@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, memo } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, memo, lazy, Suspense } from 'react';
 import { createClient } from '@supabase/supabase-js'; 
 import { gsap } from 'gsap';
 import dynamic from 'next/dynamic';
@@ -23,6 +23,63 @@ import { useUIState } from "@/contexts/UIStateContext";
 // --- IMPORT SEPARATE LOADER COMPONENT ---
 import { MultiStepLoader} from "@/components/Mainpage/MultiStepLoader";
 import { TelegramConfirmationResponsive } from "./TelegramConfirmationResponsive"; 
+
+// --- DYNAMIC SPLINE IMPORT FOR WELCOME SCREEN ---
+const Spline = dynamic(() => import('@splinetool/react-spline'), {
+  ssr: false,
+  loading: () => null,
+});
+
+// --- WELCOME SCREEN SPLINE BACKGROUND COMPONENT ---
+const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  
+  return (
+    <div 
+      className="absolute inset-0 w-full h-full"
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        overflow: 'hidden',
+        background: '#000',
+      }}
+    >
+      {/* Spline Scene */}
+      {!hasError && (
+        <div 
+          className={`absolute inset-0 transition-opacity duration-1000 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+          style={{
+            width: '100%',
+            height: '100%',
+            touchAction: 'auto',
+            pointerEvents: 'auto',
+          }}
+        >
+          <Spline
+            scene="/scene1.splinecode"
+            onLoad={() => setIsLoaded(true)}
+            onError={() => setHasError(true)}
+            style={{
+              width: '100%',
+              height: '100%',
+              display: 'block',
+              touchAction: 'auto',
+            }}
+          />
+        </div>
+      )}
+      
+      {/* Black fallback / loading state */}
+      <div 
+        className={`absolute inset-0 bg-black transition-opacity duration-1000 ${isLoaded && !hasError ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+      />
+    </div>
+  );
+});
 
 // --- 1. SUPABASE SETUP ---
 const TELEGRAM_GROUP_LINK = "https://t.me/addlist/uswKuwT2JUQ4YWI8";
@@ -382,7 +439,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   // --- STATE ---
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'register' | 'login'>('register');
-  const [step, setStep] = useState(0); 
+  const [step, setStep] = useState(-1); // Start at -1 for welcome screen
   const [activeBroker, setActiveBroker] = useState<'Vantage' | 'XM'>('Vantage');
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -483,106 +540,10 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         return;
       }
       
-      // 1. Check for completed session
-      const savedSession = localStorage.getItem("bullmoney_session");
-      
-      // ALSO check if telegram was already shown/confirmed - skip it on reload
-      const telegramAlreadyConfirmed = localStorage.getItem("bullmoney_telegram_confirmed") === "true";
-      
-      if (savedSession) {
-        try {
-          const session = JSON.parse(savedSession);
-          // Detect if this is a refresh (user has session = returning visitor)
-          setIsRefresh(true);
-          
-          // Verify ID exists in Supabase (async)
-          const { data, error } = await supabase
-            .from("recruits")
-            .select("id")
-            .eq("id", session.id)
-            .maybeSingle();
-
-          if (!error && data && mounted) {
-             console.log("Session valid, user authenticated");
-             // Clear any old drafts since we are logged in
-             localStorage.removeItem("bullmoney_draft");
-             
-             // Ensure pagemode_completed is set for users with older sessions
-             // This prevents pagemode from showing again if session gets cleared
-             localStorage.setItem("bullmoney_pagemode_completed", "true");
-             
-             // If telegram was already confirmed, skip directly to unlock (no telegram screen)
-             if (telegramAlreadyConfirmed) {
-               console.log("Telegram already confirmed, skipping to unlock");
-               // Random chance to show loaders on reload:
-               // - 5% chance: V3 celebration loader (rare, special)
-               // - 35% chance: Regular MultiStepLoader (more common, smooth experience)
-               // - 60% chance: Instant unlock (most common, fast)
-               const loaderRoll = Math.random();
-               
-               if (loaderRoll < 0.05 && mounted) {
-                 // 5% - Show V3 celebration loader (rare)
-                 setIsCelebration(true);
-                 setTimeout(() => {
-                   setLoading(false);
-                   onUnlock();
-                 }, 2000); // Short V3 experience
-               } else if (loaderRoll < 0.40 && mounted) {
-                 // 35% - Show regular MultiStepLoader (common)
-                 setIsRefresh(true);
-                 setTimeout(() => {
-                   setLoading(false);
-                   onUnlock();
-                 }, 1500); // Standard loader duration
-               } else if (mounted) {
-                 // 60% - Instant unlock (most common)
-                 setLoading(false);
-                 onUnlock();
-               }
-               return;
-             }
-             
-             // Show Telegram confirmation ONLY if not already confirmed
-             setTimeout(() => {
-                 setLoading(false);
-                 setStep(4); // Go to Telegram confirmation
-             }, 1500); 
-             return; 
-          } 
-          
-          if(error || !data) {
-             localStorage.removeItem("bullmoney_session");
-          }
-        } catch (e) {
-          localStorage.removeItem("bullmoney_session");
-        }
-      }
-
-      // 2. DRAFT RESTORE PATH: If no session, check for partial form data
-      const savedDraft = localStorage.getItem("bullmoney_draft");
-      if (savedDraft) {
-          try {
-              const draft = JSON.parse(savedDraft);
-              // Only restore if less than 24 hours old
-              if (Date.now() - draft.timestamp < 24 * 60 * 60 * 1000) {
-                  if (mounted) {
-                      setFormData(draft.formData);
-                      setStep(draft.step);
-                      setActiveBroker(draft.activeBroker || 'Vantage');
-                  }
-              }
-          } catch (e) {
-              localStorage.removeItem("bullmoney_draft");
-          }
-      }
-
-      // 3. DONE LOADING (If no session was found)
+      // Always show welcome screen (step -1) on load/reload
+      // Just end loading and stay on step -1
       if (mounted) {
-        // Allow the "Initializing" text to read before showing form (1.5 seconds for reload experience)
-        // But don't auto-exit if we're on step 4 (telegram confirmation screen)
-        if (step !== 4) {
-          setTimeout(() => { setLoading(false); }, 1500);
-        }
+        setTimeout(() => { setLoading(false); }, 1500);
       }
     };
 
@@ -685,7 +646,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   };
 
   const handleBack = () => {
-    if (step > 0) {
+    if (step > -1) {
       setStep(step - 1);
       setSubmitError(null);
     }
@@ -920,7 +881,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       {/* =========================================== */}
 
       {/* HEADER - BULLMONEY FREE TITLE */}
-      {!loading && (
+      {!loading && step !== -1 && (
         <div className="w-full md:fixed md:top-6 lg:top-8 md:left-0 md:right-0 flex flex-col items-center pt-6 md:pt-8 pb-4 md:pb-6 md:bg-black/60 md:backdrop-blur-md mb-8 md:mb-0 z-50" style={{ zIndex: 100 }}>
           <div className="mb-3 md:mb-4 text-center w-full">
              <h1 className={cn("text-3xl md:text-5xl lg:text-6xl font-black tracking-tight", neonTextClass)} style={{ animation: isXM ? 'neon-pulse-red 2s ease-in-out infinite' : 'neon-pulse 2s ease-in-out infinite' }}>
@@ -941,8 +902,147 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         {/* Existing background elements */}
         <div className={cn("absolute bottom-0 right-0 w-[300px] md:w-[500px] h-[300px] md:h-[500px] rounded-full blur-[80px] pointer-events-none transition-colors duration-500 gpu-accel -z-10", isXM ? "bg-red-900/10" : "bg-blue-900/10")} />
 
+        {/* ================= WELCOME SCREEN (Step -1) ================= */}
+        {step === -1 && (
+          <motion.div
+            key="welcome-screen"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 flex items-center justify-center z-[99999999]"
+            style={{ minHeight: '100dvh', width: '100vw', height: '100vh' }}
+          >
+            {/* Spline Background - Independent wrapper for welcome screen */}
+            <div 
+              className="absolute inset-0 w-full h-full overflow-hidden"
+              style={{ 
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                width: '100vw',
+                height: '100vh',
+                minHeight: '100dvh',
+                zIndex: 0,
+                pointerEvents: 'auto',
+                touchAction: 'auto'
+              }}
+            >
+              <WelcomeSplineBackground />
+            </div>
+            
+            {/* Buttons container - above Spline */}
+            <div 
+              className="relative flex flex-col items-center justify-center gap-6 px-6 w-full max-w-sm"
+              style={{ zIndex: 10 }}
+            >
+              {/* Sign Up Button */}
+              <motion.button
+                onClick={() => {
+                  setViewMode('register');
+                  setStep(0);
+                }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full py-4 bg-black/80 backdrop-blur-sm border-2 border-blue-500 rounded-xl font-bold text-lg tracking-wide transition-all flex items-center justify-center cursor-target overflow-hidden text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.4)] hover:shadow-[0_0_25px_rgba(59,130,246,0.6)]"
+              >
+                <span className="flex items-center gap-2">
+                  Sign Up <ArrowRight className="w-5 h-5" />
+                </span>
+              </motion.button>
+
+              {/* Guest Button */}
+              <motion.button
+                onClick={() => {
+                  // Go to guest intermediate screen
+                  setStep(-2);
+                }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full py-4 bg-black/80 backdrop-blur-sm border-2 border-white/30 rounded-xl font-bold text-lg tracking-wide transition-all flex items-center justify-center cursor-target overflow-hidden text-white/70 hover:border-white/50 hover:text-white"
+              >
+                <span className="flex items-center gap-2">
+                  Guest
+                </span>
+              </motion.button>
+
+              {/* Login Button */}
+              <motion.button
+                onClick={() => {
+                  setViewMode('login');
+                  setStep(0);
+                }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full py-4 bg-black/80 backdrop-blur-sm border-2 border-blue-500/60 rounded-xl font-bold text-lg tracking-wide transition-all flex items-center justify-center cursor-target overflow-hidden text-blue-300 hover:border-blue-500 hover:text-blue-400"
+              >
+                <span className="flex items-center gap-2">
+                  Login <ArrowRight className="w-5 h-5" />
+                </span>
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ================= GUEST INTERMEDIATE SCREEN (Step -2) ================= */}
+        {step === -2 && (
+          <motion.div
+            key="guest-screen"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 bg-black flex items-center justify-center z-[99999999]"
+            style={{ minHeight: '100dvh' }}
+          >
+            <div className="flex flex-col items-center justify-center gap-6 px-6 w-full max-w-md">
+              <div className="bg-black/80 backdrop-blur-xl p-6 md:p-8 rounded-2xl border-2 border-white/20 text-center w-full">
+                <div className="mb-5 flex justify-center">
+                  <div className="h-14 w-14 md:h-16 md:w-16 rounded-full bg-black flex items-center justify-center border-2 border-white/30">
+                    <User className="w-7 h-7 md:w-8 md:h-8 text-white/70" />
+                  </div>
+                </div>
+                
+                <h2 className="text-xl md:text-2xl font-bold text-white mb-3">Continue as Guest</h2>
+                <p className="text-sm md:text-base text-white/60 mb-6 leading-relaxed">
+                  You can browse the site without an account.<br/>
+                  <span className="text-white/40">Some features may be limited.</span>
+                </p>
+
+                {/* Continue Button */}
+                <motion.button
+                  onClick={() => {
+                    // Set step to prevent re-render, then bypass pagemode
+                    setStep(99);
+                    requestAnimationFrame(() => {
+                      onUnlock();
+                    });
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full py-3 md:py-4 bg-black border-2 border-white/40 rounded-xl font-bold text-lg tracking-wide transition-all flex items-center justify-center cursor-target overflow-hidden text-white hover:border-white/60 hover:shadow-[0_0_15px_rgba(255,255,255,0.2)]"
+                >
+                  <span className="flex items-center gap-2">
+                    Continue to Site <ArrowRight className="w-5 h-5" />
+                  </span>
+                </motion.button>
+              </div>
+              
+              {/* Back Button */}
+              <button 
+                onClick={() => setStep(-1)} 
+                className="flex items-center text-slate-500 hover:text-slate-300 text-sm transition-colors cursor-target"
+              >
+                <ChevronLeft className="w-4 h-4 mr-1" /> Back
+              </button>
+            </div>
+          </motion.div>
+        )}
+
         {/* ================= LOGIN VIEW ================= */}
-        {viewMode === 'login' ? (
+        {step !== -1 && step !== -2 && viewMode === 'login' ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -1034,6 +1134,13 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   </button>
                 </div>
              </div>
+             {/* Back to Welcome Screen */}
+             <button 
+               onClick={() => setStep(-1)} 
+               className="mt-4 flex items-center text-slate-500 hover:text-slate-300 text-sm mx-auto transition-colors cursor-target"
+             >
+               <ChevronLeft className="w-4 h-4 mr-1" /> Back
+             </button>
           </motion.div>
         ) : (
           /* ================= UNLOCK FLOW VIEW ================= */
@@ -1069,7 +1176,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
             )}
 
             <AnimatePresence mode="wait">
-                
+
               {/* --- SCREEN 1: ENTRY GATE (Step 0) --- */}
               {step === 0 && (
                  <motion.div
@@ -1127,6 +1234,13 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                          </motion.button>
                       </div>
                    </div>
+                   {/* Back to Welcome Screen */}
+                   <button 
+                     onClick={() => setStep(-1)} 
+                     className="mt-4 flex items-center text-slate-500 hover:text-slate-300 text-sm mx-auto transition-colors cursor-target"
+                   >
+                     <ChevronLeft className="w-4 h-4 mr-1" /> Back
+                   </button>
                  </motion.div>
               )}
 

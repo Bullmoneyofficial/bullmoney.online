@@ -1405,6 +1405,30 @@ const NeonRing: React.FC<{ progress: number; size: number }> = ({ progress, size
 // ============================================================================
 export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
   const { shouldSkipHeavyEffects } = useMobilePerformance();
+  
+  // UI State - signal that loader is active
+  let setLoaderv2Open: ((open: boolean) => void) | null = null;
+  try {
+    // Dynamic import to avoid issues if context isn't available
+    const { useUIState } = require("@/contexts/UIStateContext");
+    const uiState = useUIState();
+    setLoaderv2Open = uiState?.setLoaderv2Open ?? null;
+  } catch {
+    // UIStateContext may not be available
+  }
+  
+  // Signal loader is open on mount, closed on unmount
+  useEffect(() => {
+    if (setLoaderv2Open) {
+      setLoaderv2Open(true);
+    }
+    return () => {
+      if (setLoaderv2Open) {
+        setLoaderv2Open(false);
+      }
+    };
+  }, [setLoaderv2Open]);
+  
   const [progress, setProgress] = useState(0);
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [gateVisible, setGateVisible] = useState(true);

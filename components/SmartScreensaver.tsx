@@ -7,6 +7,7 @@ import { useBrowserDetection } from '@/lib/browserDetection';
 import { getFpsEngine, initializeFpsMeasurement } from '@/lib/FpsMeasurement';
 import { detectBrowserCapabilities, selectOptimalMeasurementConfig } from '@/lib/FpsCompatibility';
 import { useMobilePerformance } from "@/hooks/useMobilePerformance";
+import { useUIState } from "@/contexts/UIStateContext";
 
 // ============================================================================
 // SMART SCREENSAVER CONTEXT
@@ -57,6 +58,20 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
   
   // Mobile performance hook
   const { shouldSkipHeavyEffects } = useMobilePerformance();
+  
+  // UI State - check if pagemode or loader is active (don't show screensaver during these)
+  let isPagemodeOpen = false;
+  let isLoaderv2Open = false;
+  try {
+    const uiState = useUIState();
+    isPagemodeOpen = uiState?.isPagemodeOpen ?? false;
+    isLoaderv2Open = uiState?.isLoaderv2Open ?? false;
+  } catch {
+    // UIStateContext may not be available (e.g., outside provider)
+  }
+  
+  // Don't show screensaver when pagemode or loader is active
+  const shouldBlockScreensaver = isPagemodeOpen || isLoaderv2Open;
   
   const idleCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const screensaverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -699,8 +714,9 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
       {children}
       
       {/* BULLMONEY Screensaver Overlay - HIGHEST Z-INDEX, above cursor and trading tips */}
+      {/* Don't show when pagemode or loader is active */}
       <AnimatePresence>
-        {isScreensaverActive && (
+        {isScreensaverActive && !shouldBlockScreensaver && (
           <motion.div
             data-bullmoney-overlay="true"
             id="bullmoney-screensaver-overlay"
