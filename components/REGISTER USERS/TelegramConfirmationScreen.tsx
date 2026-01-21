@@ -145,8 +145,32 @@ export const TelegramConfirmationScreen: React.FC<TelegramConfirmationScreenProp
   }, [joinedTelegram]);
 
   const handleTelegramClick = () => {
-    window.open(TELEGRAM_GROUP_LINK, '_blank');
+    // Mark as joined first before navigating (in case navigation causes issues)
     setJoinedTelegram(true);
+    
+    // Use a safer approach for mobile apps/WebViews
+    // Create a temporary link element to handle the navigation
+    try {
+      const link = document.createElement('a');
+      link.href = TELEGRAM_GROUP_LINK;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      
+      // Try to open in new tab/window first
+      const newWindow = window.open(TELEGRAM_GROUP_LINK, '_blank', 'noopener,noreferrer');
+      
+      // If popup was blocked or we're in a WebView, fall back to link click
+      if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+        // Fallback: programmatically click the link
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (error) {
+      // Final fallback: direct navigation (will navigate current page in worst case)
+      // This ensures the user can always access the Telegram group
+      window.location.href = TELEGRAM_GROUP_LINK;
+    }
   };
 
   return (
