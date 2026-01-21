@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
 interface TelegramPost {
   id: string;
@@ -19,7 +20,11 @@ const CHANNELS = {
 };
 
 // Mr.Bullmoney Bot Token - @MrBullmoneybot
-const TELEGRAM_BOT_TOKEN = '8554647051:AAE-FBW0qW0ZL4VVvUPlytlDXdo9lH7T9A8';
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const VIP_CHANNEL_ID = process.env.VIP_CHANNEL_ID;
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 // In-memory cache for VIP messages (persists during server runtime)
 let vipMessagesCache: TelegramPost[] = [];
@@ -27,12 +32,77 @@ let lastFetchTime = 0;
 const CACHE_DURATION = 10000; // 10 seconds
 
 // Track last update ID for getUpdates
-let lastUpdateId = 0;
+// (currently unused but reserved for future incremental polling)
+
+async function fetchVipMessagesFromDatabase(limit: number = 10): Promise<TelegramPost[]> {
+  if (!supabaseUrl || !supabaseServiceKey) {
+    return [];
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  const { data, error } = await supabase
+    .from('vip_messages')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error || !data) {
+    console.error('[TG VIP] Supabase error:', error);
+    return [];
+  }
+
+  return data.map((message: any) => ({
+    id: (message.telegram_message_id || message.id)?.toString() || String(message.id),
+    text: message.message || (message.has_media ? '📷 Media post' : ''),
+    date: formatDate(message.created_at || new Date().toISOString()),
+    views: undefined,
+    hasMedia: !!message.has_media,
+    channel: '+yW5jIfxJpv9hNmY0',
+    channelName: 'VIP Trades',
+  }));
+}
+
+async function getWebhookStatus() {
+  try {
+    if (!TELEGRAM_BOT_TOKEN) {
+      return { active: false, url: null };
+    }
+    const webhookInfo = await fetch(
+      `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getWebhookInfo`,
+      { cache: 'no-store' }
+    );
+    const webhookData = await webhookInfo.json();
+    const url = webhookData?.result?.url;
+    return { active: !!url, url };
+  } catch (error) {
+    console.error('[TG VIP] Webhook info error:', error);
+    return { active: false, url: null };
+  }
+}
 
 // Fetch VIP messages directly from Telegram Bot API
 async function fetchVIPMessagesFromTelegram(): Promise<TelegramPost[]> {
   try {
     console.log('[TG VIP] Fetching messages from Telegram Bot API...');
+
+    if (!TELEGRAM_BOT_TOKEN) {
+      console.error('[TG VIP] TELEGRAM_BOT_TOKEN not configured');
+      return [];
+    }
+    
+    // First check if webhook is active
+    const webhookStatus = await getWebhookStatus();
+    
+    if (webhookStatus.active) {
+      console.warn('[TG VIP] Webhook is active:', webhookStatus.url);
+      // When webhook is active, getUpdates will not return messages.
+      // Fall back to database messages stored by the webhook handler.
+      const dbMessages = await fetchVipMessagesFromDatabase(10);
+      if (dbMessages.length > 0) {
+        return dbMessages;
+      }
+      return vipMessagesCache;
+    }
     
     // Use getUpdates to fetch channel posts
     const updatesUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates?allowed_updates=["channel_post","edited_channel_post"]&limit=100`;
@@ -44,16 +114,19 @@ async function fetchVIPMessagesFromTelegram(): Promise<TelegramPost[]> {
     
     if (!data.ok) {
       console.error('[TG VIP] API Error:', data.description);
-      // If webhook is active, return cached messages
-      if (data.description?.includes('webhook')) {
-        console.log('[TG VIP] Webhook active, returning cached messages');
-        return vipMessagesCache;
-      }
-      return [];
+      return vipMessagesCache;
     }
     
     const updates = data.result || [];
-    const channelPosts = updates.filter((u: any) => u.channel_post || u.edited_channel_post);
+    const channelPosts = updates
+      .map((u: any) => u.channel_post || u.edited_channel_post)
+      .filter(Boolean)
+      .filter((post: any) => {
+        if (!VIP_CHANNEL_ID) return true;
+        const expected = VIP_CHANNEL_ID.replace('-100', '').replace('-', '');
+        const actual = String(post.chat?.id || '').replace('-100', '').replace('-', '');
+        return expected && actual ? expected === actual : true;
+      });
     
     console.log('[TG VIP] Found', channelPosts.length, 'channel posts');
     
@@ -65,9 +138,7 @@ async function fetchVIPMessagesFromTelegram(): Promise<TelegramPost[]> {
     // Process channel posts into our format
     const newPosts: TelegramPost[] = [];
     
-    for (const update of channelPosts) {
-      const post = update.channel_post || update.edited_channel_post;
-      lastUpdateId = Math.max(lastUpdateId, update.update_id);
+    for (const post of channelPosts) {
       
       const messageText = post.text || post.caption || '';
       const hasMedia = !!(post.photo || post.video || post.document || post.animation);
@@ -168,7 +239,10 @@ async function getVIPMessagesDirectFromTelegram(channelUsername: string, channel
   try {
     console.log('[VIP Direct] Fetching VIP messages directly from Telegram...');
     
-    // Fetch messages from Telegram
+    // Check webhook status first
+    const webhookStatus = await getWebhookStatus();
+    
+    // Fetch messages from Telegram (or DB fallback if webhook is active)
     const posts = await fetchVIPMessagesFromTelegram();
     
     console.log('[VIP Direct] Got', posts.length, 'messages from Telegram');
@@ -181,7 +255,10 @@ async function getVIPMessagesDirectFromTelegram(channelUsername: string, channel
         channelName: channelName,
         lastUpdated: new Date().toISOString(),
         source: 'telegram_bot',
-        message: 'No VIP messages yet. Make sure @MrBullmoneybot is admin in the VIP channel and post a message.',
+        message: webhookStatus.active 
+          ? 'Webhook is active. Messages should appear once the webhook is receiving posts.'
+          : 'No VIP messages yet. Make sure @MrBullmoneybot is admin in the VIP channel and post a message.',
+        webhook: webhookStatus.active ? { url: webhookStatus.url } : null,
         setup: {
           step1: 'Add @MrBullmoneybot as ADMIN in your VIP Telegram channel',
           step2: 'Give it "Post Messages" permission',

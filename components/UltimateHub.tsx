@@ -2006,12 +2006,10 @@ function useVipCheck(userId?: string, userEmail?: string) {
           cachedVipStatus 
         });
         
-        // If we have a cached VIP status = true, use it immediately
+        // If we have a cached VIP status = true, use it immediately while still verifying via API
         if (cachedVipStatus) {
-          console.log('[VIP Check] ✅ User is VIP from localStorage cache');
+          console.log('[VIP Check] ✅ User is VIP from localStorage cache (verifying with API)');
           setIsVip(true);
-          setLoading(false);
-          return; // Trust localStorage, don't need API call
         }
       }
     } catch (e) {
@@ -2022,8 +2020,8 @@ function useVipCheck(userId?: string, userEmail?: string) {
     const emailToCheck = userEmail || sessionEmail;
     
     if (!emailToCheck && !userId) {
-      console.log('[VIP Check] No email or userId - not VIP');
-      setIsVip(false);
+      console.log('[VIP Check] No email or userId - using cached VIP status');
+      setIsVip(cachedVipStatus || false);
       setLoading(false);
       return;
     }
@@ -3244,6 +3242,31 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false }: { channe
           setError(false);
           setStatusMessage(null);
         } else {
+          // If VIP channel is empty, try database fallback (webhook stored messages)
+          if (channel === 'vip') {
+            try {
+              const vipResponse = await fetch(`/api/vip/messages?limit=10&t=${Date.now()}`, { cache: 'no-store' });
+              const vipData = await vipResponse.json();
+              if (vipData.success && Array.isArray(vipData.messages) && vipData.messages.length > 0) {
+                const mapped = vipData.messages.map((message: any) => ({
+                  id: (message.telegram_message_id || message.id)?.toString() || String(message.id),
+                  text: message.message || (message.has_media ? '📷 Media post' : ''),
+                  date: message.created_at ? new Date(message.created_at).toLocaleString() : 'Recently',
+                  views: undefined,
+                  hasMedia: !!message.has_media,
+                  channel: TELEGRAM_CHANNELS.vip.handle,
+                  channelName: TELEGRAM_CHANNELS.vip.name,
+                }));
+                setPosts(mapped);
+                setError(false);
+                setStatusMessage(null);
+                return;
+              }
+            } catch (vipErr) {
+              console.error('[TelegramChannelEmbed] VIP DB fallback error:', vipErr);
+            }
+          }
+
           setPosts([]);
           setError(false);
           setStatusMessage(data.message || 'No messages yet');
