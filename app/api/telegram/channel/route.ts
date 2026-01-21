@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 interface TelegramPost {
   id: string;
@@ -11,85 +10,104 @@ interface TelegramPost {
   channelName: string;
 }
 
-// Available channels
+// Available channels - VIP uses invite link hash format
 const CHANNELS = {
   trades: { username: 'bullmoneywebsite', name: 'Free Trades', isPrivate: false },
   main: { username: 'bullmoneyfx', name: 'BullMoney FX', isPrivate: false },
   shop: { username: 'Bullmoneyshop', name: 'BullMoney Shop', isPrivate: false },
-  vip: { username: 'bullmoneyvip', name: 'VIP Trades', isPrivate: true }, // Private - uses Bot API
+  vip: { username: '+yW5jIfxJpv9hNmY0', name: 'VIP Trades', isPrivate: true },
 };
 
-// Supabase client for VIP messages
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+// Mr.Bullmoney Bot Token - @MrBullmoneybot
+const TELEGRAM_BOT_TOKEN = '8554647051:AAE-FBW0qW0ZL4VVvUPlytlDXdo9lH7T9A8';
 
-// Telegram Bot API for private channel access
-// Bot must be admin in the channel with "Read Messages" permission
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const VIP_CHANNEL_ID = process.env.VIP_CHANNEL_ID; // e.g., -1001234567890 (channel ID with -100 prefix)
+// In-memory cache for VIP messages (persists during server runtime)
+let vipMessagesCache: TelegramPost[] = [];
+let lastFetchTime = 0;
+const CACHE_DURATION = 10000; // 10 seconds
 
-// Track last sync time to avoid too frequent syncs
-let lastSyncTime = 0;
-const SYNC_INTERVAL = 2 * 60 * 1000; // 2 minutes minimum between syncs
+// Track last update ID for getUpdates
+let lastUpdateId = 0;
 
-// Check if we should sync and trigger it in the background
-async function checkAndTriggerSync(supabase: SupabaseClient): Promise<boolean> {
-  if (!TELEGRAM_BOT_TOKEN || !VIP_CHANNEL_ID) {
-    return false;
-  }
-  
-  const now = Date.now();
-  if (now - lastSyncTime < SYNC_INTERVAL) {
-    return false;
-  }
-  
-  // Trigger sync in background
-  syncFromTelegramBot().catch(err => console.error('Background sync error:', err));
-  lastSyncTime = now;
-  return true;
-}
-
-// Sync messages from private Telegram channel using Bot API
-async function syncFromTelegramBot(): Promise<void> {
+// Fetch VIP messages directly from Telegram Bot API
+async function fetchVIPMessagesFromTelegram(): Promise<TelegramPost[]> {
   try {
-    if (!supabaseUrl || !supabaseAnonKey || !TELEGRAM_BOT_TOKEN || !VIP_CHANNEL_ID) {
-      console.log('Missing config for Telegram Bot sync');
-      return;
+    console.log('[TG VIP] Fetching messages from Telegram Bot API...');
+    
+    // Use getUpdates to fetch channel posts
+    const updatesUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates?allowed_updates=["channel_post","edited_channel_post"]&limit=100`;
+    
+    const response = await fetch(updatesUrl, { cache: 'no-store' });
+    const data = await response.json();
+    
+    console.log('[TG VIP] getUpdates response:', data.ok, 'total updates:', data.result?.length || 0);
+    
+    if (!data.ok) {
+      console.error('[TG VIP] API Error:', data.description);
+      // If webhook is active, return cached messages
+      if (data.description?.includes('webhook')) {
+        console.log('[TG VIP] Webhook active, returning cached messages');
+        return vipMessagesCache;
+      }
+      return [];
     }
     
-    // Use getUpdates or getChatHistory - Bot API doesn't directly support fetching channel history
-    // Instead, we'll use the forwardMessage trick or rely on updates
-    // For channels, we need to use getChat and then rely on webhook/updates
+    const updates = data.result || [];
+    const channelPosts = updates.filter((u: any) => u.channel_post || u.edited_channel_post);
     
-    // Alternative: Use the Telegram Bot API's getUpdates to get recent messages
-    // But for channel history, we need a different approach
+    console.log('[TG VIP] Found', channelPosts.length, 'channel posts');
     
-    // Let's try using the channel's @username with t.me/s/ if it's semi-public
-    // Or use a webhook approach
-    
-    console.log('Telegram Bot sync triggered for channel:', VIP_CHANNEL_ID);
-    
-    // For now, let's check if the bot can access the chat
-    const chatInfoUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getChat?chat_id=${VIP_CHANNEL_ID}`;
-    const chatResponse = await fetch(chatInfoUrl);
-    const chatData = await chatResponse.json();
-    
-    if (!chatData.ok) {
-      console.error('Bot cannot access channel:', chatData.description);
-      console.log('Make sure the bot is an ADMIN in the channel with "Read Messages" permission');
-      return;
+    if (channelPosts.length === 0) {
+      // Return cached messages if no new updates
+      return vipMessagesCache;
     }
     
-    console.log('Bot has access to channel:', chatData.result?.title);
+    // Process channel posts into our format
+    const newPosts: TelegramPost[] = [];
     
-    // Unfortunately, Telegram Bot API doesn't have a direct "get channel messages" endpoint
-    // The bot can only receive messages via webhooks or getUpdates
-    // For historical messages, we need to use MTProto API or store messages as they come via webhook
+    for (const update of channelPosts) {
+      const post = update.channel_post || update.edited_channel_post;
+      lastUpdateId = Math.max(lastUpdateId, update.update_id);
+      
+      const messageText = post.text || post.caption || '';
+      const hasMedia = !!(post.photo || post.video || post.document || post.animation);
+      const messageId = post.message_id;
+      const messageDate = post.date ? new Date(post.date * 1000).toISOString() : new Date().toISOString();
+      
+      // Skip empty messages
+      if (!messageText && !hasMedia) continue;
+      
+      newPosts.push({
+        id: messageId.toString(),
+        text: messageText || (hasMedia ? '📷 Media post' : ''),
+        date: formatDate(messageDate),
+        views: undefined,
+        hasMedia,
+        channel: '+yW5jIfxJpv9hNmY0',
+        channelName: 'VIP Trades',
+      });
+    }
     
-    // Let's set up a webhook endpoint and store messages as they arrive
+    // Merge new posts with cache, avoiding duplicates
+    const existingIds = new Set(vipMessagesCache.map(p => p.id));
+    for (const post of newPosts) {
+      if (!existingIds.has(post.id)) {
+        vipMessagesCache.unshift(post); // Add to beginning (newest first)
+      }
+    }
     
+    // Keep only last 50 messages in cache
+    vipMessagesCache = vipMessagesCache.slice(0, 50);
+    
+    // DON'T confirm updates - keep them available for next fetch
+    // This way messages persist in Telegram's queue
+    
+    console.log('[TG VIP] Total cached messages:', vipMessagesCache.length);
+    
+    return vipMessagesCache;
   } catch (error) {
-    console.error('Telegram bot sync error:', error);
+    console.error('[TG VIP] Error fetching from Telegram:', error);
+    return vipMessagesCache; // Return cached on error
   }
 }
 
@@ -98,9 +116,12 @@ export async function GET(request: NextRequest) {
     const channelParam = request.nextUrl.searchParams.get('channel') || 'main';
     const channel = CHANNELS[channelParam as keyof typeof CHANNELS] || CHANNELS.main;
     
-    // For private VIP channel, fetch from database
+    console.log('[Telegram API] Fetching channel:', channelParam, 'isPrivate:', channel.isPrivate);
+    
+    // For private VIP channel, fetch directly from Telegram Bot API
     if (channel.isPrivate) {
-      return await getVIPMessagesFromDB(channel.username, channel.name);
+      console.log('[Telegram API] Fetching VIP messages directly from Telegram Bot');
+      return await getVIPMessagesDirectFromTelegram(channel.username, channel.name);
     }
     
     // For public channels, scrape from Telegram - minimal cache for fast updates
@@ -142,131 +163,59 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Fetch VIP messages from Supabase database (synced from private Telegram channel)
-async function getVIPMessagesFromDB(channelUsername: string, channelName: string) {
+// Fetch VIP messages directly from Telegram Bot API (no database)
+async function getVIPMessagesDirectFromTelegram(channelUsername: string, channelName: string) {
   try {
-    if (!supabaseUrl || !supabaseAnonKey) {
-      // Return sample VIP content if DB not configured
+    console.log('[VIP Direct] Fetching VIP messages directly from Telegram...');
+    
+    // Fetch messages from Telegram
+    const posts = await fetchVIPMessagesFromTelegram();
+    
+    console.log('[VIP Direct] Got', posts.length, 'messages from Telegram');
+    
+    if (posts.length === 0) {
       return NextResponse.json({
         success: true,
-        posts: getSampleVIPPosts(channelUsername, channelName),
+        posts: [],
         channel: channelUsername,
         channelName: channelName,
         lastUpdated: new Date().toISOString(),
-        source: 'sample',
+        source: 'telegram_bot',
+        message: 'No VIP messages yet. Make sure @MrBullmoneybot is admin in the VIP channel and post a message.',
+        setup: {
+          step1: 'Add @MrBullmoneybot as ADMIN in your VIP Telegram channel',
+          step2: 'Give it "Post Messages" permission',
+          step3: 'Post a test message in the VIP channel',
+          step4: 'Refresh this page - messages will appear automatically'
+        }
       });
     }
-
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
     
-    // Check if we should auto-sync from Telegram (if configured and messages are stale)
-    const shouldSync = await checkAndTriggerSync(supabase);
-    
-    // Fetch from vip_messages table
-    const { data, error } = await supabase
-      .from('vip_messages')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(10);
-
-    if (error || !data || data.length === 0) {
-      // Return sample VIP content if no messages in DB
-      return NextResponse.json({
-        success: true,
-        posts: getSampleVIPPosts(channelUsername, channelName),
-        channel: channelUsername,
-        channelName: channelName,
-        lastUpdated: new Date().toISOString(),
-        source: 'sample',
-        syncTriggered: shouldSync,
-      });
-    }
-
-    // Transform DB data to post format
-    const posts: TelegramPost[] = data.map((msg: any) => ({
-      id: msg.id?.toString() || Math.random().toString(36).substr(2, 9),
-      text: msg.message || msg.text || msg.content || '',
-      date: formatDate(msg.created_at),
-      views: msg.views?.toString(),
-      hasMedia: msg.has_media || false,
-      channel: channelUsername,
-      channelName: channelName,
-    }));
-
     return NextResponse.json({
       success: true,
-      posts,
+      posts: posts.slice(0, 10),
       channel: channelUsername,
       channelName: channelName,
       lastUpdated: new Date().toISOString(),
-      source: 'database',
+      source: 'telegram_bot',
+      totalCached: posts.length,
     }, {
       headers: {
-        'Cache-Control': 'private, s-maxage=30, stale-while-revalidate=60',
+        'Cache-Control': 'private, no-cache',
       },
     });
   } catch (error) {
-    console.error('Error fetching VIP messages from DB:', error);
+    console.error('[VIP Direct] Error:', error);
     return NextResponse.json({
       success: true,
-      posts: getSampleVIPPosts(channelUsername, channelName),
+      posts: vipMessagesCache.slice(0, 10), // Return cached on error
       channel: channelUsername,
       channelName: channelName,
       lastUpdated: new Date().toISOString(),
-      source: 'sample',
+      source: 'cache',
+      error: 'Telegram fetch failed, showing cached messages',
     });
   }
-}
-
-// Sample VIP posts for when DB is empty or unavailable
-function getSampleVIPPosts(channelUsername: string, channelName: string): TelegramPost[] {
-  return [
-    {
-      id: 'vip-1',
-      text: '🚀 VIP SIGNAL: GOLD (XAUUSD)\n\n📈 BUY @ 2650.00\n🎯 TP1: 2665.00\n🎯 TP2: 2680.00\n🛑 SL: 2635.00\n\n⚡ Risk: 1-2% of capital\n📊 Confidence: HIGH',
-      date: '2h ago',
-      views: '1.2K',
-      hasMedia: false,
-      channel: channelUsername,
-      channelName: channelName,
-    },
-    {
-      id: 'vip-2',
-      text: '💎 PREMIUM ANALYSIS: EUR/USD\n\nLooking for a potential reversal at the 1.0850 support level. Multiple confluences including:\n\n✅ 200 EMA support\n✅ Previous structure\n✅ RSI oversold\n\nWait for confirmation before entry.',
-      date: '5h ago',
-      views: '890',
-      hasMedia: true,
-      channel: channelUsername,
-      channelName: channelName,
-    },
-    {
-      id: 'vip-3',
-      text: '📊 WEEKLY MARKET OUTLOOK\n\n🔹 USD strength expected to continue\n🔹 Watch NFP data Friday\n🔹 Gold consolidating before next move\n🔹 BTC holding key support\n\nFull analysis in members area 👑',
-      date: '1d ago',
-      views: '2.1K',
-      hasMedia: false,
-      channel: channelUsername,
-      channelName: channelName,
-    },
-    {
-      id: 'vip-4',
-      text: '✅ CLOSED IN PROFIT!\n\nGBP/JPY signal hit TP2!\n\n📈 Entry: 188.50\n🎯 Exit: 189.80\n💰 +130 pips\n\nCongrats to everyone who took this! 🔥',
-      date: '2d ago',
-      views: '1.5K',
-      hasMedia: false,
-      channel: channelUsername,
-      channelName: channelName,
-    },
-    {
-      id: 'vip-5',
-      text: '⚠️ RISK MANAGEMENT REMINDER\n\nNever risk more than 1-2% per trade.\n\nEven with a 50% win rate, proper risk management = long-term profitability.\n\nProtect your capital! 💪',
-      date: '3d ago',
-      views: '980',
-      hasMedia: false,
-      channel: channelUsername,
-      channelName: channelName,
-    },
-  ];
 }
 
 function parseChannelHTML(html: string, channelUsername: string, channelName: string): TelegramPost[] {

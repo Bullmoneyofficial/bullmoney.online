@@ -119,10 +119,12 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
         localStorage.setItem('adminToken', data.token);
         
         // Also set bullmoney_session so CommunityQuickAccess can detect the admin
+        // Admin users are always VIP
         localStorage.setItem('bullmoney_session', JSON.stringify({
           id: `admin_${Date.now()}`,
           email: email,
           isAdmin: true,
+          is_vip: true, // Admin users have VIP access
           timestamp: Date.now(),
         }));
         

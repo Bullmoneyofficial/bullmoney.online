@@ -554,10 +554,11 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       if (error) throw error;
 
       if (newUser) {
-        // Save persistent session
+        // Save persistent session with VIP status
         localStorage.setItem("bullmoney_session", JSON.stringify({
           id: newUser.id,
           email: formData.email,
+          is_vip: newUser.is_vip || false,
           timestamp: Date.now()
         }));
         // Clear draft
@@ -587,7 +588,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     try {
       const { data, error } = await supabase
         .from("recruits")
-        .select("id") 
+        .select("id, is_vip") 
         .eq("email", loginEmail)
         .eq("password", loginPassword) 
         .maybeSingle();
@@ -599,10 +600,11 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         throw new Error("Invalid email or password.");
       }
 
-      // Save persistent session
+      // Save persistent session with VIP status
       localStorage.setItem("bullmoney_session", JSON.stringify({
         id: data.id,
         email: loginEmail,
+        is_vip: data.is_vip || false,
         timestamp: Date.now()
       }));
 

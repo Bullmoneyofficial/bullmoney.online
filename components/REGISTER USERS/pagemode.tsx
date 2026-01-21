@@ -760,10 +760,12 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
       if (newUser) {
         // Save persistent session (both storage keys for compatibility)
+        // Include is_vip status (false by default for new users)
         localStorage.setItem("bullmoney_session", JSON.stringify({
           id: newUser.id,
           email: formData.email,
           mt5_id: formData.mt5Number, // Save MT5 ID for affiliate modal persistence
+          is_vip: newUser.is_vip || false, // Store VIP status for auto-unlock
           timestamp: Date.now()
         }));
         
@@ -820,7 +822,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     try {
       const { data, error } = await supabase
         .from("recruits")
-        .select("id, mt5_id") 
+        .select("id, mt5_id, is_vip") 
         .eq("email", loginEmail)
         .eq("password", loginPassword) 
         .maybeSingle();
@@ -833,10 +835,12 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       }
 
       // Save persistent session (both storage keys for compatibility)
+      // Include is_vip status for auto-unlocking VIP content in UltimateHub
       localStorage.setItem("bullmoney_session", JSON.stringify({
         id: data.id,
         email: loginEmail,
         mt5_id: data.mt5_id, // Save MT5 ID for affiliate modal persistence
+        is_vip: data.is_vip || false, // Store VIP status for auto-unlock
         timestamp: Date.now()
       }));
       

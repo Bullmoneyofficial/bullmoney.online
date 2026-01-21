@@ -1989,23 +1989,74 @@ function useVipCheck(userId?: string, userEmail?: string) {
   const [loading, setLoading] = useState(true);
   
   const checkStatus = useCallback(async () => {
-    if (!userId && !userEmail) {
+    // First, check localStorage for cached VIP status (instant access)
+    let sessionEmail: string | null = null;
+    let cachedVipStatus: boolean | null = null;
+    
+    try {
+      const savedSession = localStorage.getItem('bullmoney_session');
+      if (savedSession) {
+        const session = JSON.parse(savedSession);
+        sessionEmail = session.email || null;
+        cachedVipStatus = session.is_vip === true;
+        
+        console.log('[VIP Check] localStorage session:', { 
+          email: sessionEmail, 
+          is_vip: session.is_vip,
+          cachedVipStatus 
+        });
+        
+        // If we have a cached VIP status = true, use it immediately
+        if (cachedVipStatus) {
+          console.log('[VIP Check] ✅ User is VIP from localStorage cache');
+          setIsVip(true);
+          setLoading(false);
+          return; // Trust localStorage, don't need API call
+        }
+      }
+    } catch (e) {
+      console.error('[VIP Check] localStorage error:', e);
+    }
+    
+    // Determine the email to use for API check
+    const emailToCheck = userEmail || sessionEmail;
+    
+    if (!emailToCheck && !userId) {
+      console.log('[VIP Check] No email or userId - not VIP');
       setIsVip(false);
       setLoading(false);
       return;
     }
     
     try {
-      // IMPORTANT: Always prefer email for VIP check since recruits table uses email as identifier
-      // The userId from Supabase auth is a UUID but recruits.id is BIGSERIAL (numeric)
-      const params = userEmail 
-        ? `email=${encodeURIComponent(userEmail)}` 
+      const params = emailToCheck 
+        ? `email=${encodeURIComponent(emailToCheck)}` 
         : `userId=${userId}`;
+      
+      console.log('[VIP Check] Checking API with:', params);
       const res = await fetch(`/api/vip/status?${params}`, { cache: 'no-store' });
       const data = await res.json();
-      setIsVip(data.isVip ?? false);
-    } catch {
-      setIsVip(false);
+      const vipStatus = data.isVip === true;
+      
+      console.log('[VIP Check] API Response:', { isVip: vipStatus, data });
+      
+      setIsVip(vipStatus);
+      
+      // Update localStorage with latest VIP status
+      try {
+        const savedSession = localStorage.getItem('bullmoney_session');
+        if (savedSession) {
+          const session = JSON.parse(savedSession);
+          localStorage.setItem('bullmoney_session', JSON.stringify({
+            ...session,
+            is_vip: vipStatus
+          }));
+          console.log('[VIP Check] Updated localStorage is_vip:', vipStatus);
+        }
+      } catch {}
+    } catch (error) {
+      console.error('[VIP Check] API Error:', error);
+      setIsVip(cachedVipStatus || false);
     } finally {
       setLoading(false);
     }
@@ -2013,7 +2064,7 @@ function useVipCheck(userId?: string, userEmail?: string) {
   
   useEffect(() => {
     checkStatus();
-    const interval = setInterval(checkStatus, 30000);
+    const interval = setInterval(checkStatus, 60000); // Check every 60s
     return () => clearInterval(interval);
   }, [checkStatus]);
   
@@ -2060,32 +2111,32 @@ function useAdminCheck() {
   
   useEffect(() => {
     const checkAdmin = async () => {
+      // First, always check localStorage for session (faster)
+      const saved = localStorage.getItem('bullmoney_session');
+      if (saved) {
+        try {
+          const sess = JSON.parse(saved);
+          console.log('[useAdminCheck] Found localStorage session:', { id: sess?.id, email: sess?.email, is_vip: sess?.is_vip });
+          if (sess?.id) setUserId(sess.id);
+          if (sess?.email) setUserEmail(sess.email);
+          setIsAdmin(sess?.email === 'mrbullmoney@gmail.com' || sess?.isAdmin);
+        } catch (e) {
+          console.error('[useAdminCheck] Error parsing session:', e);
+        }
+      }
+      
+      // Also check Supabase auth (may override if different)
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user?.email) {
           const email = session.user.email;
+          console.log('[useAdminCheck] Found Supabase session:', { id: session.user.id, email });
           setIsAdmin(email === 'mrbullmoney@gmail.com');
           setUserId(session.user.id);
           setUserEmail(email);
-        } else {
-          const saved = localStorage.getItem('bullmoney_session');
-          if (saved) {
-            const sess = JSON.parse(saved);
-            if (sess?.id) setUserId(sess.id);
-            if (sess?.email) setUserEmail(sess.email);
-            setIsAdmin(sess?.email === 'mrbullmoney@gmail.com' || sess?.isAdmin);
-          }
         }
-      } catch {
-        const saved = localStorage.getItem('bullmoney_session');
-        if (saved) {
-          try {
-            const sess = JSON.parse(saved);
-            if (sess?.id) setUserId(sess.id);
-            if (sess?.email) setUserEmail(sess.email);
-            setIsAdmin(sess?.email === 'mrbullmoney@gmail.com' || sess?.isAdmin);
-          } catch {}
-        }
+      } catch (e) {
+        console.log('[useAdminCheck] Supabase auth check failed, using localStorage');
       }
     };
     
@@ -3165,28 +3216,50 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false }: { channe
   const [posts, setPosts] = useState<TelegramPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   
   const channelConfig = TELEGRAM_CHANNELS[channel];
   const requiresVip = channelConfig.requiresVip && !isVip;
+  
+  // Debug log
+  console.log('[TelegramChannelEmbed] channel:', channel, 'isVip:', isVip, 'requiresVip:', requiresVip, 'channelRequiresVip:', channelConfig.requiresVip);
 
   useEffect(() => {
-    if (requiresVip) { setLoading(false); return; }
+    if (requiresVip) { 
+      console.log('[TelegramChannelEmbed] VIP required but user is not VIP - showing lock');
+      setLoading(false); 
+      return; 
+    }
     
     const fetchPosts = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/telegram/channel?channel=${channel}`);
+        console.log('[TelegramChannelEmbed] Fetching posts for channel:', channel, 'isVip:', isVip);
+        const response = await fetch(`/api/telegram/channel?channel=${channel}&t=${Date.now()}`, { cache: 'no-store' });
         const data = await response.json();
-        if (data.success && data.posts) { setPosts(data.posts); setError(false); }
-        else setError(true);
-      } catch { setError(true); }
+        console.log('[TelegramChannelEmbed] API Response:', data);
+        
+        if (data.success && data.posts && data.posts.length > 0) { 
+          setPosts(data.posts); 
+          setError(false);
+          setStatusMessage(null);
+        } else {
+          setPosts([]);
+          setError(false);
+          setStatusMessage(data.message || 'No messages yet');
+        }
+      } catch (err) { 
+        console.error('[TelegramChannelEmbed] Fetch error:', err);
+        setError(true); 
+      }
       finally { setLoading(false); }
     };
 
     fetchPosts();
-    const interval = setInterval(fetchPosts, 300000);
+    // Refresh every 30 seconds for VIP channel to get new messages
+    const interval = setInterval(fetchPosts, channel === 'vip' ? 30000 : 300000);
     return () => clearInterval(interval);
-  }, [channel, requiresVip]);
+  }, [channel, requiresVip, isVip]);
 
   if (requiresVip) {
     return (
@@ -3221,24 +3294,79 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false }: { channe
   }
 
   if (error || posts.length === 0) {
+    // For private channels with invite links, format the URL correctly
+    const telegramUrl = channelConfig.handle.startsWith('+') 
+      ? `https://t.me/${channelConfig.handle}` 
+      : `https://t.me/${channelConfig.handle}`;
+    
+    const isVipChannel = channel === 'vip';
+    
     return (
-      <div className="flex flex-col items-center justify-center py-8">
-        <MessageCircle className="w-10 h-10 text-blue-400/30 mb-3" />
-        <p className="text-[11px] text-zinc-400 mb-2">Live feed loading...</p>
-        <a href={`https://t.me/${channelConfig.handle}`} target="_blank" rel="noopener noreferrer"
-          className="text-[10px] text-blue-400 hover:text-blue-300 flex items-center gap-1">
-          <ExternalLink className="w-3 h-3" /> Open in Telegram
-        </a>
+      <div className="flex flex-col items-center justify-center py-8 px-4">
+        <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${
+          isVipChannel ? 'bg-gradient-to-r from-amber-500 to-orange-500' : 'bg-blue-500/20'
+        }`}>
+          {isVipChannel ? (
+            <Crown className="w-6 h-6 text-white" />
+          ) : (
+            <MessageCircle className="w-6 h-6 text-blue-400" />
+          )}
+        </div>
+        {isVipChannel && isVip && (
+          <div className="flex items-center gap-1 mb-2 px-2 py-1 bg-emerald-500/20 rounded-full">
+            <CheckCircle className="w-3 h-3 text-emerald-400" />
+            <span className="text-[9px] text-emerald-400 font-bold">VIP ACCESS UNLOCKED</span>
+          </div>
+        )}
+        <p className="text-[11px] text-zinc-400 mb-1 text-center">
+          {isVipChannel && isVip 
+            ? 'VIP signals syncing from Telegram...' 
+            : isVipChannel 
+              ? 'VIP signals available in Telegram' 
+              : 'No messages yet'}
+        </p>
+        <p className="text-[9px] text-zinc-500 mb-3 text-center max-w-[200px]">
+          {isVipChannel && isVip
+            ? statusMessage || 'Post a message in the VIP channel to see it here. Make sure @MrBullmoneybot is admin.'
+            : isVipChannel 
+              ? 'Join the VIP Telegram channel for live trading signals and premium analysis.'
+              : 'Messages will appear here once available.'}
+        </p>
+        <motion.a 
+          href={telegramUrl} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 ${
+            isVipChannel 
+              ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-lg shadow-amber-500/30'
+              : 'bg-blue-500/20 text-blue-400 border border-blue-500/40'
+          }`}
+        >
+          <ExternalLink className="w-3.5 h-3.5" />
+          {isVipChannel ? 'Open VIP Channel' : 'Open in Telegram'}
+        </motion.a>
       </div>
     );
   }
+
+  // For private channels with invite links, posts don't have direct links
+  // Just open the channel itself
+  const getPostUrl = (postId: string) => {
+    if (channelConfig.handle.startsWith('+')) {
+      // Private channel - can't link to individual posts, just link to channel
+      return `https://t.me/${channelConfig.handle}`;
+    }
+    return `https://t.me/${channelConfig.handle}/${postId}`;
+  };
 
   return (
     <div className="space-y-2 p-2">
       {posts.map((post, idx) => (
         <motion.a
           key={post.id}
-          href={`https://t.me/${channelConfig.handle}/${post.id}`}
+          href={getPostUrl(post.id)}
           target="_blank"
           rel="noopener noreferrer"
           initial={{ opacity: 0, y: 10 }}
@@ -3767,7 +3895,7 @@ const CommunityModal = memo(({ isOpen, onClose, isVip, isAdmin }: {
         <a href={`https://t.me/${TELEGRAM_CHANNELS[activeChannel].handle}`}
           target="_blank" rel="noopener noreferrer"
           className="flex items-center justify-center gap-1 text-[9px] text-blue-400 hover:text-blue-300">
-          <ExternalLink className="w-2.5 h-2.5" /> View all on Telegram
+          <ExternalLink className="w-2.5 h-2.5" /> {activeChannel === 'vip' ? 'Join VIP Channel' : 'View all on Telegram'}
         </a>
       </div>
 
@@ -4695,7 +4823,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         target="_blank" rel="noopener noreferrer"
                         className="flex items-center justify-center gap-1 text-[9px] text-blue-400 hover:text-blue-300 neon-blue-text transition-all"
                         style={{ textShadow: '0 0 4px rgba(59, 130, 246, 0.5)' }}>
-                        <ExternalLink className="w-2.5 h-2.5" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} /> View all on Telegram
+                        <ExternalLink className="w-2.5 h-2.5" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} /> {activeChannel === 'vip' ? 'Join VIP Channel' : 'View all on Telegram'}
                       </a>
                     </div>
                     
@@ -6933,7 +7061,15 @@ export function UltimateHub() {
   const { fps, deviceTier, jankScore } = useFpsMonitor();
   const prices = useLivePrices();
   const { isAdmin, userId, userEmail } = useAdminCheck();
-  const { isVip } = useVipCheck(userId, userEmail);
+  const { isVip: isVipFromCheck } = useVipCheck(userId, userEmail);
+  
+  // Admin always gets VIP access
+  const isVip = isVipFromCheck || isAdmin;
+  
+  // Debug log VIP status
+  useEffect(() => {
+    console.log('[UltimateHub] VIP Status:', { isVip, isVipFromCheck, isAdmin, userId, userEmail });
+  }, [isVip, isVipFromCheck, isAdmin, userId, userEmail]);
   
   const { 
     isAnyModalOpen, 

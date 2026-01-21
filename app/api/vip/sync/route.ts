@@ -8,7 +8,9 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.
 const TELEGRAM_API_ID = process.env.TELEGRAM_API_ID;
 const TELEGRAM_API_HASH = process.env.TELEGRAM_API_HASH;
 const TELEGRAM_SESSION = process.env.TELEGRAM_SESSION; // StringSession from gramjs
-const VIP_CHANNEL_USERNAME = process.env.VIP_CHANNEL_USERNAME || 'bullmoneyvip';
+// VIP channel invite link: https://t.me/+yW5jIfxJpv9hNmY0
+// For gramjs, use either the channel username (if public) or the channel ID
+const VIP_CHANNEL_USERNAME = process.env.VIP_CHANNEL_USERNAME || '+yW5jIfxJpv9hNmY0';
 
 interface TelegramMessage {
   id: number;

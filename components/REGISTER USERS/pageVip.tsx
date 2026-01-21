@@ -561,9 +561,11 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
       if (newUser) {
         // Save persistent session (both storage keys for compatibility)
+        // Include is_vip status for auto-unlocking VIP content in UltimateHub
         localStorage.setItem("bullmoney_session", JSON.stringify({
           id: newUser.id,
           email: formData.email,
+          is_vip: newUser.is_vip || false,
           timestamp: Date.now()
         }));
         
@@ -600,7 +602,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     try {
       const { data, error } = await supabase
         .from("recruits")
-        .select("id") 
+        .select("id, is_vip") 
         .eq("email", loginEmail)
         .eq("password", loginPassword) 
         .maybeSingle();
@@ -613,9 +615,11 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       }
 
       // Save persistent session (both storage keys for compatibility)
+      // Include is_vip status for auto-unlocking VIP content in UltimateHub
       localStorage.setItem("bullmoney_session", JSON.stringify({
         id: data.id,
         email: loginEmail,
+        is_vip: data.is_vip || false,
         timestamp: Date.now()
       }));
       
