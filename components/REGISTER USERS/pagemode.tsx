@@ -819,8 +819,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       trackEvent('login', { method: 'email', source: 'pagemode' });
 
       setLoading(false);
-      // Move to step 4 (Telegram confirmation) instead of directly unlocking
-      setStep(4); 
+      // For login, skip Telegram confirmation and go directly to unlock
+      // (Telegram confirmation is only for new sign-ups)
+      onUnlock(); 
 
     } catch (err: any) {
       setLoading(false);
