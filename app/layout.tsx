@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import "../styles/performance-optimizations.css";
 import "../styles/gpu-animations.css";
@@ -34,7 +34,11 @@ import { SmartScreensaverProvider } from "@/components/SmartScreensaver";
 // ✅ LAYOUT PROVIDERS - Client component wrapper for dynamic imports
 import { LayoutProviders } from "@/components/LayoutProviders";
 
-const inter = Inter({ subsets: ["latin"], display: "swap" });
+// Use system font stack with Inter as preference - avoids network dependency during build
+const inter = {
+  className: "font-sans",
+  style: { fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(
