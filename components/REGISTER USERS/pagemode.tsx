@@ -37,43 +37,122 @@ const Spline = dynamic(() => import('@splinetool/react-spline'), {
   loading: () => null,
 });
 
+const SPLINE_SCENES = [
+  '/scene1.splinecode',
+  '/scene2.splinecode',
+  '/scene3.splinecode',
+  '/scene4.splinecode',
+  '/scene5.splinecode',
+  '/scene6.splinecode',
+  '/scene.splinecode',
+];
+
+const SPLINE_ROTATION_KEY = 'bullmoney_spline_rotation_v2';
+
+const warmSplineRuntime = (() => {
+  let warmed = false;
+  return () => {
+    if (warmed) return;
+    warmed = true;
+    if (typeof window !== 'undefined') {
+      import('@splinetool/react-spline').catch(() => {});
+    }
+  };
+})();
+
 // --- WELCOME SCREEN SPLINE BACKGROUND COMPONENT ---
 // Optimized with aggressive caching, preloading, and error recovery
 const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [sceneToLoad, setSceneToLoad] = useState<string>(SPLINE_SCENES[0]);
   const splineRef = useRef<any>(null);
   const mountedRef = useRef(true);
   const MAX_RETRIES = 2;
+  const ROTATE_INTERVAL_MS = 60000; // rotate every 60s to keep motion fresh
+
+  const ensurePreload = useCallback((scenePath: string, rel: 'preload' | 'prefetch' = 'preload') => {
+    if (typeof window === 'undefined') return;
+    const existing = document.querySelector(`link[data-spline="${scenePath}"]`);
+    if (!existing) {
+      const link = document.createElement('link');
+      link.rel = rel;
+      link.as = 'fetch';
+      link.href = scenePath;
+      link.crossOrigin = 'anonymous';
+      link.dataset.spline = scenePath;
+      document.head.appendChild(link);
+    }
+    fetch(scenePath, {
+      method: 'GET',
+      cache: 'force-cache',
+      priority: rel === 'preload' ? 'high' : 'low'
+    } as RequestInit).catch(() => {});
+  }, []);
+
+  const pickNextScene = useCallback(() => {
+    try {
+      const raw = localStorage.getItem(SPLINE_ROTATION_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      let queue: string[] = Array.isArray(parsed.queue) ? parsed.queue : [];
+      if (!queue.length) {
+        queue = [...SPLINE_SCENES];
+        for (let i = queue.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [queue[i], queue[j]] = [queue[j], queue[i]];
+        }
+      }
+      const next = queue.shift() || SPLINE_SCENES[0];
+      localStorage.setItem(SPLINE_ROTATION_KEY, JSON.stringify({ queue, lastUsed: next, updated: Date.now() }));
+      return next;
+    } catch {
+      return SPLINE_SCENES[0];
+    }
+  }, []);
+
+  const setScene = useCallback((scene: string) => {
+    setIsLoaded(false);
+    setHasError(false);
+    setRetryCount(0);
+    setSceneToLoad(scene);
+  }, []);
 
   // Preload the spline scene on mount for faster loading
   useEffect(() => {
     mountedRef.current = true;
-
-    // Aggressive preloading - cache the spline file
     if (typeof window !== 'undefined') {
-      const link = document.createElement('link');
-      link.rel = 'preload';
-      link.href = '/scene1.splinecode';
-      link.as = 'fetch';
-      link.crossOrigin = 'anonymous';
-      if (!document.querySelector('link[href="/scene1.splinecode"]')) {
-        document.head.appendChild(link);
-      }
+      warmSplineRuntime();
+      const chosen = pickNextScene();
+      setScene(chosen);
+      ensurePreload(chosen, 'preload');
 
-      // Also fetch to warm the cache
-      fetch('/scene1.splinecode', {
-        method: 'GET',
-        cache: 'force-cache',
-        priority: 'high'
-      } as RequestInit).catch(() => {});
+      const preloadOthers = () => {
+        SPLINE_SCENES.filter((scene) => scene !== chosen).forEach((scene) => ensurePreload(scene, 'prefetch'));
+      };
+
+      if ('requestIdleCallback' in window) {
+        (window as any).requestIdleCallback(preloadOthers, { timeout: 1200 });
+      } else {
+        setTimeout(preloadOthers, 500);
+      }
     }
 
     return () => {
       mountedRef.current = false;
     };
-  }, []);
+  }, [ensurePreload, pickNextScene]);
+
+  // Rotate scenes every ROTATE_INTERVAL_MS to keep experience lively
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const id = window.setInterval(() => {
+      const next = pickNextScene();
+      ensurePreload(next, 'preload');
+      setScene(next);
+    }, ROTATE_INTERVAL_MS);
+    return () => window.clearInterval(id);
+  }, [ensurePreload, pickNextScene, setScene]);
 
   // Handle successful load
   const handleLoad = useCallback((spline: any) => {
@@ -96,10 +175,13 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
           }
         }, 500);
       } else {
+        // Final fallback: reset to first scene and try again once
+        const fallback = SPLINE_SCENES[0];
+        setScene(fallback);
         setHasError(true);
       }
     }
-  }, [retryCount]);
+  }, [retryCount, setScene]);
 
   return (
     <div
@@ -118,7 +200,7 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
       {/* Spline Scene - with retry key to force remount on retry */}
       {!hasError && (
         <div
-          key={`spline-${retryCount}`}
+          key={`spline-${sceneToLoad}-${retryCount}`}
           className={`absolute inset-0 transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
           style={{
             width: '100%',
@@ -129,7 +211,7 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
           }}
         >
           <Spline
-            scene="/scene1.splinecode"
+            scene={sceneToLoad}
             onLoad={handleLoad}
             onError={handleError}
             style={{
@@ -962,10 +1044,31 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     );
   }
 
+  const isWelcomeScreen = step === -1 || step === -2;
+
   // --- RENDER: MAIN INTERFACE ---
   return (
-    <div className="register-container bg-black px-4 py-6 md:p-4 md:overflow-hidden md:h-screen font-sans">
+    <div className={cn("register-container px-4 py-6 md:p-4 md:overflow-hidden md:h-screen font-sans", isWelcomeScreen ? "bg-transparent" : "bg-black")}
+         style={{ position: 'relative' }}>
       <GlobalStyles />
+
+      {/* Shared Spline background for welcome/guest to survive resizes */}
+      {isWelcomeScreen && (
+        <div
+          className="fixed inset-0 w-full h-full overflow-hidden"
+          style={{
+            zIndex: 0,
+            pointerEvents: 'auto',
+            touchAction: 'auto',
+            width: '100vw',
+            minWidth: '100vw',
+            height: '100vh',
+            minHeight: '100dvh'
+          }}
+        >
+          <WelcomeSplineBackground />
+        </div>
+      )}
       
       {/* Blue shimmer background - left to right */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -1030,6 +1133,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 setViewMode('login');
                 setStep(0);
               }}
+              hideBackground
             />
           ) : (
             // Mobile Welcome Screen - Glassy transparent design
@@ -1043,26 +1147,6 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 className="fixed inset-0 flex flex-col z-[99999999]"
                 style={{ minHeight: '100dvh', width: '100vw', height: '100vh' }}
               >
-                {/* Spline Background - Independent wrapper for welcome screen */}
-                <div
-                  className="absolute inset-0 w-full h-full overflow-hidden"
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    width: '100vw',
-                    height: '100vh',
-                    minHeight: '100dvh',
-                    zIndex: 0,
-                    pointerEvents: 'auto',
-                    touchAction: 'auto'
-                  }}
-                >
-                  <WelcomeSplineBackground />
-                </div>
-
                 {/* Branding Header - Neon Sign Style */}
                 <motion.div
                   initial={{ opacity: 0, y: -20 }}
@@ -1125,18 +1209,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 </motion.div>
 
                 {/* Main Content Area - Centered (40% smaller for mobile) */}
-                {/* Full screen touch area to detect interaction */}
-                <div
-                  className="absolute inset-0 z-[5]"
-                  onTouchStart={handleUserInteraction}
-                  onMouseDown={handleUserInteraction}
-                  style={{ pointerEvents: userInteracted ? 'none' : 'auto' }}
-                />
                 <div
                   className="relative flex-1 flex flex-col items-center justify-center gap-2 px-3 w-full max-w-[220px] mx-auto pb-4"
                   style={{ zIndex: 10 }}
-                  onTouchStart={handleUserInteraction}
-                  onMouseDown={handleUserInteraction}
                 >
                   {/* Ultra-transparent Card Container - Ghost animation (fades to 0) until interaction */}
                   <motion.div
@@ -1159,6 +1234,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                           }
                     }
                     className="w-full rounded-xl p-3 border border-white/5"
+                    onMouseEnter={handleUserInteraction}
+                    onTouchStart={handleUserInteraction}
                     style={{
                       background: 'rgba(0, 0, 0, 0.15)',
                       backdropFilter: 'blur(8px)',
@@ -1289,26 +1366,6 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
               className="fixed inset-0 flex flex-col z-[99999999]"
               style={{ minHeight: '100dvh' }}
             >
-              {/* Spline Background - Same as welcome screen */}
-              <div
-                className="absolute inset-0 w-full h-full overflow-hidden"
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  width: '100vw',
-                  height: '100vh',
-                  minHeight: '100dvh',
-                  zIndex: 0,
-                  pointerEvents: 'auto',
-                  touchAction: 'auto'
-                }}
-              >
-                <WelcomeSplineBackground />
-              </div>
-
               {/* Ultra-transparent Back Button - Top Right (UltimateHub is on left) */}
               <button
                 onClick={() => setStep(-1)}
