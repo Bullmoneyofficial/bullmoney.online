@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useRef, memo, useCallback } from 'react';
+import { useState, useEffect, useRef, memo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import dynamic from 'next/dynamic';
 import { motion } from "framer-motion";
-import { ArrowRight, User, Sparkles, Shield, TrendingUp } from 'lucide-react';
+import { ArrowRight, User } from 'lucide-react';
 
 // Import the actual UnifiedFpsPill and UnifiedHubPanel from UltimateHub
 import { UnifiedFpsPill, UnifiedHubPanel, useLivePrices } from '@/components/UltimateHub';
@@ -185,13 +185,35 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin }: WelcomeScre
   const [mounted, setMounted] = useState(false);
   const [isHubOpen, setIsHubOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  
+
+  // Ghost animation state - card fades until user interacts
+  const [userInteracted, setUserInteracted] = useState(false);
+
   // Use live prices from UltimateHub
   const prices = useLivePrices();
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Handle any user interaction to stop ghost mode (including mouse move on desktop)
+  const handleUserInteraction = useCallback(() => {
+    if (!userInteracted) {
+      setUserInteracted(true);
+    }
+  }, [userInteracted]);
+
+  // Add mouse move listener for desktop to stop ghost animation
+  useEffect(() => {
+    const handleMouseMove = () => {
+      if (!userInteracted) {
+        setUserInteracted(true);
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [userInteracted]);
   
   // Handle guest click - immediate transition, no animation delay
   const handleGuestClick = useCallback(() => {
@@ -243,74 +265,42 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin }: WelcomeScre
           onOpenPanel={() => setIsHubOpen(true)}
         />
 
-        {/* Desktop Layout: Split View */}
+        {/* Desktop Layout: Centered */}
         <div className="relative z-10 h-full w-full flex">
-          
-          {/* Left Side - Branding & Info (60% width) */}
-          <div className="hidden lg:flex w-[60%] h-full flex-col justify-center items-start pl-16 xl:pl-24 2xl:pl-32 pr-8">
-            {/* Logo/Brand */}
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="mb-8"
-            >
-              <h1 className="text-5xl xl:text-6xl 2xl:text-7xl font-black tracking-tight neon-title-desktop">
-                BULLMONEY
-              </h1>
-              <p className="text-lg xl:text-xl text-white/60 mt-3 font-medium tracking-wide">
-                The Ultimate Trading Hub
-              </p>
-            </motion.div>
-
-            {/* Feature Cards */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="space-y-4 max-w-lg"
-            >
-              <FeatureCard 
-                icon={<TrendingUp className="w-5 h-5" />}
-                title="Live Trade Setups"
-                description="Real-time callouts from professional traders"
-                delay={0}
-              />
-              <FeatureCard 
-                icon={<Sparkles className="w-5 h-5" />}
-                title="Premium Signals"
-                description="Access exclusive trading strategies and alerts"
-                delay={0.1}
-              />
-              <FeatureCard 
-                icon={<Shield className="w-5 h-5" />}
-                title="Elite Community"
-                description="Join 10,000+ traders sharing winning setups"
-                delay={0.2}
-              />
-            </motion.div>
-
-            {/* Stats Bar */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.7 }}
-              className="mt-10 flex items-center gap-8"
-            >
-              <StatItem value="10K+" label="Active Traders" />
-              <StatItem value="500+" label="Daily Signals" />
-              <StatItem value="24/7" label="Live Support" />
-            </motion.div>
-          </div>
-
-          {/* Right Side - Action Buttons (40% width on large, full on medium) */}
-          <div className="w-full lg:w-[40%] h-full flex flex-col justify-center items-center px-8 lg:px-12 xl:px-16">
-            {/* Card Container */}
+          {/* Centered Action Buttons */}
+          {/* Full area touch/click handler to detect interaction */}
+          <div
+            className="w-full h-full flex flex-col justify-center items-center px-8 lg:px-12 xl:px-16"
+            onMouseDown={handleUserInteraction}
+            onTouchStart={handleUserInteraction}
+          >
+            {/* Card Container - Ghost animation until interaction (ultra-transparent glass) */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="w-full max-w-md bg-black/70 backdrop-blur-xl rounded-3xl p-8 xl:p-10 neon-border-desktop"
+              animate={
+                userInteracted
+                  ? { opacity: 1, scale: 1 }
+                  : {
+                      opacity: [0, 1, 0],
+                      scale: [0.96, 1, 0.96],
+                    }
+              }
+              transition={
+                userInteracted
+                  ? { duration: 0.3, ease: 'easeOut' }
+                  : {
+                      duration: 5,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                    }
+              }
+              className="w-full max-w-md rounded-2xl p-8 xl:p-10 border border-white/5"
+              style={{
+                background: 'rgba(0, 0, 0, 0.15)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                boxShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.03), 0 0 40px rgba(59, 130, 246, 0.1)',
+              }}
             >
               {/* Card Header - Only show on smaller desktop */}
               <div className="lg:hidden text-center mb-8">
@@ -333,44 +323,61 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin }: WelcomeScre
               </div>
 
               {/* Buttons Stack */}
-              <div className="flex flex-col gap-4">
-                {/* Sign Up Button - Primary */}
+              <div className="flex flex-col gap-3">
+                {/* Sign Up Button - Primary glass */}
                 <motion.button
                   onClick={onSignUp}
-                  whileHover={{ scale: 1.02, boxShadow: '0 0 30px rgba(59,130,246,0.6)' }}
+                  whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full py-4 xl:py-5 bg-blue-600 hover:bg-blue-500 border-2 border-blue-400 rounded-xl font-bold text-lg xl:text-xl tracking-wide transition-all flex items-center justify-center gap-3 text-white shadow-[0_0_20px_rgba(59,130,246,0.4)]"
+                  className="w-full py-4 xl:py-5 rounded-xl font-bold text-lg xl:text-xl tracking-wide transition-all flex items-center justify-center gap-3 text-white"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.5) 0%, rgba(37, 99, 235, 0.6) 100%)',
+                    backdropFilter: 'blur(8px)',
+                    boxShadow: '0 4px 30px rgba(59, 130, 246, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                    border: '1px solid rgba(96, 165, 250, 0.3)',
+                  }}
                 >
                   <span>Create Account</span>
                   <ArrowRight className="w-5 h-5 xl:w-6 xl:h-6" />
                 </motion.button>
 
-                {/* Login Button - Secondary */}
+                {/* Login Button - Secondary glass */}
                 <motion.button
                   onClick={onLogin}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full py-4 xl:py-5 bg-transparent border-2 border-blue-500/60 rounded-xl font-bold text-lg xl:text-xl tracking-wide transition-all flex items-center justify-center gap-3 text-blue-400 hover:border-blue-400 hover:text-blue-300 hover:shadow-[0_0_20px_rgba(59,130,246,0.3)]"
+                  className="w-full py-4 xl:py-5 rounded-xl font-bold text-lg xl:text-xl tracking-wide transition-all flex items-center justify-center gap-3 text-blue-300"
+                  style={{
+                    background: 'rgba(59, 130, 246, 0.1)',
+                    backdropFilter: 'blur(6px)',
+                    border: '1px solid rgba(59, 130, 246, 0.25)',
+                  }}
                 >
                   <span>Login</span>
                   <ArrowRight className="w-5 h-5 xl:w-6 xl:h-6" />
                 </motion.button>
 
                 {/* Divider */}
-                <div className="flex items-center gap-4 my-2">
-                  <div className="flex-1 h-px bg-white/10" />
-                  <span className="text-white/30 text-sm">or</span>
-                  <div className="flex-1 h-px bg-white/10" />
+                <div className="flex items-center gap-4 my-1">
+                  <div className="flex-1 h-px bg-white/5" />
+                  <span className="text-white/20 text-sm">or</span>
+                  <div className="flex-1 h-px bg-white/5" />
                 </div>
 
-                {/* Guest Button - Tertiary - Fast transition */}
-                <button
+                {/* Guest Button - Tertiary glass */}
+                <motion.button
                   onClick={handleGuestClick}
-                  className="w-full py-3 xl:py-4 bg-transparent border border-white/20 rounded-xl font-medium text-base xl:text-lg tracking-wide transition-all flex items-center justify-center gap-2 text-white/60 hover:border-white/40 hover:text-white/80 hover:scale-[1.02] active:scale-[0.98]"
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full py-3 xl:py-4 rounded-xl font-medium text-base xl:text-lg tracking-wide transition-all flex items-center justify-center gap-2 text-white/50"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    backdropFilter: 'blur(4px)',
+                    border: '1px solid rgba(255, 255, 255, 0.05)',
+                  }}
                 >
                   <User className="w-4 h-4 xl:w-5 xl:h-5" />
                   <span>Continue as Guest</span>
-                </button>
+                </motion.button>
               </div>
 
               {/* Footer Note */}
@@ -398,48 +405,6 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin }: WelcomeScre
         document.body
       )}
     </>
-  );
-}
-
-// Feature Card Component
-function FeatureCard({ 
-  icon, 
-  title, 
-  description, 
-  delay 
-}: { 
-  icon: React.ReactNode; 
-  title: string; 
-  description: string; 
-  delay: number;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.5, delay: 0.5 + delay }}
-      className="flex items-start gap-4 p-4 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-blue-500/30 transition-all group"
-    >
-      <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400 group-hover:bg-blue-500/30 transition-colors">
-        {icon}
-      </div>
-      <div>
-        <h3 className="text-white font-semibold text-base">{title}</h3>
-        <p className="text-white/50 text-sm mt-0.5">{description}</p>
-      </div>
-    </motion.div>
-  );
-}
-
-// Stat Item Component
-function StatItem({ value, label }: { value: string; label: string }) {
-  return (
-    <div className="text-center">
-      <div className="text-2xl xl:text-3xl font-bold text-blue-400" style={{ textShadow: '0 0 10px rgba(59,130,246,0.5)' }}>
-        {value}
-      </div>
-      <div className="text-xs xl:text-sm text-white/40 mt-1">{label}</div>
-    </div>
   );
 }
 

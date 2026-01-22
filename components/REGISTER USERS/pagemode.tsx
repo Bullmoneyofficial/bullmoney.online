@@ -550,6 +550,19 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   const [isHubMinimized, setIsHubMinimized] = useState(false);
   const prices = useLivePrices();
 
+  // --- GHOST ANIMATION STATE (for welcome screen card) ---
+  // Card fades in/out like a ghost until user interacts, then stays visible
+  const [isGhostMode, setIsGhostMode] = useState(true);
+  const [userInteracted, setUserInteracted] = useState(false);
+
+  // Handle any user interaction to stop ghost mode
+  const handleUserInteraction = useCallback(() => {
+    if (!userInteracted) {
+      setUserInteracted(true);
+      setIsGhostMode(false);
+    }
+  }, [userInteracted]);
+
   const [formData, setFormData] = useState({
     email: '',
     mt5Number: '',
@@ -1112,15 +1125,39 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 </motion.div>
 
                 {/* Main Content Area - Centered (40% smaller for mobile) */}
+                {/* Full screen touch area to detect interaction */}
+                <div
+                  className="absolute inset-0 z-[5]"
+                  onTouchStart={handleUserInteraction}
+                  onMouseDown={handleUserInteraction}
+                  style={{ pointerEvents: userInteracted ? 'none' : 'auto' }}
+                />
                 <div
                   className="relative flex-1 flex flex-col items-center justify-center gap-2 px-3 w-full max-w-[220px] mx-auto pb-4"
                   style={{ zIndex: 10 }}
+                  onTouchStart={handleUserInteraction}
+                  onMouseDown={handleUserInteraction}
                 >
-                  {/* Ultra-transparent Card Container - See through to Spline */}
+                  {/* Ultra-transparent Card Container - Ghost animation (fades to 0) until interaction */}
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.4, delay: 0.2 }}
+                    animate={
+                      userInteracted
+                        ? { opacity: 1, scale: 1 }
+                        : {
+                            opacity: [0, 1, 0],
+                            scale: [0.96, 1, 0.96],
+                          }
+                    }
+                    transition={
+                      userInteracted
+                        ? { duration: 0.3, ease: 'easeOut' }
+                        : {
+                            duration: 5,
+                            repeat: Infinity,
+                            ease: 'easeInOut',
+                          }
+                    }
                     className="w-full rounded-xl p-3 border border-white/5"
                     style={{
                       background: 'rgba(0, 0, 0, 0.15)',
