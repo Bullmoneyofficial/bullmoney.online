@@ -7,19 +7,44 @@
   transform: translateZ(0);
   will-change: auto;
   contain: layout style;
+  /* Safari GPU layer hint */
+  -webkit-transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .dock-item {
   transform: translateZ(0);
   contain: layout style;
   transition: transform 0.1s ease-out;
+  /* Safari optimization */
+  -webkit-transform: translateZ(0);
 }
 
 .dock-item:hover {
   transform: translateY(-2px) translateZ(0);
+  -webkit-transform: translateY(-2px) translateZ(0);
 }
 
 .dock-tooltip {
   contain: layout style paint;
   transform: translateX(-50%) translateZ(0);
+  -webkit-transform: translateX(-50%) translateZ(0);
+  /* Safari: No backdrop blur on tooltips */
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: rgba(0, 0, 0, 0.95);
+}
+
+/* Safari-specific fixes for dock blur artifacts */
+@supports (-webkit-appearance: none) and (not (-ms-ime-align: auto)) {
+  .dock-container {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  
+  .dock-item {
+    -webkit-filter: none;
+    filter: none;
+  }
 }

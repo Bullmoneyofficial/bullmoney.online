@@ -330,3 +330,65 @@ html.is-safari.macos body {
 html.is-safari.desktop-optimized main {
   overflow: visible;
 }
+
+/* ================================================================
+   SAFARI DESKTOP DOCK & NAVBAR FIXES
+   Fixes blur rendering issues on dock icons for Analysis/Livestream
+   ================================================================ */
+
+/* Safari Desktop: Remove problematic filters from dock icons */
+html.is-safari .dock-icon-content {
+  filter: none !important;
+  -webkit-filter: none !important;
+}
+
+/* Safari: Fix dock icon rendering with simpler styling */
+html.is-safari .dock-icon-static {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  /* Use box-shadow instead of filter for glow */
+  box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+}
+
+html.is-safari .dock-icon-static:hover {
+  box-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6;
+}
+
+/* Safari: Fix dock container blur artifacts */
+html.is-safari .dock-container {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* Safari: Remove drop-shadow from dock icon labels */
+html.is-safari .dock-icon-label {
+  text-shadow: none;
+  -webkit-filter: none;
+  filter: none;
+}
+
+/* Safari Desktop: Fix tooltip blur rendering */
+html.is-safari .dock-tooltip {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: rgba(0, 0, 0, 0.95);
+}
+
+/* Safari: Ensure navbar buttons don't have blur artifacts */
+html.is-safari [data-navbar] button,
+html.is-safari [data-navbar] a {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  -webkit-filter: none;
+  filter: none;
+}
+
+/* Safari: Fix modal trigger buttons in dock */
+html.is-safari .dock-item button {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}

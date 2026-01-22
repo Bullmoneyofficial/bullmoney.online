@@ -677,4 +677,40 @@
     /* Ensure fixed elements stay fixed */
     transform: translateZ(0) !important;
   }
+
+  /* ============================================
+     SAFARI DESKTOP: Dock Blur Fix
+     Removes problematic filters from dock icons
+     ============================================ */
+  
+  /* Safari detection via feature query */
+  @supports (-webkit-appearance: none) and (not (-ms-ime-align: auto)) {
+    /* Remove filter from dock icon content to prevent Safari blur artifacts */
+    .dock-icon-content {
+      -webkit-filter: none !important;
+      filter: none !important;
+      /* Use text-shadow as alternative glow */
+      text-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
+    }
+    
+    /* Ensure dock container doesn't have backdrop blur issues */
+    .dock-container {
+      -webkit-backdrop-filter: none !important;
+      backdrop-filter: none !important;
+    }
+    
+    /* Fix dock tooltip rendering */
+    .dock-tooltip {
+      -webkit-backdrop-filter: none !important;
+      backdrop-filter: none !important;
+      background: rgba(0, 0, 0, 0.95) !important;
+    }
+    
+    /* Prevent Analysis/Livestream buttons from having blur artifacts */
+    .dock-item button,
+    .dock-item a {
+      -webkit-backdrop-filter: none !important;
+      backdrop-filter: none !important;
+    }
+  }
 }

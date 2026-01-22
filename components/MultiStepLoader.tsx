@@ -529,7 +529,7 @@ export const MultiStepLoader = ({ loadingStates, loading }: { loadingStates: Loa
           <LiveChromeHeader currentAsset={selectedAsset} setAsset={setSelectedAsset} />
 
           {/* Main Content */}
-          <div className="relative z-20 flex flex-col items-center justify-center p-4 w-full pointer-events-none mx-auto" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', WebkitBoxAlign: 'center', WebkitBoxPack: 'center', maxWidth: '100vw', flex: '1 1 auto', marginTop: 'auto', marginBottom: 'auto' }}>
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-4 pointer-events-none" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', WebkitBoxAlign: 'center', WebkitBoxPack: 'center' }}>
             
             <div className="mb-6 md:mb-10 relative z-50 pointer-events-auto">
               <ReactiveLiquidLogo src="/favicon.svg" />

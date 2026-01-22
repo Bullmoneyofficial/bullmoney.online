@@ -1026,11 +1026,11 @@ function HomeContent() {
       const sessionCount = Number(sessionStorage.getItem(sessionCountKey) || "0") + 1;
       sessionStorage.setItem(sessionCountKey, String(sessionCount));
 
-      // If user refreshes more than 10 times in this session,
+      // If user refreshes more than 15 times in this session,
       // force the welcome/pagemode screen to show again.
-      if (sessionCount > 10) {
+      if (sessionCount > 15) {
         shouldResetPagemode = true;
-        forceReasons.push(`refresh_over_10_${sessionCount}`);
+        forceReasons.push(`refresh_over_15_${sessionCount}`);
       }
 
       // Track refresh timestamps for rapid-refresh detection (2-minute window)

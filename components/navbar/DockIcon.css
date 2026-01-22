@@ -8,16 +8,34 @@
   will-change: auto;
   contain: layout style paint;
   transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+  /* Safari: Force GPU layer */
+  -webkit-transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .dock-icon-static:hover {
   transform: translateY(-3px) translateZ(0);
   box-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6, inset 0 0 6px #3b82f6;
+  -webkit-transform: translateY(-3px) translateZ(0);
 }
 
 .dock-icon-content {
   color: #ffffff;
+  /* Use text-shadow instead of filter for better Safari compatibility */
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
+  /* Fallback filter with webkit prefix */
+  -webkit-filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.6));
   filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.6));
+}
+
+/* Safari-specific: Remove filter to prevent blur artifacts */
+@supports (-webkit-appearance: none) and (not (-ms-ime-align: auto)) {
+  .dock-icon-content {
+    -webkit-filter: none;
+    filter: none;
+    text-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
+  }
 }
 
 .dock-icon-label {

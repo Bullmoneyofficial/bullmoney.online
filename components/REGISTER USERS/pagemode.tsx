@@ -31,157 +31,129 @@ import { WelcomeScreenDesktop } from "./WelcomeScreenDesktop";
 import { UnifiedFpsPill, UnifiedHubPanel, useLivePrices } from '@/components/UltimateHub';
 import { createPortal } from 'react-dom';
 
-// --- DYNAMIC SPLINE IMPORT FOR WELCOME SCREEN ---
-const Spline = dynamic(() => import('@splinetool/react-spline'), {
-  ssr: false,
-  loading: () => null,
-});
+// --- SPLINE IFRAME SCENES CONFIG (from HeroDesktop) ---
+// Mobile uses iframes instead of local files for better performance
+type MobileSplineScene = {
+  id: string;
+  viewerUrl: string;
+  weight: number;
+};
 
-const SPLINE_SCENES = [
-  '/scene1.splinecode',
-  '/scene2.splinecode',
-  '/scene3.splinecode',
-  '/scene4.splinecode',
-  '/scene5.splinecode',
-  '/scene6.splinecode',
-  '/scene.splinecode',
-];
+const MOBILE_SPLINE_SCENES: readonly MobileSplineScene[] = [
+  {
+    id: "timefold",
+    viewerUrl: "https://my.spline.design/timefoldodyssey-s3vKRBOk0ESLxu0qgZIB1IOD/",
+    weight: 35,
+  },
+  {
+    id: "nexbot",
+    viewerUrl: "https://my.spline.design/nexbotrobotcharacterconcept-pJvW8Dq4jVXayg6xUDiM8nPp/",
+    weight: 35,
+  },
+  {
+    id: "followers-focus",
+    viewerUrl: "https://my.spline.design/100followersfocus-55tpQJYDbng5lAQ3P1tq5abx/",
+    weight: 6,
+  },
+  {
+    id: "loading-bar",
+    viewerUrl: "https://my.spline.design/theloadingbarvertical-J0jRfhBsRDUAUKzNRxMvZXak/",
+    weight: 6,
+  },
+  {
+    id: "cannon",
+    viewerUrl: "https://my.spline.design/cannon-vOk1Cc5VyFBvcSq1ozXuhK1n/",
+    weight: 6,
+  },
+  {
+    id: "xgamer",
+    viewerUrl: "https://my.spline.design/xgamer-RZ9X6L57SHESs7L04p6IDisA/",
+    weight: 6,
+  },
+  {
+    id: "r4xbot",
+    viewerUrl: "https://my.spline.design/r4xbot-2RZeOpfgJ0Vr36G9Jd9EHlFB/",
+    weight: 6,
+  },
+] as const;
 
-const SPLINE_ROTATION_KEY = 'bullmoney_spline_rotation_v2';
+const MOBILE_SPLINE_ROTATION_KEY = 'bullmoney_mobile_spline_rotation_v1';
 
-const warmSplineRuntime = (() => {
-  let warmed = false;
-  return () => {
-    if (warmed) return;
-    warmed = true;
-    if (typeof window !== 'undefined') {
-      import('@splinetool/react-spline').catch(() => {});
-    }
-  };
-})();
+// Weighted random selection for mobile spline scenes
+const selectWeightedMobileScene = (): MobileSplineScene => {
+  const totalWeight = MOBILE_SPLINE_SCENES.reduce((sum, scene) => sum + scene.weight, 0);
+  let random = Math.random() * totalWeight;
+  for (const scene of MOBILE_SPLINE_SCENES) {
+    random -= scene.weight;
+    if (random <= 0) return scene;
+  }
+  return MOBILE_SPLINE_SCENES[0];
+};
 
-// --- WELCOME SCREEN SPLINE BACKGROUND COMPONENT ---
-// Optimized with aggressive caching, preloading, and error recovery
+// --- WELCOME SCREEN SPLINE BACKGROUND COMPONENT (MOBILE - IFRAME VERSION) ---
+// Uses iframes instead of local files for better mobile performance
 const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [hasError, setHasError] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
-  const [sceneToLoad, setSceneToLoad] = useState<string>(SPLINE_SCENES[0]);
-  const splineRef = useRef<any>(null);
+  const [currentScene, setCurrentScene] = useState<MobileSplineScene | null>(null);
   const mountedRef = useRef(true);
-  const MAX_RETRIES = 2;
-  const ROTATE_INTERVAL_MS = 60000; // rotate every 60s to keep motion fresh
+  const ROTATE_INTERVAL_MS = 60000; // rotate every 60s
 
-  const ensurePreload = useCallback((scenePath: string, rel: 'preload' | 'prefetch' = 'preload') => {
-    if (typeof window === 'undefined') return;
-    const existing = document.querySelector(`link[data-spline="${scenePath}"]`);
-    if (!existing) {
-      const link = document.createElement('link');
-      link.rel = rel;
-      link.as = 'fetch';
-      link.href = scenePath;
-      link.crossOrigin = 'anonymous';
-      link.dataset.spline = scenePath;
-      document.head.appendChild(link);
-    }
-    fetch(scenePath, {
-      method: 'GET',
-      cache: 'force-cache',
-      priority: rel === 'preload' ? 'high' : 'low'
-    } as RequestInit).catch(() => {});
-  }, []);
-
-  const pickNextScene = useCallback(() => {
+  const pickNextScene = useCallback((): MobileSplineScene => {
     try {
-      const raw = localStorage.getItem(SPLINE_ROTATION_KEY);
+      const raw = localStorage.getItem(MOBILE_SPLINE_ROTATION_KEY);
       const parsed = raw ? JSON.parse(raw) : {};
       let queue: string[] = Array.isArray(parsed.queue) ? parsed.queue : [];
+      
       if (!queue.length) {
-        queue = [...SPLINE_SCENES];
+        // Shuffle all scene IDs
+        queue = MOBILE_SPLINE_SCENES.map(s => s.id);
         for (let i = queue.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [queue[i], queue[j]] = [queue[j], queue[i]];
         }
       }
-      const next = queue.shift() || SPLINE_SCENES[0];
-      localStorage.setItem(SPLINE_ROTATION_KEY, JSON.stringify({ queue, lastUsed: next, updated: Date.now() }));
-      return next;
+      
+      const nextId = queue.shift() || MOBILE_SPLINE_SCENES[0].id;
+      localStorage.setItem(MOBILE_SPLINE_ROTATION_KEY, JSON.stringify({ queue, lastUsed: nextId, updated: Date.now() }));
+      
+      return MOBILE_SPLINE_SCENES.find(s => s.id === nextId) || MOBILE_SPLINE_SCENES[0];
     } catch {
-      return SPLINE_SCENES[0];
+      return selectWeightedMobileScene();
     }
   }, []);
 
-  const setScene = useCallback((scene: string) => {
-    setIsLoaded(false);
-    setHasError(false);
-    setRetryCount(0);
-    setSceneToLoad(scene);
-  }, []);
-
-  // Preload the spline scene on mount for faster loading
+  // Initialize scene on mount
   useEffect(() => {
     mountedRef.current = true;
     if (typeof window !== 'undefined') {
-      warmSplineRuntime();
       const chosen = pickNextScene();
-      setScene(chosen);
-      ensurePreload(chosen, 'preload');
-
-      const preloadOthers = () => {
-        SPLINE_SCENES.filter((scene) => scene !== chosen).forEach((scene) => ensurePreload(scene, 'prefetch'));
-      };
-
-      if ('requestIdleCallback' in window) {
-        (window as any).requestIdleCallback(preloadOthers, { timeout: 1200 });
-      } else {
-        setTimeout(preloadOthers, 500);
-      }
+      setCurrentScene(chosen);
     }
 
     return () => {
       mountedRef.current = false;
     };
-  }, [ensurePreload, pickNextScene]);
+  }, [pickNextScene]);
 
-  // Rotate scenes every ROTATE_INTERVAL_MS to keep experience lively
+  // Rotate scenes periodically
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const id = window.setInterval(() => {
-      const next = pickNextScene();
-      ensurePreload(next, 'preload');
-      setScene(next);
+      if (mountedRef.current) {
+        const next = pickNextScene();
+        setIsLoaded(false);
+        setCurrentScene(next);
+      }
     }, ROTATE_INTERVAL_MS);
     return () => window.clearInterval(id);
-  }, [ensurePreload, pickNextScene, setScene]);
+  }, [pickNextScene]);
 
-  // Handle successful load
-  const handleLoad = useCallback((spline: any) => {
+  // Handle iframe load
+  const handleIframeLoad = useCallback(() => {
     if (mountedRef.current) {
-      splineRef.current = spline;
       setIsLoaded(true);
-      setHasError(false);
     }
   }, []);
-
-  // Handle error with retry logic
-  const handleError = useCallback(() => {
-    if (mountedRef.current) {
-      if (retryCount < MAX_RETRIES) {
-        // Retry after a short delay
-        setTimeout(() => {
-          if (mountedRef.current) {
-            setRetryCount(prev => prev + 1);
-            setHasError(false);
-          }
-        }, 500);
-      } else {
-        // Final fallback: reset to first scene and try again once
-        const fallback = SPLINE_SCENES[0];
-        setScene(fallback);
-        setHasError(true);
-      }
-    }
-  }, [retryCount, setScene]);
 
   return (
     <div
@@ -197,10 +169,10 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
         contain: 'layout style paint',
       }}
     >
-      {/* Spline Scene - with retry key to force remount on retry */}
-      {!hasError && (
+      {/* Spline Scene via iframe */}
+      {currentScene && (
         <div
-          key={`spline-${sceneToLoad}-${retryCount}`}
+          key={`spline-mobile-iframe-${currentScene.id}`}
           className={`absolute inset-0 transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
           style={{
             width: '100%',
@@ -210,23 +182,31 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
             willChange: isLoaded ? 'auto' : 'opacity',
           }}
         >
-          <Spline
-            scene={sceneToLoad}
-            onLoad={handleLoad}
-            onError={handleError}
+          <iframe
+            src={currentScene.viewerUrl}
+            title="BullMoney mobile welcome scene"
+            frameBorder="0"
+            allow="fullscreen; autoplay; xr-spatial-tracking"
+            loading="lazy"
+            onLoad={handleIframeLoad}
             style={{
               width: '100%',
-              height: '100%',
+              height: 'calc(100% + 60px)',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              border: 'none',
               display: 'block',
+              marginBottom: '-60px',
               touchAction: 'auto',
             }}
           />
         </div>
       )}
 
-      {/* Subtle gradient fallback while loading or on error */}
+      {/* Subtle gradient fallback while loading */}
       <div
-        className={`absolute inset-0 transition-opacity duration-700 ${isLoaded && !hasError ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        className={`absolute inset-0 transition-opacity duration-700 ${isLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
         style={{
           background: 'radial-gradient(ellipse at 50% 30%, rgba(59, 130, 246, 0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 40%), #000',
         }}
