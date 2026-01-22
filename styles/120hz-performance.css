@@ -413,3 +413,110 @@ canvas {
 .scroll-snap-section {
   scroll-snap-align: start;
 }
+
+/* ============================================================================
+   DESKTOP LITE MODE - User-controlled performance optimization
+   ============================================================================
+   
+   When enabled via the lite mode toggle, this disables heavy render effects
+   (shadows, glows, backdrop-blur) while KEEPING ANIMATIONS working.
+   
+   This allows users with older hardware or who prefer cleaner visuals to
+   still enjoy the site with smooth animations.
+   ============================================================================ */
+
+/* Desktop Lite Mode - Disable heavy effects */
+html.desktop-lite-mode {
+  /* CSS variables for lite mode */
+  --lite-mode: 1;
+  --blur-enabled: 0;
+  --shadows-enabled: 0;
+  --glow-enabled: 0;
+}
+
+/* Disable backdrop blur in lite mode */
+html.desktop-lite-mode .backdrop-blur-sm,
+html.desktop-lite-mode .backdrop-blur,
+html.desktop-lite-mode .backdrop-blur-md,
+html.desktop-lite-mode .backdrop-blur-lg,
+html.desktop-lite-mode .backdrop-blur-xl,
+html.desktop-lite-mode .backdrop-blur-2xl,
+html.desktop-lite-mode .backdrop-blur-3xl,
+html.desktop-lite-mode [class*="backdrop-blur"] {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  /* Replace blur with solid semi-transparent background */
+  background-color: rgba(0, 0, 0, 0.85) !important;
+}
+
+/* Disable heavy box shadows in lite mode */
+html.desktop-lite-mode [style*="box-shadow"],
+html.desktop-lite-mode .shadow-lg,
+html.desktop-lite-mode .shadow-xl,
+html.desktop-lite-mode .shadow-2xl,
+html.desktop-lite-mode [class*="shadow-"] {
+  box-shadow: none !important;
+}
+
+/* Disable text shadows / glows in lite mode */
+html.desktop-lite-mode [style*="text-shadow"] {
+  text-shadow: none !important;
+}
+
+/* Disable filter effects (drop-shadow, blur) in lite mode */
+html.desktop-lite-mode [style*="filter"]:not(img):not(video) {
+  filter: none !important;
+}
+
+/* Glass surfaces in lite mode - use solid background */
+html.desktop-lite-mode .glass-surface,
+html.desktop-lite-mode .glass-panel,
+html.desktop-lite-mode [data-glass] {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  background-color: rgba(10, 10, 15, 0.95) !important;
+  border: 1px solid rgba(59, 130, 246, 0.3) !important;
+}
+
+/* Keep borders visible for visual clarity in lite mode */
+html.desktop-lite-mode .border-blue-500\/50,
+html.desktop-lite-mode [class*="border-blue"] {
+  border-color: rgba(59, 130, 246, 0.5) !important;
+}
+
+/* Reduce animation complexity in lite mode (optional - keep enabled for smooth UX) */
+/* Note: We're NOT disabling animations, just reducing some complexity */
+html.desktop-lite-mode .animate-pulse {
+  animation-duration: 2s !important;
+}
+
+/* Keep core animations working - these are lightweight */
+html.desktop-lite-mode .animate-spin,
+html.desktop-lite-mode .animate-bounce,
+html.desktop-lite-mode .animate-ping {
+  /* Keep these running - they're GPU accelerated */
+}
+
+/* Spline/WebGL scenes - keep running but reduce quality hint */
+html.desktop-lite-mode canvas,
+html.desktop-lite-mode [data-spline-scene] {
+  /* Scenes stay enabled - this is just a hint */
+  image-rendering: optimizeSpeed;
+}
+
+/* Disable glow effects on buttons and interactive elements */
+html.desktop-lite-mode button:hover,
+html.desktop-lite-mode a:hover {
+  box-shadow: none !important;
+}
+
+/* Lite mode indicator styling */
+html.desktop-lite-mode [data-lite-indicator] {
+  display: flex !important;
+}
+
+/* Performance boost: reduce repaints */
+html.desktop-lite-mode * {
+  /* Hint to browser to optimize */
+  -webkit-font-smoothing: subpixel-antialiased;
+}

@@ -7,6 +7,7 @@ import { useBrowserDetection } from '@/lib/browserDetection';
 import { getFpsEngine, initializeFpsMeasurement } from '@/lib/FpsMeasurement';
 import { detectBrowserCapabilities, selectOptimalMeasurementConfig } from '@/lib/FpsCompatibility';
 import { useMobilePerformance } from "@/hooks/useMobilePerformance";
+import { useUnifiedPerformance } from "@/hooks/useDesktopPerformance";
 import { useUIState } from "@/contexts/UIStateContext";
 
 // ============================================================================
@@ -56,8 +57,9 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
   const browserInfo = useBrowserDetection();
   const shouldReduceAnimations = browserInfo.shouldReduceAnimations;
   
-  // Mobile performance hook
-  const { shouldSkipHeavyEffects } = useMobilePerformance();
+  // Unified performance hook - works for both mobile and desktop
+  // On desktop, this respects the lite mode toggle; on mobile, uses existing logic
+  const { shouldSkipHeavyEffects } = useUnifiedPerformance();
   
   // UI State - check if pagemode or loader is active (don't show screensaver during these)
   let isPagemodeOpen = false;

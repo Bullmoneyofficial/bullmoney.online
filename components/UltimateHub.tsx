@@ -25,6 +25,7 @@ import React, {
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, PanInfo, type TargetAndTransition } from 'framer-motion';
 import { useMobilePerformance } from '@/hooks/useMobilePerformance';
+import { useDesktopPerformance } from '@/hooks/useDesktopPerformance';
 import { getFpsEngine, initializeFpsMeasurement } from '@/lib/FpsMeasurement';
 import { detectBrowserCapabilities, selectOptimalMeasurementConfig } from '@/lib/FpsCompatibility';
 
@@ -4274,6 +4275,9 @@ export const UnifiedHubPanel = memo(({
   // Device tab state - Get REAL device data from hooks
   const memoryStats = useRealTimeMemory();
   const browserInfo = useBrowserInfo();
+  
+  // Desktop performance / Lite mode
+  const { liteMode, toggleLiteMode, gpuTier: desktopGpuTier, isHydrated: desktopHydrated } = useDesktopPerformance();
   const storageInfo = useStorageInfo();
   const networkStats = useNetworkStats() as NetworkStats & { runSpeedTest: () => Promise<void> };
   const perfStats = usePerformanceStats();
@@ -5067,6 +5071,50 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                       </div>
                       <div className="text-xs font-semibold text-blue-200">{browserInfo.name} {browserInfo.version.split('.')[0]}</div>
                       <div className="text-[9px] text-blue-300/70">{browserInfo.engine} • {browserInfo.platform}</div>
+                    </div>
+                    
+                    {/* Lite Mode Toggle - Performance Settings */}
+                    <div className="p-2.5 rounded-xl bg-black border border-blue-500/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wide">Performance Mode</span>
+                        <Zap className="w-3.5 h-3.5 text-blue-400" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                      </div>
+                      <button
+                        onClick={toggleLiteMode}
+                        className="w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all"
+                        style={{
+                          background: liteMode ? 'rgba(59, 130, 246, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                          border: liteMode ? '1px solid rgba(59, 130, 246, 0.5)' : '1px solid rgba(255, 255, 255, 0.1)',
+                        }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">{liteMode ? '🌙' : '✨'}</span>
+                          <div className="text-left">
+                            <div className="text-xs font-semibold text-blue-200">Lite Mode</div>
+                            <div className="text-[9px] text-blue-300/60">
+                              {liteMode ? 'Heavy effects disabled' : 'Full effects enabled'}
+                            </div>
+                          </div>
+                        </div>
+                        {/* Toggle Switch */}
+                        <div 
+                          className={`w-9 h-5 rounded-full relative transition-colors ${
+                            liteMode ? 'bg-blue-500' : 'bg-zinc-700'
+                          }`}
+                        >
+                          <motion.div
+                            className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow"
+                            animate={{ x: liteMode ? 18 : 2 }}
+                            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                          />
+                        </div>
+                      </button>
+                      <div className="text-[8px] text-zinc-500 mt-2">
+                        Disables blur, shadows & glow while keeping animations smooth.
+                        {desktopGpuTier && (
+                          <span className="block mt-0.5">GPU: {desktopGpuTier === 'discrete' ? '🎮 Discrete' : desktopGpuTier === 'integrated' ? '💻 Integrated' : '❓ Unknown'}</span>
+                        )}
+                      </div>
                     </div>
                     
                     {/* Account Info */}

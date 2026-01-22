@@ -1193,6 +1193,7 @@ function HomeContent() {
   return (
     <>
       <style>{NEON_STYLES}</style>
+      
       {currentView === 'pagemode' && (
         <div className="fixed inset-0 z-[99999] bg-black">
           <PageMode onUnlock={handlePageModeUnlock} />

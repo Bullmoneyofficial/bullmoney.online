@@ -4,6 +4,12 @@ import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, memo,
 import { createClient } from '@supabase/supabase-js'; 
 import { gsap } from 'gsap';
 import dynamic from 'next/dynamic';
+
+// Dynamic import for Spline component (used for local .splinecode files)
+const Spline = dynamic(() => import('@splinetool/react-spline'), {
+  ssr: false,
+  loading: () => null,
+});
 import { trackEvent, BullMoneyAnalytics } from '@/lib/analytics';
 import {
   Check, Mail, Hash, Lock,
@@ -31,11 +37,12 @@ import { WelcomeScreenDesktop } from "./WelcomeScreenDesktop";
 import { UnifiedFpsPill, UnifiedHubPanel, useLivePrices } from '@/components/UltimateHub';
 import { createPortal } from 'react-dom';
 
-// --- SPLINE IFRAME SCENES CONFIG (from HeroDesktop) ---
-// Mobile uses iframes instead of local files for better performance
+// --- SPLINE SCENES CONFIG (from HeroDesktop) ---
+// Mobile uses a mix of local .splinecode files and iframes for remote URLs
 type MobileSplineScene = {
   id: string;
-  viewerUrl: string;
+  viewerUrl?: string;      // Remote Spline viewer URL (for iframe)
+  localPath?: string;      // Local .splinecode file path (for Spline component)
   weight: number;
 };
 
@@ -47,12 +54,12 @@ const MOBILE_SPLINE_SCENES: readonly MobileSplineScene[] = [
   },
   {
     id: "nexbot",
-    viewerUrl: "https://my.spline.design/nexbotrobotcharacterconcept-pJvW8Dq4jVXayg6xUDiM8nPp/",
+    localPath: "/scene1.splinecode",
     weight: 35,
   },
   {
     id: "followers-focus",
-    viewerUrl: "https://my.spline.design/100followersfocus-55tpQJYDbng5lAQ3P1tq5abx/",
+    localPath: "/scene5.splinecode",
     weight: 6,
   },
   {
@@ -221,11 +228,11 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
         contentVisibility: 'auto',
       }}
     >
-      {/* Spline Scene via iframe - INTERACTIVE: Full touch enabled */}
-      {/* Mobile-optimized with lower quality and disabled heavy effects */}
+      {/* Spline Scene - INTERACTIVE: Full touch enabled */}
+      {/* Supports both local .splinecode files and remote iframe URLs */}
       {currentScene && (
         <div
-          key={`spline-mobile-iframe-${currentScene.id}`}
+          key={`spline-mobile-${currentScene.id}`}
           className="absolute inset-0"
           style={{
             width: '100%',
@@ -239,32 +246,52 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
             transition: `opacity ${MOBILE_SPLINE_CONFIG.fadeInDuration}ms ease-out, transform ${MOBILE_SPLINE_CONFIG.fadeInDuration}ms ease-out`,
           }}
         >
-          <iframe
-            ref={iframeRef}
-            src={getMobileOptimizedSplineUrl(currentScene.viewerUrl)}
-            title="BullMoney mobile welcome scene"
-            frameBorder="0"
-            allow="fullscreen; autoplay; xr-spatial-tracking; pointer-lock; gyroscope; accelerometer"
-            loading="eager"
-            onLoad={handleIframeLoad}
-            style={{
-              width: '100%',
-              height: 'calc(100% + 60px)',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              border: 'none',
-              display: 'block',
-              marginBottom: '-60px',
-              touchAction: 'manipulation',
-              pointerEvents: 'auto',
-              // GPU acceleration for smooth rendering
-              transform: 'translateZ(0)',
-              backfaceVisibility: 'hidden',
-              // Reduce rendering load on mobile
-              imageRendering: reducedMotion ? 'auto' : 'auto',
-            }}
-          />
+          {/* Local .splinecode file - use Spline component */}
+          {currentScene.localPath ? (
+            <Spline
+              scene={currentScene.localPath}
+              onLoad={handleIframeLoad}
+              style={{
+                width: '100%',
+                height: 'calc(100% + 60px)',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                display: 'block',
+                marginBottom: '-60px',
+                touchAction: 'manipulation',
+                pointerEvents: 'auto',
+                transform: 'translateZ(0)',
+                backfaceVisibility: 'hidden',
+              }}
+            />
+          ) : currentScene.viewerUrl ? (
+            /* Remote URL - use iframe */
+            <iframe
+              ref={iframeRef}
+              src={getMobileOptimizedSplineUrl(currentScene.viewerUrl)}
+              title="BullMoney mobile welcome scene"
+              frameBorder="0"
+              allow="fullscreen; autoplay; xr-spatial-tracking; pointer-lock; gyroscope; accelerometer"
+              loading="eager"
+              onLoad={handleIframeLoad}
+              style={{
+                width: '100%',
+                height: 'calc(100% + 60px)',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                border: 'none',
+                display: 'block',
+                marginBottom: '-60px',
+                touchAction: 'manipulation',
+                pointerEvents: 'auto',
+                transform: 'translateZ(0)',
+                backfaceVisibility: 'hidden',
+                imageRendering: reducedMotion ? 'auto' : 'auto',
+              }}
+            />
+          ) : null}
         </div>
       )}
 

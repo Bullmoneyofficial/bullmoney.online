@@ -24,6 +24,7 @@ import { Loader2, X, Play, ArrowRight, Volume2, VolumeX, Copy, Check } from "luc
 import { useSplinePreload, useEnsureSplineViewer } from '@/hooks/useSplinePreload';
 import { DISCORD_STAGE_FEATURED_VIDEOS } from "@/components/TradingQuickAccess";
 import { useMobilePerformance } from "@/hooks/useMobilePerformance";
+import { useUnifiedPerformance } from "@/hooks/useDesktopPerformance";
 
 const SPLINE_VIEWER_SCRIPT_SRC = "https://unpkg.com/@splinetool/viewer@1.12.36/build/spline-viewer.js";
 
@@ -1604,6 +1605,8 @@ const MuteToggle = ({ muted, onToggle }: { muted: boolean; onToggle: () => void 
   );
 };
 
+// Desktop Lite Mode Toggle - Moved to GlobalLiteModeToggle component in page.tsx
+
 // ============================================================================
 // CATEGORY J: OVER THE TOP
 // ============================================================================
@@ -1664,8 +1667,18 @@ import { useAudioEngine } from "@/app/hooks/useAudioEngine";
 // ============================================================================
 
 const HeroDesktop = () => {
-  // Mobile performance optimization
-  const { shouldSkipHeavyEffects, shouldDisableBackdropBlur, shouldDisableBoxShadows } = useMobilePerformance();
+  // Desktop performance optimization with lite mode toggle
+  // Uses unified hook that combines mobile detection with desktop lite mode
+  const { 
+    shouldSkipHeavyEffects, 
+    shouldDisableBackdropBlur, 
+    shouldDisableBoxShadows,
+    isDesktopLiteMode,
+    toggleDesktopLiteMode,
+    animationsEnabled,
+    isMobile,
+    isTablet,
+  } = useUnifiedPerformance();
   
   const sceneUrls = useMemo(() => HERO_SPLINE_SCENES.map(s => s.runtimeUrl), []);
   useSplinePreload({ sceneUrls, priority: 'high', delay: 0 });
@@ -1872,8 +1885,8 @@ const HeroDesktop = () => {
       <div ref={ref} className="relative min-h-[100dvh] h-[100dvh] bg-black overflow-hidden hero-section" data-allow-scroll data-content data-theme-aware data-hero>
         {/* Removed all background animations for cleaner look */}
         <VignetteOverlay />
-
-
+        
+        {/* Desktop Lite Mode Toggle moved to GlobalLiteModeToggle in page.tsx */}
 
         <GravityMode active={gravityMode}>
           <motion.div className="relative z-20 pt-[12vh] sm:pt-[18vh] lg:pt-[20vh]" style={{ x: horizontalScroll }} onMouseEnter={() => setIsUIHovered(true)} onMouseLeave={() => setIsUIHovered(false)}>
