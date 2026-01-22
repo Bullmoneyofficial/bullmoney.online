@@ -1050,30 +1050,70 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   <WelcomeSplineBackground />
                 </div>
 
-                {/* Branding Header - Top Center (above buttons) */}
+                {/* Branding Header - Neon Sign Style */}
                 <motion.div
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.1 }}
-                  className="relative z-10 pt-6 pb-2 text-center"
+                  transition={{ duration: 0.6, delay: 0.1 }}
+                  className="relative z-10 pt-8 pb-4 text-center"
                 >
-                  <h1
-                    className="text-3xl font-black tracking-tight"
+                  {/* Neon glow backdrop effect */}
+                  <div
+                    className="absolute inset-0 pointer-events-none"
                     style={{
-                      color: '#3b82f6',
-                      textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6, 0 0 16px #3b82f6',
+                      background: 'radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 60%)',
+                      filter: 'blur(20px)',
+                    }}
+                  />
+                  <motion.h1
+                    className="relative text-4xl font-black tracking-wider uppercase"
+                    style={{
+                      color: '#60a5fa',
+                      textShadow: `
+                        0 0 5px #3b82f6,
+                        0 0 10px #3b82f6,
+                        0 0 20px #3b82f6,
+                        0 0 40px #3b82f6,
+                        0 0 80px #2563eb
+                      `,
+                      letterSpacing: '0.15em',
+                    }}
+                    animate={{
+                      textShadow: [
+                        '0 0 5px #3b82f6, 0 0 10px #3b82f6, 0 0 20px #3b82f6, 0 0 40px #3b82f6, 0 0 80px #2563eb',
+                        '0 0 8px #60a5fa, 0 0 15px #60a5fa, 0 0 30px #3b82f6, 0 0 60px #3b82f6, 0 0 100px #2563eb',
+                        '0 0 5px #3b82f6, 0 0 10px #3b82f6, 0 0 20px #3b82f6, 0 0 40px #3b82f6, 0 0 80px #2563eb',
+                      ],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
                     }}
                   >
                     BULLMONEY
-                  </h1>
-                  <p className="text-sm text-white/50 mt-1 font-medium tracking-wide">
+                  </motion.h1>
+                  <motion.p
+                    className="relative text-sm text-blue-200/80 mt-2 font-semibold tracking-[0.2em] uppercase"
+                    style={{
+                      textShadow: '0 0 10px rgba(147, 197, 253, 0.5), 0 0 20px rgba(59, 130, 246, 0.3)',
+                    }}
+                    animate={{
+                      opacity: [0.7, 1, 0.7],
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                    }}
+                  >
                     The Ultimate Trading Hub
-                  </p>
+                  </motion.p>
                 </motion.div>
 
-                {/* Main Content Area - Centered */}
+                {/* Main Content Area - Centered (40% smaller for mobile) */}
                 <div
-                  className="relative flex-1 flex flex-col items-center justify-center gap-4 px-5 w-full max-w-sm mx-auto pb-6"
+                  className="relative flex-1 flex flex-col items-center justify-center gap-2 px-3 w-full max-w-[220px] mx-auto pb-4"
                   style={{ zIndex: 10 }}
                 >
                   {/* Ultra-transparent Card Container - See through to Spline */}
@@ -1081,7 +1121,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.4, delay: 0.2 }}
-                    className="w-full rounded-2xl p-5 border border-white/5"
+                    className="w-full rounded-xl p-3 border border-white/5"
                     style={{
                       background: 'rgba(0, 0, 0, 0.15)',
                       backdropFilter: 'blur(8px)',
@@ -1090,17 +1130,17 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     }}
                   >
                     {/* Action Header */}
-                    <div className="text-center mb-5">
-                      <h2 className="text-lg font-bold text-white/80 mb-1">
+                    <div className="text-center mb-3">
+                      <h2 className="text-sm font-bold text-white/80 mb-0.5">
                         Get Started
                       </h2>
-                      <p className="text-white/30 text-xs">
+                      <p className="text-white/30 text-[10px]">
                         Choose how you want to continue
                       </p>
                     </div>
 
                     {/* Buttons Stack */}
-                    <div className="flex flex-col gap-2.5">
+                    <div className="flex flex-col gap-1.5">
                       {/* Sign Up Button - Primary with transparent glass */}
                       <motion.button
                         onClick={() => {
@@ -1108,7 +1148,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                           setStep(0);
                         }}
                         whileTap={{ scale: 0.98 }}
-                        className="w-full py-3.5 rounded-xl font-bold text-base tracking-wide transition-all flex items-center justify-center gap-2 text-white"
+                        className="w-full py-2 rounded-lg font-bold text-xs tracking-wide transition-all flex items-center justify-center gap-1.5 text-white"
                         style={{
                           background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.5) 0%, rgba(37, 99, 235, 0.6) 100%)',
                           backdropFilter: 'blur(8px)',
@@ -1117,7 +1157,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         }}
                       >
                         <span>Create Account</span>
-                        <ArrowRight className="w-5 h-5" />
+                        <ArrowRight className="w-3.5 h-3.5" />
                       </motion.button>
 
                       {/* Login Button - Very transparent glass */}
@@ -1127,7 +1167,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                           setStep(0);
                         }}
                         whileTap={{ scale: 0.98 }}
-                        className="w-full py-3.5 rounded-xl font-bold text-base tracking-wide transition-all flex items-center justify-center gap-2 text-blue-300"
+                        className="w-full py-2 rounded-lg font-bold text-xs tracking-wide transition-all flex items-center justify-center gap-1.5 text-blue-300"
                         style={{
                           background: 'rgba(59, 130, 246, 0.08)',
                           backdropFilter: 'blur(6px)',
@@ -1135,13 +1175,13 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         }}
                       >
                         <span>Login</span>
-                        <ArrowRight className="w-5 h-5" />
+                        <ArrowRight className="w-3.5 h-3.5" />
                       </motion.button>
 
                       {/* Divider */}
-                      <div className="flex items-center gap-3 my-1">
+                      <div className="flex items-center gap-2 my-0.5">
                         <div className="flex-1 h-px bg-white/5" />
-                        <span className="text-white/20 text-[10px]">or</span>
+                        <span className="text-white/20 text-[8px]">or</span>
                         <div className="flex-1 h-px bg-white/5" />
                       </div>
 
@@ -1151,20 +1191,20 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                           setStep(-2);
                         }}
                         whileTap={{ scale: 0.98 }}
-                        className="w-full py-2.5 rounded-xl font-medium text-sm tracking-wide transition-all flex items-center justify-center gap-2 text-white/40"
+                        className="w-full py-1.5 rounded-lg font-medium text-[11px] tracking-wide transition-all flex items-center justify-center gap-1.5 text-white/40"
                         style={{
                           background: 'rgba(255, 255, 255, 0.02)',
                           backdropFilter: 'blur(4px)',
                           border: '1px solid rgba(255, 255, 255, 0.05)',
                         }}
                       >
-                        <User className="w-4 h-4" />
+                        <User className="w-3 h-3" />
                         <span>Continue as Guest</span>
                       </motion.button>
                     </div>
 
                     {/* Footer Note */}
-                    <p className="text-center text-white/15 text-[9px] mt-4">
+                    <p className="text-center text-white/15 text-[7px] mt-2">
                       By continuing, you agree to our Terms of Service
                     </p>
                   </motion.div>
