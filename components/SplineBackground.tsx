@@ -12,23 +12,12 @@ interface Props {
 }
 
 // Lightweight device detection with 120Hz support
+// UPDATED 2026.1.22: Always return true - never block Spline loading
 const shouldLoadSpline = () => {
   if (typeof window === 'undefined') return true;
   
-  const memory = (navigator as any).deviceMemory || 4;
-  const connection = (navigator as any).connection;
-  const effectiveType = connection?.effectiveType || '4g';
-  const refreshRate = detectRefreshRate();
-  
-  // Skip spline on very low-end devices (unless they have ProMotion - indicates high-end)
-  if (refreshRate >= 120) {
-    // ProMotion device - likely high-end, allow loading
-    return true;
-  }
-  
-  if (memory < 2 || effectiveType === 'slow-2g' || effectiveType === '2g') {
-    return false;
-  }
+  // ALWAYS load Spline - quality will be reduced automatically for low-end devices
+  // The spline-wrapper handles all quality adjustments
   return true;
 };
 

@@ -112,6 +112,8 @@ interface UIStateContextType {
   isDiscordStageModalOpen: boolean; // Discord Stage modal
   isV2Unlocked: boolean;
   devSkipPageModeAndLoader: boolean; // Dev flag to skip pagemode and loader
+  isWelcomeScreenActive: boolean;  // Welcome screen active - allows AudioWidget to show
+  hasStartedPagemodeAudio: boolean; // Track if user entered pagemode flow - audio persists until content loads
 
   // Legacy: activeNavbarModal (maps to specific modal states)
   activeNavbarModal: NavbarModalType;
@@ -148,6 +150,7 @@ interface UIStateContextType {
   setDiscordStageModalOpen: (open: boolean) => void;
   setV2Unlocked: (unlocked: boolean) => void;
   setDevSkipPageModeAndLoader: (skip: boolean) => void;
+  setWelcomeScreenActive: (active: boolean) => void;
 
   // Legacy: setNavbarModal (for backwards compatibility)
   setNavbarModal: (modal: NavbarModalType) => void;
@@ -216,6 +219,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     () => typeof window !== 'undefined' && sessionStorage.getItem('affiliate_unlock_complete') === 'true'
   );
   const [devSkipPageModeAndLoader, setDevSkipPageModeAndLoaderState] = useState(false);
+  const [isWelcomeScreenActive, setIsWelcomeScreenActiveState] = useState(false);
+  // Track if user has started audio in pagemode flow - persists through loader transition
+  // Only resets when content loads (V2 unlocked)
+  const [hasStartedPagemodeAudio, setHasStartedPagemodeAudioState] = useState(false);
 
   // Derived state: Legacy activeNavbarModal (maps to individual states)
   const activeNavbarModal: NavbarModalType =
@@ -237,7 +244,8 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
 
   // Derived state: modals that DO NOT require audio widget to minimize
   // Discord Stage modal should keep audio widget visible so users can control Discord volume
-  const shouldNotMinimizeForThisModal = isDiscordStageModalOpen;
+  // Welcome screen should also keep audio widget visible so users can control music while viewing welcome
+  const shouldNotMinimizeForThisModal = isDiscordStageModalOpen || isWelcomeScreenActive;
 
   // Derived state: should audio widget minimize (not unmount)?
   // True when any other UI component is open that would overlay the player
@@ -501,6 +509,8 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (open) {
       closeOthers('pagemode');
       trackUIStateChange('pagemode', 'open');
+      // Mark that user has entered pagemode - audio should persist until content loads
+      setHasStartedPagemodeAudioState(true);
     } else {
       trackUIStateChange('pagemode', 'close');
     }
@@ -571,6 +581,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setIsV2UnlockedState(unlocked);
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('affiliate_unlock_complete', String(unlocked));
+    }
+    // Reset pagemode audio tracking when content loads - audio widget handles itself now
+    if (unlocked) {
+      setHasStartedPagemodeAudioState(false);
     }
   }, []);
 
@@ -724,6 +738,8 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isDiscordStageModalOpen,
     isV2Unlocked,
     devSkipPageModeAndLoader,
+    isWelcomeScreenActive,
+    hasStartedPagemodeAudio,
     activeNavbarModal,
     isAnyOpen,
     isAnyModalOpen,
@@ -757,6 +773,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setDiscordStageModalOpen,
     setV2Unlocked,
     setDevSkipPageModeAndLoader,
+    setWelcomeScreenActive: setIsWelcomeScreenActiveState,
     setNavbarModal,
 
     // Convenience methods
@@ -813,6 +830,8 @@ export function useAudioWidgetUI() {
     isPagemodeOpen,
     isLoaderv2Open,
     isV2Unlocked,
+    isWelcomeScreenActive,
+    hasStartedPagemodeAudio,
   } = useUIState();
 
   // IMPORTANT: We no longer return shouldHideFloatingPlayer that causes unmount.
@@ -823,8 +842,29 @@ export function useAudioWidgetUI() {
   // shouldHideFloatingPlayer now means "minimize" not "unmount"
   const shouldHideFloatingPlayer = shouldMinimizeAudioWidget;
 
-  // When pagemode or loaderv2 is open, or v2 is not unlocked, don't show the audio widget at all
-  const shouldHideAudioWidgetCompletely = isPagemodeOpen || isLoaderv2Open || !isV2Unlocked;
+  // AUDIO PERSISTENCE STRATEGY:
+  // 1. Welcome screen (step -1, -2): Show full AudioWidget (MainWidget + FloatingPlayer)
+  // 2. Registration/Login (step 0+): Show minimized FloatingPlayer only (audio continues)
+  // 3. Loader during pagemode flow: Keep FloatingPlayer mounted but hidden (audio continues!)
+  // 4. Main content: Show full AudioWidget
+  //
+  // shouldHideAudioWidgetCompletely = true means the ENTIRE widget is hidden (iframe unmounts, audio stops)
+  // shouldHideAudioWidgetCompletely = false means at least the FloatingPlayer shows (audio persists)
+  //
+  // CRITICAL: Audio must persist throughout the ENTIRE pagemode flow (welcome -> registration -> loader -> content)
+  // hasStartedPagemodeAudio is set when pagemode opens and only cleared when V2 unlocks (content loads)
+  // This ensures the iframe stays mounted even during the loader transition
+  //
+  // Logic:
+  // - Hide completely ONLY if: (loader is open AND user never entered pagemode) OR (not unlocked AND not in pagemode/welcome AND never started pagemode audio)
+  // - In other words: Keep showing (mounted) if user has started the pagemode flow at any point
+  const isInPagemodeFlow = isPagemodeOpen || isWelcomeScreenActive || hasStartedPagemodeAudio;
+  const shouldHideAudioWidgetCompletely = !isInPagemodeFlow && !isV2Unlocked;
+
+  // NEW: shouldHideMainWidget - hides MainWidget (settings panel) but keeps FloatingPlayer for audio
+  // During pagemode registration (not welcome screen), hide the settings but keep audio playing
+  // Also hide during loader (but keep FloatingPlayer for audio persistence)
+  const shouldHideMainWidget = (isPagemodeOpen && !isWelcomeScreenActive) || isLoaderv2Open;
 
   return {
     isAudioWidgetOpen,
@@ -836,6 +876,8 @@ export function useAudioWidgetUI() {
     isLoaderv2Open,
     isV2Unlocked,
     shouldHideAudioWidgetCompletely,
+    shouldHideMainWidget,
+    isWelcomeScreenActive,
   };
 }
 

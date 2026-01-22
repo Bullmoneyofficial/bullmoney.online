@@ -28,23 +28,21 @@ interface SplineCanvasProps {
 }
 
 // Device capability detection (runs once)
+// UPDATED 2026.1.22: Always return at least 'medium' - never block Spline
 const getDeviceCapability = (): 'high' | 'medium' | 'low' => {
   if (typeof window === 'undefined') return 'medium';
   
   const memory = (navigator as any).deviceMemory || 4;
   const cores = navigator.hardwareConcurrency || 4;
   const isMobile = window.innerWidth < 768;
-  const isSmallScreen = window.innerWidth < 480;
   
-  // Disable 3D on very small screens
-  if (isSmallScreen) return 'low';
-  
-  // Mobile with low specs
-  if (isMobile && (memory < 4 || cores < 4)) return 'low';
+  // CHANGED: Never return 'low' - always render Spline with quality reduction
+  // The spline-wrapper handles quality adjustment automatically
   
   // Desktop or high-end mobile
   if (memory >= 8 && cores >= 8) return 'high';
   
+  // Everything else gets medium - Spline will auto-adjust quality
   return 'medium';
 };
 
@@ -77,7 +75,8 @@ const MemoizedSplineCanvas = memo(function MemoizedSplineCanvas({
       style={{
         width: '100%',
         height: '100%',
-        touchAction: 'pan-y',
+        touchAction: 'manipulation', // UPDATED: Allow interaction
+        pointerEvents: 'auto',
       }}
     />
   );
@@ -192,13 +191,16 @@ export const SplineCanvasWrapper = memo(function SplineCanvasWrapper({
     onError?.(error);
   }, [onError]);
 
-  // Low capability or error - show fallback
-  if (capability === 'low' || hasError) {
+  // UPDATED 2026.1.22: NEVER show fallback - always attempt to render Spline
+  // Quality degradation is handled by spline-wrapper
+  const showFallback = false; // Never show fallback
+  
+  if (showFallback) {
     return (
       <div 
         ref={containerRef}
         className={`w-full h-full relative ${className}`}
-        style={{ contain: 'strict', touchAction: 'pan-y' }}
+        style={{ contain: 'strict', touchAction: 'manipulation' }}
       >
         <SplineFallback />
       </div>
@@ -212,17 +214,20 @@ export const SplineCanvasWrapper = memo(function SplineCanvasWrapper({
       style={{
         contain: 'strict',
         isolation: 'isolate',
-        touchAction: 'pan-y',
+        touchAction: 'manipulation', // UPDATED: Allow interaction
         transform: 'translateZ(0)',
+        pointerEvents: 'auto',
       }}
+      data-interactive="true"
     >
       {isVisible ? (
         <Suspense fallback={<LoadingSpinner />}>
           <div 
             className="absolute inset-0"
             style={{
-              touchAction: 'pan-y',
+              touchAction: 'manipulation', // UPDATED: Allow interaction
               transform: 'translateZ(0)',
+              pointerEvents: 'auto',
             }}
           >
             <MemoizedSplineCanvas

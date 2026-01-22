@@ -146,9 +146,10 @@ function DesktopSplineSceneComponent({
       className={`desktop-spline-scene relative w-full h-full ${className}`}
       style={{
         contain: heroMode ? 'none' : 'layout style',
-        touchAction: 'pan-y pinch-zoom',
+        touchAction: 'manipulation',
         overflow: 'visible',
         pointerEvents: 'auto',
+        cursor: 'grab',
       }}
     >
       {/* Loading indicator */}

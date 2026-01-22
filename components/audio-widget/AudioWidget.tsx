@@ -19,8 +19,9 @@ const AudioWidget = function AudioWidget() {
   // Use the new UIState context for mutual exclusion with other components
   // shouldMinimizeAudioWidget tells FloatingPlayer to minimize (hide iframe behind pull tab)
   // but NOT unmount - this preserves audio playback
-  // shouldHideAudioWidgetCompletely hides the entire widget when pagemode or loaderv2 is open
-  const { shouldMinimizeAudioWidget, setAudioWidgetOpen, shouldHideAudioWidgetCompletely } = useAudioWidgetUI();
+  // shouldHideAudioWidgetCompletely hides the entire widget (only during loader or when not unlocked)
+  // shouldHideMainWidget hides just the MainWidget but keeps FloatingPlayer for audio persistence
+  const { shouldMinimizeAudioWidget, setAudioWidgetOpen, shouldHideAudioWidgetCompletely, shouldHideMainWidget, isWelcomeScreenActive } = useAudioWidgetUI();
   const state = useAudioWidgetState();
   const game = useWanderingGame({ isMobile: state.isMobile });
   useAudioWidgetEffects(state, audioSettings, game);
@@ -60,6 +61,10 @@ const AudioWidget = function AudioWidget() {
     />
   );
 
+  // Determine if MainWidget should be shown
+  // Show MainWidget on welcome screen and main content, hide during registration
+  const showMainWidget = !shouldHideAudioWidgetCompletely && !shouldHideMainWidget;
+
   return (
     <>
       <AnimatePresence>
@@ -81,18 +86,21 @@ const AudioWidget = function AudioWidget() {
 
       <TipsOverlay show={state.showTipsOverlay} open={state.open} streamingActive={state.streamingActive} onClose={() => state.setShowTipsOverlay(false)} />
 
-      {!shouldHideAudioWidgetCompletely && (
+      {/* MainWidget (settings panel) - shown on welcome screen and main content, hidden during registration */}
+      {showMainWidget && (
         <MainWidget {...state} {...audioSettings} {...h} setOpen={handleSetOpen} shimmerEnabled={perf.shimmerEnabled} shimmerSettings={perf.shimmerSettings}
           isWandering={game.isWandering} gameStats={game.gameStats} gameState={game.gameState} setPlayerMinimized={state.setPlayerMinimized} />
       )}
 
       {/*
-        IMPORTANT: FloatingPlayer is ALWAYS rendered to preserve audio persistence.
-        When shouldMinimizeAudioWidget is true, the player minimizes (hides iframe behind pull tab)
-        but the iframe stays in the DOM so audio continues playing.
-        This is the key to audio persistence across UI state changes.
+        AUDIO PERSISTENCE STRATEGY:
+        FloatingPlayer with iframe is rendered whenever audio needs to persist.
+        - Welcome screen: Full widget shown (FloatingPlayer normal)
+        - Registration/Login: FloatingPlayer shown (minimized) for audio persistence
+        - Loader: Hidden completely (brief, acceptable)
+        - Main content: Full widget shown (FloatingPlayer normal)
         
-        However, when pagemode or loaderv2 is open (shouldHideAudioWidgetCompletely), we don't show it at all.
+        forceMinimize is true during registration (shouldHideMainWidget) or when other UI is open
       */}
       {!shouldHideAudioWidgetCompletely && (
         typeof document !== "undefined" && createPortal(
@@ -106,7 +114,7 @@ const AudioWidget = function AudioWidget() {
             maybeShowCatchGameTutorial={h.maybeShowCatchGameTutorial} dismissCatchGameTutorial={h.dismissCatchGameTutorial}
             showCatchGameTutorial={state.showCatchGameTutorial && !state.open && !state.playerHidden}
             tutorialContent={tutorialContent}
-            forceMinimize={shouldMinimizeAudioWidget} />, document.body)
+            forceMinimize={shouldMinimizeAudioWidget || shouldHideMainWidget} />, document.body)
       )}
 
       {typeof document !== "undefined" && createPortal(

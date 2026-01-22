@@ -145,7 +145,11 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
   }, [setPlayerMinimized]);
 
   // Get UI state to hide widget when modals/menus are open
-  const { shouldMinimizeAudioWidget } = useAudioWidgetUI();
+  const { shouldMinimizeAudioWidget, isWelcomeScreenActive } = useAudioWidgetUI();
+  
+  // Z-index: Must be above welcome screen (z-99999999) but below max safe integer
+  // Use 999999999 to be above welcome screen's z-99999999
+  const MAIN_WIDGET_Z_INDEX = isWelcomeScreenActive ? 999999999 : 100200;
 
   // Scroll detection for auto-minimizing
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -244,6 +248,13 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
     }
   }, [shouldMinimizeAudioWidget, widgetHidden, setWidgetHidden]);
 
+  // Auto-show widget on welcome screen (override any hidden state)
+  useEffect(() => {
+    if (isWelcomeScreenActive && widgetHidden) {
+      setWidgetHidden(false);
+    }
+  }, [isWelcomeScreenActive, widgetHidden, setWidgetHidden]);
+
   const currentStreamingIcon = React.useMemo(() => {
     const SourceIcon = sourceIcons[musicSource];
     if (isStreamingSource && SourceIcon) {
@@ -258,7 +269,15 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
         <AnimatePresence mode="wait">
         {widgetHidden && !isScrollMinimized && (
           <motion.div
-            className="fixed bottom-[70px] z-[100200] pointer-events-none left-[max(0px,12px)] md:left-3 md:right-auto"
+            className="fixed bottom-[70px] pointer-events-none"
+            style={{
+              zIndex: MAIN_WIDGET_Z_INDEX,
+              // Welcome screen: position on RIGHT, Normal: position on LEFT
+              ...(isWelcomeScreenActive 
+                ? { right: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
+                : { left: 'max(0px, 12px)' }
+              ),
+            }}
           >
             <motion.button
               key="normal-pull-tab"
@@ -311,7 +330,15 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
         {/* Minimized pull tab on scroll when widget is hidden */}
         {widgetHidden && isScrollMinimized && (
           <motion.div
-            className="fixed bottom-[70px] z-[100200] pointer-events-none left-[clamp(0px,12px,100px)] md:left-3 md:right-auto"
+            className="fixed bottom-[70px] pointer-events-none"
+            style={{
+              zIndex: MAIN_WIDGET_Z_INDEX,
+              // Welcome screen: position on RIGHT, Normal: position on LEFT
+              ...(isWelcomeScreenActive 
+                ? { right: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
+                : { left: 'clamp(0px, 12px, 100px)' }
+              ),
+            }}
           >
             <motion.button
               key="minimized-pull-tab"
@@ -390,7 +417,15 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
             {/* MINIMIZED PILL STATE - Cool Music icon with animated wave bars */}
             {isScrollMinimized && !open && (
               <motion.div
-                className="fixed bottom-[70px] z-[100200] pointer-events-none right-[clamp(12px,calc((100vw-1600px)/2+12px),112px)] md:left-3 md:right-auto"
+                className="fixed bottom-[70px] pointer-events-none"
+                style={{
+                  zIndex: MAIN_WIDGET_Z_INDEX,
+                  // Welcome screen: position on RIGHT, Normal: position on LEFT (md: left)
+                  ...(isWelcomeScreenActive 
+                    ? { right: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
+                    : { right: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
+                  ),
+                }}
               >
                 <motion.button
                   key="minimized-audio"
@@ -473,12 +508,18 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.25 }}
-                className="fixed bottom-[70px] z-[100200] pointer-events-auto right-[clamp(12px,calc((100vw-1600px)/2+12px),112px)] md:left-3 md:right-auto"
+                className="fixed bottom-[70px] pointer-events-auto"
                 drag="x"
                 dragConstraints={{ left: 0, right: 150 }}
                 dragElastic={0.1}
                 onDragEnd={handleWidgetDragEnd}
-                style={{ x: widgetX, opacity: widgetOpacity }}
+                style={{ 
+                  x: widgetX, 
+                  opacity: widgetOpacity,
+                  zIndex: MAIN_WIDGET_Z_INDEX,
+                  // Welcome screen: position on RIGHT, Normal: position on RIGHT (md:left)
+                  right: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)',
+                }}
               >
 
             {/* Return User "Click Play" Helper */}

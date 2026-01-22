@@ -175,6 +175,7 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
       }}
     >
       {/* Spline Scene - with retry key to force remount on retry */}
+      {/* INTERACTIVE: Full touch/mouse interaction enabled for 3D scene */}
       {!hasError && (
         <div
           key={`spline-desktop-${sceneToLoad}-${retryCount}`}
@@ -182,9 +183,10 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
           style={{
             width: '100%',
             height: '100%',
-            touchAction: 'auto',
+            touchAction: 'manipulation',
             pointerEvents: 'auto',
             willChange: isLoaded ? 'auto' : 'opacity',
+            cursor: 'grab',
           }}
         >
           <Spline
@@ -195,7 +197,9 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
               width: '100%',
               height: '100%',
               display: 'block',
-              touchAction: 'auto',
+              touchAction: 'manipulation',
+              pointerEvents: 'auto',
+              cursor: 'grab',
             }}
           />
         </div>

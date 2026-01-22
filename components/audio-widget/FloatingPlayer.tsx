@@ -9,28 +9,12 @@ import { SoundEffects } from "@/app/hooks/useSoundEffects";
 import { CompactGameHUD, BoredPopup, SparkleBurst, ConfettiBurst, PulseRing } from "@/components/audio-widget/ui";
 import { MinimizedPlayer } from "@/components/audio-widget/MinimizedPlayer";
 import { sourceLabel, sourceIcons } from "./constants";
+import { Z_INDEX } from "./constants/zIndex";
+import { ButtonTooltip } from "./ui/ButtonTooltip";
 import type { MusicSource } from "@/contexts/AudioSettingsProvider";
 import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 
-// Z-Index Constants - Centralized for consistency
-// Using very high values to ensure ALL elements render ABOVE everything else
-// Hierarchy: Base < Controls < HUD < Effects < Hints < Helpers < Tutorial < Tooltips < Modal
-const Z_INDEX = {
-  PULL_TAB: 2147483600,        // Minimized pull tab - high priority
-  PLAYER_BASE: 2147483610,     // Main iPhone container
-  PLAYER_CONTROLS: 2147483620, // Volume, power buttons
-  VOLUME_SLIDER: 2147483630,   // Volume overlay
-  LOCK_SCREEN: 2147483640,     // Lock screen overlay
-  GAME_HUD: 2147483650,        // Game score HUD
-  EFFECTS: 2147483660,         // Sparkles, confetti
-  SWIPE_HINT: 2147483670,      // "Swipe to minimize" hint
-  HELPERS: 2147483680,         // First time help tips
-  TUTORIAL: 2147483690,        // Game tutorial - MUST be above iPhone
-  TOOLTIPS: 2147483695,        // Button tooltips - highest UI element
-  CAMERA_MODAL: 2147483647,    // Camera modal - max safe integer
-} as const;
-
-// Export for external components (like QuickGameTutorial)
+// Re-export Z_INDEX for external components (like QuickGameTutorial)
 export { Z_INDEX };
 
 interface FloatingPlayerProps {
@@ -141,55 +125,6 @@ function CameraModal({
     </AnimatePresence>
   );
 }
-
-const ButtonTooltip = React.memo(function ButtonTooltip({
-  show,
-  text,
-  position = "right",
-  color = "blue",
-}: {
-  show: boolean;
-  text: string;
-  position?: "right" | "left" | "top" | "bottom";
-  color?: "blue" | "purple" | "red" | "green" | "orange";
-}) {
-  if (!show) return null;
-
-  const colorClasses = {
-    blue: "from-blue-600/95 via-cyan-500/95 to-blue-600/95 border-blue-400/50 shadow-blue-500/30",
-    purple: "from-purple-600/95 via-pink-500/95 to-purple-600/95 border-purple-400/50 shadow-purple-500/30",
-    red: "from-red-600/95 via-rose-500/95 to-red-600/95 border-red-400/50 shadow-red-500/30",
-    green: "from-green-600/95 via-emerald-500/95 to-green-600/95 border-green-400/50 shadow-green-500/30",
-    orange: "from-orange-600/95 via-amber-500/95 to-orange-600/95 border-orange-400/50 shadow-orange-500/30",
-  };
-
-  const positionClasses = {
-    right: "left-full ml-3 top-1/2 -translate-y-1/2",
-    left: "right-full mr-3 top-1/2 -translate-y-1/2",
-    top: "bottom-full mb-3 left-1/2 -translate-x-1/2",
-    bottom: "top-full mt-3 left-1/2 -translate-x-1/2",
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.8 }}
-      transition={{ type: "spring", stiffness: 400, damping: 20 }}
-      className={cn("absolute whitespace-nowrap pointer-events-none", positionClasses[position])}
-      style={{ zIndex: Z_INDEX.TOOLTIPS }}
-    >
-      <div
-        className={cn(
-          "px-3 py-2 rounded-xl text-white text-[10px] font-semibold shadow-xl backdrop-blur-md border bg-gradient-to-r",
-          colorClasses[color]
-        )}
-      >
-        {text}
-      </div>
-    </motion.div>
-  );
-});
 
 // Main iPhone 17 Floating Player
 export const FloatingPlayer = React.memo(function FloatingPlayer(props: FloatingPlayerProps) {
@@ -728,6 +663,12 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
         When forceMinimize is true, it pushes further off-screen so modals have more visible area.
 
         KEY: Same iframe element = same audio context = continuous playback
+        
+        CRITICAL FOR AUDIO PERSISTENCE:
+        - Keep z-index HIGH even when hidden (some browsers deprioritize z-index: -1)
+        - Use visibility: hidden instead of scale(0) which can pause media
+        - Position off-screen but don't use extreme negative values
+        - Keep width/height at 1px minimum (0 can cause unload in some browsers)
 
         NOTE: We check both isMinimized (internal state) AND playerMinimized (parent prop) to handle
         the race condition on reload where the prop updates after initial render.
@@ -736,16 +677,22 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
         className="fixed transition-all duration-300 ease-out"
         style={minimizedActive ? {
           position: 'fixed',
-          top: -9999,
-          left: -9999,
+          // Position off-screen but keep it "alive" - using bottom/right to push off viewport
+          bottom: -200,
+          right: -200,
+          // Minimum dimensions - 0 can cause browsers to unload iframe
           width: 1,
           height: 1,
           overflow: 'hidden',
+          // Use visibility:hidden instead of opacity:0 + transform:scale(0) for better audio persistence
+          visibility: 'hidden' as const,
           opacity: 0,
-          zIndex: -1,
+          // CRITICAL: Keep high z-index even when hidden - browsers may deprioritize z-index:-1
+          zIndex: Z_INDEX.PLAYER_BASE,
           pointerEvents: 'none',
           borderRadius: '12px',
-          transform: 'scale(0)',
+          // Avoid scale(0) which can pause media in some browsers
+          transform: 'scale(0.01)',
           transformOrigin: playerSide === 'left' ? 'left center' : 'right center',
         } : {
           position: 'fixed',
@@ -762,7 +709,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
           zIndex: isScrollMinimized ? (Z_INDEX.PULL_TAB - 10) : (Z_INDEX.PLAYER_BASE + 5),
           pointerEvents: isScrollMinimized ? 'none' : 'auto',
           borderRadius: isScrollMinimized ? '12px' : '0 0 16px 16px',
-          transform: isScrollMinimized ? 'scale(0)' : 'scale(1)',
+          transform: isScrollMinimized ? 'scale(0.01)' : 'scale(1)',
           transformOrigin: playerSide === 'left' ? 'left center' : 'right center',
         }}
         aria-hidden={isScrollMinimized || minimizedActive}

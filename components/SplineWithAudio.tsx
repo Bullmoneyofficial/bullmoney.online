@@ -448,14 +448,16 @@ function SplineWithAudioComponent({
       ref={containerRef}
       className={`spline-audio-container relative w-full h-full ${className}`}
       style={{
-        touchAction: isHero ? 'pan-y' : (isInteracting ? 'none' : 'pan-y'),
+        touchAction: 'manipulation', // UPDATED: Allow interaction on mobile and desktop
         // MOBILE/IN-APP FIX: Ensure full coverage
         width: '100%',
         height: '100%',
         minHeight: isHero ? '100%' : 'auto',
         maxWidth: '100vw',
         maxHeight: '100dvh', // Dynamic viewport height for in-app browsers
+        pointerEvents: 'auto', // Always interactive
       }}
+      data-interactive="true"
       {...combinedHandlers}
     >
       {/* VISUAL INTERACTION FEEDBACK LAYER */}

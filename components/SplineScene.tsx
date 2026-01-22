@@ -44,7 +44,8 @@ function SplineSceneComponent({
   targetFPS,
 }: SplineWrapperProps) {
   
-  const [isInteractive, setIsInteractive] = useState(false);
+  // UPDATED 2026.1.22: Start interactive by default on all devices
+  const [isInteractive, setIsInteractive] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [shouldRender, setShouldRender] = useState(true);
@@ -146,22 +147,22 @@ function SplineSceneComponent({
     setTimeout(() => setInteractionHint(''), 1000);
   }, [audioHandlers]);
 
-  // HERO MODE: Always render on ALL devices, optimize quality instead of blocking
+  // HERO MODE: Always render on ALL devices - NO FALLBACKS EVER
+  // Updated 2026.1.22: Removed all fallback conditions
   useEffect(() => {
     const browserInfo = detectBrowser();
     
-    // For hero, never disable - always find a way to render
-    const canBrowserRender = true; // HERO: Override all restrictions
-    const canDeviceRender = true; // HERO: Override all restrictions
-    
-    console.log('[SplineScene] HERO MODE: Enabled on ALL devices', {
+    // FORCE RENDER: Always render Spline on ALL devices
+    // Quality will be automatically reduced for low-end devices
+    console.log('[SplineScene] FORCE RENDER MODE: Spline enabled on ALL devices', {
       browserName: browserInfo.browserName,
       gpuTier: browserInfo.gpuTier,
       recommendedQuality: browserInfo.recommendedSplineQuality,
       deviceMemory: browserInfo.deviceMemory,
     });
     
-    setShouldRender(true); // HERO: Always render
+    setShouldRender(true); // ALWAYS render - no fallbacks
+    setHasError(false); // Reset any previous error state
   }, [perf.enable3D, perf.deviceTier]);
 
   const showSparkles =
@@ -170,21 +171,27 @@ function SplineSceneComponent({
     !perf.isMobile &&
     !hasError;
 
-  // Handle spline loading errors gracefully
+  // Handle spline loading errors gracefully - but DON'T stop rendering
+  // UPDATED 2026.1.22: Log error but keep trying to render
   const handleError = (error: Error) => {
-    console.error(`❌ Spline load failed for ${scene}:`, error);
-    setHasError(true);
+    console.error(`❌ Spline load issue for ${scene}:`, error);
+    // DON'T set hasError - let spline-wrapper handle retries
+    // setHasError(true); // REMOVED - keep rendering
     if (onError) onError(error);
   };
 
   const handleLoad = () => {
     setIsVisible(true);
+    setHasError(false); // Clear any previous error state on successful load
     if (onLoad) onLoad();
   };
 
-  // Show fallback if error occurred OR device can't handle 3D
-  // CLS FIX: Fallback has same dimensions as actual content
-  if (hasError || !shouldRender) {
+  // UPDATED 2026.1.22: NEVER show fallback - always attempt to render Spline
+  // Even if error occurs, we retry with reduced quality instead of showing fallback
+  // Only show fallback if we explicitly catch an unrecoverable WebGL error
+  const showFallback = false; // NEVER show fallback
+  
+  if (showFallback) {
     return (
       <div 
         className={`w-full h-full bg-gradient-to-br from-black via-neutral-950/30 to-black rounded-xl overflow-hidden relative spline-container ${className}`}
@@ -232,10 +239,14 @@ function SplineSceneComponent({
       ref={containerRef}
       className={`w-full h-full relative group spline-container ${className}`}
       data-spline-scene
+      data-interactive="true"
       style={{ 
         minHeight: '300px',
         height: '100%',
         contain: 'layout',
+        touchAction: 'manipulation',
+        pointerEvents: 'auto',
+        cursor: isDragging ? 'grabbing' : 'grab',
       }}
       // Enhanced event handlers with visual feedback
       onMouseDown={handleMouseDown}
@@ -384,10 +395,10 @@ function SplineSceneComponent({
         </div>
       )}
 
-      {/* The 3D Scene Layer - pointer-events-none by default on mobile to allow scrolling */}
+      {/* The 3D Scene Layer - ALWAYS interactive on mobile and desktop */}
       <div 
-        className={`w-full h-full transition-opacity duration-500 ${isInteractive ? 'pointer-events-auto' : 'pointer-events-none'}`}
-        style={{ touchAction: isInteractive ? 'none' : 'pan-y' }}
+        className="w-full h-full transition-opacity duration-500 pointer-events-auto"
+        style={{ touchAction: 'manipulation', cursor: isDragging ? 'grabbing' : 'grab' }}
       >
         <Suspense fallback={
           <div className="w-full h-full bg-gradient-to-br from-slate-950 to-neutral-950 flex items-center justify-center relative overflow-hidden">
@@ -435,7 +446,7 @@ function SplineSceneComponent({
         </Suspense>
       </div>
 
-      {/* Interaction Toggle Overlay - Tap to interact on mobile */}
+      {/* Interaction Toggle Overlay - Only shown if isInteractive is false (no longer the default) */}
       {!isInteractive && !hasError && isVisible && (
         <motion.button
           initial={{ opacity: 0 }}
@@ -444,7 +455,7 @@ function SplineSceneComponent({
           onClick={() => setIsInteractive(true)}
           className="absolute inset-0 z-10 flex items-center justify-center bg-transparent transition-colors cursor-pointer"
           aria-label="Interact with 3D Scene"
-          style={{ touchAction: 'pan-y' }}
+          style={{ touchAction: 'manipulation' }}
         >
           {/* Pulsing interaction prompt - always visible on mobile, hover on desktop */}
           <motion.div 

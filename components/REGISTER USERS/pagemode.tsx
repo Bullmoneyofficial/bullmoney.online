@@ -169,7 +169,7 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
         contain: 'layout style paint',
       }}
     >
-      {/* Spline Scene via iframe */}
+      {/* Spline Scene via iframe - INTERACTIVE: Full touch enabled */}
       {currentScene && (
         <div
           key={`spline-mobile-iframe-${currentScene.id}`}
@@ -177,17 +177,18 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
           style={{
             width: '100%',
             height: '100%',
-            touchAction: 'auto',
+            touchAction: 'manipulation',
             pointerEvents: 'auto',
             willChange: isLoaded ? 'auto' : 'opacity',
+            cursor: 'grab',
           }}
         >
           <iframe
             src={currentScene.viewerUrl}
             title="BullMoney mobile welcome scene"
             frameBorder="0"
-            allow="fullscreen; autoplay; xr-spatial-tracking"
-            loading="lazy"
+            allow="fullscreen; autoplay; xr-spatial-tracking; pointer-lock; gyroscope; accelerometer"
+            loading="eager"
             onLoad={handleIframeLoad}
             style={{
               width: '100%',
@@ -198,7 +199,8 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
               border: 'none',
               display: 'block',
               marginBottom: '-60px',
-              touchAction: 'auto',
+              touchAction: 'manipulation',
+              pointerEvents: 'auto',
             }}
           />
         </div>
@@ -1033,17 +1035,19 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       <GlobalStyles />
 
       {/* Shared Spline background for welcome/guest to survive resizes */}
+      {/* INTERACTIVE: Touch and mouse events pass through to Spline 3D scene */}
       {isWelcomeScreen && (
         <div
           className="fixed inset-0 w-full h-full overflow-hidden"
           style={{
             zIndex: 0,
             pointerEvents: 'auto',
-            touchAction: 'auto',
+            touchAction: 'manipulation',
             width: '100vw',
             minWidth: '100vw',
             height: '100vh',
-            minHeight: '100dvh'
+            minHeight: '100dvh',
+            cursor: 'grab',
           }}
         >
           <WelcomeSplineBackground />

@@ -104,20 +104,20 @@ export function usePageInitialization({
       setDisableSpline(!splineEnabled);
       console.log('[Init] ✅ Loaded saved Spline preference:', splineEnabled ? 'ENABLED' : 'DISABLED');
     } else {
-      // FIXED: Default to ENABLED for ALL devices with WebGL support
-      // Only disable for accessibility (reduced motion preference)
-      // Quality degradation and memory manager handle device limitations
-      const shouldDisableByDefault = deviceProfile.prefersReducedMotion;
+      // UPDATED 2026.1.22: ALWAYS enable Splines by default - NO DISABLING
+      // Even reduced motion users get splines with reduced animation speed
+      // Quality degradation handles device limitations automatically
+      const shouldDisableByDefault = false; // NEVER disable by default
 
       setDisableSpline(shouldDisableByDefault);
-      devicePrefs.set('spline_enabled', shouldDisableByDefault ? 'false' : 'true');
+      devicePrefs.set('spline_enabled', 'true'); // Always enable
 
-      console.log('[Init] 🚀 First visit - Splines', shouldDisableByDefault ? '❌ DISABLED (reduced motion)' : '✅ ENABLED (default)', {
+      console.log('[Init] 🚀 First visit - Splines ✅ ALWAYS ENABLED', {
         device: deviceProfile.isMobile ? 'mobile' : 'desktop',
         isHighEnd: deviceProfile.isHighEndDevice,
         reducedMotion: deviceProfile.prefersReducedMotion,
         connectionType: effectiveType,
-        note: shouldDisableByDefault ? 'Respecting accessibility preference' : 'Quality will auto-adjust for device'
+        note: 'Quality will auto-adjust for device, Splines always render'
       });
 
       // REMOVED: Performance prompt - no longer needed with auto-quality

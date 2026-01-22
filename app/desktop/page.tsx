@@ -123,11 +123,15 @@ function LazySplineContainer({ scene }: { scene: string }) {
       className="w-full h-full relative isolate overflow-hidden rounded-xl spline-container"
       data-spline-scene
       data-desktop-mode="true"
+      data-interactive="true"
       style={{
         contain: 'layout style',
         position: 'relative',
         minHeight: '300px',
         height: '100%',
+        touchAction: 'manipulation',
+        pointerEvents: 'auto',
+        cursor: 'grab',
       }}
     >
       {!hasLoadedOnce && !isInView && (
@@ -154,6 +158,8 @@ function LazySplineContainer({ scene }: { scene: string }) {
               opacity: isPaused ? 0 : 1,
               visibility: isPaused ? 'hidden' : 'visible',
               willChange: isPaused ? 'auto' : 'transform',
+              touchAction: 'manipulation',
+              cursor: 'grab',
             }}
           >
             <SplineScene scene={scene} />

@@ -880,7 +880,7 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
         // GPU layer
         transform: "translate3d(0,0,0)",
         willChange: "transform",
-        touchAction: 'pan-y',
+        touchAction: 'manipulation', // UPDATED: Allow interaction
         WebkitOverflowScrolling: 'touch',
         // BATTERY SAVER: Hide when saving
         visibility: isBatterySaving ? 'hidden' : 'visible',
@@ -899,7 +899,7 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          touchAction: 'pan-y',
+          touchAction: 'manipulation', // UPDATED: Allow interaction
         }}
       >
         {shouldUseViewer ? (
@@ -911,7 +911,7 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
             events-target="global"
             style={{
               ...fullViewportStyles,
-              touchAction: 'pan-y',
+              touchAction: 'manipulation', // UPDATED: Allow interaction on mobile/desktop
               pointerEvents: 'auto',
             }}
           />
@@ -931,7 +931,7 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
                 left: 0,
                 height: 'calc(100% + 60px)',
                 marginBottom: '-60px',
-                touchAction: 'pan-y',
+                touchAction: 'manipulation', // UPDATED: Allow interaction
                 pointerEvents: 'auto',
               }}
             />
@@ -1962,7 +1962,7 @@ const HeroParallax = () => {
         className="h-screen pt-10 pb-0 antialiased relative flex flex-col self-auto [perspective:1000px] [transform-style:preserve-3d] hero"
         style={{ 
           contain: typeof window !== 'undefined' && window.innerWidth >= 1440 ? 'layout style' : 'layout', 
-          touchAction: 'pan-y',
+          touchAction: 'manipulation', // UPDATED: Allow interaction
           minHeight: typeof window !== 'undefined' && window.innerWidth >= 1440 ? 'calc(100vh - 80px)' : '100dvh',
           height: '100dvh',
         }}
@@ -1970,6 +1970,7 @@ const HeroParallax = () => {
         data-content
         data-theme-aware
         data-hero
+        data-interactive="true"
     >
         {/* CLS FIX: Hero Spline wrapper with fixed dimensions */}
         <div 
@@ -1977,11 +1978,12 @@ const HeroParallax = () => {
           style={{ 
             contain: 'strict',
             isolation: 'isolate',
-            touchAction: 'pan-y',
+            touchAction: 'manipulation', // UPDATED: Allow interaction
             minHeight: '100dvh',
             pointerEvents: 'auto',
           }}
           data-allow-scroll
+          data-interactive="true"
         >
           <div 
             className="w-full h-full relative"
@@ -1992,7 +1994,7 @@ const HeroParallax = () => {
               right: 0,
               bottom: 0,
               contain: 'strict',
-              touchAction: 'pan-y',
+              touchAction: 'manipulation', // UPDATED: Allow interaction
               minHeight: '100dvh',
               pointerEvents: 'auto',
             }}
@@ -2017,6 +2019,7 @@ const HeroParallax = () => {
               <div
                 className="spline-container spline-fullscreen"
                 data-spline-scene
+                data-interactive="true"
                 style={{
                   // FULL VIEWPORT COVERAGE
                   position: 'absolute',
@@ -2034,7 +2037,7 @@ const HeroParallax = () => {
                   padding: 0,
                   // Performance
                   contain: 'strict',
-                  touchAction: 'pan-y',
+                  touchAction: 'manipulation', // UPDATED: Allow interaction
                   pointerEvents: 'auto',
                   overflow: 'hidden',
                   // GPU acceleration

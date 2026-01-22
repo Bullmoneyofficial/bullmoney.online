@@ -165,12 +165,14 @@ export function detectBrowser(): BrowserInfo {
   }
   
   // Recommended Spline quality based on device capabilities
+  // UPDATED 2026.1.22: NEVER disable Spline - always render with quality reduction instead
   let recommendedSplineQuality: 'high' | 'medium' | 'low' | 'disabled' = 'medium';
-  let shouldDisableSpline = false;
+  let shouldDisableSpline = false; // NEVER disable - always false
   
+  // Quality tiers based on device capability - but NEVER disabled
   if (gpuTier === 'minimal' || isUltraLowMemoryDevice || isTinyViewport) {
-    recommendedSplineQuality = 'disabled';
-    shouldDisableSpline = true;
+    recommendedSplineQuality = 'low'; // CHANGED: Use 'low' instead of 'disabled'
+    // shouldDisableSpline stays false - we render with extreme reduction instead
   } else if (gpuTier === 'low' || isVeryLowMemoryDevice || isSmallViewport) {
     recommendedSplineQuality = 'low';
   } else if (gpuTier === 'medium' || isLowMemoryDevice) {
@@ -224,8 +226,8 @@ export function detectBrowser(): BrowserInfo {
     isMobileChrome,
     isLowMemoryDevice,        // For analytics only
     isVeryLowMemoryDevice,    // For analytics only
-    canHandle3D: !shouldDisableSpline, // Now respects device capabilities
-    canHandleWebGL: !shouldDisableSpline, // Tied to Spline capability
+    canHandle3D: true, // ALWAYS TRUE - render with quality reduction instead of fallback
+    canHandleWebGL: true, // ALWAYS TRUE - attempt WebGL on all devices
     canHandleWebSocket: true, // ALWAYS TRUE
     canHandleAudio: true,     // ALWAYS TRUE
     shouldReduceAnimations,   // Only respects user preference
