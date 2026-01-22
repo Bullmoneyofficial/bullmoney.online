@@ -22,7 +22,14 @@ import { useUIState } from "@/contexts/UIStateContext";
 
 // --- IMPORT SEPARATE LOADER COMPONENT ---
 import { MultiStepLoader} from "@/components/Mainpage/MultiStepLoader";
-import { TelegramConfirmationResponsive } from "./TelegramConfirmationResponsive"; 
+import { TelegramConfirmationResponsive } from "./TelegramConfirmationResponsive";
+
+// --- DESKTOP WELCOME SCREEN (separate layout for larger screens) ---
+import { WelcomeScreenDesktop } from "./WelcomeScreenDesktop";
+
+// --- ULTIMATE HUB COMPONENTS (for mobile welcome screen to match desktop) ---
+import { UnifiedFpsPill, UnifiedHubPanel, useLivePrices } from '@/components/UltimateHub';
+import { createPortal } from 'react-dom';
 
 // --- DYNAMIC SPLINE IMPORT FOR WELCOME SCREEN ---
 const Spline = dynamic(() => import('@splinetool/react-spline'), {
@@ -31,12 +38,71 @@ const Spline = dynamic(() => import('@splinetool/react-spline'), {
 });
 
 // --- WELCOME SCREEN SPLINE BACKGROUND COMPONENT ---
+// Optimized with aggressive caching, preloading, and error recovery
 const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
-  
+  const [retryCount, setRetryCount] = useState(0);
+  const splineRef = useRef<any>(null);
+  const mountedRef = useRef(true);
+  const MAX_RETRIES = 2;
+
+  // Preload the spline scene on mount for faster loading
+  useEffect(() => {
+    mountedRef.current = true;
+
+    // Aggressive preloading - cache the spline file
+    if (typeof window !== 'undefined') {
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.href = '/scene1.splinecode';
+      link.as = 'fetch';
+      link.crossOrigin = 'anonymous';
+      if (!document.querySelector('link[href="/scene1.splinecode"]')) {
+        document.head.appendChild(link);
+      }
+
+      // Also fetch to warm the cache
+      fetch('/scene1.splinecode', {
+        method: 'GET',
+        cache: 'force-cache',
+        priority: 'high'
+      } as RequestInit).catch(() => {});
+    }
+
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  // Handle successful load
+  const handleLoad = useCallback((spline: any) => {
+    if (mountedRef.current) {
+      splineRef.current = spline;
+      setIsLoaded(true);
+      setHasError(false);
+    }
+  }, []);
+
+  // Handle error with retry logic
+  const handleError = useCallback(() => {
+    if (mountedRef.current) {
+      if (retryCount < MAX_RETRIES) {
+        // Retry after a short delay
+        setTimeout(() => {
+          if (mountedRef.current) {
+            setRetryCount(prev => prev + 1);
+            setHasError(false);
+          }
+        }, 500);
+      } else {
+        setHasError(true);
+      }
+    }
+  }, [retryCount]);
+
   return (
-    <div 
+    <div
       className="absolute inset-0 w-full h-full"
       style={{
         position: 'absolute',
@@ -46,23 +112,26 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
         height: '100%',
         overflow: 'hidden',
         background: '#000',
+        contain: 'layout style paint',
       }}
     >
-      {/* Spline Scene */}
+      {/* Spline Scene - with retry key to force remount on retry */}
       {!hasError && (
-        <div 
-          className={`absolute inset-0 transition-opacity duration-1000 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+        <div
+          key={`spline-${retryCount}`}
+          className={`absolute inset-0 transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
           style={{
             width: '100%',
             height: '100%',
             touchAction: 'auto',
             pointerEvents: 'auto',
+            willChange: isLoaded ? 'auto' : 'opacity',
           }}
         >
           <Spline
             scene="/scene1.splinecode"
-            onLoad={() => setIsLoaded(true)}
-            onError={() => setHasError(true)}
+            onLoad={handleLoad}
+            onError={handleError}
             style={{
               width: '100%',
               height: '100%',
@@ -72,10 +141,13 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
           />
         </div>
       )}
-      
-      {/* Black fallback / loading state */}
-      <div 
-        className={`absolute inset-0 bg-black transition-opacity duration-1000 ${isLoaded && !hasError ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+
+      {/* Subtle gradient fallback while loading or on error */}
+      <div
+        className={`absolute inset-0 transition-opacity duration-700 ${isLoaded && !hasError ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        style={{
+          background: 'radial-gradient(ellipse at 50% 30%, rgba(59, 130, 246, 0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 40%), #000',
+        }}
       />
     </div>
   );
@@ -108,6 +180,25 @@ const useIsMobile = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
   return isMobile;
+};
+
+// --- UTILS: DESKTOP DETECTION HOOK (for welcome screen layout) ---
+const useIsDesktop = () => {
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    const checkDesktop = () => {
+      // Desktop: 1024px+ width AND not a touch-primary device
+      const isLargeScreen = window.innerWidth >= 1024;
+      const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+      const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+      // Consider it desktop if large screen and not a mobile user agent
+      setIsDesktop(isLargeScreen && !isMobileUA);
+    };
+    checkDesktop();
+    window.addEventListener('resize', checkDesktop);
+    return () => window.removeEventListener('resize', checkDesktop);
+  }, []);
+  return isDesktop;
 };
 
 // --- 2. INTERNAL CSS FOR SCROLL LOCK & SHIMMER ANIMATION & NEON STYLES ---
@@ -437,7 +528,9 @@ interface RegisterPageProps {
 
 export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   // --- STATE ---
-  const [loading, setLoading] = useState(true);
+  // IMPORTANT: Start with loading=false so welcome screen shows immediately
+  // The MultiStepLoader should ONLY show during form submissions, NOT on initial load
+  const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState<'register' | 'login'>('register');
   const [step, setStep] = useState(-1); // Start at -1 for welcome screen
   const [activeBroker, setActiveBroker] = useState<'Vantage' | 'XM'>('Vantage');
@@ -447,7 +540,15 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [isRefresh, setIsRefresh] = useState(false);
   const [isCelebration, setIsCelebration] = useState(false);
-  const [confirmationClicked, setConfirmationClicked] = useState(false); 
+  const [confirmationClicked, setConfirmationClicked] = useState(false);
+  
+  // --- DESKTOP DETECTION FOR WELCOME SCREEN ---
+  const isDesktop = useIsDesktop();
+
+  // --- ULTIMATE HUB STATE (for mobile welcome screen) ---
+  const [isHubOpen, setIsHubOpen] = useState(false);
+  const [isHubMinimized, setIsHubMinimized] = useState(false);
+  const prices = useLivePrices();
 
   const [formData, setFormData] = useState({
     email: '',
@@ -522,14 +623,15 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     const initSession = async () => {
       // Check if this is a celebration loader after V3 completion
       const showCelebration = localStorage.getItem("bullmoney_show_celebration_loader");
-      
+
       if (showCelebration === "true") {
         console.log("Showing premium celebration loader after V3 completion");
         localStorage.removeItem("bullmoney_show_celebration_loader");
         localStorage.setItem("bullmoney_loader_completed", "true");
         setIsRefresh(false);
         setIsCelebration(true); // Flag for premium celebration mode
-        
+        setLoading(true); // Only show loader for celebration mode
+
         if (mounted) {
           // 5 seconds premium celebration experience, then show Telegram confirmation
           setTimeout(() => {
@@ -539,12 +641,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         }
         return;
       }
-      
-      // Always show welcome screen (step -1) on load/reload
-      // Just end loading and stay on step -1
-      if (mounted) {
-        setTimeout(() => { setLoading(false); }, 1500);
-      }
+
+      // Welcome screen (step -1) shows immediately - no loading delay needed
+      // loading is already false by default, so welcome screen appears instantly
     };
 
     initSession();
@@ -904,141 +1003,349 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
         {/* ================= WELCOME SCREEN (Step -1) ================= */}
         {step === -1 && (
-          <motion.div
-            key="welcome-screen"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 flex items-center justify-center z-[99999999]"
-            style={{ minHeight: '100dvh', width: '100vw', height: '100vh' }}
-          >
-            {/* Spline Background - Independent wrapper for welcome screen */}
-            <div 
-              className="absolute inset-0 w-full h-full overflow-hidden"
-              style={{ 
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                width: '100vw',
-                height: '100vh',
-                minHeight: '100dvh',
-                zIndex: 0,
-                pointerEvents: 'auto',
-                touchAction: 'auto'
+          isDesktop ? (
+            // Desktop Welcome Screen - Split layout with branding
+            <WelcomeScreenDesktop
+              onSignUp={() => {
+                setViewMode('register');
+                setStep(0);
               }}
-            >
-              <WelcomeSplineBackground />
-            </div>
-            
-            {/* Buttons container - above Spline */}
-            <div 
-              className="relative flex flex-col items-center justify-center gap-6 px-6 w-full max-w-sm"
-              style={{ zIndex: 10 }}
-            >
-              {/* Sign Up Button */}
-              <motion.button
-                onClick={() => {
-                  setViewMode('register');
-                  setStep(0);
-                }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full py-4 bg-black/80 backdrop-blur-sm border-2 border-blue-500 rounded-xl font-bold text-lg tracking-wide transition-all flex items-center justify-center cursor-target overflow-hidden text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.4)] hover:shadow-[0_0_25px_rgba(59,130,246,0.6)]"
+              onGuest={() => {
+                setStep(-2);
+              }}
+              onLogin={() => {
+                setViewMode('login');
+                setStep(0);
+              }}
+            />
+          ) : (
+            // Mobile Welcome Screen - Glassy transparent design
+            <>
+              <motion.div
+                key="welcome-screen"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="fixed inset-0 flex flex-col z-[99999999]"
+                style={{ minHeight: '100dvh', width: '100vw', height: '100vh' }}
               >
-                <span className="flex items-center gap-2">
-                  Sign Up <ArrowRight className="w-5 h-5" />
-                </span>
-              </motion.button>
+                {/* Spline Background - Independent wrapper for welcome screen */}
+                <div
+                  className="absolute inset-0 w-full h-full overflow-hidden"
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    width: '100vw',
+                    height: '100vh',
+                    minHeight: '100dvh',
+                    zIndex: 0,
+                    pointerEvents: 'auto',
+                    touchAction: 'auto'
+                  }}
+                >
+                  <WelcomeSplineBackground />
+                </div>
 
-              {/* Guest Button */}
-              <motion.button
-                onClick={() => {
-                  // Go to guest intermediate screen
-                  setStep(-2);
-                }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full py-4 bg-black/80 backdrop-blur-sm border-2 border-white/30 rounded-xl font-bold text-lg tracking-wide transition-all flex items-center justify-center cursor-target overflow-hidden text-white/70 hover:border-white/50 hover:text-white"
-              >
-                <span className="flex items-center gap-2">
-                  Guest
-                </span>
-              </motion.button>
+                {/* Branding Header - Top Center (above buttons) */}
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                  className="relative z-10 pt-6 pb-2 text-center"
+                >
+                  <h1
+                    className="text-3xl font-black tracking-tight"
+                    style={{
+                      color: '#3b82f6',
+                      textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6, 0 0 16px #3b82f6',
+                    }}
+                  >
+                    BULLMONEY
+                  </h1>
+                  <p className="text-sm text-white/50 mt-1 font-medium tracking-wide">
+                    The Ultimate Trading Hub
+                  </p>
+                </motion.div>
 
-              {/* Login Button */}
-              <motion.button
-                onClick={() => {
-                  setViewMode('login');
-                  setStep(0);
-                }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full py-4 bg-black/80 backdrop-blur-sm border-2 border-blue-500/60 rounded-xl font-bold text-lg tracking-wide transition-all flex items-center justify-center cursor-target overflow-hidden text-blue-300 hover:border-blue-500 hover:text-blue-400"
-              >
-                <span className="flex items-center gap-2">
-                  Login <ArrowRight className="w-5 h-5" />
-                </span>
-              </motion.button>
-            </div>
-          </motion.div>
+                {/* Main Content Area - Centered */}
+                <div
+                  className="relative flex-1 flex flex-col items-center justify-center gap-4 px-5 w-full max-w-sm mx-auto pb-6"
+                  style={{ zIndex: 10 }}
+                >
+                  {/* Ultra-transparent Card Container - See through to Spline */}
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.4, delay: 0.2 }}
+                    className="w-full rounded-2xl p-5 border border-white/5"
+                    style={{
+                      background: 'rgba(0, 0, 0, 0.15)',
+                      backdropFilter: 'blur(8px)',
+                      WebkitBackdropFilter: 'blur(8px)',
+                      boxShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.03)',
+                    }}
+                  >
+                    {/* Action Header */}
+                    <div className="text-center mb-5">
+                      <h2 className="text-lg font-bold text-white/80 mb-1">
+                        Get Started
+                      </h2>
+                      <p className="text-white/30 text-xs">
+                        Choose how you want to continue
+                      </p>
+                    </div>
+
+                    {/* Buttons Stack */}
+                    <div className="flex flex-col gap-2.5">
+                      {/* Sign Up Button - Primary with transparent glass */}
+                      <motion.button
+                        onClick={() => {
+                          setViewMode('register');
+                          setStep(0);
+                        }}
+                        whileTap={{ scale: 0.98 }}
+                        className="w-full py-3.5 rounded-xl font-bold text-base tracking-wide transition-all flex items-center justify-center gap-2 text-white"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.5) 0%, rgba(37, 99, 235, 0.6) 100%)',
+                          backdropFilter: 'blur(8px)',
+                          boxShadow: '0 4px 20px rgba(59, 130, 246, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                          border: '1px solid rgba(96, 165, 250, 0.3)',
+                        }}
+                      >
+                        <span>Create Account</span>
+                        <ArrowRight className="w-5 h-5" />
+                      </motion.button>
+
+                      {/* Login Button - Very transparent glass */}
+                      <motion.button
+                        onClick={() => {
+                          setViewMode('login');
+                          setStep(0);
+                        }}
+                        whileTap={{ scale: 0.98 }}
+                        className="w-full py-3.5 rounded-xl font-bold text-base tracking-wide transition-all flex items-center justify-center gap-2 text-blue-300"
+                        style={{
+                          background: 'rgba(59, 130, 246, 0.08)',
+                          backdropFilter: 'blur(6px)',
+                          border: '1px solid rgba(59, 130, 246, 0.2)',
+                        }}
+                      >
+                        <span>Login</span>
+                        <ArrowRight className="w-5 h-5" />
+                      </motion.button>
+
+                      {/* Divider */}
+                      <div className="flex items-center gap-3 my-1">
+                        <div className="flex-1 h-px bg-white/5" />
+                        <span className="text-white/20 text-[10px]">or</span>
+                        <div className="flex-1 h-px bg-white/5" />
+                      </div>
+
+                      {/* Guest Button - Near invisible glass */}
+                      <motion.button
+                        onClick={() => {
+                          setStep(-2);
+                        }}
+                        whileTap={{ scale: 0.98 }}
+                        className="w-full py-2.5 rounded-xl font-medium text-sm tracking-wide transition-all flex items-center justify-center gap-2 text-white/40"
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.02)',
+                          backdropFilter: 'blur(4px)',
+                          border: '1px solid rgba(255, 255, 255, 0.05)',
+                        }}
+                      >
+                        <User className="w-4 h-4" />
+                        <span>Continue as Guest</span>
+                      </motion.button>
+                    </div>
+
+                    {/* Footer Note */}
+                    <p className="text-center text-white/15 text-[9px] mt-4">
+                      By continuing, you agree to our Terms of Service
+                    </p>
+                  </motion.div>
+                </div>
+
+                {/* Ultimate Hub Pill - Uses its own fixed positioning (matching desktop) */}
+                <UnifiedFpsPill
+                  fps={60}
+                  deviceTier="high"
+                  prices={prices}
+                  isMinimized={isHubMinimized}
+                  onToggleMinimized={() => setIsHubMinimized(!isHubMinimized)}
+                  onOpenPanel={() => setIsHubOpen(true)}
+                />
+              </motion.div>
+
+              {/* Ultimate Hub Panel - Portal for z-index */}
+              {typeof window !== 'undefined' && createPortal(
+                <UnifiedHubPanel
+                  isOpen={isHubOpen}
+                  onClose={() => setIsHubOpen(false)}
+                  fps={60}
+                  deviceTier="high"
+                  isAdmin={false}
+                  isVip={false}
+                  userId={undefined}
+                  userEmail={undefined}
+                  prices={prices}
+                />,
+                document.body
+              )}
+            </>
+          )
         )}
 
         {/* ================= GUEST INTERMEDIATE SCREEN (Step -2) ================= */}
         {step === -2 && (
-          <motion.div
-            key="guest-screen"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 bg-black flex items-center justify-center z-[99999999]"
-            style={{ minHeight: '100dvh' }}
-          >
-            <div className="flex flex-col items-center justify-center gap-6 px-6 w-full max-w-md">
-              <div className="bg-black/80 backdrop-blur-xl p-6 md:p-8 rounded-2xl border-2 border-white/20 text-center w-full">
-                <div className="mb-5 flex justify-center">
-                  <div className="h-14 w-14 md:h-16 md:w-16 rounded-full bg-black flex items-center justify-center border-2 border-white/30">
-                    <User className="w-7 h-7 md:w-8 md:h-8 text-white/70" />
-                  </div>
-                </div>
-                
-                <h2 className="text-xl md:text-2xl font-bold text-white mb-3">Continue as Guest</h2>
-                <p className="text-sm md:text-base text-white/60 mb-6 leading-relaxed">
-                  You can browse the site without an account.<br/>
-                  <span className="text-white/40">Some features may be limited.</span>
-                </p>
-
-                {/* Continue Button */}
-                <motion.button
-                  onClick={() => {
-                    // Set step to prevent re-render, then bypass pagemode
-                    setStep(99);
-                    requestAnimationFrame(() => {
-                      onUnlock();
-                    });
-                  }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full py-3 md:py-4 bg-black border-2 border-white/40 rounded-xl font-bold text-lg tracking-wide transition-all flex items-center justify-center cursor-target overflow-hidden text-white hover:border-white/60 hover:shadow-[0_0_15px_rgba(255,255,255,0.2)]"
-                >
-                  <span className="flex items-center gap-2">
-                    Continue to Site <ArrowRight className="w-5 h-5" />
-                  </span>
-                </motion.button>
-              </div>
-              
-              {/* Back Button */}
-              <button 
-                onClick={() => setStep(-1)} 
-                className="flex items-center text-slate-500 hover:text-slate-300 text-sm transition-colors cursor-target"
+          <>
+            <motion.div
+              key="guest-screen"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="fixed inset-0 flex flex-col z-[99999999]"
+              style={{ minHeight: '100dvh' }}
+            >
+              {/* Spline Background - Same as welcome screen */}
+              <div
+                className="absolute inset-0 w-full h-full overflow-hidden"
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  width: '100vw',
+                  height: '100vh',
+                  minHeight: '100dvh',
+                  zIndex: 0,
+                  pointerEvents: 'auto',
+                  touchAction: 'auto'
+                }}
               >
-                <ChevronLeft className="w-4 h-4 mr-1" /> Back
+                <WelcomeSplineBackground />
+              </div>
+
+              {/* Ultra-transparent Back Button - Top Right (UltimateHub is on left) */}
+              <button
+                onClick={() => setStep(-1)}
+                className="fixed top-5 right-4 flex items-center gap-2 text-blue-300 text-sm font-medium transition-all cursor-target py-2 px-3.5 rounded-xl z-[2147483646]"
+                style={{
+                  background: 'rgba(0, 0, 0, 0.15)',
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(59, 130, 246, 0.15)',
+                }}
+              >
+                <ChevronLeft className="w-4 h-4" /> Back
               </button>
-            </div>
-          </motion.div>
+
+              {/* Branding Header - Top Center */}
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="relative z-10 pt-6 pb-2 text-center"
+              >
+                <h1
+                  className="text-2xl font-black tracking-tight"
+                  style={{
+                    color: '#3b82f6',
+                    textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6, 0 0 16px #3b82f6',
+                  }}
+                >
+                  BULLMONEY
+                </h1>
+                <p className="text-xs text-white/30 mt-1 font-medium tracking-wide">
+                  The Ultimate Trading Hub
+                </p>
+              </motion.div>
+
+              {/* Centered Content - Ultra-transparent Card */}
+              <div className="flex-1 flex flex-col items-center justify-center gap-6 px-5 w-full max-w-sm mx-auto pb-20 relative z-10">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: 0.1 }}
+                  className="rounded-2xl p-6 text-center w-full border border-white/5"
+                  style={{
+                    background: 'rgba(0, 0, 0, 0.15)',
+                    backdropFilter: 'blur(8px)',
+                    WebkitBackdropFilter: 'blur(8px)',
+                    boxShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.03)',
+                  }}
+                >
+                  <div className="mb-4 flex justify-center">
+                    <div
+                      className="h-12 w-12 rounded-full flex items-center justify-center"
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                      }}
+                    >
+                      <User className="w-6 h-6 text-white/50" />
+                    </div>
+                  </div>
+
+                  <h2 className="text-lg font-bold text-white/80 mb-2">Continue as Guest</h2>
+                  <p className="text-xs text-white/30 mb-5 leading-relaxed">
+                    Browse the site without an account.<br />
+                    <span className="text-white/20">Some features may be limited.</span>
+                  </p>
+
+                  {/* Continue Button - Ultra-transparent */}
+                  <motion.button
+                    onClick={() => {
+                      setStep(99);
+                      onUnlock();
+                    }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full py-3 rounded-xl font-bold text-base tracking-wide transition-all flex items-center justify-center gap-2 text-white/70"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      backdropFilter: 'blur(6px)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                    }}
+                  >
+                    <span>Continue to Site</span>
+                    <ArrowRight className="w-5 h-5" />
+                  </motion.button>
+                </motion.div>
+              </div>
+
+              {/* Ultimate Hub Pill - Uses its own fixed positioning (matching welcome screen) */}
+              <UnifiedFpsPill
+                fps={60}
+                deviceTier="high"
+                prices={prices}
+                isMinimized={isHubMinimized}
+                onToggleMinimized={() => setIsHubMinimized(!isHubMinimized)}
+                onOpenPanel={() => setIsHubOpen(true)}
+              />
+            </motion.div>
+
+            {/* Ultimate Hub Panel - Portal for z-index */}
+            {typeof window !== 'undefined' && createPortal(
+              <UnifiedHubPanel
+                isOpen={isHubOpen}
+                onClose={() => setIsHubOpen(false)}
+                fps={60}
+                deviceTier="high"
+                isAdmin={false}
+                isVip={false}
+                userId={undefined}
+                userEmail={undefined}
+                prices={prices}
+              />,
+              document.body
+            )}
+          </>
         )}
 
         {/* ================= LOGIN VIEW ================= */}
@@ -1046,10 +1353,18 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full flex flex-col items-center justify-center"
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}
+            className="fixed inset-0 bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center z-[99999998]"
+            style={{ minHeight: '100dvh' }}
           >
-             <div className={cn("register-card bg-black/80 backdrop-blur-xl p-5 md:p-8 rounded-2xl relative overflow-hidden w-full max-w-md mx-auto", neonBorderClass)}>
+             {/* Back Button - Fixed Left Side Like Ultimate Hub */}
+             <button 
+               onClick={() => setStep(-1)} 
+               className="fixed top-20 left-4 lg:top-24 lg:left-6 flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm lg:text-base font-semibold transition-all cursor-target py-2.5 px-4 rounded-xl bg-black/90 backdrop-blur-xl border border-blue-500/40 hover:border-blue-400/60 shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] z-[2147483646]"
+             >
+               <ChevronLeft className="w-5 h-5" /> Back
+             </button>
+             
+             <div className={cn("register-card bg-black/80 backdrop-blur-xl p-5 md:p-8 rounded-2xl relative overflow-hidden w-full max-w-md mx-4", neonBorderClass)}>
                 {/* Shimmer overlay effect */}
                 <div className="absolute inset-0 shimmer-ltr opacity-20 pointer-events-none" />
                 
@@ -1134,13 +1449,6 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   </button>
                 </div>
              </div>
-             {/* Back to Welcome Screen */}
-             <button 
-               onClick={() => setStep(-1)} 
-               className="mt-4 flex items-center text-slate-500 hover:text-slate-300 text-sm mx-auto transition-colors cursor-target"
-             >
-               <ChevronLeft className="w-4 h-4 mr-1" /> Back
-             </button>
           </motion.div>
         ) : (
           /* ================= UNLOCK FLOW VIEW ================= */
@@ -1181,14 +1489,22 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
               {step === 0 && (
                  <motion.div
                   key="step0"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="w-full flex flex-col items-center justify-center relative"
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', zIndex: 1 }}
+                  className="fixed inset-0 bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center z-[99999998]"
+                  style={{ minHeight: '100dvh' }}
                  >
-                   <div className={cn("register-card bg-black/80 backdrop-blur-xl p-5 md:p-8 rounded-2xl relative overflow-hidden text-center w-full max-w-md mx-auto", neonBorderClass)} style={{ zIndex: 1 }}>
+                   {/* Back Button - Fixed Left Side Like Ultimate Hub */}
+                   <button 
+                     onClick={() => setStep(-1)} 
+                     className="fixed top-20 left-4 lg:top-24 lg:left-6 flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm lg:text-base font-semibold transition-all cursor-target py-2.5 px-4 rounded-xl bg-black/90 backdrop-blur-xl border border-blue-500/40 hover:border-blue-400/60 shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] z-[2147483646]"
+                   >
+                     <ChevronLeft className="w-5 h-5" /> Back
+                   </button>
+                   
+                   <div className={cn("register-card bg-black/80 backdrop-blur-xl p-5 md:p-8 rounded-2xl relative overflow-hidden text-center w-full max-w-md mx-4", neonBorderClass)} style={{ zIndex: 1 }}>
                       {/* Shimmer overlay effect */}
                       <div className="absolute inset-0 shimmer-ltr opacity-20 pointer-events-none" />
                       
@@ -1234,13 +1550,6 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                          </motion.button>
                       </div>
                    </div>
-                   {/* Back to Welcome Screen */}
-                   <button 
-                     onClick={() => setStep(-1)} 
-                     className="mt-4 flex items-center text-slate-500 hover:text-slate-300 text-sm mx-auto transition-colors cursor-target"
-                   >
-                     <ChevronLeft className="w-4 h-4 mr-1" /> Back
-                   </button>
                  </motion.div>
               )}
 

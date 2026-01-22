@@ -1069,20 +1069,29 @@ function HomeContent() {
 
     console.log('[Page] Session check:', { hasSession: !!hasSession, hasCompletedPagemode, hasCompletedLoader, shouldForceLoader, forceReasons });
 
-    if (shouldForceLoader) {
-      console.log('[Page] Forcing loader due to refresh policy');
-      setCurrentView('loader');
-    } else if (hasCompletedLoader === "true") {
-      // Skip V3 loader but show pagemode loader briefly on every reload
-      console.log('[Page] Showing pagemode loader instead of V3 - loader previously completed');
+    // CRITICAL: Pagemode/welcome screen MUST always show first
+    // MultiStepLoaderv3 should ONLY show after pagemode has been completed at least once
+    if (!hasCompletedPagemode && !hasSession) {
+      // First time visitor - always show pagemode welcome screen first
+      console.log('[Page] First time visitor - showing pagemode');
       setCurrentView('pagemode');
+    } else if (hasCompletedLoader === "true") {
+      // User has completed both pagemode AND loader before
+      // Skip directly to content (no loader needed)
+      console.log('[Page] Loader already completed - skipping to content');
+      setV2Unlocked(true);
+      setCurrentView('content');
+    } else if (shouldForceLoader && (hasSession || hasCompletedPagemode === "true")) {
+      // Only force loader if user has already completed pagemode
+      console.log('[Page] Forcing loader due to refresh policy (pagemode already completed)');
+      setCurrentView('loader');
     } else if (hasSession || hasCompletedPagemode === "true") {
-      // Skip pagemode if user has session OR has ever completed pagemode
+      // User completed pagemode but not loader yet - show loader
       console.log('[Page] Skipping to loader - session/pagemode previously completed');
       setCurrentView('loader');
     } else {
-      // First time visitor - show pagemode
-      console.log('[Page] First time visitor - showing pagemode');
+      // Fallback - show pagemode
+      console.log('[Page] Fallback - showing pagemode');
       setCurrentView('pagemode');
     }
     setIsInitialized(true);

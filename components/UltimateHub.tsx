@@ -1715,7 +1715,10 @@ function useConsoleLogs(maxLogs: number = 100): { logs: ConsoleEntry[]; clearLog
       };
 
       logsRef.current = [entry, ...logsRef.current].slice(0, maxLogs);
-      setLogs([...logsRef.current]);
+      // Defer setLogs to avoid calling setState during render phase
+      queueMicrotask(() => {
+        setLogs([...logsRef.current]);
+      });
     };
 
     // Override console methods
@@ -2070,7 +2073,8 @@ function useVipCheck(userId?: string, userEmail?: string) {
   return { isVip, loading };
 }
 
-function useLivePrices() {
+// Exported for use in WelcomeScreenDesktop
+export function useLivePrices() {
   const [prices, setPrices] = useState({ xauusd: '...', btcusd: '...' });
   
   useEffect(() => {
@@ -4221,7 +4225,8 @@ const UNIFIED_HUB_TABS: { id: UnifiedHubTab; label: string; icon: typeof Trendin
 // UNIFIED HUB PANEL - All features in one panel
 // ============================================================================
 
-const UnifiedHubPanel = memo(({
+// Exported for use in WelcomeScreenDesktop
+export const UnifiedHubPanel = memo(({
   isOpen,
   onClose,
   fps,
@@ -5721,7 +5726,8 @@ const BreakingNewsViewer = memo(() => {
 });
 BreakingNewsViewer.displayName = 'BreakingNewsViewer';
 
-const UnifiedFpsPill = memo(({ 
+// Exported for use in WelcomeScreenDesktop
+export const UnifiedFpsPill = memo(({ 
   fps, 
   deviceTier, 
   prices,
@@ -6249,10 +6255,9 @@ const UnifiedFpsPill = memo(({
         : { y: { duration: 0.2, ease: "easeOut" } }
       }
       className="fixed left-0 z-[999999999] pointer-events-none"
-      style={{ 
-        // Mobile: center vertically (50%), Desktop: near top (15%)
-        top: isMobile ? '50%' : '15%', 
-        transform: isMobile ? 'translateY(-50%)' : undefined,
+      style={{
+        // Mobile: 18% from top, Desktop: near top (15%)
+        top: isMobile ? '18%' : '15%',
         paddingLeft: 'calc(env(safe-area-inset-left, 0px))',
         // Disable screen bloom effect on mobile
         filter: (!isMobile && extremeScrollProgress > 0.7) ? `brightness(${1 + (extremeScrollProgress - 0.7) * 0.3})` : undefined,
