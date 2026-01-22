@@ -90,12 +90,39 @@ const selectWeightedMobileScene = (): MobileSplineScene => {
   return MOBILE_SPLINE_SCENES[0];
 };
 
+// --- MOBILE SPLINE OPTIMIZATION CONFIG ---
+// Lower quality settings for smoother mobile performance
+const MOBILE_SPLINE_CONFIG = {
+  // Disable heavy render effects for mobile
+  disableShadows: true,
+  disableReflections: true,
+  disablePostProcessing: true,
+  // Lower quality settings
+  pixelRatio: 1.0, // Lower pixel ratio for mobile
+  maxFPS: 30, // Cap FPS for battery savings
+  // Smooth loading
+  loadingDelay: 100,
+  fadeInDuration: 500,
+};
+
+// Build optimized URL with quality parameters for mobile
+const getMobileOptimizedSplineUrl = (baseUrl: string): string => {
+  const url = new URL(baseUrl);
+  // Add URL parameters to reduce quality for smoother mobile performance
+  url.searchParams.set('hideUI', 'true');
+  url.searchParams.set('quality', 'low');
+  return url.toString();
+};
+
 // --- WELCOME SCREEN SPLINE BACKGROUND COMPONENT (MOBILE - IFRAME VERSION) ---
 // Uses iframes instead of local files for better mobile performance
+// Optimized with lower quality rendering and disabled heavy effects
 const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isRendering, setIsRendering] = useState(false);
   const [currentScene, setCurrentScene] = useState<MobileSplineScene | null>(null);
   const mountedRef = useRef(true);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const ROTATE_INTERVAL_MS = 60000; // rotate every 60s
 
   const pickNextScene = useCallback((): MobileSplineScene => {
@@ -148,11 +175,35 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
     return () => window.clearInterval(id);
   }, [pickNextScene]);
 
-  // Handle iframe load
+  // Handle iframe load with smooth transition
   const handleIframeLoad = useCallback(() => {
     if (mountedRef.current) {
-      setIsLoaded(true);
+      // Small delay to ensure Spline scene has started rendering
+      setTimeout(() => {
+        if (mountedRef.current) {
+          setIsRendering(true);
+          // Second delay for smooth fade-in after render starts
+          setTimeout(() => {
+            if (mountedRef.current) {
+              setIsLoaded(true);
+            }
+          }, MOBILE_SPLINE_CONFIG.fadeInDuration);
+        }
+      }, MOBILE_SPLINE_CONFIG.loadingDelay);
     }
+  }, []);
+
+  // Reduce motion when battery is low or device is struggling
+  const [reducedMotion, setReducedMotion] = useState(false);
+  
+  useEffect(() => {
+    // Check for reduced motion preference
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setReducedMotion(mediaQuery.matches);
+    
+    const handleChange = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
   return (
@@ -166,25 +217,31 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
         height: '100%',
         overflow: 'hidden',
         background: '#000',
-        contain: 'layout style paint',
+        contain: 'layout style paint size',
+        contentVisibility: 'auto',
       }}
     >
       {/* Spline Scene via iframe - INTERACTIVE: Full touch enabled */}
+      {/* Mobile-optimized with lower quality and disabled heavy effects */}
       {currentScene && (
         <div
           key={`spline-mobile-iframe-${currentScene.id}`}
-          className={`absolute inset-0 transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+          className="absolute inset-0"
           style={{
             width: '100%',
             height: '100%',
             touchAction: 'manipulation',
             pointerEvents: 'auto',
-            willChange: isLoaded ? 'auto' : 'opacity',
+            willChange: isLoaded ? 'auto' : 'opacity, transform',
             cursor: 'grab',
+            opacity: isLoaded ? 1 : 0,
+            transform: isLoaded ? 'scale(1)' : 'scale(1.02)',
+            transition: `opacity ${MOBILE_SPLINE_CONFIG.fadeInDuration}ms ease-out, transform ${MOBILE_SPLINE_CONFIG.fadeInDuration}ms ease-out`,
           }}
         >
           <iframe
-            src={currentScene.viewerUrl}
+            ref={iframeRef}
+            src={getMobileOptimizedSplineUrl(currentScene.viewerUrl)}
             title="BullMoney mobile welcome scene"
             frameBorder="0"
             allow="fullscreen; autoplay; xr-spatial-tracking; pointer-lock; gyroscope; accelerometer"
@@ -201,18 +258,36 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
               marginBottom: '-60px',
               touchAction: 'manipulation',
               pointerEvents: 'auto',
+              // GPU acceleration for smooth rendering
+              transform: 'translateZ(0)',
+              backfaceVisibility: 'hidden',
+              // Reduce rendering load on mobile
+              imageRendering: reducedMotion ? 'auto' : 'auto',
             }}
           />
         </div>
       )}
 
-      {/* Subtle gradient fallback while loading */}
+      {/* Smooth gradient placeholder during loading - ensures visual continuity */}
       <div
-        className={`absolute inset-0 transition-opacity duration-700 ${isLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        className="absolute inset-0 pointer-events-none"
         style={{
           background: 'radial-gradient(ellipse at 50% 30%, rgba(59, 130, 246, 0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 40%), #000',
+          opacity: isLoaded ? 0 : 1,
+          transition: `opacity ${MOBILE_SPLINE_CONFIG.fadeInDuration}ms ease-out`,
         }}
       />
+      
+      {/* Loading shimmer effect - shows activity while Spline loads */}
+      {!isLoaded && isRendering && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: 'linear-gradient(90deg, transparent 0%, rgba(59, 130, 246, 0.03) 50%, transparent 100%)',
+            animation: 'mobileSplineLoadShimmer 1.5s ease-in-out infinite',
+          }}
+        />
+      )}
     </div>
   );
 });
@@ -285,6 +360,12 @@ const NEON_GLOBAL_STYLES = `
     50% { 
       box-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6, inset 0 0 6px #3b82f6;
     }
+  }
+
+  /* Mobile Spline loading shimmer animation */
+  @keyframes mobileSplineLoadShimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
   }
 
   .neon-blue-text {
@@ -649,7 +730,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   }, []);
   
   // --- UI STATE CONTEXT: Signal to minimize audio widget when pagemode is active ---
-  const { setPagemodeOpen } = useUIState();
+  const { setPagemodeOpen, setWelcomeScreenActive } = useUIState();
   
   // Use useLayoutEffect to set state BEFORE browser paint - ensures AudioWidget sees it on first render
   useLayoutEffect(() => {
@@ -660,8 +741,19 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     // Cleanup: close the pagemode state when component unmounts
     return () => {
       setPagemodeOpen(false);
+      setWelcomeScreenActive(false);
     };
-  }, [setPagemodeOpen]);
+  }, [setPagemodeOpen, setWelcomeScreenActive]);
+  
+  // Track welcome screen state for AudioWidget visibility
+  // Welcome screen is step -1 (main welcome) or step -2 (guest intermediate)
+  const isWelcomeScreenStep = step === -1 || step === -2;
+  
+  useEffect(() => {
+    // Set welcome screen active based on current step
+    // This allows AudioWidget/FloatingPlayer to show on welcome screens
+    setWelcomeScreenActive(isWelcomeScreenStep);
+  }, [isWelcomeScreenStep, setWelcomeScreenActive]);
   
   const isVantage = activeBroker === 'Vantage';
   const isXM = activeBroker === 'XM';

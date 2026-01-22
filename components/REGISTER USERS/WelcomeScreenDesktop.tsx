@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, memo, useCallback } from 'react';
+import { useState, useEffect, useRef, memo, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import dynamic from 'next/dynamic';
 import { motion } from "framer-motion";
@@ -9,11 +9,63 @@ import { ArrowRight, User } from 'lucide-react';
 // Import the actual UnifiedFpsPill and UnifiedHubPanel from UltimateHub
 import { UnifiedFpsPill, UnifiedHubPanel, useLivePrices } from '@/components/UltimateHub';
 
-// --- DYNAMIC SPLINE IMPORT ---
+// --- DEVICE DETECTION FOR QUALITY SETTINGS ---
+const useDeviceCapabilities = () => {
+  const [capabilities, setCapabilities] = useState({
+    isMobile: false,
+    isLowEnd: false,
+    prefersReducedMotion: false,
+  });
+
+  useEffect(() => {
+    const checkCapabilities = () => {
+      const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+        navigator.userAgent.toLowerCase()
+      ) || window.innerWidth < 768;
+      
+      // Check for low-end device indicators
+      const isLowEnd = (
+        (navigator as any).deviceMemory !== undefined && (navigator as any).deviceMemory < 4 ||
+        navigator.hardwareConcurrency !== undefined && navigator.hardwareConcurrency < 4
+      );
+      
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      
+      setCapabilities({ isMobile, isLowEnd, prefersReducedMotion });
+    };
+    
+    checkCapabilities();
+    window.addEventListener('resize', checkCapabilities);
+    return () => window.removeEventListener('resize', checkCapabilities);
+  }, []);
+  
+  return capabilities;
+};
+
+// --- DYNAMIC SPLINE IMPORT WITH MOBILE OPTIMIZATION ---
 const Spline = dynamic(() => import('@splinetool/react-spline'), {
   ssr: false,
   loading: () => null,
 });
+
+// --- SPLINE QUALITY CONFIG ---
+const SPLINE_QUALITY_CONFIG = {
+  desktop: {
+    pixelRatio: typeof window !== 'undefined' ? Math.min(window.devicePixelRatio, 2) : 2,
+    fadeInDuration: 700,
+    loadingDelay: 0,
+  },
+  mobile: {
+    pixelRatio: 1.0, // Lower pixel ratio for mobile
+    fadeInDuration: 500,
+    loadingDelay: 100,
+  },
+  lowEnd: {
+    pixelRatio: 0.75, // Even lower for struggling devices
+    fadeInDuration: 400,
+    loadingDelay: 150,
+  },
+};
 
 const SPLINE_SCENES = [
   '/scene1.splinecode',
@@ -39,9 +91,10 @@ const warmSplineRuntime = (() => {
 })();
 
 // --- WELCOME SCREEN SPLINE BACKGROUND COMPONENT ---
-// Optimized with aggressive caching, preloading, and error recovery
+// Optimized with aggressive caching, preloading, error recovery, and mobile quality reduction
 const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isRendering, setIsRendering] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [sceneToLoad, setSceneToLoad] = useState<string>(SPLINE_SCENES[0]);
@@ -49,6 +102,16 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
   const mountedRef = useRef(true);
   const MAX_RETRIES = 2;
   const ROTATE_INTERVAL_MS = 60000;
+  
+  // Get device capabilities for quality adjustment
+  const { isMobile, isLowEnd, prefersReducedMotion } = useDeviceCapabilities();
+  
+  // Select quality config based on device
+  const qualityConfig = useMemo(() => {
+    if (isLowEnd) return SPLINE_QUALITY_CONFIG.lowEnd;
+    if (isMobile) return SPLINE_QUALITY_CONFIG.mobile;
+    return SPLINE_QUALITY_CONFIG.desktop;
+  }, [isMobile, isLowEnd]);
 
   const ensurePreload = useCallback((scenePath: string, rel: 'preload' | 'prefetch' = 'preload') => {
     if (typeof window === 'undefined') return;
@@ -132,14 +195,51 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
     return () => window.clearInterval(id);
   }, [ensurePreload, pickNextScene, setScene]);
 
-  // Handle successful load
+  // Handle successful load with quality adjustments for mobile
   const handleLoad = useCallback((spline: any) => {
     if (mountedRef.current) {
       splineRef.current = spline;
-      setIsLoaded(true);
-      setHasError(false);
+      
+      // Apply mobile/low-end optimizations to Spline runtime
+      if ((isMobile || isLowEnd) && spline) {
+        try {
+          // Disable heavy render effects for mobile
+          if (spline.setVariable) {
+            // Try to disable shadows and reflections if the scene supports it
+            spline.setVariable?.('disableShadows', true);
+            spline.setVariable?.('disableReflections', true);
+          }
+          
+          // Reduce pixel ratio for smoother performance
+          if (spline.setPixelRatio) {
+            spline.setPixelRatio(qualityConfig.pixelRatio);
+          }
+          
+          // Access renderer if available to reduce quality
+          const app = spline._app || spline.app;
+          if (app?.renderer) {
+            app.renderer.setPixelRatio(qualityConfig.pixelRatio);
+            // Disable antialiasing on low-end devices
+            if (isLowEnd && app.renderer.capabilities) {
+              app.renderer.capabilities.logarithmicDepthBuffer = false;
+            }
+          }
+        } catch (e) {
+          // Silently ignore - some scenes may not support these methods
+          console.debug('[WelcomeSpline] Could not apply mobile optimizations:', e);
+        }
+      }
+      
+      // Smooth transition with configurable delay
+      setIsRendering(true);
+      setTimeout(() => {
+        if (mountedRef.current) {
+          setIsLoaded(true);
+          setHasError(false);
+        }
+      }, qualityConfig.loadingDelay);
     }
-  }, []);
+  }, [isMobile, isLowEnd, qualityConfig]);
 
   // Handle error with retry logic
   const handleError = useCallback(() => {
@@ -150,6 +250,7 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
           if (mountedRef.current) {
             setRetryCount(prev => prev + 1);
             setHasError(false);
+            setIsRendering(false);
           }
         }, 500);
       } else {
@@ -171,22 +272,27 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
         height: '100%',
         overflow: 'hidden',
         background: '#000',
-        contain: 'layout style paint',
+        contain: 'layout style paint size',
+        contentVisibility: 'auto',
       }}
     >
       {/* Spline Scene - with retry key to force remount on retry */}
       {/* INTERACTIVE: Full touch/mouse interaction enabled for 3D scene */}
+      {/* Mobile-optimized with lower quality rendering */}
       {!hasError && (
         <div
           key={`spline-desktop-${sceneToLoad}-${retryCount}`}
-          className={`absolute inset-0 transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+          className="absolute inset-0"
           style={{
             width: '100%',
             height: '100%',
             touchAction: 'manipulation',
             pointerEvents: 'auto',
-            willChange: isLoaded ? 'auto' : 'opacity',
+            willChange: isLoaded ? 'auto' : 'opacity, transform',
             cursor: 'grab',
+            opacity: isLoaded ? 1 : 0,
+            transform: isLoaded ? 'scale(1)' : 'scale(1.01)',
+            transition: `opacity ${qualityConfig.fadeInDuration}ms ease-out, transform ${qualityConfig.fadeInDuration}ms ease-out`,
           }}
         >
           <Spline
@@ -200,24 +306,46 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
               touchAction: 'manipulation',
               pointerEvents: 'auto',
               cursor: 'grab',
+              // GPU acceleration
+              transform: 'translateZ(0)',
+              backfaceVisibility: 'hidden',
             }}
           />
         </div>
       )}
 
-      {/* Subtle gradient fallback while loading or on error */}
+      {/* Smooth gradient fallback while loading or on error */}
       <div
-        className={`absolute inset-0 transition-opacity duration-700 ${isLoaded && !hasError ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        className="absolute inset-0 pointer-events-none"
         style={{
           background: 'radial-gradient(ellipse at 50% 30%, rgba(59, 130, 246, 0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 40%), #000',
+          opacity: isLoaded && !hasError ? 0 : 1,
+          transition: `opacity ${qualityConfig.fadeInDuration}ms ease-out`,
         }}
       />
+      
+      {/* Loading shimmer for visual feedback */}
+      {!isLoaded && isRendering && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: 'linear-gradient(90deg, transparent 0%, rgba(59, 130, 246, 0.03) 50%, transparent 100%)',
+            animation: 'desktopSplineLoadShimmer 1.5s ease-in-out infinite',
+          }}
+        />
+      )}
     </div>
   );
 });
 
 // --- NEON STYLES ---
 const NEON_STYLES = `
+  /* Desktop Spline loading shimmer animation */
+  @keyframes desktopSplineLoadShimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
   @keyframes neon-pulse-desktop {
     0%, 100% { 
       text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, 0 0 16px #3b82f6;
