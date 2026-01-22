@@ -4,7 +4,7 @@ import React, { useEffect } from "react";
 import { AnimatePresence, motion, type TargetAndTransition } from "framer-motion";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useMobilePerformance } from "@/hooks/useMobilePerformance";
+import { useUnifiedPerformance } from "@/hooks/useDesktopPerformance";
 
 // Neon Blue Sign Styles (Static glow like Chartnews)
 const NEON_MODAL_STYLES = `
@@ -56,7 +56,7 @@ export const EnhancedModal = ({
   children,
   maxWidth = "max-w-3xl",
 }: EnhancedModalProps) => {
-  const { isMobile, animations, shouldSkipHeavyEffects } = useMobilePerformance();
+  const { isMobile, animations, shouldSkipHeavyEffects } = useUnifiedPerformance();
   
   useEffect(() => {
     if (isOpen) {

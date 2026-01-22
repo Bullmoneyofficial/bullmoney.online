@@ -7,7 +7,7 @@ import { ButtonTooltip } from "./ui/ButtonTooltip";
 import { Z_INDEX } from "./constants/zIndex";
 import { sourceLabel, sourceIcons } from "./constants";
 import type { MusicSource } from "@/contexts/AudioSettingsProvider";
-import { useMobilePerformance } from "@/hooks/useMobilePerformance";
+import { useUnifiedPerformance } from "@/hooks/useDesktopPerformance";
 
 interface MinimizedPlayerProps {
   isMinimized: boolean;
@@ -38,7 +38,7 @@ export function MinimizedPlayer({
   onExpand,
   renderHiddenIframe = true,
 }: MinimizedPlayerProps) {
-  const { shouldSkipHeavyEffects } = useMobilePerformance();
+  const { shouldSkipHeavyEffects } = useUnifiedPerformance();
   const SourceIcon = sourceIcons[musicSource];
   const [isScrolling, setIsScrolling] = useState(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);

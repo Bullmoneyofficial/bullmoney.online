@@ -12,7 +12,7 @@ import { sourceLabel, sourceIcons } from "./constants";
 import { Z_INDEX } from "./constants/zIndex";
 import { ButtonTooltip } from "./ui/ButtonTooltip";
 import type { MusicSource } from "@/contexts/AudioSettingsProvider";
-import { useMobilePerformance } from "@/hooks/useMobilePerformance";
+import { useUnifiedPerformance } from "@/hooks/useDesktopPerformance";
 
 // Re-export Z_INDEX for external components (like QuickGameTutorial)
 export { Z_INDEX };
@@ -143,7 +143,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
 
   const prefersReducedMotion = useReducedMotion();
   const dragControls = useDragControls();
-  const { shouldSkipHeavyEffects } = useMobilePerformance();
+  const { shouldSkipHeavyEffects } = useUnifiedPerformance();
   
   // iPhone UI States
   const [volume, setVolume] = useState(70);

@@ -5,7 +5,7 @@ import {
   IconCamera, IconInfoCircle, IconChevronUp, IconPlayerPlay, 
   IconPlayerPause 
 } from "@tabler/icons-react";
-import { useMobilePerformance } from "@/hooks/useMobilePerformance";
+import { useUnifiedPerformance } from "@/hooks/useDesktopPerformance";
 import { cn } from "@/lib/utils";
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
 import { ButtonTooltip } from "./ui/ButtonTooltip";
@@ -38,7 +38,7 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
   onMinimize,
   onOpenCamera,
 }: IPhoneFrameProps) {
-  const { shouldSkipHeavyEffects } = useMobilePerformance();
+  const { shouldSkipHeavyEffects } = useUnifiedPerformance();
   const [volume, setVolume] = useState(70);
   const [isMuted, setIsMuted] = useState(false);
   const [isLocked, setIsLocked] = useState(false);

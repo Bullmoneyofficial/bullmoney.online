@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSplineAudio, useSplineAudioHandlers, SplineAudioProfile } from '@/app/hooks/useSplineAudio';
 import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
 import type { SplineWrapperProps } from '@/lib/spline-wrapper';
-import { useMobilePerformance } from "@/hooks/useMobilePerformance";
+import { useUnifiedPerformance } from "@/hooks/useDesktopPerformance";
 
 // Dynamic import for the heavy Spline runtime
 const SplineBase = dynamic<SplineWrapperProps>(() => import('@/lib/spline-wrapper') as any, { 
@@ -91,7 +91,7 @@ function SplineWithAudioComponent({
   const { activeTheme } = useGlobalTheme();
   
   // Mobile performance optimization
-  const { shouldSkipHeavyEffects } = useMobilePerformance();
+  const { shouldSkipHeavyEffects } = useUnifiedPerformance();
   
   // Determine audio profile based on theme or prop
   const effectiveAudioProfile: SplineAudioProfile = (() => {

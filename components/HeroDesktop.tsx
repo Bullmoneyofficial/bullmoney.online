@@ -23,7 +23,6 @@ import { Loader2, X, Play, ArrowRight, Volume2, VolumeX, Copy, Check } from "luc
 // ✅ SPLINE PRELOADER
 import { useSplinePreload, useEnsureSplineViewer } from '@/hooks/useSplinePreload';
 import { DISCORD_STAGE_FEATURED_VIDEOS } from "@/components/TradingQuickAccess";
-import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 import { useUnifiedPerformance } from "@/hooks/useDesktopPerformance";
 
 const SPLINE_VIEWER_SCRIPT_SRC = "https://unpkg.com/@splinetool/viewer@1.12.36/build/spline-viewer.js";
@@ -1159,7 +1158,7 @@ const LiveTickerTape = ({ tickerData, skipHeavyEffects = false }: { tickerData: 
 };
 
 const BullPulse = () => {
-  const { shouldSkipHeavyEffects } = useMobilePerformance();
+  const { shouldSkipHeavyEffects } = useUnifiedPerformance();
   return (
     <svg className="absolute left-0 right-0 h-8 top-1/2 -translate-y-1/2 opacity-20" preserveAspectRatio="none">
       <motion.path d="M0,20 L50,20 L60,5 L70,35 L80,15 L90,25 L100,20 L150,20 L160,5 L170,35 L180,15 L190,25 L200,20 L250,20"
@@ -1404,7 +1403,7 @@ const HeroVideoEmbed = ({ videoId, muted }: { videoId: string; muted: boolean })
 };
 
 const SplineLoadingPlaceholder = () => {
-  const { shouldSkipHeavyEffects } = useMobilePerformance();
+  const { shouldSkipHeavyEffects } = useUnifiedPerformance();
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-black">
       <motion.div className="w-24 h-24 border-2 border-blue-500/50" animate={{ rotateY: 360, rotateX: 360 }} transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: 'linear' }} style={{ transformStyle: 'preserve-3d' }} />
@@ -1591,7 +1590,7 @@ const useAudioEffects = (enabled: boolean) => {
 };
 
 const MuteToggle = ({ muted, onToggle }: { muted: boolean; onToggle: () => void }) => {
-  const { shouldSkipHeavyEffects } = useMobilePerformance();
+  const { shouldSkipHeavyEffects } = useUnifiedPerformance();
   return (
     <button onClick={onToggle} className="relative p-3 rounded-full bg-white/5 hover:bg-white/10 transition-colors">
       {muted ? <VolumeX className="w-5 h-5 text-white/40" /> : (

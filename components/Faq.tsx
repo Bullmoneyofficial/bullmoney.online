@@ -23,7 +23,7 @@ import {
   ShieldAlert,
   MessageSquare
 } from 'lucide-react';
-import { useMobilePerformance } from '@/hooks/useMobilePerformance';
+import { useUnifiedPerformance } from '@/hooks/useDesktopPerformance';
 
 // ==========================================
 // 0. CONFIGURATION & CONSTANTS
@@ -673,7 +673,7 @@ const FaqModalContent = ({onClose}: {onClose: () => void}) => {
 // ==========================================
 export default function BullMoneyModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
   const [mounted, setMounted] = useState(false);
-  const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects } = useMobilePerformance();
+  const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects } = useUnifiedPerformance();
 
   useEffect(() => {
     setMounted(true);

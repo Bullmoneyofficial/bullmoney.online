@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence  } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { useMobilePerformance } from "@/hooks/useMobilePerformance";
+import { useUnifiedPerformance } from "@/hooks/useDesktopPerformance";
 
 // Neon Blue Sign Style from Chartnews (STATIC for performance)
 const NEON_STYLES = `
@@ -132,7 +132,7 @@ const testimonials = [
 
 export function TestimonialsCarousel() {
   const [index, setIndex] = useState(0);
-  const { isMobile, shouldSkipHeavyEffects, shouldDisableBackdropBlur, animations } = useMobilePerformance();
+  const { isMobile, shouldSkipHeavyEffects, shouldDisableBackdropBlur, animations } = useUnifiedPerformance();
 
   const nextSlide = () => setIndex((index + 1) % testimonials.length);
   const prevSlide = () => setIndex((index - 1 + testimonials.length) % testimonials.length);

@@ -14,7 +14,7 @@ import {
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
-import { useMobilePerformance } from "@/hooks/useMobilePerformance";
+import { useUnifiedPerformance } from "@/hooks/useDesktopPerformance";
 import { BlueShimmer, Slider, GameOverScreen, GameControls, GameShimmer, BounceDots, StatusBadge, QuickGameTutorial, QuickGameTutorialDemo } from "@/components/audio-widget/ui";
 import { ShimmerLine } from "@/components/ui/UnifiedShimmer";
 import { sourceLabel, streamingOptions, sourceIcons } from "./constants";
@@ -28,7 +28,7 @@ import type { MusicSource } from "@/contexts/AudioSettingsProvider";
  */
 function MusicWaveBars({ isPlaying, isActive = false }: { isPlaying: boolean; isActive?: boolean }) {
   // Mobile performance optimization
-  const { shouldSkipHeavyEffects } = useMobilePerformance();
+  const { shouldSkipHeavyEffects } = useUnifiedPerformance();
   
   // When active/playing, use a brighter green, otherwise use theme accent color
   const barStyle = isActive 
@@ -134,7 +134,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
   } = props;
   
   // Mobile performance optimization
-  const { shouldSkipHeavyEffects } = useMobilePerformance();
+  const { shouldSkipHeavyEffects } = useUnifiedPerformance();
 
   // Handler to open iPhone player (expand from minimized state)
   const handleOpenIPhonePlayer = useCallback(() => {

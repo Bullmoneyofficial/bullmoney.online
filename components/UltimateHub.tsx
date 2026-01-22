@@ -25,7 +25,7 @@ import React, {
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, PanInfo, type TargetAndTransition } from 'framer-motion';
 import { useMobilePerformance } from '@/hooks/useMobilePerformance';
-import { useDesktopPerformance } from '@/hooks/useDesktopPerformance';
+import { useDesktopPerformance, useUnifiedPerformance } from '@/hooks/useDesktopPerformance';
 import { getFpsEngine, initializeFpsMeasurement } from '@/lib/FpsMeasurement';
 import { detectBrowserCapabilities, selectOptimalMeasurementConfig } from '@/lib/FpsCompatibility';
 
@@ -5781,7 +5781,8 @@ export const UnifiedFpsPill = memo(({
   prices,
   isMinimized, 
   onToggleMinimized,
-  onOpenPanel
+  onOpenPanel,
+  liteMode = false
 }: {
   fps: number;
   deviceTier: string;
@@ -5789,6 +5790,7 @@ export const UnifiedFpsPill = memo(({
   isMinimized: boolean;
   onToggleMinimized: () => void;
   onOpenPanel: () => void;
+  liteMode?: boolean;
 }) => {
   const [isPinned, setIsPinned] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false); // Track if showing full content
@@ -6424,6 +6426,21 @@ export const UnifiedFpsPill = memo(({
                 }
                 className="px-1 py-1.5 md:px-4 md:py-4 relative z-10"
               >
+                {/* Lite Mode Indicator Badge */}
+                {liteMode && (
+                  <div 
+                    className="absolute -top-1 -right-1 px-1.5 py-0.5 rounded text-[7px] font-bold uppercase tracking-wide z-20"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(37, 99, 235, 0.9) 100%)',
+                      color: '#fff',
+                      boxShadow: '0 0 8px rgba(59, 130, 246, 0.6)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                    }}
+                  >
+                    LITE
+                  </div>
+                )}
+                
                 {/* Mobile: Always compact view with prices - with scroll-intensified neons */}
                 <div className="flex md:hidden flex-col items-center justify-center gap-0.5 min-w-[36px]">
                   <TrendingUp 
@@ -7102,7 +7119,7 @@ export function UltimateHub() {
     isV2Unlocked,
     setUltimateHubOpen
   } = useUIState();
-  const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects } = useMobilePerformance();
+  const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects, isDesktopLiteMode } = useUnifiedPerformance();
 
   // Inject neon styles
   useEffect(() => {
@@ -7161,6 +7178,7 @@ export function UltimateHub() {
           isMinimized={isMinimized}
           onToggleMinimized={() => setIsMinimized(!isMinimized)}
           onOpenPanel={() => setUltimateHubOpen(true)}
+          liteMode={isDesktopLiteMode}
         />
       )}
 

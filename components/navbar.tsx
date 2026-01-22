@@ -23,7 +23,7 @@ import dynamic from "next/dynamic";
 
 import { useCalEmbed } from "@/app/hooks/useCalEmbed";
 import { CONSTANTS } from "@/constants/links";
-import { useMobilePerformance } from "@/hooks/useMobilePerformance";
+import { useUnifiedPerformance } from "@/hooks/useDesktopPerformance";
 
 // --- IMPORT CONTEXT ---
 import { useStudio } from "@/context/StudioContext";
@@ -206,7 +206,7 @@ export const Navbar = memo(() => {
   const { tipsMuted } = useAudioSettings();
   const { deviceTier, isSafari } = useCacheContext();
   const { shouldRender: allowMobileLazy } = useMobileLazyRender(200);
-  const { shouldSkipHeavyEffects } = useMobilePerformance();
+  const { shouldSkipHeavyEffects } = useUnifiedPerformance();
   
   // Unified UI State - handles mutual exclusion between mobile menu, modals, audio widget, etc.
   const { isMobileMenuOpen, setIsMobileMenuOpen } = useMobileMenu();

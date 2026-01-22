@@ -8,7 +8,7 @@ import createGlobe from "cobe";
 import { detectBrowser } from "@/lib/browserDetection";
 import { useComponentTracking } from "@/lib/CrashTracker";
 import { useComponentLifecycle } from "@/lib/UnifiedPerformanceSystem";
-import { useMobilePerformance } from "@/hooks/useMobilePerformance";
+import { useUnifiedPerformance } from "@/hooks/useDesktopPerformance";
 
 // ✅ MOBILE DETECTION - For conditional lazy loading
 import { isMobileDevice } from "@/lib/mobileDetection";
@@ -90,8 +90,8 @@ const HelperTip = ({ label, className }: { label: string; className?: string }) 
 export function Features() {
   const [copied, setCopied] = React.useState(false);
   
-  // --- MOBILE PERFORMANCE ---
-  const { isMobile, shouldSkipHeavyEffects, shouldDisableBackdropBlur, animations } = useMobilePerformance();
+  // --- UNIFIED PERFORMANCE (Mobile + Desktop Lite Mode) ---
+  const { isMobile, shouldSkipHeavyEffects, shouldDisableBackdropBlur, animations } = useUnifiedPerformance();
   
   // --- INJECT GLOBAL NEON STYLES ---
   useEffect(() => {

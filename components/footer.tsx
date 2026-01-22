@@ -13,7 +13,7 @@ import { ShimmerLine, ShimmerBorder, useOptimizedShimmer } from "@/components/ui
 import { useFpsOptimizer } from "@/lib/FpsOptimizer";
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
 import { useFooterModalsUI } from "@/contexts/UIStateContext";
-import { useMobilePerformance } from "@/hooks/useMobilePerformance";
+import { useUnifiedPerformance } from "@/hooks/useDesktopPerformance";
 
 // Neon Blue Sign Style from Chartnews (STATIC for performance)
 const NEON_STYLES = `
@@ -192,8 +192,8 @@ AppsToolsContent.displayName = 'AppsToolsContent';
 export function Footer() {
   const currentYear = new Date().getFullYear();
 
-  // Mobile performance optimization
-  const { isMobile, shouldSkipHeavyEffects, shouldDisableBackdropBlur, animations } = useMobilePerformance();
+  // Unified performance (Mobile + Desktop Lite Mode)
+  const { isMobile, shouldSkipHeavyEffects, shouldDisableBackdropBlur, animations } = useUnifiedPerformance();
 
   // FPS Optimizer integration for component lifecycle tracking
   const { registerComponent, unregisterComponent, shouldEnableShimmer } = useFpsOptimizer();

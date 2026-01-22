@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Shield } from 'lucide-react';
 import { createSupabaseClient } from '@/lib/supabase';
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
-import { useMobilePerformance } from "@/hooks/useMobilePerformance";
+import { useUnifiedPerformance } from "@/hooks/useDesktopPerformance";
 
 const ADMIN_EMAIL = 'mrbullmoney@gmail.com';
 
@@ -14,7 +14,7 @@ const ADMIN_EMAIL = 'mrbullmoney@gmail.com';
  * Opens the Admin VIP Panel
  */
 export function AdminButton() {
-  const { shouldSkipHeavyEffects } = useMobilePerformance();
+  const { shouldSkipHeavyEffects } = useUnifiedPerformance();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 

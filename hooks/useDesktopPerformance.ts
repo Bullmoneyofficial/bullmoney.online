@@ -143,6 +143,8 @@ export function useDesktopPerformance() {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved === 'true') {
         setLiteMode(true);
+        // Apply CSS class immediately if lite mode was saved
+        document.documentElement.classList.add('desktop-lite-mode');
       }
     } catch {
       // localStorage not available
@@ -155,6 +157,7 @@ export function useDesktopPerformance() {
     setIsHighRefreshRate(detectHighRefreshRate());
     
     // Detect reduced motion preference
+    let cleanupMotionListener: (() => void) | undefined;
     if (window.matchMedia) {
       const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
       setPrefersReducedMotion(motionQuery.matches);
@@ -164,10 +167,13 @@ export function useDesktopPerformance() {
       };
       
       motionQuery.addEventListener('change', handleMotionChange);
-      return () => motionQuery.removeEventListener('change', handleMotionChange);
+      cleanupMotionListener = () => motionQuery.removeEventListener('change', handleMotionChange);
     }
     
+    // Mark as hydrated AFTER all detection is complete
     setIsHydrated(true);
+    
+    return cleanupMotionListener;
   }, []);
 
   // Toggle lite mode with persistence
