@@ -1003,6 +1003,7 @@ function HomeContent() {
     const now = Date.now();
     let shouldForceLoader = false;
     const forceReasons: string[] = [];
+    let shouldResetPagemode = false;
 
     // ===== Refresh/session-based loader triggers =====
     try {
@@ -1024,6 +1025,13 @@ function HomeContent() {
       // Session refresh counter
       const sessionCount = Number(sessionStorage.getItem(sessionCountKey) || "0") + 1;
       sessionStorage.setItem(sessionCountKey, String(sessionCount));
+
+      // If user refreshes more than 10 times in this session,
+      // force the welcome/pagemode screen to show again.
+      if (sessionCount > 10) {
+        shouldResetPagemode = true;
+        forceReasons.push(`refresh_over_10_${sessionCount}`);
+      }
 
       // Track refresh timestamps for rapid-refresh detection (2-minute window)
       const rawTimes = sessionStorage.getItem(refreshTimesKey);
@@ -1067,11 +1075,21 @@ function HomeContent() {
       console.warn('[Page] Daily trigger check failed', error);
     }
 
-    console.log('[Page] Session check:', { hasSession: !!hasSession, hasCompletedPagemode, hasCompletedLoader, shouldForceLoader, forceReasons });
+    console.log('[Page] Session check:', { hasSession: !!hasSession, hasCompletedPagemode, hasCompletedLoader, shouldForceLoader, shouldResetPagemode, forceReasons });
 
     // CRITICAL: Pagemode/welcome screen MUST always show first
     // MultiStepLoaderv3 should ONLY show after pagemode has been completed at least once
-    if (!hasCompletedPagemode && !hasSession) {
+    // Additionally: if the user refreshes the page more than 10 times
+    // in a single session, re-show the pagemode welcome experience.
+    if (shouldResetPagemode) {
+      try {
+        localStorage.removeItem("bullmoney_pagemode_completed");
+      } catch {
+        // Ignore storage errors; still fall back to pagemode view
+      }
+      console.log('[Page] Refresh count > 10 - re-showing pagemode welcome');
+      setCurrentView('pagemode');
+    } else if (!hasCompletedPagemode && !hasSession) {
       // First time visitor - always show pagemode welcome screen first
       console.log('[Page] First time visitor - showing pagemode');
       setCurrentView('pagemode');
