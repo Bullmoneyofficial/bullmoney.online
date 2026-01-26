@@ -4,7 +4,11 @@ import React, { useState, useEffect, useCallback, useMemo, useRef, memo } from "
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence, type TargetAndTransition } from "framer-motion";
 import { IconExternalLink, IconRefresh } from "@tabler/icons-react";
-import { Newspaper, X, ChevronDown, TrendingUp } from "lucide-react";
+import { 
+  Newspaper, X, ChevronDown, TrendingUp, 
+  Globe, Bitcoin, BarChart3, DollarSign, 
+  Gem, LineChart, Earth, Landmark, Cpu 
+} from "lucide-react";
 import { ShimmerLine, ShimmerBorder } from "@/components/ui/UnifiedShimmer";
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
 import { useMobilePerformance } from "@/hooks/useMobilePerformance";
@@ -103,14 +107,16 @@ const OptimizedNewsImage = memo(({
 OptimizedNewsImage.displayName = "OptimizedNewsImage";
 
 // --- TYPES ---
-type MarketFilter = "all" | "crypto" | "stocks" | "forex" | "metals";
+type MarketFilter = "all" | "crypto" | "stocks" | "forex" | "metals" | "markets" | "geopolitics" | "economics" | "tech";
 
 type NewsItem = {
   title: string;
   link: string;
   source?: string;
   published_at?: string;
-  category?: MarketFilter | "other";
+  category?: MarketFilter | string;
+  description?: string;
+  thumbnail?: string;
 };
 
 type LinkPreview = {
@@ -123,21 +129,42 @@ type LinkPreview = {
 
 // --- CONSTANTS ---
 const MARKET_KEYWORDS = {
-  crypto: ["bitcoin", "btc", "ethereum", "eth", "solana", "binance", "crypto", "doge", "xrp", "defi", "blockchain"],
-  stocks: ["nasdaq", "dow", "s&p", "tesla", "apple", "microsoft", "amazon", "nvidia", "stock", "earnings", "ipo"],
-  forex: ["eurusd", "gbpusd", "usdjpy", "audusd", "usdchf", "forex", "currency", "exchange rate", "federal reserve"],
-  metals: ["gold", "silver", "platinum", "palladium", "metal", "commodity", "precious", "oil"],
+  crypto: ["bitcoin", "btc", "ethereum", "eth", "solana", "binance", "crypto", "doge", "xrp", "defi", "blockchain", "coinbase", "web3", "nft", "altcoin"],
+  stocks: ["nasdaq", "dow", "s&p", "tesla", "apple", "microsoft", "amazon", "nvidia", "stock", "earnings", "ipo", "equity", "shares", "wall street", "nyse"],
+  forex: ["eurusd", "gbpusd", "usdjpy", "audusd", "usdchf", "forex", "currency", "exchange rate", "dollar", "euro", "yen", "pound"],
+  metals: ["gold", "silver", "platinum", "palladium", "metal", "commodity", "precious", "oil", "copper", "mining", "crude", "natural gas", "brent"],
+  markets: ["market", "trading", "investors", "portfolio", "hedge", "etf", "mutual fund", "bonds", "treasury", "yield"],
+  geopolitics: ["war", "conflict", "sanctions", "geopolitical", "military", "russia", "china", "ukraine", "middle east", "tension", "nato"],
+  economics: ["fed", "federal reserve", "inflation", "interest rate", "gdp", "unemployment", "recession", "central bank", "ecb", "monetary"],
+  tech: ["ai", "artificial intelligence", "tech", "semiconductor", "chips", "software", "startup", "silicon valley", "innovation"],
 } as const;
 
 const ALL_KEYWORDS = Object.values(MARKET_KEYWORDS).flat();
 const NEWS_REFRESH_RATE = 20000;
 
+// Icon map for filters
+const FILTER_ICONS: Record<MarketFilter, React.ComponentType<{ className?: string }>> = {
+  all: Globe,
+  crypto: Bitcoin,
+  stocks: BarChart3,
+  forex: DollarSign,
+  metals: Gem,
+  markets: LineChart,
+  geopolitics: Earth,
+  economics: Landmark,
+  tech: Cpu,
+};
+
 const MARKET_FILTERS: { value: MarketFilter; label: string }[] = [
-  { value: "all", label: "All Markets" },
+  { value: "all", label: "All News" },
   { value: "crypto", label: "Crypto" },
   { value: "stocks", label: "Stocks" },
   { value: "forex", label: "Forex" },
-  { value: "metals", label: "Metals" },
+  { value: "metals", label: "Commodities" },
+  { value: "markets", label: "Markets" },
+  { value: "geopolitics", label: "World" },
+  { value: "economics", label: "Economy" },
+  { value: "tech", label: "Tech" },
 ];
 
 // --- HELPER FUNCTIONS ---
@@ -153,7 +180,16 @@ const timeAgo = (iso?: string) => {
   return `${d}d ago`;
 };
 
-const detectCategory = (title: string): MarketFilter | "other" => {
+const detectCategory = (title: string, apiCategory?: string): MarketFilter | "other" => {
+  // If the API already provided a category, use it directly
+  if (apiCategory && apiCategory !== "other") {
+    const validCategories: MarketFilter[] = ["crypto", "stocks", "forex", "metals", "markets", "geopolitics", "economics", "tech"];
+    if (validCategories.includes(apiCategory as MarketFilter)) {
+      return apiCategory as MarketFilter;
+    }
+  }
+  
+  // Otherwise, detect from title keywords
   const lower = title.toLowerCase();
   for (const [category, words] of Object.entries(MARKET_KEYWORDS)) {
     if (words.some((w) => lower.includes(w))) return category as MarketFilter;
@@ -366,11 +402,19 @@ const NewsFeedContent = memo(() => {
       if (!r.ok) throw new Error(`API returned ${r.status}`);
       const json = await r.json();
       const rawItems: NewsItem[] = Array.isArray(json?.items) ? json.items : [];
-      const tagged = rawItems.map((n) => ({ ...n, category: detectCategory(n.title || "") }));
+      // Use API category if provided, otherwise detect from title
+      const tagged = rawItems.map((n) => ({ 
+        ...n, 
+        category: detectCategory(n.title || "", n.category) 
+      }));
       setItems(tagged);
       setLastUpdated(new Date());
       if (tagged.length === 0) {
         setError("No news available at the moment. Try refreshing.");
+      }
+      // Log metadata if available
+      if (json?.meta) {
+        console.log(`[NewsFeed] Loaded ${json.meta.total} items from ${json.meta.sources} sources`);
       }
     } catch (err: any) {
       console.error("News fetch error:", err);
@@ -532,7 +576,7 @@ const NewsFeedContent = memo(() => {
               </div>
               <div>
                 <h2 className="text-lg sm:text-xl font-bold text-white">BullMoney News</h2>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="inline-flex items-center gap-1.5 text-xs text-blue-400/70">
                     <span className="relative flex h-1.5 w-1.5">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
@@ -542,7 +586,7 @@ const NewsFeedContent = memo(() => {
                   </span>
                   {lastUpdated && (
                     <span className="hidden sm:inline text-[10px] text-slate-500 font-mono">
-                      • Updated {lastUpdated.toLocaleTimeString()}
+                      Updated {lastUpdated.toLocaleTimeString()}
                     </span>
                   )}
                 </div>
@@ -576,23 +620,27 @@ const NewsFeedContent = memo(() => {
             </div>
           </div>
 
-          {/* Filter Bar */}
-          <div className="p-3 border-b border-blue-500/20 flex-shrink-0">
-            <div className="flex flex-wrap gap-2">
-              {MARKET_FILTERS.map(({ value, label }) => (
-                <button
-                  key={value}
-                  onClick={() => handleFilterChange(value)}
-                  className={cn(
-                    "px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all",
-                    activeMarket === value
-                      ? "bg-blue-600 text-white"
-                      : "bg-neutral-800/50 border border-blue-500/20 text-slate-400 hover:border-blue-500/50 hover:text-white"
-                  )}
-                >
-                  {label}
-                </button>
-              ))}
+          {/* Filter Bar - Horizontal scrollable on mobile */}
+          <div className="p-3 border-b border-blue-500/20 flex-shrink-0 overflow-x-auto scrollbar-hide">
+            <div className="flex gap-2 min-w-max">
+              {MARKET_FILTERS.map(({ value, label }) => {
+                const Icon = FILTER_ICONS[value];
+                return (
+                  <button
+                    key={value}
+                    onClick={() => handleFilterChange(value)}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wide transition-all whitespace-nowrap",
+                      activeMarket === value
+                        ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/25"
+                        : "bg-neutral-800/50 border border-blue-500/20 text-slate-400 hover:border-blue-500/50 hover:text-white"
+                    )}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    {label}
+                  </button>
+                );
+              })}
               <span className="ml-auto text-[10px] font-mono text-slate-500 self-center hidden md:block">
                 {totalCount} articles
               </span>

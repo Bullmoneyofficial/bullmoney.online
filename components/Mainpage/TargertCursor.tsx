@@ -11,7 +11,7 @@ export interface TargetCursorProps {
 
 export const TargetCursor: React.FC<TargetCursorProps> = ({
   spinDuration = 2,
-  hideDefaultCursor = true,
+  hideDefaultCursor = false, // CHANGED: Always show real cursor
   targetSelector = "a, button",
 }) => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -40,7 +40,9 @@ export const TargetCursor: React.FC<TargetCursorProps> = ({
     document.addEventListener("mouseover", handleMouseOver);
     document.addEventListener("mouseout", handleMouseOut);
 
-    if (hideDefaultCursor) {
+    // Only hide cursor if explicitly requested AND no modal is open
+    const isModalOpen = () => document.querySelector('[style*="z-index: 2147483647"], .fixed.inset-0');
+    if (hideDefaultCursor && !isModalOpen()) {
       document.body.style.cursor = "none";
     }
 
@@ -48,9 +50,7 @@ export const TargetCursor: React.FC<TargetCursorProps> = ({
       window.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseover", handleMouseOver);
       document.removeEventListener("mouseout", handleMouseOut);
-      if (hideDefaultCursor) {
-        document.body.style.cursor = "auto";
-      }
+      document.body.style.cursor = "auto";
     };
   }, [hideDefaultCursor, targetSelector]);
 

@@ -57,6 +57,9 @@ const isLowMemoryDevice = (): boolean => {
 // Preloaded scene, interactive, loads fast - z-index 0 so menus overlay properly
 const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [loadTimeout, setLoadTimeout] = useState(false);
+  const splineRef = useRef<any>(null);
   
   // On low memory devices, always use scene1 (preloaded, most optimized)
   // Otherwise, use scene1 on first visit, random on return visits
@@ -77,32 +80,73 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
     return SPLINE_SCENES[Math.floor(Math.random() * SPLINE_SCENES.length)];
   });
 
-  const handleLoad = useCallback(() => {
+  // Timeout fallback - if Spline doesn't load in 8 seconds, show fallback
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!isLoaded) {
+        console.warn('[WelcomeSplineDesktop] Load timeout - showing fallback');
+        setLoadTimeout(true);
+      }
+    }, 8000);
+    return () => clearTimeout(timer);
+  }, [isLoaded]);
+
+  const handleLoad = useCallback((splineApp: any) => {
+    splineRef.current = splineApp;
     setIsLoaded(true);
+    setHasError(false);
   }, []);
+
+  const handleError = useCallback((error: any) => {
+    console.error('[WelcomeSplineDesktop] Load error:', error);
+    setHasError(true);
+  }, []);
+
+  // Show animated gradient fallback if Spline fails or times out
+  const showFallback = hasError || loadTimeout;
 
   return (
     <div 
-      className="absolute inset-0 w-full h-full overflow-hidden bg-black"
-      style={{ zIndex: 0 }}
+      className="absolute inset-0 w-full h-full overflow-hidden"
+      style={{ 
+        zIndex: 0,
+        backgroundColor: '#000',
+      }}
     >
-      <Spline
-        scene={scene}
-        onLoad={handleLoad}
+      {/* Animated gradient fallback - always visible as base layer */}
+      <div
+        className="absolute inset-0"
         style={{
-          width: '100%',
-          height: '100%',
-          display: 'block',
-          opacity: isLoaded ? 1 : 0,
-          transition: 'opacity 400ms ease-out',
+          background: 'radial-gradient(ellipse at 40% 30%, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 35%, transparent 60%), radial-gradient(ellipse at 70% 70%, rgba(147, 51, 234, 0.1) 0%, transparent 45%), #000',
+          opacity: showFallback || !isLoaded ? 1 : 0,
+          transition: 'opacity 600ms ease-out',
         }}
-      />
-      {/* Loading placeholder - non-interactive */}
-      {!isLoaded && (
-        <div
-          className="absolute inset-0 pointer-events-none"
+      >
+        {/* Subtle animated glow for visual interest when no Spline */}
+        {showFallback && (
+          <div
+            className="absolute inset-0"
+            style={{
+              background: 'radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.12) 0%, transparent 50%)',
+              animation: 'pulse 4s ease-in-out infinite',
+            }}
+          />
+        )}
+      </div>
+
+      {/* Spline scene - only render if no error */}
+      {!showFallback && (
+        <Spline
+          scene={scene}
+          onLoad={handleLoad}
+          onError={handleError}
           style={{
-            background: 'radial-gradient(ellipse at 50% 30%, rgba(59, 130, 246, 0.08) 0%, transparent 50%), #000',
+            width: '100%',
+            height: '100%',
+            display: 'block',
+            opacity: isLoaded ? 1 : 0,
+            transition: 'opacity 500ms ease-out',
+            willChange: 'opacity',
           }}
         />
       )}
@@ -166,7 +210,7 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
   const [isHubOpen, setIsHubOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
 
-  // Ghost animation state - card fades until user interacts
+  // Ghost animation state - card pulses gently until user interacts
   const [userInteracted, setUserInteracted] = useState(false);
 
   // Use live prices from UltimateHub
@@ -194,14 +238,28 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
   return (
     <>
       <style>{NEON_STYLES}</style>
+      {/* Add pulse animation for fallback */}
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 0.6; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.02); }
+        }
+      `}</style>
       <motion.div
         key="welcome-screen-desktop"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.4 }}
-        className="fixed inset-0 z-10 overflow-hidden pointer-events-none"
-        style={{ minHeight: '100dvh', width: '100vw', height: '100vh' }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="fixed inset-0 z-10 overflow-hidden"
+        style={{ 
+          minHeight: '100dvh', 
+          width: '100vw', 
+          height: '100vh',
+          // Allow pointer events to pass through to Spline, but UI elements capture them
+          pointerEvents: 'none',
+          backgroundColor: '#000', // Prevent white flash
+        }}
       >
         {/* Spline Background - Full screen (can be suppressed if parent provides shared background) */}
         {!hideBackground && (
@@ -218,7 +276,8 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
               minHeight: '100dvh',
               zIndex: 0,
               pointerEvents: 'auto',
-              touchAction: 'auto'
+              touchAction: 'auto',
+              backgroundColor: '#000',
             }}
           >
             <WelcomeSplineBackground />
@@ -243,35 +302,37 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
             className="w-full h-full flex flex-col justify-center items-center px-8 lg:px-12 xl:px-16"
             style={{ pointerEvents: 'none' }}
           >
-            {/* Card Container - Ghost animation until interaction (ultra-transparent glass) */}
+            {/* Card Container - Gentle pulse animation until interaction (ultra-transparent glass) */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0.6, scale: 0.98 }}
               animate={
                 userInteracted
                   ? { opacity: 1, scale: 1 }
                   : {
-                      opacity: [0, 1, 0],
-                      scale: [0.96, 1, 0.96],
+                      // Smoother animation - never fully invisible to prevent black flash
+                      opacity: [0.4, 0.85, 0.4],
+                      scale: [0.97, 1, 0.97],
                     }
               }
               transition={
                 userInteracted
                   ? { duration: 0.3, ease: 'easeOut' }
                   : {
-                      duration: 5,
+                      duration: 4.5,
                       repeat: Infinity,
                       ease: 'easeInOut',
                     }
               }
-                className="w-full max-w-md rounded-2xl p-8 xl:p-10 border border-white/5"
+                className="w-full max-w-md rounded-2xl p-8 xl:p-10 border border-white/10"
                 onMouseEnter={handleUserInteraction}
                 onTouchStart={handleUserInteraction}
+                onClick={handleUserInteraction}
               style={{
                 pointerEvents: 'auto',
-                background: 'rgba(0, 0, 0, 0.15)',
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
-                boxShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.03), 0 0 40px rgba(59, 130, 246, 0.1)',
+                background: 'rgba(0, 0, 0, 0.3)',
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
+                boxShadow: '0 8px 40px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.06), 0 0 60px rgba(59, 130, 246, 0.12)',
               }}
             >
               {/* Card Header - Only show on smaller desktop */}

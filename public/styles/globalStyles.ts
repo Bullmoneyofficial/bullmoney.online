@@ -223,12 +223,12 @@ export const GLOBAL_STYLES = `
   html, body { 
     background-color: black; 
     overflow-x: hidden;
-    cursor: auto;
+    cursor: auto !important;
   }
 
-  /* Enable custom cursor only when explicitly toggled */
+  /* Custom cursor is purely decorative - never hide the real cursor */
   html.use-custom-cursor, body.use-custom-cursor {
-    cursor: none;
+    cursor: auto !important;
   }
 
   /* Never hide cursor on coarse pointer devices */

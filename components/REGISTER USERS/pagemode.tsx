@@ -79,6 +79,9 @@ const isLowMemoryDevice = (): boolean => {
 // Preloaded scene, interactive, loads fast - z-index 0 so menus overlay properly
 const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [loadTimeout, setLoadTimeout] = useState(false);
+  const splineRef = useRef<any>(null);
   
   // On low memory devices, always use scene1 (preloaded, most optimized)
   // Otherwise, use scene1 on first visit, random on return visits
@@ -99,35 +102,74 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
     return SPLINE_SCENES[Math.floor(Math.random() * SPLINE_SCENES.length)];
   });
 
-  const handleLoad = useCallback(() => {
+  // Timeout fallback - if Spline doesn't load in 8 seconds, show fallback
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!isLoaded) {
+        console.warn('[WelcomeSpline] Load timeout - showing fallback');
+        setLoadTimeout(true);
+      }
+    }, 8000);
+    return () => clearTimeout(timer);
+  }, [isLoaded]);
+
+  const handleLoad = useCallback((splineApp: any) => {
+    splineRef.current = splineApp;
     setIsLoaded(true);
+    setHasError(false);
   }, []);
+
+  const handleError = useCallback((error: any) => {
+    console.error('[WelcomeSpline] Load error:', error);
+    setHasError(true);
+  }, []);
+
+  // Show animated gradient fallback if Spline fails or times out
+  const showFallback = hasError || loadTimeout;
 
   return (
     <div 
-      className="absolute inset-0 w-full h-full overflow-hidden bg-black"
+      className="absolute inset-0 w-full h-full overflow-hidden"
       style={{ 
         zIndex: 0,
-        touchAction: 'none', // Let Spline handle all touch
+        touchAction: 'pan-y pinch-zoom', // Allow scrolling but let Spline handle other gestures
+        backgroundColor: '#000',
       }}
     >
-      <Spline
-        scene={scene}
-        onLoad={handleLoad}
+      {/* Animated gradient fallback - always visible as base layer */}
+      <div
+        className="absolute inset-0"
         style={{
-          width: '100%',
-          height: '100%',
-          display: 'block',
-          opacity: isLoaded ? 1 : 0,
-          transition: 'opacity 300ms ease-out',
+          background: 'radial-gradient(ellipse at 50% 30%, rgba(59, 130, 246, 0.12) 0%, rgba(59, 130, 246, 0.04) 30%, transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(147, 51, 234, 0.08) 0%, transparent 40%), #000',
+          opacity: showFallback || !isLoaded ? 1 : 0,
+          transition: 'opacity 500ms ease-out',
         }}
-      />
-      {/* Loading placeholder - non-interactive */}
-      {!isLoaded && (
-        <div
-          className="absolute inset-0 pointer-events-none"
+      >
+        {/* Subtle animated glow for visual interest when no Spline */}
+        {showFallback && (
+          <div
+            className="absolute inset-0"
+            style={{
+              background: 'radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)',
+              animation: 'pulse 4s ease-in-out infinite',
+            }}
+          />
+        )}
+      </div>
+
+      {/* Spline scene - only render if no error */}
+      {!showFallback && (
+        <Spline
+          scene={scene}
+          onLoad={handleLoad}
+          onError={handleError}
           style={{
-            background: 'radial-gradient(ellipse at 50% 30%, rgba(59, 130, 246, 0.08) 0%, transparent 50%), #000',
+            width: '100%',
+            height: '100%',
+            display: 'block',
+            opacity: isLoaded ? 1 : 0,
+            transition: 'opacity 400ms ease-out',
+            willChange: 'opacity',
           }}
         />
       )}
@@ -237,6 +279,12 @@ const NEON_GLOBAL_STYLES = `
   .neon-blue-bg {
     background: #3b82f6;
     box-shadow: 0 0 8px #3b82f6, 0 0 16px #3b82f6;
+  }
+
+  /* Pulse animation for Spline fallback */
+  @keyframes pulse {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.02); }
   }
 
   .neon-red-text {
@@ -971,12 +1019,13 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
           style={{
             zIndex: 0,
             pointerEvents: 'auto',
-            touchAction: 'manipulation',
+            touchAction: 'pan-y pinch-zoom',
             width: '100vw',
             minWidth: '100vw',
             height: '100vh',
             minHeight: '100dvh',
-            cursor: 'grab',
+            cursor: 'default',
+            backgroundColor: '#000', // Prevent white flash during load
           }}
         >
           <WelcomeSplineBackground />
@@ -1056,9 +1105,15 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="fixed inset-0 flex flex-col z-10 pointer-events-none"
-                style={{ minHeight: '100dvh', width: '100vw', height: '100vh' }}
+                transition={{ duration: 0.4, ease: 'easeOut' }}
+                className="fixed inset-0 flex flex-col z-10"
+                style={{ 
+                  minHeight: '100dvh', 
+                  width: '100vw', 
+                  height: '100vh',
+                  // Allow touch events to pass through to Spline but capture on UI elements
+                  pointerEvents: 'none',
+                }}
               >
                 {/* Branding Header - Neon Sign Style */}
                 <motion.div
@@ -1123,37 +1178,40 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
                 {/* Main Content Area - Centered (40% smaller for mobile) */}
                 <div
-                  className="relative flex-1 flex flex-col items-center justify-center gap-2 px-3 w-full max-w-[220px] mx-auto pb-4 pointer-events-auto"
-                  style={{ zIndex: 10 }}
+                  className="relative flex-1 flex flex-col items-center justify-center gap-2 px-3 w-full max-w-[220px] mx-auto pb-4"
+                  style={{ zIndex: 10, pointerEvents: 'auto' }}
                 >
-                  {/* Ultra-transparent Card Container - Ghost animation (fades to 0) until interaction */}
+                  {/* Ultra-transparent Card Container - Gentle pulse animation until interaction */}
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
+                    initial={{ opacity: 0.7, scale: 0.98 }}
                     animate={
                       userInteracted
                         ? { opacity: 1, scale: 1 }
                         : {
-                            opacity: [0, 1, 0],
-                            scale: [0.96, 1, 0.96],
+                            // Smoother animation - never fully invisible to prevent black flash
+                            opacity: [0.5, 0.9, 0.5],
+                            scale: [0.97, 1, 0.97],
                           }
                     }
                     transition={
                       userInteracted
-                        ? { duration: 0.3, ease: 'easeOut' }
+                        ? { duration: 0.25, ease: 'easeOut' }
                         : {
-                            duration: 5,
+                            duration: 4,
                             repeat: Infinity,
                             ease: 'easeInOut',
                           }
                     }
-                    className="w-full rounded-xl p-3 border border-white/5"
+                    className="w-full rounded-xl p-3 border border-white/10"
                     onMouseEnter={handleUserInteraction}
                     onTouchStart={handleUserInteraction}
+                    onClick={handleUserInteraction}
                     style={{
-                      background: 'rgba(0, 0, 0, 0.15)',
-                      backdropFilter: 'blur(8px)',
-                      WebkitBackdropFilter: 'blur(8px)',
-                      boxShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.03)',
+                      background: 'rgba(0, 0, 0, 0.25)',
+                      // Use simpler blur for better mobile performance
+                      backdropFilter: 'blur(12px)',
+                      WebkitBackdropFilter: 'blur(12px)',
+                      boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.05)',
                     }}
                   >
                     {/* Action Header */}
@@ -1275,19 +1333,23 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              className="fixed inset-0 flex flex-col z-10 pointer-events-none"
-              style={{ minHeight: '100dvh' }}
+              transition={{ duration: 0.35, ease: 'easeOut' }}
+              className="fixed inset-0 flex flex-col z-10"
+              style={{ 
+                minHeight: '100dvh',
+                pointerEvents: 'none', // Allow Spline interaction, UI elements override
+              }}
             >
               {/* Ultra-transparent Back Button - Top Right (UltimateHub is on left) */}
               <button
                 onClick={() => setStep(-1)}
-                className="fixed top-5 right-4 flex items-center gap-2 text-blue-300 text-sm font-medium transition-all cursor-target py-2 px-3.5 rounded-xl z-50 pointer-events-auto"
+                className="fixed top-5 right-4 flex items-center gap-2 text-blue-300 text-sm font-medium transition-all cursor-target py-2 px-3.5 rounded-xl z-50"
                 style={{
-                  background: 'rgba(0, 0, 0, 0.15)',
-                  backdropFilter: 'blur(8px)',
-                  WebkitBackdropFilter: 'blur(8px)',
-                  border: '1px solid rgba(59, 130, 246, 0.15)',
+                  pointerEvents: 'auto',
+                  background: 'rgba(0, 0, 0, 0.25)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(59, 130, 246, 0.2)',
                 }}
               >
                 <ChevronLeft className="w-4 h-4" /> Back
@@ -1299,6 +1361,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
                 className="relative z-10 pt-6 pb-2 text-center"
+                style={{ pointerEvents: 'none' }}
               >
                 <h1
                   className="text-2xl font-black tracking-tight"
@@ -1315,35 +1378,38 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
               </motion.div>
 
               {/* Centered Content - Ultra-transparent Card */}
-              <div className="flex-1 flex flex-col items-center justify-center gap-6 px-5 w-full max-w-sm mx-auto pb-20 relative z-10 pointer-events-auto">
+              <div 
+                className="flex-1 flex flex-col items-center justify-center gap-6 px-5 w-full max-w-sm mx-auto pb-20 relative z-10"
+                style={{ pointerEvents: 'auto' }}
+              >
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
+                  initial={{ opacity: 0.7, scale: 0.97 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3, delay: 0.1 }}
-                  className="rounded-2xl p-6 text-center w-full border border-white/5"
+                  transition={{ duration: 0.35, delay: 0.05, ease: 'easeOut' }}
+                  className="rounded-2xl p-6 text-center w-full border border-white/10"
                   style={{
-                    background: 'rgba(0, 0, 0, 0.15)',
-                    backdropFilter: 'blur(8px)',
-                    WebkitBackdropFilter: 'blur(8px)',
-                    boxShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.03)',
+                    background: 'rgba(0, 0, 0, 0.25)',
+                    backdropFilter: 'blur(14px)',
+                    WebkitBackdropFilter: 'blur(14px)',
+                    boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.05)',
                   }}
                 >
                   <div className="mb-4 flex justify-center">
                     <div
                       className="h-12 w-12 rounded-full flex items-center justify-center"
                       style={{
-                        background: 'rgba(255, 255, 255, 0.03)',
-                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
                       }}
                     >
-                      <User className="w-6 h-6 text-white/50" />
+                      <User className="w-6 h-6 text-white/60" />
                     </div>
                   </div>
 
-                  <h2 className="text-lg font-bold text-white/80 mb-2">Continue as Guest</h2>
-                  <p className="text-xs text-white/30 mb-5 leading-relaxed">
+                  <h2 className="text-lg font-bold text-white/85 mb-2">Continue as Guest</h2>
+                  <p className="text-xs text-white/40 mb-5 leading-relaxed">
                     Browse the site without an account.<br />
-                    <span className="text-white/20">Some features may be limited.</span>
+                    <span className="text-white/25">Some features may be limited.</span>
                   </p>
 
                   {/* Continue Button - Ultra-transparent */}
@@ -1353,7 +1419,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                       onUnlock();
                     }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full py-3 rounded-xl font-bold text-base tracking-wide transition-all flex items-center justify-center gap-2 text-white/70"
+                    className="w-full py-3 rounded-xl font-bold text-base tracking-wide transition-all flex items-center justify-center gap-2 text-white/75"
                     style={{
                       background: 'rgba(255, 255, 255, 0.05)',
                       backdropFilter: 'blur(6px)',

@@ -124,6 +124,8 @@ import {
 } from 'lucide-react';
 import { useUIState } from '@/contexts/UIStateContext';
 import { createSupabaseClient } from '@/lib/supabase';
+import { NotificationToggle, NotificationBadge } from '@/components/NotificationSettingsPanel';
+import { useNotifications } from '@/hooks/useNotifications';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -1729,8 +1731,23 @@ function useConsoleLogs(maxLogs: number = 100): { logs: ConsoleEntry[]; clearLog
     };
 
     console.error = (...args) => {
-      originalError(...args);
-      captureLog('error', ...args);
+      // Filter out known benign errors from third-party scripts
+      const errorMessage = args.join(' ');
+      const ignoredErrors = [
+        'Cannot listen to the event from the provided iframe',
+        'contentWindow is not available',
+        'ResizeObserver loop',
+        'Script error.',
+      ];
+      
+      const shouldIgnore = ignoredErrors.some(ignored => 
+        errorMessage.toLowerCase().includes(ignored.toLowerCase())
+      );
+      
+      if (!shouldIgnore) {
+        originalError(...args);
+        captureLog('error', ...args);
+      }
     };
 
     console.warn = (...args) => {
@@ -3824,6 +3841,14 @@ const CommunityModal = memo(({ isOpen, onClose, isVip, isAdmin }: {
         </div>
       </div>
 
+      {/* 🔔 NOTIFICATION SETTINGS - Full control over push notifications */}
+      <div 
+        className="px-2 py-1.5 border-b border-white/5 relative z-10"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <NotificationToggle showChannelSettings={true} />
+      </div>
+
       {/* Channel Tabs */}
       <div className="flex items-center gap-1 p-2 border-b border-white/10 overflow-x-auto">
         {(Object.keys(TELEGRAM_CHANNELS) as ChannelKey[]).map(key => {
@@ -3851,6 +3876,9 @@ const CommunityModal = memo(({ isOpen, onClose, isVip, isAdmin }: {
             </button>
           );
         })}
+        
+        {/* Notification Badge - Quick toggle */}
+        <NotificationBadge />
         
         {/* Admin Button */}
         <motion.button
@@ -4750,6 +4778,14 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     exit={{ opacity: 0, x: -20 }}
                     className="h-full flex flex-col"
                   >
+                    {/* 🔔 NOTIFICATION SETTINGS */}
+                    <div 
+                      className="px-2 py-1.5 border-b border-blue-500/20 bg-black/50 relative z-10"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <NotificationToggle showChannelSettings={true} />
+                    </div>
+                    
                     {/* Channel Tabs */}
                     <div className="flex items-center gap-1 p-2 border-b border-blue-500/30 overflow-x-auto bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}>
                       {(Object.keys(TELEGRAM_CHANNELS) as ChannelKey[]).map(key => {
@@ -4775,6 +4811,9 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                           </button>
                         );
                       })}
+                      
+                      {/* Notification Badge - Quick toggle */}
+                      <NotificationBadge />
                       
                       {/* Admin Button */}
                       <motion.button

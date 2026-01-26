@@ -61,7 +61,7 @@ export function ClientCursor() {
       targetSelector="a, button, input, .cursor-target, .interactive-object, [role='button']"
       autoMoveSelector="button, a, input, .cursor-target"
       spinDuration={2.5}
-      hideDefaultCursor={!isMobile} // Only hide default cursor on desktop
+      hideDefaultCursor={false} // ALWAYS show real cursor - custom cursor is decorative only
       idleTimeout={5}
       enableOnMobile={false} // Disable on mobile to prevent memory issues
     />

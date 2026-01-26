@@ -1,11 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import webpush from 'web-push';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 // Mr.Bullmoney Bot Token - @MrBullmoneybot
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8554647051:AAE-FBW0qW0ZL4VVvUPlytlDXdo9lH7T9A8';
 const VIP_CHANNEL_ID = process.env.VIP_CHANNEL_ID;
+
+// VAPID keys for push notifications
+const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
+const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@bullmoney.com';
+
+if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+}
+
+// Channel mapping for notifications
+const CHANNEL_INFO: Record<string, { name: string; emoji: string; channel: string }> = {
+  'bullmoneywebsite': { name: 'Free Trades', emoji: '📈', channel: 'trades' },
+  'bullmoneyfx': { name: 'Livestreams', emoji: '🔴', channel: 'main' },
+  'Bullmoneyshop': { name: 'News', emoji: '📰', channel: 'shop' },
+  'vip': { name: 'VIP Trades', emoji: '👑', channel: 'vip' },
+};
 
 /**
  * Telegram Webhook Handler
@@ -63,6 +81,79 @@ export async function POST(request: NextRequest) {
           console.error('Failed to store message:', error);
         } else {
           console.log('✅ Stored VIP message:', messageText?.substring(0, 50) || '(media)');
+          
+          // ============================================
+          // 🔔 SEND PUSH NOTIFICATIONS TO ALL SUBSCRIBERS
+          // ============================================
+          if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+            try {
+              // Get channel info from chat username or default to VIP
+              const chatUsername = message.chat?.username || 'vip';
+              const channelInfo = CHANNEL_INFO[chatUsername] || CHANNEL_INFO['vip'];
+              
+              // Get all active push subscriptions
+              const { data: subscriptions } = await supabase
+                .from('push_subscriptions')
+                .select('*')
+                .eq('is_active', true);
+              
+              if (subscriptions && subscriptions.length > 0) {
+                const notificationPayload = {
+                  title: `${channelInfo.emoji} BullMoney ${channelInfo.name}`,
+                  body: messageText?.substring(0, 100) || '📷 New media post - tap to view',
+                  icon: '/icons/icon-192x192.png',
+                  badge: '/icons/badge-72x72.png',
+                  channel: channelInfo.channel,
+                  tag: `trade-${message.message_id}`,
+                  url: `/?channel=${channelInfo.channel}&from=notification`,
+                  requireInteraction: true,
+                };
+                
+                const payloadString = JSON.stringify(notificationPayload);
+                
+                // Send to all subscribers
+                let sent = 0;
+                let failed = 0;
+                
+                await Promise.allSettled(
+                  subscriptions.map(async (sub) => {
+                    try {
+                      await webpush.sendNotification({
+                        endpoint: sub.endpoint,
+                        keys: { p256dh: sub.p256dh, auth: sub.auth },
+                      }, payloadString);
+                      sent++;
+                    } catch (err: any) {
+                      failed++;
+                      // Remove expired subscriptions
+                      if (err.statusCode === 404 || err.statusCode === 410) {
+                        await supabase
+                          .from('push_subscriptions')
+                          .update({ is_active: false })
+                          .eq('endpoint', sub.endpoint);
+                      }
+                    }
+                  })
+                );
+                
+                console.log(`🔔 Push notifications sent: ${sent} success, ${failed} failed`);
+                
+                // Log notification history
+                await supabase
+                  .from('notification_history')
+                  .insert({
+                    title: notificationPayload.title,
+                    body: notificationPayload.body,
+                    channel: channelInfo.channel,
+                    sent_count: sent,
+                    failed_count: failed,
+                    created_at: new Date().toISOString(),
+                  });
+              }
+            } catch (pushError) {
+              console.error('Push notification error:', pushError);
+            }
+          }
         }
       }
     }

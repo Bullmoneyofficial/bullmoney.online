@@ -1,9 +1,9 @@
-// Service Worker for Offline Support - Minimal Caching
-// Version 3.0.0 - Network-first approach for freshest content
+// Service Worker for Offline Support + Push Notifications
+// Version 4.0.0 - Network-first approach + Push notification support
 // Caching DISABLED for most assets to ensure users always get latest content
 
-const CACHE_NAME = 'bullmoney-v3-minimal';
-const OFFLINE_CACHE = 'bullmoney-offline-v3';
+const CACHE_NAME = 'bullmoney-v4-push';
+const OFFLINE_CACHE = 'bullmoney-offline-v4';
 
 // MINIMAL cache - only offline fallback essentials
 // No longer caching Spline scenes or runtime assets
@@ -11,6 +11,7 @@ const PRECACHE_ASSETS = [
   '/offline.html',
   '/bullmoney-logo.png',
   '/favicon.svg',
+  '/B.png',
 ];
 
 // Detect browser type for logging only
@@ -97,6 +98,134 @@ self.addEventListener('message', (event) => {
 // Background sync (keep for future use)
 self.addEventListener('sync', (event) => {
   if (event.tag === 'sync-data') {
-    console.log('[SW v3] Background sync triggered');
+    console.log('[SW v4] Background sync triggered');
   }
+  if (event.tag === 'notification-analytics') {
+    console.log('[SW v4] Syncing notification analytics');
+  }
+});
+
+// ============================================================================
+// PUSH NOTIFICATIONS - Handle incoming push events
+// ============================================================================
+
+// Push event - this is where notifications are received (works even when app is closed!)
+self.addEventListener('push', (event) => {
+  console.log('[SW v4] Push event received');
+
+  let data = {
+    title: 'BullMoney Trade Alert 🚀',
+    body: 'New trade signal available!',
+    icon: '/bullmoney-logo.png',
+    badge: '/B.png',
+    tag: 'trade-alert',
+    url: '/',
+    channel: 'trades',
+  };
+
+  try {
+    if (event.data) {
+      const payload = event.data.json();
+      data = { ...data, ...payload };
+    }
+  } catch (e) {
+    console.error('[SW v4] Error parsing push data:', e);
+    if (event.data) {
+      data.body = event.data.text();
+    }
+  }
+
+  const options = {
+    body: data.body,
+    icon: data.icon || '/bullmoney-logo.png',
+    badge: data.badge || '/B.png',
+    tag: data.tag || 'trade-alert-' + Date.now(),
+    renotify: true,
+    requireInteraction: data.requireInteraction || false,
+    vibrate: [200, 100, 200, 100, 200],
+    data: {
+      url: data.url || '/',
+      channel: data.channel || 'trades',
+      timestamp: Date.now(),
+    },
+    actions: [
+      {
+        action: 'view',
+        title: '📈 View Trade',
+      },
+      {
+        action: 'dismiss',
+        title: 'Dismiss',
+      },
+    ],
+  };
+
+  // Add image if provided (for trade screenshots, charts, etc.)
+  if (data.image) {
+    options.image = data.image;
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  );
+});
+
+// Notification click event - opens the app when user taps notification
+self.addEventListener('notificationclick', (event) => {
+  console.log('[SW v4] Notification clicked:', event.action);
+
+  event.notification.close();
+
+  if (event.action === 'dismiss') {
+    return;
+  }
+
+  // Get the URL to open
+  const urlToOpen = event.notification.data?.url || '/';
+  const channel = event.notification.data?.channel;
+
+  // Build full URL with tracking params
+  let fullUrl = urlToOpen;
+  if (channel && !urlToOpen.includes('channel=')) {
+    const separator = urlToOpen.includes('?') ? '&' : '?';
+    fullUrl = `${urlToOpen}${separator}channel=${channel}&from=notification`;
+  }
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Check if there's already a window open
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          // Navigate to the notification URL
+          client.postMessage({
+            type: 'NOTIFICATION_CLICK',
+            url: fullUrl,
+            channel: channel,
+          });
+          return client.focus();
+        }
+      }
+
+      // No window open, open a new one
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(fullUrl);
+      }
+    })
+  );
+});
+
+// Notification close event (for analytics)
+self.addEventListener('notificationclose', (event) => {
+  console.log('[SW v4] Notification closed without action');
+  
+  // Track notification dismissal (fire and forget)
+  fetch('/api/notifications/track', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action: 'close',
+      tag: event.notification.tag,
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
 });

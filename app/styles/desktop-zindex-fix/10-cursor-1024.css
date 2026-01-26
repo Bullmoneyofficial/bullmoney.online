@@ -75,10 +75,27 @@
      on desktop, especially inside modals and overlays
      ============================================ */
   html,
-  body,
-  *,
+  body {
+    cursor: auto !important;
+  }
+  
+  /* Default cursor for all elements - but allow overrides for specific components */
+  *:not(.cursor-none):not([style*="cursor: none"]),
   *::before,
   *::after {
+    cursor: auto;
+  }
+  
+  /* HIGH PRIORITY: Modals and overlays MUST show cursor */
+  [style*="z-index: 2147483647"],
+  [style*="zIndex: 2147483647"],
+  .fixed.inset-0 {
+    cursor: auto !important;
+  }
+  
+  [style*="z-index: 2147483647"] *,
+  [style*="zIndex: 2147483647"] *,
+  .fixed.inset-0 * {
     cursor: auto !important;
   }
   
@@ -86,6 +103,16 @@
   a, button, [role="button"], .cursor-pointer, .cursor-target,
   input[type="button"], input[type="submit"], input[type="reset"],
   select, label[for], summary {
+    cursor: pointer !important;
+  }
+  
+  /* Interactive elements in modals */
+  [style*="z-index: 2147483647"] a,
+  [style*="z-index: 2147483647"] button,
+  [style*="zIndex: 2147483647"] a,
+  [style*="zIndex: 2147483647"] button,
+  .fixed.inset-0 a,
+  .fixed.inset-0 button {
     cursor: pointer !important;
   }
   

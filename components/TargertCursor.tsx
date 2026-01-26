@@ -20,7 +20,7 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
   targetSelector = 'a, button, input, .cursor-target, .interactive-object',
   autoMoveSelector = 'button, a, input, .cursor-target',
   spinDuration = 2,
-  hideDefaultCursor = true,
+  hideDefaultCursor = false, // CHANGED: Always show real cursor for better UX
   idleTimeout = 3,
   // 🎯 Audio disabled - CodePen assets no longer available
   clickSoundUrl = '',
@@ -77,11 +77,25 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
     const setCorner3 = corners[2] ? { x: gsap.quickSetter(corners[2], "x", "px"), y: gsap.quickSetter(corners[2], "y", "px") } : { x: () => {}, y: () => {} };
     const setCorner4 = corners[3] ? { x: gsap.quickSetter(corners[3], "x", "px"), y: gsap.quickSetter(corners[3], "y", "px") } : { x: () => {}, y: () => {} };
 
-    // Init Logic
-    if (hideDefaultCursor) {
+    // Init Logic - ONLY hide cursor if explicitly requested AND no modal is open
+    const isModalOpen = () => document.querySelector('[style*="z-index: 2147483647"], .fixed.inset-0[style*="zIndex"]');
+    
+    if (hideDefaultCursor && !isModalOpen()) {
       document.documentElement.style.cursor = 'none';
       document.body.style.cursor = 'none';
     }
+    
+    // Watch for modals opening - restore cursor when they do
+    const modalObserver = new MutationObserver(() => {
+      if (isModalOpen()) {
+        document.documentElement.style.cursor = '';
+        document.body.style.cursor = '';
+      } else if (hideDefaultCursor) {
+        document.documentElement.style.cursor = 'none';
+        document.body.style.cursor = 'none';
+      }
+    });
+    modalObserver.observe(document.body, { childList: true, subtree: true });
     
     // Initialize cursor at center of screen (not top-left)
     const centerX = window.innerWidth / 2;
@@ -276,6 +290,7 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
     window.addEventListener('mouseover', onHover, true); 
 
     return () => {
+      modalObserver.disconnect();
       gsap.ticker.remove(renderLoop); clearInterval(idleTimer); spinTl.current?.kill();
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mousedown', onClick);

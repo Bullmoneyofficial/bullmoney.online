@@ -56,6 +56,13 @@ const ClientCursor = dynamic(
   { ssr: false }
 );
 
+// 🔔 NOTIFICATION PERMISSION MODAL - Shows IMMEDIATELY on first load asking for push notifications
+// Using eager loading to ensure it appears before anything else
+const NotificationPermissionModal = dynamic(
+  () => import("@/components/NotificationPermissionModal").then(mod => mod.NotificationPermissionModal),
+  { ssr: false, loading: () => null }
+);
+
 interface LayoutProvidersProps {
   children: ReactNode;
   modal?: ReactNode;
@@ -93,6 +100,10 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
 
   return (
     <>
+      {/* 🔔 NOTIFICATION PERMISSION MODAL - FIRST! Shows immediately on first load 
+          Must be rendered FIRST to appear ABOVE everything including welcome screens */}
+      <NotificationPermissionModal />
+      
       {/* Global Shimmer Styles - ensures all shimmers are synchronized */}
       <ShimmerStylesProvider />
       
