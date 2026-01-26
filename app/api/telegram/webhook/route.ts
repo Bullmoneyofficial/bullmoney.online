@@ -52,8 +52,9 @@ export async function POST(request: NextRequest) {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
     // Store message in database
+    let messageDbId: string | null = null;
     try {
-      await supabase
+      const { data: insertedMsg } = await supabase
         .from('vip_messages')
         .insert({
           message: messageText || 'Media post',
@@ -61,7 +62,14 @@ export async function POST(request: NextRequest) {
           views: 0,
           created_at: new Date(message.date * 1000).toISOString(),
           telegram_message_id: message.message_id,
-        });
+          notification_sent: false, // Will be marked true after notifications sent
+        })
+        .select('id')
+        .single();
+
+      if (insertedMsg) {
+        messageDbId = insertedMsg.id;
+      }
     } catch (error) {
       // Silently fail if insert doesn't work
     }
@@ -142,6 +150,18 @@ export async function POST(request: NextRequest) {
             }
 
             console.log(`[Webhook] ✅ Push notifications: ${sent} sent, ${failed} failed (${Date.now() - startTime}ms)`);
+
+            // Mark message as notified in database
+            if (messageDbId && sent > 0) {
+              try {
+                await supabase
+                  .from('vip_messages')
+                  .update({ notification_sent: true })
+                  .eq('id', messageDbId);
+              } catch (updateErr) {
+                console.error('[Webhook] Failed to mark message as notified');
+              }
+            }
           }
         }
       } catch (err) {

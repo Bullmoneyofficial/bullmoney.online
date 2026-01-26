@@ -15,6 +15,11 @@ CREATE TABLE IF NOT EXISTS public.vip_messages (
 -- Add telegram_message_id column if table already exists
 ALTER TABLE public.vip_messages ADD COLUMN IF NOT EXISTS telegram_message_id INTEGER;
 
+-- Add columns for notification tracking and chat info
+ALTER TABLE public.vip_messages ADD COLUMN IF NOT EXISTS notification_sent BOOLEAN DEFAULT false;
+ALTER TABLE public.vip_messages ADD COLUMN IF NOT EXISTS chat_id TEXT;
+ALTER TABLE public.vip_messages ADD COLUMN IF NOT EXISTS chat_title TEXT;
+
 -- Create unique index on telegram_message_id to prevent duplicates
 CREATE UNIQUE INDEX IF NOT EXISTS idx_vip_messages_telegram_id ON public.vip_messages(telegram_message_id) WHERE telegram_message_id IS NOT NULL;
 
@@ -35,6 +40,11 @@ CREATE POLICY "Allow service role full access" ON public.vip_messages
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_vip_messages_created_at ON public.vip_messages(created_at DESC);
+
+-- Index for efficient notification query (unnotified recent messages)
+CREATE INDEX IF NOT EXISTS idx_vip_messages_notification
+ON public.vip_messages(created_at DESC)
+WHERE notification_sent = false OR notification_sent IS NULL;
 
 -- ============================================
 -- AUTO-DELETE MESSAGES OLDER THAN 24 HOURS

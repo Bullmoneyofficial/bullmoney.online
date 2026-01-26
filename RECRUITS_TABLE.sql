@@ -312,7 +312,29 @@ GRANT SELECT ON public.channel_subscriber_counts TO service_role;
 
 
 -- =============================================
--- PART 7: INSERT EXISTING RECRUIT DATA
+-- PART 7: VIP MESSAGES NOTIFICATION TRACKING
+-- For cron job background notifications
+-- =============================================
+
+-- Add columns for notification tracking and chat info to vip_messages
+ALTER TABLE public.vip_messages ADD COLUMN IF NOT EXISTS notification_sent BOOLEAN DEFAULT false;
+ALTER TABLE public.vip_messages ADD COLUMN IF NOT EXISTS chat_id TEXT;
+ALTER TABLE public.vip_messages ADD COLUMN IF NOT EXISTS chat_title TEXT;
+
+-- Index for efficient notification query (unnotified recent messages)
+-- This allows the cron job to quickly find messages that haven't been notified yet
+CREATE INDEX IF NOT EXISTS idx_vip_messages_notification
+ON public.vip_messages(created_at DESC)
+WHERE notification_sent = false OR notification_sent IS NULL;
+
+-- Index for telegram_message_id lookups (for deduplication)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_vip_messages_telegram_id
+ON public.vip_messages(telegram_message_id)
+WHERE telegram_message_id IS NOT NULL;
+
+
+-- =============================================
+-- PART 8: INSERT EXISTING RECRUIT DATA
 -- =============================================
 
 INSERT INTO "public"."recruits" ("id", "created_at", "email", "password", "mt5_id", "affiliate_code", "referred_by_code", "social_handle", "task_broker_verified", "task_social_verified", "status", "commission_balance", "total_referred_manual", "used_code", "image_url") VALUES 

@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     
     console.log('[Notifications] Received subscription request');
     
-    const { subscription, channels, userAgent } = body;
+    const { subscription, channels, userAgent, oldEndpoint, reason } = body;
 
     if (!subscription || !subscription.endpoint) {
       console.error('[Notifications] Invalid subscription - missing endpoint');
@@ -45,6 +45,25 @@ export async function POST(request: NextRequest) {
         { error: 'Invalid subscription data - missing endpoint' },
         { status: 400 }
       );
+    }
+
+    // Handle subscription token refresh (from service worker pushsubscriptionchange event)
+    if (oldEndpoint && oldEndpoint !== subscription.endpoint) {
+      console.log('[Notifications] Subscription changed, removing old endpoint');
+      try {
+        const supabase = getServerSupabase();
+        await supabase
+          .from('push_subscriptions')
+          .delete()
+          .eq('endpoint', oldEndpoint);
+        console.log('[Notifications] Old subscription removed');
+      } catch (e) {
+        console.warn('[Notifications] Could not remove old subscription:', e);
+      }
+    }
+
+    if (reason) {
+      console.log('[Notifications] Subscription reason:', reason);
     }
 
     // Validate keys
