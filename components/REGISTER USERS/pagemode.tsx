@@ -38,7 +38,7 @@ import { UnifiedFpsPill, UnifiedHubPanel, useLivePrices } from '@/components/Ult
 import { createPortal } from 'react-dom';
 
 // --- SIMPLE SPLINE BACKGROUND COMPONENT (MOBILE) ---
-// Single scene, no rotation, no complexity - just load fast
+// Single scene, interactive, loads fast - z-index 0 so menus overlay properly
 const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -47,7 +47,10 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
   }, []);
 
   return (
-    <div className="absolute inset-0 w-full h-full overflow-hidden bg-black">
+    <div 
+      className="absolute inset-0 w-full h-full overflow-hidden bg-black"
+      style={{ zIndex: 0 }}
+    >
       <Spline
         scene="/scene1.splinecode"
         onLoad={handleLoad}
@@ -57,9 +60,13 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
           display: 'block',
           opacity: isLoaded ? 1 : 0,
           transition: 'opacity 300ms ease-out',
+          // Interactive: allow touch/mouse on the 3D scene
+          touchAction: 'manipulation',
+          pointerEvents: 'auto',
+          cursor: 'grab',
         }}
       />
-      {/* Loading placeholder */}
+      {/* Loading placeholder - non-interactive */}
       {!isLoaded && (
         <div
           className="absolute inset-0 pointer-events-none"
