@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, memo } from 'react';
+import React, { useState, memo, useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Bell, BellOff, BellRing, Settings, ChevronUp,
   TrendingUp, MessageCircle, ShoppingBag, Crown, Volume2, VolumeX,
-  Check, X, Loader2, AlertCircle, Zap
+  Check, X, Loader2, AlertCircle, Zap,
+  Smartphone, Share, Plus, ExternalLink, CheckCircle2, ArrowRight, ChevronDown
 } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 
@@ -13,6 +14,373 @@ import { useNotifications } from '@/hooks/useNotifications';
 // NOTIFICATION SETTINGS PANEL - ULTIMATE HUB STYLE
 // Neon blue aesthetic matching UltimateHub design system
 // ============================================================================
+
+// ============ DEVICE & BROWSER DETECTION ============
+interface DeviceInfo {
+  isIOS: boolean;
+  isSafari: boolean;
+  isAndroid: boolean;
+  isPWA: boolean;
+  isInAppBrowser: boolean;
+  inAppBrowserName: string | null;
+  canInstallPWA: boolean;
+  needsSetupGuide: boolean;
+}
+
+function getDeviceInfo(): DeviceInfo {
+  if (typeof window === 'undefined') {
+    return {
+      isIOS: false,
+      isSafari: false,
+      isAndroid: false,
+      isPWA: false,
+      isInAppBrowser: false,
+      inAppBrowserName: null,
+      canInstallPWA: false,
+      needsSetupGuide: false,
+    };
+  }
+
+  const ua = navigator.userAgent || (navigator as any).vendor || '';
+  
+  // iOS detection
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || 
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  
+  // Safari detection (not Chrome/Firefox on iOS)
+  const isSafari = /^((?!chrome|android|CriOS|FxiOS|OPiOS).)*safari/i.test(ua);
+  
+  // Android detection
+  const isAndroid = /android/i.test(ua);
+  
+  // PWA detection (running as installed app)
+  const isPWA = window.matchMedia('(display-mode: standalone)').matches ||
+    (window.navigator as any).standalone === true ||
+    document.referrer.includes('android-app://');
+  
+  // In-app browser detection
+  const inAppPatterns: { [key: string]: RegExp } = {
+    'Instagram': /Instagram/i,
+    'Facebook': /FBAN|FBAV|FB_IAB/i,
+    'TikTok': /BytedanceWebview|TikTok/i,
+    'Twitter/X': /Twitter/i,
+    'Snapchat': /Snapchat/i,
+    'LinkedIn': /LinkedIn/i,
+    'Pinterest': /Pinterest/i,
+    'Discord': /Discord/i,
+    'Messenger': /Messenger|FBMN/i,
+    'Line': /Line\//i,
+    'WeChat': /MicroMessenger/i,
+    'Telegram': /TelegramBot/i,
+  };
+  
+  let inAppBrowserName: string | null = null;
+  for (const [name, pattern] of Object.entries(inAppPatterns)) {
+    if (pattern.test(ua)) {
+      inAppBrowserName = name;
+      break;
+    }
+  }
+  
+  const isInAppBrowser = inAppBrowserName !== null;
+  
+  // Can install PWA (has beforeinstallprompt support or is iOS Safari)
+  const canInstallPWA = 'BeforeInstallPromptEvent' in window || (isIOS && isSafari && !isPWA);
+  
+  // Needs setup guide if:
+  // 1. In an in-app browser (must open in real browser)
+  // 2. On iOS but not in PWA mode (must add to home screen)
+  const needsSetupGuide = isInAppBrowser || (isIOS && !isPWA);
+  
+  return {
+    isIOS,
+    isSafari,
+    isAndroid,
+    isPWA,
+    isInAppBrowser,
+    inAppBrowserName,
+    canInstallPWA,
+    needsSetupGuide,
+  };
+}
+
+// Step interface for setup guide
+interface SetupStep {
+  title: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
+  tips: string[];
+  visual?: string;
+}
+
+// ============ iOS SETUP GUIDE COMPONENT ============
+const IOSSetupGuide = memo(({ deviceInfo, onClose }: { deviceInfo: DeviceInfo; onClose: () => void }) => {
+  const [currentStep, setCurrentStep] = useState(0);
+  
+  // Copy current URL to clipboard
+  const copyUrlToClipboard = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      alert('Link copied! Now open Safari and paste this link.');
+    } catch {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = window.location.href;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('Link copied! Now open Safari and paste this link.');
+    }
+  }, []);
+
+  // Open in Safari (iOS specific)
+  const openInSafari = useCallback(() => {
+    // On iOS, we can try to use x-safari-https to open in Safari
+    const url = window.location.href;
+    
+    // Try the Safari URL scheme
+    const safariUrl = `x-safari-${url}`;
+    
+    // Create a hidden link and click it
+    const link = document.createElement('a');
+    link.href = safariUrl;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    
+    // Try to open, if it fails, show instructions
+    try {
+      link.click();
+    } catch {
+      // Fallback - show manual instructions
+      copyUrlToClipboard();
+    }
+    
+    document.body.removeChild(link);
+    
+    // Also copy URL as fallback
+    setTimeout(() => {
+      copyUrlToClipboard();
+    }, 500);
+  }, [copyUrlToClipboard]);
+
+  // Different flows based on situation
+  const getSteps = useCallback((): SetupStep[] => {
+    if (deviceInfo.isInAppBrowser) {
+      // In-app browser flow
+      return [
+        {
+          title: `Open in Safari`,
+          description: `You're viewing this in ${deviceInfo.inAppBrowserName || 'an in-app browser'}. Push notifications only work in Safari.`,
+          icon: ExternalLink,
+          action: {
+            label: 'Copy Link & Open Safari',
+            onClick: copyUrlToClipboard,
+          },
+          tips: [
+            'Tap the ••• or share button in the app',
+            'Select "Open in Safari" or "Open in Browser"',
+            'Or copy the link and paste in Safari',
+          ],
+        },
+      ];
+    }
+
+    if (deviceInfo.isIOS && !deviceInfo.isPWA) {
+      // iOS Safari but not PWA
+      return [
+        {
+          title: 'Add to Home Screen',
+          description: 'iPhone notifications require adding BullMoney to your home screen first.',
+          icon: Plus,
+          action: {
+            label: 'Show Me How',
+            onClick: () => setCurrentStep(1),
+          },
+          tips: [],
+        },
+        {
+          title: 'Step 1: Tap Share',
+          description: 'Tap the Share button at the bottom of Safari (square with arrow pointing up).',
+          icon: Share,
+          action: {
+            label: 'Next Step',
+            onClick: () => setCurrentStep(2),
+          },
+          visual: '📤',
+          tips: ['Look for the square icon with an upward arrow', 'It\'s at the bottom of Safari'],
+        },
+        {
+          title: 'Step 2: Add to Home Screen',
+          description: 'Scroll down in the share menu and tap "Add to Home Screen".',
+          icon: Plus,
+          action: {
+            label: 'Next Step',
+            onClick: () => setCurrentStep(3),
+          },
+          visual: '➕',
+          tips: ['Scroll down in the share sheet', 'Look for "Add to Home Screen"'],
+        },
+        {
+          title: 'Step 3: Confirm & Open',
+          description: 'Tap "Add" in the top right, then open BullMoney from your home screen.',
+          icon: CheckCircle2,
+          action: {
+            label: 'Done! I\'ll Open From Home Screen',
+            onClick: onClose,
+          },
+          visual: '✅',
+          tips: ['Tap "Add" to confirm', 'Find the BullMoney icon on your home screen', 'Open it and enable notifications!'],
+        },
+      ];
+    }
+
+    return [];
+  }, [deviceInfo, copyUrlToClipboard, onClose]);
+
+  const steps = getSteps();
+  const step = steps[currentStep];
+
+  if (!step) return null;
+
+  const StepIcon = step.icon;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      className="rounded-xl overflow-hidden"
+      style={{
+        background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(7, 11, 20, 0.98) 100%)',
+        border: '1px solid rgba(251, 191, 36, 0.3)',
+        boxShadow: '0 0 20px rgba(251, 191, 36, 0.15), inset 0 0 30px rgba(0, 0, 0, 0.5)',
+      }}
+    >
+      {/* Header */}
+      <div 
+        className="px-3 py-2 flex items-center justify-between"
+        style={{
+          background: 'linear-gradient(90deg, rgba(251, 191, 36, 0.15) 0%, rgba(245, 158, 11, 0.1) 100%)',
+          borderBottom: '1px solid rgba(251, 191, 36, 0.2)',
+        }}
+      >
+        <div className="flex items-center gap-2">
+          <Smartphone 
+            className="w-4 h-4 text-amber-400" 
+            style={{ filter: 'drop-shadow(0 0 4px #f59e0b)' }}
+          />
+          <span 
+            className="text-[10px] font-black uppercase tracking-wider"
+            style={{ color: '#fbbf24', textShadow: '0 0 8px rgba(251, 191, 36, 0.5)' }}
+          >
+            {deviceInfo.isIOS ? 'iPhone Setup' : 'Setup Required'}
+          </span>
+        </div>
+        {steps.length > 1 && (
+          <span className="text-[9px] text-amber-400/70">
+            Step {currentStep + 1} of {steps.length}
+          </span>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="p-3 space-y-3">
+        {/* Visual indicator for iOS steps */}
+        {step.visual && (
+          <div className="flex justify-center">
+            <div 
+              className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl"
+              style={{
+                background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(245, 158, 11, 0.1) 100%)',
+                border: '2px solid rgba(251, 191, 36, 0.3)',
+                boxShadow: '0 0 20px rgba(251, 191, 36, 0.2)',
+              }}
+            >
+              {step.visual}
+            </div>
+          </div>
+        )}
+
+        {/* Step info */}
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <StepIcon 
+              className="w-4 h-4 text-amber-400" 
+              style={{ filter: 'drop-shadow(0 0 4px #f59e0b)' }}
+            />
+            <h3 
+              className="text-sm font-bold"
+              style={{ color: '#fcd34d', textShadow: '0 0 8px rgba(251, 191, 36, 0.4)' }}
+            >
+              {step.title}
+            </h3>
+          </div>
+          <p className="text-[10px] text-zinc-400 leading-relaxed">
+            {step.description}
+          </p>
+        </div>
+
+        {/* Tips */}
+        {step.tips && step.tips.length > 0 && (
+          <div 
+            className="rounded-lg p-2 space-y-1"
+            style={{
+              background: 'rgba(0, 0, 0, 0.4)',
+              border: '1px solid rgba(251, 191, 36, 0.15)',
+            }}
+          >
+            {step.tips.map((tip, i) => (
+              <div key={i} className="flex items-start gap-1.5">
+                <ArrowRight className="w-3 h-3 text-amber-400/70 mt-0.5 flex-shrink-0" />
+                <span className="text-[9px] text-zinc-400">{tip}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Action button */}
+        {step.action && (
+          <button
+            onClick={step.action.onClick}
+            className="w-full py-2.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all active:scale-95"
+            style={{
+              background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+              color: '#000',
+              boxShadow: '0 0 15px rgba(245, 158, 11, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+              border: '1px solid rgba(251, 191, 36, 0.5)',
+            }}
+          >
+            {step.action.label}
+          </button>
+        )}
+
+        {/* Back button for multi-step */}
+        {currentStep > 0 && (
+          <button
+            onClick={() => setCurrentStep(currentStep - 1)}
+            className="w-full py-1.5 text-[10px] text-amber-400/70 hover:text-amber-400 transition-colors"
+          >
+            ← Go Back
+          </button>
+        )}
+
+        {/* Skip/Close */}
+        <button
+          onClick={onClose}
+          className="w-full py-1.5 text-[9px] text-zinc-500 hover:text-zinc-400 transition-colors"
+        >
+          I&apos;ll do this later
+        </button>
+      </div>
+    </motion.div>
+  );
+});
+IOSSetupGuide.displayName = 'IOSSetupGuide';
 
 interface NotificationToggleProps {
   compact?: boolean;
@@ -43,6 +411,10 @@ export const NotificationToggle = memo(({ compact = false, showChannelSettings =
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [localLoading, setLocalLoading] = useState(false);
+  const [showSetupGuide, setShowSetupGuide] = useState(false);
+  
+  // Device detection - memoized to avoid recalculation
+  const deviceInfo = useMemo(() => getDeviceInfo(), []);
 
   // Combined loading state
   const showLoading = isLoading || localLoading || isCheckingSupport;
@@ -54,6 +426,14 @@ export const NotificationToggle = memo(({ compact = false, showChannelSettings =
     
     console.log('[NotificationToggle] 🔔 Toggle clicked!');
     console.log('[NotificationToggle] State:', { isSubscribed, isLoading, localLoading, showLoading, isPermissionDenied, isSupported });
+    console.log('[NotificationToggle] Device:', deviceInfo);
+    
+    // If device needs setup guide, show it instead of toggling
+    if (deviceInfo.needsSetupGuide && !isSubscribed) {
+      console.log('[NotificationToggle] 📱 Showing setup guide for iOS/in-app browser');
+      setShowSetupGuide(true);
+      return;
+    }
     
     if (showLoading) {
       console.log('[NotificationToggle] ⏳ Already loading, ignoring click');
@@ -89,6 +469,62 @@ On mobile Safari: Go to Settings > Notifications > Safari`;
       console.log('[NotificationToggle] 🏁 Loading complete');
     }
   };
+
+  // Show setup guide if user clicked and needs it
+  if (showSetupGuide && deviceInfo.needsSetupGuide) {
+    return (
+      <IOSSetupGuide 
+        deviceInfo={deviceInfo} 
+        onClose={() => setShowSetupGuide(false)} 
+      />
+    );
+  }
+
+  // Show setup needed indicator for iOS/in-app users who haven't completed setup
+  if (deviceInfo.needsSetupGuide && !isSubscribed && !isCheckingSupport) {
+    return (
+      <div 
+        className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition-all active:scale-[0.98]"
+        onClick={() => setShowSetupGuide(true)}
+        style={{
+          background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(245, 158, 11, 0.1) 100%)',
+          border: '1px solid rgba(251, 191, 36, 0.3)',
+          boxShadow: '0 0 12px rgba(251, 191, 36, 0.15)',
+        }}
+      >
+        <div 
+          className="p-1.5 rounded-lg"
+          style={{
+            background: 'rgba(251, 191, 36, 0.2)',
+            border: '1px solid rgba(251, 191, 36, 0.3)',
+          }}
+        >
+          <Smartphone 
+            className="w-4 h-4 text-amber-400" 
+            style={{ filter: 'drop-shadow(0 0 4px #f59e0b)' }}
+          />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div 
+            className="text-[10px] font-bold uppercase tracking-wide"
+            style={{ color: '#fbbf24', textShadow: '0 0 4px rgba(251, 191, 36, 0.5)' }}
+          >
+            {deviceInfo.isInAppBrowser ? 'Open in Safari' : 'iPhone Setup Required'}
+          </div>
+          <div className="text-[8px] text-amber-400/70">
+            {deviceInfo.isInAppBrowser 
+              ? `Tap to open in Safari for notifications`
+              : 'Tap to add to home screen for notifications'
+            }
+          </div>
+        </div>
+        <ArrowRight 
+          className="w-4 h-4 text-amber-400/70" 
+          style={{ filter: 'drop-shadow(0 0 2px #f59e0b)' }}
+        />
+      </div>
+    );
+  }
 
   if (!isSupported && !isCheckingSupport) {
     return (
@@ -434,7 +870,10 @@ Protocol: ${typeof window !== 'undefined' ? window.location.protocol : 'N/A'}`;
                   className="text-[8px] leading-relaxed font-medium"
                   style={{ color: 'rgba(147, 197, 253, 0.9)' }}
                 >
-                  Notifications work even when the app is closed. Your device will alert you when new trades are posted.
+                  {deviceInfo.isIOS && deviceInfo.isPWA
+                    ? "🎉 You're all set! Notifications will appear like WhatsApp messages - even when the app is closed."
+                    : "Notifications work even when the app is closed. Your device will alert you when new trades are posted."
+                  }
                 </p>
               </div>
             </div>
