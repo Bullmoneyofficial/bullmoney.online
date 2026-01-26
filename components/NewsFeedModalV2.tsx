@@ -15,6 +15,93 @@ function cn(...classes: (string | undefined | null | false)[]) {
   return classes.filter(Boolean).join(" ");
 }
 
+// --- OPTIMIZED IMAGE COMPONENT ---
+const OptimizedNewsImage = memo(({ 
+  src, 
+  alt = "",
+  className = "",
+  aspectRatio = "aspect-video",
+  priority = false,
+  onLoad,
+}: { 
+  src?: string; 
+  alt?: string; 
+  className?: string;
+  aspectRatio?: string;
+  priority?: boolean;
+  onLoad?: () => void;
+}) => {
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // Intersection Observer for lazy loading
+  useEffect(() => {
+    if (priority || !imgRef.current || !src) return;
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && imgRef.current) {
+            imgRef.current.src = src;
+            observer.disconnect();
+          }
+        });
+      },
+      { rootMargin: "100px", threshold: 0.1 }
+    );
+
+    observer.observe(imgRef.current);
+    return () => observer.disconnect();
+  }, [src, priority]);
+
+  const handleLoad = useCallback(() => {
+    setLoaded(true);
+    onLoad?.();
+  }, [onLoad]);
+
+  const handleError = useCallback(() => {
+    setError(true);
+  }, []);
+
+  if (!src || error) {
+    return (
+      <div className={cn("bg-gradient-to-br from-blue-900/20 to-black flex items-center justify-center", aspectRatio, className)}>
+        <Newspaper className="w-8 h-8 text-blue-500/30" />
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn("relative overflow-hidden bg-neutral-900", aspectRatio, className)}>
+      {/* Skeleton placeholder */}
+      {!loaded && (
+        <div className="absolute inset-0 bg-neutral-800 animate-pulse" />
+      )}
+      <img
+        ref={imgRef}
+        src={priority ? src : undefined}
+        data-src={src}
+        alt={alt}
+        onLoad={handleLoad}
+        onError={handleError}
+        loading={priority ? "eager" : "lazy"}
+        decoding="async"
+        referrerPolicy="no-referrer"
+        className={cn(
+          "w-full h-full object-cover transition-opacity duration-200",
+          loaded ? "opacity-100" : "opacity-0"
+        )}
+        style={{ 
+          willChange: loaded ? 'auto' : 'opacity',
+          contentVisibility: 'auto',
+        }}
+      />
+    </div>
+  );
+});
+OptimizedNewsImage.displayName = "OptimizedNewsImage";
+
 // --- TYPES ---
 type MarketFilter = "all" | "crypto" | "stocks" | "forex" | "metals";
 
@@ -105,12 +192,16 @@ const NewsCard = memo(({
   item, 
   preview,
   featured = false,
-  onPreviewClick
+  onPreviewClick,
+  shouldSkipHeavyEffects = false,
+  isMobile = false,
 }: { 
   item: NewsItem;
   preview?: LinkPreview;
   featured?: boolean;
   onPreviewClick: (url: string) => void;
+  shouldSkipHeavyEffects?: boolean;
+  isMobile?: boolean;
 }) => {
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -141,7 +232,7 @@ const NewsCard = memo(({
   if (featured) {
     return (
       <motion.div
-        whileHover={{ scale: 1.01 }}
+        whileHover={shouldSkipHeavyEffects || isMobile ? {} : { scale: 1.01 }}
         onClick={handleClick}
         className="relative rounded-xl overflow-hidden cursor-pointer group"
         style={{
@@ -151,19 +242,16 @@ const NewsCard = memo(({
       >
         {/* Image */}
         <div className="relative aspect-[16/9] md:aspect-[21/9] overflow-hidden">
-          {preview?.image ? (
-            <img
-              src={preview.image}
-              alt=""
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              loading="lazy"
-              referrerPolicy="no-referrer"
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-blue-900/30 to-black flex items-center justify-center">
-              <Newspaper className="w-16 h-16 text-blue-500/30" />
-            </div>
-          )}
+          <OptimizedNewsImage
+            src={preview?.image}
+            alt={item.title}
+            aspectRatio="aspect-auto"
+            priority={true}
+            className={cn(
+              "w-full h-full",
+              !shouldSkipHeavyEffects && "transition-transform duration-300 group-hover:scale-105"
+            )}
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
 
           {/* Preview Button */}
@@ -210,8 +298,8 @@ const NewsCard = memo(({
 
   return (
     <motion.div
-      whileHover={{ scale: 1.02, y: -2 }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={shouldSkipHeavyEffects || isMobile ? {} : { scale: 1.02, y: -2 }}
+      whileTap={shouldSkipHeavyEffects || isMobile ? {} : { scale: 0.98 }}
       onClick={handleClick}
       className="relative rounded-xl overflow-hidden cursor-pointer group"
       style={{
@@ -222,19 +310,15 @@ const NewsCard = memo(({
       <div className="flex gap-4 p-4">
         {/* Thumbnail */}
         <div className="shrink-0 w-20 h-20 md:w-24 md:h-24 rounded-lg overflow-hidden">
-          {preview?.image ? (
-            <img
-              src={preview.image}
-              alt=""
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-              loading="lazy"
-              referrerPolicy="no-referrer"
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-blue-900/20 to-black flex items-center justify-center border border-blue-500/20 rounded-lg">
-              <Newspaper className="w-6 h-6 text-blue-500/30" />
-            </div>
-          )}
+          <OptimizedNewsImage
+            src={preview?.image}
+            alt={item.title}
+            aspectRatio="aspect-square"
+            className={cn(
+              "w-full h-full rounded-lg",
+              !shouldSkipHeavyEffects && "transition-transform duration-200 group-hover:scale-110"
+            )}
+          />
         </div>
 
         {/* Content */}
@@ -467,8 +551,8 @@ const NewsFeedContent = memo(() => {
 
             <div className="flex items-center gap-2">
               <motion.button
-                whileHover={isMobile ? {} : { scale: 1.05, rotate: 180 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={shouldSkipHeavyEffects || isMobile ? {} : { scale: 1.05, rotate: 180 }}
+                whileTap={shouldSkipHeavyEffects ? {} : { scale: 0.95 }}
                 onClick={handleRefresh}
                 className="p-2 rounded-full bg-neutral-800 text-blue-400 hover:bg-neutral-700 transition-colors"
                 title="Refresh"
@@ -476,16 +560,18 @@ const NewsFeedContent = memo(() => {
                 <IconRefresh className={cn("w-4 h-4", loading && "animate-spin")} />
               </motion.button>
               <motion.button
-                whileHover={isMobile ? {} : { scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={shouldSkipHeavyEffects || isMobile ? {} : { scale: 1.1 }}
+                whileTap={shouldSkipHeavyEffects ? {} : { scale: 0.95 }}
                 onClick={handleClose}
                 className="p-2 rounded-full bg-neutral-800 text-white hover:bg-neutral-700 transition-colors group relative"
                 title="Close (ESC)"
               >
                 <X className="w-5 h-5" />
-                <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-white/50 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                  ESC
-                </span>
+                {!shouldSkipHeavyEffects && (
+                  <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-white/50 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                    ESC
+                  </span>
+                )}
               </motion.button>
             </div>
           </div>
@@ -561,6 +647,8 @@ const NewsFeedContent = memo(() => {
                       preview={previews[featured.link]}
                       featured
                       onPreviewClick={setPreviewUrl}
+                      shouldSkipHeavyEffects={shouldSkipHeavyEffects}
+                      isMobile={isMobile}
                     />
                   </div>
                 )}
@@ -580,6 +668,8 @@ const NewsFeedContent = memo(() => {
                           item={item}
                           preview={previews[item.link]}
                           onPreviewClick={setPreviewUrl}
+                          shouldSkipHeavyEffects={shouldSkipHeavyEffects}
+                          isMobile={isMobile}
                         />
                       ))}
                     </div>
@@ -600,6 +690,8 @@ const NewsFeedContent = memo(() => {
                           item={item}
                           preview={previews[item.link]}
                           onPreviewClick={setPreviewUrl}
+                          shouldSkipHeavyEffects={shouldSkipHeavyEffects}
+                          isMobile={isMobile}
                         />
                       ))}
                     </div>
@@ -641,17 +733,18 @@ const NewsFeedContent = memo(() => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
             className="fixed inset-0 z-[100000] flex items-center justify-center p-4"
             onClick={() => setPreviewUrl(null)}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              initial={shouldSkipHeavyEffects ? { opacity: 0 } : { scale: 0.95, opacity: 0 }}
+              animate={shouldSkipHeavyEffects ? { opacity: 1 } : { scale: 1, opacity: 1 }}
+              exit={shouldSkipHeavyEffects ? { opacity: 0 } : { scale: 0.95, opacity: 0 }}
+              transition={shouldSkipHeavyEffects ? { duration: 0.15 } : { type: "spring", damping: 30, stiffness: 400 }}
               onClick={(e) => e.stopPropagation()}
               className="relative w-full max-w-4xl h-[80vh] overflow-hidden rounded-2xl bg-black border-2 border-blue-500/40"
-              style={{ boxShadow: "0 0 60px rgba(59, 130, 246, 0.3)" }}
+              style={shouldSkipHeavyEffects ? {} : { boxShadow: "0 0 60px rgba(59, 130, 246, 0.3)" }}
             >
               {/* Preview Header */}
               <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-blue-500/20 bg-neutral-900">
@@ -680,12 +773,20 @@ const NewsFeedContent = memo(() => {
               </div>
 
               {/* Preview Content */}
-              <div className="h-[calc(100%-60px)]">
+              <div className="h-[calc(100%-60px)] relative">
+                {/* Loading indicator */}
+                <div className="absolute inset-0 flex items-center justify-center bg-neutral-900 z-0">
+                  <div className="flex flex-col items-center gap-3">
+                    <IconRefresh className="w-6 h-6 text-blue-400 animate-spin" />
+                    <span className="text-xs text-slate-500">Loading preview...</span>
+                  </div>
+                </div>
                 <iframe
                   title="Article Preview"
                   src={previewUrl}
-                  className="w-full h-full bg-white"
+                  className="w-full h-full bg-white relative z-10"
                   sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                  loading="lazy"
                 />
               </div>
 
