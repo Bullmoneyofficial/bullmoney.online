@@ -35,26 +35,54 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
 
 async function subscribeToPush(): Promise<PushSubscription | null> {
   try {
+    console.log('[Notifications] Starting subscription process...');
+    
+    // Check HTTPS requirement
+    if (typeof window !== 'undefined' && window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+      console.error('[Notifications] Push notifications require HTTPS');
+      alert('Push notifications require a secure connection (HTTPS). Please access the site via HTTPS.');
+      return null;
+    }
+    
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      console.warn('[Notifications] Push notifications not supported');
+      console.warn('[Notifications] Push notifications not supported in this browser');
+      alert('Push notifications are not supported in this browser. Try Chrome, Firefox, Edge, or Safari.');
       return null;
     }
 
+    // Check if VAPID key is configured
+    if (!VAPID_PUBLIC_KEY) {
+      console.error('[Notifications] VAPID_PUBLIC_KEY not configured');
+      alert('Push notifications are not configured on this server. Please contact support.');
+      return null;
+    }
+
+    console.log('[Notifications] Registering service worker...');
     const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+    console.log('[Notifications] Service worker registered');
+    
     await navigator.serviceWorker.ready;
+    console.log('[Notifications] Service worker ready');
 
+    // Request permission - THIS must be from a user gesture (button click)
+    console.log('[Notifications] Requesting permission...');
     const permission = await Notification.requestPermission();
+    console.log('[Notifications] Permission result:', permission);
+    
     if (permission !== 'granted') {
-      console.log('[Notifications] Permission denied');
+      console.log('[Notifications] Permission denied by user');
       return null;
     }
 
+    console.log('[Notifications] Subscribing to push...');
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
     });
+    console.log('[Notifications] Push subscription created');
 
-    await fetch('/api/notifications/subscribe', {
+    console.log('[Notifications] Saving to server...');
+    const response = await fetch('/api/notifications/subscribe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -63,11 +91,21 @@ async function subscribeToPush(): Promise<PushSubscription | null> {
         timestamp: Date.now(),
       }),
     });
+    
+    const data = await response.json();
+    console.log('[Notifications] Server response:', data);
 
-    console.log('[Notifications] Successfully subscribed');
+    if (!response.ok) {
+      console.error('[Notifications] Server error:', data);
+      alert('Failed to save subscription: ' + (data.error || 'Unknown error'));
+      return null;
+    }
+
+    console.log('[Notifications] Successfully subscribed!');
     return subscription;
   } catch (error) {
     console.error('[Notifications] Failed to subscribe:', error);
+    alert('Failed to enable notifications: ' + (error instanceof Error ? error.message : 'Unknown error'));
     return null;
   }
 }
@@ -76,8 +114,9 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
   const [isVisible, setIsVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [portalNode, setPortalNode] = useState<Element | null>(null);
-  const [step, setStep] = useState<'ask' | 'success' | 'declined'>('ask');
+  const [step, setStep] = useState<'ask' | 'success' | 'declined' | 'blocked'>('ask');
   const [isReady, setIsReady] = useState(false);
+  const [browserPermission, setBrowserPermission] = useState<NotificationPermission | null>(null);
 
   useEffect(() => {
     if (typeof document !== 'undefined') {
@@ -95,7 +134,16 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
 
       if (typeof window === 'undefined') return;
       
-      if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+      // Check all requirements for push notifications
+      const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost';
+      const hasNotificationAPI = 'Notification' in window;
+      const hasServiceWorker = 'serviceWorker' in navigator;
+      const hasPushManager = 'PushManager' in window;
+      
+      console.log('[NotificationModal] Support check:', { isSecure, hasNotificationAPI, hasServiceWorker, hasPushManager });
+      
+      if (!isSecure || !hasNotificationAPI || !hasServiceWorker || !hasPushManager) {
+        console.log('[NotificationModal] Not supported, hiding modal');
         setIsVisible(false);
         return;
       }
@@ -107,10 +155,19 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
         return;
       }
 
-      if (Notification.permission === 'granted') {
+      // Check current browser permission
+      const currentPermission = Notification.permission;
+      setBrowserPermission(currentPermission);
+      
+      if (currentPermission === 'granted') {
         localStorage.setItem(NOTIFICATION_ASKED_KEY, 'enabled');
         setIsVisible(false);
         return;
+      }
+      
+      // If permission was previously denied, show special blocked UI
+      if (currentPermission === 'denied') {
+        setStep('blocked');
       }
       
       if (hasAsked === 'true') {
@@ -416,6 +473,88 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
                 >
                   Got it
                 </button>
+              </motion.div>
+            )}
+
+            {step === 'blocked' && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center py-3"
+              >
+                <div 
+                  className="inline-flex items-center justify-center w-12 h-12 rounded-lg mb-3"
+                  style={{ 
+                    background: 'rgba(251, 191, 36, 0.15)', 
+                    border: '1px solid rgba(251, 191, 36, 0.3)',
+                    boxShadow: '0 0 15px rgba(251, 191, 36, 0.2)'
+                  }}
+                >
+                  <BellOff size={22} className="text-amber-400" style={{ filter: 'drop-shadow(0 0 4px #fbbf24)' }} />
+                </div>
+
+                <h3 
+                  className="text-sm font-black mb-1 uppercase tracking-wide" 
+                  style={{ color: '#fcd34d', textShadow: '0 0 8px rgba(251, 191, 36, 0.4)' }}
+                >
+                  Blocked by Browser
+                </h3>
+                <p className="text-[9px] font-medium mb-3 px-2" style={{ color: 'rgba(253, 230, 138, 0.7)' }}>
+                  Notifications were previously blocked. To enable:
+                </p>
+                
+                {/* Browser-specific instructions */}
+                <div 
+                  className="text-left p-2.5 rounded-lg mb-3 mx-1 space-y-1.5"
+                  style={{ 
+                    background: 'rgba(251, 191, 36, 0.1)', 
+                    border: '1px solid rgba(251, 191, 36, 0.2)' 
+                  }}
+                >
+                  <div className="flex items-start gap-2">
+                    <span className="text-[8px] font-black text-amber-400 mt-0.5">1.</span>
+                    <span className="text-[8px] font-medium" style={{ color: 'rgba(253, 230, 138, 0.8)' }}>
+                      Click the 🔒 lock icon in the address bar
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-[8px] font-black text-amber-400 mt-0.5">2.</span>
+                    <span className="text-[8px] font-medium" style={{ color: 'rgba(253, 230, 138, 0.8)' }}>
+                      Find "Notifications" and change to "Allow"
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-[8px] font-black text-amber-400 mt-0.5">3.</span>
+                    <span className="text-[8px] font-medium" style={{ color: 'rgba(253, 230, 138, 0.8)' }}>
+                      Refresh this page
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="flex-1 px-3 py-1.5 rounded-lg font-bold text-[9px] uppercase tracking-wide transition-all"
+                    style={{ 
+                      background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)',
+                      color: '#000',
+                      border: '1px solid rgba(251, 191, 36, 0.5)',
+                      boxShadow: '0 0 10px rgba(251, 191, 36, 0.3)'
+                    }}
+                  >
+                    Refresh Page
+                  </button>
+                  <button
+                    onClick={handleClose}
+                    className="px-3 py-1.5 rounded-lg font-bold text-[9px] uppercase tracking-wide transition-all hover:bg-amber-500/15"
+                    style={{ 
+                      color: 'rgba(253, 211, 77, 0.7)', 
+                      border: '1px solid rgba(251, 191, 36, 0.25)' 
+                    }}
+                  >
+                    Close
+                  </button>
+                </div>
               </motion.div>
             )}
           </div>

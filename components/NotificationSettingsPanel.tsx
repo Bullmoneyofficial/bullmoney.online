@@ -34,6 +34,7 @@ export const NotificationToggle = memo(({ compact = false, showChannelSettings =
     isSubscribed,
     isLoading,
     isSupported,
+    isCheckingSupport,
     isPermissionDenied,
     toggle,
     setChannelEnabled,
@@ -44,7 +45,7 @@ export const NotificationToggle = memo(({ compact = false, showChannelSettings =
   const [localLoading, setLocalLoading] = useState(false);
 
   // Combined loading state
-  const showLoading = isLoading || localLoading;
+  const showLoading = isLoading || localLoading || isCheckingSupport;
 
   // Handle toggle with proper async handling
   const handleToggle = async (e: React.MouseEvent) => {
@@ -60,8 +61,18 @@ export const NotificationToggle = memo(({ compact = false, showChannelSettings =
     }
     
     if (isPermissionDenied) {
-      console.log('[NotificationToggle] 🚫 Permission denied, cannot toggle');
-      alert('Notifications are blocked. Please enable them in your browser settings.');
+      console.log('[NotificationToggle] 🚫 Permission denied, showing instructions');
+      // Show browser-specific instructions
+      const instructions = `Notifications are blocked by your browser.
+
+To enable notifications:
+1. Click the 🔒 lock icon in the address bar
+2. Find "Notifications" setting
+3. Change it from "Block" to "Allow"
+4. Refresh this page
+
+On mobile Safari: Go to Settings > Notifications > Safari`;
+      alert(instructions);
       return;
     }
     
@@ -79,11 +90,33 @@ export const NotificationToggle = memo(({ compact = false, showChannelSettings =
     }
   };
 
-  if (!isSupported) {
+  if (!isSupported && !isCheckingSupport) {
     return (
-      <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-black/40 border border-zinc-700/50 text-zinc-500 text-[9px]">
-        <BellOff className="w-3.5 h-3.5" />
-        <span className="font-medium">Not supported</span>
+      <div 
+        className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[9px] cursor-pointer"
+        onClick={() => {
+          const info = `Push notifications are not available.
+
+This could be because:
+• You're not on HTTPS (secure connection required)
+• Your browser doesn't support push notifications
+• You're in Private/Incognito mode
+• Service Workers are disabled
+
+Supported browsers:
+✅ Chrome (desktop & Android)
+✅ Firefox (desktop & Android)
+✅ Edge (desktop)
+✅ Safari 16+ (macOS & iOS 16.4+)
+✅ Opera
+
+Current URL: ${typeof window !== 'undefined' ? window.location.href : 'N/A'}
+Protocol: ${typeof window !== 'undefined' ? window.location.protocol : 'N/A'}`;
+          alert(info);
+        }}
+      >
+        <AlertCircle className="w-3.5 h-3.5" />
+        <span className="font-medium">Tap for info</span>
       </div>
     );
   }
