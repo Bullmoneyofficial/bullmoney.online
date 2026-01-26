@@ -202,7 +202,7 @@ export const TelegramConfirmationScreen: React.FC<TelegramConfirmationScreenProp
         {/* Main heading */}
         <div className="text-center relative z-10 space-y-1">
           <h2 className={cn("text-xl md:text-2xl font-bold shimmer-text neon-text-pulse", isXM ? "neon-red-text" : "text-blue-400")}>
-            You're Almost In!
+            You&apos;re Almost In!
           </h2>
           <p className="text-blue-200/70 text-sm md:text-base neon-text">
             One tap unlocks <span className="text-blue-300 font-semibold">everything</span> completely FREE
@@ -213,7 +213,7 @@ export const TelegramConfirmationScreen: React.FC<TelegramConfirmationScreenProp
         <div className="relative z-10 w-full bg-neutral-900/60 backdrop-blur-sm rounded-xl border border-blue-500/40 p-4 space-y-3 neon-container">
           <div className="flex items-center gap-2 text-center justify-center">
             <Gift className="w-4 h-4 text-blue-400 neon-icon" />
-            <span className="text-xs md:text-sm font-semibold text-blue-300 neon-text">What You're Unlocking:</span>
+            <span className="text-xs md:text-sm font-semibold text-blue-300 neon-text">What You&apos;re Unlocking:</span>
           </div>
           
           <div className="grid grid-cols-2 gap-2">
@@ -321,7 +321,7 @@ export const TelegramConfirmationScreen: React.FC<TelegramConfirmationScreenProp
           {/* Success message */}
           {showCelebration && (
             <p className="text-blue-300 text-xs md:text-sm text-center neon-text-pulse">
-              Congratulations! You've unlocked full access!
+              Congratulations! You&apos;ve unlocked full access!
             </p>
           )}
         </div>

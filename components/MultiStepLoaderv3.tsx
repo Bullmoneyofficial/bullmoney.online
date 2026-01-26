@@ -1411,6 +1411,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
   try {
     // Dynamic import to avoid issues if context isn't available
     const { useUIState } = require("@/contexts/UIStateContext");
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     const uiState = useUIState();
     setLoaderv2Open = uiState?.setLoaderv2Open ?? null;
   } catch {

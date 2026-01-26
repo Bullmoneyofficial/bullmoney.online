@@ -433,7 +433,7 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
                   All Set!
                 </h3>
                 <p className="text-[10px] font-medium" style={{ color: 'rgba(134, 239, 172, 0.7)' }}>
-                  You'll receive instant trade alerts
+                  You&apos;ll receive instant trade alerts
                 </p>
               </motion.div>
             )}
@@ -520,7 +520,7 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
                   <div className="flex items-start gap-2">
                     <span className="text-[8px] font-black text-amber-400 mt-0.5">2.</span>
                     <span className="text-[8px] font-medium" style={{ color: 'rgba(253, 230, 138, 0.8)' }}>
-                      Find "Notifications" and change to "Allow"
+                      Find &ldquo;Notifications&rdquo; and change to &ldquo;Allow&rdquo;
                     </span>
                   </div>
                   <div className="flex items-start gap-2">

@@ -450,7 +450,6 @@ function DesktopHomeContent() {
       setCurrentView('pagemode');
     }
     setIsInitialized(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handlePageModeUnlock = () => {

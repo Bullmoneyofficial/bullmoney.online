@@ -932,8 +932,6 @@ export function FPSCounter({
     };
   }, [show]);
 
-  if (!show) return null;
-
   // Detect mobile for smaller sizing (20-30% smaller)
   // Use state to prevent SSR mismatch and fix scroll enlargement issue
   const [isMobile, setIsMobile] = React.useState(false);
@@ -943,6 +941,8 @@ export function FPSCounter({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  if (!show) return null;
   const scaleFactor = isMobile ? 0.65 : 1; // 35% smaller on mobile (fixed, not affected by scroll)
 
   const positionStyles = {

@@ -189,7 +189,7 @@ export const TelegramConfirmationScreenDesktop: React.FC<TelegramConfirmationScr
                 marginBottom: '4px'
               }}
             >
-              You're Almost In!
+              You&apos;re Almost In!
             </h2>
             <p className="dt-neon-text" style={{ fontSize: '14px', color: 'rgba(191, 219, 254, 0.7)' }}>
               One tap unlocks <span style={{ color: '#93c5fd', fontWeight: 600 }}>everything</span> completely FREE
@@ -210,7 +210,7 @@ export const TelegramConfirmationScreenDesktop: React.FC<TelegramConfirmationScr
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '12px' }}>
               <Gift className="dt-neon-icon" style={{ width: '16px', height: '16px', color: '#60a5fa' }} />
-              <span className="dt-neon-text" style={{ fontSize: '14px', fontWeight: 600, color: '#93c5fd' }}>What You're Unlocking:</span>
+              <span className="dt-neon-text" style={{ fontSize: '14px', fontWeight: 600, color: '#93c5fd' }}>What You&apos;re Unlocking:</span>
             </div>
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
@@ -354,7 +354,7 @@ export const TelegramConfirmationScreenDesktop: React.FC<TelegramConfirmationScr
             {/* Success message */}
             {showCelebration && (
               <p className="dt-neon-text-pulse" style={{ fontSize: '14px', color: '#93c5fd', textAlign: 'center' }}>
-                Congratulations! You've unlocked full access!
+                Congratulations! You&apos;ve unlocked full access!
               </p>
             )}
           </div>

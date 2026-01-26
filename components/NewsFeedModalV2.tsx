@@ -841,7 +841,7 @@ const NewsFeedContent = memo(() => {
               {/* CSP Notice */}
               <div className="absolute bottom-0 left-0 right-0 px-4 py-2 bg-neutral-900/90 backdrop-blur-sm border-t border-blue-500/20">
                 <p className="text-[10px] text-slate-500 text-center">
-                  Some sites block iframe previews. Use "Open Full Article" if content doesn't load.
+                  Some sites block iframe previews. Use &ldquo;Open Full Article&rdquo; if content doesn&apos;t load.
                 </p>
               </div>
             </motion.div>
