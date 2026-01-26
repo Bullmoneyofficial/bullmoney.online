@@ -67,60 +67,82 @@ export async function POST(request: NextRequest) {
     }
     
     // PUSH NOTIFICATIONS - Works when browser is closed!
-    if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+    if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
+      console.warn('[Webhook] ⚠️ VAPID keys not configured - push notifications DISABLED');
+      console.warn('[Webhook] Set NEXT_PUBLIC_VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY env vars');
+    } else {
       try {
-        const { data: subscriptions } = await supabase
+        const { data: subscriptions, error: subError } = await supabase
           .from('push_subscriptions')
           .select('*')
           .eq('is_active', true);
-        
-        if (subscriptions && subscriptions.length > 0) {
+
+        if (subError) {
+          console.error('[Webhook] Failed to fetch subscriptions:', subError.message);
+        } else if (!subscriptions || subscriptions.length === 0) {
+          console.log('[Webhook] No active subscriptions found - no notifications to send');
+        } else {
+          console.log(`[Webhook] Found ${subscriptions.length} active subscriptions`);
+
           const channelColumn = `channel_${channelInfo.channel}`;
           const targets = subscriptions.filter(sub => sub[channelColumn] !== false);
-          
-          const payload = JSON.stringify({
-            title: `BullMoney ${channelInfo.name}`,
-            body: messageText?.substring(0, 120) || 'New trade signal - tap to view',
-            icon: '/bullmoney-logo.png',
-            badge: '/B.png',
-            tag: `trade-${channelInfo.channel}-${message.message_id}`,
-            url: `/?channel=${channelInfo.channel}&from=notification`,
-            channel: channelInfo.channel,
-            requireInteraction: channelInfo.priority === 'high',
-          });
-          
-          let sent = 0;
-          const expired: string[] = [];
-          
-          await Promise.allSettled(
-            targets.map(async (sub) => {
-              try {
-                await webpush.sendNotification(
-                  { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-                  payload,
-                  { TTL: 86400, urgency: channelInfo.priority === 'high' ? 'high' : 'normal' }
-                );
-                sent++;
-              } catch (err: any) {
-                if (err.statusCode === 404 || err.statusCode === 410) {
-                  expired.push(sub.endpoint);
+
+          console.log(`[Webhook] ${targets.length} subscriptions want ${channelInfo.channel} channel notifications`);
+
+          if (targets.length === 0) {
+            console.log('[Webhook] No subscriptions enabled for this channel');
+          } else {
+            const payload = JSON.stringify({
+              title: `BullMoney ${channelInfo.name}`,
+              body: messageText?.substring(0, 120) || 'New trade signal - tap to view',
+              icon: '/bullmoney-logo.png',
+              badge: '/B.png',
+              tag: `trade-${channelInfo.channel}-${message.message_id}`,
+              url: `/?channel=${channelInfo.channel}&from=notification`,
+              channel: channelInfo.channel,
+              requireInteraction: channelInfo.priority === 'high',
+            });
+
+            let sent = 0;
+            let failed = 0;
+            const expired: string[] = [];
+
+            await Promise.allSettled(
+              targets.map(async (sub) => {
+                try {
+                  await webpush.sendNotification(
+                    { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+                    payload,
+                    { TTL: 86400, urgency: channelInfo.priority === 'high' ? 'high' : 'normal' }
+                  );
+                  sent++;
+                  return { success: true };
+                } catch (err: any) {
+                  failed++;
+                  if (err.statusCode === 404 || err.statusCode === 410) {
+                    expired.push(sub.endpoint);
+                    return { success: false, reason: 'expired' };
+                  }
+                  console.error('[Webhook] Push failed:', err.statusCode, err.message);
+                  return { success: false, reason: err.message };
                 }
+              })
+            );
+
+            if (expired.length > 0) {
+              console.log(`[Webhook] Marking ${expired.length} expired subscriptions as inactive`);
+              try {
+                await supabase
+                  .from('push_subscriptions')
+                  .update({ is_active: false })
+                  .in('endpoint', expired);
+              } catch (error) {
+                console.error('[Webhook] Failed to update expired subscriptions');
               }
-            })
-          );
-          
-          if (expired.length > 0) {
-            try {
-              await supabase
-                .from('push_subscriptions')
-                .update({ is_active: false })
-                .in('endpoint', expired);
-            } catch (error) {
-              // Silently fail if update doesn't work
             }
+
+            console.log(`[Webhook] ✅ Push notifications: ${sent} sent, ${failed} failed (${Date.now() - startTime}ms)`);
           }
-          
-          console.log(`[Webhook] ${sent}/${targets.length} sent (${Date.now() - startTime}ms)`);
         }
       } catch (err) {
         console.error('[Webhook] Push error:', err);

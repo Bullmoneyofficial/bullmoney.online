@@ -231,7 +231,7 @@ const NotificationSetupGuide = memo(({ deviceInfo, onClose }: { deviceInfo: Devi
           tips: [
             'Tap the notification toggle',
             'Allow notifications when your browser asks',
-            'You\'ll get alerts like WhatsApp messages!',
+            'You\'ll get instant trade alerts!',
           ],
         },
       ];
@@ -917,7 +917,7 @@ Protocol: ${typeof window !== 'undefined' ? window.location.protocol : 'N/A'}`;
                   style={{ color: 'rgba(147, 197, 253, 0.9)' }}
                 >
                   {deviceInfo.isIOS && deviceInfo.isPWA
-                    ? "🎉 You're all set! Notifications will appear like WhatsApp messages - even when the app is closed."
+                    ? "🎉 You're all set! Notifications will appear even when the app is closed."
                     : "Notifications work even when the app is closed. Your device will alert you when new trades are posted."
                   }
                 </p>
