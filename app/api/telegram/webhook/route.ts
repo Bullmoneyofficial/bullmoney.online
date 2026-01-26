@@ -52,16 +52,19 @@ export async function POST(request: NextRequest) {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
     // Store message in database
-    await supabase
-      .from('vip_messages')
-      .insert({
-        message: messageText || 'Media post',
-        has_media: hasMedia,
-        views: 0,
-        created_at: new Date(message.date * 1000).toISOString(),
-        telegram_message_id: message.message_id,
-      })
-      .catch(() => {});
+    try {
+      await supabase
+        .from('vip_messages')
+        .insert({
+          message: messageText || 'Media post',
+          has_media: hasMedia,
+          views: 0,
+          created_at: new Date(message.date * 1000).toISOString(),
+          telegram_message_id: message.message_id,
+        });
+    } catch (error) {
+      // Silently fail if insert doesn't work
+    }
     
     // PUSH NOTIFICATIONS - Works when browser is closed!
     if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
@@ -107,11 +110,14 @@ export async function POST(request: NextRequest) {
           );
           
           if (expired.length > 0) {
-            await supabase
-              .from('push_subscriptions')
-              .update({ is_active: false })
-              .in('endpoint', expired)
-              .catch(() => {});
+            try {
+              await supabase
+                .from('push_subscriptions')
+                .update({ is_active: false })
+                .in('endpoint', expired);
+            } catch (error) {
+              // Silently fail if update doesn't work
+            }
           }
           
           console.log(`[Webhook] ${sent}/${targets.length} sent (${Date.now() - startTime}ms)`);
