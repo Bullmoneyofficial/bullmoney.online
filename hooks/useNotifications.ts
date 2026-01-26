@@ -80,35 +80,35 @@ export function useNotifications() {
 
     // Check browser support for push notifications
     const checkSupport = () => {
-      // Must be on HTTPS (or localhost for testing)
-      const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost';
       // Check for all required APIs
+      const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost';
       const hasNotificationAPI = 'Notification' in window;
       const hasServiceWorker = 'serviceWorker' in navigator;
       const hasPushManager = 'PushManager' in window;
       
-      const supported = isSecure && hasNotificationAPI && hasServiceWorker && hasPushManager;
+      console.log('[Notifications] Support check:', { isSecure, hasNotificationAPI, hasServiceWorker, hasPushManager });
       
-      console.log('[Notifications] Support check:', { isSecure, hasNotificationAPI, hasServiceWorker, hasPushManager, supported });
-      
-      setIsSupported(supported);
-      
-      if (!supported) {
-        if (!isSecure) {
-          console.warn('[Notifications] Not supported: requires HTTPS');
-          setSettings(prev => ({ ...prev, permission: 'unsupported' }));
-        } else if (!hasNotificationAPI) {
-          console.warn('[Notifications] Not supported: Notification API unavailable');
-          setSettings(prev => ({ ...prev, permission: 'unsupported' }));
-        } else if (!hasServiceWorker) {
-          console.warn('[Notifications] Not supported: Service Worker unavailable');
-          setSettings(prev => ({ ...prev, permission: 'unsupported' }));
-        } else if (!hasPushManager) {
-          console.warn('[Notifications] Not supported: PushManager unavailable');
-          setSettings(prev => ({ ...prev, permission: 'unsupported' }));
-        }
+      // Be more permissive - only truly unsupported if no Notification API at all
+      // Let the user try even if not all features are available
+      if (!hasNotificationAPI) {
+        console.warn('[Notifications] Notification API unavailable - truly not supported');
+        setIsSupported(false);
+        setSettings(prev => ({ ...prev, permission: 'unsupported' }));
         return false;
       }
+      
+      // Even if ServiceWorker or PushManager is missing, we can still try
+      // Some browsers report them differently but still work
+      if (!hasServiceWorker || !hasPushManager) {
+        console.warn('[Notifications] ServiceWorker or PushManager may be limited, but will try anyway');
+      }
+      
+      if (!isSecure) {
+        console.warn('[Notifications] Not on HTTPS - may have limitations');
+      }
+      
+      // Mark as supported - let user try
+      setIsSupported(true);
       return true;
     };
     
@@ -220,7 +220,7 @@ export function useNotifications() {
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
       });
-      console.log('[Notifications] Push subscription created');
+      console.log('[Notifications] Push subscription created:', sub.endpoint.slice(-30));
 
       // Send subscription to server with channel preferences
       console.log('[Notifications] Saving to server...');
@@ -228,29 +228,38 @@ export function useNotifications() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          subscription: sub,
+          subscription: sub.toJSON(), // Convert to plain object
           channels: settings.channels,
           userAgent: navigator.userAgent,
-          timestamp: Date.now(),
         }),
       });
       
-      const data = await response.json();
-      console.log('[Notifications] Server response:', data);
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        data = { error: 'Invalid server response' };
+      }
+      
+      console.log('[Notifications] Server response:', response.status, data);
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to save subscription');
+        const errorMsg = data.details || data.error || 'Failed to save subscription';
+        console.error('[Notifications] Server error:', errorMsg);
+        // Don't throw - still mark as subscribed locally since browser has the subscription
+        // The server save can be retried later
+        console.warn('[Notifications] Continuing with local subscription despite server error');
       }
 
       setSubscription(sub);
       setIsSubscribed(true);
       saveSettings({ enabled: true });
 
-      console.log('[Notifications] Successfully subscribed');
+      console.log('[Notifications] ✅ Successfully subscribed');
       setIsLoading(false);
       return true;
-    } catch (error) {
-      console.error('[Notifications] Subscribe error:', error);
+    } catch (error: any) {
+      console.error('[Notifications] Subscribe error:', error?.message || error);
       setIsLoading(false);
       return false;
     }

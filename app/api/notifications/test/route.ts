@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
 // GET - Test endpoint to check notification system status
 // Access: /api/notifications/test
@@ -10,6 +11,47 @@ export async function GET(request: NextRequest) {
   const vapidPrivate = process.env.VAPID_PRIVATE_KEY;
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  // Test database connection
+  let dbStatus = { connected: false, tableExists: false, canInsert: false, error: null as string | null, rowCount: 0 };
+  
+  if (supabaseUrl && supabaseKey) {
+    try {
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Test 1: Can we connect and read?
+      const { count, error: countError } = await supabase
+        .from('push_subscriptions')
+        .select('*', { count: 'exact', head: true });
+      
+      if (countError) {
+        dbStatus.error = `Read error: ${countError.message}`;
+        if (countError.message.includes('does not exist')) {
+          dbStatus.tableExists = false;
+        }
+      } else {
+        dbStatus.connected = true;
+        dbStatus.tableExists = true;
+        dbStatus.rowCount = count || 0;
+        
+        // Test 2: Can we insert? (with a test record we immediately delete)
+        const testEndpoint = `test-${Date.now()}`;
+        const { error: insertError } = await supabase
+          .from('push_subscriptions')
+          .insert({ endpoint: testEndpoint, p256dh: 'test', auth: 'test', is_active: false });
+        
+        if (insertError) {
+          dbStatus.error = `Insert error: ${insertError.message}`;
+        } else {
+          dbStatus.canInsert = true;
+          // Clean up test record
+          await supabase.from('push_subscriptions').delete().eq('endpoint', testEndpoint);
+        }
+      }
+    } catch (e: any) {
+      dbStatus.error = `Connection error: ${e.message}`;
+    }
+  }
   
   // Detect browser from user agent
   const isChrome = /Chrome/i.test(userAgent) && !/Edge|Edg/i.test(userAgent);
@@ -40,6 +82,9 @@ export async function GET(request: NextRequest) {
       allConfigured: !!(vapidPublic && vapidPrivate && supabaseUrl && supabaseKey),
     },
     
+    // Database status
+    database: dbStatus,
+    
     // Browser detection
     browser: {
       userAgent: userAgent.substring(0, 100) + (userAgent.length > 100 ? '...' : ''),
@@ -66,6 +111,13 @@ export async function GET(request: NextRequest) {
         ? 'Safari on macOS supports push notifications'
         : 'Push notifications should be supported',
     },
+    
+    // Quick fix instructions
+    quickFix: dbStatus.tableExists === false 
+      ? 'Run the SQL in PUSH_NOTIFICATIONS_TABLE.sql in your Supabase SQL editor'
+      : dbStatus.canInsert === false
+      ? 'Check RLS policies - run the GRANT statements from PUSH_NOTIFICATIONS_TABLE.sql'
+      : null,
     
     // Instructions
     instructions: {

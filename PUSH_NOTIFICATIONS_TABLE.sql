@@ -58,36 +58,34 @@ CREATE TABLE IF NOT EXISTS public.notification_history (
 CREATE INDEX IF NOT EXISTS idx_notification_history_channel ON public.notification_history(channel);
 CREATE INDEX IF NOT EXISTS idx_notification_history_created ON public.notification_history(created_at DESC);
 
+-- ============================================================================
+-- ROW LEVEL SECURITY - SIMPLIFIED FOR API ACCESS
+-- ============================================================================
+
 -- Enable Row Level Security
 ALTER TABLE public.push_subscriptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notification_history ENABLE ROW LEVEL SECURITY;
 
--- Drop existing policies first (to recreate them)
+-- Drop ALL existing policies first
 DROP POLICY IF EXISTS "Allow public subscription insert" ON public.push_subscriptions;
 DROP POLICY IF EXISTS "Allow update own subscription" ON public.push_subscriptions;
 DROP POLICY IF EXISTS "Allow select for service role" ON public.push_subscriptions;
 DROP POLICY IF EXISTS "Allow anon select" ON public.push_subscriptions;
+DROP POLICY IF EXISTS "Allow all for anon" ON public.push_subscriptions;
+DROP POLICY IF EXISTS "Allow all push ops" ON public.push_subscriptions;
 DROP POLICY IF EXISTS "Allow insert for service role" ON public.notification_history;
 DROP POLICY IF EXISTS "Allow select for service role" ON public.notification_history;
 DROP POLICY IF EXISTS "Allow anon notification operations" ON public.notification_history;
+DROP POLICY IF EXISTS "Allow all notification ops" ON public.notification_history;
 
--- Policies for push_subscriptions
--- Allow inserts from anyone (public subscription)
-CREATE POLICY "Allow public subscription insert" ON public.push_subscriptions
-    FOR INSERT TO anon, authenticated WITH CHECK (true);
+-- SIMPLE POLICY: Allow all operations for everyone (push_subscriptions)
+-- This is safe because subscriptions are tied to device endpoints, not user data
+CREATE POLICY "Allow all push ops" ON public.push_subscriptions
+    FOR ALL USING (true) WITH CHECK (true);
 
--- Allow updates on own subscription (by endpoint)
-CREATE POLICY "Allow update own subscription" ON public.push_subscriptions
-    FOR UPDATE TO anon, authenticated USING (true);
-
--- Allow select for anon and authenticated (needed for API routes)
-CREATE POLICY "Allow anon select" ON public.push_subscriptions
-    FOR SELECT TO anon, authenticated USING (true);
-
--- Policies for notification_history
--- Allow all operations for anon and authenticated (for API routes)
-CREATE POLICY "Allow anon notification operations" ON public.notification_history
-    FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
+-- SIMPLE POLICY: Allow all operations for everyone (notification_history)  
+CREATE POLICY "Allow all notification ops" ON public.notification_history
+    FOR ALL USING (true) WITH CHECK (true);
 
 -- ============================================================================
 -- OPTIONAL: Trigger to auto-update updated_at
