@@ -37,10 +37,67 @@ import { WelcomeScreenDesktop } from "./WelcomeScreenDesktop";
 import { UnifiedFpsPill, UnifiedHubPanel, useLivePrices } from '@/components/UltimateHub';
 import { createPortal } from 'react-dom';
 
+// Available Spline scenes - scene1 is preloaded in layout.tsx for fastest first load
+const SPLINE_SCENES = ['/scene1.splinecode', '/scene.splinecode', '/scene2.splinecode', '/scene4.splinecode', '/scene5.splinecode', '/scene6.splinecode'];
+
+// Detect low memory / constrained environments
+const isLowMemoryDevice = (): boolean => {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return true;
+  
+  const ua = navigator.userAgent.toLowerCase();
+  
+  // iOS Safari and in-app browsers (Facebook, Instagram, TikTok, Twitter, LinkedIn, etc.)
+  const isIOS = /iphone|ipad|ipod/.test(ua);
+  const isSafari = /safari/.test(ua) && !/chrome|crios|fxios/.test(ua);
+  const isInAppBrowser = /fban|fbav|instagram|twitter|linkedin|snapchat|tiktok|wechat|line|telegram/i.test(ua);
+  
+  // Check for low device memory (Chrome/Edge expose this)
+  const deviceMemory = (navigator as any).deviceMemory;
+  const isLowRAM = deviceMemory !== undefined && deviceMemory < 4;
+  
+  // Check for low CPU cores
+  const hardwareConcurrency = navigator.hardwareConcurrency;
+  const isLowCPU = hardwareConcurrency !== undefined && hardwareConcurrency < 4;
+  
+  // Older/budget Android devices
+  const isOldAndroid = /android [1-7]\./i.test(ua);
+  
+  // WebView detection (apps embedding browsers)
+  const isWebView = /wv|webview/i.test(ua) || (isIOS && !/safari/i.test(ua));
+  
+  return (
+    (isIOS && isSafari) || // iOS Safari has strict memory limits
+    isInAppBrowser ||       // In-app browsers are very constrained
+    isWebView ||            // WebViews have limited resources
+    isLowRAM ||             // Low RAM devices
+    isLowCPU ||             // Low CPU devices
+    isOldAndroid            // Old Android versions
+  );
+};
+
 // --- SIMPLE SPLINE BACKGROUND COMPONENT (MOBILE) ---
-// Single scene, interactive, loads fast - z-index 0 so menus overlay properly
+// Preloaded scene, interactive, loads fast - z-index 0 so menus overlay properly
 const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
   const [isLoaded, setIsLoaded] = useState(false);
+  
+  // On low memory devices, always use scene1 (preloaded, most optimized)
+  // Otherwise, use scene1 on first visit, random on return visits
+  const [scene] = useState(() => {
+    if (typeof window === 'undefined') return SPLINE_SCENES[0];
+    
+    // Low memory device = always scene1
+    if (isLowMemoryDevice()) {
+      return SPLINE_SCENES[0];
+    }
+    
+    // Normal device: scene1 on first visit, random after
+    const visited = sessionStorage.getItem('spline_visited');
+    if (!visited) {
+      sessionStorage.setItem('spline_visited', '1');
+      return SPLINE_SCENES[0]; // scene1 - preloaded for fast first load
+    }
+    return SPLINE_SCENES[Math.floor(Math.random() * SPLINE_SCENES.length)];
+  });
 
   const handleLoad = useCallback(() => {
     setIsLoaded(true);
@@ -49,10 +106,13 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
   return (
     <div 
       className="absolute inset-0 w-full h-full overflow-hidden bg-black"
-      style={{ zIndex: 0 }}
+      style={{ 
+        zIndex: 0,
+        touchAction: 'none', // Let Spline handle all touch
+      }}
     >
       <Spline
-        scene="/scene1.splinecode"
+        scene={scene}
         onLoad={handleLoad}
         style={{
           width: '100%',
@@ -60,10 +120,6 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
           display: 'block',
           opacity: isLoaded ? 1 : 0,
           transition: 'opacity 300ms ease-out',
-          // Interactive: allow touch/mouse on the 3D scene
-          touchAction: 'manipulation',
-          pointerEvents: 'auto',
-          cursor: 'grab',
         }}
       />
       {/* Loading placeholder - non-interactive */}
@@ -1001,7 +1057,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="fixed inset-0 flex flex-col z-[99999999]"
+                className="fixed inset-0 flex flex-col z-10 pointer-events-none"
                 style={{ minHeight: '100dvh', width: '100vw', height: '100vh' }}
               >
                 {/* Branding Header - Neon Sign Style */}
@@ -1009,7 +1065,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: 0.1 }}
-                  className="relative z-10 pt-8 pb-4 text-center"
+                  className="relative z-10 pt-8 pb-4 text-center pointer-events-none"
                 >
                   {/* Neon glow backdrop effect */}
                   <div
@@ -1067,7 +1123,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
                 {/* Main Content Area - Centered (40% smaller for mobile) */}
                 <div
-                  className="relative flex-1 flex flex-col items-center justify-center gap-2 px-3 w-full max-w-[220px] mx-auto pb-4"
+                  className="relative flex-1 flex flex-col items-center justify-center gap-2 px-3 w-full max-w-[220px] mx-auto pb-4 pointer-events-auto"
                   style={{ zIndex: 10 }}
                 >
                   {/* Ultra-transparent Card Container - Ghost animation (fades to 0) until interaction */}
@@ -1220,13 +1276,13 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
-              className="fixed inset-0 flex flex-col z-[99999999]"
+              className="fixed inset-0 flex flex-col z-10 pointer-events-none"
               style={{ minHeight: '100dvh' }}
             >
               {/* Ultra-transparent Back Button - Top Right (UltimateHub is on left) */}
               <button
                 onClick={() => setStep(-1)}
-                className="fixed top-5 right-4 flex items-center gap-2 text-blue-300 text-sm font-medium transition-all cursor-target py-2 px-3.5 rounded-xl z-[2147483646]"
+                className="fixed top-5 right-4 flex items-center gap-2 text-blue-300 text-sm font-medium transition-all cursor-target py-2 px-3.5 rounded-xl z-50 pointer-events-auto"
                 style={{
                   background: 'rgba(0, 0, 0, 0.15)',
                   backdropFilter: 'blur(8px)',
@@ -1259,7 +1315,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
               </motion.div>
 
               {/* Centered Content - Ultra-transparent Card */}
-              <div className="flex-1 flex flex-col items-center justify-center gap-6 px-5 w-full max-w-sm mx-auto pb-20 relative z-10">
+              <div className="flex-1 flex flex-col items-center justify-center gap-6 px-5 w-full max-w-sm mx-auto pb-20 relative z-10 pointer-events-auto">
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}

@@ -15,10 +15,67 @@ const Spline = dynamic(() => import('@splinetool/react-spline'), {
   loading: () => null,
 });
 
+// Available Spline scenes - scene1 is preloaded in layout.tsx for fastest first load
+const SPLINE_SCENES = ['/scene1.splinecode', '/scene.splinecode', '/scene2.splinecode', '/scene4.splinecode', '/scene5.splinecode', '/scene6.splinecode'];
+
+// Detect low memory / constrained environments
+const isLowMemoryDevice = (): boolean => {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return true;
+  
+  const ua = navigator.userAgent.toLowerCase();
+  
+  // iOS Safari and in-app browsers (Facebook, Instagram, TikTok, Twitter, LinkedIn, etc.)
+  const isIOS = /iphone|ipad|ipod/.test(ua);
+  const isSafari = /safari/.test(ua) && !/chrome|crios|fxios/.test(ua);
+  const isInAppBrowser = /fban|fbav|instagram|twitter|linkedin|snapchat|tiktok|wechat|line|telegram/i.test(ua);
+  
+  // Check for low device memory (Chrome/Edge expose this)
+  const deviceMemory = (navigator as any).deviceMemory;
+  const isLowRAM = deviceMemory !== undefined && deviceMemory < 4;
+  
+  // Check for low CPU cores
+  const hardwareConcurrency = navigator.hardwareConcurrency;
+  const isLowCPU = hardwareConcurrency !== undefined && hardwareConcurrency < 4;
+  
+  // Older/budget Android devices
+  const isOldAndroid = /android [1-7]\./i.test(ua);
+  
+  // WebView detection (apps embedding browsers)
+  const isWebView = /wv|webview/i.test(ua) || (isIOS && !/safari/i.test(ua));
+  
+  return (
+    (isIOS && isSafari) || // iOS Safari has strict memory limits
+    isInAppBrowser ||       // In-app browsers are very constrained
+    isWebView ||            // WebViews have limited resources
+    isLowRAM ||             // Low RAM devices
+    isLowCPU ||             // Low CPU devices
+    isOldAndroid            // Old Android versions
+  );
+};
+
 // --- SIMPLE SPLINE BACKGROUND COMPONENT (DESKTOP) ---
-// Single scene, interactive, loads fast - z-index 0 so menus overlay properly
+// Preloaded scene, interactive, loads fast - z-index 0 so menus overlay properly
 const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
   const [isLoaded, setIsLoaded] = useState(false);
+  
+  // On low memory devices, always use scene1 (preloaded, most optimized)
+  // Otherwise, use scene1 on first visit, random on return visits
+  const [scene] = useState(() => {
+    if (typeof window === 'undefined') return SPLINE_SCENES[0];
+    
+    // Low memory device = always scene1
+    if (isLowMemoryDevice()) {
+      return SPLINE_SCENES[0];
+    }
+    
+    // Normal device: scene1 on first visit, random after
+    const visited = sessionStorage.getItem('spline_visited_desktop');
+    if (!visited) {
+      sessionStorage.setItem('spline_visited_desktop', '1');
+      return SPLINE_SCENES[0]; // scene1 - preloaded for fast first load
+    }
+    return SPLINE_SCENES[Math.floor(Math.random() * SPLINE_SCENES.length)];
+  });
 
   const handleLoad = useCallback(() => {
     setIsLoaded(true);
@@ -30,7 +87,7 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
       style={{ zIndex: 0 }}
     >
       <Spline
-        scene="/scene1.splinecode"
+        scene={scene}
         onLoad={handleLoad}
         style={{
           width: '100%',
@@ -38,9 +95,6 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
           display: 'block',
           opacity: isLoaded ? 1 : 0,
           transition: 'opacity 400ms ease-out',
-          // Interactive: allow mouse interaction on the 3D scene
-          pointerEvents: 'auto',
-          cursor: 'grab',
         }}
       />
       {/* Loading placeholder - non-interactive */}
@@ -146,7 +200,7 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.4 }}
-        className="fixed inset-0 z-[99999999] overflow-hidden"
+        className="fixed inset-0 z-10 overflow-hidden pointer-events-none"
         style={{ minHeight: '100dvh', width: '100vw', height: '100vh' }}
       >
         {/* Spline Background - Full screen (can be suppressed if parent provides shared background) */}

@@ -642,8 +642,11 @@ export default function RootLayout({
         <link rel="preload" href="/scene1.splinecode" as="fetch" crossOrigin="anonymous" fetchPriority="high" />
 
         {/* CLS FIX: Prefetch other Spline scenes with lower priority */}
-        <link rel="prefetch" href="/scene3.splinecode" as="fetch" crossOrigin="anonymous" />
+        <link rel="prefetch" href="/scene.splinecode" as="fetch" crossOrigin="anonymous" />
+        <link rel="prefetch" href="/scene2.splinecode" as="fetch" crossOrigin="anonymous" />
         <link rel="prefetch" href="/scene4.splinecode" as="fetch" crossOrigin="anonymous" />
+        <link rel="prefetch" href="/scene5.splinecode" as="fetch" crossOrigin="anonymous" />
+        <link rel="prefetch" href="/scene6.splinecode" as="fetch" crossOrigin="anonymous" />
         
         {/* LCP FIX: Critical inline script to start hero scene preload immediately */}
         <script
