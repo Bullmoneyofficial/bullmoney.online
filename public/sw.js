@@ -114,7 +114,7 @@ self.addEventListener('push', (event) => {
   console.log('[SW v4] Push event received');
 
   let data = {
-    title: 'BullMoney Trade Alert 🚀',
+    title: 'BullMoney Trade Alert',
     body: 'New trade signal available!',
     icon: '/bullmoney-logo.png',
     badge: '/B.png',
@@ -151,7 +151,7 @@ self.addEventListener('push', (event) => {
     actions: [
       {
         action: 'view',
-        title: '📈 View Trade',
+        title: 'View Trade',
       },
       {
         action: 'dismiss',

@@ -117,15 +117,15 @@ interface SetupStep {
   visual?: string;
 }
 
-// ============ iOS SETUP GUIDE COMPONENT ============
-const IOSSetupGuide = memo(({ deviceInfo, onClose }: { deviceInfo: DeviceInfo; onClose: () => void }) => {
+// ============ UNIVERSAL SETUP GUIDE COMPONENT - NEON BLUE STYLE ============
+const NotificationSetupGuide = memo(({ deviceInfo, onClose }: { deviceInfo: DeviceInfo; onClose: () => void }) => {
   const [currentStep, setCurrentStep] = useState(0);
   
   // Copy current URL to clipboard
   const copyUrlToClipboard = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
-      alert('Link copied! Now open Safari and paste this link.');
+      alert('Link copied! Paste it in your browser.');
     } catch {
       // Fallback for older browsers
       const textArea = document.createElement('textarea');
@@ -134,133 +134,127 @@ const IOSSetupGuide = memo(({ deviceInfo, onClose }: { deviceInfo: DeviceInfo; o
       textArea.select();
       document.execCommand('copy');
       document.body.removeChild(textArea);
-      alert('Link copied! Now open Safari and paste this link.');
+      alert('Link copied! Paste it in your browser.');
     }
   }, []);
 
-  // Open in Safari (iOS specific)
-  const openInSafari = useCallback(() => {
-    // On iOS, we can try to use x-safari-https to open in Safari
-    const url = window.location.href;
-    
-    // Try the Safari URL scheme
-    const safariUrl = `x-safari-${url}`;
-    
-    // Create a hidden link and click it
-    const link = document.createElement('a');
-    link.href = safariUrl;
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    
-    // Try to open, if it fails, show instructions
-    try {
-      link.click();
-    } catch {
-      // Fallback - show manual instructions
-      copyUrlToClipboard();
-    }
-    
-    document.body.removeChild(link);
-    
-    // Also copy URL as fallback
-    setTimeout(() => {
-      copyUrlToClipboard();
-    }, 500);
-  }, [copyUrlToClipboard]);
+  // Get device-specific title
+  const getDeviceTitle = useCallback(() => {
+    if (deviceInfo.isInAppBrowser) return 'Open in Browser';
+    if (deviceInfo.isIOS) return 'iPhone Setup';
+    if (deviceInfo.isAndroid) return 'Android Setup';
+    return 'Enable Notifications';
+  }, [deviceInfo]);
 
-  // Different flows based on situation
+  // Different flows based on device situation
   const getSteps = useCallback((): SetupStep[] => {
+    // IN-APP BROWSER FLOW (Instagram, TikTok, Facebook, etc.)
     if (deviceInfo.isInAppBrowser) {
-      // In-app browser flow - recommend Chrome for Apple devices
       return [
         {
-          title: deviceInfo.isIOS ? `Open in Chrome or Safari` : `Open in Browser`,
-          description: `You're viewing this in ${deviceInfo.inAppBrowserName || 'an in-app browser'}. ${deviceInfo.isIOS ? 'For best results, use Chrome (recommended) or Safari.' : 'Push notifications only work in a real browser.'}`,
+          title: 'Open in Real Browser',
+          description: `You're in ${deviceInfo.inAppBrowserName || 'an in-app browser'}. Notifications require a real browser like Chrome or Safari.`,
           icon: ExternalLink,
           action: {
             label: 'Copy Link',
             onClick: copyUrlToClipboard,
           },
-          tips: deviceInfo.isIOS ? [
-            '💡 Chrome works BEST on iPhone for notifications',
-            'Tap the ••• or share button in the app',
-            'Select "Open in Chrome" or "Open in Safari"',
-            'Or copy the link and paste in your browser',
-          ] : [
-            'Tap the ••• or share button in the app',
-            'Select "Open in Browser"',
-            'Or copy the link and paste in your browser',
+          tips: [
+            'Tap the ••• menu in this app',
+            'Select "Open in Browser" or "Open in Safari/Chrome"',
+            'Or copy the link and paste in Chrome/Safari',
           ],
         },
       ];
     }
 
+    // iOS FLOW (Safari without PWA)
     if (deviceInfo.isIOS && !deviceInfo.isPWA) {
-      // iOS Safari but not PWA - recommend Chrome as alternative
       return [
         {
-          title: 'Setup Notifications',
-          description: 'iPhone notifications work best with Chrome, or you can add to Home Screen with Safari.',
+          title: 'Add to Home Screen',
+          description: 'iPhone requires adding BullMoney to your home screen for notifications.',
           icon: Plus,
           action: {
             label: 'Show Me How',
             onClick: () => setCurrentStep(1),
           },
-          tips: ['💡 Tip: Chrome on iPhone has better notification support!'],
+          tips: ['This takes 30 seconds and enables real push notifications!'],
         },
         {
-          title: 'Option 1: Use Chrome (Recommended)',
-          description: 'Chrome provides the best notification experience on iPhone. Just open this site in Chrome and enable notifications.',
-          icon: Chrome as any,
-          action: {
-            label: 'Copy Link for Chrome',
-            onClick: copyUrlToClipboard,
-          },
-          visual: '🌐',
-          tips: [
-            '✅ Best notification support on iPhone',
-            '✅ No "Add to Home Screen" required',
-            '✅ Works like Android notifications',
-            'Download Chrome from App Store if needed',
-          ],
-        },
-        {
-          title: 'Option 2: Add to Home Screen (Safari)',
-          description: 'If you prefer Safari, add BullMoney to your home screen for notifications.',
+          title: 'Step 1: Tap Share',
+          description: 'Tap the Share button at the bottom of Safari.',
           icon: Share,
           action: {
-            label: 'Next Step',
-            onClick: () => setCurrentStep(3),
+            label: 'Next',
+            onClick: () => setCurrentStep(2),
           },
-          visual: '📤',
-          tips: ['Tap the Share button at the bottom of Safari', 'Look for the square icon with an upward arrow'],
+          visual: 'share',
+          tips: ['Look for the square with an arrow pointing up', 'It\'s at the bottom of Safari'],
         },
         {
-          title: 'Tap "Add to Home Screen"',
-          description: 'Scroll down in the share menu and tap "Add to Home Screen".',
+          title: 'Step 2: Add to Home Screen',
+          description: 'Scroll down and tap "Add to Home Screen".',
           icon: Plus,
           action: {
-            label: 'Next Step',
-            onClick: () => setCurrentStep(4),
+            label: 'Next',
+            onClick: () => setCurrentStep(3),
           },
-          visual: '➕',
-          tips: ['Scroll down in the share sheet', 'Look for "Add to Home Screen"'],
+          visual: 'plus',
+          tips: ['Scroll down in the share menu', 'Look for the + icon with "Add to Home Screen"'],
         },
         {
-          title: 'Confirm & Open',
-          description: 'Tap "Add" in the top right, then open BullMoney from your home screen.',
+          title: 'Step 3: Open & Enable',
+          description: 'Tap "Add", then open BullMoney from your home screen and enable notifications!',
           icon: CheckCircle2,
           action: {
-            label: 'Done! I\'ll Open From Home Screen',
+            label: 'Done!',
             onClick: onClose,
           },
-          visual: '✅',
-          tips: ['Tap "Add" to confirm', 'Find the BullMoney icon on your home screen', 'Open it and enable notifications!'],
+          visual: 'check',
+          tips: ['Find the BullMoney icon on your home screen', 'Open it and tap the notification toggle'],
         },
       ];
     }
 
-    return [];
+    // ANDROID FLOW
+    if (deviceInfo.isAndroid) {
+      return [
+        {
+          title: 'Enable Notifications',
+          description: 'Android supports notifications directly! Just allow them when prompted.',
+          icon: Bell,
+          action: {
+            label: 'Got It!',
+            onClick: onClose,
+          },
+          tips: [
+            'Tap the notification toggle',
+            'Allow notifications when your browser asks',
+            'You\'ll get alerts like WhatsApp messages!',
+          ],
+        },
+      ];
+    }
+
+    // DESKTOP/MAC FLOW
+    return [
+      {
+        title: 'Enable Notifications',
+        description: 'Desktop browsers support notifications directly. Just allow them when prompted!',
+        icon: Bell,
+        action: {
+          label: 'Got It!',
+          onClick: onClose,
+        },
+        tips: [
+          'Click the notification toggle',
+          'Allow notifications in the browser popup',
+          'You\'ll see alerts even when the tab is in background',
+          'Tip: Make sure notifications aren\'t blocked in your browser settings',
+        ],
+      },
+    ];
   }, [deviceInfo, copyUrlToClipboard, onClose]);
 
   const steps = getSteps();
@@ -277,52 +271,63 @@ const IOSSetupGuide = memo(({ deviceInfo, onClose }: { deviceInfo: DeviceInfo; o
       exit={{ opacity: 0, y: -10 }}
       className="rounded-xl overflow-hidden"
       style={{
-        background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(7, 11, 20, 0.98) 100%)',
-        border: '1px solid rgba(251, 191, 36, 0.3)',
-        boxShadow: '0 0 20px rgba(251, 191, 36, 0.15), inset 0 0 30px rgba(0, 0, 0, 0.5)',
+        background: 'linear-gradient(180deg, rgba(0, 0, 0, 0.95) 0%, rgba(7, 11, 20, 0.98) 100%)',
+        border: '1px solid rgba(59, 130, 246, 0.4)',
+        boxShadow: '0 0 20px rgba(59, 130, 246, 0.2), inset 0 0 30px rgba(0, 0, 0, 0.5)',
       }}
     >
-      {/* Header */}
+      {/* Header - Neon Blue */}
       <div 
         className="px-3 py-2 flex items-center justify-between"
         style={{
-          background: 'linear-gradient(90deg, rgba(251, 191, 36, 0.15) 0%, rgba(245, 158, 11, 0.1) 100%)',
-          borderBottom: '1px solid rgba(251, 191, 36, 0.2)',
+          background: 'linear-gradient(90deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.1) 100%)',
+          borderBottom: '1px solid rgba(59, 130, 246, 0.3)',
         }}
       >
         <div className="flex items-center gap-2">
-          <Smartphone 
-            className="w-4 h-4 text-amber-400" 
-            style={{ filter: 'drop-shadow(0 0 4px #f59e0b)' }}
+          <Bell 
+            className="w-4 h-4 text-blue-400" 
+            style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }}
           />
           <span 
             className="text-[10px] font-black uppercase tracking-wider"
-            style={{ color: '#fbbf24', textShadow: '0 0 8px rgba(251, 191, 36, 0.5)' }}
+            style={{ color: '#60a5fa', textShadow: '0 0 8px rgba(59, 130, 246, 0.5)' }}
           >
-            {deviceInfo.isIOS ? 'iPhone Setup' : 'Setup Required'}
+            {getDeviceTitle()}
           </span>
         </div>
         {steps.length > 1 && (
-          <span className="text-[9px] text-amber-400/70">
-            Step {currentStep + 1} of {steps.length}
+          <span 
+            className="text-[9px] font-bold"
+            style={{ color: 'rgba(96, 165, 250, 0.7)' }}
+          >
+            {currentStep + 1} / {steps.length}
           </span>
         )}
       </div>
 
       {/* Content */}
       <div className="p-3 space-y-3">
-        {/* Visual indicator for iOS steps */}
+        {/* Visual indicator for steps - Blue Icons instead of emojis */}
         {step.visual && (
           <div className="flex justify-center">
             <div 
-              className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl"
+              className="w-16 h-16 rounded-2xl flex items-center justify-center"
               style={{
-                background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(245, 158, 11, 0.1) 100%)',
-                border: '2px solid rgba(251, 191, 36, 0.3)',
-                boxShadow: '0 0 20px rgba(251, 191, 36, 0.2)',
+                background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.1) 100%)',
+                border: '2px solid rgba(59, 130, 246, 0.4)',
+                boxShadow: '0 0 20px rgba(59, 130, 246, 0.2), inset 0 0 15px rgba(59, 130, 246, 0.1)',
               }}
             >
-              {step.visual}
+              {step.visual === 'share' && (
+                <Share className="w-8 h-8 text-blue-400" style={{ filter: 'drop-shadow(0 0 6px #3b82f6)' }} />
+              )}
+              {step.visual === 'plus' && (
+                <Plus className="w-8 h-8 text-blue-400" style={{ filter: 'drop-shadow(0 0 6px #3b82f6)' }} />
+              )}
+              {step.visual === 'check' && (
+                <Check className="w-8 h-8 text-blue-400" style={{ filter: 'drop-shadow(0 0 6px #3b82f6)' }} />
+              )}
             </div>
           </div>
         )}
@@ -331,49 +336,62 @@ const IOSSetupGuide = memo(({ deviceInfo, onClose }: { deviceInfo: DeviceInfo; o
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 mb-1">
             <StepIcon 
-              className="w-4 h-4 text-amber-400" 
-              style={{ filter: 'drop-shadow(0 0 4px #f59e0b)' }}
+              className="w-4 h-4 text-blue-400" 
+              style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }}
             />
             <h3 
               className="text-sm font-bold"
-              style={{ color: '#fcd34d', textShadow: '0 0 8px rgba(251, 191, 36, 0.4)' }}
+              style={{ color: '#93c5fd', textShadow: '0 0 8px rgba(59, 130, 246, 0.4)' }}
             >
               {step.title}
             </h3>
           </div>
-          <p className="text-[10px] text-zinc-400 leading-relaxed">
+          <p 
+            className="text-[10px] leading-relaxed"
+            style={{ color: 'rgba(148, 163, 184, 0.9)' }}
+          >
             {step.description}
           </p>
         </div>
 
-        {/* Tips */}
+        {/* Tips - Neon Blue Style */}
         {step.tips && step.tips.length > 0 && (
           <div 
-            className="rounded-lg p-2 space-y-1"
+            className="rounded-lg p-2 space-y-1.5"
             style={{
-              background: 'rgba(0, 0, 0, 0.4)',
-              border: '1px solid rgba(251, 191, 36, 0.15)',
+              background: 'rgba(59, 130, 246, 0.08)',
+              border: '1px solid rgba(59, 130, 246, 0.2)',
+              boxShadow: 'inset 0 0 10px rgba(59, 130, 246, 0.05)',
             }}
           >
             {step.tips.map((tip, i) => (
               <div key={i} className="flex items-start gap-1.5">
-                <ArrowRight className="w-3 h-3 text-amber-400/70 mt-0.5 flex-shrink-0" />
-                <span className="text-[9px] text-zinc-400">{tip}</span>
+                <ArrowRight 
+                  className="w-3 h-3 text-blue-400/70 mt-0.5 flex-shrink-0" 
+                  style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }}
+                />
+                <span 
+                  className="text-[9px]"
+                  style={{ color: 'rgba(147, 197, 253, 0.85)' }}
+                >
+                  {tip}
+                </span>
               </div>
             ))}
           </div>
         )}
 
-        {/* Action button */}
+        {/* Action button - Neon Blue */}
         {step.action && (
           <button
             onClick={step.action.onClick}
             className="w-full py-2.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all active:scale-95"
             style={{
-              background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-              color: '#000',
-              boxShadow: '0 0 15px rgba(245, 158, 11, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
-              border: '1px solid rgba(251, 191, 36, 0.5)',
+              background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+              color: '#fff',
+              boxShadow: '0 0 15px rgba(59, 130, 246, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+              border: '1px solid rgba(96, 165, 250, 0.5)',
+              textShadow: '0 0 4px rgba(255, 255, 255, 0.5)',
             }}
           >
             {step.action.label}
@@ -384,7 +402,8 @@ const IOSSetupGuide = memo(({ deviceInfo, onClose }: { deviceInfo: DeviceInfo; o
         {currentStep > 0 && (
           <button
             onClick={() => setCurrentStep(currentStep - 1)}
-            className="w-full py-1.5 text-[10px] text-amber-400/70 hover:text-amber-400 transition-colors"
+            className="w-full py-1.5 text-[10px] transition-colors"
+            style={{ color: 'rgba(96, 165, 250, 0.7)' }}
           >
             ← Go Back
           </button>
@@ -401,7 +420,7 @@ const IOSSetupGuide = memo(({ deviceInfo, onClose }: { deviceInfo: DeviceInfo; o
     </motion.div>
   );
 });
-IOSSetupGuide.displayName = 'IOSSetupGuide';
+NotificationSetupGuide.displayName = 'NotificationSetupGuide';
 
 interface NotificationToggleProps {
   compact?: boolean;
@@ -445,29 +464,29 @@ export const NotificationToggle = memo(({ compact = false, showChannelSettings =
     e.preventDefault();
     e.stopPropagation();
     
-    console.log('[NotificationToggle] 🔔 Toggle clicked!');
+    console.log('[NotificationToggle] Toggle clicked');
     console.log('[NotificationToggle] State:', { isSubscribed, isLoading, localLoading, showLoading, isPermissionDenied, isSupported });
     console.log('[NotificationToggle] Device:', deviceInfo);
     
     // If device needs setup guide, show it instead of toggling
     if (deviceInfo.needsSetupGuide && !isSubscribed) {
-      console.log('[NotificationToggle] 📱 Showing setup guide for iOS/in-app browser');
+      console.log('[NotificationToggle] Showing setup guide for iOS/in-app browser');
       setShowSetupGuide(true);
       return;
     }
     
     if (showLoading) {
-      console.log('[NotificationToggle] ⏳ Already loading, ignoring click');
+      console.log('[NotificationToggle] Already loading, ignoring click');
       return;
     }
     
     if (isPermissionDenied) {
-      console.log('[NotificationToggle] 🚫 Permission denied, showing instructions');
+      console.log('[NotificationToggle] Permission denied, showing instructions');
       // Show browser-specific instructions
       const instructions = `Notifications are blocked by your browser.
 
 To enable notifications:
-1. Click the 🔒 lock icon in the address bar
+1. Click the lock icon in the address bar
 2. Find "Notifications" setting
 3. Change it from "Block" to "Allow"
 4. Refresh this page
@@ -478,70 +497,76 @@ On mobile Safari: Go to Settings > Notifications > Safari`;
     }
     
     setLocalLoading(true);
-    console.log('[NotificationToggle] 📤 Calling toggle...');
+    console.log('[NotificationToggle] Calling toggle...');
     
     try {
       const result = await toggle();
-      console.log('[NotificationToggle] ✅ Toggle result:', result);
+      console.log('[NotificationToggle] Toggle result:', result);
     } catch (error) {
-      console.error('[NotificationToggle] ❌ Toggle error:', error);
+      console.error('[NotificationToggle] Toggle error:', error);
     } finally {
       setLocalLoading(false);
-      console.log('[NotificationToggle] 🏁 Loading complete');
+      console.log('[NotificationToggle] Loading complete');
     }
   };
 
   // Show setup guide if user clicked and needs it
   if (showSetupGuide && deviceInfo.needsSetupGuide) {
     return (
-      <IOSSetupGuide 
+      <NotificationSetupGuide 
         deviceInfo={deviceInfo} 
         onClose={() => setShowSetupGuide(false)} 
       />
     );
   }
 
-  // Show setup needed indicator for iOS/in-app users who haven't completed setup
+  // Show setup needed indicator for iOS/in-app users who haven't completed setup - NEON BLUE
   if (deviceInfo.needsSetupGuide && !isSubscribed && !isCheckingSupport) {
     return (
       <div 
         className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition-all active:scale-[0.98]"
         onClick={() => setShowSetupGuide(true)}
         style={{
-          background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(245, 158, 11, 0.1) 100%)',
-          border: '1px solid rgba(251, 191, 36, 0.3)',
-          boxShadow: '0 0 12px rgba(251, 191, 36, 0.15)',
+          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.1) 100%)',
+          border: '1px solid rgba(59, 130, 246, 0.4)',
+          boxShadow: '0 0 12px rgba(59, 130, 246, 0.2)',
         }}
       >
         <div 
           className="p-1.5 rounded-lg"
           style={{
-            background: 'rgba(251, 191, 36, 0.2)',
-            border: '1px solid rgba(251, 191, 36, 0.3)',
+            background: 'rgba(59, 130, 246, 0.2)',
+            border: '1px solid rgba(59, 130, 246, 0.4)',
+            boxShadow: '0 0 8px rgba(59, 130, 246, 0.2)',
           }}
         >
-          <Smartphone 
-            className="w-4 h-4 text-amber-400" 
-            style={{ filter: 'drop-shadow(0 0 4px #f59e0b)' }}
+          <Bell 
+            className="w-4 h-4 text-blue-400" 
+            style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }}
           />
         </div>
         <div className="flex-1 min-w-0">
           <div 
             className="text-[10px] font-bold uppercase tracking-wide"
-            style={{ color: '#fbbf24', textShadow: '0 0 4px rgba(251, 191, 36, 0.5)' }}
+            style={{ color: '#60a5fa', textShadow: '0 0 4px rgba(59, 130, 246, 0.5)' }}
           >
-            {deviceInfo.isInAppBrowser ? 'Open in Safari' : 'iPhone Setup Required'}
+            {deviceInfo.isInAppBrowser ? 'Open in Browser' : deviceInfo.isIOS ? 'Setup Required' : 'Enable Notifications'}
           </div>
-          <div className="text-[8px] text-amber-400/70">
+          <div 
+            className="text-[8px]"
+            style={{ color: 'rgba(96, 165, 250, 0.7)' }}
+          >
             {deviceInfo.isInAppBrowser 
-              ? `Tap to open in Safari for notifications`
-              : 'Tap to add to home screen for notifications'
+              ? `Tap to open in a real browser`
+              : deviceInfo.isIOS
+                ? 'Tap to add to home screen'
+                : 'Tap to enable push notifications'
             }
           </div>
         </div>
         <ArrowRight 
-          className="w-4 h-4 text-amber-400/70" 
-          style={{ filter: 'drop-shadow(0 0 2px #f59e0b)' }}
+          className="w-4 h-4 text-blue-400/70" 
+          style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }}
         />
       </div>
     );
@@ -561,11 +586,11 @@ This could be because:
 • Service Workers are disabled
 
 Supported browsers:
-✅ Chrome (desktop & Android)
-✅ Firefox (desktop & Android)
-✅ Edge (desktop)
-✅ Safari 16+ (macOS & iOS 16.4+)
-✅ Opera
+- Chrome (desktop & Android)
+- Firefox (desktop & Android)
+- Edge (desktop)
+- Safari 16+ (macOS & iOS 16.4+)
+- Opera
 
 Current URL: ${typeof window !== 'undefined' ? window.location.href : 'N/A'}
 Protocol: ${typeof window !== 'undefined' ? window.location.protocol : 'N/A'}`;

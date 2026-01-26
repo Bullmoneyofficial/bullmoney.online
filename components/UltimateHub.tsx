@@ -120,7 +120,8 @@ import {
   Filter,
   Radio,
   Monitor,
-  Sparkles
+  Sparkles,
+  Bell
 } from 'lucide-react';
 import { useUIState } from '@/contexts/UIStateContext';
 import { createSupabaseClient } from '@/lib/supabase';
@@ -3242,20 +3243,26 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false, onNewMessa
       return; 
     }
     
+    let isFirstFetch = true;
+    
     const fetchPosts = async () => {
       try {
-        setLoading(true);
-        console.log('[TelegramChannelEmbed] Fetching posts for channel:', channel, 'isVip:', isVip);
+        // Only show loading on first fetch to avoid UI flicker
+        if (isFirstFetch) {
+          setLoading(true);
+          isFirstFetch = false;
+        }
+        
+        // Silent fetch for updates (no logging spam)
         const response = await fetch(`/api/telegram/channel?channel=${channel}&t=${Date.now()}`, { cache: 'no-store' });
         const data = await response.json();
-        console.log('[TelegramChannelEmbed] API Response:', data);
         
         if (data.success && data.posts && data.posts.length > 0) { 
           // Check for new messages
           const latestPostId = data.posts[0]?.id;
           if (lastPostIdRef.current && latestPostId && latestPostId !== lastPostIdRef.current) {
             // New message detected!
-            console.log('[TelegramChannelEmbed] 🔔 New message detected in channel:', channel);
+            console.log('[TelegramChannelEmbed] 🔔 NEW MESSAGE DETECTED in channel:', channel);
             onNewMessage?.(channel, latestPostId);
           }
           lastPostIdRef.current = latestPostId;
@@ -3276,8 +3283,11 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false, onNewMessa
     };
 
     fetchPosts();
-    // Refresh every 30 seconds for VIP channel to get new messages
-    const interval = setInterval(fetchPosts, channel === 'vip' ? 30000 : 300000);
+    
+    // FAST POLLING: Check every 3 seconds for new messages!
+    // This ensures users get near-instant notifications
+    const interval = setInterval(fetchPosts, 3000);
+    
     return () => clearInterval(interval);
   }, [channel, requiresVip, isVip, onNewMessage]);
 
@@ -7225,14 +7235,40 @@ BullMoneyTVPill.displayName = 'BullMoneyTVPill';
 // MAIN COMPONENT - UNIFIED SINGLE PILL APPROACH
 // ============================================================================
 
+// LocalStorage key for persisting last seen message
+const LAST_SEEN_MESSAGE_KEY = 'bullmoney_last_seen_message_id';
+const NEW_MESSAGE_COUNT_KEY = 'bullmoney_new_message_count';
+
 export function UltimateHub() {
   const [mounted, setMounted] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   
-  // New message notification state
+  // New message notification state - persisted to localStorage
   const [hasNewMessages, setHasNewMessages] = useState(false);
   const [newMessageCount, setNewMessageCount] = useState(0);
   const lastSeenMessageIdRef = useRef<string | null>(null);
+  const isCheckingRef = useRef(false);
+  
+  // Load persisted notification state on mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    // Load last seen message ID from localStorage
+    const savedLastSeen = localStorage.getItem(LAST_SEEN_MESSAGE_KEY);
+    if (savedLastSeen) {
+      lastSeenMessageIdRef.current = savedLastSeen;
+    }
+    
+    // Load any pending notification count (from when app was closed)
+    const savedCount = localStorage.getItem(NEW_MESSAGE_COUNT_KEY);
+    if (savedCount) {
+      const count = parseInt(savedCount, 10);
+      if (count > 0) {
+        setHasNewMessages(true);
+        setNewMessageCount(count);
+      }
+    }
+  }, []);
   
   const { fps, deviceTier, jankScore } = useFpsMonitor();
   const prices = useLivePrices();
@@ -7262,16 +7298,30 @@ export function UltimateHub() {
 
   // Handle new message detection from Telegram embeds
   const handleNewMessage = useCallback((channel: string, postId: string) => {
-    console.log('[UltimateHub] 🔔 New message detected!', { channel, postId });
+    console.log('[UltimateHub] NEW MESSAGE DETECTED', { channel, postId });
     
     // Only increment if this is a truly new message
     if (postId !== lastSeenMessageIdRef.current) {
-      setHasNewMessages(true);
-      setNewMessageCount(prev => prev + 1);
+      lastSeenMessageIdRef.current = postId;
       
-      // Play notification sound (optional)
+      // Persist to localStorage so we remember across browser sessions
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(LAST_SEEN_MESSAGE_KEY, postId);
+      }
+      
+      setHasNewMessages(true);
+      setNewMessageCount(prev => {
+        const newCount = prev + 1;
+        // Persist count for when user returns
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(NEW_MESSAGE_COUNT_KEY, newCount.toString());
+        }
+        return newCount;
+      });
+      
+      // Play notification sound (if tab is visible)
       try {
-        if (typeof window !== 'undefined' && 'Audio' in window) {
+        if (typeof window !== 'undefined' && 'Audio' in window && document.visibilityState === 'visible') {
           const audio = new Audio('/sounds/notification.mp3');
           audio.volume = 0.3;
           audio.play().catch(() => {}); // Ignore autoplay errors
@@ -7280,6 +7330,77 @@ export function UltimateHub() {
     }
   }, []);
   
+  // BACKGROUND POLLING: Check for new messages even when panel is closed
+  // This runs every 3 seconds to ensure fast notification delivery
+  // Also checks immediately when user returns to the tab (visibility change)
+  useEffect(() => {
+    if (!mounted) return;
+    
+    const checkForNewMessages = async (isVisibilityCheck = false) => {
+      // Prevent overlapping checks
+      if (isCheckingRef.current) return;
+      
+      // Only poll when panel is NOT open (when open, TelegramChannelEmbed handles it)
+      // Exception: always check on visibility change (user returning to tab)
+      if (isUltimateHubOpen && !isVisibilityCheck) return;
+      
+      isCheckingRef.current = true;
+      
+      try {
+        // Check the FREE TRADES channel (most important for notifications)
+        const response = await fetch(`/api/telegram/channel?channel=trades&t=${Date.now()}`, { 
+          cache: 'no-store' 
+        });
+        const data = await response.json();
+        
+        if (data.success && data.posts && data.posts.length > 0) {
+          const latestPostId = data.posts[0]?.id;
+          
+          // Get stored last seen from localStorage (in case it was updated elsewhere)
+          const storedLastSeen = localStorage.getItem(LAST_SEEN_MESSAGE_KEY);
+          const currentLastSeen = lastSeenMessageIdRef.current || storedLastSeen;
+          
+          if (currentLastSeen && latestPostId && latestPostId !== currentLastSeen) {
+            console.log('[UltimateHub] BACKGROUND: New message detected!', { latestPostId, currentLastSeen });
+            handleNewMessage('trades', latestPostId);
+          }
+          
+          // Update ref if this is first load (no stored value)
+          if (!currentLastSeen && latestPostId) {
+            lastSeenMessageIdRef.current = latestPostId;
+            localStorage.setItem(LAST_SEEN_MESSAGE_KEY, latestPostId);
+          }
+        }
+      } catch (err) {
+        // Silent fail for background polling
+      } finally {
+        isCheckingRef.current = false;
+      }
+    };
+    
+    // Handle visibility change - check immediately when user returns to tab
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('[UltimateHub] User returned to tab - checking for new messages');
+        checkForNewMessages(true);
+      }
+    };
+    
+    // Listen for visibility changes (user returns to browser/tab)
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Initial check
+    checkForNewMessages();
+    
+    // Poll every 3 seconds for fast notifications
+    const interval = setInterval(() => checkForNewMessages(false), 3000);
+    
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [mounted, isUltimateHubOpen, handleNewMessage]);
+  
   // Clear notifications when panel is opened
   useEffect(() => {
     if (isUltimateHubOpen && hasNewMessages) {
@@ -7287,6 +7408,11 @@ export function UltimateHub() {
       const timeout = setTimeout(() => {
         setHasNewMessages(false);
         setNewMessageCount(0);
+        
+        // Clear from localStorage too
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(NEW_MESSAGE_COUNT_KEY, '0');
+        }
       }, 1000);
       return () => clearTimeout(timeout);
     }
@@ -7305,6 +7431,41 @@ export function UltimateHub() {
   useEffect(() => {
     setMounted(true);
   }, []);
+  
+  // Handle notification click from service worker (when user taps push notification)
+  useEffect(() => {
+    const handleServiceWorkerMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'NOTIFICATION_CLICK') {
+        console.log('[UltimateHub] Notification clicked - opening panel');
+        // Open the Ultimate Hub panel when notification is clicked
+        setUltimateHubOpen(true);
+        
+        // Mark messages as seen since user is responding to notification
+        setHasNewMessages(false);
+        setNewMessageCount(0);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(NEW_MESSAGE_COUNT_KEY, '0');
+        }
+      }
+    };
+    
+    // Also check URL params on load (user may have opened from notification)
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('from') === 'notification') {
+        console.log('[UltimateHub] Opened from notification - opening panel');
+        setUltimateHubOpen(true);
+        // Clean up URL
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+      }
+    }
+    
+    navigator.serviceWorker?.addEventListener('message', handleServiceWorkerMessage);
+    return () => {
+      navigator.serviceWorker?.removeEventListener('message', handleServiceWorkerMessage);
+    };
+  }, [setUltimateHubOpen]);
 
   // Handle keyboard shortcuts
   useEffect(() => {

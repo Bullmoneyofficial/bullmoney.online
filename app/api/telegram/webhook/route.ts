@@ -4,11 +4,8 @@ import webpush from 'web-push';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-// Mr.Bullmoney Bot Token - @MrBullmoneybot
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8554647051:AAE-FBW0qW0ZL4VVvUPlytlDXdo9lH7T9A8';
-const VIP_CHANNEL_ID = process.env.VIP_CHANNEL_ID;
 
-// VAPID keys for push notifications
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
 const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@bullmoney.com';
@@ -17,172 +14,124 @@ if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 }
 
-// Channel mapping for notifications
-const CHANNEL_INFO: Record<string, { name: string; emoji: string; channel: string }> = {
-  'bullmoneywebsite': { name: 'Free Trades', emoji: '📈', channel: 'trades' },
-  'bullmoneyfx': { name: 'Livestreams', emoji: '🔴', channel: 'main' },
-  'Bullmoneyshop': { name: 'News', emoji: '📰', channel: 'shop' },
-  'vip': { name: 'VIP Trades', emoji: '👑', channel: 'vip' },
+const CHANNEL_INFO: Record<string, { name: string; channel: string; priority: 'high' | 'normal' }> = {
+  'bullmoneywebsite': { name: 'FREE TRADES', channel: 'trades', priority: 'high' },
+  'bullmoneyfx': { name: 'LIVESTREAMS', channel: 'main', priority: 'normal' },
+  'bullmoneyshop': { name: 'NEWS', channel: 'shop', priority: 'normal' },
 };
 
-/**
- * Telegram Webhook Handler
- * 
- * This endpoint receives messages from the Telegram Bot when new messages 
- * are posted in the VIP channel. The bot must be an admin in the channel.
- * 
- * Setup:
- * 1. Set TELEGRAM_BOT_TOKEN in .env.local
- * 2. Set VIP_CHANNEL_ID in .env.local (e.g., -1001234567890)
- * 3. Register the webhook with Telegram:
- *    curl "https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://yourdomain.com/api/telegram/webhook"
- */
-
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  
   try {
     const update = await request.json();
-    
-    console.log('📩 Telegram webhook received:', JSON.stringify(update, null, 2));
-    
-    // Handle channel posts
     const message = update.channel_post || update.message;
     
     if (!message) {
-      return NextResponse.json({ ok: true, message: 'No message in update' });
+      return NextResponse.json({ ok: true });
     }
     
-    // Check if this is from our VIP channel
-    const chatId = message.chat?.id?.toString();
-    const expectedChannelId = VIP_CHANNEL_ID?.replace('-100', '')?.replace('-', '');
-    const actualChannelId = chatId?.replace('-100', '')?.replace('-', '');
+    const chatUsername = (message.chat?.username || '').toLowerCase();
+    const messageText = message.text || message.caption || '';
+    const hasMedia = !!(message.photo || message.video || message.document || message.animation);
     
-    console.log('Chat ID:', chatId, 'Expected:', VIP_CHANNEL_ID);
+    if (!messageText && !hasMedia) {
+      return NextResponse.json({ ok: true });
+    }
     
-    // Store the message in the database
-    if (supabaseUrl && supabaseServiceKey) {
-      const supabase = createClient(supabaseUrl, supabaseServiceKey);
-      
-      const messageText = message.text || message.caption || '';
-      const hasMedia = !!(message.photo || message.video || message.document || message.animation);
-      
-      // Only store non-empty messages
-      if (messageText || hasMedia) {
-        const { error } = await supabase
-          .from('vip_messages')
-          .insert({
-            message: messageText || '📷 Media post',
-            has_media: hasMedia,
-            views: 0,
-            created_at: new Date(message.date * 1000).toISOString(),
-            telegram_message_id: message.message_id,
-          });
+    let channelInfo = CHANNEL_INFO[chatUsername] || { 
+      name: 'BullMoney', 
+      channel: 'trades', 
+      priority: 'high' as const 
+    };
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      return NextResponse.json({ ok: false, error: 'DB not configured' });
+    }
+    
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    // Store message in database
+    await supabase
+      .from('vip_messages')
+      .insert({
+        message: messageText || 'Media post',
+        has_media: hasMedia,
+        views: 0,
+        created_at: new Date(message.date * 1000).toISOString(),
+        telegram_message_id: message.message_id,
+      })
+      .catch(() => {});
+    
+    // PUSH NOTIFICATIONS - Works when browser is closed!
+    if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+      try {
+        const { data: subscriptions } = await supabase
+          .from('push_subscriptions')
+          .select('*')
+          .eq('is_active', true);
         
-        if (error) {
-          console.error('Failed to store message:', error);
-        } else {
-          console.log('✅ Stored VIP message:', messageText?.substring(0, 50) || '(media)');
+        if (subscriptions && subscriptions.length > 0) {
+          const channelColumn = `channel_${channelInfo.channel}`;
+          const targets = subscriptions.filter(sub => sub[channelColumn] !== false);
           
-          // ============================================
-          // 🔔 SEND PUSH NOTIFICATIONS TO ALL SUBSCRIBERS
-          // ============================================
-          if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
-            try {
-              // Get channel info from chat username or default to VIP
-              const chatUsername = message.chat?.username || 'vip';
-              const channelInfo = CHANNEL_INFO[chatUsername] || CHANNEL_INFO['vip'];
-              
-              // Get all active push subscriptions
-              const { data: subscriptions } = await supabase
-                .from('push_subscriptions')
-                .select('*')
-                .eq('is_active', true);
-              
-              if (subscriptions && subscriptions.length > 0) {
-                const notificationPayload = {
-                  title: `${channelInfo.emoji} BullMoney ${channelInfo.name}`,
-                  body: messageText?.substring(0, 100) || '📷 New media post - tap to view',
-                  icon: '/icons/icon-192x192.png',
-                  badge: '/icons/badge-72x72.png',
-                  channel: channelInfo.channel,
-                  tag: `trade-${message.message_id}`,
-                  url: `/?channel=${channelInfo.channel}&from=notification`,
-                  requireInteraction: true,
-                };
-                
-                const payloadString = JSON.stringify(notificationPayload);
-                
-                // Send to all subscribers
-                let sent = 0;
-                let failed = 0;
-                
-                await Promise.allSettled(
-                  subscriptions.map(async (sub) => {
-                    try {
-                      await webpush.sendNotification({
-                        endpoint: sub.endpoint,
-                        keys: { p256dh: sub.p256dh, auth: sub.auth },
-                      }, payloadString);
-                      sent++;
-                    } catch (err: any) {
-                      failed++;
-                      // Remove expired subscriptions
-                      if (err.statusCode === 404 || err.statusCode === 410) {
-                        await supabase
-                          .from('push_subscriptions')
-                          .update({ is_active: false })
-                          .eq('endpoint', sub.endpoint);
-                      }
-                    }
-                  })
+          const payload = JSON.stringify({
+            title: `BullMoney ${channelInfo.name}`,
+            body: messageText?.substring(0, 120) || 'New trade signal - tap to view',
+            icon: '/bullmoney-logo.png',
+            badge: '/B.png',
+            tag: `trade-${channelInfo.channel}-${message.message_id}`,
+            url: `/?channel=${channelInfo.channel}&from=notification`,
+            channel: channelInfo.channel,
+            requireInteraction: channelInfo.priority === 'high',
+          });
+          
+          let sent = 0;
+          const expired: string[] = [];
+          
+          await Promise.allSettled(
+            targets.map(async (sub) => {
+              try {
+                await webpush.sendNotification(
+                  { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+                  payload,
+                  { TTL: 86400, urgency: channelInfo.priority === 'high' ? 'high' : 'normal' }
                 );
-                
-                console.log(`🔔 Push notifications sent: ${sent} success, ${failed} failed`);
-                
-                // Log notification history
-                await supabase
-                  .from('notification_history')
-                  .insert({
-                    title: notificationPayload.title,
-                    body: notificationPayload.body,
-                    channel: channelInfo.channel,
-                    sent_count: sent,
-                    failed_count: failed,
-                    created_at: new Date().toISOString(),
-                  });
+                sent++;
+              } catch (err: any) {
+                if (err.statusCode === 404 || err.statusCode === 410) {
+                  expired.push(sub.endpoint);
+                }
               }
-            } catch (pushError) {
-              console.error('Push notification error:', pushError);
-            }
+            })
+          );
+          
+          if (expired.length > 0) {
+            await supabase
+              .from('push_subscriptions')
+              .update({ is_active: false })
+              .in('endpoint', expired)
+              .catch(() => {});
           }
+          
+          console.log(`[Webhook] ${sent}/${targets.length} sent (${Date.now() - startTime}ms)`);
         }
+      } catch (err) {
+        console.error('[Webhook] Push error:', err);
       }
     }
     
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, channel: channelInfo.name });
+    
   } catch (error) {
-    console.error('Webhook error:', error);
-    return NextResponse.json({ ok: false, error: 'Internal error' }, { status: 500 });
+    console.error('[Webhook] Error:', error);
+    return NextResponse.json({ ok: false }, { status: 500 });
   }
 }
 
-// GET endpoint to check webhook status and setup
 export async function GET(request: NextRequest) {
   const action = request.nextUrl.searchParams.get('action');
   
-  if (!TELEGRAM_BOT_TOKEN) {
-    return NextResponse.json({
-      success: false,
-      error: 'TELEGRAM_BOT_TOKEN not configured',
-      setup: {
-        step1: 'Add TELEGRAM_BOT_TOKEN=8554647051:AAE-FBW0qW0ZL4VVvUPlytlDXdo9lH7T9A8 to .env.local',
-        step2: 'Add VIP_CHANNEL_ID=-100XXXXXXXXXX to .env.local (get from channel info)',
-        step3: 'Make sure the bot @MrBullmoneybot is an ADMIN in the VIP channel',
-        step4: 'Call this endpoint with ?action=setup to register the webhook',
-      }
-    });
-  }
-  
-  // Setup webhook
   if (action === 'setup') {
     const host = request.headers.get('host');
     const protocol = host?.includes('localhost') ? 'http' : 'https';
@@ -195,16 +144,43 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: data.ok,
       webhookUrl,
-      telegramResponse: data,
-      nextSteps: data.ok ? [
-        'Webhook registered! New messages in the VIP channel will now be saved.',
-        'Make sure the bot is an ADMIN in the channel with "Post Messages" permission.',
-        'Test by posting a message in the VIP channel.',
-      ] : ['Failed to register webhook. Check your bot token.']
+      message: data.ok ? 'Webhook registered!' : 'Failed to register',
+      error: data.ok ? undefined : data.description,
     });
   }
   
-  // Check webhook info
+  if (action === 'test') {
+    if (!VAPID_PUBLIC_KEY || !supabaseUrl) {
+      return NextResponse.json({ error: 'VAPID or DB not configured' });
+    }
+    
+    const supabase = createClient(supabaseUrl, supabaseServiceKey!);
+    const { data: subs } = await supabase
+      .from('push_subscriptions')
+      .select('*')
+      .eq('is_active', true)
+      .limit(1);
+    
+    if (!subs?.length) {
+      return NextResponse.json({ error: 'No subscriptions. Enable notifications in app first.' });
+    }
+    
+    try {
+      await webpush.sendNotification(
+        { endpoint: subs[0].endpoint, keys: { p256dh: subs[0].p256dh, auth: subs[0].auth } },
+        JSON.stringify({
+          title: 'BullMoney Test',
+          body: 'Push notifications working!',
+          icon: '/bullmoney-logo.png',
+          badge: '/B.png',
+        })
+      );
+      return NextResponse.json({ success: true, message: 'Test sent!' });
+    } catch (err: any) {
+      return NextResponse.json({ error: err.message });
+    }
+  }
+  
   if (action === 'info') {
     const infoUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getWebhookInfo`;
     const response = await fetch(infoUrl);
@@ -216,41 +192,5 @@ export async function GET(request: NextRequest) {
     });
   }
   
-  // Delete webhook
-  if (action === 'delete') {
-    const deleteUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/deleteWebhook`;
-    const response = await fetch(deleteUrl);
-    const data = await response.json();
-    
-    return NextResponse.json({
-      success: data.ok,
-      message: 'Webhook deleted',
-    });
-  }
-  
-  // Get bot info
-  const botInfoUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getMe`;
-  const botResponse = await fetch(botInfoUrl);
-  const botData = await botResponse.json();
-  
-  return NextResponse.json({
-    success: true,
-    bot: botData.result,
-    configured: {
-      TELEGRAM_BOT_TOKEN: !!TELEGRAM_BOT_TOKEN,
-      VIP_CHANNEL_ID: VIP_CHANNEL_ID || 'NOT SET - Add this to .env.local',
-    },
-    actions: {
-      setup: '?action=setup - Register webhook to receive channel messages',
-      info: '?action=info - Get current webhook status',
-      delete: '?action=delete - Remove webhook',
-    },
-    instructions: [
-      '1. Make sure @MrBullmoneybot is an ADMIN in your VIP channel',
-      '2. Get the channel ID by forwarding a message to @userinfobot',
-      '3. Add VIP_CHANNEL_ID to .env.local (format: -100XXXXXXXXXX)',
-      '4. Call ?action=setup to register the webhook',
-      '5. New channel messages will automatically be saved to the database',
-    ]
-  });
+  return NextResponse.json({ ok: true });
 }
