@@ -1212,48 +1212,60 @@ function HomeContent() {
           <main className="min-h-screen flex flex-col w-full" data-allow-scroll data-scrollable data-content data-theme-aware style={{ overflow: 'visible', height: 'auto' }}>
             <div id="top" />
 
-            {canRenderMobileSections && (
-              <section
-                id="hero"
-                className={isMobile
-                  ? "w-full full-bleed flex items-end justify-center overflow-hidden"
-                  : "w-full full-bleed viewport-full"}
-                style={isMobile ? {
-                  // Fill from under navbar+static helper to bottom of viewport
-                  // This ensures content stretches to fill on taller screens
-                  height: 'calc(100dvh - env(safe-area-inset-bottom, 0px))',
-                  paddingTop: 'calc(110px + env(safe-area-inset-top, 0px))',
-                  paddingBottom: '12px',
-                  display: 'flex',
-                  flexDirection: 'column' as const,
-                } : undefined}
-                data-allow-scroll
-                data-content
-                data-theme-aware
-              >
-                {isMobile ? (
+            <section
+              id="hero"
+              className={isMobile
+                ? "w-full full-bleed flex items-end justify-center overflow-hidden"
+                : "w-full full-bleed viewport-full"}
+              style={isMobile ? {
+                // Fill from under navbar+static helper to bottom of viewport
+                // This ensures content stretches to fill on taller screens
+                height: 'calc(100dvh - env(safe-area-inset-bottom, 0px))',
+                paddingTop: 'calc(110px + env(safe-area-inset-top, 0px))',
+                paddingBottom: '12px',
+                display: 'flex',
+                flexDirection: 'column' as const,
+              } : undefined}
+              data-allow-scroll
+              data-content
+              data-theme-aware
+            >
+              {isMobile ? (
+                canRenderMobileSections ? (
                   <MobileDiscordHero
                     sources={DISCORD_STAGE_FEATURED_VIDEOS}
                     onOpenModal={openDiscordStageModal}
                     variant="mobile"
                   />
                 ) : (
-                  <HeroDesktop />
-                )}
-              </section>
-            )}
+                  <HeroSkeleton />
+                )
+              ) : (
+                <HeroDesktop />
+              )}
+            </section>
 
-            {canRenderMobileSections && (
-              <section id="cta" className="w-full full-bleed viewport-full" data-allow-scroll data-content data-theme-aware>
-                <CTA />
-              </section>
-            )}
+            <section
+              id="cta"
+              className="w-full full-bleed viewport-full"
+              style={isMobile ? { minHeight: '70dvh' } : undefined}
+              data-allow-scroll
+              data-content
+              data-theme-aware
+            >
+              {canRenderMobileSections ? <CTA /> : <MinimalFallback />}
+            </section>
 
-            {canRenderMobileSections && (
-              <section id="features" className="w-full full-bleed viewport-full" data-allow-scroll data-content data-theme-aware>
-                <FeaturesComponent />
-              </section>
-            )}
+            <section
+              id="features"
+              className="w-full full-bleed viewport-full"
+              style={isMobile ? { minHeight: '80dvh' } : undefined}
+              data-allow-scroll
+              data-content
+              data-theme-aware
+            >
+              {canRenderMobileSections ? <FeaturesComponent /> : <FeaturesSkeleton />}
+            </section>
 
             {canRenderHeavyDesktop && (
               <section 

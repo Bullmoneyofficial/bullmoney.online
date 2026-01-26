@@ -435,3 +435,16 @@ html.is-ios .fixed-bottom,
 html.is-ios [data-fixed-bottom] {
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
+
+/* =========================================================================
+   MOBILE CLS GUARDRAILS
+   Reserve stable viewport height to avoid address-bar shifts on load.
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  .viewport-full,
+  .page-full {
+    min-height: 100svh;
+    min-height: 100dvh;
+  }
+}
