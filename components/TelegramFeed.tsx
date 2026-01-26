@@ -24,7 +24,7 @@ interface TelegramFeedProps {
 
 export function TelegramFeed({
   limit = 10,
-  refreshInterval = 300000, // 5 minutes
+  refreshInterval = 30000, // 30 seconds for responsive notifications
   showHeader = true,
   compact = false,
 }: TelegramFeedProps) {
@@ -38,6 +38,15 @@ export function TelegramFeed({
       try {
         setLoading(true);
         setError(null);
+
+        // First, trigger a sync to fetch any new messages from Telegram
+        // This also sends push notifications for new messages
+        try {
+          await fetch('/api/telegram/sync');
+        } catch (syncErr) {
+          // Sync errors are not critical, continue with message fetch
+          console.log('[TelegramFeed] Sync failed, continuing with message fetch');
+        }
 
         const response = await fetch(`/api/telegram/messages?limit=${limit}`);
 
@@ -62,7 +71,7 @@ export function TelegramFeed({
 
     fetchMessages();
 
-    // Set up auto-refresh
+    // Set up auto-refresh - also triggers sync on each poll
     const interval = setInterval(fetchMessages, refreshInterval);
     return () => clearInterval(interval);
   }, [limit, refreshInterval]);

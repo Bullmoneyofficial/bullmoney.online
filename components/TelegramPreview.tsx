@@ -24,6 +24,13 @@ export function TelegramPreview({ limit = 3, onViewMore }: TelegramPreviewProps)
   useEffect(() => {
     const fetchMessages = async () => {
       try {
+        // Trigger sync to fetch new messages from Telegram and send push notifications
+        try {
+          await fetch('/api/telegram/sync');
+        } catch (syncErr) {
+          // Sync errors are not critical, continue
+        }
+
         const response = await fetch(`/api/telegram/messages?limit=${limit}`);
         const data = await response.json();
 
@@ -38,7 +45,8 @@ export function TelegramPreview({ limit = 3, onViewMore }: TelegramPreviewProps)
     };
 
     fetchMessages();
-    const interval = setInterval(fetchMessages, 300000); // Refresh every 5 minutes
+    // Refresh every 30 seconds for more responsive notifications
+    const interval = setInterval(fetchMessages, 30000);
     return () => clearInterval(interval);
   }, [limit]);
 
