@@ -37,281 +37,34 @@ import { WelcomeScreenDesktop } from "./WelcomeScreenDesktop";
 import { UnifiedFpsPill, UnifiedHubPanel, useLivePrices } from '@/components/UltimateHub';
 import { createPortal } from 'react-dom';
 
-// --- SPLINE SCENES CONFIG (from HeroDesktop) ---
-// Mobile uses a mix of local .splinecode files and iframes for remote URLs
-type MobileSplineScene = {
-  id: string;
-  viewerUrl?: string;      // Remote Spline viewer URL (for iframe)
-  localPath?: string;      // Local .splinecode file path (for Spline component)
-  weight: number;
-};
-
-const MOBILE_SPLINE_SCENES: readonly MobileSplineScene[] = [
-  {
-    id: "timefold",
-    viewerUrl: "https://my.spline.design/timefoldodyssey-s3vKRBOk0ESLxu0qgZIB1IOD/",
-    weight: 35,
-  },
-  {
-    id: "nexbot",
-    localPath: "/scene1.splinecode",
-    weight: 35,
-  },
-  {
-    id: "followers-focus",
-    localPath: "/scene5.splinecode",
-    weight: 6,
-  },
-  {
-    id: "loading-bar",
-    viewerUrl: "https://my.spline.design/theloadingbarvertical-J0jRfhBsRDUAUKzNRxMvZXak/",
-    weight: 6,
-  },
-  {
-    id: "cannon",
-    viewerUrl: "https://my.spline.design/cannon-vOk1Cc5VyFBvcSq1ozXuhK1n/",
-    weight: 6,
-  },
-  {
-    id: "xgamer",
-    viewerUrl: "https://my.spline.design/xgamer-RZ9X6L57SHESs7L04p6IDisA/",
-    weight: 6,
-  },
-  {
-    id: "r4xbot",
-    viewerUrl: "https://my.spline.design/r4xbot-2RZeOpfgJ0Vr36G9Jd9EHlFB/",
-    weight: 6,
-  },
-] as const;
-
-const MOBILE_SPLINE_ROTATION_KEY = 'bullmoney_mobile_spline_rotation_v1';
-
-// Weighted random selection for mobile spline scenes
-const selectWeightedMobileScene = (): MobileSplineScene => {
-  const totalWeight = MOBILE_SPLINE_SCENES.reduce((sum, scene) => sum + scene.weight, 0);
-  let random = Math.random() * totalWeight;
-  for (const scene of MOBILE_SPLINE_SCENES) {
-    random -= scene.weight;
-    if (random <= 0) return scene;
-  }
-  return MOBILE_SPLINE_SCENES[0];
-};
-
-// --- MOBILE SPLINE OPTIMIZATION CONFIG ---
-// Lower quality settings for smoother mobile performance
-const MOBILE_SPLINE_CONFIG = {
-  // Disable heavy render effects for mobile
-  disableShadows: true,
-  disableReflections: true,
-  disablePostProcessing: true,
-  // Lower quality settings
-  pixelRatio: 1.0, // Lower pixel ratio for mobile
-  maxFPS: 30, // Cap FPS for battery savings
-  // Smooth loading
-  loadingDelay: 100,
-  fadeInDuration: 500,
-};
-
-// Build optimized URL with quality parameters for mobile
-const getMobileOptimizedSplineUrl = (baseUrl: string): string => {
-  const url = new URL(baseUrl);
-  // Add URL parameters to reduce quality for smoother mobile performance
-  url.searchParams.set('hideUI', 'true');
-  url.searchParams.set('quality', 'low');
-  return url.toString();
-};
-
-// --- WELCOME SCREEN SPLINE BACKGROUND COMPONENT (MOBILE - IFRAME VERSION) ---
-// Uses iframes instead of local files for better mobile performance
-// Optimized with lower quality rendering and disabled heavy effects
+// --- SIMPLE SPLINE BACKGROUND COMPONENT (MOBILE) ---
+// Single scene, no rotation, no complexity - just load fast
 const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isRendering, setIsRendering] = useState(false);
-  const [currentScene, setCurrentScene] = useState<MobileSplineScene | null>(null);
-  const mountedRef = useRef(true);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const ROTATE_INTERVAL_MS = 60000; // rotate every 60s
 
-  const pickNextScene = useCallback((): MobileSplineScene => {
-    try {
-      const raw = localStorage.getItem(MOBILE_SPLINE_ROTATION_KEY);
-      const parsed = raw ? JSON.parse(raw) : {};
-      let queue: string[] = Array.isArray(parsed.queue) ? parsed.queue : [];
-      
-      if (!queue.length) {
-        // Shuffle all scene IDs
-        queue = MOBILE_SPLINE_SCENES.map(s => s.id);
-        for (let i = queue.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [queue[i], queue[j]] = [queue[j], queue[i]];
-        }
-      }
-      
-      const nextId = queue.shift() || MOBILE_SPLINE_SCENES[0].id;
-      localStorage.setItem(MOBILE_SPLINE_ROTATION_KEY, JSON.stringify({ queue, lastUsed: nextId, updated: Date.now() }));
-      
-      return MOBILE_SPLINE_SCENES.find(s => s.id === nextId) || MOBILE_SPLINE_SCENES[0];
-    } catch {
-      return selectWeightedMobileScene();
-    }
-  }, []);
-
-  // Initialize scene on mount
-  useEffect(() => {
-    mountedRef.current = true;
-    if (typeof window !== 'undefined') {
-      const chosen = pickNextScene();
-      setCurrentScene(chosen);
-    }
-
-    return () => {
-      mountedRef.current = false;
-    };
-  }, [pickNextScene]);
-
-  // Rotate scenes periodically
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const id = window.setInterval(() => {
-      if (mountedRef.current) {
-        const next = pickNextScene();
-        setIsLoaded(false);
-        setCurrentScene(next);
-      }
-    }, ROTATE_INTERVAL_MS);
-    return () => window.clearInterval(id);
-  }, [pickNextScene]);
-
-  // Handle iframe load with smooth transition
-  const handleIframeLoad = useCallback(() => {
-    if (mountedRef.current) {
-      // Small delay to ensure Spline scene has started rendering
-      setTimeout(() => {
-        if (mountedRef.current) {
-          setIsRendering(true);
-          // Second delay for smooth fade-in after render starts
-          setTimeout(() => {
-            if (mountedRef.current) {
-              setIsLoaded(true);
-            }
-          }, MOBILE_SPLINE_CONFIG.fadeInDuration);
-        }
-      }, MOBILE_SPLINE_CONFIG.loadingDelay);
-    }
-  }, []);
-
-  // Reduce motion when battery is low or device is struggling
-  const [reducedMotion, setReducedMotion] = useState(false);
-  
-  useEffect(() => {
-    // Check for reduced motion preference
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setReducedMotion(mediaQuery.matches);
-    
-    const handleChange = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+  const handleLoad = useCallback(() => {
+    setIsLoaded(true);
   }, []);
 
   return (
-    <div
-      className="absolute inset-0 w-full h-full"
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        overflow: 'hidden',
-        background: '#000',
-        contain: 'layout style paint size',
-        contentVisibility: 'auto',
-      }}
-    >
-      {/* Spline Scene - INTERACTIVE: Full touch enabled */}
-      {/* Supports both local .splinecode files and remote iframe URLs */}
-      {currentScene && (
-        <div
-          key={`spline-mobile-${currentScene.id}`}
-          className="absolute inset-0"
-          style={{
-            width: '100%',
-            height: '100%',
-            touchAction: 'manipulation',
-            pointerEvents: 'auto',
-            willChange: isLoaded ? 'auto' : 'opacity, transform',
-            cursor: 'grab',
-            opacity: isLoaded ? 1 : 0,
-            transform: isLoaded ? 'scale(1)' : 'scale(1.02)',
-            transition: `opacity ${MOBILE_SPLINE_CONFIG.fadeInDuration}ms ease-out, transform ${MOBILE_SPLINE_CONFIG.fadeInDuration}ms ease-out`,
-          }}
-        >
-          {/* Local .splinecode file - use Spline component */}
-          {currentScene.localPath ? (
-            <Spline
-              scene={currentScene.localPath}
-              onLoad={handleIframeLoad}
-              style={{
-                width: '100%',
-                height: 'calc(100% + 60px)',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                display: 'block',
-                marginBottom: '-60px',
-                touchAction: 'manipulation',
-                pointerEvents: 'auto',
-                transform: 'translateZ(0)',
-                backfaceVisibility: 'hidden',
-              }}
-            />
-          ) : currentScene.viewerUrl ? (
-            /* Remote URL - use iframe */
-            <iframe
-              ref={iframeRef}
-              src={getMobileOptimizedSplineUrl(currentScene.viewerUrl)}
-              title="BullMoney mobile welcome scene"
-              frameBorder="0"
-              allow="fullscreen; autoplay; xr-spatial-tracking; pointer-lock; gyroscope; accelerometer"
-              loading="eager"
-              onLoad={handleIframeLoad}
-              style={{
-                width: '100%',
-                height: 'calc(100% + 60px)',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                border: 'none',
-                display: 'block',
-                marginBottom: '-60px',
-                touchAction: 'manipulation',
-                pointerEvents: 'auto',
-                transform: 'translateZ(0)',
-                backfaceVisibility: 'hidden',
-                imageRendering: reducedMotion ? 'auto' : 'auto',
-              }}
-            />
-          ) : null}
-        </div>
-      )}
-
-      {/* Smooth gradient placeholder during loading - ensures visual continuity */}
-      <div
-        className="absolute inset-0 pointer-events-none"
+    <div className="absolute inset-0 w-full h-full overflow-hidden bg-black">
+      <Spline
+        scene="/scene1.splinecode"
+        onLoad={handleLoad}
         style={{
-          background: 'radial-gradient(ellipse at 50% 30%, rgba(59, 130, 246, 0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 40%), #000',
-          opacity: isLoaded ? 0 : 1,
-          transition: `opacity ${MOBILE_SPLINE_CONFIG.fadeInDuration}ms ease-out`,
+          width: '100%',
+          height: '100%',
+          display: 'block',
+          opacity: isLoaded ? 1 : 0,
+          transition: 'opacity 300ms ease-out',
         }}
       />
-      
-      {/* Loading shimmer effect - shows activity while Spline loads */}
-      {!isLoaded && isRendering && (
+      {/* Loading placeholder */}
+      {!isLoaded && (
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: 'linear-gradient(90deg, transparent 0%, rgba(59, 130, 246, 0.03) 50%, transparent 100%)',
-            animation: 'mobileSplineLoadShimmer 1.5s ease-in-out infinite',
+            background: 'radial-gradient(ellipse at 50% 30%, rgba(59, 130, 246, 0.08) 0%, transparent 50%), #000',
           }}
         />
       )}
@@ -387,12 +140,6 @@ const NEON_GLOBAL_STYLES = `
     50% { 
       box-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6, inset 0 0 6px #3b82f6;
     }
-  }
-
-  /* Mobile Spline loading shimmer animation */
-  @keyframes mobileSplineLoadShimmer {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
   }
 
   .neon-blue-text {

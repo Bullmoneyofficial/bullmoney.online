@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, memo, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, memo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import dynamic from 'next/dynamic';
 import { motion } from "framer-motion";
@@ -9,328 +9,40 @@ import { ArrowRight, User } from 'lucide-react';
 // Import the actual UnifiedFpsPill and UnifiedHubPanel from UltimateHub
 import { UnifiedFpsPill, UnifiedHubPanel, useLivePrices } from '@/components/UltimateHub';
 
-// --- DEVICE DETECTION FOR QUALITY SETTINGS ---
-const useDeviceCapabilities = () => {
-  const [capabilities, setCapabilities] = useState({
-    isMobile: false,
-    isLowEnd: false,
-    prefersReducedMotion: false,
-  });
-
-  useEffect(() => {
-    const checkCapabilities = () => {
-      const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
-        navigator.userAgent.toLowerCase()
-      ) || window.innerWidth < 768;
-      
-      // Check for low-end device indicators
-      const isLowEnd = (
-        (navigator as any).deviceMemory !== undefined && (navigator as any).deviceMemory < 4 ||
-        navigator.hardwareConcurrency !== undefined && navigator.hardwareConcurrency < 4
-      );
-      
-      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      
-      setCapabilities({ isMobile, isLowEnd, prefersReducedMotion });
-    };
-    
-    checkCapabilities();
-    window.addEventListener('resize', checkCapabilities);
-    return () => window.removeEventListener('resize', checkCapabilities);
-  }, []);
-  
-  return capabilities;
-};
-
-// --- DYNAMIC SPLINE IMPORT WITH MOBILE OPTIMIZATION ---
+// --- DYNAMIC SPLINE IMPORT ---
 const Spline = dynamic(() => import('@splinetool/react-spline'), {
   ssr: false,
   loading: () => null,
 });
 
-// --- SPLINE QUALITY CONFIG ---
-const SPLINE_QUALITY_CONFIG = {
-  desktop: {
-    pixelRatio: typeof window !== 'undefined' ? Math.min(window.devicePixelRatio, 2) : 2,
-    fadeInDuration: 700,
-    loadingDelay: 0,
-  },
-  mobile: {
-    pixelRatio: 1.0, // Lower pixel ratio for mobile
-    fadeInDuration: 500,
-    loadingDelay: 100,
-  },
-  lowEnd: {
-    pixelRatio: 0.75, // Even lower for struggling devices
-    fadeInDuration: 400,
-    loadingDelay: 150,
-  },
-};
-
-const SPLINE_SCENES = [
-  '/scene1.splinecode',
-  '/scene2.splinecode',
-  '/scene3.splinecode',
-  '/scene4.splinecode',
-  '/scene5.splinecode',
-  '/scene6.splinecode',
-  '/scene.splinecode',
-];
-
-const SPLINE_ROTATION_KEY = 'bullmoney_spline_rotation_v2';
-
-const warmSplineRuntime = (() => {
-  let warmed = false;
-  return () => {
-    if (warmed) return;
-    warmed = true;
-    if (typeof window !== 'undefined') {
-      import('@splinetool/react-spline').catch(() => {});
-    }
-  };
-})();
-
-// --- WELCOME SCREEN SPLINE BACKGROUND COMPONENT ---
-// Optimized with aggressive caching, preloading, error recovery, and mobile quality reduction
+// --- SIMPLE SPLINE BACKGROUND COMPONENT (DESKTOP) ---
+// Single scene, no rotation, no complexity - just load fast
 const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isRendering, setIsRendering] = useState(false);
-  const [hasError, setHasError] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
-  const [sceneToLoad, setSceneToLoad] = useState<string>(SPLINE_SCENES[0]);
-  const splineRef = useRef<any>(null);
-  const mountedRef = useRef(true);
-  const MAX_RETRIES = 2;
-  const ROTATE_INTERVAL_MS = 60000;
-  
-  // Get device capabilities for quality adjustment
-  const { isMobile, isLowEnd, prefersReducedMotion } = useDeviceCapabilities();
-  
-  // Select quality config based on device
-  const qualityConfig = useMemo(() => {
-    if (isLowEnd) return SPLINE_QUALITY_CONFIG.lowEnd;
-    if (isMobile) return SPLINE_QUALITY_CONFIG.mobile;
-    return SPLINE_QUALITY_CONFIG.desktop;
-  }, [isMobile, isLowEnd]);
 
-  const ensurePreload = useCallback((scenePath: string, rel: 'preload' | 'prefetch' = 'preload') => {
-    if (typeof window === 'undefined') return;
-    const existing = document.querySelector(`link[data-spline="${scenePath}"]`);
-    if (!existing) {
-      const link = document.createElement('link');
-      link.rel = rel;
-      link.as = 'fetch';
-      link.href = scenePath;
-      link.crossOrigin = 'anonymous';
-      link.dataset.spline = scenePath;
-      document.head.appendChild(link);
-    }
-    fetch(scenePath, {
-      method: 'GET',
-      cache: 'force-cache',
-      priority: rel === 'preload' ? 'high' : 'low'
-    } as RequestInit).catch(() => {});
+  const handleLoad = useCallback(() => {
+    setIsLoaded(true);
   }, []);
-
-  const pickNextScene = useCallback(() => {
-    try {
-      const raw = localStorage.getItem(SPLINE_ROTATION_KEY);
-      const parsed = raw ? JSON.parse(raw) : {};
-      let queue: string[] = Array.isArray(parsed.queue) ? parsed.queue : [];
-      if (!queue.length) {
-        queue = [...SPLINE_SCENES];
-        for (let i = queue.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [queue[i], queue[j]] = [queue[j], queue[i]];
-        }
-      }
-      const next = queue.shift() || SPLINE_SCENES[0];
-      localStorage.setItem(SPLINE_ROTATION_KEY, JSON.stringify({ queue, lastUsed: next, updated: Date.now() }));
-      return next;
-    } catch {
-      return SPLINE_SCENES[0];
-    }
-  }, []);
-
-  const setScene = useCallback((scene: string) => {
-    setIsLoaded(false);
-    setHasError(false);
-    setRetryCount(0);
-    setSceneToLoad(scene);
-  }, []);
-
-  // Preload the spline scene on mount for faster loading
-  useEffect(() => {
-    mountedRef.current = true;
-    if (typeof window !== 'undefined') {
-      warmSplineRuntime();
-      const chosen = pickNextScene();
-      setScene(chosen);
-      ensurePreload(chosen, 'preload');
-
-      const preloadOthers = () => {
-        SPLINE_SCENES.filter((scene) => scene !== chosen).forEach((scene) => ensurePreload(scene, 'prefetch'));
-      };
-
-      if ('requestIdleCallback' in window) {
-        (window as any).requestIdleCallback(preloadOthers, { timeout: 1200 });
-      } else {
-        setTimeout(preloadOthers, 500);
-      }
-    }
-
-    return () => {
-      mountedRef.current = false;
-    };
-  }, [ensurePreload, pickNextScene, setScene]);
-
-  // Rotate scenes every ROTATE_INTERVAL_MS to keep visuals fresh
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const id = window.setInterval(() => {
-      const next = pickNextScene();
-      ensurePreload(next, 'preload');
-      setScene(next);
-    }, ROTATE_INTERVAL_MS);
-    return () => window.clearInterval(id);
-  }, [ensurePreload, pickNextScene, setScene]);
-
-  // Handle successful load with quality adjustments for mobile
-  const handleLoad = useCallback((spline: any) => {
-    if (mountedRef.current) {
-      splineRef.current = spline;
-      
-      // Apply mobile/low-end optimizations to Spline runtime
-      if ((isMobile || isLowEnd) && spline) {
-        try {
-          // Disable heavy render effects for mobile
-          if (spline.setVariable) {
-            // Try to disable shadows and reflections if the scene supports it
-            spline.setVariable?.('disableShadows', true);
-            spline.setVariable?.('disableReflections', true);
-          }
-          
-          // Reduce pixel ratio for smoother performance
-          if (spline.setPixelRatio) {
-            spline.setPixelRatio(qualityConfig.pixelRatio);
-          }
-          
-          // Access renderer if available to reduce quality
-          const app = spline._app || spline.app;
-          if (app?.renderer) {
-            app.renderer.setPixelRatio(qualityConfig.pixelRatio);
-            // Disable antialiasing on low-end devices
-            if (isLowEnd && app.renderer.capabilities) {
-              app.renderer.capabilities.logarithmicDepthBuffer = false;
-            }
-          }
-        } catch (e) {
-          // Silently ignore - some scenes may not support these methods
-          console.debug('[WelcomeSpline] Could not apply mobile optimizations:', e);
-        }
-      }
-      
-      // Smooth transition with configurable delay
-      setIsRendering(true);
-      setTimeout(() => {
-        if (mountedRef.current) {
-          setIsLoaded(true);
-          setHasError(false);
-        }
-      }, qualityConfig.loadingDelay);
-    }
-  }, [isMobile, isLowEnd, qualityConfig]);
-
-  // Handle error with retry logic
-  const handleError = useCallback(() => {
-    if (mountedRef.current) {
-      if (retryCount < MAX_RETRIES) {
-        // Retry after a short delay
-        setTimeout(() => {
-          if (mountedRef.current) {
-            setRetryCount(prev => prev + 1);
-            setHasError(false);
-            setIsRendering(false);
-          }
-        }, 500);
-      } else {
-        const fallback = SPLINE_SCENES[0];
-        setScene(fallback);
-        setHasError(true);
-      }
-    }
-  }, [retryCount, setScene]);
 
   return (
-    <div
-      className="absolute inset-0 w-full h-full"
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        overflow: 'hidden',
-        background: '#000',
-        contain: 'layout style paint size',
-        contentVisibility: 'auto',
-      }}
-    >
-      {/* Spline Scene - with retry key to force remount on retry */}
-      {/* INTERACTIVE: Full touch/mouse interaction enabled for 3D scene */}
-      {/* Mobile-optimized with lower quality rendering */}
-      {!hasError && (
-        <div
-          key={`spline-desktop-${sceneToLoad}-${retryCount}`}
-          className="absolute inset-0"
-          style={{
-            width: '100%',
-            height: '100%',
-            touchAction: 'manipulation',
-            pointerEvents: 'auto',
-            willChange: isLoaded ? 'auto' : 'opacity, transform',
-            cursor: 'grab',
-            opacity: isLoaded ? 1 : 0,
-            transform: isLoaded ? 'scale(1)' : 'scale(1.01)',
-            transition: `opacity ${qualityConfig.fadeInDuration}ms ease-out, transform ${qualityConfig.fadeInDuration}ms ease-out`,
-          }}
-        >
-          <Spline
-            scene={sceneToLoad}
-            onLoad={handleLoad}
-            onError={handleError}
-            style={{
-              width: '100%',
-              height: '100%',
-              display: 'block',
-              touchAction: 'manipulation',
-              pointerEvents: 'auto',
-              cursor: 'grab',
-              // GPU acceleration
-              transform: 'translateZ(0)',
-              backfaceVisibility: 'hidden',
-            }}
-          />
-        </div>
-      )}
-
-      {/* Smooth gradient fallback while loading or on error */}
-      <div
-        className="absolute inset-0 pointer-events-none"
+    <div className="absolute inset-0 w-full h-full overflow-hidden bg-black">
+      <Spline
+        scene="/scene1.splinecode"
+        onLoad={handleLoad}
         style={{
-          background: 'radial-gradient(ellipse at 50% 30%, rgba(59, 130, 246, 0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 40%), #000',
-          opacity: isLoaded && !hasError ? 0 : 1,
-          transition: `opacity ${qualityConfig.fadeInDuration}ms ease-out`,
+          width: '100%',
+          height: '100%',
+          display: 'block',
+          opacity: isLoaded ? 1 : 0,
+          transition: 'opacity 400ms ease-out',
         }}
       />
-      
-      {/* Loading shimmer for visual feedback */}
-      {!isLoaded && isRendering && (
+      {/* Loading placeholder */}
+      {!isLoaded && (
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: 'linear-gradient(90deg, transparent 0%, rgba(59, 130, 246, 0.03) 50%, transparent 100%)',
-            animation: 'desktopSplineLoadShimmer 1.5s ease-in-out infinite',
+            background: 'radial-gradient(ellipse at 50% 30%, rgba(59, 130, 246, 0.08) 0%, transparent 50%), #000',
           }}
         />
       )}
@@ -340,12 +52,6 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
 
 // --- NEON STYLES ---
 const NEON_STYLES = `
-  /* Desktop Spline loading shimmer animation */
-  @keyframes desktopSplineLoadShimmer {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
-  }
-
   @keyframes neon-pulse-desktop {
     0%, 100% { 
       text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, 0 0 16px #3b82f6;
