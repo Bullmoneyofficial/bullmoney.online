@@ -31,6 +31,12 @@ export interface UIStore {
     type: 'success' | 'error' | 'warning' | 'info';
   } | null;
   
+  // New message notification indicator for UltimateHub
+  hasNewMessages: boolean;
+  newMessageCount: number;
+  lastSeenMessageId: string | null;
+  newMessageChannel: string | null; // Which channel has new messages
+  
   // Actions
   openAffiliateModal: () => void;
   closeAffiliateModal: () => void;
@@ -52,6 +58,11 @@ export interface UIStore {
   
   showToast: (message: string, type: 'success' | 'error' | 'warning' | 'info') => void;
   hideToast: () => void;
+  
+  // New message notification actions
+  setNewMessages: (hasNew: boolean, count?: number, channel?: string | null) => void;
+  markMessagesSeen: (messageId: string) => void;
+  incrementNewMessages: (channel: string) => void;
 }
 
 export const useUIStore = create<UIStore>((set) => ({
@@ -75,6 +86,12 @@ export const useUIStore = create<UIStore>((set) => ({
   
   // Initial toast
   toast: null,
+  
+  // Initial new message state
+  hasNewMessages: false,
+  newMessageCount: 0,
+  lastSeenMessageId: null,
+  newMessageChannel: null,
   
   // Modal actions
   openAffiliateModal: () => set({ isAffiliateModalOpen: true }),
@@ -101,6 +118,24 @@ export const useUIStore = create<UIStore>((set) => ({
   // Toast actions
   showToast: (message, type) => set({ toast: { message, type } }),
   hideToast: () => set({ toast: null }),
+  
+  // New message notification actions
+  setNewMessages: (hasNew, count = 0, channel = null) => set({ 
+    hasNewMessages: hasNew, 
+    newMessageCount: count,
+    newMessageChannel: channel 
+  }),
+  markMessagesSeen: (messageId) => set({ 
+    hasNewMessages: false, 
+    newMessageCount: 0,
+    lastSeenMessageId: messageId,
+    newMessageChannel: null 
+  }),
+  incrementNewMessages: (channel) => set((state) => ({ 
+    hasNewMessages: true, 
+    newMessageCount: state.newMessageCount + 1,
+    newMessageChannel: channel 
+  })),
 }));
 
 // ============================================================================
@@ -130,4 +165,15 @@ export const useToast = () => useUIStore((s) => ({
   toast: s.toast,
   show: s.showToast,
   hide: s.hideToast,
+}));
+
+// New messages notification hook for UltimateHub
+export const useNewMessages = () => useUIStore((s) => ({
+  hasNewMessages: s.hasNewMessages,
+  newMessageCount: s.newMessageCount,
+  newMessageChannel: s.newMessageChannel,
+  lastSeenMessageId: s.lastSeenMessageId,
+  setNewMessages: s.setNewMessages,
+  markMessagesSeen: s.markMessagesSeen,
+  incrementNewMessages: s.incrementNewMessages,
 }));

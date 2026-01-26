@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Bell, BellOff, BellRing, Settings, ChevronUp,
   TrendingUp, MessageCircle, ShoppingBag, Crown, Volume2, VolumeX,
-  Check, X, Loader2, AlertCircle, Zap,
+  Check, X, Loader2, AlertCircle, Zap, Chrome,
   Smartphone, Share, Plus, ExternalLink, CheckCircle2, ArrowRight, ChevronDown
 } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -171,62 +171,83 @@ const IOSSetupGuide = memo(({ deviceInfo, onClose }: { deviceInfo: DeviceInfo; o
   // Different flows based on situation
   const getSteps = useCallback((): SetupStep[] => {
     if (deviceInfo.isInAppBrowser) {
-      // In-app browser flow
+      // In-app browser flow - recommend Chrome for Apple devices
       return [
         {
-          title: `Open in Safari`,
-          description: `You're viewing this in ${deviceInfo.inAppBrowserName || 'an in-app browser'}. Push notifications only work in Safari.`,
+          title: deviceInfo.isIOS ? `Open in Chrome or Safari` : `Open in Browser`,
+          description: `You're viewing this in ${deviceInfo.inAppBrowserName || 'an in-app browser'}. ${deviceInfo.isIOS ? 'For best results, use Chrome (recommended) or Safari.' : 'Push notifications only work in a real browser.'}`,
           icon: ExternalLink,
           action: {
-            label: 'Copy Link & Open Safari',
+            label: 'Copy Link',
             onClick: copyUrlToClipboard,
           },
-          tips: [
+          tips: deviceInfo.isIOS ? [
+            '💡 Chrome works BEST on iPhone for notifications',
             'Tap the ••• or share button in the app',
-            'Select "Open in Safari" or "Open in Browser"',
-            'Or copy the link and paste in Safari',
+            'Select "Open in Chrome" or "Open in Safari"',
+            'Or copy the link and paste in your browser',
+          ] : [
+            'Tap the ••• or share button in the app',
+            'Select "Open in Browser"',
+            'Or copy the link and paste in your browser',
           ],
         },
       ];
     }
 
     if (deviceInfo.isIOS && !deviceInfo.isPWA) {
-      // iOS Safari but not PWA
+      // iOS Safari but not PWA - recommend Chrome as alternative
       return [
         {
-          title: 'Add to Home Screen',
-          description: 'iPhone notifications require adding BullMoney to your home screen first.',
+          title: 'Setup Notifications',
+          description: 'iPhone notifications work best with Chrome, or you can add to Home Screen with Safari.',
           icon: Plus,
           action: {
             label: 'Show Me How',
             onClick: () => setCurrentStep(1),
           },
-          tips: [],
+          tips: ['💡 Tip: Chrome on iPhone has better notification support!'],
         },
         {
-          title: 'Step 1: Tap Share',
-          description: 'Tap the Share button at the bottom of Safari (square with arrow pointing up).',
+          title: 'Option 1: Use Chrome (Recommended)',
+          description: 'Chrome provides the best notification experience on iPhone. Just open this site in Chrome and enable notifications.',
+          icon: Chrome as any,
+          action: {
+            label: 'Copy Link for Chrome',
+            onClick: copyUrlToClipboard,
+          },
+          visual: '🌐',
+          tips: [
+            '✅ Best notification support on iPhone',
+            '✅ No "Add to Home Screen" required',
+            '✅ Works like Android notifications',
+            'Download Chrome from App Store if needed',
+          ],
+        },
+        {
+          title: 'Option 2: Add to Home Screen (Safari)',
+          description: 'If you prefer Safari, add BullMoney to your home screen for notifications.',
           icon: Share,
           action: {
             label: 'Next Step',
-            onClick: () => setCurrentStep(2),
+            onClick: () => setCurrentStep(3),
           },
           visual: '📤',
-          tips: ['Look for the square icon with an upward arrow', 'It\'s at the bottom of Safari'],
+          tips: ['Tap the Share button at the bottom of Safari', 'Look for the square icon with an upward arrow'],
         },
         {
-          title: 'Step 2: Add to Home Screen',
+          title: 'Tap "Add to Home Screen"',
           description: 'Scroll down in the share menu and tap "Add to Home Screen".',
           icon: Plus,
           action: {
             label: 'Next Step',
-            onClick: () => setCurrentStep(3),
+            onClick: () => setCurrentStep(4),
           },
           visual: '➕',
           tips: ['Scroll down in the share sheet', 'Look for "Add to Home Screen"'],
         },
         {
-          title: 'Step 3: Confirm & Open',
+          title: 'Confirm & Open',
           description: 'Tap "Add" in the top right, then open BullMoney from your home screen.',
           icon: CheckCircle2,
           action: {

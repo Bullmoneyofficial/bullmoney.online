@@ -3222,11 +3222,12 @@ DeviceCenterPanel.displayName = 'DeviceCenterPanel';
 // SUB-COMPONENTS: Telegram Feed
 // ============================================================================
 
-const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false }: { channel?: ChannelKey; isVip?: boolean }) => {
+const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false, onNewMessage }: { channel?: ChannelKey; isVip?: boolean; onNewMessage?: (channel: string, postId: string) => void }) => {
   const [posts, setPosts] = useState<TelegramPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const lastPostIdRef = useRef<string | null>(null);
   
   const channelConfig = TELEGRAM_CHANNELS[channel];
   const requiresVip = channelConfig.requiresVip && !isVip;
@@ -3250,6 +3251,15 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false }: { channe
         console.log('[TelegramChannelEmbed] API Response:', data);
         
         if (data.success && data.posts && data.posts.length > 0) { 
+          // Check for new messages
+          const latestPostId = data.posts[0]?.id;
+          if (lastPostIdRef.current && latestPostId && latestPostId !== lastPostIdRef.current) {
+            // New message detected!
+            console.log('[TelegramChannelEmbed] 🔔 New message detected in channel:', channel);
+            onNewMessage?.(channel, latestPostId);
+          }
+          lastPostIdRef.current = latestPostId;
+          
           setPosts(data.posts); 
           setError(false);
           setStatusMessage(null);
@@ -3269,7 +3279,7 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false }: { channe
     // Refresh every 30 seconds for VIP channel to get new messages
     const interval = setInterval(fetchPosts, channel === 'vip' ? 30000 : 300000);
     return () => clearInterval(interval);
-  }, [channel, requiresVip, isVip]);
+  }, [channel, requiresVip, isVip, onNewMessage]);
 
   if (requiresVip) {
     return (
@@ -4265,6 +4275,7 @@ export const UnifiedHubPanel = memo(({
   userId,
   userEmail,
   prices,
+  onNewMessage,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -4275,6 +4286,7 @@ export const UnifiedHubPanel = memo(({
   userId?: string;
   userEmail?: string;
   prices: { xauusd: string; btcusd: string };
+  onNewMessage?: (channel: string, postId: string) => void;
 }) => {
   // Mobile detection for smoother, more subtle animations
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
@@ -4835,7 +4847,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     
                     {/* Feed */}
                     <div className="flex-1 overflow-y-auto min-h-0 min-h-[200px] bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}>
-                      <TelegramChannelEmbed channel={activeChannel} isVip={isVip} />
+                      <TelegramChannelEmbed channel={activeChannel} isVip={isVip} onNewMessage={onNewMessage} />
                     </div>
                     
                     {/* View All Link */}
@@ -5821,7 +5833,9 @@ export const UnifiedFpsPill = memo(({
   isMinimized, 
   onToggleMinimized,
   onOpenPanel,
-  liteMode = false
+  liteMode = false,
+  hasNewMessages = false,
+  newMessageCount = 0
 }: {
   fps: number;
   deviceTier: string;
@@ -5830,6 +5844,8 @@ export const UnifiedFpsPill = memo(({
   onToggleMinimized: () => void;
   onOpenPanel: () => void;
   liteMode?: boolean;
+  hasNewMessages?: boolean;
+  newMessageCount?: number;
 }) => {
   const [isPinned, setIsPinned] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false); // Track if showing full content
@@ -6444,13 +6460,36 @@ export const UnifiedFpsPill = memo(({
                 className="px-2 py-1.5 relative z-10"
               >
                 {/* Minimized: White neon icon with glow */}
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 relative">
                   <TrendingUp 
                     className="w-4 h-4 text-white neon-white-icon" 
                     style={{ 
                       filter: 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #3b82f6)'
                     }} 
                   />
+                  {/* New Message Notification Badge - Minimized View */}
+                  {hasNewMessages && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-1.5 -right-1.5"
+                    >
+                      <div 
+                        className="w-3 h-3 rounded-full flex items-center justify-center"
+                        style={{
+                          background: '#3b82f6',
+                          boxShadow: '0 0 8px #3b82f6, 0 0 16px #3b82f6',
+                        }}
+                      >
+                        <Bell className="w-2 h-2 text-white" />
+                      </div>
+                      {/* Pulse animation */}
+                      <div 
+                        className="absolute inset-0 rounded-full animate-ping"
+                        style={{ background: '#3b82f6', opacity: 0.6 }}
+                      />
+                    </motion.div>
+                  )}
                 </div>
               </motion.div>
             ) : (
@@ -6480,12 +6519,68 @@ export const UnifiedFpsPill = memo(({
                   </div>
                 )}
                 
+                {/* New Message Notification Badge - Full View (shows count) */}
+                {hasNewMessages && !liteMode && (
+                  <motion.div
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    className="absolute -top-1.5 -right-1.5 z-30"
+                  >
+                    <div 
+                      className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full"
+                      style={{
+                        background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                        boxShadow: '0 0 12px #3b82f6, 0 0 24px rgba(59, 130, 246, 0.5)',
+                        border: '1px solid rgba(255, 255, 255, 0.3)',
+                      }}
+                    >
+                      <Bell 
+                        className="w-2.5 h-2.5 text-white" 
+                        style={{ filter: 'drop-shadow(0 0 4px #fff)' }}
+                      />
+                      {newMessageCount > 0 && (
+                        <span 
+                          className="text-[8px] font-black text-white"
+                          style={{ textShadow: '0 0 4px #fff' }}
+                        >
+                          {newMessageCount > 9 ? '9+' : newMessageCount}
+                        </span>
+                      )}
+                    </div>
+                    {/* Glowing pulse ring */}
+                    <div 
+                      className="absolute inset-0 rounded-full animate-ping"
+                      style={{ 
+                        background: 'rgba(59, 130, 246, 0.4)',
+                        animationDuration: '1.5s' 
+                      }}
+                    />
+                  </motion.div>
+                )}
+                
                 {/* Mobile: Always compact view with prices - with scroll-intensified neons */}
-                <div className="flex md:hidden flex-col items-center justify-center gap-0.5 min-w-[36px]">
+                <div className="flex md:hidden flex-col items-center justify-center gap-0.5 min-w-[36px] relative">
                   <TrendingUp 
                     className="w-2.5 h-2.5 text-white neon-white-icon" 
                     style={{ filter: dynamicStyles.iconFilter }} 
                   />
+                  {/* Mobile notification bell inline */}
+                  {hasNewMessages && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ repeat: Infinity, duration: 1.5 }}
+                      className="absolute -top-1 -right-0.5"
+                    >
+                      <Bell 
+                        className="w-2.5 h-2.5 text-blue-400" 
+                        style={{ 
+                          filter: 'drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6)'
+                        }}
+                      />
+                    </motion.div>
+                  )}
                   <div className="flex items-center gap-1">
                     <div className="flex items-center gap-0.5">
                       <Coins 
@@ -7134,6 +7229,11 @@ export function UltimateHub() {
   const [mounted, setMounted] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   
+  // New message notification state
+  const [hasNewMessages, setHasNewMessages] = useState(false);
+  const [newMessageCount, setNewMessageCount] = useState(0);
+  const lastSeenMessageIdRef = useRef<string | null>(null);
+  
   const { fps, deviceTier, jankScore } = useFpsMonitor();
   const prices = useLivePrices();
   const { isAdmin, userId, userEmail } = useAdminCheck();
@@ -7159,6 +7259,38 @@ export function UltimateHub() {
     setUltimateHubOpen
   } = useUIState();
   const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects, isDesktopLiteMode } = useUnifiedPerformance();
+
+  // Handle new message detection from Telegram embeds
+  const handleNewMessage = useCallback((channel: string, postId: string) => {
+    console.log('[UltimateHub] 🔔 New message detected!', { channel, postId });
+    
+    // Only increment if this is a truly new message
+    if (postId !== lastSeenMessageIdRef.current) {
+      setHasNewMessages(true);
+      setNewMessageCount(prev => prev + 1);
+      
+      // Play notification sound (optional)
+      try {
+        if (typeof window !== 'undefined' && 'Audio' in window) {
+          const audio = new Audio('/sounds/notification.mp3');
+          audio.volume = 0.3;
+          audio.play().catch(() => {}); // Ignore autoplay errors
+        }
+      } catch {}
+    }
+  }, []);
+  
+  // Clear notifications when panel is opened
+  useEffect(() => {
+    if (isUltimateHubOpen && hasNewMessages) {
+      // Small delay before clearing to let user see the notification
+      const timeout = setTimeout(() => {
+        setHasNewMessages(false);
+        setNewMessageCount(0);
+      }, 1000);
+      return () => clearTimeout(timeout);
+    }
+  }, [isUltimateHubOpen, hasNewMessages]);
 
   // Inject neon styles
   useEffect(() => {
@@ -7218,6 +7350,8 @@ export function UltimateHub() {
           onToggleMinimized={() => setIsMinimized(!isMinimized)}
           onOpenPanel={() => setUltimateHubOpen(true)}
           liteMode={isDesktopLiteMode}
+          hasNewMessages={hasNewMessages}
+          newMessageCount={newMessageCount}
         />
       )}
 
@@ -7232,6 +7366,7 @@ export function UltimateHub() {
         userId={userId}
         userEmail={userEmail}
         prices={prices}
+        onNewMessage={handleNewMessage}
       />
     </>
   );
