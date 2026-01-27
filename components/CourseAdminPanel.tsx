@@ -325,8 +325,8 @@ export default function CourseAdminPanel() {
             {/* Module Edit Form */}
             {editingModule && (
               <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                <div className="bg-gray-900 border-2 border-blue-500 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                  <div className="flex items-center justify-between mb-6">
+                <div className="bg-gray-900 border-2 border-blue-500 rounded-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
+                  <div className="flex items-center justify-between p-6 pb-4 border-b border-blue-500/30">
                     <h3 className="text-2xl font-bold text-blue-400" style={{ textShadow: '0 0 8px #3b82f6' }}>
                       {editingModule.id ? 'Edit Module' : 'New Module'}
                     </h3>
@@ -335,7 +335,7 @@ export default function CourseAdminPanel() {
                     </button>
                   </div>
 
-                  <div className="space-y-4">
+                  <div className="space-y-4 overflow-y-auto flex-1 p-6">
                     <div>
                       <label className="block text-sm font-semibold text-blue-400 mb-2">Title</label>
                       <input
@@ -377,7 +377,10 @@ export default function CourseAdminPanel() {
                       <label className="text-white font-semibold">Published</label>
                     </div>
 
-                    <div className="flex gap-3 pt-4">
+                  </div>
+                  
+                  <div className="border-t border-blue-500/30 p-4 bg-gray-900">
+                    <div className="flex gap-3">
                       <button
                         onClick={saveModule}
                         className="flex-1 bg-blue-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-400 transition-all flex items-center justify-center gap-2"
@@ -472,8 +475,8 @@ export default function CourseAdminPanel() {
             {/* Lesson Edit Form */}
             {editingLesson && (
               <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                <div className="bg-gray-900 border-2 border-blue-500 rounded-xl p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-                  <div className="flex items-center justify-between mb-6">
+                <div className="bg-gray-900 border-2 border-blue-500 rounded-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
+                  <div className="flex items-center justify-between p-6 pb-4 border-b border-blue-500/30">
                     <h3 className="text-2xl font-bold text-blue-400" style={{ textShadow: '0 0 8px #3b82f6' }}>
                       {editingLesson.id ? 'Edit Lesson' : 'New Lesson'}
                     </h3>
@@ -482,7 +485,7 @@ export default function CourseAdminPanel() {
                     </button>
                   </div>
 
-                  <div className="space-y-4">
+                  <div className="space-y-4 overflow-y-auto flex-1 p-6">
                     <div>
                       <label className="block text-sm font-semibold text-blue-400 mb-2">Title</label>
                       <input
@@ -626,7 +629,10 @@ export default function CourseAdminPanel() {
                       </div>
                     </div>
 
-                    <div className="flex gap-3 pt-4">
+                  </div>
+                  
+                  <div className="border-t border-blue-500/30 p-4 bg-gray-900">
+                    <div className="flex gap-3">
                       <button
                         onClick={saveLesson}
                         className="flex-1 bg-blue-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-400 transition-all flex items-center justify-center gap-2"

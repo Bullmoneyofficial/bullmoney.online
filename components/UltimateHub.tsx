@@ -2707,20 +2707,20 @@ const DeviceCenterPanel = memo(({
           </div>
 
           {/* Tabs */}
-          <div className="flex border-b border-blue-500/20">
+          <div className="flex border-b border-blue-500/20 overflow-x-auto overflow-y-hidden scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ touchAction: 'pan-x pinch-zoom' }}>
             {DEVICE_PANEL_TABS.map(tab => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[10px] font-semibold transition-all ${
+                  className={`flex-1 min-w-[70px] flex items-center justify-center gap-1.5 py-3 px-2 sm:px-3 text-[10px] sm:text-[11px] font-semibold transition-all whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'text-blue-400 border-b-2 border-blue-400 bg-blue-500/10'
                       : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5'
                   }`}
                 >
-                  <Icon className="w-3.5 h-3.5" />
+                  <Icon className="w-4 h-4" />
                   <span className="hidden sm:inline">{tab.label}</span>
                 </button>
               );
@@ -4753,7 +4753,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
             </div>
             
             {/* Tab Navigation */}
-            <div className="flex items-stretch border-b border-blue-500/30 bg-black" style={{ boxShadow: '0 0 12px rgba(59, 130, 246, 0.3), inset 0 0 12px rgba(59, 130, 246, 0.1)' }}>
+            <div className="flex items-stretch border-b border-blue-500/30 bg-black overflow-x-auto overflow-y-hidden scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ boxShadow: '0 0 12px rgba(59, 130, 246, 0.3), inset 0 0 12px rgba(59, 130, 246, 0.1)', touchAction: 'pan-x pinch-zoom' }}>
               {UNIFIED_HUB_TABS.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -4767,15 +4767,15 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     }}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className={`flex-1 flex flex-col items-center justify-center gap-1 py-2.5 px-2 border-b-2 transition-all ${
+                    className={`flex-1 min-w-[80px] sm:min-w-[100px] flex flex-col items-center justify-center gap-1.5 py-3 px-3 sm:px-4 border-b-2 transition-all whitespace-nowrap ${
                       isActive 
                         ? 'bg-blue-500/20 text-blue-300 border-blue-400 neon-blue-text' 
                         : 'text-blue-400/50 border-transparent hover:text-blue-300/70 hover:bg-blue-500/10'
                     }`}
                     style={isActive ? { textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' } : {}}
                   >
-                    <Icon className="w-4 h-4" style={isActive ? { filter: 'drop-shadow(0 0 4px #3b82f6)' } : {}} />
-                    <span className="text-[9px] font-bold uppercase tracking-widest">{tab.label}</span>
+                    <Icon className="w-4 h-4 sm:w-5 sm:h-5" style={isActive ? { filter: 'drop-shadow(0 0 4px #3b82f6)' } : {}} />
+                    <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">{tab.label}</span>
                   </motion.button>
                 );
               })}
@@ -4794,7 +4794,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     className="h-full flex flex-col"
                   >
                     {/* Symbol Selector */}
-                    <div className="flex gap-1 p-2 overflow-x-auto overflow-y-hidden border-b border-blue-500/30 bg-black scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)', touchAction: 'pan-x pinch-zoom' }}>
+                    <div className="flex gap-1.5 sm:gap-2 p-2 sm:p-3 overflow-x-auto overflow-y-hidden border-b border-blue-500/30 bg-black scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)', touchAction: 'pan-x pinch-zoom' }}>
                       {TRADING_SYMBOLS.map(symbol => {
                         const Icon = symbol.icon;
                         const isActive = selectedSymbol.id === symbol.id;
@@ -4804,14 +4804,14 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                             onClick={() => setSelectedSymbol(symbol)}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold whitespace-nowrap transition-all ${
+                            className={`flex items-center gap-1.5 min-w-[65px] px-3 py-2 rounded-lg text-[10px] sm:text-[11px] font-semibold whitespace-nowrap transition-all ${
                               isActive
                                 ? 'bg-blue-500/30 text-blue-300 border border-blue-400/60 neon-blue-text'
                                 : 'bg-black/40 text-blue-400/60 border border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400'
                             }`}
                             style={isActive ? { boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)' } : {}}
                           >
-                            <Icon className="w-3 h-3" style={isActive ? { filter: 'drop-shadow(0 0 2px #3b82f6)' } : {}} />
+                            <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={isActive ? { filter: 'drop-shadow(0 0 2px #3b82f6)' } : {}} />
                             <span>{symbol.abbr}</span>
                           </motion.button>
                         );
@@ -4883,13 +4883,13 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                           >
                             {/* Impact Filter */}
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] text-zinc-400 w-14">Impact:</span>
-                              <div className="flex gap-1 flex-1">
+                              <span className="text-[10px] text-zinc-400 w-14 flex-shrink-0">Impact:</span>
+                              <div className="flex gap-1.5 flex-1">
                                 {(['all', 'high', 'medium', 'low'] as CalendarImpact[]).map(impact => (
                                   <button
                                     key={impact}
                                     onClick={() => setCalendarImpact(impact)}
-                                    className={`flex-1 py-1 px-2 rounded text-[9px] font-semibold transition-all ${
+                                    className={`flex-1 min-w-[52px] py-1.5 px-2 rounded text-[10px] font-semibold transition-all whitespace-nowrap ${
                                       calendarImpact === impact
                                         ? 'bg-blue-500/30 text-blue-300 border border-blue-400/60 neon-blue-text'
                                         : 'bg-black/40 text-blue-400/60 border border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400'
@@ -4904,13 +4904,13 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                             
                             {/* Country Filter */}
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] text-zinc-400 w-14">Currency:</span>
-                              <div className="flex gap-1 flex-1 overflow-x-auto overflow-y-hidden pb-1 scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ touchAction: 'pan-x pinch-zoom' }}>
+                              <span className="text-[10px] text-zinc-400 w-14 flex-shrink-0">Currency:</span>
+                              <div className="flex gap-1.5 flex-1 overflow-x-auto overflow-y-hidden pb-1 scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ touchAction: 'pan-x pinch-zoom' }}>
                                 {CALENDAR_COUNTRIES.map(country => (
                                   <button
                                     key={country.id}
                                     onClick={() => setCalendarCountry(country.id)}
-                                    className={`flex items-center gap-0.5 py-1 px-1.5 rounded text-[9px] font-semibold transition-all whitespace-nowrap ${
+                                    className={`flex items-center gap-1 py-1.5 px-2.5 rounded text-[10px] font-semibold transition-all whitespace-nowrap flex-shrink-0 ${
                                       calendarCountry === country.id
                                         ? 'bg-blue-500/30 text-blue-300 border border-blue-400/60 neon-blue-text'
                                         : 'bg-black/40 text-blue-400/60 border border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400'
@@ -4951,7 +4951,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     </div>
                     
                     {/* Channel Tabs */}
-                    <div className="flex items-center gap-1 p-2 border-b border-blue-500/30 overflow-x-auto overflow-y-hidden bg-black scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)', touchAction: 'pan-x pinch-zoom' }}>
+                    <div className="flex items-center gap-1.5 sm:gap-2 p-2 sm:p-3 border-b border-blue-500/30 overflow-x-auto overflow-y-hidden bg-black scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)', touchAction: 'pan-x pinch-zoom' }}>
                       {(Object.keys(TELEGRAM_CHANNELS) as ChannelKey[]).map(key => {
                         const ch = TELEGRAM_CHANNELS[key];
                         const Icon = ch.icon;
@@ -4962,16 +4962,16 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                           <button
                             key={key}
                             onClick={() => setActiveChannel(key)}
-                            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-medium transition-all whitespace-nowrap flex-shrink-0 ${
+                            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] sm:text-[11px] font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                               isActive
                                 ? 'bg-blue-500/30 text-blue-300 border border-blue-400/60 neon-blue-text'
                                 : 'bg-black/40 text-blue-400/60 border border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400'
                             }`}
                             style={isActive ? { boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' } : {}}
                           >
-                            <Icon className="w-3 h-3" style={isActive ? { filter: 'drop-shadow(0 0 2px #3b82f6)' } : {}} />
+                            <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={isActive ? { filter: 'drop-shadow(0 0 2px #3b82f6)' } : {}} />
                             <span>{ch.name}</span>
-                            {isLocked && <Lock className="w-2.5 h-2.5 opacity-60" />}
+                            {isLocked && <Lock className="w-3 h-3 opacity-60" />}
                           </button>
                         );
                       })}
@@ -4985,14 +4985,14 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                           window.dispatchEvent(new CustomEvent('openAdminVIPPanel'));
                           onClose();
                         }}
-                        className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ml-auto flex-shrink-0 ${
+                        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] sm:text-[11px] font-semibold transition-all whitespace-nowrap ml-auto flex-shrink-0 ${
                           isAdmin 
                             ? 'bg-blue-500/30 text-blue-300 border border-blue-400/60 neon-blue-text'
                             : 'bg-black/40 text-blue-400/60 border border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400'
                         }`}
                         style={isAdmin ? { boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)' } : {}}
                       >
-                        <Shield className="w-3.5 h-3.5" style={isAdmin ? { filter: 'drop-shadow(0 0 2px #3b82f6)' } : {}} />
+                        <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={isAdmin ? { filter: 'drop-shadow(0 0 2px #3b82f6)' } : {}} />
                         <span>Admin</span>
                       </motion.button>
                     </div>
@@ -5021,17 +5021,17 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                           onClick={handleCopyLink}
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-blue-500/30 text-blue-300 font-semibold text-xs border border-blue-400/60 neon-blue-text"
+                          className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-blue-500/30 text-blue-300 font-semibold text-xs sm:text-sm border border-blue-400/60 neon-blue-text"
                           style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}
                         >
-                          {copied ? <Check className="w-3 h-3" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} /> : <Copy className="w-3 h-3" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />}
+                          {copied ? <Check className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} /> : <Copy className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />}
                           {copied ? 'Copied!' : 'Copy Link'}
                         </motion.button>
                         
                         <div className="flex-1" />
                       </div>
                       
-                      <div className="grid grid-cols-4 gap-1.5">
+                      <div className="grid grid-cols-4 gap-2">
                         {socialLinks.map(link => {
                           const Icon = link.icon;
                           return (
@@ -5042,10 +5042,10 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                               rel="noopener noreferrer"
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
-                              className="flex flex-col items-center justify-center gap-1 py-2 px-2 rounded-lg bg-blue-500/30 text-blue-300 font-semibold text-[10px] border border-blue-400/60 neon-blue-text transition-all"
+                              className="flex flex-col items-center justify-center gap-1.5 py-3 px-2 rounded-lg bg-blue-500/30 text-blue-300 font-semibold text-[10px] border border-blue-400/60 neon-blue-text transition-all"
                               style={{ boxShadow: '0 0 6px rgba(59, 130, 246, 0.3)' }}
                             >
-                              <Icon className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                              <Icon className="w-5 h-5" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
                               <span className="hidden sm:block">{link.name}</span>
                             </motion.a>
                           );
@@ -5065,21 +5065,21 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     className="h-full flex flex-col"
                   >
                     {/* TV Tabs */}
-                    <div className="flex gap-2 p-2 border-b border-blue-500/30 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}>
+                    <div className="flex gap-2 p-2 sm:p-3 border-b border-blue-500/30 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}>
                       {(['featured', 'live'] as const).map(tab => (
                         <motion.button
                           key={tab}
                           onClick={() => setTvTab(tab)}
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
+                          className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
                             tvTab === tab
                               ? 'bg-blue-500/30 text-blue-300 border border-blue-400/60 neon-blue-text'
                               : 'bg-black/40 text-blue-400/60 border border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400'
                           }`}
                           style={tvTab === tab ? { boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)' } : {}}
                         >
-                          {tab === 'featured' ? <Play className="w-3.5 h-3.5" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} /> : <Radio className="w-3.5 h-3.5" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />}
+                          {tab === 'featured' ? <Play className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} /> : <Radio className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />}
                           <span>{tab === 'featured' ? 'Featured' : 'Live Streams'}</span>
                         </motion.button>
                       ))}
@@ -5098,7 +5098,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     </div>
                     
                     {/* Video Controls */}
-                    <div className="p-2 space-y-2">
+                    <div className="p-2 sm:p-3 space-y-2">
                       {tvTab === 'featured' && (
                         <div className="flex gap-2">
                           {FEATURED_VIDEOS.map((_, idx) => (
@@ -5107,7 +5107,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                               onClick={() => setFeaturedIndex(idx)}
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
-                              className={`flex-1 py-2 rounded-lg text-xs font-semibold ${
+                              className={`flex-1 min-w-[80px] py-2.5 rounded-lg text-xs sm:text-sm font-semibold ${
                                 featuredIndex === idx
                                   ? 'bg-blue-500/30 text-blue-300 border border-blue-400/60 neon-blue-text'
                                   : 'bg-black/40 text-blue-400/60 border border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400'
@@ -5121,21 +5121,21 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                       )}
                       
                       {tvTab === 'live' && (
-                        <div className="flex gap-1 overflow-x-auto overflow-y-hidden pb-1 scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ touchAction: 'pan-x pinch-zoom' }}>
+                        <div className="flex gap-1.5 overflow-x-auto overflow-y-hidden pb-1 scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ touchAction: 'pan-x pinch-zoom' }}>
                           {TRADING_LIVE_CHANNELS.map((channel, idx) => (
                             <motion.button
                               key={channel.id}
                               onClick={() => setTradingChannelIndex(idx)}
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
-                              className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-semibold whitespace-nowrap ${
+                              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] sm:text-[11px] font-semibold whitespace-nowrap flex-shrink-0 ${
                                 tradingChannelIndex === idx
                                   ? 'bg-blue-500/30 text-blue-300 border border-blue-400/60 neon-blue-text'
                                   : 'bg-black/40 text-blue-400/60 border border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400'
                               }`}
                               style={tradingChannelIndex === idx ? { boxShadow: '0 0 6px rgba(59, 130, 246, 0.3)' } : {}}
                             >
-                              <Radio className="w-3 h-3" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                              <Radio className="w-3.5 h-3.5" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
                               {channel.name}
                             </motion.button>
                           ))}

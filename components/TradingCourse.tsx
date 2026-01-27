@@ -488,8 +488,8 @@ export default function TradingCourse() {
                     )}
                   </div>
 
-                  {/* Lesson Content - Scrollable */}
-                  <div className="p-3 sm:p-4 max-h-[calc(100vh-300px)] lg:max-h-[calc(100vh-200px)] overflow-y-auto">
+                  {/* Lesson Content - Scrollable with proper mobile handling */}
+                  <div className="p-3 sm:p-4 max-h-[calc(100vh-280px)] sm:max-h-[calc(100vh-300px)] lg:max-h-[calc(100vh-200px)] overflow-y-auto">
                     {/* Video Content */}
                     {selectedLesson.content_type === 'video' && selectedLesson.video_url && (
                       <div className="mb-3 sm:mb-4">
@@ -531,9 +531,9 @@ export default function TradingCourse() {
                       </div>
                     )}
 
-                    {/* Complete Lesson Button - Sticky at bottom on mobile */}
+                    {/* Complete Lesson Button - Always accessible with proper spacing */}
                     {user && !getLessonProgress(selectedLesson.id)?.completed && (
-                      <div className="sticky bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black to-transparent pt-4 -mx-3 -mb-3 px-3 pb-3 sm:relative sm:bg-none sm:pt-0 sm:mx-0 sm:mb-0 sm:px-0 sm:pb-0">
+                      <div className="mt-4 pt-4 border-t border-blue-500/20">
                         <button
                           onClick={() => markLessonComplete(selectedLesson.id)}
                           className="w-full bg-blue-500 hover:bg-blue-400 text-white font-bold py-3 px-4 sm:px-6 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base"
