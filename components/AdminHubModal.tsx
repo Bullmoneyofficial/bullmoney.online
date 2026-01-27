@@ -23,6 +23,7 @@ import { createSupabaseClient } from "@/lib/supabase";
 import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 import CourseAdminPanel from "@/components/CourseAdminPanel";
 import AffiliateAdminPanel from "@/app/recruit/AffiliateAdminPanel";
+import AdminAffiliateCalculator from "@/components/AdminAffiliateCalculator";
 
 // Generate a reasonably unique id when inserting rows from the client
 const safeId = () =>
@@ -250,6 +251,7 @@ export function AdminHubModal({
   const [activeTab, setActiveTab] = useState<
     "products" | "services" | "livestream" | "analysis" | "recruits" | "course" | "affiliate"
   >("products");
+  const [affiliateView, setAffiliateView] = useState<"calculator" | "admin">("calculator");
   const [busy, setBusy] = useState(false);
   const isSyncing = useRef(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -1533,7 +1535,40 @@ export function AdminHubModal({
                     {activeTab === "analysis" && renderAnalyses()}
                     {activeTab === "recruits" && renderRecruits()}
                     {activeTab === "course" && <CourseAdminPanel />}
-                    {activeTab === "affiliate" && <AffiliateAdminPanel />}
+                    {activeTab === "affiliate" && (
+                      <div className="space-y-4">
+                        {/* Toggle between Calculator and Admin Panel */}
+                        <div className="flex gap-2 p-1 bg-slate-900/50 rounded-lg border border-slate-800 w-fit">
+                          <button
+                            onClick={() => setAffiliateView("calculator")}
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                              affiliateView === "calculator"
+                                ? "bg-blue-500 text-white"
+                                : "text-slate-400 hover:text-slate-300"
+                            }`}
+                          >
+                            Calculator
+                          </button>
+                          <button
+                            onClick={() => setAffiliateView("admin")}
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                              affiliateView === "admin"
+                                ? "bg-blue-500 text-white"
+                                : "text-slate-400 hover:text-slate-300"
+                            }`}
+                          >
+                            Admin Panel
+                          </button>
+                        </div>
+
+                        {/* Content */}
+                        {affiliateView === "calculator" ? (
+                          <AdminAffiliateCalculator />
+                        ) : (
+                          <AffiliateAdminPanel />
+                        )}
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div className="flex flex-col items-center justify-center gap-3 py-12 text-center text-slate-200">
