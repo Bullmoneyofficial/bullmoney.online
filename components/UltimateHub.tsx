@@ -2721,7 +2721,7 @@ const DeviceCenterPanel = memo(({
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 min-w-[70px] flex items-center justify-center gap-1.5 py-4 sm:py-3 px-2 sm:px-3 text-[10px] sm:text-[11px] font-semibold transition-all whitespace-nowrap ${
+                  className={`flex-1 min-w-[70px] flex items-center justify-center gap-1.5 py-5 sm:py-3 px-2 sm:px-3 text-[10px] sm:text-[11px] font-semibold transition-all whitespace-nowrap min-h-[48px] sm:min-h-0 ${
                     activeTab === tab.id
                       ? 'text-blue-400 border-b-2 border-blue-400 bg-blue-500/10'
                       : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5'
@@ -4888,7 +4888,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     }}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className={`flex-1 min-w-[80px] sm:min-w-[100px] flex flex-col items-center justify-center gap-1.5 py-4 sm:py-3 px-3 sm:px-4 border-b-2 transition-all whitespace-nowrap ${
+                    className={`flex-1 min-w-[80px] sm:min-w-[100px] flex flex-col items-center justify-center gap-1.5 py-5 sm:py-3 px-3 sm:px-4 border-b-2 transition-all whitespace-nowrap min-h-[60px] sm:min-h-0 ${
                       isActive 
                         ? 'bg-blue-500/20 text-blue-300 border-blue-400 neon-blue-text' 
                         : 'text-blue-400/50 border-transparent hover:text-blue-300/70 hover:bg-blue-500/10'
