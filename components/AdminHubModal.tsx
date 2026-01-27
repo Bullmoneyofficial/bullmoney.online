@@ -52,11 +52,12 @@ type TabButtonProps = {
 const TabButton: React.FC<TabButtonProps> = ({ label, icon, active, onClick }) => (
   <button
     onClick={onClick}
-    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm border transition-colors ${
+    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm border transition-colors flex-shrink-0 whitespace-nowrap scroll-snap-align-start ${
       active
         ? "border-blue-500/70 bg-blue-500/10 text-white"
         : "border-slate-800 bg-slate-900/60 text-slate-300 hover:border-slate-700"
     }`}
+    style={{ scrollSnapAlign: 'start' }}
   >
     {icon}
     <span>{label}</span>
@@ -1439,10 +1440,9 @@ export function AdminHubModal({
               <div className="flex items-center gap-2">
                 <button
                   onClick={loadAll}
-                  className="px-3 py-1 text-xs rounded-md bg-slate-800 text-slate-200 border border-slate-700 flex items-center gap-1 hover:bg-slate-700 transition-colors"
-                  title={shouldSkipHeavyEffects ? "Manual refresh (auto-refresh disabled on mobile)" : "Sync all data"}
+                  className="px-3 py-1 text-xs rounded-md bg-slate-800 text-slate-200 border border-slate-700 flex items-center gap-1"
                 >
-                  <Database className="w-4 h-4" /> {shouldSkipHeavyEffects ? "Refresh" : "Sync"}
+                  <Database className="w-4 h-4" /> Sync
                 </button>
                 <button
                   onClick={onClose}
@@ -1453,7 +1453,7 @@ export function AdminHubModal({
               </div>
             </div>
 
-              <div className="px-3 sm:px-4 py-2 flex flex-nowrap sm:flex-wrap gap-1 sm:gap-2 overflow-x-auto overflow-y-hidden border-b border-slate-800 bg-slate-900/60 scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ touchAction: 'pan-x pinch-zoom' }}>
+              <div className="px-3 sm:px-4 py-2 flex flex-nowrap sm:flex-wrap gap-1 sm:gap-2 overflow-x-auto overflow-y-hidden border-b border-slate-800 bg-slate-900/60 scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain] [scroll-snap-type:x_mandatory]" style={{ touchAction: 'pan-x pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
               <TabButton
                 label="Products"
                 icon={<Package className="w-4 h-4" />}
