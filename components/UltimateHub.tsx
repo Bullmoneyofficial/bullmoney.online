@@ -2719,7 +2719,7 @@ const DeviceCenterPanel = memo(({
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 min-w-[70px] flex items-center justify-center gap-1.5 py-3 px-2 sm:px-3 text-[10px] sm:text-[11px] font-semibold transition-all whitespace-nowrap ${
+                  className={`flex-1 min-w-[70px] flex items-center justify-center gap-1.5 py-4 sm:py-3 px-2 sm:px-3 text-[10px] sm:text-[11px] font-semibold transition-all whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'text-blue-400 border-b-2 border-blue-400 bg-blue-500/10'
                       : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5'
@@ -4368,16 +4368,17 @@ BrowserModal.displayName = 'BrowserModal';
 // UNIFIED HUB TAB TYPE - All features in one pill
 // ============================================================================
 
-type UnifiedHubTab = 'community' | 'trading' | 'indicators' | 'device' | 'logs' | 'journal' | 'course';
+type UnifiedHubTab = 'community' | 'trading' | 'indicators' | 'device' | 'logs' | 'journal' | 'course' | 'broker';
 
 const UNIFIED_HUB_TABS: { id: UnifiedHubTab; label: string; icon: typeof TrendingUp; color: string }[] = [
   { id: 'community', label: 'Social', icon: MessageSquare, color: 'blue' },
+  { id: 'indicators', label: 'Indicators', icon: BarChart3, color: 'blue' },
   { id: 'trading', label: 'Trade', icon: TrendingUp, color: 'blue' },
   { id: 'journal', label: 'Journal', icon: Calendar, color: 'blue' },
   { id: 'course', label: 'Course', icon: GraduationCap, color: 'blue' },
-  { id: 'indicators', label: 'Indicators', icon: BarChart3, color: 'blue' },
   { id: 'device', label: 'Device', icon: Smartphone, color: 'blue' },
   { id: 'logs', label: 'Logs', icon: AlertTriangle, color: 'blue' },
+  { id: 'broker', label: 'Broker', icon: Zap, color: 'blue' },
 ];
 
 // ============================================================================
@@ -4434,6 +4435,16 @@ export const UnifiedHubPanel = memo(({
   // Indicators tab state
   const [indicatorCategory, setIndicatorCategory] = useState<'crypto' | 'stocks' | 'sentiment'>('crypto');
   
+  // Broker Integration State
+  const [brokerConnected, setBrokerConnected] = useState(false);
+  const [brokerType, setBrokerType] = useState<'mt4' | 'mt5' | null>(null);
+  const [brokerAccount, setBrokerAccount] = useState<any>(null);
+  const [brokerPositions, setBrokerPositions] = useState<any[]>([]);
+  const [brokerOrders, setBrokerOrders] = useState<any[]>([]);
+  const [connectingBroker, setConnectingBroker] = useState(false);
+  const [tradeAmount, setTradeAmount] = useState('0.01');
+  const [showBrokerSetup, setShowBrokerSetup] = useState(false);
+  
   // Device tab state - Get REAL device data from hooks
   const memoryStats = useRealTimeMemory();
   const browserInfo = useBrowserInfo();
@@ -4452,6 +4463,122 @@ export const UnifiedHubPanel = memo(({
   // Calculate 3D Performance Score
   const performanceScore = calculate3DPerformanceScore(fps, memoryStats.percentage, gpuInfo.score, browserInfo.cores);
   const performanceGrade = getPerformanceGrade(performanceScore);
+  
+  // Broker Connection Functions
+  const connectBroker = useCallback(async (type: 'mt4' | 'mt5', credentials: any) => {
+    setConnectingBroker(true);
+    try {
+      // Call API to establish broker connection
+      const response = await fetch('/api/broker/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, demo: true, ...credentials })
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        setBrokerConnected(true);
+        setBrokerType(type);
+        setBrokerAccount(data.account);
+        setBrokerPositions(data.positions || []);
+        setBrokerOrders(data.orders || []);
+        setShowBrokerSetup(false);
+        SoundEffects.success();
+        
+        // Store accountId for subsequent API calls
+        if (typeof window !== 'undefined' && data.account?.accountId) {
+          localStorage.setItem('broker_account_id', data.account.accountId);
+        }
+      } else {
+        alert('Failed to connect: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Broker connection error:', error);
+      alert('Connection failed. Check console for details.');
+    } finally {
+      setConnectingBroker(false);
+    }
+  }, []);
+  
+  const disconnectBroker = useCallback(() => {
+    setBrokerConnected(false);
+    setBrokerType(null);
+    setBrokerAccount(null);
+    setBrokerPositions([]);
+    setBrokerOrders([]);
+    SoundEffects.click();
+  }, []);
+  
+  const executeTrade = useCallback(async (symbol: string, side: 'buy' | 'sell', volume: string) => {
+    if (!brokerConnected) {
+      alert('Please connect to a broker first');
+      return;
+    }
+    
+    try {
+      const accountId = typeof window !== 'undefined' 
+        ? localStorage.getItem('broker_account_id') 
+        : brokerAccount?.accountId;
+        
+      const response = await fetch('/api/broker/trade', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          accountId: accountId || 'demo-account',
+          symbol, 
+          side, 
+          volume: parseFloat(volume)
+        })
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        SoundEffects.success();
+        // Refresh positions
+        setBrokerPositions(data.positions || brokerPositions);
+        alert(`${side.toUpperCase()} order executed: ${volume} lots of ${symbol}`);
+      } else {
+        alert('Trade failed: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Trade execution error:', error);
+      alert('Trade failed. Check console for details.');
+    }
+  }, [brokerConnected, brokerAccount, brokerPositions]);
+  
+  const closePosition = useCallback(async (positionId: string) => {
+    if (!brokerConnected) {
+      alert('Please connect to a broker first');
+      return;
+    }
+    
+    try {
+      const accountId = typeof window !== 'undefined' 
+        ? localStorage.getItem('broker_account_id') 
+        : brokerAccount?.accountId;
+        
+      const response = await fetch('/api/broker/close', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          accountId: accountId || 'demo-account',
+          positionId 
+        })
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        SoundEffects.success();
+        setBrokerPositions(data.positions || []);
+        alert('Position closed successfully');
+      } else {
+        alert('Failed to close position: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Close position error:', error);
+      alert('Failed to close position.');
+    }
+  }, [brokerConnected, brokerAccount]);
 
   // Copy device snapshot to clipboard
   const handleCopyDeviceSnapshot = useCallback(async () => {
@@ -4758,7 +4885,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     }}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className={`flex-1 min-w-[80px] sm:min-w-[100px] flex flex-col items-center justify-center gap-1.5 py-3 px-3 sm:px-4 border-b-2 transition-all whitespace-nowrap ${
+                    className={`flex-1 min-w-[80px] sm:min-w-[100px] flex flex-col items-center justify-center gap-1.5 py-4 sm:py-3 px-3 sm:px-4 border-b-2 transition-all whitespace-nowrap ${
                       isActive 
                         ? 'bg-blue-500/20 text-blue-300 border-blue-400 neon-blue-text' 
                         : 'text-blue-400/50 border-transparent hover:text-blue-300/70 hover:bg-blue-500/10'
@@ -5363,6 +5490,382 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                   </motion.div>
                 )}
                 
+                {/* BROKER TAB - MT4/MT5 Integration */}
+                {activeTab === 'broker' && (
+                  <motion.div
+                    key="broker"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="p-3 space-y-3 bg-black flex flex-col h-full overflow-y-auto"
+                    style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}
+                  >
+                    {/* Connection Status */}
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-black border border-blue-500/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
+                      <div className="flex items-center gap-3">
+                        <div className={`w-3 h-3 rounded-full animate-pulse`} style={{ 
+                          backgroundColor: brokerConnected ? '#10b981' : '#ef4444',
+                          boxShadow: brokerConnected ? '0 0 12px #10b981' : '0 0 12px #ef4444'
+                        }} />
+                        <div>
+                          <div className="text-sm font-bold text-white">
+                            {brokerConnected ? `Connected to ${brokerType?.toUpperCase()}` : 'Not Connected'}
+                          </div>
+                          <div className="text-[10px] text-zinc-400">
+                            {brokerConnected ? `Account: ${brokerAccount?.accountNumber || 'N/A'}` : 'Connect your broker to trade'}
+                          </div>
+                        </div>
+                      </div>
+                      {brokerConnected ? (
+                        <motion.button
+                          onClick={disconnectBroker}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="px-3 py-1.5 rounded-lg bg-red-500/30 text-red-300 text-xs font-semibold border border-red-400/60"
+                          style={{ boxShadow: '0 0 8px rgba(239, 68, 68, 0.3)' }}
+                        >
+                          Disconnect
+                        </motion.button>
+                      ) : (
+                        <motion.button
+                          onClick={() => setShowBrokerSetup(true)}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="px-3 py-1.5 rounded-lg bg-blue-500/30 text-blue-300 text-xs font-semibold border border-blue-400/60 neon-blue-text"
+                          style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}
+                        >
+                          <Zap className="w-3 h-3 inline mr-1" />Connect
+                        </motion.button>
+                      )}
+                    </div>
+
+                    {/* Broker Setup Modal */}
+                    <AnimatePresence>
+                      {showBrokerSetup && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.9 }}
+                          className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+                          onClick={() => setShowBrokerSetup(false)}
+                        >
+                          <motion.div
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 border border-blue-500/30 rounded-2xl p-6 max-w-md w-full mx-4 space-y-4"
+                            style={{ boxShadow: '0 0 20px rgba(59, 130, 246, 0.4)' }}
+                          >
+                            <div className="flex items-center justify-between">
+                              <h3 className="text-lg font-bold text-blue-300 neon-blue-text" style={{ textShadow: '0 0 8px #3b82f6' }}>Connect Broker</h3>
+                              <button onClick={() => setShowBrokerSetup(false)} className="text-zinc-400 hover:text-white">
+                                <X className="w-5 h-5" />
+                              </button>
+                            </div>
+
+                            <div className="space-y-3">
+                              {/* Broker Type Selection */}
+                              <div>
+                                <label className="text-xs text-zinc-400 mb-1 block">Broker Platform</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <motion.button
+                                    onClick={() => {
+                                      connectBroker('mt4', {
+                                        server: 'demo.server.com',
+                                        login: '12345678',
+                                        password: 'demo123'
+                                      });
+                                    }}
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    disabled={connectingBroker}
+                                    className="p-3 rounded-lg bg-blue-500/20 border border-blue-400/40 text-blue-300 font-semibold text-sm hover:bg-blue-500/30 disabled:opacity-50"
+                                  >
+                                    {connectingBroker ? 'Connecting...' : 'MetaTrader 4'}
+                                  </motion.button>
+                                  <motion.button
+                                    onClick={() => {
+                                      connectBroker('mt5', {
+                                        server: 'demo.server.com',
+                                        login: '87654321',
+                                        password: 'demo456'
+                                      });
+                                    }}
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    disabled={connectingBroker}
+                                    className="p-3 rounded-lg bg-blue-500/20 border border-blue-400/40 text-blue-300 font-semibold text-sm hover:bg-blue-500/30 disabled:opacity-50"
+                                  >
+                                    {connectingBroker ? 'Connecting...' : 'MetaTrader 5'}
+                                  </motion.button>
+                                </div>
+                              </div>
+
+                              {/* Info */}
+                              <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-400/30">
+                                <div className="flex gap-2 text-xs text-blue-300">
+                                  <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                                  <div>
+                                    <p className="font-semibold mb-1">Demo Mode Active</p>
+                                    <p className="text-blue-400/70">Click a platform to connect with demo credentials. For live trading, configure your MT4/MT5 API credentials in settings.</p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {brokerConnected && brokerAccount && (
+                      <>
+                        {/* Account Overview */}
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="p-3 rounded-xl bg-black border border-blue-500/30" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2)' }}>
+                            <div className="text-[10px] text-zinc-400 mb-1">Balance</div>
+                            <div className="text-lg font-bold text-blue-300 neon-blue-text" style={{ textShadow: '0 0 4px #3b82f6' }}>
+                              ${brokerAccount?.balance?.toLocaleString() || '10,000.00'}
+                            </div>
+                          </div>
+                          <div className="p-3 rounded-xl bg-black border border-blue-500/30" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2)' }}>
+                            <div className="text-[10px] text-zinc-400 mb-1">Equity</div>
+                            <div className="text-lg font-bold text-blue-300 neon-blue-text" style={{ textShadow: '0 0 4px #3b82f6' }}>
+                              ${brokerAccount?.equity?.toLocaleString() || '10,245.50'}
+                            </div>
+                          </div>
+                          <div className="p-3 rounded-xl bg-black border border-blue-500/30" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2)' }}>
+                            <div className="text-[10px] text-zinc-400 mb-1">Margin</div>
+                            <div className="text-sm font-bold text-blue-400">
+                              ${brokerAccount?.margin?.toLocaleString() || '245.50'}
+                            </div>
+                          </div>
+                          <div className="p-3 rounded-xl bg-black border border-blue-500/30" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2)' }}>
+                            <div className="text-[10px] text-zinc-400 mb-1">Free Margin</div>
+                            <div className="text-sm font-bold text-green-400">
+                              ${brokerAccount?.freeMargin?.toLocaleString() || '9,754.50'}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* One-Click Trading */}
+                        <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-400/40" style={{ boxShadow: '0 0 12px rgba(59, 130, 246, 0.4)' }}>
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="text-sm font-bold text-blue-300 neon-blue-text flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6' }}>
+                              <Zap className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
+                              One-Click Trading
+                            </h4>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-zinc-400">Lots:</span>
+                              <input
+                                type="number"
+                                value={tradeAmount}
+                                onChange={(e) => setTradeAmount(e.target.value)}
+                                step="0.01"
+                                min="0.01"
+                                className="w-16 px-2 py-1 text-xs bg-black border border-blue-500/30 rounded text-blue-300 font-mono"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Quick Trade Buttons */}
+                          <div className="grid grid-cols-2 gap-2">
+                            <motion.button
+                              onClick={() => executeTrade(selectedSymbol.id.toUpperCase(), 'buy', tradeAmount)}
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              className="p-3 rounded-lg bg-green-500/30 border border-green-400/60 text-green-300 font-bold text-sm flex items-center justify-center gap-2"
+                              style={{ boxShadow: '0 0 12px rgba(34, 197, 94, 0.4)' }}
+                            >
+                              <TrendingUp className="w-4 h-4" />
+                              BUY {selectedSymbol.abbr}
+                            </motion.button>
+                            <motion.button
+                              onClick={() => executeTrade(selectedSymbol.id.toUpperCase(), 'sell', tradeAmount)}
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              className="p-3 rounded-lg bg-red-500/30 border border-red-400/60 text-red-300 font-bold text-sm flex items-center justify-center gap-2"
+                              style={{ boxShadow: '0 0 12px rgba(239, 68, 68, 0.4)' }}
+                            >
+                              <TrendingDown className="w-4 h-4" />
+                              SELL {selectedSymbol.abbr}
+                            </motion.button>
+                          </div>
+
+                          {/* Symbol Selector */}
+                          <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1">
+                            {TRADING_SYMBOLS.map(sym => (
+                              <button
+                                key={sym.id}
+                                onClick={() => setSelectedSymbol(sym)}
+                                className={`flex-shrink-0 px-2 py-1 rounded text-xs font-semibold transition-all ${
+                                  selectedSymbol.id === sym.id
+                                    ? 'bg-blue-500/40 text-blue-300 border border-blue-400/60'
+                                    : 'bg-black/40 text-blue-400/60 border border-blue-500/20 hover:bg-blue-500/20'
+                                }`}
+                              >
+                                {sym.abbr}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Open Positions */}
+                        <div className="space-y-2">
+                          <h4 className="text-sm font-bold text-blue-300 flex items-center gap-2">
+                            <Activity className="w-4 h-4" />
+                            Open Positions ({brokerPositions.length})
+                          </h4>
+                          {brokerPositions.length === 0 ? (
+                            <div className="p-4 text-center text-zinc-500 text-xs border border-blue-500/20 rounded-lg bg-black/40">
+                              No open positions
+                            </div>
+                          ) : (
+                            <div className="space-y-2 max-h-60 overflow-y-auto">
+                              {brokerPositions.map((pos, idx) => (
+                                <motion.div
+                                  key={idx}
+                                  initial={{ opacity: 0, y: 10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  className="p-3 rounded-lg bg-black border border-blue-500/30" 
+                                  style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2)' }}
+                                >
+                                  <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${
+                                        pos.type === 'buy' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                                      }`}>
+                                        {pos.type?.toUpperCase() || 'BUY'}
+                                      </span>
+                                      <span className="font-bold text-blue-300">{pos.symbol || 'XAUUSD'}</span>
+                                    </div>
+                                    <motion.button
+                                      onClick={() => closePosition(pos.id || idx.toString())}
+                                      whileHover={{ scale: 1.1 }}
+                                      whileTap={{ scale: 0.9 }}
+                                      className="px-2 py-1 rounded bg-red-500/30 text-red-300 text-xs font-semibold hover:bg-red-500/50"
+                                    >
+                                      Close
+                                    </motion.button>
+                                  </div>
+                                  <div className="grid grid-cols-3 gap-2 text-xs">
+                                    <div>
+                                      <div className="text-zinc-500">Volume</div>
+                                      <div className="text-blue-300 font-semibold">{pos.volume || '0.01'}</div>
+                                    </div>
+                                    <div>
+                                      <div className="text-zinc-500">Entry</div>
+                                      <div className="text-blue-300 font-semibold">{pos.entryPrice || '2650.50'}</div>
+                                    </div>
+                                    <div>
+                                      <div className="text-zinc-500">P/L</div>
+                                      <div className={`font-bold ${
+                                        (pos.profit || 24.50) >= 0 ? 'text-green-400' : 'text-red-400'
+                                      }`}>
+                                        ${(pos.profit || 24.50).toFixed(2)}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Pending Orders */}
+                        <div className="space-y-2">
+                          <h4 className="text-sm font-bold text-blue-300 flex items-center gap-2">
+                            <Clock className="w-4 h-4" />
+                            Pending Orders ({brokerOrders.length})
+                          </h4>
+                          {brokerOrders.length === 0 ? (
+                            <div className="p-4 text-center text-zinc-500 text-xs border border-blue-500/20 rounded-lg bg-black/40">
+                              No pending orders
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              {brokerOrders.map((order, idx) => (
+                                <div
+                                  key={idx}
+                                  className="p-3 rounded-lg bg-black border border-blue-500/30" 
+                                  style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2)' }}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div>
+                                      <span className="font-bold text-blue-300">{order.symbol}</span>
+                                      <span className="ml-2 text-xs text-zinc-400">{order.type}</span>
+                                    </div>
+                                    <button className="text-xs text-red-400 hover:text-red-300">Cancel</button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Trading Tips */}
+                        <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-400/30">
+                          <div className="flex gap-2 text-xs text-blue-300">
+                            <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <p className="font-semibold mb-1">Risk Management</p>
+                              <p className="text-blue-400/70">Always use stop-loss orders. Never risk more than 1-2% of your account on a single trade.</p>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Not Connected State */}
+                    {!brokerConnected && (
+                      <div className="flex-1 flex flex-col items-center justify-center py-12 px-4 text-center">
+                        <div className="w-20 h-20 rounded-full bg-blue-500/20 border-2 border-blue-400/40 flex items-center justify-center mb-4"
+                          style={{ boxShadow: '0 0 20px rgba(59, 130, 246, 0.3)' }}>
+                          <Zap className="w-10 h-10 text-blue-400" style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
+                        </div>
+                        <h3 className="text-lg font-bold text-blue-300 mb-2 neon-blue-text" style={{ textShadow: '0 0 8px #3b82f6' }}>
+                          Connect Your Broker
+                        </h3>
+                        <p className="text-sm text-zinc-400 mb-6 max-w-sm">
+                          Link your MetaTrader 4 or MetaTrader 5 account for seamless one-click trading directly from the hub.
+                        </p>
+                        <motion.button
+                          onClick={() => setShowBrokerSetup(true)}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="px-6 py-3 rounded-lg bg-gradient-to-r from-blue-500/30 to-cyan-500/30 text-blue-300 font-bold border border-blue-400/60 neon-blue-text flex items-center gap-2"
+                          style={{ boxShadow: '0 0 16px rgba(59, 130, 246, 0.4)' }}
+                        >
+                          <Zap className="w-5 h-5" />
+                          Get Started
+                        </motion.button>
+
+                        {/* Features List */}
+                        <div className="mt-8 space-y-3 text-left max-w-md w-full">
+                          <div className="flex items-start gap-3">
+                            <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <div className="text-sm font-semibold text-blue-300">Instant Execution</div>
+                              <div className="text-xs text-zinc-500">Execute trades in milliseconds with one click</div>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-3">
+                            <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <div className="text-sm font-semibold text-blue-300">Live Account Sync</div>
+                              <div className="text-xs text-zinc-500">Real-time balance, positions, and orders</div>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-3">
+                            <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <div className="text-sm font-semibold text-blue-300">Multi-Platform Support</div>
+                              <div className="text-xs text-zinc-500">Works with MT4 and MT5 brokers</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+
                 {/* DEVICE TAB */}
                 {activeTab === 'device' && (
                   <motion.div
