@@ -32,6 +32,9 @@ import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 import { MultiStepLoader} from "@/components/Mainpage/MultiStepLoader";
 import { TelegramConfirmationResponsive } from "./TelegramConfirmationResponsive";
 
+// --- IMPORT LEGAL DISCLAIMER MODAL ---
+import { LegalDisclaimerModal } from "@/components/Mainpage/footer/LegalDisclaimerModal";
+
 // --- DESKTOP WELCOME SCREEN (separate layout for larger screens) ---
 import { WelcomeScreenDesktop } from "./WelcomeScreenDesktop";
 
@@ -639,6 +642,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   const [copied, setCopied] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
+  const [legalModalTab, setLegalModalTab] = useState<'terms' | 'privacy' | 'disclaimer'>('terms');
   const [isRefresh, setIsRefresh] = useState(false);
   const [isCelebration, setIsCelebration] = useState(false);
   const [confirmationClicked, setConfirmationClicked] = useState(false);
@@ -1407,7 +1412,22 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
                     {/* Footer Note */}
                     <p className="text-center text-white/15 text-[7px] mt-2">
-                      By continuing, you agree to our Terms of Service
+                      By continuing, you agree to our{' '}
+                      <button 
+                        type="button"
+                        onClick={() => { setLegalModalTab('terms'); setIsLegalModalOpen(true); }}
+                        className="text-blue-400/50 hover:text-blue-400 underline underline-offset-1 transition-colors"
+                      >
+                        Terms
+                      </button>
+                      {' & '}
+                      <button 
+                        type="button"
+                        onClick={() => { setLegalModalTab('privacy'); setIsLegalModalOpen(true); }}
+                        className="text-blue-400/50 hover:text-blue-400 underline underline-offset-1 transition-colors"
+                      >
+                        Privacy
+                      </button>
                     </p>
                   </motion.div>
                 </div>
@@ -2059,8 +2079,10 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         onClick={() => setAcceptedTerms(!acceptedTerms)}
                         className={cn("flex items-start gap-3 p-3 rounded-lg bg-black/60 cursor-pointer transition-colors cursor-target", isXM ? "neon-red-border" : "neon-blue-border")}
                       >
-                        <div className={cn(
-                          "w-5 h-5 rounded border-2 flex items-center justify-center mt-0.5 transition-colors shrink-0",
+                        <div 
+                          onClick={() => setAcceptedTerms(!acceptedTerms)}
+                          className={cn(
+                          "w-5 h-5 rounded border-2 flex items-center justify-center mt-0.5 transition-colors shrink-0 cursor-pointer",
                           acceptedTerms 
                             ? cn("border-blue-600", isXM ? "neon-red-bg" : "neon-blue-bg")
                             : isXM ? "border-red-500/60" : "border-blue-500/60"
@@ -2069,7 +2091,31 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         </div>
                         <div className="flex-1">
                           <p className="text-xs text-blue-200/70 leading-tight neon-white-text">
-                            I agree to the Terms of Service and understand this is educational content.
+                            I agree to the{' '}
+                            <button 
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); setLegalModalTab('terms'); setIsLegalModalOpen(true); }}
+                              className="text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors"
+                            >
+                              Terms of Service
+                            </button>
+                            {', '}
+                            <button 
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); setLegalModalTab('privacy'); setIsLegalModalOpen(true); }}
+                              className="text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors"
+                            >
+                              Privacy Policy
+                            </button>
+                            {', and '}
+                            <button 
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); setLegalModalTab('disclaimer'); setIsLegalModalOpen(true); }}
+                              className="text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors"
+                            >
+                              Disclaimer
+                            </button>
+                            . I understand this is educational content only and NOT financial advice.
                           </p>
                         </div>
                       </div>
@@ -2092,6 +2138,13 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
           </>
         )}
       </div>
+      
+      {/* Legal Disclaimer Modal */}
+      <LegalDisclaimerModal 
+        isOpen={isLegalModalOpen} 
+        onClose={() => setIsLegalModalOpen(false)} 
+        initialTab={legalModalTab}
+      />
     </div>
   );
 }

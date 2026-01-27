@@ -92,7 +92,8 @@ export const EnhancedModal = ({
             animate={animations.modalBackdrop.animate as TargetAndTransition}
             exit={animations.modalBackdrop.exit}
             transition={animations.modalBackdrop.transition}
-            className="fixed inset-0 z-[999999] flex items-center justify-center p-2 xs:p-3 sm:p-4 md:p-6"
+            className="fixed inset-0 flex items-center justify-center p-2 xs:p-3 sm:p-4 md:p-6"
+            style={{ zIndex: 9999999999 }}
           >
             <div onClick={onClose} className="absolute inset-0 bg-black/95" />
 
@@ -121,7 +122,7 @@ export const EnhancedModal = ({
               <div className="relative z-10 m-[2px] flex max-h-[90vh] xs:max-h-[88vh] sm:max-h-[85vh] md:max-h-[82vh] lg:max-h-[80vh] flex-col rounded-xl xs:rounded-2xl sm:rounded-2xl md:rounded-3xl bg-black overflow-hidden min-h-0">
                 {/* Header with neon styling */}
                 <div 
-                  className="relative flex items-center justify-between px-3 xs:px-4 sm:px-5 md:px-6 py-2.5 xs:py-3 sm:py-3.5 md:py-4 bg-black shrink-0"
+                  className="relative flex flex-row items-center justify-between px-3 xs:px-4 sm:px-5 md:px-6 py-2.5 xs:py-3 sm:py-3.5 md:py-4 bg-black shrink-0"
                   style={shouldSkipHeavyEffects ? { borderBottom: '2px solid #3b82f6' } : { 
                     borderBottom: '2px solid #3b82f6',
                     boxShadow: '0 2px 8px rgba(59, 130, 246, 0.4)'
@@ -138,13 +139,15 @@ export const EnhancedModal = ({
                     />
                   )}
 
-                  <div className="relative text-sm xs:text-base sm:text-lg md:text-xl font-semibold tracking-wide modal-neon-white-text truncate pr-3">
+                  {/* Title - always on left */}
+                  <div className="relative flex-1 text-sm xs:text-base sm:text-lg md:text-xl font-semibold tracking-wide modal-neon-white-text truncate pr-3 order-1">
                     {title}
                   </div>
 
+                  {/* Close button - always on right */}
                   <button
                     onClick={onClose}
-                    className="relative z-[9999999] p-1.5 xs:p-2 sm:p-2 md:p-2.5 rounded-full bg-black text-white min-w-[36px] min-h-[36px] xs:min-w-[40px] xs:min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] flex items-center justify-center group flex-shrink-0 transition-all duration-300"
+                    className="relative z-[99999999999] p-1.5 xs:p-2 sm:p-2 md:p-2.5 rounded-full bg-black text-white min-w-[36px] min-h-[36px] xs:min-w-[40px] xs:min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] flex items-center justify-center group flex-shrink-0 transition-all duration-300 order-2 ml-auto"
                     style={{
                       border: '2px solid #3b82f6',
                       boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6'
@@ -154,7 +157,14 @@ export const EnhancedModal = ({
                   </button>
                 </div>
 
-                <div className="flex-1 min-h-0 overflow-y-auto px-3 xs:px-4 sm:px-5 md:px-6 py-3 xs:py-4 sm:py-5 md:py-6 footer-scrollbar relative bg-black">
+                <div 
+                  className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-3 xs:px-4 sm:px-5 md:px-6 py-3 xs:py-4 sm:py-5 md:py-6 footer-scrollbar relative bg-black"
+                  style={{ 
+                    WebkitOverflowScrolling: 'touch',
+                    overscrollBehavior: 'contain',
+                    touchAction: 'pan-y'
+                  }}
+                >
                   {children}
                 </div>
               </div>

@@ -16,6 +16,9 @@ import { cn } from "@/lib/utils";
 // --- IMPORT SEPARATE LOADER COMPONENT ---
 import { MultiStepLoader} from "@/components/Mainpage/MultiStepLoader"; 
 
+// --- IMPORT LEGAL DISCLAIMER MODAL ---
+import { LegalDisclaimerModal } from "@/components/Mainpage/footer/LegalDisclaimerModal"; 
+
 // --- 1. SUPABASE SETUP ---
 const TELEGRAM_GROUP_LINK = "https://t.me/addlist/uswKuwT2JUQ4YWI8";
 
@@ -322,6 +325,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   const [copied, setCopied] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false); 
+  const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
+  const [legalModalTab, setLegalModalTab] = useState<'terms' | 'privacy' | 'disclaimer'>('terms'); 
 
   const [formData, setFormData] = useState({
     email: '',
@@ -1129,11 +1134,12 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                       </div>
 
                         <div 
-                        onClick={() => setAcceptedTerms(!acceptedTerms)}
                         className="flex items-start gap-3 p-3 rounded-lg border-2 border-blue-500/20 bg-black/60 cursor-pointer hover:bg-blue-950/30 hover:border-blue-500/30 transition-colors cursor-target"
                       >
-                        <div className={cn(
-                          "w-5 h-5 rounded border-2 flex items-center justify-center mt-0.5 transition-colors shrink-0",
+                        <div 
+                          onClick={() => setAcceptedTerms(!acceptedTerms)}
+                          className={cn(
+                          "w-5 h-5 rounded border-2 flex items-center justify-center mt-0.5 transition-colors shrink-0 cursor-pointer",
                           acceptedTerms 
                             ? "bg-blue-600 border-blue-600" 
                             : "border-blue-500/40"
@@ -1142,7 +1148,31 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         </div>
                         <div className="flex-1">
                           <p className="text-xs text-blue-200/70 leading-tight">
-                            I agree to the Terms of Service and understand this is educational content.
+                            I agree to the{' '}
+                            <button 
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); setLegalModalTab('terms'); setIsLegalModalOpen(true); }}
+                              className="text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors"
+                            >
+                              Terms of Service
+                            </button>
+                            {', '}
+                            <button 
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); setLegalModalTab('privacy'); setIsLegalModalOpen(true); }}
+                              className="text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors"
+                            >
+                              Privacy Policy
+                            </button>
+                            {', and '}
+                            <button 
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); setLegalModalTab('disclaimer'); setIsLegalModalOpen(true); }}
+                              className="text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors"
+                            >
+                              Financial Disclaimer
+                            </button>
+                            . I understand this is educational content only and NOT financial advice.
                           </p>
                         </div>
                       </div>
@@ -1165,6 +1195,13 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
           </>
         )}
       </div>
+      
+      {/* Legal Disclaimer Modal */}
+      <LegalDisclaimerModal 
+        isOpen={isLegalModalOpen} 
+        onClose={() => setIsLegalModalOpen(false)} 
+        initialTab={legalModalTab}
+      />
     </div>
   );
 }

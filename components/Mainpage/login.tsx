@@ -4,6 +4,8 @@ import { cn } from "@/lib/utils";
 import { IconBrandGithub } from "@tabler/icons-react";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { useState } from "react";
+import { LegalDisclaimerModal } from "@/components/Mainpage/footer/LegalDisclaimerModal";
 
 export function Login() {
   return (
@@ -52,11 +54,15 @@ export function Login() {
 }
 
 function Form() {
+  const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
+  const [legalModalTab, setLegalModalTab] = useState<'terms' | 'privacy' | 'disclaimer'>('terms');
+  
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     console.log("submitted form", e);
   }
 
   return (
+    <>
     <form className="bg-gray-50 dark:bg-neutral-950" onSubmit={onSubmit}>
       <div className="flex items-center w-full justify-center px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-32 max-w-2xl mx-auto">
         <div className="mx-auto w-full max-w-md">
@@ -169,25 +175,35 @@ function Form() {
 
               <p className="text-neutral-600 dark:text-neutral-400 text-sm text-center mt-8">
                 By clicking on sign up, you agree to our{" "}
-                <Link
-                  href="#"
-                  className="text-neutral-500 dark:text-neutral-300"
+                <button
+                  type="button"
+                  onClick={() => { setLegalModalTab('terms'); setIsLegalModalOpen(true); }}
+                  className="text-neutral-500 dark:text-neutral-300 hover:text-blue-500 dark:hover:text-blue-400 underline underline-offset-2 transition-colors"
                 >
                   Terms of Service
-                </Link>{" "}
+                </button>{" "}
                 and{" "}
-                <Link
-                  href="#"
-                  className="text-neutral-500 dark:text-neutral-300"
+                <button
+                  type="button"
+                  onClick={() => { setLegalModalTab('privacy'); setIsLegalModalOpen(true); }}
+                  className="text-neutral-500 dark:text-neutral-300 hover:text-blue-500 dark:hover:text-blue-400 underline underline-offset-2 transition-colors"
                 >
                   Privacy Policy
-                </Link>
+                </button>
               </p>
             </div>
           </div>
         </div>
       </div>
     </form>
+    
+    {/* Legal Disclaimer Modal */}
+    <LegalDisclaimerModal 
+      isOpen={isLegalModalOpen} 
+      onClose={() => setIsLegalModalOpen(false)} 
+      initialTab={legalModalTab}
+    />
+    </>
   );
 }
 

@@ -47,10 +47,13 @@ export const UI_Z_INDEX = {
   // High priority modals
   CHARTNEWS: 9999999,
   AFFILIATE: 999999,
-  PAGEMODE: 99999999,
+  PAGEMODE: 99999998,
 
   // Mobile menu - HIGHEST PRIORITY (appears on top of everything)
   MOBILE_MENU: 999999999,
+  
+  // Legal Modal - Above pagemode but below mobile menu
+  LEGAL_MODAL: 9999999999,
   
   // Analysis Modal - Maximum z-index (same as LiveStreamModal)
   ANALYSIS_MODAL: 2147483647,

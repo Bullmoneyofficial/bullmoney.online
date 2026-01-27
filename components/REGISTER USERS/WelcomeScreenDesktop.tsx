@@ -10,6 +10,9 @@ import { UI_Z_INDEX } from "@/contexts/UIStateContext";
 // Import the actual UnifiedFpsPill and UnifiedHubPanel from UltimateHub
 import { UnifiedFpsPill, UnifiedHubPanel, useLivePrices } from '@/components/UltimateHub';
 
+// Import Legal Disclaimer Modal
+import { LegalDisclaimerModal } from "@/components/Mainpage/footer/LegalDisclaimerModal";
+
 // --- DYNAMIC SPLINE IMPORT ---
 const Spline = dynamic(() => import('@splinetool/react-spline'), {
   ssr: false,
@@ -187,6 +190,8 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
   const [mounted, setMounted] = useState(false);
   const [isHubOpen, setIsHubOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
+  const [legalModalTab, setLegalModalTab] = useState<'terms' | 'privacy' | 'disclaimer'>('terms');
 
   // Ghost animation state - card pulses gently until user interacts
   const [userInteracted, setUserInteracted] = useState(false);
@@ -387,12 +392,42 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
 
               {/* Footer Note */}
               <p className="text-center text-white/30 text-xs mt-6 xl:mt-8">
-                By continuing, you agree to our Terms of Service
+                By continuing, you agree to our{' '}
+                <button 
+                  type="button"
+                  onClick={() => { setLegalModalTab('terms'); setIsLegalModalOpen(true); }}
+                  className="text-blue-400/70 hover:text-blue-400 underline underline-offset-2 transition-colors"
+                >
+                  Terms of Service
+                </button>
+                {', '}
+                <button 
+                  type="button"
+                  onClick={() => { setLegalModalTab('privacy'); setIsLegalModalOpen(true); }}
+                  className="text-blue-400/70 hover:text-blue-400 underline underline-offset-2 transition-colors"
+                >
+                  Privacy Policy
+                </button>
+                {' & '}
+                <button 
+                  type="button"
+                  onClick={() => { setLegalModalTab('disclaimer'); setIsLegalModalOpen(true); }}
+                  className="text-blue-400/70 hover:text-blue-400 underline underline-offset-2 transition-colors"
+                >
+                  Disclaimer
+                </button>
               </p>
             </motion.div>
           </div>
         </div>
       </motion.div>
+      
+      {/* Legal Disclaimer Modal */}
+      <LegalDisclaimerModal 
+        isOpen={isLegalModalOpen} 
+        onClose={() => setIsLegalModalOpen(false)} 
+        initialTab={legalModalTab}
+      />
       
       {/* ========== ULTIMATE HUB PANEL - Rendered via Portal to ensure it's on top ========== */}
       {typeof window !== 'undefined' && createPortal(

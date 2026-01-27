@@ -7,7 +7,7 @@ import { Logo } from "./logo";
 import { DesktopFooter } from "./footer/DesktopFooter";
 import { SocialsRow } from "./footer/SocialsRow";
 import AdminModal from "@/components/AdminModal";
-import BullMoneyModal from "@/components/Faq";
+import { LegalDisclaimerModal } from "@/components/Mainpage/footer/LegalDisclaimerModal";
 import AffiliateModal from "@/components/AffiliateModal";
 import { ShimmerLine, ShimmerBorder, useOptimizedShimmer } from "@/components/ui/UnifiedShimmer";
 import { useFpsOptimizer } from "@/lib/FpsOptimizer";
@@ -222,8 +222,8 @@ export function Footer() {
     <>
       {/* Only inject neon styles on desktop for performance */}
       {!shouldSkipHeavyEffects && <style dangerouslySetInnerHTML={{ __html: NEON_STYLES }} />}
-      {/* Modal Components */}
-      <BullMoneyModal isOpen={isDisclaimerOpen} onClose={() => setDisclaimerOpen(false)} />
+      {/* Legal Disclaimer Modal - Comprehensive Terms, Privacy & Disclaimer */}
+      <LegalDisclaimerModal isOpen={isDisclaimerOpen} onClose={() => setDisclaimerOpen(false)} />
 
       <FooterModal
         isOpen={isAppsOpen}
