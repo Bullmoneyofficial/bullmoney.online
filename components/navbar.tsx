@@ -16,6 +16,7 @@ import React, {
   useState,
   memo,
   useCallback,
+  useMemo,
 } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -31,6 +32,7 @@ import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 import { useCacheContext } from "@/components/CacheManagerProvider";
 import { useMobileMenu, useNavbarModals } from "@/contexts/UIStateContext";
 import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
+import { createSupabaseClient } from "@/lib/supabase";
 
 // ✅ MOBILE DETECTION - For conditional lazy loading
 import { isMobileDevice } from "@/lib/mobileDetection";
@@ -228,7 +230,7 @@ export const Navbar = memo(() => {
     console.log('[Navbar] openAnalysisModal called');
     openAnalysisModalBase();
   }, [openAnalysisModalBase]);
-  
+
   // Unified Performance System - single source for lifecycle & shimmer
   const navbarPerf = useComponentLifecycle('navbar', 10); // Priority 10 (highest)
   
@@ -285,7 +287,89 @@ export const Navbar = memo(() => {
 
   // --- USE STUDIO FOR ADMIN CHECK ---
   const { state } = useStudio();
-  const { isAdmin, isAuthenticated, userProfile } = state;
+  const { userProfile } = state;
+ 
+  // Admin visibility based on Supabase session email matching env
+  const adminEmailEnv = process.env.NEXT_PUBLIC_ADMIN_EMAIL?.toLowerCase() || "";
+  const supabase = useMemo(() => createSupabaseClient(), []);
+  const [adminAuthorized, setAdminAuthorized] = useState(false);
+  const [adminChecked, setAdminChecked] = useState(false);
+  const [pagemodeAdminAuthorized, setPagemodeAdminAuthorized] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const raw = localStorage.getItem("bullmoney_session");
+      if (!raw) return false;
+      const parsed = JSON.parse(raw);
+      const email = (parsed?.email || "").toLowerCase();
+      const isAdminFlag = Boolean(parsed?.isAdmin);
+      return Boolean(adminEmailEnv) && (isAdminFlag || email === adminEmailEnv);
+    } catch (err) {
+      console.error("Navbar pagemode session parse error (init)", err);
+      return false;
+    }
+  });
+ 
+  useEffect(() => {
+    let mounted = true;
+    const evaluate = (email?: string | null) => {
+      if (!mounted) return;
+      setAdminAuthorized(Boolean(adminEmailEnv) && email?.toLowerCase() === adminEmailEnv);
+    };
+    const run = async () => {
+      if (!adminEmailEnv) {
+        setAdminAuthorized(false);
+        setAdminChecked(true);
+        return;
+      }
+      const { data, error } = await supabase.auth.getSession();
+      if (error) console.error("Navbar auth session error", error.message);
+      evaluate(data?.session?.user?.email || null);
+      setAdminChecked(true);
+    };
+    run();
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      evaluate(session?.user?.email || null);
+    });
+    return () => {
+      mounted = false;
+      sub?.subscription?.unsubscribe();
+    };
+  }, [adminEmailEnv, supabase]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const evaluate = () => {
+      try {
+        const raw = localStorage.getItem("bullmoney_session");
+        if (!raw) {
+          setPagemodeAdminAuthorized(false);
+          return;
+        }
+        const parsed = JSON.parse(raw);
+        const email = (parsed?.email || "").toLowerCase();
+        const isAdminFlag = Boolean(parsed?.isAdmin);
+        setPagemodeAdminAuthorized(Boolean(adminEmailEnv) && (isAdminFlag || email === adminEmailEnv));
+      } catch (err) {
+        console.error("Navbar pagemode session parse error", err);
+        setPagemodeAdminAuthorized(false);
+      }
+    };
+
+    evaluate();
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "bullmoney_session") evaluate();
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [adminEmailEnv]);
+
+  const profileMatchesAdmin = (userProfile?.email || "").toLowerCase() === adminEmailEnv;
+  const isAdmin = profileMatchesAdmin || pagemodeAdminAuthorized || (adminChecked && adminAuthorized);
+
+  const handleAdminClick = useCallback(() => {
+    if (!isAdmin) return;
+    openAdminModal();
+  }, [isAdmin, openAdminModal]);
 
   // Cal embed hook
   const calOptions = useCalEmbed({
@@ -477,7 +561,6 @@ export const Navbar = memo(() => {
           ref={dockRef}
           isXMUser={isXMUser}
           isAdmin={isAdmin}
-          isAuthenticated={isAuthenticated}
           hasReward={hasReward}
           dockRef={dockRef}
           buttonRefs={buttonRefs}
@@ -485,7 +568,7 @@ export const Navbar = memo(() => {
           onAffiliateClick={openAffiliateModal}
           onFaqClick={openFaqModal}
           onThemeClick={openThemeSelectorModal}
-          onAdminClick={openAdminModal}
+          onAdminClick={handleAdminClick}
           onAnalysisClick={openAnalysisModal}
           mounted={mounted}
           isScrollMinimized={isDesktopScrollMinimized}
@@ -623,10 +706,13 @@ export const Navbar = memo(() => {
           isXMUser={isXMUser}
           hasReward={hasReward}
           isAdmin={isAdmin}
-          isAuthenticated={isAuthenticated}
           onAffiliateClick={() => { trackClick('affiliate_nav', { source: 'mobile_menu' }); openAffiliateModal(); }}
           onFaqClick={() => { trackClick('faq_nav', { source: 'mobile_menu' }); openFaqModal(); }}
-          onAdminClick={() => { trackClick('admin_nav', { source: 'mobile_menu' }); openAdminModal(); }}
+          onAdminClick={() => { 
+            if (!isAdmin) return;
+            trackClick('admin_nav', { source: 'mobile_menu' }); 
+            handleAdminClick(); 
+          }}
           onThemeClick={() => { trackClick('theme_nav', { source: 'mobile_menu' }); openThemeSelectorModal(); }}
           onAnalysisClick={() => { trackClick('analysis_nav', { source: 'mobile_menu' }); openAnalysisModal(); }}
         />

@@ -1,35 +1,31 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Shield } from 'lucide-react';
 import { createSupabaseClient } from '@/lib/supabase';
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { useUnifiedPerformance } from "@/hooks/useDesktopPerformance";
 
-const ADMIN_EMAIL = 'mrbullmoney@gmail.com';
-
-/**
- * Admin Button - Only visible to mrbullmoney@gmail.com when logged in
- * Opens the Admin VIP Panel
- */
 export function AdminButton() {
   const { shouldSkipHeavyEffects } = useUnifiedPerformance();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const adminEmailEnv = process.env.NEXT_PUBLIC_ADMIN_EMAIL?.toLowerCase() || '';
+  const supabase = useMemo(() => createSupabaseClient(), []);
 
   useEffect(() => {
-    const supabase = createSupabaseClient();
-    
+    if (!adminEmailEnv) {
+      setIsAdmin(false);
+      setLoading(false);
+      return;
+    }
+
     const checkAdmin = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user?.email === ADMIN_EMAIL) {
-          setIsAdmin(true);
-        } else {
-          setIsAdmin(false);
-        }
+        const email = user?.email?.toLowerCase();
+        setIsAdmin(Boolean(adminEmailEnv) && email === adminEmailEnv);
       } catch (error) {
         console.error('Admin check error:', error);
         setIsAdmin(false);
@@ -42,19 +38,16 @@ export function AdminButton() {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event: AuthChangeEvent, session: Session | null) => {
-        if (session?.user?.email === ADMIN_EMAIL) {
-          setIsAdmin(true);
-        } else {
-          setIsAdmin(false);
-        }
+      (_event: AuthChangeEvent, session: Session | null) => {
+        const email = session?.user?.email?.toLowerCase();
+        setIsAdmin(Boolean(adminEmailEnv) && email === adminEmailEnv);
       }
     );
 
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [adminEmailEnv, supabase]);
 
   const openAdminPanel = () => {
     window.dispatchEvent(new CustomEvent('openAdminVIPPanel'));

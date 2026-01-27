@@ -34,7 +34,7 @@ import { Loader2 } from "lucide-react";
 const modalOpenHistory = new Map<string, boolean>();
 
 // Lazy load ALL heavy modal components - ONLY when actually opened
-const AdminModalLazy = lazy(() => import("@/components/AdminModal"));
+const AdminModalLazy = lazy(() => import("@/components/AdminHubModal"));
 const AffiliateModalLazy = lazy(() => import("@/components/AffiliateModal"));
 const BullMoneyModalLazy = lazy(() => import("@/components/Faq"));
 const UltimateControlPanelLazy = lazy(() => import("@/components/UltimateControlPanel"));

@@ -31,7 +31,6 @@ interface MobileDropdownMenuProps {
   isXMUser: boolean;
   hasReward: boolean;
   isAdmin: boolean;
-  isAuthenticated: boolean;
   onAffiliateClick: () => void;
   onFaqClick: () => void;
   onAdminClick: () => void;
@@ -47,7 +46,6 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
       isXMUser,
       hasReward,
       isAdmin,
-      isAuthenticated,
       onAffiliateClick,
       onFaqClick,
       onAdminClick,
@@ -367,7 +365,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
             </motion.div>
 
             {/* Admin */}
-            {(!isAuthenticated || isAdmin) && (
+            {isAdmin && (
               <motion.div
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -382,17 +380,13 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
                   onClick={handleAdminClick}
                   className="w-full flex items-center justify-center gap-3 text-xs sm:text-sm uppercase tracking-widest transition-all duration-200 py-2.5 sm:py-3 rounded-xl px-4 sm:px-6"
                   style={{
-                    color: isAdmin ? 'var(--accent-color, #60a5fa)' : 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)',
-                    backgroundColor: isAdmin ? 'rgba(var(--accent-rgb, 59, 130, 246), 0.15)' : 'rgba(var(--accent-rgb, 59, 130, 246), 0.08)',
-                    border: isAdmin ? '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.4)' : '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
-                    fontWeight: isAdmin ? 'bold' : 'normal'
+                    color: 'var(--accent-color, #60a5fa)',
+                    backgroundColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.15)',
+                    border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.4)',
+                    fontWeight: 'bold'
                   }}
                 >
-                  {isAdmin ? (
-                    <><IconSettings className="h-5 w-5" stroke={1.5} style={{ color: 'var(--accent-color, #60a5fa)' }} /> Admin Dashboard</>
-                  ) : (
-                    <><IconLock className="h-5 w-5" stroke={1.5} style={{ color: 'var(--accent-color, #60a5fa)' }} /> Team Access</>
-                  )}
+                  <IconSettings className="h-5 w-5" stroke={1.5} style={{ color: 'var(--accent-color, #60a5fa)' }} /> Admin Dashboard
                 </motion.button>
               </motion.div>
             )}

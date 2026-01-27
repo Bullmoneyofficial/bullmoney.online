@@ -22,7 +22,6 @@ import './DesktopNavbar.css';
 interface DesktopNavbarProps {
   isXMUser: boolean;
   isAdmin: boolean;
-  isAuthenticated: boolean;
   hasReward: boolean;
   dockRef: React.RefObject<HTMLDivElement | null>;
   buttonRefs: React.RefObject<(HTMLDivElement | null)[]>;
@@ -42,7 +41,6 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
     {
       isXMUser,
       isAdmin,
-      isAuthenticated,
       hasReward,
       dockRef,
       buttonRefs,
@@ -116,11 +114,11 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
       },
     ];
 
-    if (mounted && (!isAuthenticated || isAdmin)) {
+    if (mounted && isAdmin) {
       desktopNavItems.push({
         icon: safeAdminIcon,
-        label: isAdmin ? "Dashboard" : "Admin",
-        tips: isAdmin ? ["Manage Site", "Logout", "View Orders"] : ["Team Access", "Admin Login"],
+        label: "Dashboard",
+        tips: ["Manage Site", "Logout", "View Orders"],
         onClick: onAdminClick,
         triggerComponent: undefined,
         href: undefined
