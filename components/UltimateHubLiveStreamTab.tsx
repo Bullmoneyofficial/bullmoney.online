@@ -55,7 +55,7 @@ interface LiveStreamVideo {
 const FEATURED_VIDEOS = ['Q3dSjSP3t8I', 'xvP1FJt-Qto'];
 
 export const UltimateHubLiveStreamTab = memo(() => {
-  const { shouldSkipHeavyEffects } = useMobilePerformance();
+  const { shouldSkipHeavyEffects, isMobile } = useMobilePerformance();
   
   const [activeTab, setActiveTab] = useState<'featured' | 'live'>('featured');
   const [videos, setVideos] = useState<LiveStreamVideo[]>([]);
@@ -163,21 +163,25 @@ export const UltimateHubLiveStreamTab = memo(() => {
   return (
     <div className="flex flex-col h-full bg-black overflow-hidden">
       {/* Header */}
-      <div className="shrink-0 p-2 sm:p-3 border-b border-blue-500/30 bg-black" style={{ boxShadow: '0 2px 8px rgba(59, 130, 246, 0.2)' }}>
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <Tv className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400" style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
-            <h2 className="text-xs sm:text-sm font-bold text-blue-300" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
-              BullMoney TV
+      <div className="shrink-0 p-1.5 sm:p-2 md:p-3 border-b border-blue-500/30 bg-black" style={{ boxShadow: '0 2px 8px rgba(59, 130, 246, 0.2)' }}>
+        <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+          <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1">
+            <Tv className="w-3 h-3 sm:w-4 sm:h-4 text-blue-400 shrink-0" style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
+            <h2 className="text-xs sm:text-sm font-bold text-blue-300 truncate" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
+              Live
             </h2>
             {hasLive && (
-              <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-red-500/20 border border-red-500/40 animate-pulse">
-                <motion.div
-                  className="w-1.5 h-1.5 rounded-full bg-red-500"
-                  animate={{ opacity: [1, 0.3, 1] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                />
-                <span className="text-[8px] font-bold text-red-400 uppercase">Breaking Live</span>
+              <div className="flex items-center gap-0.5 px-1 sm:px-1.5 py-0.5 rounded-full bg-red-500/20 border border-red-500/40 shrink-0">
+                {!shouldSkipHeavyEffects ? (
+                  <motion.div
+                    className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-red-500"
+                    animate={{ opacity: [1, 0.3, 1] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  />
+                ) : (
+                  <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-red-500" />
+                )}
+                <span className="text-[7px] sm:text-[8px] font-bold text-red-400 uppercase">Live</span>
               </div>
             )}
           </div>
@@ -187,17 +191,18 @@ export const UltimateHubLiveStreamTab = memo(() => {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => SoundEffects.click()}
-            className="p-1.5 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/40 transition-colors"
+            className="p-1 sm:p-1.5 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/40 transition-colors shrink-0"
+            title="Open on YouTube"
           >
-            <ExternalLink className="w-3 h-3 text-blue-400" />
+            <ExternalLink className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-400" />
           </a>
         </div>
 
         {/* Tab Selector */}
-        <div className="flex gap-2">
+        <div className="flex gap-1 sm:gap-2">
           <button
             onClick={() => { SoundEffects.click(); setActiveTab('featured'); setPlayerKey(p => p + 1); }}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-[10px] sm:text-xs font-semibold transition-all min-h-[40px] sm:min-h-0 ${
+            className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-2 sm:px-3 rounded text-[8px] sm:text-xs font-semibold transition-all ${
               activeTab === 'featured'
                 ? 'bg-blue-500/30 text-blue-300 border border-blue-400/50'
                 : 'bg-zinc-800/50 text-zinc-400 hover:bg-zinc-700/50 border border-blue-500/20'

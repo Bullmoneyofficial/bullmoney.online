@@ -41,9 +41,8 @@ export const UltimateHubCommunityPostsTab = memo(() => {
   const [activeTypes, setActiveTypes] = useState<string[]>(['all']);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAnalysis, setSelectedAnalysis] = useState<Analysis | null>(null);
-  const [showFilters, setShowFilters] = useState(!isMobile);
-  const [headerCollapsed, setHeaderCollapsed] = useState(isMobile);
-  const [showSearchBar, setShowSearchBar] = useState(!isMobile);
+  const [showFilters, setShowFilters] = useState(!isMobile); // Collapse filters on mobile by default
+  const [headerCollapsed, setHeaderCollapsed] = useState(isMobile); // Collapse header details on mobile
 
   const fetchData = useCallback(async () => {
     try {
@@ -222,73 +221,78 @@ export const UltimateHubCommunityPostsTab = memo(() => {
 
   return (
     <div className="flex flex-col h-full bg-black overflow-hidden">
-      {/* Header - Ultra Compact */}
+      {/* Header - Responsive & Compact */}
       <div className="shrink-0 bg-black/95 sticky top-0 z-10 border-b border-blue-500/20">
-        {/* Single row header with everything inline */}
-        <div className="px-2 py-1 flex items-center gap-2">
+        {/* Title + Search + Actions */}
+        <div className="px-1.5 sm:px-2 py-1 flex items-center gap-1 sm:gap-2">
           {/* Title */}
-          <span className="text-[9px] font-bold text-blue-300">Posts</span>
-          <span className="text-[8px] text-blue-400/50">({filteredAnalyses.length})</span>
+          <span className="text-[8px] sm:text-[9px] font-bold text-blue-300 shrink-0">Feed</span>
+          <span className="text-[7px] sm:text-[8px] text-blue-400/50 shrink-0">({filteredAnalyses.length})</span>
           
           {/* Search - inline on desktop, togglable on mobile */}
-          <div className={`flex-1 min-w-0 ${showSearchBar ? '' : 'hidden md:block'}`}>
-            <div className="relative">
-              <Search className="absolute left-1.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-neutral-500" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search..."
-                className="w-full pl-5 pr-2 py-0.5 bg-zinc-900/50 border border-zinc-700/50 rounded text-[9px] text-white placeholder:text-neutral-600 focus:outline-none focus:border-blue-500/50"
-              />
+          {!isMobile && (
+            <div className="flex-1 min-w-0">
+              <div className="relative">
+                <Search className="absolute left-1.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-neutral-500" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search..."
+                  className="w-full pl-5 pr-2 py-0.5 bg-zinc-900/50 border border-zinc-700/50 rounded text-[8px] text-white placeholder:text-neutral-600 focus:outline-none focus:border-blue-500/50"
+                />
+              </div>
             </div>
-          </div>
+          )}
           
           {/* Action buttons */}
-          <div className="flex items-center gap-1 shrink-0">
-            <button
-              onClick={() => { SoundEffects.click(); setShowSearchBar(!showSearchBar); }}
-              className={`md:hidden p-1 rounded ${showSearchBar ? 'text-blue-400' : 'text-zinc-500'}`}
-              aria-label="Search"
-            >
-              <Search className="w-3 h-3" />
-            </button>
+          <div className="flex items-center gap-0.5 sm:gap-1 shrink-0 ml-auto">
+            {isMobile && (
+              <button
+                onClick={() => { SoundEffects.click(); setSearchQuery(''); }}
+                className="p-1 rounded text-zinc-500 hover:text-zinc-300"
+                aria-label="Search"
+              >
+                <Search className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+              </button>
+            )}
             <button
               onClick={() => { SoundEffects.click(); setShowFilters((v) => !v); }}
-              className={`p-1 rounded ${showFilters ? 'text-blue-400' : 'text-zinc-500'}`}
+              className={`p-1 rounded transition-colors ${showFilters ? 'text-blue-400' : 'text-zinc-500'}`}
               aria-label="Filters"
             >
-              <Filter className="w-3 h-3" />
+              <Filter className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
             </button>
             <button
               onClick={handleCreatePost}
-              className="p-1 rounded text-green-400"
+              className="p-1 rounded text-green-400 hover:text-green-300"
               aria-label="New post"
             >
-              <Plus className="w-3 h-3" />
+              <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
             </button>
           </div>
         </div>
 
         {/* Filters - Single scrollable row when open */}
         {showFilters && (
-          <div className="px-2 pb-1 overflow-x-auto scrollbar-hide">
-            <div className="flex items-center gap-1 min-w-min">
+          <div className="px-1.5 sm:px-2 pb-1 overflow-x-auto scrollbar-hide border-t border-blue-500/10">
+            <div className="flex items-center gap-0.5 sm:gap-1 min-w-min">
               {/* Sort tabs */}
               {tabOptions.map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
                   onClick={() => { SoundEffects.click(); setActiveTab(id); }}
-                  className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[8px] font-medium whitespace-nowrap ${
+                  className={`flex items-center gap-0.5 px-1 py-0.5 rounded text-[7px] sm:text-[8px] font-medium whitespace-nowrap transition-colors ${
                     activeTab === id ? 'bg-blue-500 text-white' : 'text-zinc-500 hover:text-zinc-300'
                   }`}
                 >
-                  <Icon className="w-2.5 h-2.5" />
-                  <span>{label}</span>
+                  <Icon className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
+                  <span className="hidden sm:inline">{label}</span>
+                  <span className="sm:hidden">{label.substring(0, 1)}</span>
                 </button>
               ))}
               
-              <span className="text-zinc-700 mx-0.5">|</span>
+              <span className="text-zinc-700 mx-0.5 text-[6px]">|</span>
               
               {/* Content types */}
               {contentTypeOptions.map(({ id, label, icon: Icon }) => {
@@ -297,12 +301,13 @@ export const UltimateHubCommunityPostsTab = memo(() => {
                   <button
                     key={id}
                     onClick={() => { SoundEffects.click(); toggleType(id); }}
-                    className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[8px] font-medium whitespace-nowrap ${
+                    className={`flex items-center gap-0.5 px-1 py-0.5 rounded text-[7px] sm:text-[8px] font-medium whitespace-nowrap transition-colors ${
                       isActive ? 'bg-purple-500/70 text-white' : 'text-zinc-500 hover:text-zinc-300'
                     }`}
                   >
-                    <Icon className="w-2.5 h-2.5" />
-                    <span>{label}</span>
+                    <Icon className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
+                    <span className="hidden sm:inline">{label}</span>
+                    <span className="sm:hidden">{label.substring(0, 1)}</span>
                   </button>
                 );
               })}
@@ -313,7 +318,7 @@ export const UltimateHubCommunityPostsTab = memo(() => {
 
       {/* Feed List */}
       <div className="flex-1 overflow-y-auto">
-        <div className="p-2 sm:p-4">
+        <div className="p-1 sm:p-2 md:p-4 h-full">
           <FeedGrid
             analyses={filteredAnalyses}
             loading={loading}

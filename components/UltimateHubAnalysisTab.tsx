@@ -135,16 +135,17 @@ const ConfidenceMeter = memo(({ score }: { score: number }) => {
 ConfidenceMeter.displayName = 'ConfidenceMeter';
 
 export const UltimateHubAnalysisTab = memo(() => {
-  const { shouldSkipHeavyEffects } = useMobilePerformance();
+  const { shouldSkipHeavyEffects, isMobile } = useMobilePerformance();
   
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [showChart, setShowChart] = useState(true);
+  const [showChart, setShowChart] = useState(!isMobile); // Hide chart on mobile by default to save resources
   const [userReaction, setUserReaction] = useState<'bull' | 'bear' | 'save' | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<Analysis> | null>(null);
+  const [headerCollapsed, setHeaderCollapsed] = useState(isMobile); // Collapse details on mobile
 
   // Check admin status
   useEffect(() => {
@@ -327,30 +328,31 @@ export const UltimateHubAnalysisTab = memo(() => {
   return (
     <div className="flex flex-col h-full bg-black overflow-hidden">
       {/* Header */}
-      <div className="shrink-0 p-2 sm:p-3 border-b border-blue-500/30 bg-black" style={{ boxShadow: '0 2px 8px rgba(59, 130, 246, 0.2)' }}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400" style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
-            <h2 className="text-xs sm:text-sm font-bold text-blue-300" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
-              Trading Analysis
+      <div className="shrink-0 p-1.5 sm:p-2 md:p-3 border-b border-blue-500/30 bg-black" style={{ boxShadow: '0 2px 8px rgba(59, 130, 246, 0.2)' }}>
+        {/* Title Row */}
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center gap-1 sm:gap-2 flex-1 min-w-0">
+            <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4 text-blue-400 shrink-0" style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
+            <h2 className="text-xs sm:text-sm font-bold text-blue-300 truncate" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
+              Analysis
             </h2>
-            <span className="text-[8px] sm:text-[9px] text-blue-400/60">
-              {currentIndex + 1} / {analyses.length}
+            <span className="text-[8px] sm:text-[9px] text-blue-400/60 shrink-0">
+              {currentIndex + 1}/{analyses.length}
             </span>
           </div>
           
-          <div className="flex items-center gap-1">
-            {/* Admin Controls */}
+          {/* Controls */}
+          <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
             {isAdmin && (
               <>
                 <motion.button
                   onClick={handleCreate}
                   whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="p-1.5 rounded-lg bg-green-500/20 hover:bg-green-500/30 border border-green-500/40"
-                  title="Create new analysis"
+                  className="p-1 sm:p-1.5 rounded-lg bg-green-500/20 hover:bg-green-500/30 border border-green-500/40"
+                  title="Create"
                 >
-                  <Plus className="w-3.5 h-3.5 text-green-400" />
+                  <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-green-400" />
                 </motion.button>
                 {!isEditing ? (
                   <>
@@ -358,19 +360,19 @@ export const UltimateHubAnalysisTab = memo(() => {
                       onClick={handleEdit}
                       whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="p-1.5 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/40"
-                      title="Edit analysis"
+                      className="p-1 sm:p-1.5 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/40"
+                      title="Edit"
                     >
-                      <Edit3 className="w-3.5 h-3.5 text-yellow-400" />
+                      <Edit3 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-yellow-400" />
                     </motion.button>
                     <motion.button
                       onClick={handleDelete}
                       whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="p-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 border border-red-500/40"
-                      title="Delete analysis"
+                      className="p-1 sm:p-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 border border-red-500/40"
+                      title="Delete"
                     >
-                      <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                      <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-red-400" />
                     </motion.button>
                   </>
                 ) : (
@@ -379,19 +381,19 @@ export const UltimateHubAnalysisTab = memo(() => {
                       onClick={handleSaveEdit}
                       whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="p-1.5 rounded-lg bg-green-500/20 hover:bg-green-500/30 border border-green-500/40"
-                      title="Save changes"
+                      className="p-1 sm:p-1.5 rounded-lg bg-green-500/20 hover:bg-green-500/30 border border-green-500/40"
+                      title="Save"
                     >
-                      <Save className="w-3.5 h-3.5 text-green-400" />
+                      <Save className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-green-400" />
                     </motion.button>
                     <motion.button
                       onClick={() => { setIsEditing(false); setEditForm(null); }}
                       whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="p-1.5 rounded-lg bg-zinc-500/20 hover:bg-zinc-500/30 border border-zinc-500/40"
-                      title="Cancel editing"
+                      className="p-1 sm:p-1.5 rounded-lg bg-zinc-500/20 hover:bg-zinc-500/30 border border-zinc-500/40"
+                      title="Cancel"
                     >
-                      <X className="w-3.5 h-3.5 text-zinc-400" />
+                      <X className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-zinc-400" />
                     </motion.button>
                   </>
                 )}
@@ -402,38 +404,51 @@ export const UltimateHubAnalysisTab = memo(() => {
               onClick={goPrev}
               whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="p-1.5 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/40"
+              className="p-1 sm:p-1.5 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/40"
             >
-              <ChevronLeft className="w-3.5 h-3.5 text-blue-400" />
+              <ChevronLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-400" />
             </motion.button>
             <motion.button
               onClick={goNext}
               whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="p-1.5 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/40"
+              className="p-1 sm:p-1.5 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/40"
             >
-              <ChevronRight className="w-3.5 h-3.5 text-blue-400" />
+              <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-400" />
             </motion.button>
           </div>
         </div>
 
-        {/* Market Badge & Direction */}
-        <div className="flex items-center gap-2 mt-2">
-          <span className={`px-2 py-0.5 rounded-full bg-gradient-to-r ${marketColors[currentAnalysis.market]} text-[9px] font-bold uppercase text-white`}>
-            {currentAnalysis.market}
-          </span>
-          <span className={`flex items-center gap-1 text-[10px] font-bold ${directionColors[currentAnalysis.direction]}`}>
-            {currentAnalysis.direction === 'bullish' && <TrendingUp className="w-3 h-3" />}
-            {currentAnalysis.direction === 'bearish' && <TrendingDown className="w-3 h-3" />}
-            {currentAnalysis.direction === 'neutral' && <BarChart3 className="w-3 h-3" />}
-            {currentAnalysis.direction.toUpperCase()}
-          </span>
-          <span className="text-[10px] font-semibold text-white">{currentAnalysis.pair}</span>
-        </div>
+        {/* Market Badge & Direction - Collapse on mobile */}
+        {!isMobile && (
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto text-nowrap scrollbar-hide">
+            <span className={`px-2 py-0.5 rounded-full bg-gradient-to-r ${marketColors[currentAnalysis.market]} text-[9px] font-bold uppercase text-white shrink-0`}>
+              {currentAnalysis.market}
+            </span>
+            <span className={`flex items-center gap-1 text-[10px] font-bold shrink-0 ${directionColors[currentAnalysis.direction]}`}>
+              {currentAnalysis.direction === 'bullish' && <TrendingUp className="w-2.5 h-2.5" />}
+              {currentAnalysis.direction === 'bearish' && <TrendingDown className="w-2.5 h-2.5" />}
+              {currentAnalysis.direction === 'neutral' && <BarChart3 className="w-2.5 h-2.5" />}
+              {currentAnalysis.direction.toUpperCase()}
+            </span>
+            <span className="text-[10px] font-semibold text-white shrink-0">{currentAnalysis.pair}</span>
+          </div>
+        )}
+        {isMobile && (
+          <div className="flex items-center gap-1 flex-wrap">
+            <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase text-white bg-gradient-to-r ${marketColors[currentAnalysis.market]}`}>
+              {currentAnalysis.market.charAt(0).toUpperCase()}
+            </span>
+            <span className={`text-[8px] font-bold ${directionColors[currentAnalysis.direction]}`}>
+              {currentAnalysis.direction === 'bullish' && '↑'} {currentAnalysis.direction === 'bearish' && '↓'}
+            </span>
+            <span className="text-[8px] text-blue-400">{currentAnalysis.pair}</span>
+          </div>
+        )}
       </div>
 
       {/* Content Area - Scrollable */}
-      <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-2 sm:space-y-3" style={{ touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}>
+      <div className="flex-1 overflow-y-auto p-1.5 sm:p-2 md:p-3 space-y-1.5 sm:space-y-2 md:space-y-3" style={{ touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}>
         {isEditing && editForm ? (
           /* Edit Mode */
           <div className="space-y-3">
@@ -590,14 +605,16 @@ export const UltimateHubAnalysisTab = memo(() => {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
+              transition={shouldSkipHeavyEffects ? { duration: 0 } : { duration: 0.3 }}
               className="overflow-hidden rounded-lg border border-blue-500/30"
             >
-              <div className="w-full h-[250px] sm:h-[300px] md:h-[350px] bg-black">
+              <div className="w-full h-[200px] sm:h-[250px] md:h-[300px] lg:h-[350px] xl:h-[400px] bg-black">
                 <iframe
                   src={`https://www.tradingview.com/widgetembed/?frameElementId=tradingview_chart&symbol=${getChartSymbol(currentAnalysis)}&interval=15&hidesidetoolbar=0&theme=dark&style=1&timezone=Etc%2FUTC`}
                   className="w-full h-full border-0"
                   style={{ touchAction: 'pan-y pinch-zoom' }}
                   allowFullScreen
+                  loading="lazy"
                 />
               </div>
             </motion.div>
@@ -627,58 +644,58 @@ export const UltimateHubAnalysisTab = memo(() => {
       </div>
 
       {/* Footer Actions */}
-      <div className="shrink-0 p-2 sm:p-3 border-t border-blue-500/30 bg-black" style={{ boxShadow: '0 -2px 8px rgba(59, 130, 246, 0.2)' }}>
-        <div className="flex items-center justify-around gap-2">
+      <div className="shrink-0 p-1.5 sm:p-2 md:p-3 border-t border-blue-500/30 bg-black" style={{ boxShadow: '0 -2px 8px rgba(59, 130, 246, 0.2)' }}>
+        <div className="flex items-center justify-around gap-1 sm:gap-2">
           {/* Bullish */}
           <motion.button
             onClick={() => handleReaction('bull')}
             whileTap={{ scale: 0.95 }}
-            className={`flex-1 flex flex-col items-center gap-1 p-2 rounded-lg transition-all ${
+            className={`flex-1 flex flex-col items-center gap-0.5 p-1.5 sm:p-2 rounded-lg transition-all ${
               userReaction === 'bull'
                 ? 'bg-green-500/30 border border-green-500/50'
                 : 'bg-zinc-800/50 hover:bg-zinc-700/50 border border-transparent'
             }`}
           >
-            <TrendingUp className={`w-4 h-4 ${userReaction === 'bull' ? 'text-green-400' : 'text-zinc-400'}`} />
-            <span className="text-[8px] font-bold text-zinc-400">Bull</span>
+            <TrendingUp className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${userReaction === 'bull' ? 'text-green-400' : 'text-zinc-400'}`} />
+            <span className="text-[7px] sm:text-[8px] font-bold text-zinc-400">Bull</span>
           </motion.button>
 
           {/* Bearish */}
           <motion.button
             onClick={() => handleReaction('bear')}
             whileTap={{ scale: 0.95 }}
-            className={`flex-1 flex flex-col items-center gap-1 p-2 rounded-lg transition-all ${
+            className={`flex-1 flex flex-col items-center gap-0.5 p-1.5 sm:p-2 rounded-lg transition-all ${
               userReaction === 'bear'
                 ? 'bg-red-500/30 border border-red-500/50'
                 : 'bg-zinc-800/50 hover:bg-zinc-700/50 border border-transparent'
             }`}
           >
-            <TrendingDown className={`w-4 h-4 ${userReaction === 'bear' ? 'text-red-400' : 'text-zinc-400'}`} />
-            <span className="text-[8px] font-bold text-zinc-400">Bear</span>
+            <TrendingDown className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${userReaction === 'bear' ? 'text-red-400' : 'text-zinc-400'}`} />
+            <span className="text-[7px] sm:text-[8px] font-bold text-zinc-400">Bear</span>
           </motion.button>
 
           {/* Save */}
           <motion.button
             onClick={() => handleReaction('save')}
             whileTap={{ scale: 0.95 }}
-            className={`flex-1 flex flex-col items-center gap-1 p-2 rounded-lg transition-all ${
+            className={`flex-1 flex flex-col items-center gap-0.5 p-1.5 sm:p-2 rounded-lg transition-all ${
               userReaction === 'save'
                 ? 'bg-blue-500/30 border border-blue-500/50'
                 : 'bg-zinc-800/50 hover:bg-zinc-700/50 border border-transparent'
             }`}
           >
-            <Copy className={`w-4 h-4 ${userReaction === 'save' ? 'text-blue-400' : 'text-zinc-400'}`} />
-            <span className="text-[8px] font-bold text-zinc-400">Save</span>
+            <Copy className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${userReaction === 'save' ? 'text-blue-400' : 'text-zinc-400'}`} />
+            <span className="text-[7px] sm:text-[8px] font-bold text-zinc-400">Save</span>
           </motion.button>
 
           {/* Share */}
           <motion.button
             onClick={handleShare}
             whileTap={{ scale: 0.95 }}
-            className="flex-1 flex flex-col items-center gap-1 p-2 rounded-lg bg-zinc-800/50 hover:bg-zinc-700/50 transition-all"
+            className="flex-1 flex flex-col items-center gap-0.5 p-1.5 sm:p-2 rounded-lg bg-zinc-800/50 hover:bg-zinc-700/50 transition-all"
           >
-            <Share2 className="w-4 h-4 text-zinc-400" />
-            <span className="text-[8px] font-bold text-zinc-400">Share</span>
+            <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-zinc-400" />
+            <span className="text-[7px] sm:text-[8px] font-bold text-zinc-400">Share</span>
           </motion.button>
         </div>
       </div>
