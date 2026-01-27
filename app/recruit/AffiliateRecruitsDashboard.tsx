@@ -143,7 +143,7 @@ const getNextTier = (activeCount: number): AffiliateTier | null => {
   return null;
 };
 
-const getTierIcon = (iconName: string) => {
+const getTierIcon = (iconName: string): React.ElementType => {
   const icons: Record<string, React.ElementType> = {
     target: Target,
     award: Award,
@@ -698,7 +698,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                   {/* All Tiers */}
                   <div className="grid grid-cols-5 gap-2">
                     {AFFILIATE_TIERS.map((tier, index) => {
-                      const TierIcon = getTierIcon(tier.icon);
+                      const TierIcon = getTierIcon(tier.icon) as React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
                       const isActive = currentTier.name === tier.name;
                       const isUnlocked = stats.active >= tier.minTraders;
                       
@@ -1744,7 +1744,7 @@ const EarningsCard = ({
   title: string; 
   value: string; 
   subtitle: string; 
-  icon: React.ElementType; 
+  icon: React.ComponentType<{ className?: string }>; 
   trend?: string; 
   trendUp?: boolean; 
   isXMUser: boolean;
@@ -1792,7 +1792,7 @@ const QuickStatCard = ({
 }: { 
   label: string; 
   value: string | number; 
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
   color?: 'accent' | 'green' | 'purple' | 'orange';
   isXMUser: boolean;
 }) => {

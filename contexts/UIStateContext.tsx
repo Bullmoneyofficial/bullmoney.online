@@ -886,7 +886,10 @@ export function useAudioWidgetUI() {
   // - Hide completely ONLY if: (loader is open AND user never entered pagemode) OR (not unlocked AND not in pagemode/welcome AND never started pagemode audio)
   // - In other words: Keep showing (mounted) if user has started the pagemode flow at any point
   const isInPagemodeFlow = isPagemodeOpen || isWelcomeScreenActive || hasStartedPagemodeAudio;
-  const shouldHideAudioWidgetCompletely = !isInPagemodeFlow && !isV2Unlocked;
+  // Desktop should always be able to see the AudioWidget (even before V2 unlock),
+  // otherwise the UI appears "missing" on larger screens.
+  const isDesktopViewport = typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches;
+  const shouldHideAudioWidgetCompletely = !isDesktopViewport && !isInPagemodeFlow && !isV2Unlocked;
 
   // NEW: shouldHideMainWidget - hides MainWidget (settings panel) but keeps FloatingPlayer for audio
   // During pagemode registration (not welcome screen), hide the settings but keep audio playing

@@ -27,7 +27,7 @@ export function useAudioWidgetHandlers({ state, audioSettings, gameHook }: UseAu
     setHasStartedCatchGame, setShowCatchGameTutorial, catchGameTutorialTimerRef,
     setShowCatchGameDemo, tutorialStep, setTutorialStep, setHasCompletedTutorial,
     setIframeKey, setStreamingActive, setPlayerHidden, setShowFirstTimeHelp,
-    isTutorialHovered, setPlayerMinimized,
+    isTutorialHovered, setPlayerMinimized, setOpen, setShowBoredPopup,
   } = state;
   
   const { musicSource, setMusicSource, setMusicEnabled, musicVolume, iframeVolume } = audioSettings;
@@ -36,8 +36,13 @@ export function useAudioWidgetHandlers({ state, audioSettings, gameHook }: UseAu
   const handleStartCatchGame = useCallback(() => {
     setHasStartedCatchGame(true);
     setHasInteracted(false);
+    // Ensure the player is actually visible/interactive when the game starts.
+    setShowBoredPopup(false);
+    setPlayerHidden(false);
+    setPlayerMinimized(false);
+    setOpen(false);
     startGame();
-  }, [startGame, setHasInteracted, setHasStartedCatchGame]);
+  }, [setHasInteracted, setHasStartedCatchGame, setOpen, setPlayerHidden, setPlayerMinimized, setShowBoredPopup, startGame]);
 
   const dismissCatchGameTutorial = useCallback(() => {
     setShowCatchGameTutorial(false);

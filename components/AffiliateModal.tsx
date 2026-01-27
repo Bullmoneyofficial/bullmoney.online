@@ -227,7 +227,7 @@ const NeonButton = memo(({
   variant?: 'primary' | 'secondary' | 'ghost';
   size?: 'small' | 'default' | 'large';
   className?: string;
-  icon?: React.ComponentType<{ className?: string }>;
+  icon?: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
 }) => {
   const sizeClasses = {
     small: 'py-2 px-4 text-sm',
@@ -298,7 +298,7 @@ const NeonInput = memo(({
   placeholder?: string;
   disabled?: boolean;
   autoFocus?: boolean;
-  icon?: React.ComponentType<{ className?: string }>;
+  icon?: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
   className?: string;
 }) => {
   return (
@@ -342,7 +342,7 @@ const StatCard = memo(({
   subtext,
   highlight = false 
 }: { 
-  icon: React.ComponentType<{ className?: string }>; 
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>; 
   label: string; 
   value: string | number;
   subtext?: string;
@@ -419,7 +419,7 @@ TierBadge.displayName = "TierBadge";
 const CollapsibleSection = memo(({ title, subtitle, icon: Icon, children, defaultOpen = false }: {
   title: string;
   subtitle?: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
   children: React.ReactNode;
   defaultOpen?: boolean;
 }) => (
