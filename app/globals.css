@@ -11,5 +11,296 @@
 @import "./styles/50-fps-overrides.css";
 @import "./styles/60-desktop-zindex-fix.css";
 @import "./styles/70-mobile-performance.css";
+@import "../styles/themes/supreme-z-index.css";
+
+/* =============================================
+   GLOBAL THEME ACCENT OVERRIDES (ALL MODALS)
+   ============================================= */
+
+/* Modal containers (broad coverage) */
+[role="dialog"],
+.modal,
+.modal-content,
+.modal-container,
+.modal-card,
+.pm-modal-content,
+.recruit-modal-content,
+.affiliate-modal,
+.theme-config-modal-supreme,
+.theme-selector-modal-supreme {
+  border-color: var(--neon-border) !important;
+  box-shadow: var(--neon-glow) !important;
+}
+
+/* Modal headers and separators */
+.modal-header,
+.modal-title,
+.modal-footer,
+.modal-separator,
+.modal-divider {
+  border-color: var(--neon-border-soft) !important;
+}
+
+/* Close buttons and action icons inside modals */
+[data-modal-close="true"],
+.modal-close,
+.modal-action {
+  color: rgba(var(--neon-accent-rgb), 0.8) !important;
+  border-color: var(--neon-border-soft) !important;
+  box-shadow: 0 0 10px rgba(var(--neon-accent-rgb), 0.3) !important;
+}
+
+/* Modal accent text */
+.modal-accent,
+.modal-title,
+.modal-subtitle,
+.modal-highlight {
+  color: rgba(var(--neon-accent-rgb), 0.85) !important;
+  text-shadow: 0 0 10px rgba(var(--neon-accent-rgb), 0.4);
+}
+
+/* =============================================
+   GLOBAL THEME ACCENT OVERRIDES (FOOTER)
+   ============================================= */
+
+footer,
+[data-footer],
+.footer,
+.footer-section,
+.site-footer {
+  border-color: var(--neon-border-soft) !important;
+}
+
+footer a,
+[data-footer] a,
+.footer a,
+.footer-section a,
+.site-footer a {
+  color: rgba(var(--neon-accent-rgb), 0.8) !important;
+  text-shadow: 0 0 8px rgba(var(--neon-accent-rgb), 0.3);
+}
+
+footer a:hover,
+[data-footer] a:hover,
+.footer a:hover,
+.footer-section a:hover,
+.site-footer a:hover {
+  color: rgba(var(--neon-accent-rgb), 1) !important;
+  text-shadow: 0 0 12px rgba(var(--neon-accent-rgb), 0.6);
+}
+
+footer .accent,
+[data-footer] .accent,
+.footer .accent,
+.footer-section .accent,
+.site-footer .accent {
+  color: rgba(var(--neon-accent-rgb), 0.9) !important;
+  text-shadow: 0 0 10px rgba(var(--neon-accent-rgb), 0.5);
+}
+
+/* =============================================
+   GLOBAL THEME ACCENT OVERRIDES (PAGES + NAV + HUB)
+   ============================================= */
+
+/* Core page wrappers */
+main,
+section,
+article,
+[data-theme-aware],
+[data-page],
+[data-section] {
+  --page-accent: var(--neon-accent);
+  --page-accent-rgb: var(--neon-accent-rgb);
+}
+
+/* Navbar + header + hub wrappers */
+nav,
+header,
+.navbar,
+.nav,
+.nav-bar,
+.nav-container,
+.nav-wrapper,
+.nav-content,
+.header,
+.header-bar,
+.ultimate-hub,
+.ultimate-hub-container,
+.hub,
+.hub-container,
+.hub-panel {
+  border-color: var(--neon-border-soft) !important;
+  box-shadow: 0 0 20px rgba(var(--neon-accent-rgb), 0.15);
+}
+
+/* Nav links + hub links */
+nav a,
+header a,
+.navbar a,
+.nav a,
+.nav-bar a,
+.nav-container a,
+.ultimate-hub a,
+.hub a {
+  color: rgba(var(--neon-accent-rgb), 0.85) !important;
+  text-shadow: 0 0 8px rgba(var(--neon-accent-rgb), 0.3);
+}
+
+nav a:hover,
+header a:hover,
+.navbar a:hover,
+.nav a:hover,
+.nav-bar a:hover,
+.nav-container a:hover,
+.ultimate-hub a:hover,
+.hub a:hover {
+  color: rgba(var(--neon-accent-rgb), 1) !important;
+  text-shadow: 0 0 12px rgba(var(--neon-accent-rgb), 0.6);
+}
+
+/* Active nav items + hub highlights */
+nav .active,
+header .active,
+.navbar .active,
+.nav .active,
+.nav-bar .active,
+.nav-container .active,
+.ultimate-hub .active,
+.hub .active,
+.hub-highlight,
+.hub-accent,
+.nav-accent {
+  color: rgba(var(--neon-accent-rgb), 0.95) !important;
+  text-shadow: 0 0 12px rgba(var(--neon-accent-rgb), 0.7);
+}
+
+/* =============================================
+   AFFILIATE MODAL - NEON BLUE THEME STYLES
+   ============================================= */
+
+/* Custom range slider styling for affiliate calculator */
+input[type="range"].neon-slider,
+.affiliate-modal input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 8px;
+  border-radius: 9999px;
+  background: rgba(59, 130, 246, 0.2);
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #3b82f6;
+  border: 2px solid #60a5fa;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
+  transition: all 0.2s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.8);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #3b82f6;
+  border: 2px solid #60a5fa;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
+  transition: all 0.2s ease;
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.8);
+}
+
+/* Neon text glow effect */
+.neon-text-blue {
+  color: #93c5fd;
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+.neon-text-cyan {
+  color: #22d3ee;
+  text-shadow: 0 0 15px rgba(34, 211, 238, 0.6);
+}
+
+/* Static neon border glow */
+.neon-border-blue {
+  border: 2px solid rgba(59, 130, 246, 0.6);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+}
+
+.neon-border-cyan {
+  border: 2px solid rgba(34, 211, 238, 0.6);
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.4);
+}
+
+/* Neon card hover effect (static, no animation) */
+.neon-card-hover:hover {
+  border-color: rgba(59, 130, 246, 0.9);
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
+}
+
+/* Mobile-optimized scrollbar for affiliate modal */
+.affiliate-modal::-webkit-scrollbar {
+  width: 6px;
+}
+
+.affiliate-modal::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+}
+
+.affiliate-modal::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.5);
+  border-radius: 3px;
+}
+
+.affiliate-modal::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.7);
+}
+
+/* =============================================
+   GLOBAL MODAL CLOSE BUTTON - NEON + UI STATE
+   ============================================= */
+
+body[data-modal-open="true"] button[data-modal-close="true"],
+body[data-modal-open="true"] button[aria-label*="Close" i],
+body[data-modal-open="true"] button[title*="Close" i] {
+  border: 1px solid rgba(59, 130, 246, 0.6);
+  background: rgba(2, 6, 23, 0.7);
+  color: #e2e8f0;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.6), 0 0 20px rgba(14, 165, 233, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+body[data-modal-open="true"] button[data-modal-close="true"]:hover,
+body[data-modal-open="true"] button[aria-label*="Close" i]:hover,
+body[data-modal-open="true"] button[title*="Close" i]:hover {
+  background: rgba(15, 23, 42, 0.85);
+  border-color: rgba(34, 211, 238, 0.8);
+  box-shadow: 0 0 14px rgba(34, 211, 238, 0.7), 0 0 28px rgba(59, 130, 246, 0.6);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 640px) {
+  body[data-modal-open="true"] button[data-modal-close="true"],
+  body[data-modal-open="true"] button[aria-label*="Close" i],
+  body[data-modal-open="true"] button[title*="Close" i] {
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.7), 0 0 12px rgba(239, 68, 68, 0.7);
+    border-color: rgba(59, 130, 246, 0.7);
+  }
+}
 
 

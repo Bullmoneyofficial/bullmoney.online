@@ -28,6 +28,12 @@ interface FloatingPlayerProps {
   setStreamingActive: (v: boolean) => void;
   musicSource: MusicSource;
   setMusicEnabled: (v: boolean) => void;
+  musicEnabled: boolean;
+  musicVolume: number;
+  setMusicVolume: (v: number) => void;
+  // Separate iframe volume control
+  iframeVolume: number;
+  setIframeVolume: (v: number) => void;
   iframeRef: React.RefObject<HTMLIFrameElement | null>;
   iframeKey: number;
   
@@ -131,7 +137,8 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
   const {
     miniPlayerRef, open, playerHidden, setPlayerHidden,
     isStreamingSource, streamingEmbedUrl, streamingActive, setStreamingActive,
-    musicSource, setMusicEnabled, iframeRef, iframeKey,
+    musicSource, setMusicEnabled, musicEnabled, musicVolume, setMusicVolume, 
+    iframeVolume, setIframeVolume, iframeRef, iframeKey,
     isWandering, wanderPosition, morphPhase, isHovering, setIsHovering,
     isNearPlayer, isFleeing, isReturning, movementStyle, speedMultiplier, fleeDirection,
     handlePlayerInteraction, energy, combo, getTirednessLevel, gameStats,
@@ -146,8 +153,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
   const { shouldSkipHeavyEffects } = useUnifiedPerformance();
   
   // iPhone UI States
-  const [volume, setVolume] = useState(70);
-  const [isMuted, setIsMuted] = useState(false);
+  const lastNonZeroVolumeRef = useRef(0.7);
   const [isLocked, setIsLocked] = useState(false);
   const [brightness, setBrightness] = useState(100);
   const [showCameraModal, setShowCameraModal] = useState(false);
@@ -357,22 +363,69 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
     props.onMinimizedChange?.(false);
   }, [props]);
 
-  // Volume control
+  // Volume control - controls iframeVolume (for streaming iframes)
   const handleVolumeUp = useCallback(() => {
     SoundEffects.click();
-    setVolume(v => Math.min(100, v + 10));
-    setIsMuted(false);
+    const next = Math.min(1, iframeVolume + 0.1);
+    setMusicEnabled(true);
+    setIframeVolume(next);
     setShowVolumeSlider(true);
     setTimeout(() => setShowVolumeSlider(false), 2000);
-  }, []);
+  }, [iframeVolume, setMusicEnabled, setIframeVolume]);
 
   const handleVolumeDown = useCallback(() => {
     SoundEffects.click();
-    setVolume(v => Math.max(0, v - 10));
-    if (volume <= 10) setIsMuted(true);
+    const next = Math.max(0, iframeVolume - 0.1);
+    setIframeVolume(next);
+    setMusicEnabled(next > 0);
     setShowVolumeSlider(true);
     setTimeout(() => setShowVolumeSlider(false), 2000);
-  }, [volume]);
+  }, [iframeVolume, setMusicEnabled, setIframeVolume]);
+
+  // Use iframeVolume for iframe control display
+  const iframeVolumePercent = Math.round(iframeVolume * 100);
+  const isIframeMuted = !musicEnabled || iframeVolumePercent === 0;
+
+  useEffect(() => {
+    if (iframeVolume > 0) {
+      lastNonZeroVolumeRef.current = iframeVolume;
+    }
+  }, [iframeVolume]);
+
+  // Broadcast volume to iframe whenever iframeVolume changes (separate from musicVolume)
+  useEffect(() => {
+    if (!iframeRef.current?.contentWindow) return;
+    const win = iframeRef.current.contentWindow;
+    const vol0to100 = Math.floor(iframeVolume * 100);
+    
+    // YouTube API
+    if (musicSource === 'YOUTUBE') {
+      if (musicEnabled && iframeVolume > 0) {
+        win.postMessage(JSON.stringify({ event: 'command', func: 'unMute' }), '*');
+      } else {
+        win.postMessage(JSON.stringify({ event: 'command', func: 'mute' }), '*');
+      }
+      win.postMessage(JSON.stringify({ event: 'command', func: 'setVolume', args: [vol0to100] }), '*');
+    }
+    
+    // Generic protocols for Spotify/Apple Music
+    win.postMessage({ method: 'setVolume', value: iframeVolume }, '*');
+    win.postMessage({ method: 'setVolume', value: vol0to100 }, '*');
+    win.postMessage(JSON.stringify({ method: 'setVolume', value: vol0to100 }), '*');
+  }, [iframeVolume, musicEnabled, musicSource, iframeRef]);
+
+  const handleToggleMute = useCallback(() => {
+    SoundEffects.click();
+    if (isIframeMuted) {
+      const restored = Math.max(0.1, lastNonZeroVolumeRef.current);
+      setMusicEnabled(true);
+      setIframeVolume(restored);
+    } else {
+      lastNonZeroVolumeRef.current = Math.max(iframeVolume, 0.1);
+      setIframeVolume(0);
+      setMusicEnabled(false);
+    }
+  }, [isIframeMuted, iframeVolume, setMusicEnabled, setIframeVolume]);
 
   // Power button
   const handlePower = useCallback(() => {
@@ -394,6 +447,33 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
     trackEvent('feature_used', { component: 'floating_player', action: 'camera' });
     setShowCameraModal(true);
   }, []);
+
+  // Handle iframe load - send initial volume command after a delay
+  const handleIframeLoad = useCallback(() => {
+    handlePlayerInteraction();
+    
+    // YouTube iframe needs a moment after load before accepting postMessage commands
+    // Send volume command after delays to ensure it catches the ready state
+    const sendVolumeCommands = () => {
+      if (!iframeRef.current?.contentWindow) return;
+      const win = iframeRef.current.contentWindow;
+      const vol0to100 = Math.floor(iframeVolume * 100);
+      
+      if (musicSource === 'YOUTUBE') {
+        if (musicEnabled && iframeVolume > 0) {
+          win.postMessage(JSON.stringify({ event: 'command', func: 'unMute' }), '*');
+        } else {
+          win.postMessage(JSON.stringify({ event: 'command', func: 'mute' }), '*');
+        }
+        win.postMessage(JSON.stringify({ event: 'command', func: 'setVolume', args: [vol0to100] }), '*');
+      }
+    };
+    
+    // Send after 500ms, 1s, and 2s to catch YouTube's ready state
+    setTimeout(sendVolumeCommands, 500);
+    setTimeout(sendVolumeCommands, 1000);
+    setTimeout(sendVolumeCommands, 2000);
+  }, [handlePlayerInteraction, iframeRef, iframeVolume, musicEnabled, musicSource]);
 
   if (!isStreamingSource || !streamingEmbedUrl) return null;
 
@@ -759,7 +839,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
             display: 'block',
             borderRadius: 'inherit',
           }}
-          onLoad={handlePlayerInteraction}
+          onLoad={handleIframeLoad}
           allow="autoplay; encrypted-media; fullscreen; picture-in-picture; clipboard-write"
           sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation"
         />
@@ -953,15 +1033,15 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               >
                 <motion.button
                   whileTap={{ x: -2 }}
-                  onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); SoundEffects.click(); }}
+                  onClick={(e) => { e.stopPropagation(); handleToggleMute(); }}
                   className={cn(
                     "w-[5px] h-7 rounded-l-sm transition-all shadow-lg",
-                    isMuted 
+                    isIframeMuted 
                       ? "bg-gradient-to-b from-orange-400 to-orange-600 shadow-orange-500/40" 
                       : "bg-gradient-to-b from-slate-500 to-slate-600"
                   )}
                 />
-                <ButtonTooltip show={hoveredButton === 'mute'} text={isMuted ? "🔇 Tap to Unmute" : "🔊 Tap to Mute"} position="right" color="orange" />
+                <ButtonTooltip show={hoveredButton === 'mute'} text={isIframeMuted ? "🔇 Tap to Unmute" : "🔊 Tap to Mute"} position="right" color="orange" />
               </div>
               
               {/* Volume Up */}
@@ -1024,7 +1104,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                   style={{ zIndex: Z_INDEX.VOLUME_SLIDER }}
                 >
                   <div className="bg-black/90 backdrop-blur-xl rounded-2xl px-5 py-3 flex items-center gap-3 border border-white/10 shadow-2xl">
-                    {isMuted ? (
+                    {isIframeMuted ? (
                       <IconVolumeOff className="w-5 h-5 text-white" />
                     ) : (
                       <IconVolume className="w-5 h-5 text-white" />
@@ -1033,10 +1113,10 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                       <motion.div 
                         className="h-full bg-white rounded-full"
                         initial={{ width: 0 }}
-                        animate={{ width: `${isMuted ? 0 : volume}%` }}
+                        animate={{ width: `${isIframeMuted ? 0 : iframeVolumePercent}%` }}
                       />
                     </div>
-                    <span className="text-white text-xs font-semibold w-8">{isMuted ? 0 : volume}%</span>
+                    <span className="text-white text-xs font-semibold w-8">{isIframeMuted ? 0 : iframeVolumePercent}%</span>
                   </div>
                 </motion.div>
               )}
@@ -1175,7 +1255,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                   <div className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden">
                     <motion.div 
                       className="h-full bg-white/80 rounded-full"
-                      animate={{ width: `${isMuted ? 0 : volume}%` }}
+                      animate={{ width: `${isIframeMuted ? 0 : iframeVolumePercent}%` }}
                     />
                   </div>
                   <IconVolume className="w-3 h-3 text-white/40" />

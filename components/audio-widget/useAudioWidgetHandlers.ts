@@ -11,6 +11,7 @@ export interface UseAudioWidgetHandlersOptions {
     setMusicSource: (source: MusicSource) => void;
     setMusicEnabled: (enabled: boolean) => void;
     musicVolume: number;
+    iframeVolume: number;
   };
   gameHook: {
     isWandering: boolean;
@@ -29,7 +30,7 @@ export function useAudioWidgetHandlers({ state, audioSettings, gameHook }: UseAu
     isTutorialHovered, setPlayerMinimized,
   } = state;
   
-  const { musicSource, setMusicSource, setMusicEnabled, musicVolume } = audioSettings;
+  const { musicSource, setMusicSource, setMusicEnabled, musicVolume, iframeVolume } = audioSettings;
   const { setHasInteracted, startGame, gameStats, isWandering, handlePlayerInteraction } = gameHook;
 
   const handleStartCatchGame = useCallback(() => {
@@ -115,13 +116,13 @@ export function useAudioWidgetHandlers({ state, audioSettings, gameHook }: UseAu
     }
   }, [isWandering, handlePlayerInteraction]);
 
-  // Broadcast volume commands to iframe
+  // Broadcast volume commands to iframe (uses separate iframeVolume)
   const broadcastVolumeToIframe = useCallback((iframeRef: React.RefObject<HTMLIFrameElement | null>) => {
     if (!iframeRef.current || !iframeRef.current.contentWindow) return;
     
     const win = iframeRef.current.contentWindow;
-    const vol0to100 = Math.floor(musicVolume * 100);
-    const vol0to1 = musicVolume;
+    const vol0to100 = Math.floor(iframeVolume * 100);
+    const vol0to1 = iframeVolume;
 
     if (musicSource === 'YOUTUBE') {
       win.postMessage(JSON.stringify({
@@ -144,7 +145,7 @@ export function useAudioWidgetHandlers({ state, audioSettings, gameHook }: UseAu
       win.postMessage(msg, '*');
       win.postMessage(JSON.stringify(msg), '*');
     });
-  }, [musicVolume, musicSource]);
+  }, [iframeVolume, musicSource]);
 
   return {
     handleStartCatchGame,

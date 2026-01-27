@@ -609,6 +609,7 @@ const NewsFeedContent = memo(() => {
                 onClick={handleClose}
                 className="p-2 rounded-full bg-neutral-800 text-white hover:bg-neutral-700 transition-colors group relative"
                 title="Close (ESC)"
+                data-modal-close="true"
               >
                 <X className="w-5 h-5" />
                 {!shouldSkipHeavyEffects && (

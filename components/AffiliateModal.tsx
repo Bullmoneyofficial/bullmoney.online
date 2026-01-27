@@ -3,32 +3,25 @@
 import React, { useRef, useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { useRouter } from "next/navigation";
 import dynamic from 'next/dynamic';
-import YouTube, { YouTubeProps, YouTubeEvent } from 'react-youtube'; 
-import { Volume2, Volume1, VolumeX, X, Palette, Sparkles, MessageCircle, Check, Mail, Hash, Lock, ArrowRight, ChevronLeft, ExternalLink, AlertCircle, Copy, Plus, Eye, EyeOff, FolderPlus, Loader2, ShieldCheck, Clock, User } from 'lucide-react';
-import { motion, AnimatePresence, useMotionTemplate, useMotionValue } from "framer-motion";
+import { 
+  X, Check, Mail, Hash, Lock, ArrowRight, ChevronLeft, ExternalLink, AlertCircle, 
+  Copy, Eye, EyeOff, Loader2, User, DollarSign, Users, TrendingUp, Award, 
+  Zap, Target, Gift, Calendar, ChevronRight, Info, Star, Sparkles, 
+  Share2, MessageCircle, Clock, BarChart3, Percent, Coins, Trophy, ChevronDown,
+  Shield
+} from 'lucide-react';
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { createClient } from '@supabase/supabase-js';
-import { gsap } from 'gsap';
 
 // --- ANALYTICS ---
 import { BullMoneyAnalytics, trackEvent } from '@/lib/analytics';
 
-// --- CORE STATIC IMPORTS ---
-import { ALL_THEMES, Theme, THEME_SOUNDTRACKS, SoundProfile } from '@/components/Mainpage/ThemeComponents';
-import { safeGetItem, safeSetItem } from '@/lib/localStorage';
-
-// --- LOADER IMPORTS ---
-import { MultiStepLoader } from "@/components/Mainpage/MultiStepLoaderAffiliate";
-import MultiStepLoaderV2 from "@/components/Mainpage/MultiStepLoaderv2";
-import BullMoneyGate from "@/components/Mainpage/TradingHoldUnlock";
-
-// --- PAGE CONTENT IMPORTS ---
-import RecruitPage from "@/app/register/New"; 
-import RegisterPage from "@/app/recruit/RecruitPage";
-import Socials from "@/components/Mainpage/Socialsfooter";
-
-// --- GLOBAL THEME CONTEXT (for XM easter egg) ---
+// --- GLOBAL THEME CONTEXT ---
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
+
+// --- PERFORMANCE HOOKS ---
+// import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 
 // --- SUPABASE SETUP ---
 const TELEGRAM_GROUP_LINK = "https://t.me/addlist/uswKuwT2JUQ4YWI8";
@@ -42,292 +35,38 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl!, supabaseKey!);
 
-// --- UTILS: MOBILE DETECTION HOOK ---
-import { useMobilePerformance } from '@/hooks/useMobilePerformance';
-
-const useIsMobile = () => {
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => {
-      const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-      const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
-      setIsMobile(isTouch && (window.innerWidth <= 768 || isMobileUA));
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-  return isMobile;
-};
-
-// --- CSS FOR GLOBAL CURSOR & SCROLL LOCK ---
-const CursorStyles = () => (
-  <style jsx global>{`
-    .target-cursor-wrapper {
-      position: fixed;
-      top: 0;
-      left: 0;
-      z-index: 9999;
-      pointer-events: none;
-      mix-blend-mode: difference;
-      will-change: transform;
-    }
-    .target-cursor-dot {
-      width: 8px;
-      height: 8px;
-      background-color: white;
-      border-radius: 50%;
-      position: absolute;
-      top: 0;
-      left: 0;
-      transform: translate(-50%, -50%);
-    }
-    .target-cursor-corner {
-      position: absolute;
-      width: 12px;
-      height: 12px;
-      border: 2px solid white;
-      will-change: transform;
-    }
-    .corner-tl { top: -6px; left: -6px; border-right: none; border-bottom: none; }
-    .corner-tr { top: -6px; right: -6px; border-left: none; border-bottom: none; }
-    .corner-br { bottom: -6px; right: -6px; border-left: none; border-top: none; }
-    .corner-bl { bottom: -6px; left: -6px; border-right: none; border-top: none; }
-    
-    body.custom-cursor-active {
-      cursor: none !important;
-    }
-    
-    input:-webkit-autofill,
-    input:-webkit-autofill:hover, 
-    input:-webkit-autofill:focus, 
-    input:-webkit-autofill:active{
-        -webkit-box-shadow: 0 0 0 30px #171717 inset !important;
-        -webkit-text-fill-color: white !important;
-        transition: background-color 5000s ease-in-out 0s;
-    }
-
-    body.loader-lock {
-        overflow: hidden !important;
-        height: 100vh !important;
-        width: 100vw !important;
-    }
-  `}</style>
-);
-
-// --- DYNAMIC CURSOR COMPONENT ---
-interface TargetCursorProps {
-  targetSelector?: string;
-  spinDuration?: number;
-  hideDefaultCursor?: boolean;
-  hoverDuration?: number;
-  parallaxOn?: boolean;
-}
-
-const TargetCursorComponent = memo(({
-  targetSelector = 'button, a, input, [role="button"], .cursor-target', 
-  spinDuration = 2,
-  hideDefaultCursor = true,
-  hoverDuration = 0.2,
-  parallaxOn = true
-}: TargetCursorProps) => {
-  const isMobile = useIsMobile();
-  const cursorRef = useRef<HTMLDivElement>(null);
-  const cornersRef = useRef<NodeListOf<HTMLDivElement> | null>(null);
-  const spinTlRef = useRef<gsap.core.Timeline | null>(null);
-  const dotRef = useRef<HTMLDivElement>(null);
-
-  const stateRef = useRef({
-    isActive: false,
-    activeStrength: { current: 0 },
-    targetCornerPositions: null as { x: number; y: number }[] | null,
-    tickerFn: null as (() => void) | null,
-    activeTarget: null as Element | null
-  });
-
-  const moveCursor = useCallback((e: MouseEvent) => {
-    if (cursorRef.current && !isMobile) {
-      gsap.to(cursorRef.current, { x: e.clientX, y: e.clientY, duration: 0.1, ease: 'power3.out', overwrite: 'auto' });
-    }
-  }, [isMobile]);
-
-  const handleDown = useCallback(() => {
-    const corners = cornersRef.current;
-    if (dotRef.current && corners) {
-      gsap.to(dotRef.current, { scale: 0.5, duration: 0.2 });
-      gsap.to(corners, { scale: 1.2, borderColor: '#00ffff', duration: 0.2 });
-    }
-  }, []);
-
-  const handleUp = useCallback(() => {
-    const corners = cornersRef.current;
-    if (dotRef.current && corners) {
-      gsap.to(dotRef.current, { scale: 1, duration: 0.2 });
-      gsap.to(corners, { scale: 1, borderColor: '#ffffff', duration: 0.2 });
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!cursorRef.current || typeof window === 'undefined') return;
-
-    if (hideDefaultCursor && !isMobile) {
-      document.body.classList.add('custom-cursor-active');
-    }
-
-    const cursor = cursorRef.current;
-    cornersRef.current = cursor.querySelectorAll<HTMLDivElement>('.target-cursor-corner');
-    
-    let ctx = gsap.context(() => {});
-
-    if (!isMobile) {
-        ctx = gsap.context(() => {
-            const corners = cornersRef.current!;
-
-            gsap.set(cursor, { xPercent: -50, yPercent: -50, x: window.innerWidth / 2, y: window.innerHeight / 2 });
-
-            spinTlRef.current = gsap.timeline({ repeat: -1 })
-                .to(cursor, { rotation: 360, duration: spinDuration, ease: 'none' });
-
-            window.addEventListener('mousemove', moveCursor, { passive: true });
-            window.addEventListener('mousedown', handleDown);
-            window.addEventListener('mouseup', handleUp);
-
-            const tickerFn = () => {
-                const state = stateRef.current;
-                if (!state.targetCornerPositions || !cursorRef.current) return;
-                
-                const strength = state.activeStrength.current;
-                if (strength === 0) {
-                    if (stateRef.current.tickerFn) gsap.ticker.remove(stateRef.current.tickerFn);
-                    return;
-                }
-
-                const cursorX = gsap.getProperty(cursor, 'x') as number;
-                const cursorY = gsap.getProperty(cursor, 'y') as number;
-
-                for(let i = 0; i < corners.length; i++) {
-                    const corner = corners[i];
-                    const targetPosition = state.targetCornerPositions[i];
-                    if (!corner || !targetPosition) continue;
-                    const currentX = gsap.getProperty(corner, 'x') as number;
-                    const currentY = gsap.getProperty(corner, 'y') as number;
-                    const targetX = targetPosition.x - cursorX;
-                    const targetY = targetPosition.y - cursorY;
-
-                    const finalX = currentX + (targetX - currentX) * strength;
-                    const finalY = currentY + (targetY - currentY) * strength;
-                    
-                    const duration = strength >= 0.99 ? (parallaxOn ? 0.2 : 0) : 0.05;
-                    gsap.to(corner, { x: finalX, y: finalY, duration: duration, ease: duration === 0 ? 'none' : 'power1.out', overwrite: 'auto' });
-                }
-            };
-            stateRef.current.tickerFn = tickerFn;
-            gsap.ticker.add(tickerFn);
-
-            const handleHover = (e: MouseEvent) => {
-                const target = (e.target as Element).closest(targetSelector);
-                if (target && target !== stateRef.current.activeTarget) {
-                    stateRef.current.activeTarget = target;
-                    stateRef.current.isActive = true;
-                    spinTlRef.current?.pause();
-                    gsap.to(cursor, { rotation: 0, duration: 0.3 }); 
-
-                    const rect = target.getBoundingClientRect();
-                    const borderWidth = 3; const cornerSize = 12;
-
-                    stateRef.current.targetCornerPositions = [
-                        { x: rect.left - borderWidth, y: rect.top - borderWidth },
-                        { x: rect.right + borderWidth - cornerSize, y: rect.top - borderWidth },
-                        { x: rect.right + borderWidth - cornerSize, y: rect.bottom + borderWidth - cornerSize },
-                        { x: rect.left - borderWidth, y: rect.bottom + borderWidth - cornerSize }
-                    ];
-
-                    gsap.to(stateRef.current.activeStrength, { current: 1, duration: hoverDuration, ease: 'power2.out' });
-                    
-                    if (!stateRef.current.tickerFn) gsap.ticker.add(stateRef.current.tickerFn!);
-
-                    const handleLeave = () => {
-                      gsap.to(stateRef.current.activeStrength, { current: 0, duration: hoverDuration, ease: 'power2.out' });
-                      stateRef.current.activeTarget = null;
-                      spinTlRef.current?.play();
-                      target.removeEventListener('mouseleave', handleLeave);
-                    };
-                    target.addEventListener('mouseleave', handleLeave);
-                }
-            };
-            window.addEventListener('mouseover', handleHover, { passive: true });
-        });
-    }
-
-    return () => {
-        const state = stateRef.current;
-        document.body.classList.remove('custom-cursor-active');
-        window.removeEventListener('mousemove', moveCursor);
-        window.removeEventListener('mousedown', handleDown);
-        window.removeEventListener('mouseup', handleUp);
-
-        if(state.tickerFn) gsap.ticker.remove(state.tickerFn);
-        ctx.revert();
-    };
-  }, [isMobile, hideDefaultCursor, spinDuration, targetSelector, hoverDuration, parallaxOn, moveCursor, handleDown, handleUp]);
-
-  return (
-    <div ref={cursorRef} className="target-cursor-wrapper">
-      <div ref={dotRef} className="target-cursor-dot" />
-      <div className="target-cursor-corner corner-tl" />
-      <div className="target-cursor-corner corner-tr" />
-      <div className="target-cursor-corner corner-br" />
-      <div className="target-cursor-corner corner-bl" />
-    </div>
-  );
-});
-TargetCursorComponent.displayName = "TargetCursorComponent";
-
-const TargetCursor = dynamic(() => Promise.resolve(TargetCursorComponent), { 
-  ssr: false 
-});
-
 // --- DYNAMIC IMPORTS ---
-const Shopmain = dynamic(() => import("@/components/Mainpage/ShopMainpage"), { ssr: false });
-const AffiliateAdmin = dynamic(() => import("@/app/register/AffiliateAdmin"), { ssr: false });
 const AffiliateRecruitsDashboard = dynamic(() => import("@/app/recruit/AffiliateRecruitsDashboard"), { ssr: false });
+const AffiliateAdminPanel = dynamic(() => import("@/app/recruit/AffiliateAdminPanel"), { ssr: false });
 
-const FixedThemeConfigurator = dynamic(
-    () => import('@/components/Mainpage/ThemeComponents').then((mod) => mod.ThemeSelector), 
-    { ssr: false }
-);
+const AFFILIATE_ADMIN_EMAILS = (process.env.NEXT_PUBLIC_AFFILIATE_ADMIN_EMAILS || "")
+  .split(",")
+  .map((email) => email.trim().toLowerCase())
+  .filter(Boolean);
 
-// --- LOADING STATES DATA ---
-const affiliateLoadingStates = [
-  { text: "ESTABLISHING SECURE CONNECTION" },
-  { text: "VERIFYING AFFILIATE PROTOCOLS" },
-  { text: "SYNCING RECRUIT DATABASE" },
-  { text: "DECRYPTING DASHBOARD ACCESS" },
-  { text: "WELCOME, ADMIN" },
-];
-
-// --- FALLBACK THEME ---
-const FALLBACK_THEME: Partial<Theme> = {
-    id: 'default',
-    name: 'Loading...',
-    filter: 'none',
-    mobileFilter: 'none',
-};
-
-// --- HELPER: GET THEME COLOR ---
-const getThemeColor = (theme: Partial<Theme> | any) => {
-    if (theme?.primaryColor) return theme.primaryColor;
-    
-    const colorMap: Record<string, string> = {
-        't01': '#3b82f6',
-        't02': '#22c55e',
-        't03': '#ef4444',
-        't04': '#a855f7',
-        't05': '#eab308',
-        't06': '#ec4899',
-    };
-    return colorMap[theme?.id] || '#3b82f6';
+// --- NEON BLUE THEME COLORS (Matching Navbar) ---
+const NEON_BLUE = {
+  // Primary neon blue (theme-driven)
+  primary: 'var(--accent-color, #3b82f6)',
+  primaryLight: 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)',
+  primaryDark: 'rgba(var(--accent-rgb, 59, 130, 246), 1)',
+  // Cyan accent (kept for contrast)
+  cyan: '#22d3ee',
+  cyanLight: '#67e8f9',
+  // Static neon glow values
+  border: 'rgba(var(--accent-rgb, 59, 130, 246), 0.6)',
+  borderHover: 'rgba(var(--accent-rgb, 59, 130, 246), 0.9)',
+  glow: '0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.4)',
+  glowStrong: '0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.6)',
+  glowIntense: '0 0 40px rgba(var(--accent-rgb, 59, 130, 246), 0.8)',
+  // Background
+  bgDark: 'rgba(0, 0, 0, 0.95)',
+  bgCard: 'rgba(0, 0, 0, 0.8)',
+  // Text
+  textPrimary: 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)',
+  textSecondary: 'rgba(var(--accent-rgb, 59, 130, 246), 0.7)',
+  textMuted: 'rgba(var(--accent-rgb, 59, 130, 246), 0.5)',
+  textWhite: '#ffffff',
 };
 
 // --- FORM DATA INTERFACES ---
@@ -338,157 +77,419 @@ interface FormData {
   referralCode: string;
 }
 
-// --- StepCard Component (Mobile Optimized) ---
-const StepCard = memo(({ number, number2, title, children, actions, className, isXM = false }: any) => {
-  const { isMobile: isMobileDevice, shouldSkipHeavyEffects } = useMobilePerformance();
-  const useRed = typeof number2 === "number";
-  const n = useRed ? number2 : number;
-  const ringColor = isXM ? 'ring-red-500/30' : 'ring-blue-500/30';
-  const shadowColor = isXM ? 'shadow-[0_0_40px_rgba(239,68,68,0.2)]' : 'shadow-[0_0_40px_rgba(59,130,246,0.2)]';
-  const gradientColor = isXM ? 'bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ef4444_50%,#00000000_100%)]' : 'bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)]';
-  const glowColor = isXM ? 'from-red-500/20 via-red-500/10' : 'from-blue-500/20 via-blue-500/10';
-  const textColor = isXM ? 'text-red-300/90' : 'text-blue-300/90';
-  const borderColor = isXM ? 'border-red-500/20' : 'border-blue-500/20';
-  const innerRing = isXM ? 'ring-red-500/10' : 'ring-blue-500/10';
+// --- AFFILIATE TIER SYSTEM ---
+const AFFILIATE_TIERS = [
+  { 
+    name: 'Starter', 
+    minTraders: 1, 
+    maxTraders: 4, 
+    commissionPercent: 5, 
+    xmRate: 11, 
+    vantageRate: 5.50,
+    color: NEON_BLUE.primary,
+    icon: Target 
+  },
+  { 
+    name: 'Bronze', 
+    minTraders: 5, 
+    maxTraders: 14, 
+    commissionPercent: 10, 
+    xmRate: 11, 
+    vantageRate: 5.50,
+    color: '#cd7f32',
+    icon: Award 
+  },
+  { 
+    name: 'Silver', 
+    minTraders: 15, 
+    maxTraders: 29, 
+    commissionPercent: 15, 
+    xmRate: 11, 
+    vantageRate: 5.50,
+    color: '#c0c0c0',
+    icon: Star 
+  },
+  { 
+    name: 'Gold', 
+    minTraders: 30, 
+    maxTraders: 49, 
+    commissionPercent: 20, 
+    xmRate: 11, 
+    vantageRate: 5.50,
+    color: '#ffd700',
+    icon: Trophy 
+  },
+  { 
+    name: 'Elite', 
+    minTraders: 50, 
+    maxTraders: Infinity, 
+    commissionPercent: 25, 
+    xmRate: 11, 
+    vantageRate: 5.50,
+    color: '#00d4ff',
+    icon: Sparkles 
+  },
+];
+
+// --- EARNINGS CALCULATOR ---
+const calculateEarnings = (
+  traders: number, 
+  avgLotsPerTrader: number, 
+  broker: 'XM' | 'Vantage',
+  socialPosts: number // posts per week
+): { commission: number; bonus: number; total: number; tier: typeof AFFILIATE_TIERS[0] } => {
+  // Find tier based on traders
+  const tier = AFFILIATE_TIERS.find(t => traders >= t.minTraders && traders <= t.maxTraders) || AFFILIATE_TIERS[0];
   
-  return (
-    <div className={cn(
-      "group relative overflow-hidden rounded-2xl p-6 md:p-8",
-      "bg-black/80 ring-2",
-      // Skip backdrop-blur on mobile for performance
-      !isMobileDevice && "backdrop-blur-xl",
-      isMobileDevice && "mobile-simple-bg",
-      ringColor,
-      // Skip heavy shadows on mobile
-      !shouldSkipHeavyEffects && shadowColor,
-      className
-    )}>
-      {/* Skip decorative animations on mobile */}
-      {!shouldSkipHeavyEffects && (
-        <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
-          <span className={cn("absolute inset-[-100%] animate-[spin_8s_linear_infinite] opacity-10", gradientColor)} />
-        </div>
-      )}
-      
-      {!shouldSkipHeavyEffects && (
-        <>
-          <div className={cn("pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-gradient-to-l blur-2xl to-transparent", glowColor)} />
-          <div className={cn("pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset", innerRing)} />
-        </>
-      )}
-      <div className="flex items-center justify-between mb-4 md:mb-6">
-        <span className={cn("inline-flex items-center gap-2 text-[10px] md:text-[11px] uppercase tracking-[0.18em] px-2 py-1 rounded-md ring-2 bg-black/60", textColor, ringColor)}>
-          Step {n} of 3
-        </span>
-      </div>
-      <h3 className="text-xl md:text-2xl font-extrabold text-white mb-4">{title}</h3>
-      <div className="flex-1">{children}</div>
-      {actions && <div className={cn("mt-6 md:mt-8 pt-6 border-t", borderColor)}>{actions}</div>}
-    </div>
-  );
-});
-StepCard.displayName = "StepCard";
-
-function IconPlusCorners() {
-  return (
-    <>
-      <Plus className="absolute h-4 w-4 -top-2 -left-2 text-white/70" />
-      <Plus className="absolute h-4 w-4 -bottom-2 -left-2 text-white/70" />
-      <Plus className="absolute h-4 w-4 -top-2 -right-2 text-white/70" />
-      <Plus className="absolute h-4 w-4 -bottom-2 -right-2 text-white/70" />
-    </>
-  );
-}
-
-const characters = "BULLMONEY";
-const generateRandomString = (length: number) => {
-  let result = "";
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  // Base rate per lot
+  const baseRate = broker === 'XM' ? tier.xmRate : tier.vantageRate;
+  
+  // Commission per lot = baseRate * (commissionPercent / 100)
+  const commissionPerLot = baseRate * (tier.commissionPercent / 100);
+  
+  // Total lots traded by all referred traders
+  const totalLots = traders * avgLotsPerTrader;
+  
+  // Base commission
+  const commission = totalLots * commissionPerLot;
+  
+  // Bonus calculation: If traders trade >20 lots/month total
+  // Bonus = commission difference * traders * social multiplier
+  let bonus = 0;
+  if (totalLots >= 20) {
+    // Social media multiplier: 2x if posted 2x/week (8x/month), 1.5x if 6x/month
+    const monthlyPosts = socialPosts * 4; // Convert weekly to monthly
+    const socialMultiplier = monthlyPosts >= 8 ? 2 : monthlyPosts >= 6 ? 1.5 : 1;
+    
+    // Bonus = commissionPerLot * traders * socialMultiplier
+    bonus = commissionPerLot * traders * socialMultiplier;
   }
-  return result;
+  
+  return {
+    commission: Math.round(commission * 100) / 100,
+    bonus: Math.round(bonus * 100) / 100,
+    total: Math.round((commission + bonus) * 100) / 100,
+    tier
+  };
 };
 
-// --- Card Components ---
-export const EvervaultCard = memo(({ text }: { text?: string }) => {
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const [randomString, setRandomString] = useState("");
-  useEffect(() => { setRandomString(generateRandomString(1500)); }, []);
-  function onMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent<HTMLDivElement>) {
-    const { left, top } = currentTarget.getBoundingClientRect();
-    mouseX.set(clientX - left);
-    mouseY.set(clientY - top);
-    setRandomString(generateRandomString(1500));
-  }
+// --- NEON CARD COMPONENT ---
+const NeonCard = memo(({ 
+  children, 
+  className,
+  glow = true,
+  padding = 'default'
+}: { 
+  children: React.ReactNode; 
+  className?: string;
+  glow?: boolean;
+  padding?: 'none' | 'small' | 'default' | 'large';
+}) => {
+  const paddingClasses = {
+    none: '',
+    small: 'p-3 sm:p-4',
+    default: 'p-4 sm:p-6',
+    large: 'p-6 sm:p-8'
+  };
+  
   return (
-    <div className="w-full h-full flex items-center justify-center bg-transparent" onMouseMove={onMouseMove}>
-      <div className="group/card rounded-3xl w-full h-full relative overflow-hidden bg-transparent flex items-center justify-center">
-        <CardPattern mouseX={mouseX} mouseY={mouseY} randomString={randomString} />
-        <div className="relative z-10">
-          <div className="relative h-32 w-32 rounded-full flex items-center justify-center">
-            <div className="absolute inset-0 rounded-full bg-white/10 blur-md" />
-            <span className="relative z-20 font-extrabold text-2xl md:text-3xl text-white select-none">{text}</span>
-          </div>
-        </div>
-      </div>
+    <div 
+      className={cn(
+        "relative rounded-2xl overflow-hidden",
+        "bg-black/80 border-2",
+        paddingClasses[padding],
+        className
+      )}
+      style={{
+        borderColor: NEON_BLUE.border,
+        boxShadow: glow ? NEON_BLUE.glow : 'none',
+      }}
+    >
+      {children}
     </div>
   );
 });
-EvervaultCard.displayName = "EvervaultCard";
+NeonCard.displayName = "NeonCard";
 
-function CardPattern({ mouseX, mouseY, randomString }: any) {
-  const maskImage = useMotionTemplate`radial-gradient(250px at ${mouseX}px ${mouseY}px, white, transparent)`;
-  const style = { maskImage, WebkitMaskImage: maskImage as unknown as string };
+// --- NEON BUTTON COMPONENT ---
+const NeonButton = memo(({ 
+  children, 
+  onClick, 
+  disabled = false,
+  variant = 'primary',
+  size = 'default',
+  className,
+  icon: Icon
+}: { 
+  children: React.ReactNode; 
+  onClick?: () => void;
+  disabled?: boolean;
+  variant?: 'primary' | 'secondary' | 'ghost';
+  size?: 'small' | 'default' | 'large';
+  className?: string;
+  icon?: React.ComponentType<{ className?: string }>;
+}) => {
+  const sizeClasses = {
+    small: 'py-2 px-4 text-sm',
+    default: 'py-3 px-6 text-base',
+    large: 'py-4 px-8 text-lg'
+  };
+  
+  const variantStyles = {
+    primary: {
+      background: 'transparent',
+      border: `2px solid ${disabled ? 'rgba(59, 130, 246, 0.3)' : NEON_BLUE.border}`,
+      color: disabled ? 'rgba(147, 197, 253, 0.4)' : NEON_BLUE.textPrimary,
+      boxShadow: disabled ? 'none' : NEON_BLUE.glow,
+    },
+    secondary: {
+      background: 'rgba(59, 130, 246, 0.1)',
+      border: `2px solid ${disabled ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.4)'}`,
+      color: disabled ? 'rgba(147, 197, 253, 0.4)' : NEON_BLUE.textPrimary,
+      boxShadow: 'none',
+    },
+    ghost: {
+      background: 'transparent',
+      border: '2px solid transparent',
+      color: disabled ? 'rgba(147, 197, 253, 0.4)' : NEON_BLUE.textSecondary,
+      boxShadow: 'none',
+    }
+  };
+  
   return (
-    <div className="pointer-events-none absolute inset-0">
-      <motion.div className="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-700 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
-      <motion.div className="absolute inset-0 opacity-0 mix-blend-overlay group-hover/card:opacity-100" style={style}>
-        <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-white font-mono font-bold transition duration-500">{randomString}</p>
-      </motion.div>
-    </div>
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        "relative rounded-xl font-bold tracking-wide transition-all duration-300",
+        "flex items-center justify-center gap-2",
+        disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:scale-[1.02] active:scale-[0.98]",
+        sizeClasses[size],
+        className
+      )}
+      style={variantStyles[variant]}
+    >
+      {Icon && <Icon className="w-5 h-5" />}
+      {children}
+    </button>
   );
-}
+});
 
-export const EvervaultCardRed = memo(({ text }: { text?: string }) => {
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const [randomString, setRandomString] = useState("");
-  useEffect(() => { setRandomString(generateRandomString(1500)); }, []);
-  function onMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent<HTMLDivElement>) {
-    const { left, top } = currentTarget.getBoundingClientRect();
-    mouseX.set(clientX - left);
-    mouseY.set(clientY - top);
-    setRandomString(generateRandomString(1500));
-  }
+NeonButton.displayName = "NeonButton";
+
+// --- NEON INPUT COMPONENT ---
+const NeonInput = memo(({ 
+  type = 'text',
+  name,
+  value,
+  onChange,
+  onKeyDown,
+  placeholder,
+  disabled = false,
+  autoFocus = false,
+  icon: Icon,
+  className
+}: { 
+  type?: string;
+  name: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onKeyDown?: (e: React.KeyboardEvent) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  autoFocus?: boolean;
+  icon?: React.ComponentType<{ className?: string }>;
+  className?: string;
+}) => {
   return (
-    <div className="w-full h-full flex items-center justify-center bg-transparent" onMouseMove={onMouseMove}>
-      <div className="group/card rounded-3xl w-full h-full relative overflow-hidden bg-transparent flex items-center justify-center">
-        <CardPatternRed mouseX={mouseX} mouseY={mouseY} randomString={randomString} />
-        <div className="relative z-10">
-          <div className="relative h-32 w-32 rounded-full flex items-center justify-center">
-            <div className="absolute inset-0 rounded-full bg-white/10 blur-md" />
-            <span className="relative z-20 font-extrabold text-2xl md:text-3xl text-white select-none">{text}</span>
-          </div>
-        </div>
-      </div>
+    <div className={cn("relative group", className)}>
+      {Icon && (
+        <Icon 
+          className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors"
+          style={{ color: 'rgba(59, 130, 246, 0.5)' }}
+        />
+      )}
+      <input
+        type={type}
+        name={name}
+        value={value}
+        onChange={onChange}
+        onKeyDown={onKeyDown}
+        placeholder={placeholder}
+        disabled={disabled}
+        autoFocus={autoFocus}
+        className={cn(
+          "w-full rounded-lg py-3.5 text-white placeholder-blue-300/30",
+          "focus:outline-none transition-all duration-300",
+          "bg-black/60 border-2",
+          Icon ? "pl-10 pr-4" : "px-4",
+          disabled && "opacity-50 cursor-not-allowed"
+        )}
+        style={{
+          borderColor: 'rgba(59, 130, 246, 0.3)',
+        }}
+      />
     </div>
   );
 });
-EvervaultCardRed.displayName = "EvervaultCardRed";
+NeonInput.displayName = "NeonInput";
 
-function CardPatternRed({ mouseX, mouseY, randomString }: any) {
-  const maskImage = useMotionTemplate`radial-gradient(250px at ${mouseX}px ${mouseY}px, white, transparent)`;
-  const style = { maskImage, WebkitMaskImage: maskImage as unknown as string };
+// --- STAT CARD COMPONENT ---
+const StatCard = memo(({ 
+  icon: Icon, 
+  label, 
+  value, 
+  subtext,
+  highlight = false 
+}: { 
+  icon: React.ComponentType<{ className?: string }>; 
+  label: string; 
+  value: string | number;
+  subtext?: string;
+  highlight?: boolean;
+}) => (
+  <div 
+    className={cn(
+      "flex flex-col items-center p-3 sm:p-4 rounded-xl border-2 transition-all",
+      "bg-black/40"
+    )}
+    style={{
+      borderColor: highlight ? NEON_BLUE.primary : 'rgba(59, 130, 246, 0.3)',
+      boxShadow: highlight ? NEON_BLUE.glow : 'none',
+    }}
+  >
+    <Icon 
+      className="w-5 h-5 sm:w-6 sm:h-6 mb-2" 
+      style={{ color: highlight ? NEON_BLUE.cyan : NEON_BLUE.textPrimary }} 
+    />
+    <span 
+      className="text-lg sm:text-xl font-bold"
+      style={{ color: NEON_BLUE.textWhite }}
+    >
+      {value}
+    </span>
+    <span 
+      className="text-[10px] sm:text-xs text-center"
+      style={{ color: NEON_BLUE.textMuted }}
+    >
+      {label}
+    </span>
+    {subtext && (
+      <span 
+        className="text-[9px] sm:text-[10px] mt-1"
+        style={{ color: NEON_BLUE.textMuted }}
+      >
+        {subtext}
+      </span>
+    )}
+  </div>
+));
+StatCard.displayName = "StatCard";
+
+// --- TIER BADGE COMPONENT ---
+const TierBadge = memo(({ tier, size = 'default' }: { tier: typeof AFFILIATE_TIERS[0]; size?: 'small' | 'default' | 'large' }) => {
+  const Icon = tier.icon;
+  const sizeClasses = {
+    small: 'text-xs px-2 py-1',
+    default: 'text-sm px-3 py-1.5',
+    large: 'text-base px-4 py-2'
+  };
+  
   return (
-    <div className="pointer-events-none absolute inset-0">
-      <motion.div className="absolute inset-0 bg-gradient-to-r from-red-500 to-orange-500 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
-      <motion.div className="absolute inset-0 opacity-0 mix-blend-overlay group-hover/card:opacity-100" style={style}>
-        <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-red-100/90 font-mono font-bold transition duration-500">{randomString}</p>
-      </motion.div>
-    </div>
+    <span 
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full font-semibold border-2",
+        sizeClasses[size]
+      )}
+      style={{
+        borderColor: tier.color,
+        color: tier.color,
+        background: `${tier.color}15`,
+        boxShadow: `0 0 15px ${tier.color}40`,
+      }}
+    >
+      <Icon className="w-4 h-4" />
+      {tier.name}
+    </span>
   );
-}
+});
+TierBadge.displayName = "TierBadge";
+
+// --- COLLAPSIBLE SECTION ---
+const CollapsibleSection = memo(({ title, subtitle, icon: Icon, children, defaultOpen = false }: {
+  title: string;
+  subtitle?: string;
+  icon: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) => (
+  <details
+    className="group rounded-2xl border-2 bg-black/70"
+    style={{ borderColor: 'rgba(59, 130, 246, 0.35)' }}
+    open={defaultOpen}
+  >
+    <summary className="flex items-center justify-between gap-3 cursor-pointer list-none p-4">
+      <div className="flex items-center gap-3">
+        <div
+          className="w-9 h-9 rounded-full border-2 flex items-center justify-center"
+          style={{ borderColor: NEON_BLUE.primary, background: 'rgba(59, 130, 246, 0.12)' }}
+        >
+          <Icon className="w-4 h-4" style={{ color: NEON_BLUE.cyan }} />
+        </div>
+        <div>
+          <p className="text-sm font-bold" style={{ color: NEON_BLUE.textWhite }}>{title}</p>
+          {subtitle && <p className="text-[11px]" style={{ color: NEON_BLUE.textMuted }}>{subtitle}</p>}
+        </div>
+      </div>
+      <ChevronDown className="w-4 h-4 transition-transform duration-200 group-open:rotate-180" style={{ color: NEON_BLUE.textMuted }} />
+    </summary>
+    <div className="px-4 pb-4 pt-1">
+      {children}
+    </div>
+  </details>
+));
+CollapsibleSection.displayName = "CollapsibleSection";
+
+// --- CODE VAULT CARD (Static Evervault Style) ---
+const CodeVaultCard = memo(({ label, code, onCopy, copied }: {
+  label: string;
+  code: string;
+  onCopy: () => void;
+  copied: boolean;
+}) => (
+  <div
+    className="relative overflow-hidden rounded-2xl border-2 p-4"
+    style={{ borderColor: NEON_BLUE.border, boxShadow: NEON_BLUE.glow }}
+  >
+    <div
+      className="absolute inset-0 opacity-30"
+      style={{
+        background: 'conic-gradient(from 180deg at 50% 50%, rgba(59,130,246,0.0), rgba(34,211,238,0.35), rgba(59,130,246,0.0))'
+      }}
+    />
+    <div className="relative z-10">
+      <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: NEON_BLUE.textMuted }}>{label}</p>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-xl sm:text-2xl font-black" style={{ color: NEON_BLUE.textWhite }}>{code}</span>
+        <button
+          onClick={onCopy}
+          className="px-3 py-1.5 rounded-lg border-2 text-xs font-bold"
+          style={{
+            borderColor: NEON_BLUE.border,
+            color: NEON_BLUE.textPrimary,
+            background: 'rgba(59, 130, 246, 0.12)'
+          }}
+        >
+          {copied ? 'COPIED' : 'COPY'}
+        </button>
+      </div>
+      <p className="text-[11px] mt-2" style={{ color: NEON_BLUE.textMuted }}>
+        Paste this code during broker signup to connect your traders to you.
+      </p>
+    </div>
+  </div>
+));
+CodeVaultCard.displayName = "CodeVaultCard";
 
 // =========================================
 // MAIN AFFILIATE MODAL COMPONENT
@@ -499,89 +500,56 @@ interface AffiliateModalProps {
   onClose: () => void;
 }
 
+type ModalStep = 'intro' | 'how-it-works' | 'signup-broker' | 'signup-mt5' | 'signup-account' | 'loading' | 'success' | 'dashboard';
+
 export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps) {
+  const router = useRouter();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  // const { isMobile: isMobileDevice } = useMobilePerformance();
   
-  // Global theme context for XM easter egg
+  // Global theme context
   const { setIsXMUser } = useGlobalTheme();
   
-  // Form state
-  const [step, setStep] = useState(0);
+  // Step management
+  const [step, setStep] = useState<ModalStep>('intro');
   const [activeBroker, setActiveBroker] = useState<'Vantage' | 'XM'>('Vantage');
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
   
+  // Form state
   const [formData, setFormData] = useState<FormData>({
     email: '',
     mt5Number: '',
     password: '',
     referralCode: ''
   });
-
-  // Saved session state for skip feature
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  
+  // Session state
   const [savedSession, setSavedSession] = useState<{ id: string; email: string; mt5_id?: string } | null>(null);
   const [isReturningUser, setIsReturningUser] = useState(false);
   const [isVerifyingMT5, setIsVerifyingMT5] = useState(false);
-  const [mt5Verified, setMt5Verified] = useState(false);
+  const [dashboardTab, setDashboardTab] = useState<'dashboard' | 'admin'>('dashboard');
+  
+  // Calculator state
+  const [calcTraders, setCalcTraders] = useState(10);
+  const [calcLots, setCalcLots] = useState(5);
+  const [calcPosts, setCalcPosts] = useState(2);
 
-  const isVantage = activeBroker === 'Vantage';
-  const isXM = activeBroker === 'XM';
-  const brokerCode = isVantage ? "BULLMONEY" : "X3R7P";
+  const brokerCode = activeBroker === 'Vantage' ? "BULLMONEY" : "X3R7P";
+  const earnings = calculateEarnings(calcTraders, calcLots, activeBroker, calcPosts);
 
-  // Dynamic color classes based on broker
-  const themeColors = useMemo(() => ({
-    ring: isXM ? 'ring-red-500/30' : 'ring-blue-500/30',
-    shadow: isXM ? 'shadow-[0_0_40px_rgba(239,68,68,0.2)]' : 'shadow-[0_0_40px_rgba(59,130,246,0.2)]',
-    gradient: isXM ? 'bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ef4444_50%,#00000000_100%)]' : 'bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)]',
-    glow: isXM ? 'from-red-500/20 via-red-500/10' : 'from-blue-500/20 via-blue-500/10',
-    text: isXM ? 'text-red-300' : 'text-blue-300',
-    textMuted: isXM ? 'text-red-200/70' : 'text-blue-200/70',
-    textFaint: isXM ? 'text-red-300/40' : 'text-blue-300/40',
-    border: isXM ? 'border-red-500/60' : 'border-blue-500/60',
-    borderMuted: isXM ? 'border-red-500/30' : 'border-blue-500/30',
-    borderHover: isXM ? 'hover:border-red-400' : 'hover:border-blue-400',
-    icon: isXM ? 'text-red-400' : 'text-blue-400',
-    iconMuted: isXM ? 'text-red-400/50' : 'text-blue-400/50',
-    shadowGlow: isXM ? 'shadow-[0_0_25px_rgba(239,68,68,0.4)]' : 'shadow-[0_0_25px_rgba(59,130,246,0.4)]',
-    shadowGlowHover: isXM ? 'hover:shadow-[0_0_35px_rgba(239,68,68,0.6)]' : 'hover:shadow-[0_0_35px_rgba(59,130,246,0.6)]',
-    shadowSmall: isXM ? 'shadow-[0_0_20px_rgba(239,68,68,0.3)]' : 'shadow-[0_0_20px_rgba(59,130,246,0.3)]',
-    focusShadow: isXM ? 'focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'focus:shadow-[0_0_15px_rgba(59,130,246,0.3)]',
-    bg: isXM ? 'bg-red-600' : 'bg-blue-600',
-    bgHover: isXM ? 'hover:bg-red-950/30' : 'hover:bg-blue-950/30',
-  }), [isXM]);
+  const isAffiliateAdmin = useMemo(() => {
+    const email = savedSession?.email?.toLowerCase();
+    if (!email) return false;
+    return AFFILIATE_ADMIN_EMAILS.includes(email);
+  }, [savedSession]);
 
-  // Theme/audio state
-  const [isClient, setIsClient] = useState(false);
-  const [activeThemeId, setActiveThemeId] = useState<string>('t01');
-  const [showConfigurator, setShowConfigurator] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [volume, setVolume] = useState(25);
-  const playerRef = useRef<any>(null);
-  const [isPreviewing, setIsPreviewing] = useState(false);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-
-  const activeTheme = useMemo(() => {
-    if (!ALL_THEMES || ALL_THEMES.length === 0) return FALLBACK_THEME as Theme;
-    return ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
-  }, [activeThemeId]);
-
-  // Initialize
+  // Initialize and check for saved session
   useEffect(() => {
     if (!isOpen) return;
     
-    setIsClient(true);
-    
-    const storedTheme = safeGetItem('user_theme_id');
-    const storedMute = safeGetItem('user_is_muted');
-    const storedVol = safeGetItem('user_volume');
-    
-    if (storedTheme) setActiveThemeId(storedTheme);
-    if (storedMute !== null) setIsMuted(storedMute === 'true');
-    if (storedVol) setVolume(parseInt(storedVol));
-    
-    // Check for existing saved session for skip feature
     try {
       const savedSessionStr = localStorage.getItem('bullmoney_session');
       if (savedSessionStr) {
@@ -591,31 +559,10 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
           setFormData(prev => ({ ...prev, email: session.email }));
           setIsReturningUser(true);
           
-          // If user has existing MT5 ID in their session, auto-verify and skip to dashboard
+          // If user has existing MT5 ID, go directly to dashboard
           if (session.mt5_id) {
             setFormData(prev => ({ ...prev, mt5Number: session.mt5_id }));
-            setMt5Verified(true);
-            // Verify MT5 exists and skip directly to success screen
-            setTimeout(async () => {
-              try {
-                const { data: existingMT5 } = await supabase
-                  .from("recruits")
-                  .select("id, email, mt5_id")
-                  .eq("mt5_id", session.mt5_id)
-                  .maybeSingle();
-                
-                if (existingMT5 && existingMT5.id === session.id) {
-                  // User already fully registered - go to dashboard
-                  setStep(6);
-                } else {
-                  // MT5 not found or mismatch - go back to MT5 verification
-                  setStep(2);
-                }
-              } catch (err) {
-                console.error('Error verifying MT5:', err);
-                setStep(2); // Fallback to MT5 verification
-              }
-            }, 300);
+            setStep('dashboard');
           }
         }
       }
@@ -628,11 +575,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
     }
   }, [isOpen]);
 
-  const handleBrokerSwitch = (newBroker: 'Vantage' | 'XM') => {
-    if (activeBroker === newBroker) return;
-    setActiveBroker(newBroker);
-  };
-
+  // Form handlers
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     if (name === 'mt5Number' && !/^\d*$/.test(value)) return;
@@ -644,163 +587,11 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
   const isValidPassword = (pass: string) => pass.length >= 6;
   const isValidMT5 = (id: string) => id.length >= 5;
 
-  const handleNext = async (e?: React.SyntheticEvent) => {
-    if (e) e.preventDefault();
-    setSubmitError(null);
-
-    if (step === 0) {
-      setStep(1);
-    } else if (step === 1) {
-      setStep(2);
-    } else if (step === 2) {
-      if (!isValidMT5(formData.mt5Number)) {
-        setSubmitError("Please enter a valid MT5 ID (min 5 digits).");
-        return;
-      }
-      // Verify MT5 ID
-      await verifyMT5Id();
-    } else if (step === 3) {
-      if (!isValidEmail(formData.email)) {
-        setSubmitError("Please enter a valid email address.");
-        return;
-      }
-      if (!isValidPassword(formData.password)) {
-        setSubmitError("Password must be at least 6 characters.");
-        return;
-      }
-      if (!acceptedTerms) {
-        setSubmitError("You must agree to the Terms & Conditions.");
-        return;
-      }
-      handleRegisterSubmit();
-    }
-  };
-
-  const handleBack = () => {
-    if (step > 0) {
-      setStep(step - 1);
-      setSubmitError(null);
-    }
-  };
-
-  // Skip to MT5 verification for returning users
-  const handleSkipWithExistingAccount = () => {
-    if (savedSession) {
-      setIsReturningUser(true);
-      setFormData(prev => ({ ...prev, email: savedSession.email }));
-      setStep(2); // Skip directly to MT5 ID verification
-    }
-  };
-
-  // Verify MT5 ID against database
-  const verifyMT5Id = async () => {
-    setIsVerifyingMT5(true);
-    setSubmitError(null);
-    
-    try {
-      // Check if this MT5 ID already exists in the recruits table
-      const { data: existingMT5, error: mt5Error } = await supabase
-        .from("recruits")
-        .select("id, email, mt5_id")
-        .eq("mt5_id", formData.mt5Number)
-        .maybeSingle();
-      
-      if (mt5Error) {
-        console.error("MT5 verification error:", mt5Error);
-        // If there's an error, we'll allow them to proceed (new account)
-      }
-      
-      if (existingMT5) {
-        // MT5 ID exists - check if it matches the returning user
-        if (isReturningUser && savedSession) {
-          if (existingMT5.email === savedSession.email) {
-            // Correct MT5 for this user - update session and proceed to success
-            setMt5Verified(true);
-            localStorage.setItem("bullmoney_session", JSON.stringify({
-              id: existingMT5.id,
-              email: existingMT5.email,
-              mt5_id: existingMT5.mt5_id,
-              timestamp: Date.now(),
-              broker: activeBroker
-            }));
-            // 🎉 XM EASTER EGG: Activate for returning XM users too!
-            if (isXM) {
-              setIsXMUser(true);
-              console.log("🔴 XM Easter Egg Activated! Welcome back to the red side.");
-            }
-            setStep(5); // Skip to success
-            return;
-          } else {
-            // MT5 ID belongs to a different account
-            setSubmitError("This MT5 ID is registered to a different account.");
-            setIsVerifyingMT5(false);
-            return;
-          }
-        } else {
-          // MT5 ID already registered - auto-login the user with their existing account
-          setMt5Verified(true);
-          setSavedSession({
-            id: existingMT5.id,
-            email: existingMT5.email,
-            mt5_id: existingMT5.mt5_id
-          });
-          setIsReturningUser(true);
-          localStorage.setItem("bullmoney_session", JSON.stringify({
-            id: existingMT5.id,
-            email: existingMT5.email,
-            mt5_id: existingMT5.mt5_id,
-            timestamp: Date.now(),
-            broker: activeBroker
-          }));
-          // 🎉 XM EASTER EGG: Activate for auto-logged-in XM users!
-          if (isXM) {
-            setIsXMUser(true);
-            console.log("🔴 XM Easter Egg Activated! Auto-login on the red side.");
-          }
-          setStep(5); // Skip to success - welcome them back
-          return;
-        }
-      }
-      
-      // MT5 ID is new or not found - proceed to registration
-      setMt5Verified(true);
-      setStep(3);
-    } catch (err: any) {
-      console.error("MT5 verification error:", err);
-      setSubmitError("Verification failed. Please try again.");
-    } finally {
-      setIsVerifyingMT5(false);
-    }
-  };
-
-  // Handle keyboard submit for forms
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleNext();
     }
-  };
-
-  // Handle logout - clear session and reset state
-  const handleLogout = () => {
-    // Clear localStorage session
-    localStorage.removeItem('bullmoney_session');
-    
-    // Reset all form state
-    setFormData({
-      email: '',
-      mt5Number: '',
-      password: '',
-      referralCode: ''
-    });
-    setSavedSession(null);
-    setIsReturningUser(false);
-    setMt5Verified(false);
-    setAcceptedTerms(false);
-    setSubmitError(null);
-    
-    // Go back to step 0
-    setStep(0);
   };
 
   const copyCode = async (code: string) => {
@@ -813,16 +604,125 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
 
   const handleBrokerClick = () => {
     const link = activeBroker === 'Vantage' ? "https://vigco.co/iQbe2u" : "https://affs.click/t5wni";
-    // Track affiliate broker click
     BullMoneyAnalytics.trackAffiliateClick(activeBroker, 'affiliate_modal');
     window.open(link, '_blank');
   };
 
-  const handleRegisterSubmit = async () => {
-    setStep(4);
+  const handleNext = async () => {
     setSubmitError(null);
     
-    // Track registration attempt
+    switch (step) {
+      case 'intro':
+        setStep('how-it-works');
+        break;
+      case 'how-it-works':
+        setStep('signup-broker');
+        break;
+      case 'signup-broker':
+        setStep('signup-mt5');
+        break;
+      case 'signup-mt5':
+        if (!isValidMT5(formData.mt5Number)) {
+          setSubmitError("Please enter a valid MT5 ID (min 5 digits).");
+          return;
+        }
+        await verifyMT5Id();
+        break;
+      case 'signup-account':
+        if (!isValidEmail(formData.email)) {
+          setSubmitError("Please enter a valid email address.");
+          return;
+        }
+        if (!isValidPassword(formData.password)) {
+          setSubmitError("Password must be at least 6 characters.");
+          return;
+        }
+        if (!acceptedTerms) {
+          setSubmitError("You must agree to the Terms & Conditions.");
+          return;
+        }
+        await handleRegisterSubmit();
+        break;
+    }
+  };
+
+  const handleBack = () => {
+    const backMap: Partial<Record<ModalStep, ModalStep>> = {
+      'how-it-works': 'intro',
+      'signup-broker': 'how-it-works',
+      'signup-mt5': 'signup-broker',
+      'signup-account': 'signup-mt5',
+    };
+    const prevStep = backMap[step];
+    if (prevStep) {
+      setStep(prevStep);
+      setSubmitError(null);
+    }
+  };
+
+  const verifyMT5Id = async () => {
+    setIsVerifyingMT5(true);
+    setSubmitError(null);
+    
+    try {
+      const { data: existingMT5, error: mt5Error } = await supabase
+        .from("recruits")
+        .select("id, email, mt5_id")
+        .eq("mt5_id", formData.mt5Number)
+        .maybeSingle();
+      
+      if (mt5Error) {
+        console.error("MT5 verification error:", mt5Error);
+      }
+      
+      if (existingMT5) {
+        // MT5 ID exists - log them in
+        if (isReturningUser && savedSession && existingMT5.email === savedSession.email) {
+          localStorage.setItem("bullmoney_session", JSON.stringify({
+            id: existingMT5.id,
+            email: existingMT5.email,
+            mt5_id: existingMT5.mt5_id,
+            timestamp: Date.now(),
+            broker: activeBroker
+          }));
+          if (activeBroker === 'XM') setIsXMUser(true);
+          setStep('success');
+          return;
+        }
+        
+        // MT5 belongs to different account - still log them in
+        setSavedSession({
+          id: existingMT5.id,
+          email: existingMT5.email,
+          mt5_id: existingMT5.mt5_id
+        });
+        setIsReturningUser(true);
+        localStorage.setItem("bullmoney_session", JSON.stringify({
+          id: existingMT5.id,
+          email: existingMT5.email,
+          mt5_id: existingMT5.mt5_id,
+          timestamp: Date.now(),
+          broker: activeBroker
+        }));
+        if (activeBroker === 'XM') setIsXMUser(true);
+        setStep('success');
+        return;
+      }
+      
+      // MT5 ID is new - proceed to registration
+      setStep('signup-account');
+    } catch (err: any) {
+      console.error("MT5 verification error:", err);
+      setSubmitError("Verification failed. Please try again.");
+    } finally {
+      setIsVerifyingMT5(false);
+    }
+  };
+
+  const handleRegisterSubmit = async () => {
+    setStep('loading');
+    setSubmitError(null);
+    
     trackEvent('checkout_start', { 
       broker: activeBroker, 
       hasReferralCode: !!formData.referralCode 
@@ -859,12 +759,11 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
         localStorage.setItem("bullmoney_session", JSON.stringify({
           id: newUser.id,
           email: formData.email,
-          mt5_id: formData.mt5Number, // Save MT5 ID so user stays logged in
+          mt5_id: formData.mt5Number,
           timestamp: Date.now(),
-          broker: activeBroker // Save the broker choice
+          broker: activeBroker
         }));
         
-        // 🎉 Track successful affiliate signup
         BullMoneyAnalytics.trackAffiliateSignup(formData.referralCode || 'direct');
         trackEvent('signup', { 
           method: 'email', 
@@ -872,36 +771,33 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
           source: 'affiliate_modal' 
         });
         
-        // 🎉 XM EASTER EGG: If user registered with XM, activate red theme site-wide!
-        if (isXM) {
+        if (activeBroker === 'XM') {
           setIsXMUser(true);
-          console.log("🔴 XM Easter Egg Activated! Welcome to the red side.");
         }
       }
 
-      setTimeout(() => {
-        setStep(5);
-      }, 1000);
+      setTimeout(() => setStep('success'), 1000);
 
     } catch (err: any) {
       console.error("Submission Error:", err);
-      // Track registration error
       trackEvent('error', { 
         type: 'registration_failed', 
         message: err.message || 'Unknown error' 
       });
       
-      if (err.code === '23505') {
-        setSubmitError("This email is already registered.");
-      } else {
-        setSubmitError(err.message || "Connection failed. Please check your internet.");
-      }
-      setStep(3);
+      setSubmitError(err.message || "Connection failed. Please check your internet.");
+      setStep('signup-account');
     }
   };
 
-  const getStepProps = (currentStep: number) => {
-    return isVantage ? { number2: currentStep, isXM: false } : { number: currentStep, isXM: true };
+  const handleLogout = () => {
+    localStorage.removeItem('bullmoney_session');
+    setFormData({ email: '', mt5Number: '', password: '', referralCode: '' });
+    setSavedSession(null);
+    setIsReturningUser(false);
+    setAcceptedTerms(false);
+    setSubmitError(null);
+    setStep('intro');
   };
 
   const handleClose = useCallback(() => {
@@ -910,695 +806,835 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
 
   if (!isOpen) return null;
 
-  // SUCCESS SCREEN (Step 5)
-  if (step === 5) {
-    return (
-      <div className="fixed inset-0 z-[999999] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 md:p-8">
-        <CursorStyles />
-        <TargetCursor />
+  // =========================================
+  // RENDER INTRO SCREEN
+  // =========================================
+  const renderIntro = () => (
+    <motion.div
+      key="intro"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className="w-full max-w-lg mx-auto"
+    >
+      <NeonCard padding="large" className="text-center">
+        {/* Header Icon */}
+        <div 
+          className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center border-2"
+          style={{ 
+            borderColor: NEON_BLUE.primary,
+            boxShadow: NEON_BLUE.glowStrong,
+            background: 'rgba(59, 130, 246, 0.1)'
+          }}
+        >
+          <DollarSign className="w-10 h-10" style={{ color: NEON_BLUE.cyan }} />
+        </div>
         
-        <div className={cn(
-          "bg-black/80 border-2 backdrop-blur-xl p-6 md:p-8 rounded-2xl text-center max-w-md w-full relative z-10 animate-in fade-in zoom-in duration-500",
-          isXM ? "border-red-500/40 shadow-[0_0_50px_rgba(239,68,68,0.3)]" : "border-blue-500/40 shadow-[0_0_50px_rgba(59,130,246,0.3)]"
-        )}>
-          <div className="mx-auto w-24 h-24 relative mb-6">
-            <div className={cn("absolute inset-0 rounded-full border-2 animate-[spin_3s_linear_infinite]", isXM ? "border-red-500/50" : "border-blue-500/50")} />
-            <div className={cn("absolute inset-0 rounded-full scale-0 animate-[scale-up_0.5s_ease-out_forwards_0.2s] flex items-center justify-center", isXM ? "bg-red-500" : "bg-blue-500")}>
-              <Check className="w-12 h-12 text-white stroke-[3] opacity-0 animate-[fade-in_0.3s_ease-out_forwards_0.6s]" />
+        <h1 
+          className="text-2xl sm:text-3xl font-black mb-3"
+          style={{ color: NEON_BLUE.textWhite }}
+        >
+          BullMoney Affiliate Program
+        </h1>
+        
+        <p 
+          className="text-sm sm:text-base mb-5 leading-relaxed"
+          style={{ color: NEON_BLUE.textSecondary }}
+        >
+          Earn <span style={{ color: NEON_BLUE.cyan }}>5-25% commission</span> every time your traders place real trades.
+          Bring more traders → unlock higher tiers → stack bigger monthly payouts.
+        </p>
+
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
+          <span className="text-[11px] px-2 py-1 rounded-full border-2" style={{ borderColor: NEON_BLUE.border, color: NEON_BLUE.textPrimary }}>Fast payout</span>
+          <span className="text-[11px] px-2 py-1 rounded-full border-2" style={{ borderColor: NEON_BLUE.border, color: NEON_BLUE.textPrimary }}>No cap earnings</span>
+          <span className="text-[11px] px-2 py-1 rounded-full border-2" style={{ borderColor: NEON_BLUE.border, color: NEON_BLUE.textPrimary }}>Bonus boosts</span>
+        </div>
+        
+        {/* Quick Stats */}
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <StatCard icon={Percent} label="Commission" value="5-25%" highlight />
+          <StatCard icon={Users} label="No Limit" value="∞ Traders" />
+          <StatCard icon={Gift} label="Bonuses" value="2x" subtext="with social" />
+        </div>
+        
+        {/* CTA Buttons */}
+        <div className="space-y-3">
+          <NeonButton 
+            onClick={handleNext} 
+            variant="primary" 
+            size="large" 
+            className="w-full"
+            icon={ArrowRight}
+          >
+            See How You Earn
+          </NeonButton>
+          
+          {savedSession && (
+            <NeonButton 
+              onClick={() => setStep('dashboard')} 
+              variant="secondary" 
+              className="w-full"
+              icon={User}
+            >
+              Continue as {savedSession.email.split('@')[0]}
+            </NeonButton>
+          )}
+        </div>
+        
+        <p 
+          className="text-[10px] sm:text-xs mt-4 flex items-center justify-center gap-1"
+          style={{ color: NEON_BLUE.textMuted }}
+        >
+          <Lock className="w-3 h-3" /> Free to join • No hidden fees
+        </p>
+      </NeonCard>
+    </motion.div>
+  );
+
+  // =========================================
+  // RENDER HOW IT WORKS SCREEN
+  // =========================================
+  const renderHowItWorks = () => (
+    <motion.div
+      key="how-it-works"
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="w-full max-w-2xl mx-auto space-y-4"
+    >
+      <div className="space-y-3">
+        <CollapsibleSection
+          title="How You Earn Money"
+          subtitle="Tap to expand the 3-step flow"
+          icon={Info}
+          defaultOpen
+        >
+          <div className="space-y-3">
+            <div className="flex gap-3 p-3 rounded-xl border-2" style={{ borderColor: 'rgba(59, 130, 246, 0.3)', background: 'rgba(0, 0, 0, 0.4)' }}>
+              <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 font-bold text-xs" style={{ background: NEON_BLUE.primary, color: NEON_BLUE.textWhite }}>1</div>
+              <div>
+                <h3 className="font-semibold mb-1" style={{ color: NEON_BLUE.textWhite }}>Recruit Traders</h3>
+                <p className="text-sm" style={{ color: NEON_BLUE.textSecondary }}>
+                  Share your affiliate code. Traders sign up, open accounts, and get verified under you.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 p-3 rounded-xl border-2" style={{ borderColor: 'rgba(59, 130, 246, 0.3)', background: 'rgba(0, 0, 0, 0.4)' }}>
+              <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 font-bold text-xs" style={{ background: NEON_BLUE.primary, color: NEON_BLUE.textWhite }}>2</div>
+              <div>
+                <h3 className="font-semibold mb-1" style={{ color: NEON_BLUE.textWhite }}>They Trade, You Earn</h3>
+                <p className="text-sm" style={{ color: NEON_BLUE.textSecondary }}>
+                  XM: $11/lot × your tier %. Vantage: $5.50/lot × your tier %.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 p-3 rounded-xl border-2" style={{ borderColor: 'rgba(59, 130, 246, 0.3)', background: 'rgba(0, 0, 0, 0.4)' }}>
+              <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 font-bold text-xs" style={{ background: NEON_BLUE.primary, color: NEON_BLUE.textWhite }}>3</div>
+              <div>
+                <h3 className="font-semibold mb-1" style={{ color: NEON_BLUE.textWhite }}>Boost With Bonuses</h3>
+                <p className="text-sm" style={{ color: NEON_BLUE.textSecondary }}>
+                  Hit 20+ lots/month and post 2× per week to unlock higher multipliers.
+                </p>
+              </div>
             </div>
           </div>
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Commission Tiers"
+          subtitle="More traders = higher %"
+          icon={Trophy}
+        >
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+            {AFFILIATE_TIERS.map((tier) => (
+              <div 
+                key={tier.name}
+                className="flex flex-col items-center p-3 rounded-xl border-2 text-center"
+                style={{ 
+                  borderColor: `${tier.color}40`,
+                  background: `${tier.color}10`
+                }}
+              >
+                <tier.icon className="w-5 h-5 mb-1" style={{ color: tier.color }} />
+                <span className="text-xs font-bold" style={{ color: tier.color }}>{tier.name}</span>
+                <span className="text-lg font-black" style={{ color: NEON_BLUE.textWhite }}>{tier.commissionPercent}%</span>
+                <span className="text-[10px]" style={{ color: NEON_BLUE.textMuted }}>
+                  {tier.minTraders}-{tier.maxTraders === Infinity ? '∞' : tier.maxTraders} traders
+                </span>
+              </div>
+            ))}
+          </div>
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Earnings Calculator"
+          subtitle="Tap to estimate your monthly payout"
+          icon={BarChart3}
+        >
+          <div>
+            <div className="flex justify-center gap-2 mb-4">
+              {(['Vantage', 'XM'] as const).map((broker) => (
+                <button
+                  key={broker}
+                  onClick={() => setActiveBroker(broker)}
+                  className="px-4 py-2 rounded-full text-sm font-semibold transition-all border-2"
+                  style={{
+                    borderColor: activeBroker === broker ? NEON_BLUE.primary : 'rgba(59, 130, 246, 0.3)',
+                    background: activeBroker === broker ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
+                    color: activeBroker === broker ? NEON_BLUE.textWhite : NEON_BLUE.textMuted,
+                    boxShadow: activeBroker === broker ? NEON_BLUE.glow : 'none',
+                  }}
+                >
+                  {broker}
+                </button>
+              ))}
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <span style={{ color: NEON_BLUE.textSecondary }}>Traders Referred</span>
+                  <span className="font-bold" style={{ color: NEON_BLUE.cyan }}>{calcTraders}</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="100"
+                  value={calcTraders}
+                  onChange={(e) => setCalcTraders(Number(e.target.value))}
+                  className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                  style={{ 
+                    background: `linear-gradient(to right, ${NEON_BLUE.primary} ${calcTraders}%, rgba(59, 130, 246, 0.2) ${calcTraders}%)` 
+                  }}
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <span style={{ color: NEON_BLUE.textSecondary }}>Avg Lots/Trader/Month</span>
+                  <span className="font-bold" style={{ color: NEON_BLUE.cyan }}>{calcLots}</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="50"
+                  value={calcLots}
+                  onChange={(e) => setCalcLots(Number(e.target.value))}
+                  className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                  style={{ 
+                    background: `linear-gradient(to right, ${NEON_BLUE.primary} ${calcLots * 2}%, rgba(59, 130, 246, 0.2) ${calcLots * 2}%)` 
+                  }}
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <span style={{ color: NEON_BLUE.textSecondary }}>Social Posts/Week</span>
+                  <span className="font-bold" style={{ color: NEON_BLUE.cyan }}>{calcPosts}</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="7"
+                  value={calcPosts}
+                  onChange={(e) => setCalcPosts(Number(e.target.value))}
+                  className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                  style={{ 
+                    background: `linear-gradient(to right, ${NEON_BLUE.primary} ${(calcPosts / 7) * 100}%, rgba(59, 130, 246, 0.2) ${(calcPosts / 7) * 100}%)` 
+                  }}
+                />
+              </div>
+            </div>
+
+            <div 
+              className="p-4 rounded-xl border-2"
+              style={{ borderColor: NEON_BLUE.primary, background: 'rgba(59, 130, 246, 0.1)' }}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm" style={{ color: NEON_BLUE.textSecondary }}>Your Tier</span>
+                <TierBadge tier={earnings.tier} size="small" />
+              </div>
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div>
+                  <p className="text-xs" style={{ color: NEON_BLUE.textMuted }}>Base Commission</p>
+                  <p className="text-lg font-bold" style={{ color: NEON_BLUE.textWhite }}>${earnings.commission}</p>
+                </div>
+                <div>
+                  <p className="text-xs" style={{ color: NEON_BLUE.textMuted }}>Social Bonus</p>
+                  <p className="text-lg font-bold" style={{ color: NEON_BLUE.cyan }}>+${earnings.bonus}</p>
+                </div>
+                <div>
+                  <p className="text-xs" style={{ color: NEON_BLUE.textMuted }}>Total/Month</p>
+                  <p className="text-xl font-black" style={{ color: NEON_BLUE.cyan, textShadow: `0 0 20px ${NEON_BLUE.cyan}` }}>
+                    ${earnings.total}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Payment Schedule"
+          subtitle="When payouts hit your account"
+          icon={Calendar}
+        >
+          <p className="text-sm" style={{ color: NEON_BLUE.textSecondary }}>
+            Paid monthly in the first week (latest Friday). Most payments clear in 1–15 minutes. Some take 1–7 days. New accounts can take up to 30 days for international processing.
+          </p>
+        </CollapsibleSection>
+      </div>
+      
+      {/* Action Buttons */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <NeonButton onClick={handleBack} variant="ghost" className="sm:w-auto">
+          <ChevronLeft className="w-4 h-4 mr-1" /> Back
+        </NeonButton>
+        <NeonButton onClick={handleNext} variant="primary" size="large" className="flex-1" icon={ArrowRight}>
+          Start Earning Now
+        </NeonButton>
+      </div>
+    </motion.div>
+  );
+
+  // =========================================
+  // RENDER SIGNUP BROKER SCREEN
+  // =========================================
+  const renderSignupBroker = () => (
+    <motion.div
+      key="signup-broker"
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="w-full max-w-lg mx-auto"
+    >
+      <NeonCard padding="large">
+        {/* Step Indicator */}
+        <div className="flex items-center justify-between mb-6">
+          <span 
+            className="text-[10px] sm:text-xs uppercase tracking-widest px-3 py-1 rounded-full border-2"
+            style={{ borderColor: NEON_BLUE.border, color: NEON_BLUE.textPrimary }}
+          >
+            Step 1 of 3
+          </span>
+        </div>
+        
+        <h2 className="text-xl sm:text-2xl font-bold mb-2" style={{ color: NEON_BLUE.textWhite }}>
+          Open Trading Account
+        </h2>
+        <p className="text-sm mb-6" style={{ color: NEON_BLUE.textSecondary }}>
+          Choose your preferred broker and open a free trading account. This only takes about 1 minute.
+        </p>
+        
+        {/* Broker Toggle */}
+        <div className="flex justify-center gap-3 mb-6">
+          {(['Vantage', 'XM'] as const).map((broker) => (
+            <button
+              key={broker}
+              onClick={() => setActiveBroker(broker)}
+              className="px-6 py-3 rounded-xl text-base font-bold transition-all border-2"
+              style={{
+                borderColor: activeBroker === broker ? NEON_BLUE.primary : 'rgba(59, 130, 246, 0.3)',
+                background: activeBroker === broker ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
+                color: activeBroker === broker ? NEON_BLUE.textWhite : NEON_BLUE.textMuted,
+                boxShadow: activeBroker === broker ? NEON_BLUE.glowStrong : 'none',
+              }}
+            >
+              {broker}
+            </button>
+          ))}
+        </div>
+        
+        {/* Referral Code - Evervault Style */}
+        <div className="mb-4">
+          <CodeVaultCard label="Your Affiliate Code" code={brokerCode} onCopy={() => copyCode(brokerCode)} copied={copied} />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
+          <div className="rounded-xl border-2 p-3 text-center" style={{ borderColor: NEON_BLUE.border, background: 'rgba(59,130,246,0.08)' }}>
+            <p className="text-[11px]" style={{ color: NEON_BLUE.textMuted }}>Step A</p>
+            <p className="text-xs font-semibold" style={{ color: NEON_BLUE.textWhite }}>Open account</p>
+          </div>
+          <div className="rounded-xl border-2 p-3 text-center" style={{ borderColor: NEON_BLUE.border, background: 'rgba(59,130,246,0.08)' }}>
+            <p className="text-[11px]" style={{ color: NEON_BLUE.textMuted }}>Step B</p>
+            <p className="text-xs font-semibold" style={{ color: NEON_BLUE.textWhite }}>Paste code</p>
+          </div>
+          <div className="rounded-xl border-2 p-3 text-center" style={{ borderColor: NEON_BLUE.border, background: 'rgba(59,130,246,0.08)' }}>
+            <p className="text-[11px]" style={{ color: NEON_BLUE.textMuted }}>Step C</p>
+            <p className="text-xs font-semibold" style={{ color: NEON_BLUE.textWhite }}>Start earning</p>
+          </div>
+        </div>
+        
+        {/* Open Account Button */}
+        <NeonButton onClick={handleBrokerClick} variant="primary" size="large" className="w-full mb-4">
+          Open Free {activeBroker} Account
+          <ExternalLink className="w-4 h-4 ml-2" />
+        </NeonButton>
+        
+        {/* Already have account */}
+        <NeonButton onClick={handleNext} variant="secondary" className="w-full">
+          I already have an account
+        </NeonButton>
+        
+        <p 
+          className="text-[10px] sm:text-xs mt-4 flex items-center justify-center gap-1"
+          style={{ color: NEON_BLUE.textMuted }}
+        >
+          <Clock className="w-3 h-3" /> Takes about 1 minute • No deposit required
+        </p>
+      </NeonCard>
+      
+      <button 
+        onClick={handleBack} 
+        className="mt-4 flex items-center text-sm mx-auto transition-colors"
+        style={{ color: NEON_BLUE.textMuted }}
+      >
+        <ChevronLeft className="w-4 h-4 mr-1" /> Back
+      </button>
+    </motion.div>
+  );
+
+  // =========================================
+  // RENDER SIGNUP MT5 SCREEN
+  // =========================================
+  const renderSignupMT5 = () => (
+    <motion.div
+      key="signup-mt5"
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="w-full max-w-lg mx-auto"
+    >
+      <NeonCard padding="large">
+        {/* Step Indicator */}
+        <div className="flex items-center justify-between mb-6">
+          <span 
+            className="text-[10px] sm:text-xs uppercase tracking-widest px-3 py-1 rounded-full border-2"
+            style={{ borderColor: NEON_BLUE.border, color: NEON_BLUE.textPrimary }}
+          >
+            Step 2 of 3
+          </span>
+        </div>
+        
+        <h2 className="text-xl sm:text-2xl font-bold mb-2" style={{ color: NEON_BLUE.textWhite }}>
+          {isReturningUser ? "Verify Your MT5 ID" : "Enter Your Trading ID"}
+        </h2>
+        <p className="text-sm mb-6" style={{ color: NEON_BLUE.textSecondary }}>
+          {isReturningUser 
+            ? "Enter your MetaTrader 5 ID to verify your account." 
+            : "After opening your account, you'll receive an email with your MT5 trading ID."}
+        </p>
+        
+        {/* Returning User Info */}
+        {isReturningUser && savedSession && (
+          <div 
+            className="p-3 rounded-xl mb-4 border-2"
+            style={{ borderColor: 'rgba(59, 130, 246, 0.3)', background: 'rgba(59, 130, 246, 0.1)' }}
+          >
+            <p className="text-xs" style={{ color: NEON_BLUE.textSecondary }}>
+              Welcome back, <span style={{ color: NEON_BLUE.cyan }}>{savedSession.email}</span>
+            </p>
+          </div>
+        )}
+        
+        {/* MT5 Input */}
+        <div className="space-y-4">
+          <NeonInput
+            type="tel"
+            name="mt5Number"
+            value={formData.mt5Number}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+            placeholder="Enter MT5 ID (numbers only)"
+            icon={Hash}
+            disabled={isVerifyingMT5}
+            autoFocus
+          />
           
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">You&apos;re In 🚀</h2>
-          <p className={cn("mb-8 text-sm md:text-base", isXM ? "text-red-200/70" : "text-blue-200/70")}>
-            Your free BullMoney access is now active.<br/>
+          <p className="text-xs flex items-center gap-1" style={{ color: NEON_BLUE.textMuted }}>
+            <Lock className="w-3 h-3" /> Used only to verify your access
           </p>
           
-          <button 
-            onClick={() => setStep(6)}
-            className={cn(
-              "w-full py-4 bg-black border-2 rounded-xl font-bold tracking-wide transition-all group flex items-center justify-center mb-4 cursor-target relative overflow-hidden",
-              isXM 
-                ? "border-red-500/60 hover:border-red-400 text-red-400 shadow-[0_0_25px_rgba(239,68,68,0.4)] hover:shadow-[0_0_35px_rgba(239,68,68,0.6)]"
-                : "border-blue-500/60 hover:border-blue-400 text-blue-400 shadow-[0_0_25px_rgba(59,130,246,0.4)] hover:shadow-[0_0_35px_rgba(59,130,246,0.6)]"
-            )}
-          >
-            <span className={cn(
-              "absolute inset-[-100%] animate-[spin_3s_linear_infinite] opacity-30 z-0",
-              isXM ? "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ef4444_50%,#00000000_100%)]" : "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)]"
-            )} />
-            <span className="relative z-10 flex items-center">
-              Go to Dashboard  
-              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-            </span>
-          </button>
-
-          <button 
-            onClick={() => window.open(TELEGRAM_GROUP_LINK, '_blank')}
-            className={cn("text-sm transition-colors flex items-center justify-center gap-2 mx-auto cursor-target", isXM ? "text-red-400/60 hover:text-red-300" : "text-blue-400/60 hover:text-blue-300")}
-          >
-            <FolderPlus className="w-4 h-4" /> Join Free Telegram
-          </button>
-        </div>
-        <style jsx global>{`
-          @keyframes scale-up { 0% { transform: scale(0); } 80% { transform: scale(1.1); } 100% { transform: scale(1); } }
-          @keyframes fade-in { 0% { opacity: 0; transform: scale(0.5); } 100% { opacity: 1; transform: scale(1); } }
-        `}</style>
-      </div>
-    );
-  }
-
-  // LOADING SCREEN (Step 4)
-  if (step === 4) {
-    return (
-      <div className="fixed inset-0 z-[999999] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-        <div className="min-h-screen bg-black flex flex-col items-center justify-center relative">
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            <span className={cn(
-              "absolute inset-[-100%] animate-[spin_6s_linear_infinite] opacity-10",
-              isXM ? "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ef4444_50%,#00000000_100%)]" : "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)]"
-            )} />
-          </div>
-          <div className={cn("absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full blur-[60px] pointer-events-none", isXM ? "bg-red-500/10" : "bg-blue-500/10")} />
-          <Loader2 className={cn("w-16 h-16 animate-spin mb-4", isXM ? "text-red-500" : "text-blue-500")} />
-          <h2 className={cn("text-xl font-bold", isXM ? "text-red-300" : "text-blue-300")}>Unlocking Platform...</h2>
-        </div>
-      </div>
-    );
-  }
-
-  // DASHBOARD SCREEN (Step 6) - Shows the affiliate dashboard in modal
-  if (step === 6) {
-    return (
-      <div className="fixed inset-0 z-[999999] bg-black/95 backdrop-blur-sm flex flex-col">
-        <CursorStyles />
-        <TargetCursor />
-        
-        {/* Header with logout and close buttons */}
-        <div className="flex items-center justify-between p-4 border-b border-white/10 bg-black/80 backdrop-blur-xl">
-          <div className="flex items-center gap-3">
-            <h1 className={cn("text-lg font-bold", isXM ? "text-red-400" : "text-blue-400")}>
-              BullMoney Dashboard
-            </h1>
-            {savedSession && (
-              <span className="text-xs text-white/40 hidden sm:inline">
-                {savedSession.email}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={handleLogout}
-              className={cn(
-                "px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-1.5 cursor-target",
-                isXM 
-                  ? "bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 hover:border-red-500/50"
-                  : "bg-blue-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-500/20 hover:border-blue-500/50"
-              )}
-              aria-label="Logout"
+          {submitError && (
+            <div 
+              className="flex items-center gap-2 p-3 rounded-lg border"
+              style={{ borderColor: 'rgba(239, 68, 68, 0.5)', background: 'rgba(239, 68, 68, 0.1)', color: '#fca5a5' }}
             >
-              <Lock size={14} />
-              <span className="hidden sm:inline">Logout</span>
-            </button>
-            <button 
-              onClick={handleClose}
-              className="p-2 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 text-white/70 hover:text-white hover:bg-white/20 hover:border-white/40 transition-all duration-300 group"
-              aria-label="Close modal"
-            >
-              <X size={18} className="group-hover:rotate-90 transition-transform duration-300" />
-            </button>
-          </div>
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span className="text-xs font-medium">{submitError}</span>
+            </div>
+          )}
         </div>
         
-        {/* Dashboard content */}
-        <div className="flex-1 overflow-y-auto">
-          <AffiliateRecruitsDashboard onBack={() => setStep(5)} />
-        </div>
-      </div>
-    );
-  }
-
-  // MAIN FORM
-  return (
-    <div className="fixed inset-0 z-[999999] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 md:p-8">
-      <CursorStyles />
-      <TargetCursor 
-        targetSelector="button, a, input, [role='button'], .cursor-target"
-        hideDefaultCursor={true}
-        spinDuration={2}
-        parallaxOn={true}
-      />
+        {/* Continue Button */}
+        <NeonButton 
+          onClick={handleNext} 
+          variant="primary" 
+          size="large" 
+          className="w-full mt-6"
+          disabled={!formData.mt5Number || isVerifyingMT5}
+        >
+          {isVerifyingMT5 ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              Verifying...
+            </>
+          ) : (
+            <>
+              Continue <ArrowRight className="w-4 h-4 ml-2" />
+            </>
+          )}
+        </NeonButton>
+      </NeonCard>
       
-      <div className="relative w-full max-w-2xl bg-black/95 rounded-2xl sm:rounded-3xl border border-white/20 shadow-2xl shadow-black/50 overflow-hidden">
+      <button 
+        onClick={handleBack} 
+        className="mt-4 flex items-center text-sm mx-auto transition-colors"
+        style={{ color: NEON_BLUE.textMuted }}
+      >
+        <ChevronLeft className="w-4 h-4 mr-1" /> Back
+      </button>
+    </motion.div>
+  );
+
+  // =========================================
+  // RENDER SIGNUP ACCOUNT SCREEN
+  // =========================================
+  const renderSignupAccount = () => (
+    <motion.div
+      key="signup-account"
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="w-full max-w-lg mx-auto"
+    >
+      <NeonCard padding="large">
+        {/* Step Indicator */}
+        <div className="flex items-center justify-between mb-6">
+          <span 
+            className="text-[10px] sm:text-xs uppercase tracking-widest px-3 py-1 rounded-full border-2"
+            style={{ borderColor: NEON_BLUE.border, color: NEON_BLUE.textPrimary }}
+          >
+            Step 3 of 3
+          </span>
+        </div>
+        
+        <h2 className="text-xl sm:text-2xl font-bold mb-2" style={{ color: NEON_BLUE.textWhite }}>
+          Create Your Affiliate Account
+        </h2>
+        <p className="text-sm mb-6" style={{ color: NEON_BLUE.textSecondary }}>
+          Set up your login to access your affiliate dashboard and track earnings.
+        </p>
+        
+        {/* Form Fields */}
+        <div className="space-y-4">
+          {/* Email */}
+          <div>
+            <NeonInput
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              onKeyDown={handleKeyDown}
+              placeholder="Email address"
+              icon={Mail}
+              disabled={isReturningUser}
+              autoFocus={!isReturningUser}
+            />
+            <p className="text-[10px] mt-1 ml-1" style={{ color: NEON_BLUE.textMuted }}>
+              {isReturningUser ? "Using your saved email." : "We'll send your login details here."}
+            </p>
+          </div>
+          
+          {/* Password */}
+          <div className="relative">
+            <NeonInput
+              type={showPassword ? "text" : "password"}
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              onKeyDown={handleKeyDown}
+              placeholder="Create password (min 6 chars)"
+              icon={Lock}
+              autoFocus={isReturningUser}
+            />
+            <button 
+              type="button" 
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+              style={{ color: NEON_BLUE.textMuted }}
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+            <p className="text-[10px] mt-1 ml-1" style={{ color: NEON_BLUE.textMuted }}>
+              Must be at least 6 characters.
+            </p>
+          </div>
+          
+          {/* Referral Code (if new user) */}
+          {!isReturningUser && (
+            <div>
+              <NeonInput
+                type="text"
+                name="referralCode"
+                value={formData.referralCode}
+                onChange={handleChange}
+                placeholder="Referral Code (Optional)"
+                icon={User}
+              />
+              <p className="text-[10px] mt-1 ml-1" style={{ color: NEON_BLUE.textMuted }}>
+                Leave blank if you don't have one.
+              </p>
+            </div>
+          )}
+          
+          {/* Terms Checkbox */}
+          <div 
+            onClick={() => setAcceptedTerms(!acceptedTerms)}
+            className="flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-colors"
+            style={{ 
+              borderColor: 'rgba(59, 130, 246, 0.3)', 
+              background: acceptedTerms ? 'rgba(59, 130, 246, 0.1)' : 'transparent' 
+            }}
+          >
+            <div 
+              className="w-5 h-5 rounded border-2 flex items-center justify-center mt-0.5 shrink-0 transition-colors"
+              style={{ 
+                borderColor: acceptedTerms ? NEON_BLUE.primary : 'rgba(59, 130, 246, 0.4)',
+                background: acceptedTerms ? NEON_BLUE.primary : 'transparent'
+              }}
+            >
+              {acceptedTerms && <Check className="w-3.5 h-3.5 text-white" />}
+            </div>
+            <p className="text-xs leading-tight" style={{ color: NEON_BLUE.textSecondary }}>
+              I agree to the Terms of Service and understand this is educational content.
+            </p>
+          </div>
+          
+          {submitError && (
+            <div 
+              className="flex items-center gap-2 p-3 rounded-lg border"
+              style={{ borderColor: 'rgba(239, 68, 68, 0.5)', background: 'rgba(239, 68, 68, 0.1)', color: '#fca5a5' }}
+            >
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span className="text-xs font-medium">{submitError}</span>
+            </div>
+          )}
+        </div>
+        
+        {/* Submit Button */}
+        <NeonButton 
+          onClick={handleNext} 
+          variant="primary" 
+          size="large" 
+          className="w-full mt-6"
+          disabled={!formData.email || !formData.password || !acceptedTerms}
+        >
+          Create Account & Start Earning
+          <ArrowRight className="w-4 h-4 ml-2" />
+        </NeonButton>
+      </NeonCard>
+      
+      <button 
+        onClick={handleBack} 
+        className="mt-4 flex items-center text-sm mx-auto transition-colors"
+        style={{ color: NEON_BLUE.textMuted }}
+      >
+        <ChevronLeft className="w-4 h-4 mr-1" /> Back
+      </button>
+    </motion.div>
+  );
+
+  // =========================================
+  // RENDER LOADING SCREEN
+  // =========================================
+  const renderLoading = () => (
+    <motion.div
+      key="loading"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="flex flex-col items-center justify-center min-h-[300px]"
+    >
+      <Loader2 
+        className="w-16 h-16 animate-spin mb-4" 
+        style={{ color: NEON_BLUE.primary }} 
+      />
+      <h2 className="text-xl font-bold" style={{ color: NEON_BLUE.textPrimary }}>
+        Creating Your Account...
+      </h2>
+    </motion.div>
+  );
+
+  // =========================================
+  // RENDER SUCCESS SCREEN
+  // =========================================
+  const renderSuccess = () => (
+    <motion.div
+      key="success"
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0 }}
+      className="w-full max-w-lg mx-auto"
+    >
+      <NeonCard padding="large" className="text-center">
+        {/* Success Icon */}
+        <div 
+          className="w-24 h-24 mx-auto mb-6 rounded-full flex items-center justify-center border-2"
+          style={{ 
+            borderColor: NEON_BLUE.cyan,
+            boxShadow: `0 0 40px ${NEON_BLUE.cyan}60`,
+            background: `${NEON_BLUE.cyan}20`
+          }}
+        >
+          <Check className="w-12 h-12" style={{ color: NEON_BLUE.cyan }} />
+        </div>
+        
+        <h2 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: NEON_BLUE.textWhite }}>
+          You're In! 🚀
+        </h2>
+        <p className="text-sm sm:text-base mb-8" style={{ color: NEON_BLUE.textSecondary }}>
+          Your affiliate account is now active. Start recruiting traders and earning commissions!
+        </p>
+        
+        <NeonButton 
+          onClick={() => setStep('dashboard')} 
+          variant="primary" 
+          size="large" 
+          className="w-full mb-4"
+        >
+          Go to Dashboard
+          <ArrowRight className="w-5 h-5 ml-2" />
+        </NeonButton>
         
         <button 
-          onClick={handleClose}
-          className="absolute top-3 right-3 sm:top-4 sm:right-4 z-[9999999] p-2 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 text-white/70 hover:text-white hover:bg-white/20 hover:border-white/40 transition-all duration-300 group"
-          aria-label="Close modal"
+          onClick={() => window.open(TELEGRAM_GROUP_LINK, '_blank')}
+          className="flex items-center justify-center gap-2 text-sm mx-auto transition-colors"
+          style={{ color: NEON_BLUE.textMuted }}
         >
-          <X size={18} className="sm:w-5 sm:h-5 group-hover:rotate-90 transition-transform duration-300" />
+          <MessageCircle className="w-4 h-4" /> Join Free Telegram
         </button>
+      </NeonCard>
+    </motion.div>
+  );
 
-        <div className="relative w-full h-full overflow-y-auto rounded-2xl sm:rounded-3xl">
-          
-          <div className="p-4 sm:p-6 md:p-8 min-h-screen flex flex-col items-center justify-center">
-            
-            {/* Broker selector for step 1 */}
-            {step === 1 && (
-              <div className="flex justify-center gap-3 mb-8 w-full">
-                {(["Vantage", "XM"] as const).map((partner) => {
-                  const isActive = activeBroker === partner;
-                  const isXMPartner = partner === 'XM';
-                  return (
-                    <button
-                      key={partner}
-                      onClick={() => handleBrokerSwitch(partner)}
-                      className={cn(
-                        "relative px-6 py-2 rounded-full font-semibold transition-all duration-300 z-20 cursor-target text-sm md:text-base",
-                        isActive 
-                          ? (isXM ? "text-red-300" : "text-blue-300") 
-                          : (isXM ? "bg-black/60 border-2 border-red-500/20 text-red-300/60 hover:border-red-500/40" : "bg-black/60 border-2 border-blue-500/20 text-blue-300/60 hover:border-blue-500/40")
-                      )}
-                    >
-                      {partner}
-                      {isActive && (
-                        <motion.span
-                          layoutId="tab-pill"
-                          className={cn(
-                            "absolute inset-0 -z-10 rounded-full bg-black border-2",
-                            isXM ? "border-red-500/60 shadow-[0_0_25px_rgba(239,68,68,0.4)]" : "border-blue-500/60 shadow-[0_0_25px_rgba(59,130,246,0.4)]"
-                          )}
-                          transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                        />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
+  // =========================================
+  // RENDER DASHBOARD SCREEN
+  // =========================================
+  const renderDashboard = () => (
+    <div className="fixed inset-0 z-[999999] flex flex-col" style={{ background: NEON_BLUE.bgDark }}>
+      {/* Header */}
+      <div 
+        className="flex items-center justify-between p-4 border-b"
+        style={{ borderColor: 'rgba(59, 130, 246, 0.3)', background: 'rgba(0, 0, 0, 0.8)' }}
+      >
+        <div className="flex items-center gap-4">
+          <h1 className="text-lg font-bold" style={{ color: NEON_BLUE.textPrimary }}>
+            Affiliate Dashboard
+          </h1>
+          <div className="hidden sm:flex items-center gap-2">
+            <button
+              onClick={() => setDashboardTab('dashboard')}
+              className={cn(
+                "px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all",
+                dashboardTab === 'dashboard' ? "bg-white/10" : "bg-transparent"
+              )}
+              style={{ borderColor: 'rgba(59, 130, 246, 0.3)', color: NEON_BLUE.textPrimary }}
+            >
+              Dashboard
+            </button>
+            {isAffiliateAdmin && (
+              <button
+                onClick={() => setDashboardTab('admin')}
+                className={cn(
+                  "px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all flex items-center gap-1",
+                  dashboardTab === 'admin' ? "bg-white/10" : "bg-transparent"
+                )}
+                style={{ borderColor: 'rgba(59, 130, 246, 0.3)', color: NEON_BLUE.textPrimary }}
+              >
+                <Shield className="w-3 h-3" /> Admin Panel
+              </button>
             )}
-
-            <div className="w-full max-w-xl">
-              <AnimatePresence mode="wait">
-                
-                {/* STEP 0: ENTRY */}
-                {step === 0 && (
-                  <motion.div
-                    key="step0"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <div className={cn(
-                      "bg-black/80 ring-2 backdrop-blur-xl p-6 md:p-8 rounded-2xl relative overflow-hidden text-center",
-                      isXM ? "ring-red-500/30 shadow-[0_0_40px_rgba(239,68,68,0.2)]" : "ring-blue-500/30 shadow-[0_0_40px_rgba(59,130,246,0.2)]"
-                    )}>
-                      <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
-                        <span className={cn(
-                          "absolute inset-[-100%] animate-[spin_8s_linear_infinite] opacity-10",
-                          isXM ? "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ef4444_50%,#00000000_100%)]" : "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)]"
-                        )} />
-                      </div>
-                      
-                      <div className="absolute top-0 right-0 p-4 opacity-5">
-                        <Lock className={cn("w-32 h-32", isXM ? "text-red-400" : "text-blue-400")} />
-                      </div>
-
-                      <div className="mb-6 flex justify-center">
-                        <div className={cn(
-                          "h-16 w-16 rounded-full bg-black flex items-center justify-center border-2",
-                          isXM ? "border-red-500/40 shadow-[0_0_30px_rgba(239,68,68,0.3)]" : "border-blue-500/40 shadow-[0_0_30px_rgba(59,130,246,0.3)]"
-                        )}>
-                          <ShieldCheck className={cn("w-8 h-8", isXM ? "text-red-400" : "text-blue-400")} />
-                        </div>
-                      </div>
-
-                      <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-3">Unlock Free BullMoney Access</h2>
-                      <p className={cn("text-sm md:text-base mb-8 max-w-sm mx-auto leading-relaxed", isXM ? "text-red-200/70" : "text-blue-200/70")}>
-                        Get free trading setups and community access. <br/>
-                        <span className={cn("text-blue-300/40", isXM && "text-red-300/40")}>No payment. Takes about 2 minutes.</span>
-                      </p>
-
-                      <motion.button 
-                        onClick={handleNext}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className={cn(
-                          "w-full py-3.5 md:py-4 bg-black border-2 rounded-xl font-bold text-base md:text-lg tracking-wide transition-all flex items-center justify-center cursor-target relative overflow-hidden",
-                          isXM 
-                            ? "border-red-500/60 hover:border-red-400 text-red-400 shadow-[0_0_25px_rgba(239,68,68,0.4)] hover:shadow-[0_0_35px_rgba(239,68,68,0.6)]"
-                            : "border-blue-500/60 hover:border-blue-400 text-blue-400 shadow-[0_0_25px_rgba(59,130,246,0.4)] hover:shadow-[0_0_35px_rgba(59,130,246,0.6)]"
-                        )}
-                      >
-                        <span className={cn(
-                          "absolute inset-[-100%] animate-[spin_3s_linear_infinite] opacity-40 z-0",
-                          isXM ? "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ef4444_50%,#00000000_100%)]" : "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)]"
-                        )} />
-                        <span className="relative z-10 flex items-center">
-                          {savedSession ? "New Account" : "Start Free Access"} <ArrowRight className="w-5 h-5 ml-2" />
-                        </span>
-                      </motion.button>
-                      
-                      {/* Skip button for returning users with saved session */}
-                      {savedSession && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.2, duration: 0.4 }}
-                          className="mt-4"
-                        >
-                          <div className="relative">
-                            <div className={cn(
-                              "absolute inset-0 rounded-xl blur-md",
-                              isXM ? "bg-gradient-to-r from-red-500/20 via-orange-500/20 to-red-500/20" : "bg-gradient-to-r from-blue-500/20 via-cyan-500/20 to-blue-500/20"
-                            )} />
-                            <motion.button 
-                              onClick={handleSkipWithExistingAccount}
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                              className={cn(
-                                "relative w-full py-3.5 border-2 text-white rounded-xl font-bold text-base transition-all flex items-center justify-center cursor-target gap-3 overflow-hidden",
-                                isXM 
-                                  ? "bg-gradient-to-r from-red-950/80 to-orange-950/80 border-red-400/50 hover:border-red-400 shadow-[0_0_30px_rgba(239,68,68,0.3)] hover:shadow-[0_0_40px_rgba(239,68,68,0.5)]"
-                                  : "bg-gradient-to-r from-blue-950/80 to-cyan-950/80 border-blue-400/50 hover:border-blue-400 shadow-[0_0_30px_rgba(59,130,246,0.3)] hover:shadow-[0_0_40px_rgba(59,130,246,0.5)]"
-                              )}
-                            >
-                              <span className={cn(
-                                "absolute inset-[-100%] animate-[spin_4s_linear_infinite] opacity-20 z-0",
-                                isXM ? "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#f97316_25%,#ef4444_50%,#f97316_75%,#00000000_100%)]" : "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#22d3ee_25%,#3b82f6_50%,#22d3ee_75%,#00000000_100%)]"
-                              )} />
-                              <div className="relative z-10 flex items-center gap-3">
-                                <div className={cn(
-                                  "w-8 h-8 rounded-full border flex items-center justify-center",
-                                  isXM ? "bg-red-500/30 border-red-400/50" : "bg-blue-500/30 border-blue-400/50"
-                                )}>
-                                  <User className={cn("w-4 h-4", isXM ? "text-red-300" : "text-blue-300")} />
-                                </div>
-                                <div className="flex flex-col items-start">
-                                  <span className={cn("text-xs font-normal", isXM ? "text-red-300/60" : "text-blue-300/60")}>Welcome back</span>
-                                  <span className="text-sm font-semibold text-white truncate max-w-[180px]">
-                                    {savedSession.email}
-                                  </span>
-                                </div>
-                                <ArrowRight className={cn("w-5 h-5 ml-auto", isXM ? "text-red-400" : "text-blue-400")} />
-                              </div>
-                            </motion.button>
-                          </div>
-                          <p className={cn("text-center text-[10px] mt-2", isXM ? "text-red-400/40" : "text-blue-400/40")}>
-                            Just verify your MT5 ID to continue
-                          </p>
-                        </motion.div>
-                      )}
-                      
-                      <div className="mt-4 space-y-3">
-                        <div className={cn("flex items-center justify-center gap-2 text-xs", isXM ? "text-red-400/40" : "text-blue-400/40")}>
-                          <Lock className="w-3 h-3" /> No credit card required
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* STEP 1: OPEN ACCOUNT */}
-                {step === 1 && (
-                  <motion.div
-                    key="step1"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <StepCard
-                      {...getStepProps(1)}
-                      title="Open Free Account"
-                      className="bg-black/80"
-                      actions={
-                        <div className="flex flex-col gap-3 md:gap-4">
-                          <p className={cn("text-xs text-center flex items-center justify-center gap-1", isXM ? "text-red-300/50" : "text-blue-300/50")}>
-                            <Clock className="w-3 h-3" /> Takes about 1 minute • No deposit required
-                          </p>
-                          
-                          <div className="flex flex-col items-center justify-center gap-3">
-                            <button
-                              onClick={() => copyCode(brokerCode)}
-                              className={cn(
-                                "inline-flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-semibold ring-2 ring-inset transition cursor-target w-full justify-center mb-1",
-                                isXM ? "text-red-300 ring-red-500/40 hover:bg-red-500/10" : "text-blue-300 ring-blue-500/40 hover:bg-blue-500/10"
-                              )}
-                            >
-                              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                              {copied ? "Copied" : `Copy Code: ${brokerCode}`}
-                            </button>
-
-                            <button
-                              onClick={handleBrokerClick}
-                              className={cn(
-                                "w-full py-3.5 rounded-xl font-bold shadow transition flex items-center justify-center gap-2 cursor-target text-base bg-black border-2 relative overflow-hidden",
-                                isXM 
-                                  ? "text-red-400 border-red-500/60 hover:border-red-400 shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:shadow-[0_0_30px_rgba(239,68,68,0.5)]"
-                                  : "text-blue-400 border-blue-500/60 hover:border-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]"
-                              )}
-                            >
-                              <span className={cn(
-                                "absolute inset-[-100%] animate-[spin_3s_linear_infinite] opacity-30 z-0",
-                                isXM ? "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ef4444_50%,#00000000_100%)]" : "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)]"
-                              )} />
-                              <span className="relative z-10 flex items-center gap-2">
-                                Open Free Account
-                                <ExternalLink className="h-4 w-4" />
-                              </span>
-                            </button>
-                          </div>
-                          
-                          <button 
-                            onClick={handleNext}
-                            className={cn(
-                              "w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 border-2 mt-1 bg-black/60 cursor-target",
-                              isXM ? "border-red-500/30 text-red-300 hover:bg-red-950/30 hover:border-red-500/50" : "border-blue-500/30 text-blue-300 hover:bg-blue-950/30 hover:border-blue-500/50"
-                            )}
-                          >
-                            I already have an account
-                          </button>
-                          
-                          {/* Quick continue for returning users */}
-                          {savedSession && (
-                            <motion.div
-                              initial={{ opacity: 0, y: 5 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: 0.1 }}
-                              className="mt-2"
-                            >
-                              <div className="relative">
-                                <div className={cn(
-                                  "absolute inset-0 rounded-xl blur-md",
-                                  isXM ? "bg-gradient-to-r from-red-500/20 via-orange-500/20 to-red-500/20" : "bg-gradient-to-r from-blue-500/20 via-cyan-500/20 to-blue-500/20"
-                                )} />
-                                <motion.button 
-                                  onClick={handleSkipWithExistingAccount}
-                                  whileHover={{ scale: 1.01 }}
-                                  whileTap={{ scale: 0.99 }}
-                                  className={cn(
-                                    "relative w-full py-3 border-2 rounded-xl font-semibold text-sm transition-all flex items-center justify-center cursor-target gap-2 overflow-hidden",
-                                    isXM 
-                                      ? "bg-gradient-to-r from-red-950/80 to-orange-950/80 border-red-400/50 hover:border-red-400 text-white shadow-[0_0_25px_rgba(239,68,68,0.3)]"
-                                      : "bg-gradient-to-r from-blue-950/80 to-cyan-950/80 border-blue-400/50 hover:border-blue-400 text-white shadow-[0_0_25px_rgba(59,130,246,0.3)]"
-                                  )}
-                                >
-                                  <span className={cn(
-                                    "absolute inset-[-100%] animate-[spin_4s_linear_infinite] opacity-20 z-0",
-                                    isXM ? "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#f97316_25%,#ef4444_50%,#f97316_75%,#00000000_100%)]" : "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#22d3ee_25%,#3b82f6_50%,#22d3ee_75%,#00000000_100%)]"
-                                  )} />
-                                  <div className="relative z-10 flex items-center gap-2">
-                                    <div className={cn(
-                                      "w-6 h-6 rounded-full border flex items-center justify-center",
-                                      isXM ? "bg-red-500/30 border-red-400/50" : "bg-blue-500/30 border-blue-400/50"
-                                    )}>
-                                      <User className={cn("w-3 h-3", isXM ? "text-red-300" : "text-blue-300")} />
-                                    </div>
-                                    <span className="truncate max-w-[150px]">{savedSession.email.split('@')[0]}</span>
-                                    <ArrowRight className={cn("w-4 h-4 ml-1", isXM ? "text-red-400" : "text-blue-400")} />
-                                  </div>
-                                </motion.button>
-                              </div>
-                            </motion.div>
-                          )}
-                        </div>
-                      }
-                    >
-                      <p className={cn("text-sm md:text-[15px] leading-relaxed mb-4 text-center", isXM ? "text-red-200/70" : "text-blue-200/70")}>
-                        BullMoney works with regulated brokers. <br className="hidden md:block" />
-                        This free account lets us verify your access.
-                      </p>
-                      
-                      <div className="relative mx-auto w-full max-w-[280px] h-32 md:h-40 rounded-3xl border border-white/10 overflow-hidden shadow-2xl mb-2 opacity-80 hover:opacity-100 transition-opacity">
-                        <IconPlusCorners />
-                        <div className="absolute inset-0 p-2">
-                          {isXM ? <EvervaultCardRed text="X3R7P" /> : <EvervaultCard text="VANTAGE" />}
-                        </div>
-                      </div>
-                    </StepCard>
-                  </motion.div>
-                )}
-
-                {/* STEP 2: VERIFY ID */}
-                {step === 2 && (
-                  <motion.div
-                    key="step2"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <StepCard
-                      {...getStepProps(2)}
-                      title={isReturningUser ? "Verify Your MT5 ID" : "Confirm Your Account ID"}
-                      actions={
-                        <button
-                          onClick={handleNext}
-                          disabled={!formData.mt5Number || isVerifyingMT5}
-                          className={cn(
-                            "w-full py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-target text-base relative overflow-hidden",
-                            (!formData.mt5Number || isVerifyingMT5)
-                              ? cn("opacity-50 cursor-not-allowed bg-black/60 border-2", isXM ? "border-red-500/20 text-red-300/50" : "border-blue-500/20 text-blue-300/50")
-                              : cn("bg-black border-2", isXM 
-                                  ? "border-red-500/60 text-red-400 shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:border-red-400 hover:shadow-[0_0_30px_rgba(239,68,68,0.5)]"
-                                  : "border-blue-500/60 text-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:border-blue-400 hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]")
-                          )}
-                        >
-                          {(formData.mt5Number && !isVerifyingMT5) && <span className={cn(
-                            "absolute inset-[-100%] animate-[spin_3s_linear_infinite] opacity-30 z-0",
-                            isXM ? "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ef4444_50%,#00000000_100%)]" : "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)]"
-                          )} />}
-                          <span className="relative z-10 flex items-center gap-2">
-                            {isVerifyingMT5 ? (
-                              <>
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                Verifying...
-                              </>
-                            ) : (
-                              <>
-                                {isReturningUser ? "Verify & Continue" : "Continue"} <ArrowRight className="w-4 h-4" />
-                              </>
-                            )}
-                          </span>
-                        </button>
-                      }
-                    >
-                      <div className="space-y-4 pt-2">
-                        {isReturningUser && savedSession && (
-                          <div className={cn("p-3 rounded-lg border-2", isXM ? "bg-red-950/20 border-red-500/30" : "bg-blue-950/20 border-blue-500/30")}>
-                            <p className={cn("text-xs", isXM ? "text-red-200/70" : "text-blue-200/70")}>
-                              Welcome back, <span className={cn("font-medium", isXM ? "text-red-300" : "text-blue-300")}>{savedSession.email}</span>
-                            </p>
-                            <p className={cn("text-xs mt-1", isXM ? "text-red-300/50" : "text-blue-300/50")}>
-                              Please verify your MT5 ID to continue.
-                            </p>
-                          </div>
-                        )}
-                        <div className="flex items-center justify-between">
-                          <p className="text-slate-300 text-sm">
-                            {isReturningUser 
-                              ? "Enter your MetaTrader 5 ID to verify your account." 
-                              : "After opening your account, you'll receive an email with your trading ID (MT5 ID)."}
-                          </p>
-                        </div>
-                        
-                        <div className="relative group">
-                          <Hash className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors", isXM ? "text-red-400/50 group-focus-within:text-red-400" : "text-slate-500 group-focus-within:text-white")} />
-                          <input
-                            autoFocus
-                            type="tel"
-                            name="mt5Number"
-                            value={formData.mt5Number}
-                            onChange={handleChange}
-                            onKeyDown={handleKeyDown}
-                            placeholder="Enter MT5 ID (numbers only)"
-                            disabled={isVerifyingMT5}
-                            className={cn(
-                              "w-full rounded-lg pl-10 pr-4 py-4 text-white placeholder-slate-600 focus:outline-none transition-all cursor-target text-base",
-                              isXM 
-                                ? "bg-black/60 border-2 border-red-500/30 focus:border-red-500/60 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]"
-                                : "bg-black/20 border border-white/10 focus:border-white/30 focus:bg-black/40",
-                              isVerifyingMT5 && "opacity-50 cursor-not-allowed"
-                            )}
-                          />
-                        </div>
-                        <p className="text-xs text-slate-500 flex items-center gap-1"><Lock className="w-3 h-3"/> Used only to verify access</p>
-                        
-                        {submitError && (
-                          <div className="flex items-center gap-2 text-red-400 bg-red-950/20 p-3 rounded-lg border border-red-900/50 animate-in slide-in-from-top-2">
-                            <AlertCircle className="w-4 h-4 shrink-0" />
-                            <span className="text-xs font-medium">{submitError}</span>
-                          </div>
-                        )}
-                      </div>
-                    </StepCard>
-                    <button onClick={handleBack} className={cn("mt-4 flex items-center text-sm mx-auto transition-colors cursor-target", isXM ? "text-red-300/50 hover:text-red-300" : "text-slate-500 hover:text-slate-300")}>
-                      <ChevronLeft className="w-4 h-4 mr-1" /> Back
-                    </button>
-                  </motion.div>
-                )}
-
-                {/* STEP 3: CREATE LOGIN */}
-                {step === 3 && (
-                  <motion.div
-                    key="step3"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <StepCard
-                      {...getStepProps(3)}
-                      title={isReturningUser ? "Confirm Your Details" : "Create BullMoney Login"}
-                      actions={
-                        <button
-                          onClick={handleNext}
-                          disabled={!formData.email || !formData.password || !acceptedTerms}
-                          className={cn(
-                            "w-full py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-target text-base relative overflow-hidden",
-                            (!formData.email || !formData.password || !acceptedTerms) 
-                              ? cn("opacity-50 cursor-not-allowed bg-black/60 border-2", isXM ? "border-red-500/20 text-red-300/50" : "border-blue-500/20 text-blue-300/50")
-                              : cn("bg-black border-2", isXM 
-                                  ? "border-red-500/60 text-red-400 shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:border-red-400 hover:shadow-[0_0_30px_rgba(239,68,68,0.5)]"
-                                  : "border-blue-500/60 text-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:border-blue-400 hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]")
-                          )}
-                        >
-                          {(formData.email && formData.password && acceptedTerms) && <span className={cn(
-                            "absolute inset-[-100%] animate-[spin_3s_linear_infinite] opacity-30 z-0",
-                            isXM ? "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ef4444_50%,#00000000_100%)]" : "bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#3b82f6_50%,#00000000_100%)]"
-                          )} />}
-                          <span className="relative z-10 flex items-center gap-2">
-                            {isReturningUser ? "Update & Continue" : "Unlock My Access"} <ArrowRight className="w-4 h-4" />
-                          </span>
-                        </button>
-                      }
-                    >
-                      <p className={cn("text-xs md:text-sm mb-4", isXM ? "text-red-200/60" : "text-blue-200/60")}>
-                        {isReturningUser 
-                          ? <>Verify your details to continue as <span className={cn("font-medium", isXM ? "text-red-300" : "text-blue-300")}>{savedSession?.email}</span></>
-                          : <>This lets you access <span className={cn("font-medium", isXM ? "text-red-300" : "text-blue-300")}>setups</span>, tools, and the community.</>
-                        }
-                      </p>
-                      <div className="space-y-4 pt-1">
-                        <div>
-                          <div className="relative group">
-                            <Mail className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors", isXM ? "text-red-400/50 group-focus-within:text-red-400" : "text-blue-400/50 group-focus-within:text-blue-400")} />
-                            <input
-                              autoFocus={!isReturningUser}
-                              type="email"
-                              name="email"
-                              autoComplete="username"
-                              value={formData.email}
-                              onChange={handleChange}
-                              onKeyDown={handleKeyDown}
-                              placeholder="Email address"
-                              disabled={isReturningUser}
-                              className={cn(
-                                "w-full rounded-lg pl-10 pr-4 py-3.5 text-white focus:outline-none transition-all cursor-target text-base",
-                                isReturningUser ? "bg-black/40 border-2 border-white/10 text-white/70" : "",
-                                !isReturningUser && (isXM 
-                                  ? "bg-black/60 border-2 border-red-500/30 placeholder-red-300/30 focus:border-red-500/60 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]"
-                                  : "bg-black/60 border-2 border-blue-500/30 placeholder-blue-300/30 focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)]")
-                              )}
-                            />
-                          </div>
-                          <p className={cn("text-[10px] mt-1 ml-1", isXM ? "text-red-300/40" : "text-blue-300/40")}>
-                            {isReturningUser ? "Using your saved email address." : "We'll send your login details here."}
-                          </p>
-                        </div>
-
-                        <div>
-                          <div className="relative group">
-                            <Lock className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors", isXM ? "text-red-400/50 group-focus-within:text-red-400" : "text-blue-400/50 group-focus-within:text-blue-400")} />
-                            <input
-                              autoFocus={isReturningUser}
-                              type={showPassword ? "text" : "password"}
-                              name="password"
-                              autoComplete="new-password"
-                              value={formData.password}
-                              onChange={handleChange}
-                              onKeyDown={handleKeyDown}
-                              placeholder={isReturningUser ? "Enter your password" : "Create password (min 6 chars)"}
-                              className={cn(
-                                "w-full rounded-lg pl-10 pr-12 py-3.5 text-white focus:outline-none transition-all cursor-target text-base",
-                                isXM 
-                                  ? "bg-black/60 border-2 border-red-500/30 placeholder-red-300/30 focus:border-red-500/60 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]"
-                                  : "bg-black/60 border-2 border-blue-500/30 placeholder-blue-300/30 focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)]"
-                              )}
-                            />
-                            <button 
-                              type="button" 
-                              onClick={() => setShowPassword(!showPassword)}
-                              className={cn("absolute right-3 top-1/2 -translate-y-1/2 transition-colors cursor-target", isXM ? "text-red-400/50 hover:text-red-400" : "text-blue-400/50 hover:text-blue-400")}
-                            >
-                              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </button>
-                          </div>
-                          <p className={cn("text-[10px] mt-1 ml-1", isXM ? "text-red-300/40" : "text-blue-300/40")}>Must be at least 6 characters.</p>
-                        </div>
-
-                        {!isReturningUser && (
-                          <div>
-                            <div className="relative group">
-                              <User className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors", isXM ? "text-red-400/50 group-focus-within:text-red-400" : "text-blue-400/50 group-focus-within:text-blue-400")} />
-                              <input
-                                type="text"
-                                name="referralCode"
-                                value={formData.referralCode}
-                                onChange={handleChange}
-                                placeholder="Referral Code (Optional)"
-                                className={cn(
-                                  "w-full rounded-lg pl-10 pr-4 py-3.5 text-white focus:outline-none transition-all cursor-target text-base",
-                                  isXM 
-                                    ? "bg-black/60 border-2 border-red-500/30 placeholder-red-300/30 focus:border-red-500/60 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]"
-                                    : "bg-black/60 border-2 border-blue-500/30 placeholder-blue-300/30 focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)]"
-                                )}
-                              />
-                            </div>
-                            <p className={cn("text-[10px] mt-1 ml-1", isXM ? "text-red-300/40" : "text-blue-300/40")}>Leave blank if you don&apos;t have one.</p>
-                          </div>
-                        )}
-
-                        <div 
-                          onClick={() => setAcceptedTerms(!acceptedTerms)}
-                          className={cn(
-                            "flex items-start gap-3 p-3 rounded-lg border-2 bg-black/60 cursor-pointer transition-colors cursor-target",
-                            isXM ? "border-red-500/20 hover:bg-red-950/30 hover:border-red-500/30" : "border-blue-500/20 hover:bg-blue-950/30 hover:border-blue-500/30"
-                          )}
-                        >
-                          <div className={cn(
-                            "w-5 h-5 rounded border-2 flex items-center justify-center mt-0.5 transition-colors shrink-0",
-                            acceptedTerms 
-                              ? (isXM ? "bg-red-600 border-red-600" : "bg-blue-600 border-blue-600")
-                              : (isXM ? "border-red-500/40" : "border-blue-500/40")
-                          )}>
-                            {acceptedTerms && <Check className="w-3.5 h-3.5 text-white" />}
-                          </div>
-                          <div className="flex-1">
-                            <p className={cn("text-xs leading-tight", isXM ? "text-red-200/70" : "text-blue-200/70")}>
-                              I agree to the Terms of Service and understand this is educational content.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {submitError && (
-                        <div className="flex items-center gap-2 text-red-400 bg-red-950/20 p-3 rounded-lg border border-red-900/50 mt-4 animate-in slide-in-from-top-2">
-                          <AlertCircle className="w-4 h-4 shrink-0" />
-                          <span className="text-xs font-medium">{submitError}</span>
-                        </div>
-                      )}
-                    </StepCard>
-
-                    <button onClick={handleBack} className={cn("mt-4 flex items-center text-sm mx-auto transition-colors cursor-target", isXM ? "text-red-300/50 hover:text-red-300" : "text-blue-300/50 hover:text-blue-300")}>
-                      <ChevronLeft className="w-4 h-4 mr-1" /> Back
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
           </div>
+          {savedSession && (
+            <span className="text-xs hidden sm:inline" style={{ color: NEON_BLUE.textMuted }}>
+              {savedSession.email}
+            </span>
+          )}
         </div>
+        <div className="flex items-center gap-2">
+          <NeonButton onClick={handleLogout} variant="ghost" size="small">
+            <Lock className="w-4 h-4 mr-1" />
+            <span className="hidden sm:inline">Logout</span>
+          </NeonButton>
+          <button 
+            onClick={handleClose}
+            className="p-2 rounded-full transition-all border-2"
+            style={{ 
+              borderColor: 'rgba(59, 130, 246, 0.3)',
+              color: NEON_BLUE.textMuted
+            }}
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+      
+      {/* Dashboard Content */}
+      <div className="flex-1 overflow-y-auto">
+        {dashboardTab === 'dashboard' && (
+          <AffiliateRecruitsDashboard onBack={() => setStep('success')} />
+        )}
+        {dashboardTab === 'admin' && isAffiliateAdmin && (
+          <AffiliateAdminPanel />
+        )}
+      </div>
+    </div>
+  );
+
+  // =========================================
+  // MAIN RENDER
+  // =========================================
+  
+  // Dashboard is fullscreen
+  if (step === 'dashboard') {
+    return renderDashboard();
+  }
+
+  // Modal wrapper for other steps
+  return (
+    <div 
+      className="affiliate-modal fixed inset-0 z-[999999] flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
+      style={{ background: 'rgba(0, 0, 0, 0.85)' }}
+    >
+      {/* Close Button */}
+      <button 
+        onClick={handleClose}
+        className="absolute top-4 right-4 z-50 p-2 rounded-full transition-all border-2"
+        style={{ 
+          borderColor: 'rgba(59, 130, 246, 0.3)',
+          background: 'rgba(0, 0, 0, 0.8)',
+          color: NEON_BLUE.textMuted
+        }}
+      >
+        <X className="w-5 h-5" />
+      </button>
+
+      {/* Content Container */}
+      <div 
+        ref={scrollContainerRef}
+        className="w-full max-h-[90vh] overflow-y-auto py-8"
+      >
+        <AnimatePresence mode="wait">
+          {step === 'intro' && renderIntro()}
+          {step === 'how-it-works' && renderHowItWorks()}
+          {step === 'signup-broker' && renderSignupBroker()}
+          {step === 'signup-mt5' && renderSignupMT5()}
+          {step === 'signup-account' && renderSignupAccount()}
+          {step === 'loading' && renderLoading()}
+          {step === 'success' && renderSuccess()}
+        </AnimatePresence>
       </div>
     </div>
   );

@@ -29,6 +29,10 @@ type AudioSettingsContextValue = {
   tipsMuted: boolean;
   setTipsMuted: (muted: boolean) => void;
 
+  // Separate iframe volume (0..1) - independent from music volume
+  iframeVolume: number;
+  setIframeVolume: (volume: number) => void;
+
   getResolvedMusicUrl: () => string | null;
   
   // Streaming embed URLs
@@ -46,6 +50,7 @@ const STORAGE_KEYS = {
   sfxVolume: "audio_sfx_volume_v1",
   musicSource: "audio_music_source_v1",
   tipsMuted: "audio_tips_muted_v1",
+  iframeVolume: "audio_iframe_volume_v1",
 } as const;
 
 const MUSIC_URLS: Record<Exclude<MusicSource, "THEME" | "SPOTIFY" | "APPLE_MUSIC" | "YOUTUBE">, string> = {
@@ -64,6 +69,7 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
   const [musicSource, setMusicSourceState] = useState<MusicSource>("THEME");
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const [tipsMuted, setTipsMutedState] = useState(false);
+  const [iframeVolume, setIframeVolumeState] = useState(0.5); // Separate iframe volume (50% default)
 
   // Cleanup audio resource on unmount.
   useEffect(() => {
@@ -201,6 +207,7 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
     const storedSfxVol = userStorage.get(STORAGE_KEYS.sfxVolume);
     const storedSource = userStorage.get(STORAGE_KEYS.musicSource);
     const storedTipsMuted = userStorage.get(STORAGE_KEYS.tipsMuted);
+    const storedIframeVol = userStorage.get(STORAGE_KEYS.iframeVolume);
 
     if (storedEnabled !== null) setMusicEnabledState(storedEnabled === true || storedEnabled === "true");
 
@@ -225,6 +232,12 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
 
     if (storedTipsMuted !== null) {
       setTipsMutedState(storedTipsMuted === true || storedTipsMuted === "true");
+    }
+
+    if (typeof storedIframeVol === "number") setIframeVolumeState(clamp01(storedIframeVol));
+    else if (typeof storedIframeVol === "string") {
+      const parsed = Number(storedIframeVol);
+      if (!Number.isNaN(parsed)) setIframeVolumeState(clamp01(parsed));
     }
   }, []);
 
@@ -300,6 +313,10 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
     userStorage.set(STORAGE_KEYS.tipsMuted, String(tipsMuted));
   }, [tipsMuted]);
 
+  useEffect(() => {
+    userStorage.set(STORAGE_KEYS.iframeVolume, String(iframeVolume));
+  }, [iframeVolume]);
+
   const setMusicEnabled = useCallback((enabled: boolean) => {
     setMusicEnabledState(enabled);
     if (!enabled) {
@@ -349,6 +366,10 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
 
   const setTipsMuted = useCallback((muted: boolean) => {
     setTipsMutedState(muted);
+  }, []);
+
+  const setIframeVolume = useCallback((volume: number) => {
+    setIframeVolumeState(clamp01(volume));
   }, []);
 
   // keep Media Session API in sync 
@@ -425,6 +446,9 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
 
       tipsMuted,
       setTipsMuted,
+
+      iframeVolume,
+      setIframeVolume,
       
       streamingEmbedUrl,
       isStreamingSource,
@@ -444,6 +468,9 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
 
       tipsMuted,
       setTipsMuted,
+
+      iframeVolume,
+      setIframeVolume,
       
       streamingEmbedUrl,
       isStreamingSource,

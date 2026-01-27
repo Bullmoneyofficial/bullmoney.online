@@ -17,10 +17,12 @@ import {
   Edit,
   Trash2,
   GraduationCap,
+  Users,
 } from "lucide-react";
 import { createSupabaseClient } from "@/lib/supabase";
 import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 import CourseAdminPanel from "@/components/CourseAdminPanel";
+import AffiliateAdminPanel from "@/app/recruit/AffiliateAdminPanel";
 
 // Generate a reasonably unique id when inserting rows from the client
 const safeId = () =>
@@ -246,7 +248,7 @@ export function AdminHubModal({
   const adminEmailEnv = process.env.NEXT_PUBLIC_ADMIN_EMAIL?.toLowerCase() || "";
   const supabase = useMemo(() => createSupabaseClient(), []);
   const [activeTab, setActiveTab] = useState<
-    "products" | "services" | "livestream" | "analysis" | "recruits" | "course"
+    "products" | "services" | "livestream" | "analysis" | "recruits" | "course" | "affiliate"
   >("products");
   const [busy, setBusy] = useState(false);
   const isSyncing = useRef(false);
@@ -1510,6 +1512,12 @@ export function AdminHubModal({
                 active={activeTab === "course"}
                 onClick={() => setActiveTab("course")}
               />
+              <TabButton
+                label="Affiliate Admin"
+                icon={<Users className="w-4 h-4" />}
+                active={activeTab === "affiliate"}
+                onClick={() => setActiveTab("affiliate")}
+              />
             </div>
 
               <div className="p-3 sm:p-4 bg-slate-950/70 overflow-hidden [overscroll-behavior:contain]">
@@ -1525,6 +1533,7 @@ export function AdminHubModal({
                     {activeTab === "analysis" && renderAnalyses()}
                     {activeTab === "recruits" && renderRecruits()}
                     {activeTab === "course" && <CourseAdminPanel />}
+                    {activeTab === "affiliate" && <AffiliateAdminPanel />}
                   </>
                 ) : (
                   <div className="flex flex-col items-center justify-center gap-3 py-12 text-center text-slate-200">

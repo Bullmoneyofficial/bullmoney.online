@@ -9,8 +9,12 @@ import {
   IconPlayerPause,
   IconChevronUp,
   IconInfoCircle,
+  IconVolume,
   IconX,
   IconGripVertical,
+  IconVolumeOff,
+  IconVolume2,
+  IconVolume3,
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
@@ -19,6 +23,7 @@ import { BlueShimmer, Slider, GameOverScreen, GameControls, GameShimmer, BounceD
 import { ShimmerLine } from "@/components/ui/UnifiedShimmer";
 import { sourceLabel, streamingOptions, sourceIcons } from "./constants";
 import { useAudioWidgetUI } from "@/contexts/UIStateContext";
+import { useDeviceVolumeDetector } from "@/hooks/useDeviceVolumeDetector";
 import type { MusicSource } from "@/contexts/AudioSettingsProvider";
 
 /**
@@ -93,6 +98,9 @@ interface MainWidgetProps {
   toggleMusic: () => void;
   musicVolume: number;
   setMusicVolume: (v: number) => void;
+  // Separate iframe volume
+  iframeVolume: number;
+  setIframeVolume: (v: number) => void;
   sfxVolume: number;
   setSfxVolume: (v: number) => void;
   tipsMuted: boolean;
@@ -126,7 +134,8 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
     isScrollMinimized, setIsScrollMinimized,
     musicSource, isStreamingSource, streamingActive, setStreamingActive,
     streamingEmbedUrl, musicEnabled, setMusicEnabled, isMusicPlaying, toggleMusic,
-    musicVolume, setMusicVolume, sfxVolume, setSfxVolume, tipsMuted, setTipsMuted,
+    musicVolume, setMusicVolume, iframeVolume, setIframeVolume, 
+    sfxVolume, setSfxVolume, tipsMuted, setTipsMuted,
     handleStreamingSelect, handleStartCatchGame, handleStopGame,
     setMusicEmbedOpen, setShowTipsOverlay, showReturnUserHint, showFirstTimeHelp,
     iframeRef, isWandering, gameStats, gameState,
@@ -187,6 +196,61 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
   
   // Track if we're on mobile
   const [isMobileDevice, setIsMobileDevice] = useState(false);
+  const [activeMobilePanel, setActiveMobilePanel] = useState<'music' | 'volume' | 'game' | 'actions'>('music');
+  
+  // Device volume detection - opens widget when user presses device volume buttons
+  const [showDeviceVolumePopup, setShowDeviceVolumePopup] = useState(false);
+  const [deviceVolumeDirection, setDeviceVolumeDirection] = useState<'up' | 'down' | null>(null);
+  const deviceVolumeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Callback for device volume button press - defined before hook to avoid reference issues
+  const handleDeviceVolumePress = useCallback((direction: 'up' | 'down') => {
+    // When device volume button is pressed, show the volume popup and open widget
+    setShowDeviceVolumePopup(true);
+    setDeviceVolumeDirection(direction);
+    
+    // If widget is not open, open it to the volume panel
+    if (!open) {
+      setOpen(true);
+      setActiveMobilePanel('volume');
+      trackEvent('feature_used', { component: 'main_widget', action: 'device_volume_opened' });
+    }
+    
+    // Hide popup after 2.5 seconds
+    if (deviceVolumeTimeoutRef.current) {
+      clearTimeout(deviceVolumeTimeoutRef.current);
+    }
+    deviceVolumeTimeoutRef.current = setTimeout(() => {
+      setShowDeviceVolumePopup(false);
+      setDeviceVolumeDirection(null);
+    }, 2500);
+  }, [open, setOpen]);
+  
+  // Activate audio context on first user interaction for iOS compatibility
+  const { activateAudioContext } = useDeviceVolumeDetector({
+    onVolumeButtonPress: handleDeviceVolumePress,
+  });
+  
+  // Activate audio context on any user interaction for iOS
+  useEffect(() => {
+    const handleInteraction = () => activateAudioContext();
+    window.addEventListener('touchstart', handleInteraction, { once: true, passive: true });
+    window.addEventListener('click', handleInteraction, { once: true });
+    return () => {
+      window.removeEventListener('touchstart', handleInteraction);
+      window.removeEventListener('click', handleInteraction);
+    };
+  }, [activateAudioContext]);
+  
+  // Cleanup device volume timeout
+  useEffect(() => {
+    return () => {
+      if (deviceVolumeTimeoutRef.current) {
+        clearTimeout(deviceVolumeTimeoutRef.current);
+      }
+    };
+  }, []);
+  
   useEffect(() => {
     const checkMobile = () => setIsMobileDevice(window.innerWidth < 768);
     checkMobile();
@@ -265,6 +329,98 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
 
   return (
     <>
+        {/* Device Volume Detection Popup - Shows when user presses device volume buttons */}
+        <AnimatePresence>
+          {showDeviceVolumePopup && (
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.9 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              className="fixed top-20 left-1/2 -translate-x-1/2 z-[999999999999] pointer-events-auto"
+            >
+              <div className="relative px-4 py-3 rounded-2xl backdrop-blur-xl border shadow-2xl overflow-hidden"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(6, 182, 212, 0.1) 50%, rgba(59, 130, 246, 0.05) 100%)',
+                  borderColor: 'rgba(59, 130, 246, 0.4)',
+                  boxShadow: '0 0 30px rgba(59, 130, 246, 0.3), 0 0 60px rgba(59, 130, 246, 0.15), inset 0 0 20px rgba(59, 130, 246, 0.1)',
+                }}
+              >
+                {/* Animated background shimmer */}
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/20 to-transparent"
+                  animate={{ x: ['-100%', '100%'] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+                />
+                
+                <div className="relative flex items-center gap-3">
+                  {/* Volume Icon with direction indicator */}
+                  <motion.div
+                    animate={{ 
+                      scale: [1, 1.2, 1],
+                      rotate: deviceVolumeDirection === 'up' ? [0, -10, 0] : [0, 10, 0]
+                    }}
+                    transition={{ duration: 0.3 }}
+                    className="relative"
+                  >
+                    {deviceVolumeDirection === 'up' ? (
+                      <IconVolume3 className="w-6 h-6 text-blue-400" style={{ filter: 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.6))' }} />
+                    ) : (
+                      <IconVolume2 className="w-6 h-6 text-blue-400" style={{ filter: 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.6))' }} />
+                    )}
+                    
+                    {/* Direction arrow */}
+                    <motion.div
+                      className="absolute -top-1 -right-1 w-3 h-3 flex items-center justify-center"
+                      animate={{ y: deviceVolumeDirection === 'up' ? [-2, 0] : [0, 2] }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <span className="text-[8px] text-cyan-300 font-bold">
+                        {deviceVolumeDirection === 'up' ? '▲' : '▼'}
+                      </span>
+                    </motion.div>
+                  </motion.div>
+                  
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-semibold text-blue-300 uppercase tracking-wider">
+                      Device Volume Detected
+                    </span>
+                    <span className="text-[9px] text-white/60">
+                      Control app volume below ↓
+                    </span>
+                  </div>
+                  
+                  {/* Quick volume bars visualization */}
+                  <div className="flex items-end gap-[2px] h-4 ml-2">
+                    {[0, 1, 2, 3, 4].map((i) => (
+                      <motion.div
+                        key={i}
+                        className="w-[3px] rounded-full bg-gradient-to-t from-blue-500 to-cyan-400"
+                        initial={{ height: 4 }}
+                        animate={{ 
+                          height: deviceVolumeDirection === 'up' 
+                            ? [4, 8 + i * 2, 4 + i * 1.5]
+                            : [8 + i * 2, 4, 4 + i * 0.5]
+                        }}
+                        transition={{ 
+                          duration: 0.4, 
+                          delay: i * 0.05,
+                          ease: 'easeOut'
+                        }}
+                        style={{ 
+                          boxShadow: '0 0 4px rgba(59, 130, 246, 0.6)',
+                          minHeight: '4px',
+                          maxHeight: '16px'
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Pull tab to show widget when hidden - minimizes/maximizes on scroll */}
         <AnimatePresence mode="wait">
         {widgetHidden && !isScrollMinimized && (
@@ -624,9 +780,44 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                     transition={{ duration: 0.2 }}
                     className="px-3 pb-3 overflow-hidden"
                   >
+                    {/* Mobile panel selector */}
+                    {isMobileDevice && (
+                      <div className="mb-3 grid grid-cols-4 gap-2">
+                        {[
+                          { key: 'music' as const, label: 'Music', icon: <IconMusic className="w-4 h-4" /> },
+                          { key: 'volume' as const, label: 'Volume', icon: <IconVolume className="w-4 h-4" /> },
+                          { key: 'game' as const, label: 'Game', icon: <IconPlayerPlay className="w-4 h-4" /> },
+                          { key: 'actions' as const, label: 'More', icon: <IconInfoCircle className="w-4 h-4" /> },
+                        ].map((tab) => {
+                          const isActive = activeMobilePanel === tab.key;
+                          return (
+                            <button
+                              key={tab.key}
+                              onClick={() => { SoundEffects.click(); setActiveMobilePanel(tab.key); }}
+                              className={cn(
+                                "flex flex-col items-center justify-center gap-1 rounded-xl border px-2 py-2 text-[9px] font-semibold transition-all",
+                                isActive
+                                  ? "border-blue-400/70 text-blue-100 shadow-[0_0_12px_rgba(59,130,246,0.55)]"
+                                  : "border-white/15 text-white/60 hover:border-blue-400/40"
+                              )}
+                              style={isActive ? {
+                                background: 'linear-gradient(135deg, rgba(59,130,246,0.25), rgba(14,165,233,0.2), rgba(59,130,246,0.25))'
+                              } : { background: 'rgba(15,23,42,0.5)' }}
+                            >
+                              <span className="text-blue-300" style={{ filter: shouldSkipHeavyEffects ? 'none' : 'drop-shadow(0 0 6px rgba(59,130,246,0.8))' }}>
+                                {tab.icon}
+                              </span>
+                              {tab.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
                     {/* Streaming Status - Theme-aware */}
-                    {isStreamingSource && streamingEmbedUrl && streamingActive && (
-                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-2 px-2 py-1.5 rounded-lg bg-white/15 border border-white/25 flex items-center justify-between">
+                    {(!isMobileDevice || activeMobilePanel === 'music') && isStreamingSource && streamingEmbedUrl && streamingActive && (
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={cn("mb-2 px-2 py-1.5 rounded-lg bg-white/15 border border-white/25 flex items-center justify-between", isMobileDevice && "border-blue-500/30 bg-slate-900/60")}
+                      >
                         <div className="flex items-center gap-2">
                           <div className="flex gap-0.5 h-3 items-end">
                             <motion.div className="w-0.5 rounded-full" style={{ backgroundColor: 'var(--accent-color, #60a5fa)' }} animate={{ height: [4, 12, 4] }} transition={shouldSkipHeavyEffects ? {} : { duration: 0.5, repeat: Infinity }} />
@@ -640,7 +831,8 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                     )}
 
                     {/* Music Service Selection - Theme-aware */}
-                    <div className="mb-3">
+                    {(!isMobileDevice || activeMobilePanel === 'music') && (
+                    <div className={cn("mb-3", isMobileDevice && "rounded-xl border border-blue-500/30 bg-slate-900/60 p-2") }>
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-[11px] text-white/70 font-medium">🎧 Music Service</span>
                         {!streamingActive && <span className="text-[9px] shimmer-pulse" style={{ color: 'var(--accent-color, #60a5fa)' }}>Tap one</span>}
@@ -673,9 +865,11 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                         })}
                       </div>
                     </div>
+                    )}
 
                     {/* Volume Controls */}
-                    <div className="mb-2 space-y-2">
+                    {(!isMobileDevice || activeMobilePanel === 'volume') && (
+                    <div className={cn("mb-2 space-y-2", isMobileDevice && "rounded-xl border border-blue-500/30 bg-slate-900/60 p-2") }>
                       <div className="flex items-center justify-between">
                         <span className="text-[11px] text-white/70 font-medium">🔊 Volume</span>
                         <motion.button
@@ -689,13 +883,31 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                           Tips: {tipsMuted ? "OFF" : "ON"}
                         </motion.button>
                       </div>
-                      <Slider label="🎵 Music" value={musicVolume} onChange={(v) => { setMusicVolume(v); if (iframeRef.current?.contentWindow) { const win = iframeRef.current.contentWindow; if (musicSource === 'YOUTUBE') win.postMessage(JSON.stringify({ event: 'command', func: 'unMute' }), '*'); win.postMessage({ method: 'play' }, '*'); win.postMessage({ method: 'setVolume', value: 1 }, '*'); } }} />
+                      <Slider label="🎵 Music" value={musicVolume} onChange={(v) => setMusicVolume(v)} />
+                      <Slider label="📺 Iframe" value={iframeVolume} onChange={(v) => { 
+                        setIframeVolume(v); 
+                        // Immediately broadcast volume to iframe
+                        if (iframeRef.current?.contentWindow) { 
+                          const win = iframeRef.current.contentWindow; 
+                          const vol0to100 = Math.floor(v * 100);
+                          // YouTube API
+                          if (musicSource === 'YOUTUBE') {
+                            win.postMessage(JSON.stringify({ event: 'command', func: 'unMute' }), '*');
+                            win.postMessage(JSON.stringify({ event: 'command', func: 'setVolume', args: [vol0to100] }), '*');
+                          }
+                          // Generic protocols
+                          win.postMessage({ method: 'setVolume', value: v }, '*');
+                          win.postMessage({ method: 'setVolume', value: vol0to100 }, '*');
+                          win.postMessage(JSON.stringify({ method: 'setVolume', value: vol0to100 }), '*');
+                        } 
+                      }} />
                       <Slider label="✨ SFX" value={sfxVolume} onChange={(v) => setSfxVolume(v)} />
                     </div>
+                    )}
 
                     {/* Game Stats */}
-                    {gameStats.gamesPlayed > 0 && (
-                      <div className="mb-2 p-2 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-400/20 relative overflow-hidden">
+                    {(!isMobileDevice || activeMobilePanel === 'game') && gameStats.gamesPlayed > 0 && (
+                      <div className={cn("mb-2 p-2 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-400/20 relative overflow-hidden", isMobileDevice && "shadow-[0_0_16px_rgba(59,130,246,0.25)]") }>
                         <GameShimmer colors="blue" />
                         <div className="flex items-center justify-between text-[10px] mb-1.5">
                           <div className="flex items-center gap-2">
@@ -731,8 +943,8 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                     )}
 
                     {/* Quick game start if no games played */}
-                    {gameStats.gamesPlayed === 0 && streamingActive && (
-                      <div className="mb-2 p-2 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-400/20 relative overflow-hidden">
+                    {(!isMobileDevice || activeMobilePanel === 'game') && gameStats.gamesPlayed === 0 && streamingActive && (
+                      <div className={cn("mb-2 p-2 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-400/20 relative overflow-hidden", isMobileDevice && "shadow-[0_0_16px_rgba(59,130,246,0.25)]") }>
                         <GameShimmer colors="blue" />
                         <div className="text-[10px] text-white/60 mb-1.5 text-center">Try the catch game</div>
                         <GameControls isPlaying={isWandering} onStart={handleStartCatchGame} onStop={handleStopGame} />
@@ -740,7 +952,8 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                     )}
 
                     {/* Bottom actions - Theme-aware */}
-                    <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                    {(!isMobileDevice || activeMobilePanel === 'actions') && (
+                    <div className={cn("flex items-center justify-between pt-2 border-t border-white/5", isMobileDevice && "rounded-xl border border-blue-500/30 bg-slate-900/60 p-2") }>
                       <button onClick={() => { SoundEffects.click(); setMusicEnabled(false); setMusicEmbedOpen(true); setOpen(false); }} className="text-[9px] hover:opacity-80 transition-opacity" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.7)' }}>🎵 Full Library</button>
                       {streamingActive && (
                         <button onClick={handleOpenIPhonePlayer} className="text-[9px] hover:opacity-80 transition-opacity flex items-center gap-1" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.7)' }}>
@@ -751,6 +964,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                         <IconInfoCircle className="w-3 h-3" />Help
                       </button>
                     </div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>

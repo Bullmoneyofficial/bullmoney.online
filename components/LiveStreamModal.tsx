@@ -1327,6 +1327,7 @@ const LiveStreamContent = memo(() => {
               onClick={handleClose}
               className="p-2 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-all group relative"
               title="Close (ESC)"
+              data-modal-close="true"
             >
               <X className="w-5 h-5" />
               <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-white/50 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">ESC</span>

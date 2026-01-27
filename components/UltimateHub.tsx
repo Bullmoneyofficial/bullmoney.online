@@ -141,6 +141,7 @@ import {
   Newspaper
 } from 'lucide-react';
 import { useUIState } from '@/contexts/UIStateContext';
+import { useAudioSettings } from '@/contexts/AudioSettingsProvider';
 import { createSupabaseClient } from '@/lib/supabase';
 import { NotificationToggle, NotificationBadge } from '@/components/NotificationSettingsPanel';
 import { useNotifications } from '@/hooks/useNotifications';

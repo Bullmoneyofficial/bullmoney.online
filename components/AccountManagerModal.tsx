@@ -192,6 +192,19 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
   const [editMT5AccountId, setEditMT5AccountId] = useState("");
   const [editMT5Broker, setEditMT5Broker] = useState<"XM" | "Vantage" | "">("");
 
+  // ESC close support (UI state compatible)
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [isOpen, onClose]);
+
   // Helper function to get authenticated user email (pagemode or Supabase)
   const getAuthenticatedEmail = useCallback(async (): Promise<string | null> => {
     // Check pagemode session first (localStorage)
@@ -758,7 +771,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+          className="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md"
           onClick={onClose}
         >
           <motion.div
@@ -767,21 +780,23 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ type: "spring", damping: 25 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl bg-gradient-to-b from-slate-950 via-slate-900 to-black shadow-2xl shadow-blue-900/40 border border-blue-500/40"
+            className="relative w-full max-w-4xl max-h-[92vh] sm:max-h-[90vh] overflow-hidden rounded-2xl bg-gradient-to-b from-slate-950 via-slate-900 to-black shadow-2xl shadow-blue-900/40 border border-blue-500/40"
           >
             {/* Header */}
-            <div className="sticky top-0 z-10 bg-blue-500/10 px-6 py-4 border-b border-blue-500/30">
+            <div className="sticky top-0 z-10 bg-blue-500/10 px-4 sm:px-6 py-3 sm:py-4 border-b border-blue-500/30">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <User className="h-6 w-6 text-cyan-300" />
-                  <h2 className="text-2xl font-bold text-white">Account Manager</h2>
+                  <User className="h-5 w-5 sm:h-6 sm:w-6 text-cyan-300 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+                  <h2 className="text-xl sm:text-2xl font-bold text-white neon-text-blue">Account Manager</h2>
                   {accountData?.is_vip && (
                     <Crown className="h-5 w-5 text-yellow-400 animate-pulse" />
                   )}
                 </div>
                 <button
                   onClick={onClose}
-                  className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-colors"
+                  className="p-2.5 sm:p-2 rounded-full transition-colors"
+                  aria-label="Close modal"
+                  data-modal-close="true"
                 >
                   <X className="h-5 w-5 text-white" />
                 </button>
@@ -789,7 +804,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
             </div>
 
             {/* Content */}
-            <div className="overflow-y-auto max-h-[calc(90vh-80px)] p-6 space-y-6">
+            <div className="overflow-y-auto max-h-[calc(92vh-72px)] sm:max-h-[calc(90vh-80px)] p-4 sm:p-6 space-y-5 sm:space-y-6">
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-20">
                   <Loader2 className="h-12 w-12 text-blue-500 animate-spin mb-4" />
@@ -842,8 +857,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                   {/* Profile Section */}
                   <div className="bg-slate-900/70 rounded-xl p-6 border border-slate-800">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                        <User className="h-5 w-5 text-cyan-300" />
+                      <h3 className="text-lg sm:text-xl font-bold text-white neon-text-cyan flex items-center gap-2">
+                        <User className="h-5 w-5 text-cyan-300 drop-shadow-[0_0_6px_rgba(34,211,238,0.7)]" />
                         Profile Information
                       </h3>
                       {!isEditingProfile ? (
@@ -967,7 +982,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             Social Media Accounts
                           </h4>
                           
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {/* Telegram */}
                             <div>
                               <label className="block text-xs font-medium text-slate-400 mb-1">
@@ -1246,13 +1261,13 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
 
                   {/* Contact Information & Location */}
                   <div className="bg-slate-900/70 rounded-xl p-6 border border-slate-800">
-                    <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                      <Mail className="h-5 w-5 text-cyan-300" />
+                    <h3 className="text-lg sm:text-xl font-bold text-white neon-text-cyan mb-4 flex items-center gap-2">
+                      <Mail className="h-5 w-5 text-cyan-300 drop-shadow-[0_0_6px_rgba(34,211,238,0.7)]" />
                       Contact & Location
                     </h3>
                     
                     {isEditingProfile ? (
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-xs font-medium text-slate-400 mb-1">Cell Number</label>
                           <input
@@ -1324,7 +1339,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                         </div>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
                           <p className="text-xs text-slate-400 mb-1">Cell Number</p>
                           <span className="text-white text-sm">{accountData.cell_number || 'Not set'}</span>
@@ -1355,14 +1370,14 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
 
                   {/* Trading Profile */}
                   <div className="bg-slate-900/70 rounded-xl p-6 border border-slate-800">
-                    <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                      <TrendingUp className="h-5 w-5 text-cyan-300" />
+                    <h3 className="text-lg sm:text-xl font-bold text-white neon-text-cyan mb-4 flex items-center gap-2">
+                      <TrendingUp className="h-5 w-5 text-cyan-300 drop-shadow-[0_0_6px_rgba(34,211,238,0.7)]" />
                       Trading Profile
                     </h3>
                     
                     {isEditingProfile ? (
                       <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
                             <label className="block text-xs font-medium text-slate-400 mb-1">Experience (Years)</label>
                             <input
@@ -1466,7 +1481,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             style={{ color: '#ffffff' }}
                           />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
                             <label className="block text-xs font-medium text-slate-400 mb-1">Win Rate Target (%)</label>
                             <input
@@ -1545,7 +1560,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
                             <p className="text-xs text-slate-400 mb-1">Experience</p>
                             <span className="text-white text-sm">{accountData.trading_experience_years ? `${accountData.trading_experience_years} years` : 'Not set'}</span>
@@ -1581,7 +1596,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             <span className="text-white text-sm">{accountData.trading_strategy}</span>
                           </div>
                         )}
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
                             <p className="text-xs text-slate-400 mb-1">Win Rate Target</p>
                             <span className="text-white text-sm">{accountData.win_rate_target ? `${accountData.win_rate_target}%` : 'Not set'}</span>
@@ -1742,8 +1757,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                   {/* Affiliate Stats */}
                   {accountData.affiliate_code && (
                     <div className="bg-slate-900/70 rounded-xl p-6 border border-slate-800">
-                      <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                        <TrendingUp className="h-5 w-5 text-cyan-300" />
+                      <h3 className="text-lg sm:text-xl font-bold text-white neon-text-cyan mb-4 flex items-center gap-2">
+                        <TrendingUp className="h-5 w-5 text-cyan-300 drop-shadow-[0_0_6px_rgba(34,211,238,0.7)]" />
                         Affiliate Dashboard
                       </h3>
                       
@@ -1776,8 +1791,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
 
                   {/* MT5 Accounts Section */}
                   <div className="bg-slate-900/70 rounded-xl p-6 border border-slate-800">
-                    <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                      <Shield className="h-5 w-5 text-cyan-300" />
+                    <h3 className="text-lg sm:text-xl font-bold text-white neon-text-cyan mb-4 flex items-center gap-2">
+                      <Shield className="h-5 w-5 text-cyan-300 drop-shadow-[0_0_6px_rgba(34,211,238,0.7)]" />
                       MT5 Trading Accounts
                     </h3>
 
@@ -1928,7 +1943,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
 
                   {/* Broker Registration Link */}
                   <div className="bg-blue-500/10 rounded-xl p-6 border border-blue-500/40">
-                    <h3 className="text-lg font-bold text-white mb-2">Need a Broker Account?</h3>
+                    <h3 className="text-lg font-bold text-white neon-text-blue mb-2">Need a Broker Account?</h3>
                     <p className="text-sm text-slate-400 mb-4">
                       Register with our partner brokers to start trading and unlock exclusive benefits.
                     </p>

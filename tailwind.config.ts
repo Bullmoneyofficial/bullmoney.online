@@ -17,6 +17,20 @@ const config: Config = {
     },
     extend: {
       colors: {
+        blue: {
+          50: "rgb(var(--accent-rgb) / 0.05)",
+          100: "rgb(var(--accent-rgb) / 0.1)",
+          200: "rgb(var(--accent-rgb) / 0.2)",
+          300: "rgb(var(--accent-rgb) / 0.4)",
+          400: "rgb(var(--accent-rgb) / 0.6)",
+          500: "rgb(var(--accent-rgb) / 1)",
+          600: "rgb(var(--accent-rgb) / 0.9)",
+          700: "rgb(var(--accent-rgb) / 0.8)",
+          800: "rgb(var(--accent-rgb) / 0.7)",
+          900: "rgb(var(--accent-rgb) / 0.6)",
+          950: "rgb(var(--accent-rgb) / 0.5)",
+          DEFAULT: "rgb(var(--accent-rgb) / 1)",
+        },
         // You can customize specific gold colors here if you want overrides
         gold: {
           100: "#F9F1D8",

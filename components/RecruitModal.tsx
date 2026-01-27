@@ -87,6 +87,8 @@ export default function RecruitModal({ isOpen, onClose }: RecruitModalProps) {
             <button
               onClick={onClose}
               className="absolute top-4 right-4 z-50 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+              aria-label="Close modal"
+              data-modal-close="true"
             >
               <X className="w-5 h-5 text-white" />
             </button>

@@ -119,7 +119,8 @@ export function TelegramModal({ isOpen, onClose }: TelegramModalProps) {
                   whileHover={{ scale: 1.1, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
                   className="flex items-center gap-2 p-2 hover:bg-white/10 rounded-lg transition-colors group"
-                  aria-label="Close modal"
+                    aria-label="Close modal"
+                    data-modal-close="true"
                 >
                   <span className="text-[10px] sm:text-xs text-gray-500 group-hover:text-gray-300 hidden sm:inline">ESC to close</span>
                   <X className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400 group-hover:text-white" />

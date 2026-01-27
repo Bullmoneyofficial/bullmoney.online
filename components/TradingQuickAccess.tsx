@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useUIState } from '@/contexts/UIStateContext';
 import { useMobilePerformance } from '@/hooks/useMobilePerformance';
+import { useAudioSettings } from '@/contexts/AudioSettingsProvider';
 
 // Trading symbols configuration
 const symbols = [
@@ -78,6 +79,9 @@ export function TradingQuickAccess() {
   const [liveChannelId, setLiveChannelId] = useState<string>('UCTd2Y1DjefTH6bOAvFcJ34Q');
   const [tradingChannelIndex, setTradingChannelIndex] = useState(0);
   const featuredVideos = DISCORD_STAGE_FEATURED_VIDEOS;
+  
+  // Get tipsMuted state from audio settings
+  const { tipsMuted } = useAudioSettings();
   
   // Popular trading/forex YouTube channels to pull live streams from when BullMoney isn't live
   const tradingLiveChannels = [
@@ -963,8 +967,8 @@ export function TradingQuickAccess() {
             </div>
           </div>
           
-          {/* Trading Tip - Matching Price Pill Style */}
-          {!isExpanded && (
+          {/* Trading Tip - Matching Price Pill Style - Hidden when tipsMuted */}
+          {!isExpanded && !tipsMuted && (
             <motion.div
               data-trading-tip="true"
               initial={{ opacity: 0, y: -8, x: -20 }}

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
+import { useAudioSettings } from '@/contexts/AudioSettingsProvider';
 
 // --- 👇 CRITICAL FIX: TYPE DECLARATION BLOCK 👇 ---
 declare global {
@@ -37,12 +38,16 @@ type HiddenYouTubePlayerProps = {
 const HiddenYouTubePlayer = ({ 
   videoId, 
   isPlaying, 
-  volume = 20 
+  volume
 }: HiddenYouTubePlayerProps) => {
+  const audioSettings = useAudioSettings();
   const playerRef = useRef<any>(null);
   const containerId = `yt-player-${videoId}`;
   const hasPlayedOnceRef = useRef(false);
   const [shouldMuteAfterFirstPlay, setShouldMuteAfterFirstPlay] = useState(false);
+  // Use iframeVolume for separate iframe volume control
+  const resolvedVolume = typeof volume === 'number' ? volume : Math.round(audioSettings.iframeVolume * 100);
+  const effectiveVolume = audioSettings.musicEnabled ? resolvedVolume : 0;
 
   // 1. INITIALIZE PLAYER (Only runs when videoId changes, forcing a rebuild)
   useEffect(() => {
@@ -75,7 +80,7 @@ const HiddenYouTubePlayer = ({
         },
         events: {
           onReady: (event: any) => {
-            event.target.setVolume(volume);
+            event.target.setVolume(effectiveVolume);
             // Attempt playback immediately if the state demands it and the player is ready
             if (isPlaying) {
                event.target.playVideo();
@@ -123,7 +128,7 @@ const HiddenYouTubePlayer = ({
         playerRef.current = null;
       }
     };
-  }, [videoId]); // Dependency is ONLY videoId
+  }, [videoId]);
 
   // 2. CONTROL PLAYBACK (Runs when isPlaying or volume changes)
   useEffect(() => {
@@ -131,12 +136,6 @@ const HiddenYouTubePlayer = ({
       try {
         if (isPlaying) {
           playerRef.current.playVideo();
-          // If we've already played once, keep it muted
-          if (shouldMuteAfterFirstPlay) {
-            playerRef.current.mute();
-          } else {
-            playerRef.current.setVolume(volume);
-          }
         } else {
           playerRef.current.pauseVideo();
         }
@@ -144,7 +143,23 @@ const HiddenYouTubePlayer = ({
         // console.warn("Player control error, likely not fully ready yet.", e);
       }
     }
-  }, [isPlaying, volume, shouldMuteAfterFirstPlay]);
+  }, [isPlaying]);
+
+  // 3. CONTROL VOLUME (Runs when volume changes - separate from playback)
+  useEffect(() => {
+    if (playerRef.current && typeof playerRef.current.setVolume === 'function') {
+      try {
+        // If we've already played once, keep it muted (for looping behavior)
+        if (shouldMuteAfterFirstPlay || effectiveVolume === 0) {
+          playerRef.current.mute();
+        } else {
+          playerRef.current.setVolume(effectiveVolume);
+        }
+      } catch (e) {
+        // Player not ready yet
+      }
+    }
+  }, [effectiveVolume, shouldMuteAfterFirstPlay]);
 
   return (
     <div 

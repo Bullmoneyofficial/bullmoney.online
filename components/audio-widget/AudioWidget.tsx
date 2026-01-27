@@ -44,7 +44,7 @@ const AudioWidget = function AudioWidget() {
     }
   }, [shouldMinimizeAudioWidget, state.open, state.setOpen]);
 
-  useEffect(() => { h.broadcastVolumeToIframe(state.iframeRef); }, [audioSettings.musicVolume, audioSettings.musicSource, state.iframeKey, h, state.iframeRef]);
+  useEffect(() => { h.broadcastVolumeToIframe(state.iframeRef); }, [audioSettings.iframeVolume, audioSettings.musicSource, state.iframeKey, h, state.iframeRef]);
 
   const startGame = () => { h.dismissCatchGameTutorial(); h.handleStartCatchGame(); };
 

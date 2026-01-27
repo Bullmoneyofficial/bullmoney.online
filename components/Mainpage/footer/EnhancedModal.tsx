@@ -147,7 +147,7 @@ export const EnhancedModal = ({
                   {/* Close button - always on right */}
                   <button
                     onClick={onClose}
-                    className="relative z-[99999999999] p-1.5 xs:p-2 sm:p-2 md:p-2.5 rounded-full bg-black text-white min-w-[36px] min-h-[36px] xs:min-w-[40px] xs:min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] flex items-center justify-center group flex-shrink-0 transition-all duration-300 order-2 ml-auto"
+                    className="relative z-[9999] p-1.5 xs:p-2 sm:p-2 md:p-2.5 rounded-full bg-black text-white min-w-[36px] min-h-[36px] xs:min-w-[40px] xs:min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] flex items-center justify-center group flex-shrink-0 transition-all duration-300 order-2 ml-auto"
                     style={{
                       border: '2px solid #3b82f6',
                       boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6'

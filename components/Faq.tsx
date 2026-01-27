@@ -770,6 +770,7 @@ export default function BullMoneyModal({ isOpen, onClose }: { isOpen: boolean, o
                   boxShadow: isMobile ? 'none' : '0 0 4px #3b82f6, 0 0 8px rgba(59, 130, 246, 0.5)'
                 }}
                 title="Close (ESC)"
+                data-modal-close="true"
             >
                 <X className="w-5 h-5" style={{ color: '#ffffff', filter: isMobile ? 'none' : 'drop-shadow(0 0 4px #ffffff)' }} />
                 <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap" style={{ color: '#3b82f6', textShadow: '0 0 4px #3b82f6' }}>ESC</span>

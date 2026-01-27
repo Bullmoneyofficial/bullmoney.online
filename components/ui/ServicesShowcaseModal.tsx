@@ -289,6 +289,8 @@ function PacManGameModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
           <button
             onClick={onClose}
             className="absolute right-3 top-3 sm:right-4 sm:top-4 z-50 inline-flex h-12 w-12 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-yellow-400/20 text-yellow-400 transition hover:bg-yellow-400/40 hover:scale-110 active:scale-95 freeze-exempt"
+            aria-label="Close modal"
+            data-modal-close="true"
           >
             <X size={22} />
           </button>
