@@ -25,6 +25,7 @@ import { ShimmerLine, ShimmerBorder, ShimmerSpinner, ShimmerRadialGlow } from '@
 
 // --- UI STATE CONTEXT ---
 import { useUIState, UI_Z_INDEX } from "@/contexts/UIStateContext";
+import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 
 // --- IMPORT SEPARATE LOADER COMPONENT ---
 import { MultiStepLoader} from "@/components/Mainpage/MultiStepLoader";
@@ -442,6 +443,46 @@ const GlobalStyles = () => (
       animation-play-state: paused;
     }
 
+    /* === MOBILE LITE MODE: DISABLE HEAVY EFFECTS IN PAGEMODE === */
+    html.is-mobile .register-container .shimmer-ltr::before {
+      animation: none !important;
+      opacity: 0 !important;
+    }
+
+    html.is-mobile .register-container .shimmer-text {
+      animation: none !important;
+      background: none !important;
+      -webkit-text-fill-color: currentColor !important;
+      color: inherit !important;
+    }
+
+    html.is-mobile .register-container .neon-blue-text,
+    html.is-mobile .register-container .neon-red-text {
+      animation: none !important;
+      text-shadow: none !important;
+    }
+
+    html.is-mobile .register-container .neon-blue-border,
+    html.is-mobile .register-container .neon-red-border {
+      animation: none !important;
+      box-shadow: none !important;
+    }
+
+    html.is-mobile .register-container .neon-blue-icon,
+    html.is-mobile .register-container .neon-red-icon,
+    html.is-mobile .register-container .neon-white-icon {
+      filter: none !important;
+    }
+
+    html.is-mobile .register-container .backdrop-blur-xl,
+    html.is-mobile .register-container .backdrop-blur-lg,
+    html.is-mobile .register-container .backdrop-blur-md,
+    html.is-mobile .register-container .backdrop-blur,
+    html.is-mobile .register-container .backdrop-blur-sm {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+
     /* === MOBILE VIEWPORT FIXES FOR SAFARI & IN-APP BROWSERS === */
     .register-container {
       min-height: 100vh;
@@ -601,6 +642,10 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   
   // --- DESKTOP DETECTION FOR WELCOME SCREEN ---
   const isDesktop = useIsDesktop();
+
+  // --- MOBILE PERFORMANCE PROFILE ---
+  const { isMobile, shouldSkipHeavyEffects, shouldDisableBackdropBlur } = useMobilePerformance();
+  const shouldReduceEffects = isMobile || shouldSkipHeavyEffects;
 
   // --- ULTIMATE HUB STATE (for mobile welcome screen) ---
   const [isHubOpen, setIsHubOpen] = useState(false);
@@ -1060,9 +1105,11 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       )}
       
       {/* Blue shimmer background - left to right */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute inset-0 shimmer-ltr opacity-10" />
-      </div>
+      {!shouldReduceEffects && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute inset-0 shimmer-ltr opacity-10" />
+        </div>
+      )}
       
       {/* === FIX: HIGH Z-INDEX WRAPPER FOR LOADER === */}
       {/* This fixed container ensures the loader covers the entire viewport and overlays native browser bars. */}
@@ -1151,13 +1198,15 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   className="relative z-10 pt-8 pb-4 text-center pointer-events-none"
                 >
                   {/* Neon glow backdrop effect */}
-                  <div
-                    className="absolute inset-0 pointer-events-none"
-                    style={{
-                      background: 'radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 60%)',
-                      filter: 'blur(20px)',
-                    }}
-                  />
+                  {!shouldReduceEffects && (
+                    <div
+                      className="absolute inset-0 pointer-events-none"
+                      style={{
+                        background: 'radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 60%)',
+                        filter: 'blur(20px)',
+                      }}
+                    />
+                  )}
                   <motion.h1
                     className="relative text-4xl font-black tracking-wider uppercase"
                     style={{
@@ -1171,18 +1220,26 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                       `,
                       letterSpacing: '0.15em',
                     }}
-                    animate={{
-                      textShadow: [
-                        '0 0 5px #3b82f6, 0 0 10px #3b82f6, 0 0 20px #3b82f6, 0 0 40px #3b82f6, 0 0 80px #2563eb',
-                        '0 0 8px #60a5fa, 0 0 15px #60a5fa, 0 0 30px #3b82f6, 0 0 60px #3b82f6, 0 0 100px #2563eb',
-                        '0 0 5px #3b82f6, 0 0 10px #3b82f6, 0 0 20px #3b82f6, 0 0 40px #3b82f6, 0 0 80px #2563eb',
-                      ],
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: 'easeInOut',
-                    }}
+                    animate={
+                      shouldReduceEffects
+                        ? undefined
+                        : {
+                            textShadow: [
+                              '0 0 5px #3b82f6, 0 0 10px #3b82f6, 0 0 20px #3b82f6, 0 0 40px #3b82f6, 0 0 80px #2563eb',
+                              '0 0 8px #60a5fa, 0 0 15px #60a5fa, 0 0 30px #3b82f6, 0 0 60px #3b82f6, 0 0 100px #2563eb',
+                              '0 0 5px #3b82f6, 0 0 10px #3b82f6, 0 0 20px #3b82f6, 0 0 40px #3b82f6, 0 0 80px #2563eb',
+                            ],
+                          }
+                    }
+                    transition={
+                      shouldReduceEffects
+                        ? { duration: 0 }
+                        : {
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: 'easeInOut',
+                          }
+                    }
                   >
                     BULLMONEY
                   </motion.h1>
@@ -1191,14 +1248,22 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     style={{
                       textShadow: '0 0 10px rgba(147, 197, 253, 0.5), 0 0 20px rgba(59, 130, 246, 0.3)',
                     }}
-                    animate={{
-                      opacity: [0.7, 1, 0.7],
-                    }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      ease: 'easeInOut',
-                    }}
+                    animate={
+                      shouldReduceEffects
+                        ? undefined
+                        : {
+                            opacity: [0.7, 1, 0.7],
+                          }
+                    }
+                    transition={
+                      shouldReduceEffects
+                        ? { duration: 0 }
+                        : {
+                            duration: 3,
+                            repeat: Infinity,
+                            ease: 'easeInOut',
+                          }
+                    }
                   >
                     The Ultimate Trading Hub
                   </motion.p>
@@ -1213,22 +1278,26 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   <motion.div
                     initial={{ opacity: 0.7, scale: 0.98 }}
                     animate={
-                      userInteracted
+                      shouldReduceEffects
                         ? { opacity: 1, scale: 1 }
-                        : {
-                            // Smoother animation - never fully invisible to prevent black flash
-                            opacity: [0.5, 0.9, 0.5],
-                            scale: [0.97, 1, 0.97],
-                          }
+                        : userInteracted
+                          ? { opacity: 1, scale: 1 }
+                          : {
+                              // Smoother animation - never fully invisible to prevent black flash
+                              opacity: [0.5, 0.9, 0.5],
+                              scale: [0.97, 1, 0.97],
+                            }
                     }
                     transition={
-                      userInteracted
-                        ? { duration: 0.25, ease: 'easeOut' }
-                        : {
-                            duration: 4,
-                            repeat: Infinity,
-                            ease: 'easeInOut',
-                          }
+                      shouldReduceEffects
+                        ? { duration: 0 }
+                        : userInteracted
+                          ? { duration: 0.25, ease: 'easeOut' }
+                          : {
+                              duration: 4,
+                              repeat: Infinity,
+                              ease: 'easeInOut',
+                            }
                     }
                     className="w-full rounded-xl p-3 border border-white/10"
                     onMouseEnter={handleUserInteraction}
@@ -1237,9 +1306,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     style={{
                       background: 'rgba(0, 0, 0, 0.25)',
                       // Use simpler blur for better mobile performance
-                      backdropFilter: 'blur(12px)',
-                      WebkitBackdropFilter: 'blur(12px)',
-                      boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.05)',
+                      backdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(12px)',
+                      WebkitBackdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(12px)',
+                      boxShadow: shouldReduceEffects ? 'none' : '0 4px 24px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.05)',
                     }}
                   >
                     {/* Action Header */}
@@ -1264,8 +1333,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         className="w-full py-2 rounded-lg font-bold text-xs tracking-wide transition-all flex items-center justify-center gap-1.5 text-white"
                         style={{
                           background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.5) 0%, rgba(37, 99, 235, 0.6) 100%)',
-                          backdropFilter: 'blur(8px)',
-                          boxShadow: '0 4px 20px rgba(59, 130, 246, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                          backdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(8px)',
+                          boxShadow: shouldReduceEffects ? 'none' : '0 4px 20px rgba(59, 130, 246, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
                           border: '1px solid rgba(96, 165, 250, 0.3)',
                         }}
                       >
@@ -1283,7 +1352,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         className="w-full py-2 rounded-lg font-bold text-xs tracking-wide transition-all flex items-center justify-center gap-1.5 text-blue-300"
                         style={{
                           background: 'rgba(59, 130, 246, 0.08)',
-                          backdropFilter: 'blur(6px)',
+                          backdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(6px)',
                           border: '1px solid rgba(59, 130, 246, 0.2)',
                         }}
                       >
@@ -1307,7 +1376,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         className="w-full py-1.5 rounded-lg font-medium text-[11px] tracking-wide transition-all flex items-center justify-center gap-1.5 text-white/40"
                         style={{
                           background: 'rgba(255, 255, 255, 0.02)',
-                          backdropFilter: 'blur(4px)',
+                          backdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(4px)',
                           border: '1px solid rgba(255, 255, 255, 0.05)',
                         }}
                       >
@@ -1376,8 +1445,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 style={{
                   pointerEvents: 'auto',
                   background: 'rgba(0, 0, 0, 0.25)',
-                  backdropFilter: 'blur(12px)',
-                  WebkitBackdropFilter: 'blur(12px)',
+                  backdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(12px)',
+                  WebkitBackdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(12px)',
                   border: '1px solid rgba(59, 130, 246, 0.2)',
                 }}
               >
@@ -1418,9 +1487,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   className="rounded-2xl p-6 text-center w-full border border-white/10"
                   style={{
                     background: 'rgba(0, 0, 0, 0.25)',
-                    backdropFilter: 'blur(14px)',
-                    WebkitBackdropFilter: 'blur(14px)',
-                    boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.05)',
+                    backdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(14px)',
+                    WebkitBackdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(14px)',
+                    boxShadow: shouldReduceEffects ? 'none' : '0 4px 24px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.05)',
                   }}
                 >
                   <div className="mb-4 flex justify-center">
@@ -1451,7 +1520,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     className="w-full py-3 rounded-xl font-bold text-base tracking-wide transition-all flex items-center justify-center gap-2 text-white/75"
                     style={{
                       background: 'rgba(255, 255, 255, 0.05)',
-                      backdropFilter: 'blur(6px)',
+                      backdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(6px)',
                       border: '1px solid rgba(255, 255, 255, 0.08)',
                     }}
                   >
@@ -1495,20 +1564,28 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="fixed inset-0 bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center z-[99999998]"
+            className={cn(
+              "fixed inset-0 bg-black/95 flex flex-col items-center justify-center z-[99999998]",
+              shouldDisableBackdropBlur ? '' : 'backdrop-blur-xl'
+            )}
             style={{ minHeight: '100dvh' }}
           >
              {/* Back Button - Fixed Left Side Like Ultimate Hub */}
              <button 
                onClick={() => setStep(-1)} 
-               className="fixed top-20 left-4 lg:top-24 lg:left-6 flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm lg:text-base font-semibold transition-all cursor-target py-2.5 px-4 rounded-xl bg-black/90 backdrop-blur-xl border border-blue-500/40 hover:border-blue-400/60 shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] z-[2147483646]"
+               className={cn(
+                 "fixed top-20 left-4 lg:top-24 lg:left-6 flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm lg:text-base font-semibold transition-all cursor-target py-2.5 px-4 rounded-xl bg-black/90 border border-blue-500/40 hover:border-blue-400/60 shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] z-[2147483646]",
+                 shouldDisableBackdropBlur ? '' : 'backdrop-blur-xl'
+               )}
              >
                <ChevronLeft className="w-5 h-5" /> Back
              </button>
              
              <div className={cn("register-card bg-black/80 backdrop-blur-xl p-5 md:p-8 rounded-2xl relative overflow-hidden w-full max-w-md mx-4", neonBorderClass)}>
                 {/* Shimmer overlay effect */}
-                <div className="absolute inset-0 shimmer-ltr opacity-20 pointer-events-none" />
+                {!shouldReduceEffects && (
+                  <div className="absolute inset-0 shimmer-ltr opacity-20 pointer-events-none" />
+                )}
                 
                 <div className="absolute top-0 right-0 p-3 md:p-4 opacity-10 z-0">
                     <Lock className={cn("w-24 h-24 md:w-32 md:h-32", isXM ? "text-red-400" : "text-blue-400", neonIconClass)} />
@@ -1635,20 +1712,28 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="fixed inset-0 bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center z-[99999998]"
+                  className={cn(
+                    "fixed inset-0 bg-black/95 flex flex-col items-center justify-center z-[99999998]",
+                    shouldDisableBackdropBlur ? '' : 'backdrop-blur-xl'
+                  )}
                   style={{ minHeight: '100dvh' }}
                  >
                    {/* Back Button - Fixed Left Side Like Ultimate Hub */}
                    <button 
                      onClick={() => setStep(-1)} 
-                     className="fixed top-20 left-4 lg:top-24 lg:left-6 flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm lg:text-base font-semibold transition-all cursor-target py-2.5 px-4 rounded-xl bg-black/90 backdrop-blur-xl border border-blue-500/40 hover:border-blue-400/60 shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] z-[2147483646]"
+                     className={cn(
+                       "fixed top-20 left-4 lg:top-24 lg:left-6 flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm lg:text-base font-semibold transition-all cursor-target py-2.5 px-4 rounded-xl bg-black/90 border border-blue-500/40 hover:border-blue-400/60 shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] z-[2147483646]",
+                       shouldDisableBackdropBlur ? '' : 'backdrop-blur-xl'
+                     )}
                    >
                      <ChevronLeft className="w-5 h-5" /> Back
                    </button>
                    
                    <div className={cn("register-card bg-black/80 backdrop-blur-xl p-5 md:p-8 rounded-2xl relative overflow-hidden text-center w-full max-w-md mx-4", neonBorderClass)} style={{ zIndex: 1 }}>
                       {/* Shimmer overlay effect */}
-                      <div className="absolute inset-0 shimmer-ltr opacity-20 pointer-events-none" />
+                      {!shouldReduceEffects && (
+                        <div className="absolute inset-0 shimmer-ltr opacity-20 pointer-events-none" />
+                      )}
                       
                       <div className="absolute top-0 right-0 p-3 md:p-4 opacity-5 z-0">
                         <Lock className={cn("w-24 h-24 md:w-32 md:h-32", isXM ? "text-red-400" : "text-blue-400", neonIconClass)} />
@@ -1711,6 +1796,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     title="Open Free Account"
                     className="bg-black/80 register-card w-full max-w-md mx-auto"
                     isXM={isXM}
+                    disableEffects={shouldReduceEffects}
+                    disableBackdropBlur={shouldDisableBackdropBlur}
                     actions={
                       <div className="flex flex-col gap-2 md:gap-4">
                         <p className={cn("text-xs text-center flex items-center justify-center gap-1", neonTextClass)}>
@@ -1785,6 +1872,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     title="Confirm Your Account ID"
                     className="register-card w-full max-w-md mx-auto"
                     isXM={isXM}
+                    disableEffects={shouldReduceEffects}
+                    disableBackdropBlur={shouldDisableBackdropBlur}
                     actions={
                       <button
                         onClick={handleNext}
@@ -1844,6 +1933,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     title="Create BullMoney Login"
                     className="register-card w-full max-w-md mx-auto"
                     isXM={isXM}
+                    disableEffects={shouldReduceEffects}
+                    disableBackdropBlur={shouldDisableBackdropBlur}
                     actions={
                       <button
                         onClick={handleNext}
@@ -1979,19 +2070,23 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
 // --- SUB-COMPONENTS (MEMOIZED CARDS) ---
 
-const StepCard = memo(({ number, number2, title, children, actions, className, isXM }: any) => {
+const StepCard = memo(({ number, number2, title, children, actions, className, isXM, disableEffects, disableBackdropBlur }: any) => {
   const useRed = typeof number2 === "number";
   const n = useRed ? number2 : number;
   return (
     <div className={cn(
       "group relative overflow-hidden rounded-2xl p-5 md:p-8",
-      cn("bg-black/80 backdrop-blur-xl", isXM ? "neon-red-border" : "neon-blue-border"),
+      cn("bg-black/80", disableBackdropBlur ? '' : "backdrop-blur-xl", isXM ? "neon-red-border" : "neon-blue-border"),
       className
     )}>
       {/* Shimmer overlay effect */}
-      <div className="absolute inset-0 shimmer-ltr opacity-20 pointer-events-none rounded-2xl" />
+      {!disableEffects && (
+        <div className="absolute inset-0 shimmer-ltr opacity-20 pointer-events-none rounded-2xl" />
+      )}
       
-      <div className="pointer-events-none absolute -top-12 right-0 h-24 w-2/3 blur-2xl z-0" style={{background: isXM ? 'linear-gradient(to left, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1), transparent)' : 'linear-gradient(to left, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.1), transparent)'}} />
+      {!disableEffects && (
+        <div className="pointer-events-none absolute -top-12 right-0 h-24 w-2/3 blur-2xl z-0" style={{background: isXM ? 'linear-gradient(to left, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1), transparent)' : 'linear-gradient(to left, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.1), transparent)'}} />
+      )}
       <div className={cn("pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset z-0", isXM ? "ring-red-500/10" : "ring-blue-500/10")} />
       <div className="flex items-center justify-between mb-3 md:mb-6 relative z-10">
         <span className={cn("inline-flex items-center gap-2 text-[10px] md:text-[11px] uppercase tracking-[0.18em] px-2 py-1 rounded-md bg-black/60", isXM ? "neon-red-border text-red-300/90 neon-red-text" : "neon-blue-border text-blue-300/90 neon-blue-text")}>
