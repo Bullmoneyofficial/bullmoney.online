@@ -154,6 +154,7 @@ ALTER TABLE public.recruits ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can view own recruit data" ON public.recruits;
 DROP POLICY IF EXISTS "Service role has full access" ON public.recruits;
 DROP POLICY IF EXISTS "Anyone can insert recruits" ON public.recruits;
+DROP POLICY IF EXISTS "Users can update own recruit data" ON public.recruits;
 
 -- Policy: Allow authenticated users to read their own data
 CREATE POLICY "Users can view own recruit data" ON public.recruits
@@ -166,6 +167,11 @@ CREATE POLICY "Service role has full access" ON public.recruits
 -- Policy: Allow insert for registration
 CREATE POLICY "Anyone can insert recruits" ON public.recruits
   FOR INSERT WITH CHECK (true);
+
+-- Policy: Allow authenticated users to update their own record
+CREATE POLICY "Users can update own recruit data" ON public.recruits
+    FOR UPDATE USING (auth.email() = email)
+    WITH CHECK (auth.email() = email);
 
 
 -- =============================================
