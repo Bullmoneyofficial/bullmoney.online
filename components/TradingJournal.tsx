@@ -186,7 +186,6 @@ export default function TradingJournal({ isEmbedded = false, onClose }: TradingJ
       setAuthError(true);
     }
     // If hasSession is null, we're still checking - do nothing yet
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasSession, currentUser?.id]);
 
   useEffect(() => {
