@@ -64,11 +64,11 @@ export async function POST(request: NextRequest) {
       
       const accountData = {
         name: `${type.toUpperCase()} - ${login}`,
-        type: type === 'mt5' ? 'cloud-g2' : 'cloud-g1',
+        type: (type === 'mt5' ? 'cloud-g2' : 'cloud-g1') as 'cloud-g1' | 'cloud-g2',
         login: login,
         password: password,
         server: server,
-        platform: type === 'mt5' ? 'mt5' : 'mt4',
+        platform: (type === 'mt5' ? 'mt5' : 'mt4') as 'mt4' | 'mt5',
         magic: 123456,
         application: 'MetaApi',
         region: region,
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
       freeMargin: accountInfo.freeMargin,
       leverage: accountInfo.leverage,
       currency: accountInfo.currency,
-      company: accountInfo.company || accountInfo.broker || 'Unknown',
+      company: (accountInfo as any).company || (accountInfo as any).broker || 'Unknown',
       name: accountInfo.name || account.name,
       demo: demo,
     };

@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
 
     // Close position
     console.log('[Close API] Closing position:', positionId);
-    await connection.closePosition(positionId);
+    await connection.closePosition(positionId, {});
     
     console.log('[Close API] Position closed successfully');
 

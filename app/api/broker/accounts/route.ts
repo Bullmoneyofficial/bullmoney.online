@@ -19,8 +19,8 @@ export async function GET(request: NextRequest) {
 
     const api = new MetaApi(token, { region });
     
-    // Get all accounts
-    const accounts = await api.metatraderAccountApi.getAccounts();
+    // Get all accounts - using type assertion for MetaAPI SDK
+    const accounts = await (api.metatraderAccountApi as any).getAccounts();
     
     const formattedAccounts = accounts.map((account: any) => ({
       id: account.id,

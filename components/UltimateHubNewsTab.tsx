@@ -19,6 +19,7 @@ import {
   Gem, LineChart, Earth, Landmark, Cpu,
   Filter, Sparkles, Clock, Flame, Calendar as CalendarIcon, X
 } from "lucide-react";
+import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 
 // --- TYPES ---
 type MarketFilter = "all" | "trending" | "crypto" | "stocks" | "forex" | "metals" | "markets" | "geopolitics" | "economics" | "tech";
@@ -189,7 +190,7 @@ const OptimizedNewsImage = memo(({
 OptimizedNewsImage.displayName = "OptimizedNewsImage";
 
 // --- NEWS CARD COMPONENT ---
-const NewsCard = memo(({ item, preview }: { item: NewsItem; preview?: { image?: string } }) => {
+const NewsCard = memo(({ item, preview, skipAnimations }: { item: NewsItem; preview?: { image?: string }; skipAnimations?: boolean }) => {
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (item.link) {
@@ -213,10 +214,15 @@ const NewsCard = memo(({ item, preview }: { item: NewsItem; preview?: { image?: 
   const colorClass = categoryColors[item.category || "other"] || categoryColors.other;
   const imageUrl = item.thumbnail || preview?.image;
 
+  const CardWrapper = skipAnimations ? 'div' : motion.div;
+  const cardProps = skipAnimations ? {} : {
+    whileHover: { scale: 1.01, x: 2 },
+    whileTap: { scale: 0.99 },
+  };
+
   return (
-    <motion.div
-      whileHover={{ scale: 1.01, x: 2 }}
-      whileTap={{ scale: 0.99 }}
+    <CardWrapper
+      {...cardProps}
       onClick={handleClick}
       className="relative rounded-lg overflow-hidden cursor-pointer group bg-black border border-blue-500/20 hover:border-blue-500/40 transition-all"
       style={{ boxShadow: '0 0 4px rgba(59, 130, 246, 0.1)' }}
@@ -261,13 +267,16 @@ const NewsCard = memo(({ item, preview }: { item: NewsItem; preview?: { image?: 
           </div>
         </div>
       </div>
-    </motion.div>
+    </CardWrapper>
   );
 });
 NewsCard.displayName = "NewsCard";
 
 // --- MAIN COMPONENT ---
 export const UltimateHubNewsTab = memo(() => {
+  // Mobile performance detection
+  const { shouldSkipHeavyEffects, isMobile } = useMobilePerformance();
+  
   const [activeMarket, setActiveMarket] = useState<MarketFilter>("all");
   const [items, setItems] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -398,91 +407,169 @@ export const UltimateHubNewsTab = memo(() => {
                   {lastUpdated.toLocaleTimeString()}
                 </span>
               )}
-              <motion.button
-                onClick={() => setShowCalendar(true)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="p-1 sm:p-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-400/30 hover:bg-amber-500/30 transition-all"
-                style={{ boxShadow: '0 0 4px rgba(251, 191, 36, 0.3)' }}
-                title="Economic Calendar"
-              >
-                <CalendarIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-              </motion.button>
-              <motion.button
-                onClick={handleRefresh}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9, rotate: 180 }}
-                className="p-1 sm:p-1.5 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-400/30 hover:bg-blue-500/30 transition-all"
-                style={{ boxShadow: '0 0 4px rgba(59, 130, 246, 0.3)' }}
-              >
-                <RefreshCw className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-              </motion.button>
-              <motion.button
-                onClick={() => setShowFilters(!showFilters)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={`p-1 sm:p-1.5 rounded-lg transition-all ${
-                  showFilters 
-                    ? 'bg-blue-500/40 text-blue-200 border-blue-400/60' 
-                    : 'bg-blue-500/20 text-blue-300 border-blue-400/30'
-                } border`}
-                style={{ boxShadow: showFilters ? '0 0 8px rgba(59, 130, 246, 0.4)' : '0 0 4px rgba(59, 130, 246, 0.3)' }}
-              >
-                <Filter className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-              </motion.button>
+              {shouldSkipHeavyEffects ? (
+                <>
+                  <button
+                    onClick={() => setShowCalendar(true)}
+                    className="p-1 sm:p-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-400/30 hover:bg-amber-500/30 transition-all"
+                    style={{ boxShadow: '0 0 4px rgba(251, 191, 36, 0.3)' }}
+                    title="Economic Calendar"
+                  >
+                    <CalendarIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  </button>
+                  <button
+                    onClick={handleRefresh}
+                    className="p-1 sm:p-1.5 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-400/30 hover:bg-blue-500/30 transition-all"
+                    style={{ boxShadow: '0 0 4px rgba(59, 130, 246, 0.3)' }}
+                  >
+                    <RefreshCw className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={`p-1 sm:p-1.5 rounded-lg transition-all ${
+                      showFilters 
+                        ? 'bg-blue-500/40 text-blue-200 border-blue-400/60' 
+                        : 'bg-blue-500/20 text-blue-300 border-blue-400/30'
+                    } border`}
+                    style={{ boxShadow: showFilters ? '0 0 8px rgba(59, 130, 246, 0.4)' : '0 0 4px rgba(59, 130, 246, 0.3)' }}
+                  >
+                    <Filter className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <motion.button
+                    onClick={() => setShowCalendar(true)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="p-1 sm:p-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-400/30 hover:bg-amber-500/30 transition-all"
+                    style={{ boxShadow: '0 0 4px rgba(251, 191, 36, 0.3)' }}
+                    title="Economic Calendar"
+                  >
+                    <CalendarIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  </motion.button>
+                  <motion.button
+                    onClick={handleRefresh}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9, rotate: 180 }}
+                    className="p-1 sm:p-1.5 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-400/30 hover:bg-blue-500/30 transition-all"
+                    style={{ boxShadow: '0 0 4px rgba(59, 130, 246, 0.3)' }}
+                  >
+                    <RefreshCw className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  </motion.button>
+                  <motion.button
+                    onClick={() => setShowFilters(!showFilters)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`p-1 sm:p-1.5 rounded-lg transition-all ${
+                      showFilters 
+                        ? 'bg-blue-500/40 text-blue-200 border-blue-400/60' 
+                        : 'bg-blue-500/20 text-blue-300 border-blue-400/30'
+                    } border`}
+                    style={{ boxShadow: showFilters ? '0 0 8px rgba(59, 130, 246, 0.4)' : '0 0 4px rgba(59, 130, 246, 0.3)' }}
+                  >
+                    <Filter className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  </motion.button>
+                </>
+              )}
             </div>
           </div>
 
           {/* Filter Pills */}
-          <AnimatePresence>
-            {showFilters && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden"
-              >
-                <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                  {MARKET_FILTERS.map((filter) => {
-                    const Icon = FILTER_ICONS[filter.value];
-                    const isActive = activeMarket === filter.value;
-                    let count = 0;
-                    if (filter.value === "all") {
-                      count = items.length;
-                    } else if (filter.value === "trending") {
-                      count = Math.min(50, items.length);
-                    } else {
-                      count = items.filter(i => i.category === filter.value).length;
-                    }
+          {shouldSkipHeavyEffects ? (
+            <>
+              {showFilters && (
+                <div className="overflow-hidden">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                    {MARKET_FILTERS.map((filter) => {
+                      const Icon = FILTER_ICONS[filter.value];
+                      const isActive = activeMarket === filter.value;
+                      let count = 0;
+                      if (filter.value === "all") {
+                        count = items.length;
+                      } else if (filter.value === "trending") {
+                        count = Math.min(50, items.length);
+                      } else {
+                        count = items.filter(i => i.category === filter.value).length;
+                      }
 
-                    return (
-                      <motion.button
-                        key={filter.value}
-                        onClick={() => setActiveMarket(filter.value)}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-wider border transition-all ${
-                          isActive
-                            ? 'bg-blue-500/40 text-blue-200 border-blue-400/60'
-                            : 'bg-blue-500/10 text-blue-400/70 border-blue-400/20 hover:bg-blue-500/20'
-                        }`}
-                        style={{ 
-                          boxShadow: isActive 
-                            ? '0 0 8px rgba(59, 130, 246, 0.4)' 
-                            : '0 0 4px rgba(59, 130, 246, 0.1)' 
-                        }}
-                      >
-                        <Icon className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                        <span className="hidden sm:inline">{filter.label}</span>
-                        <span className="sm:hidden">{filter.label.substring(0, 3)}</span>
-                        <span className="text-[8px] sm:text-[9px] opacity-70">({count})</span>
-                      </motion.button>
-                    );
-                  })}
+                      return (
+                        <button
+                          key={filter.value}
+                          onClick={() => setActiveMarket(filter.value)}
+                          className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-wider border transition-all ${
+                            isActive
+                              ? 'bg-blue-500/40 text-blue-200 border-blue-400/60'
+                              : 'bg-blue-500/10 text-blue-400/70 border-blue-400/20 hover:bg-blue-500/20'
+                          }`}
+                          style={{ 
+                            boxShadow: isActive 
+                              ? '0 0 8px rgba(59, 130, 246, 0.4)' 
+                              : '0 0 4px rgba(59, 130, 246, 0.1)' 
+                          }}
+                        >
+                          <Icon className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                          <span className="hidden sm:inline">{filter.label}</span>
+                          <span className="sm:hidden">{filter.label.substring(0, 3)}</span>
+                          <span className="text-[8px] sm:text-[9px] opacity-70">({count})</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              )}
+            </>
+          ) : (
+            <AnimatePresence>
+              {showFilters && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                    {MARKET_FILTERS.map((filter) => {
+                      const Icon = FILTER_ICONS[filter.value];
+                      const isActive = activeMarket === filter.value;
+                      let count = 0;
+                      if (filter.value === "all") {
+                        count = items.length;
+                      } else if (filter.value === "trending") {
+                        count = Math.min(50, items.length);
+                      } else {
+                        count = items.filter(i => i.category === filter.value).length;
+                      }
+
+                      return (
+                        <motion.button
+                          key={filter.value}
+                          onClick={() => setActiveMarket(filter.value)}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-wider border transition-all ${
+                            isActive
+                              ? 'bg-blue-500/40 text-blue-200 border-blue-400/60'
+                              : 'bg-blue-500/10 text-blue-400/70 border-blue-400/20 hover:bg-blue-500/20'
+                          }`}
+                          style={{ 
+                            boxShadow: isActive 
+                              ? '0 0 8px rgba(59, 130, 246, 0.4)' 
+                              : '0 0 4px rgba(59, 130, 246, 0.1)' 
+                          }}
+                        >
+                          <Icon className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                          <span className="hidden sm:inline">{filter.label}</span>
+                          <span className="sm:hidden">{filter.label.substring(0, 3)}</span>
+                          <span className="text-[8px] sm:text-[9px] opacity-70">({count})</span>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          )}
 
           {/* Stats Bar */}
           <div className="flex items-center justify-between text-[9px] sm:text-[10px] text-blue-400/60">
