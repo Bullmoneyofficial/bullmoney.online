@@ -1,104 +1,102 @@
 "use client";
 
-import React, { useMemo, useRef, useEffect } from 'react';
+import React, { useMemo, useRef, useEffect, useState } from 'react';
 
 type YouTubeVideoEmbedProps = {
   videoId: string;
   muted?: boolean;
+  volume?: number;
   className?: string;
   title?: string;
   [key: string]: any;
 };
 
-/**
- * YouTube Video Embed component that plays audio only on first load.
- * After the first play-through, the video continues looping but muted.
- */
+const YOUTUBE_ORIGIN = "https://www.youtube.com";
+
+const clampVolume = (value: number): number => {
+  if (!Number.isFinite(value)) return 0;
+  return Math.min(100, Math.max(0, Math.round(value)));
+};
+
+const buildEmbedUrl = (videoId: string, muted: boolean) => {
+  const params = new URLSearchParams({
+    autoplay: '1',
+    mute: muted ? '1' : '0',
+    controls: '0',
+    rel: '0',
+    modestbranding: '1',
+    playsinline: '1',
+    loop: '1',
+    playlist: videoId,
+    enablejsapi: '1',
+  });
+
+  return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
+};
+
+const sendPlayerCommand = (iframe: HTMLIFrameElement, func: string, args: (number | string)[] = []) => {
+  const targetWindow = iframe.contentWindow;
+  if (!targetWindow) return;
+
+  const payload = {
+    event: 'command',
+    func,
+    args,
+  };
+
+  targetWindow.postMessage(JSON.stringify(payload), YOUTUBE_ORIGIN);
+};
+
 const YouTubeVideoEmbed = ({ 
   videoId, 
   muted = false, 
+  volume = 100,
   className = "absolute inset-0 w-full h-full",
   title = "Video player",
   ...props 
 }: YouTubeVideoEmbedProps) => {
-  const hasPlayedRef = useRef(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  
-  // Track if this is the first load using sessionStorage
-  // This way audio plays once per session (until page is refreshed/revisited)
+  const iframeId = useMemo(() => `yt-embed-${videoId}-${Math.random().toString(36).slice(2, 7)}`, [videoId]);
+  const [playerReady, setPlayerReady] = useState(false);
+  const targetVolume = useMemo(() => clampVolume(muted ? 0 : volume), [muted, volume]);
+  const embedUrl = useMemo(() => buildEmbedUrl(videoId, muted), [videoId, muted]);
+
   useEffect(() => {
-    const storageKey = `yt-played-${videoId}`;
-    const hasPlayedInSession = sessionStorage.getItem(storageKey);
-    
-    if (hasPlayedInSession === 'true') {
-      hasPlayedRef.current = true;
-    }
-  }, [videoId]);
+    setPlayerReady(false);
+  }, [iframeId]);
 
-  // Generate embed URL - muted if already played or user explicitly muted
-  const embedUrl = useMemo(() => {
-    const shouldMute = muted || hasPlayedRef.current;
-    
-    const params = new URLSearchParams({
-      autoplay: '1',
-      mute: shouldMute ? '1' : '0',
-      controls: '0',
-      rel: '0',
-      modestbranding: '1',
-      playsinline: '1',
-      loop: '1',
-      playlist: videoId,
-      enablejsapi: '1', // Enable JS API for event tracking
-    });
-    
-    return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
-  }, [videoId, muted]);
-
-  // Listen for video end events to mark as played
   useEffect(() => {
-    if (!iframeRef.current) return;
-
     const handleMessage = (event: MessageEvent) => {
-      // YouTube iframe API sends messages
-      if (event.origin !== 'https://www.youtube.com') return;
-      
+      if (event.origin !== YOUTUBE_ORIGIN || typeof event.data !== 'string') return;
       try {
         const data = JSON.parse(event.data);
-        // YT.PlayerState.ENDED = 0
-        if (data.event === 'onStateChange' && data.info === 0) {
-          // Video ended - mark as played
-          const storageKey = `yt-played-${videoId}`;
-          sessionStorage.setItem(storageKey, 'true');
-          hasPlayedRef.current = true;
-          
-          // Reload iframe with muted version for subsequent loops
-          if (iframeRef.current) {
-            const params = new URLSearchParams({
-              autoplay: '1',
-              mute: '1', // Now muted for loops
-              controls: '0',
-              rel: '0',
-              modestbranding: '1',
-              playsinline: '1',
-              loop: '1',
-              playlist: videoId,
-              enablejsapi: '1',
-            });
-            iframeRef.current.src = `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
-          }
+        if (data?.event === 'onReady' && data?.id === iframeId) {
+          setPlayerReady(true);
         }
-      } catch (e) {
-        // Ignore parsing errors
+      } catch {
+        // Ignore malformed messages
       }
     };
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [videoId]);
+  }, [iframeId]);
+
+  useEffect(() => {
+    if (!playerReady || !iframeRef.current) return;
+
+    if (targetVolume === 0) {
+      sendPlayerCommand(iframeRef.current, 'mute');
+    } else {
+      sendPlayerCommand(iframeRef.current, 'unMute');
+    }
+    sendPlayerCommand(iframeRef.current, 'setVolume', [targetVolume]);
+  }, [playerReady, targetVolume]);
 
   return (
     <iframe
       ref={iframeRef}
+      id={iframeId}
       key={embedUrl}
       src={embedUrl}
       title={title}

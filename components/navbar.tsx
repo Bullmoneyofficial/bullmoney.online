@@ -92,6 +92,20 @@ import { useComponentTracking } from "@/lib/CrashTracker";
 // --- IMPORT NAVBAR CSS ---
 import "./navbar.css";
 
+// Detect if a pagemode session exists locally (used to persist Account Manager access)
+const getStoredAccountManagerAccess = (): boolean => {
+  if (typeof window === "undefined") return false;
+  try {
+    const raw = window.localStorage.getItem("bullmoney_session");
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    return Boolean(parsed?.email);
+  } catch (err) {
+    console.error("[Navbar] Failed to parse bullmoney_session", err);
+    return false;
+  }
+};
+
 // --- MOBILE MENU CONTROLS COMPONENT (Optimized with Unified Shimmer + Theme-Aware) ---
 const MobileMenuControls = memo(({ 
   open, 
@@ -311,6 +325,7 @@ export const Navbar = memo(() => {
       return false;
     }
   });
+  const [hasAccountManagerAccess, setHasAccountManagerAccess] = useState<boolean>(() => getStoredAccountManagerAccess());
  
   useEffect(() => {
     let mounted = true;
@@ -365,6 +380,55 @@ export const Navbar = memo(() => {
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, [adminEmailEnv]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const syncAccountAccess = async () => {
+      const localAccess = getStoredAccountManagerAccess();
+      if (localAccess) {
+        if (isMounted) setHasAccountManagerAccess(true);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error("[Navbar] Account manager session error", error.message);
+        }
+        if (!isMounted) return;
+        setHasAccountManagerAccess(Boolean(data?.session?.user?.email));
+      } catch (err) {
+        if (!isMounted) return;
+        console.error("[Navbar] Failed to check account manager access", err);
+        setHasAccountManagerAccess(getStoredAccountManagerAccess());
+      }
+    };
+
+    syncAccountAccess();
+
+    const { data: accountManagerSub } = supabase.auth.onAuthStateChange((_event, session) => {
+      setHasAccountManagerAccess(getStoredAccountManagerAccess() || Boolean(session?.user?.email));
+    });
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === "bullmoney_session") {
+        setHasAccountManagerAccess(getStoredAccountManagerAccess());
+      }
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("storage", handleStorage);
+    }
+
+    return () => {
+      isMounted = false;
+      accountManagerSub?.subscription?.unsubscribe();
+      if (typeof window !== "undefined") {
+        window.removeEventListener("storage", handleStorage);
+      }
+    };
+  }, [supabase]);
 
   const profileMatchesAdmin = (userProfile?.email || "").toLowerCase() === adminEmailEnv;
   const isAdmin = profileMatchesAdmin || pagemodeAdminAuthorized || (adminChecked && adminAuthorized);
@@ -574,6 +638,11 @@ export const Navbar = memo(() => {
           onThemeClick={openThemeSelectorModal}
           onAdminClick={handleAdminClick}
           onAnalysisClick={openAnalysisModal}
+          onAccountManagerClick={() => {
+            trackClick('account_manager_nav', { source: 'desktop_dock' });
+            openAccountManagerModal();
+          }}
+          showAccountManager={hasAccountManagerAccess}
           mounted={mounted}
           isScrollMinimized={isDesktopScrollMinimized}
           onExpandClick={() => setIsDesktopScrollMinimized(false)}
@@ -710,6 +779,7 @@ export const Navbar = memo(() => {
           isXMUser={isXMUser}
           hasReward={hasReward}
           isAdmin={isAdmin}
+          showAccountManager={hasAccountManagerAccess}
           onAffiliateClick={() => { trackClick('affiliate_nav', { source: 'mobile_menu' }); openAffiliateModal(); }}
           onFaqClick={() => { trackClick('faq_nav', { source: 'mobile_menu' }); openFaqModal(); }}
           onAdminClick={() => { 

@@ -670,6 +670,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setIsFaqModalOpenState(false);
     setIsAffiliateModalOpenState(false);
     setIsThemeSelectorModalOpenState(false);
+    setIsAccountManagerModalOpenState(false);
   }, []);
 
   // Global escape key handler to close any open component

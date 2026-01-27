@@ -32,6 +32,7 @@ interface MobileDropdownMenuProps {
   isXMUser: boolean;
   hasReward: boolean;
   isAdmin: boolean;
+  showAccountManager: boolean;
   onAffiliateClick: () => void;
   onFaqClick: () => void;
   onAdminClick: () => void;
@@ -48,6 +49,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
       isXMUser,
       hasReward,
       isAdmin,
+      showAccountManager,
       onAffiliateClick,
       onFaqClick,
       onAdminClick,
@@ -313,30 +315,31 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
               </motion.button>
             </motion.div>
 
-            {/* Account Manager */}
-            <motion.div
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.21 }}
-              className="w-full"
-            >
-              <motion.button 
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.98 }}
-                onHoverStart={() => SoundEffects.hover()}
-                onTouchStart={() => SoundEffects.click()}
-                className="w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold hover:text-white cursor-pointer px-4 sm:px-6 py-3 sm:py-4 rounded-xl transition-all duration-200"
-                style={{
-                  color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)',
-                  backgroundColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.08)',
-                  border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.3)'
-                }}
-                onClick={handleAccountManagerClick}
+            {showAccountManager && (
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.21 }}
+                className="w-full"
               >
-                <IconUser className="h-5 w-5" stroke={1.5} style={{ color: 'var(--accent-color, #60a5fa)' }} />
-                Account Manager
-              </motion.button>
-            </motion.div>
+                <motion.button 
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.98 }}
+                  onHoverStart={() => SoundEffects.hover()}
+                  onTouchStart={() => SoundEffects.click()}
+                  className="w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold hover:text-white cursor-pointer px-4 sm:px-6 py-3 sm:py-4 rounded-xl transition-all duration-200"
+                  style={{
+                    color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)',
+                    backgroundColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.08)',
+                    border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.3)'
+                  }}
+                  onClick={handleAccountManagerClick}
+                >
+                  <IconUser className="h-5 w-5" stroke={1.5} style={{ color: 'var(--accent-color, #60a5fa)' }} />
+                  Account Manager
+                </motion.button>
+              </motion.div>
+            )}
 
             {/* Divider */}
             <motion.div

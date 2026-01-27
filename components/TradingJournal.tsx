@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSupabaseClient } from '@/lib/supabase';
+import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
 import TradingCalendar from './TradingCalendar';
 import TradeStatistics from './TradeStatistics';
 import TradeEntryModal from './TradeEntryModal';
@@ -55,8 +56,37 @@ export default function TradingJournal({ isEmbedded = false, onClose }: TradingJ
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [authError, setAuthError] = useState(false);
   const [hasSession, setHasSession] = useState<boolean | null>(null); // null = checking, true/false = determined
+  const { recruit, isAuthenticated: isRecruitAuthenticated, isLoading: recruitAuthLoading } = useRecruitAuth();
+  const isCurrentUserRecruit = currentUser?.user_type === 'recruit';
 
   const supabase = useMemo(() => createSupabaseClient(), []);
+
+  useEffect(() => {
+    if (isRecruitAuthenticated && recruit) {
+      const recruitUser = {
+        id: String(recruit.id),
+        email: recruit.email,
+        user_type: 'recruit',
+      };
+
+      setCurrentUser((prev: any) => {
+        if (prev && prev.id === recruitUser.id && prev.user_type === 'recruit') {
+          return prev;
+        }
+        return recruitUser;
+      });
+      setHasSession(true);
+      setAuthError(false);
+      return;
+    }
+
+    if (!recruitAuthLoading && isCurrentUserRecruit && !isRecruitAuthenticated) {
+      setCurrentUser(null);
+      setHasSession(null);
+      setAuthError(false);
+      setLoading(true);
+    }
+  }, [isRecruitAuthenticated, recruit, recruitAuthLoading, isCurrentUserRecruit]);
 
   // Memoized loaders/filters defined early so hooks below can reference them safely
   const loadTrades = useCallback(async () => {
@@ -140,6 +170,9 @@ export default function TradingJournal({ isEmbedded = false, onClose }: TradingJ
     // Check all authentication methods and set user info
     const checkAuth = async () => {
       if (!isMounted) return;
+      if (isRecruitAuthenticated && recruit) {
+        return;
+      }
       
       let foundUserId: string | null = null;
       let foundEmail: string | null = null;
@@ -196,6 +229,9 @@ export default function TradingJournal({ isEmbedded = false, onClose }: TradingJ
       
       // Update state if this is the first check OR if user changed
       if (lastUserId === undefined || foundUserId !== lastUserId) {
+        if (!foundUserId && recruitAuthLoading) {
+          return;
+        }
         lastUserId = foundUserId;
         
         if (foundUserId) {
@@ -248,7 +284,7 @@ export default function TradingJournal({ isEmbedded = false, onClose }: TradingJ
       window.removeEventListener('bullmoney_session_changed', handleSessionChange);
       subscription.unsubscribe();
     };
-  }, [supabase]);
+  }, [supabase, isRecruitAuthenticated, recruit, recruitAuthLoading]);
 
   useEffect(() => {
     // Only attempt to load trades if user has a valid session and currentUser is set

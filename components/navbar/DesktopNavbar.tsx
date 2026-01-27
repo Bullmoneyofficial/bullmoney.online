@@ -11,6 +11,7 @@ import {
   IconBroadcast,
   IconChartLine,
   IconPalette,
+  IconUser,
 } from '@tabler/icons-react';
 import { Dock } from './Dock';
 import { MinimizedDock } from './MinimizedDock';
@@ -31,9 +32,11 @@ interface DesktopNavbarProps {
   onThemeClick: () => void;
   onAdminClick: () => void;
   onAnalysisClick: () => void;
+  onAccountManagerClick: () => void;
   mounted: boolean;
   isScrollMinimized?: boolean;
   onExpandClick?: () => void;
+  showAccountManager?: boolean;
 }
 
 export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbarProps>(
@@ -50,9 +53,11 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
       onThemeClick,
       onAdminClick,
       onAnalysisClick,
+      onAccountManagerClick,
       mounted,
       isScrollMinimized = false,
       onExpandClick,
+      showAccountManager = false,
     },
     ref
   ) => {
@@ -113,6 +118,15 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
         onClick: onThemeClick,
       },
     ];
+
+    if (showAccountManager) {
+      desktopNavItems.splice(5, 0, {
+        icon: <IconUser className="h-6 w-6 text-blue-400" stroke={1.5} />,
+        label: "Account Manager",
+        tips: ["Manage your profile", "Update MT5 accounts", "Access VIP perks"],
+        onClick: onAccountManagerClick,
+      });
+    }
 
     if (mounted && isAdmin) {
       desktopNavItems.push({

@@ -1372,17 +1372,16 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
 });
 SplineSceneEmbed.displayName = "SplineSceneEmbed";
 
-const HeroVideoEmbed = ({ videoId, muted }: { videoId: string; muted: boolean }) => {
-  return (
-    <YouTubeVideoEmbed
-      videoId={videoId}
-      muted={muted}
-      title="Featured trading video"
-      className="absolute inset-0 w-full h-full"
-      style={{ backgroundColor: 'black' }}
-    />
-  );
-};
+const HeroVideoEmbed = ({ videoId, muted, volume }: { videoId: string; muted: boolean; volume: number }) => (
+  <YouTubeVideoEmbed
+    videoId={videoId}
+    muted={muted}
+    volume={volume}
+    title="Featured trading video"
+    className="absolute inset-0 w-full h-full"
+    style={{ backgroundColor: 'black' }}
+  />
+);
 
 const SplineLoadingPlaceholder = () => {
   const { shouldSkipHeavyEffects } = useUnifiedPerformance();
@@ -1642,6 +1641,7 @@ import HiddenYoutubePlayer from "@/components/Mainpage/HiddenYoutubePlayer";
 import { ALL_THEMES } from "@/constants/theme-data";
 import type { SoundProfile } from "@/constants/theme-data";
 import { useAudioEngine } from "@/app/hooks/useAudioEngine";
+import { useHeroVideoVolume } from "@/app/hooks/useHeroVideoVolume";
 import YouTubeVideoEmbed from "@/components/YouTubeVideoEmbed";
 
 // ============================================================================
@@ -1789,6 +1789,7 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
   useEffect(() => { if (!uiStateModalChangeInitRef.current) { uiStateModalChangeInitRef.current = true; return; } cycleHeroMedia("ui-state-change"); }, [isAnyModalOpen, activeComponent, cycleHeroMedia]);
 
   const { activeThemeId, accentColor } = useGlobalTheme();
+  const { resolveVolume: resolveHeroVideoVolume } = useHeroVideoVolume();
   const [isMuted, setIsMuted] = useState(false);
   const [currentSound, setCurrentSound] = useState<SoundProfile>('MECHANICAL');
   const audioProfile = currentSound === 'MECHANICAL' || currentSound === 'SOROS' || currentSound === 'SCI-FI' || currentSound === 'SILENT' ? currentSound : 'MECHANICAL';
@@ -1802,6 +1803,7 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
   }, []);
 
   const currentTheme = ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
+  const heroVideoPlaybackVolume = resolveHeroVideoVolume(isMuted);
   const isVideoMode = heroMediaMode === 'video' && !!activeVideoId;
   const mediaLabel = isVideoMode
     ? `Featured Video ${activeVideoIndex + 1}/${heroVideoIds.length || 1}`
@@ -1866,7 +1868,13 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
 
       {/* Removed: CustomCursor, CursorTrail, ScrollProgressBar for performance */}
       {/* Removed: Confetti, WarpSpeed, GodModeOverlay for performance */}
-      {currentTheme?.youtubeId && <HiddenYoutubePlayer videoId={currentTheme.youtubeId} isPlaying={!isMuted} volume={isMuted ? 0 : 15} />}
+      {currentTheme?.youtubeId && (
+        <HiddenYoutubePlayer
+          videoId={currentTheme.youtubeId}
+          isPlaying={!isMuted}
+          volume={heroVideoPlaybackVolume}
+        />
+      )}
 
       <div ref={ref} className="relative min-h-[100dvh] h-[100dvh] bg-black overflow-hidden hero-section" data-allow-scroll data-content data-theme-aware data-hero>
         {/* Removed all background animations for cleaner look */}
@@ -1928,7 +1936,7 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
                 <div className="lg:col-span-6 order-2 lg:order-2 mt-12 lg:mt-0">
                   <div className="relative w-full aspect-square sm:aspect-[4/3] lg:aspect-[4/3] max-h-[40vh] sm:max-h-[40vh] lg:max-h-[60vh] rounded-xl sm:rounded-2xl overflow-hidden bg-black border-2 border-blue-500/60" style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 10px rgba(59, 130, 246, 0.6), 0 0 20px rgba(59, 130, 246, 0.4), 0 0 40px rgba(59, 130, 246, 0.2), inset 0 0 20px rgba(59, 130, 246, 0.1)' }}>
                     {isVideoMode && activeVideoId ? (
-                      <HeroVideoEmbed videoId={activeVideoId} muted={isMuted} />
+                      <HeroVideoEmbed videoId={activeVideoId} muted={isMuted} volume={heroVideoPlaybackVolume} />
                     ) : (
                       <SplineSceneEmbed 
                         key={heroSplineScene} 
@@ -2040,7 +2048,7 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
             {/* Fullscreen Spline or Video */}
             <div className="absolute inset-0">
               {isVideoMode && activeVideoId ? (
-                <HeroVideoEmbed videoId={activeVideoId} muted={isMuted} />
+                <HeroVideoEmbed videoId={activeVideoId} muted={isMuted} volume={heroVideoPlaybackVolume} />
               ) : (
                 <SplineSceneEmbed 
                   key={`fullscreen-${heroSplineScene}`} 

@@ -351,6 +351,7 @@ import { ThemeConfigModal } from "@/components/Mainpage/ThemeConfigModal";
 import { ALL_THEMES, type ThemeCategory } from "@/constants/theme-data";
 import type { SoundProfile } from "@/constants/theme-data";
 import { useAudioEngine } from "@/app/hooks/useAudioEngine";
+import { useHeroVideoVolume } from "@/app/hooks/useHeroVideoVolume";
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 
 // UltimateControlPanel - direct import, it handles its own internal mount/unmount
@@ -1031,6 +1032,7 @@ const HeroParallax = () => {
 
   // Global Theme Context - syncs across entire app
   const { activeThemeId, setTheme, accentColor } = useGlobalTheme();
+  const { resolveVolume: resolveHeroVideoVolume } = useHeroVideoVolume();
   
   // Local UI state for theme modal
   const [activeCategory, setActiveCategory] = useState<'SPECIAL' | 'SENTIMENT' | 'ASSETS' | 'CRYPTO' | 'HISTORICAL' | 'OPTICS' | 'GLITCH' | 'EXOTIC' | 'LOCATION' | 'ELEMENTAL' | 'CONCEPTS' | 'MEME' | 'SEASONAL'>('SPECIAL');
@@ -1085,6 +1087,7 @@ const HeroParallax = () => {
   }, []);
 
   const currentTheme = ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
+  const heroVideoPlaybackVolume = resolveHeroVideoVolume(isMuted);
   const displayTheme = hoverThemeId ? ALL_THEMES.find(t => t.id === hoverThemeId) : currentTheme;
   const [heroSize, setHeroSize] = useState({ width: 0, height: 0, aspect: 1 });
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
@@ -1726,7 +1729,7 @@ const HeroParallax = () => {
       <HiddenYoutubePlayer
         videoId={displayTheme.youtubeId}
         isPlaying={!isMuted}
-        volume={isMuted ? 0 : 15}
+        volume={heroVideoPlaybackVolume}
       />
     )}
     
