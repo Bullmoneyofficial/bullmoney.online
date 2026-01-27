@@ -58,10 +58,6 @@ const isLowMemoryDevice = (): boolean => {
 // Preloaded scene, interactive, loads fast - z-index 0 so menus overlay properly
 const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [hasError, setHasError] = useState(false);
-  const [loadTimeout, setLoadTimeout] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
-  const [retryKey, setRetryKey] = useState(0);
   const splineRef = useRef<any>(null);
   
   // Always use scene1 for fastest cold start and reliable reloads
@@ -90,49 +86,15 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
     };
   }, [scene]);
 
-  // Timeout fallback - if Spline doesn't load in 10 seconds, show fallback and retry
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!isLoaded) {
-        console.warn('[WelcomeSplineDesktop] Load timeout - showing fallback');
-        setLoadTimeout(true);
-        if (retryCount < 2) {
-          const retryTimer = setTimeout(() => {
-            setRetryCount((count) => count + 1);
-            setRetryKey((key) => key + 1);
-            setHasError(false);
-            setLoadTimeout(false);
-          }, 400);
-          return () => clearTimeout(retryTimer);
-        }
-      }
-    }, 10000);
-    return () => clearTimeout(timer);
-  }, [isLoaded, retryCount]);
-
   const handleLoad = useCallback((splineApp: any) => {
     splineRef.current = splineApp;
     setIsLoaded(true);
-    setHasError(false);
-    setLoadTimeout(false);
   }, []);
 
   const handleError = useCallback((error: any) => {
     console.error('[WelcomeSplineDesktop] Load error:', error);
-    setHasError(true);
-    if (retryCount < 2) {
-      setTimeout(() => {
-        setRetryCount((count) => count + 1);
-        setRetryKey((key) => key + 1);
-        setHasError(false);
-        setLoadTimeout(false);
-        setIsLoaded(false);
-      }, 500);
-    }
+    setIsLoaded(false);
   }, []);
-
-  // Show animated gradient fallback if Spline fails or times out
-  const showFallback = hasError || (!isLoaded && loadTimeout);
 
   return (
     <div 
@@ -147,25 +109,13 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
         className="absolute inset-0"
         style={{
           background: 'radial-gradient(ellipse at 40% 30%, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 35%, transparent 60%), radial-gradient(ellipse at 70% 70%, rgba(147, 51, 234, 0.1) 0%, transparent 45%), #000',
-          opacity: showFallback || !isLoaded ? 1 : 0.2,
+          opacity: !isLoaded ? 1 : 0.2,
           transition: 'opacity 600ms ease-out',
         }}
-      >
-        {/* Subtle animated glow for visual interest when no Spline */}
-        {showFallback && (
-          <div
-            className="absolute inset-0"
-            style={{
-              background: 'radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.12) 0%, transparent 50%)',
-              animation: 'pulse 4s ease-in-out infinite',
-            }}
-          />
-        )}
-      </div>
+      />
 
       {/* Spline scene - always render, fallback stays visible until loaded */}
       <Spline
-        key={`welcome-spline-desktop-${retryKey}`}
         scene={scene}
         onLoad={handleLoad}
         onError={handleError}
@@ -266,13 +216,6 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
   return (
     <>
       <style>{NEON_STYLES}</style>
-      {/* Add pulse animation for fallback */}
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 0.6; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.02); }
-        }
-      `}</style>
       <motion.div
         key="welcome-screen-desktop"
         initial={{ opacity: 0 }}
@@ -286,7 +229,7 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
           height: '100vh',
           // Allow pointer events to pass through to Spline, but UI elements capture them
           pointerEvents: 'none',
-          backgroundColor: '#000', // Prevent white flash
+          backgroundColor: hideBackground ? 'transparent' : '#000', // Prevent white flash unless parent provides background
           zIndex: UI_Z_INDEX.PAGEMODE,
         }}
       >
