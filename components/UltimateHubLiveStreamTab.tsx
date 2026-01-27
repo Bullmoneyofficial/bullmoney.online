@@ -161,7 +161,9 @@ export const UltimateHubLiveStreamTab = memo(() => {
   const liveVideos = videos.filter(v => v.is_live);
 
   return (
-    <div className="flex flex-col h-full bg-black overflow-hidden">
+    <div className="flex flex-col h-full w-full bg-black overflow-hidden md:flex-row md:gap-0">
+      {/* Main Content Container */}
+      <div className="flex flex-col flex-1 min-w-0 h-full overflow-hidden">
       {/* Header */}
       <div className="shrink-0 p-1.5 sm:p-2 md:p-3 border-b border-blue-500/30 bg-black" style={{ boxShadow: '0 2px 8px rgba(59, 130, 246, 0.2)' }}>
         <div className="flex items-center justify-between mb-1.5 sm:mb-2">
@@ -234,55 +236,132 @@ export const UltimateHubLiveStreamTab = memo(() => {
       </div>
 
       {/* Video Player */}
-      <div className="flex-1 flex flex-col bg-black overflow-hidden">
-        <div className="w-full aspect-video bg-zinc-900">
-          <iframe
-            key={playerKey}
-            className="w-full h-full"
-            src={`https://www.youtube.com/embed/${currentVideoId}?autoplay=${isPlaying ? 1 : 0}&rel=0&modestbranding=1&playsinline=1`}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            loading="lazy"
-          />
+      <div className="flex-1 flex flex-col bg-black overflow-hidden min-h-0 md:min-h-[500px]">
+        {/* Responsive aspect ratio container with better desktop sizing */}
+        <div className="flex-1 w-full bg-zinc-900 flex items-center justify-center">
+          <div className="w-full h-full">
+            <iframe
+              key={playerKey}
+              className="w-full h-full"
+              src={`https://www.youtube.com/embed/${currentVideoId}?autoplay=${isPlaying ? 1 : 0}&rel=0&modestbranding=1&playsinline=1`}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              loading="lazy"
+            />
+          </div>
         </div>
+      </div>
 
-        {/* Video Info & Controls */}
-        <div className="p-2 sm:p-3 bg-zinc-900/50 border-t border-blue-500/20">
-          {/* Current Video Info */}
-          <div className="flex-1 min-w-0 mb-2">
-            <div className="text-[10px] sm:text-xs font-semibold text-blue-300 truncate">
-              {activeTab === 'featured'
-                ? (currentVideo?.title || `Featured Video ${featuredIndex + 1}`)
-                : (currentVideo?.title || 'BullMoney Live')}
+      {/* Sidebar Playlist Container - Desktop Only */}
+      <div className="hidden md:flex md:flex-col md:w-80 md:border-l md:border-blue-500/20 md:bg-zinc-950 md:overflow-hidden">
+        {/* Playlist Header */}
+        <div className="shrink-0 p-3 border-b border-blue-500/20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <List className="w-5 h-5 text-blue-400" />
+              <h3 className="text-sm font-semibold text-blue-300">
+                {activeTab === 'featured' ? 'Featured' : 'Live'}
+              </h3>
             </div>
-            <div className="text-[8px] sm:text-[9px] text-blue-400/60">
+            <span className="text-xs text-blue-400/60">
               {activeTab === 'featured'
                 ? `${featuredIndex + 1} / ${videos.length || FEATURED_VIDEOS.length}`
-                : liveVideos.length > 0 ? `${liveIndex + 1} / ${liveVideos.length}` : 'No live streams'}
-            </div>
+                : liveVideos.length > 0 ? `${liveIndex + 1} / ${liveVideos.length}` : '0'}
+            </span>
           </div>
+        </div>
 
-          {/* Player Controls */}
-          <div className="flex items-center justify-center gap-2">
+        {/* Playlist Items */}
+        <div className="flex-1 overflow-y-auto p-2 space-y-1" style={{ WebkitOverflowScrolling: 'touch' }}>
+          {activeTab === 'featured'
+            ? (videos.length > 0 ? videos : FEATURED_VIDEOS.map((id, i) => ({ id: i.toString(), youtube_id: id, title: `Video ${i + 1}`, is_live: false, order_index: i }))).map((video, idx) => (
+                <button
+                  key={video.id}
+                  onClick={() => { SoundEffects.click(); setFeaturedIndex(idx); setPlayerKey(p => p + 1); }}
+                  className={`w-full flex items-center gap-2 p-2 rounded-lg text-left transition-all group ${
+                    idx === featuredIndex
+                      ? 'bg-blue-500/30 border border-blue-400/50'
+                      : 'bg-zinc-800/30 hover:bg-zinc-700/50 border border-transparent'
+                  }`}
+                >
+                  <img
+                    src={getYouTubeThumbnail(video.youtube_id, 'default')}
+                    alt={video.title}
+                    className="w-14 h-10 rounded object-cover shrink-0 group-hover:opacity-80 transition-opacity"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-semibold text-white truncate">{video.title}</div>
+                    {video.is_live && (
+                      <span className="text-[9px] text-red-400 font-bold uppercase">● Live</span>
+                    )}
+                  </div>
+                </button>
+              ))
+            : liveVideos.length > 0 ? liveVideos.map((video, idx) => (
+                <button
+                  key={video.id}
+                  onClick={() => { SoundEffects.click(); setLiveIndex(idx); setPlayerKey(p => p + 1); }}
+                  className={`w-full flex items-center gap-2 p-2 rounded-lg text-left transition-all group ${
+                    idx === liveIndex
+                      ? 'bg-red-500/30 border border-red-400/50'
+                      : 'bg-zinc-800/30 hover:bg-zinc-700/50 border border-transparent'
+                  }`}
+                >
+                  <img
+                    src={getYouTubeThumbnail(video.youtube_id, 'default')}
+                    alt={video.title}
+                    className="w-14 h-10 rounded object-cover shrink-0 group-hover:opacity-80 transition-opacity"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-semibold text-white truncate">{video.title}</div>
+                    <span className="text-[9px] text-red-400 font-bold uppercase">● Live</span>
+                  </div>
+                </button>
+              )) : (
+                <div className="text-center py-8 text-zinc-400 text-xs">
+                  <Loader2 className="w-4 h-4 animate-spin mx-auto mb-2" />
+                  Checking for live streams...
+                </div>
+              )}
+        </div>
+      </div>
+      {/* Video Info & Controls - Mobile Only / Desktop Bottom */}
+      <div className="p-1.5 sm:p-2 md:p-3 bg-zinc-900/50 border-t border-blue-500/20 md:border-t-0 md:border-b">
+        {/* Current Video Info */}
+        <div className="flex-1 min-w-0 mb-2 md:mb-3 md:hidden">
+          <div className="text-[10px] sm:text-xs md:text-sm font-semibold text-blue-300 truncate">
+            {activeTab === 'featured'
+              ? (currentVideo?.title || `Featured Video ${featuredIndex + 1}`)
+              : (currentVideo?.title || 'BullMoney Live')}
+          </div>
+          <div className="text-[8px] sm:text-[9px] md:text-xs text-blue-400/60">
+            {activeTab === 'featured'
+              ? `${featuredIndex + 1} / ${videos.length || FEATURED_VIDEOS.length}`
+              : liveVideos.length > 0 ? `${liveIndex + 1} / ${liveVideos.length}` : 'No live streams'}
+          </div>
+        </div>
+
+        {/* Player Controls */}
+        <div className="flex items-center justify-center gap-1 sm:gap-2 md:gap-3">
             <motion.button
               onClick={goPrev}
               whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="p-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/40 transition-colors"
+              className="p-2 sm:p-2.5 md:p-3 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/40 transition-colors"
             >
-              <SkipBack className="w-4 h-4 text-blue-400" />
+              <SkipBack className="w-3.5 h-3.5 sm:w-4 h-4 md:w-5 h-5 text-blue-400" />
             </motion.button>
             
             <motion.button
               onClick={togglePlayPause}
               whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="p-3 rounded-lg bg-blue-500/30 hover:bg-blue-500/40 border border-blue-500/50 transition-colors"
+              className="p-3 sm:p-3.5 md:p-4 rounded-lg bg-blue-500/30 hover:bg-blue-500/40 border border-blue-500/50 transition-colors"
             >
               {isPlaying ? (
-                <Pause className="w-5 h-5 text-blue-300" />
+                <Pause className="w-4.5 h-4.5 sm:w-5 h-5 md:w-6 h-6 text-blue-300" />
               ) : (
-                <Play className="w-5 h-5 text-blue-300" />
+                <Play className="w-4.5 h-4.5 sm:w-5 h-5 md:w-6 h-6 text-blue-300" />
               )}
             </motion.button>
             
@@ -290,34 +369,34 @@ export const UltimateHubLiveStreamTab = memo(() => {
               onClick={goNext}
               whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="p-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/40 transition-colors"
+              className="p-2 sm:p-2.5 md:p-3 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/40 transition-colors"
             >
-              <SkipForward className="w-4 h-4 text-blue-400" />
+              <SkipForward className="w-3.5 h-3.5 sm:w-4 h-4 md:w-5 h-5 text-blue-400" />
             </motion.button>
             
             <motion.button
               onClick={() => { SoundEffects.click(); setShowPlaylist(p => !p); }}
               whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className={`p-2 rounded-lg border transition-colors ${
+              className={`p-2 sm:p-2.5 md:p-3 rounded-lg border transition-colors md:hidden ${
                 showPlaylist
                   ? 'bg-blue-500/30 border-blue-500/50'
                   : 'bg-blue-500/20 hover:bg-blue-500/30 border-blue-500/40'
               }`}
             >
-              <List className="w-4 h-4 text-blue-400" />
+              <List className="w-3.5 h-3.5 sm:w-4 h-4 md:w-5 h-5 text-blue-400" />
             </motion.button>
           </div>
 
-          {/* Playlist Dropdown */}
+          {/* Playlist Dropdown - Mobile Only */}
           {showPlaylist && (
-            <div className="mt-2 max-h-[200px] overflow-y-auto p-2 rounded-lg bg-zinc-900/50 border border-blue-500/20 space-y-1" style={{ touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
+            <div className="mt-2 md:mt-3 max-h-[150px] sm:max-h-[200px] md:max-h-[300px] overflow-y-auto p-2 md:p-3 rounded-lg bg-zinc-900/50 border border-blue-500/20 space-y-1 md:hidden" style={{ touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
               {activeTab === 'featured'
                 ? (videos.length > 0 ? videos : FEATURED_VIDEOS.map((id, i) => ({ id: i.toString(), youtube_id: id, title: `Video ${i + 1}`, is_live: false, order_index: i }))).map((video, idx) => (
                     <button
                       key={video.id}
                       onClick={() => { SoundEffects.click(); setFeaturedIndex(idx); setPlayerKey(p => p + 1); setShowPlaylist(false); }}
-                      className={`w-full flex items-center gap-2 p-2 rounded-lg text-left transition-all ${
+                      className={`w-full flex items-center gap-2 p-2 md:p-2.5 rounded-lg text-left transition-all ${
                         idx === featuredIndex
                           ? 'bg-blue-500/30 border border-blue-400/50'
                           : 'bg-zinc-800/30 hover:bg-zinc-700/50 border border-transparent'
@@ -326,12 +405,12 @@ export const UltimateHubLiveStreamTab = memo(() => {
                       <img
                         src={getYouTubeThumbnail(video.youtube_id, 'default')}
                         alt={video.title}
-                        className="w-12 h-9 rounded object-cover"
+                        className="w-12 h-9 md:w-14 md:h-10 rounded object-cover shrink-0"
                       />
                       <div className="flex-1 min-w-0">
-                        <div className="text-[10px] font-semibold text-white truncate">{video.title}</div>
+                        <div className="text-[10px] md:text-xs font-semibold text-white truncate">{video.title}</div>
                         {video.is_live && (
-                          <span className="text-[8px] text-red-400 font-bold uppercase">● Live</span>
+                          <span className="text-[8px] md:text-[9px] text-red-400 font-bold uppercase">● Live</span>
                         )}
                       </div>
                     </button>
@@ -340,7 +419,7 @@ export const UltimateHubLiveStreamTab = memo(() => {
                     <button
                       key={video.id}
                       onClick={() => { SoundEffects.click(); setLiveIndex(idx); setPlayerKey(p => p + 1); setShowPlaylist(false); }}
-                      className={`w-full flex items-center gap-2 p-2 rounded-lg text-left transition-all ${
+                      className={`w-full flex items-center gap-2 p-2 md:p-2.5 rounded-lg text-left transition-all ${
                         idx === liveIndex
                           ? 'bg-red-500/30 border border-red-400/50'
                           : 'bg-zinc-800/30 hover:bg-zinc-700/50 border border-transparent'
@@ -349,11 +428,11 @@ export const UltimateHubLiveStreamTab = memo(() => {
                       <img
                         src={getYouTubeThumbnail(video.youtube_id, 'default')}
                         alt={video.title}
-                        className="w-12 h-9 rounded object-cover"
+                        className="w-12 h-9 md:w-14 md:h-10 rounded object-cover shrink-0"
                       />
                       <div className="flex-1 min-w-0">
-                        <div className="text-[10px] font-semibold text-white truncate">{video.title}</div>
-                        <span className="text-[8px] text-red-400 font-bold uppercase">● Live</span>
+                        <div className="text-[10px] md:text-xs font-semibold text-white truncate">{video.title}</div>
+                        <span className="text-[8px] md:text-[9px] text-red-400 font-bold uppercase">● Live</span>
                       </div>
                     </button>
                   )) : (
