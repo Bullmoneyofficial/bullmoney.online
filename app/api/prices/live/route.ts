@@ -219,7 +219,7 @@ export async function GET() {
     
     // Return fallback prices with error indicator
     return NextResponse.json({
-      xauusd: '2847.50', // Updated fallback to current market price
+      xauusd: '5085.20', // Updated fallback to current 2026 market price
       btcusd: '102500',
       timestamp: new Date().toISOString(),
       updateFrequency: '1s',
