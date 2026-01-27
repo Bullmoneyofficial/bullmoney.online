@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import dynamic from 'next/dynamic';
 import { motion } from "framer-motion";
 import { ArrowRight, User } from 'lucide-react';
+import { UI_Z_INDEX } from "@/contexts/UIStateContext";
 
 // Import the actual UnifiedFpsPill and UnifiedHubPanel from UltimateHub
 import { UnifiedFpsPill, UnifiedHubPanel, useLivePrices } from '@/components/UltimateHub';
@@ -59,51 +60,79 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [loadTimeout, setLoadTimeout] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [retryKey, setRetryKey] = useState(0);
   const splineRef = useRef<any>(null);
   
-  // On low memory devices, always use scene1 (preloaded, most optimized)
-  // Otherwise, use scene1 on first visit, random on return visits
+  // Always use scene1 for fastest cold start and reliable reloads
   const [scene] = useState(() => {
     if (typeof window === 'undefined') return SPLINE_SCENES[0];
-    
-    // Low memory device = always scene1
-    if (isLowMemoryDevice()) {
-      return SPLINE_SCENES[0];
-    }
-    
-    // Normal device: scene1 on first visit, random after
-    const visited = sessionStorage.getItem('spline_visited_desktop');
-    if (!visited) {
-      sessionStorage.setItem('spline_visited_desktop', '1');
-      return SPLINE_SCENES[0]; // scene1 - preloaded for fast first load
-    }
-    return SPLINE_SCENES[Math.floor(Math.random() * SPLINE_SCENES.length)];
+    return SPLINE_SCENES[0];
   });
 
-  // Timeout fallback - if Spline doesn't load in 8 seconds, show fallback
+  // Preload Spline runtime + scene for faster first paint and reliable reloads
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    import('@splinetool/react-spline').catch(() => undefined);
+
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'fetch';
+    link.href = scene;
+    link.crossOrigin = 'anonymous';
+    document.head.appendChild(link);
+
+    fetch(scene, { cache: 'force-cache' }).catch(() => undefined);
+
+    return () => {
+      if (link.parentNode) link.parentNode.removeChild(link);
+    };
+  }, [scene]);
+
+  // Timeout fallback - if Spline doesn't load in 10 seconds, show fallback and retry
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!isLoaded) {
         console.warn('[WelcomeSplineDesktop] Load timeout - showing fallback');
         setLoadTimeout(true);
+        if (retryCount < 2) {
+          const retryTimer = setTimeout(() => {
+            setRetryCount((count) => count + 1);
+            setRetryKey((key) => key + 1);
+            setHasError(false);
+            setLoadTimeout(false);
+          }, 400);
+          return () => clearTimeout(retryTimer);
+        }
       }
-    }, 8000);
+    }, 10000);
     return () => clearTimeout(timer);
-  }, [isLoaded]);
+  }, [isLoaded, retryCount]);
 
   const handleLoad = useCallback((splineApp: any) => {
     splineRef.current = splineApp;
     setIsLoaded(true);
     setHasError(false);
+    setLoadTimeout(false);
   }, []);
 
   const handleError = useCallback((error: any) => {
     console.error('[WelcomeSplineDesktop] Load error:', error);
     setHasError(true);
+    if (retryCount < 2) {
+      setTimeout(() => {
+        setRetryCount((count) => count + 1);
+        setRetryKey((key) => key + 1);
+        setHasError(false);
+        setLoadTimeout(false);
+        setIsLoaded(false);
+      }, 500);
+    }
   }, []);
 
   // Show animated gradient fallback if Spline fails or times out
-  const showFallback = hasError || loadTimeout;
+  const showFallback = hasError || (!isLoaded && loadTimeout);
 
   return (
     <div 
@@ -118,7 +147,7 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
         className="absolute inset-0"
         style={{
           background: 'radial-gradient(ellipse at 40% 30%, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 35%, transparent 60%), radial-gradient(ellipse at 70% 70%, rgba(147, 51, 234, 0.1) 0%, transparent 45%), #000',
-          opacity: showFallback || !isLoaded ? 1 : 0,
+          opacity: showFallback || !isLoaded ? 1 : 0.2,
           transition: 'opacity 600ms ease-out',
         }}
       >
@@ -134,22 +163,21 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
         )}
       </div>
 
-      {/* Spline scene - only render if no error */}
-      {!showFallback && (
-        <Spline
-          scene={scene}
-          onLoad={handleLoad}
-          onError={handleError}
-          style={{
-            width: '100%',
-            height: '100%',
-            display: 'block',
-            opacity: isLoaded ? 1 : 0,
-            transition: 'opacity 500ms ease-out',
-            willChange: 'opacity',
-          }}
-        />
-      )}
+      {/* Spline scene - always render, fallback stays visible until loaded */}
+      <Spline
+        key={`welcome-spline-desktop-${retryKey}`}
+        scene={scene}
+        onLoad={handleLoad}
+        onError={handleError}
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'block',
+          opacity: isLoaded ? 1 : 0.6,
+          transition: 'opacity 500ms ease-out',
+          willChange: 'opacity',
+        }}
+      />
     </div>
   );
 });
@@ -251,7 +279,7 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
-        className="fixed inset-0 z-10 overflow-hidden"
+        className="fixed inset-0 overflow-hidden"
         style={{ 
           minHeight: '100dvh', 
           width: '100vw', 
@@ -259,6 +287,7 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
           // Allow pointer events to pass through to Spline, but UI elements capture them
           pointerEvents: 'none',
           backgroundColor: '#000', // Prevent white flash
+          zIndex: UI_Z_INDEX.PAGEMODE,
         }}
       >
         {/* Spline Background - Full screen (can be suppressed if parent provides shared background) */}

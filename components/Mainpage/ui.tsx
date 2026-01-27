@@ -209,6 +209,16 @@ export function MultiStepLoader({
   duration?: number;
 }) {
   const [step, setStep] = useState(0);
+  const safeLoadingStates = loadingStates.length
+    ? loadingStates
+    : [{ text: "Loading..." }];
+  const totalSteps = safeLoadingStates.length;
+
+  useEffect(() => {
+    if (step > totalSteps - 1) {
+      setStep(Math.max(0, totalSteps - 1));
+    }
+  }, [step, totalSteps]);
 
   useEffect(() => {
     if (!loading) {
@@ -216,19 +226,23 @@ export function MultiStepLoader({
       return;
     }
 
+    if (totalSteps <= 1) {
+      return;
+    }
+
     let index = 0;
 
     const interval = setInterval(() => {
       index++;
-      if (index >= loadingStates.length) {
+      if (index >= totalSteps) {
         clearInterval(interval);
         return;
       }
       setStep(index);
-    }, duration / loadingStates.length);
+    }, duration / totalSteps);
 
     return () => clearInterval(interval);
-  }, [loading, duration, loadingStates.length]);
+  }, [loading, duration, totalSteps]);
 
   return (
     <AnimatePresence>
@@ -245,7 +259,7 @@ export function MultiStepLoader({
             exit={{ scale: 0.9, opacity: 0 }}
             className="px-8 py-6 rounded-2xl bg-neutral-900/80 border border-white/10 shadow-2xl text-white text-lg font-medium"
           >
-            {loadingStates[step]?.text || "Loading..."}
+            {safeLoadingStates[step]?.text || "Loading..."}
           </motion.div>
         </motion.div>
       )}

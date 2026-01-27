@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import localFont from "next/font/local";
 import "./globals.css";
 import "../styles/performance-optimizations.css";
@@ -491,8 +492,10 @@ export default function RootLayout({
             `,
           }}
         />
-        {/* CRITICAL: Auto-refresh on stale cache - runs BEFORE any other JS */}
-        <script
+        {/* Cache validation (deferred to avoid blocking first paint) */}
+        <Script
+          id="cache-buster"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
 (function() {

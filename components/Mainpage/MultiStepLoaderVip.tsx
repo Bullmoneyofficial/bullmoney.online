@@ -25,6 +25,16 @@ export const MultiStepLoader = ({
   loop = true,
 }: MultiStepLoaderProps) => {
   const [currentState, setCurrentState] = useState(0);
+  const safeLoadingStates = loadingStates.length
+    ? loadingStates
+    : [{ text: "Loading..." }];
+  const totalSteps = safeLoadingStates.length;
+
+  useEffect(() => {
+    if (currentState > totalSteps - 1) {
+      setCurrentState(Math.max(0, totalSteps - 1));
+    }
+  }, [currentState, totalSteps]);
 
   useEffect(() => {
     if (!loading) {
@@ -32,17 +42,26 @@ export const MultiStepLoader = ({
       return;
     }
 
+    if (totalSteps <= 1) {
+      return;
+    }
+
     const interval = setInterval(() => {
       setCurrentState((prev) => {
-        if (prev === loadingStates.length - 1) {
-          return loop ? 0 : prev;
+        const next = prev + 1;
+        if (next >= totalSteps) {
+          if (loop) {
+            return 0;
+          }
+          clearInterval(interval);
+          return totalSteps - 1;
         }
-        return prev + 1;
+        return next;
       });
     }, duration);
 
     return () => clearInterval(interval);
-  }, [loading, loadingStates.length, duration, loop]);
+  }, [loading, totalSteps, duration, loop]);
 
   return (
     <AnimatePresence mode="wait">

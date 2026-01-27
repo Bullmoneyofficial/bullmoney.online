@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 import { ShimmerLine, ShimmerBorder, ShimmerSpinner, ShimmerRadialGlow } from '@/components/ui/UnifiedShimmer';
 
 // --- UI STATE CONTEXT ---
-import { useUIState } from "@/contexts/UIStateContext";
+import { useUIState, UI_Z_INDEX } from "@/contexts/UIStateContext";
 
 // --- IMPORT SEPARATE LOADER COMPONENT ---
 import { MultiStepLoader} from "@/components/Mainpage/MultiStepLoader";
@@ -81,51 +81,79 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [loadTimeout, setLoadTimeout] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [retryKey, setRetryKey] = useState(0);
   const splineRef = useRef<any>(null);
   
-  // On low memory devices, always use scene1 (preloaded, most optimized)
-  // Otherwise, use scene1 on first visit, random on return visits
+  // Always use scene1 for fastest cold start and reliable reloads
   const [scene] = useState(() => {
     if (typeof window === 'undefined') return SPLINE_SCENES[0];
-    
-    // Low memory device = always scene1
-    if (isLowMemoryDevice()) {
-      return SPLINE_SCENES[0];
-    }
-    
-    // Normal device: scene1 on first visit, random after
-    const visited = sessionStorage.getItem('spline_visited');
-    if (!visited) {
-      sessionStorage.setItem('spline_visited', '1');
-      return SPLINE_SCENES[0]; // scene1 - preloaded for fast first load
-    }
-    return SPLINE_SCENES[Math.floor(Math.random() * SPLINE_SCENES.length)];
+    return SPLINE_SCENES[0];
   });
 
-  // Timeout fallback - if Spline doesn't load in 8 seconds, show fallback
+  // Preload Spline runtime + scene for faster first paint and reliable reloads
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    import('@splinetool/react-spline').catch(() => undefined);
+
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'fetch';
+    link.href = scene;
+    link.crossOrigin = 'anonymous';
+    document.head.appendChild(link);
+
+    fetch(scene, { cache: 'force-cache' }).catch(() => undefined);
+
+    return () => {
+      if (link.parentNode) link.parentNode.removeChild(link);
+    };
+  }, [scene]);
+
+  // Timeout fallback - if Spline doesn't load in 10 seconds, show fallback and retry
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!isLoaded) {
         console.warn('[WelcomeSpline] Load timeout - showing fallback');
         setLoadTimeout(true);
+        if (retryCount < 2) {
+          const retryTimer = setTimeout(() => {
+            setRetryCount((count) => count + 1);
+            setRetryKey((key) => key + 1);
+            setHasError(false);
+            setLoadTimeout(false);
+          }, 400);
+          return () => clearTimeout(retryTimer);
+        }
       }
-    }, 8000);
+    }, 10000);
     return () => clearTimeout(timer);
-  }, [isLoaded]);
+  }, [isLoaded, retryCount]);
 
   const handleLoad = useCallback((splineApp: any) => {
     splineRef.current = splineApp;
     setIsLoaded(true);
     setHasError(false);
+    setLoadTimeout(false);
   }, []);
 
   const handleError = useCallback((error: any) => {
     console.error('[WelcomeSpline] Load error:', error);
     setHasError(true);
+    if (retryCount < 2) {
+      setTimeout(() => {
+        setRetryCount((count) => count + 1);
+        setRetryKey((key) => key + 1);
+        setHasError(false);
+        setLoadTimeout(false);
+        setIsLoaded(false);
+      }, 500);
+    }
   }, []);
 
   // Show animated gradient fallback if Spline fails or times out
-  const showFallback = hasError || loadTimeout;
+  const showFallback = hasError || (!isLoaded && loadTimeout);
 
   return (
     <div 
@@ -141,7 +169,7 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
         className="absolute inset-0"
         style={{
           background: 'radial-gradient(ellipse at 50% 30%, rgba(59, 130, 246, 0.12) 0%, rgba(59, 130, 246, 0.04) 30%, transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(147, 51, 234, 0.08) 0%, transparent 40%), #000',
-          opacity: showFallback || !isLoaded ? 1 : 0,
+          opacity: showFallback || !isLoaded ? 1 : 0.2,
           transition: 'opacity 500ms ease-out',
         }}
       >
@@ -157,22 +185,21 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
         )}
       </div>
 
-      {/* Spline scene - only render if no error */}
-      {!showFallback && (
-        <Spline
-          scene={scene}
-          onLoad={handleLoad}
-          onError={handleError}
-          style={{
-            width: '100%',
-            height: '100%',
-            display: 'block',
-            opacity: isLoaded ? 1 : 0,
-            transition: 'opacity 400ms ease-out',
-            willChange: 'opacity',
-          }}
-        />
-      )}
+      {/* Spline scene - always render, fallback stays visible until loaded */}
+      <Spline
+        key={`welcome-spline-${retryKey}`}
+        scene={scene}
+        onLoad={handleLoad}
+        onError={handleError}
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'block',
+          opacity: isLoaded ? 1 : 0.6,
+          transition: 'opacity 400ms ease-out',
+          willChange: 'opacity',
+        }}
+      />
     </div>
   );
 });
@@ -1058,7 +1085,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       {/* =========================================== */}
 
       {/* HEADER - BULLMONEY FREE TITLE */}
-      {!loading && step !== -1 && (
+      {!loading && step !== -1 && step !== -2 && (
         <div className="w-full md:fixed md:top-6 lg:top-8 md:left-0 md:right-0 flex flex-col items-center pt-6 md:pt-8 pb-4 md:pb-6 md:bg-black/60 md:backdrop-blur-md mb-8 md:mb-0 z-50" style={{ zIndex: 100 }}>
           <div className="mb-3 md:mb-4 text-center w-full">
              <h1 className={cn("text-3xl md:text-5xl lg:text-6xl font-black tracking-tight", neonTextClass)} style={{ animation: isXM ? 'neon-pulse-red 2s ease-in-out infinite' : 'neon-pulse 2s ease-in-out infinite' }}>
@@ -1106,13 +1133,14 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.4, ease: 'easeOut' }}
-                className="fixed inset-0 flex flex-col z-10"
+                className="fixed inset-0 flex flex-col"
                 style={{ 
                   minHeight: '100dvh', 
                   width: '100vw', 
                   height: '100vh',
                   // Allow touch events to pass through to Spline but capture on UI elements
                   pointerEvents: 'none',
+                  zIndex: UI_Z_INDEX.PAGEMODE,
                 }}
               >
                 {/* Branding Header - Neon Sign Style */}
@@ -1334,10 +1362,11 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35, ease: 'easeOut' }}
-              className="fixed inset-0 flex flex-col z-10"
+              className="fixed inset-0 flex flex-col"
               style={{ 
                 minHeight: '100dvh',
                 pointerEvents: 'none', // Allow Spline interaction, UI elements override
+                zIndex: UI_Z_INDEX.PAGEMODE,
               }}
             >
               {/* Ultra-transparent Back Button - Top Right (UltimateHub is on left) */}

@@ -285,6 +285,32 @@ function MobileDiscordHero({ sources, onOpenModal, variant = 'mobile' }: { sourc
   );
 }
 
+function DesktopHeroFallback() {
+  return (
+    <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-black via-[#050915] to-black">
+      <div className="w-full max-w-6xl mx-auto px-6 py-16 flex flex-col items-center text-center gap-4">
+        <p
+          className="font-mono text-[10px] tracking-[0.2em] uppercase"
+          style={{ color: '#60a5fa', textShadow: '0 0 10px rgba(96, 165, 250, 0.5)' }}
+        >
+          EST. 2024 • TRADING EXCELLENCE
+        </p>
+        <h1 className="text-4xl md:text-6xl font-black tracking-tight neon-white-text">
+          The path to <span className="neon-blue-text">consistent profit</span>
+        </h1>
+        <p className="text-sm md:text-base max-w-3xl" style={{ color: 'rgba(147, 197, 253, 0.85)' }}>
+          Live trade ideas, coaching, and real-time market insights—delivered in a community of 10,000+ focused traders.
+        </p>
+        <div className="mt-4 inline-flex items-center gap-3">
+          <span className="px-6 py-3 rounded-full text-sm font-bold neon-white-text" style={{ background: '#3b82f6', boxShadow: '0 0 10px rgba(59, 130, 246, 0.6)' }}>
+            Loading your experience…
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 type RemoteSplineMeta = {
   id: string;
   title: string;
@@ -816,6 +842,8 @@ function HomeContent() {
   const [currentView, setCurrentView] = useState<'pagemode' | 'loader' | 'content'>('pagemode');
   const [isInitialized, setIsInitialized] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [desktopHeroReady, setDesktopHeroReady] = useState(false);
+  const [allowHeavyDesktop, setAllowHeavyDesktop] = useState(false);
   // Legacy flag retained for older bundles; default keeps desktop on 3D hero.
   const desktopHeroVariant = 'spline';
   const useDesktopVideoVariant = desktopHeroVariant === 'spline';
@@ -855,7 +883,7 @@ function HomeContent() {
   const theme = activeTheme || ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
   useAudioEngine(!isMuted, 'MECHANICAL');
   const canRenderMobileSections = !isMobile || allowMobileLazyRender;
-  const canRenderHeavyDesktop = !isMobile;
+  const canRenderHeavyDesktop = !isMobile && allowHeavyDesktop;
   const FeaturesComponent = isMobile ? FeaturesLazy : Features;
   
   // Track FPS drops
@@ -927,6 +955,33 @@ function HomeContent() {
       setAppLoading(true);
     }
   }, [currentView, setAppLoading]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (isMobile || currentView !== 'content') {
+      setAllowHeavyDesktop(false);
+      return;
+    }
+
+    let cancelled = false;
+    const enable = () => {
+      if (!cancelled) setAllowHeavyDesktop(true);
+    };
+
+    if ('requestIdleCallback' in window) {
+      const id = (window as any).requestIdleCallback(enable, { timeout: 1200 });
+      return () => {
+        cancelled = true;
+        (window as any).cancelIdleCallback(id);
+      };
+    }
+
+    const timeout = window.setTimeout(enable, 1200);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [isMobile, currentView]);
 
   useEffect(() => {
     setLoaderv2Open(currentView === 'loader');
@@ -1215,8 +1270,8 @@ function HomeContent() {
             <section
               id="hero"
               className={isMobile
-                ? "w-full full-bleed flex items-end justify-center overflow-hidden"
-                : "w-full full-bleed viewport-full"}
+                ? "w-full full-bleed flex items-end justify-center overflow-hidden relative"
+                : "w-full full-bleed viewport-full relative"}
               style={isMobile ? {
                 // Fill from under navbar+static helper to bottom of viewport
                 // This ensures content stretches to fill on taller screens
@@ -1225,11 +1280,22 @@ function HomeContent() {
                 paddingBottom: '12px',
                 display: 'flex',
                 flexDirection: 'column' as const,
-              } : undefined}
+              } : {
+                minHeight: '100vh',
+              }}
               data-allow-scroll
               data-content
               data-theme-aware
             >
+              {!isMobile && (
+                <div
+                  className={`absolute inset-0 z-10 transition-opacity duration-500 ${desktopHeroReady ? 'opacity-0' : 'opacity-100'}`}
+                  aria-hidden={desktopHeroReady}
+                  style={{ pointerEvents: 'none' }}
+                >
+                  <DesktopHeroFallback />
+                </div>
+              )}
               {isMobile ? (
                 canRenderMobileSections ? (
                   <MobileDiscordHero
@@ -1241,7 +1307,7 @@ function HomeContent() {
                   <HeroSkeleton />
                 )
               ) : (
-                <HeroDesktop />
+                <HeroDesktop onReady={() => setDesktopHeroReady(true)} />
               )}
             </section>
 

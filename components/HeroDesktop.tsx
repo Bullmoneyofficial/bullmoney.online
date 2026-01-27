@@ -1665,7 +1665,7 @@ import { useAudioEngine } from "@/app/hooks/useAudioEngine";
 // MAIN HERO DESKTOP COMPONENT
 // ============================================================================
 
-const HeroDesktop = () => {
+const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
   // Desktop performance optimization with lite mode toggle
   // Uses unified hook that combines mobile detection with desktop lite mode
   const { 
@@ -1709,6 +1709,10 @@ const HeroDesktop = () => {
   const activeVideoId = heroMediaMode === 'video' && heroVideoIds.length
     ? heroVideoIds[(activeVideoIndex % heroVideoIds.length + heroVideoIds.length) % heroVideoIds.length]
     : null;
+
+  useEffect(() => {
+    onReady?.();
+  }, [onReady]);
 
   useEffect(() => {
     if (!heroVideoIds.length && heroMediaMode === 'video') {

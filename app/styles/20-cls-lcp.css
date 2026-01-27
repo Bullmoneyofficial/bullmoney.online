@@ -128,6 +128,14 @@ section:not(.hero):not(#hero),
   contain-intrinsic-size: auto 500px;
 }
 
+/* Reserve full-viewport space for above-the-fold sections to prevent shifts */
+.viewport-full,
+section.viewport-full,
+#cta,
+#features {
+  contain-intrinsic-size: auto 100vh;
+}
+
 /* ============================================================================
    2026 CLS PREVENTION - ADDITIONAL RULES
    ============================================================================ */
