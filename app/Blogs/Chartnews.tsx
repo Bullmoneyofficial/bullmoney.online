@@ -583,7 +583,7 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
     const activePreview = previewUrl ? previews[previewUrl] : undefined;
 
     return (
-        <div className="relative flex h-full max-h-full min-h-0 flex-col overflow-hidden rounded-2xl bg-black" data-lenis-prevent>
+        <div className="relative flex h-full max-h-full min-h-0 flex-col overflow-hidden rounded-2xl bg-black [overscroll-behavior:contain]" data-lenis-prevent style={{ touchAction: 'pan-y' }}>
             {/* Masthead (mini news site header) */}
             <div className="shrink-0 neon-blue-border bg-black">
                 <div className="flex items-center justify-between px-4 md:px-6 py-4">
@@ -730,8 +730,9 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
             </div>
 
             <div
-                className="flex-1 min-h-0 overflow-y-auto bg-black/90 custom-scrollbar overscroll-contain md:overscroll-auto"
+                className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-black/90 custom-scrollbar [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]"
                 data-lenis-prevent
+                style={{ touchAction: 'pan-y' }}
             >
                 {/* Error State */}
                 {error && !loading && (
@@ -1130,6 +1131,10 @@ function NewsFeedModal({ activeMarket, showTip }: { activeMarket: string; showTi
     const closeButtonRef = useRef<HTMLButtonElement | null>(null);
     const modalRef = useRef<HTMLDivElement | null>(null);
     const prevBodyOverflowRef = useRef<string>("");
+    const prevBodyPaddingRef = useRef<string>("");
+    const prevHtmlOverflowXRef = useRef<string>("");
+    const prevHtmlOverflowYRef = useRef<string>("");
+    const prevHtmlOverscrollRef = useRef<string>("");
 
     const handleOpenModal = useCallback(() => {
         setIsOpen(true);
@@ -1159,9 +1164,26 @@ function NewsFeedModal({ activeMarket, showTip }: { activeMarket: string; showTi
     useEffect(() => {
         if (!isOpen) return;
         prevBodyOverflowRef.current = document.body.style.overflow;
+        prevBodyPaddingRef.current = document.body.style.paddingRight;
+        prevHtmlOverflowXRef.current = document.documentElement.style.overflowX;
+        prevHtmlOverflowYRef.current = document.documentElement.style.overflowY;
+        prevHtmlOverscrollRef.current = document.documentElement.style.overscrollBehavior;
+
+        const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+        if (scrollbarWidth > 0) {
+            document.body.style.paddingRight = `${scrollbarWidth}px`;
+        }
+
         document.body.style.overflow = "hidden";
+        document.documentElement.style.overflowX = "hidden";
+        document.documentElement.style.overflowY = "hidden";
+        document.documentElement.style.overscrollBehavior = "contain";
         return () => {
             document.body.style.overflow = prevBodyOverflowRef.current;
+            document.body.style.paddingRight = prevBodyPaddingRef.current;
+            document.documentElement.style.overflowX = prevHtmlOverflowXRef.current;
+            document.documentElement.style.overflowY = prevHtmlOverflowYRef.current;
+            document.documentElement.style.overscrollBehavior = prevHtmlOverscrollRef.current;
         };
     }, [isOpen]);
 
@@ -1263,7 +1285,8 @@ function NewsFeedModal({ activeMarket, showTip }: { activeMarket: string; showTi
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                className="fixed inset-0 z-[9999999] flex items-center justify-center p-3 md:p-6"
+                                className="fixed inset-0 z-[9999999] flex items-center justify-center p-3 md:p-6 overflow-hidden [overscroll-behavior:contain]"
+                                style={{ overscrollBehavior: "contain", touchAction: "none" }}
                             >
                                 {/* Backdrop */}
                                 <motion.div
@@ -1290,8 +1313,9 @@ function NewsFeedModal({ activeMarket, showTip }: { activeMarket: string; showTi
                                     exit={{ opacity: 0, scale: 0.96, y: 18 }}
                                     transition={{ type: "spring", bounce: 0, duration: 0.45 }}
                                     onPointerDown={(e) => e.stopPropagation()}
-                                    className="relative z-10 w-full max-w-6xl h-[90vh] md:h-[85vh] min-h-0"
+                                    className="relative z-10 w-full max-w-6xl h-[90vh] md:h-[85vh] min-h-0 [overscroll-behavior:contain]"
                                     data-lenis-prevent
+                                    style={{ touchAction: "pan-y", overscrollBehavior: "contain" }}
                                 >
                                     {/* Close button */}
                                     <button
@@ -1305,7 +1329,7 @@ function NewsFeedModal({ activeMarket, showTip }: { activeMarket: string; showTi
                                     </button>
 
                                     {/* Modal content */}
-                                    <div className="relative z-20 w-full h-full min-h-0 overflow-hidden rounded-3xl neon-blue-border bg-black" data-lenis-prevent>
+                                    <div className="relative z-20 w-full h-full min-h-0 overflow-hidden rounded-3xl neon-blue-border bg-black [overscroll-behavior:contain]" data-lenis-prevent style={{ touchAction: 'pan-y' }}>
                                         <NewsFeedContent activeMarket={activeMarket as MarketFilter} onClose={handleCloseModal} />
                                     </div>
                                 </motion.div>

@@ -839,7 +839,7 @@ export function AdminHubModal({
   );
 
   const renderServices = () => (
-    <div className="space-y-2 overflow-y-auto max-h-[70vh] pr-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900/60">
+    <div className="space-y-2 overflow-y-auto overflow-x-hidden max-h-[70vh] pr-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900/60 [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]" style={{ touchAction: 'pan-y' }}>
       <div className="flex items-center justify-between px-2">
         <h3 className="text-white font-semibold text-sm">Services</h3>
         <div className="flex items-center gap-2">
@@ -998,7 +998,7 @@ export function AdminHubModal({
   );
 
   const renderLivestream = () => (
-    <div className="space-y-3 overflow-y-auto max-h-[70vh] pr-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900/60">
+    <div className="space-y-3 overflow-y-auto overflow-x-hidden max-h-[70vh] pr-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900/60 [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]" style={{ touchAction: 'pan-y' }}>
       <div className="flex items-center justify-between px-2">
         <h3 className="text-white font-semibold text-sm">Livestream videos</h3>
         <div className="flex items-center gap-2">
@@ -1129,7 +1129,7 @@ export function AdminHubModal({
   );
 
   const renderAnalyses = () => (
-    <div className="space-y-2 overflow-y-auto max-h-[70vh] pr-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900/60">
+    <div className="space-y-2 overflow-y-auto overflow-x-hidden max-h-[70vh] pr-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900/60 [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]" style={{ touchAction: 'pan-y' }}>
       <div className="flex items-center justify-between px-2">
         <h3 className="text-white font-semibold text-sm">Analyses</h3>
         <div className="flex items-center gap-2">
@@ -1261,7 +1261,7 @@ export function AdminHubModal({
   );
 
   const renderRecruits = () => (
-    <div className="space-y-2 overflow-y-auto max-h-[70vh] pr-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900/60">
+    <div className="space-y-2 overflow-y-auto overflow-x-hidden max-h-[70vh] pr-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900/60 [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]" style={{ touchAction: 'pan-y' }}>
       <div className="flex items-center justify-between px-2">
         <h3 className="text-white font-semibold text-sm">Recruits / VIP</h3>
         <div className="flex items-center gap-2">
@@ -1381,7 +1381,8 @@ export function AdminHubModal({
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-6xl sm:max-w-5xl md:max-w-6xl max-h-[92vh] overflow-y-auto rounded-2xl border border-blue-500/40 bg-gradient-to-b from-slate-950 via-slate-900 to-black shadow-2xl shadow-blue-900/40 touch-pan-y"
+              className="w-full max-w-6xl sm:max-w-5xl md:max-w-6xl max-h-[92vh] overflow-y-auto overflow-x-hidden rounded-2xl border border-blue-500/40 bg-gradient-to-b from-slate-950 via-slate-900 to-black shadow-2xl shadow-blue-900/40 [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]"
+              style={{ touchAction: 'pan-y' }}
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-blue-500/30 bg-blue-500/10">
               <div className="flex items-center gap-2 text-white font-bold">
@@ -1413,7 +1414,7 @@ export function AdminHubModal({
               </div>
             </div>
 
-              <div className="px-3 sm:px-4 py-2 flex flex-nowrap sm:flex-wrap gap-1 sm:gap-2 overflow-x-auto border-b border-slate-800 bg-slate-900/60">
+              <div className="px-3 sm:px-4 py-2 flex flex-nowrap sm:flex-wrap gap-1 sm:gap-2 overflow-x-auto border-b border-slate-800 bg-slate-900/60 scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ touchAction: 'pan-x' }}>
               <TabButton
                 label="Products"
                 icon={<Package className="w-4 h-4" />}
@@ -1446,7 +1447,7 @@ export function AdminHubModal({
               />
             </div>
 
-              <div className="p-3 sm:p-4 bg-slate-950/70 overflow-hidden">
+              <div className="p-3 sm:p-4 bg-slate-950/70 overflow-hidden [overscroll-behavior:contain]">
                 {!authChecked ? (
                   <div className="flex items-center justify-center gap-2 py-12 text-slate-300 text-sm">
                     <RefreshCw className="w-4 h-4 animate-spin" /> Checking admin access...

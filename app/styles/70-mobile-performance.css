@@ -309,6 +309,62 @@ html.is-mobile.is-scrolling .shimmer-border {
 }
 
 /* ============================================================================
+   MOBILE MODAL SCROLL FIXES (2026.01 - AdminHub, UltimateHub, NewsModal)
+   Prevent sideways scroll bleed and ensure smooth vertical scrolling
+   ============================================================================ */
+
+/* Modal containers - prevent horizontal scroll leaking to body */
+@media (max-width: 768px) {
+  /* Fixed modals should contain all scroll behavior */
+  .fixed[role="dialog"],
+  [aria-modal="true"],
+  [data-modal-root],
+  [data-lenis-prevent] {
+    overscroll-behavior: contain !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Horizontal scroll containers - isolated scroll */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain !important;
+    overscroll-behavior-y: none !important;
+    touch-action: pan-x !important;
+  }
+  
+  /* Vertical scroll containers inside modals */
+  .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain !important;
+    overscroll-behavior-x: none !important;
+    touch-action: pan-y !important;
+  }
+  
+  /* Tab bars and nav strips - no vertical scroll allowed */
+  [class*="flex-nowrap"].overflow-x-auto,
+  [class*="gap-1"].overflow-x-auto,
+  [class*="gap-2"].overflow-x-auto {
+    overflow-y: hidden !important;
+    touch-action: pan-x pinch-zoom !important;
+  }
+  
+  /* Content areas should only scroll vertically */
+  [class*="max-h-"][class*="overflow-y-auto"] {
+    overflow-x: hidden !important;
+    touch-action: pan-y pinch-zoom !important;
+  }
+}
+
+/* iOS specific - prevent rubber banding on modal content */
+@supports (-webkit-touch-callout: none) {
+  [role="dialog"] .overflow-y-auto,
+  [aria-modal="true"] .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+}
+
+/* ============================================================================
    TOUCH FEEDBACK OPTIMIZATIONS
    ============================================================================ */
 

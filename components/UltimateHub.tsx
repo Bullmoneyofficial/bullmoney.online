@@ -3870,7 +3870,7 @@ const TradingModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () =
               {/* Country Filter */}
               <div className="flex items-center gap-2">
                 <span className="text-[10px] text-zinc-400 w-14">Currency:</span>
-                <div className="flex gap-1 flex-1 overflow-x-auto pb-1">
+                <div className="flex gap-1 flex-1 overflow-x-auto overflow-y-hidden pb-1 scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ touchAction: 'pan-x' }}>
                   {CALENDAR_COUNTRIES.map(country => (
                     <button
                       key={country.id}
@@ -4395,6 +4395,11 @@ export const UnifiedHubPanel = memo(({
   const [activeTab, setActiveTab] = useState<UnifiedHubTab>('community');
   const [isDragging, setIsDragging] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const prevBodyOverflowRef = useRef<string>('');
+  const prevBodyPaddingRef = useRef<string>('');
+  const prevHtmlOverflowXRef = useRef<string>('');
+  const prevHtmlOverflowYRef = useRef<string>('');
+  const prevHtmlOverscrollRef = useRef<string>('');
   
   // Trading tab state
   const [selectedSymbol, setSelectedSymbol] = useState<typeof TRADING_SYMBOLS[number]>(TRADING_SYMBOLS[0]);
@@ -4602,6 +4607,38 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
   }, [calendarImpact, calendarCountry]);
 
   const colors = getFpsColor(fps);
+  const enableDrag = !isMobile;
+
+  // Prevent background scroll while the hub is open (especially on mobile)
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const body = document.body;
+    const html = document.documentElement;
+    prevBodyOverflowRef.current = body.style.overflow;
+    prevBodyPaddingRef.current = body.style.paddingRight;
+    prevHtmlOverflowXRef.current = html.style.overflowX;
+    prevHtmlOverflowYRef.current = html.style.overflowY;
+    prevHtmlOverscrollRef.current = html.style.overscrollBehavior;
+
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    if (scrollbarWidth > 0) {
+      body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+
+    body.style.overflow = 'hidden';
+    html.style.overflowX = 'hidden';
+    html.style.overflowY = 'hidden';
+    html.style.overscrollBehavior = 'contain';
+
+    return () => {
+      body.style.overflow = prevBodyOverflowRef.current;
+      body.style.paddingRight = prevBodyPaddingRef.current;
+      html.style.overflowX = prevHtmlOverflowXRef.current;
+      html.style.overflowY = prevHtmlOverflowYRef.current;
+      html.style.overscrollBehavior = prevHtmlOverscrollRef.current;
+    };
+  }, [isOpen]);
 
   return (
     <AnimatePresence>
@@ -4627,13 +4664,13 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
               ? { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] } 
               : { type: 'spring', damping: 25, stiffness: 300, duration: 0.3 }
             }
-            drag="y"
-            dragConstraints={{ top: 0, bottom: 0 }}
-            dragElastic={{ top: 0.2, bottom: 0.2 }}
-            onDragStart={() => setIsDragging(true)}
-            onDragEnd={handleDragEnd}
-            className="fixed left-1/2 top-1/2 z-[2147483647] -translate-x-1/2 -translate-y-1/2 w-[90vw] h-[85vh] sm:w-[80vw] sm:h-[80vh] md:w-[75vw] md:h-[75vh] lg:w-[1200px] lg:h-[700px] max-w-sm sm:max-w-md md:max-w-2xl lg:max-w-6xl flex flex-col bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 border border-blue-500/30 shadow-2xl overflow-hidden rounded-2xl"
-            style={{ touchAction: 'pan-y' }}
+            drag={enableDrag ? 'y' : false}
+            dragConstraints={enableDrag ? { top: 0, bottom: 0 } : undefined}
+            dragElastic={enableDrag ? { top: 0.2, bottom: 0.2 } : undefined}
+            onDragStart={enableDrag ? () => setIsDragging(true) : undefined}
+            onDragEnd={enableDrag ? handleDragEnd : undefined}
+            className="fixed left-1/2 top-1/2 z-[2147483647] -translate-x-1/2 -translate-y-1/2 w-[90vw] h-[85vh] sm:w-[80vw] sm:h-[80vh] md:w-[75vw] md:h-[75vh] lg:w-[1200px] lg:h-[700px] max-w-sm sm:max-w-md md:max-w-2xl lg:max-w-6xl flex flex-col bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 border border-blue-500/30 shadow-2xl overflow-hidden rounded-2xl [overscroll-behavior:contain]"
+            style={{ touchAction: isMobile ? 'pan-y' : (enableDrag ? 'pan-y' : 'auto'), overscrollBehavior: 'contain' }}
           >
             {/* Header with FPS Display */}
             <div className="p-3 border-b border-blue-500/30 bg-black" style={{ boxShadow: '0 0 12px rgba(59, 130, 246, 0.3), inset 0 0 12px rgba(59, 130, 246, 0.1)' }}>
@@ -4731,7 +4768,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
             </div>
             
             {/* Tab Content */}
-            <div className="flex-1 overflow-y-auto min-h-0">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]" style={{ touchAction: 'pan-y' }}>
               <AnimatePresence mode="wait">
                 {/* TRADING TAB */}
                 {activeTab === 'trading' && (
@@ -4743,7 +4780,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     className="h-full flex flex-col"
                   >
                     {/* Symbol Selector */}
-                    <div className="flex gap-1 p-2 overflow-x-auto border-b border-blue-500/30 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}>
+                    <div className="flex gap-1 p-2 overflow-x-auto overflow-y-hidden border-b border-blue-500/30 bg-black scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)', touchAction: 'pan-x' }}>
                       {TRADING_SYMBOLS.map(symbol => {
                         const Icon = symbol.icon;
                         const isActive = selectedSymbol.id === symbol.id;
@@ -4854,7 +4891,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                             {/* Country Filter */}
                             <div className="flex items-center gap-2">
                               <span className="text-[10px] text-zinc-400 w-14">Currency:</span>
-                              <div className="flex gap-1 flex-1 overflow-x-auto pb-1">
+                              <div className="flex gap-1 flex-1 overflow-x-auto overflow-y-hidden pb-1 scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ touchAction: 'pan-x' }}>
                                 {CALENDAR_COUNTRIES.map(country => (
                                   <button
                                     key={country.id}
@@ -4900,7 +4937,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     </div>
                     
                     {/* Channel Tabs */}
-                    <div className="flex items-center gap-1 p-2 border-b border-blue-500/30 overflow-x-auto bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}>
+                    <div className="flex items-center gap-1 p-2 border-b border-blue-500/30 overflow-x-auto overflow-y-hidden bg-black scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)', touchAction: 'pan-x' }}>
                       {(Object.keys(TELEGRAM_CHANNELS) as ChannelKey[]).map(key => {
                         const ch = TELEGRAM_CHANNELS[key];
                         const Icon = ch.icon;
@@ -4947,7 +4984,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     </div>
                     
                     {/* Feed */}
-                    <div className="flex-1 overflow-y-auto min-h-0 min-h-[200px] bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}>
+                    <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 min-h-[200px] bg-black [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)', touchAction: 'pan-y' }}>
                       <TelegramChannelEmbed channel={activeChannel} isVip={isVip} onNewMessage={onNewMessage} />
                     </div>
                     
@@ -5070,7 +5107,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                       )}
                       
                       {tvTab === 'live' && (
-                        <div className="flex gap-1 overflow-x-auto pb-1">
+                        <div className="flex gap-1 overflow-x-auto overflow-y-hidden pb-1 scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ touchAction: 'pan-x' }}>
                           {TRADING_LIVE_CHANNELS.map((channel, idx) => (
                             <motion.button
                               key={channel.id}
