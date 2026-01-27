@@ -122,6 +122,21 @@ function mergeLessonProgress(local: LocalLessonProgress | undefined, remote: Pro
   };
 }
 
+// Helper to extract YouTube video ID from URL
+function extractYouTubeId(url: string): string | null {
+  if (!url) return null;
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/v\/([a-zA-Z0-9_-]{11})/
+  ];
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  return null;
+}
+
 export default function TradingCourse() {
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
   const [levels, setLevels] = useState<CourseLevel[]>([]);
@@ -129,6 +144,7 @@ export default function TradingCourse() {
   const [lessonsByModule, setLessonsByModule] = useState<Record<string, Lesson[]>>({});
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
+  const [lessonStarted, setLessonStarted] = useState(false);
   const [userProgress, setUserProgress] = useState<Map<string, Progress>>(new Map());
   const [resourcesByLesson, setResourcesByLesson] = useState<Record<string, Resource[]>>({});
   const [quizzesByLesson, setQuizzesByLesson] = useState<Record<string, Quiz[]>>({});
@@ -150,6 +166,11 @@ export default function TradingCourse() {
 
   const activeLessonIdRef = useRef<string | null>(null);
   const activeLessonStartMsRef = useRef<number | null>(null);
+
+  // Reset lesson started when changing lessons
+  useEffect(() => {
+    setLessonStarted(false);
+  }, [selectedLesson?.id]);
 
   useEffect(() => {
     loadUser();
@@ -577,13 +598,13 @@ export default function TradingCourse() {
 
   return (
     <div className="h-full flex flex-col bg-black text-white overflow-hidden">
-      {/* Header - Compact for mobile */}
-      <div className="flex-shrink-0 border-b border-blue-500/20 bg-black/80 backdrop-blur-sm px-3 py-3">
+      {/* Header - Ultra-Compact for mobile like UltimateHub */}
+      <div className="flex-shrink-0 border-b border-blue-500/20 bg-black/80 backdrop-blur-sm px-2 py-2 sm:px-3 sm:py-3">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg sm:text-xl font-bold text-blue-400 flex items-center gap-2" style={{ textShadow: '0 0 8px #3b82f6' }}>
-            <TrendingUp className="text-blue-400 w-5 h-5 sm:w-6 sm:h-6" style={{ filter: 'drop-shadow(0 0 8px #3b82f6)' }} />
-            <span className="hidden sm:inline">Elite Trading Academy</span>
-            <span className="sm:hidden">Trading Course</span>
+          <h1 className="text-sm sm:text-lg md:text-xl font-bold text-blue-400 flex items-center gap-1.5 sm:gap-2" style={{ textShadow: '0 0 8px #3b82f6' }}>
+            <TrendingUp className="text-blue-400 w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" style={{ filter: 'drop-shadow(0 0 8px #3b82f6)' }} />
+            <span className="hidden md:inline">Elite Trading Academy</span>
+            <span className="md:hidden">Course</span>
           </h1>
           {selectedLevel && (
             <button
@@ -592,10 +613,10 @@ export default function TradingCourse() {
                 setSelectedModule(null);
                 setSelectedLesson(null);
               }}
-              className="text-blue-400 hover:text-blue-300 text-xs sm:text-sm flex items-center gap-1 transition-colors"
+              className="text-blue-400 hover:text-blue-300 text-[10px] sm:text-xs flex items-center gap-0.5 sm:gap-1 transition-colors px-1.5 py-1 sm:px-2 sm:py-1"
               style={{ textShadow: '0 0 4px #3b82f6' }}
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4" />
               <span className="hidden sm:inline">Back</span>
             </button>
           )}
@@ -604,10 +625,10 @@ export default function TradingCourse() {
 
       {/* Level Selection */}
       {!selectedLevel ? (
-        <div className="flex-1 overflow-y-auto px-3 py-4 sm:px-4 sm:py-6">
-          <div className="text-center mb-4 sm:mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-blue-400 mb-2" style={{ textShadow: '0 0 8px #3b82f6' }}>Choose Your Journey</h2>
-            <p className="text-gray-400 text-xs sm:text-sm">Select your trading level</p>
+        <div className="flex-1 overflow-y-auto px-2 py-2 sm:px-3 sm:py-4">
+          <div className="text-center mb-2 sm:mb-4">
+            <h2 className="text-base sm:text-xl md:text-2xl font-bold text-blue-400 mb-1 sm:mb-2" style={{ textShadow: '0 0 8px #3b82f6' }}>Choose Your Journey</h2>
+            <p className="text-gray-400 text-[10px] sm:text-xs">Select your trading level</p>
           </div>
           
           {levels.length === 0 ? (
@@ -633,7 +654,7 @@ export default function TradingCourse() {
               </div>
             </div>
           ) : (
-          <div className="grid gap-3 sm:gap-4 max-w-3xl mx-auto">
+          <div className="grid gap-2 sm:gap-3 max-w-3xl mx-auto">
             {levels.map((level, index) => (
               <div
                 key={level.id}
@@ -644,30 +665,30 @@ export default function TradingCourse() {
                 }}
                 className="group cursor-pointer"
               >
-                <div className="relative bg-gradient-to-br from-gray-900/80 to-black border-2 border-blue-500/30 hover:border-blue-400 rounded-xl p-4 sm:p-6 transition-all duration-300 hover:scale-[1.02]" 
-                     style={{ boxShadow: '0 0 10px rgba(59,130,246,0.1)' }}
+                <div className="relative bg-gradient-to-br from-gray-900/80 to-black border border-blue-500/30 hover:border-blue-400 rounded-lg sm:rounded-xl p-2.5 sm:p-4 md:p-6 transition-all duration-300 active:scale-[0.98] sm:hover:scale-[1.02]" 
+                     style={{ boxShadow: '0 0 8px rgba(59,130,246,0.1)' }}
                      onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 0 20px rgba(59,130,246,0.3)'}
-                     onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 0 10px rgba(59,130,246,0.1)'}>
+                     onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 0 8px rgba(59,130,246,0.1)'}>
                   {/* Level Number Badge */}
-                  <div className="absolute -top-2 -right-2 w-8 h-8 sm:w-10 sm:h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-base"
-                       style={{ boxShadow: '0 0 15px #3b82f6' }}>
+                  <div className="absolute -top-1.5 -right-1.5 w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm md:text-base"
+                       style={{ boxShadow: '0 0 12px #3b82f6' }}>
                     {index + 1}
                   </div>
                   
-                  <div className="flex items-center gap-3 sm:gap-4">
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0 bg-gradient-to-br from-blue-500/20 to-blue-400/20 rounded-full flex items-center justify-center"
-                         style={{ boxShadow: '0 0 15px rgba(59,130,246,0.2)' }}>
-                      <BookOpen className="text-blue-400 w-6 h-6 sm:w-8 sm:h-8" style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
+                  <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 flex-shrink-0 bg-gradient-to-br from-blue-500/20 to-blue-400/20 rounded-full flex items-center justify-center"
+                         style={{ boxShadow: '0 0 12px rgba(59,130,246,0.2)' }}>
+                      <BookOpen className="text-blue-400 w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8" style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-lg sm:text-xl font-bold text-blue-400 mb-1 truncate" style={{ textShadow: '0 0 8px #3b82f6' }}>{level.display_name}</h3>
-                      <p className="text-gray-400 text-xs sm:text-sm line-clamp-2">{level.description}</p>
+                      <h3 className="text-sm sm:text-base md:text-lg font-bold text-blue-400 mb-0.5 sm:mb-1 truncate" style={{ textShadow: '0 0 8px #3b82f6' }}>{level.display_name}</h3>
+                      <p className="text-gray-400 text-[10px] sm:text-xs line-clamp-2">{level.description}</p>
                       
-                      <div className="mt-2 inline-flex items-center gap-1 sm:gap-2 text-blue-400 text-xs sm:text-sm font-semibold group-hover:gap-2 sm:group-hover:gap-3 transition-all"
+                      <div className="mt-1 sm:mt-2 inline-flex items-center gap-0.5 sm:gap-1 text-blue-400 text-[10px] sm:text-xs font-semibold group-hover:gap-1 sm:group-hover:gap-2 transition-all"
                            style={{ textShadow: '0 0 4px #3b82f6' }}>
                         Start Learning
-                        <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                       </div>
                     </div>
                   </div>
@@ -679,33 +700,34 @@ export default function TradingCourse() {
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto">
-          {/* Back Button - Mobile optimized */}
-          <div className="sticky top-0 bg-black/95 backdrop-blur-sm border-b border-blue-500/20 px-3 py-2 sm:hidden z-10">
+          {/* Back Button - Mobile optimized - Ultra compact */}
+          <div className="sticky top-0 bg-black/95 backdrop-blur-sm border-b border-blue-500/20 px-2 py-1.5 sm:hidden z-10">
             <button
               onClick={() => {
                 setSelectedLevel(null);
                 setSelectedModule(null);
                 setSelectedLesson(null);
               }}
-              className="text-blue-400 hover:text-blue-300 flex items-center gap-2 text-sm transition-colors" style={{ textShadow: '0 0 4px #3b82f6' }}
+              className="text-blue-400 hover:text-blue-300 flex items-center gap-1 text-xs transition-colors px-1 py-0.5" style={{ textShadow: '0 0 4px #3b82f6' }}
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="w-3 h-3" />
               Back to Levels
             </button>
           </div>
 
-          <div className="grid lg:grid-cols-12 gap-3 sm:gap-4 p-3 sm:p-4">
-            {/* Sidebar - Modules & Lessons - Collapsible on mobile */}
+          <div className="grid lg:grid-cols-12 gap-2 sm:gap-3 md:gap-4 p-2 sm:p-3 md:p-4">
+            {/* Sidebar - Modules & Lessons - Compact on mobile */}
             <div className="lg:col-span-4">
-              <div className="bg-gradient-to-br from-gray-900/80 to-black border border-blue-500/30 rounded-lg p-3 sm:p-4 lg:sticky lg:top-4 max-h-[400px] lg:max-h-[calc(100vh-120px)] overflow-y-auto">
-                <h3 className="text-sm sm:text-base font-bold text-blue-400 mb-3 flex items-center gap-2 sticky top-0 bg-gradient-to-br from-gray-900/95 to-black/95 pb-2 -mt-3 -mx-3 px-3 pt-3 backdrop-blur-sm"
+              <div className="bg-gradient-to-br from-gray-900/80 to-black border border-blue-500/30 rounded-lg p-2 sm:p-3 lg:sticky lg:top-4 max-h-[300px] sm:max-h-[400px] lg:max-h-[calc(100vh-120px)] overflow-y-auto">
+                <h3 className="text-xs sm:text-sm font-bold text-blue-400 mb-2 flex items-center gap-1.5 sticky top-0 bg-gradient-to-br from-gray-900/95 to-black/95 pb-1.5 -mt-2 -mx-2 px-2 pt-2 backdrop-blur-sm"
                     style={{ textShadow: '0 0 8px #3b82f6' }}>
-                  <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
-                  Course Modules
+                  <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400" style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
+                  <span className="hidden sm:inline">Course Modules</span>
+                  <span className="sm:hidden">Modules</span>
                 </h3>
 
                 {/* Progress Summary */}
-                <div className="mb-3 rounded-lg border border-blue-500/20 bg-blue-500/5 p-2">
+                <div className="mb-2 rounded-lg border border-blue-500/20 bg-blue-500/5 p-1.5 sm:p-2">
                   {(() => {
                     const p = getTotalLevelProgress();
                     const minutes = getTotalTimeSpentMinutes();
@@ -735,29 +757,29 @@ export default function TradingCourse() {
                     <p className="text-xs text-gray-500">This level hasn&apos;t been set up yet. Use the Admin Panel to add modules.</p>
                   </div>
                 ) : (
-                <div className="space-y-2">
+                <div className="space-y-1.5 sm:space-y-2">
                   {modules.map((module) => (
                     <div key={module.id}>
                       <button
                         onClick={() => setSelectedModule(module.id)}
-                        className={`w-full text-left p-2 sm:p-3 rounded-lg border transition-all ${
+                        className={`w-full text-left p-1.5 sm:p-2 md:p-3 rounded-lg border transition-all ${
                           selectedModule === module.id
                             ? 'border-blue-400 bg-blue-500/10'
                             : 'border-blue-500/20 hover:border-blue-500/50'
                         }`}
                       >
-                        <div className="flex items-start justify-between mb-1">
-                          <h4 className="font-semibold text-white text-xs sm:text-sm line-clamp-2 pr-2">{module.title}</h4>
-                          <div className="text-[10px] sm:text-xs text-blue-400 bg-blue-500/20 px-1.5 py-0.5 rounded flex-shrink-0" style={{ textShadow: '0 0 4px #3b82f6' }}>
+                        <div className="flex items-start justify-between mb-0.5 sm:mb-1">
+                          <h4 className="font-semibold text-white text-[10px] sm:text-xs line-clamp-2 pr-1.5">{module.title}</h4>
+                          <div className="text-[9px] sm:text-[10px] text-blue-400 bg-blue-500/20 px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0" style={{ textShadow: '0 0 4px #3b82f6' }}>
                             {getModuleProgress(module.id)}%
                           </div>
                         </div>
-                        <p className="text-[10px] sm:text-xs text-gray-400 line-clamp-1">{module.description}</p>
+                        <p className="text-[9px] sm:text-[10px] text-gray-400 line-clamp-1">{module.description}</p>
                       </button>
                       
                       {/* Lessons for this module */}
                       {selectedModule === module.id && (
-                        <div className="ml-2 sm:ml-3 mt-1 space-y-1">
+                        <div className="ml-1.5 sm:ml-2 mt-0.5 sm:mt-1 space-y-0.5 sm:space-y-1">
                           {(lessonsByModule[module.id] || []).map((lesson, idx) => {
                             const progress = getEffectiveLessonProgress(lesson.id);
                             const isCompleted = progress?.completed;
@@ -769,38 +791,38 @@ export default function TradingCourse() {
                                   ensureCourseStarted(selectedLevel ?? undefined);
                                   setSelectedLesson(lesson);
                                 }}
-                                className={`w-full text-left p-2 rounded-lg border transition-all flex items-center gap-2 ${
+                                className={`w-full text-left p-1.5 sm:p-2 rounded-md sm:rounded-lg border transition-all flex items-center gap-1.5 sm:gap-2 ${
                                   selectedLesson?.id === lesson.id
                                     ? 'border-blue-400 bg-blue-500/5'
                                     : 'border-blue-500/10 hover:border-blue-500/30'
                                 }`}
                               >
-                                <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
+                                <div className={`flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center ${
                                   isCompleted ? 'bg-blue-500' : 'bg-blue-500/20'
                                 }`}>
                                   {isCompleted ? (
-                                    <Check className="w-3 h-3 text-white" />
+                                    <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
                                   ) : lesson.is_free ? (
-                                    <Play className="w-3 h-3 text-blue-400" />
+                                    <Play className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-400" />
                                   ) : (
-                                    <Lock className="w-3 h-3 text-blue-400" />
+                                    <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-400" />
                                   )}
                                 </div>
                                 
                                 <div className="flex-1 min-w-0">
-                                  <div className="text-[10px] sm:text-xs font-medium text-white truncate">
+                                  <div className="text-[9px] sm:text-[10px] font-medium text-white truncate">
                                     {idx + 1}. {lesson.title}
                                   </div>
                                   {lesson.duration_minutes && (
-                                    <div className="text-[9px] sm:text-[10px] text-gray-400 flex items-center gap-1 mt-0.5">
-                                      <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                                      {lesson.duration_minutes} min
+                                    <div className="text-[8px] sm:text-[9px] text-gray-400 flex items-center gap-0.5 sm:gap-1 mt-0.5">
+                                      <Clock className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
+                                      {lesson.duration_minutes}m
                                     </div>
                                   )}
                                 </div>
                                 
                                 {lesson.content_type === 'video' && (
-                                  <Video className="w-3 h-3 sm:w-4 sm:h-4 text-blue-400/60 flex-shrink-0" />
+                                  <Video className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-400/60 flex-shrink-0" />
                                 )}
                               </button>
                             );
@@ -818,37 +840,37 @@ export default function TradingCourse() {
             <div className="lg:col-span-8">
               {selectedLesson ? (
                 <div className="bg-gradient-to-br from-gray-900/80 to-black border border-blue-500/30 rounded-lg overflow-hidden">
-                  {/* Lesson Header - Compact */}
-                  <div className="border-b border-blue-500/20 p-3 sm:p-4">
-                    <div className="flex items-start justify-between gap-2 mb-2">
+                  {/* Lesson Header - Ultra Compact for Mobile */}
+                  <div className="border-b border-blue-500/20 p-2 sm:p-3 md:p-4">
+                    <div className="flex items-start justify-between gap-1.5 sm:gap-2 mb-1 sm:mb-2">
                       <div className="flex-1 min-w-0">
-                        <h2 className="text-base sm:text-lg font-bold text-white mb-1 line-clamp-2">{selectedLesson.title}</h2>
-                        <p className="text-xs sm:text-sm text-gray-400 line-clamp-2">{selectedLesson.description}</p>
+                        <h2 className="text-sm sm:text-base md:text-lg font-bold text-white mb-0.5 sm:mb-1 line-clamp-2">{selectedLesson.title}</h2>
+                        <p className="text-[10px] sm:text-xs text-gray-400 line-clamp-2">{selectedLesson.description}</p>
                       </div>
                       {getEffectiveLessonProgress(selectedLesson.id)?.completed && (
-                        <div className="flex items-center gap-1 bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full flex-shrink-0" style={{ textShadow: '0 0 4px #3b82f6' }}>
+                        <div className="flex items-center gap-0.5 sm:gap-1 bg-blue-500/20 text-blue-400 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full flex-shrink-0" style={{ textShadow: '0 0 4px #3b82f6' }}>
                           <Award className="w-3 h-3 sm:w-4 sm:h-4" />
-                          <span className="text-[10px] sm:text-xs font-semibold hidden sm:inline">Done</span>
+                          <span className="text-[9px] sm:text-[10px] font-semibold hidden sm:inline">Done</span>
                         </div>
                       )}
                     </div>
                     
                     {selectedLesson.duration_minutes && (
-                      <div className="flex items-center gap-3 text-[10px] sm:text-xs text-gray-400">
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-blue-400" />
-                          {selectedLesson.duration_minutes} min
+                      <div className="flex items-center gap-2 sm:gap-3 text-[9px] sm:text-[10px] text-gray-400">
+                        <div className="flex items-center gap-0.5 sm:gap-1">
+                          <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-400" />
+                          {selectedLesson.duration_minutes}m
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-0.5 sm:gap-1">
                           {selectedLesson.content_type === 'video' ? (
                             <>
-                              <Video className="w-3 h-3 sm:w-4 sm:h-4 text-blue-400" />
-                              Video
+                              <Video className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-400" />
+                              <span className="hidden sm:inline">Video</span>
                             </>
                           ) : (
                             <>
-                              <FileText className="w-3 h-3 sm:w-4 sm:h-4 text-blue-400" />
-                              Article
+                              <FileText className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-400" />
+                              <span className="hidden sm:inline">Article</span>
                             </>
                           )}
                         </div>
@@ -856,95 +878,146 @@ export default function TradingCourse() {
                     )}
                   </div>
 
-                  {/* Lesson Content - Scrollable with proper mobile handling */}
-                  <div className="p-3 sm:p-4 max-h-[calc(100vh-280px)] sm:max-h-[calc(100vh-300px)] lg:max-h-[calc(100vh-200px)] overflow-y-auto">
-                    {/* Video Content */}
-                    {selectedLesson.content_type === 'video' && selectedLesson.video_url && (
-                      <div className="mb-3 sm:mb-4">
-                        <div className="relative w-full pt-[56.25%] bg-black rounded-lg overflow-hidden border border-blue-500/30">
-                          <iframe
-                            className="absolute top-0 left-0 w-full h-full"
-                            src={selectedLesson.video_url}
-                            title={selectedLesson.title}
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Article Content */}
-                    {selectedLesson.article_content && (
-                      <div className="prose prose-invert prose-sm sm:prose-base max-w-none mb-3 sm:mb-4">
-                        <div 
-                          className="text-gray-300 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap"
-                          dangerouslySetInnerHTML={{ __html: selectedLesson.article_content }}
-                        />
-                      </div>
-                    )}
-
-                    {/* Image Gallery - Responsive grid */}
-                    {selectedLesson.image_urls && selectedLesson.image_urls.length > 0 && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
-                        {selectedLesson.image_urls.map((url, index) => (
-                          <div key={index} className="border border-blue-500/30 rounded-lg overflow-hidden">
-                            <img
-                              src={url}
-                              alt={`Lesson image ${index + 1}`}
-                              className="w-full h-auto"
-                              loading="lazy"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Resources */}
-                    {(resourcesByLesson[selectedLesson.id] || []).length > 0 && (
-                      <div className="mt-4 pt-4 border-t border-blue-500/20">
-                        <h4 className="text-sm sm:text-base font-bold text-blue-400 mb-2" style={{ textShadow: '0 0 6px #3b82f6' }}>Downloads & Resources</h4>
-                        <div className="space-y-2">
-                          {(resourcesByLesson[selectedLesson.id] || []).map((r) => (
-                            <a
-                              key={r.id}
-                              href={r.file_url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="block rounded-lg border border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10 transition-colors p-3"
-                            >
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="min-w-0">
-                                  <div className="text-sm font-semibold text-white truncate">{r.title}</div>
-                                  {r.description && <div className="text-xs text-gray-400 mt-0.5">{r.description}</div>}
-                                  <div className="text-[10px] text-gray-500 mt-1">{r.resource_type}{r.file_size_kb ? ` · ${r.file_size_kb} KB` : ''}</div>
-                                </div>
-                                <div className="flex-shrink-0 text-blue-400">
-                                  <Download className="w-4 h-4" />
-                                </div>
+                  {/* Lesson Content - Inline layout with start button */}
+                  <div className="p-2 sm:p-3 md:p-4 max-h-[calc(100vh-220px)] sm:max-h-[calc(100vh-260px)] lg:max-h-[calc(100vh-200px)] overflow-y-auto">
+                    {!lessonStarted ? (
+                      /* Start Lesson Screen */
+                      <div className="flex flex-col items-center justify-center py-8 sm:py-12 text-center">
+                        <div className="mb-4 sm:mb-6">
+                          {selectedLesson.content_type === 'video' ? (
+                            <div className="relative">
+                              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-500/20 to-blue-400/20 rounded-full flex items-center justify-center"
+                                   style={{ boxShadow: '0 0 30px rgba(59,130,246,0.4)' }}>
+                                <Video className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400" style={{ filter: 'drop-shadow(0 0 8px #3b82f6)' }} />
                               </div>
-                            </a>
-                          ))}
+                            </div>
+                          ) : (
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-500/20 to-blue-400/20 rounded-full flex items-center justify-center"
+                                 style={{ boxShadow: '0 0 30px rgba(59,130,246,0.4)' }}>
+                              <FileText className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400" style={{ filter: 'drop-shadow(0 0 8px #3b82f6)' }} />
+                            </div>
+                          )}
                         </div>
+                        <h3 className="text-base sm:text-lg font-bold text-white mb-2">Ready to Learn?</h3>
+                        <p className="text-[10px] sm:text-xs text-gray-400 mb-6 max-w-sm">
+                          {selectedLesson.content_type === 'video' 
+                            ? 'Watch this video lesson and expand your trading knowledge'
+                            : 'Read through this lesson to master the concepts'}
+                        </p>
+                        <button
+                          onClick={() => setLessonStarted(true)}
+                          className="bg-blue-500 hover:bg-blue-400 text-white font-bold py-3 px-8 sm:py-4 sm:px-12 rounded-lg transition-all duration-300 flex items-center gap-2 text-sm sm:text-base group"
+                          style={{ boxShadow: '0 0 25px rgba(59,130,246,0.5)' }}
+                          onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 0 35px rgba(59,130,246,0.7)'}
+                          onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 0 25px rgba(59,130,246,0.5)'}
+                        >
+                          <Play className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
+                          Start Lesson
+                        </button>
                       </div>
-                    )}
+                    ) : (
+                      /* Inline Lesson Content */
+                      <div className="space-y-3 sm:space-y-4">
+                        {/* Video Content - Inline with better YouTube player */}
+                        {selectedLesson.content_type === 'video' && selectedLesson.video_url && (() => {
+                          const youtubeId = extractYouTubeId(selectedLesson.video_url);
+                          const embedUrl = youtubeId 
+                            ? `https://www.youtube.com/embed/${youtubeId}?rel=0&modestbranding=1&controls=1&showinfo=0`
+                            : selectedLesson.video_url;
+                          
+                          return (
+                            <div className="bg-black rounded-lg overflow-hidden border border-blue-500/30" style={{ boxShadow: '0 0 15px rgba(59,130,246,0.2)' }}>
+                              <div className="relative w-full pt-[56.25%]">
+                                <iframe
+                                  className="absolute top-0 left-0 w-full h-full"
+                                  src={embedUrl}
+                                  title={selectedLesson.title}
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                  allowFullScreen
+                                  style={{ border: 'none' }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })()}
 
-                    {/* Quizzes */}
-                    {(quizzesByLesson[selectedLesson.id] || []).length > 0 && (
-                      <div className="mt-4 pt-4 border-t border-blue-500/20">
-                        <h4 className="text-sm sm:text-base font-bold text-blue-400 mb-2" style={{ textShadow: '0 0 6px #3b82f6' }}>Quick Check</h4>
-                        <div className="space-y-3">
-                          {(quizzesByLesson[selectedLesson.id] || []).map((q) => {
-                            const attempt = localState.quizAttempts[q.id] || {};
-                            const submitted = typeof attempt.isCorrect === 'boolean' && typeof attempt.selectedAnswer === 'number';
-                            return (
-                              <div key={q.id} className="rounded-lg border border-blue-500/20 bg-black/40 p-3">
-                                <div className="text-sm font-semibold text-white mb-2">{q.question}</div>
-                                <div className="space-y-1">
-                                  {q.options.map((opt, idx) => (
-                                    <button
-                                      key={idx}
-                                      onClick={() => submitQuizAttempt(q, idx)}
-                                      className={`w-full text-left text-xs sm:text-sm rounded-lg border px-3 py-2 transition-colors ${
+                        {/* Article Content - Inline */}
+                        {selectedLesson.article_content && (
+                          <div className="bg-gradient-to-br from-blue-500/5 to-transparent border border-blue-500/20 rounded-lg p-3 sm:p-4">
+                            <div className="prose prose-invert prose-sm max-w-none">
+                              <div 
+                                className="text-gray-300 text-[10px] sm:text-xs leading-relaxed whitespace-pre-wrap"
+                                dangerouslySetInnerHTML={{ __html: selectedLesson.article_content }}
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Image Gallery - Inline grid */}
+                        {selectedLesson.image_urls && selectedLesson.image_urls.length > 0 && (
+                          <div className="space-y-2">
+                            <h4 className="text-xs sm:text-sm font-bold text-blue-400" style={{ textShadow: '0 0 6px #3b82f6' }}>Visual References</h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                              {selectedLesson.image_urls.map((url, index) => (
+                                <div key={index} className="border border-blue-500/30 rounded-lg overflow-hidden bg-black/40" style={{ boxShadow: '0 0 10px rgba(59,130,246,0.15)' }}>
+                                  <img
+                                    src={url}
+                                    alt={`Lesson visual ${index + 1}`}
+                                    className="w-full h-auto"
+                                    loading="lazy"
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Resources - Inline */}
+                        {(resourcesByLesson[selectedLesson.id] || []).length > 0 && (
+                          <div className="pt-2 sm:pt-3 border-t border-blue-500/20">
+                            <h4 className="text-xs sm:text-sm font-bold text-blue-400 mb-1.5 sm:mb-2" style={{ textShadow: '0 0 6px #3b82f6' }}>📚 Resources</h4>
+                            <div className="space-y-1.5 sm:space-y-2">
+                              {(resourcesByLesson[selectedLesson.id] || []).map((r) => (
+                                <a
+                                  key={r.id}
+                                  href={r.file_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="block rounded-lg border border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10 transition-colors p-2 sm:p-3"
+                                >
+                                  <div className="flex items-start justify-between gap-1.5 sm:gap-2">
+                                    <div className="min-w-0">
+                                      <div className="text-[10px] sm:text-xs font-semibold text-white truncate">{r.title}</div>
+                                      {r.description && <div className="text-[9px] sm:text-[10px] text-gray-400 mt-0.5">{r.description}</div>}
+                                      <div className="text-[8px] sm:text-[9px] text-gray-500 mt-0.5 sm:mt-1">{r.resource_type}{r.file_size_kb ? ` · ${r.file_size_kb} KB` : ''}</div>
+                                    </div>
+                                    <div className="flex-shrink-0 text-blue-400">
+                                      <Download className="w-3 h-3 sm:w-4 sm:h-4" />
+                                    </div>
+                                  </div>
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Quizzes - Inline */}
+                        {(quizzesByLesson[selectedLesson.id] || []).length > 0 && (
+                          <div className="pt-2 sm:pt-3 border-t border-blue-500/20">
+                            <h4 className="text-xs sm:text-sm font-bold text-blue-400 mb-1.5 sm:mb-2" style={{ textShadow: '0 0 6px #3b82f6' }}>🎯 Quick Quiz</h4>
+                            <div className="space-y-2 sm:space-y-3">
+                              {(quizzesByLesson[selectedLesson.id] || []).map((q) => {
+                                const attempt = localState.quizAttempts[q.id] || {};
+                                const submitted = typeof attempt.isCorrect === 'boolean' && typeof attempt.selectedAnswer === 'number';
+                                return (
+                                  <div key={q.id} className="rounded-lg border border-blue-500/20 bg-black/40 p-2 sm:p-3">
+                                    <div className="text-[10px] sm:text-xs font-semibold text-white mb-1.5 sm:mb-2">{q.question}</div>
+                                    <div className="space-y-1">
+                                      {q.options.map((opt, idx) => (
+                                        <button
+                                          key={idx}
+                                          onClick={() => submitQuizAttempt(q, idx)}
+                                          className={`w-full text-left text-[9px] sm:text-[10px] rounded-lg border px-2 sm:px-3 py-1.5 sm:py-2 transition-colors ${
                                         submitted
                                           ? (idx === q.correct_answer
                                               ? 'border-blue-400/60 bg-blue-500/10 text-white'
@@ -960,61 +1033,63 @@ export default function TradingCourse() {
                                   ))}
                                 </div>
 
-                                {submitted && (
-                                  <div className="mt-2 text-xs">
-                                    <div className={`font-semibold ${attempt.isCorrect ? 'text-blue-400' : 'text-gray-300'}`} style={{ textShadow: '0 0 4px rgba(59,130,246,0.4)' }}>
-                                      {attempt.isCorrect ? 'Correct' : 'Not quite'}
-                                    </div>
-                                    {q.explanation && <div className="text-gray-400 mt-1">{q.explanation}</div>}
+                                    {submitted && (
+                                      <div className="mt-1.5 sm:mt-2 text-[9px] sm:text-[10px]">
+                                        <div className={`font-semibold ${attempt.isCorrect ? 'text-blue-400' : 'text-gray-300'}`} style={{ textShadow: '0 0 4px rgba(59,130,246,0.4)' }}>
+                                          {attempt.isCorrect ? '✅ Correct!' : '❌ Not quite'}
+                                        </div>
+                                        {q.explanation && <div className="text-gray-400 mt-0.5 sm:mt-1">{q.explanation}</div>}
+                                      </div>
+                                    )}
                                   </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
 
-                    {/* Next lesson guidance */}
-                    {(() => {
-                      const next = getNextLesson();
-                      if (!next || next.id === selectedLesson.id) return null;
-                      if (getEffectiveLessonProgress(selectedLesson.id)?.completed !== true) return null;
-                      return (
-                        <div className="mt-4 pt-4 border-t border-blue-500/20">
-                          <button
-                            onClick={() => setSelectedLesson(next)}
-                            className="w-full bg-blue-500/10 hover:bg-blue-500/15 border border-blue-500/30 text-blue-400 font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
-                            style={{ boxShadow: '0 0 18px rgba(59,130,246,0.25)' }}
-                          >
-                            <ChevronRight className="w-4 h-4" />
-                            Continue: {next.title}
-                          </button>
-                        </div>
-                      );
-                    })()}
+                        {/* Next lesson guidance */}
+                        {(() => {
+                          const next = getNextLesson();
+                          if (!next || next.id === selectedLesson.id) return null;
+                          if (getEffectiveLessonProgress(selectedLesson.id)?.completed !== true) return null;
+                          return (
+                            <div className="pt-2 sm:pt-3 border-t border-blue-500/20">
+                              <button
+                                onClick={() => setSelectedLesson(next)}
+                                className="w-full bg-blue-500/10 hover:bg-blue-500/15 border border-blue-500/30 text-blue-400 font-bold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg transition-colors flex items-center justify-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs"
+                                style={{ boxShadow: '0 0 18px rgba(59,130,246,0.25)' }}
+                              >
+                                <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
+                                <span className="truncate">Next: {next.title}</span>
+                              </button>
+                            </div>
+                          );
+                        })()}
 
-                    {/* Complete Lesson Button - Always accessible with proper spacing */}
-                    {!getEffectiveLessonProgress(selectedLesson.id)?.completed && (
-                      <div className="mt-4 pt-4 border-t border-blue-500/20">
-                        <button
-                          onClick={() => markLessonComplete(selectedLesson.id)}
-                          className="w-full bg-blue-500 hover:bg-blue-400 text-white font-bold py-3 px-4 sm:px-6 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base"
-                          style={{ boxShadow: '0 0 20px rgba(59,130,246,0.4)' }}
-                          onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 0 30px rgba(59,130,246,0.6)'}
-                          onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 0 20px rgba(59,130,246,0.4)'}>
-                          <Check className="w-4 h-4 sm:w-5 sm:h-5" />
-                          Mark as Complete
-                        </button>
+                        {/* Complete Lesson Button */}
+                        {!getEffectiveLessonProgress(selectedLesson.id)?.completed && (
+                          <div className="pt-2 sm:pt-3 border-t border-blue-500/20">
+                            <button
+                              onClick={() => markLessonComplete(selectedLesson.id)}
+                              className="w-full bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs"
+                              style={{ boxShadow: '0 0 15px rgba(59,130,246,0.4)' }}
+                              onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 0 25px rgba(59,130,246,0.6)'}
+                              onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 0 15px rgba(59,130,246,0.4)'}>
+                              <Check className="w-3 h-3 sm:w-4 sm:h-4" />
+                              ✓ Mark Complete
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
                 </div>
               ) : (
-                <div className="bg-gradient-to-br from-gray-900/80 to-black border border-blue-500/30 rounded-lg p-8 sm:p-12 text-center">
-                  <BookOpen className="mx-auto text-blue-400/50 mb-3 w-12 h-12 sm:w-16 sm:h-16" style={{ filter: 'drop-shadow(0 0 8px rgba(59,130,246,0.3))' }} />
-                  <h3 className="text-lg sm:text-xl font-bold text-blue-400 mb-2" style={{ textShadow: '0 0 8px #3b82f6' }}>Select a Lesson</h3>
-                  <p className="text-xs sm:text-sm text-gray-500">Choose a lesson from the sidebar to begin</p>
+                <div className="bg-gradient-to-br from-gray-900/80 to-black border border-blue-500/30 rounded-lg p-4 sm:p-8 text-center">
+                  <BookOpen className="mx-auto text-blue-400/50 mb-2 sm:mb-3 w-8 h-8 sm:w-12 sm:h-12" style={{ filter: 'drop-shadow(0 0 8px rgba(59,130,246,0.3))' }} />
+                  <h3 className="text-sm sm:text-lg font-bold text-blue-400 mb-1 sm:mb-2" style={{ textShadow: '0 0 8px #3b82f6' }}>Select a Lesson</h3>
+                  <p className="text-[10px] sm:text-xs text-gray-500">Choose a lesson from the sidebar to begin</p>
                 </div>
               )}
             </div>
