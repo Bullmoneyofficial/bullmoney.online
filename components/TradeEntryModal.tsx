@@ -3,9 +3,59 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createSupabaseClient } from '@/lib/supabase';
 import { motion } from 'framer-motion';
-import { X, Upload, Image as ImageIcon, Trash2, Calendar as CalendarIcon } from 'lucide-react';
+import { X, Upload, Image as ImageIcon, Trash2, Calendar as CalendarIcon, ChevronDown } from 'lucide-react';
 import { TradeDB, AssetType, TradeDirection, NewTrade } from '@/types/tradingJournal';
 import { calculateTradePnL, calculateRiskReward, determineOutcome } from '@/lib/tradingCalculations';
+
+// Neon styling from Ultimate Hub
+const NEON_STYLES = `
+  .neon-blue-btn {
+    background: #3b82f6;
+    color: #ffffff;
+    border: 2px solid #3b82f6;
+    box-shadow: 0 0 8px #3b82f6, 0 0 16px #3b82f6, inset 0 0 4px rgba(255,255,255,0.2);
+    text-shadow: 0 0 4px #3b82f6;
+    transition: all 0.3s ease;
+  }
+
+  .neon-blue-btn:hover:not(:disabled) {
+    box-shadow: 0 0 12px #3b82f6, 0 0 20px #3b82f6, 0 0 32px #3b82f6, inset 0 0 4px rgba(255,255,255,0.3);
+  }
+
+  .neon-cancel-btn {
+    border: 2px solid #3b82f6;
+    color: #3b82f6;
+    text-shadow: 0 0 4px #3b82f6;
+    box-shadow: 0 0 4px #3b82f6, inset 0 0 4px #3b82f6;
+    transition: all 0.3s ease;
+  }
+
+  .neon-cancel-btn:hover {
+    background: rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 8px #3b82f6, 0 0 12px #3b82f6, inset 0 0 4px #3b82f6;
+  }
+
+  /* Force white text on all inputs and textareas */
+  input, textarea, select {
+    color: #ffffff !important;
+    caret-color: #3b82f6;
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: #9ca3af !important;
+  }
+
+  /* Ensure autofill doesn't override text color */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px #1e293b inset !important;
+    box-shadow: 0 0 0 30px #1e293b inset !important;
+    -webkit-text-fill-color: #ffffff !important;
+    caret-color: #3b82f6 !important;
+  }
+`;
 
 interface TradeEntryModalProps {
   trade: TradeDB | null;
@@ -19,6 +69,26 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
   const [uploadingImages, setUploadingImages] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [expandedSections, setExpandedSections] = useState({
+    tradeDetails: true,
+    riskManagement: false,
+    fees: false,
+    analysis: false,
+    emotions: false,
+    images: false,
+    notes: false,
+  });
+
+  // Inject neon styles once
+  useEffect(() => {
+    const styleId = 'neon-trade-modal-styles';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.textContent = NEON_STYLES;
+      document.head.appendChild(style);
+    }
+  }, []);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -81,6 +151,10 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
   const removeImage = (index: number) => {
     setImageFiles(prev => prev.filter((_, i) => i !== index));
     setImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const toggleSection = (section: keyof typeof expandedSections) => {
+    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
   const uploadImages = async (tradeId: string, userId: string) => {
@@ -281,525 +355,629 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         className="bg-black rounded-2xl border border-blue-500/30 
-                   max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+                   max-w-4xl w-full max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 bg-slate-900/95 backdrop-blur-xl border-b border-white/10 p-6 z-10">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-white">
+        {/* Sticky Header with Close Button */}
+        <div className="sticky top-0 bg-slate-900/95 backdrop-blur-xl border-b border-blue-500/50 z-10">
+          <div className="flex items-center justify-between p-4 gap-3">
+            <h2 className="text-lg sm:text-2xl font-bold text-white flex-shrink-0" style={{textShadow: '0 0 4px #3b82f6'}}>
               {trade ? 'Edit Trade' : 'New Trade'}
             </h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-white transition-colors"
+              className="text-gray-400 hover:text-white transition-colors p-1 flex-shrink-0"
             >
-              <X size={24} />
+              <X size={20} />
             </button>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Basic Trade Info */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Trade Details</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Trade Date *
-                </label>
-                <input
-                  type="date"
-                  name="trade_date"
-                  value={formData.trade_date}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                           focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Symbol *
-                </label>
-                <input
-                  type="text"
-                  name="asset_symbol"
-                  value={formData.asset_symbol}
-                  onChange={handleInputChange}
-                  placeholder="BTC, AAPL, EUR/USD..."
-                  required
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                           placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Asset Type *
-                </label>
-                <select
-                  name="asset_type"
-                  value={formData.asset_type}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                           focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="stock">Stock</option>
-                  <option value="crypto">Crypto</option>
-                  <option value="forex">Forex</option>
-                  <option value="options">Options</option>
-                  <option value="futures">Futures</option>
-                  <option value="commodities">Commodities</option>
-                  <option value="bonds">Bonds</option>
-                  <option value="etf">ETF</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Direction *
-                </label>
-                <select
-                  name="direction"
-                  value={formData.direction}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                           focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="long">Long</option>
-                  <option value="short">Short</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Entry Price *
-                </label>
-                <input
-                  type="number"
-                  name="entry_price"
-                  value={formData.entry_price || ''}
-                  onChange={handleInputChange}
-                  step="0.00000001"
-                  required
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                           focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Exit Price
-                </label>
-                <input
-                  type="number"
-                  name="exit_price"
-                  value={formData.exit_price || ''}
-                  onChange={handleInputChange}
-                  step="0.00000001"
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                           focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Quantity *
-                </label>
-                <input
-                  type="number"
-                  name="quantity"
-                  value={formData.quantity || ''}
-                  onChange={handleInputChange}
-                  step="0.00000001"
-                  required
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                           focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Leverage
-                </label>
-                <input
-                  type="number"
-                  name="leverage"
-                  value={formData.leverage || 1}
-                  onChange={handleInputChange}
-                  step="0.1"
-                  min="1"
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                           focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Risk Management */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Risk Management</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Stop Loss
-                </label>
-                <input
-                  type="number"
-                  name="stop_loss"
-                  value={formData.stop_loss || ''}
-                  onChange={handleInputChange}
-                  step="0.00000001"
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                           focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Take Profit
-                </label>
-                <input
-                  type="number"
-                  name="take_profit"
-                  value={formData.take_profit || ''}
-                  onChange={handleInputChange}
-                  step="0.00000001"
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                           focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Setup Quality (1-5)
-                </label>
-                <input
-                  type="number"
-                  name="setup_quality"
-                  value={formData.setup_quality || 3}
-                  onChange={handleInputChange}
-                  min="1"
-                  max="5"
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                           focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Fees */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Fees</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Entry Fee
-                </label>
-                <input
-                  type="number"
-                  name="entry_fee"
-                  value={formData.entry_fee || 0}
-                  onChange={handleInputChange}
-                  step="0.01"
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                           focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Exit Fee
-                </label>
-                <input
-                  type="number"
-                  name="exit_fee"
-                  value={formData.exit_fee || 0}
-                  onChange={handleInputChange}
-                  step="0.01"
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                           focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Funding Fees
-                </label>
-                <input
-                  type="number"
-                  name="funding_fees"
-                  value={formData.funding_fees || 0}
-                  onChange={handleInputChange}
-                  step="0.01"
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                           focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Trading Analysis */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Analysis</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Strategy
-                </label>
-                <input
-                  type="text"
-                  name="strategy"
-                  value={formData.strategy}
-                  onChange={handleInputChange}
-                  placeholder="Breakout, Reversal..."
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                           placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Timeframe
-                </label>
-                <input
-                  type="text"
-                  name="timeframe"
-                  value={formData.timeframe}
-                  onChange={handleInputChange}
-                  placeholder="1h, 4h, 1d..."
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                           placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Market Condition
-                </label>
-                <input
-                  type="text"
-                  name="market_condition"
-                  value={formData.market_condition}
-                  onChange={handleInputChange}
-                  placeholder="Trending, Ranging..."
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                           placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Entry Reason
-              </label>
-              <textarea
-                name="entry_reason"
-                value={formData.entry_reason}
-                onChange={handleInputChange}
-                rows={3}
-                placeholder="Why did you enter this trade?"
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                         placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        <form onSubmit={handleSubmit} id="trade-form" className="p-4 sm:p-6 pt-40 space-y-4 flex-1 overflow-y-auto pb-24 sm:pb-6">
+          {/* Trade Details Section */}
+          <div className="space-y-3 bg-white/5 border border-white/10 rounded-lg">
+            <button
+              type="button"
+              onClick={() => toggleSection('tradeDetails')}
+              className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
+            >
+              <h3 className="text-lg font-semibold text-white">Trade Details</h3>
+              <ChevronDown 
+                size={20} 
+                className={`text-gray-400 transition-transform ${expandedSections.tradeDetails ? 'rotate-180' : ''}`}
               />
-            </div>
+            </button>
+            
+            {expandedSections.tradeDetails && (
+              <div className="px-4 pb-4 space-y-4 border-t border-white/10">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                      Trade Date *
+                    </label>
+                    <input
+                      type="date"
+                      name="trade_date"
+                      value={formData.trade_date}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Exit Reason
-              </label>
-              <textarea
-                name="exit_reason"
-                value={formData.exit_reason}
-                onChange={handleInputChange}
-                rows={3}
-                placeholder="Why did you exit this trade?"
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                         placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                      Symbol *
+                    </label>
+                    <input
+                      type="text"
+                      name="asset_symbol"
+                      value={formData.asset_symbol}
+                      onChange={handleInputChange}
+                      placeholder="BTC, AAPL, EUR/USD..."
+                      required
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                               placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                      Asset Type *
+                    </label>
+                    <select
+                      name="asset_type"
+                      value={formData.asset_type}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="stock">Stock</option>
+                      <option value="crypto">Crypto</option>
+                      <option value="forex">Forex</option>
+                      <option value="options">Options</option>
+                      <option value="futures">Futures</option>
+                      <option value="commodities">Commodities</option>
+                      <option value="bonds">Bonds</option>
+                      <option value="etf">ETF</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                      Direction *
+                    </label>
+                    <select
+                      name="direction"
+                      value={formData.direction}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="long">Long</option>
+                      <option value="short">Short</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                      Entry Price *
+                    </label>
+                    <input
+                      type="number"
+                      name="entry_price"
+                      value={formData.entry_price || ''}
+                      onChange={handleInputChange}
+                      step="0.00000001"
+                      required
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                      Exit Price
+                    </label>
+                    <input
+                      type="number"
+                      name="exit_price"
+                      value={formData.exit_price || ''}
+                      onChange={handleInputChange}
+                      step="0.00000001"
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                      Quantity *
+                    </label>
+                    <input
+                      type="number"
+                      name="quantity"
+                      value={formData.quantity || ''}
+                      onChange={handleInputChange}
+                      step="0.00000001"
+                      required
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                      Leverage
+                    </label>
+                    <input
+                      type="number"
+                      name="leverage"
+                      value={formData.leverage || 1}
+                      onChange={handleInputChange}
+                      step="0.1"
+                      min="1"
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Psychology */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Trading Psychology</h3>
+          {/* Risk Management Section */}
+          <div className="space-y-3 bg-white/5 border border-white/10 rounded-lg">
+            <button
+              type="button"
+              onClick={() => toggleSection('riskManagement')}
+              className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
+            >
+              <h3 className="text-lg font-semibold text-white">Risk Management</h3>
+              <ChevronDown 
+                size={20} 
+                className={`text-gray-400 transition-transform ${expandedSections.riskManagement ? 'rotate-180' : ''}`}
+              />
+            </button>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Emotional State
-                </label>
-                <select
-                  name="emotional_state"
-                  value={formData.emotional_state}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                           focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select...</option>
-                  <option value="confident">Confident</option>
-                  <option value="fearful">Fearful</option>
-                  <option value="greedy">Greedy</option>
-                  <option value="disciplined">Disciplined</option>
-                  <option value="revenge">Revenge Trading</option>
-                  <option value="calm">Calm</option>
-                </select>
-              </div>
+            {expandedSections.riskManagement && (
+              <div className="px-4 pb-4 space-y-3 border-t border-white/10">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                      Stop Loss
+                    </label>
+                    <input
+                      type="number"
+                      name="stop_loss"
+                      value={formData.stop_loss || ''}
+                      onChange={handleInputChange}
+                      step="0.00000001"
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
 
-              <div className="flex items-center gap-4 pt-8">
-                <label className="flex items-center gap-2 text-white cursor-pointer">
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                      Take Profit
+                    </label>
+                    <input
+                      type="number"
+                      name="take_profit"
+                      value={formData.take_profit || ''}
+                      onChange={handleInputChange}
+                      step="0.00000001"
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                      Setup Quality (1-5)
+                    </label>
+                    <input
+                      type="number"
+                      name="setup_quality"
+                      value={formData.setup_quality || 3}
+                      onChange={handleInputChange}
+                      min="1"
+                      max="5"
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Fees Section */}
+          <div className="space-y-3 bg-white/5 border border-white/10 rounded-lg">
+            <button
+              type="button"
+              onClick={() => toggleSection('fees')}
+              className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
+            >
+              <h3 className="text-lg font-semibold text-white">Fees</h3>
+              <ChevronDown 
+                size={20} 
+                className={`text-gray-400 transition-transform ${expandedSections.fees ? 'rotate-180' : ''}`}
+              />
+            </button>
+            
+            {expandedSections.fees && (
+              <div className="px-4 pb-4 space-y-3 border-t border-white/10">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                      Entry Fee
+                    </label>
+                    <input
+                      type="number"
+                      name="entry_fee"
+                      value={formData.entry_fee || 0}
+                      onChange={handleInputChange}
+                      step="0.01"
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                      Exit Fee
+                    </label>
+                    <input
+                      type="number"
+                      name="exit_fee"
+                      value={formData.exit_fee || 0}
+                      onChange={handleInputChange}
+                      step="0.01"
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                      Funding Fees
+                    </label>
+                    <input
+                      type="number"
+                      name="funding_fees"
+                      value={formData.funding_fees || 0}
+                      onChange={handleInputChange}
+                      step="0.01"
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Trading Analysis Section */}
+          <div className="space-y-3 bg-white/5 border border-white/10 rounded-lg">
+            <button
+              type="button"
+              onClick={() => toggleSection('analysis')}
+              className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
+            >
+              <h3 className="text-lg font-semibold text-white">Analysis</h3>
+              <ChevronDown 
+                size={20} 
+                className={`text-gray-400 transition-transform ${expandedSections.analysis ? 'rotate-180' : ''}`}
+              />
+            </button>
+            
+            {expandedSections.analysis && (
+              <div className="px-4 pb-4 space-y-3 border-t border-white/10">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                      Strategy
+                    </label>
+                    <input
+                      type="text"
+                      name="strategy"
+                      value={formData.strategy}
+                      onChange={handleInputChange}
+                      placeholder="Breakout, Reversal..."
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                               placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                      Timeframe
+                    </label>
+                    <input
+                      type="text"
+                      name="timeframe"
+                      value={formData.timeframe}
+                      onChange={handleInputChange}
+                      placeholder="1h, 4h, 1d..."
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                               placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                      Market Condition
+                    </label>
+                    <input
+                      type="text"
+                      name="market_condition"
+                      value={formData.market_condition}
+                      onChange={handleInputChange}
+                      placeholder="Trending, Ranging..."
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                               placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                    Entry Reason
+                  </label>
+                  <textarea
+                    name="entry_reason"
+                    value={formData.entry_reason}
+                    onChange={handleInputChange}
+                    rows={2}
+                    placeholder="Why did you enter this trade?"
+                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                             placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                    Exit Reason
+                  </label>
+                  <textarea
+                    name="exit_reason"
+                    value={formData.exit_reason}
+                    onChange={handleInputChange}
+                    rows={2}
+                    placeholder="Why did you exit this trade?"
+                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                             placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Emotions & Discipline Section */}
+          <div className="space-y-3 bg-white/5 border border-white/10 rounded-lg">
+            <button
+              type="button"
+              onClick={() => toggleSection('emotions')}
+              className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
+            >
+              <h3 className="text-lg font-semibold text-white">Emotions & Discipline</h3>
+              <ChevronDown 
+                size={20} 
+                className={`text-gray-400 transition-transform ${expandedSections.emotions ? 'rotate-180' : ''}`}
+              />
+            </button>
+            
+            {expandedSections.emotions && (
+              <div className="px-4 pb-4 space-y-3 border-t border-white/10">
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                    Emotional State
+                  </label>
+                  <input
+                    type="text"
+                    name="emotional_state"
+                    value={formData.emotional_state}
+                    onChange={handleInputChange}
+                    placeholder="Confident, Anxious, Neutral..."
+                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                             placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div className="flex items-center gap-3">
                   <input
                     type="checkbox"
                     name="followed_plan"
                     checked={formData.followed_plan}
                     onChange={handleInputChange}
-                    className="w-5 h-5 rounded border-white/10 bg-white/5 text-blue-500
-                             focus:ring-2 focus:ring-blue-500"
+                    className="w-4 h-4 rounded"
                   />
-                  Followed Trading Plan
-                </label>
+                  <label className="text-sm text-gray-300">
+                    Followed Trading Plan
+                  </label>
+                </div>
 
-                <label className="flex items-center gap-2 text-white cursor-pointer">
+                <div className="flex items-center gap-3">
                   <input
                     type="checkbox"
                     name="mistake_made"
                     checked={formData.mistake_made}
                     onChange={handleInputChange}
-                    className="w-5 h-5 rounded border-white/10 bg-white/5 text-red-500
-                             focus:ring-2 focus:ring-red-500"
+                    className="w-4 h-4 rounded"
                   />
-                  Mistake Made
-                </label>
-              </div>
-            </div>
-
-            {formData.mistake_made && (
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Mistake Notes
-                </label>
-                <textarea
-                  name="mistake_notes"
-                  value={formData.mistake_notes}
-                  onChange={handleInputChange}
-                  rows={2}
-                  placeholder="What mistake was made and how to avoid it?"
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                           placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Notes and Tags */}
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Tags (comma separated)
-              </label>
-              <input
-                type="text"
-                name="tags"
-                value={formData.tags}
-                onChange={handleInputChange}
-                placeholder="breakout, high-volume, news-driven"
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                         placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Notes
-              </label>
-              <textarea
-                name="notes"
-                value={formData.notes}
-                onChange={handleInputChange}
-                rows={4}
-                placeholder="Additional notes about this trade..."
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                         placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-
-          {/* Image Upload */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-              <ImageIcon size={20} />
-              Screenshots & Charts
-            </h3>
-
-            <div>
-              <label className="flex items-center justify-center w-full px-4 py-8 border-2 border-dashed 
-                             border-white/20 rounded-lg cursor-pointer hover:border-blue-500 
-                             transition-colors bg-white/5">
-                <div className="text-center">
-                  <Upload className="mx-auto mb-2 text-gray-400" size={32} />
-                  <span className="text-gray-300">Click to upload images</span>
-                  <span className="block text-sm text-gray-500 mt-1">PNG, JPG up to 10MB</span>
+                  <label className="text-sm text-gray-300">
+                    Mistake Made
+                  </label>
                 </div>
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleImageSelect}
-                  className="hidden"
-                />
-              </label>
-            </div>
 
-            {imagePreviews.length > 0 && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {imagePreviews.map((preview, index) => (
-                  <div key={index} className="relative group">
-                    <img
-                      src={preview}
-                      alt={`Preview ${index + 1}`}
-                      className="w-full h-32 object-cover rounded-lg"
+                {formData.mistake_made && (
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                      Mistake Details
+                    </label>
+                    <textarea
+                      name="mistake_notes"
+                      value={formData.mistake_notes}
+                      onChange={handleInputChange}
+                      rows={2}
+                      placeholder="Describe the mistake and what you learned..."
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                               placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(index)}
-                      className="absolute top-2 right-2 p-1 bg-red-500 rounded-full opacity-0 
-                               group-hover:opacity-100 transition-opacity"
-                    >
-                      <Trash2 size={16} className="text-white" />
-                    </button>
                   </div>
-                ))}
+                )}
+
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                    Session Number
+                  </label>
+                  <input
+                    type="number"
+                    name="session_number"
+                    value={formData.session_number || ''}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                             focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
               </div>
             )}
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-4 pt-6 border-t border-white/10">
+          {/* Images Section */}
+          <div className="space-y-3 bg-white/5 border border-white/10 rounded-lg">
             <button
               type="button"
-              onClick={onClose}
-              className="flex-1 px-6 py-3 bg-white/5 border border-white/10 text-white rounded-lg
-                       hover:bg-white/10 transition-all"
+              onClick={() => toggleSection('images')}
+              className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
             >
-              Cancel
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <ImageIcon size={18} />
+                Screenshots & Charts
+              </h3>
+              <ChevronDown 
+                size={20} 
+                className={`text-gray-400 transition-transform ${expandedSections.images ? 'rotate-180' : ''}`}
+              />
             </button>
+            
+            {expandedSections.images && (
+              <div className="px-4 pb-4 space-y-3 border-t border-white/10">
+                <label className="flex items-center justify-center w-full px-4 py-8 border-2 border-dashed 
+                               border-white/20 rounded-lg cursor-pointer hover:border-blue-500 
+                               transition-colors bg-white/5">
+                  <div className="text-center">
+                    <Upload className="mx-auto mb-2 text-gray-400" size={32} />
+                    <span className="text-gray-300 text-sm">Click to upload images</span>
+                    <span className="block text-xs text-gray-500 mt-1">PNG, JPG up to 10MB</span>
+                  </div>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleImageSelect}
+                    className="hidden"
+                  />
+                </label>
+
+                {imagePreviews.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                    {imagePreviews.map((preview, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={preview}
+                          alt={`Preview ${index + 1}`}
+                          className="w-full h-24 sm:h-32 object-cover rounded-lg"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute top-1 right-1 p-1 bg-red-500 rounded-full opacity-0 
+                                   group-hover:opacity-100 transition-opacity"
+                        >
+                          <Trash2 size={14} className="text-white" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Notes & Tags Section */}
+          <div className="space-y-3 bg-white/5 border border-white/10 rounded-lg">
             <button
-              type="submit"
-              disabled={loading || uploadingImages}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white 
-                       rounded-lg font-semibold hover:shadow-xl transition-all disabled:opacity-50"
+              type="button"
+              onClick={() => toggleSection('notes')}
+              className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
             >
-              {loading || uploadingImages ? 'Saving...' : trade ? 'Update Trade' : 'Add Trade'}
+              <h3 className="text-lg font-semibold text-white">Notes & Tags</h3>
+              <ChevronDown 
+                size={20} 
+                className={`text-gray-400 transition-transform ${expandedSections.notes ? 'rotate-180' : ''}`}
+              />
             </button>
+            
+            {expandedSections.notes && (
+              <div className="px-4 pb-4 space-y-3 border-t border-white/10">
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                    Tags (comma separated)
+                  </label>
+                  <input
+                    type="text"
+                    name="tags"
+                    value={formData.tags}
+                    onChange={handleInputChange}
+                    placeholder="breakout, high-volume, news-driven"
+                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                             placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                    Notes
+                  </label>
+                  <textarea
+                    name="notes"
+                    value={formData.notes}
+                    onChange={handleInputChange}
+                    rows={3}
+                    placeholder="Additional notes about this trade..."
+                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                             placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </form>
+
+        {/* Sticky Footer with Action Buttons for Mobile */}
+        <div className="sticky bottom-0 bg-slate-900/95 backdrop-blur-xl border-t border-blue-500/50 p-4 flex gap-3 sm:hidden">
+          <button
+            type="button"
+            onClick={onClose}
+            className="neon-cancel-btn flex-1 px-4 py-3 rounded-lg text-sm font-medium"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            form="trade-form"
+            disabled={loading || uploadingImages}
+            className="neon-blue-btn flex-1 px-4 py-3 rounded-lg font-semibold text-sm disabled:opacity-50"
+          >
+            {loading || uploadingImages ? 'Saving...' : trade ? 'Update' : 'Save Trade'}
+          </button>
+        </div>
       </motion.div>
     </motion.div>
   );

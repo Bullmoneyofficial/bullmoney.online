@@ -1646,12 +1646,13 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         value={loginEmail}
                         onChange={(e) => setLoginEmail(e.target.value)}
                         placeholder="Email Address"
-                        className={cn("w-full bg-black/60 border-2 rounded-xl pl-10 pr-4 py-3 md:py-4 text-white transition-all cursor-target text-base", 
+                        className={cn("w-full bg-black/60 border-2 rounded-xl pl-10 pr-4 py-3 md:py-4 !text-white transition-all cursor-target text-base", 
                           isXM 
                             ? "border-red-500/30 placeholder-red-300/30 focus:border-red-500/60 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]" 
                             : "border-blue-500/30 placeholder-blue-300/30 focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)]",
                           "focus:outline-none"
                         )}
+                        style={{ color: '#ffffff' }}
                       />
                     </div>
 
@@ -1665,12 +1666,13 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
                         placeholder="Password"
-                        className={cn("w-full bg-black/60 border-2 rounded-xl pl-10 pr-12 py-3 md:py-4 text-white transition-all cursor-target text-base",
+                        className={cn("w-full bg-black/60 border-2 rounded-xl pl-10 pr-12 py-3 md:py-4 !text-white transition-all cursor-target text-base",
                           isXM 
                             ? "border-red-500/30 placeholder-red-300/30 focus:border-red-500/60 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]" 
                             : "border-blue-500/30 placeholder-blue-300/30 focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)]",
                           "focus:outline-none"
                         )}
+                        style={{ color: '#ffffff' }}
                       />
                       <button 
                         type="button" 
@@ -1953,7 +1955,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                           value={formData.mt5Number}
                           onChange={handleChange}
                           placeholder="Enter MT5 ID (numbers only)"
-                          className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-3.5 md:py-4 text-white placeholder-slate-600 focus:outline-none focus:border-white/30 focus:bg-black/40 transition-all cursor-target text-base"
+                          className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-3.5 md:py-4 !text-white placeholder-slate-600 focus:outline-none focus:border-white/30 focus:bg-black/40 transition-all cursor-target text-base"
+                          style={{ color: '#ffffff' }}
                         />
                       </div>
                       <p className="text-xs text-slate-500 flex items-center gap-1"><Lock className="w-3 h-3"/> Used only to verify access</p>
@@ -2013,12 +2016,13 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             value={formData.email}
                             onChange={handleChange}
                             placeholder="Email address"
-                            className={cn("w-full bg-black/60 border-2 rounded-lg pl-10 pr-4 py-3.5 text-white transition-all cursor-target text-base",
+                            className={cn("w-full bg-black/60 border-2 rounded-lg pl-10 pr-4 py-3.5 !text-white transition-all cursor-target text-base",
                               isXM 
                                 ? "border-red-500/30 placeholder-red-300/30 focus:border-red-500/60 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]" 
                                 : "border-blue-500/30 placeholder-blue-300/30 focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)]",
                               "focus:outline-none"
                             )}
+                            style={{ color: '#ffffff' }}
                           />
                         </div>
                         <p className={cn("text-[10px] mt-1 ml-1", isXM ? "text-red-300/40 neon-red-text" : "text-blue-300/40 neon-blue-text")}>We&apos;ll send your login details here.</p>
@@ -2034,12 +2038,13 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             value={formData.password}
                             onChange={handleChange}
                             placeholder="Create password (min 6 chars)"
-                            className={cn("w-full bg-black/60 border-2 rounded-lg pl-10 pr-12 py-3.5 text-white transition-all cursor-target text-base",
+                            className={cn("w-full bg-black/60 border-2 rounded-lg pl-10 pr-12 py-3.5 !text-white transition-all cursor-target text-base",
                               isXM 
                                 ? "border-red-500/30 placeholder-red-300/30 focus:border-red-500/60 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]" 
                                 : "border-blue-500/30 placeholder-blue-300/30 focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)]",
                               "focus:outline-none"
                             )}
+                            style={{ color: '#ffffff' }}
                           />
                           <button 
                             type="button" 
@@ -2064,12 +2069,13 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             value={formData.referralCode}
                             onChange={handleChange}
                             placeholder="Referral Code (Optional)"
-                            className={cn("w-full bg-black/60 border-2 rounded-lg pl-10 pr-4 py-3.5 text-white transition-all cursor-target text-base",
+                            className={cn("w-full bg-black/60 border-2 rounded-lg pl-10 pr-4 py-3.5 !text-white transition-all cursor-target text-base",
                               isXM 
                                 ? "border-red-500/30 placeholder-red-300/30 focus:border-red-500/60 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]" 
                                 : "border-blue-500/30 placeholder-blue-300/30 focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)]",
                               "focus:outline-none"
                             )}
+                            style={{ color: '#ffffff' }}
                           />
                         </div>
                         <p className={cn("text-[10px] mt-1 ml-1", isXM ? "text-red-300/40 neon-red-text" : "text-blue-300/40 neon-blue-text")}>Leave blank if you don&apos;t have one.</p>

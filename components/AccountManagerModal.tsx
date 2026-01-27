@@ -929,7 +929,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                               type="email"
                               value={editEmail}
                               onChange={(e) => setEditEmail(e.target.value)}
-                              className="w-full px-4 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                              className="w-full px-4 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                              style={{ color: '#ffffff' }}
                             />
                           ) : (
                             <div className="flex items-center gap-2 px-4 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
@@ -948,7 +949,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                               value={editFullName}
                               onChange={(e) => setEditFullName(e.target.value)}
                               placeholder="Enter your full name"
-                              className="w-full px-4 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                              className="w-full px-4 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                              style={{ color: '#ffffff' }}
                             />
                           ) : (
                             <div className="flex items-center gap-2 px-4 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
@@ -977,7 +979,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                                   value={editTelegram}
                                   onChange={(e) => setEditTelegram(e.target.value)}
                                   placeholder="@username"
-                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                  style={{ color: '#ffffff' }}
                                 />
                               ) : (
                                 <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
@@ -997,7 +1000,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                                   value={editDiscord}
                                   onChange={(e) => setEditDiscord(e.target.value)}
                                   placeholder="username#0000"
-                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                  style={{ color: '#ffffff' }}
                                 />
                               ) : (
                                 <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
@@ -1018,7 +1022,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                                   value={editInstagram}
                                   onChange={(e) => setEditInstagram(e.target.value)}
                                   placeholder="@username"
-                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                  style={{ color: '#ffffff' }}
                                 />
                               ) : (
                                 <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
@@ -1039,7 +1044,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                                   value={editFacebook}
                                   onChange={(e) => setEditFacebook(e.target.value)}
                                   placeholder="username"
-                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                  style={{ color: '#ffffff' }}
                                 />
                               ) : (
                                 <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
@@ -1060,7 +1066,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                                   value={editTwitter}
                                   onChange={(e) => setEditTwitter(e.target.value)}
                                   placeholder="@username"
-                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                  style={{ color: '#ffffff' }}
                                 />
                               ) : (
                                 <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
@@ -1081,7 +1088,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                                   value={editYoutube}
                                   onChange={(e) => setEditYoutube(e.target.value)}
                                   placeholder="@channel"
-                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                  style={{ color: '#ffffff' }}
                                 />
                               ) : (
                                 <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
@@ -1102,7 +1110,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                                   value={editTwitch}
                                   onChange={(e) => setEditTwitch(e.target.value)}
                                   placeholder="username"
-                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                  style={{ color: '#ffffff' }}
                                 />
                               ) : (
                                 <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
@@ -1122,7 +1131,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                                   value={editTiktok}
                                   onChange={(e) => setEditTiktok(e.target.value)}
                                   placeholder="@username"
-                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                  style={{ color: '#ffffff' }}
                                 />
                               ) : (
                                 <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
@@ -1184,7 +1194,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                               value={editNewPassword}
                               onChange={(e) => setEditNewPassword(e.target.value)}
                               placeholder="Enter new password"
-                              className="w-full px-4 py-2 pr-10 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                              className="w-full px-4 py-2 pr-10 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                              style={{ color: '#ffffff' }}
                             />
                             <button
                               type="button"
@@ -1203,7 +1214,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             value={editConfirmPassword}
                             onChange={(e) => setEditConfirmPassword(e.target.value)}
                             placeholder="Confirm new password"
-                            className="w-full px-4 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            className="w-full px-4 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            style={{ color: '#ffffff' }}
                           />
                         </div>
 
@@ -1248,7 +1260,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             value={editCellNumber}
                             onChange={(e) => setEditCellNumber(e.target.value)}
                             placeholder="+1 234 567 8900"
-                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            style={{ color: '#ffffff' }}
                           />
                         </div>
                         <div>
@@ -1273,7 +1286,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             value={editCountry}
                             onChange={(e) => setEditCountry(e.target.value)}
                             placeholder="United States"
-                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            style={{ color: '#ffffff' }}
                           />
                         </div>
                         <div>
@@ -1283,7 +1297,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             value={editCity}
                             onChange={(e) => setEditCity(e.target.value)}
                             placeholder="New York"
-                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            style={{ color: '#ffffff' }}
                           />
                         </div>
                         <div>
@@ -1293,7 +1308,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             value={editTimezone}
                             onChange={(e) => setEditTimezone(e.target.value)}
                             placeholder="EST, PST, UTC+3"
-                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            style={{ color: '#ffffff' }}
                           />
                         </div>
                         <div>
@@ -1302,7 +1318,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             type="date"
                             value={editBirthDate}
                             onChange={(e) => setEditBirthDate(e.target.value)}
-                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            style={{ color: '#ffffff' }}
                           />
                         </div>
                       </div>
@@ -1392,7 +1409,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                               value={editPreferredInstruments}
                               onChange={(e) => setEditPreferredInstruments(e.target.value)}
                               placeholder="Forex, Stocks, Crypto"
-                              className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                              className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                              style={{ color: '#ffffff' }}
                             />
                           </div>
                           <div>
@@ -1433,7 +1451,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             value={editFavoritePairs}
                             onChange={(e) => setEditFavoritePairs(e.target.value)}
                             placeholder="EURUSD, GBPUSD, GOLD, BTC/USD"
-                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            style={{ color: '#ffffff' }}
                           />
                         </div>
                         <div>
@@ -1443,7 +1462,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             onChange={(e) => setEditTradingStrategy(e.target.value)}
                             placeholder="Describe your primary trading strategy..."
                             rows={3}
-                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            style={{ color: '#ffffff' }}
                           />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
@@ -1457,7 +1477,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                               min="0"
                               max="100"
                               step="0.1"
-                              className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                              className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                              style={{ color: '#ffffff' }}
                             />
                           </div>
                           <div>
@@ -1467,7 +1488,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                               value={editMonthlyTarget}
                               onChange={(e) => setEditMonthlyTarget(e.target.value)}
                               placeholder="$500, 10%, etc."
-                              className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                              className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                              style={{ color: '#ffffff' }}
                             />
                           </div>
                           <div>
@@ -1495,7 +1517,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                               value={editTradingTimezone}
                               onChange={(e) => setEditTradingTimezone(e.target.value)}
                               placeholder="London, New York, Asian"
-                              className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                              className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                              style={{ color: '#ffffff' }}
                             />
                           </div>
                         </div>
@@ -1600,7 +1623,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             onChange={(e) => setEditHobbies(e.target.value)}
                             placeholder="Gaming, fitness, reading, travel, etc."
                             rows={2}
-                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            style={{ color: '#ffffff' }}
                           />
                         </div>
                         <div>
@@ -1610,7 +1634,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             onChange={(e) => setEditPersonalityTraits(e.target.value)}
                             placeholder="Analytical, patient, risk-taker, disciplined, etc."
                             rows={2}
-                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            style={{ color: '#ffffff' }}
                           />
                         </div>
                         <div>
@@ -1620,7 +1645,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             onChange={(e) => setEditTradingGoals(e.target.value)}
                             placeholder="What are your short-term and long-term trading goals?"
                             rows={3}
-                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            style={{ color: '#ffffff' }}
                           />
                         </div>
                         <div>
@@ -1645,7 +1671,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             onChange={(e) => setEditBio(e.target.value)}
                             placeholder="Tell us about yourself and your trading journey..."
                             rows={4}
-                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            style={{ color: '#ffffff' }}
                           />
                         </div>
                       </div>
@@ -1763,7 +1790,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                           placeholder="MT5 Account ID"
                           value={newMT5Id}
                           onChange={(e) => setNewMT5Id(e.target.value)}
-                          className="w-full px-4 py-2 bg-slate-900/70 border border-slate-800 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500/70 focus:bg-blue-500/5"
+                          className="w-full px-4 py-2 bg-slate-900/70 border border-slate-800 rounded-lg !text-white placeholder-slate-500 focus:outline-none focus:border-blue-500/70 focus:bg-blue-500/5"
+                          style={{ color: '#ffffff' }}
                         />
                         <div className="flex flex-col sm:flex-row gap-3">
                           <select
