@@ -137,13 +137,15 @@ import {
   LineChart,
   Flame,
   Target,
-  Eye
+  Eye,
+  Newspaper
 } from 'lucide-react';
 import { useUIState } from '@/contexts/UIStateContext';
 import { createSupabaseClient } from '@/lib/supabase';
 import { NotificationToggle, NotificationBadge } from '@/components/NotificationSettingsPanel';
 import { useNotifications } from '@/hooks/useNotifications';
 import TradingCourse from '@/components/TradingCourse';
+import { UltimateHubNewsTab } from '@/components/UltimateHubNewsTab';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -4368,11 +4370,12 @@ BrowserModal.displayName = 'BrowserModal';
 // UNIFIED HUB TAB TYPE - All features in one pill
 // ============================================================================
 
-type UnifiedHubTab = 'community' | 'trading' | 'indicators' | 'device' | 'logs' | 'journal' | 'course' | 'broker';
+type UnifiedHubTab = 'community' | 'trading' | 'indicators' | 'news' | 'device' | 'logs' | 'journal' | 'course' | 'broker';
 
 const UNIFIED_HUB_TABS: { id: UnifiedHubTab; label: string; icon: typeof TrendingUp; color: string }[] = [
   { id: 'community', label: 'Social', icon: MessageSquare, color: 'blue' },
   { id: 'indicators', label: 'Indicators', icon: BarChart3, color: 'blue' },
+  { id: 'news', label: 'News', icon: Newspaper, color: 'blue' },
   { id: 'trading', label: 'Trade', icon: TrendingUp, color: 'blue' },
   { id: 'journal', label: 'Journal', icon: Calendar, color: 'blue' },
   { id: 'course', label: 'Course', icon: GraduationCap, color: 'blue' },
@@ -5459,6 +5462,20 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         </div>
                       </div>
                     )}
+                  </motion.div>
+                )}
+                
+                {/* NEWS TAB - Global News Feed for Traders */}
+                {activeTab === 'news' && (
+                  <motion.div
+                    key="news"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="h-full overflow-hidden bg-black"
+                    style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}
+                  >
+                    <UltimateHubNewsTab />
                   </motion.div>
                 )}
                 
