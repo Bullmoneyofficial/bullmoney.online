@@ -11,7 +11,7 @@
  * - Optimized for Ultimate Hub's neon blue styling
  */
 
-import React, { useState, useEffect, useCallback, useMemo, memo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Newspaper, RefreshCw, ExternalLink, TrendingUp,
@@ -286,6 +286,7 @@ export const UltimateHubNewsTab = memo(() => {
   const [showFilters, setShowFilters] = useState(!isMobile); // Collapse filters on mobile by default
   const [showCalendar, setShowCalendar] = useState(false);
   const [previews, setPreviews] = useState<Record<string, { image?: string }>>({});
+  const fetchingRef = useRef<Set<string>>(new Set());
 
   // Fetch link preview for images
   const fetchPreview = useCallback(async (url: string) => {
