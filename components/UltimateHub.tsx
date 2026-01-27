@@ -2118,7 +2118,21 @@ function getPerformanceGrade(score: number): { grade: string; color: string; lab
 }
 
 function useVipCheck(userId?: string, userEmail?: string) {
-  const [isVip, setIsVip] = useState(false);
+  // Initialize from localStorage synchronously for immediate VIP access
+  const [isVip, setIsVip] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      const savedSession = localStorage.getItem('bullmoney_session');
+      if (savedSession) {
+        const session = JSON.parse(savedSession);
+        if (session.is_vip === true) {
+          console.log('[VIP Check] ✅ Initialized as VIP from localStorage');
+          return true;
+        }
+      }
+    } catch (e) {}
+    return false;
+  });
   const [loading, setLoading] = useState(true);
   
   const checkStatus = useCallback(async () => {
@@ -3340,11 +3354,28 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false, onNewMessa
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const lastPostIdRef = useRef<string | null>(null);
   
+  // Also check localStorage directly for VIP status in case prop is stale
+  const [localStorageVip, setLocalStorageVip] = useState(false);
+  useEffect(() => {
+    try {
+      const savedSession = localStorage.getItem('bullmoney_session');
+      if (savedSession) {
+        const session = JSON.parse(savedSession);
+        if (session.is_vip === true) {
+          setLocalStorageVip(true);
+        }
+      }
+    } catch (e) {}
+  }, []);
+  
+  // Use VIP status from either prop or localStorage
+  const effectiveIsVip = isVip || localStorageVip;
+  
   const channelConfig = TELEGRAM_CHANNELS[channel];
-  const requiresVip = channelConfig.requiresVip && !isVip;
+  const requiresVip = channelConfig.requiresVip && !effectiveIsVip;
   
   // Debug log
-  console.log('[TelegramChannelEmbed] channel:', channel, 'isVip:', isVip, 'requiresVip:', requiresVip, 'channelRequiresVip:', channelConfig.requiresVip);
+  console.log('[TelegramChannelEmbed] channel:', channel, 'isVip prop:', isVip, 'localStorageVip:', localStorageVip, 'effectiveIsVip:', effectiveIsVip, 'requiresVip:', requiresVip, 'channelRequiresVip:', channelConfig.requiresVip);
 
   useEffect(() => {
     if (requiresVip) { 
@@ -3399,7 +3430,7 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false, onNewMessa
     const interval = setInterval(fetchPosts, 3000);
     
     return () => clearInterval(interval);
-  }, [channel, requiresVip, isVip, onNewMessage]);
+  }, [channel, requiresVip, effectiveIsVip, onNewMessage]);
 
   if (requiresVip) {
     return (
@@ -3443,21 +3474,21 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false, onNewMessa
             <MessageCircle className="w-6 h-6 text-blue-400" />
           )}
         </div>
-        {isVipChannel && isVip && (
+        {isVipChannel && effectiveIsVip && (
           <div className="flex items-center gap-1 mb-2 px-2 py-1 bg-emerald-500/20 rounded-full">
             <CheckCircle className="w-3 h-3 text-emerald-400" />
             <span className="text-[9px] text-emerald-400 font-bold">VIP ACCESS UNLOCKED</span>
           </div>
         )}
         <p className="text-[11px] text-zinc-400 mb-1 text-center">
-          {isVipChannel && isVip 
+          {isVipChannel && effectiveIsVip 
             ? 'VIP signals syncing from Telegram...' 
             : isVipChannel 
               ? 'VIP signals available in Telegram' 
               : 'No messages yet'}
         </p>
         <p className="text-[9px] text-zinc-500 mb-3 text-center max-w-[200px]">
-          {isVipChannel && isVip
+          {isVipChannel && effectiveIsVip
             ? statusMessage || 'Post a message in the VIP channel to see it here. Make sure @MrBullmoneybot is admin.'
             : isVipChannel 
               ? 'Join the VIP Telegram channel for live trading signals and premium analysis.'
@@ -3980,7 +4011,7 @@ const CommunityModal = memo(({ isOpen, onClose, isVip, isAdmin }: {
       </div>
 
       {/* Channel Tabs */}
-      <div className="flex items-center gap-1 p-2 border-b border-white/10 overflow-x-auto">
+      <div className="flex items-center gap-1 p-2 border-b border-white/10 overflow-x-auto overflow-y-hidden min-h-[44px] flex-shrink-0 scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ touchAction: 'pan-x pinch-zoom' }}>
         {(Object.keys(TELEGRAM_CHANNELS) as ChannelKey[]).map(key => {
           const ch = TELEGRAM_CHANNELS[key];
           const Icon = ch.icon;
@@ -3991,7 +4022,7 @@ const CommunityModal = memo(({ isOpen, onClose, isVip, isAdmin }: {
             <button
               key={key}
               onClick={() => setActiveChannel(key)}
-              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-medium transition-all whitespace-nowrap flex-shrink-0 ${
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all whitespace-nowrap flex-shrink-0 min-h-[32px] ${
                 isActive
                   ? ch.color === 'amber' ? 'bg-amber-500/30 text-amber-300 border border-amber-500/40'
                   : ch.color === 'emerald' ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/40'
@@ -4000,7 +4031,7 @@ const CommunityModal = memo(({ isOpen, onClose, isVip, isAdmin }: {
                   : 'bg-white/5 text-zinc-400 border border-transparent hover:bg-white/10'
               }`}
             >
-              <Icon className="w-3 h-3" />
+              <Icon className="w-3.5 h-3.5" />
               <span>{ch.name}</span>
               {isLocked && <Lock className="w-2.5 h-2.5 opacity-60" />}
             </button>
@@ -5072,7 +5103,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     </div>
                     
                     {/* Channel Tabs */}
-                    <div className="flex items-center gap-1.5 sm:gap-2 p-2 sm:p-3 border-b border-blue-500/30 overflow-x-auto overflow-y-hidden bg-black scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)', touchAction: 'pan-x pinch-zoom' }}>
+                    <div className="flex items-center gap-1.5 sm:gap-2 p-2 sm:p-3 border-b border-blue-500/30 overflow-x-auto overflow-y-hidden min-h-[48px] sm:min-h-[52px] flex-shrink-0 bg-black scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)', touchAction: 'pan-x pinch-zoom' }}>
                       {(Object.keys(TELEGRAM_CHANNELS) as ChannelKey[]).map(key => {
                         const ch = TELEGRAM_CHANNELS[key];
                         const Icon = ch.icon;
@@ -5083,7 +5114,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                           <button
                             key={key}
                             onClick={() => setActiveChannel(key)}
-                            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] sm:text-[11px] font-medium transition-all whitespace-nowrap flex-shrink-0 ${
+                            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] sm:text-[11px] font-medium transition-all whitespace-nowrap flex-shrink-0 min-h-[36px] sm:min-h-[40px] ${
                               isActive
                                 ? 'bg-blue-500/30 text-blue-300 border border-blue-400/60 neon-blue-text'
                                 : 'bg-black/40 text-blue-400/60 border border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400'

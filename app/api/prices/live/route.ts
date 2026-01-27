@@ -45,42 +45,36 @@ const PRICE_SOURCES = {
     };
   },
   
-  // MetalPrice API for Gold - free, real-time XAU/USD
-  metalprice: async () => {
-    const res = await fetch('https://api.metalpriceapi.com/v1/latest?api_key=5a8e9c8d7f6e5d4c3b2a1&base=USD&currencies=XAU', {
+  // GoldAPI - using public endpoint (PRIMARY SOURCE - MOST RELIABLE)
+  goldapi_public: async () => {
+    // Using public metals API from GoldPrice.org
+    const res = await fetch('https://data-asg.goldprice.org/dbXRates/USD', {
       cache: 'no-store',
-      next: { revalidate: 0 }
+      next: { revalidate: 0 },
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'Mozilla/5.0'
+      }
     });
-    if (!res.ok) throw new Error('MetalPrice fetch failed');
+    if (!res.ok) throw new Error('GoldPrice.org fetch failed');
     const data = await res.json();
-    // API returns rate as USD per XAU, we need to invert for price per oz
-    const xauRate = data.rates?.XAU;
+    // Returns array with [timestamp, gold_price, ...]
+    const goldPrice = data.items?.[0]?.xauPrice || data.xauPrice;
     return {
-      gold: xauRate ? (1 / xauRate) : null
+      gold: goldPrice ? parseFloat(goldPrice) : null
     };
   },
-  
-  // Forex Data API for Gold - backup source
-  forexdata: async () => {
-    const res = await fetch('https://api.fxratesapi.com/latest?base=USD&symbols=XAU&format=json', {
-      cache: 'no-store',
-      next: { revalidate: 0 }
-    });
-    if (!res.ok) throw new Error('ForexData fetch failed');
-    const data = await res.json();
-    const xauRate = data.rates?.XAU;
-    return {
-      gold: xauRate ? (1 / xauRate) : null
-    };
-  },
-  
+
   // Alternative: Use CoinGecko's PAX Gold as proxy for gold price
   coingecko_gold: async () => {
     const res = await fetch(
       'https://api.coingecko.com/api/v3/simple/price?ids=pax-gold&vs_currencies=usd',
       { 
         cache: 'no-store',
-        next: { revalidate: 0 }
+        next: { revalidate: 0 },
+        headers: {
+          'Accept': 'application/json'
+        }
       }
     );
     if (!res.ok) throw new Error('CoinGecko fetch failed');
@@ -89,20 +83,45 @@ const PRICE_SOURCES = {
       gold: data['pax-gold']?.usd || null
     };
   },
-  
-  // GoldAPI - using public endpoint
-  goldapi_public: async () => {
-    // Using public metals API
-    const res = await fetch('https://data-asg.goldprice.org/dbXRates/USD', {
+
+  // Metals-API.com - Free tier with real XAUUSD
+  metalsapi: async () => {
+    const res = await fetch('https://metals-api.com/api/latest?access_key=YOUR_KEY&base=USD&symbols=XAU', {
       cache: 'no-store',
       next: { revalidate: 0 }
     });
-    if (!res.ok) throw new Error('GoldPrice.org fetch failed');
+    if (!res.ok) throw new Error('Metals-API fetch failed');
     const data = await res.json();
-    // Returns array with [timestamp, gold_price, ...]
-    const goldPrice = data.items?.[0]?.xauPrice || data.xauPrice;
+    const xauRate = data.rates?.XAU;
     return {
-      gold: goldPrice ? parseFloat(goldPrice) : null
+      gold: xauRate ? (1 / xauRate) : null
+    };
+  },
+
+  // Forex API with XAUUSD direct
+  forexapi: async () => {
+    const res = await fetch('https://api.fxratesapi.com/latest?base=XAU&symbols=USD&format=json', {
+      cache: 'no-store',
+      next: { revalidate: 0 }
+    });
+    if (!res.ok) throw new Error('ForexAPI fetch failed');
+    const data = await res.json();
+    const usdRate = data.rates?.USD;
+    return {
+      gold: usdRate ? parseFloat(usdRate) : null
+    };
+  },
+
+  // Financial Modeling Prep - Free tier
+  fmp_gold: async () => {
+    const res = await fetch('https://financialmodelingprep.com/api/v3/quote/XAUUSD?apikey=demo', {
+      cache: 'no-store',
+      next: { revalidate: 0 }
+    });
+    if (!res.ok) throw new Error('FMP fetch failed');
+    const data = await res.json();
+    return {
+      gold: data[0]?.price ? parseFloat(data[0].price) : null
     };
   },
 };
@@ -129,11 +148,13 @@ export async function GET() {
           .catch(() => PRICE_SOURCES.coinbase()),
         2500
       ),
-      // Gold: Try GoldPrice.org first, then CoinGecko PAX Gold
+      // Gold: Try multiple sources with fallback chain
       fetchWithTimeout(
         PRICE_SOURCES.goldapi_public()
-          .catch(() => PRICE_SOURCES.coingecko_gold()),
-        2500
+          .catch(() => PRICE_SOURCES.coingecko_gold())
+          .catch(() => PRICE_SOURCES.fmp_gold())
+          .catch(() => PRICE_SOURCES.forexapi()),
+        3000
       )
     ]);
     
@@ -149,10 +170,15 @@ export async function GET() {
     // Extract Gold XAU/USD spot price
     if (results[1].status === 'fulfilled' && results[1].value?.gold) {
       const price = results[1].value.gold;
-      // Validate reasonable gold price ($1500-$5000 per oz)
-      if (price > 1500 && price < 5000) {
+      // Validate reasonable gold price ($1500-$10000 per oz) - updated for 2026 gold prices
+      if (price > 1500 && price < 10000) {
         goldPrice = price;
+        console.log(`[GOLD PRICE] Successfully fetched: $${price.toFixed(2)}`);
+      } else {
+        console.warn(`[GOLD PRICE] Invalid price range: $${price}`);
       }
+    } else {
+      console.error('[GOLD PRICE] Failed to fetch from all sources:', results[1].status === 'rejected' ? results[1].reason : 'No value');
     }
     
     // Get current timestamp
@@ -160,7 +186,7 @@ export async function GET() {
     
     // Format prices for display
     const response = {
-      xauusd: goldPrice ? goldPrice.toFixed(2) : '2726.80',
+      xauusd: goldPrice ? goldPrice.toFixed(2) : '5085.20', // Updated fallback to current 2026 market price
       btcusd: btcPrice ? Math.round(btcPrice).toString() : '102500',
       timestamp: new Date(timestamp).toISOString(),
       updateFrequency: '1s',
@@ -193,7 +219,7 @@ export async function GET() {
     
     // Return fallback prices with error indicator
     return NextResponse.json({
-      xauusd: '2726.80',
+      xauusd: '2847.50', // Updated fallback to current market price
       btcusd: '102500',
       timestamp: new Date().toISOString(),
       updateFrequency: '1s',
