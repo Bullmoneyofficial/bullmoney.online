@@ -1399,7 +1399,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
                 icon={User}
               />
               <p className="text-[10px] mt-1 ml-1" style={{ color: NEON_BLUE.textMuted }}>
-                Leave blank if you don't have one.
+                Leave blank if you don&apos;t have one.
               </p>
             </div>
           )}
@@ -1507,7 +1507,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
         </div>
         
         <h2 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: NEON_BLUE.textWhite }}>
-          You're In! 🚀
+          You&apos;re In! 🚀
         </h2>
         <p className="text-sm sm:text-base mb-8" style={{ color: NEON_BLUE.textSecondary }}>
           Your affiliate account is now active. Start recruiting traders and earning commissions!

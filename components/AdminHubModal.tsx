@@ -1493,7 +1493,7 @@ export function AdminHubModal({
 
       {faqCategories.length === 0 ? (
         <div className="text-center py-8 text-slate-400">
-          <p>Click "Load Current FAQ" to start editing</p>
+          <p>Click &quot;Load Current FAQ&quot; to start editing</p>
         </div>
       ) : (
         <div className="space-y-3">

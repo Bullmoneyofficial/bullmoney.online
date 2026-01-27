@@ -5,95 +5,10 @@ import { AlertTriangle, CheckCircle2, Edit3, RefreshCw, Search } from "lucide-re
 import { cn } from "@/lib/utils";
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 import { createSupabaseClient } from "@/lib/supabase";
+import DesktopAffiliateAdminPanel from "./DesktopAffiliateAdminPanel";
+import { RecruitAdminRecord } from "@/app/recruit/types";
 
 const supabase = createSupabaseClient();
-
-interface RecruitAdminRecord {
-  id: string | number;
-  email: string;
-  created_at: string;
-  mt5_id: string | null;
-  affiliate_code: string | null;
-  referred_by_code: string | null;
-  social_handle?: string | null;
-  task_broker_verified?: boolean | null;
-  task_social_verified?: boolean | null;
-  status?: string | null;
-  commission_balance?: number | null;
-  total_referred_manual?: number | null;
-  used_code?: boolean | null;
-  image_url?: string | null;
-  is_vip?: boolean | null;
-  vip_updated_at?: string | null;
-  full_name?: string | null;
-  phone?: string | null;
-  telegram_username?: string | null;
-  discord_username?: string | null;
-  notes?: string | null;
-  instagram_username?: string | null;
-  facebook_username?: string | null;
-  twitter_username?: string | null;
-  youtube_username?: string | null;
-  twitch_username?: string | null;
-  tiktok_username?: string | null;
-  cell_number?: string | null;
-  country?: string | null;
-  city?: string | null;
-  timezone?: string | null;
-  birth_date?: string | null;
-  preferred_contact_method?: string | null;
-  trading_experience_years?: number | null;
-  trading_style?: string | null;
-  risk_tolerance?: string | null;
-  preferred_instruments?: string | null;
-  trading_timezone?: string | null;
-  account_balance_range?: string | null;
-  preferred_leverage?: string | null;
-  favorite_pairs?: string | null;
-  trading_strategy?: string | null;
-  win_rate_target?: number | null;
-  monthly_profit_target?: string | null;
-  hobbies?: string | null;
-  personality_traits?: string | null;
-  trading_goals?: string | null;
-  learning_style?: string | null;
-  notification_preferences?: string | null;
-  preferred_chart_timeframe?: string | null;
-  uses_automated_trading?: boolean | null;
-  attends_live_sessions?: boolean | null;
-  bio?: string | null;
-  notifications_enabled?: boolean | null;
-  notify_trades?: boolean | null;
-  notify_livestreams?: boolean | null;
-  notify_news?: boolean | null;
-  notify_vip?: boolean | null;
-  notification_sound?: boolean | null;
-  affiliate_tier?: string | null;
-  affiliate_tier_updated_at?: string | null;
-  total_earnings?: number | null;
-  pending_earnings?: number | null;
-  paid_earnings?: number | null;
-  last_payout_date?: string | null;
-  last_payout_amount?: number | null;
-  total_referred_traders?: number | null;
-  active_traders?: number | null;
-  total_lots_traded?: number | null;
-  monthly_lots_traded?: number | null;
-  social_posts_this_week?: number | null;
-  social_posts_this_month?: number | null;
-  social_bonus_multiplier?: number | null;
-  last_social_post_date?: string | null;
-  preferred_broker?: string | null;
-  conversion_rate?: number | null;
-  avg_trader_volume?: number | null;
-  best_month_earnings?: number | null;
-  payment_method?: string | null;
-  payment_details?: any | null;
-  payment_verified?: boolean | null;
-  custom_referral_link?: string | null;
-  link_clicks?: number | null;
-  link_last_clicked?: string | null;
-}
 
 const TIERS = ["Starter", "Bronze", "Silver", "Gold", "Elite"];
 const BROKERS = ["XM", "Vantage"];
@@ -321,15 +236,15 @@ export default function AffiliateAdminPanel() {
 
   return (
     <div className="min-h-full text-white">
-      <div className="max-w-7xl mx-auto p-4 md:p-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+      <div className="max-w-full mx-auto p-4 lg:p-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
           <div>
             <h2 className="text-2xl font-black">Affiliate Admin Panel</h2>
             <p className="text-sm text-slate-400">Edit every recruit column (except password).</p>
           </div>
           <button
             onClick={fetchRecruits}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-900/70 hover:bg-slate-800/70 border border-slate-800 text-sm"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-900/70 hover:bg-slate-800/70 border border-slate-800 text-sm whitespace-nowrap"
           >
             <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} /> Refresh
           </button>
@@ -351,21 +266,23 @@ export default function AffiliateAdminPanel() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-4">
-          <div className="bg-slate-950/70 border border-slate-800 rounded-2xl overflow-hidden">
-            <div className="p-4 border-b border-slate-800">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by email, ID, MT5, affiliate code"
-                  className="w-full bg-slate-900/70 border border-slate-800 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:outline-none"
-                />
+        {/* Mobile Layout */}
+        <div className="lg:hidden">
+          <div className="grid grid-cols-1 gap-4">
+            <div className="bg-slate-950/70 border border-slate-800 rounded-2xl overflow-hidden">
+              <div className="p-4 border-b border-slate-800">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search by email, ID, MT5, affiliate code"
+                    className="w-full bg-slate-900/70 border border-slate-800 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:outline-none"
+                  />
+                </div>
               </div>
-            </div>
 
-            <div className="divide-y divide-slate-800 max-h-[70vh] overflow-y-auto">
+              <div className="divide-y divide-slate-800 max-h-[70vh] overflow-y-auto">
               {loading ? (
                 <div className="p-6 text-center text-slate-500">Loading recruits...</div>
               ) : filtered.length === 0 ? (
@@ -540,9 +457,89 @@ export default function AffiliateAdminPanel() {
             </div>
           </div>
         </div>
+        </div>
+
+        {/* Desktop Layout - Table View */}
+        <DesktopAffiliateAdminPanel
+          search={search}
+          setSearch={setSearch}
+          filtered={filtered}
+          loading={loading}
+          expandedId={expandedId}
+          onOpenEditor={openEditor}
+          renderEditForm={renderDesktopEditForm}
+        />
       </div>
     </div>
   );
+
+  function renderDesktopEditForm(r: RecruitAdminRecord) {
+    const draft = drafts[r.id] || r;
+    return (
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-lg font-bold text-white mb-1">Edit Recruit</h3>
+          <p className="text-xs text-slate-500">{draft.email} • ID: {draft.id}</p>
+        </div>
+
+        <Section title="Core Profile">
+          <div className="grid grid-cols-4 gap-4">
+            <Field label="Email" value={draft.email || ""} onChange={(v) => updateField(r.id, "email", v)} />
+            <Field label="Status" value={draft.status || ""} onChange={(v) => updateField(r.id, "status", v)} />
+            <Field label="MT5 ID" value={draft.mt5_id || ""} onChange={(v) => updateField(r.id, "mt5_id", v)} />
+            <Field label="Affiliate Code" value={draft.affiliate_code || ""} onChange={(v) => updateField(r.id, "affiliate_code", v)} />
+            <Field label="Referred By" value={draft.referred_by_code || ""} onChange={(v) => updateField(r.id, "referred_by_code", v)} />
+            <Field label="Social Handle" value={draft.social_handle || ""} onChange={(v) => updateField(r.id, "social_handle", v)} />
+            <Field label="Image URL" value={draft.image_url || ""} onChange={(v) => updateField(r.id, "image_url", v)} />
+            <Field label="Full Name" value={draft.full_name || ""} onChange={(v) => updateField(r.id, "full_name", v)} />
+            <Field label="Commission Balance" value={draft.commission_balance} onChange={(v) => updateField(r.id, "commission_balance", v)} type="number" />
+            <Field label="Total Referred Manual" value={draft.total_referred_manual} onChange={(v) => updateField(r.id, "total_referred_manual", v)} type="number" />
+            <ToggleField label="Broker Verified" value={Boolean(draft.task_broker_verified)} onChange={(v) => updateField(r.id, "task_broker_verified", v)} />
+            <ToggleField label="Social Verified" value={Boolean(draft.task_social_verified)} onChange={(v) => updateField(r.id, "task_social_verified", v)} />
+          </div>
+          <TextAreaField label="Notes" value={draft.notes || ""} onChange={(v) => updateField(r.id, "notes", v)} />
+        </Section>
+
+        <Section title="Contact & Social">
+          <div className="grid grid-cols-4 gap-4">
+            <Field label="Phone" value={draft.phone || ""} onChange={(v) => updateField(r.id, "phone", v)} />
+            <Field label="Country" value={draft.country || ""} onChange={(v) => updateField(r.id, "country", v)} />
+            <Field label="City" value={draft.city || ""} onChange={(v) => updateField(r.id, "city", v)} />
+            <Field label="Telegram" value={draft.telegram_username || ""} onChange={(v) => updateField(r.id, "telegram_username", v)} />
+            <Field label="Discord" value={draft.discord_username || ""} onChange={(v) => updateField(r.id, "discord_username", v)} />
+            <Field label="Instagram" value={draft.instagram_username || ""} onChange={(v) => updateField(r.id, "instagram_username", v)} />
+            <Field label="Twitter" value={draft.twitter_username || ""} onChange={(v) => updateField(r.id, "twitter_username", v)} />
+            <Field label="YouTube" value={draft.youtube_username || ""} onChange={(v) => updateField(r.id, "youtube_username", v)} />
+          </div>
+        </Section>
+
+        <Section title="Affiliate Metrics">
+          <div className="grid grid-cols-4 gap-4">
+            <SelectField label="Tier" value={draft.affiliate_tier || "Starter"} options={TIERS} onChange={(v) => updateField(r.id, "affiliate_tier", v)} />
+            <Field label="Total Earnings" value={draft.total_earnings} onChange={(v) => updateField(r.id, "total_earnings", v)} type="number" />
+            <Field label="Total Referred" value={draft.total_referred_traders} onChange={(v) => updateField(r.id, "total_referred_traders", v)} type="number" />
+            <Field label="Active Traders" value={draft.active_traders} onChange={(v) => updateField(r.id, "active_traders", v)} type="number" />
+            <Field label="Total Lots" value={draft.total_lots_traded} onChange={(v) => updateField(r.id, "total_lots_traded", v)} type="number" />
+            <Field label="Monthly Lots" value={draft.monthly_lots_traded} onChange={(v) => updateField(r.id, "monthly_lots_traded", v)} type="number" />
+            <Field label="Conversion %" value={draft.conversion_rate} onChange={(v) => updateField(r.id, "conversion_rate", v)} type="number" />
+            <SelectField label="Preferred Broker" value={draft.preferred_broker || "Vantage"} options={BROKERS} onChange={(v) => updateField(r.id, "preferred_broker", v)} />
+          </div>
+        </Section>
+
+        <button
+          onClick={() => saveChanges(r.id)}
+          disabled={saving}
+          className={cn(
+            "px-6 py-2.5 rounded-lg font-semibold text-sm transition-all",
+            isXMUser ? "bg-red-600 hover:bg-red-500" : "bg-cyan-600 hover:bg-cyan-500",
+            saving && "opacity-60 cursor-not-allowed"
+          )}
+        >
+          {saving ? "Saving..." : "Save Changes"}
+        </button>
+      </div>
+    );
+  }
 }
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
