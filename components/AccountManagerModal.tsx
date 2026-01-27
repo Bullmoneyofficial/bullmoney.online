@@ -48,6 +48,7 @@ interface MT5Account {
 }
 
 interface UserAccountData {
+  id: number;
   email: string;
   full_name?: string;
   image_url?: string;
@@ -103,6 +104,11 @@ interface AccountManagerModalProps {
   onClose: () => void;
 }
 
+interface SessionPayload {
+  id: number;
+  email: string;
+}
+
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
@@ -115,6 +121,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [accountData, setAccountData] = useState<UserAccountData | null>(null);
+  const [recruitId, setRecruitId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   
@@ -218,6 +225,59 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
     return null;
   }, [supabase]);
 
+  const getLocalSession = useCallback((): SessionPayload | null => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const rawSession = localStorage.getItem('bullmoney_session');
+      if (!rawSession) return null;
+      const parsed = JSON.parse(rawSession);
+      if (parsed?.id && parsed?.email) {
+        return { id: parsed.id, email: parsed.email };
+      }
+    } catch (err) {
+      console.error('[AccountManager] Error parsing local session:', err);
+    }
+    return null;
+  }, []);
+
+  const getSessionPayload = useCallback((): SessionPayload | null => {
+    const localSession = getLocalSession();
+    if (localSession) {
+      return localSession;
+    }
+
+    if (accountData?.email && recruitId) {
+      return { id: recruitId, email: accountData.email };
+    }
+
+    return null;
+  }, [accountData?.email, recruitId, getLocalSession]);
+
+  const updateRecruitRecord = useCallback(async (updates: Record<string, unknown>) => {
+    const session = getSessionPayload();
+
+    if (!session) {
+      throw new Error("Not authenticated");
+    }
+
+    const response = await fetch('/api/account/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session, updates }),
+    });
+
+    let result: any = null;
+    try {
+      result = await response.json();
+    } catch {
+      result = null;
+    }
+
+    if (!response.ok || !result?.success) {
+      throw new Error(result?.error || 'Failed to update account');
+    }
+  }, [getSessionPayload]);
+
   // Fetch account data
   const fetchAccountData = useCallback(async () => {
     try {
@@ -284,7 +344,10 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
         });
       }
 
+      setRecruitId(recruitData.id);
+
       setAccountData({
+        id: recruitData.id,
         email: recruitData.email,
         full_name: recruitData.full_name,
         image_url: recruitData.image_url,
@@ -400,17 +463,16 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
       return;
     }
 
+    const session = getSessionPayload();
+    if (!session) {
+      setError("Not authenticated");
+      return;
+    }
+
     try {
       setUploadingImage(true);
       setError(null);
-
-      const userEmail = await getAuthenticatedEmail();
-      
-      if (!userEmail) {
-        setError("Not authenticated");
-        setUploadingImage(false);
-        return;
-      }
+      const userEmail = session.email;
 
       // Create unique filename
       const fileExt = file.name.split('.').pop();
@@ -436,17 +498,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
         .from('bull-feed')
         .getPublicUrl(filePath);
 
-      // Update recruit record
-      const { error: updateError } = await supabase
-        .from('recruits')
-        .update({ image_url: publicUrl })
-        .eq('email', userEmail);
-
-      if (updateError) {
-        console.error('Update error:', updateError);
-        setError("Failed to update profile");
-        return;
-      }
+      // Update recruit record via secure API route
+      await updateRecruitRecord({ image_url: publicUrl });
 
       // Update local state
       setAccountData(prev => prev ? { ...prev, image_url: publicUrl } : null);
@@ -454,7 +507,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error('Image upload error:', err);
-      setError("Failed to upload image");
+      setError(err instanceof Error ? err.message : "Failed to upload image");
     } finally {
       setUploadingImage(false);
     }
@@ -471,14 +524,6 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
       setSaving(true);
       setError(null);
 
-      const userEmail = await getAuthenticatedEmail();
-      
-      if (!userEmail) {
-        setError("Not authenticated");
-        setSaving(false);
-        return;
-      }
-
       // Get current MT5 IDs
       const currentIds = accountData?.mt5_accounts.map(acc => acc.mt5_id) || [];
       
@@ -491,19 +536,10 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
       // Add new MT5 ID
       const updatedIds = [...currentIds, newMT5Id.trim()].join(',');
 
-      const { error: updateError } = await supabase
-        .from('recruits')
-        .update({ 
-          mt5_id: updatedIds,
-          broker_name: newBrokerName.trim() || accountData?.mt5_accounts[0]?.broker_name || 'Unknown'
-        })
-        .eq('email', userEmail);
-
-      if (updateError) {
-        console.error('Update error:', updateError);
-        setError("Failed to add MT5 account");
-        return;
-      }
+      await updateRecruitRecord({ 
+        mt5_id: updatedIds,
+        broker_name: newBrokerName.trim() || accountData?.mt5_accounts[0]?.broker_name || 'Unknown'
+      });
 
       // Refresh data
       await fetchAccountData();
@@ -513,7 +549,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error('Add MT5 error:', err);
-      setError("Failed to add MT5 account");
+      setError(err instanceof Error ? err.message : "Failed to add MT5 account");
     } finally {
       setSaving(false);
     }
@@ -529,28 +565,11 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
       setSaving(true);
       setError(null);
 
-      const userEmail = await getAuthenticatedEmail();
-      
-      if (!userEmail) {
-        setError("Not authenticated");
-        setSaving(false);
-        return;
-      }
-
       // Get current MT5 IDs and remove the specified one
       const currentIds = accountData?.mt5_accounts.map(acc => acc.mt5_id) || [];
       const updatedIds = currentIds.filter(id => id !== mt5Id).join(',');
 
-      const { error: updateError } = await supabase
-        .from('recruits')
-        .update({ mt5_id: updatedIds || null })
-        .eq('email', userEmail);
-
-      if (updateError) {
-        console.error('Update error:', updateError);
-        setError("Failed to remove MT5 account");
-        return;
-      }
+      await updateRecruitRecord({ mt5_id: updatedIds || null });
 
       // Refresh data
       await fetchAccountData();
@@ -558,7 +577,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error('Remove MT5 error:', err);
-      setError("Failed to remove MT5 account");
+      setError(err instanceof Error ? err.message : "Failed to remove MT5 account");
     } finally {
       setSaving(false);
     }
@@ -578,12 +597,6 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
     try {
       setSaving(true);
       setError(null);
-
-      const userEmail = await getAuthenticatedEmail();
-      if (!userEmail) {
-        setError("Not authenticated");
-        return;
-      }
 
       const updates: any = {
         full_name: editFullName.trim(),
@@ -634,15 +647,15 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
         updates.email = editEmail.trim();
       }
 
-      const { error: updateError } = await supabase
-        .from('recruits')
-        .update(updates)
-        .eq('email', userEmail);
+      const nextEmail = updates.email;
 
-      if (updateError) {
-        console.error('Update error:', updateError);
-        setError("Failed to update profile");
-        return;
+      await updateRecruitRecord(updates);
+
+      if (nextEmail && typeof window !== 'undefined') {
+        const session = getLocalSession();
+        if (session) {
+          localStorage.setItem('bullmoney_session', JSON.stringify({ ...session, email: nextEmail }));
+        }
       }
 
       setSuccess("Profile updated successfully!");
@@ -653,7 +666,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
       await fetchAccountData();
     } catch (err) {
       console.error('Save profile error:', err);
-      setError("Failed to update profile");
+      setError(err instanceof Error ? err.message : "Failed to update profile");
     } finally {
       setSaving(false);
     }
@@ -680,22 +693,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
       setSaving(true);
       setError(null);
 
-      const userEmail = await getAuthenticatedEmail();
-      if (!userEmail) {
-        setError("Not authenticated");
-        return;
-      }
-
-      const { error: updateError } = await supabase
-        .from('recruits')
-        .update({ password: editNewPassword })
-        .eq('email', userEmail);
-
-      if (updateError) {
-        console.error('Password update error:', updateError);
-        setError("Failed to update password");
-        return;
-      }
+      await updateRecruitRecord({ password: editNewPassword });
 
       setSuccess("Password updated successfully!");
       setTimeout(() => setSuccess(null), 3000);
@@ -707,7 +705,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
       await fetchAccountData();
     } catch (err) {
       console.error('Update password error:', err);
-      setError("Failed to update password");
+      setError(err instanceof Error ? err.message : "Failed to update password");
     } finally {
       setSaving(false);
     }
@@ -729,29 +727,14 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
       setSaving(true);
       setError(null);
 
-      const userEmail = await getAuthenticatedEmail();
-      if (!userEmail) {
-        setError("Not authenticated");
-        return;
-      }
-
       // Get current MT5 IDs and replace the old one with new one
       const currentIds = accountData?.mt5_accounts.map(acc => acc.mt5_id) || [];
       const updatedIds = currentIds.map(id => id === oldMT5Id ? editMT5AccountId.trim() : id).join(',');
 
-      const { error: updateError } = await supabase
-        .from('recruits')
-        .update({ 
-          mt5_id: updatedIds,
-          broker_name: editMT5Broker
-        })
-        .eq('email', userEmail);
-
-      if (updateError) {
-        console.error('Update error:', updateError);
-        setError("Failed to update MT5 account");
-        return;
-      }
+      await updateRecruitRecord({ 
+        mt5_id: updatedIds,
+        broker_name: editMT5Broker
+      });
 
       setSuccess("MT5 account updated successfully!");
       setTimeout(() => setSuccess(null), 3000);
@@ -762,7 +745,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
       await fetchAccountData();
     } catch (err) {
       console.error('Edit MT5 error:', err);
-      setError("Failed to update MT5 account");
+      setError(err instanceof Error ? err.message : "Failed to update MT5 account");
     } finally {
       setSaving(false);
     }

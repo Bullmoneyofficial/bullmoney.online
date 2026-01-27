@@ -148,8 +148,8 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
   const { shouldMinimizeAudioWidget, isWelcomeScreenActive } = useAudioWidgetUI();
   
   // Z-index: Must be above welcome screen (z-99999999) but below max safe integer
-  // Use 999999999 to be above welcome screen's z-99999999
-  const MAIN_WIDGET_Z_INDEX = isWelcomeScreenActive ? 999999999 : 100200;
+  // Use 11 digits to ensure visibility above all other elements
+  const MAIN_WIDGET_Z_INDEX = isWelcomeScreenActive ? 99999999999 : 99999999999;
 
   // Scroll detection for auto-minimizing
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -272,10 +272,10 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
             className="fixed bottom-[70px] pointer-events-none"
             style={{
               zIndex: MAIN_WIDGET_Z_INDEX,
-              // Welcome screen: position on RIGHT, Normal: position on LEFT
-              ...(isWelcomeScreenActive 
+              // Mobile: RIGHT, Desktop: LEFT
+              ...(isMobileDevice
                 ? { right: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
-                : { left: 'max(0px, 12px)' }
+                : { left: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
               ),
             }}
           >
@@ -420,10 +420,10 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                 className="fixed bottom-[70px] pointer-events-none"
                 style={{
                   zIndex: MAIN_WIDGET_Z_INDEX,
-                  // Welcome screen: position on RIGHT, Normal: position on LEFT (md: left)
-                  ...(isWelcomeScreenActive 
+                  // Mobile: RIGHT, Desktop: LEFT
+                  ...(isMobileDevice
                     ? { right: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
-                    : { right: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
+                    : { left: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
                   ),
                 }}
               >
@@ -517,8 +517,11 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                   x: widgetX, 
                   opacity: widgetOpacity,
                   zIndex: MAIN_WIDGET_Z_INDEX,
-                  // Welcome screen: position on RIGHT, Normal: position on RIGHT (md:left)
-                  right: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)',
+                  // Mobile: RIGHT, Desktop: LEFT
+                  ...(isMobileDevice
+                    ? { right: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
+                    : { left: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
+                  ),
                 }}
               >
 

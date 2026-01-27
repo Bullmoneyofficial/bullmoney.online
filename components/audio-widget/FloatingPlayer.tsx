@@ -153,8 +153,22 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
   const [showCameraModal, setShowCameraModal] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
   
-  // Position state - left or right side of screen
+  // Track if we're on mobile for positioning
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobileDevice(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
+  // Position state - left or right side of screen (right on mobile, left on desktop)
   const [playerSide, setPlayerSide] = useState<'left' | 'right'>('left');
+  
+  // Update playerSide based on mobile detection
+  useEffect(() => {
+    setPlayerSide(isMobileDevice ? 'right' : 'left');
+  }, [isMobileDevice]);
   // Initialize from parent's playerMinimized prop (true on reload for pull-tab-only behavior)
   const [isMinimized, setIsMinimizedInternal] = useState(playerMinimized);
   const [isDragging, setIsDragging] = useState(false);
@@ -404,7 +418,14 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
             <motion.div
               key="compact-pill-div"
               className="fixed bottom-[70px] pointer-events-none"
-              style={{ zIndex: 100201, right: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }}
+              style={{ 
+                zIndex: 100201,
+                // Mobile: RIGHT, Desktop: LEFT
+                ...(isMobileDevice
+                  ? { right: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
+                  : { left: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
+                )
+              }}
             >
               <motion.button
                 initial={{ x: 100, opacity: 0 }}
@@ -481,7 +502,14 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
             <motion.div
               key="scroll-compact-pill-div"
               className="fixed bottom-[70px] pointer-events-none"
-              style={{ zIndex: 100201, right: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }}
+              style={{ 
+                zIndex: 100201,
+                // Mobile: RIGHT, Desktop: LEFT  
+                ...(isMobileDevice
+                  ? { right: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
+                  : { left: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
+                )
+              }}
             >
               <motion.button
                 initial={{ x: 100, opacity: 0 }}
@@ -590,7 +618,11 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
             )}
             style={{
               zIndex: 100201, // Just above MainWidget z-[100200]
-              right: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)',
+              // Mobile: RIGHT, Desktop: LEFT
+              ...(isMobileDevice
+                ? { right: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
+                : { left: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
+              ),
             }}
             whileHover={{ scale: 1.05, x: 2 }}
             whileTap={{ scale: 0.95 }}
