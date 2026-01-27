@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import MetaApi from 'metaapi.cloud-sdk';
 
 /**
  * MT4/MT5 Position Closing API - Production Ready
  * Powered by MetaAPI (https://metaapi.cloud/)
  */
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 const token = process.env.METAAPI_TOKEN;
 const region = process.env.METAAPI_REGION || 'new-york';
@@ -30,7 +32,8 @@ export async function POST(request: NextRequest) {
       return getDemoCloseResponse(positionId);
     }
 
-    // Initialize MetaAPI
+    // Initialize MetaAPI with dynamic import
+    const MetaApi = (await import('metaapi.cloud-sdk')).default;
     const api = new MetaApi(token, { region });
     
     // Get account

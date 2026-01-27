@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import MetaApi from 'metaapi.cloud-sdk';
 
 /**
  * MT4/MT5 Trade Execution API - Production Ready
  * Powered by MetaAPI (https://metaapi.cloud/)
  */
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 const token = process.env.METAAPI_TOKEN;
 const region = process.env.METAAPI_REGION || 'new-york';
@@ -37,7 +39,8 @@ export async function POST(request: NextRequest) {
       return getDemoTradeResponse(symbol, side, volume);
     }
 
-    // Initialize MetaAPI
+    // Initialize MetaAPI with dynamic import
+    const MetaApi = (await import('metaapi.cloud-sdk')).default;
     const api = new MetaApi(token, { region });
     
     // Get account
@@ -106,7 +109,7 @@ export async function POST(request: NextRequest) {
       symbol: symbol.toUpperCase(),
       side: side,
       volume: volume,
-      executionPrice: result.price || 'Market',
+      executionPrice: (result as any).price || 'Market',
       positions: formattedPositions,
       timestamp: new Date().toISOString()
     });
@@ -188,7 +191,21 @@ function getDemoTradeResponse(symbol: string, side: string, volume: number) {
 
 export async function GET() {
   return NextResponse.json({
-    success: false,
-    error: 'Use POST method to execute trades'
-  }, { status: 405 });
+    message: 'MT4/MT5 Trade Execution API',
+    version: '2.0.0',
+    status: token ? 'configured' : 'demo-mode',
+    endpoints: {
+      POST: {
+        description: 'Execute a market order',
+        body: {
+          accountId: 'string (required)',
+          symbol: 'string (required) - e.g., XAUUSD, EURUSD',
+          side: 'string (required) - buy or sell',
+          volume: 'number (required) - lot size',
+          stopLoss: 'number (optional)',
+          takeProfit: 'number (optional)'
+        }
+      }
+    }
+  });
 }

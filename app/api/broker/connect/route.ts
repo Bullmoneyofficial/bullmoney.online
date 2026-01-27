@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import MetaApi from 'metaapi.cloud-sdk';
 
 /**
  * MT4/MT5 Broker Connection API - Production Ready
@@ -11,6 +10,9 @@ import MetaApi from 'metaapi.cloud-sdk';
  * - 1000+ brokers worldwide
  * - Real-time synchronization
  */
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 // Initialize MetaAPI
 const token = process.env.METAAPI_TOKEN;
@@ -42,7 +44,8 @@ export async function POST(request: NextRequest) {
       return getDemoResponse(type, login, server);
     }
 
-    // Initialize MetaAPI client
+    // Initialize MetaAPI client with dynamic import
+    const MetaApi = (await import('metaapi.cloud-sdk')).default;
     const api = new MetaApi(token, { region });
 
     let account;

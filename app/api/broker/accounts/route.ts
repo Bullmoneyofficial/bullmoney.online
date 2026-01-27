@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import MetaApi from 'metaapi.cloud-sdk';
 
 /**
  * List all MT4/MT5 accounts linked to this MetaAPI token
  */
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 const token = process.env.METAAPI_TOKEN;
 const region = process.env.METAAPI_REGION || 'new-york';
@@ -17,6 +19,8 @@ export async function GET(request: NextRequest) {
       }, { status: 500 });
     }
 
+    // Dynamic import to avoid SSR issues
+    const MetaApi = (await import('metaapi.cloud-sdk')).default;
     const api = new MetaApi(token, { region });
     
     // Get all accounts - using type assertion for MetaAPI SDK
@@ -68,6 +72,8 @@ export async function DELETE(request: NextRequest) {
       }, { status: 500 });
     }
 
+    // Dynamic import to avoid SSR issues
+    const MetaApi = (await import('metaapi.cloud-sdk')).default;
     const api = new MetaApi(token, { region });
     const account = await api.metatraderAccountApi.getAccount(accountId);
     

@@ -177,7 +177,7 @@ const OptimizedNewsImage = memo(({
         onError={() => setError(true)}
         loading="lazy"
         decoding="async"
-        fetchpriority="low"
+        fetchPriority="low"
         referrerPolicy="no-referrer"
         className={`w-full h-full object-cover transition-opacity duration-150 ${
           loaded ? "opacity-100" : "opacity-0"
@@ -587,7 +587,7 @@ export const UltimateHubNewsTab = memo(() => {
       </div>
 
       {/* News List */}
-      <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-1.5 sm:space-y-2">
+      <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-1.5 sm:space-y-2" style={{ touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}>
         {loading && items.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center space-y-3">
@@ -689,12 +689,12 @@ export const UltimateHubNewsTab = memo(() => {
               </div>
 
               {/* TradingView Economic Calendar Widget */}
-              <div className="w-full h-full pt-12 sm:pt-16 pb-10 sm:pb-12">
+              <div className="w-full h-full pt-12 sm:pt-16 pb-10 sm:pb-12" style={{ touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch', overflowY: 'auto' }}>
                 <iframe
                   src="https://www.tradingview.com/embed-widget/events/?locale=en#%7B%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Afalse%2C%22importanceFilter%22%3A%22-1%2C0%2C1%22%2C%22currencyFilter%22%3A%22USD%2CEUR%2CGBP%2CJPY%2CAUD%2CCAD%2CCHF%2CNZD%22%7D"
                   className="w-full h-full border-0"
                   title="Economic Calendar"
-                  style={{ backgroundColor: '#000000' }}
+                  style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom' }}
                 />
               </div>
 
