@@ -130,6 +130,7 @@ import { ALL_THEMES } from "@/constants/theme-data";
 import { useAudioEngine } from "@/app/hooks/useAudioEngine";
 import Image from "next/image";
 import Link from "next/link";
+import YouTubeVideoEmbed from "@/components/YouTubeVideoEmbed";
 
 // Import dev utilities
 import { useDevSkipShortcut } from "@/hooks/useDevSkipShortcut";
@@ -185,7 +186,6 @@ const normalizeYouTubeId = (input: string) => {
 function MobileDiscordHero({ sources, onOpenModal, variant = 'mobile' }: { sources: string[]; onOpenModal: () => void; variant?: 'mobile' | 'desktop' }) {
   const [index, setIndex] = useState(0);
   const videoId = normalizeYouTubeId(sources[index] || sources[0] || 'Q3dSjSP3t8I');
-  const embed = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&rel=0&modestbranding=1&loop=1&playlist=${videoId}&playsinline=1`;
 
   // Responsive container: auto-adjusts from smallest (320px) to largest mobile views
   // On mobile, content fills entire available space from top to bottom
@@ -244,12 +244,9 @@ function MobileDiscordHero({ sources, onOpenModal, variant = 'mobile' }: { sourc
 
       <div className="relative rounded-xl xs:rounded-2xl overflow-hidden border border-blue-500/40 bg-black shadow-[0_0_18px_rgba(59,130,246,0.3)] flex-1 min-h-[120px]">
         <div className="relative w-full h-full">
-          <iframe
-            key={embed}
-            src={embed}
+          <YouTubeVideoEmbed
+            videoId={videoId}
             className="absolute inset-0 w-full h-full"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
             title="BullMoney Discord Video"
           />
         </div>

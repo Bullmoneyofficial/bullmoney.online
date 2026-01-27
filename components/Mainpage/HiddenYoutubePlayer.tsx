@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 // --- 👇 CRITICAL FIX: TYPE DECLARATION BLOCK 👇 ---
 declare global {
@@ -13,6 +13,7 @@ declare global {
         setVolume: (vol: number) => void;
         destroy: () => void;
         getPlayerState: () => number;
+        mute: () => void;
       };
       PlayerState: {
         PLAYING: number;
@@ -40,6 +41,8 @@ const HiddenYouTubePlayer = ({
 }: HiddenYouTubePlayerProps) => {
   const playerRef = useRef<any>(null);
   const containerId = `yt-player-${videoId}`;
+  const hasPlayedOnceRef = useRef(false);
+  const [shouldMuteAfterFirstPlay, setShouldMuteAfterFirstPlay] = useState(false);
 
   // 1. INITIALIZE PLAYER (Only runs when videoId changes, forcing a rebuild)
   useEffect(() => {
@@ -48,6 +51,10 @@ const HiddenYouTubePlayer = ({
         try { playerRef.current.destroy(); } catch(e) {}
         playerRef.current = null;
     }
+    
+    // Reset the played-once flag when video changes
+    hasPlayedOnceRef.current = false;
+    setShouldMuteAfterFirstPlay(false);
 
     const initPlayer = () => {
       if (!window.YT || !window.YT.Player) return;
@@ -75,8 +82,15 @@ const HiddenYouTubePlayer = ({
             }
           },
           onStateChange: (event: any) => {
-             // Ensures continuous looping, even if YouTube's playlist loop sometimes fails
+             // When video ends, mark that it has played once and mute for future loops
              if (window.YT.PlayerState && event.data === window.YT.PlayerState.ENDED) {
+                if (!hasPlayedOnceRef.current) {
+                  hasPlayedOnceRef.current = true;
+                  setShouldMuteAfterFirstPlay(true);
+                  // Mute the player before looping
+                  event.target.mute();
+                }
+                // Continue looping the video (now muted after first play)
                 event.target.playVideo(); 
              }
           }
@@ -117,15 +131,20 @@ const HiddenYouTubePlayer = ({
       try {
         if (isPlaying) {
           playerRef.current.playVideo();
+          // If we've already played once, keep it muted
+          if (shouldMuteAfterFirstPlay) {
+            playerRef.current.mute();
+          } else {
+            playerRef.current.setVolume(volume);
+          }
         } else {
           playerRef.current.pauseVideo();
         }
-        playerRef.current.setVolume(volume);
       } catch (e) {
         // console.warn("Player control error, likely not fully ready yet.", e);
       }
     }
-  }, [isPlaying, volume]);
+  }, [isPlaying, volume, shouldMuteAfterFirstPlay]);
 
   return (
     <div 

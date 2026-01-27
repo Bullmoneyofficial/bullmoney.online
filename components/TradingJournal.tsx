@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSupabaseClient } from '@/lib/supabase';
 import TradingCalendar from './TradingCalendar';
@@ -57,6 +57,78 @@ export default function TradingJournal({ isEmbedded = false, onClose }: TradingJ
   const [hasSession, setHasSession] = useState<boolean | null>(null); // null = checking, true/false = determined
 
   const supabase = useMemo(() => createSupabaseClient(), []);
+
+  // Memoized loaders/filters defined early so hooks below can reference them safely
+  const loadTrades = useCallback(async () => {
+    try {
+      setLoading(true);
+      setAuthError(false);
+
+      const userId = currentUser?.id;
+
+      if (!userId) {
+        console.warn('loadTrades called without userId');
+        setAuthError(true);
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('trades')
+        .select('*')
+        .eq('user_id', userId.toString())
+        .order('entry_date', { ascending: false });
+
+      if (error) {
+        console.log('Trades query error:', error);
+        setTrades([]);
+        setLoading(false);
+        return;
+      }
+
+      setTrades(data || []);
+
+      if (data && data.length > 0) {
+        const { data: images } = await supabase
+          .from('trade_images')
+          .select('trade_id, image_url')
+          .in('trade_id', data.map(t => t.id));
+
+        if (images) {
+          const imageMap: { [key: string]: string[] } = {};
+          images.forEach(img => {
+            if (!imageMap[img.trade_id]) imageMap[img.trade_id] = [];
+            imageMap[img.trade_id].push(img.image_url);
+          });
+          setTradeImages(imageMap);
+        }
+      }
+    } catch (error) {
+      console.error('Load trades error:', error);
+      setTrades([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentUser?.id, supabase]);
+
+  const applyFilters = useCallback(() => {
+    let filtered = [...trades];
+
+    if (filterAssetType !== 'all') {
+      filtered = filtered.filter(t => t.asset_type === filterAssetType);
+    }
+
+    if (filterOutcome !== 'all') {
+      filtered = filtered.filter(t => t.outcome === filterOutcome);
+    }
+
+    filtered = filtered.filter(t => {
+      const tradeDate = new Date(t.trade_date);
+      return tradeDate >= dateRange.start && tradeDate <= dateRange.end;
+    });
+
+    setFilteredTrades(filtered);
+  }, [trades, filterAssetType, filterOutcome, dateRange]);
 
   // Check both pagemode session AND Supabase auth on mount and listen for changes
   useEffect(() => {
@@ -133,9 +205,11 @@ export default function TradingJournal({ isEmbedded = false, onClose }: TradingJ
             user_type: foundUserType
           });
           setHasSession(true);
+          setAuthError(false); // Clear auth error when session is found
         } else {
           setCurrentUser(null);
           setHasSession(false);
+          setAuthError(true); // Set auth error when no session found
           setLoading(false); // Stop loading immediately if no session
         }
       }
@@ -185,89 +259,12 @@ export default function TradingJournal({ isEmbedded = false, onClose }: TradingJ
       setLoading(false);
       setAuthError(true);
     }
-    // If hasSession is null, we're still checking - do nothing yet
-  }, [hasSession, currentUser?.id]);
+    // If hasSession is null, we're still checking - keep loading state
+  }, [hasSession, currentUser?.id, loadTrades]);
 
   useEffect(() => {
     applyFilters();
-  }, [trades, filterAssetType, filterOutcome, dateRange]);
-
-  const loadTrades = async () => {
-    try {
-      setLoading(true);
-      setAuthError(false);
-      
-      // Get user ID from currentUser (already set by auth check)
-      const userId = currentUser?.id;
-      
-      if (!userId) {
-        // User not authenticated
-        setAuthError(true);
-        setLoading(false);
-        return;
-      }
-
-      // Query trades based on user type
-      // user_id is stored as TEXT, so we convert both UUID and BIGINT to string
-      const { data, error } = await supabase
-        .from('trades')
-        .select('*')
-        .eq('user_id', userId.toString())
-        .order('entry_date', { ascending: false });
-
-      if (error) {
-        // Handle database errors gracefully (e.g., table doesn't exist yet)
-        console.log('Trades query error:', error);
-        setTrades([]);
-        setLoading(false);
-        return;
-      }
-      
-      setTrades(data || []);
-      
-      // Load images for trades
-      if (data && data.length > 0) {
-        const { data: images } = await supabase
-          .from('trade_images')
-          .select('trade_id, image_url')
-          .in('trade_id', data.map(t => t.id));
-        
-        if (images) {
-          const imageMap: {[key: string]: string[]} = {};
-          images.forEach(img => {
-            if (!imageMap[img.trade_id]) imageMap[img.trade_id] = [];
-            imageMap[img.trade_id].push(img.image_url);
-          });
-          setTradeImages(imageMap);
-        }
-      }
-    } catch (error) {
-      // Silently handle errors - user will see loading state end
-      console.error('Load trades error:', error);
-      setTrades([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const applyFilters = () => {
-    let filtered = [...trades];
-
-    if (filterAssetType !== 'all') {
-      filtered = filtered.filter(t => t.asset_type === filterAssetType);
-    }
-
-    if (filterOutcome !== 'all') {
-      filtered = filtered.filter(t => t.outcome === filterOutcome);
-    }
-
-    filtered = filtered.filter(t => {
-      const tradeDate = new Date(t.trade_date);
-      return tradeDate >= dateRange.start && tradeDate <= dateRange.end;
-    });
-
-    setFilteredTrades(filtered);
-  };
+  }, [applyFilters]);
 
   const handleAddTrade = () => {
     setEditingTrade(null);

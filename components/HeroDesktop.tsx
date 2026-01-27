@@ -1373,30 +1373,12 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
 SplineSceneEmbed.displayName = "SplineSceneEmbed";
 
 const HeroVideoEmbed = ({ videoId, muted }: { videoId: string; muted: boolean }) => {
-  const embedUrl = useMemo(() => {
-    const params = new URLSearchParams({
-      autoplay: '1',
-      mute: muted ? '1' : '0',
-      controls: '0',
-      rel: '0',
-      modestbranding: '1',
-      playsinline: '1',
-      loop: '1',
-      playlist: videoId,
-    });
-    return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
-  }, [videoId, muted]);
-
   return (
-    <iframe
-      key={embedUrl}
-      src={embedUrl}
+    <YouTubeVideoEmbed
+      videoId={videoId}
+      muted={muted}
       title="Featured trading video"
       className="absolute inset-0 w-full h-full"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-      allowFullScreen
-      frameBorder="0"
-      loading="lazy"
       style={{ backgroundColor: 'black' }}
     />
   );
@@ -1660,6 +1642,7 @@ import HiddenYoutubePlayer from "@/components/Mainpage/HiddenYoutubePlayer";
 import { ALL_THEMES } from "@/constants/theme-data";
 import type { SoundProfile } from "@/constants/theme-data";
 import { useAudioEngine } from "@/app/hooks/useAudioEngine";
+import YouTubeVideoEmbed from "@/components/YouTubeVideoEmbed";
 
 // ============================================================================
 // MAIN HERO DESKTOP COMPONENT
