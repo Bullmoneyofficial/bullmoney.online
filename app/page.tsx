@@ -976,10 +976,10 @@ function HomeContent() {
       };
     }
 
-    const timeout = window.setTimeout(enable, 1200);
+    const timeout = setTimeout(enable, 1200);
     return () => {
       cancelled = true;
-      window.clearTimeout(timeout);
+      clearTimeout(timeout);
     };
   }, [isMobile, currentView]);
 
