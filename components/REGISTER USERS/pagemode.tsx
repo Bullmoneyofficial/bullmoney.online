@@ -4,6 +4,7 @@ import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, memo,
 import { createClient } from '@supabase/supabase-js'; 
 import { gsap } from 'gsap';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
 
 // Dynamic import for Spline component (used for local .splinecode files)
 const Spline = dynamic(() => import('@splinetool/react-spline'), {
@@ -625,6 +626,8 @@ interface RegisterPageProps {
 }
 
 export default function RegisterPage({ onUnlock }: RegisterPageProps) {
+  const router = useRouter();
+  
   // --- STATE ---
   // IMPORTANT: Start with loading=false so welcome screen shows immediately
   // The MultiStepLoader should ONLY show during form submissions, NOT on initial load
@@ -639,6 +642,17 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   const [isRefresh, setIsRefresh] = useState(false);
   const [isCelebration, setIsCelebration] = useState(false);
   const [confirmationClicked, setConfirmationClicked] = useState(false);
+  
+  // Check if user came from Account Manager
+  const [returnToAccountManager, setReturnToAccountManager] = useState(false);
+  
+  useEffect(() => {
+    const shouldReturn = localStorage.getItem('return_to_account_manager');
+    if (shouldReturn === 'true') {
+      setReturnToAccountManager(true);
+      setStep(0); // Start directly at step 0 (broker registration)
+    }
+  }, []);
   
   // --- DESKTOP DETECTION FOR WELCOME SCREEN ---
   const isDesktop = useIsDesktop();
@@ -1718,15 +1732,23 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   )}
                   style={{ minHeight: '100dvh' }}
                  >
-                   {/* Back Button - Fixed Left Side Like Ultimate Hub */}
+                   {/* Back Button - Dynamic based on source */}
                    <button 
-                     onClick={() => setStep(-1)} 
+                     onClick={() => {
+                       if (returnToAccountManager) {
+                         // Clear flag and return to home with modal trigger
+                         localStorage.removeItem('return_to_account_manager');
+                         router.push('/?openAccountManager=true');
+                       } else {
+                         setStep(-1);
+                       }
+                     }} 
                      className={cn(
                        "fixed top-20 left-4 lg:top-24 lg:left-6 flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm lg:text-base font-semibold transition-all cursor-target py-2.5 px-4 rounded-xl bg-black/90 border border-blue-500/40 hover:border-blue-400/60 shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] z-[2147483646]",
                        shouldDisableBackdropBlur ? '' : 'backdrop-blur-xl'
                      )}
                    >
-                     <ChevronLeft className="w-5 h-5" /> Back
+                     <ChevronLeft className="w-5 h-5" /> {returnToAccountManager ? 'Back to Account Manager' : 'Back'}
                    </button>
                    
                    <div className={cn("register-card bg-black/80 backdrop-blur-xl p-5 md:p-8 rounded-2xl relative overflow-hidden text-center w-full max-w-md mx-4", neonBorderClass)} style={{ zIndex: 1 }}>

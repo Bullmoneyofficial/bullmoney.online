@@ -34,6 +34,43 @@ CREATE TABLE IF NOT EXISTS public.recruits (
   telegram_username TEXT,
   discord_username TEXT,
   notes TEXT,
+  -- Social media accounts
+  instagram_username TEXT,
+  facebook_username TEXT,
+  twitter_username TEXT,
+  youtube_username TEXT,
+  twitch_username TEXT,
+  tiktok_username TEXT,
+  -- Contact information
+  cell_number TEXT,
+  country TEXT,
+  city TEXT,
+  timezone TEXT,
+  birth_date TEXT,
+  preferred_contact_method TEXT,
+  -- Trading profile
+  trading_experience_years INTEGER,
+  trading_style TEXT, -- scalper, day trader, swing trader, position trader
+  risk_tolerance TEXT, -- conservative, moderate, aggressive
+  preferred_instruments TEXT, -- forex, stocks, crypto, commodities
+  trading_timezone TEXT,
+  account_balance_range TEXT,
+  preferred_leverage TEXT,
+  favorite_pairs TEXT,
+  trading_strategy TEXT,
+  win_rate_target DECIMAL(5,2),
+  monthly_profit_target TEXT,
+  -- Personality & interests
+  hobbies TEXT,
+  personality_traits TEXT,
+  trading_goals TEXT,
+  learning_style TEXT, -- visual, auditory, reading, kinesthetic
+  -- Advanced preferences
+  notification_preferences TEXT,
+  preferred_chart_timeframe TEXT, -- M1, M5, M15, M30, H1, H4, D1, W1
+  uses_automated_trading BOOLEAN DEFAULT false,
+  attends_live_sessions BOOLEAN DEFAULT false,
+  bio TEXT,
   -- Push notification preferences (per recruit)
   notifications_enabled BOOLEAN DEFAULT false,
   notify_trades BOOLEAN DEFAULT true,
@@ -51,6 +88,48 @@ ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS phone TEXT;
 ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS telegram_username TEXT;
 ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS discord_username TEXT;
 ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS notes TEXT;
+
+-- Add social media columns if table already exists
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS instagram_username TEXT;
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS facebook_username TEXT;
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS twitter_username TEXT;
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS youtube_username TEXT;
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS twitch_username TEXT;
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS tiktok_username TEXT;
+
+-- Add contact information columns if table already exists
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS cell_number TEXT;
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS country TEXT;
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS city TEXT;
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS timezone TEXT;
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS birth_date TEXT;
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS preferred_contact_method TEXT;
+
+-- Add trading profile columns if table already exists
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS trading_experience_years INTEGER;
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS trading_style TEXT;
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS risk_tolerance TEXT;
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS preferred_instruments TEXT;
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS trading_timezone TEXT;
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS account_balance_range TEXT;
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS preferred_leverage TEXT;
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS favorite_pairs TEXT;
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS trading_strategy TEXT;
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS win_rate_target DECIMAL(5,2);
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS monthly_profit_target TEXT;
+
+-- Add personality & interests columns if table already exists
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS hobbies TEXT;
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS personality_traits TEXT;
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS trading_goals TEXT;
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS learning_style TEXT;
+
+-- Add advanced preferences columns if table already exists
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS notification_preferences TEXT;
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS preferred_chart_timeframe TEXT;
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS uses_automated_trading BOOLEAN DEFAULT false;
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS attends_live_sessions BOOLEAN DEFAULT false;
+ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS bio TEXT;
 
 -- Add notification preference columns if table already exists
 ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS notifications_enabled BOOLEAN DEFAULT false;

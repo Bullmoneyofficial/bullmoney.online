@@ -19,9 +19,20 @@ import {
   ExternalLink,
   Plus,
   Trash2,
+  Eye,
+  EyeOff,
+  Edit2,
+  MessageCircle,
+  ArrowLeft,
+  Instagram,
+  Facebook,
+  Twitter,
+  Youtube,
+  Twitch as TwitchIcon,
 } from "lucide-react";
 import { createSupabaseClient } from "@/lib/supabase";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 // ============================================================================
 // TYPES
@@ -48,6 +59,43 @@ interface UserAccountData {
   total_referred_manual?: number;
   telegram_username?: string;
   discord_username?: string;
+  password?: string;
+  instagram_username?: string;
+  facebook_username?: string;
+  twitter_username?: string;
+  youtube_username?: string;
+  twitch_username?: string;
+  tiktok_username?: string;
+  // Contact Information
+  cell_number?: string;
+  country?: string;
+  city?: string;
+  timezone?: string;
+  birth_date?: string;
+  preferred_contact_method?: string;
+  // Trading Profile
+  trading_experience_years?: number;
+  trading_style?: string; // scalper, day trader, swing trader, position trader
+  risk_tolerance?: string; // conservative, moderate, aggressive
+  preferred_instruments?: string; // forex, stocks, crypto, commodities
+  trading_timezone?: string;
+  account_balance_range?: string;
+  preferred_leverage?: string;
+  favorite_pairs?: string;
+  trading_strategy?: string;
+  win_rate_target?: number;
+  monthly_profit_target?: string;
+  // Personality & Interests
+  hobbies?: string;
+  personality_traits?: string;
+  trading_goals?: string;
+  learning_style?: string; // visual, auditory, reading, kinesthetic
+  // Advanced Preferences
+  notification_preferences?: string;
+  preferred_chart_timeframe?: string; // M1, M5, M15, M30, H1, H4, D1, W1
+  uses_automated_trading?: boolean;
+  attends_live_sessions?: boolean;
+  bio?: string;
 }
 
 interface AccountManagerModalProps {
@@ -61,6 +109,7 @@ interface AccountManagerModalProps {
 
 export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen, onClose }) => {
   const supabase = createSupabaseClient();
+  const router = useRouter();
   
   // State
   const [loading, setLoading] = useState(true);
@@ -71,9 +120,70 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
   
   // Form states
   const [newMT5Id, setNewMT5Id] = useState("");
-  const [newBrokerName, setNewBrokerName] = useState("");
+  const [newBrokerName, setNewBrokerName] = useState<"XM" | "Vantage" | "">("");
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Edit mode states
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [isEditingPassword, setIsEditingPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [editingMT5Id, setEditingMT5Id] = useState<string | null>(null);
+
+  // Editable field states
+  const [editFullName, setEditFullName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editTelegram, setEditTelegram] = useState("");
+  const [editDiscord, setEditDiscord] = useState("");
+  const [editPassword, setEditPassword] = useState("");
+  const [editNewPassword, setEditNewPassword] = useState("");
+  const [editConfirmPassword, setEditConfirmPassword] = useState("");
+  
+  // Social media edit states
+  const [editInstagram, setEditInstagram] = useState("");
+  const [editFacebook, setEditFacebook] = useState("");
+  const [editTwitter, setEditTwitter] = useState("");
+  const [editYoutube, setEditYoutube] = useState("");
+  const [editTwitch, setEditTwitch] = useState("");
+  const [editTiktok, setEditTiktok] = useState("");
+  
+  // Contact info edit states
+  const [editCellNumber, setEditCellNumber] = useState("");
+  const [editCountry, setEditCountry] = useState("");
+  const [editCity, setEditCity] = useState("");
+  const [editTimezone, setEditTimezone] = useState("");
+  const [editBirthDate, setEditBirthDate] = useState("");
+  const [editPreferredContact, setEditPreferredContact] = useState("");
+  
+  // Trading profile edit states
+  const [editTradingYears, setEditTradingYears] = useState("");
+  const [editTradingStyle, setEditTradingStyle] = useState("");
+  const [editRiskTolerance, setEditRiskTolerance] = useState("");
+  const [editPreferredInstruments, setEditPreferredInstruments] = useState("");
+  const [editTradingTimezone, setEditTradingTimezone] = useState("");
+  const [editAccountBalance, setEditAccountBalance] = useState("");
+  const [editPreferredLeverage, setEditPreferredLeverage] = useState("");
+  const [editFavoritePairs, setEditFavoritePairs] = useState("");
+  const [editTradingStrategy, setEditTradingStrategy] = useState("");
+  const [editWinRateTarget, setEditWinRateTarget] = useState("");
+  const [editMonthlyTarget, setEditMonthlyTarget] = useState("");
+  
+  // Personality & interests edit states
+  const [editHobbies, setEditHobbies] = useState("");
+  const [editPersonalityTraits, setEditPersonalityTraits] = useState("");
+  const [editTradingGoals, setEditTradingGoals] = useState("");
+  const [editLearningStyle, setEditLearningStyle] = useState("");
+  
+  // Advanced preferences edit states
+  const [editNotificationPrefs, setEditNotificationPrefs] = useState("");
+  const [editChartTimeframe, setEditChartTimeframe] = useState("");
+  const [editUsesAutomated, setEditUsesAutomated] = useState(false);
+  const [editAttendsLive, setEditAttendsLive] = useState(false);
+  const [editBio, setEditBio] = useState("");
+
+  // MT5 edit states
+  const [editMT5AccountId, setEditMT5AccountId] = useState("");
+  const [editMT5Broker, setEditMT5Broker] = useState<"XM" | "Vantage" | "">("");
 
   // Helper function to get authenticated user email (pagemode or Supabase)
   const getAuthenticatedEmail = useCallback(async (): Promise<string | null> => {
@@ -186,7 +296,78 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
         total_referred_manual: recruitData.total_referred_manual || 0,
         telegram_username: recruitData.telegram_username,
         discord_username: recruitData.discord_username,
+        password: recruitData.password,
+        instagram_username: recruitData.instagram_username,
+        facebook_username: recruitData.facebook_username,
+        twitter_username: recruitData.twitter_username,
+        youtube_username: recruitData.youtube_username,
+        twitch_username: recruitData.twitch_username,
+        tiktok_username: recruitData.tiktok_username,
+        cell_number: recruitData.cell_number,
+        country: recruitData.country,
+        city: recruitData.city,
+        timezone: recruitData.timezone,
+        birth_date: recruitData.birth_date,
+        preferred_contact_method: recruitData.preferred_contact_method,
+        trading_experience_years: recruitData.trading_experience_years,
+        trading_style: recruitData.trading_style,
+        risk_tolerance: recruitData.risk_tolerance,
+        preferred_instruments: recruitData.preferred_instruments,
+        trading_timezone: recruitData.trading_timezone,
+        account_balance_range: recruitData.account_balance_range,
+        preferred_leverage: recruitData.preferred_leverage,
+        favorite_pairs: recruitData.favorite_pairs,
+        trading_strategy: recruitData.trading_strategy,
+        win_rate_target: recruitData.win_rate_target,
+        monthly_profit_target: recruitData.monthly_profit_target,
+        hobbies: recruitData.hobbies,
+        personality_traits: recruitData.personality_traits,
+        trading_goals: recruitData.trading_goals,
+        learning_style: recruitData.learning_style,
+        notification_preferences: recruitData.notification_preferences,
+        preferred_chart_timeframe: recruitData.preferred_chart_timeframe,
+        uses_automated_trading: recruitData.uses_automated_trading,
+        attends_live_sessions: recruitData.attends_live_sessions,
+        bio: recruitData.bio,
       });
+
+      // Initialize edit fields
+      setEditFullName(recruitData.full_name || "");
+      setEditEmail(recruitData.email || "");
+      setEditTelegram(recruitData.telegram_username || "");
+      setEditDiscord(recruitData.discord_username || "");
+      setEditInstagram(recruitData.instagram_username || "");
+      setEditFacebook(recruitData.facebook_username || "");
+      setEditTwitter(recruitData.twitter_username || "");
+      setEditYoutube(recruitData.youtube_username || "");
+      setEditTwitch(recruitData.twitch_username || "");
+      setEditTiktok(recruitData.tiktok_username || "");
+      setEditCellNumber(recruitData.cell_number || "");
+      setEditCountry(recruitData.country || "");
+      setEditCity(recruitData.city || "");
+      setEditTimezone(recruitData.timezone || "");
+      setEditBirthDate(recruitData.birth_date || "");
+      setEditPreferredContact(recruitData.preferred_contact_method || "");
+      setEditTradingYears(recruitData.trading_experience_years?.toString() || "");
+      setEditTradingStyle(recruitData.trading_style || "");
+      setEditRiskTolerance(recruitData.risk_tolerance || "");
+      setEditPreferredInstruments(recruitData.preferred_instruments || "");
+      setEditTradingTimezone(recruitData.trading_timezone || "");
+      setEditAccountBalance(recruitData.account_balance_range || "");
+      setEditPreferredLeverage(recruitData.preferred_leverage || "");
+      setEditFavoritePairs(recruitData.favorite_pairs || "");
+      setEditTradingStrategy(recruitData.trading_strategy || "");
+      setEditWinRateTarget(recruitData.win_rate_target?.toString() || "");
+      setEditMonthlyTarget(recruitData.monthly_profit_target || "");
+      setEditHobbies(recruitData.hobbies || "");
+      setEditPersonalityTraits(recruitData.personality_traits || "");
+      setEditTradingGoals(recruitData.trading_goals || "");
+      setEditLearningStyle(recruitData.learning_style || "");
+      setEditNotificationPrefs(recruitData.notification_preferences || "");
+      setEditChartTimeframe(recruitData.preferred_chart_timeframe || "");
+      setEditUsesAutomated(recruitData.uses_automated_trading || false);
+      setEditAttendsLive(recruitData.attends_live_sessions || false);
+      setEditBio(recruitData.bio || "");
     } catch (err) {
       console.error('Error in fetchAccountData:', err);
       setError("An unexpected error occurred");
@@ -392,6 +573,201 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
     }
   };
 
+  // Save profile updates
+  const handleSaveProfile = async () => {
+    try {
+      setSaving(true);
+      setError(null);
+
+      const userEmail = await getAuthenticatedEmail();
+      if (!userEmail) {
+        setError("Not authenticated");
+        return;
+      }
+
+      const updates: any = {
+        full_name: editFullName.trim(),
+        telegram_username: editTelegram.trim(),
+        discord_username: editDiscord.trim(),
+        instagram_username: editInstagram.trim(),
+        facebook_username: editFacebook.trim(),
+        twitter_username: editTwitter.trim(),
+        youtube_username: editYoutube.trim(),
+        twitch_username: editTwitch.trim(),
+        tiktok_username: editTiktok.trim(),
+        cell_number: editCellNumber.trim(),
+        country: editCountry.trim(),
+        city: editCity.trim(),
+        timezone: editTimezone.trim(),
+        birth_date: editBirthDate.trim(),
+        preferred_contact_method: editPreferredContact.trim(),
+        trading_experience_years: editTradingYears ? parseInt(editTradingYears) : null,
+        trading_style: editTradingStyle.trim(),
+        risk_tolerance: editRiskTolerance.trim(),
+        preferred_instruments: editPreferredInstruments.trim(),
+        trading_timezone: editTradingTimezone.trim(),
+        account_balance_range: editAccountBalance.trim(),
+        preferred_leverage: editPreferredLeverage.trim(),
+        favorite_pairs: editFavoritePairs.trim(),
+        trading_strategy: editTradingStrategy.trim(),
+        win_rate_target: editWinRateTarget ? parseFloat(editWinRateTarget) : null,
+        monthly_profit_target: editMonthlyTarget.trim(),
+        hobbies: editHobbies.trim(),
+        personality_traits: editPersonalityTraits.trim(),
+        trading_goals: editTradingGoals.trim(),
+        learning_style: editLearningStyle.trim(),
+        notification_preferences: editNotificationPrefs.trim(),
+        preferred_chart_timeframe: editChartTimeframe.trim(),
+        uses_automated_trading: editUsesAutomated,
+        attends_live_sessions: editAttendsLive,
+        bio: editBio.trim(),
+      };
+
+      // Only update email if changed and not empty
+      if (editEmail.trim() && editEmail.trim() !== accountData?.email) {
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(editEmail.trim())) {
+          setError("Please enter a valid email address");
+          return;
+        }
+        updates.email = editEmail.trim();
+      }
+
+      const { error: updateError } = await supabase
+        .from('recruits')
+        .update(updates)
+        .eq('email', userEmail);
+
+      if (updateError) {
+        console.error('Update error:', updateError);
+        setError("Failed to update profile");
+        return;
+      }
+
+      setSuccess("Profile updated successfully!");
+      setTimeout(() => setSuccess(null), 3000);
+      setIsEditingProfile(false);
+      
+      // Refresh data
+      await fetchAccountData();
+    } catch (err) {
+      console.error('Save profile error:', err);
+      setError("Failed to update profile");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Update password
+  const handleUpdatePassword = async () => {
+    if (!editNewPassword || !editConfirmPassword) {
+      setError("Please fill in all password fields");
+      return;
+    }
+
+    if (editNewPassword !== editConfirmPassword) {
+      setError("New passwords do not match");
+      return;
+    }
+
+    if (editNewPassword.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setError(null);
+
+      const userEmail = await getAuthenticatedEmail();
+      if (!userEmail) {
+        setError("Not authenticated");
+        return;
+      }
+
+      const { error: updateError } = await supabase
+        .from('recruits')
+        .update({ password: editNewPassword })
+        .eq('email', userEmail);
+
+      if (updateError) {
+        console.error('Password update error:', updateError);
+        setError("Failed to update password");
+        return;
+      }
+
+      setSuccess("Password updated successfully!");
+      setTimeout(() => setSuccess(null), 3000);
+      setIsEditingPassword(false);
+      setEditPassword("");
+      setEditNewPassword("");
+      setEditConfirmPassword("");
+      
+      await fetchAccountData();
+    } catch (err) {
+      console.error('Update password error:', err);
+      setError("Failed to update password");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Edit MT5 account
+  const handleEditMT5Account = async (oldMT5Id: string) => {
+    if (!editMT5AccountId.trim()) {
+      setError("Please enter MT5 Account ID");
+      return;
+    }
+
+    if (!editMT5Broker) {
+      setError("Please select a broker");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setError(null);
+
+      const userEmail = await getAuthenticatedEmail();
+      if (!userEmail) {
+        setError("Not authenticated");
+        return;
+      }
+
+      // Get current MT5 IDs and replace the old one with new one
+      const currentIds = accountData?.mt5_accounts.map(acc => acc.mt5_id) || [];
+      const updatedIds = currentIds.map(id => id === oldMT5Id ? editMT5AccountId.trim() : id).join(',');
+
+      const { error: updateError } = await supabase
+        .from('recruits')
+        .update({ 
+          mt5_id: updatedIds,
+          broker_name: editMT5Broker
+        })
+        .eq('email', userEmail);
+
+      if (updateError) {
+        console.error('Update error:', updateError);
+        setError("Failed to update MT5 account");
+        return;
+      }
+
+      setSuccess("MT5 account updated successfully!");
+      setTimeout(() => setSuccess(null), 3000);
+      setEditingMT5Id(null);
+      setEditMT5AccountId("");
+      setEditMT5Broker("");
+      
+      await fetchAccountData();
+    } catch (err) {
+      console.error('Edit MT5 error:', err);
+      setError("Failed to update MT5 account");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -399,8 +775,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[999999] flex items-center justify-center p-4"
-          style={{ backgroundColor: 'rgba(0, 0, 0, 0.85)' }}
+          className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
           onClick={onClose}
         >
           <motion.div
@@ -409,13 +784,13 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ type: "spring", damping: 25 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-2xl border border-blue-500/30"
+            className="relative w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl bg-gradient-to-b from-slate-950 via-slate-900 to-black shadow-2xl shadow-blue-900/40 border border-blue-500/40"
           >
             {/* Header */}
-            <div className="sticky top-0 z-10 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 px-6 py-4 border-b border-white/10">
+            <div className="sticky top-0 z-10 bg-blue-500/10 px-6 py-4 border-b border-blue-500/30">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <User className="h-6 w-6 text-white" />
+                  <User className="h-6 w-6 text-cyan-300" />
                   <h2 className="text-2xl font-bold text-white">Account Manager</h2>
                   {accountData?.is_vip && (
                     <Crown className="h-5 w-5 text-yellow-400 animate-pulse" />
@@ -423,7 +798,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                 </div>
                 <button
                   onClick={onClose}
-                  className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                  className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-colors"
                 >
                   <X className="h-5 w-5 text-white" />
                 </button>
@@ -440,10 +815,10 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
               ) : error && !accountData ? (
                 <div className="flex flex-col items-center justify-center py-20">
                   <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
-                  <p className="text-red-400 mb-4">{error}</p>
+                  <p className="text-red-300 mb-4">{error}</p>
                   <button
                     onClick={fetchAccountData}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                    className="px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/40 rounded-lg transition-colors"
                   >
                     Retry
                   </button>
@@ -451,9 +826,9 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
               ) : accountData ? (
                 <>
                   {/* Logged-in User Indicator */}
-                  <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mb-4">
+                  <div className="bg-blue-500/10 border border-blue-500/40 rounded-lg p-3 mb-4">
                     <div className="flex items-center gap-2 text-sm">
-                      <Mail className="h-4 w-4 text-blue-400" />
+                      <Mail className="h-4 w-4 text-cyan-300" />
                       <span className="text-slate-400">Logged in as:</span>
                       <span className="text-white font-semibold">{accountData.email}</span>
                     </div>
@@ -466,8 +841,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                       animate={{ opacity: 1, y: 0 }}
                       className={`p-4 rounded-lg border ${
                         success 
-                          ? 'bg-green-500/10 border-green-500/30 text-green-400' 
-                          : 'bg-red-500/10 border-red-500/30 text-red-400'
+                          ? 'bg-blue-500/10 border-blue-500/40 text-blue-300' 
+                          : 'bg-red-500/10 border-red-500/40 text-red-300'
                       }`}
                     >
                       <div className="flex items-center gap-2">
@@ -482,16 +857,50 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                   )}
 
                   {/* Profile Section */}
-                  <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
-                    <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                      <User className="h-5 w-5 text-blue-400" />
-                      Profile Information
-                    </h3>
+                  <div className="bg-slate-900/70 rounded-xl p-6 border border-slate-800">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                        <User className="h-5 w-5 text-cyan-300" />
+                        Profile Information
+                      </h3>
+                      {!isEditingProfile ? (
+                        <button
+                          onClick={() => setIsEditingProfile(true)}
+                          className="flex items-center gap-2 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/40 rounded-lg transition-colors text-sm"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                          Edit Profile
+                        </button>
+                      ) : (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={handleSaveProfile}
+                            disabled={saving}
+                            className="flex items-center gap-2 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 disabled:bg-slate-800 text-blue-300 border border-blue-500/40 rounded-lg transition-colors text-sm"
+                          >
+                            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                            Save
+                          </button>
+                          <button
+                            onClick={() => {
+                              setIsEditingProfile(false);
+                              setEditFullName(accountData?.full_name || "");
+                              setEditEmail(accountData?.email || "");
+                              setEditTelegram(accountData?.telegram_username || "");
+                              setEditDiscord(accountData?.discord_username || "");
+                            }}
+                            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 rounded-lg transition-colors text-sm"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      )}
+                    </div>
                     
                     <div className="flex flex-col md:flex-row gap-6">
                       {/* Profile Picture */}
                       <div className="flex flex-col items-center gap-3">
-                        <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-blue-500/30 bg-slate-700">
+                        <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-blue-500/40 bg-slate-900/60">
                           {accountData.image_url ? (
                             <Image
                               src={accountData.image_url}
@@ -513,7 +922,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                         <button
                           onClick={() => fileInputRef.current?.click()}
                           disabled={uploadingImage}
-                          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors text-sm"
+                          className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 disabled:bg-slate-800 disabled:cursor-not-allowed text-blue-300 border border-blue-500/40 rounded-lg transition-colors text-sm"
                         >
                           <Upload className="h-4 w-4" />
                           Upload Photo
@@ -529,33 +938,214 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
 
                       {/* Profile Details */}
                       <div className="flex-1 space-y-4">
+                        {/* Email Field */}
                         <div>
                           <label className="block text-sm font-medium text-slate-400 mb-1">Email</label>
-                          <div className="flex items-center gap-2 px-4 py-2 bg-slate-900/50 rounded-lg border border-slate-700">
-                            <Mail className="h-4 w-4 text-slate-400" />
-                            <span className="text-white">{accountData.email}</span>
-                          </div>
+                          {isEditingProfile ? (
+                            <input
+                              type="email"
+                              value={editEmail}
+                              onChange={(e) => setEditEmail(e.target.value)}
+                              className="w-full px-4 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            />
+                          ) : (
+                            <div className="flex items-center gap-2 px-4 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                              <Mail className="h-4 w-4 text-cyan-300" />
+                              <span className="text-white">{accountData.email}</span>
+                            </div>
+                          )}
                         </div>
 
+                        {/* Full Name Field */}
                         <div>
                           <label className="block text-sm font-medium text-slate-400 mb-1">Full Name</label>
-                          <div className="flex items-center gap-2 px-4 py-2 bg-slate-900/50 rounded-lg border border-slate-700">
-                            <User className="h-4 w-4 text-slate-400" />
-                            <span className="text-white">{accountData.full_name || 'Not set'}</span>
-                          </div>
+                          {isEditingProfile ? (
+                            <input
+                              type="text"
+                              value={editFullName}
+                              onChange={(e) => setEditFullName(e.target.value)}
+                              placeholder="Enter your full name"
+                              className="w-full px-4 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            />
+                          ) : (
+                            <div className="flex items-center gap-2 px-4 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                              <User className="h-4 w-4 text-cyan-300" />
+                              <span className="text-white">{accountData.full_name || 'Not set'}</span>
+                            </div>
+                          )}
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-slate-400 mb-1">Telegram</label>
-                            <div className="px-4 py-2 bg-slate-900/50 rounded-lg border border-slate-700">
-                              <span className="text-white text-sm">{accountData.telegram_username || 'Not set'}</span>
+                        {/* Social Usernames */}
+                        <div className="space-y-3">
+                          <h4 className="text-sm font-semibold text-slate-300 flex items-center gap-2">
+                            <MessageCircle className="h-4 w-4 text-cyan-300" />
+                            Social Media Accounts
+                          </h4>
+                          
+                          <div className="grid grid-cols-2 gap-3">
+                            {/* Telegram */}
+                            <div>
+                              <label className="block text-xs font-medium text-slate-400 mb-1">
+                                Telegram
+                              </label>
+                              {isEditingProfile ? (
+                                <input
+                                  type="text"
+                                  value={editTelegram}
+                                  onChange={(e) => setEditTelegram(e.target.value)}
+                                  placeholder="@username"
+                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                />
+                              ) : (
+                                <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                                  <span className="text-white text-sm">{accountData.telegram_username || 'Not set'}</span>
+                                </div>
+                              )}
                             </div>
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-slate-400 mb-1">Discord</label>
-                            <div className="px-4 py-2 bg-slate-900/50 rounded-lg border border-slate-700">
-                              <span className="text-white text-sm">{accountData.discord_username || 'Not set'}</span>
+
+                            {/* Discord */}
+                            <div>
+                              <label className="block text-xs font-medium text-slate-400 mb-1">
+                                Discord
+                              </label>
+                              {isEditingProfile ? (
+                                <input
+                                  type="text"
+                                  value={editDiscord}
+                                  onChange={(e) => setEditDiscord(e.target.value)}
+                                  placeholder="username#0000"
+                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                />
+                              ) : (
+                                <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                                  <span className="text-white text-sm">{accountData.discord_username || 'Not set'}</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Instagram */}
+                            <div>
+                              <label className="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-1">
+                                <Instagram className="h-3 w-3" />
+                                Instagram
+                              </label>
+                              {isEditingProfile ? (
+                                <input
+                                  type="text"
+                                  value={editInstagram}
+                                  onChange={(e) => setEditInstagram(e.target.value)}
+                                  placeholder="@username"
+                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                />
+                              ) : (
+                                <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                                  <span className="text-white text-sm">{accountData.instagram_username || 'Not set'}</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Facebook */}
+                            <div>
+                              <label className="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-1">
+                                <Facebook className="h-3 w-3" />
+                                Facebook
+                              </label>
+                              {isEditingProfile ? (
+                                <input
+                                  type="text"
+                                  value={editFacebook}
+                                  onChange={(e) => setEditFacebook(e.target.value)}
+                                  placeholder="username"
+                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                />
+                              ) : (
+                                <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                                  <span className="text-white text-sm">{accountData.facebook_username || 'Not set'}</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Twitter/X */}
+                            <div>
+                              <label className="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-1">
+                                <Twitter className="h-3 w-3" />
+                                Twitter/X
+                              </label>
+                              {isEditingProfile ? (
+                                <input
+                                  type="text"
+                                  value={editTwitter}
+                                  onChange={(e) => setEditTwitter(e.target.value)}
+                                  placeholder="@username"
+                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                />
+                              ) : (
+                                <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                                  <span className="text-white text-sm">{accountData.twitter_username || 'Not set'}</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* YouTube */}
+                            <div>
+                              <label className="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-1">
+                                <Youtube className="h-3 w-3" />
+                                YouTube
+                              </label>
+                              {isEditingProfile ? (
+                                <input
+                                  type="text"
+                                  value={editYoutube}
+                                  onChange={(e) => setEditYoutube(e.target.value)}
+                                  placeholder="@channel"
+                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                />
+                              ) : (
+                                <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                                  <span className="text-white text-sm">{accountData.youtube_username || 'Not set'}</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Twitch */}
+                            <div>
+                              <label className="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-1">
+                                <TwitchIcon className="h-3 w-3" />
+                                Twitch
+                              </label>
+                              {isEditingProfile ? (
+                                <input
+                                  type="text"
+                                  value={editTwitch}
+                                  onChange={(e) => setEditTwitch(e.target.value)}
+                                  placeholder="username"
+                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                />
+                              ) : (
+                                <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                                  <span className="text-white text-sm">{accountData.twitch_username || 'Not set'}</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* TikTok */}
+                            <div>
+                              <label className="block text-xs font-medium text-slate-400 mb-1">
+                                TikTok
+                              </label>
+                              {isEditingProfile ? (
+                                <input
+                                  type="text"
+                                  value={editTiktok}
+                                  onChange={(e) => setEditTiktok(e.target.value)}
+                                  placeholder="@username"
+                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                />
+                              ) : (
+                                <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                                  <span className="text-white text-sm">{accountData.tiktok_username || 'Not set'}</span>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -563,15 +1153,567 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                     </div>
                   </div>
 
+                  {/* Password Section */}
+                  <div className="bg-slate-900/70 rounded-xl p-6 border border-slate-800">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                        <Shield className="h-5 w-5 text-cyan-300" />
+                        Password & Security
+                      </h3>
+                      {!isEditingPassword && (
+                        <button
+                          onClick={() => setIsEditingPassword(true)}
+                          className="flex items-center gap-2 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/40 rounded-lg transition-colors text-sm"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                          Change Password
+                        </button>
+                      )}
+                    </div>
+
+                    {!isEditingPassword ? (
+                      <div>
+                        <label className="block text-sm font-medium text-slate-400 mb-1">Current Password</label>
+                        <div className="flex items-center gap-2 px-4 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                          <Shield className="h-4 w-4 text-cyan-300" />
+                          <span className="text-white font-mono flex-1">
+                            {showPassword ? (accountData.password || '••••••••') : '••••••••'}
+                          </span>
+                          <button
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="p-1 hover:bg-slate-800 rounded transition-colors"
+                          >
+                            {showPassword ? (
+                              <EyeOff className="h-4 w-4 text-slate-400" />
+                            ) : (
+                              <Eye className="h-4 w-4 text-slate-400" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-slate-400 mb-1">New Password</label>
+                          <div className="relative">
+                            <input
+                              type={showPassword ? "text" : "password"}
+                              value={editNewPassword}
+                              onChange={(e) => setEditNewPassword(e.target.value)}
+                              placeholder="Enter new password"
+                              className="w-full px-4 py-2 pr-10 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+                            >
+                              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-slate-400 mb-1">Confirm New Password</label>
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            value={editConfirmPassword}
+                            onChange={(e) => setEditConfirmPassword(e.target.value)}
+                            placeholder="Confirm new password"
+                            className="w-full px-4 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                          />
+                        </div>
+
+                        <div className="flex gap-2 pt-2">
+                          <button
+                            onClick={handleUpdatePassword}
+                            disabled={saving}
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 disabled:bg-slate-800 text-blue-300 border border-blue-500/40 rounded-lg transition-colors"
+                          >
+                            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                            Update Password
+                          </button>
+                          <button
+                            onClick={() => {
+                              setIsEditingPassword(false);
+                              setEditNewPassword("");
+                              setEditConfirmPassword("");
+                              setShowPassword(false);
+                            }}
+                            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 rounded-lg transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Contact Information & Location */}
+                  <div className="bg-slate-900/70 rounded-xl p-6 border border-slate-800">
+                    <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                      <Mail className="h-5 w-5 text-cyan-300" />
+                      Contact & Location
+                    </h3>
+                    
+                    {isEditingProfile ? (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-medium text-slate-400 mb-1">Cell Number</label>
+                          <input
+                            type="tel"
+                            value={editCellNumber}
+                            onChange={(e) => setEditCellNumber(e.target.value)}
+                            placeholder="+1 234 567 8900"
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-slate-400 mb-1">Preferred Contact</label>
+                          <select
+                            value={editPreferredContact}
+                            onChange={(e) => setEditPreferredContact(e.target.value)}
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                          >
+                            <option value="">Select method</option>
+                            <option value="Email">Email</option>
+                            <option value="Telegram">Telegram</option>
+                            <option value="Discord">Discord</option>
+                            <option value="WhatsApp">WhatsApp</option>
+                            <option value="Phone">Phone</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-slate-400 mb-1">Country</label>
+                          <input
+                            type="text"
+                            value={editCountry}
+                            onChange={(e) => setEditCountry(e.target.value)}
+                            placeholder="United States"
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-slate-400 mb-1">City</label>
+                          <input
+                            type="text"
+                            value={editCity}
+                            onChange={(e) => setEditCity(e.target.value)}
+                            placeholder="New York"
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-slate-400 mb-1">Timezone</label>
+                          <input
+                            type="text"
+                            value={editTimezone}
+                            onChange={(e) => setEditTimezone(e.target.value)}
+                            placeholder="EST, PST, UTC+3"
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-slate-400 mb-1">Birth Date</label>
+                          <input
+                            type="date"
+                            value={editBirthDate}
+                            onChange={(e) => setEditBirthDate(e.target.value)}
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                          <p className="text-xs text-slate-400 mb-1">Cell Number</p>
+                          <span className="text-white text-sm">{accountData.cell_number || 'Not set'}</span>
+                        </div>
+                        <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                          <p className="text-xs text-slate-400 mb-1">Preferred Contact</p>
+                          <span className="text-white text-sm">{accountData.preferred_contact_method || 'Not set'}</span>
+                        </div>
+                        <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                          <p className="text-xs text-slate-400 mb-1">Country</p>
+                          <span className="text-white text-sm">{accountData.country || 'Not set'}</span>
+                        </div>
+                        <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                          <p className="text-xs text-slate-400 mb-1">City</p>
+                          <span className="text-white text-sm">{accountData.city || 'Not set'}</span>
+                        </div>
+                        <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                          <p className="text-xs text-slate-400 mb-1">Timezone</p>
+                          <span className="text-white text-sm">{accountData.timezone || 'Not set'}</span>
+                        </div>
+                        <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                          <p className="text-xs text-slate-400 mb-1">Birth Date</p>
+                          <span className="text-white text-sm">{accountData.birth_date || 'Not set'}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Trading Profile */}
+                  <div className="bg-slate-900/70 rounded-xl p-6 border border-slate-800">
+                    <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                      <TrendingUp className="h-5 w-5 text-cyan-300" />
+                      Trading Profile
+                    </h3>
+                    
+                    {isEditingProfile ? (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs font-medium text-slate-400 mb-1">Experience (Years)</label>
+                            <input
+                              type="number"
+                              value={editTradingYears}
+                              onChange={(e) => setEditTradingYears(e.target.value)}
+                              placeholder="3"
+                              min="0"
+                              className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-slate-400 mb-1">Trading Style</label>
+                            <select
+                              value={editTradingStyle}
+                              onChange={(e) => setEditTradingStyle(e.target.value)}
+                              className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            >
+                              <option value="">Select style</option>
+                              <option value="Scalper">Scalper</option>
+                              <option value="Day Trader">Day Trader</option>
+                              <option value="Swing Trader">Swing Trader</option>
+                              <option value="Position Trader">Position Trader</option>
+                              <option value="Mixed">Mixed</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-slate-400 mb-1">Risk Tolerance</label>
+                            <select
+                              value={editRiskTolerance}
+                              onChange={(e) => setEditRiskTolerance(e.target.value)}
+                              className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            >
+                              <option value="">Select tolerance</option>
+                              <option value="Conservative">Conservative (1-2%)</option>
+                              <option value="Moderate">Moderate (2-5%)</option>
+                              <option value="Aggressive">Aggressive (5%+)</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-slate-400 mb-1">Preferred Instruments</label>
+                            <input
+                              type="text"
+                              value={editPreferredInstruments}
+                              onChange={(e) => setEditPreferredInstruments(e.target.value)}
+                              placeholder="Forex, Stocks, Crypto"
+                              className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-slate-400 mb-1">Account Balance</label>
+                            <select
+                              value={editAccountBalance}
+                              onChange={(e) => setEditAccountBalance(e.target.value)}
+                              className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            >
+                              <option value="">Select range</option>
+                              <option value="$0-$500">$0-$500</option>
+                              <option value="$500-$2K">$500-$2K</option>
+                              <option value="$2K-$10K">$2K-$10K</option>
+                              <option value="$10K-$50K">$10K-$50K</option>
+                              <option value="$50K+">$50K+</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-slate-400 mb-1">Preferred Leverage</label>
+                            <select
+                              value={editPreferredLeverage}
+                              onChange={(e) => setEditPreferredLeverage(e.target.value)}
+                              className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            >
+                              <option value="">Select leverage</option>
+                              <option value="1:50">1:50</option>
+                              <option value="1:100">1:100</option>
+                              <option value="1:200">1:200</option>
+                              <option value="1:500">1:500</option>
+                              <option value="1:1000">1:1000</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-slate-400 mb-1">Favorite Trading Pairs</label>
+                          <input
+                            type="text"
+                            value={editFavoritePairs}
+                            onChange={(e) => setEditFavoritePairs(e.target.value)}
+                            placeholder="EURUSD, GBPUSD, GOLD, BTC/USD"
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-slate-400 mb-1">Trading Strategy</label>
+                          <textarea
+                            value={editTradingStrategy}
+                            onChange={(e) => setEditTradingStrategy(e.target.value)}
+                            placeholder="Describe your primary trading strategy..."
+                            rows={3}
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs font-medium text-slate-400 mb-1">Win Rate Target (%)</label>
+                            <input
+                              type="number"
+                              value={editWinRateTarget}
+                              onChange={(e) => setEditWinRateTarget(e.target.value)}
+                              placeholder="65"
+                              min="0"
+                              max="100"
+                              step="0.1"
+                              className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-slate-400 mb-1">Monthly Profit Target</label>
+                            <input
+                              type="text"
+                              value={editMonthlyTarget}
+                              onChange={(e) => setEditMonthlyTarget(e.target.value)}
+                              placeholder="$500, 10%, etc."
+                              className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-slate-400 mb-1">Preferred Timeframe</label>
+                            <select
+                              value={editChartTimeframe}
+                              onChange={(e) => setEditChartTimeframe(e.target.value)}
+                              className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            >
+                              <option value="">Select timeframe</option>
+                              <option value="M1">M1 (1 Minute)</option>
+                              <option value="M5">M5 (5 Minutes)</option>
+                              <option value="M15">M15 (15 Minutes)</option>
+                              <option value="M30">M30 (30 Minutes)</option>
+                              <option value="H1">H1 (1 Hour)</option>
+                              <option value="H4">H4 (4 Hours)</option>
+                              <option value="D1">D1 (Daily)</option>
+                              <option value="W1">W1 (Weekly)</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-slate-400 mb-1">Trading Timezone</label>
+                            <input
+                              type="text"
+                              value={editTradingTimezone}
+                              onChange={(e) => setEditTradingTimezone(e.target.value)}
+                              placeholder="London, New York, Asian"
+                              className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex gap-4">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={editUsesAutomated}
+                              onChange={(e) => setEditUsesAutomated(e.target.checked)}
+                              className="w-4 h-4 rounded border-blue-500/40 bg-slate-900/70 text-blue-500 focus:ring-blue-500 focus:ring-offset-0"
+                            />
+                            <span className="text-sm text-slate-300">Uses Automated Trading</span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={editAttendsLive}
+                              onChange={(e) => setEditAttendsLive(e.target.checked)}
+                              className="w-4 h-4 rounded border-blue-500/40 bg-slate-900/70 text-blue-500 focus:ring-blue-500 focus:ring-offset-0"
+                            />
+                            <span className="text-sm text-slate-300">Attends Live Sessions</span>
+                          </label>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                            <p className="text-xs text-slate-400 mb-1">Experience</p>
+                            <span className="text-white text-sm">{accountData.trading_experience_years ? `${accountData.trading_experience_years} years` : 'Not set'}</span>
+                          </div>
+                          <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                            <p className="text-xs text-slate-400 mb-1">Style</p>
+                            <span className="text-white text-sm">{accountData.trading_style || 'Not set'}</span>
+                          </div>
+                          <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                            <p className="text-xs text-slate-400 mb-1">Risk Tolerance</p>
+                            <span className="text-white text-sm">{accountData.risk_tolerance || 'Not set'}</span>
+                          </div>
+                          <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                            <p className="text-xs text-slate-400 mb-1">Instruments</p>
+                            <span className="text-white text-sm">{accountData.preferred_instruments || 'Not set'}</span>
+                          </div>
+                          <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                            <p className="text-xs text-slate-400 mb-1">Account Balance</p>
+                            <span className="text-white text-sm">{accountData.account_balance_range || 'Not set'}</span>
+                          </div>
+                          <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                            <p className="text-xs text-slate-400 mb-1">Leverage</p>
+                            <span className="text-white text-sm">{accountData.preferred_leverage || 'Not set'}</span>
+                          </div>
+                        </div>
+                        <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                          <p className="text-xs text-slate-400 mb-1">Favorite Pairs</p>
+                          <span className="text-white text-sm">{accountData.favorite_pairs || 'Not set'}</span>
+                        </div>
+                        {accountData.trading_strategy && (
+                          <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                            <p className="text-xs text-slate-400 mb-1">Strategy</p>
+                            <span className="text-white text-sm">{accountData.trading_strategy}</span>
+                          </div>
+                        )}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                            <p className="text-xs text-slate-400 mb-1">Win Rate Target</p>
+                            <span className="text-white text-sm">{accountData.win_rate_target ? `${accountData.win_rate_target}%` : 'Not set'}</span>
+                          </div>
+                          <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                            <p className="text-xs text-slate-400 mb-1">Monthly Target</p>
+                            <span className="text-white text-sm">{accountData.monthly_profit_target || 'Not set'}</span>
+                          </div>
+                        </div>
+                        <div className="flex gap-3">
+                          {accountData.uses_automated_trading && (
+                            <span className="px-3 py-1 bg-blue-500/20 border border-blue-500/40 rounded-full text-blue-300 text-xs">
+                              Automated Trading
+                            </span>
+                          )}
+                          {accountData.attends_live_sessions && (
+                            <span className="px-3 py-1 bg-cyan-500/20 border border-cyan-500/40 rounded-full text-cyan-300 text-xs">
+                              Attends Live Sessions
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Personality & Interests */}
+                  <div className="bg-slate-900/70 rounded-xl p-6 border border-slate-800">
+                    <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                      <User className="h-5 w-5 text-cyan-300" />
+                      Personality & Interests
+                    </h3>
+                    
+                    {isEditingProfile ? (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-xs font-medium text-slate-400 mb-1">Hobbies & Interests</label>
+                          <textarea
+                            value={editHobbies}
+                            onChange={(e) => setEditHobbies(e.target.value)}
+                            placeholder="Gaming, fitness, reading, travel, etc."
+                            rows={2}
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-slate-400 mb-1">Personality Traits</label>
+                          <textarea
+                            value={editPersonalityTraits}
+                            onChange={(e) => setEditPersonalityTraits(e.target.value)}
+                            placeholder="Analytical, patient, risk-taker, disciplined, etc."
+                            rows={2}
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-slate-400 mb-1">Trading Goals</label>
+                          <textarea
+                            value={editTradingGoals}
+                            onChange={(e) => setEditTradingGoals(e.target.value)}
+                            placeholder="What are your short-term and long-term trading goals?"
+                            rows={3}
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-slate-400 mb-1">Learning Style</label>
+                          <select
+                            value={editLearningStyle}
+                            onChange={(e) => setEditLearningStyle(e.target.value)}
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                          >
+                            <option value="">Select learning style</option>
+                            <option value="Visual">Visual (Charts, Videos)</option>
+                            <option value="Auditory">Auditory (Podcasts, Calls)</option>
+                            <option value="Reading">Reading (Articles, PDFs)</option>
+                            <option value="Kinesthetic">Kinesthetic (Hands-on Practice)</option>
+                            <option value="Mixed">Mixed</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-slate-400 mb-1">Bio</label>
+                          <textarea
+                            value={editBio}
+                            onChange={(e) => setEditBio(e.target.value)}
+                            placeholder="Tell us about yourself and your trading journey..."
+                            rows={4}
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {accountData.hobbies && (
+                          <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                            <p className="text-xs text-slate-400 mb-1">Hobbies</p>
+                            <span className="text-white text-sm">{accountData.hobbies}</span>
+                          </div>
+                        )}
+                        {accountData.personality_traits && (
+                          <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                            <p className="text-xs text-slate-400 mb-1">Personality Traits</p>
+                            <span className="text-white text-sm">{accountData.personality_traits}</span>
+                          </div>
+                        )}
+                        {accountData.trading_goals && (
+                          <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                            <p className="text-xs text-slate-400 mb-1">Trading Goals</p>
+                            <span className="text-white text-sm">{accountData.trading_goals}</span>
+                          </div>
+                        )}
+                        {accountData.learning_style && (
+                          <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                            <p className="text-xs text-slate-400 mb-1">Learning Style</p>
+                            <span className="text-white text-sm">{accountData.learning_style}</span>
+                          </div>
+                        )}
+                        {accountData.bio && (
+                          <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
+                            <p className="text-xs text-slate-400 mb-1">Bio</p>
+                            <span className="text-white text-sm whitespace-pre-wrap">{accountData.bio}</span>
+                          </div>
+                        )}
+                        {!accountData.hobbies && !accountData.personality_traits && !accountData.trading_goals && !accountData.learning_style && !accountData.bio && (
+                          <p className="text-center text-slate-500 py-4">No information added yet</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
                   {/* VIP Status */}
-                  <div className="bg-gradient-to-r from-yellow-500/10 to-purple-500/10 rounded-xl p-6 border border-yellow-500/30">
+                  <div className="bg-slate-900/70 rounded-xl p-6 border border-slate-800">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-xl font-bold text-white flex items-center gap-2">
                         <Crown className="h-5 w-5 text-yellow-400" />
                         VIP Status
                       </h3>
                       {accountData.is_vip ? (
-                        <span className="px-3 py-1 bg-yellow-500/20 border border-yellow-500/30 rounded-full text-yellow-400 text-sm font-semibold">
+                        <span className="px-3 py-1 bg-cyan-500/20 border border-cyan-500/40 rounded-full text-cyan-300 text-sm font-semibold">
                           Active
                         </span>
                       ) : (
@@ -589,22 +1731,22 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
 
                   {/* Affiliate Stats */}
                   {accountData.affiliate_code && (
-                    <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
+                    <div className="bg-slate-900/70 rounded-xl p-6 border border-slate-800">
                       <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                        <TrendingUp className="h-5 w-5 text-green-400" />
+                        <TrendingUp className="h-5 w-5 text-cyan-300" />
                         Affiliate Dashboard
                       </h3>
                       
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
+                        <div className="bg-slate-900/70 rounded-lg p-4 border border-slate-800">
                           <p className="text-sm text-slate-400 mb-1">Affiliate Code</p>
                           <div className="flex items-center justify-between">
                             <span className="text-lg font-bold text-white">{accountData.affiliate_code}</span>
                             <button
                               onClick={copyAffiliateCode}
-                              className="p-2 hover:bg-slate-700 rounded transition-colors"
+                              className="p-2 hover:bg-blue-600/20 rounded border border-transparent hover:border-blue-500/40 transition-colors"
                             >
-                              <Copy className="h-4 w-4 text-blue-400" />
+                              <Copy className="h-4 w-4 text-cyan-300" />
                             </button>
                           </div>
                         </div>
@@ -616,49 +1758,53 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                         
                         <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
                           <p className="text-sm text-slate-400 mb-1">Commission Balance</p>
-                          <span className="text-lg font-bold text-green-400">${(accountData.commission_balance || 0).toFixed(2)}</span>
+                          <span className="text-lg font-bold text-cyan-300">${(accountData.commission_balance || 0).toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
                   )}
 
                   {/* MT5 Accounts Section */}
-                  <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
+                  <div className="bg-slate-900/70 rounded-xl p-6 border border-slate-800">
                     <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                      <Shield className="h-5 w-5 text-blue-400" />
+                      <Shield className="h-5 w-5 text-cyan-300" />
                       MT5 Trading Accounts
                     </h3>
 
                     {/* Add New MT5 Account */}
-                    <div className="mb-6 p-4 bg-slate-900/50 rounded-lg border border-slate-700">
+                    <div className="mb-6 p-4 bg-slate-900/70 rounded-lg border border-slate-800">
                       <p className="text-sm text-slate-400 mb-3">Add New MT5 Account</p>
-                      <div className="flex flex-col sm:flex-row gap-3">
+                      <div className="flex flex-col gap-3">
                         <input
                           type="text"
                           placeholder="MT5 Account ID"
                           value={newMT5Id}
                           onChange={(e) => setNewMT5Id(e.target.value)}
-                          className="flex-1 px-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                          className="w-full px-4 py-2 bg-slate-900/70 border border-slate-800 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500/70 focus:bg-blue-500/5"
                         />
-                        <input
-                          type="text"
-                          placeholder="Broker Name (Optional)"
-                          value={newBrokerName}
-                          onChange={(e) => setNewBrokerName(e.target.value)}
-                          className="flex-1 px-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
-                        />
-                        <button
-                          onClick={handleAddMT5Account}
-                          disabled={saving || !newMT5Id.trim()}
-                          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors whitespace-nowrap"
-                        >
-                          {saving ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Plus className="h-4 w-4" />
-                          )}
-                          Add Account
-                        </button>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <select
+                            value={newBrokerName}
+                            onChange={(e) => setNewBrokerName(e.target.value as "XM" | "Vantage" | "")}
+                            className="flex-1 px-4 py-2 bg-slate-900/70 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-blue-500/70 focus:bg-blue-500/5"
+                          >
+                            <option value="">Select Broker</option>
+                            <option value="XM">XM</option>
+                            <option value="Vantage">Vantage</option>
+                          </select>
+                          <button
+                            onClick={handleAddMT5Account}
+                            disabled={saving || !newMT5Id.trim() || !newBrokerName}
+                            className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 disabled:bg-slate-800 disabled:cursor-not-allowed text-blue-300 border border-blue-500/40 rounded-lg transition-colors whitespace-nowrap"
+                          >
+                            {saving ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Plus className="h-4 w-4" />
+                            )}
+                            Add Account
+                          </button>
+                        </div>
                       </div>
                     </div>
 
@@ -668,36 +1814,94 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                         {accountData.mt5_accounts.map((account) => (
                           <div
                             key={account.id}
-                            className="flex items-center justify-between p-4 bg-slate-900/50 rounded-lg border border-slate-700 hover:border-blue-500/30 transition-colors"
+                            className="p-4 bg-slate-900/70 rounded-lg border border-slate-800 hover:border-blue-500/40 transition-colors"
                           >
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="font-mono text-white font-semibold">{account.mt5_id}</span>
-                                {account.is_primary && (
-                                  <span className="px-2 py-0.5 bg-blue-500/20 border border-blue-500/30 rounded text-blue-400 text-xs">
-                                    Primary
-                                  </span>
-                                )}
+                            {editingMT5Id === account.mt5_id ? (
+                              // Edit Mode
+                              <div className="space-y-3">
+                                <input
+                                  type="text"
+                                  value={editMT5AccountId}
+                                  onChange={(e) => setEditMT5AccountId(e.target.value)}
+                                  placeholder="MT5 Account ID"
+                                  className="w-full px-4 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                />
+                                <select
+                                  value={editMT5Broker}
+                                  onChange={(e) => setEditMT5Broker(e.target.value as "XM" | "Vantage")}
+                                  className="w-full px-4 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                >
+                                  <option value="">Select Broker</option>
+                                  <option value="XM">XM</option>
+                                  <option value="Vantage">Vantage</option>
+                                </select>
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => handleEditMT5Account(account.mt5_id)}
+                                    disabled={saving || !editMT5AccountId.trim() || !editMT5Broker}
+                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 disabled:bg-slate-800 text-blue-300 border border-blue-500/40 rounded-lg transition-colors"
+                                  >
+                                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                                    Save Changes
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setEditingMT5Id(null);
+                                      setEditMT5AccountId("");
+                                      setEditMT5Broker("");
+                                    }}
+                                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 rounded-lg transition-colors"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-4 text-sm text-slate-400">
-                                <span>Broker: {account.broker_name || 'Unknown'}</span>
-                                <span className={`px-2 py-0.5 rounded ${
-                                  account.status === 'Verified' 
-                                    ? 'bg-green-500/20 text-green-400' 
-                                    : 'bg-yellow-500/20 text-yellow-400'
-                                }`}>
-                                  {account.status}
-                                </span>
+                            ) : (
+                              // View Mode
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="font-mono text-white font-semibold">{account.mt5_id}</span>
+                                    {account.is_primary && (
+                                      <span className="px-2 py-0.5 bg-cyan-500/20 border border-cyan-500/40 rounded text-cyan-300 text-xs">
+                                        Primary
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-4 text-sm text-slate-400">
+                                    <span>Broker: {account.broker_name || 'Unknown'}</span>
+                                    <span className={`px-2 py-0.5 rounded ${
+                                      account.status === 'Verified' 
+                                        ? 'bg-blue-500/20 border border-blue-500/40 text-blue-300' 
+                                        : 'bg-cyan-500/20 border border-cyan-500/40 text-cyan-300'
+                                    }`}>
+                                      {account.status}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => {
+                                      setEditingMT5Id(account.mt5_id);
+                                      setEditMT5AccountId(account.mt5_id);
+                                      setEditMT5Broker((account.broker_name === "XM" || account.broker_name === "Vantage" ? account.broker_name : "") as "XM" | "Vantage" | "");
+                                    }}
+                                    disabled={saving}
+                                    className="p-2 hover:bg-blue-600/20 rounded border border-transparent hover:border-blue-500/40 transition-colors disabled:opacity-50"
+                                  >
+                                    <Edit2 className="h-4 w-4 text-cyan-300" />
+                                  </button>
+                                  {!account.is_primary && (
+                                    <button
+                                      onClick={() => handleRemoveMT5Account(account.mt5_id)}
+                                      disabled={saving}
+                                      className="p-2 hover:bg-red-600/20 rounded border border-transparent hover:border-red-500/40 transition-colors disabled:opacity-50"
+                                    >
+                                      <Trash2 className="h-4 w-4 text-red-300" />
+                                    </button>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                            {!account.is_primary && (
-                              <button
-                                onClick={() => handleRemoveMT5Account(account.mt5_id)}
-                                disabled={saving}
-                                className="p-2 hover:bg-red-500/20 rounded transition-colors disabled:opacity-50"
-                              >
-                                <Trash2 className="h-4 w-4 text-red-400" />
-                              </button>
                             )}
                           </div>
                         ))}
@@ -712,18 +1916,25 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                   </div>
 
                   {/* Broker Registration Link */}
-                  <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl p-6 border border-blue-500/30">
+                  <div className="bg-blue-500/10 rounded-xl p-6 border border-blue-500/40">
                     <h3 className="text-lg font-bold text-white mb-2">Need a Broker Account?</h3>
                     <p className="text-sm text-slate-400 mb-4">
                       Register with our partner brokers to start trading and unlock exclusive benefits.
                     </p>
-                    <a
-                      href="/recruit"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                      Register with Brokers
-                    </a>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => {
+                          // Store return flag to AccountManager
+                          localStorage.setItem('return_to_account_manager', 'true');
+                          onClose(); // Close modal
+                          router.push('/recruit'); // Navigate to recruit page
+                        }}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/40 rounded-lg transition-colors"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        Register with Brokers
+                      </button>
+                    </div>
                   </div>
                 </>
               ) : null}

@@ -852,7 +852,22 @@ function HomeContent() {
   const [activeRemoteScene, setActiveRemoteScene] = useState<RemoteSplineMeta | null>(null);
   const [isSplitModalOpen, setIsSplitModalOpen] = useState(false);
   const splinePreloadRanRef = useRef(false);
-  const { setLoaderv2Open, setV2Unlocked, devSkipPageModeAndLoader, setDevSkipPageModeAndLoader, openDiscordStageModal } = useUIState();
+  const { setLoaderv2Open, setV2Unlocked, devSkipPageModeAndLoader, setDevSkipPageModeAndLoader, openDiscordStageModal, openAccountManagerModal } = useUIState();
+
+  // Check for Account Manager query parameter and open modal
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('openAccountManager') === 'true') {
+        // Clear the URL parameter
+        window.history.replaceState({}, '', window.location.pathname);
+        // Open Account Manager modal after a short delay to ensure everything is loaded
+        setTimeout(() => {
+          openAccountManagerModal();
+        }, 500);
+      }
+    }
+  }, [openAccountManagerModal]);
 
   // Dev keyboard shortcut to skip pagemode and loader
   useDevSkipShortcut(() => {
