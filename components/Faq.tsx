@@ -24,6 +24,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { useUnifiedPerformance } from '@/hooks/useDesktopPerformance';
+import { createSupabaseClient } from '@/lib/supabase';
 
 // ==========================================
 // 0. CONFIGURATION & CONSTANTS
@@ -588,9 +589,30 @@ function FAQCategoryItem({ data }: { data: FAQCategoryData }) {
 }
 
 const FaqModalContent = ({onClose}: {onClose: () => void}) => {
-    useEffect(() => {
-        injectGlobalStyles();
-    }, []);
+  const [faqData, setFaqData] = useState<FAQCategoryData[]>(FAQ_CONTENT);
+
+  useEffect(() => {
+    injectGlobalStyles();
+  }, []);
+
+  useEffect(() => {
+    const loadFaq = async () => {
+      try {
+        const supabase = createSupabaseClient();
+        const { data, error } = await supabase
+          .from('faq_content')
+          .select('content')
+          .eq('id', 'main')
+          .single();
+        if (!error && data?.content) {
+          setFaqData(data.content as FAQCategoryData[]);
+        }
+      } catch (err) {
+        console.error('[FAQ] Failed to load FAQ content:', err);
+      }
+    };
+    loadFaq();
+  }, []);
 
     return (
         <>
@@ -622,7 +644,7 @@ const FaqModalContent = ({onClose}: {onClose: () => void}) => {
             {/* Content List with Marquees */}
             <div className="menu-wrap relative z-10" style={{ borderTop: '1px solid #3b82f6', boxShadow: '0 -1px 4px rgba(59, 130, 246, 0.3)' }}>
                 <nav className="menu flex flex-col pb-20">
-                    {FAQ_CONTENT.map((cat, idx) => (
+                      {faqData.map((cat, idx) => (
                        <FAQCategoryItem key={idx} data={cat} />
                     ))}
                 </nav>

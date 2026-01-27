@@ -351,6 +351,34 @@ export function AdminHubModal({
     setTimeout(() => setToast(null), 3200);
   }, []);
 
+  const loadFaqFromDb = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("faq_content")
+      .select("content")
+      .eq("id", "main")
+      .single();
+    if (error) {
+      showError(`Load FAQ failed: ${error.message}`);
+      return;
+    }
+    if (data?.content) {
+      setFaqCategories(data.content);
+      showToast("FAQ content loaded from database");
+    }
+  }, [supabase, showError, showToast]);
+
+  const saveFaqToDb = useCallback(async () => {
+    const payload = { id: "main", content: faqCategories, updated_at: new Date().toISOString() };
+    const { error } = await supabase
+      .from("faq_content")
+      .upsert(payload, { onConflict: "id" });
+    if (error) {
+      showError(`Save FAQ failed: ${error.message}`);
+      return;
+    }
+    showToast("FAQ content saved to database");
+  }, [supabase, faqCategories, showError, showToast]);
+
   // -----------------------------------------------------------------------
   // AUTH GUARD - Only allow configured admin email
   // -----------------------------------------------------------------------
@@ -381,6 +409,12 @@ export function AdminHubModal({
       sub?.subscription?.unsubscribe();
     };
   }, [adminEmailEnv, supabase]);
+
+  useEffect(() => {
+    if (activeTab === "faq" && faqCategories.length === 0) {
+      loadFaqFromDb();
+    }
+  }, [activeTab, faqCategories.length, loadFaqFromDb]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -1432,31 +1466,28 @@ export function AdminHubModal({
   );
 
   const renderFaq = () => (
-    <div className="space-y-4 overflow-y-auto max-h-[70vh] pr-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900/60">
+    <div className="space-y-2 overflow-y-auto max-h-[70vh] pr-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900/60 [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]">
       <div className="flex items-center justify-between px-2">
         <h3 className="text-white font-semibold text-sm">FAQ Content Editor</h3>
-        <button
-          onClick={() => {
-            // Load FAQ from Faq.tsx component
-            import('@/components/Faq').then(module => {
-              if (module.FAQ_CONTENT) {
-                setFaqCategories(module.FAQ_CONTENT);
-                showToast('FAQ content loaded from Faq.tsx');
-              }
-            }).catch(err => showError('Failed to load FAQ content'));
-          }}
-          className="px-3 py-1.5 text-xs rounded-md bg-blue-600 text-white border border-blue-500/60"
-        >
-          Load Current FAQ
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={loadFaqFromDb}
+            className="px-2 py-1 text-xs rounded-md bg-slate-800 text-slate-200 border border-slate-700"
+          >
+            Load FAQ
+          </button>
+          <button
+            onClick={saveFaqToDb}
+            className="px-2 py-1 text-xs rounded-md bg-blue-600 text-white border border-blue-500/60"
+          >
+            Save FAQ
+          </button>
+        </div>
       </div>
 
-      <div className="p-4 rounded-lg border border-blue-500/30 bg-slate-900/50">
-        <p className="text-sm text-slate-300 mb-2">
-          Edit FAQ categories and items below. Changes are displayed in real-time but need to be saved to the FAQ component file.
-        </p>
-        <p className="text-xs text-slate-400">
-          Note: This is a visual editor. To persist changes, you'll need to copy the updated JSON structure to components/Faq.tsx.
+      <div className="p-3 rounded-lg border border-blue-500/30 bg-slate-900/50">
+        <p className="text-xs text-slate-300">
+          Edit FAQ categories and items below. Changes save directly to the live FAQ content.
         </p>
       </div>
 
@@ -1467,8 +1498,8 @@ export function AdminHubModal({
       ) : (
         <div className="space-y-3">
           {faqCategories.map((category, catIdx) => (
-            <div key={catIdx} className="p-3 rounded-lg border border-slate-700 bg-slate-900/70">
-              <div className="flex items-center justify-between mb-3">
+            <div key={catIdx} className="p-2 rounded-lg border border-slate-700 bg-slate-900/70">
+              <div className="flex items-center justify-between mb-2">
                 <input
                   value={category.category}
                   onChange={(e) => {
@@ -1476,7 +1507,7 @@ export function AdminHubModal({
                     updated[catIdx] = { ...updated[catIdx], category: e.target.value };
                     setFaqCategories(updated);
                   }}
-                  className="flex-1 rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-white font-semibold"
+                  className="flex-1 rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-sm text-white font-semibold"
                   placeholder="Category Name"
                 />
                 <button
@@ -1484,7 +1515,7 @@ export function AdminHubModal({
                     const updated = faqCategories.filter((_, i) => i !== catIdx);
                     setFaqCategories(updated);
                   }}
-                  className="ml-2 p-2 rounded-md bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-300"
+                  className="ml-2 p-1.5 rounded-md bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-300"
                   title="Delete Category"
                 >
                   <Trash2 className="w-4 h-4" />

@@ -380,24 +380,24 @@ export default function CourseAdminPanel() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="bg-gradient-to-br from-black via-gray-900 to-black text-white p-3 sm:p-6 space-y-3 overflow-y-auto max-h-[70vh] pr-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900/60 [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]">
+      <div className="w-full">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-blue-400 flex items-center gap-3" style={{ textShadow: '0 0 10px #3b82f6' }}>
-            <BookOpen className="text-blue-400" size={40} style={{ filter: 'drop-shadow(0 0 8px #3b82f6)' }} />
+        <div className="mb-4">
+          <h1 className="text-xl sm:text-3xl font-bold text-blue-400 flex items-center gap-2" style={{ textShadow: '0 0 10px #3b82f6' }}>
+            <BookOpen className="text-blue-400" size={24} style={{ filter: 'drop-shadow(0 0 8px #3b82f6)' }} />
             Course Admin Panel
           </h1>
-          <p className="text-gray-400 mt-2">Manage your trading course content</p>
+          <p className="text-gray-400 mt-1 text-xs sm:text-sm">Manage your trading course content</p>
         </div>
 
         {/* Level Tabs */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+        <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
           {levels.map((level) => (
             <button
               key={level.id}
               onClick={() => setSelectedLevel(level.id)}
-              className={`px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition-all ${
+              className={`px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
                 selectedLevel === level.id
                   ? 'bg-blue-500 text-white'
                   : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
@@ -408,24 +408,24 @@ export default function CourseAdminPanel() {
           ))}
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-6">
+        <div className="grid lg:grid-cols-2 gap-3 sm:gap-6">
           {/* Modules Section */}
-          <div className="bg-gradient-to-br from-gray-900/80 to-black border border-blue-500/30 rounded-xl p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-blue-400" style={{ textShadow: '0 0 8px #3b82f6' }}>Modules</h2>
+          <div className="bg-gradient-to-br from-gray-900/80 to-black border border-blue-500/30 rounded-xl p-3 sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg sm:text-2xl font-bold text-blue-400" style={{ textShadow: '0 0 8px #3b82f6' }}>Modules</h2>
               <button
                 onClick={() => setEditingModule({ title: '', description: '', is_published: false, order_index: modules.length })}
-                className="bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-400 transition-all flex items-center gap-2"
+                className="bg-blue-500 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold hover:bg-blue-400 transition-all flex items-center gap-2"
               >
-                <Plus size={20} />
+                <Plus size={16} />
                 Add Module
               </button>
             </div>
 
             {/* Module List */}
-            <div className="space-y-3 max-h-[600px] overflow-y-auto">
+            <div className="space-y-3 max-h-[50vh] sm:max-h-[600px] overflow-y-auto">
               {modules.map((module) => (
-                <div key={module.id} className="border border-blue-500/30 rounded-lg p-4">
+                <div key={module.id} className="border border-blue-500/30 rounded-lg p-3 sm:p-4">
                   <div className="flex items-start justify-between">
                     <div 
                       className="flex-1 cursor-pointer"
@@ -435,14 +435,14 @@ export default function CourseAdminPanel() {
                       }}
                     >
                       <div className="flex items-center gap-2 mb-2">
-                        <h3 className="font-bold text-white">{module.title}</h3>
+                        <h3 className="font-bold text-white text-sm sm:text-base">{module.title}</h3>
                         {module.is_published ? (
                           <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Published</span>
                         ) : (
                           <span className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded">Draft</span>
                         )}
                       </div>
-                      <p className="text-sm text-gray-400">{module.description}</p>
+                      <p className="text-xs sm:text-sm text-gray-400">{module.description}</p>
                     </div>
                     <div className="flex gap-2">
                       <button
@@ -487,10 +487,10 @@ export default function CourseAdminPanel() {
 
             {/* Module Edit Form */}
             {editingModule && (
-              <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4">
                 <div className="bg-gray-900 border-2 border-blue-500 rounded-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
-                  <div className="flex items-center justify-between p-6 pb-4 border-b border-blue-500/30">
-                    <h3 className="text-2xl font-bold text-blue-400" style={{ textShadow: '0 0 8px #3b82f6' }}>
+                  <div className="flex items-center justify-between p-4 sm:p-6 pb-3 sm:pb-4 border-b border-blue-500/30">
+                    <h3 className="text-lg sm:text-2xl font-bold text-blue-400" style={{ textShadow: '0 0 8px #3b82f6' }}>
                       {editingModule.id ? 'Edit Module' : 'New Module'}
                     </h3>
                     <button onClick={() => setEditingModule(null)} className="text-gray-400 hover:text-white">
@@ -498,7 +498,7 @@ export default function CourseAdminPanel() {
                     </button>
                   </div>
 
-                  <div className="space-y-4 overflow-y-auto flex-1 p-6">
+                  <div className="space-y-4 overflow-y-auto flex-1 p-4 sm:p-6">
                     <div>
                       <label className="block text-sm font-semibold text-blue-400 mb-2">Title</label>
                       <input
@@ -565,9 +565,9 @@ export default function CourseAdminPanel() {
           </div>
 
           {/* Lessons Section */}
-          <div className="bg-gradient-to-br from-gray-900/80 to-black border border-blue-500/30 rounded-xl p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-blue-400" style={{ textShadow: '0 0 8px #3b82f6' }}>Lessons</h2>
+          <div className="bg-gradient-to-br from-gray-900/80 to-black border border-blue-500/30 rounded-xl p-3 sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg sm:text-2xl font-bold text-blue-400" style={{ textShadow: '0 0 8px #3b82f6' }}>Lessons</h2>
               <button
                 onClick={() => selectedModule && setEditingLesson({ 
                   title: '', 
@@ -578,9 +578,9 @@ export default function CourseAdminPanel() {
                   order_index: lessons.length 
                 })}
                 disabled={!selectedModule}
-                className="bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-400 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-blue-500 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold hover:bg-blue-400 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Plus size={20} />
+                <Plus size={16} />
                 Add Lesson
               </button>
             </div>
@@ -590,13 +590,13 @@ export default function CourseAdminPanel() {
                 Select a module to manage lessons
               </div>
             ) : (
-              <div className="space-y-3 max-h-[600px] overflow-y-auto">
+              <div className="space-y-3 max-h-[50vh] sm:max-h-[600px] overflow-y-auto">
                 {lessons.map((lesson) => (
-                  <div key={lesson.id} className="border border-blue-500/30 rounded-lg p-4">
+                  <div key={lesson.id} className="border border-blue-500/30 rounded-lg p-3 sm:p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-bold text-white">{lesson.title}</h3>
+                          <h3 className="font-bold text-white text-sm sm:text-base">{lesson.title}</h3>
                           {lesson.is_published ? (
                             <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Published</span>
                           ) : (
@@ -606,8 +606,8 @@ export default function CourseAdminPanel() {
                             <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">Free</span>
                           )}
                         </div>
-                        <p className="text-sm text-gray-400 mb-2">{lesson.description}</p>
-                        <div className="flex items-center gap-3 text-xs text-gray-500">
+                        <p className="text-xs sm:text-sm text-gray-400 mb-2">{lesson.description}</p>
+                        <div className="flex items-center gap-3 text-[11px] text-gray-500">
                           <span className="flex items-center gap-1">
                             {lesson.content_type === 'video' ? <Video size={14} /> : <BookOpen size={14} />}
                             {lesson.content_type}
@@ -637,10 +637,10 @@ export default function CourseAdminPanel() {
 
             {/* Lesson Edit Form */}
             {editingLesson && (
-              <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4">
                 <div className="bg-gray-900 border-2 border-blue-500 rounded-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
-                  <div className="flex items-center justify-between p-6 pb-4 border-b border-blue-500/30">
-                    <h3 className="text-2xl font-bold text-blue-400" style={{ textShadow: '0 0 8px #3b82f6' }}>
+                  <div className="flex items-center justify-between p-4 sm:p-6 pb-3 sm:pb-4 border-b border-blue-500/30">
+                    <h3 className="text-lg sm:text-2xl font-bold text-blue-400" style={{ textShadow: '0 0 8px #3b82f6' }}>
                       {editingLesson.id ? 'Edit Lesson' : 'New Lesson'}
                     </h3>
                     <button onClick={() => setEditingLesson(null)} className="text-gray-400 hover:text-white">
@@ -648,7 +648,7 @@ export default function CourseAdminPanel() {
                     </button>
                   </div>
 
-                  <div className="space-y-4 overflow-y-auto flex-1 p-6">
+                  <div className="space-y-4 overflow-y-auto flex-1 p-4 sm:p-6">
                     <div>
                       <label className="block text-sm font-semibold text-blue-400 mb-2">Title</label>
                       <input
