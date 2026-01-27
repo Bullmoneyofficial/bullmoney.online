@@ -113,8 +113,51 @@ const scoreItem = (item: NewsItem) => {
   return recency * 0.6 + Math.min(1, kw / 3) * 0.35 + sourceBoost;
 };
 
+// --- OPTIMIZED IMAGE COMPONENT ---
+const OptimizedNewsImage = memo(({ 
+  src, 
+  alt = "",
+  className = "",
+}: { 
+  src?: string; 
+  alt?: string; 
+  className?: string;
+}) => {
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+
+  if (!src || error) {
+    return (
+      <div className={`bg-gradient-to-br from-blue-900/20 to-black flex items-center justify-center ${className}`}>
+        <Newspaper className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500/30" />
+      </div>
+    );
+  }
+
+  return (
+    <div className={`relative overflow-hidden bg-neutral-900 ${className}`}>
+      {!loaded && (
+        <div className="absolute inset-0 bg-neutral-800 animate-pulse" />
+      )}
+      <img
+        src={src}
+        alt={alt}
+        onLoad={() => setLoaded(true)}
+        onError={() => setError(true)}
+        loading="lazy"
+        decoding="async"
+        referrerPolicy="no-referrer"
+        className={`w-full h-full object-cover transition-opacity duration-200 ${
+          loaded ? "opacity-100" : "opacity-0"
+        }`}
+      />
+    </div>
+  );
+});
+OptimizedNewsImage.displayName = "OptimizedNewsImage";
+
 // --- NEWS CARD COMPONENT ---
-const NewsCard = memo(({ item }: { item: NewsItem }) => {
+const NewsCard = memo(({ item, preview }: { item: NewsItem; preview?: { image?: string } }) => {
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (item.link) {
@@ -135,6 +178,7 @@ const NewsCard = memo(({ item }: { item: NewsItem }) => {
   };
 
   const colorClass = categoryColors[item.category || "other"] || categoryColors.other;
+  const imageUrl = item.thumbnail || preview?.image;
 
   return (
     <motion.div
@@ -144,39 +188,44 @@ const NewsCard = memo(({ item }: { item: NewsItem }) => {
       className="relative rounded-lg overflow-hidden cursor-pointer group bg-black border border-blue-500/20 hover:border-blue-500/40 transition-all"
       style={{ boxShadow: '0 0 4px rgba(59, 130, 246, 0.1)' }}
     >
-      <div className="p-3 space-y-2">
-        {/* Header */}
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            <span className={`px-2 py-0.5 rounded-full bg-gradient-to-r ${colorClass} text-[9px] font-bold uppercase tracking-wider border shrink-0`}>
+      <div className="flex gap-2 sm:gap-3 p-2 sm:p-3">
+        {/* Image Thumbnail */}
+        <div className="shrink-0 w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-md overflow-hidden">
+          <OptimizedNewsImage
+            src={imageUrl}
+            alt={item.title}
+            className="w-full h-full"
+          />
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0 flex flex-col gap-1 sm:gap-1.5">
+          {/* Header */}
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            <span className={`px-1.5 py-0.5 sm:px-2 rounded-full bg-gradient-to-r ${colorClass} text-[8px] sm:text-[9px] font-bold uppercase tracking-wider border shrink-0`}>
               {item.category || "News"}
             </span>
-            <span className="text-[9px] font-mono text-blue-400/70 truncate">
+            <span className="text-[8px] sm:text-[9px] font-mono text-blue-400/70 truncate">
               {item.source || "Unknown"}
             </span>
           </div>
-          <div className="flex items-center gap-1 text-[9px] text-blue-400/50 shrink-0">
-            <Clock className="w-3 h-3" />
-            {timeAgo(item.published_at)}
+
+          {/* Title */}
+          <h4 className="text-xs sm:text-sm font-semibold text-white line-clamp-2 group-hover:text-blue-300 transition-colors leading-tight">
+            {item.title}
+          </h4>
+
+          {/* Footer - Time and Read More */}
+          <div className="flex items-center justify-between gap-2 mt-auto">
+            <div className="flex items-center gap-1 text-[8px] sm:text-[9px] text-blue-400/50">
+              <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+              <span>{timeAgo(item.published_at)}</span>
+            </div>
+            <div className="flex items-center gap-0.5 sm:gap-1 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-blue-400/70 group-hover:text-blue-400 transition-colors">
+              <span className="hidden sm:inline">Read</span>
+              <ExternalLink className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+            </div>
           </div>
-        </div>
-
-        {/* Title */}
-        <h4 className="text-sm font-semibold text-white line-clamp-2 group-hover:text-blue-300 transition-colors leading-tight">
-          {item.title}
-        </h4>
-
-        {/* Description */}
-        {item.description && (
-          <p className="text-[10px] text-slate-400 line-clamp-2 leading-relaxed">
-            {item.description}
-          </p>
-        )}
-
-        {/* Footer */}
-        <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-blue-400/70 group-hover:text-blue-400 transition-colors">
-          <span>Read More</span>
-          <ExternalLink className="w-3 h-3" />
         </div>
       </div>
     </motion.div>
@@ -193,6 +242,29 @@ export const UltimateHubNewsTab = memo(() => {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
+  const [previews, setPreviews] = useState<Record<string, { image?: string }>>({});
+  
+  const fetchingRef = React.useRef<Set<string>>(new Set());
+
+  // Fetch link preview for images
+  const fetchPreview = useCallback(async (url: string) => {
+    if (fetchingRef.current.has(url) || previews[url]) return;
+    fetchingRef.current.add(url);
+    try {
+      const r = await fetch(`/api/link-preview?url=${encodeURIComponent(url)}`);
+      const json = await r.json();
+      if (json && typeof json === "object" && json.image) {
+        setPreviews((prev) => ({
+          ...prev,
+          [url]: { image: json.image },
+        }));
+      }
+    } catch {
+      // Ignore errors
+    } finally {
+      fetchingRef.current.delete(url);
+    }
+  }, [previews]);
 
   // Load news data
   const loadNews = useCallback(async () => {
@@ -241,6 +313,26 @@ export const UltimateHubNewsTab = memo(() => {
     return [...filtered].sort((a, b) => scoreItem(b) - scoreItem(a));
   }, [items, activeMarket]);
 
+  // Prefetch previews for items without thumbnails
+  useEffect(() => {
+    const itemsNeedingPreviews = filteredItems
+      .slice(0, 15) // Only fetch for first 15 items
+      .filter(item => !item.thumbnail && item.link && !previews[item.link]);
+    
+    if (itemsNeedingPreviews.length === 0) return;
+
+    let cancelled = false;
+    const fetchAll = async () => {
+      for (const item of itemsNeedingPreviews.slice(0, 8)) {
+        if (cancelled) break;
+        await fetchPreview(item.link);
+        await new Promise(resolve => setTimeout(resolve, 100)); // Small delay between requests
+      }
+    };
+    fetchAll();
+    return () => { cancelled = true; };
+  }, [filteredItems, previews, fetchPreview]);
+
   const handleRefresh = useCallback(() => {
     setRefreshKey(k => k + 1);
   }, []);
@@ -249,18 +341,18 @@ export const UltimateHubNewsTab = memo(() => {
     <div className="flex flex-col h-full bg-black">
       {/* Header with Filters */}
       <div className="shrink-0 border-b border-blue-500/30 bg-black" style={{ boxShadow: '0 2px 8px rgba(59, 130, 246, 0.2)' }}>
-        <div className="p-3 space-y-3">
+        <div className="p-2 sm:p-3 space-y-2 sm:space-y-3">
           {/* Top Bar */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Newspaper className="w-4 h-4 text-blue-400" style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
-              <h2 className="text-sm font-bold text-blue-300" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
-                Global News Feed
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <Newspaper className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400" style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
+              <h2 className="text-xs sm:text-sm font-bold text-blue-300" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
+                Global News
               </h2>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               {lastUpdated && (
-                <span className="text-[9px] text-blue-400/50 font-mono">
+                <span className="text-[8px] sm:text-[9px] text-blue-400/50 font-mono hidden sm:inline">
                   {lastUpdated.toLocaleTimeString()}
                 </span>
               )}
@@ -268,23 +360,23 @@ export const UltimateHubNewsTab = memo(() => {
                 onClick={handleRefresh}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9, rotate: 180 }}
-                className="p-1.5 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-400/30 hover:bg-blue-500/30 transition-all"
+                className="p-1 sm:p-1.5 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-400/30 hover:bg-blue-500/30 transition-all"
                 style={{ boxShadow: '0 0 4px rgba(59, 130, 246, 0.3)' }}
               >
-                <RefreshCw className="w-3.5 h-3.5" />
+                <RefreshCw className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               </motion.button>
               <motion.button
                 onClick={() => setShowFilters(!showFilters)}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className={`p-1.5 rounded-lg transition-all ${
+                className={`p-1 sm:p-1.5 rounded-lg transition-all ${
                   showFilters 
                     ? 'bg-blue-500/40 text-blue-200 border-blue-400/60' 
                     : 'bg-blue-500/20 text-blue-300 border-blue-400/30'
                 } border`}
                 style={{ boxShadow: showFilters ? '0 0 8px rgba(59, 130, 246, 0.4)' : '0 0 4px rgba(59, 130, 246, 0.3)' }}
               >
-                <Filter className="w-3.5 h-3.5" />
+                <Filter className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               </motion.button>
             </div>
           </div>
@@ -298,7 +390,7 @@ export const UltimateHubNewsTab = memo(() => {
                 exit={{ height: 0, opacity: 0 }}
                 className="overflow-hidden"
               >
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
                   {MARKET_FILTERS.map((filter) => {
                     const Icon = FILTER_ICONS[filter.value];
                     const isActive = activeMarket === filter.value;
@@ -312,7 +404,7 @@ export const UltimateHubNewsTab = memo(() => {
                         onClick={() => setActiveMarket(filter.value)}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition-all ${
+                        className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-wider border transition-all ${
                           isActive
                             ? 'bg-blue-500/40 text-blue-200 border-blue-400/60'
                             : 'bg-blue-500/10 text-blue-400/70 border-blue-400/20 hover:bg-blue-500/20'
@@ -323,9 +415,10 @@ export const UltimateHubNewsTab = memo(() => {
                             : '0 0 4px rgba(59, 130, 246, 0.1)' 
                         }}
                       >
-                        <Icon className="w-3 h-3" />
-                        <span>{filter.label}</span>
-                        <span className="text-[9px] opacity-70">({count})</span>
+                        <Icon className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                        <span className="hidden sm:inline">{filter.label}</span>
+                        <span className="sm:hidden">{filter.label.substring(0, 3)}</span>
+                        <span className="text-[8px] sm:text-[9px] opacity-70">({count})</span>
                       </motion.button>
                     );
                   })}
@@ -335,21 +428,22 @@ export const UltimateHubNewsTab = memo(() => {
           </AnimatePresence>
 
           {/* Stats Bar */}
-          <div className="flex items-center justify-between text-[10px] text-blue-400/60">
+          <div className="flex items-center justify-between text-[9px] sm:text-[10px] text-blue-400/60">
             <div className="flex items-center gap-1">
-              <Sparkles className="w-3 h-3" />
-              <span>{filteredItems.length} stories</span>
+              <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+              <span>{filteredItems.length} {filteredItems.length === 1 ? 'story' : 'stories'}</span>
             </div>
             <div className="flex items-center gap-1">
-              <TrendingUp className="w-3 h-3" />
-              <span>Live Updates</span>
+              <TrendingUp className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+              <span className="hidden sm:inline">Live Updates</span>
+              <span className="sm:hidden">Live</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* News List */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2">
+      <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-1.5 sm:space-y-2">
         {loading && items.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center space-y-3">
@@ -402,7 +496,7 @@ export const UltimateHubNewsTab = memo(() => {
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ delay: Math.min(index * 0.03, 0.5) }}
               >
-                <NewsCard item={item} />
+                <NewsCard item={item} preview={previews[item.link]} />
               </motion.div>
             ))}
           </AnimatePresence>
