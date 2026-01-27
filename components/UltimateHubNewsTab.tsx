@@ -17,11 +17,11 @@ import {
   Newspaper, RefreshCw, ExternalLink, TrendingUp,
   Globe, Bitcoin, BarChart3, DollarSign, 
   Gem, LineChart, Earth, Landmark, Cpu,
-  Filter, Sparkles, Clock
+  Filter, Sparkles, Clock, Flame, Calendar as CalendarIcon, X
 } from "lucide-react";
 
 // --- TYPES ---
-type MarketFilter = "all" | "crypto" | "stocks" | "forex" | "metals" | "markets" | "geopolitics" | "economics" | "tech";
+type MarketFilter = "all" | "trending" | "crypto" | "stocks" | "forex" | "metals" | "markets" | "geopolitics" | "economics" | "tech";
 
 type NewsItem = {
   title: string;
@@ -51,6 +51,7 @@ const NEWS_REFRESH_RATE = 20000; // 20 seconds
 // Icon map for filters
 const FILTER_ICONS: Record<MarketFilter, React.ComponentType<{ className?: string }>> = {
   all: Globe,
+  trending: Flame,
   crypto: Bitcoin,
   stocks: BarChart3,
   forex: DollarSign,
@@ -63,13 +64,14 @@ const FILTER_ICONS: Record<MarketFilter, React.ComponentType<{ className?: strin
 
 const MARKET_FILTERS: { value: MarketFilter; label: string }[] = [
   { value: "all", label: "All" },
+  { value: "trending", label: "Trending" },
+  { value: "forex", label: "Forex" },
   { value: "crypto", label: "Crypto" },
   { value: "stocks", label: "Stocks" },
-  { value: "forex", label: "Forex" },
   { value: "metals", label: "Commodities" },
+  { value: "economics", label: "Economy" },
   { value: "markets", label: "Markets" },
   { value: "geopolitics", label: "World" },
-  { value: "economics", label: "Economy" },
   { value: "tech", label: "Tech" },
 ];
 
@@ -105,15 +107,38 @@ const scoreItem = (item: NewsItem) => {
   const now = Date.now();
   const t = item.published_at ? Date.parse(item.published_at) : now - 1000 * 60 * 60 * 48;
   const hours = Math.max(1, (now - t) / (1000 * 60 * 60));
-  const recency = Math.max(0, 1 - Math.log2(hours + 1) / 8);
+  
+  // Enhanced recency scoring - prioritize last 6 hours heavily
+  let recency = 0;
+  if (hours < 1) recency = 1.0;
+  else if (hours < 6) recency = 0.9;
+  else if (hours < 24) recency = 0.7;
+  else if (hours < 48) recency = 0.4;
+  else recency = Math.max(0, 0.2 - (hours - 48) / 1000);
+  
   const title = (item.title || "").toLowerCase();
-  let kw = 0;
-  for (const k of ALL_KEYWORDS) if (title.includes(k)) kw += 1;
-  const sourceBoost = /coindesk|cointelegraph|reuters|investing|bloomberg|bbc|nytimes/i.test(item.source || "") ? 0.05 : 0;
-  return recency * 0.6 + Math.min(1, kw / 3) * 0.35 + sourceBoost;
+  const desc = (item.description || "").toLowerCase();
+  const combined = title + " " + desc;
+  
+  // Trading-specific keywords with weights
+  const highImpactWords = ["breaking", "alert", "fed", "rate", "crash", "surge", "plunge", "rally", "earnings", "announcement"];
+  const tradingWords = ["price", "trade", "analysis", "forecast", "target", "support", "resistance", "breakout"];
+  
+  let keywordScore = 0;
+  for (const k of ALL_KEYWORDS) if (combined.includes(k)) keywordScore += 0.5;
+  for (const k of highImpactWords) if (combined.includes(k)) keywordScore += 1.0;
+  for (const k of tradingWords) if (combined.includes(k)) keywordScore += 0.3;
+  
+  // Premium source boost
+  const sourceBoost = /forexlive|dailyfx|coindesk|cointelegraph|reuters|investing|bloomberg|fxstreet|marketwatch/i.test(item.source || "") ? 0.08 : 0;
+  
+  // Forex and crypto get slight boost (most relevant for traders)
+  const categoryBoost = (item.category === "forex" || item.category === "crypto") ? 0.05 : 0;
+  
+  return (recency * 0.5) + Math.min(1, keywordScore / 5) * 0.35 + sourceBoost + categoryBoost + 0.05;
 };
 
-// --- OPTIMIZED IMAGE COMPONENT ---
+// --- OPTIMIZED IMAGE COMPONENT (Fast Loading) ---
 const OptimizedNewsImage = memo(({ 
   src, 
   alt = "",
@@ -134,22 +159,29 @@ const OptimizedNewsImage = memo(({
     );
   }
 
+  // Use image proxy for faster loading and caching
+  const optimizedSrc = src.startsWith('http') 
+    ? `/api/image-proxy?url=${encodeURIComponent(src)}&w=200&q=75`
+    : src;
+
   return (
     <div className={`relative overflow-hidden bg-neutral-900 ${className}`}>
       {!loaded && (
-        <div className="absolute inset-0 bg-neutral-800 animate-pulse" />
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 to-neutral-800 animate-pulse" />
       )}
       <img
-        src={src}
+        src={optimizedSrc}
         alt={alt}
         onLoad={() => setLoaded(true)}
         onError={() => setError(true)}
         loading="lazy"
         decoding="async"
+        fetchpriority="low"
         referrerPolicy="no-referrer"
-        className={`w-full h-full object-cover transition-opacity duration-200 ${
+        className={`w-full h-full object-cover transition-opacity duration-150 ${
           loaded ? "opacity-100" : "opacity-0"
         }`}
+        style={{ contentVisibility: 'auto' }}
       />
     </div>
   );
@@ -174,6 +206,7 @@ const NewsCard = memo(({ item, preview }: { item: NewsItem; preview?: { image?: 
     economics: "from-purple-500/20 to-violet-600/20 border-purple-500/30 text-purple-300",
     tech: "from-cyan-500/20 to-blue-600/20 border-cyan-500/30 text-cyan-300",
     markets: "from-indigo-500/20 to-purple-600/20 border-indigo-500/30 text-indigo-300",
+    trending: "from-orange-500/20 to-red-600/20 border-orange-500/30 text-orange-300",
     other: "from-slate-500/20 to-zinc-600/20 border-slate-500/30 text-slate-300",
   };
 
@@ -242,6 +275,7 @@ export const UltimateHubNewsTab = memo(() => {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
   const [previews, setPreviews] = useState<Record<string, { image?: string }>>({});
   
   const fetchingRef = React.useRef<Set<string>>(new Set());
@@ -307,9 +341,17 @@ export const UltimateHubNewsTab = memo(() => {
 
   // Filter and sort items
   const filteredItems = useMemo(() => {
-    const filtered = activeMarket === "all" 
-      ? items 
-      : items.filter((i) => i.category === activeMarket);
+    let filtered: NewsItem[];
+    
+    if (activeMarket === "trending") {
+      // Trending = highest scored items across all categories
+      filtered = [...items].sort((a, b) => scoreItem(b) - scoreItem(a)).slice(0, 50);
+    } else if (activeMarket === "all") {
+      filtered = items;
+    } else {
+      filtered = items.filter((i) => i.category === activeMarket);
+    }
+    
     return [...filtered].sort((a, b) => scoreItem(b) - scoreItem(a));
   }, [items, activeMarket]);
 
@@ -357,6 +399,16 @@ export const UltimateHubNewsTab = memo(() => {
                 </span>
               )}
               <motion.button
+                onClick={() => setShowCalendar(true)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="p-1 sm:p-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-400/30 hover:bg-amber-500/30 transition-all"
+                style={{ boxShadow: '0 0 4px rgba(251, 191, 36, 0.3)' }}
+                title="Economic Calendar"
+              >
+                <CalendarIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              </motion.button>
+              <motion.button
                 onClick={handleRefresh}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9, rotate: 180 }}
@@ -394,9 +446,14 @@ export const UltimateHubNewsTab = memo(() => {
                   {MARKET_FILTERS.map((filter) => {
                     const Icon = FILTER_ICONS[filter.value];
                     const isActive = activeMarket === filter.value;
-                    const count = filter.value === "all" 
-                      ? items.length 
-                      : items.filter(i => i.category === filter.value).length;
+                    let count = 0;
+                    if (filter.value === "all") {
+                      count = items.length;
+                    } else if (filter.value === "trending") {
+                      count = Math.min(50, items.length);
+                    } else {
+                      count = items.filter(i => i.category === filter.value).length;
+                    }
 
                     return (
                       <motion.button
@@ -502,6 +559,85 @@ export const UltimateHubNewsTab = memo(() => {
           </AnimatePresence>
         )}
       </div>
+
+      {/* Economic Calendar Modal */}
+      <AnimatePresence>
+        {showCalendar && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm p-0 sm:p-4"
+            onClick={() => setShowCalendar(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full h-full sm:h-[85vh] sm:max-w-5xl bg-black border-0 sm:border-2 border-amber-500/40 sm:rounded-2xl overflow-hidden"
+              style={{ boxShadow: '0 0 40px rgba(251, 191, 36, 0.3)' }}
+            >
+              {/* Calendar Header */}
+              <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-2.5 sm:p-4 bg-gradient-to-b from-black via-black/98 to-transparent border-b border-amber-500/30">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <CalendarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" style={{ filter: 'drop-shadow(0 0 6px #fbbf24)' }} />
+                  <h3 className="text-xs sm:text-base font-bold text-amber-300" style={{ textShadow: '0 0 8px #fbbf24' }}>
+                    Economic Calendar
+                  </h3>
+                </div>
+                <div className="flex items-center gap-2">
+                  {/* Close Button - Mobile Friendly */}
+                  <motion.button
+                    onClick={() => setShowCalendar(false)}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg bg-red-500/20 text-red-300 border border-red-400/40 hover:bg-red-500/30 transition-all font-semibold text-xs sm:text-sm"
+                    style={{ boxShadow: '0 0 8px rgba(239, 68, 68, 0.3)' }}
+                  >
+                    <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">Close</span>
+                  </motion.button>
+                </div>
+              </div>
+
+              {/* TradingView Economic Calendar Widget */}
+              <div className="w-full h-full pt-12 sm:pt-16 pb-10 sm:pb-12">
+                <iframe
+                  src="https://www.tradingview.com/embed-widget/events/?locale=en#%7B%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Afalse%2C%22importanceFilter%22%3A%22-1%2C0%2C1%22%2C%22currencyFilter%22%3A%22USD%2CEUR%2CGBP%2CJPY%2CAUD%2CCAD%2CCHF%2CNZD%22%7D"
+                  className="w-full h-full border-0"
+                  title="Economic Calendar"
+                  style={{ backgroundColor: '#000000' }}
+                />
+              </div>
+
+              {/* Footer Info */}
+              <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-2.5 bg-gradient-to-t from-black via-black/98 to-transparent border-t border-amber-500/20">
+                <div className="flex items-center justify-center gap-1.5">
+                  <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-400/70" />
+                  <p className="text-[9px] sm:text-[10px] text-center text-amber-400/70 font-medium">
+                    High-impact events can create major market volatility
+                  </p>
+                </div>
+              </div>
+
+              {/* Tap to Close Hint (Mobile Only) */}
+              <div className="absolute top-16 left-0 right-0 sm:hidden">
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5, duration: 0.3 }}
+                  className="mx-auto w-fit px-3 py-1 bg-black/80 border border-amber-500/30 rounded-full"
+                >
+                  <p className="text-[9px] text-amber-400/60 font-medium">
+                    Tap outside to close
+                  </p>
+                </motion.div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 });

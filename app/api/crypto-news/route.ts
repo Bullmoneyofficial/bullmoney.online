@@ -22,10 +22,17 @@ const FEEDS: { url: string; source: string; category: string }[] = [
   { url: "https://beincrypto.com/feed/", source: "BeInCrypto", category: "crypto" },
   { url: "https://cryptopotato.com/feed/", source: "CryptoPotato", category: "crypto" },
   
+  // === FOREX (Free Sources) ===
+  { url: "https://www.forexlive.com/feed/news", source: "ForexLive", category: "forex" },
+  { url: "https://www.dailyfx.com/feeds/market-news", source: "DailyFX", category: "forex" },
+  { url: "https://www.investing.com/rss/news.rss", source: "Investing.com", category: "forex" },
+  { url: "https://www.fxstreet.com/rss/", source: "FXStreet", category: "forex" },
+  
   // === STOCKS (Verified) ===
   { url: "https://feeds.finance.yahoo.com/rss/2.0/headline?s=^GSPC&region=US&lang=en-US", source: "Yahoo Finance", category: "stocks" },
   { url: "https://seekingalpha.com/market_currents.xml", source: "Seeking Alpha", category: "stocks" },
   { url: "https://www.fool.com/feeds/index.aspx", source: "Motley Fool", category: "stocks" },
+  { url: "https://www.marketwatch.com/rss/", source: "MarketWatch", category: "stocks" },
   
   // === METALS & COMMODITIES ===
   { url: "https://www.kitco.com/rss/gold.xml", source: "Kitco Gold", category: "metals" },
