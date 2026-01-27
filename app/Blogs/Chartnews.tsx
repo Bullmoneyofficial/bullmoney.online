@@ -583,7 +583,7 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
     const activePreview = previewUrl ? previews[previewUrl] : undefined;
 
     return (
-        <div className="relative flex h-full max-h-full min-h-0 flex-col overflow-hidden rounded-2xl bg-black [overscroll-behavior:contain]" data-lenis-prevent style={{ touchAction: 'pan-y' }}>
+        <div className="relative flex h-full max-h-full min-h-0 flex-col overflow-hidden rounded-2xl bg-black [overscroll-behavior:contain]" data-lenis-prevent style={{ touchAction: 'auto' }}>
             {/* Masthead (mini news site header) */}
             <div className="shrink-0 neon-blue-border bg-black">
                 <div className="flex items-center justify-between px-4 md:px-6 py-4">

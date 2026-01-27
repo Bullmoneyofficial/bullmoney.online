@@ -315,41 +315,47 @@ html.is-mobile.is-scrolling .shimmer-border {
 
 /* Modal containers - prevent horizontal scroll leaking to body */
 @media (max-width: 768px) {
-  /* Fixed modals should contain all scroll behavior */
+  /* Fixed modals should contain all scroll behavior but allow both directions */
   .fixed[role="dialog"],
   [aria-modal="true"],
   [data-modal-root],
   [data-lenis-prevent] {
     overscroll-behavior: contain !important;
     -webkit-overflow-scrolling: touch;
+    /* Allow both scroll directions by default - children will override */
+    touch-action: auto;
   }
   
-  /* Horizontal scroll containers - isolated scroll */
+  /* Horizontal scroll containers - allow horizontal scroll with pinch zoom */
   .overflow-x-auto {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain !important;
     overscroll-behavior-y: none !important;
-    touch-action: pan-x !important;
+    touch-action: pan-x pinch-zoom !important;
+    /* Ensure horizontal scrolling works */
+    overflow-y: hidden;
   }
   
   /* Vertical scroll containers inside modals */
-  .overflow-y-auto {
+  .overflow-y-auto:not(.overflow-x-auto) {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain !important;
     overscroll-behavior-x: none !important;
-    touch-action: pan-y !important;
+    touch-action: pan-y pinch-zoom !important;
+    overflow-x: hidden;
   }
   
-  /* Tab bars and nav strips - no vertical scroll allowed */
+  /* Tab bars and nav strips - ensure horizontal scroll works */
   [class*="flex-nowrap"].overflow-x-auto,
   [class*="gap-1"].overflow-x-auto,
   [class*="gap-2"].overflow-x-auto {
     overflow-y: hidden !important;
     touch-action: pan-x pinch-zoom !important;
+    min-height: 0;
   }
   
   /* Content areas should only scroll vertically */
-  [class*="max-h-"][class*="overflow-y-auto"] {
+  [class*="max-h-"][class*="overflow-y-auto"]:not(.overflow-x-auto) {
     overflow-x: hidden !important;
     touch-action: pan-y pinch-zoom !important;
   }

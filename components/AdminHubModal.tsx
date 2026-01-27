@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, type TargetAndTransition } from "framer-motion";
 import {
   BarChart3,
   ClipboardList,
@@ -16,6 +16,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { createSupabaseClient } from "@/lib/supabase";
+import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 
 // Generate a reasonably unique id when inserting rows from the client
 const safeId = () =>
@@ -77,7 +78,7 @@ const ImagePreview: React.FC<{ src?: string; alt: string }> = ({ src, alt }) => 
   );
 };
 
-const VideoPreview: React.FC<{ youtubeId?: string; title?: string }> = ({ youtubeId, title }) => {
+const VideoPreview: React.FC<{ youtubeId?: string; title?: string; skipEmbed?: boolean }> = ({ youtubeId, title, skipEmbed }) => {
   if (!youtubeId) return null;
   const embed = `https://www.youtube.com/embed/${youtubeId}`;
   return (
@@ -93,15 +94,29 @@ const VideoPreview: React.FC<{ youtubeId?: string; title?: string }> = ({ youtub
           Open
         </a>
       </div>
-      <div className="aspect-video w-full overflow-hidden rounded-md border border-slate-800/60 bg-black">
-        <iframe
-          src={embed}
-          title={title || "Video"}
-          className="w-full h-full"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-        />
-      </div>
+      {skipEmbed ? (
+        <div className="aspect-video w-full overflow-hidden rounded-md border border-slate-800/60 bg-black flex items-center justify-center">
+          <a
+            href={`https://youtu.be/${youtubeId}`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-blue-300 hover:text-blue-200 text-sm"
+          >
+            Click to view video →
+          </a>
+        </div>
+      ) : (
+        <div className="aspect-video w-full overflow-hidden rounded-md border border-slate-800/60 bg-black">
+          <iframe
+            src={embed}
+            title={title || "Video"}
+            className="w-full h-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            loading="lazy"
+          />
+        </div>
+      )}
     </div>
   );
 };
@@ -112,7 +127,7 @@ const detectYouTubeId = (url?: string) => {
   return match ? match[1] : "";
 };
 
-const MediaAttachmentList: React.FC<{ attachments?: any[] }> = ({ attachments }) => {
+const MediaAttachmentList: React.FC<{ attachments?: any[]; skipEmbed?: boolean }> = ({ attachments, skipEmbed }) => {
   if (!attachments || !attachments.length) return null;
   return (
     <div className="space-y-2">
@@ -125,15 +140,29 @@ const MediaAttachmentList: React.FC<{ attachments?: any[] }> = ({ attachments })
           <div key={`${url}-${idx}`} className="mt-1 rounded-md border border-slate-800 bg-slate-900/60 p-2">
             <div className="text-xs text-slate-400 mb-1 truncate">Attachment {idx + 1}</div>
             {yt ? (
-              <div className="aspect-video w-full overflow-hidden rounded-md border border-slate-800/60 bg-black">
-                <iframe
-                  src={`https://www.youtube.com/embed/${yt}`}
-                  title={`Attachment video ${idx + 1}`}
-                  className="w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              </div>
+              skipEmbed ? (
+                <div className="aspect-video w-full overflow-hidden rounded-md border border-slate-800/60 bg-black flex items-center justify-center">
+                  <a
+                    href={`https://youtu.be/${yt}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-blue-300 hover:text-blue-200 text-sm"
+                  >
+                    Click to view video →
+                  </a>
+                </div>
+              ) : (
+                <div className="aspect-video w-full overflow-hidden rounded-md border border-slate-800/60 bg-black">
+                  <iframe
+                    src={`https://www.youtube.com/embed/${yt}`}
+                    title={`Attachment video ${idx + 1}`}
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    loading="lazy"
+                  />
+                </div>
+              )
             ) : isImage ? (
               <img
                 src={url}
@@ -188,6 +217,9 @@ export function AdminHubModal({
   isOpen: boolean;
   onClose: () => void;
 }) {
+  // Mobile performance optimization
+  const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects } = useMobilePerformance();
+  
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const adminEmailEnv = process.env.NEXT_PUBLIC_ADMIN_EMAIL?.toLowerCase() || "";
@@ -447,14 +479,14 @@ export function AdminHubModal({
     }
   }, [isOpen, isAdmin, loadAll]);
 
-  // Auto-refresh every 1s while open so data stays live without closing the panel
+  // Auto-refresh every 1s while open (skip on mobile/low-end for better performance)
   useEffect(() => {
-    if (!isOpen || !isAdmin) return;
+    if (!isOpen || !isAdmin || shouldSkipHeavyEffects) return;
     const id = setInterval(() => {
       syncTick();
     }, 1000);
     return () => clearInterval(id);
-  }, [isOpen, isAdmin, syncTick]);
+  }, [isOpen, isAdmin, syncTick, shouldSkipHeavyEffects]);
 
   // -----------------------------------------------------------------------
   // CRUD HELPERS
@@ -1025,7 +1057,7 @@ export function AdminHubModal({
         const vid = v.id;
         const isEditing = liveForm.id === vid;
         const youtubeId = v.youtube_id || detectYouTubeId(v.youtube_url);
-        const videoPreview = youtubeId ? <VideoPreview youtubeId={youtubeId} title={v.title} /> : null;
+        const videoPreview = youtubeId ? <VideoPreview youtubeId={youtubeId} title={v.title} skipEmbed={shouldSkipHeavyEffects} /> : null;
         return (
           <div key={vid} className="space-y-2">
             <Row
@@ -1173,8 +1205,8 @@ export function AdminHubModal({
               }
             })();
         const youtubeId = detectYouTubeId(a.content || "") || detectYouTubeId(a.video_url || "");
-        const videoPreview = youtubeId ? <VideoPreview youtubeId={youtubeId} title={a.title} /> : null;
-        const attachmentPreview = attachments && attachments.length ? <MediaAttachmentList attachments={attachments} /> : null;
+        const videoPreview = youtubeId ? <VideoPreview youtubeId={youtubeId} title={a.title} skipEmbed={shouldSkipHeavyEffects} /> : null;
+        const attachmentPreview = attachments && attachments.length ? <MediaAttachmentList attachments={attachments} skipEmbed={shouldSkipHeavyEffects} /> : null;
         return (
           <div key={aid} className="space-y-2">
             <Row
@@ -1370,19 +1402,25 @@ export function AdminHubModal({
     <AnimatePresence>
       {isOpen && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[2147483647] bg-black/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4"
+            initial={animations.modalBackdrop.initial}
+            animate={animations.modalBackdrop.animate as TargetAndTransition}
+            exit={animations.modalBackdrop.exit}
+            transition={animations.modalBackdrop.transition}
+            className={`fixed inset-0 z-[2147483647] flex items-center justify-center p-2 sm:p-4 bg-black/80 ${
+              shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'
+            }`}
             onClick={onClose}
           >
           <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.95, opacity: 0 }}
+            initial={animations.modalContent.initial}
+            animate={animations.modalContent.animate as TargetAndTransition}
+            exit={animations.modalContent.exit}
+            transition={animations.modalContent.transition}
             onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-6xl sm:max-w-5xl md:max-w-6xl max-h-[92vh] overflow-y-auto overflow-x-hidden rounded-2xl border border-blue-500/40 bg-gradient-to-b from-slate-950 via-slate-900 to-black shadow-2xl shadow-blue-900/40 [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]"
-              style={{ touchAction: 'pan-y' }}
+              className={`w-full max-w-6xl sm:max-w-5xl md:max-w-6xl max-h-[92vh] overflow-y-auto overflow-x-hidden rounded-2xl border border-blue-500/40 bg-gradient-to-b from-slate-950 via-slate-900 to-black [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain] ${
+                shouldSkipHeavyEffects ? '' : 'shadow-2xl shadow-blue-900/40'
+              }`}
+              style={{ touchAction: 'auto' }}
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-blue-500/30 bg-blue-500/10">
               <div className="flex items-center gap-2 text-white font-bold">
@@ -1401,9 +1439,10 @@ export function AdminHubModal({
               <div className="flex items-center gap-2">
                 <button
                   onClick={loadAll}
-                  className="px-3 py-1 text-xs rounded-md bg-slate-800 text-slate-200 border border-slate-700 flex items-center gap-1"
+                  className="px-3 py-1 text-xs rounded-md bg-slate-800 text-slate-200 border border-slate-700 flex items-center gap-1 hover:bg-slate-700 transition-colors"
+                  title={shouldSkipHeavyEffects ? "Manual refresh (auto-refresh disabled on mobile)" : "Sync all data"}
                 >
-                  <Database className="w-4 h-4" /> Sync
+                  <Database className="w-4 h-4" /> {shouldSkipHeavyEffects ? "Refresh" : "Sync"}
                 </button>
                 <button
                   onClick={onClose}
@@ -1414,7 +1453,7 @@ export function AdminHubModal({
               </div>
             </div>
 
-              <div className="px-3 sm:px-4 py-2 flex flex-nowrap sm:flex-wrap gap-1 sm:gap-2 overflow-x-auto border-b border-slate-800 bg-slate-900/60 scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ touchAction: 'pan-x' }}>
+              <div className="px-3 sm:px-4 py-2 flex flex-nowrap sm:flex-wrap gap-1 sm:gap-2 overflow-x-auto overflow-y-hidden border-b border-slate-800 bg-slate-900/60 scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ touchAction: 'pan-x pinch-zoom' }}>
               <TabButton
                 label="Products"
                 icon={<Package className="w-4 h-4" />}
