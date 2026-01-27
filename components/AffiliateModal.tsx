@@ -532,6 +532,9 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
   const [isVerifyingMT5, setIsVerifyingMT5] = useState(false);
   const [dashboardTab, setDashboardTab] = useState<'dashboard' | 'admin'>('dashboard');
   
+  // Detect mobile/desktop for layout switching
+  const [isMobileView, setIsMobileView] = useState(false);
+  
   // Calculator state
   const [calcTraders, setCalcTraders] = useState(10);
   const [calcLots, setCalcLots] = useState(5);
@@ -545,6 +548,18 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
     if (!email) return false;
     return AFFILIATE_ADMIN_EMAILS.includes(email);
   }, [savedSession]);
+
+  // Detect screen size for responsive layout switching
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobileView(window.innerWidth < 768); // 768px is typical tablet/desktop breakpoint
+    };
+    
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
   // Initialize and check for saved session
   useEffect(() => {
@@ -1522,74 +1537,136 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
   // =========================================
   // RENDER DASHBOARD SCREEN
   // =========================================
-  const renderDashboard = () => (
-    <div className="fixed inset-0 z-[999999] flex flex-col" style={{ background: NEON_BLUE.bgDark }}>
-      {/* Header */}
-      <div 
-        className="flex items-center justify-between p-4 border-b"
-        style={{ borderColor: 'rgba(59, 130, 246, 0.3)', background: 'rgba(0, 0, 0, 0.8)' }}
-      >
-        <div className="flex items-center gap-4">
-          <h1 className="text-lg font-bold" style={{ color: NEON_BLUE.textPrimary }}>
-            Affiliate Dashboard
-          </h1>
-          <div className="hidden sm:flex items-center gap-2">
-            <button
-              onClick={() => setDashboardTab('dashboard')}
-              className={cn(
-                "px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all",
-                dashboardTab === 'dashboard' ? "bg-white/10" : "bg-transparent"
-              )}
-              style={{ borderColor: 'rgba(59, 130, 246, 0.3)', color: NEON_BLUE.textPrimary }}
-            >
-              Dashboard
-            </button>
-            {isAffiliateAdmin && (
+  const renderDashboard = () => {
+    // Mobile view - Keep existing compact modal layout
+    if (isMobileView) {
+      return (
+        <div className="fixed inset-0 z-[999999] flex flex-col" style={{ background: NEON_BLUE.bgDark }}>
+          {/* Header */}
+          <div 
+            className="flex items-center justify-between p-4 border-b"
+            style={{ borderColor: 'rgba(59, 130, 246, 0.3)', background: 'rgba(0, 0, 0, 0.8)' }}
+          >
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg font-bold" style={{ color: NEON_BLUE.textPrimary }}>
+                Affiliate Dashboard
+              </h1>
+            </div>
+            <div className="flex items-center gap-2">
+              <NeonButton
+                onClick={() => setStep('success')}
+                variant="ghost"
+                size="small"
+                className="text-xs"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </NeonButton>
+              <button 
+                onClick={handleClose}
+                className="p-2 rounded-full transition-all border-2"
+                style={{ 
+                  borderColor: 'rgba(59, 130, 246, 0.3)',
+                  color: NEON_BLUE.textMuted
+                }}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+          
+          {/* Mobile Dashboard Content */}
+          <div className="flex-1 overflow-y-auto">
+            {dashboardTab === 'dashboard' && (
+              <AffiliateRecruitsDashboard onBack={() => setStep('success')} />
+            )}
+            {dashboardTab === 'admin' && isAffiliateAdmin && (
+              <AffiliateAdminPanel />
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // Desktop view - Full layout from AffiliateRecruitsDashboard
+    return (
+      <div className="fixed inset-0 z-[999999] flex flex-col" style={{ background: NEON_BLUE.bgDark }}>
+        {/* Header */}
+        <div 
+          className="flex items-center justify-between p-4 border-b"
+          style={{ borderColor: 'rgba(59, 130, 246, 0.3)', background: 'rgba(0, 0, 0, 0.8)' }}
+        >
+          <div className="flex items-center gap-4">
+            <h1 className="text-lg font-bold" style={{ color: NEON_BLUE.textPrimary }}>
+              Affiliate Dashboard
+            </h1>
+            <div className="flex items-center gap-2">
               <button
-                onClick={() => setDashboardTab('admin')}
+                onClick={() => setDashboardTab('dashboard')}
                 className={cn(
-                  "px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all flex items-center gap-1",
-                  dashboardTab === 'admin' ? "bg-white/10" : "bg-transparent"
+                  "px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all",
+                  dashboardTab === 'dashboard' ? "bg-white/10" : "bg-transparent"
                 )}
                 style={{ borderColor: 'rgba(59, 130, 246, 0.3)', color: NEON_BLUE.textPrimary }}
               >
-                <Shield className="w-3 h-3" /> Admin Panel
+                Dashboard
               </button>
+              {isAffiliateAdmin && (
+                <button
+                  onClick={() => setDashboardTab('admin')}
+                  className={cn(
+                    "px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all flex items-center gap-1",
+                    dashboardTab === 'admin' ? "bg-white/10" : "bg-transparent"
+                  )}
+                  style={{ borderColor: 'rgba(59, 130, 246, 0.3)', color: NEON_BLUE.textPrimary }}
+                >
+                  <Shield className="w-3 h-3" /> Admin Panel
+                </button>
+              )}
+            </div>
+            {savedSession && (
+              <span className="text-xs" style={{ color: NEON_BLUE.textMuted }}>
+                {savedSession.email}
+              </span>
             )}
           </div>
-          {savedSession && (
-            <span className="text-xs hidden sm:inline" style={{ color: NEON_BLUE.textMuted }}>
-              {savedSession.email}
-            </span>
+          <div className="flex items-center gap-2">
+            <NeonButton
+              onClick={() => setStep('success')}
+              variant="ghost"
+              size="small"
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" /> Back
+            </NeonButton>
+            <button 
+              onClick={handleClose}
+              className="p-2 rounded-full transition-all border-2"
+              style={{ 
+                borderColor: 'rgba(59, 130, 246, 0.3)',
+                color: NEON_BLUE.textMuted
+              }}
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+        
+        {/* Desktop Dashboard Content - Full width layout */}
+        <div className="flex-1 overflow-y-auto">
+          {dashboardTab === 'dashboard' && (
+            <AffiliateRecruitsDashboard onBack={() => setStep('success')} />
+          )}
+          {dashboardTab === 'admin' && isAffiliateAdmin && (
+            <AffiliateAdminPanel />
           )}
         </div>
-        <div className="flex items-center gap-2">
-          <NeonButton onClick={handleLogout} variant="ghost" size="small">
-            <Lock className="w-4 h-4 mr-1" />
-            <span className="hidden sm:inline">Logout</span>
-          </NeonButton>
-          <button 
-            onClick={handleClose}
-            className="p-2 rounded-full transition-all border-2"
-            style={{ 
-              borderColor: 'rgba(59, 130, 246, 0.3)',
-              color: NEON_BLUE.textMuted
-            }}
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
       </div>
-      
-      {/* Dashboard Content */}
-      <div className="flex-1 overflow-y-auto">
-        {dashboardTab === 'dashboard' && (
-          <AffiliateRecruitsDashboard onBack={() => setStep('success')} />
-        )}
-        {dashboardTab === 'admin' && isAffiliateAdmin && (
-          <AffiliateAdminPanel />
-        )}
-      </div>
+    );
+  };
+
+  // OLD renderDashboard for reference - replaced above
+  const renderDashboard_OLD = () => (
+    <div className="fixed inset-0 z-[999999] flex flex-col" style={{ background: NEON_BLUE.bgDark }}>
+      {/* This old implementation is kept for reference but not used */}
     </div>
   );
 

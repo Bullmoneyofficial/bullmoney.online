@@ -4,10 +4,8 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   IconBuildingStore,
-  IconBroadcast,
   IconUsersGroup,
   IconHelp,
-  IconChartLine,
   IconPalette,
   IconSettings,
   IconLock,
@@ -19,9 +17,7 @@ import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
 import { 
   useMobileMenu, 
   UI_Z_INDEX,
-  useLiveStreamModalUI,
   useProductsModalUI,
-  useAnalysisModalUI,
 } from '@/contexts/UIStateContext';
 // UNIFIED SHIMMER SYSTEM - Import from single source
 import { ShimmerBorder, ShimmerLine, ShimmerRadialGlow, ShimmerDot } from '@/components/ui/UnifiedShimmer';
@@ -37,7 +33,6 @@ interface MobileDropdownMenuProps {
   onFaqClick: () => void;
   onAdminClick: () => void;
   onThemeClick: () => void;
-  onAnalysisClick: () => void;
   onAccountManagerClick: () => void;
 }
 
@@ -54,7 +49,6 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
       onFaqClick,
       onAdminClick,
       onThemeClick,
-      onAnalysisClick,
       onAccountManagerClick,
     },
     ref
@@ -63,9 +57,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
     const { setIsMobileMenuOpen } = useMobileMenu();
     
     // SMART MOUNT: Use centralized UI state for modals - they mount ONLY when opened
-    const { setIsOpen: setLiveStreamOpen } = useLiveStreamModalUI();
     const { setIsOpen: setProductsOpen } = useProductsModalUI();
-    const { setIsOpen: setAnalysisOpen } = useAnalysisModalUI();
     
     // Track if component should render (delayed unmount for exit animation)
     const [shouldRender, setShouldRender] = useState(open);
@@ -115,17 +107,6 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
       onFaqClick();
       onClose();
     }, [onFaqClick, onClose]);
-
-    const handleAnalysisClick = useCallback(() => {
-      console.log('[MobileDropdownMenu] handleAnalysisClick called');
-      SoundEffects.click();
-      // SMART MOUNT: Close menu first, then open modal to avoid race conditions
-      onClose();
-      // Use setTimeout to ensure menu close completes before modal opens
-      setTimeout(() => {
-        setAnalysisOpen(true);
-      }, 50);
-    }, [onClose, setAnalysisOpen]);
     
     const handleAdminClick = useCallback(() => {
       SoundEffects.click();
@@ -138,16 +119,6 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
       onClose();
       onThemeClick();
     }, [onClose, onThemeClick]);
-    
-    // SMART MOUNT: Trigger LiveStream modal via UI state (not embedded component)
-    const handleLiveStreamClick = useCallback(() => {
-      SoundEffects.click();
-      // Close menu first, then open modal to avoid race conditions
-      onClose();
-      setTimeout(() => {
-        setLiveStreamOpen(true);
-      }, 50);
-    }, [setLiveStreamOpen, onClose]);
     
     // SMART MOUNT: Trigger Products modal via UI state (not embedded component)
     const handleProductsClick = useCallback(() => {
@@ -210,35 +181,11 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
             {/* Home */}
             <ThemedMenuItem delay={0.12} href="/" onClick={handleClose} icon={<IconBuildingStore className="h-5 w-5" stroke={1.5} />} label="Home" />
 
-            {/* Live Stream - SMART MOUNT: Button triggers modal via UI state, not embedded */}
-            <motion.div
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.14 }}
-              className="w-full"
-            >
-              <motion.button 
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.98 }}
-                onHoverStart={() => SoundEffects.hover()}
-                onClick={handleLiveStreamClick}
-                className="w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold hover:text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl cursor-pointer transition-all duration-200"
-                style={{
-                  color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)',
-                  backgroundColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.08)',
-                  border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.3)'
-                }}
-              >
-                <IconBroadcast className="h-5 w-5" stroke={1.5} style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 1)' }} />
-                <span>Live Stream</span>
-              </motion.button>
-            </motion.div>
-
             {/* Affiliates */}
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.16 }}
+              transition={{ delay: 0.14 }}
               className="w-full"
             >
               <motion.button 
@@ -269,7 +216,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.18 }}
+              transition={{ delay: 0.16 }}
               className="w-full"
             >
               <motion.button 
@@ -290,36 +237,11 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
               </motion.button>
             </motion.div>
 
-            {/* Analysis */}
-            <motion.div
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.20 }}
-              className="w-full"
-            >
-              <motion.button 
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.98 }}
-                onHoverStart={() => SoundEffects.hover()}
-                onTouchStart={() => SoundEffects.click()}
-                className="w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold hover:text-white cursor-pointer px-4 sm:px-6 py-3 sm:py-4 rounded-xl transition-all duration-200"
-                style={{
-                  color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)',
-                  backgroundColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.08)',
-                  border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.3)'
-                }}
-                onClick={handleAnalysisClick}
-              >
-                <IconChartLine className="h-5 w-5" stroke={1.5} style={{ color: 'var(--accent-color, #60a5fa)' }} />
-                Analysis
-              </motion.button>
-            </motion.div>
-
             {showAccountManager && (
               <motion.div
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.21 }}
+                transition={{ delay: 0.18 }}
                 className="w-full"
               >
                 <motion.button 
@@ -345,7 +267,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.22 }}
+              transition={{ delay: 0.20 }}
               className="h-px my-1"
               style={{
                 background: 'linear-gradient(to right, transparent, rgba(var(--accent-rgb, 59, 130, 246), 0.3), transparent)'
@@ -356,7 +278,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.24 }}
+              transition={{ delay: 0.22 }}
               className="w-full"
             >
               <motion.button 
@@ -380,7 +302,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.26 }}
+              transition={{ delay: 0.24 }}
               className="w-full"
             >
               <motion.button

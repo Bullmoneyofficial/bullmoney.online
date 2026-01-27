@@ -138,7 +138,9 @@ import {
   Flame,
   Target,
   Eye,
-  Newspaper
+  Newspaper,
+  Tv,
+  Users
 } from 'lucide-react';
 import { useUIState } from '@/contexts/UIStateContext';
 import { useAudioSettings } from '@/contexts/AudioSettingsProvider';
@@ -147,6 +149,9 @@ import { NotificationToggle, NotificationBadge } from '@/components/Notification
 import { useNotifications } from '@/hooks/useNotifications';
 import TradingCourse from '@/components/TradingCourse';
 import { UltimateHubNewsTab } from '@/components/UltimateHubNewsTab';
+import { UltimateHubLiveStreamTab } from '@/components/UltimateHubLiveStreamTab';
+import { UltimateHubAnalysisTab } from '@/components/UltimateHubAnalysisTab';
+import { UltimateHubCommunityPostsTab } from '@/components/UltimateHubCommunityPostsTab';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -4402,13 +4407,16 @@ BrowserModal.displayName = 'BrowserModal';
 // UNIFIED HUB TAB TYPE - All features in one pill
 // ============================================================================
 
-type UnifiedHubTab = 'community' | 'trading' | 'indicators' | 'news' | 'device' | 'logs' | 'journal' | 'course' | 'broker';
+type UnifiedHubTab = 'community' | 'trading' | 'indicators' | 'news' | 'device' | 'logs' | 'journal' | 'course' | 'broker' | 'livestream' | 'analysis' | 'posts';
 
 const UNIFIED_HUB_TABS: { id: UnifiedHubTab; label: string; icon: typeof TrendingUp; color: string }[] = [
   { id: 'community', label: 'Social', icon: MessageSquare, color: 'blue' },
   { id: 'indicators', label: 'Indicators', icon: BarChart3, color: 'blue' },
   { id: 'news', label: 'News', icon: Newspaper, color: 'blue' },
   { id: 'trading', label: 'Trade', icon: TrendingUp, color: 'blue' },
+  { id: 'livestream', label: 'Live TV', icon: Tv, color: 'blue' },
+  { id: 'analysis', label: 'Analysis', icon: Target, color: 'blue' },
+  { id: 'posts', label: 'Posts', icon: Users, color: 'blue' },
   { id: 'journal', label: 'Journal', icon: Calendar, color: 'blue' },
   { id: 'course', label: 'Course', icon: GraduationCap, color: 'blue' },
   { id: 'device', label: 'Device', icon: Smartphone, color: 'blue' },
@@ -5508,6 +5516,48 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}
                   >
                     <UltimateHubNewsTab />
+                  </motion.div>
+                )}
+                
+                {/* LIVESTREAM TAB - BullMoney TV */}
+                {activeTab === 'livestream' && (
+                  <motion.div
+                    key="livestream"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="h-full overflow-hidden bg-black"
+                    style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}
+                  >
+                    <UltimateHubLiveStreamTab />
+                  </motion.div>
+                )}
+                
+                {/* ANALYSIS TAB - Trading Analysis & Charts */}
+                {activeTab === 'analysis' && (
+                  <motion.div
+                    key="analysis"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="h-full overflow-hidden bg-black"
+                    style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}
+                  >
+                    <UltimateHubAnalysisTab />
+                  </motion.div>
+                )}
+                
+                {/* COMMUNITY POSTS TAB - User-Generated Trade Posts */}
+                {activeTab === 'posts' && (
+                  <motion.div
+                    key="posts"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="h-full overflow-hidden bg-black"
+                    style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}
+                  >
+                    <UltimateHubCommunityPostsTab />
                   </motion.div>
                 )}
                 

@@ -237,16 +237,9 @@ export const Navbar = memo(() => {
     openFaqModal,
     openAffiliateModal,
     openThemeSelectorModal,
-    openAnalysisModal: openAnalysisModalBase,
     openAccountManagerModal,
     closeNavbarModal,
   } = useNavbarModals();
-  
-  // Wrap openAnalysisModal with logging
-  const openAnalysisModal = useCallback(() => {
-    console.log('[Navbar] openAnalysisModal called');
-    openAnalysisModalBase();
-  }, [openAnalysisModalBase]);
 
   // Unified Performance System - single source for lifecycle & shimmer
   const navbarPerf = useComponentLifecycle('navbar', 10); // Priority 10 (highest)
@@ -637,7 +630,6 @@ export const Navbar = memo(() => {
           onFaqClick={openFaqModal}
           onThemeClick={openThemeSelectorModal}
           onAdminClick={handleAdminClick}
-          onAnalysisClick={openAnalysisModal}
           onAccountManagerClick={() => {
             trackClick('account_manager_nav', { source: 'desktop_dock' });
             openAccountManagerModal();
@@ -788,7 +780,6 @@ export const Navbar = memo(() => {
             handleAdminClick(); 
           }}
           onThemeClick={() => { trackClick('theme_nav', { source: 'mobile_menu' }); openThemeSelectorModal(); }}
-          onAnalysisClick={() => { trackClick('analysis_nav', { source: 'mobile_menu' }); openAnalysisModal(); }}
           onAccountManagerClick={() => { trackClick('account_manager_nav', { source: 'mobile_menu' }); openAccountManagerModal(); }}
         />
       )}

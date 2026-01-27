@@ -8,14 +8,11 @@ import {
   IconCalendarTime,
   IconSettings,
   IconLock,
-  IconBroadcast,
-  IconChartLine,
   IconPalette,
   IconUser,
 } from '@tabler/icons-react';
 import { Dock } from './Dock';
 import { MinimizedDock } from './MinimizedDock';
-import { LiveStreamModal } from '@/components/LiveStreamModal';
 import { ProductsModal } from '@/components/ProductsModal';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import './DesktopNavbar.css';
@@ -31,7 +28,6 @@ interface DesktopNavbarProps {
   onFaqClick: () => void;
   onThemeClick: () => void;
   onAdminClick: () => void;
-  onAnalysisClick: () => void;
   onAccountManagerClick: () => void;
   mounted: boolean;
   isScrollMinimized?: boolean;
@@ -52,7 +48,6 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
       onFaqClick,
       onThemeClick,
       onAdminClick,
-      onAnalysisClick,
       onAccountManagerClick,
       mounted,
       isScrollMinimized = false,
@@ -79,12 +74,6 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
         href: "/",
       },
       {
-        icon: <IconBroadcast className="h-6 w-6 text-blue-400" stroke={1.5} />,
-        label: "Live",
-        tips: ["Watch live streams", "Trading sessions", "Market updates"],
-        triggerComponent: <div className="w-full h-full flex items-center justify-center pointer-events-auto"><LiveStreamModal /></div>,
-      },
-      {
         icon: isXMUser 
           ? <IconUsersGroup className="h-6 w-6 text-red-400" stroke={1.5} />
           : <IconUsersGroup className="h-6 w-6 text-blue-400" stroke={1.5} />,
@@ -98,12 +87,6 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
         label: "FAQ",
         tips: ["Got questions?", "Find your answers here", "Support center"],
         onClick: onFaqClick,
-      },
-      {
-        icon: <IconChartLine className="h-6 w-6 text-blue-400" stroke={1.5} />,
-        label: "Analysis",
-        tips: ["Trade analysis", "Market insights", "Expert breakdowns"],
-        onClick: onAnalysisClick,
       },
       {
         icon: <IconCalendarTime className="h-6 w-6 text-blue-400" stroke={1.5} />,

@@ -18,6 +18,7 @@ import {
   Trash2,
   GraduationCap,
   Users,
+  HelpCircle,
 } from "lucide-react";
 import { createSupabaseClient } from "@/lib/supabase";
 import { useMobilePerformance } from "@/hooks/useMobilePerformance";
@@ -249,7 +250,7 @@ export function AdminHubModal({
   const adminEmailEnv = process.env.NEXT_PUBLIC_ADMIN_EMAIL?.toLowerCase() || "";
   const supabase = useMemo(() => createSupabaseClient(), []);
   const [activeTab, setActiveTab] = useState<
-    "products" | "services" | "livestream" | "analysis" | "recruits" | "course" | "affiliate"
+    "products" | "services" | "livestream" | "analysis" | "recruits" | "course" | "affiliate" | "faq"
   >("products");
   const [affiliateView, setAffiliateView] = useState<"calculator" | "admin">("calculator");
   const [busy, setBusy] = useState(false);
@@ -328,6 +329,16 @@ export function AdminHubModal({
     is_vip: false,
     commission_balance: "0",
     notes: "",
+  });
+
+  // FAQ Content
+  const [faqCategories, setFaqCategories] = useState<any[]>([]);
+  const [faqForm, setFaqForm] = useState({
+    categoryId: "",
+    categoryName: "",
+    itemId: "",
+    question: "",
+    answer: "",
   });
 
   const showToast = useCallback((msg: string) => {
@@ -1420,6 +1431,145 @@ export function AdminHubModal({
     </>
   );
 
+  const renderFaq = () => (
+    <div className="space-y-4 overflow-y-auto max-h-[70vh] pr-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900/60">
+      <div className="flex items-center justify-between px-2">
+        <h3 className="text-white font-semibold text-sm">FAQ Content Editor</h3>
+        <button
+          onClick={() => {
+            // Load FAQ from Faq.tsx component
+            import('@/components/Faq').then(module => {
+              if (module.FAQ_CONTENT) {
+                setFaqCategories(module.FAQ_CONTENT);
+                showToast('FAQ content loaded from Faq.tsx');
+              }
+            }).catch(err => showError('Failed to load FAQ content'));
+          }}
+          className="px-3 py-1.5 text-xs rounded-md bg-blue-600 text-white border border-blue-500/60"
+        >
+          Load Current FAQ
+        </button>
+      </div>
+
+      <div className="p-4 rounded-lg border border-blue-500/30 bg-slate-900/50">
+        <p className="text-sm text-slate-300 mb-2">
+          Edit FAQ categories and items below. Changes are displayed in real-time but need to be saved to the FAQ component file.
+        </p>
+        <p className="text-xs text-slate-400">
+          Note: This is a visual editor. To persist changes, you'll need to copy the updated JSON structure to components/Faq.tsx.
+        </p>
+      </div>
+
+      {faqCategories.length === 0 ? (
+        <div className="text-center py-8 text-slate-400">
+          <p>Click "Load Current FAQ" to start editing</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {faqCategories.map((category, catIdx) => (
+            <div key={catIdx} className="p-3 rounded-lg border border-slate-700 bg-slate-900/70">
+              <div className="flex items-center justify-between mb-3">
+                <input
+                  value={category.category}
+                  onChange={(e) => {
+                    const updated = [...faqCategories];
+                    updated[catIdx] = { ...updated[catIdx], category: e.target.value };
+                    setFaqCategories(updated);
+                  }}
+                  className="flex-1 rounded-md bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-white font-semibold"
+                  placeholder="Category Name"
+                />
+                <button
+                  onClick={() => {
+                    const updated = faqCategories.filter((_, i) => i !== catIdx);
+                    setFaqCategories(updated);
+                  }}
+                  className="ml-2 p-2 rounded-md bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-300"
+                  title="Delete Category"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                {category.items?.map((item: any, itemIdx: number) => (
+                  <div key={itemIdx} className="p-2 rounded-md border border-slate-600 bg-slate-800/50">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <input
+                        value={item.name}
+                        onChange={(e) => {
+                          const updated = [...faqCategories];
+                          updated[catIdx].items[itemIdx] = { ...item, name: e.target.value };
+                          setFaqCategories(updated);
+                        }}
+                        className="flex-1 rounded-md bg-slate-700 border border-slate-600 px-2 py-1 text-sm text-white"
+                        placeholder="Question"
+                      />
+                      <button
+                        onClick={() => {
+                          const updated = [...faqCategories];
+                          updated[catIdx].items = updated[catIdx].items.filter((_: any, i: number) => i !== itemIdx);
+                          setFaqCategories(updated);
+                        }}
+                        className="p-1.5 rounded-md bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-300"
+                        title="Delete Question"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                    <textarea
+                      value={typeof item.answer === 'string' ? item.answer : ''}
+                      onChange={(e) => {
+                        const updated = [...faqCategories];
+                        updated[catIdx].items[itemIdx] = { ...item, answer: e.target.value };
+                        setFaqCategories(updated);
+                      }}
+                      className="w-full rounded-md bg-slate-700 border border-slate-600 px-2 py-1 text-sm text-slate-200"
+                      placeholder="Answer"
+                      rows={2}
+                    />
+                  </div>
+                ))}
+
+                <button
+                  onClick={() => {
+                    const updated = [...faqCategories];
+                    if (!updated[catIdx].items) updated[catIdx].items = [];
+                    updated[catIdx].items.push({ name: '', answer: '' });
+                    setFaqCategories(updated);
+                  }}
+                  className="w-full px-3 py-2 text-xs rounded-md bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 text-blue-300"
+                >
+                  + Add Question
+                </button>
+              </div>
+            </div>
+          ))}
+
+          <button
+            onClick={() => {
+              setFaqCategories([...faqCategories, { category: 'New Category', items: [] }]);
+            }}
+            className="w-full px-4 py-2 text-sm rounded-md bg-blue-600 text-white border border-blue-500/60"
+          >
+            + Add Category
+          </button>
+
+          <button
+            onClick={() => {
+              const json = JSON.stringify(faqCategories, null, 2);
+              navigator.clipboard.writeText(json);
+              showToast('FAQ JSON copied to clipboard!');
+            }}
+            className="w-full px-4 py-2 text-sm rounded-md bg-green-600 text-white border border-green-500/60"
+          >
+            Copy JSON to Clipboard
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
   // -----------------------------------------------------------------------
   // MAIN RENDER
   // -----------------------------------------------------------------------
@@ -1520,6 +1670,12 @@ export function AdminHubModal({
                 active={activeTab === "affiliate"}
                 onClick={() => setActiveTab("affiliate")}
               />
+              <TabButton
+                label="FAQ Editor"
+                icon={<HelpCircle className="w-4 h-4" />}
+                active={activeTab === "faq"}
+                onClick={() => setActiveTab("faq")}
+              />
             </div>
 
               <div className="p-3 sm:p-4 bg-slate-950/70 overflow-hidden [overscroll-behavior:contain]">
@@ -1535,6 +1691,7 @@ export function AdminHubModal({
                     {activeTab === "analysis" && renderAnalyses()}
                     {activeTab === "recruits" && renderRecruits()}
                     {activeTab === "course" && <CourseAdminPanel />}
+                    {activeTab === "faq" && renderFaq()}
                     {activeTab === "affiliate" && (
                       <div className="space-y-4">
                         {/* Toggle between Calculator and Admin Panel */}
