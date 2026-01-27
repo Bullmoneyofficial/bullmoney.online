@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createSupabaseClient } from '@/lib/supabase';
 import { Play, Check, Lock, Download, ChevronRight, BookOpen, Video, FileText, Award, Clock, TrendingUp, X, ArrowLeft } from 'lucide-react';
 
@@ -47,23 +47,156 @@ interface Progress {
   last_watched_position: number;
 }
 
+interface Resource {
+  id: string;
+  lesson_id: string;
+  title: string;
+  description: string | null;
+  resource_type: string;
+  file_url: string;
+  file_size_kb: number | null;
+}
+
+interface Quiz {
+  id: string;
+  lesson_id: string;
+  question: string;
+  options: string[];
+  correct_answer: number;
+  explanation: string | null;
+  order_index: number;
+}
+
+type LocalLessonProgress = {
+  completed?: boolean;
+  completedAt?: string;
+  timeSpentSeconds?: number;
+  lastViewedAt?: string;
+};
+
+type LocalQuizAttempt = {
+  selectedAnswer?: number;
+  isCorrect?: boolean;
+  attemptedAt?: string;
+};
+
+type LocalCourseStateV1 = {
+  version: 1;
+  startedAt?: string;
+  startedLevelId?: string;
+  lastViewedLessonId?: string;
+  lessons: Record<string, LocalLessonProgress>;
+  quizAttempts: Record<string, LocalQuizAttempt>;
+};
+
+const LOCAL_STATE_VERSION = 1 as const;
+const LOCAL_STORAGE_PREFIX = 'bullmoney_trading_course_v1';
+
+function safeJsonParse<T>(value: string | null): T | null {
+  if (!value) return null;
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return null;
+  }
+}
+
+function nowIso() {
+  return new Date().toISOString();
+}
+
+function clampInt(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, Math.trunc(value)));
+}
+
+function mergeLessonProgress(local: LocalLessonProgress | undefined, remote: Progress | undefined): LocalLessonProgress {
+  const localTime = local?.timeSpentSeconds ?? 0;
+  const remoteTimeSeconds = (remote?.time_spent_minutes ?? 0) * 60;
+  const timeSpentSeconds = Math.max(localTime, remoteTimeSeconds);
+  const completed = Boolean(local?.completed || remote?.completed);
+  return {
+    completed,
+    completedAt: local?.completedAt,
+    lastViewedAt: local?.lastViewedAt,
+    timeSpentSeconds,
+  };
+}
+
 export default function TradingCourse() {
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
   const [levels, setLevels] = useState<CourseLevel[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
-  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [lessonsByModule, setLessonsByModule] = useState<Record<string, Lesson[]>>({});
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [userProgress, setUserProgress] = useState<Map<string, Progress>>(new Map());
+  const [resourcesByLesson, setResourcesByLesson] = useState<Record<string, Resource[]>>({});
+  const [quizzesByLesson, setQuizzesByLesson] = useState<Record<string, Quiz[]>>({});
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+
+  const [localState, setLocalState] = useState<LocalCourseStateV1>({
+    version: LOCAL_STATE_VERSION,
+    lessons: {},
+    quizAttempts: {},
+  });
   
   const supabase = useMemo(() => createSupabaseClient(), []);
+
+  const localStorageKey = useMemo(() => {
+    const userKey = user?.id ? String(user.id) : 'anon';
+    return `${LOCAL_STORAGE_PREFIX}:${userKey}`;
+  }, [user?.id]);
+
+  const activeLessonIdRef = useRef<string | null>(null);
+  const activeLessonStartMsRef = useRef<number | null>(null);
 
   useEffect(() => {
     loadUser();
     loadLevels();
   }, []);
+
+  useEffect(() => {
+    const parsed = safeJsonParse<LocalCourseStateV1>(localStorage.getItem(localStorageKey));
+    if (parsed && parsed.version === LOCAL_STATE_VERSION && parsed.lessons && parsed.quizAttempts) {
+      setLocalState(parsed);
+      return;
+    }
+    setLocalState({ version: LOCAL_STATE_VERSION, lessons: {}, quizAttempts: {} });
+  }, [localStorageKey]);
+
+  useEffect(() => {
+    // Best-effort anon -> authed migration (only if authed state is empty)
+    if (!user?.id) return;
+    const anonKey = `${LOCAL_STORAGE_PREFIX}:anon`;
+    const anon = safeJsonParse<LocalCourseStateV1>(localStorage.getItem(anonKey));
+    if (!anon || anon.version !== LOCAL_STATE_VERSION) return;
+    if ((Object.keys(localState.lessons).length ?? 0) > 0) return;
+
+    const merged: LocalCourseStateV1 = {
+      version: LOCAL_STATE_VERSION,
+      startedAt: anon.startedAt,
+      startedLevelId: anon.startedLevelId,
+      lastViewedLessonId: anon.lastViewedLessonId,
+      lessons: anon.lessons ?? {},
+      quizAttempts: anon.quizAttempts ?? {},
+    };
+    setLocalState(merged);
+    try {
+      localStorage.setItem(localStorageKey, JSON.stringify(merged));
+      localStorage.removeItem(anonKey);
+    } catch {
+      // ignore
+    }
+  }, [user?.id, localState.lessons, localStorageKey]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(localStorageKey, JSON.stringify(localState));
+    } catch {
+      // ignore
+    }
+  }, [localState, localStorageKey]);
 
   useEffect(() => {
     if (selectedLevel) {
@@ -79,6 +212,83 @@ export default function TradingCourse() {
       loadLessons(selectedModule);
     }
   }, [selectedModule]);
+
+  useEffect(() => {
+    // Track time spent per lesson.
+    const currentId = selectedLesson?.id ?? null;
+
+    const finalizePrevious = () => {
+      const prevLessonId = activeLessonIdRef.current;
+      const startMs = activeLessonStartMsRef.current;
+      if (!prevLessonId || !startMs) return;
+      const elapsedSeconds = Math.max(0, Math.round((Date.now() - startMs) / 1000));
+      activeLessonIdRef.current = null;
+      activeLessonStartMsRef.current = null;
+      if (elapsedSeconds < 5) return;
+
+      setLocalState(prev => {
+        const existing = prev.lessons[prevLessonId] ?? {};
+        const nextTime = (existing.timeSpentSeconds ?? 0) + elapsedSeconds;
+        return {
+          ...prev,
+          lessons: {
+            ...prev.lessons,
+            [prevLessonId]: {
+              ...existing,
+              timeSpentSeconds: nextTime,
+              lastViewedAt: nowIso(),
+            },
+          },
+        };
+      });
+
+      // Best-effort sync (only if logged in)
+      if (user?.id) {
+        void (async () => {
+          try {
+            const merged = mergeLessonProgress(localState.lessons[prevLessonId], userProgress.get(prevLessonId));
+            const timeMinutes = clampInt(Math.round((merged.timeSpentSeconds ?? 0) / 60), 0, 100000);
+            await supabase
+              .from('trading_course_progress')
+              .upsert({
+                user_id: user.id,
+                lesson_id: prevLessonId,
+                completed: Boolean(merged.completed),
+                progress_percentage: merged.completed ? 100 : 0,
+                time_spent_minutes: timeMinutes,
+              });
+          } catch {
+            // ignore
+          }
+        })();
+      }
+    };
+
+    finalizePrevious();
+
+    if (currentId) {
+      activeLessonIdRef.current = currentId;
+      activeLessonStartMsRef.current = Date.now();
+      setLocalState(prev => ({
+        ...prev,
+        lastViewedLessonId: currentId,
+        lessons: {
+          ...prev.lessons,
+          [currentId]: {
+            ...(prev.lessons[currentId] ?? {}),
+            lastViewedAt: nowIso(),
+          },
+        },
+      }));
+
+      void loadResourcesForLesson(currentId);
+      void loadQuizzesForLesson(currentId);
+    }
+
+    return () => {
+      finalizePrevious();
+    };
+  }, [selectedLesson?.id]);
 
   const loadUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -122,6 +332,8 @@ export default function TradingCourse() {
       
       console.log('Loaded modules:', data);
       setModules(data || []);
+      setLessonsByModule({});
+      setSelectedLesson(null);
       if (data && data.length > 0) {
         setSelectedModule(data[0].id);
       } else {
@@ -147,9 +359,46 @@ export default function TradingCourse() {
       }
       
       console.log('Loaded lessons:', data);
-      setLessons(data || []);
+      const nextLessons = data || [];
+      setLessonsByModule(prev => ({ ...prev, [moduleId]: nextLessons }));
+      // Auto-select first lesson for better guided flow
+      if (nextLessons.length > 0 && (!selectedLesson || selectedLesson.module_id !== moduleId)) {
+        setSelectedLesson(nextLessons[0]);
+      }
     } catch (error) {
       console.error('Error loading lessons:', error);
+    }
+  };
+
+  const loadResourcesForLesson = async (lessonId: string) => {
+    if (resourcesByLesson[lessonId]) return;
+    try {
+      const { data, error } = await supabase
+        .from('trading_course_resources')
+        .select('*')
+        .eq('lesson_id', lessonId)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      setResourcesByLesson(prev => ({ ...prev, [lessonId]: (data as Resource[]) || [] }));
+    } catch (error) {
+      console.error('Error loading resources:', error);
+      setResourcesByLesson(prev => ({ ...prev, [lessonId]: [] }));
+    }
+  };
+
+  const loadQuizzesForLesson = async (lessonId: string) => {
+    if (quizzesByLesson[lessonId]) return;
+    try {
+      const { data, error } = await supabase
+        .from('trading_course_quizzes')
+        .select('*')
+        .eq('lesson_id', lessonId)
+        .order('order_index');
+      if (error) throw error;
+      setQuizzesByLesson(prev => ({ ...prev, [lessonId]: (data as Quiz[]) || [] }));
+    } catch (error) {
+      console.error('Error loading quizzes:', error);
+      setQuizzesByLesson(prev => ({ ...prev, [lessonId]: [] }));
     }
   };
 
@@ -172,10 +421,38 @@ export default function TradingCourse() {
     }
   };
 
+  const ensureCourseStarted = useCallback((levelId?: string) => {
+    setLocalState(prev => {
+      if (prev.startedAt) return prev;
+      return {
+        ...prev,
+        startedAt: nowIso(),
+        startedLevelId: levelId ?? prev.startedLevelId,
+      };
+    });
+  }, []);
+
   const markLessonComplete = async (lessonId: string) => {
+    setLocalState(prev => {
+      const existing = prev.lessons[lessonId] ?? {};
+      return {
+        ...prev,
+        lessons: {
+          ...prev.lessons,
+          [lessonId]: {
+            ...existing,
+            completed: true,
+            completedAt: existing.completedAt ?? nowIso(),
+          },
+        },
+      };
+    });
+
     if (!user) return;
-    
+
     try {
+      const merged = mergeLessonProgress(localState.lessons[lessonId], userProgress.get(lessonId));
+      const timeMinutes = clampInt(Math.round((merged.timeSpentSeconds ?? 0) / 60), 0, 100000);
       const { error } = await supabase
         .from('trading_course_progress')
         .upsert({
@@ -183,9 +460,9 @@ export default function TradingCourse() {
           lesson_id: lessonId,
           completed: true,
           progress_percentage: 100,
-          completed_at: new Date().toISOString()
+          time_spent_minutes: timeMinutes,
+          completed_at: nowIso(),
         });
-      
       if (error) throw error;
       loadUserProgress();
     } catch (error) {
@@ -193,16 +470,76 @@ export default function TradingCourse() {
     }
   };
 
-  const getLessonProgress = (lessonId: string) => {
-    return userProgress.get(lessonId);
+  const getLessonProgress = (lessonId: string) => userProgress.get(lessonId);
+
+  const getEffectiveLessonProgress = (lessonId: string) => {
+    const local = localState.lessons[lessonId];
+    const remote = userProgress.get(lessonId);
+    return mergeLessonProgress(local, remote);
   };
 
   const getModuleProgress = (moduleId: string) => {
-    const moduleLessons = lessons.filter(l => l.module_id === moduleId);
+    const moduleLessons = lessonsByModule[moduleId] || [];
     if (moduleLessons.length === 0) return 0;
     
-    const completed = moduleLessons.filter(l => getLessonProgress(l.id)?.completed).length;
+    const completed = moduleLessons.filter(l => getEffectiveLessonProgress(l.id)?.completed).length;
     return Math.round((completed / moduleLessons.length) * 100);
+  };
+
+  const getTotalLevelProgress = () => {
+    const allLessons = Object.values(lessonsByModule).flat();
+    if (allLessons.length === 0) return { completed: 0, total: 0, percent: 0 };
+    const completed = allLessons.filter(l => getEffectiveLessonProgress(l.id)?.completed).length;
+    return { completed, total: allLessons.length, percent: Math.round((completed / allLessons.length) * 100) };
+  };
+
+  const getTotalTimeSpentMinutes = () => {
+    const seconds = Object.values(localState.lessons).reduce((acc, lp) => acc + (lp.timeSpentSeconds ?? 0), 0);
+    return clampInt(Math.round(seconds / 60), 0, 100000);
+  };
+
+  const getNextLesson = () => {
+    const moduleLessonList = selectedModule ? (lessonsByModule[selectedModule] || []) : [];
+    if (moduleLessonList.length === 0) return null;
+    const idx = moduleLessonList.findIndex(l => l.id === selectedLesson?.id);
+    for (let i = Math.max(0, idx + 1); i < moduleLessonList.length; i++) {
+      const candidate = moduleLessonList[i];
+      if (!getEffectiveLessonProgress(candidate.id)?.completed) return candidate;
+    }
+    // If rest of module is done, pick first incomplete across all loaded lessons
+    const allLessons = Object.values(lessonsByModule).flat();
+    return allLessons.find(l => !getEffectiveLessonProgress(l.id)?.completed) ?? null;
+  };
+
+  const submitQuizAttempt = async (quiz: Quiz, selectedAnswer: number) => {
+    const isCorrect = selectedAnswer === quiz.correct_answer;
+
+    setLocalState(prev => ({
+      ...prev,
+      quizAttempts: {
+        ...prev.quizAttempts,
+        [quiz.id]: {
+          selectedAnswer,
+          isCorrect,
+          attemptedAt: nowIso(),
+        },
+      },
+    }));
+
+    if (!user) return;
+
+    try {
+      await supabase
+        .from('trading_course_quiz_attempts')
+        .insert({
+          user_id: user.id,
+          quiz_id: quiz.id,
+          selected_answer: selectedAnswer,
+          is_correct: isCorrect,
+        });
+    } catch (error) {
+      console.error('Error saving quiz attempt:', error);
+    }
   };
 
   if (loading) {
@@ -300,7 +637,11 @@ export default function TradingCourse() {
             {levels.map((level, index) => (
               <div
                 key={level.id}
-                onClick={() => setSelectedLevel(level.id)}
+                onClick={() => {
+                  ensureCourseStarted(level.id);
+                  setLocalState(prev => ({ ...prev, startedLevelId: level.id }));
+                  setSelectedLevel(level.id);
+                }}
                 className="group cursor-pointer"
               >
                 <div className="relative bg-gradient-to-br from-gray-900/80 to-black border-2 border-blue-500/30 hover:border-blue-400 rounded-xl p-4 sm:p-6 transition-all duration-300 hover:scale-[1.02]" 
@@ -362,6 +703,30 @@ export default function TradingCourse() {
                   <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
                   Course Modules
                 </h3>
+
+                {/* Progress Summary */}
+                <div className="mb-3 rounded-lg border border-blue-500/20 bg-blue-500/5 p-2">
+                  {(() => {
+                    const p = getTotalLevelProgress();
+                    const minutes = getTotalTimeSpentMinutes();
+                    return (
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="text-[10px] sm:text-xs text-gray-300">
+                          <span className="text-blue-400 font-semibold" style={{ textShadow: '0 0 4px #3b82f6' }}>{p.percent}%</span> complete
+                          <span className="text-gray-500"> · </span>
+                          <span className="text-gray-400">{p.completed}/{p.total} lessons</span>
+                        </div>
+                        <div className="text-[10px] sm:text-xs text-gray-400 flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-blue-400" />
+                          {minutes}m
+                        </div>
+                      </div>
+                    );
+                  })()}
+                  {!user && (
+                    <div className="mt-1 text-[10px] sm:text-[11px] text-gray-500">Progress saves locally. Log in to sync across devices.</div>
+                  )}
+                </div>
                 
                 {modules.length === 0 ? (
                   <div className="text-center py-8">
@@ -393,14 +758,17 @@ export default function TradingCourse() {
                       {/* Lessons for this module */}
                       {selectedModule === module.id && (
                         <div className="ml-2 sm:ml-3 mt-1 space-y-1">
-                          {lessons.map((lesson, idx) => {
-                            const progress = getLessonProgress(lesson.id);
+                          {(lessonsByModule[module.id] || []).map((lesson, idx) => {
+                            const progress = getEffectiveLessonProgress(lesson.id);
                             const isCompleted = progress?.completed;
                             
                             return (
                               <button
                                 key={lesson.id}
-                                onClick={() => setSelectedLesson(lesson)}
+                                onClick={() => {
+                                  ensureCourseStarted(selectedLevel ?? undefined);
+                                  setSelectedLesson(lesson);
+                                }}
                                 className={`w-full text-left p-2 rounded-lg border transition-all flex items-center gap-2 ${
                                   selectedLesson?.id === lesson.id
                                     ? 'border-blue-400 bg-blue-500/5'
@@ -457,7 +825,7 @@ export default function TradingCourse() {
                         <h2 className="text-base sm:text-lg font-bold text-white mb-1 line-clamp-2">{selectedLesson.title}</h2>
                         <p className="text-xs sm:text-sm text-gray-400 line-clamp-2">{selectedLesson.description}</p>
                       </div>
-                      {getLessonProgress(selectedLesson.id)?.completed && (
+                      {getEffectiveLessonProgress(selectedLesson.id)?.completed && (
                         <div className="flex items-center gap-1 bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full flex-shrink-0" style={{ textShadow: '0 0 4px #3b82f6' }}>
                           <Award className="w-3 h-3 sm:w-4 sm:h-4" />
                           <span className="text-[10px] sm:text-xs font-semibold hidden sm:inline">Done</span>
@@ -531,8 +899,103 @@ export default function TradingCourse() {
                       </div>
                     )}
 
+                    {/* Resources */}
+                    {(resourcesByLesson[selectedLesson.id] || []).length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-blue-500/20">
+                        <h4 className="text-sm sm:text-base font-bold text-blue-400 mb-2" style={{ textShadow: '0 0 6px #3b82f6' }}>Downloads & Resources</h4>
+                        <div className="space-y-2">
+                          {(resourcesByLesson[selectedLesson.id] || []).map((r) => (
+                            <a
+                              key={r.id}
+                              href={r.file_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="block rounded-lg border border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10 transition-colors p-3"
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                  <div className="text-sm font-semibold text-white truncate">{r.title}</div>
+                                  {r.description && <div className="text-xs text-gray-400 mt-0.5">{r.description}</div>}
+                                  <div className="text-[10px] text-gray-500 mt-1">{r.resource_type}{r.file_size_kb ? ` · ${r.file_size_kb} KB` : ''}</div>
+                                </div>
+                                <div className="flex-shrink-0 text-blue-400">
+                                  <Download className="w-4 h-4" />
+                                </div>
+                              </div>
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Quizzes */}
+                    {(quizzesByLesson[selectedLesson.id] || []).length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-blue-500/20">
+                        <h4 className="text-sm sm:text-base font-bold text-blue-400 mb-2" style={{ textShadow: '0 0 6px #3b82f6' }}>Quick Check</h4>
+                        <div className="space-y-3">
+                          {(quizzesByLesson[selectedLesson.id] || []).map((q) => {
+                            const attempt = localState.quizAttempts[q.id] || {};
+                            const submitted = typeof attempt.isCorrect === 'boolean' && typeof attempt.selectedAnswer === 'number';
+                            return (
+                              <div key={q.id} className="rounded-lg border border-blue-500/20 bg-black/40 p-3">
+                                <div className="text-sm font-semibold text-white mb-2">{q.question}</div>
+                                <div className="space-y-1">
+                                  {q.options.map((opt, idx) => (
+                                    <button
+                                      key={idx}
+                                      onClick={() => submitQuizAttempt(q, idx)}
+                                      className={`w-full text-left text-xs sm:text-sm rounded-lg border px-3 py-2 transition-colors ${
+                                        submitted
+                                          ? (idx === q.correct_answer
+                                              ? 'border-blue-400/60 bg-blue-500/10 text-white'
+                                              : idx === attempt.selectedAnswer
+                                                ? 'border-blue-500/30 bg-blue-500/5 text-gray-200'
+                                                : 'border-blue-500/10 bg-transparent text-gray-400')
+                                          : 'border-blue-500/10 hover:border-blue-500/30 bg-transparent text-gray-200'
+                                      }`}
+                                      disabled={submitted}
+                                    >
+                                      {opt}
+                                    </button>
+                                  ))}
+                                </div>
+
+                                {submitted && (
+                                  <div className="mt-2 text-xs">
+                                    <div className={`font-semibold ${attempt.isCorrect ? 'text-blue-400' : 'text-gray-300'}`} style={{ textShadow: '0 0 4px rgba(59,130,246,0.4)' }}>
+                                      {attempt.isCorrect ? 'Correct' : 'Not quite'}
+                                    </div>
+                                    {q.explanation && <div className="text-gray-400 mt-1">{q.explanation}</div>}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Next lesson guidance */}
+                    {(() => {
+                      const next = getNextLesson();
+                      if (!next || next.id === selectedLesson.id) return null;
+                      if (getEffectiveLessonProgress(selectedLesson.id)?.completed !== true) return null;
+                      return (
+                        <div className="mt-4 pt-4 border-t border-blue-500/20">
+                          <button
+                            onClick={() => setSelectedLesson(next)}
+                            className="w-full bg-blue-500/10 hover:bg-blue-500/15 border border-blue-500/30 text-blue-400 font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
+                            style={{ boxShadow: '0 0 18px rgba(59,130,246,0.25)' }}
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                            Continue: {next.title}
+                          </button>
+                        </div>
+                      );
+                    })()}
+
                     {/* Complete Lesson Button - Always accessible with proper spacing */}
-                    {user && !getLessonProgress(selectedLesson.id)?.completed && (
+                    {!getEffectiveLessonProgress(selectedLesson.id)?.completed && (
                       <div className="mt-4 pt-4 border-t border-blue-500/20">
                         <button
                           onClick={() => markLessonComplete(selectedLesson.id)}

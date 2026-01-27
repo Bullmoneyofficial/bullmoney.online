@@ -83,6 +83,7 @@ import TradingJournal from './TradingJournal';
 import {
   Activity,
   TrendingUp,
+  TrendingDown,
   ChevronRight,
   ChevronDown,
   BarChart3,
@@ -132,7 +133,11 @@ import {
   Monitor,
   Sparkles,
   Bell,
-  GraduationCap
+  GraduationCap,
+  LineChart,
+  Flame,
+  Target,
+  Eye
 } from 'lucide-react';
 import { useUIState } from '@/contexts/UIStateContext';
 import { createSupabaseClient } from '@/lib/supabase';
@@ -4363,14 +4368,14 @@ BrowserModal.displayName = 'BrowserModal';
 // UNIFIED HUB TAB TYPE - All features in one pill
 // ============================================================================
 
-type UnifiedHubTab = 'community' | 'trading' | 'tv' | 'device' | 'logs' | 'journal' | 'course';
+type UnifiedHubTab = 'community' | 'trading' | 'indicators' | 'device' | 'logs' | 'journal' | 'course';
 
 const UNIFIED_HUB_TABS: { id: UnifiedHubTab; label: string; icon: typeof TrendingUp; color: string }[] = [
   { id: 'community', label: 'Social', icon: MessageSquare, color: 'blue' },
   { id: 'trading', label: 'Trade', icon: TrendingUp, color: 'blue' },
   { id: 'journal', label: 'Journal', icon: Calendar, color: 'blue' },
   { id: 'course', label: 'Course', icon: GraduationCap, color: 'blue' },
-  { id: 'tv', label: 'TV', icon: Play, color: 'blue' },
+  { id: 'indicators', label: 'Indicators', icon: BarChart3, color: 'blue' },
   { id: 'device', label: 'Device', icon: Smartphone, color: 'blue' },
   { id: 'logs', label: 'Logs', icon: AlertTriangle, color: 'blue' },
 ];
@@ -4426,11 +4431,8 @@ export const UnifiedHubPanel = memo(({
   const [activeChannel, setActiveChannel] = useState<ChannelKey>('trades');
   const [copied, setCopied] = useState(false);
   
-  // TV tab state
-  const [tvTab, setTvTab] = useState<'featured' | 'live'>('featured');
-  const [featuredIndex, setFeaturedIndex] = useState(0);
-  const [tradingChannelIndex, setTradingChannelIndex] = useState(0);
-  const [isLive, setIsLive] = useState(false);
+  // Indicators tab state
+  const [indicatorCategory, setIndicatorCategory] = useState<'crypto' | 'stocks' | 'sentiment'>('crypto');
   
   // Device tab state - Get REAL device data from hooks
   const memoryStats = useRealTimeMemory();
@@ -4589,17 +4591,6 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
     { name: 'Instagram', icon: Instagram, url: 'https://www.instagram.com/bullmoney.online/', color: 'from-pink-500 to-purple-500' },
     { name: 'YouTube', icon: Youtube, url: 'https://youtube.com/@bullmoney.online', color: 'from-red-600 to-red-500' },
   ];
-
-  const youtubeEmbedUrl = useMemo(() => {
-    if (tvTab === 'live') {
-      if (isLive) {
-        return `https://www.youtube.com/embed/live_stream?channel=UCTd2Y1DjefTH6bOAvFcJ34Q&autoplay=1&mute=0`;
-      }
-      const channel = TRADING_LIVE_CHANNELS[tradingChannelIndex];
-      return `https://www.youtube.com/embed/live_stream?channel=${channel.id}&autoplay=1&mute=0`;
-    }
-    return `https://www.youtube.com/embed/${FEATURED_VIDEOS[featuredIndex]}?autoplay=1&mute=0`;
-  }, [tvTab, featuredIndex, tradingChannelIndex, isLive]);
 
   // Calendar URL builder
   const calendarUrl = useMemo(() => {
@@ -5055,107 +5046,247 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                   </motion.div>
                 )}
                 
-                {/* TV TAB */}
-                {activeTab === 'tv' && (
+                {/* INDICATORS TAB - Market Indicators & Sentiment */}
+                {activeTab === 'indicators' && (
                   <motion.div
-                    key="tv"
+                    key="indicators"
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="h-full flex flex-col"
+                    className="h-full flex flex-col bg-black"
                   >
-                    {/* TV Tabs */}
+                    {/* Category Tabs */}
                     <div className="flex gap-2 p-2 sm:p-3 border-b border-blue-500/30 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}>
-                      {(['featured', 'live'] as const).map(tab => (
+                      {(['crypto', 'stocks', 'sentiment'] as const).map(category => (
                         <motion.button
-                          key={tab}
-                          onClick={() => setTvTab(tab)}
+                          key={category}
+                          onClick={() => setIndicatorCategory(category)}
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
-                            tvTab === tab
+                          className={`flex-1 min-w-[90px] flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
+                            indicatorCategory === category
                               ? 'bg-blue-500/30 text-blue-300 border border-blue-400/60 neon-blue-text'
                               : 'bg-black/40 text-blue-400/60 border border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400'
                           }`}
-                          style={tvTab === tab ? { boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)' } : {}}
+                          style={indicatorCategory === category ? { boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)', textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' } : {}}
                         >
-                          {tab === 'featured' ? <Play className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} /> : <Radio className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />}
-                          <span>{tab === 'featured' ? 'Featured' : 'Live Streams'}</span>
+                          {category === 'crypto' && <Bitcoin className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />}
+                          {category === 'stocks' && <TrendingUp className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />}
+                          {category === 'sentiment' && <Target className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />}
+                          <span className="neon-blue-text">{category === 'crypto' ? 'Crypto' : category === 'stocks' ? 'Stocks & Gold' : 'Sentiment'}</span>
                         </motion.button>
                       ))}
                     </div>
                     
-                    {/* Video Player */}
-                    <div className="relative aspect-video bg-black border border-blue-500/30" style={{ boxShadow: 'inset 0 0 12px rgba(59, 130, 246, 0.2)' }}>
-                      <iframe
-                        key={youtubeEmbedUrl}
-                        src={youtubeEmbedUrl}
-                        className="absolute inset-0 w-full h-full"
-                        title="BullMoney TV"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
-                    </div>
-                    
-                    {/* Video Controls */}
-                    <div className="p-2 sm:p-3 space-y-2">
-                      {tvTab === 'featured' && (
-                        <div className="flex gap-2">
-                          {FEATURED_VIDEOS.map((_, idx) => (
-                            <motion.button
-                              key={idx}
-                              onClick={() => setFeaturedIndex(idx)}
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              className={`flex-1 min-w-[80px] py-2.5 rounded-lg text-xs sm:text-sm font-semibold ${
-                                featuredIndex === idx
-                                  ? 'bg-blue-500/30 text-blue-300 border border-blue-400/60 neon-blue-text'
-                                  : 'bg-black/40 text-blue-400/60 border border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400'
-                              }`}
-                              style={featuredIndex === idx ? { boxShadow: '0 0 6px rgba(59, 130, 246, 0.3)' } : {}}
-                            >
-                              Video {idx + 1}
-                            </motion.button>
-                          ))}
+                    {/* Crypto Indicators */}
+                    {indicatorCategory === 'crypto' && (
+                      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+                        {/* Crypto Market Overview */}
+                        <div className="border border-blue-500/30 rounded-lg p-3 bg-black/60" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
+                          <h3 className="text-sm font-bold neon-blue-text mb-3 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
+                            <Globe className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                            Crypto Market Overview
+                          </h3>
+                          <iframe
+                            src="https://s.tradingview.com/embed-widget/crypto-mkt-overview/?locale=en#%7B%22width%22%3A%22100%25%22%2C%22height%22%3A%22300%22%2C%22defaultColumn%22%3A%22overview%22%2C%22screener_type%22%3A%22crypto_mkt%22%2C%22displayCurrency%22%3A%22USD%22%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%2C%22locale%22%3A%22en%22%7D"
+                            className="w-full h-[300px] border-0 rounded"
+                            title="Crypto Market Overview"
+                          />
                         </div>
-                      )}
-                      
-                      {tvTab === 'live' && (
-                        <div className="flex gap-1.5 overflow-x-auto overflow-y-hidden pb-1 scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ touchAction: 'pan-x pinch-zoom' }}>
-                          {TRADING_LIVE_CHANNELS.map((channel, idx) => (
-                            <motion.button
-                              key={channel.id}
-                              onClick={() => setTradingChannelIndex(idx)}
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] sm:text-[11px] font-semibold whitespace-nowrap flex-shrink-0 ${
-                                tradingChannelIndex === idx
-                                  ? 'bg-blue-500/30 text-blue-300 border border-blue-400/60 neon-blue-text'
-                                  : 'bg-black/40 text-blue-400/60 border border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400'
-                              }`}
-                              style={tradingChannelIndex === idx ? { boxShadow: '0 0 6px rgba(59, 130, 246, 0.3)' } : {}}
-                            >
-                              <Radio className="w-3.5 h-3.5" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
-                              {channel.name}
-                            </motion.button>
-                          ))}
+
+                        {/* Crypto Screener */}
+                        <div className="border border-blue-500/30 rounded-lg p-3 bg-black/60" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
+                          <h3 className="text-sm font-bold neon-blue-text mb-3 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
+                            <Activity className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                            Top Crypto Screener
+                          </h3>
+                          <iframe
+                            src="https://s.tradingview.com/embed-widget/screener/?locale=en#%7B%22width%22%3A%22100%25%22%2C%22height%22%3A%22500%22%2C%22defaultColumn%22%3A%22overview%22%2C%22screener_type%22%3A%22crypto_mkt%22%2C%22displayCurrency%22%3A%22USD%22%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%7D"
+                            className="w-full h-[500px] border-0 rounded"
+                            title="Crypto Screener"
+                          />
                         </div>
-                      )}
-                    </div>
+
+                        {/* Crypto Ticker */}
+                        <div className="border border-blue-500/30 rounded-lg p-3 bg-black/60" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
+                          <h3 className="text-sm font-bold neon-blue-text mb-3 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
+                            <Bitcoin className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                            Live Crypto Prices
+                          </h3>
+                          <iframe
+                            src="https://s.tradingview.com/embed-widget/ticker-tape/?locale=en#%7B%22symbols%22%3A%5B%7B%22proName%22%3A%22BITSTAMP%3ABTCUSD%22%2C%22title%22%3A%22Bitcoin%22%7D%2C%7B%22proName%22%3A%22BITSTAMP%3AETHUSD%22%2C%22title%22%3A%22Ethereum%22%7D%2C%7B%22description%22%3A%22BNB%22%2C%22proName%22%3A%22BINANCE%3ABNBUSDT%22%7D%2C%7B%22description%22%3A%22Solana%22%2C%22proName%22%3A%22BINANCE%3ASOLUSDT%22%7D%2C%7B%22description%22%3A%22XRP%22%2C%22proName%22%3A%22BINANCE%3AXRPUSDT%22%7D%2C%7B%22description%22%3A%22Cardano%22%2C%22proName%22%3A%22BINANCE%3AADAUSDT%22%7D%2C%7B%22description%22%3A%22Dogecoin%22%2C%22proName%22%3A%22BINANCE%3ADOGEUSDT%22%7D%5D%2C%22showSymbolLogo%22%3Atrue%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%2C%22displayMode%22%3A%22adaptive%22%2C%22locale%22%3A%22en%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A60%7D"
+                            className="w-full h-[60px] border-0 rounded"
+                            title="Crypto Ticker"
+                          />
+                        </div>
+
+                        {/* Crypto Heat Map */}
+                        <div className="border border-blue-500/30 rounded-lg p-3 bg-black/60" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
+                          <h3 className="text-sm font-bold neon-blue-text mb-3 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
+                            <BarChart3 className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                            Crypto Heat Map
+                          </h3>
+                          <iframe
+                            src="https://s.tradingview.com/embed-widget/crypto-coins-heatmap/?locale=en#%7B%22dataSource%22%3A%22Crypto%22%2C%22blockSize%22%3A%22market_cap_calc%22%2C%22blockColor%22%3A%22change%22%2C%22locale%22%3A%22en%22%2C%22symbolUrl%22%3A%22%22%2C%22colorTheme%22%3A%22dark%22%2C%22hasTopBar%22%3Afalse%2C%22isDataSetEnabled%22%3Afalse%2C%22isZoomEnabled%22%3Atrue%2C%22hasSymbolTooltip%22%3Atrue%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22400%22%2C%22isTransparent%22%3Atrue%7D"
+                            className="w-full h-[400px] border-0 rounded"
+                            title="Crypto Heat Map"
+                          />
+                        </div>
+
+                        {/* Crypto Hot Lists */}
+                        <div className="border border-blue-500/30 rounded-lg p-3 bg-black/60" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
+                          <h3 className="text-sm font-bold neon-blue-text mb-3 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
+                            <Flame className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                            Top Gainers & Losers
+                          </h3>
+                          <iframe
+                            src="https://s.tradingview.com/embed-widget/hotlists/?locale=en#%7B%22colorTheme%22%3A%22dark%22%2C%22dateRange%22%3A%221D%22%2C%22exchange%22%3A%22BINANCE%22%2C%22showChart%22%3Atrue%2C%22locale%22%3A%22en%22%2C%22largeChartUrl%22%3A%22%22%2C%22isTransparent%22%3Atrue%2C%22showSymbolLogo%22%3Afalse%2C%22showFloatingTooltip%22%3Afalse%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22400%22%7D"
+                            className="w-full h-[400px] border-0 rounded"
+                            title="Hot Lists"
+                          />
+                        </div>
+
+                        {/* Market Data */}
+                        <div className="border border-blue-500/30 rounded-lg p-3 bg-black/60" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
+                          <h3 className="text-sm font-bold neon-blue-text mb-3 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
+                            <BarChart3 className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                            Market Data
+                          </h3>
+                          <iframe
+                            src="https://s.tradingview.com/embed-widget/market-quotes/?locale=en#%7B%22width%22%3A%22100%25%22%2C%22height%22%3A%22400%22%2C%22symbolsGroups%22%3A%5B%7B%22name%22%3A%22Crypto%22%2C%22symbols%22%3A%5B%7B%22name%22%3A%22BINANCE%3ABTCUSDT%22%7D%2C%7B%22name%22%3A%22BINANCE%3AETHUSDT%22%7D%2C%7B%22name%22%3A%22BINANCE%3ABNBUSDT%22%7D%2C%7B%22name%22%3A%22BINANCE%3ASOLUSDT%22%7D%2C%7B%22name%22%3A%22BINANCE%3AXRPUSDT%22%7D%2C%7B%22name%22%3A%22BINANCE%3AADAUSDT%22%7D%5D%7D%5D%2C%22showSymbolLogo%22%3Atrue%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%2C%22locale%22%3A%22en%22%7D"
+                            className="w-full h-[400px] border-0 rounded"
+                            title="Market Data"
+                          />
+                        </div>
+                      </div>
+                    )}
                     
-                    {/* Platform Links */}
-                    <div className="flex border-t border-blue-500/30 mt-auto bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}>
-                      <a href="https://youtube.com/@bullmoney.streams" target="_blank" rel="noopener noreferrer"
-                        className="flex-1 py-2 px-3 flex items-center justify-center gap-2 text-xs font-semibold text-blue-300 hover:text-blue-200 hover:bg-blue-500/20 transition-all"
-                        style={{ textShadow: '0 0 4px rgba(59, 130, 246, 0.3)' }}>
-                        <Youtube className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} /> YouTube
-                      </a>
-                      <a href="https://discord.gg/vfxHPpCeQ" target="_blank" rel="noopener noreferrer"
-                        className="flex-1 py-2 px-3 flex items-center justify-center gap-2 text-xs font-semibold text-blue-300 hover:text-blue-200 hover:bg-blue-500/20 transition-all border-l border-blue-500/30"
-                        style={{ textShadow: '0 0 4px rgba(59, 130, 246, 0.3)' }}>
-                        <MessageSquare className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} /> Discord
-                      </a>
-                    </div>
+                    {/* Stocks & Gold Indicators */}
+                    {indicatorCategory === 'stocks' && (
+                      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+                        {/* Gold & Commodities */}
+                        <div className="border border-blue-500/30 rounded-lg p-3 bg-black/60" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
+                          <h3 className="text-sm font-bold neon-blue-text mb-3 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
+                            <Coins className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                            Gold & Commodities
+                          </h3>
+                          <iframe
+                            src="https://s.tradingview.com/embed-widget/symbol-overview/?locale=en#%7B%22symbols%22%3A%5B%5B%22OANDA%3AXAUUSD%7C1D%22%5D%2C%5B%22OANDA%3AXAGUSD%7C1D%22%5D%2C%5B%22TVC%3AUSOIL%7C1D%22%5D%5D%2C%22chartOnly%22%3Afalse%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22300%22%2C%22locale%22%3A%22en%22%2C%22colorTheme%22%3A%22dark%22%2C%22autosize%22%3Afalse%2C%22showVolume%22%3Afalse%2C%22showMA%22%3Afalse%2C%22hideDateRanges%22%3Afalse%2C%22hideMarketStatus%22%3Afalse%2C%22hideSymbolLogo%22%3Afalse%2C%22scalePosition%22%3A%22right%22%2C%22scaleMode%22%3A%22Normal%22%2C%22fontFamily%22%3A%22-apple-system%2C%20BlinkMacSystemFont%2C%20Trebuchet%20MS%2C%20Roboto%2C%20Ubuntu%2C%20sans-serif%22%2C%22fontSize%22%3A%2210%22%2C%22noTimeScale%22%3Afalse%2C%22valuesTracking%22%3A%221%22%2C%22changeMode%22%3A%22price-and-percent%22%2C%22chartType%22%3A%22area%22%2C%22lineWidth%22%3A2%2C%22lineType%22%3A0%2C%22dateRanges%22%3A%5B%221d%7C1%22%2C%221m%7C30%22%2C%223m%7C60%22%2C%2212m%7C1D%22%2C%2260m%7C1W%22%2C%22all%7C1M%22%5D%2C%22isTransparent%22%3Atrue%7D"
+                            className="w-full h-[300px] border-0 rounded"
+                            title="Gold & Commodities"
+                          />
+                        </div>
+
+                        {/* Market Overview */}
+                        <div className="border border-blue-500/30 rounded-lg p-3 bg-black/60" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
+                          <h3 className="text-sm font-bold neon-blue-text mb-3 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
+                            <TrendingUp className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                            Market Overview
+                          </h3>
+                          <iframe
+                            src="https://s.tradingview.com/embed-widget/market-overview/?locale=en#%7B%22colorTheme%22%3A%22dark%22%2C%22dateRange%22%3A%2212M%22%2C%22showChart%22%3Atrue%2C%22width%22%3A%22100%25%22%2C%22height%22%3A400%2C%22largeChartUrl%22%3A%22%22%2C%22isTransparent%22%3Atrue%2C%22showSymbolLogo%22%3Atrue%2C%22plotLineColorGrowing%22%3A%22rgba(59%2C130%2C246%2C1)%22%2C%22plotLineColorFalling%22%3A%22rgba(59%2C130%2C246%2C1)%22%2C%22gridLineColor%22%3A%22rgba(59%2C130%2C246%2C0.1)%22%2C%22scaleFontColor%22%3A%22rgba(59%2C130%2C246%2C1)%22%2C%22belowLineFillColorGrowing%22%3A%22rgba(59%2C130%2C246%2C0.12)%22%2C%22belowLineFillColorFalling%22%3A%22rgba(59%2C130%2C246%2C0.12)%22%2C%22symbolActiveColor%22%3A%22rgba(59%2C130%2C246%2C0.12)%22%2C%22tabs%22%3A%5B%7B%22title%22%3A%22Indices%22%2C%22symbols%22%3A%5B%7B%22s%22%3A%22FOREXCOM%3ASPX500%22%2C%22d%22%3A%22S%26P%20500%22%7D%2C%7B%22s%22%3A%22FOREXCOM%3ANSXUSD%22%2C%22d%22%3A%22Nasdaq%20100%22%7D%2C%7B%22s%22%3A%22FOREXCOM%3ADJI%22%2C%22d%22%3A%22Dow%2030%22%7D%5D%2C%22originalTitle%22%3A%22Indices%22%7D%2C%7B%22title%22%3A%22Commodities%22%2C%22symbols%22%3A%5B%7B%22s%22%3A%22OANDA%3AXAUUSD%22%2C%22d%22%3A%22Gold%22%7D%2C%7B%22s%22%3A%22OANDA%3AXAGUSD%22%2C%22d%22%3A%22Silver%22%7D%2C%7B%22s%22%3A%22TVC%3AUSOIL%22%2C%22d%22%3A%22WTI%20Crude%20Oil%22%7D%5D%2C%22originalTitle%22%3A%22Commodities%22%7D%5D%7D"
+                            className="w-full h-[400px] border-0 rounded"
+                            title="Market Overview"
+                          />
+                        </div>
+
+                        {/* Screener */}
+                        <div className="border border-blue-500/30 rounded-lg p-3 bg-black/60" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
+                          <h3 className="text-sm font-bold neon-blue-text mb-3 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
+                            <Eye className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                            Stock Screener
+                          </h3>
+                          <iframe
+                            src="https://s.tradingview.com/embed-widget/screener/?locale=en#%7B%22width%22%3A%22100%25%22%2C%22height%22%3A500%2C%22defaultColumn%22%3A%22overview%22%2C%22defaultScreen%22%3A%22general%22%2C%22market%22%3A%22america%22%2C%22showToolbar%22%3Atrue%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%7D"
+                            className="w-full h-[500px] border-0 rounded"
+                            title="Stock Screener"
+                          />
+                        </div>
+
+                        {/* Heat Map */}
+                        <div className="border border-blue-500/30 rounded-lg p-3 bg-black/60" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
+                          <h3 className="text-sm font-bold neon-blue-text mb-3 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
+                            <LineChart className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                            Market Heat Map
+                          </h3>
+                          <iframe
+                            src="https://s.tradingview.com/embed-widget/stock-heatmap/?locale=en#%7B%22exchanges%22%3A%5B%5D%2C%22dataSource%22%3A%22SPX500%22%2C%22grouping%22%3A%22sector%22%2C%22blockSize%22%3A%22market_cap_basic%22%2C%22blockColor%22%3A%22change%22%2C%22hasTopBar%22%3Atrue%2C%22isDataSetEnabled%22%3Atrue%2C%22isZoomEnabled%22%3Atrue%2C%22hasSymbolTooltip%22%3Atrue%2C%22width%22%3A%22100%25%22%2C%22height%22%3A400%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%7D"
+                            className="w-full h-[400px] border-0 rounded"
+                            title="Heat Map"
+                          />
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Sentiment Indicators */}
+                    {indicatorCategory === 'sentiment' && (
+                      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+                        {/* Economic Calendar */}
+                        <div className="border border-blue-500/30 rounded-lg p-3 bg-black/60" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
+                          <h3 className="text-sm font-bold neon-blue-text mb-3 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
+                            <Calendar className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                            Economic Calendar
+                          </h3>
+                          <iframe
+                            src="https://www.tradingview.com/embed-widget/events/?locale=en#%7B%22width%22%3A%22100%25%22%2C%22height%22%3A400%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%2C%22importanceFilter%22%3A%22-1%2C0%2C1%2C2%22%7D"
+                            className="w-full h-[400px] border-0 rounded"
+                            title="Economic Calendar"
+                          />
+                        </div>
+
+                        {/* Crypto Timeline */}
+                        <div className="border border-blue-500/30 rounded-lg p-3 bg-black/60" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
+                          <h3 className="text-sm font-bold neon-blue-text mb-3 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
+                            <Target className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                            Latest Crypto News
+                          </h3>
+                          <iframe
+                            src="https://s.tradingview.com/embed-widget/timeline/?locale=en#%7B%22feedMode%22%3A%22all_symbols%22%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%2C%22displayMode%22%3A%22regular%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22450%22%2C%22locale%22%3A%22en%22%7D"
+                            className="w-full h-[450px] border-0 rounded"
+                            title="Crypto News Timeline"
+                          />
+                        </div>
+
+                        {/* Technical Analysis Summary */}
+                        <div className="border border-blue-500/30 rounded-lg p-3 bg-black/60" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
+                          <h3 className="text-sm font-bold neon-blue-text mb-3 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
+                            <Activity className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                            Technical Analysis
+                          </h3>
+                          <iframe
+                            src="https://s.tradingview.com/embed-widget/technical-analysis/?locale=en#%7B%22interval%22%3A%221m%22%2C%22width%22%3A%22100%25%22%2C%22isTransparent%22%3Atrue%2C%22height%22%3A400%2C%22symbol%22%3A%22BINANCE%3ABTCUSDT%22%2C%22showIntervalTabs%22%3Atrue%2C%22colorTheme%22%3A%22dark%22%7D"
+                            className="w-full h-[400px] border-0 rounded"
+                            title="Technical Analysis"
+                          />
+                        </div>
+
+                        {/* Forex Cross Rates */}
+                        <div className="border border-blue-500/30 rounded-lg p-3 bg-black/60" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
+                          <h3 className="text-sm font-bold neon-blue-text mb-3 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
+                            <Globe className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                            Forex Cross Rates
+                          </h3>
+                          <iframe
+                            src="https://s.tradingview.com/embed-widget/forex-cross-rates/?locale=en#%7B%22width%22%3A%22100%25%22%2C%22height%22%3A%22400%22%2C%22currencies%22%3A%5B%22EUR%22%2C%22USD%22%2C%22JPY%22%2C%22GBP%22%2C%22CHF%22%2C%22AUD%22%2C%22CAD%22%2C%22NZD%22%5D%2C%22isTransparent%22%3Atrue%2C%22colorTheme%22%3A%22dark%22%2C%22locale%22%3A%22en%22%7D"
+                            className="w-full h-[400px] border-0 rounded"
+                            title="Forex Cross Rates"
+                          />
+                        </div>
+
+                        {/* Market Movers */}
+                        <div className="border border-blue-500/30 rounded-lg p-3 bg-black/60" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
+                          <h3 className="text-sm font-bold neon-blue-text mb-3 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
+                            <Sparkles className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                            Market Movers
+                          </h3>
+                          <iframe
+                            src="https://s.tradingview.com/embed-widget/market-quotes/?locale=en#%7B%22width%22%3A%22100%25%22%2C%22height%22%3A%22400%22%2C%22symbolsGroups%22%3A%5B%7B%22name%22%3A%22Indices%22%2C%22symbols%22%3A%5B%7B%22name%22%3A%22FOREXCOM%3ASPX500%22%7D%2C%7B%22name%22%3A%22FOREXCOM%3ANSXUSD%22%7D%2C%7B%22name%22%3A%22FOREXCOM%3ADJI%22%7D%5D%7D%2C%7B%22name%22%3A%22Commodities%22%2C%22symbols%22%3A%5B%7B%22name%22%3A%22OANDA%3AXAUUSD%22%7D%2C%7B%22name%22%3A%22TVC%3AUSOIL%22%7D%5D%7D%5D%2C%22showSymbolLogo%22%3Atrue%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%2C%22locale%22%3A%22en%22%7D"
+                            className="w-full h-[400px] border-0 rounded"
+                            title="Market Movers"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </motion.div>
                 )}
                 

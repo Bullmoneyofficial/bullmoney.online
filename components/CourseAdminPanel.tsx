@@ -37,6 +37,26 @@ interface Lesson {
   is_published: boolean;
 }
 
+interface Resource {
+  id: string;
+  lesson_id: string;
+  title: string;
+  description: string | null;
+  resource_type: string;
+  file_url: string;
+  file_size_kb: number | null;
+}
+
+interface Quiz {
+  id: string;
+  lesson_id: string;
+  question: string;
+  options: string[];
+  correct_answer: number;
+  explanation: string | null;
+  order_index: number;
+}
+
 export default function CourseAdminPanel() {
   const [levels, setLevels] = useState<CourseLevel[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
@@ -48,6 +68,12 @@ export default function CourseAdminPanel() {
   const [editingModule, setEditingModule] = useState<Partial<Module> | null>(null);
   const [editingLesson, setEditingLesson] = useState<Partial<Lesson> | null>(null);
   const [uploading, setUploading] = useState(false);
+
+  const [lessonResources, setLessonResources] = useState<Resource[]>([]);
+  const [lessonQuizzes, setLessonQuizzes] = useState<Quiz[]>([]);
+  const [editingResource, setEditingResource] = useState<Partial<Resource> | null>(null);
+  const [editingQuiz, setEditingQuiz] = useState<Partial<Quiz> | null>(null);
+  const [quizOptionsText, setQuizOptionsText] = useState('');
   
   const supabase = useMemo(() => createSupabaseClient(), []);
 
@@ -66,6 +92,19 @@ export default function CourseAdminPanel() {
       loadLessons(selectedModule);
     }
   }, [selectedModule]);
+
+  useEffect(() => {
+    // When opening a lesson for edit, also load its resources/quizzes.
+    if (!editingLesson?.id) {
+      setLessonResources([]);
+      setLessonQuizzes([]);
+      setEditingResource(null);
+      setEditingQuiz(null);
+      setQuizOptionsText('');
+      return;
+    }
+    void loadLessonExtras(editingLesson.id);
+  }, [editingLesson?.id]);
 
   const loadLevels = async () => {
     const { data, error } = await supabase
@@ -162,6 +201,130 @@ export default function CourseAdminPanel() {
     
     setEditingLesson(null);
     loadLessons(selectedModule);
+  };
+
+  const loadLessonExtras = async (lessonId: string) => {
+    try {
+      const [{ data: resources, error: resourcesError }, { data: quizzes, error: quizzesError }] = await Promise.all([
+        supabase
+          .from('trading_course_resources')
+          .select('*')
+          .eq('lesson_id', lessonId)
+          .order('created_at', { ascending: true }),
+        supabase
+          .from('trading_course_quizzes')
+          .select('*')
+          .eq('lesson_id', lessonId)
+          .order('order_index'),
+      ]);
+
+      if (resourcesError) throw resourcesError;
+      if (quizzesError) throw quizzesError;
+
+      setLessonResources((resources as Resource[]) || []);
+      const normalized = ((quizzes as any[]) || []).map((q) => ({
+        ...q,
+        options: Array.isArray(q.options) ? q.options : [],
+      })) as Quiz[];
+      setLessonQuizzes(normalized);
+    } catch (error) {
+      console.error('Error loading lesson extras:', error);
+      setLessonResources([]);
+      setLessonQuizzes([]);
+    }
+  };
+
+  const saveResource = async () => {
+    if (!editingLesson?.id || !editingResource) return;
+    const payload = {
+      lesson_id: editingLesson.id,
+      title: editingResource.title || '',
+      description: editingResource.description || null,
+      resource_type: editingResource.resource_type || 'pdf',
+      file_url: editingResource.file_url || '',
+      file_size_kb: editingResource.file_size_kb ?? null,
+    };
+    if (!payload.title || !payload.file_url) {
+      alert('Resource title and file URL are required.');
+      return;
+    }
+
+    try {
+      if (editingResource.id) {
+        await supabase.from('trading_course_resources').update(payload).eq('id', editingResource.id);
+      } else {
+        await supabase.from('trading_course_resources').insert([payload]);
+      }
+      setEditingResource(null);
+      await loadLessonExtras(editingLesson.id);
+    } catch (error) {
+      console.error('Error saving resource:', error);
+      alert('Failed to save resource. Check console for details.');
+    }
+  };
+
+  const deleteResource = async (id: string) => {
+    if (!editingLesson?.id) return;
+    if (!confirm('Delete this resource?')) return;
+    try {
+      await supabase.from('trading_course_resources').delete().eq('id', id);
+      await loadLessonExtras(editingLesson.id);
+    } catch (error) {
+      console.error('Error deleting resource:', error);
+      alert('Failed to delete resource.');
+    }
+  };
+
+  const saveQuiz = async () => {
+    if (!editingLesson?.id || !editingQuiz) return;
+    const options = quizOptionsText
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const correct = Number(editingQuiz.correct_answer ?? 0);
+    const payload = {
+      lesson_id: editingLesson.id,
+      question: editingQuiz.question || '',
+      options,
+      correct_answer: correct,
+      explanation: editingQuiz.explanation || null,
+      order_index: editingQuiz.order_index ?? lessonQuizzes.length + 1,
+    };
+
+    if (!payload.question || options.length < 2) {
+      alert('Quiz needs a question and at least 2 options (one per line).');
+      return;
+    }
+    if (correct < 0 || correct >= options.length) {
+      alert('Correct answer index must match an option (0-based).');
+      return;
+    }
+
+    try {
+      if (editingQuiz.id) {
+        await supabase.from('trading_course_quizzes').update(payload).eq('id', editingQuiz.id);
+      } else {
+        await supabase.from('trading_course_quizzes').insert([payload]);
+      }
+      setEditingQuiz(null);
+      setQuizOptionsText('');
+      await loadLessonExtras(editingLesson.id);
+    } catch (error) {
+      console.error('Error saving quiz:', error);
+      alert('Failed to save quiz. Check console for details.');
+    }
+  };
+
+  const deleteQuiz = async (id: string) => {
+    if (!editingLesson?.id) return;
+    if (!confirm('Delete this quiz question?')) return;
+    try {
+      await supabase.from('trading_course_quizzes').delete().eq('id', id);
+      await loadLessonExtras(editingLesson.id);
+    } catch (error) {
+      console.error('Error deleting quiz:', error);
+      alert('Failed to delete quiz.');
+    }
   };
 
   const deleteLesson = async (id: string) => {
@@ -628,6 +791,268 @@ export default function CourseAdminPanel() {
                         <label className="text-white font-semibold">Free Preview</label>
                       </div>
                     </div>
+
+                    {/* Resources + Quizzes */}
+                    {editingLesson.id ? (
+                      <div className="pt-2">
+                        <div className="border-t border-blue-500/20 pt-4">
+                          <div className="flex items-center justify-between gap-3 mb-3">
+                            <h4 className="text-lg font-bold text-blue-400" style={{ textShadow: '0 0 6px #3b82f6' }}>Lesson Resources</h4>
+                            <button
+                              onClick={() => setEditingResource({ title: '', description: '', resource_type: 'pdf', file_url: '', file_size_kb: null })}
+                              className="bg-blue-500/20 text-blue-400 px-3 py-2 rounded-lg font-semibold hover:bg-blue-500/30 transition-all flex items-center gap-2"
+                            >
+                              <Plus size={18} />
+                              Add Resource
+                            </button>
+                          </div>
+
+                          {lessonResources.length === 0 ? (
+                            <div className="text-sm text-gray-400 bg-black/40 border border-blue-500/20 rounded-lg p-3">
+                              No resources yet for this lesson.
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              {lessonResources.map((r) => (
+                                <div key={r.id} className="flex items-start gap-3 bg-black border border-blue-500/20 rounded-lg p-3">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="text-white font-semibold truncate">{r.title}</div>
+                                    {r.description && <div className="text-xs text-gray-400 mt-0.5">{r.description}</div>}
+                                    <div className="text-[11px] text-gray-500 mt-1 truncate">{r.resource_type} · {r.file_url}</div>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => setEditingResource(r)}
+                                      className="text-blue-400 hover:text-white p-2"
+                                    >
+                                      <Edit size={18} />
+                                    </button>
+                                    <button
+                                      onClick={() => deleteResource(r.id)}
+                                      className="text-red-400 hover:text-red-300 p-2"
+                                    >
+                                      <Trash2 size={18} />
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {editingResource && (
+                            <div className="mt-3 bg-black/60 border border-blue-500/30 rounded-xl p-4">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="text-white font-bold">{editingResource.id ? 'Edit Resource' : 'New Resource'}</div>
+                                <button onClick={() => setEditingResource(null)} className="text-gray-400 hover:text-white">
+                                  <X size={18} />
+                                </button>
+                              </div>
+
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                  <label className="block text-sm font-semibold text-blue-400 mb-1">Title</label>
+                                  <input
+                                    type="text"
+                                    value={editingResource.title || ''}
+                                    onChange={(e) => setEditingResource({ ...editingResource, title: e.target.value })}
+                                    className="w-full bg-black border border-blue-500/30 rounded-lg px-3 py-2 text-white focus:border-blue-400 focus:outline-none"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-semibold text-blue-400 mb-1">Type</label>
+                                  <select
+                                    value={editingResource.resource_type || 'pdf'}
+                                    onChange={(e) => setEditingResource({ ...editingResource, resource_type: e.target.value })}
+                                    className="w-full bg-black border border-blue-500/30 rounded-lg px-3 py-2 text-white focus:border-blue-400 focus:outline-none"
+                                  >
+                                    <option value="pdf">PDF</option>
+                                    <option value="template">Template</option>
+                                    <option value="spreadsheet">Spreadsheet</option>
+                                    <option value="chart">Chart</option>
+                                    <option value="image">Image</option>
+                                  </select>
+                                </div>
+                                <div className="md:col-span-2">
+                                  <label className="block text-sm font-semibold text-blue-400 mb-1">File URL</label>
+                                  <input
+                                    type="text"
+                                    value={editingResource.file_url || ''}
+                                    onChange={(e) => setEditingResource({ ...editingResource, file_url: e.target.value })}
+                                    className="w-full bg-black border border-blue-500/30 rounded-lg px-3 py-2 text-white focus:border-blue-400 focus:outline-none"
+                                    placeholder="https://..."
+                                  />
+                                </div>
+                                <div className="md:col-span-2">
+                                  <label className="block text-sm font-semibold text-blue-400 mb-1">Description</label>
+                                  <textarea
+                                    value={editingResource.description || ''}
+                                    onChange={(e) => setEditingResource({ ...editingResource, description: e.target.value })}
+                                    className="w-full bg-black border border-blue-500/30 rounded-lg px-3 py-2 text-white focus:border-blue-400 focus:outline-none h-20"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-semibold text-blue-400 mb-1">File Size (KB)</label>
+                                  <input
+                                    type="number"
+                                    value={editingResource.file_size_kb ?? ''}
+                                    onChange={(e) => setEditingResource({ ...editingResource, file_size_kb: parseInt(e.target.value) || null })}
+                                    className="w-full bg-black border border-blue-500/30 rounded-lg px-3 py-2 text-white focus:border-blue-400 focus:outline-none"
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="flex gap-3 mt-4">
+                                <button
+                                  onClick={saveResource}
+                                  className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-400 transition-all"
+                                >
+                                  Save Resource
+                                </button>
+                                <button
+                                  onClick={() => setEditingResource(null)}
+                                  className="px-4 py-2 border border-blue-500/30 rounded-lg text-white hover:border-blue-400 transition-all"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="border-t border-blue-500/20 pt-4 mt-5">
+                          <div className="flex items-center justify-between gap-3 mb-3">
+                            <h4 className="text-lg font-bold text-blue-400" style={{ textShadow: '0 0 6px #3b82f6' }}>Lesson Quizzes</h4>
+                            <button
+                              onClick={() => {
+                                setEditingQuiz({ question: '', explanation: '', correct_answer: 0, order_index: lessonQuizzes.length + 1 });
+                                setQuizOptionsText('');
+                              }}
+                              className="bg-blue-500/20 text-blue-400 px-3 py-2 rounded-lg font-semibold hover:bg-blue-500/30 transition-all flex items-center gap-2"
+                            >
+                              <Plus size={18} />
+                              Add Quiz
+                            </button>
+                          </div>
+
+                          {lessonQuizzes.length === 0 ? (
+                            <div className="text-sm text-gray-400 bg-black/40 border border-blue-500/20 rounded-lg p-3">
+                              No quizzes yet for this lesson.
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              {lessonQuizzes.map((q) => (
+                                <div key={q.id} className="flex items-start gap-3 bg-black border border-blue-500/20 rounded-lg p-3">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="text-white font-semibold">{q.order_index}. {q.question}</div>
+                                    <div className="text-xs text-gray-400 mt-1">Options: {q.options?.length ?? 0} · Correct: {q.correct_answer}</div>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => {
+                                        setEditingQuiz(q);
+                                        setQuizOptionsText((q.options || []).join('\n'));
+                                      }}
+                                      className="text-blue-400 hover:text-white p-2"
+                                    >
+                                      <Edit size={18} />
+                                    </button>
+                                    <button
+                                      onClick={() => deleteQuiz(q.id)}
+                                      className="text-red-400 hover:text-red-300 p-2"
+                                    >
+                                      <Trash2 size={18} />
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {editingQuiz && (
+                            <div className="mt-3 bg-black/60 border border-blue-500/30 rounded-xl p-4">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="text-white font-bold">{editingQuiz.id ? 'Edit Quiz' : 'New Quiz'}</div>
+                                <button onClick={() => setEditingQuiz(null)} className="text-gray-400 hover:text-white">
+                                  <X size={18} />
+                                </button>
+                              </div>
+
+                              <div className="space-y-3">
+                                <div>
+                                  <label className="block text-sm font-semibold text-blue-400 mb-1">Question</label>
+                                  <textarea
+                                    value={editingQuiz.question || ''}
+                                    onChange={(e) => setEditingQuiz({ ...editingQuiz, question: e.target.value })}
+                                    className="w-full bg-black border border-blue-500/30 rounded-lg px-3 py-2 text-white focus:border-blue-400 focus:outline-none h-20"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="block text-sm font-semibold text-blue-400 mb-1">Options (one per line)</label>
+                                  <textarea
+                                    value={quizOptionsText}
+                                    onChange={(e) => setQuizOptionsText(e.target.value)}
+                                    className="w-full bg-black border border-blue-500/30 rounded-lg px-3 py-2 text-white focus:border-blue-400 focus:outline-none h-24 font-mono text-sm"
+                                    placeholder="Option 1\nOption 2\nOption 3"
+                                  />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="block text-sm font-semibold text-blue-400 mb-1">Correct Answer Index (0-based)</label>
+                                    <input
+                                      type="number"
+                                      value={editingQuiz.correct_answer ?? 0}
+                                      onChange={(e) => setEditingQuiz({ ...editingQuiz, correct_answer: parseInt(e.target.value) || 0 })}
+                                      className="w-full bg-black border border-blue-500/30 rounded-lg px-3 py-2 text-white focus:border-blue-400 focus:outline-none"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-semibold text-blue-400 mb-1">Order Index</label>
+                                    <input
+                                      type="number"
+                                      value={editingQuiz.order_index ?? 1}
+                                      onChange={(e) => setEditingQuiz({ ...editingQuiz, order_index: parseInt(e.target.value) || 1 })}
+                                      className="w-full bg-black border border-blue-500/30 rounded-lg px-3 py-2 text-white focus:border-blue-400 focus:outline-none"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <label className="block text-sm font-semibold text-blue-400 mb-1">Explanation</label>
+                                  <textarea
+                                    value={editingQuiz.explanation || ''}
+                                    onChange={(e) => setEditingQuiz({ ...editingQuiz, explanation: e.target.value })}
+                                    className="w-full bg-black border border-blue-500/30 rounded-lg px-3 py-2 text-white focus:border-blue-400 focus:outline-none h-20"
+                                  />
+                                </div>
+
+                                <div className="flex gap-3 pt-1">
+                                  <button
+                                    onClick={saveQuiz}
+                                    className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-400 transition-all"
+                                  >
+                                    Save Quiz
+                                  </button>
+                                  <button
+                                    onClick={() => setEditingQuiz(null)}
+                                    className="px-4 py-2 border border-blue-500/30 rounded-lg text-white hover:border-blue-400 transition-all"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="border-t border-blue-500/20 pt-4">
+                        <div className="text-sm text-gray-400 bg-black/40 border border-blue-500/20 rounded-lg p-3">
+                          Save the lesson first to add resources and quiz questions.
+                        </div>
+                      </div>
+                    )}
 
                   </div>
                   
