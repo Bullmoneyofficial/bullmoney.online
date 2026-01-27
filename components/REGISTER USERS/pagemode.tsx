@@ -969,6 +969,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
           timestamp: Date.now()
         }));
         
+        // Dispatch event so other components (like TradingJournal) can detect session change
+        window.dispatchEvent(new Event('bullmoney_session_changed'));
+        
         // Also save to recruit auth storage key for immediate auth context detection
         localStorage.setItem("bullmoney_recruit_auth", JSON.stringify({
           recruitId: newUser.id,
@@ -1043,6 +1046,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         is_vip: data.is_vip || false, // Store VIP status for auto-unlock
         timestamp: Date.now()
       }));
+      
+      // Dispatch event so other components (like TradingJournal) can detect session change
+      window.dispatchEvent(new Event('bullmoney_session_changed'));
       
       // Also save to recruit auth storage key for immediate auth context detection
       localStorage.setItem("bullmoney_recruit_auth", JSON.stringify({

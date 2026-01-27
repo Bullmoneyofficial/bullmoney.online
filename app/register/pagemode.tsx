@@ -569,6 +569,12 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
           email: formData.email
         }));
         
+        // Mark pagemode as completed
+        localStorage.setItem("bullmoney_pagemode_completed", "true");
+        
+        // Dispatch custom event so trading journal and other components pick up the session immediately
+        window.dispatchEvent(new Event('bullmoney_session_changed'));
+        
         // Clear draft
         localStorage.removeItem("bullmoney_draft");
       }
@@ -626,6 +632,12 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       // Mark telegram as confirmed for existing users logging in
       // This ensures Telegram screen NEVER shows for login route, only for new signups
       localStorage.setItem("bullmoney_telegram_confirmed", "true");
+      
+      // Mark pagemode as completed
+      localStorage.setItem("bullmoney_pagemode_completed", "true");
+      
+      // Dispatch custom event so trading journal and other components pick up the session immediately
+      window.dispatchEvent(new Event('bullmoney_session_changed'));
 
       setTimeout(() => {
         setLoading(false);

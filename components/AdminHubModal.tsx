@@ -16,9 +16,11 @@ import {
   ChevronDown,
   Edit,
   Trash2,
+  GraduationCap,
 } from "lucide-react";
 import { createSupabaseClient } from "@/lib/supabase";
 import { useMobilePerformance } from "@/hooks/useMobilePerformance";
+import CourseAdminPanel from "@/components/CourseAdminPanel";
 
 // Generate a reasonably unique id when inserting rows from the client
 const safeId = () =>
@@ -244,7 +246,7 @@ export function AdminHubModal({
   const adminEmailEnv = process.env.NEXT_PUBLIC_ADMIN_EMAIL?.toLowerCase() || "";
   const supabase = useMemo(() => createSupabaseClient(), []);
   const [activeTab, setActiveTab] = useState<
-    "products" | "services" | "livestream" | "analysis" | "recruits"
+    "products" | "services" | "livestream" | "analysis" | "recruits" | "course"
   >("products");
   const [busy, setBusy] = useState(false);
   const isSyncing = useRef(false);
@@ -1502,6 +1504,12 @@ export function AdminHubModal({
                 active={activeTab === "recruits"}
                 onClick={() => setActiveTab("recruits")}
               />
+              <TabButton
+                label="Trading Course"
+                icon={<GraduationCap className="w-4 h-4" />}
+                active={activeTab === "course"}
+                onClick={() => setActiveTab("course")}
+              />
             </div>
 
               <div className="p-3 sm:p-4 bg-slate-950/70 overflow-hidden [overscroll-behavior:contain]">
@@ -1516,6 +1524,7 @@ export function AdminHubModal({
                     {activeTab === "livestream" && renderLivestream()}
                     {activeTab === "analysis" && renderAnalyses()}
                     {activeTab === "recruits" && renderRecruits()}
+                    {activeTab === "course" && <CourseAdminPanel />}
                   </>
                 ) : (
                   <div className="flex flex-col items-center justify-center gap-3 py-12 text-center text-slate-200">

@@ -69,7 +69,17 @@ const GLOBAL_NEON_STYLES = `
     will-change: transform, opacity;
     backface-visibility: hidden;
   }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 50%;
+    }
+    100% {
+      background-position: 200% 50%;
+    }
+  }
 `;
+import TradingJournal from './TradingJournal';
 import {
   Activity,
   TrendingUp,
@@ -121,12 +131,14 @@ import {
   Radio,
   Monitor,
   Sparkles,
-  Bell
+  Bell,
+  GraduationCap
 } from 'lucide-react';
 import { useUIState } from '@/contexts/UIStateContext';
 import { createSupabaseClient } from '@/lib/supabase';
 import { NotificationToggle, NotificationBadge } from '@/components/NotificationSettingsPanel';
 import { useNotifications } from '@/hooks/useNotifications';
+import TradingCourse from '@/components/TradingCourse';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -4351,11 +4363,13 @@ BrowserModal.displayName = 'BrowserModal';
 // UNIFIED HUB TAB TYPE - All features in one pill
 // ============================================================================
 
-type UnifiedHubTab = 'community' | 'trading' | 'tv' | 'device' | 'logs';
+type UnifiedHubTab = 'community' | 'trading' | 'tv' | 'device' | 'logs' | 'journal' | 'course';
 
 const UNIFIED_HUB_TABS: { id: UnifiedHubTab; label: string; icon: typeof TrendingUp; color: string }[] = [
   { id: 'community', label: 'Social', icon: MessageSquare, color: 'blue' },
   { id: 'trading', label: 'Trade', icon: TrendingUp, color: 'blue' },
+  { id: 'journal', label: 'Journal', icon: Calendar, color: 'blue' },
+  { id: 'course', label: 'Course', icon: GraduationCap, color: 'blue' },
   { id: 'tv', label: 'TV', icon: Play, color: 'blue' },
   { id: 'device', label: 'Device', icon: Smartphone, color: 'blue' },
   { id: 'logs', label: 'Logs', icon: AlertTriangle, color: 'blue' },
@@ -4669,7 +4683,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
             dragElastic={enableDrag ? { top: 0.2, bottom: 0.2 } : undefined}
             onDragStart={enableDrag ? () => setIsDragging(true) : undefined}
             onDragEnd={enableDrag ? handleDragEnd : undefined}
-            className="fixed left-1/2 top-1/2 z-[2147483647] -translate-x-1/2 -translate-y-1/2 w-[90vw] h-[85vh] sm:w-[80vw] sm:h-[80vh] md:w-[75vw] md:h-[75vh] lg:w-[1200px] lg:h-[700px] max-w-sm sm:max-w-md md:max-w-2xl lg:max-w-6xl flex flex-col bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 border border-blue-500/30 shadow-2xl overflow-hidden rounded-2xl [overscroll-behavior:contain]"
+            className="fixed left-1/2 top-1/2 z-[2147483647] -translate-x-1/2 -translate-y-1/2 w-[90vw] h-[75vh] max-h-[650px] sm:w-[80vw] sm:h-[80vh] sm:max-h-[700px] md:w-[75vw] md:h-[75vh] md:max-h-[750px] lg:w-[1200px] lg:h-[700px] lg:max-h-[800px] max-w-sm sm:max-w-md md:max-w-2xl lg:max-w-6xl flex flex-col bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 border border-blue-500/30 shadow-2xl overflow-hidden rounded-2xl [overscroll-behavior:contain]"
             style={{ touchAction: 'auto', overscrollBehavior: 'contain' }}
           >
             {/* Header with FPS Display */}
@@ -5142,6 +5156,34 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         <MessageSquare className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} /> Discord
                       </a>
                     </div>
+                  </motion.div>
+                )}
+                
+                {/* JOURNAL TAB */}
+                {activeTab === 'journal' && (
+                  <motion.div
+                    key="journal"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="h-full overflow-hidden bg-black"
+                    style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}
+                  >
+                    <TradingJournal isEmbedded onClose={onClose} />
+                  </motion.div>
+                )}
+                
+                {/* COURSE TAB */}
+                {activeTab === 'course' && (
+                  <motion.div
+                    key="course"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="h-full bg-black overflow-hidden"
+                    style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}
+                  >
+                    <TradingCourse />
                   </motion.div>
                 )}
                 
