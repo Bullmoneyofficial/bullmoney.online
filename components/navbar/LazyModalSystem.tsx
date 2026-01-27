@@ -38,6 +38,7 @@ const AdminModalLazy = lazy(() => import("@/components/AdminHubModal"));
 const AffiliateModalLazy = lazy(() => import("@/components/AffiliateModal"));
 const BullMoneyModalLazy = lazy(() => import("@/components/Faq"));
 const UltimateControlPanelLazy = lazy(() => import("@/components/UltimateControlPanel"));
+const AccountManagerModalLazy = lazy(() => import("@/components/AccountManagerModal").then(mod => ({ default: mod.AccountManagerModal })));
 
 // ============================================================================
 // ANIMATION FREEZE CONTEXT - Smart freezing based on visibility
@@ -394,6 +395,32 @@ export const LazyUltimatePanel = memo(function LazyUltimatePanel({
 });
 
 // ============================================================================
+// LAZY ACCOUNT MANAGER MODAL - Complete mount/unmount lifecycle
+// ============================================================================
+
+interface LazyAccountManagerModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export const LazyAccountManagerModal = memo(function LazyAccountManagerModal({ 
+  isOpen, 
+  onClose 
+}: LazyAccountManagerModalProps) {
+  const { shouldRender, mounted } = useLazyModalLifecycle('account-manager', isOpen);
+
+  if (!mounted || !shouldRender) {
+    return null;
+  }
+
+  return (
+    <Suspense fallback={<ModalLoadingSpinner text="Loading Account Manager..." />}>
+      <AccountManagerModalLazy isOpen={isOpen} onClose={onClose} />
+    </Suspense>
+  );
+});
+
+// ============================================================================
 // EXPORTS
 // ============================================================================
 
@@ -402,6 +429,7 @@ export {
   AffiliateModalLazy,
   BullMoneyModalLazy,
   UltimateControlPanelLazy,
+  AccountManagerModalLazy,
   modalOpenHistory,
   MODAL_FREEZE_STYLE,
   ModalFreezeContext,

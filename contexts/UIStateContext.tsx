@@ -80,7 +80,8 @@ export type UIComponentType =
   | 'bullFeedModal'       // Bull Feed: Main feed modal
   | 'postComposerModal'   // Bull Feed: Create post modal
   | 'heroSceneModal'      // Hero scene selector modal
-  | 'discordStageModal';  // Discord Stage live stream modal
+  | 'discordStageModal'   // Discord Stage live stream modal
+  | 'accountManagerModal'; // Account Manager modal
 
 // Legacy type for backwards compatibility
 export type NavbarModalType = 'admin' | 'faq' | 'affiliate' | 'themeSelector' | null;
@@ -110,6 +111,7 @@ interface UIStateContextType {
   isPostComposerModalOpen: boolean; // Bull Feed: Create post
   isHeroSceneModalOpen: boolean;   // Hero scene picker modal
   isDiscordStageModalOpen: boolean; // Discord Stage modal
+  isAccountManagerModalOpen: boolean; // Account Manager modal
   isV2Unlocked: boolean;
   devSkipPageModeAndLoader: boolean; // Dev flag to skip pagemode and loader
   isWelcomeScreenActive: boolean;  // Welcome screen active - allows AudioWidget to show
@@ -148,6 +150,7 @@ interface UIStateContextType {
   setPostComposerModalOpen: (open: boolean) => void;
   setHeroSceneModalOpen: (open: boolean) => void;
   setDiscordStageModalOpen: (open: boolean) => void;
+  setAccountManagerModalOpen: (open: boolean) => void;
   setV2Unlocked: (unlocked: boolean) => void;
   setDevSkipPageModeAndLoader: (skip: boolean) => void;
   setWelcomeScreenActive: (active: boolean) => void;
@@ -169,6 +172,7 @@ interface UIStateContextType {
   openPostComposerModal: () => void;
   openHeroSceneModal: () => void;
   openDiscordStageModal: () => void;
+  openAccountManagerModal: () => void;
   closeNavbarModal: () => void;
 
   // Close all UI components
@@ -215,6 +219,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const [isPostComposerModalOpen, setIsPostComposerModalOpenState] = useState(false);
   const [isHeroSceneModalOpen, setIsHeroSceneModalOpenState] = useState(false);
   const [isDiscordStageModalOpen, setIsDiscordStageModalOpenState] = useState(false);
+  const [isAccountManagerModalOpen, setIsAccountManagerModalOpenState] = useState(false);
   const [isV2Unlocked, setIsV2UnlockedState] = useState(
     () => typeof window !== 'undefined' && sessionStorage.getItem('affiliate_unlock_complete') === 'true'
   );
@@ -237,7 +242,8 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isLiveStreamModalOpen || isProductsModalOpen || isServicesModalOpen || isAffiliateModalOpen ||
     isThemeSelectorModalOpen || isAdminModalOpen || isFaqModalOpen ||
     isAppsModalOpen || isDisclaimerModalOpen || isPagemodeOpen || isLoaderv2Open ||
-    isAuthModalOpen || isBullFeedModalOpen || isPostComposerModalOpen || isHeroSceneModalOpen || isDiscordStageModalOpen;
+    isAuthModalOpen || isBullFeedModalOpen || isPostComposerModalOpen || isHeroSceneModalOpen || isDiscordStageModalOpen ||
+    isAccountManagerModalOpen;
 
   // Derived state: is any component currently open?
   const isAnyOpen = isMobileMenuOpen || isAudioWidgetOpen || isUltimatePanelOpen || isUltimateHubOpen || isAnyModalOpen;
@@ -284,6 +290,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isPostComposerModalOpen ? 'postComposerModal' :
     isHeroSceneModalOpen ? 'heroSceneModal' :
     isDiscordStageModalOpen ? 'discordStageModal' :
+    isAccountManagerModalOpen ? 'accountManagerModal' :
     null;
 
   // Closes all other components except the one specified
@@ -311,6 +318,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (except !== 'postComposerModal') setIsPostComposerModalOpenState(false);
     if (except !== 'heroSceneModal') setIsHeroSceneModalOpenState(false);
     if (except !== 'discordStageModal') setIsDiscordStageModalOpenState(false);
+    if (except !== 'accountManagerModal') setIsAccountManagerModalOpenState(false);
   }, []);
 
   // Closes all modals but preserves floating elements state
@@ -334,6 +342,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setIsPostComposerModalOpenState(false);
     setIsHeroSceneModalOpenState(false);
     setIsDiscordStageModalOpenState(false);
+    setIsAccountManagerModalOpenState(false);
   }, []);
 
   // Closes all components
@@ -577,6 +586,16 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setIsDiscordStageModalOpenState(open);
   }, [closeOthers]);
 
+  const setAccountManagerModalOpen = useCallback((open: boolean) => {
+    if (open) {
+      closeOthers('accountManagerModal');
+      trackUIStateChange('accountManagerModal', 'open');
+    } else {
+      trackUIStateChange('accountManagerModal', 'close');
+    }
+    setIsAccountManagerModalOpenState(open);
+  }, [closeOthers]);
+
   const setV2Unlocked = useCallback((unlocked: boolean) => {
     setIsV2UnlockedState(unlocked);
     if (typeof window !== 'undefined') {
@@ -642,6 +661,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const openPostComposerModal = useCallback(() => setPostComposerModalOpen(true), [setPostComposerModalOpen]);
   const openHeroSceneModal = useCallback(() => setHeroSceneModalOpen(true), [setHeroSceneModalOpen]);
   const openDiscordStageModal = useCallback(() => setDiscordStageModalOpen(true), [setDiscordStageModalOpen]);
+  const openAccountManagerModal = useCallback(() => setAccountManagerModalOpen(true), [setAccountManagerModalOpen]);
   const closeNavbarModal = useCallback(() => {
     setIsAdminModalOpenState(false);
     setIsFaqModalOpenState(false);
@@ -736,6 +756,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isPostComposerModalOpen,
     isHeroSceneModalOpen,
     isDiscordStageModalOpen,
+    isAccountManagerModalOpen,
     isV2Unlocked,
     devSkipPageModeAndLoader,
     isWelcomeScreenActive,
@@ -771,6 +792,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setPostComposerModalOpen,
     setHeroSceneModalOpen,
     setDiscordStageModalOpen,
+    setAccountManagerModalOpen,
     setV2Unlocked,
     setDevSkipPageModeAndLoader,
     setWelcomeScreenActive: setIsWelcomeScreenActiveState,
@@ -790,6 +812,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     openPostComposerModal,
     openHeroSceneModal,
     openDiscordStageModal,
+    openAccountManagerModal,
     closeNavbarModal,
     closeAll,
     closeAllModals,
@@ -933,13 +956,15 @@ export function useNavbarModals() {
     openFaqModal,
     openAffiliateModal,
     openThemeSelectorModal,
-    openAnalysisModal, // Add this
+    openAnalysisModal,
+    openAccountManagerModal,
     closeNavbarModal,
     isAdminModalOpen,
     isFaqModalOpen,
     isAffiliateModalOpen,
     isThemeSelectorModalOpen,
-    isAnalysisModalOpen, // And this
+    isAnalysisModalOpen,
+    isAccountManagerModalOpen,
   } = useUIState();
 
   return {
@@ -948,13 +973,15 @@ export function useNavbarModals() {
     isFaqOpen: isFaqModalOpen,
     isAffiliateOpen: isAffiliateModalOpen,
     isThemeSelectorOpen: isThemeSelectorModalOpen,
-    isAnalysisOpen: isAnalysisModalOpen, // And this
+    isAnalysisOpen: isAnalysisModalOpen,
+    isAccountManagerOpen: isAccountManagerModalOpen,
     setNavbarModal,
     openAdminModal,
     openFaqModal,
     openAffiliateModal,
     openThemeSelectorModal,
-    openAnalysisModal, // And this
+    openAnalysisModal,
+    openAccountManagerModal,
     closeNavbarModal,
   };
 }

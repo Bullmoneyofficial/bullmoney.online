@@ -14,6 +14,8 @@ import {
   Video,
   X,
   ChevronDown,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import { createSupabaseClient } from "@/lib/supabase";
 import { useMobilePerformance } from "@/hooks/useMobilePerformance";
@@ -33,11 +35,27 @@ type RowProps = {
 };
 
 const Row: React.FC<RowProps> = ({ title, subtitle, meta, onEdit, onDelete }) => (
-  <div className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900/70 px-3 py-2">
-    <div className="min-w-0">
+  <div className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900/70 px-3 py-2 gap-3">
+    <div className="min-w-0 flex-1">
       <div className="text-white font-semibold text-sm truncate">{title}</div>
       {subtitle ? <div className="text-slate-300 text-xs truncate">{subtitle}</div> : null}
       {meta ? <div className="text-slate-400 text-[11px] truncate">{meta}</div> : null}
+    </div>
+    <div className="flex items-center gap-2 flex-shrink-0">
+      <button
+        onClick={onEdit}
+        className="p-1.5 rounded-md bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 text-blue-300 transition-colors"
+        title="Edit"
+      >
+        <Edit className="w-4 h-4" />
+      </button>
+      <button
+        onClick={onDelete}
+        className="p-1.5 rounded-md bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-300 transition-colors"
+        title="Delete"
+      >
+        <Trash2 className="w-4 h-4" />
+      </button>
     </div>
   </div>
 );

@@ -44,7 +44,8 @@ import { MinimalFallback } from "@/components/MobileLazyLoadingFallback";
 import { 
   LazyAdminModal, 
   LazyAffiliateModal, 
-  LazyFaqModal 
+  LazyFaqModal,
+  LazyAccountManagerModal,
 } from "./navbar/LazyModalSystem";
 
 // --- IMPORT SOUND EFFECTS ---
@@ -217,11 +218,13 @@ export const Navbar = memo(() => {
     isFaqOpen, 
     isAffiliateOpen, 
     isThemeSelectorOpen,
+    isAccountManagerOpen,
     openAdminModal,
     openFaqModal,
     openAffiliateModal,
     openThemeSelectorModal,
     openAnalysisModal: openAnalysisModalBase,
+    openAccountManagerModal,
     closeNavbarModal,
   } = useNavbarModals();
   
@@ -514,6 +517,7 @@ export const Navbar = memo(() => {
       <LazyAdminModal isOpen={isAdminOpen} onClose={closeNavbarModal} />
       <LazyFaqModal isOpen={isFaqOpen} onClose={closeNavbarModal} />
       <LazyAffiliateModal isOpen={isAffiliateOpen} onClose={closeNavbarModal} />
+      <LazyAccountManagerModal isOpen={isAccountManagerOpen} onClose={closeNavbarModal} />
       {(!isMobile || allowMobileLazy) && (
         <ThemeSelectorModal isOpen={isThemeSelectorOpen} onClose={closeNavbarModal} />
       )}
@@ -715,6 +719,7 @@ export const Navbar = memo(() => {
           }}
           onThemeClick={() => { trackClick('theme_nav', { source: 'mobile_menu' }); openThemeSelectorModal(); }}
           onAnalysisClick={() => { trackClick('analysis_nav', { source: 'mobile_menu' }); openAnalysisModal(); }}
+          onAccountManagerClick={() => { trackClick('account_manager_nav', { source: 'mobile_menu' }); openAccountManagerModal(); }}
         />
       )}
     </>

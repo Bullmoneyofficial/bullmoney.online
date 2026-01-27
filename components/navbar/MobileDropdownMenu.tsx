@@ -11,6 +11,7 @@ import {
   IconPalette,
   IconSettings,
   IconLock,
+  IconUser,
 } from '@tabler/icons-react';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 // SMART MOUNT: Only import lightweight trigger components - heavy modals mount via UIState
@@ -36,6 +37,7 @@ interface MobileDropdownMenuProps {
   onAdminClick: () => void;
   onThemeClick: () => void;
   onAnalysisClick: () => void;
+  onAccountManagerClick: () => void;
 }
 
 export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDropdownMenuProps>(
@@ -51,6 +53,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
       onAdminClick,
       onThemeClick,
       onAnalysisClick,
+      onAccountManagerClick,
     },
     ref
   ) => {
@@ -153,6 +156,12 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
         setProductsOpen(true);
       }, 50);
     }, [setProductsOpen, onClose]);
+    
+    const handleAccountManagerClick = useCallback(() => {
+      SoundEffects.click();
+      onAccountManagerClick();
+      onClose();
+    }, [onAccountManagerClick, onClose]);
     
     // SMART MOUNT: Return null if shouldn't render (component fully unmounted)
     if (!shouldRender) return null;
@@ -301,6 +310,31 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
               >
                 <IconChartLine className="h-5 w-5" stroke={1.5} style={{ color: 'var(--accent-color, #60a5fa)' }} />
                 Analysis
+              </motion.button>
+            </motion.div>
+
+            {/* Account Manager */}
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.21 }}
+              className="w-full"
+            >
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+                onHoverStart={() => SoundEffects.hover()}
+                onTouchStart={() => SoundEffects.click()}
+                className="w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold hover:text-white cursor-pointer px-4 sm:px-6 py-3 sm:py-4 rounded-xl transition-all duration-200"
+                style={{
+                  color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)',
+                  backgroundColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.08)',
+                  border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.3)'
+                }}
+                onClick={handleAccountManagerClick}
+              >
+                <IconUser className="h-5 w-5" stroke={1.5} style={{ color: 'var(--accent-color, #60a5fa)' }} />
+                Account Manager
               </motion.button>
             </motion.div>
 
