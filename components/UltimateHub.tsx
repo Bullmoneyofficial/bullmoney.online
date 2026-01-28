@@ -4065,7 +4065,7 @@ const CommunityModal = memo(({ isOpen, onClose, isVip, isAdmin }: {
       </div>
 
       {/* Feed */}
-      <div className="flex-1 overflow-y-auto min-h-0">
+      <div className="flex-1 overflow-y-auto min-h-0 [-webkit-overflow-scrolling:touch]" style={{ touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
         <TelegramChannelEmbed channel={activeChannel} isVip={isVip} />
       </div>
 
@@ -4358,7 +4358,7 @@ const BrowserModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () =
               </div>
             </div>
             
-            <div className="p-3 space-y-2 max-h-[60vh] overflow-y-auto">
+            <div className="p-3 space-y-2 max-h-[60vh] overflow-y-auto [-webkit-overflow-scrolling:touch]" style={{ touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
               {BROWSERS.map((browser, index) => {
                 const Icon = browser.icon;
                 const isLoading = openingBrowser === browser.id;
@@ -4832,6 +4832,8 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
           {/* Panel - Centered Modal */}
           <motion.div
             ref={panelRef}
+            data-ultimate-hub
+            data-panel
             initial={isMobile ? { opacity: 0, y: 30 } : { scale: 0.95, opacity: 0, y: 20 }}
             animate={isMobile ? { opacity: 1, y: 0 } : { scale: 1, opacity: 1, y: 0 }}
             exit={isMobile ? { opacity: 0, y: 30 } : { scale: 0.95, opacity: 0, y: 20 }}
@@ -4844,8 +4846,8 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
             dragElastic={enableDrag ? { top: 0.2, bottom: 0.2 } : undefined}
             onDragStart={enableDrag ? () => setIsDragging(true) : undefined}
             onDragEnd={enableDrag ? handleDragEnd : undefined}
-            className="fixed left-1/2 top-1/2 z-[2147483647] -translate-x-1/2 -translate-y-1/2 w-[90vw] h-[75vh] max-h-[650px] sm:w-[80vw] sm:h-[80vh] sm:max-h-[700px] md:w-[75vw] md:h-[75vh] md:max-h-[750px] lg:w-[1200px] lg:h-[700px] lg:max-h-[800px] max-w-sm sm:max-w-md md:max-w-2xl lg:max-w-6xl flex flex-col bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 border border-blue-500/30 shadow-2xl overflow-hidden rounded-2xl [overscroll-behavior:contain]"
-            style={{ touchAction: 'auto', overscrollBehavior: 'contain' }}
+            className="fixed left-1/2 top-1/2 z-[2147483647] -translate-x-1/2 -translate-y-1/2 w-[90vw] h-[75vh] max-h-[650px] sm:w-[80vw] sm:h-[80vh] sm:max-h-[700px] md:w-[75vw] md:h-[75vh] md:max-h-[750px] lg:w-[1200px] lg:h-[700px] lg:max-h-[800px] max-w-sm sm:max-w-md md:max-w-2xl lg:max-w-6xl flex flex-col bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 border border-blue-500/30 shadow-2xl overflow-hidden rounded-2xl [overscroll-behavior:contain] [-webkit-overflow-scrolling:touch]"
+            style={{ touchAction: 'pan-y pan-x', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' }}
           >
             {/* Header with FPS Display */}
             <div className="p-3 border-b border-blue-500/30 bg-black" style={{ boxShadow: '0 0 12px rgba(59, 130, 246, 0.3), inset 0 0 12px rgba(59, 130, 246, 0.1)' }}>
@@ -4943,7 +4945,11 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
             </div>
             
             {/* Tab Content */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]" style={{ touchAction: 'auto' }}>
+            <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]" 
+              style={{ touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
+              data-ultimate-hub-content
+              data-scrollable
+            >
               <AnimatePresence mode="wait">
                 {/* TRADING TAB */}
                 {activeTab === 'trading' && (
@@ -5159,7 +5165,10 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     </div>
                     
                     {/* Feed */}
-                    <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 min-h-[200px] bg-black [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)', touchAction: 'pan-y' }}>
+                    <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 min-h-[200px] bg-black [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]" 
+                      style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)', touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
+                      data-scrollable
+                    >
                       <TelegramChannelEmbed channel={activeChannel} isVip={isVip} onNewMessage={onNewMessage} />
                     </div>
                     
@@ -5596,8 +5605,8 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="p-3 space-y-3 bg-black flex flex-col h-full overflow-y-auto"
-                    style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}
+                    className="p-3 space-y-3 bg-black flex flex-col h-full overflow-y-auto [-webkit-overflow-scrolling:touch]"
+                    style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)', touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
                   >
                     {/* Connection Status */}
                     <div className="flex items-center justify-between p-3 rounded-xl bg-black border border-blue-500/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
@@ -5988,7 +5997,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     </motion.button>
 
                     {/* Scrollable Content */}
-                    <div className="flex-1 overflow-y-auto min-h-0 space-y-3 pr-1">
+                    <div className="flex-1 overflow-y-auto min-h-0 space-y-3 pr-1 [-webkit-overflow-scrolling:touch]" style={{ touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
                     {/* Performance Grade */}
                     <div className="flex items-center justify-between p-3 rounded-xl bg-black border border-blue-500/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
                       <div className="flex items-center gap-3">
@@ -6288,7 +6297,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     </div>
 
                     {/* Logs Container */}
-                    <div className="flex-1 overflow-y-auto min-h-0 bg-black/50 rounded-lg border border-blue-500/20 p-2 font-mono text-[8px] space-y-1">
+                    <div className="flex-1 overflow-y-auto min-h-0 bg-black/50 rounded-lg border border-blue-500/20 p-2 font-mono text-[8px] space-y-1 [-webkit-overflow-scrolling:touch]" style={{ touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
                       {consoleLogs.length === 0 ? (
                         <div className="text-blue-400/50 text-center py-4">No logs captured yet</div>
                       ) : (

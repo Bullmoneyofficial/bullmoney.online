@@ -210,14 +210,43 @@ export function PerformanceProvider({
         
         // Add appropriate premium classes to both html and body
         if (isAppleDevice) {
-          document.documentElement.classList.add('apple-premium', 'high-performance');
-          document.body?.classList.add('apple-premium', 'high-performance');
+          document.documentElement.classList.add('apple-premium', 'high-performance', 'display-120hz');
+          document.body?.classList.add('apple-premium', 'high-performance', 'display-120hz');
+          
+          // iPhone-specific optimizations
+          if (/iphone|ipod/i.test(ua)) {
+            document.documentElement.classList.add('iphone-promotion');
+            document.body?.classList.add('iphone-promotion');
+            console.log('[PerformanceProvider] 📱 iPhone ProMotion 120Hz enabled');
+          }
+          
+          // iPad-specific optimizations
+          if (/ipad/i.test(ua)) {
+            document.documentElement.classList.add('ipad-promotion');
+            document.body?.classList.add('ipad-promotion');
+            console.log('[PerformanceProvider] 📱 iPad ProMotion 120Hz enabled');
+          }
         }
         if (isInstagram) {
-          document.documentElement.classList.add('instagram-premium', 'high-performance');
-          document.body?.classList.add('instagram-premium', 'high-performance');
+          document.documentElement.classList.add('instagram-premium', 'high-performance', 'display-120hz');
+          document.body?.classList.add('instagram-premium', 'high-performance', 'display-120hz');
         }
         // Continue with detection but don't return early
+      }
+      
+      // UPDATED 2026.1: Samsung and Android high-refresh detection
+      const isSamsung = /samsung|sm-g|sm-n|sm-s/i.test(ua);
+      const isAndroid = /android/i.test(ua);
+      if (isSamsung || isAndroid) {
+        document.documentElement.classList.add('android-premium', 'high-performance');
+        document.body?.classList.add('android-premium', 'high-performance');
+        if (isSamsung) {
+          document.documentElement.classList.add('samsung-120hz');
+          document.body?.classList.add('samsung-120hz');
+          console.log('[PerformanceProvider] 📱 Samsung 120Hz enabled');
+        }
+        console.log('[PerformanceProvider] 📱 Android premium experience enabled');
+        setIsHighEndDesktop(true);
       }
 
       // UPDATED 2026.1: Safari and Chrome mobile also get premium experience

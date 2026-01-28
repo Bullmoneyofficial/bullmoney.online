@@ -96,16 +96,21 @@ function detectProMotionDevice(): boolean {
   const screenHeight = window.screen.height;
   const dpr = window.devicePixelRatio;
   
-  // iPhone Pro detection (13 Pro+, 14 Pro+, 15 Pro+, 16 Pro+)
+  // iPhone Pro detection (13 Pro+, 14 Pro+, 15 Pro+, 16 Pro+, 17 Pro+)
   const isIPhone = /iphone/.test(ua);
   if (isIPhone && dpr >= 3) {
     // iPhone Pro models have specific screen dimensions
+    // iPhone 16 Pro/Pro Max: 402x874, 440×956
+    // iPhone 15 Pro/Pro Max: 393x852, 430x932
+    // iPhone 14 Pro/Pro Max: 390x844, 428x926
+    // iPhone 13 Pro/Pro Max: 390x844, 428x926
     if (
-      (screenWidth === 393 || screenWidth === 430) || // 15/16 Pro/Max
-      (screenWidth === 390 || screenWidth === 428) || // 14 Pro/Max
       (screenWidth === 402 || screenWidth === 440) || // 16 Pro/Max
-      (screenHeight >= 844) // General Pro-class height
+      (screenWidth === 393 || screenWidth === 430) || // 15 Pro/Max
+      (screenWidth === 390 || screenWidth === 428) || // 14/13 Pro/Max
+      (screenHeight >= 844 && dpr >= 3) // General Pro-class height with Retina
     ) {
+      console.log('[120Hz] 📱 iPhone Pro detected - ProMotion 120Hz enabled');
       return true;
     }
   }

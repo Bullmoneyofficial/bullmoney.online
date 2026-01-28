@@ -47,6 +47,9 @@
     inset 0 0 30px rgba(var(--navbar-accent-rgb), 0.03);
   /* DESKTOP FIX: Create isolated stacking context */
   isolation: isolate;
+  /* TOUCH FIX: Don't block scrolling on iPhone/Android */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Navbar elements use theme accent color */

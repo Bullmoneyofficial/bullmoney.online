@@ -119,14 +119,17 @@ html, body {
   /* NEVER apply filter here - breaks fixed positioning */
   filter: none !important;
   -webkit-filter: none !important;
-  /* Ensure scrolling works on all devices */
-  -webkit-overflow-scrolling: touch;
+  /* CRITICAL: Ensure scrolling works on all devices - iPhone, Samsung, Android */
+  -webkit-overflow-scrolling: touch !important;
   overflow-y: auto !important;
   overflow-x: hidden;
-  /* Touch handling */
-  touch-action: pan-y pan-x;
+  /* CRITICAL: Touch handling for all mobile - pan-y pan-x allows scrolling */
+  touch-action: pan-y pan-x !important;
   /* Prevent scroll blocking */
-  overscroll-behavior: auto;
+  overscroll-behavior-y: contain;
+  overscroll-behavior-x: none;
+  /* Remove tap highlight for cleaner touch experience */
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* ============================================

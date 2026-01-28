@@ -5,6 +5,7 @@ import "./globals.css";
 import "../styles/performance-optimizations.css";
 import "../styles/gpu-animations.css";
 import "../styles/120hz-performance.css";
+import "../styles/iphone-android-touch-fix.css";
 import "../styles/device-tier-optimizations.css";
 import "../styles/safari-optimizations.css";
 import "../styles/no-spin.css";

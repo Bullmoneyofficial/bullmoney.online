@@ -1,0 +1,410 @@
+/* ============================================================================
+   IPHONE & ANDROID TOUCH SCROLLING FIX
+   ============================================================================
+   
+   This file fixes touch scrolling issues on:
+   - iPhone (all models, especially ProMotion 120Hz)
+   - Samsung Galaxy (120Hz displays)
+   - All Android devices
+   
+   Issues fixed:
+   - Touch scrolling lag in Ultimate Hub
+   - Page scrolling stuttering
+   - Layout/navbar touch conflicts
+   - Modal scrolling issues
+   
+   UPDATED: January 2026
+   ============================================================================ */
+
+/* ============================================================================
+   GLOBAL TOUCH OPTIMIZATIONS
+   ============================================================================ */
+
+/* Root elements - enable smooth momentum scrolling */
+/* CRITICAL: Do NOT use transform on html/body - breaks fixed z-index */
+html,
+body {
+  /* iOS momentum scrolling */
+  -webkit-overflow-scrolling: touch !important;
+  /* Allow touch gestures for scrolling */
+  touch-action: pan-y pan-x;
+  /* Remove tap highlight */
+  -webkit-tap-highlight-color: transparent;
+  /* Prevent callouts on long-press */
+  -webkit-touch-callout: none;
+  /* DO NOT USE TRANSFORM HERE - breaks fixed positioning z-index */
+  /* transform: translate3d(0, 0, 0); - REMOVED - causes z-index issues */
+}
+
+/* All scrollable elements */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ============================================================================
+   ULTIMATE HUB - Fix scrolling on iPhone and Android
+   ============================================================================ */
+
+/* Hub panel container */
+[data-ultimate-hub],
+.ultimate-hub-panel,
+.ultimate-hub-container {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior-y: contain !important;
+  /* NO TRANSFORM - breaks z-index for fixed children */
+}
+
+/* Hub content areas */
+.ultimate-hub-content,
+.ultimate-hub-scroll,
+[data-hub-scroll] {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior-y: contain !important;
+}
+
+/* Hub tabs and navigation */
+.ultimate-hub-tabs,
+.ultimate-hub-nav,
+[data-hub-tabs] {
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ============================================================================
+   MODALS & PANELS - Fix scrolling issues
+   ============================================================================ */
+
+/* All modal containers */
+[role="dialog"],
+.modal,
+.modal-container,
+.modal-panel,
+[data-modal] {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior: contain !important;
+}
+
+/* Modal content areas */
+.modal-content,
+.modal-body,
+.modal-scroll,
+[data-modal-scroll] {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior-y: contain !important;
+  /* NO TRANSFORM - prevents z-index issues */
+}
+
+/* Modal headers/footers - prevent scroll but allow taps */
+.modal-header,
+.modal-footer,
+[data-modal-header],
+[data-modal-footer] {
+  touch-action: manipulation !important;
+  -webkit-overflow-scrolling: auto;
+}
+
+/* ============================================================================
+   LAYOUT & NAVIGATION - Fix touch conflicts
+   ============================================================================ */
+
+/* Main layout container */
+[data-layout],
+.layout,
+.page-container,
+.layout-wrapper {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior-y: contain !important;
+}
+
+/* Navigation bars */
+nav,
+header,
+[data-navbar],
+.navbar,
+.navigation,
+.nav-container {
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  /* Prevent scroll in navbar */
+  -webkit-overflow-scrolling: auto;
+  overscroll-behavior: none;
+}
+
+/* Main content area */
+main,
+[role="main"],
+.main-content {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior-y: contain !important;
+}
+
+/* ============================================================================
+   SCROLLABLE LISTS & CONTAINERS
+   ============================================================================ */
+
+/* Any overflow containers */
+.overflow-y-auto,
+.overflow-y-scroll,
+.overflow-x-auto,
+.overflow-x-scroll,
+[data-scrollable] {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior: contain !important;
+  /* REMOVED transform: translateZ(0) - breaks z-index for fixed children */
+}
+
+/* Nested scrollable areas */
+.overflow-y-auto .overflow-y-auto,
+.overflow-y-scroll .overflow-y-scroll {
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior: contain !important;
+}
+
+/* ============================================================================
+   BUTTONS & INTERACTIVE ELEMENTS - Prevent conflicts
+   ============================================================================ */
+
+/* All buttons and links */
+button,
+a,
+[role="button"],
+[data-button] {
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* Input elements */
+input,
+textarea,
+select,
+[contenteditable] {
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent;
+  /* Allow text selection */
+  -webkit-user-select: auto;
+  user-select: auto;
+}
+
+/* Draggable elements */
+[draggable],
+[data-draggable] {
+  touch-action: none !important;
+  -webkit-user-drag: element;
+}
+
+/* ============================================================================
+   IPHONE-SPECIFIC OPTIMIZATIONS
+   ============================================================================ */
+
+@supports (-webkit-touch-callout: none) {
+  /* iPhone detected */
+  
+  /* Root optimizations */
+  html,
+  body {
+    /* Force momentum scrolling */
+    -webkit-overflow-scrolling: touch !important;
+    /* Ensure touch gestures work */
+    touch-action: pan-y pan-x !important;
+  }
+  
+  /* All scrollable areas on iPhone */
+  [data-scrollable],
+  .overflow-y-auto,
+  .overflow-y-scroll {
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y pan-x !important;
+  }
+  
+  /* Fix Safari rubber-band effect */
+  body {
+    overscroll-behavior-y: contain !important;
+  }
+  
+  /* Prevent zoom on double-tap */
+  * {
+    touch-action: manipulation;
+  }
+}
+
+/* ============================================================================
+   ANDROID-SPECIFIC OPTIMIZATIONS
+   ============================================================================ */
+
+@media (hover: none) and (pointer: coarse) {
+  /* Touch device (Android/iPhone) */
+  
+  /* Remove tap delays */
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+  
+  /* Allow selection for text */
+  p, span, h1, h2, h3, h4, h5, h6,
+  input, textarea, [contenteditable] {
+    -webkit-user-select: auto;
+    user-select: auto;
+  }
+  
+  /* Fix Android scrolling lag */
+  html,
+  body,
+  main,
+  [data-scrollable] {
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y pan-x !important;
+  }
+}
+
+/* ============================================================================
+   SAMSUNG 120Hz OPTIMIZATIONS
+   ============================================================================ */
+
+/* Samsung devices with high refresh rate */
+.samsung-120hz html,
+.samsung-120hz body {
+  /* Enable smooth scrolling at 120Hz */
+  -webkit-overflow-scrolling: touch !important;
+  scroll-behavior: auto; /* Don't use smooth, causes lag */
+  touch-action: pan-y pan-x !important;
+}
+
+.samsung-120hz [data-scrollable],
+.samsung-120hz .overflow-y-auto {
+  -webkit-overflow-scrolling: touch !important;
+  /* NO TRANSFORM - breaks z-index for fixed children */
+}
+
+/* ============================================================================
+   IPHONE PROMOTION 120Hz
+   ============================================================================ */
+
+/* iPhone Pro models with 120Hz ProMotion */
+.iphone-promotion html,
+.iphone-promotion body {
+  /* Maximum smoothness */
+  -webkit-overflow-scrolling: touch !important;
+  scroll-behavior: auto;
+  touch-action: pan-y pan-x !important;
+}
+
+.iphone-promotion [data-scrollable],
+.iphone-promotion .overflow-y-auto,
+.iphone-promotion [data-ultimate-hub] {
+  -webkit-overflow-scrolling: touch !important;
+  /* NO TRANSFORM - breaks z-index for fixed children */
+}
+
+/* ============================================================================
+   DESKTOP IN MOBILE VIEW - Allow cursor/mouse scrolling
+   When desktop browser is resized to mobile viewport width
+   ============================================================================ */
+
+@media (max-width: 768px) and (hover: hover) and (pointer: fine) {
+  /* Desktop with mouse in mobile viewport - ensure scroll works */
+  html, body {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+    cursor: auto;
+  }
+  
+  /* All scrollable containers work with mouse wheel */
+  .overflow-y-auto,
+  .overflow-y-scroll,
+  [data-scrollable],
+  [data-ultimate-hub],
+  [role="dialog"],
+  .modal-content,
+  main {
+    overflow-y: auto !important;
+    pointer-events: auto !important;
+    cursor: auto;
+  }
+  
+  /* Ensure mouse wheel events propagate */
+  * {
+    pointer-events: auto;
+  }
+}
+
+/* ============================================================================
+   FIX SPECIFIC ISSUE: Ultimate Hub scrolling
+   ============================================================================ */
+
+/* Force scrolling to work in all hub areas */
+[class*="ultimate"] {
+  -webkit-overflow-scrolling: touch !important;
+}
+
+[class*="hub"] {
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* Tab panels inside hub */
+[role="tabpanel"],
+[data-tab-panel] {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior-y: contain !important;
+}
+
+/* ============================================================================
+   PERFORMANCE: Reduce repaints on scroll
+   ============================================================================ */
+
+/* During scroll, reduce GPU overhead */
+@media (hover: none) {
+  /* Touch devices only */
+  
+  /* Contain paint during scroll */
+  .overflow-y-auto,
+  .overflow-y-scroll,
+  [data-scrollable] {
+    contain: layout style paint;
+  }
+  
+  /* Fixed elements should not repaint */
+  [data-fixed],
+  .fixed,
+  [style*="position: fixed"] {
+    contain: layout;
+    will-change: auto;
+  }
+}
+
+/* ============================================================================
+   PREVENT SCROLL CONFLICTS
+   ============================================================================ */
+
+/* Prevent parent scroll when child is scrolling */
+[data-scroll-lock] {
+  overscroll-behavior: contain !important;
+  touch-action: pan-y pan-x !important;
+}
+
+/* Horizontal scrollers - prevent Y scroll */
+.overflow-x-auto,
+.overflow-x-scroll {
+  touch-action: pan-x !important;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: none;
+}
+
+/* Vertical scrollers - prevent X scroll */
+.overflow-y-auto,
+.overflow-y-scroll {
+  touch-action: pan-y !important;
+  overscroll-behavior-y: contain;
+  overscroll-behavior-x: none;
+}

@@ -202,7 +202,10 @@ html.instagram-premium *::after {
 html.mobile-premium,
 html.safari-premium,
 html.chrome-premium,
-html.instagram-premium {
+html.instagram-premium,
+html.iphone-promotion,
+html.samsung-120hz,
+html.android-premium {
   --animations-enabled: 1;
   --animation-duration-fast: 0.15s;
   --animation-duration-normal: 0.25s;
@@ -213,10 +216,74 @@ html.instagram-premium {
 html.mobile-premium [class*="backdrop-blur"],
 html.safari-premium [class*="backdrop-blur"],
 html.chrome-premium [class*="backdrop-blur"],
-html.instagram-premium [class*="backdrop-blur"] {
+html.instagram-premium [class*="backdrop-blur"],
+html.iphone-promotion [class*="backdrop-blur"],
+html.samsung-120hz [class*="backdrop-blur"],
+html.android-premium [class*="backdrop-blur"] {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   background-color: rgba(0, 0, 0, 0.7);
+}
+
+/* ============================================================================
+   IPHONE PROMOTION 120Hz - Premium Touch Scrolling
+   ============================================================================ */
+
+html.iphone-promotion,
+html.iphone-promotion body {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  scroll-behavior: auto;
+}
+
+html.iphone-promotion [data-scrollable],
+html.iphone-promotion .overflow-y-auto,
+html.iphone-promotion [data-ultimate-hub],
+html.iphone-promotion [role="dialog"] {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior-y: contain !important;
+  /* NO TRANSFORM - breaks z-index for fixed children */
+}
+
+/* ============================================================================
+   SAMSUNG 120Hz - Premium Touch Scrolling
+   ============================================================================ */
+
+html.samsung-120hz,
+html.samsung-120hz body {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  scroll-behavior: auto;
+}
+
+html.samsung-120hz [data-scrollable],
+html.samsung-120hz .overflow-y-auto,
+html.samsung-120hz [data-ultimate-hub],
+html.samsung-120hz [role="dialog"] {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior-y: contain !important;
+  /* NO TRANSFORM - breaks z-index for fixed children */
+}
+
+/* ============================================================================
+   ANDROID PREMIUM - Touch Scrolling Fixes
+   ============================================================================ */
+
+html.android-premium,
+html.android-premium body {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+}
+
+html.android-premium [data-scrollable],
+html.android-premium .overflow-y-auto,
+html.android-premium [data-ultimate-hub],
+html.android-premium [role="dialog"] {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior-y: contain !important;
 }
 
 /* ============================================================================

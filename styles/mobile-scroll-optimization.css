@@ -47,6 +47,10 @@ section[data-scrollable],
 main[data-allow-scroll] {
   contain: layout style paint;
   will-change: auto;
+  /* CRITICAL: Enable touch scrolling */
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior-y: contain;
 }
 
 /* When section is visible and nearby, enable GPU acceleration */
@@ -54,6 +58,15 @@ section:not([style*="visibility: hidden"]) {
   will-change: transform;
   backface-visibility: hidden;
   perspective: 1000px;
+}
+
+/* CRITICAL: Main content scrolling - iPhone/Android */
+main,
+[role="main"],
+.main-content {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior-y: contain;
 }
 
 /* ============================================================
@@ -101,10 +114,40 @@ section:not([style*="visibility: hidden"]) {
     font-size: 16px !important;
   }
 
-  /* Smooth scrolling on mobile (native) */
+  /* CRITICAL: Smooth scrolling on mobile (native) */
   html {
     scroll-behavior: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y pan-x !important;
   }
+  
+  body {
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y pan-x !important;
+  }
+}
+
+/* ============================================================
+   ULTIMATE HUB & MODAL TOUCH SCROLLING - iPhone/Android
+   ============================================================ */
+
+[data-ultimate-hub],
+.ultimate-hub-panel,
+[data-panel],
+[role="dialog"] {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior-y: contain !important;
+  /* NO TRANSFORM - breaks z-index for fixed children */
+}
+
+/* Modal scrollable areas */
+.overflow-y-auto,
+.overflow-y-scroll,
+[data-scrollable] {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior-y: contain !important;
 }
 
 /* ============================================================

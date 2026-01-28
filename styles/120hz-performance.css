@@ -3,16 +3,18 @@
    ============================================================================
    
    This CSS file provides critical performance optimizations for 120Hz displays
-   on Apple Silicon devices. It follows the "Glass Engine" rule and ensures
-   smooth scrolling and GPU compositing.
+   on Apple Silicon devices, iPhones, Samsung, and Android devices.
+   It follows the "Glass Engine" rule and ensures smooth scrolling and GPU compositing.
    
    UPDATED 2026: Fixed mouse wheel scrolling on big displays
+   UPDATED 2026.1: Enhanced iPhone ProMotion support & fixed touch scrolling
    ============================================================================ */
 
 /* ============================================================================
    CRITICAL: SCROLL FIX - Make page scrollable at 120Hz
    FIXED: Changed overscroll-behavior from 'none' to 'auto' to enable scrolling
    FIXED 2026: Better mouse wheel support for big displays (1440px+)
+   FIXED 2026.1: iPhone and Android touch scrolling optimization
    ============================================================================ */
 html {
   /* Native scrolling - do NOT use scroll-behavior: smooth, it causes jank with mouse wheel */
@@ -20,10 +22,13 @@ html {
   overflow-x: hidden;
   /* FIXED: Changed from 'none' to 'auto' - 'none' was blocking scroll on some devices */
   overscroll-behavior: auto;
-  /* Touch scrolling for iOS */
+  /* Touch scrolling for iOS - CRITICAL for smooth scrolling */
   -webkit-overflow-scrolling: touch;
   /* CRITICAL: Use 'auto' for instant mouse wheel response on big displays */
   scroll-behavior: auto;
+  /* iPhone smooth touch */
+  touch-action: pan-y pan-x;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -36,6 +41,72 @@ body {
   position: relative !important;
   height: auto !important;
   min-height: 100vh;
+  /* Smooth touch scrolling */
+  touch-action: pan-y pan-x;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ============================================================================
+   IPHONE PROMOTION 120Hz OPTIMIZATIONS - Smooth scrolling on all iPhones
+   ============================================================================ */
+@supports (-webkit-touch-callout: none) {
+  /* iPhone-specific optimizations */
+  /* CRITICAL: Do NOT use transform on html/body - breaks fixed z-index */
+  html,
+  body {
+    -webkit-overflow-scrolling: touch !important;
+    /* DO NOT USE TRANSFORM HERE - breaks fixed positioning z-index */
+    /* -webkit-transform: translate3d(0, 0, 0); - REMOVED */
+    touch-action: pan-y pan-x;
+  }
+  
+  /* Smooth 120Hz scrolling on iPhone */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Fix Ultimate Hub scrolling on iPhone */
+  [data-ultimate-hub],
+  .ultimate-hub-panel,
+  [data-panel] {
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y pan-x !important;
+    overscroll-behavior: contain !important;
+  }
+}
+
+/* ============================================================================
+   ANDROID & SAMSUNG 120Hz OPTIMIZATIONS
+   ============================================================================ */
+@media (hover: none) and (pointer: coarse) {
+  /* All touch devices */
+  html,
+  body,
+  main,
+  [data-scrollable] {
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y pan-x;
+    overscroll-behavior-y: contain;
+  }
+  
+  /* Fix Android touch lag */
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  
+  /* Allow selection for inputs and text */
+  input,
+  textarea,
+  [contenteditable],
+  p,
+  span,
+  h1, h2, h3, h4, h5, h6 {
+    -webkit-user-select: auto;
+    user-select: auto;
+  }
 }
 
 /* ============================================================================
@@ -83,6 +154,7 @@ main,
   contain: layout style;
   touch-action: pan-y pan-x;
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Sections that don't affect siblings */
@@ -103,6 +175,52 @@ section {
 canvas {
   contain: strict;
   touch-action: pan-y;
+}
+
+/* ============================================================================
+   ULTIMATE HUB & MODAL SCROLLING FIX - iPhone, Android, Samsung
+   ============================================================================ */
+
+/* Ultimate Hub panel - smooth scrolling on all devices */
+[data-ultimate-hub],
+.ultimate-hub-panel,
+.ultimate-hub-content,
+[data-panel],
+[data-modal-panel] {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior-y: contain !important;
+  /* NO TRANSFORM - breaks z-index for fixed children */
+}
+
+/* Modal scrollable areas */
+.modal-scroll,
+[data-modal-scroll],
+.overflow-y-auto,
+.overflow-y-scroll {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior-y: contain !important;
+}
+
+/* Fix navbar touch issues */
+nav,
+header,
+[data-navbar],
+.navbar,
+.navigation {
+  touch-action: pan-y pan-x !important;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* Page layout - ensure scrolling works */
+[data-layout],
+.layout,
+.page-container {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior-y: contain !important;
 }
 
 /* ============================================================================
