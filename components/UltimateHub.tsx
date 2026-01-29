@@ -8303,10 +8303,8 @@ const ATTENTION_MESSAGES = [
 // Position configs: cycles around Ultimate Hub (which is at top: 18%, left: 0)
 const ATTENTION_POSITIONS = [
   { top: '12%', left: '8px', bottom: 'auto', right: 'auto', transform: 'none', arrow: 'down' },     // Above hub
-  { top: '18%', left: '120px', bottom: 'auto', right: 'auto', transform: 'none', arrow: 'left' },   // Right of hub
-  { top: '25%', left: '8px', bottom: 'auto', right: 'auto', transform: 'none', arrow: 'up' },       // Below hub
-  { top: '18%', left: '120px', bottom: 'auto', right: 'auto', transform: 'none', arrow: 'left' },   // Right again
-  { top: '50%', left: '50%', bottom: 'auto', right: 'auto', transform: 'translate(-50%, -50%)', arrow: 'none' }, // Center of screen
+  { top: '18%', left: '100px', bottom: 'auto', right: 'auto', transform: 'none', arrow: 'left' },   // Right of hub
+  { top: '24%', left: '8px', bottom: 'auto', right: 'auto', transform: 'none', arrow: 'up' },       // Below hub
 ];
 
 // Mad popup component - shows after user ignores too many times
