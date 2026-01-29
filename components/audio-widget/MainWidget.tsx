@@ -260,7 +260,15 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
 
   useEffect(() => {
     // DISABLED on mobile - no scroll minimization to prevent size changes
-    if (isMobileDevice) return;
+    // Also ensure the widget is NOT minimized on mobile
+    if (isMobileDevice) {
+      // Force reset minimized state on mobile
+      if (isMinimizedRef.current) {
+        isMinimizedRef.current = false;
+        setIsScrollMinimized(false);
+      }
+      return;
+    }
     
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
@@ -286,6 +294,15 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
       } else if (scrollDelta > 15) {
         // Update lastScrollY even if already minimized
         lastScrollY.current = currentScrollY;
+        
+        // Reset the timeout to keep widget minimized while scrolling continues
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current);
+        }
+        scrollTimeoutRef.current = setTimeout(() => {
+          isMinimizedRef.current = false;
+          setIsScrollMinimized(false);
+        }, 1200);
       }
     };
 
@@ -294,16 +311,27 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
       window.removeEventListener('scroll', handleScroll);
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
+        // Reset ref on cleanup
+        isMinimizedRef.current = false;
       }
     };
   }, [open, setIsScrollMinimized, isMobileDevice]);
 
-  // Reset minimized state when widget opens
+  // Reset minimized state when widget opens or ref gets out of sync
   useEffect(() => {
     if (open) {
+      isMinimizedRef.current = false;
       setIsScrollMinimized(false);
     }
   }, [open, setIsScrollMinimized]);
+  
+  // Ensure ref and state stay in sync - fix stale minimized state
+  useEffect(() => {
+    // If state says not minimized but ref says minimized, reset ref
+    if (!isScrollMinimized && isMinimizedRef.current) {
+      isMinimizedRef.current = false;
+    }
+  }, [isScrollMinimized]);
 
   // Auto-hide widget when modals/menus open
   useEffect(() => {

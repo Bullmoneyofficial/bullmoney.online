@@ -447,24 +447,24 @@ export default function AffiliateDesktopDashboard({ onBack, onClose }: { onBack:
   }
 
   return (
-    <div className="fixed inset-0 z-[999999] flex flex-col overflow-hidden" style={{ background: '#050B14' }}>
+    <div className="fixed inset-0 z-[999999] flex flex-col overflow-hidden min-h-0 min-w-0" style={{ background: '#050B14' }}>
       {/* Background Effects */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
         <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full blur-[150px] opacity-20 bg-blue-600" />
         <div className="absolute bottom-[-20%] left-[-10%] w-[400px] h-[400px] rounded-full blur-[120px] opacity-15 bg-cyan-600" />
       </div>
 
       {/* Header */}
-      <header className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-blue-500/20 bg-black/50 backdrop-blur-xl">
-        <div className="flex items-center gap-4">
+      <header className="relative z-[2] grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_auto] items-start xl:items-center gap-4 px-6 py-4 border-b border-blue-500/20 bg-black/50 backdrop-blur-xl">
+        <div className="flex items-center gap-4 min-w-0">
           <button
             onClick={onBack}
             className="p-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 transition-all"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <div>
-            <div className="flex items-center gap-3">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-3">
               <h1 className="text-2xl font-black text-white">Affiliate Dashboard</h1>
               <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border bg-blue-500/10 text-blue-300 border-blue-500/20">
                 {React.createElement(getTierIcon(currentTier.icon), { className: "w-3.5 h-3.5" })}
@@ -475,23 +475,23 @@ export default function AffiliateDesktopDashboard({ onBack, onClose }: { onBack:
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 justify-start xl:justify-end w-full xl:w-auto">
           <button
             onClick={() => checkAuthAndLoad(false)}
-            className="p-2.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 transition-all"
+            className="p-2.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 transition-all cursor-pointer"
             title="Refresh Data"
           >
             <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
           </button>
-          <button className="p-2.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 transition-all">
+          <button className="p-2.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 transition-all cursor-pointer">
             <Bell className="w-4 h-4" />
           </button>
-          <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold text-sm hover:from-blue-500 hover:to-cyan-500 transition-all shadow-lg shadow-blue-900/30">
+          <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold text-sm hover:from-blue-500 hover:to-cyan-500 transition-all shadow-lg shadow-blue-900/30 cursor-pointer">
             <Download className="w-4 h-4" /> Export
           </button>
           <button
             onClick={onClose}
-            className="p-2.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all"
+            className="p-2.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -499,9 +499,9 @@ export default function AffiliateDesktopDashboard({ onBack, onClose }: { onBack:
       </header>
 
       {/* Main Content */}
-      <div className="relative z-10 flex-1 overflow-hidden flex">
+      <div className="relative z-[1] flex-1 min-h-0 min-w-0 overflow-hidden flex flex-col lg:flex-row p-8 lg:p-12 xl:p-16 gap-6 lg:gap-8">
         {/* Sidebar Navigation */}
-        <aside className="w-64 border-r border-blue-500/20 bg-black/30 backdrop-blur-xl p-4 flex flex-col gap-2">
+        <aside className="w-full lg:w-64 shrink-0 min-h-0 rounded-2xl border border-blue-500/20 bg-black/50 backdrop-blur-xl p-4 flex flex-col gap-2 lg:overflow-y-auto">
           {[
             { id: 'overview', label: 'Overview', icon: LayoutGrid },
             { id: 'recruits', label: 'Recruits', icon: Users },
@@ -513,7 +513,7 @@ export default function AffiliateDesktopDashboard({ onBack, onClose }: { onBack:
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-all",
+                "flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-all cursor-pointer",
                 activeTab === tab.id
                   ? "bg-blue-500/20 text-white border border-blue-500/40"
                   : "text-blue-400/70 hover:bg-blue-500/10 hover:text-blue-300 border border-transparent"
@@ -538,7 +538,7 @@ export default function AffiliateDesktopDashboard({ onBack, onClose }: { onBack:
 
             <button
               onClick={handleCopyLink}
-              className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-blue-600 text-white font-semibold text-sm hover:bg-blue-500 transition-all"
+              className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-blue-600 text-white font-semibold text-sm hover:bg-blue-500 transition-all cursor-pointer"
             >
               <Link2 className="w-4 h-4" />
               {copiedLink ? 'Link Copied!' : 'Copy Referral Link'}
@@ -547,7 +547,7 @@ export default function AffiliateDesktopDashboard({ onBack, onClose }: { onBack:
         </aside>
 
         {/* Content Area */}
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden rounded-2xl border border-blue-500/20 bg-black/30 backdrop-blur-xl p-6">
           {/* Admin Tab */}
           {activeTab === 'admin' && isAffiliateAdmin && (
             <AffiliateAdminPanel />
@@ -557,7 +557,7 @@ export default function AffiliateDesktopDashboard({ onBack, onClose }: { onBack:
           {activeTab === 'overview' && (
             <div className="space-y-6">
               {/* Stats Grid */}
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                 <StatCard
                   icon={Users}
                   label="Total Recruits"
@@ -618,7 +618,7 @@ export default function AffiliateDesktopDashboard({ onBack, onClose }: { onBack:
                 </div>
 
                 {/* Tier Badges */}
-                <div className="flex items-center justify-between mt-4 gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {AFFILIATE_TIERS.map((tier) => {
                     const TierIcon = getTierIcon(tier.icon);
                     const isActive = stats.active >= tier.minTraders;
@@ -696,8 +696,8 @@ export default function AffiliateDesktopDashboard({ onBack, onClose }: { onBack:
           {activeTab === 'recruits' && (
             <div className="space-y-4">
               {/* Search and Filter */}
-              <div className="flex items-center gap-4">
-                <div className="relative flex-1">
+              <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                <div className="relative flex-1 min-w-0">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-400/50" />
                   <input
                     type="text"
@@ -707,7 +707,7 @@ export default function AffiliateDesktopDashboard({ onBack, onClose }: { onBack:
                     className="w-full pl-10 pr-4 py-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-white placeholder-blue-400/40 focus:outline-none focus:border-blue-500/50"
                   />
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {(['All', 'Active', 'Pending'] as const).map((f) => (
                     <button
                       key={f}
@@ -727,7 +727,8 @@ export default function AffiliateDesktopDashboard({ onBack, onClose }: { onBack:
 
               {/* Recruits Table */}
               <NeonCard padding="none" className="overflow-hidden">
-                <table className="w-full">
+                <div className="w-full overflow-x-auto">
+                  <table className="w-full min-w-[720px]">
                   <thead>
                     <tr className="border-b border-blue-500/20">
                       <th className="text-left p-4 text-xs uppercase tracking-wide text-blue-400/60">Status</th>
@@ -762,7 +763,8 @@ export default function AffiliateDesktopDashboard({ onBack, onClose }: { onBack:
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                  </table>
+                </div>
 
                 {filteredRecruits.length === 0 && (
                   <div className="text-center py-12">
@@ -778,7 +780,7 @@ export default function AffiliateDesktopDashboard({ onBack, onClose }: { onBack:
           {activeTab === 'earnings' && (
             <div className="space-y-6">
               {/* Earnings Stats */}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 <StatCard
                   icon={DollarSign}
                   label="Total Earnings"
@@ -803,7 +805,7 @@ export default function AffiliateDesktopDashboard({ onBack, onClose }: { onBack:
               {/* Monthly Breakdown */}
               <NeonCard padding="default">
                 <h3 className="text-lg font-bold text-white mb-4">Monthly Breakdown</h3>
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
                     <p className="text-xs uppercase tracking-wide text-blue-400/60 mb-1">This Month</p>
                     <p className="text-2xl font-bold text-white">{formatCurrency(earnings.this_month)}</p>
@@ -834,7 +836,7 @@ export default function AffiliateDesktopDashboard({ onBack, onClose }: { onBack:
               <NeonCard padding="default">
                 <h3 className="text-lg font-bold text-white mb-4">Commission Structure</h3>
                 <div className="overflow-x-auto">
-                  <table className="w-full">
+                  <table className="w-full min-w-[720px]">
                     <thead>
                       <tr className="border-b border-blue-500/20">
                         <th className="text-left p-3 text-xs uppercase tracking-wide text-blue-400/60">Tier</th>
@@ -885,7 +887,7 @@ export default function AffiliateDesktopDashboard({ onBack, onClose }: { onBack:
           {/* Analytics Tab */}
           {activeTab === 'analytics' && (
             <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <StatCard
                   icon={BarChart3}
                   label="Lifetime Lots"

@@ -56,6 +56,7 @@ import {
   MinimalFallback,
   ContentSkeleton,
   CardSkeleton,
+  FooterSkeleton,
 } from "@/components/MobileLazyLoadingFallback";
 
 // ==========================================
@@ -75,6 +76,11 @@ const HeroDesktop = dynamic(
 const CTA = dynamic(
   () => import("@/components/Chartnews"),
   { ssr: false, loading: () => <MinimalFallback /> }
+);
+
+const Footer = dynamic(
+  () => import("@/components/Mainpage/footer").then((mod) => ({ default: mod.Footer })),
+  { ssr: false, loading: () => <FooterSkeleton /> }
 );
 
 import { Features } from "@/components/features";
@@ -1443,6 +1449,8 @@ function HomeContent() {
               </section>
             )}
           </main>
+
+          <Footer />
 
           {canRenderHeavyDesktop && theme.youtubeId && (
             <HiddenYoutubePlayer

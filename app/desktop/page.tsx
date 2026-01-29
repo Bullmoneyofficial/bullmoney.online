@@ -27,6 +27,7 @@ import {
   ShimmerContainer
 } from "@/components/ui/UnifiedShimmer";
 import { SplineSkeleton, LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
+import { FooterSkeleton } from "@/components/MobileLazyLoadingFallback";
 import { useCacheContext } from "@/components/CacheManagerProvider";
 import { useUnifiedPerformance, useVisibility, useObserver, useComponentLifecycle } from "@/lib/UnifiedPerformanceSystem";
 import { useComponentTracking, useCrashTracker } from "@/lib/CrashTracker";
@@ -55,6 +56,11 @@ const TradingUnlockLoader = dynamic(() => import("@/components/MultiStepLoaderv3
 const DraggableSplit = dynamic(() => import('@/components/DraggableSplit'), { ssr: false }) as any;
 const SplineScene = dynamic(() => import('@/components/SplineScene'), { ssr: false }) as any;
 const TestimonialsCarousel = dynamic(() => import('@/components/Testimonial').then(mod => ({ default: mod.TestimonialsCarousel })), { ssr: false }) as any;
+
+const Footer = dynamic(
+  () => import("@/components/Mainpage/footer").then((mod) => ({ default: mod.Footer })),
+  { ssr: false, loading: () => <FooterSkeleton /> }
+);
 
 // ==========================================
 // DESKTOP SCREEN SIZE DETECTION CONSTANTS
@@ -486,15 +492,31 @@ function DesktopHomeContent() {
   return (
     <>
       {currentView === 'pagemode' && (
-        <div className="fixed inset-0 z-[99999] bg-black">
-          <PageMode onUnlock={handlePageModeUnlock} />
-        </div>
+        <>
+          <style jsx global>{`
+            nav, footer, header, [data-footer], .footer, .footer-section, .site-footer {
+              opacity: 0 !important;
+              pointer-events: none !important;
+            }
+          `}</style>
+          <div className="fixed inset-0 z-[99999] bg-black">
+            <PageMode onUnlock={handlePageModeUnlock} />
+          </div>
+        </>
       )}
 
       {currentView === 'loader' && (
-        <div className="fixed inset-0 z-[99999] bg-black">
-          <TradingUnlockLoader onFinished={handleLoaderComplete} />
-        </div>
+        <>
+          <style jsx global>{`
+            nav, footer, header, [data-footer], .footer, .footer-section, .site-footer {
+              opacity: 0 !important;
+              pointer-events: none !important;
+            }
+          `}</style>
+          <div className="fixed inset-0 z-[99999] bg-black">
+            <TradingUnlockLoader onFinished={handleLoaderComplete} />
+          </div>
+        </>
       )}
 
       {currentView === 'content' && (
@@ -597,6 +619,8 @@ function DesktopHomeContent() {
               <LiveMarketTicker />
             </section>
           </main>
+
+          <Footer />
 
           <DesktopKeyNavigator />
 

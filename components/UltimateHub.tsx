@@ -78,13 +78,31 @@ const GLOBAL_NEON_STYLES = `
       background-position: 200% 50%;
     }
   }
+
+  @keyframes ping {
+    0% {
+      transform: scale(1);
+      opacity: 0.75;
+    }
+    50% {
+      transform: scale(1.8);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 0;
+    }
+  }
 `;
 import TradingJournal from './TradingJournal';
+import { MOBILE_HELPER_TIPS } from './navbar/navbar.utils';
 import {
   Activity,
   TrendingUp,
   TrendingDown,
   ChevronRight,
+  ChevronLeft,
+  ChevronUp,
   ChevronDown,
   BarChart3,
   Globe,
@@ -140,7 +158,9 @@ import {
   Eye,
   Newspaper,
   Tv,
-  Users
+  Users,
+  Frown,
+  Heart,
 } from 'lucide-react';
 import { useUIState } from '@/contexts/UIStateContext';
 import { useAudioSettings } from '@/contexts/AudioSettingsProvider';
@@ -6814,6 +6834,34 @@ export const UnifiedFpsPill = memo(({
   hasNewMessages?: boolean;
   newMessageCount?: number;
 }) => {
+  // Mobile tip rotation state
+  const [tipIndex, setTipIndex] = useState(0);
+  const [showTapToOpen, setShowTapToOpen] = useState(true);
+  const [tipVisible, setTipVisible] = useState(true);
+  
+  // Tip rotation effect - alternates between "Tap to open" and tips
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setTipVisible(false);
+      setTimeout(() => {
+        if (showTapToOpen) {
+          // Switch to tips
+          setShowTapToOpen(false);
+        } else {
+          // Rotate to next tip, then every 3rd tip show "Tap to open" again
+          const nextIndex = (tipIndex + 1) % MOBILE_HELPER_TIPS.length;
+          setTipIndex(nextIndex);
+          if (nextIndex % 3 === 0) {
+            setShowTapToOpen(true);
+          }
+        }
+        setTipVisible(true);
+      }, 200);
+    }, 3500);
+    
+    return () => clearInterval(intervalId);
+  }, [tipIndex, showTapToOpen]);
+  
   const [isPinned, setIsPinned] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false); // Track if showing full content
   const [scrollY, setScrollY] = useState(0);
@@ -7721,31 +7769,70 @@ export const UnifiedFpsPill = memo(({
           </AnimatePresence>
         </motion.div>
         
-        {/* Tap hint on mobile - pull tab from left */}
+        {/* Tap hint on mobile - animated tip pill */}
         {!isMinimized && (
           <motion.div
             initial={{ x: -50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.3, ease: "easeOut" }}
-            className="absolute -bottom-5 left-0 whitespace-nowrap sm:hidden flex items-center gap-0.5 cursor-pointer pointer-events-auto px-1.5 py-0.5 rounded-r-full neon-subtle-border"
+            className="absolute -bottom-5 left-0 whitespace-nowrap sm:hidden flex items-center gap-1 cursor-pointer pointer-events-auto px-2 py-1 rounded-r-full"
             style={{
-              background: 'rgba(0, 0, 0, 0.5)',
-              borderTop: '1px solid rgba(59, 130, 246, 0.3)',
-              borderRight: '1px solid rgba(59, 130, 246, 0.3)',
-              borderBottom: '1px solid rgba(59, 130, 246, 0.3)',
+              background: 'rgba(0, 0, 0, 0.9)',
+              border: '1px solid #3b82f6',
+              borderLeft: 'none',
+              boxShadow: '0 0 4px #3b82f6, 0 0 8px rgba(59, 130, 246, 0.5), inset 0 0 4px rgba(59, 130, 246, 0.2)',
+              touchAction: 'manipulation',
             }}
             onClick={(e) => {
               e.stopPropagation();
+              e.preventDefault();
               onOpenPanel();
+            }}
+            onTouchStart={(e) => {
+              e.stopPropagation();
             }}
             onTouchEnd={(e) => {
               e.stopPropagation();
+              e.preventDefault();
+              onOpenPanel();
+            }}
+            onMouseEnter={() => {
               onOpenPanel();
             }}
           >
-            <span className="text-[6px] neon-blue-text font-medium">Tap to open</span>
+            {/* Pulse indicator */}
+            <div className="relative flex h-1.5 w-1.5 flex-shrink-0 pointer-events-none">
+              <span 
+                className="absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75"
+                style={{ animation: 'ping 2s ease-in-out infinite' }}
+              />
+              <span 
+                className="relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-500"
+                style={{ boxShadow: '0 0 4px #3b82f6, 0 0 6px #3b82f6' }}
+              />
+            </div>
+            
+            {/* Animated text */}
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={showTapToOpen ? 'tap' : `tip-${tipIndex}`}
+                initial={{ opacity: 0, x: -5 }}
+                animate={{ opacity: tipVisible ? 1 : 0, x: 0 }}
+                exit={{ opacity: 0, x: 5 }}
+                transition={{ duration: 0.2 }}
+                className="text-[8px] font-medium pointer-events-none"
+                style={{
+                  color: '#93c5fd',
+                  textShadow: '0 0 2px rgba(59, 130, 246, 0.8), 0 0 4px rgba(59, 130, 246, 0.4)',
+                }}
+              >
+                {showTapToOpen ? '↑ Tap to open' : MOBILE_HELPER_TIPS[tipIndex]}
+              </motion.span>
+            </AnimatePresence>
+            
+            {/* Chevron */}
             <svg 
-              className="w-1.5 h-1.5 text-blue-400/80" 
+              className="w-2 h-2 text-blue-400/80 flex-shrink-0 pointer-events-none" 
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24"
@@ -8195,16 +8282,289 @@ BullMoneyTVPill.displayName = 'BullMoneyTVPill';
 // LocalStorage key for persisting last seen message
 const LAST_SEEN_MESSAGE_KEY = 'bullmoney_last_seen_message_id';
 const NEW_MESSAGE_COUNT_KEY = 'bullmoney_new_message_count';
+const HUB_ATTENTION_SHOWN_KEY = 'bullmoney_hub_attention_shown';
+const HUB_ATTENTION_LAST_SHOWN_KEY = 'bullmoney_hub_attention_last_shown';
+const HUB_ATTENTION_IGNORE_COUNT_KEY = 'bullmoney_hub_attention_ignore_count';
+
+// ============================================================================
+// ULTIMATE HUB ATTENTION ANIMATION - Cool text animation to draw users
+// ============================================================================
+const ATTENTION_MESSAGES = [
+  "Live Gold & Bitcoin prices",
+  "Free trading signals",
+  "Real-time market data",
+  "Join 10k+ traders",
+  "Premium setups 24/7",
+  "Daily trade ideas",
+  "Track your performance",
+  "Elite trading tools",
+];
+
+// Position configs: cycles around Ultimate Hub (which is at top: 18%, left: 0)
+const ATTENTION_POSITIONS = [
+  { top: '12%', left: '8px', bottom: 'auto', right: 'auto', transform: 'none', arrow: 'down' },     // Above hub
+  { top: '18%', left: '120px', bottom: 'auto', right: 'auto', transform: 'none', arrow: 'left' },   // Right of hub
+  { top: '25%', left: '8px', bottom: 'auto', right: 'auto', transform: 'none', arrow: 'up' },       // Below hub
+  { top: '18%', left: '120px', bottom: 'auto', right: 'auto', transform: 'none', arrow: 'left' },   // Right again
+  { top: '50%', left: '50%', bottom: 'auto', right: 'auto', transform: 'translate(-50%, -50%)', arrow: 'none' }, // Center of screen
+];
+
+// Mad popup component - shows after user ignores too many times
+const MadHubPopup = memo(({ 
+  onInteract, 
+  onDismiss 
+}: { 
+  onInteract: () => void; 
+  onDismiss: () => void;
+}) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.5 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.5 }}
+      transition={{ duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
+      className="fixed inset-0 z-[9999999999] flex items-center justify-center pointer-events-auto"
+      onClick={onInteract}
+    >
+      {/* Backdrop */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={(e) => { e.stopPropagation(); onDismiss(); }}
+      />
+      
+      {/* Popup */}
+      <motion.div
+        initial={{ y: 50 }}
+        animate={{ y: 0 }}
+        className="relative rounded-3xl px-8 py-6 flex flex-col items-center gap-3 cursor-pointer"
+        style={{
+          background: 'linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(59,130,246,0.2) 50%, rgba(59, 130, 246, 0.15) 100%)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          border: '3px solid rgba(59, 130, 246, 0.8)',
+          boxShadow: '0 0 40px rgba(59, 130, 246, 0.5), 0 0 80px rgba(59, 130, 246, 0.3), inset 0 0 20px rgba(59, 130, 246, 0.1)',
+        }}
+      >
+        {/* Close button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDismiss();
+          }}
+          className="absolute top-2 right-2 w-6 h-6 rounded-full bg-zinc-800/80 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
+        
+        {/* Cute mad face using icons */}
+        <div className="flex items-center gap-1">
+          <motion.div
+            animate={{ rotate: [-5, 5, -5] }}
+            transition={{ duration: 0.5, repeat: Infinity }}
+          >
+            <Frown className="w-12 h-12 text-blue-400" style={{ filter: 'drop-shadow(0 0 8px #3b82f6)' }} />
+          </motion.div>
+        </div>
+        
+        {/* Message using icons */}
+        <div className="flex items-center gap-2 text-white">
+          <Heart className="w-5 h-5 text-red-400" style={{ filter: 'drop-shadow(0 0 4px #f87171)' }} />
+          <span className="text-lg font-bold" style={{ textShadow: '0 0 10px rgba(59, 130, 246, 0.6)' }}>
+            Tap me!
+          </span>
+          <Heart className="w-5 h-5 text-red-400" style={{ filter: 'drop-shadow(0 0 4px #f87171)' }} />
+        </div>
+        
+        {/* Arrow pointing to action */}
+        <motion.div
+          animate={{ y: [0, 5, 0] }}
+          transition={{ duration: 0.8, repeat: Infinity }}
+          className="flex items-center gap-2"
+        >
+          <ChevronDown className="w-6 h-6 text-blue-400" style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
+          <TrendingUp className="w-8 h-8 text-blue-500" style={{ filter: 'drop-shadow(0 0 6px #3b82f6)' }} />
+          <ChevronDown className="w-6 h-6 text-blue-400" style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
+        </motion.div>
+        
+        {/* Small hint text */}
+        <span className="text-xs text-zinc-400">Open Ultimate Hub</span>
+      </motion.div>
+    </motion.div>
+  );
+});
+MadHubPopup.displayName = 'MadHubPopup';
+
+const UltimateHubAttention = memo(({ 
+  onInteract, 
+  onDismiss,
+  ignoreCount,
+  onShowMadPopup
+}: { 
+  onInteract: () => void; 
+  onDismiss: () => void;
+  ignoreCount: number;
+  onShowMadPopup: () => void;
+}) => {
+  const [messageIndex, setMessageIndex] = useState(0);
+  const [positionIndex, setPositionIndex] = useState(0);
+  const [shouldDismiss, setShouldDismiss] = useState(false);
+  const cycleCountRef = useRef(0);
+  
+  // Cycle through positions every 2 seconds, auto-dismiss after 2 cycles
+  useEffect(() => {
+    if (shouldDismiss) return;
+    
+    const interval = setInterval(() => {
+      setPositionIndex((prev) => {
+        const next = (prev + 1) % ATTENTION_POSITIONS.length;
+        // When we complete a full cycle
+        if (next === 0) {
+          cycleCountRef.current += 1;
+          // After 2 cycles, trigger dismiss
+          if (cycleCountRef.current >= 2) {
+            setShouldDismiss(true);
+          }
+        }
+        return next;
+      });
+      setMessageIndex((prev) => (prev + 1) % ATTENTION_MESSAGES.length);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [shouldDismiss]);
+  
+  // Handle dismiss when shouldDismiss becomes true
+  useEffect(() => {
+    if (shouldDismiss) {
+      if (ignoreCount >= 3) {
+        onShowMadPopup();
+      } else {
+        onDismiss();
+      }
+    }
+  }, [shouldDismiss, ignoreCount, onShowMadPopup, onDismiss]);
+  
+  // Backup auto-dismiss after 12 seconds
+  useEffect(() => {
+    const timeout = setTimeout(onDismiss, 12000);
+    return () => clearTimeout(timeout);
+  }, [onDismiss]);
+  
+  const position = ATTENTION_POSITIONS[positionIndex];
+  
+  // Get arrow icon based on position
+  const ArrowIcon = position.arrow === 'down' ? ChevronDown : 
+                    position.arrow === 'up' ? ChevronUp : 
+                    position.arrow === 'left' ? ChevronLeft :
+                    position.arrow === 'right' ? ChevronRight :
+                    null;
+  
+  return (
+    <motion.div
+      key={positionIndex}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      transition={{ duration: 0.2, ease: 'easeOut' }}
+      className="fixed z-[9999999999] pointer-events-auto cursor-pointer"
+      style={{ 
+        top: position.top,
+        left: position.left,
+        right: position.right,
+        bottom: position.bottom,
+        transform: position.transform,
+      }}
+      onClick={onInteract}
+    >
+      <div
+        className="relative rounded-xl px-2.5 py-1 flex items-center gap-1.5"
+        style={{
+          background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(59,130,246,0.15) 50%, rgba(59, 130, 246, 0.1) 100%)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          border: '1.5px solid rgba(59, 130, 246, 0.7)',
+          boxShadow: '0 0 12px rgba(59, 130, 246, 0.4), 0 0 24px rgba(59, 130, 246, 0.2)',
+        }}
+      >
+        {/* Arrow pointing towards Ultimate Hub (if not center) */}
+        {ArrowIcon && (
+          <motion.div
+            animate={{ 
+              x: position.arrow === 'left' ? [-2, 2, -2] : position.arrow === 'right' ? [2, -2, 2] : 0,
+              y: position.arrow === 'down' ? [-2, 2, -2] : position.arrow === 'up' ? [2, -2, 2] : 0
+            }}
+            transition={{ duration: 0.5, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            <ArrowIcon 
+              className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" 
+              style={{ filter: 'drop-shadow(0 0 3px #3b82f6)' }} 
+            />
+          </motion.div>
+        )}
+        
+        {/* Zap icon for center position */}
+        {position.arrow === 'none' && (
+          <motion.div
+            animate={{ scale: [1, 1.15, 1] }}
+            transition={{ duration: 0.6, repeat: Infinity }}
+          >
+            <Zap 
+              className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" 
+              style={{ filter: 'drop-shadow(0 0 3px #3b82f6)' }} 
+            />
+          </motion.div>
+        )}
+        
+        {/* Message text */}
+        <span
+          className="text-[10px] font-medium text-white whitespace-nowrap"
+          style={{ textShadow: '0 0 6px rgba(59, 130, 246, 0.4)' }}
+        >
+          {ATTENTION_MESSAGES[messageIndex]}
+        </span>
+        
+        {/* Close button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDismiss();
+          }}
+          className="ml-0.5 w-4 h-4 rounded-full bg-zinc-800/60 flex items-center justify-center text-zinc-400 hover:text-white transition-colors flex-shrink-0"
+        >
+          <X className="w-3 h-3" />
+        </button>
+      </div>
+    </motion.div>
+  );
+});
+UltimateHubAttention.displayName = 'UltimateHubAttention';
 
 export function UltimateHub() {
   const [mounted, setMounted] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  
+  // Attention animation state
+  const [showAttention, setShowAttention] = useState(false);
+  const [showMadPopup, setShowMadPopup] = useState(false);
+  const [attentionShownCount, setAttentionShownCount] = useState(0);
+  const [attentionIgnoreCount, setAttentionIgnoreCount] = useState(0);
+  const attentionIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // New message notification state - persisted to localStorage
   const [hasNewMessages, setHasNewMessages] = useState(false);
   const [newMessageCount, setNewMessageCount] = useState(0);
   const lastSeenMessageIdRef = useRef<string | null>(null);
   const isCheckingRef = useRef(false);
+  
+  // Load ignore count from localStorage
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const savedIgnoreCount = localStorage.getItem(HUB_ATTENTION_IGNORE_COUNT_KEY);
+    if (savedIgnoreCount) {
+      setAttentionIgnoreCount(parseInt(savedIgnoreCount, 10));
+    }
+  }, []);
   
   // Load persisted notification state on mount
   useEffect(() => {
@@ -8224,6 +8584,12 @@ export function UltimateHub() {
         setHasNewMessages(true);
         setNewMessageCount(count);
       }
+    }
+    
+    // Load attention shown count
+    const savedAttentionCount = localStorage.getItem(HUB_ATTENTION_SHOWN_KEY);
+    if (savedAttentionCount) {
+      setAttentionShownCount(parseInt(savedAttentionCount, 10));
     }
   }, []);
   
@@ -8389,6 +8755,89 @@ export function UltimateHub() {
     setMounted(true);
   }, []);
   
+  // Attention animation logic - shows when user hasn't interacted
+  // Shows on first/second page load if not interacted, then every 5 minutes
+  useEffect(() => {
+    if (!mounted || !isV2Unlocked || isPagemodeOpen || isLoaderv2Open) return;
+    
+    const checkAndShowAttention = () => {
+      // Don't show if hub is already open or mad popup is showing
+      if (isUltimateHubOpen) return;
+      
+      // Always show after a short delay on page load
+      setShowAttention(true);
+      localStorage.setItem(HUB_ATTENTION_LAST_SHOWN_KEY, Date.now().toString());
+    };
+    
+    // Show after 2 seconds
+    const initialTimeout = setTimeout(checkAndShowAttention, 2000);
+    
+    // Set up 5-minute interval for recurring shows
+    attentionIntervalRef.current = setInterval(() => {
+      if (!isUltimateHubOpen) {
+        setShowAttention(true);
+        localStorage.setItem(HUB_ATTENTION_LAST_SHOWN_KEY, Date.now().toString());
+      }
+    }, 5 * 60 * 1000); // 5 minutes
+    
+    return () => {
+      clearTimeout(initialTimeout);
+      if (attentionIntervalRef.current) {
+        clearInterval(attentionIntervalRef.current);
+      }
+    };
+  }, [mounted, isV2Unlocked, isPagemodeOpen, isLoaderv2Open, isUltimateHubOpen]);
+  
+  // Handle attention interaction (user clicks to open hub)
+  const handleAttentionInteract = useCallback(() => {
+    setShowAttention(false);
+    setShowMadPopup(false);
+    setUltimateHubOpen(true);
+    
+    // Reset ignore count on successful interaction
+    setAttentionIgnoreCount(0);
+    localStorage.setItem(HUB_ATTENTION_IGNORE_COUNT_KEY, '0');
+    
+    // Update shown count
+    const newCount = attentionShownCount + 1;
+    setAttentionShownCount(newCount);
+    localStorage.setItem(HUB_ATTENTION_SHOWN_KEY, newCount.toString());
+    localStorage.setItem(HUB_ATTENTION_LAST_SHOWN_KEY, Date.now().toString());
+  }, [attentionShownCount, setUltimateHubOpen]);
+  
+  // Handle attention dismiss (user closes without interacting)
+  const handleAttentionDismiss = useCallback(() => {
+    setShowAttention(false);
+    
+    // Increment ignore count
+    const newIgnoreCount = attentionIgnoreCount + 1;
+    setAttentionIgnoreCount(newIgnoreCount);
+    localStorage.setItem(HUB_ATTENTION_IGNORE_COUNT_KEY, newIgnoreCount.toString());
+    
+    // Update shown count
+    const newCount = attentionShownCount + 1;
+    setAttentionShownCount(newCount);
+    localStorage.setItem(HUB_ATTENTION_SHOWN_KEY, newCount.toString());
+    localStorage.setItem(HUB_ATTENTION_LAST_SHOWN_KEY, Date.now().toString());
+  }, [attentionShownCount, attentionIgnoreCount]);
+  
+  // Handle showing mad popup
+  const handleShowMadPopup = useCallback(() => {
+    setShowAttention(false);
+    setShowMadPopup(true);
+  }, []);
+  
+  // Handle mad popup dismiss
+  const handleMadPopupDismiss = useCallback(() => {
+    setShowMadPopup(false);
+    
+    // Increment ignore count
+    const newIgnoreCount = attentionIgnoreCount + 1;
+    setAttentionIgnoreCount(newIgnoreCount);
+    localStorage.setItem(HUB_ATTENTION_IGNORE_COUNT_KEY, newIgnoreCount.toString());
+    localStorage.setItem(HUB_ATTENTION_LAST_SHOWN_KEY, Date.now().toString());
+  }, [attentionIgnoreCount]);
+  
   // Handle notification click from service worker (when user taps push notification)
   useEffect(() => {
     const handleServiceWorkerMessage = (event: MessageEvent) => {
@@ -8458,6 +8907,28 @@ export function UltimateHub() {
 
   return (
     <>
+      {/* Mad Popup - Shows when user ignores too many times */}
+      <AnimatePresence>
+        {showMadPopup && (
+          <MadHubPopup 
+            onInteract={handleAttentionInteract}
+            onDismiss={handleMadPopupDismiss}
+          />
+        )}
+      </AnimatePresence>
+      
+      {/* Ultimate Hub Attention Animation - Draws users to the hub */}
+      <AnimatePresence>
+        {showAttention && !isUltimateHubOpen && !showMadPopup && (
+          <UltimateHubAttention 
+            onInteract={handleAttentionInteract}
+            onDismiss={handleAttentionDismiss}
+            ignoreCount={attentionIgnoreCount}
+            onShowMadPopup={handleShowMadPopup}
+          />
+        )}
+      </AnimatePresence>
+      
       {/* Single Unified FPS Pill - All features in one button */}
       {!shouldHidePill && (
         <UnifiedFpsPill

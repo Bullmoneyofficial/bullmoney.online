@@ -60,11 +60,6 @@ const DesktopNavbar = dynamic(
   { ssr: false, loading: () => <MinimalFallback /> }
 );
 
-const MobileStaticHelper = dynamic(
-  () => import("./navbar/MobileStaticHelper").then((mod) => ({ default: mod.MobileStaticHelper })),
-  { ssr: false }
-);
-
 const MobileDropdownMenu = dynamic(
   () => import("./navbar/MobileDropdownMenu").then((mod) => ({ default: mod.MobileDropdownMenu })),
   { ssr: false, loading: () => <MinimalFallback /> }
@@ -124,7 +119,7 @@ const MobileMenuControls = memo(({
       scale: [1, 1.02, 1],
     }}
     transition={skipHeavyEffects ? {} : { duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-    className="relative group rounded-full overflow-visible z-50 flex items-center flex-grow"
+    className="relative group rounded-full overflow-visible z-50 flex items-center pointer-events-auto cursor-pointer"
     data-theme-aware
     data-navbar
     style={{ 
@@ -146,8 +141,8 @@ const MobileMenuControls = memo(({
     {/* Neon Inner Content Container - Theme-aware borders and shadows */}
     <motion.div 
       className={cn(
-        "relative h-full w-full bg-black/95 rounded-full flex items-center justify-center gap-0.5 sm:gap-1 transition-all duration-200 z-10",
-        isScrollMinimized ? "p-[1px] px-1" : "p-[2px] px-1 xs:px-1.5 sm:px-2"
+        "relative h-full w-full bg-black/95 rounded-full flex items-center justify-center gap-0 transition-all duration-200 z-10",
+        isScrollMinimized ? "p-[1px] px-0.5" : "p-[1px] px-0.5 xs:px-1"
       )}
       style={{
         border: '2px solid rgba(59, 130, 246, 0.9)',
@@ -162,21 +157,21 @@ const MobileMenuControls = memo(({
         whileHover={skipHeavyEffects ? {} : { scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         className={cn(
-          "rounded-full transition-colors flex items-center justify-center gap-1",
+          "rounded-full transition-colors flex items-center justify-center gap-0.5",
           isScrollMinimized 
-            ? "p-1 min-w-[32px] min-h-[32px]" 
-            : "p-1 xs:p-1.5 sm:p-2 min-w-[40px] xs:min-w-[44px] sm:min-w-[48px] min-h-[40px] xs:min-h-[44px] sm:min-h-[48px]"
+            ? "p-0.5 min-w-[28px] min-h-[28px]" 
+            : "p-0.5 xs:p-1 min-w-[32px] xs:min-w-[36px] min-h-[32px] xs:min-h-[36px]"
         )}
         style={{ color: 'var(--accent-color, #93c5fd)' }}
         title="Theme Selector"
       >
-        <IconPalette className={isScrollMinimized ? "h-4 w-4" : "h-5 w-5 xs:h-6 xs:w-6 sm:h-6 sm:w-6"} />
-        <span className="text-[11px] xs:text-xs sm:text-base font-bold whitespace-nowrap">Theme</span>
+        <IconPalette className={isScrollMinimized ? "h-3.5 w-3.5" : "h-4 w-4 xs:h-5 xs:w-5"} />
+        <span className="text-[9px] xs:text-[10px] font-bold whitespace-nowrap">Theme</span>
       </motion.button>
 
       {/* Divider - Theme-aware */}
       <div 
-        className={cn(isScrollMinimized ? "h-4 w-[1px]" : "h-6 xs:h-7 w-[1px]")}
+        className={cn(isScrollMinimized ? "h-3 w-[1px]" : "h-4 xs:h-5 w-[1px]")}
         style={{ background: 'linear-gradient(to bottom, rgba(var(--accent-rgb, 59, 130, 246), 0.2), rgba(var(--accent-rgb, 59, 130, 246), 0.5), rgba(var(--accent-rgb, 59, 130, 246), 0.2))' }}
       />
 
@@ -188,19 +183,19 @@ const MobileMenuControls = memo(({
         whileHover={skipHeavyEffects ? {} : { scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         className={cn(
-          "rounded-full transition-colors flex items-center justify-center gap-1",
+          "rounded-full transition-colors flex items-center justify-center gap-0.5",
           isScrollMinimized 
-            ? "p-1 min-w-[32px] min-h-[32px]" 
-            : "p-1 xs:p-1.5 sm:p-2 min-w-[40px] xs:min-w-[44px] sm:min-w-[48px] min-h-[40px] xs:min-h-[44px] sm:min-h-[48px]"
+            ? "p-0.5 min-w-[28px] min-h-[28px]" 
+            : "p-0.5 xs:p-1 min-w-[32px] xs:min-w-[36px] min-h-[32px] xs:min-h-[36px]"
         )}
         style={{ color: 'var(--accent-color, #93c5fd)' }}
         title={open ? 'Close menu' : 'Open menu'}
       >
         <div className="relative flex items-center justify-center">
           {open ? (
-            <IconX className={isScrollMinimized ? "h-4 w-4" : "h-5 w-5 xs:h-6 xs:w-6 sm:h-6 sm:w-6"} />
+            <IconX className={isScrollMinimized ? "h-3.5 w-3.5" : "h-4 w-4 xs:h-5 xs:w-5"} />
           ) : (
-            <IconMenu2 className={isScrollMinimized ? "h-4 w-4" : "h-5 w-5 xs:h-6 xs:w-6 sm:h-6 sm:w-6"} />
+            <IconMenu2 className={isScrollMinimized ? "h-3.5 w-3.5" : "h-4 w-4 xs:h-5 xs:w-5"} />
           )}
           {hasReward && !open && (
             <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
@@ -209,7 +204,7 @@ const MobileMenuControls = memo(({
             </span>
           )}
         </div>
-        <span className="text-[11px] xs:text-xs sm:text-base font-bold whitespace-nowrap">{open ? 'Close' : 'Menu'}</span>
+        <span className="text-[9px] xs:text-[10px] font-bold whitespace-nowrap">{open ? 'Close' : 'Menu'}</span>
       </motion.button>
     </motion.div>
   </motion.div>
@@ -590,9 +585,6 @@ export const Navbar = memo(() => {
         />
       )}
       
-      {/* Mobile Static Helper */}
-      {mounted && <MobileStaticHelper />}
-
       {/* Main Navbar Container */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
@@ -640,13 +632,13 @@ export const Navbar = memo(() => {
           onExpandClick={() => setIsDesktopScrollMinimized(false)}
         />
 
-        {/* MOBILE NAVBAR */}
-        <div className="lg:hidden flex flex-col items-center w-full gap-2 pointer-events-auto">
+        {/* MOBILE NAVBAR - Now visible on all screen sizes */}
+        <div className="flex flex-col items-center w-full gap-2 pointer-events-auto">
           {/* Floating Glowing BULLMONEY Logo + Text - Mobile Only */}
           <motion.div
             animate={shouldSkipHeavyEffects ? {} : { y: [0, -8, 0] }}
             transition={shouldSkipHeavyEffects ? {} : { duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-            className="flex items-center gap-2 justify-center"
+            className="flex items-center gap-2 justify-center lg:hidden"
           >
             {/* Logo */}
             <Link href="/" className="relative flex-shrink-0 w-12 h-12 block">
@@ -677,7 +669,7 @@ export const Navbar = memo(() => {
           </motion.div>
 
           {/* Mobile Navbar Controls Container */}
-          <div className={cn("flex flex-row items-center w-full px-2 sm:px-4 pointer-events-auto gap-2", isScrollMinimized ? "justify-center" : "justify-between")}>
+          <div className={cn("flex flex-row items-center justify-center pointer-events-auto gap-2", isScrollMinimized ? "" : "")}>
           {/* Logo + Brand Name - Hidden on mobile */}
           <div className="hidden flex items-center gap-2 flex-shrink-0">
             {/* Logo - shrinks on scroll */}
