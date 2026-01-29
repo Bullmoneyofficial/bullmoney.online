@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Fingerprint, Activity, Radio, ScanFace, UserX, AlertTriangle, 
+  FingerprintPattern, Activity, Radio, ScanFace, UserX, AlertTriangle, 
   CheckCircle2, ShieldCheck, Image as ImageIcon, MoreHorizontal, 
   Wallet, Users, Link as LinkIcon, Lock, Save, AtSign, Mail, ShieldAlert, X
 } from 'lucide-react';
@@ -636,7 +636,7 @@ const ReflectiveCard = forwardRef<ReflectiveCardHandle, ReflectiveCardProps>(({
                         </span>
                     </div>
                     <div style={{ color: activeColor }}>
-                        <Fingerprint size={20} className="opacity-30" />
+                        <FingerprintPattern size={20} className="opacity-30" />
                     </div>
                 </div>
             </>

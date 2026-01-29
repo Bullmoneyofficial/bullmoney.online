@@ -2,7 +2,7 @@
 
 import React, { useMemo } from "react";
 import { motion } from "framer-motion";
-import { Instagram, Youtube, MessageCircle, Send, XSquareIcon } from "lucide-react";
+import { Instagram, Youtube, MessageCircle, Send, XSquare } from "lucide-react";
 
 const TikTokIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="currentColor" className={className} xmlns="http://www.w3.org/2000/svg"><path d="M19.589 6.686a4.793 4.793 0 0 1-3.77-4.245V2h-3.445v13.672a2.896 2.896 0 0 1-5.201 1.743l-.002-.001.002.001a2.895 2.895 0 0 1 3.183-4.51v-3.5a6.373 6.373 0 0 0-5.394 10.637 6.354 6.354 0 0 0 5.212-1.936V23h3.445v-4.03a7.276 7.276 0 0 0 7.397-7.397v-4.887z" /></svg>
@@ -50,7 +50,7 @@ export const SocialsRow = () => {
       { href: "https://www.tiktok.com/@bullmoney.shop?_r=1&_t=ZP-91yqeZbNosA", icon: <TikTokIcon className="w-6 h-6 sm:w-7 sm:h-7" />, alt: "TikTok" },
       { href: "https://www.instagram.com/bullmoney.shop", icon: <Instagram className="w-6 h-6 sm:w-7 sm:h-7" />, alt: "Instagram" },
       { href: "https://x.com/BULLMONEYFX", icon: <XIcon className="w-6 h-6 sm:w-7 sm:h-7" />, alt: "Twitter" },
-      { href: "https://affs.click/t5wni", icon: <XSquareIcon className="w-6 h-6 sm:w-7 sm:h-7" />, alt: "XM" },
+      { href: "https://affs.click/t5wni", icon: <XSquare className="w-6 h-6 sm:w-7 sm:h-7" />, alt: "XM" },
       { href: "https://www.youtube.com/@bullmoney.online", icon: <Youtube className="w-6 h-6 sm:w-7 sm:h-7" />, alt: "YouTube" },
       { href: "https://discord.com/invite/9vVB44ZrNA", icon: <MessageCircle className="w-6 h-6 sm:w-7 sm:h-7" />, alt: "Discord" },
       { href: "https://t.me/Bullmoneyshop", icon: <Send className="w-6 h-6 sm:w-7 sm:h-7" />, alt: "Telegram" },

@@ -39,7 +39,7 @@
   left: 0;
   right: 0;
   width: 100%;
-  pointer-events: none;
+  pointer-events: auto;
   /* Theme-aware border and glow */
   border-color: var(--navbar-border) !important;
   box-shadow: 

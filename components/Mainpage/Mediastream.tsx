@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './ReflectiveCard.css';
-import { Fingerprint, Activity, Lock, ScanFace, AlertCircle } from 'lucide-react';
+import { FingerprintPattern, Activity, Lock, ScanFace, AlertCircle } from 'lucide-react';
 
 interface ReflectiveCardProps {
   blurStrength?: number;
@@ -183,7 +183,7 @@ const ReflectiveCard: React.FC<ReflectiveCardProps> = ({
             <span className="value">{isVerified ? '8901-2345-6789' : '••••-••••-••••'}</span>
           </div>
           <div className={`fingerprint-section ${isVerified ? 'active' : ''}`}>
-            <Fingerprint size={32} className="fingerprint-icon" />
+            <FingerprintPattern size={32} className="fingerprint-icon" />
           </div>
         </div>
       </div>

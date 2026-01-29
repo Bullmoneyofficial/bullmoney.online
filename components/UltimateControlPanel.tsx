@@ -42,7 +42,7 @@ import {
   Send,
   Settings,
   Edit2,
-  Fingerprint,
+  FingerprintPattern,
   Clock,
   Database
 } from 'lucide-react';
@@ -1293,7 +1293,7 @@ export function UltimateControlPanel({
                       }}
                     >
                       <div className="flex items-center gap-2">
-                        <Fingerprint size={14} className={`${activeModal === 'identity' ? 'text-blue-300' : 'text-blue-400'}`} />
+                        <FingerprintPattern size={14} className={`${activeModal === 'identity' ? 'text-blue-300' : 'text-blue-400'}`} />
                         <span className="text-blue-100 text-xs font-bold drop-shadow-lg">
                           {activeModal === 'identity' ? 'Close' : 'Identity'}
                         </span>

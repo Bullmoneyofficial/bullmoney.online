@@ -81,11 +81,6 @@
     contain: layout paint;
   }
   
-  /* Fixed elements scroll passthrough */
-  .fixed, [style*="position: fixed"] {
-    pointer-events: auto;
-  }
-  
   /* Ensure all theme overlays don't block scroll */
   #theme-global-overlay,
   #theme-edge-glow,

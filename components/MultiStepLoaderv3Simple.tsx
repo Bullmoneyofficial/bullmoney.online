@@ -14,7 +14,7 @@ import {
   Key,
   Target,
   Timer,
-  Fingerprint,
+  FingerprintPattern,
   Hand,
   Zap,
   Star,
@@ -177,7 +177,7 @@ const MOBILE_GAMES: GameConfig[] = [
     mode: "mobileHold",
     label: "HOLD TO UNLOCK",
     instruction: "Hold for 3 seconds",
-    icon: Fingerprint,
+    icon: FingerprintPattern,
   },
   {
     mode: "typingPrank",
@@ -1177,7 +1177,7 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
               onMouseLeave={handleHoldEnd}
               animate={isHolding ? { scale: 0.95 } : { scale: 1 }}
             >
-              <Fingerprint size={48} className="text-white mb-2" />
+              <FingerprintPattern size={48} className="text-white mb-2" />
               <span className="text-white font-bold">{Math.floor(holdProgress)}%</span>
               <span className="text-xs text-blue-400/50 mt-1">Click & Hold</span>
             </motion.button>
@@ -1198,7 +1198,7 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
               onTouchEnd={handleMobileHoldEnd}
               animate={isHolding ? { scale: 0.95 } : { scale: 1 }}
             >
-              <Fingerprint size={56} className="text-white mb-2" />
+              <FingerprintPattern size={56} className="text-white mb-2" />
               <span className="text-white font-bold text-2xl">{Math.floor(mobileHoldProgress)}%</span>
               <span className="text-sm text-blue-400/50 mt-1">Touch & Hold</span>
             </motion.button>

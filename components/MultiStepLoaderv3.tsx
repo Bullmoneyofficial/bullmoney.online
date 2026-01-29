@@ -19,7 +19,7 @@ import {
   BarChart3,
   ArrowUpRight,
   ChevronUp,
-  Fingerprint,
+  FingerprintPattern,
   Eye,
   Grip,
   RotateCcw,
@@ -397,7 +397,7 @@ const INTERACTION_MODES: InteractionModeConfig[] = [
   // ===== UNIVERSAL MODES (work on all devices) =====
   { 
     mode: "hold", 
-    icon: Fingerprint, 
+    icon: FingerprintPattern, 
     label: "HOLD", 
     instruction: "Hold to unlock",
     tradingMetaphor: "Diamond hands hold through volatility"
