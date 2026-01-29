@@ -131,31 +131,45 @@ export async function GET() {
     let btcPrice: number | null = null;
     let goldPrice: number | null = null;
     
-    // Fetch with increased timeout for reliability
-    const fetchWithTimeout = async (promise: Promise<any>, timeoutMs: number = 3000) => {
-      const timeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('timeout')), timeoutMs)
-      );
-      return Promise.race([promise, timeout]);
+    // Fetch with timeout using AbortController for proper cleanup
+    const fetchWithTimeout = async (promiseFn: () => Promise<any>, timeoutMs: number = 5000) => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const result = await promiseFn();
+        clearTimeout(timeoutId);
+        return result;
+      } catch (error) {
+        clearTimeout(timeoutId);
+        throw error;
+      }
     };
     
     // Fetch BTC and Gold in parallel for maximum speed
     const results = await Promise.allSettled([
       // BTC: Try Binance first (fastest), then CoinCap, then Coinbase
       fetchWithTimeout(
-        PRICE_SOURCES.binance()
+        () => PRICE_SOURCES.binance()
           .catch(() => PRICE_SOURCES.coincap())
           .catch(() => PRICE_SOURCES.coinbase()),
-        2500
-      ),
-      // Gold: Try multiple sources with fallback chain
-      fetchWithTimeout(
-        PRICE_SOURCES.goldapi_public()
-          .catch(() => PRICE_SOURCES.coingecko_gold())
-          .catch(() => PRICE_SOURCES.fmp_gold())
-          .catch(() => PRICE_SOURCES.forexapi()),
         3000
-      )
+      ),
+      // Gold: Try multiple sources in parallel, use first successful one
+      (async () => {
+        const goldResults = await Promise.allSettled([
+          fetchWithTimeout(() => PRICE_SOURCES.goldapi_public(), 5000),
+          fetchWithTimeout(() => PRICE_SOURCES.coingecko_gold(), 5000),
+          fetchWithTimeout(() => PRICE_SOURCES.fmp_gold(), 5000),
+          fetchWithTimeout(() => PRICE_SOURCES.forexapi(), 5000),
+        ]);
+        // Return first successful result
+        for (const result of goldResults) {
+          if (result.status === 'fulfilled' && result.value?.gold) {
+            return result.value;
+          }
+        }
+        throw new Error('All gold sources failed');
+      })()
     ]);
     
     // Extract BTC price

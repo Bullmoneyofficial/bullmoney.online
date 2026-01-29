@@ -160,15 +160,35 @@ export async function GET(request: NextRequest) {
     }
     
     // For public channels, scrape from Telegram - minimal cache for fast updates
-    const response = await fetch(`https://t.me/s/${channel.username}`, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Cache-Control': 'no-cache',
-      },
-      next: { revalidate: 10 }, // Revalidate every 10 seconds for near real-time
-    });
+    // Use AbortController for timeout handling
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+
+    let response;
+    try {
+      response = await fetch(`https://t.me/s/${channel.username}`, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5',
+          'Cache-Control': 'no-cache',
+        },
+        signal: controller.signal,
+        next: { revalidate: 10 }, // Revalidate every 10 seconds for near real-time
+      });
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+      if (fetchError.name === 'AbortError') {
+        console.error('[Telegram API] Request timed out for channel:', channel.username);
+        return NextResponse.json({
+          success: false,
+          error: 'Request timed out',
+          posts: [],
+        }, { status: 504 });
+      }
+      throw fetchError;
+    }
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       throw new Error(`Failed to fetch channel: ${response.status}`);

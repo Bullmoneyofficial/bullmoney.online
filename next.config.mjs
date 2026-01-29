@@ -8,6 +8,9 @@ const nextConfig = {
   reactStrictMode: false, // Disable StrictMode in prod - reduces double renders
   compress: true,
   productionBrowserSourceMaps: false,
+
+  // Allow dev server access from local network devices
+  allowedDevOrigins: ['http://192.168.1.160:3000'],
   
   // Auto-versioning: Set build timestamp as env var
   // This changes on every build, triggering cache invalidation for users
