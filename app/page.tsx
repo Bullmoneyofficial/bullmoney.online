@@ -144,9 +144,9 @@ const PageMode = dynamic(
   { ssr: false, loading: () => <MinimalFallback /> }
 );
 
-// ✅ NEW INTERACTIVE LOADER - Neon blue trading unlock experience
+// ✅ NEW INTERACTIVE LOADER - Neon blue trading unlock experience (SIMPLIFIED: 3 desktop + 3 mobile games)
 const TradingUnlockLoader = dynamic(
-  () => import("@/components/MultiStepLoaderv3"),
+  () => import("@/components/MultiStepLoaderv3Simple"),
   { 
     ssr: false, 
     loading: () => <MinimalFallback />,

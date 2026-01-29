@@ -38,6 +38,7 @@ const supabase = createClient(supabaseUrl!, supabaseKey!);
 // --- DYNAMIC IMPORTS ---
 const AffiliateRecruitsDashboard = dynamic(() => import("@/app/recruit/AffiliateRecruitsDashboard"), { ssr: false });
 const AffiliateAdminPanel = dynamic(() => import("@/app/recruit/AffiliateAdminPanel"), { ssr: false });
+const AffiliateDesktopDashboard = dynamic(() => import("@/components/desktop/AffiliateDesktopDashboard"), { ssr: false });
 
 const AFFILIATE_ADMIN_EMAILS = (process.env.NEXT_PUBLIC_AFFILIATE_ADMIN_EMAILS || "")
   .split(",")
@@ -1587,88 +1588,14 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
       );
     }
 
-    // Desktop view - Full layout from AffiliateRecruitsDashboard
+    // Desktop view - Use dedicated desktop dashboard component
     return (
-      <div className="fixed inset-0 z-[999999] flex flex-col" style={{ background: NEON_BLUE.bgDark }}>
-        {/* Header */}
-        <div 
-          className="flex items-center justify-between p-4 border-b"
-          style={{ borderColor: 'rgba(59, 130, 246, 0.3)', background: 'rgba(0, 0, 0, 0.8)' }}
-        >
-          <div className="flex items-center gap-4">
-            <h1 className="text-lg font-bold" style={{ color: NEON_BLUE.textPrimary }}>
-              Affiliate Dashboard
-            </h1>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setDashboardTab('dashboard')}
-                className={cn(
-                  "px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all",
-                  dashboardTab === 'dashboard' ? "bg-white/10" : "bg-transparent"
-                )}
-                style={{ borderColor: 'rgba(59, 130, 246, 0.3)', color: NEON_BLUE.textPrimary }}
-              >
-                Dashboard
-              </button>
-              {isAffiliateAdmin && (
-                <button
-                  onClick={() => setDashboardTab('admin')}
-                  className={cn(
-                    "px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all flex items-center gap-1",
-                    dashboardTab === 'admin' ? "bg-white/10" : "bg-transparent"
-                  )}
-                  style={{ borderColor: 'rgba(59, 130, 246, 0.3)', color: NEON_BLUE.textPrimary }}
-                >
-                  <Shield className="w-3 h-3" /> Admin Panel
-                </button>
-              )}
-            </div>
-            {savedSession && (
-              <span className="text-xs" style={{ color: NEON_BLUE.textMuted }}>
-                {savedSession.email}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <NeonButton
-              onClick={() => setStep('success')}
-              variant="ghost"
-              size="small"
-            >
-              <ChevronLeft className="w-4 h-4 mr-1" /> Back
-            </NeonButton>
-            <button 
-              onClick={handleClose}
-              className="p-2 rounded-full transition-all border-2"
-              style={{ 
-                borderColor: 'rgba(59, 130, 246, 0.3)',
-                color: NEON_BLUE.textMuted
-              }}
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-        
-        {/* Desktop Dashboard Content - Full width layout */}
-        <div className="flex-1 overflow-y-auto">
-          {dashboardTab === 'dashboard' && (
-            <AffiliateRecruitsDashboard onBack={() => setStep('success')} />
-          )}
-          {dashboardTab === 'admin' && isAffiliateAdmin && (
-            <AffiliateAdminPanel />
-          )}
-        </div>
-      </div>
+      <AffiliateDesktopDashboard 
+        onBack={() => setStep('success')} 
+        onClose={handleClose}
+      />
     );
   };
-
-  // OLD renderDashboard for reference - replaced above
-  const renderDashboard_OLD = () => (
-    <div className="fixed inset-0 z-[999999] flex flex-col" style={{ background: NEON_BLUE.bgDark }}>
-      {/* This old implementation is kept for reference but not used */}
-    </div>
-  );
 
   // =========================================
   // MAIN RENDER

@@ -49,7 +49,7 @@ const DesktopKeyNavigator = dynamic(() => import("@/components/navigation/Deskto
 
 // Import loaders
 const PageMode = dynamic(() => import("@/components/REGISTER USERS/pagemode"), { ssr: false }) as any;
-const TradingUnlockLoader = dynamic(() => import("@/components/MultiStepLoaderv3"), { ssr: false }) as any;
+const TradingUnlockLoader = dynamic(() => import("@/components/MultiStepLoaderv3Simple"), { ssr: false }) as any;
 
 // Lazy imports for 3D components - Desktop optimized
 const DraggableSplit = dynamic(() => import('@/components/DraggableSplit'), { ssr: false }) as any;
