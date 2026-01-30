@@ -636,14 +636,10 @@ export const Navbar = memo(() => {
 
         {/* MOBILE NAVBAR */}
         <div className="lg:hidden flex flex-col items-center w-full gap-2 pointer-events-auto">
-          {/* Floating Glowing BULLMONEY Logo + Text - Mobile Only */}
-          <motion.div
-            animate={shouldSkipHeavyEffects ? {} : { y: [0, -8, 0] }}
-            transition={shouldSkipHeavyEffects ? {} : { duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-            className="flex items-center gap-2 justify-center"
-          >
-            {/* Logo */}
-            <Link href="/" className="relative flex-shrink-0 w-12 h-12 block">
+          {/* Mobile Nav Logo and Pill - Centered, 40% smaller pill, logo left of pill */}
+          <div className="flex items-center justify-center w-full">
+            {/* Logo on left */}
+            <Link href="/" className="relative flex-shrink-0 w-8 h-8 block mr-2">
               <Image
                 src="/ONcc2l601.svg"
                 alt="BullMoney"
@@ -652,108 +648,28 @@ export const Navbar = memo(() => {
                 priority
               />
             </Link>
-            
-            {/* BULLMONEY Text */}
-            <motion.h1
-              animate={shouldSkipHeavyEffects ? {} : { 
-                scale: [1, 1.05, 1],
-                opacity: [0.8, 1, 0.8]
-              }}
-              transition={shouldSkipHeavyEffects ? {} : { duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-              className="text-3xl font-black tracking-wider bg-gradient-to-r from-white via-white to-white bg-clip-text text-transparent pointer-events-none"
-              style={{
-                textShadow: shouldSkipHeavyEffects ? 'none' : '0 0 20px rgba(255, 255, 255, 1), 0 0 40px rgba(255, 255, 255, 0.8), 0 0 60px rgba(255, 255, 255, 0.6)',
-                filter: shouldSkipHeavyEffects ? 'none' : 'drop-shadow(0 0 10px rgba(255, 255, 255,0.9)) drop-shadow(0 0 20px rgba(255, 255, 255,0.6))',
-              }}
-            >
-              BULLMONEY
-            </motion.h1>
-          </motion.div>
-
-          {/* Mobile Navbar Controls Container */}
-          <div className={cn("flex flex-row items-center w-full px-2 sm:px-4 pointer-events-auto gap-2", isScrollMinimized ? "justify-center" : "justify-between")}>
-          {/* Logo + Brand Name - Hidden on mobile */}
-          <div className="hidden flex items-center gap-2 flex-shrink-0">
-            {/* Logo - shrinks on scroll */}
-            <motion.div 
-              className="relative flex items-center justify-center overflow-hidden z-50 flex-shrink-0"
-              animate={{
-                height: isScrollMinimized ? 36 : undefined,
-                width: isScrollMinimized ? 36 : undefined,
-              }}
-              transition={{ type: 'spring', damping: 25, stiffness: 450, mass: 0.6 }}
-              style={{
-                height: isScrollMinimized ? 36 : 56,
-                width: isScrollMinimized ? 36 : 56,
-              }}
-            >
-              <Link href="/" className="relative w-full h-full block">
-                <Image
-                  src="/ONcc2l601.svg"
-                  alt="BullMoney"
-                  fill
-                  className="object-cover"
-                  priority
+            {/* Pill 40% smaller */}
+            <div className="flex-1 flex justify-center">
+              <div style={{ transform: 'scale(0.6)', transformOrigin: 'left center' }}>
+                <MobileMenuControls 
+                  open={open} 
+                  onToggle={() => { 
+                    if (!open) trackEvent('menu_toggle', { type: 'mobile_menu', action: 'open' });
+                    setOpen(!open);
+                  }}
+                  onThemeClick={openThemeSelectorModal}
+                  hasReward={hasReward}
+                  isXMUser={isXMUser}
+                  shimmerEnabled={shimmerEnabled}
+                  shimmerSettings={shimmerSettings}
+                  isScrollMinimized={isScrollMinimized}
+                  skipHeavyEffects={shouldSkipHeavyEffects}
                 />
-              </Link>
-            </motion.div>
-
-            {/* BULLMONEY Text with Shimmer */}
-            <AnimatePresence>
-              {!isScrollMinimized && (
-                <motion.div
-                  initial={{ opacity: 0, x: -10, width: 0 }}
-                  animate={{ opacity: 1, x: 0, width: 'auto' }}
-                  exit={{ opacity: 0, x: -10, width: 0 }}
-                  transition={{ type: 'spring', damping: 25, stiffness: 400, mass: 0.6 }}
-                  className="relative overflow-hidden"
-                >
-                  <Link href="/" className="relative block">
-                    <span 
-                      className="text-lg font-black tracking-tight bg-gradient-to-r from-white via-white to-white bg-clip-text text-transparent"
-                      style={{
-                        textShadow: shouldSkipHeavyEffects ? 'none' : '0 0 20px rgba(255, 255, 255, 0.5)',
-                      }}
-                    >
-                      BULLMONEY
-                    </span>
-                    {/* Shimmer overlay */}
-                    {!shouldSkipHeavyEffects && (
-                      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                        <motion.div
-                          className="absolute inset-y-0 w-[60%] bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                          animate={{ x: ['-100%', '200%'] }}
-                          transition={{
-                            duration: 2.5,
-                            repeat: Infinity,
-                            repeatDelay: 1,
-                            ease: 'easeInOut',
-                          }}
-                        />
-                      </div>
-                    )}
-                  </Link>
-                </motion.div>
-              )}
-            </AnimatePresence>
+              </div>
+            </div>
           </div>
 
-          {/* Mobile Controls */}
-          <MobileMenuControls 
-            open={open} 
-            onToggle={() => { 
-              if (!open) trackEvent('menu_toggle', { type: 'mobile_menu', action: 'open' });
-              setOpen(!open);
-            }}
-            onThemeClick={openThemeSelectorModal}
-            hasReward={hasReward}
-            isXMUser={isXMUser}
-            shimmerEnabled={shimmerEnabled}
-            shimmerSettings={shimmerSettings}
-            isScrollMinimized={isScrollMinimized}
-            skipHeavyEffects={shouldSkipHeavyEffects}
-          />
-          </div>
+          {/* ...existing code... (Mobile Nav Logo and Pill now above) */}
         </div>
       </motion.div>
       
