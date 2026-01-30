@@ -5,6 +5,60 @@
    ============================================ */
 
 /* ============================================
+   DESKTOP GLOBAL CLICK FIX - NUCLEAR OPTION
+   Force all interactive elements to be clickable
+   on desktop regardless of any other CSS
+   ============================================ */
+@media (min-width: 769px) {
+  /* CRITICAL: Ensure html/body don't block clicks */
+  html, body {
+    pointer-events: auto !important;
+  }
+
+  /* ALL interactive elements MUST be clickable on desktop */
+  button,
+  a,
+  [role="button"],
+  input,
+  select,
+  textarea,
+  label,
+  [tabindex]:not([tabindex="-1"]),
+  .cursor-pointer,
+  [data-interactive],
+  [onclick],
+  [data-action],
+  nav,
+  header,
+  main {
+    pointer-events: auto !important;
+    cursor: pointer;
+  }
+
+  /* Reset cursor for text inputs */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="number"],
+  textarea {
+    cursor: text;
+  }
+
+  /* Ensure nested interactive elements are also clickable */
+  div button,
+  div a,
+  section button,
+  section a,
+  main button,
+  main a,
+  nav button,
+  nav a {
+    pointer-events: auto !important;
+  }
+}
+
+/* ============================================
    CRITICAL: OVERLAY PASSTHROUGH FIX
    Any element with pointer-events:none MUST allow
    all touch and mouse interactions through it
