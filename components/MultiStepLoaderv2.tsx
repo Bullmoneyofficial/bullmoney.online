@@ -2186,7 +2186,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                   }}
                 >
                   <Image
-                    src="/BULL.svg"
+                    src="/ONcc2l601.svg"
                     alt="BullMoney"
                     width={48}
                     height={48}

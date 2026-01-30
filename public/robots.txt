@@ -20,7 +20,7 @@ Allow: /socials
 Allow: /recruit
 
 # Allow all static assets for faster indexing
-Allow: /BULL.svg
+Allow: /ONcc2l601.svg
 Allow: /*.js$
 Allow: /*.css$
 Allow: /*.png$

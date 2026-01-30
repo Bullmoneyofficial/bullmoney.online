@@ -60,10 +60,6 @@ const DesktopNavbar = dynamic(
   { ssr: false, loading: () => <MinimalFallback /> }
 );
 
-const MobileStaticHelper = dynamic(
-  () => import("./navbar/MobileStaticHelper").then((mod) => ({ default: mod.MobileStaticHelper })),
-  { ssr: false }
-);
 
 const MobileDropdownMenu = dynamic(
   () => import("./navbar/MobileDropdownMenu").then((mod) => ({ default: mod.MobileDropdownMenu })),
@@ -590,8 +586,6 @@ export const Navbar = memo(() => {
         />
       )}
       
-      {/* Mobile Static Helper */}
-      {mounted && <MobileStaticHelper />}
 
       {/* Main Navbar Container */}
       <motion.div 
@@ -695,7 +689,7 @@ export const Navbar = memo(() => {
             >
               <Link href="/" className="relative w-full h-full block">
                 <Image
-                  src="/BULL.svg"
+                  src="/ONcc2l601.svg"
                   alt="BullMoney"
                   fill
                   className="object-cover"

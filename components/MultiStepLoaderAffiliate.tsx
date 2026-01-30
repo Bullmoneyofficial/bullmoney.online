@@ -499,7 +499,7 @@ export const MultiStepLoader = ({ loadingStates, loading }: { loadingStates: Loa
           <div className="relative z-20 flex flex-col items-center justify-center p-4 w-full h-full pb-24 md:pb-32 pointer-events-none">
             
             <div className="mb-4 md:mb-6 relative z-50 pointer-events-auto">
-              <ReactiveLiquidLogo src="/favicon.svg" />
+              <ReactiveLiquidLogo src="/ONcc2l601.svg" />
             </div>
 
             <div className="relative text-center mb-8 md:mb-12">

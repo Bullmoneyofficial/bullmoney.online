@@ -154,8 +154,8 @@ const FinancialServiceSchema = () => {
     "name": "BullMoney Free Trading Mentorship",
     "description": "Free trading mentorship and education for Gold, Crypto, Forex & Stocks. Professional traders helping beginners learn to trade in 2026.",
     "url": "https://www.bullmoney.shop",
-    "logo": "https://www.bullmoney.shop/BULL.svg",
-    "image": "https://www.bullmoney.shop/BULL.svg",
+    "logo": "https://www.bullmoney.shop/ONcc2l601.svg",
+    "image": "https://www.bullmoney.shop/ONcc2l601.svg",
     "priceRange": "Free - Premium",
     "telephone": "",
     "address": {

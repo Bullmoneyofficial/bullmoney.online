@@ -264,7 +264,7 @@ export function GoogleSEOHead() {
               "name": "BullMoney",
               "alternateName": ["BullMoney Trading", "Bull Money", "BullMoney Community"],
               "url": baseUrl,
-              "logo": `${baseUrl}/BULL.svg`,
+              "logo": `${baseUrl}/ONcc2l601.svg`,
               "description": "The #1 free trading community for Gold, Crypto, Forex & Stocks. Free trading mentor, heavy market news, and 10,000+ active traders.",
               "foundingDate": "2023",
               "slogan": "Trade Smarter, Not Harder",
@@ -308,7 +308,7 @@ export function VideoSchema() {
           "@type": "VideoObject",
           "name": "How to Trade Gold (XAUUSD) for Beginners - Free Tutorial",
           "description": "Learn how to trade Gold/XAUUSD with this free beginner tutorial from BullMoney. Covers technical analysis, entry/exit strategies, and risk management.",
-          "thumbnailUrl": "https://www.bullmoney.shop/BULL.svg",
+          "thumbnailUrl": "https://www.bullmoney.shop/ONcc2l601.svg",
           "uploadDate": "2026-01-01T00:00:00Z",
           "duration": "PT15M",
           "contentUrl": "https://www.youtube.com/@bullmoney",
@@ -323,7 +323,7 @@ export function VideoSchema() {
             "name": "BullMoney",
             "logo": {
               "@type": "ImageObject",
-              "url": "https://www.bullmoney.shop/BULL.svg"
+              "url": "https://www.bullmoney.shop/ONcc2l601.svg"
             }
           }
         })

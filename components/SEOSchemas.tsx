@@ -29,7 +29,7 @@ export function OrganizationSchema() {
     "name": "BullMoney",
     "alternateName": ["BullMoney Trading", "BullMoney Community", "Bull Money"],
     "url": "https://www.bullmoney.shop",
-    "logo": "https://www.bullmoney.shop/BULL.svg",
+    "logo": "https://www.bullmoney.shop/ONcc2l601.svg",
     "description": "BullMoney is the #1 free trading community for crypto, gold, forex, and stocks. Join 10,000+ traders for free setups, market analysis, and live mentorship.",
     "foundingDate": "2023",
     "sameAs": [
@@ -260,7 +260,7 @@ export function LocalBusinessSchema() {
     "name": "BullMoney Trading Community",
     "description": "Free online trading community providing crypto setups, gold analysis, forex setups, and trading education.",
     "url": "https://www.bullmoney.shop",
-    "logo": "https://www.bullmoney.shop/BULL.svg",
+    "logo": "https://www.bullmoney.shop/ONcc2l601.svg",
     "priceRange": "Free - $$$",
     "servesCuisine": "Trading Education",
     "areaServed": {
@@ -349,7 +349,7 @@ export function ArticleSchema({
     "headline": title,
     "description": description,
     "url": url,
-    "image": imageUrl || "https://www.bullmoney.shop/BULL.svg",
+    "image": imageUrl || "https://www.bullmoney.shop/ONcc2l601.svg",
     "datePublished": datePublished,
     "dateModified": dateModified || datePublished,
     "author": {
@@ -362,7 +362,7 @@ export function ArticleSchema({
       "name": "BullMoney",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://www.bullmoney.shop/BULL.svg"
+        "url": "https://www.bullmoney.shop/ONcc2l601.svg"
       }
     },
     "mainEntityOfPage": {
@@ -406,7 +406,7 @@ export function ProductSchema({
     "@type": "Product",
     "name": name,
     "description": description,
-    "image": imageUrl || "https://www.bullmoney.shop/BULL.svg",
+    "image": imageUrl || "https://www.bullmoney.shop/ONcc2l601.svg",
     "url": url,
     "brand": {
       "@type": "Brand",

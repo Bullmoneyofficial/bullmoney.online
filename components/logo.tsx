@@ -9,7 +9,7 @@ export const Logo = () => {
       className="font-normal flex space-x-3 items-center text-sm mr-4 text-black px-2 py-1 relative z-20"
     >
       <Image
-        src="/BULL.svg"
+        src="/ONcc2l601.svg"
         alt="BullMoney Logo"
         width={100}
         height={100}

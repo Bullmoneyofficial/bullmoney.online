@@ -239,11 +239,11 @@ export const metadata: Metadata = {
   // ============================================
   icons: {
     icon: [
-      { url: "/BULL.svg", type: "image/svg+xml" },
-      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/ONcc2l601.svg", type: "image/svg+xml" },
     ],
+    shortcut: "/ONcc2l601.svg",
     apple: [
-      { url: "/icon-180x180.png", sizes: "180x180", type: "image/png" },
+      { url: "/ONcc2l601.svg", type: "image/svg+xml" },
     ],
   },
   
@@ -258,7 +258,7 @@ export const metadata: Metadata = {
     siteName: "BullMoney Trading Community",
     images: [
       {
-        url: "/BULL.svg",
+        url: "/ONcc2l601.svg",
         width: 1200,
         height: 630,
         alt: "BullMoney - Free Trading Community for Crypto, Gold & Forex",
@@ -276,7 +276,7 @@ export const metadata: Metadata = {
     title: "BullMoney | Free Trading Community & Setups",
     description:
       "Join 10,000+ traders. FREE crypto setups, gold analysis, forex setups & live mentorship. Start trading profitably today!",
-    images: ["/BULL.svg"],
+    images: ["/ONcc2l601.svg"],
     creator: "@BullMoney",
     site: "@BullMoney",
   },
@@ -640,7 +640,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://unpkg.com" />
 
         {/* PERFORMANCE: Preload critical assets with proper priorities */}
-        <link rel="preload" href="/BULL.svg" as="image" fetchPriority="high" />
+        <link rel="preload" href="/ONcc2l601.svg" as="image" fetchPriority="high" />
         
         {/* LCP FIX: Preload hero Spline scene with HIGH priority for <2.5s LCP */}
         <link rel="preload" href="/scene1.splinecode" as="fetch" crossOrigin="anonymous" fetchPriority="high" />
@@ -725,9 +725,9 @@ export default function RootLayout({
         <link rel="apple-touch-startup-image" media="screen and (device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash-screens/4__iPhone_SE__iPod_touch_5th_generation_and_later_portrait.png" />
 
         {/* Favicon for various platforms */}
-        <link rel="icon" type="image/png" sizes="32x32" href="/icon-32x32.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/icon-16x16.png" />
-        <link rel="shortcut icon" href="/BULL.svg" />
+        <link rel="icon" type="image/svg+xml" href="/ONcc2l601.svg" />
+        <link rel="shortcut icon" href="/ONcc2l601.svg" />
+        <link rel="apple-touch-icon" href="/ONcc2l601.svg" />
 
         {/* Service Worker & Performance Scripts */}
         <script

@@ -532,7 +532,7 @@ export const MultiStepLoader = ({ loadingStates, loading }: { loadingStates: Loa
           <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-4 pointer-events-none" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', WebkitBoxAlign: 'center', WebkitBoxPack: 'center' }}>
             
             <div className="mb-6 md:mb-10 relative z-50 pointer-events-auto">
-              <ReactiveLiquidLogo src="/favicon.svg" />
+              <ReactiveLiquidLogo src="/ONcc2l601.svg" />
             </div>
 
             <div className="relative text-center mb-8 md:mb-12">

@@ -10,7 +10,7 @@ const OFFLINE_CACHE = 'bullmoney-offline-v4';
 const PRECACHE_ASSETS = [
   '/offline.html',
   '/bullmoney-logo.png',
-  '/favicon.svg',
+  '/ONcc2l601.svg',
   '/B.png',
 ];
 

@@ -75,7 +75,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       // Logo/Brand image
-      url: `${primaryDomain}/BULL.svg`,
+      url: `${primaryDomain}/ONcc2l601.svg`,
       lastModified: currentDate,
       changeFrequency: 'yearly',
       priority: 0.5,
@@ -127,7 +127,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
-      url: `${secondaryDomain}/BULL.svg`,
+      url: `${secondaryDomain}/ONcc2l601.svg`,
       lastModified: currentDate,
       changeFrequency: 'yearly',
       priority: 0.5,

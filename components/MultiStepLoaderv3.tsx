@@ -4327,7 +4327,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                     
                     {/* Bull SVG Logo */}
                     <motion.img
-                      src="/BULL.svg"
+                      src="/ONcc2l601.svg"
                       alt="Bull Money"
                       className="relative z-10"
                       style={{

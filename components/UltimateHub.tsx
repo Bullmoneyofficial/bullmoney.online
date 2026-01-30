@@ -152,6 +152,7 @@ import { UltimateHubNewsTab } from '@/components/UltimateHubNewsTab';
 import { UltimateHubLiveStreamTab } from '@/components/UltimateHubLiveStreamTab';
 import { UltimateHubAnalysisTab } from '@/components/UltimateHubAnalysisTab';
 import { UltimateHubCommunityPostsTab } from '@/components/UltimateHubCommunityPostsTab';
+import { MOBILE_HELPER_TIPS } from '@/components/navbar/navbar.utils';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -6823,6 +6824,8 @@ export const UnifiedFpsPill = memo(({
   const [isFlickeringOut, setIsFlickeringOut] = useState(false); // Track flickering fade out
   const [scrollIntensity, setScrollIntensity] = useState(0); // 0-1 for smooth intensity transitions
   const [randomDelay] = useState(() => Math.random() * 5 + 5); // Random 5-10 seconds
+  const [tipIndex, setTipIndex] = useState(0); // Rotating helper tips
+  const [tipVisible, setTipVisible] = useState(true); // For fade animation
   const unpinTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const expandTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -7269,7 +7272,20 @@ export const UnifiedFpsPill = memo(({
       }
     };
   }, []);
-  
+
+  // Rotate helper tips every 4.5 seconds (no sound)
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setTipVisible(false);
+      setTimeout(() => {
+        setTipIndex((prev) => (prev + 1) % MOBILE_HELPER_TIPS.length);
+        setTipVisible(true);
+      }, 250);
+    }, 4500);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
   // Calculate scroll-based animation values - OPTIMIZED with useMemo
   // Throttle scroll progress to reduce recalculations
   const scrollProgress = useMemo(() => Math.min(scrollY / 300, 1), [Math.floor(scrollY / 30)]);
@@ -7721,33 +7737,53 @@ export const UnifiedFpsPill = memo(({
           </AnimatePresence>
         </motion.div>
         
-        {/* Tap hint on mobile - pull tab from left */}
+        {/* Tap hint on mobile - larger touch target pill with rotating tips */}
         {!isMinimized && (
           <motion.div
             initial={{ x: -50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.3, ease: "easeOut" }}
-            className="absolute -bottom-5 left-0 whitespace-nowrap sm:hidden flex items-center gap-0.5 cursor-pointer pointer-events-auto px-1.5 py-0.5 rounded-r-full neon-subtle-border"
+            className="absolute -bottom-8 left-0 sm:hidden flex items-center gap-1 cursor-pointer pointer-events-auto px-3 py-2 rounded-r-full neon-subtle-border"
             style={{
-              background: 'rgba(0, 0, 0, 0.5)',
-              borderTop: '1px solid rgba(255, 255, 255, 0.3)',
-              borderRight: '1px solid rgba(255, 255, 255, 0.3)',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.3)',
+              background: 'rgba(0, 0, 0, 0.85)',
+              borderTop: '1px solid rgba(255, 255, 255, 0.5)',
+              borderRight: '1px solid rgba(255, 255, 255, 0.5)',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.5)',
+              minWidth: '120px',
+              minHeight: '32px',
+              boxShadow: '0 0 8px rgba(255, 255, 255, 0.3), inset 0 0 4px rgba(255, 255, 255, 0.1)',
             }}
             onClick={(e) => {
               e.stopPropagation();
               onOpenPanel();
+            }}
+            onTouchStart={(e) => {
+              e.stopPropagation();
             }}
             onTouchEnd={(e) => {
               e.stopPropagation();
               onOpenPanel();
             }}
           >
-            <span className="text-[6px] neon-blue-text font-medium">Tap to open</span>
-            <svg 
-              className="w-1.5 h-1.5 text-white/80" 
-              fill="none" 
-              stroke="currentColor" 
+            {/* Pulse indicator */}
+            <div className="relative flex h-2 w-2 flex-shrink-0">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-white opacity-75 animate-ping" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-white" style={{ boxShadow: '0 0 4px #ffffff, 0 0 6px #ffffff' }} />
+            </div>
+
+            {/* Rotating tip text */}
+            <span
+              className="text-[9px] neon-blue-text font-medium max-w-[140px] truncate transition-opacity duration-200"
+              style={{ opacity: tipVisible ? 1 : 0 }}
+            >
+              {MOBILE_HELPER_TIPS[tipIndex]}
+            </span>
+
+            {/* Arrow icon */}
+            <svg
+              className="w-2.5 h-2.5 text-white/90 flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />

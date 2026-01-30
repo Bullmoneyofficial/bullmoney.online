@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/BULL.svg",
+        url: "/ONcc2l601.svg",
         width: 1200,
         height: 630,
         alt: "BullMoney - Find Your Free Trading Mentor",
