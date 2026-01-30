@@ -108,7 +108,7 @@ export const MinimizedDock = memo(({
       <div className="minimized-logo relative w-14 h-14 rounded-xl overflow-hidden flex-shrink-0">
         <Link href="/" className="relative w-full h-full block">
           <Image
-            src="/svgs/file.svg"
+            src="/ONcc2l601.svg"
             alt="BullMoney"
             fill
             className="object-cover"

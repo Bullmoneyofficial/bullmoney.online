@@ -138,7 +138,7 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
         >
           <Link href="/" className="relative flex-shrink-0 w-20 h-20 block">
             <Image
-              src="/svgs/file.svg"
+              src="/ONcc2l601.svg"
               alt="BullMoney"
               fill
               className="object-cover"

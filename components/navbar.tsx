@@ -651,7 +651,7 @@ export const Navbar = memo(() => {
             {/* Logo */}
             <Link href="/" className="relative flex-shrink-0 w-12 h-12 block">
               <Image
-                src="/svgs/file.svg"
+                src="/ONcc2l601.svg"
                 alt="BullMoney"
                 fill
                 className="object-cover"
