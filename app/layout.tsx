@@ -479,14 +479,14 @@ export default function RootLayout({
       // Set default theme attribute so CSS selectors work
       document.documentElement.setAttribute('data-active-theme', 'bullmoney-blue');
       // Set default blue theme variables
-      document.documentElement.style.setProperty('--accent-color', '#3b82f6');
-      document.documentElement.style.setProperty('--accent-rgb', '59, 130, 246');
+      document.documentElement.style.setProperty('--accent-color', '#ffffff');
+      document.documentElement.style.setProperty('--accent-rgb', '255, 255, 255');
     }
   } catch (e) {
     // Set default on error
     document.documentElement.setAttribute('data-active-theme', 'bullmoney-blue');
-    document.documentElement.style.setProperty('--accent-color', '#3b82f6');
-    document.documentElement.style.setProperty('--accent-rgb', '59, 130, 246');
+    document.documentElement.style.setProperty('--accent-color', '#ffffff');
+    document.documentElement.style.setProperty('--accent-rgb', '255, 255, 255');
     console.warn('[EarlyTheme] Error:', e);
   }
 })();
@@ -1011,7 +1011,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={cn("antialiased dark:bg-black bg-white", inter.className)}
+        className={cn("antialiased bg-[#050915] text-white", inter.className)}
         suppressHydrationWarning
       >
         {/* Global Shimmer Styles - ensures all shimmers are synchronized */}

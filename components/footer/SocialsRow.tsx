@@ -40,10 +40,10 @@ export const SocialsRow = () => {
             onTouchStart={() => SoundEffects.click()}
             className="p-3 rounded-full bg-black cursor-pointer transition-all duration-300"
             style={{
-              color: '#3b82f6',
-              border: '2px solid #3b82f6',
-              boxShadow: '0 0 4px #3b82f6, 0 0 8px rgba(59, 130, 246, 0.5)',
-              filter: 'drop-shadow(0 0 4px #3b82f6)'
+              color: '#ffffff',
+              border: '2px solid #ffffff',
+              boxShadow: '0 0 4px #ffffff, 0 0 8px rgba(255, 255, 255, 0.5)',
+              filter: 'drop-shadow(0 0 4px #ffffff)'
             }}
           >
             {social.icon}

@@ -110,7 +110,7 @@ function VideoFallback({ src, poster, alt, onLoad }: {
       </div>
 
       {/* Performance badge */}
-      <div className="absolute top-6 right-6 px-3 py-1.5 rounded-full bg-green-500/20 backdrop-blur-sm border border-green-400/30 text-green-200 text-xs font-semibold">
+      <div className="absolute top-6 right-6 px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white text-xs font-semibold">
         ⚡ Optimized Mode
       </div>
     </div>
@@ -159,7 +159,7 @@ function ImageFallback({ src, alt, onLoad }: {
       <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/50" />
 
       {/* Data saver badge */}
-      <div className="absolute top-6 right-6 px-3 py-1.5 rounded-full bg-blue-500/20 backdrop-blur-sm border border-blue-400/30 text-blue-200 text-xs font-semibold">
+      <div className="absolute top-6 right-6 px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white text-xs font-semibold">
         📸 Lite Mode
       </div>
 
@@ -188,8 +188,8 @@ function MinimalFallback({ alt, description }: {
         className="absolute inset-0 opacity-5"
         style={{
           backgroundImage: `
-            linear-gradient(30deg, rgba(59, 130, 246, 0.5) 12%, transparent 12.5%, transparent 87%, rgba(59, 130, 246, 0.5) 87.5%, rgba(59, 130, 246, 0.5)),
-            linear-gradient(150deg, rgba(59, 130, 246, 0.5) 12%, transparent 12.5%, transparent 87%, rgba(59, 130, 246, 0.5) 87.5%, rgba(59, 130, 246, 0.5))
+            linear-gradient(30deg, rgba(255, 255, 255, 0.5) 12%, transparent 12.5%, transparent 87%, rgba(255, 255, 255, 0.5) 87.5%, rgba(255, 255, 255, 0.5)),
+            linear-gradient(150deg, rgba(255, 255, 255, 0.5) 12%, transparent 12.5%, transparent 87%, rgba(255, 255, 255, 0.5) 87.5%, rgba(255, 255, 255, 0.5))
           `,
           backgroundSize: '80px 140px'
         }}
@@ -198,7 +198,7 @@ function MinimalFallback({ alt, description }: {
       <div className="relative z-10 text-center space-y-4 px-6 max-w-2xl">
         <div className="inline-block p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
           <div className="text-6xl mb-4">🎯</div>
-          <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-purple-200 mb-3">
+          <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-white mb-3">
             {alt}
           </h2>
           <p className="text-lg text-white/70 leading-relaxed">
@@ -206,7 +206,7 @@ function MinimalFallback({ alt, description }: {
           </p>
 
           {/* Accessibility badge */}
-          <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-200 text-xs font-semibold">
+          <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/20 border border-white/30 text-white text-xs font-semibold">
             ♿ Accessible Mode
           </div>
         </div>
@@ -214,11 +214,11 @@ function MinimalFallback({ alt, description }: {
         {/* Benefits of minimal mode */}
         <div className="grid grid-cols-2 gap-3 mt-6 text-sm">
           <div className="p-3 rounded-lg bg-white/5 border border-white/10">
-            <div className="text-green-400 font-bold">0 Data</div>
+            <div className="text-white font-bold">0 Data</div>
             <div className="text-white/50 text-xs">Ultra-lite</div>
           </div>
           <div className="p-3 rounded-lg bg-white/5 border border-white/10">
-            <div className="text-blue-400 font-bold">Fast</div>
+            <div className="text-white font-bold">Fast</div>
             <div className="text-white/50 text-xs">Instant load</div>
           </div>
         </div>
@@ -284,7 +284,7 @@ export function UniversalSceneLoader({
       {!isLoaded && (
         <div className="absolute inset-0 bg-gradient-to-br from-blue-950/20 via-black to-purple-950/20 animate-pulse">
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-blue-400/50 text-sm font-mono">
+            <div className="text-white/50 text-sm font-mono">
               Loading {content.type}...
             </div>
           </div>

@@ -34,11 +34,11 @@ const SUPPORT_URL = "https://t.me/+dlP_A0ebMXs3NTg0";
 
 // Theme Configuration (BullMoney Blue Style)
 const THEME = {
-  primary: "#3b82f6", // Blue-500
-  glow: "rgba(59, 130, 246, 0.6)",
+  primary: "#ffffff", // Blue-500
+  glow: "rgba(255, 255, 255, 0.6)",
   bg: "#000000",
   text: "#ffffff",
-  border: "rgba(59, 130, 246, 0.2)"
+  border: "rgba(255, 255, 255, 0.2)"
 };
 
 // ==========================================
@@ -91,7 +91,7 @@ export const FAQ_CONTENT: FAQCategoryData[] = [
         answer: (
           <div className="space-y-2">
              <p><strong>Free Access:</strong> Provides a glimpse into our world with Public Chat and occasional streams.</p>
-             <p className="text-blue-400"><strong>VIP Access:</strong> Includes Daily Live Trading, Daily Premium Setups, and a Private Mentor.</p>
+             <p className="text-white"><strong>VIP Access:</strong> Includes Daily Live Trading, Daily Premium Setups, and a Private Mentor.</p>
           </div>
         )
       },
@@ -134,17 +134,17 @@ const injectGlobalStyles = () => {
     .focus-frame {
       position: absolute;
       pointer-events: none;
-      border: 1px solid var(--border-color, #3b82f6);
-      box-shadow: 0 0 20px var(--glow-color, rgba(59, 130, 246, 0.6));
+      border: 1px solid var(--border-color, #ffffff);
+      box-shadow: 0 0 20px var(--glow-color, rgba(255, 255, 255, 0.6));
       border-radius: 8px;
       z-index: 10;
-      background: rgba(59, 130, 246, 0.05);
+      background: rgba(255, 255, 255, 0.05);
     }
     .corner {
       position: absolute;
       width: 10px;
       height: 10px;
-      border-color: var(--border-color, #3b82f6);
+      border-color: var(--border-color, #ffffff);
       border-style: solid;
     }
     .top-left { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
@@ -225,7 +225,7 @@ const injectGlobalStyles = () => {
       font-weight: 900;
       text-transform: uppercase;
       color: rgba(255,255,255,0.05);
-      -webkit-text-stroke: 1px rgba(59, 130, 246, 0.3); /* Blue Stroke */
+      -webkit-text-stroke: 1px rgba(255, 255, 255, 0.3); /* Blue Stroke */
       white-space: nowrap;
       padding: 0 1rem;
       font-style: italic;
@@ -430,10 +430,10 @@ const FAQDetailItem = ({ item }: { item: FAQItemData }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     
     return (
-      <div style={{ borderBottom: '1px dashed rgba(59, 130, 246, 0.3)' }} className="last:border-0">
+      <div style={{ borderBottom: '1px dashed rgba(255, 255, 255, 0.3)' }} className="last:border-0">
         <div 
           onClick={() => setIsExpanded(!isExpanded)}
-          className="flex justify-between items-center py-4 cursor-pointer group transition-all duration-200 px-3 -mx-3 rounded hover:bg-blue-500/5"
+          className="flex justify-between items-center py-4 cursor-pointer group transition-all duration-200 px-3 -mx-3 rounded hover:bg-white/5"
         >
           <div className="flex flex-col flex-1">
              <div className="flex items-center gap-2">
@@ -443,7 +443,7 @@ const FAQDetailItem = ({ item }: { item: FAQItemData }) => {
              </div>
           </div>
           
-          <span style={{ color: '#3b82f6', filter: 'drop-shadow(0 0 4px #3b82f6)' }}>
+          <span style={{ color: '#ffffff', filter: 'drop-shadow(0 0 4px #ffffff)' }}>
              <ChevronDown className={cn("w-5 h-5 transition-transform", isExpanded && "rotate-180")} />
           </span>
         </div>
@@ -458,7 +458,7 @@ const FAQDetailItem = ({ item }: { item: FAQItemData }) => {
               className="overflow-hidden"
             >
               <div className="pb-6 pt-2 px-4 text-sm">
-                <div className="space-y-4 p-5 rounded-xl" style={{ background: 'rgba(0, 0, 0, 0.5)', border: '1px solid rgba(59, 130, 246, 0.4)', boxShadow: '0 0 8px rgba(59, 130, 246, 0.2)' }}>
+                <div className="space-y-4 p-5 rounded-xl" style={{ background: 'rgba(0, 0, 0, 0.5)', border: '1px solid rgba(255, 255, 255, 0.4)', boxShadow: '0 0 8px rgba(255, 255, 255, 0.2)' }}>
                    <div className="leading-relaxed text-sm opacity-90" style={{ color: '#ffffff', textShadow: '0 0 2px rgba(255, 255, 255, 0.3)' }}>
                       {item.answer}
                    </div>
@@ -469,10 +469,10 @@ const FAQDetailItem = ({ item }: { item: FAQItemData }) => {
                      rel="noopener noreferrer"
                      className="block w-full text-center mt-4 py-3 text-xs font-bold uppercase tracking-widest rounded transition-all"
                      style={{
-                       border: '2px solid #3b82f6',
-                       color: '#3b82f6',
-                       textShadow: '0 0 4px #3b82f6',
-                       boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)'
+                       border: '2px solid #ffffff',
+                       color: '#ffffff',
+                       textShadow: '0 0 4px #ffffff',
+                       boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)'
                      }}
                    >
                        Contact Support
@@ -530,12 +530,12 @@ function FAQCategoryItem({ data }: { data: FAQCategoryData }) {
 
   const repeatedMarqueeContent = Array.from({ length: 6 }).map((_, idx) => (
     <div key={idx} className="marquee__content">
-      <span className="marquee__text" style={{ color: '#3b82f6', textShadow: '0 0 8px #3b82f6' }}>{data.category}</span>
+      <span className="marquee__text" style={{ color: '#ffffff', textShadow: '0 0 8px #ffffff' }}>{data.category}</span>
     </div>
   ));
 
   return (
-    <div className="menu__item bg-black" style={{ borderBottom: '1px solid rgba(59, 130, 246, 0.3)' }}>
+    <div className="menu__item bg-black" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.3)' }}>
       <EvervaultCard className="relative overflow-hidden group">
           <div 
             ref={itemRef} 
@@ -550,7 +550,7 @@ function FAQCategoryItem({ data }: { data: FAQCategoryData }) {
                 )} style={{ color: '#ffffff', textShadow: '0 0 8px rgba(255, 255, 255, 0.5)' }}>
                   {data.category}
                 </span>
-                <div style={{ color: '#3b82f6', filter: 'drop-shadow(0 0 4px #3b82f6)' }}>
+                <div style={{ color: '#ffffff', filter: 'drop-shadow(0 0 4px #ffffff)' }}>
                    <ChevronDown className={cn("w-6 h-6 transition-transform duration-300", isOpen && "rotate-180")} />
                 </div>
             </div>
@@ -574,7 +574,7 @@ function FAQCategoryItem({ data }: { data: FAQCategoryData }) {
             transition={{ duration: 0.4, ease: "easeInOut" }}
             className="overflow-hidden bg-black/50"
           >
-            <div className="px-6 py-6 md:px-10" style={{ borderTop: '1px solid rgba(59, 130, 246, 0.3)' }}>
+            <div className="px-6 py-6 md:px-10" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.3)' }}>
                 <div className="grid gap-2 max-w-4xl mx-auto">
                     {data.items.map((item, i) => (
                         <FAQDetailItem key={i} item={item} />
@@ -626,15 +626,15 @@ const FaqModalContent = ({onClose}: {onClose: () => void}) => {
             <div className="p-8 md:p-12 pb-0 md:pb-0 z-10 relative">
                 <div className="mb-12 md:mb-16">
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="h-[1px] w-12" style={{ background: '#3b82f6', boxShadow: '0 0 4px #3b82f6' }}></div>
-                        <h4 className="font-serif italic text-lg" style={{ color: '#3b82f6', textShadow: '0 0 4px #3b82f6' }}>Knowledge Base</h4>
+                        <div className="h-[1px] w-12" style={{ background: '#ffffff', boxShadow: '0 0 4px #ffffff' }}></div>
+                        <h4 className="font-serif italic text-lg" style={{ color: '#ffffff', textShadow: '0 0 4px #ffffff' }}>Knowledge Base</h4>
                     </div>
                     
                     <div className="text-5xl md:text-7xl font-black tracking-tighter uppercase" style={{ color: '#ffffff', textShadow: '0 0 8px rgba(255, 255, 255, 0.6)' }}>
                         <TrueFocus 
                            sentence="Frequently Asked Questions"
-                           borderColor="#3b82f6"
-                           glowColor="rgba(59, 130, 246, 0.6)"
+                           borderColor="#ffffff"
+                           glowColor="rgba(255, 255, 255, 0.6)"
                            blurAmount={4}
                         />
                     </div>
@@ -642,7 +642,7 @@ const FaqModalContent = ({onClose}: {onClose: () => void}) => {
             </div>
 
             {/* Content List with Marquees */}
-            <div className="menu-wrap relative z-10" style={{ borderTop: '1px solid #3b82f6', boxShadow: '0 -1px 4px rgba(59, 130, 246, 0.3)' }}>
+            <div className="menu-wrap relative z-10" style={{ borderTop: '1px solid #ffffff', boxShadow: '0 -1px 4px rgba(255, 255, 255, 0.3)' }}>
                 <nav className="menu flex flex-col pb-20">
                       {faqData.map((cat, idx) => (
                        <FAQCategoryItem key={idx} data={cat} />
@@ -651,14 +651,14 @@ const FaqModalContent = ({onClose}: {onClose: () => void}) => {
             </div>
             
             {/* Footer Information */}
-            <div className="p-8 md:p-12 mt-4 bg-black" style={{ borderTop: '1px solid #3b82f6', boxShadow: '0 -1px 4px rgba(59, 130, 246, 0.3)' }}>
+            <div className="p-8 md:p-12 mt-4 bg-black" style={{ borderTop: '1px solid #ffffff', boxShadow: '0 -1px 4px rgba(255, 255, 255, 0.3)' }}>
                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 text-xs uppercase tracking-widest">
                    <div className="flex items-center gap-2" style={{ color: '#ffffff', textShadow: '0 0 4px rgba(255, 255, 255, 0.5)' }}>
-                       <ShieldAlert size={14} style={{ color: '#3b82f6', filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
+                       <ShieldAlert size={14} style={{ color: '#ffffff', filter: 'drop-shadow(0 0 4px #ffffff)' }} />
                        <p>Trading involves high risk. No financial advice.</p>
                    </div>
                    <div className="flex gap-4">
-                       <a href={SUPPORT_URL} className="transition-colors flex items-center gap-2" style={{ color: '#3b82f6', textShadow: '0 0 4px #3b82f6' }}><Send size={14}/> Telegram</a>
+                       <a href={SUPPORT_URL} className="transition-colors flex items-center gap-2" style={{ color: '#ffffff', textShadow: '0 0 4px #ffffff' }}><Send size={14}/> Telegram</a>
                    </div>
                </div>
             </div>
@@ -668,7 +668,7 @@ const FaqModalContent = ({onClose}: {onClose: () => void}) => {
           <GradualBlur position="bottom" />
           
           {/* Fixed Footer with CTA - Neon styled */}
-          <div className="flex justify-end p-6 bg-black relative z-50" style={{ borderTop: '1px solid #3b82f6', boxShadow: '0 -1px 4px rgba(59, 130, 246, 0.3)' }}>
+          <div className="flex justify-end p-6 bg-black relative z-50" style={{ borderTop: '1px solid #ffffff', boxShadow: '0 -1px 4px rgba(255, 255, 255, 0.3)' }}>
              <a 
                href={SUPPORT_URL} 
                target="_blank" 
@@ -678,12 +678,12 @@ const FaqModalContent = ({onClose}: {onClose: () => void}) => {
                  background: 'transparent',
                  color: '#ffffff',
                  textShadow: '0 0 4px rgba(255, 255, 255, 0.6)',
-                 border: '2px solid #3b82f6',
-                 boxShadow: '0 0 8px #3b82f6, 0 0 16px rgba(59, 130, 246, 0.4)'
+                 border: '2px solid #ffffff',
+                 boxShadow: '0 0 8px #ffffff, 0 0 16px rgba(255, 255, 255, 0.4)'
                }}
              >
                 Open Support Chat
-                <MessageSquare className="w-4 h-4" style={{ color: '#3b82f6', filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
+                <MessageSquare className="w-4 h-4" style={{ color: '#ffffff', filter: 'drop-shadow(0 0 4px #ffffff)' }} />
              </a>
           </div>
         </>
@@ -738,7 +738,7 @@ export default function BullMoneyModal({ isOpen, onClose }: { isOpen: boolean, o
                 animate={{ opacity: [0.4, 0.8, 0.4] }}
                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                 className="absolute top-4 left-1/2 -translate-x-1/2 text-xs font-medium pointer-events-none flex items-center gap-1"
-                style={{ color: '#3b82f6', textShadow: '0 0 4px #3b82f6' }}
+                style={{ color: '#ffffff', textShadow: '0 0 4px #ffffff' }}
               >
                 <span>↑</span> Tap anywhere to close <span>↑</span>
               </motion.div>
@@ -747,7 +747,7 @@ export default function BullMoneyModal({ isOpen, onClose }: { isOpen: boolean, o
                 animate={{ opacity: [0.4, 0.8, 0.4] }}
                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
                 className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs font-medium pointer-events-none flex items-center gap-1"
-                style={{ color: '#3b82f6', textShadow: '0 0 4px #3b82f6' }}
+                style={{ color: '#ffffff', textShadow: '0 0 4px #ffffff' }}
               >
                 <span>↓</span> Tap anywhere to close <span>↓</span>
               </motion.div>
@@ -756,7 +756,7 @@ export default function BullMoneyModal({ isOpen, onClose }: { isOpen: boolean, o
                 animate={{ opacity: [0.4, 0.8, 0.4] }}
                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.25 }}
                 className="absolute left-2 top-1/2 -translate-y-1/2 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
-                style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', color: '#3b82f6', textShadow: '0 0 4px #3b82f6' }}
+                style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', color: '#ffffff', textShadow: '0 0 4px #ffffff' }}
               >
                 ← Tap to close
               </motion.div>
@@ -765,7 +765,7 @@ export default function BullMoneyModal({ isOpen, onClose }: { isOpen: boolean, o
                 animate={{ opacity: [0.4, 0.8, 0.4] }}
                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.75 }}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
-                style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', color: '#3b82f6', textShadow: '0 0 4px #3b82f6' }}
+                style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', color: '#ffffff', textShadow: '0 0 4px #ffffff' }}
               >
                 Tap to close →
               </motion.div>
@@ -780,22 +780,22 @@ export default function BullMoneyModal({ isOpen, onClose }: { isOpen: boolean, o
             onClick={(e) => e.stopPropagation()}
             className="relative w-[98%] md:w-[90%] max-w-6xl max-h-[90vh] bg-black rounded-2xl overflow-hidden flex flex-col"
             style={{
-              border: '2px solid #3b82f6',
-              boxShadow: isMobile ? 'none' : '0 0 20px rgba(59, 130, 246, 0.5), 0 0 40px rgba(59, 130, 246, 0.3)'
+              border: '2px solid #ffffff',
+              boxShadow: isMobile ? 'none' : '0 0 20px rgba(255, 255, 255, 0.5), 0 0 40px rgba(255, 255, 255, 0.3)'
             }}
           >
             <button
                 onClick={onClose}
                 className="absolute top-6 right-6 z-50 p-2 rounded-full bg-black transition-colors group"
                 style={{
-                  border: '2px solid #3b82f6',
-                  boxShadow: isMobile ? 'none' : '0 0 4px #3b82f6, 0 0 8px rgba(59, 130, 246, 0.5)'
+                  border: '2px solid #ffffff',
+                  boxShadow: isMobile ? 'none' : '0 0 4px #ffffff, 0 0 8px rgba(255, 255, 255, 0.5)'
                 }}
                 title="Close (ESC)"
                 data-modal-close="true"
             >
                 <X className="w-5 h-5" style={{ color: '#ffffff', filter: isMobile ? 'none' : 'drop-shadow(0 0 4px #ffffff)' }} />
-                <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap" style={{ color: '#3b82f6', textShadow: '0 0 4px #3b82f6' }}>ESC</span>
+                <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap" style={{ color: '#ffffff', textShadow: '0 0 4px #ffffff' }}>ESC</span>
             </button>
             
             <FaqModalContent onClose={onClose} />

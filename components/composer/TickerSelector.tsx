@@ -36,10 +36,10 @@ const POPULAR_TICKERS = [
 ];
 
 const marketColors: Record<string, string> = {
-  forex: 'bg-green-500/20 text-green-400',
+  forex: 'bg-white/20 text-white',
   crypto: 'bg-orange-500/20 text-orange-400',
-  stocks: 'bg-blue-500/20 text-blue-400',
-  indices: 'bg-purple-500/20 text-purple-400',
+  stocks: 'bg-white/20 text-white',
+  indices: 'bg-white/20 text-white',
 };
 
 interface TickerSelectorProps {
@@ -130,7 +130,7 @@ export const TickerSelector = memo(({
   return (
     <div ref={containerRef} className="relative">
       {/* Input with selected tickers */}
-      <div className="flex flex-wrap items-center gap-2 p-3 bg-black/50 border border-blue-500/30 rounded-xl focus-within:border-blue-500">
+      <div className="flex flex-wrap items-center gap-2 p-3 bg-black/50 border border-white/30 rounded-xl focus-within:border-white">
         {/* Selected Tickers */}
         <AnimatePresence mode="popLayout">
           {selectedTickers.map((ticker) => {
@@ -197,12 +197,12 @@ export const TickerSelector = memo(({
               return (
                 <motion.button
                   key={ticker.symbol}
-                  whileHover={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}
+                  whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
                   onClick={() => addTicker(ticker.symbol)}
                   disabled={isSelected || selectedTickers.length >= maxTickers}
                   className={`
                     w-full flex items-center gap-3 p-3 text-left transition-colors
-                    ${isSelected ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-500/10'}
+                    ${isSelected ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/10'}
                   `}
                 >
                   <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${colorClass}`}>
@@ -213,7 +213,7 @@ export const TickerSelector = memo(({
                     <p className="text-xs text-neutral-500">{ticker.name}</p>
                   </div>
                   {isSelected && (
-                    <span className="text-xs text-blue-400">Added</span>
+                    <span className="text-xs text-white">Added</span>
                   )}
                 </motion.button>
               );

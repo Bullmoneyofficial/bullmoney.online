@@ -53,7 +53,7 @@ export function MobileQuickActions({
   onControlCenterToggle,
   safeAreaInlinePadding,
   safeAreaBottom,
-  accentColor = '#3b82f6',
+  accentColor = '#ffffff',
 }: MobileQuickActionsProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -163,9 +163,9 @@ export function MobileQuickActions({
   const pulseVariants = {
     animate: prefersReducedMotion ? {} : {
       boxShadow: [
-        `0 0 0 rgba(59, 130, 246, 0)`,
+        `0 0 0 rgba(255, 255, 255, 0)`,
         `0 0 25px ${accentColor}60`,
-        `0 0 0 rgba(59, 130, 246, 0)`
+        `0 0 0 rgba(255, 255, 255, 0)`
       ]
     }
   };
@@ -255,7 +255,7 @@ export function MobileQuickActions({
                 setIsButtonHovering(false);
               }}
               onFocus={() => setHasInteracted(true)}
-              className="relative w-full h-full flex items-center justify-center outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black z-10 rounded-full overflow-hidden will-change-auto"
+              className="relative w-full h-full flex items-center justify-center outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black z-10 rounded-full overflow-hidden will-change-auto"
               type="button"
               aria-label={isOpen ? "Close quick settings" : "Open quick settings"}
               aria-expanded={isOpen}
@@ -335,9 +335,9 @@ export function MobileQuickActions({
                 }}
                 role="tooltip"
               >
-                <div className="relative bg-gradient-to-br from-blue-600 to-blue-700 text-white text-[11px] font-bold px-3 py-2 rounded-lg shadow-2xl backdrop-blur-md border border-blue-400/50 whitespace-nowrap">
+                <div className="relative bg-gradient-to-br from-white to-white text-white text-[11px] font-bold px-3 py-2 rounded-lg shadow-2xl backdrop-blur-md border border-white/50 whitespace-nowrap">
                   Quick Settings
-                  <div className="absolute w-2 h-2 bg-blue-600 -left-1 top-1/2 -translate-y-1/2 rotate-45 border-l border-b border-blue-400/50" />
+                  <div className="absolute w-2 h-2 bg-white -left-1 top-1/2 -translate-y-1/2 rotate-45 border-l border-b border-white/50" />
                 </div>
               </motion.div>
             )}
@@ -378,7 +378,7 @@ export function MobileQuickActions({
                     value={isPlaying ? `${Math.round(volume)}%` : "OFF"}
                     active={isPlaying}
                     onClick={() => handleAction(onMusicToggle, 10)}
-                    colorClass="text-emerald-400"
+                    colorClass="text-white"
                     ariaLabel={`Toggle audio. Currently ${isPlaying ? 'on' : 'off'}`}
                   />
                 )}
@@ -390,7 +390,7 @@ export function MobileQuickActions({
                     value="THEME"
                     active={true}
                     onClick={() => handleAction(onThemeClick, 10)}
-                    colorClass="text-purple-400"
+                    colorClass="text-white"
                     ariaLabel="Open theme selector"
                   />
                 )}
@@ -402,7 +402,7 @@ export function MobileQuickActions({
                     value="INFO"
                     active={true}
                     onClick={() => handleAction(onControlCenterToggle, 12)}
-                    colorClass="text-cyan-400"
+                    colorClass="text-white"
                     ariaLabel="Open device control panel"
                   />
                 )}
@@ -414,7 +414,7 @@ export function MobileQuickActions({
                     value="HELP"
                     active={true}
                     onClick={() => handleAction(onHelpClick, 10)}
-                    colorClass="text-blue-400"
+                    colorClass="text-white"
                     ariaLabel="Open help dialog"
                   />
                 )}
@@ -461,7 +461,7 @@ const ActionButton = React.memo(({
         e.stopPropagation();
         e.currentTarget.style.transform = '';
       }}
-      className="flex items-center gap-3 w-full px-3 py-2 rounded-lg transition-all duration-200 group text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black min-h-[44px] touch-manipulation will-change-auto"
+      className="flex items-center gap-3 w-full px-3 py-2 rounded-lg transition-all duration-200 group text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black min-h-[44px] touch-manipulation will-change-auto"
       type="button"
       role="menuitem"
       aria-label={ariaLabel}
@@ -486,7 +486,7 @@ const ActionButton = React.memo(({
       <div 
         className={`flex-shrink-0 w-2 h-2 rounded-full transition-all duration-300 ${
           active 
-            ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.7)] ring-2 ring-emerald-500/30' 
+            ? 'bg-white shadow-[0_0_10px_rgba(255,255,255,0.7)] ring-2 ring-white/30' 
             : 'bg-gray-700 border border-gray-600'
         }`}
         aria-hidden="true"

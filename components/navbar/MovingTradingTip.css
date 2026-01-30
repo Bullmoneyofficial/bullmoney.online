@@ -37,8 +37,8 @@
   height: 0;
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
-  border-bottom: 8px solid #3b82f6;
-  filter: drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6);
+  border-bottom: 8px solid #ffffff;
+  filter: drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff);
 }
 
 /* Main container - full neon glow */
@@ -47,12 +47,12 @@
   padding: 10px 16px;
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.95);
-  border: 2px solid #3b82f6;
+  border: 2px solid #ffffff;
   box-shadow: 
-    0 0 4px #3b82f6,
-    0 0 8px #3b82f6,
-    0 0 16px rgba(59, 130, 246, 0.5),
-    inset 0 0 4px rgba(59, 130, 246, 0.3);
+    0 0 4px #ffffff,
+    0 0 8px #ffffff,
+    0 0 16px rgba(255, 255, 255, 0.5),
+    inset 0 0 4px rgba(255, 255, 255, 0.3);
   overflow: hidden;
 }
 
@@ -72,7 +72,7 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(59, 130, 246, 0.15) 50%,
+    rgba(255, 255, 255, 0.15) 50%,
     transparent 100%
   );
   transform: translateX(-100%);
@@ -112,7 +112,7 @@
   height: 100%;
   width: 100%;
   border-radius: 50%;
-  background-color: #3b82f6;
+  background-color: #ffffff;
   opacity: 0.75;
   animation: tip-pulse 2s ease-in-out infinite;
 }
@@ -123,8 +123,8 @@
   border-radius: 50%;
   height: 8px;
   width: 8px;
-  background-color: #3b82f6;
-  box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+  background-color: #ffffff;
+  box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
 }
 
 @keyframes tip-pulse {
@@ -144,10 +144,10 @@
   text-transform: uppercase;
   letter-spacing: 0.1em;
   font-weight: 700;
-  color: #60a5fa;
+  color: #ffffff;
   text-shadow: 
-    0 0 4px #3b82f6,
-    0 0 8px #3b82f6;
+    0 0 4px #ffffff,
+    0 0 8px #ffffff;
   flex-shrink: 0;
 }
 
@@ -158,11 +158,11 @@
   flex-shrink: 0;
   background: linear-gradient(
     to bottom,
-    rgba(59, 130, 246, 0.8),
-    rgba(59, 130, 246, 0.4),
-    rgba(59, 130, 246, 0.8)
+    rgba(255, 255, 255, 0.8),
+    rgba(255, 255, 255, 0.4),
+    rgba(255, 255, 255, 0.8)
   );
-  box-shadow: 0 0 4px #3b82f6;
+  box-shadow: 0 0 4px #ffffff;
 }
 
 /* Tip text - neon glow */
@@ -170,10 +170,10 @@
   font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
-  color: #93c5fd;
+  color: #ffffff;
   text-shadow: 
-    0 0 2px rgba(59, 130, 246, 0.8),
-    0 0 4px rgba(59, 130, 246, 0.4);
+    0 0 2px rgba(255, 255, 255, 0.8),
+    0 0 4px rgba(255, 255, 255, 0.4);
 }
 
 /* Hide on mobile */

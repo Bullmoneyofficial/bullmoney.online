@@ -89,10 +89,10 @@ const formatDate = (dateStr: string) => {
 
 // Market colors
 const marketColors: Record<string, string> = {
-  forex: 'bg-green-500',
+  forex: 'bg-white',
   crypto: 'bg-orange-500',
-  stocks: 'bg-blue-500',
-  indices: 'bg-purple-500',
+  stocks: 'bg-white',
+  indices: 'bg-white',
 };
 
 // Get TradingView symbol from analysis
@@ -126,7 +126,7 @@ const TabButton = memo(({ active, onClick, icon, label }: TabButtonProps) => (
     onClick={onClick}
     className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
       active 
-        ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/25' 
+        ? 'bg-white text-black shadow-lg shadow-white/25' 
         : 'bg-neutral-800/50 text-neutral-400 hover:bg-neutral-800 hover:text-white'
     }`}
   >
@@ -554,22 +554,22 @@ const EnhancedAnalysisContent = ({ onClose }: EnhancedAnalysisContentProps) => {
         )}
         
         {/* Inner Container */}
-        <div className="relative z-10 bg-gradient-to-b from-neutral-900 to-black rounded-2xl border border-blue-500/30 overflow-hidden max-h-[95vh] flex flex-col">
+        <div className="relative z-10 bg-gradient-to-b from-neutral-900 to-black rounded-2xl border border-white/30 overflow-hidden max-h-[95vh] flex flex-col">
           {!shouldSkipHeavyEffects && <ShimmerLine color="blue" />}
           
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-blue-500/20 flex-shrink-0">
+          <div className="flex items-center justify-between p-4 border-b border-white/20 flex-shrink-0">
             <div className="flex items-center gap-3">
-              {activeTab === 'analysis' && <BarChart3 className="w-6 h-6 text-blue-400" />}
-              {activeTab === 'feed' && <Rss className="w-6 h-6 text-blue-400" />}
-              {activeTab === 'compose' && <PenSquare className="w-6 h-6 text-blue-400" />}
+              {activeTab === 'analysis' && <BarChart3 className="w-6 h-6 text-white" />}
+              {activeTab === 'feed' && <Rss className="w-6 h-6 text-white" />}
+              {activeTab === 'compose' && <PenSquare className="w-6 h-6 text-white" />}
               <div>
                 <h2 className="text-lg sm:text-xl font-bold text-white">
                   {activeTab === 'analysis' && 'Trade Analysis'}
                   {activeTab === 'feed' && 'Bull Feed'}
                   {activeTab === 'compose' && 'Create Post'}
                 </h2>
-                <p className="text-xs text-blue-400/70">
+                <p className="text-xs text-white/70">
                   {activeTab === 'analysis' && 'Pro-grade market insights'}
                   {activeTab === 'feed' && 'Community trading ideas'}
                   {activeTab === 'compose' && 'Share your analysis'}
@@ -583,7 +583,7 @@ const EnhancedAnalysisContent = ({ onClose }: EnhancedAnalysisContentProps) => {
                   whileHover={isMobile ? {} : { scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => { SoundEffects.click(); startEdit(null); }}
-                  className="p-2 rounded-full bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors"
+                  className="p-2 rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors"
                 >
                   <Plus className="w-5 h-5" />
                 </motion.button>
@@ -603,7 +603,7 @@ const EnhancedAnalysisContent = ({ onClose }: EnhancedAnalysisContentProps) => {
           </div>
           
           {/* Tab Navigation */}
-          <div className="flex items-center gap-1 p-2 border-b border-blue-500/20 flex-shrink-0 bg-neutral-900/50">
+          <div className="flex items-center gap-1 p-2 border-b border-white/20 flex-shrink-0 bg-neutral-900/50">
             <TabButton 
               active={activeTab === 'analysis'} 
               onClick={() => { SoundEffects.click(); setActiveTab('analysis'); }}
@@ -653,14 +653,14 @@ const EnhancedAnalysisContent = ({ onClose }: EnhancedAnalysisContentProps) => {
                   ) : analyses.length === 0 ? (
                     /* No analyses */
                     <div className="flex flex-col items-center justify-center py-20 gap-4">
-                      <BarChart3 className="w-16 h-16 text-blue-400/30" />
+                      <BarChart3 className="w-16 h-16 text-white/30" />
                 <p className="text-neutral-500">No analysis available yet</p>
                 {isAdmin && (
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => startEdit(null)}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium text-sm flex items-center gap-2"
+                    className="px-4 py-2 bg-white text-black rounded-lg font-medium text-sm flex items-center gap-2"
                   >
                     <Plus className="w-4 h-4" />
                     Create First Analysis
@@ -671,14 +671,14 @@ const EnhancedAnalysisContent = ({ onClose }: EnhancedAnalysisContentProps) => {
               /* View Mode - Analysis Display */
               <div className="flex flex-col">
                 {/* Asset Header with Sentiment */}
-                <div className="p-4 border-b border-blue-500/20 flex flex-wrap items-center justify-between gap-3">
+                <div className="p-4 border-b border-white/20 flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <span className={`px-3 py-1 rounded-lg text-sm font-bold uppercase text-white ${marketColors[currentAnalysis.market] || 'bg-blue-500'}`}>
+                    <span className={`px-3 py-1 rounded-lg text-sm font-bold uppercase ${marketColors[currentAnalysis.market] === 'bg-orange-500' ? 'text-white bg-orange-500' : 'text-black bg-white'}`}>
                       {currentAnalysis.market}
                     </span>
                     <span className="text-2xl font-bold text-white">{currentAnalysis.pair}</span>
                     {currentAnalysis.direction === 'bullish' && (
-                      <span className="flex items-center gap-1 text-green-400 text-sm font-medium">
+                      <span className="flex items-center gap-1 text-white text-sm font-medium">
                         <TrendingUp className="w-5 h-5" />
                       </span>
                     )}
@@ -699,7 +699,7 @@ const EnhancedAnalysisContent = ({ onClose }: EnhancedAnalysisContentProps) => {
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => { SoundEffects.click(); startEdit(currentAnalysis); }}
-                        className="p-2 rounded-full bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors"
+                        className="p-2 rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors"
                       >
                         <Edit3 className="w-4 h-4" />
                       </motion.button>
@@ -709,7 +709,7 @@ const EnhancedAnalysisContent = ({ onClose }: EnhancedAnalysisContentProps) => {
                 
                 {/* Chart Section */}
                 {showChart && (
-                  <div className="border-b border-blue-500/20">
+                  <div className="border-b border-white/20">
                     <TradingViewWidget 
                       symbol={chartSymbol}
                       height={300}
@@ -720,7 +720,7 @@ const EnhancedAnalysisContent = ({ onClose }: EnhancedAnalysisContentProps) => {
                 )}
                 
                 {/* Confidence Meter */}
-                <div className="p-4 border-b border-blue-500/20">
+                <div className="p-4 border-b border-white/20">
                   <ConfidenceMeter 
                     score={currentAnalysis.confidence_score || 5} 
                     showLabel 
@@ -730,18 +730,18 @@ const EnhancedAnalysisContent = ({ onClose }: EnhancedAnalysisContentProps) => {
                 
                 {/* Price Targets */}
                 {(currentAnalysis.entry_price || currentAnalysis.target_price || currentAnalysis.stop_loss) && (
-                  <div className="p-4 border-b border-blue-500/20">
+                  <div className="p-4 border-b border-white/20">
                     <div className="grid grid-cols-3 gap-3">
                       {currentAnalysis.entry_price && (
-                        <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-center">
+                        <div className="p-4 rounded-xl bg-white/10 border border-white/20 text-center">
                           <p className="text-xs text-neutral-500 uppercase mb-1">Entry</p>
-                          <p className="text-xl font-bold text-blue-400">{currentAnalysis.entry_price}</p>
+                          <p className="text-xl font-bold text-white">{currentAnalysis.entry_price}</p>
                         </div>
                       )}
                       {currentAnalysis.target_price && (
-                        <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-center">
+                        <div className="p-4 rounded-xl bg-white/10 border border-white/20 text-center">
                           <p className="text-xs text-neutral-500 uppercase mb-1">Target</p>
-                          <p className="text-xl font-bold text-green-400">{currentAnalysis.target_price}</p>
+                          <p className="text-xl font-bold text-white">{currentAnalysis.target_price}</p>
                         </div>
                       )}
                       {currentAnalysis.stop_loss && (
@@ -755,7 +755,7 @@ const EnhancedAnalysisContent = ({ onClose }: EnhancedAnalysisContentProps) => {
                 )}
                 
                 {/* Analysis Content */}
-                <div className="p-4 border-b border-blue-500/20">
+                <div className="p-4 border-b border-white/20">
                   <h3 className="text-xl font-bold text-white mb-2">{currentAnalysis.title}</h3>
                   <p className="text-xs text-neutral-500 flex items-center gap-1 mb-4">
                     <Calendar className="w-3 h-3" />
@@ -773,7 +773,7 @@ const EnhancedAnalysisContent = ({ onClose }: EnhancedAnalysisContentProps) => {
                 
                 {/* Attachments */}
                 {currentAnalysis.attachments && currentAnalysis.attachments.length > 0 && (
-                  <div className="p-4 border-b border-blue-500/20">
+                  <div className="p-4 border-b border-white/20">
                     <AttachmentCarousel 
                       attachments={currentAnalysis.attachments}
                     />
@@ -782,8 +782,8 @@ const EnhancedAnalysisContent = ({ onClose }: EnhancedAnalysisContentProps) => {
                 
                 {/* Legacy single image support */}
                 {currentAnalysis.image_url && !currentAnalysis.attachments?.length && (
-                  <div className="p-4 border-b border-blue-500/20">
-                    <div className="rounded-lg overflow-hidden border border-blue-500/20">
+                  <div className="p-4 border-b border-white/20">
+                    <div className="rounded-lg overflow-hidden border border-white/20">
                       <img 
                         src={currentAnalysis.image_url} 
                         alt={currentAnalysis.title}
@@ -803,8 +803,8 @@ const EnhancedAnalysisContent = ({ onClose }: EnhancedAnalysisContentProps) => {
                       onClick={() => handleReaction('bull')}
                       className={`px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-colors ${
                         userReaction === 'bull' 
-                          ? 'bg-green-500 text-white' 
-                          : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+                          ? 'bg-white text-black' 
+                          : 'bg-white/20 text-white hover:bg-white/30'
                       }`}
                     >
                       🐂 <span>{currentAnalysis.reaction_counts?.bull || 0}</span>
@@ -841,8 +841,8 @@ const EnhancedAnalysisContent = ({ onClose }: EnhancedAnalysisContentProps) => {
                       onClick={() => handleReaction('save')}
                       className={`px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-colors ${
                         userReaction === 'save' 
-                          ? 'bg-blue-500 text-white' 
-                          : 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30'
+                          ? 'bg-white text-black' 
+                          : 'bg-white/20 text-white hover:bg-white/30'
                       }`}
                     >
                       🔖
@@ -866,7 +866,7 @@ const EnhancedAnalysisContent = ({ onClose }: EnhancedAnalysisContentProps) => {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={handleCopyTrade}
-                        className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white font-medium text-sm flex items-center gap-2"
+                        className="px-4 py-2 rounded-lg bg-gradient-to-r from-white to-white text-white font-medium text-sm flex items-center gap-2"
                       >
                         <Copy className="w-4 h-4" />
                         Copy Trade
@@ -879,7 +879,7 @@ const EnhancedAnalysisContent = ({ onClose }: EnhancedAnalysisContentProps) => {
             
             {/* Navigation for Analysis */}
             {viewMode === 'view' && analyses.length > 1 && (
-              <div className="flex items-center justify-between p-4 border-t border-blue-500/20 flex-shrink-0">
+              <div className="flex items-center justify-between p-4 border-t border-white/20 flex-shrink-0">
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
@@ -895,7 +895,7 @@ const EnhancedAnalysisContent = ({ onClose }: EnhancedAnalysisContentProps) => {
                       key={index}
                       onClick={() => { SoundEffects.click(); setCurrentIndex(index); }}
                       className={`w-2.5 h-2.5 rounded-full transition-colors ${
-                        index === currentIndex ? 'bg-blue-500' : 'bg-neutral-600 hover:bg-neutral-500'
+                        index === currentIndex ? 'bg-white' : 'bg-neutral-600 hover:bg-neutral-500'
                       }`}
                     />
                   ))}
@@ -979,7 +979,7 @@ const EditForm = memo(({
             type="text"
             value={formData.title || ''}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            className="w-full px-3 py-2 bg-black/50 border border-blue-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 bg-black/50 border border-white/30 rounded-lg text-white text-sm focus:outline-none focus:border-white"
             placeholder="Analysis title..."
           />
         </div>
@@ -990,7 +990,7 @@ const EditForm = memo(({
           <select
             value={formData.market || 'forex'}
             onChange={(e) => setFormData({ ...formData, market: e.target.value as MarketType })}
-            className="w-full px-3 py-2 bg-black/50 border border-blue-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 bg-black/50 border border-white/30 rounded-lg text-white text-sm focus:outline-none focus:border-white"
           >
             <option value="forex">Forex</option>
             <option value="crypto">Crypto</option>
@@ -1006,7 +1006,7 @@ const EditForm = memo(({
             type="text"
             value={formData.pair || ''}
             onChange={(e) => setFormData({ ...formData, pair: e.target.value })}
-            className="w-full px-3 py-2 bg-black/50 border border-blue-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 bg-black/50 border border-white/30 rounded-lg text-white text-sm focus:outline-none focus:border-white"
             placeholder="EUR/USD, BTC, AAPL..."
           />
         </div>
@@ -1017,7 +1017,7 @@ const EditForm = memo(({
           <select
             value={formData.direction || 'neutral'}
             onChange={(e) => setFormData({ ...formData, direction: e.target.value as Direction })}
-            className="w-full px-3 py-2 bg-black/50 border border-blue-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 bg-black/50 border border-white/30 rounded-lg text-white text-sm focus:outline-none focus:border-white"
           >
             <option value="bullish">🟢 Bullish (LONG)</option>
             <option value="bearish">🔴 Bearish (SHORT)</option>
@@ -1031,7 +1031,7 @@ const EditForm = memo(({
           <select
             value={formData.content_type || 'deep_dive'}
             onChange={(e) => setFormData({ ...formData, content_type: e.target.value as ContentType })}
-            className="w-full px-3 py-2 bg-black/50 border border-blue-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 bg-black/50 border border-white/30 rounded-lg text-white text-sm focus:outline-none focus:border-white"
           >
             <option value="deep_dive">📊 Deep Dive</option>
             <option value="market_pulse">⚡ Market Pulse</option>
@@ -1049,9 +1049,9 @@ const EditForm = memo(({
               max="10"
               value={formData.confidence_score || 5}
               onChange={(e) => setFormData({ ...formData, confidence_score: parseInt(e.target.value) })}
-              className="flex-1 h-2 rounded-full appearance-none bg-neutral-700 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500"
+              className="flex-1 h-2 rounded-full appearance-none bg-neutral-700 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
             />
-            <span className="text-lg font-bold text-blue-400 w-8 text-center">{formData.confidence_score || 5}</span>
+            <span className="text-lg font-bold text-white w-8 text-center">{formData.confidence_score || 5}</span>
           </div>
         </div>
         
@@ -1063,7 +1063,7 @@ const EditForm = memo(({
             step="any"
             value={formData.entry_price || ''}
             onChange={(e) => setFormData({ ...formData, entry_price: parseFloat(e.target.value) || undefined })}
-            className="w-full px-3 py-2 bg-black/50 border border-blue-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 bg-black/50 border border-white/30 rounded-lg text-white text-sm focus:outline-none focus:border-white"
             placeholder="1.0850"
           />
         </div>
@@ -1076,7 +1076,7 @@ const EditForm = memo(({
             step="any"
             value={formData.target_price || ''}
             onChange={(e) => setFormData({ ...formData, target_price: parseFloat(e.target.value) || undefined })}
-            className="w-full px-3 py-2 bg-black/50 border border-blue-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 bg-black/50 border border-white/30 rounded-lg text-white text-sm focus:outline-none focus:border-white"
             placeholder="1.0950"
           />
         </div>
@@ -1089,7 +1089,7 @@ const EditForm = memo(({
             step="any"
             value={formData.stop_loss || ''}
             onChange={(e) => setFormData({ ...formData, stop_loss: parseFloat(e.target.value) || undefined })}
-            className="w-full px-3 py-2 bg-black/50 border border-blue-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 bg-black/50 border border-white/30 rounded-lg text-white text-sm focus:outline-none focus:border-white"
             placeholder="1.0800"
           />
         </div>
@@ -1101,7 +1101,7 @@ const EditForm = memo(({
             type="text"
             value={formData.image_url || ''}
             onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-            className="w-full px-3 py-2 bg-black/50 border border-blue-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 bg-black/50 border border-white/30 rounded-lg text-white text-sm focus:outline-none focus:border-white"
             placeholder="https://..."
           />
         </div>
@@ -1113,7 +1113,7 @@ const EditForm = memo(({
             value={formData.content || ''}
             onChange={(e) => setFormData({ ...formData, content: e.target.value })}
             rows={8}
-            className="w-full px-3 py-2 bg-black/50 border border-blue-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 resize-none"
+            className="w-full px-3 py-2 bg-black/50 border border-white/30 rounded-lg text-white text-sm focus:outline-none focus:border-white resize-none"
             placeholder="Write your analysis here..."
           />
         </div>
@@ -1125,7 +1125,7 @@ const EditForm = memo(({
               type="checkbox"
               checked={formData.is_published || false}
               onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })}
-              className="w-4 h-4 rounded border-blue-500/30 bg-black/50 text-blue-500 focus:ring-blue-500"
+              className="w-4 h-4 rounded border-white/30 bg-black/50 text-white focus:ring-white"
             />
             <span className="text-sm text-neutral-400">Publish immediately</span>
           </label>
@@ -1135,7 +1135,7 @@ const EditForm = memo(({
               type="checkbox"
               checked={formData.is_pro_only || false}
               onChange={(e) => setFormData({ ...formData, is_pro_only: e.target.checked })}
-              className="w-4 h-4 rounded border-purple-500/30 bg-black/50 text-purple-500 focus:ring-purple-500"
+              className="w-4 h-4 rounded border-white/30 bg-black/50 text-white focus:ring-white"
             />
             <span className="text-sm text-neutral-400">Pro members only</span>
           </label>
@@ -1143,7 +1143,7 @@ const EditForm = memo(({
       </div>
       
       {/* Actions */}
-      <div className="flex items-center justify-between pt-4 border-t border-blue-500/20">
+      <div className="flex items-center justify-between pt-4 border-t border-white/20">
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -1172,7 +1172,7 @@ const EditForm = memo(({
             whileTap={{ scale: 0.95 }}
             onClick={onSave}
             disabled={saving || !formData.title?.trim() || !formData.content?.trim()}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium text-sm flex items-center gap-2 disabled:opacity-50"
+            className="px-4 py-2 bg-white text-black rounded-lg font-medium text-sm flex items-center gap-2 disabled:opacity-50"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {selectedAnalysis ? 'Update' : 'Publish'}

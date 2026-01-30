@@ -148,7 +148,7 @@ function FuturisticHero({ onShow }: { onShow: () => void }) {
         className="absolute inset-0 opacity-30 blur-3xl"
         style={{
           background:
-            "radial-gradient(circle at 50% 60%, rgba(56,189,248,.2), transparent 60%)",
+            "radial-gradient(circle at 50% 60%, rgba(255, 255, 255,.2), transparent 60%)",
         }}
         animate={{
           scale: [1, 1.05, 1],
@@ -190,8 +190,8 @@ function FuturisticHero({ onShow }: { onShow: () => void }) {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.96 }}
         className="relative z-10 flex cursor-pointer items-center gap-2 rounded-full px-12 py-4 text-lg font-semibold text-white 
-             shadow-[0_0_35px_rgba(56,189,248,0.4)] 
-             bg-[linear-gradient(100deg,#0284c7_0%,#2563eb_50%,#312e81_100%)]
+             shadow-[0_0_35px_rgba(255, 255, 255,0.4)] 
+             bg-[linear-gradient(100deg,#0284c7_0%,#ffffff_50%,#ffffff_100%)]
              ring-2 ring-sky-400/40 hover:ring-sky-300/70 transition-all duration-300"
       >
         Show Live Market Charts
@@ -255,7 +255,7 @@ export const TradingViewDropdown = ({
             <div className="mb-4 flex items-center justify-between">
               <button
                 onClick={() => setOpen((p) => !p)}
-                className="group relative flex items-center gap-3 rounded-full bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-lg transition"
+                className="group relative flex items-center gap-3 rounded-full bg-gradient-to-r from-sky-500 via-white to-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-lg transition"
               >
                 <span className="absolute inset-0 rounded-full border border-sky-400 opacity-0 blur-sm transition group-hover:opacity-100"></span>
                 <ChartBar className="relative z-10 h-4 w-4 transition-transform group-hover:rotate-12" />
@@ -285,7 +285,7 @@ export const TradingViewDropdown = ({
                       key={idx}
                       onClick={() => handleSelect(chart)}
                       className={cn(
-                        "block w-full px-4 py-2 text-left text-sm text-white transition-all duration-200 hover:bg-gradient-to-r hover:from-sky-600 hover:to-blue-700",
+                        "block w-full px-4 py-2 text-left text-sm text-white transition-all duration-200 hover:bg-gradient-to-r hover:from-sky-600 hover:to-white",
                         selected.label === chart.label && "bg-sky-600/60 font-bold"
                       )}
                     >

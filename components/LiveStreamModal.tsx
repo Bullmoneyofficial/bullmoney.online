@@ -1223,7 +1223,7 @@ const LiveStreamContent = memo(() => {
               </span>
             )}
             <div className="flex items-center gap-2">
-              <Tv className="w-5 h-5 text-blue-400" />
+              <Tv className="w-5 h-5 text-white" />
               <span className="text-white font-semibold hidden sm:inline">BullMoney TV</span>
             </div>
             
@@ -1233,7 +1233,7 @@ const LiveStreamContent = memo(() => {
                 onClick={() => { SoundEffects.click(); setActiveTab('bullmoney'); }}
                 className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                   activeTab === 'bullmoney' 
-                    ? 'bg-blue-500 text-white' 
+                    ? 'bg-white text-black' 
                     : 'text-neutral-400 hover:text-white'
                 }`}
               >
@@ -1246,7 +1246,7 @@ const LiveStreamContent = memo(() => {
                 onClick={() => { SoundEffects.click(); setActiveTab('personal'); }}
                 className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                   activeTab === 'personal' 
-                    ? 'bg-purple-500 text-white' 
+                    ? 'bg-white text-black' 
                     : 'text-neutral-400 hover:text-white'
                 }`}
               >
@@ -1266,7 +1266,7 @@ const LiveStreamContent = memo(() => {
                   <img 
                     src={youtubeAuth.user.picture} 
                     alt={youtubeAuth.user.name}
-                    className={`w-7 h-7 rounded-full border ${tokenNeedsRefresh ? 'border-yellow-500/70 opacity-60' : 'border-purple-500/50'}`}
+                    className={`w-7 h-7 rounded-full border ${tokenNeedsRefresh ? 'border-yellow-500/70 opacity-60' : 'border-white/50'}`}
                   />
                   {tokenNeedsRefresh ? (
                     <motion.button
@@ -1304,7 +1304,7 @@ const LiveStreamContent = memo(() => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => { SoundEffects.click(); setShowPersonalLogin(!showPersonalLogin); }}
-                  className={`p-2 rounded-lg transition-all ${showPersonalLogin ? 'bg-purple-500 text-white' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                  className={`p-2 rounded-lg transition-all ${showPersonalLogin ? 'bg-white text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}
                   title="Setup My YouTube"
                 >
                   <LogIn className="w-5 h-5" />
@@ -1316,7 +1316,7 @@ const LiveStreamContent = memo(() => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => { SoundEffects.click(); setShowAdmin(!showAdmin); }}
-                className={`p-2 rounded-lg transition-all ${showAdmin ? 'bg-blue-500 text-white' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                className={`p-2 rounded-lg transition-all ${showAdmin ? 'bg-white text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}
               >
                 <Settings className="w-5 h-5" />
               </motion.button>
@@ -1345,7 +1345,7 @@ const LiveStreamContent = memo(() => {
               className="overflow-hidden bg-neutral-800/50 border-b border-white/10 flex-shrink-0"
             >
               <div className="p-4 space-y-4">
-                <h3 className="text-sm font-semibold text-blue-400 uppercase tracking-wider">Admin Panel</h3>
+                <h3 className="text-sm font-semibold text-white uppercase tracking-wider">Admin Panel</h3>
                 
                 {/* Channel URL */}
                 <div className="flex flex-col sm:flex-row gap-2">
@@ -1354,14 +1354,14 @@ const LiveStreamContent = memo(() => {
                     placeholder="YouTube Channel URL"
                     value={channelUrl}
                     onChange={(e) => setChannelUrl(e.target.value)}
-                    className="flex-1 px-3 py-2 bg-black/50 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 placeholder-neutral-500"
+                    className="flex-1 px-3 py-2 bg-black/50 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-white placeholder-neutral-500"
                   />
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={saveConfig}
                     disabled={saving}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium text-sm flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-blue-600 transition-colors"
+                    className="px-4 py-2 bg-white text-black rounded-lg font-medium text-sm flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-white transition-colors"
                   >
                     {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     Save
@@ -1375,14 +1375,14 @@ const LiveStreamContent = memo(() => {
                     placeholder="Video Title"
                     value={newVideoTitle}
                     onChange={(e) => setNewVideoTitle(e.target.value)}
-                    className="flex-1 px-3 py-2 bg-black/50 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 placeholder-neutral-500"
+                    className="flex-1 px-3 py-2 bg-black/50 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-white placeholder-neutral-500"
                   />
                   <input
                     type="text"
                     placeholder="YouTube Video ID"
                     value={newVideoId}
                     onChange={(e) => setNewVideoId(e.target.value)}
-                    className="flex-1 px-3 py-2 bg-black/50 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 placeholder-neutral-500"
+                    className="flex-1 px-3 py-2 bg-black/50 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-white placeholder-neutral-500"
                   />
                 </div>
                 <div className="flex items-center gap-4">
@@ -1400,7 +1400,7 @@ const LiveStreamContent = memo(() => {
                     whileTap={{ scale: 0.98 }}
                     onClick={addVideo}
                     disabled={saving || !newVideoTitle.trim() || !newVideoId.trim()}
-                    className="px-4 py-2 bg-green-500 text-white rounded-lg font-medium text-sm flex items-center gap-2 disabled:opacity-50 hover:bg-green-600 transition-colors"
+                    className="px-4 py-2 bg-white text-black rounded-lg font-medium text-sm flex items-center gap-2 disabled:opacity-50 hover:bg-white transition-colors"
                   >
                     <Plus className="w-4 h-4" />
                     Add Video
@@ -1449,12 +1449,12 @@ const LiveStreamContent = memo(() => {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden bg-purple-900/20 border-b border-purple-500/20 flex-shrink-0"
+              className="overflow-hidden bg-white/20 border-b border-white/20 flex-shrink-0"
             >
               <div className="p-4 space-y-4">
                 <div className="flex items-center gap-2">
                   <Youtube className="w-5 h-5 text-red-500" />
-                  <h3 className="text-sm font-semibold text-purple-400 uppercase tracking-wider">Connect Your YouTube</h3>
+                  <h3 className="text-sm font-semibold text-white uppercase tracking-wider">Connect Your YouTube</h3>
                 </div>
                 
                 {personalError && (
@@ -1506,13 +1506,13 @@ const LiveStreamContent = memo(() => {
                     placeholder="Your YouTube Channel URL (optional)"
                     value={personalChannelUrl}
                     onChange={(e) => setPersonalChannelUrl(e.target.value)}
-                    className="flex-1 px-3 py-2 bg-black/50 border border-purple-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500 placeholder-neutral-500"
+                    className="flex-1 px-3 py-2 bg-black/50 border border-white/30 rounded-lg text-white text-sm focus:outline-none focus:border-white placeholder-neutral-500"
                   />
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={savePersonalChannelUrl}
-                    className="px-4 py-2 bg-purple-500 text-white rounded-lg font-medium text-sm flex items-center justify-center gap-2 hover:bg-purple-600 transition-colors"
+                    className="px-4 py-2 bg-white text-black rounded-lg font-medium text-sm flex items-center justify-center gap-2 hover:bg-white transition-colors"
                   >
                     <Check className="w-4 h-4" />
                     Continue
@@ -1530,7 +1530,7 @@ const LiveStreamContent = memo(() => {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden bg-purple-900/20 border-b border-purple-500/20 flex-shrink-0"
+              className="overflow-hidden bg-white/20 border-b border-white/20 flex-shrink-0"
             >
               <div className="p-4">
                 <div className="flex items-center justify-between mb-3">
@@ -1547,7 +1547,7 @@ const LiveStreamContent = memo(() => {
                   <select
                     value={selectedPlaylist}
                     onChange={(e) => setSelectedPlaylist(e.target.value)}
-                    className="px-3 py-1.5 bg-black/50 border border-purple-500/30 rounded-lg text-white text-xs focus:outline-none focus:border-purple-500"
+                    className="px-3 py-1.5 bg-black/50 border border-white/30 rounded-lg text-white text-xs focus:outline-none focus:border-white"
                   >
                     <option value="liked">❤️ Liked Videos</option>
                     {youtubePlaylists.map(playlist => (
@@ -1560,7 +1560,7 @@ const LiveStreamContent = memo(() => {
                 
                 {loadingYoutubeVideos && (
                   <div className="flex items-center justify-center py-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
+                    <Loader2 className="w-4 h-4 animate-spin text-white" />
                     <span className="text-xs text-neutral-400 ml-2">Loading videos...</span>
                   </div>
                 )}
@@ -1576,14 +1576,14 @@ const LiveStreamContent = memo(() => {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden bg-purple-900/20 border-b border-purple-500/20 flex-shrink-0"
+              className="overflow-hidden bg-white/20 border-b border-white/20 flex-shrink-0"
             >
               <div className="p-4 space-y-3">
                 {/* Channel Info Header */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Youtube className="w-4 h-4 text-red-500" />
-                    <h3 className="text-xs font-semibold text-purple-400 uppercase tracking-wider">
+                    <h3 className="text-xs font-semibold text-white uppercase tracking-wider">
                       {personalProfile.channelUrl ? 'Channel Videos' : 'My YouTube'}
                     </h3>
                     {channelVideos.length > 0 && (
@@ -1600,7 +1600,7 @@ const LiveStreamContent = memo(() => {
                           whileTap={{ scale: 0.95 }}
                           onClick={refreshChannelVideos}
                           disabled={loadingChannelVideos}
-                          className="p-1.5 rounded-lg bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition-all disabled:opacity-50"
+                          className="p-1.5 rounded-lg bg-white/20 text-white hover:bg-white/30 transition-all disabled:opacity-50"
                           title="Refresh channel videos"
                         >
                           <RefreshCw className={`w-3.5 h-3.5 ${loadingChannelVideos ? 'animate-spin' : ''}`} />
@@ -1609,7 +1609,7 @@ const LiveStreamContent = memo(() => {
                           href={personalProfile.channelUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-xs text-purple-400 hover:text-purple-300 transition-colors"
+                          className="flex items-center gap-1 text-xs text-white hover:text-white transition-colors"
                         >
                           <ExternalLink className="w-3 h-3" />
                           <span className="hidden sm:inline">View Channel</span>
@@ -1621,7 +1621,7 @@ const LiveStreamContent = memo(() => {
                 
                 {/* Channel Video Loading State */}
                 {loadingChannelVideos && (
-                  <div className="flex items-center gap-2 text-xs text-purple-400 bg-purple-500/10 px-3 py-2 rounded-lg">
+                  <div className="flex items-center gap-2 text-xs text-white bg-white/10 px-3 py-2 rounded-lg">
                     <Loader2 className="w-3 h-3 animate-spin" />
                     Loading videos from channel...
                   </div>
@@ -1637,7 +1637,7 @@ const LiveStreamContent = memo(() => {
                 
                 {/* Channel Video Success */}
                 {channelVideos.length > 0 && !loadingChannelVideos && (
-                  <div className="flex items-center gap-2 text-xs text-green-400 bg-green-500/10 px-3 py-2 rounded-lg">
+                  <div className="flex items-center gap-2 text-xs text-white bg-white/10 px-3 py-2 rounded-lg">
                     <Check className="w-3 h-3" />
                     Loaded {channelVideos.length} videos from channel
                   </div>
@@ -1664,21 +1664,21 @@ const LiveStreamContent = memo(() => {
                     placeholder="Video Title"
                     value={personalVideoTitle}
                     onChange={(e) => { setPersonalVideoTitle(e.target.value); setPersonalError(''); }}
-                    className="flex-1 px-3 py-2 bg-black/50 border border-purple-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500 placeholder-neutral-500"
+                    className="flex-1 px-3 py-2 bg-black/50 border border-white/30 rounded-lg text-white text-sm focus:outline-none focus:border-white placeholder-neutral-500"
                   />
                   <input
                     type="text"
                     placeholder="YouTube URL or Video ID"
                     value={personalVideoUrl}
                     onChange={(e) => { setPersonalVideoUrl(e.target.value); setPersonalError(''); }}
-                    className="flex-1 px-3 py-2 bg-black/50 border border-purple-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500 placeholder-neutral-500"
+                    className="flex-1 px-3 py-2 bg-black/50 border border-white/30 rounded-lg text-white text-sm focus:outline-none focus:border-white placeholder-neutral-500"
                   />
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={addPersonalVideo}
                     disabled={personalSaving || !personalVideoTitle.trim() || !personalVideoUrl.trim()}
-                    className="px-4 py-2 bg-purple-500 text-white rounded-lg font-medium text-sm flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-purple-600 transition-colors"
+                    className="px-4 py-2 bg-white text-black rounded-lg font-medium text-sm flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-white transition-colors"
                   >
                     {personalSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                     Add
@@ -1711,7 +1711,7 @@ const LiveStreamContent = memo(() => {
                   title={activeVideo.title}
                 />
               ) : activeTab === 'personal' && !youtubeAuth && !personalProfile ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-purple-900/20 to-black">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-white/20 to-black">
                   <Youtube className="w-16 h-16 text-red-500/50" />
                   <p className="text-neutral-400 text-center max-w-xs">Connect your YouTube account to watch your playlists and liked videos</p>
                   <motion.button
@@ -1730,24 +1730,24 @@ const LiveStreamContent = memo(() => {
                   </motion.button>
                 </div>
               ) : activeTab === 'personal' && youtubeAuth && youtubeVideos.length === 0 && loadingYoutubeVideos ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-purple-900/20 to-black">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-white/20 to-black">
                   <ShimmerSpinner size={48} color="blue" />
                   <p className="text-neutral-400 text-sm">Loading your videos...</p>
                 </div>
               ) : activeTab === 'personal' && youtubeAuth && youtubeVideos.length === 0 ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-purple-900/20 to-black">
-                  <Heart className="w-16 h-16 text-purple-400/50" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-white/20 to-black">
+                  <Heart className="w-16 h-16 text-white/50" />
                   <p className="text-neutral-400 text-center max-w-xs">No videos found in this playlist</p>
                   <p className="text-neutral-500 text-xs">Try selecting a different playlist above</p>
                 </div>
               ) : activeTab === 'personal' && !youtubeAuth && loadingChannelVideos ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-purple-900/20 to-black">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-white/20 to-black">
                   <ShimmerSpinner size={48} color="blue" />
                   <p className="text-neutral-400 text-sm">Loading channel videos...</p>
                 </div>
               ) : activeTab === 'personal' && !youtubeAuth && personalProfile && channelVideos.length === 0 && personalProfile.videos.length === 0 ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-purple-900/20 to-black">
-                  <Youtube className="w-16 h-16 text-purple-400/50" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-white/20 to-black">
+                  <Youtube className="w-16 h-16 text-white/50" />
                   {personalProfile.channelUrl ? (
                     <>
                       <p className="text-neutral-400 text-center max-w-xs">
@@ -1757,7 +1757,7 @@ const LiveStreamContent = memo(() => {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={refreshChannelVideos}
-                        className="px-4 py-2 bg-purple-500 text-white rounded-lg font-medium text-sm flex items-center gap-2"
+                        className="px-4 py-2 bg-white text-black rounded-lg font-medium text-sm flex items-center gap-2"
                       >
                         <RefreshCw className="w-4 h-4" />
                         Retry
@@ -1769,14 +1769,14 @@ const LiveStreamContent = memo(() => {
                 </div>
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-neutral-900 to-black">
-                  <Youtube className="w-16 h-16 text-blue-400/50" />
+                  <Youtube className="w-16 h-16 text-white/50" />
                   <p className="text-neutral-500 text-center">No videos available</p>
                   {isAdmin && (
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setShowAdmin(true)}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium text-sm"
+                      className="px-4 py-2 bg-white text-black rounded-lg font-medium text-sm"
                     >
                       Add Videos
                     </motion.button>
@@ -1804,7 +1804,7 @@ const LiveStreamContent = memo(() => {
                     {activeTab === 'personal' && (
                       <>
                         <span className="text-neutral-600">•</span>
-                        <span className="text-purple-400">My Video</span>
+                        <span className="text-white">My Video</span>
                       </>
                     )}
                   </p>
@@ -1858,7 +1858,7 @@ const LiveStreamContent = memo(() => {
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={() => { SoundEffects.click(); setIsPlaying(!isPlaying); }}
-                    className={`p-3 rounded-full text-white transition-all ${activeTab === 'personal' ? 'bg-purple-500 hover:bg-purple-600' : 'bg-blue-500 hover:bg-blue-600'}`}
+                    className={`p-3 rounded-full text-black transition-all ${activeTab === 'personal' ? 'bg-white hover:bg-white/90' : 'bg-white hover:bg-white/90'}`}
                   >
                     {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
                   </motion.button>
@@ -1889,7 +1889,7 @@ const LiveStreamContent = memo(() => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => { SoundEffects.click(); setShowPlaylist(!showPlaylist); }}
-                  className={`lg:hidden flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${showPlaylist ? 'bg-blue-500 text-white' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                  className={`lg:hidden flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${showPlaylist ? 'bg-white text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}
                 >
                   <List className="w-4 h-4" />
                   <span className="text-sm">Playlist</span>
@@ -1914,10 +1914,10 @@ const LiveStreamContent = memo(() => {
                 <div className="p-3 border-b border-white/5 flex-shrink-0">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                      <List className={`w-4 h-4 ${activeTab === 'personal' ? 'text-purple-400' : 'text-blue-400'}`} />
+                      <List className={`w-4 h-4 ${activeTab === 'personal' ? 'text-white' : 'text-white'}`} />
                       {activeTab === 'personal' ? 'My Videos' : 'Up Next'}
                     </h3>
-                    <span className={`text-xs text-neutral-500 px-2 py-0.5 rounded-full ${activeTab === 'personal' ? 'bg-purple-500/20' : 'bg-neutral-800'}`}>
+                    <span className={`text-xs text-neutral-500 px-2 py-0.5 rounded-full ${activeTab === 'personal' ? 'bg-white/20' : 'bg-neutral-800'}`}>
                       {activeVideoList.length}
                     </span>
                   </div>
@@ -1936,7 +1936,7 @@ const LiveStreamContent = memo(() => {
                         className={`
                           w-full flex gap-3 p-2 rounded-lg transition-all text-left group
                           ${index === currentVideoIndex 
-                            ? 'bg-blue-500/20 ring-1 ring-blue-500/50' 
+                            ? 'bg-white/20 ring-1 ring-white/50' 
                             : 'hover:bg-white/5'
                           }
                         `}
@@ -1954,7 +1954,7 @@ const LiveStreamContent = memo(() => {
                             transition-opacity
                             ${index === currentVideoIndex ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}
                           `}>
-                            <div className={`p-1.5 rounded-full ${index === currentVideoIndex ? 'bg-blue-500' : 'bg-white/20'}`}>
+                            <div className={`p-1.5 rounded-full ${index === currentVideoIndex ? 'bg-white' : 'bg-white/20'}`}>
                               {index === currentVideoIndex ? (
                                 <Radio className="w-3 h-3 text-white" />
                               ) : (
@@ -1974,7 +1974,7 @@ const LiveStreamContent = memo(() => {
                         <div className="flex-1 min-w-0 py-0.5">
                           <p className={`
                             text-xs font-medium line-clamp-2 mb-1 transition-colors
-                            ${index === currentVideoIndex ? 'text-blue-400' : 'text-white group-hover:text-blue-400'}
+                            ${index === currentVideoIndex ? 'text-white' : 'text-white group-hover:text-white'}
                           `}>
                             {video.title}
                           </p>
@@ -1983,8 +1983,8 @@ const LiveStreamContent = memo(() => {
                             BullMoney TV
                           </p>
                           {index === currentVideoIndex && (
-                            <p className="text-[10px] text-blue-400 mt-0.5 flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" />
+                            <p className="text-[10px] text-white mt-0.5 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                               Playing
                             </p>
                           )}
@@ -2002,7 +2002,7 @@ const LiveStreamContent = memo(() => {
                         className={`
                           w-full flex gap-3 p-2 rounded-lg transition-all text-left group
                           ${index === youtubeVideoIndex 
-                            ? 'bg-purple-500/20 ring-1 ring-purple-500/50' 
+                            ? 'bg-white/20 ring-1 ring-white/50' 
                             : 'hover:bg-white/5'
                           }
                         `}
@@ -2020,7 +2020,7 @@ const LiveStreamContent = memo(() => {
                             transition-opacity
                             ${index === youtubeVideoIndex ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}
                           `}>
-                            <div className={`p-1.5 rounded-full ${index === youtubeVideoIndex ? 'bg-purple-500' : 'bg-white/20'}`}>
+                            <div className={`p-1.5 rounded-full ${index === youtubeVideoIndex ? 'bg-white' : 'bg-white/20'}`}>
                               {index === youtubeVideoIndex ? (
                                 <Radio className="w-3 h-3 text-white" />
                               ) : (
@@ -2034,7 +2034,7 @@ const LiveStreamContent = memo(() => {
                         <div className="flex-1 min-w-0 py-0.5">
                           <p className={`
                             text-xs font-medium line-clamp-2 mb-1 transition-colors
-                            ${index === youtubeVideoIndex ? 'text-purple-400' : 'text-white group-hover:text-purple-400'}
+                            ${index === youtubeVideoIndex ? 'text-white' : 'text-white group-hover:text-white'}
                           `}>
                             {video.title}
                           </p>
@@ -2043,8 +2043,8 @@ const LiveStreamContent = memo(() => {
                             {video.channelTitle || 'YouTube'}
                           </p>
                           {index === youtubeVideoIndex && (
-                            <p className="text-[10px] text-purple-400 mt-0.5 flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse" />
+                            <p className="text-[10px] text-white mt-0.5 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                               Playing
                             </p>
                           )}
@@ -2062,7 +2062,7 @@ const LiveStreamContent = memo(() => {
                         className={`
                           w-full flex gap-3 p-2 rounded-lg transition-all text-left group
                           ${index === youtubeVideoIndex 
-                            ? 'bg-purple-500/20 ring-1 ring-purple-500/50' 
+                            ? 'bg-white/20 ring-1 ring-white/50' 
                             : 'hover:bg-white/5'
                           }
                         `}
@@ -2080,7 +2080,7 @@ const LiveStreamContent = memo(() => {
                             transition-opacity
                             ${index === youtubeVideoIndex ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}
                           `}>
-                            <div className={`p-1.5 rounded-full ${index === youtubeVideoIndex ? 'bg-purple-500' : 'bg-white/20'}`}>
+                            <div className={`p-1.5 rounded-full ${index === youtubeVideoIndex ? 'bg-white' : 'bg-white/20'}`}>
                               {index === youtubeVideoIndex ? (
                                 <Radio className="w-3 h-3 text-white" />
                               ) : (
@@ -2094,7 +2094,7 @@ const LiveStreamContent = memo(() => {
                         <div className="flex-1 min-w-0 py-0.5">
                           <p className={`
                             text-xs font-medium line-clamp-2 mb-1 transition-colors
-                            ${index === youtubeVideoIndex ? 'text-purple-400' : 'text-white group-hover:text-purple-400'}
+                            ${index === youtubeVideoIndex ? 'text-white' : 'text-white group-hover:text-white'}
                           `}>
                             {video.title}
                           </p>
@@ -2103,8 +2103,8 @@ const LiveStreamContent = memo(() => {
                             {video.channelTitle || 'Channel'}
                           </p>
                           {index === youtubeVideoIndex && (
-                            <p className="text-[10px] text-purple-400 mt-0.5 flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse" />
+                            <p className="text-[10px] text-white mt-0.5 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                               Playing
                             </p>
                           )}
@@ -2120,7 +2120,7 @@ const LiveStreamContent = memo(() => {
                         className={`
                           w-full flex gap-3 p-2 rounded-lg transition-all text-left group
                           ${index === personalVideoIndex 
-                            ? 'bg-purple-500/20 ring-1 ring-purple-500/50' 
+                            ? 'bg-white/20 ring-1 ring-white/50' 
                             : 'hover:bg-white/5'
                           }
                         `}
@@ -2142,7 +2142,7 @@ const LiveStreamContent = memo(() => {
                               transition-opacity
                               ${index === personalVideoIndex ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}
                             `}>
-                              <div className={`p-1.5 rounded-full ${index === personalVideoIndex ? 'bg-purple-500' : 'bg-white/20'}`}>
+                              <div className={`p-1.5 rounded-full ${index === personalVideoIndex ? 'bg-white' : 'bg-white/20'}`}>
                                 {index === personalVideoIndex ? (
                                   <Radio className="w-3 h-3 text-white" />
                                 ) : (
@@ -2156,7 +2156,7 @@ const LiveStreamContent = memo(() => {
                           <div className="flex-1 min-w-0 py-0.5">
                             <p className={`
                               text-xs font-medium line-clamp-2 mb-1 transition-colors
-                              ${index === personalVideoIndex ? 'text-purple-400' : 'text-white group-hover:text-purple-400'}
+                              ${index === personalVideoIndex ? 'text-white' : 'text-white group-hover:text-white'}
                             `}>
                               {video.title}
                             </p>
@@ -2165,8 +2165,8 @@ const LiveStreamContent = memo(() => {
                               My Video
                             </p>
                             {index === personalVideoIndex && (
-                              <p className="text-[10px] text-purple-400 mt-0.5 flex items-center gap-1">
-                                <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse" />
+                              <p className="text-[10px] text-white mt-0.5 flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                                 Playing
                               </p>
                             )}
@@ -2190,7 +2190,7 @@ const LiveStreamContent = memo(() => {
                     <div className="flex flex-col items-center justify-center py-8 text-center">
                       {activeTab === 'personal' ? (
                         <>
-                          <Heart className="w-10 h-10 text-purple-400/30 mb-2" />
+                          <Heart className="w-10 h-10 text-white/30 mb-2" />
                           <p className="text-neutral-500 text-xs">No videos added yet</p>
                           <p className="text-neutral-600 text-[10px] mt-1">Add videos above to watch them here</p>
                         </>

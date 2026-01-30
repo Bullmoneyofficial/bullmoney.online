@@ -123,12 +123,12 @@ const FpsMonitor = ({ show = false }: { show?: boolean }) => {
 
   // Determine color based on quality recommendation
   const getQualityColor = () => {
-    if (!recommendation) return 'text-blue-400';
+    if (!recommendation) return 'text-white';
     switch (recommendation.quality) {
       case 'excellent':
-        return 'text-green-400';
+        return 'text-white';
       case 'good':
-        return 'text-blue-400';
+        return 'text-white';
       case 'fair':
         return 'text-yellow-400';
       case 'poor':
@@ -166,8 +166,8 @@ const FpsMonitor = ({ show = false }: { show?: boolean }) => {
     >
       <style>{`
         @keyframes neon-pulse {
-          0%, 100% { text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6; }
-          50% { text-shadow: 0 0 8px #3b82f6, 0 0 16px #3b82f6; }
+          0%, 100% { text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff; }
+          50% { text-shadow: 0 0 8px #ffffff, 0 0 16px #ffffff; }
         }
         @keyframes neon-warn {
           0%, 100% { text-shadow: 0 0 4px #ef4444, 0 0 8px #ef4444; }
@@ -176,13 +176,13 @@ const FpsMonitor = ({ show = false }: { show?: boolean }) => {
         .neon-good { animation: neon-pulse 1s ease-in-out infinite; }
         .neon-bad { animation: neon-warn 1s ease-in-out infinite; }
         .fps-panel { cursor: pointer; transition: all 0.2s; }
-        .fps-panel:hover { box-shadow: 0 0 24px rgba(59, 130, 246, 0.7), 0 0 48px rgba(59, 130, 246, 0.4) !important; }
+        .fps-panel:hover { box-shadow: 0 0 24px rgba(255, 255, 255, 0.7), 0 0 48px rgba(255, 255, 255, 0.4) !important; }
       `}</style>
 
       <div
-        className="fps-panel bg-black/95 border-2 border-blue-500/50 rounded-lg p-2.5 text-white shadow-2xl"
+        className="fps-panel bg-black/95 border-2 border-white/50 rounded-lg p-2.5 text-white shadow-2xl"
         style={{
-          boxShadow: '0 0 12px rgba(59, 130, 246, 0.5)',
+          boxShadow: '0 0 12px rgba(255, 255, 255, 0.5)',
           maxWidth: '320px',
         }}
         onClick={() => setShowDiagnostics(!showDiagnostics)}
@@ -195,50 +195,50 @@ const FpsMonitor = ({ show = false }: { show?: boolean }) => {
         </div>
 
         {/* Main metrics grid */}
-        <div className="grid grid-cols-2 gap-2 mb-2 border-t border-blue-500/30 pt-2">
+        <div className="grid grid-cols-2 gap-2 mb-2 border-t border-white/30 pt-2">
           {/* FPS */}
           <div>
-            <div className="text-blue-300/70 text-xs">FPS</div>
+            <div className="text-white/70 text-xs">FPS</div>
             <div className={`font-bold text-lg ${getQualityColor()}`}>
               {metrics.averageFps}
             </div>
-            <div className="text-xs text-blue-300/50">
+            <div className="text-xs text-white/50">
               min: {Math.round(metrics.minFrameTime ? 1000 / metrics.maxFrameTime : 0)} | max: {Math.round(metrics.maxFrameTime ? 1000 / metrics.minFrameTime : 0)}
             </div>
           </div>
 
           {/* Frame Time */}
           <div>
-            <div className="text-blue-300/70 text-xs">Frame Time</div>
-            <div className={metrics.averageFrameTime > 16.67 ? 'text-red-400 font-bold' : 'text-blue-400 font-bold'}>
+            <div className="text-white/70 text-xs">Frame Time</div>
+            <div className={metrics.averageFrameTime > 16.67 ? 'text-red-400 font-bold' : 'text-white font-bold'}>
               {metrics.averageFrameTime.toFixed(2)}ms
             </div>
-            <div className="text-xs text-blue-300/50">
+            <div className="text-xs text-white/50">
               p95: {metrics.p95FrameTime.toFixed(1)}ms
             </div>
           </div>
 
           {/* Bottleneck */}
           <div>
-            <div className="text-blue-300/70 text-xs">Bottleneck</div>
+            <div className="text-white/70 text-xs">Bottleneck</div>
             <div className="font-bold">
               {metrics.isGpuBound ? (
                 <span className="text-orange-400">GPU</span>
               ) : metrics.isCpuBound ? (
                 <span className="text-yellow-400">CPU</span>
               ) : (
-                <span className="text-green-400">Balanced</span>
+                <span className="text-white">Balanced</span>
               )}
             </div>
           </div>
 
           {/* Jank */}
           <div>
-            <div className="text-blue-300/70 text-xs">Jank</div>
-            <div className={metrics.jankScore > 0.3 ? 'text-red-400 font-bold' : 'text-blue-400 font-bold'}>
+            <div className="text-white/70 text-xs">Jank</div>
+            <div className={metrics.jankScore > 0.3 ? 'text-red-400 font-bold' : 'text-white font-bold'}>
               {(metrics.jankScore * 100).toFixed(1)}%
             </div>
-            <div className="text-xs text-blue-300/50">
+            <div className="text-xs text-white/50">
               {metrics.jankEvents} events
             </div>
           </div>
@@ -246,9 +246,9 @@ const FpsMonitor = ({ show = false }: { show?: boolean }) => {
 
         {/* Quality & Recommendations */}
         {recommendation && (
-          <div className="border-t border-blue-500/30 pt-2 mb-2 text-xs">
-            <div className="text-blue-300/70 font-bold mb-1">
-              Quality: <span className="text-blue-400 capitalize">{recommendation.quality}</span>
+          <div className="border-t border-white/30 pt-2 mb-2 text-xs">
+            <div className="text-white/70 font-bold mb-1">
+              Quality: <span className="text-white capitalize">{recommendation.quality}</span>
             </div>
             {recommendation.issues.length > 0 && (
               <div className="text-red-300/70 mb-1">
@@ -265,16 +265,16 @@ const FpsMonitor = ({ show = false }: { show?: boolean }) => {
 
         {/* Diagnostics Panel */}
         {showDiagnostics && diagnosis && (
-          <div className="border-t border-blue-500/30 pt-2 text-xs bg-blue-950/30 rounded p-2">
-            <div className="font-bold text-blue-300 mb-1 capitalize">
+          <div className="border-t border-white/30 pt-2 text-xs bg-white/10/30 rounded p-2">
+            <div className="font-bold text-white mb-1 capitalize">
               {diagnosis.category}
             </div>
-            <div className="text-blue-300/70 mb-1 text-xs">
+            <div className="text-white/70 mb-1 text-xs">
               {diagnosis.diagnosis}
             </div>
             <div className="text-xs space-y-0.5">
               {diagnosis.nextSteps.slice(0, 3).map((step, i) => (
-                <div key={i} className="text-green-300/70">
+                <div key={i} className="text-white/70">
                   • {step}
                 </div>
               ))}
@@ -283,15 +283,15 @@ const FpsMonitor = ({ show = false }: { show?: boolean }) => {
         )}
 
         {/* Compact FPS Graph */}
-        <div className="border-t border-blue-500/30 pt-2">
+        <div className="border-t border-white/30 pt-2">
           <div className="flex gap-px h-4">
             {fpsHistoryRef.current.slice(-40).map((fps, i) => {
               const height = Math.max(1, Math.round((fps / 60) * 16));
               const color =
                 fps >= 58
-                  ? 'bg-green-500'
+                  ? 'bg-white'
                   : fps >= 50
-                  ? 'bg-blue-500'
+                  ? 'bg-white'
                   : fps >= 40
                   ? 'bg-yellow-500'
                   : fps >= 30
@@ -310,7 +310,7 @@ const FpsMonitor = ({ show = false }: { show?: boolean }) => {
         </div>
 
         {/* Status Footer */}
-        <div className="text-xs text-blue-300/50 mt-2 pt-2 border-t border-blue-500/30">
+        <div className="text-xs text-white/50 mt-2 pt-2 border-t border-white/30">
           Samples: {metrics.sampleCount} | {metrics.isReliable ? '✓ Reliable' : '⚠ Low sample'}
         </div>
       </div>

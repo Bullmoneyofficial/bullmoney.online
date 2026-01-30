@@ -152,15 +152,15 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#050B14] flex flex-col items-center justify-center relative overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/20 rounded-full blur-[100px] pointer-events-none" />
         <div className="relative z-10 flex flex-col items-center animate-in fade-in zoom-in duration-300">
           <div className={cn(
-            "w-20 h-20 border-t-2 border-l-2 rounded-full animate-spin mb-8 shadow-[0_0_15px_rgba(59,130,246,0.5)]",
-            activeBroker === 'Vantage' && !loadingText.includes("ESTABLISHING") ? "border-purple-500 shadow-purple-500/50" : "border-blue-500 shadow-blue-500/50"
+            "w-20 h-20 border-t-2 border-l-2 rounded-full animate-spin mb-8 shadow-[0_0_15px_rgba(255, 255, 255,0.5)]",
+            activeBroker === 'Vantage' && !loadingText.includes("ESTABLISHING") ? "border-white shadow-white/50" : "border-white shadow-white/50"
           )}></div>
           <h1 className="text-3xl font-black text-white tracking-tighter mb-2">
             BULLMONEY<span className={cn(
-              activeBroker === 'Vantage' && !loadingText.includes("ESTABLISHING") ? "text-purple-500" : "text-blue-500"
+              activeBroker === 'Vantage' && !loadingText.includes("ESTABLISHING") ? "text-white" : "text-white"
             )}>FX</span>
           </h1>
           <p className="text-white/40 font-mono text-sm tracking-widest animate-pulse uppercase">
@@ -175,23 +175,23 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   if (step === 5) {
     return (
       <div className="min-h-screen bg-[#050B14] flex items-center justify-center p-4 relative">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-[#050B14] to-[#050B14]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white/20 via-[#050B14] to-[#050B14]" />
         
-        <div className="bg-[#0A1120] border border-blue-500/30 p-8 rounded-2xl shadow-[0_0_50px_rgba(59,130,246,0.15)] text-center max-w-md w-full relative z-10 animate-in fade-in zoom-in duration-500">
+        <div className="bg-[#0A1120] border border-white/30 p-8 rounded-2xl shadow-[0_0_50px_rgba(255, 255, 255,0.15)] text-center max-w-md w-full relative z-10 animate-in fade-in zoom-in duration-500">
           <div className="mx-auto w-24 h-24 relative mb-6">
-            <div className="absolute inset-0 rounded-full border-4 border-blue-900 animate-[spin_3s_linear_infinite]" />
-            <div className="absolute inset-0 bg-green-500 rounded-full scale-0 animate-[scale-up_0.5s_ease-out_forwards_0.2s] flex items-center justify-center">
+            <div className="absolute inset-0 rounded-full border-4 border-white animate-[spin_3s_linear_infinite]" />
+            <div className="absolute inset-0 bg-white rounded-full scale-0 animate-[scale-up_0.5s_ease-out_forwards_0.2s] flex items-center justify-center">
               <Check className="w-12 h-12 text-white stroke-[3] opacity-0 animate-[fade-in_0.3s_ease-out_forwards_0.6s]" />
             </div>
           </div>
           <h2 className="text-3xl font-bold text-white mb-2">Registration Complete</h2>
           <p className="text-slate-400 mb-8">
-            Welcome aboard, <span className="text-blue-400 font-semibold">{formData.email}</span>. 
+            Welcome aboard, <span className="text-white font-semibold">{formData.email}</span>. 
             <br/>Your MT5 account has been recorded.
           </p>
           <button 
             onClick={onUnlock}
-            className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold tracking-wide transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_30px_rgba(37,99,235,0.5)] group flex items-center justify-center"
+            className="w-full py-4 bg-white hover:bg-white/90 text-black rounded-xl font-bold tracking-wide transition-all shadow-[0_0_20px_rgba(255, 255, 255,0.3)] hover:shadow-[0_0_30px_rgba(255, 255, 255,0.5)] group flex items-center justify-center"
           >
             ACCESS PLATFORM
             <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
@@ -209,8 +209,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   if (step === 4) {
     return (
       <div className="min-h-screen bg-[#050B14] flex flex-col items-center justify-center relative">
-         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none" />
-        <Loader2 className="w-16 h-16 text-blue-500 animate-spin mb-4" />
+         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/20 rounded-full blur-[100px] pointer-events-none" />
+        <Loader2 className="w-16 h-16 text-white animate-spin mb-4" />
         <h2 className="text-xl font-bold text-white">Verifying Account...</h2>
       </div>
     );
@@ -221,17 +221,17 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     <div className="min-h-screen bg-[#050B14] flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans">
       <div className={cn(
         "absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent to-transparent opacity-50 transition-colors duration-500",
-        isVantage ? "via-purple-600" : "via-blue-600"
+        isVantage ? "via-white" : "via-white"
       )} />
       <div className={cn(
         "absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px] pointer-events-none transition-colors duration-500",
-        isVantage ? "bg-purple-600/5" : "bg-blue-600/5"
+        isVantage ? "bg-white/5" : "bg-white/5"
       )} />
 
       <div className="w-full max-w-xl relative z-10">
         <div className="mb-8 text-center">
            <h1 className="text-2xl font-black text-white tracking-tight opacity-50">
-            BULLMONEY<span className={cn("transition-colors duration-300", isVantage ? "text-purple-600" : "text-blue-600")}>FREE</span>
+            BULLMONEY<span className={cn("transition-colors duration-300", isVantage ? "text-white" : "text-white")}>FREE</span>
           </h1>
         </div>
 
@@ -256,8 +256,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                       className={cn(
                         "absolute inset-0 -z-10 rounded-full",
                         partner === "Vantage"
-                          ? "bg-gradient-to-r from-purple-500 to-violet-600 shadow-[0_0_25px_rgba(168,85,247,0.45)]"
-                          : "bg-gradient-to-r from-sky-500 to-blue-600 shadow-[0_0_25px_rgba(56,189,248,0.45)]"
+                          ? "bg-gradient-to-r from-white to-white shadow-[0_0_25px_rgba(255, 255, 255,0.45)]"
+                          : "bg-gradient-to-r from-sky-500 to-white shadow-[0_0_25px_rgba(255, 255, 255,0.45)]"
                       )}
                       transition={{ type: "spring", stiffness: 400, damping: 28 }}
                     />
@@ -292,7 +292,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                       className={cn(
                         "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold ring-1 ring-inset transition",
                         isVantage 
-                          ? "text-purple-300 ring-purple-500/40 hover:bg-purple-500/10" 
+                          ? "text-white ring-white/40 hover:bg-white/10" 
                           : "text-sky-300 ring-sky-500/40 hover:bg-sky-500/10"
                       )}
                     >
@@ -305,8 +305,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                       className={cn(
                         "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-white shadow transition",
                         isVantage
-                          ? "bg-gradient-to-r from-purple-500 to-violet-600 hover:from-violet-600 hover:to-fuchsia-700"
-                          : "bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700"
+                          ? "bg-gradient-to-r from-white to-white hover:from-white hover:to-fuchsia-700"
+                          : "bg-gradient-to-r from-sky-500 to-white hover:from-sky-600 hover:to-white"
                       )}
                     >
                       <span>Open {activeBroker} Account</span>
@@ -357,8 +357,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                       "w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg",
                       !formData.mt5Number ? "opacity-50 cursor-not-allowed bg-slate-800 text-slate-500" :
                       isVantage 
-                        ? "bg-white text-purple-950 hover:bg-purple-50"
-                        : "bg-white text-blue-950 hover:bg-blue-50"
+                        ? "bg-white text-black hover:bg-white"
+                        : "bg-white text-black hover:bg-white"
                     )}
                   >
                     Next Step
@@ -410,8 +410,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                       "w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg",
                       !formData.email ? "opacity-50 cursor-not-allowed bg-slate-800 text-slate-500" :
                       isVantage 
-                        ? "bg-white text-purple-950 hover:bg-purple-50"
-                        : "bg-white text-blue-950 hover:bg-blue-50"
+                        ? "bg-white text-black hover:bg-white"
+                        : "bg-white text-black hover:bg-white"
                     )}
                   >
                     Finish Registration
@@ -471,24 +471,24 @@ function StepCard({ number, number2, title, children, actions, className }: any)
     )}>
       <div className={cn(
         "pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-gradient-to-l blur-2xl",
-        useRed ? "from-purple-500/15 via-violet-500/10 to-transparent" : "from-sky-500/15 via-blue-500/10 to-transparent"
+        useRed ? "from-white/15 via-white/10 to-transparent" : "from-sky-500/15 via-white/10 to-transparent"
       )} />
       <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10" />
       <div className="flex items-center justify-between mb-6">
         <span className={cn(
           "inline-flex items-center gap-2 text-[10px] md:text-[11px] uppercase tracking-[0.18em] px-2 py-1 rounded-md ring-1",
-          useRed ? "text-purple-300/90 ring-purple-500/30 bg-purple-500/10" : "text-sky-300/90 ring-sky-500/30 bg-sky-500/10"
+          useRed ? "text-white/90 ring-white/30 bg-white/10" : "text-sky-300/90 ring-sky-500/30 bg-sky-500/10"
         )}>
           Step {n}
         </span>
         <span className="relative text-4xl font-black bg-clip-text text-transparent">
           <span className={cn("bg-gradient-to-br bg-clip-text text-transparent",
-            useRed ? "from-purple-400 via-violet-500 to-fuchsia-400" : "from-sky-400 via-blue-500 to-indigo-400"
+            useRed ? "from-white via-white to-fuchsia-400" : "from-sky-400 via-white to-indigo-400"
           )}>
             {n}
           </span>
           <span className={cn("pointer-events-none absolute inset-0 -z-10 blur-2xl bg-gradient-to-br",
-            useRed ? "from-purple-500/40 via-violet-600/30 to-fuchsia-500/40" : "from-sky-500/40 via-blue-600/30 to-indigo-500/40"
+            useRed ? "from-white/40 via-white/30 to-fuchsia-500/40" : "from-sky-500/40 via-white/30 to-indigo-500/40"
           )} />
         </span>
       </div>
@@ -551,7 +551,7 @@ function CardPattern({ mouseX, mouseY, randomString }: any) {
   const style = { maskImage, WebkitMaskImage: maskImage as unknown as string };
   return (
     <div className="pointer-events-none absolute inset-0">
-      <motion.div className="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-700 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
+      <motion.div className="absolute inset-0 bg-gradient-to-r from-white to-white opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
       <motion.div className="absolute inset-0 opacity-0 mix-blend-overlay group-hover/card:opacity-100" style={style}>
         <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-white font-mono font-bold transition duration-500">{randomString}</p>
       </motion.div>
@@ -591,9 +591,9 @@ function CardPatternRed({ mouseX, mouseY, randomString }: any) {
   const style = { maskImage, WebkitMaskImage: maskImage as unknown as string };
   return (
     <div className="pointer-events-none absolute inset-0">
-      <motion.div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-violet-600 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
+      <motion.div className="absolute inset-0 bg-gradient-to-r from-white to-white opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
       <motion.div className="absolute inset-0 opacity-0 mix-blend-overlay group-hover/card:opacity-100" style={style}>
-        <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-violet-100/90 font-mono font-bold transition duration-500">{randomString}</p>
+        <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-white/90 font-mono font-bold transition duration-500">{randomString}</p>
       </motion.div>
     </div>
   );

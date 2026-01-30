@@ -28,7 +28,7 @@ const SoundSelector = ({ active, onSelect }: { active: SoundProfile, onSelect: (
                     key={pack.id} 
                     onClick={() => onSelect(pack.id)} 
                     className={`h-10 text-[10px] md:text-[10px] font-bold tracking-wider uppercase rounded-lg border transition-all flex items-center justify-center gap-1
-                        ${pack.id === active ? 'border-blue-500 bg-blue-900/30 text-blue-400' : 'border-white/10 text-gray-400 hover:border-blue-500/50'}
+                        ${pack.id === active ? 'border-white bg-white/30 text-white' : 'border-white/10 text-gray-400 hover:border-white/50'}
                     `}
                 >
                    <pack.icon className="w-3 h-3" /> <span className="truncate px-1">{pack.label}</span>
@@ -47,10 +47,10 @@ const AudioVisualizer = () => (
                 50% { height: 20%; }
             }
         `}</style>
-        <span className="w-0.5 h-full bg-blue-400 animate-[pulse_0.6s_ease-in-out_infinite]"/>
-        <span className="w-0.5 h-2/3 bg-blue-400 animate-[pulse_0.8s_ease-in-out_infinite] delay-100"/>
-        <span className="w-0.5 h-3/4 bg-blue-400 animate-[pulse_0.5s_ease-in-out_infinite] delay-200"/>
-        <span className="w-0.5 h-1/2 bg-blue-400 animate-[pulse_0.7s_ease-in-out_infinite] delay-300"/>
+        <span className="w-0.5 h-full bg-white animate-[pulse_0.6s_ease-in-out_infinite]"/>
+        <span className="w-0.5 h-2/3 bg-white animate-[pulse_0.8s_ease-in-out_infinite] delay-100"/>
+        <span className="w-0.5 h-3/4 bg-white animate-[pulse_0.5s_ease-in-out_infinite] delay-200"/>
+        <span className="w-0.5 h-1/2 bg-white animate-[pulse_0.7s_ease-in-out_infinite] delay-300"/>
     </div>
 );
 
@@ -107,7 +107,7 @@ export const ThemeSelector = ({
                 touch-scroll custom-scrollbar no-scrollbar
             ">
                 <div className="flex flex-row lg:flex-col p-2 gap-2 lg:gap-1 min-w-max lg:min-w-0">
-                    <div className="hidden lg:flex items-center gap-2 px-4 py-3 text-blue-500 font-bold text-xs tracking-widest border-b border-white/10 mb-2">
+                    <div className="hidden lg:flex items-center gap-2 px-4 py-3 text-white font-bold text-xs tracking-widest border-b border-white/10 mb-2">
                         <Layers className="w-3 h-3" /> CATEGORIES
                     </div>
                     {sortedCategories.map((cat) => (
@@ -120,7 +120,7 @@ export const ThemeSelector = ({
                                 text-[10px] md:text-xs font-bold tracking-wider uppercase transition-all
                                 whitespace-nowrap
                                 ${cat === activeCategory 
-                                    ? 'bg-blue-600/20 text-blue-400 border border-blue-500/50 shadow-[0_0_15px_rgba(37,99,235,0.2)]'
+                                    ? 'bg-white/20 text-white border border-white/50 shadow-[0_0_15px_rgba(255, 255, 255,0.2)]'
                                     : 'text-gray-500 hover:bg-white/5 border border-transparent bg-white/5 lg:bg-transparent'
                                 }
                             `}
@@ -140,7 +140,7 @@ export const ThemeSelector = ({
                      {/* 1. AUDIO PROFILE SECTION */}
                     <div className="shrink-0">
                         <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 flex items-center gap-2">
-                            <Volume2 className="w-3 h-3 text-blue-500"/> SYSTEM_AUDIO_PROFILE
+                            <Volume2 className="w-3 h-3 text-white"/> SYSTEM_AUDIO_PROFILE
                         </h3>
                         <SoundSelector 
                             active={currentSound} 
@@ -155,8 +155,8 @@ export const ThemeSelector = ({
                     {/* 2. VISUAL INTERFACE SECTION (Themes) */}
                     <div className="flex-1 pb-4">
                         <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4 flex items-center gap-2">
-                            <Monitor className="w-3 h-3 text-blue-500"/> 
-                            VISUAL_INTERFACE: <GlowText text={currentTheme?.name?.toUpperCase() || 'UNKNOWN'} className="text-blue-300 ml-1"/>
+                            <Monitor className="w-3 h-3 text-white"/> 
+                            VISUAL_INTERFACE: <GlowText text={currentTheme?.name?.toUpperCase() || 'UNKNOWN'} className="text-white ml-1"/>
                             
                             {/* Track Info */}
                             <span className="ml-auto flex items-center gap-2 text-[9px] text-gray-500 normal-case tracking-normal">
@@ -184,8 +184,8 @@ export const ThemeSelector = ({
                                             relative group text-left rounded-xl overflow-hidden border transition-all duration-300 w-full aspect-video shrink-0
                                             ${isUnavailable ? 'opacity-40 cursor-not-allowed border-white/5 grayscale'
                                             : isActive 
-                                                ? 'border-blue-500 ring-1 ring-blue-500/50 shadow-[0_0_20px_rgba(37,99,235,0.15)] bg-blue-950/10' 
-                                                : 'border-white/10 hover:border-blue-500/50 hover:shadow-[0_0_15px_rgba(37,99,235,0.1)] bg-black'}
+                                                ? 'border-white ring-1 ring-white/50 shadow-[0_0_20px_rgba(255, 255, 255,0.15)] bg-white/10/10' 
+                                                : 'border-white/10 hover:border-white/50 hover:shadow-[0_0_15px_rgba(255, 255, 255,0.1)] bg-black'}
                                         `}
                                     >
                                         {isUnavailable && (
@@ -201,11 +201,11 @@ export const ThemeSelector = ({
                                                 style={{ filter: isMobile ? theme.mobileFilter : theme.filter }}
                                             >
                                                 {/* Mini Preview Component */}
-                                                <LiveMiniPreview color={theme.accentColor || '#3b82f6'} isUnavailable={isUnavailable} />
+                                                <LiveMiniPreview color={theme.accentColor || '#ffffff'} isUnavailable={isUnavailable} />
                                             </div>
                                             
                                             {/* Active Overlay Effect */}
-                                            {isActive && <div className="absolute inset-0 bg-blue-500/5 mix-blend-overlay" />}
+                                            {isActive && <div className="absolute inset-0 bg-white/5 mix-blend-overlay" />}
                                         </div>
                                         
                                         {/* Label & Indicators */}
@@ -223,7 +223,7 @@ export const ThemeSelector = ({
                                             
                                             {/* Status Badge */}
                                             {isActive ? (
-                                                <div className="bg-blue-500 rounded-full p-0.5 shadow-[0_0_10px_rgba(59,130,246,0.8)]">
+                                                <div className="bg-white rounded-full p-0.5 shadow-[0_0_10px_rgba(255, 255, 255,0.8)]">
                                                     <Check className="w-2 h-2 text-black" />
                                                 </div>
                                             ) : !isUnavailable && (
@@ -244,7 +244,7 @@ export const ThemeSelector = ({
                 {/* Modal Footer/Save Bar */}
                 <div className="shrink-0 p-4 md:p-6 border-t border-white/10 bg-black/50 backdrop-blur-md">
                     <div className="grid grid-cols-2 gap-3 max-w-lg mx-auto">
-                        <ShimmerButton icon={Check} onClick={() => onSave(activeThemeId)} className="h-10 text-xs text-green-500">
+                        <ShimmerButton icon={Check} onClick={() => onSave(activeThemeId)} className="h-10 text-xs text-white">
                             APPLY & SAVE CONFIG
                         </ShimmerButton>
                         <ShimmerButton icon={X} onClick={onExit} className="h-10 text-xs text-red-500/80">

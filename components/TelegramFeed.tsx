@@ -93,7 +93,7 @@ export function TelegramFeed({
       {showHeader && (
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg">
+            <div className="p-2 bg-gradient-to-br from-white to-white rounded-lg">
               <MessageCircle className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -105,7 +105,7 @@ export function TelegramFeed({
             href="https://t.me/bullmoneyfx"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-white/90 text-black rounded-lg transition-colors"
           >
             <ExternalLink className="w-4 h-4" />
             Join Channel
@@ -115,7 +115,7 @@ export function TelegramFeed({
 
       {loading && messages.length === 0 && (
         <div className="flex items-center justify-center py-12">
-          <Loader className="w-6 h-6 text-blue-500 animate-spin" />
+          <Loader className="w-6 h-6 text-white animate-spin" />
         </div>
       )}
 
@@ -147,7 +147,7 @@ export function TelegramFeed({
               transition={{ delay: index * 0.05 }}
               className="group relative"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-600/0 via-blue-600/5 to-cyan-600/0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity" />
 
               <div className={`relative bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg transition-all backdrop-blur-sm overflow-hidden ${
                 compact ? 'p-3' : 'p-4'
@@ -155,7 +155,7 @@ export function TelegramFeed({
                 {/* Message Header */}
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white text-sm font-bold">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-white to-white flex items-center justify-center text-white text-sm font-bold">
                       {message.author.charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -172,7 +172,7 @@ export function TelegramFeed({
                   </div>
 
                   {message.hasMedia && (
-                    <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded">
+                    <span className="text-xs bg-white/20 text-white px-2 py-1 rounded">
                       {message.mediaType || 'Media'}
                     </span>
                   )}
@@ -215,7 +215,7 @@ export function TelegramFeed({
             href="https://t.me/bullmoneyfx"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors"
+            className="inline-flex items-center gap-2 text-white hover:text-white transition-colors"
           >
             View all messages on Telegram
             <ExternalLink className="w-4 h-4" />

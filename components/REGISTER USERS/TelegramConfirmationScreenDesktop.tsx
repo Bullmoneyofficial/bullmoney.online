@@ -9,11 +9,11 @@ const MINIMUM_WAIT_TIME = 3000;
 
 // What users unlock by joining
 const UNLOCK_BENEFITS = [
-  { icon: TrendingUp, label: "Free Trades", color: "text-blue-400" },
-  { icon: Video, label: "Live Streams", color: "text-blue-400" },
-  { icon: Bell, label: "Real-time Updates", color: "text-blue-400" },
-  { icon: Newspaper, label: "Market News", color: "text-cyan-400" },
-  { icon: Gift, label: "Exclusive Groups", color: "text-blue-400" },
+  { icon: TrendingUp, label: "Free Trades", color: "text-white" },
+  { icon: Video, label: "Live Streams", color: "text-white" },
+  { icon: Bell, label: "Real-time Updates", color: "text-white" },
+  { icon: Newspaper, label: "Market News", color: "text-white" },
+  { icon: Gift, label: "Exclusive Groups", color: "text-white" },
 ];
 
 interface TelegramConfirmationScreenDesktopProps {
@@ -128,32 +128,32 @@ export const TelegramConfirmationScreenDesktop: React.FC<TelegramConfirmationScr
         }
         
         @keyframes neonPulse {
-          0%, 100% { filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.8)) drop-shadow(0 0 6px rgba(59, 130, 246, 0.6)); }
-          50% { filter: drop-shadow(0 0 6px rgba(59, 130, 246, 1)) drop-shadow(0 0 12px rgba(59, 130, 246, 0.8)); }
+          0%, 100% { filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 6px rgba(255, 255, 255, 0.6)); }
+          50% { filter: drop-shadow(0 0 6px rgba(255, 255, 255, 1)) drop-shadow(0 0 12px rgba(255, 255, 255, 0.8)); }
         }
         
         @keyframes textGlow {
-          0%, 100% { text-shadow: 0 0 4px rgba(59, 130, 246, 0.8), 0 0 8px rgba(59, 130, 246, 0.6), 0 0 12px rgba(59, 130, 246, 0.4); }
-          50% { text-shadow: 0 0 6px rgba(59, 130, 246, 1), 0 0 12px rgba(59, 130, 246, 0.8), 0 0 20px rgba(59, 130, 246, 0.6); }
+          0%, 100% { text-shadow: 0 0 4px rgba(255, 255, 255, 0.8), 0 0 8px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.4); }
+          50% { text-shadow: 0 0 6px rgba(255, 255, 255, 1), 0 0 12px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.6); }
         }
         
         .dt-celebrate-pulse { animation: celebrate 0.6s ease-in-out; }
         .dt-float-animation { animation: float 3s ease-in-out infinite; }
         .dt-checkmark-pop { animation: checkmark 0.4s ease-out forwards; }
-        .dt-neon-icon { filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.9)) drop-shadow(0 0 8px rgba(59, 130, 246, 0.7)) drop-shadow(0 0 12px rgba(59, 130, 246, 0.5)); }
+        .dt-neon-icon { filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 8px rgba(255, 255, 255, 0.7)) drop-shadow(0 0 12px rgba(255, 255, 255, 0.5)); }
         .dt-neon-icon-pulse { animation: neonPulse 2s ease-in-out infinite; }
-        .dt-neon-text { text-shadow: 0 0 4px rgba(59, 130, 246, 0.8), 0 0 8px rgba(59, 130, 246, 0.6), 0 0 12px rgba(59, 130, 246, 0.4); }
+        .dt-neon-text { text-shadow: 0 0 4px rgba(255, 255, 255, 0.8), 0 0 8px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.4); }
         .dt-neon-text-pulse { animation: textGlow 2s ease-in-out infinite; }
-        .dt-neon-border { box-shadow: 0 0 5px rgba(59, 130, 246, 0.5), 0 0 10px rgba(59, 130, 246, 0.3), 0 0 20px rgba(59, 130, 246, 0.2), inset 0 0 5px rgba(59, 130, 246, 0.1); }
-        .dt-neon-border-strong { box-shadow: 0 0 8px rgba(59, 130, 246, 0.7), 0 0 16px rgba(59, 130, 246, 0.5), 0 0 24px rgba(59, 130, 246, 0.3), inset 0 0 8px rgba(59, 130, 246, 0.15); }
-        .dt-neon-container { border-color: rgba(59, 130, 246, 0.5); box-shadow: 0 0 10px rgba(59, 130, 246, 0.3), 0 0 20px rgba(59, 130, 246, 0.2), 0 0 30px rgba(59, 130, 246, 0.1), inset 0 0 15px rgba(59, 130, 246, 0.05); }
+        .dt-neon-border { box-shadow: 0 0 5px rgba(255, 255, 255, 0.5), 0 0 10px rgba(255, 255, 255, 0.3), 0 0 20px rgba(255, 255, 255, 0.2), inset 0 0 5px rgba(255, 255, 255, 0.1); }
+        .dt-neon-border-strong { box-shadow: 0 0 8px rgba(255, 255, 255, 0.7), 0 0 16px rgba(255, 255, 255, 0.5), 0 0 24px rgba(255, 255, 255, 0.3), inset 0 0 8px rgba(255, 255, 255, 0.15); }
+        .dt-neon-container { border-color: rgba(255, 255, 255, 0.5); box-shadow: 0 0 10px rgba(255, 255, 255, 0.3), 0 0 20px rgba(255, 255, 255, 0.2), 0 0 30px rgba(255, 255, 255, 0.1), inset 0 0 15px rgba(255, 255, 255, 0.05); }
       `}</style>
       
       <div className="desktop-telegram-container">
         {/* Background glow */}
         <div 
           className="desktop-telegram-glow"
-          style={{ background: isXM ? 'rgba(239, 68, 68, 0.1)' : 'rgba(59, 130, 246, 0.1)' }}
+          style={{ background: isXM ? 'rgba(239, 68, 68, 0.1)' : 'rgba(255, 255, 255, 0.1)' }}
         />
         
         {/* Shimmer */}
@@ -165,17 +165,17 @@ export const TelegramConfirmationScreenDesktop: React.FC<TelegramConfirmationScr
           {/* Progress indicator */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div style={{ display: 'flex', gap: '6px' }}>
-              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#3b82f6', boxShadow: '0 0 8px rgba(59,130,246,0.8), 0 0 16px rgba(59,130,246,0.5)' }} />
-              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#3b82f6', boxShadow: '0 0 8px rgba(59,130,246,0.8), 0 0 16px rgba(59,130,246,0.5)' }} />
+              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ffffff', boxShadow: '0 0 8px rgba(255, 255, 255,0.8), 0 0 16px rgba(255, 255, 255,0.5)' }} />
+              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ffffff', boxShadow: '0 0 8px rgba(255, 255, 255,0.8), 0 0 16px rgba(255, 255, 255,0.5)' }} />
               <div style={{ 
                 width: '10px', 
                 height: '10px', 
                 borderRadius: '50%', 
-                background: joinedTelegram ? '#3b82f6' : 'rgba(59,130,246,0.5)',
-                boxShadow: joinedTelegram ? '0 0 8px rgba(59,130,246,0.8), 0 0 16px rgba(59,130,246,0.5)' : '0 0 6px rgba(59,130,246,0.4)'
+                background: joinedTelegram ? '#ffffff' : 'rgba(255, 255, 255,0.5)',
+                boxShadow: joinedTelegram ? '0 0 8px rgba(255, 255, 255,0.8), 0 0 16px rgba(255, 255, 255,0.5)' : '0 0 6px rgba(255, 255, 255,0.4)'
               }} />
             </div>
-            <span className="dt-neon-text" style={{ fontSize: '12px', color: 'rgba(147, 197, 253, 0.8)', fontWeight: 500 }}>Final Step!</span>
+            <span className="dt-neon-text" style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.8)', fontWeight: 500 }}>Final Step!</span>
           </div>
 
           {/* Main heading */}
@@ -185,14 +185,14 @@ export const TelegramConfirmationScreenDesktop: React.FC<TelegramConfirmationScr
               style={{ 
                 fontSize: '24px', 
                 fontWeight: 'bold', 
-                color: isXM ? '#ef4444' : '#60a5fa',
+                color: isXM ? '#ef4444' : '#ffffff',
                 marginBottom: '4px'
               }}
             >
               You&apos;re Almost In!
             </h2>
             <p className="dt-neon-text" style={{ fontSize: '14px', color: 'rgba(191, 219, 254, 0.7)' }}>
-              One tap unlocks <span style={{ color: '#93c5fd', fontWeight: 600 }}>everything</span> completely FREE
+              One tap unlocks <span style={{ color: '#ffffff', fontWeight: 600 }}>everything</span> completely FREE
             </p>
           </div>
           
@@ -204,13 +204,13 @@ export const TelegramConfirmationScreenDesktop: React.FC<TelegramConfirmationScr
               background: 'rgba(23, 23, 23, 0.6)',
               backdropFilter: 'blur(8px)',
               borderRadius: '12px',
-              border: '1px solid rgba(59, 130, 246, 0.4)',
+              border: '1px solid rgba(255, 255, 255, 0.4)',
               padding: '16px',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '12px' }}>
-              <Gift className="dt-neon-icon" style={{ width: '16px', height: '16px', color: '#60a5fa' }} />
-              <span className="dt-neon-text" style={{ fontSize: '14px', fontWeight: 600, color: '#93c5fd' }}>What You&apos;re Unlocking:</span>
+              <Gift className="dt-neon-icon" style={{ width: '16px', height: '16px', color: '#ffffff' }} />
+              <span className="dt-neon-text" style={{ fontSize: '14px', fontWeight: 600, color: '#ffffff' }}>What You&apos;re Unlocking:</span>
             </div>
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
@@ -224,14 +224,14 @@ export const TelegramConfirmationScreenDesktop: React.FC<TelegramConfirmationScr
                     gap: '8px',
                     padding: '8px',
                     borderRadius: '8px',
-                    background: joinedTelegram ? 'rgba(59, 130, 246, 0.1)' : 'rgba(23, 37, 84, 0.3)',
-                    border: `1px solid ${joinedTelegram ? 'rgba(96, 165, 250, 0.5)' : 'rgba(59, 130, 246, 0.3)'}`,
+                    background: joinedTelegram ? 'rgba(255, 255, 255, 0.1)' : 'rgba(23, 37, 84, 0.3)',
+                    border: `1px solid ${joinedTelegram ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.3)'}`,
                   }}
                 >
-                  <benefit.icon className="dt-neon-icon" style={{ width: '16px', height: '16px', color: '#60a5fa', flexShrink: 0 }} />
-                  <span className="dt-neon-text" style={{ fontSize: '12px', color: '#bfdbfe', fontWeight: 500 }}>{benefit.label}</span>
+                  <benefit.icon className="dt-neon-icon" style={{ width: '16px', height: '16px', color: '#ffffff', flexShrink: 0 }} />
+                  <span className="dt-neon-text" style={{ fontSize: '12px', color: '#ffffff', fontWeight: 500 }}>{benefit.label}</span>
                   {joinedTelegram && (
-                    <Check className="dt-neon-icon dt-checkmark-pop" style={{ width: '12px', height: '12px', color: '#60a5fa', marginLeft: 'auto' }} />
+                    <Check className="dt-neon-icon dt-checkmark-pop" style={{ width: '12px', height: '12px', color: '#ffffff', marginLeft: 'auto' }} />
                   )}
                 </div>
               ))}
@@ -249,20 +249,20 @@ export const TelegramConfirmationScreenDesktop: React.FC<TelegramConfirmationScr
                 borderRadius: '8px',
                 marginTop: '12px',
                 background: joinedTelegram 
-                  ? 'linear-gradient(to right, rgba(59, 130, 246, 0.2), rgba(34, 211, 238, 0.2))'
-                  : 'linear-gradient(to right, rgba(59, 130, 246, 0.1), rgba(34, 211, 238, 0.1))',
-                border: `1px solid ${joinedTelegram ? 'rgba(96, 165, 250, 0.6)' : 'rgba(59, 130, 246, 0.4)'}`,
+                  ? 'linear-gradient(to right, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2))'
+                  : 'linear-gradient(to right, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1))',
+                border: `1px solid ${joinedTelegram ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.4)'}`,
               }}
             >
               {joinedTelegram ? (
-                <Unlock className="dt-neon-icon" style={{ width: '16px', height: '16px', color: '#60a5fa' }} />
+                <Unlock className="dt-neon-icon" style={{ width: '16px', height: '16px', color: '#ffffff' }} />
               ) : (
-                <Lock className="dt-neon-icon-pulse" style={{ width: '16px', height: '16px', color: '#60a5fa' }} />
+                <Lock className="dt-neon-icon-pulse" style={{ width: '16px', height: '16px', color: '#ffffff' }} />
               )}
-              <span className="dt-neon-text" style={{ fontSize: '14px', fontWeight: 'bold', color: '#93c5fd' }}>
+              <span className="dt-neon-text" style={{ fontSize: '14px', fontWeight: 'bold', color: '#ffffff' }}>
                 {joinedTelegram ? "Website Access Unlocked!" : "+ Full Website Access"}
               </span>
-              {joinedTelegram && <Sparkles className="dt-neon-icon" style={{ width: '16px', height: '16px', color: '#22d3ee' }} />}
+              {joinedTelegram && <Sparkles className="dt-neon-icon" style={{ width: '16px', height: '16px', color: '#ffffff' }} />}
             </div>
           </div>
           
@@ -273,7 +273,7 @@ export const TelegramConfirmationScreenDesktop: React.FC<TelegramConfirmationScr
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
               <span 
                 className={!joinedTelegram ? 'dt-neon-text-pulse' : 'dt-neon-text'}
-                style={{ fontSize: '12px', fontWeight: 500, color: '#93c5fd' }}
+                style={{ fontSize: '12px', fontWeight: 500, color: '#ffffff' }}
               >
                 {joinedTelegram ? "Telegram Opened" : "Click to join our free community"}
               </span>
@@ -286,15 +286,15 @@ export const TelegramConfirmationScreenDesktop: React.FC<TelegramConfirmationScr
                   width: '96px',
                   height: '96px',
                   borderRadius: '50%',
-                  border: `2px solid ${joinedTelegram ? '#60a5fa' : '#3b82f6'}`,
-                  background: joinedTelegram ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.1)',
+                  border: `2px solid ${joinedTelegram ? '#ffffff' : '#ffffff'}`,
+                  background: joinedTelegram ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: joinedTelegram ? 'default' : 'pointer',
                   boxShadow: joinedTelegram 
-                    ? '0 0 20px rgba(59,130,246,0.8), 0 0 40px rgba(59,130,246,0.5), 0 0 60px rgba(59,130,246,0.3), inset 0 0 20px rgba(59,130,246,0.2)'
-                    : '0 0 15px rgba(59,130,246,0.7), 0 0 30px rgba(59,130,246,0.5), 0 0 45px rgba(59,130,246,0.3), inset 0 0 15px rgba(59,130,246,0.15)',
+                    ? '0 0 20px rgba(255, 255, 255,0.8), 0 0 40px rgba(255, 255, 255,0.5), 0 0 60px rgba(255, 255, 255,0.3), inset 0 0 20px rgba(255, 255, 255,0.2)'
+                    : '0 0 15px rgba(255, 255, 255,0.7), 0 0 30px rgba(255, 255, 255,0.5), 0 0 45px rgba(255, 255, 255,0.3), inset 0 0 15px rgba(255, 255, 255,0.15)',
                   transition: 'all 0.3s ease',
                 }}
               >
@@ -320,16 +320,16 @@ export const TelegramConfirmationScreenDesktop: React.FC<TelegramConfirmationScr
                 width: '100%',
                 maxWidth: '320px',
                 padding: '16px 32px',
-                border: `2px solid ${canUnlock ? '#60a5fa' : 'rgba(59, 130, 246, 0.3)'}`,
+                border: `2px solid ${canUnlock ? '#ffffff' : 'rgba(255, 255, 255, 0.3)'}`,
                 borderRadius: '12px',
-                background: canUnlock ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
-                color: canUnlock ? '#93c5fd' : 'rgba(59, 130, 246, 0.5)',
+                background: canUnlock ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
+                color: canUnlock ? '#ffffff' : 'rgba(255, 255, 255, 0.5)',
                 fontSize: '16px',
                 fontWeight: 'bold',
                 cursor: canUnlock ? 'pointer' : 'not-allowed',
                 boxShadow: canUnlock 
-                  ? '0 0 15px rgba(59,130,246,0.6), 0 0 30px rgba(59,130,246,0.4), 0 0 45px rgba(59,130,246,0.2)'
-                  : '0 0 8px rgba(59,130,246,0.2)',
+                  ? '0 0 15px rgba(255, 255, 255,0.6), 0 0 30px rgba(255, 255, 255,0.4), 0 0 45px rgba(255, 255, 255,0.2)'
+                  : '0 0 8px rgba(255, 255, 255,0.2)',
                 transition: 'all 0.3s ease',
               }}
             >
@@ -353,14 +353,14 @@ export const TelegramConfirmationScreenDesktop: React.FC<TelegramConfirmationScr
             
             {/* Success message */}
             {showCelebration && (
-              <p className="dt-neon-text-pulse" style={{ fontSize: '14px', color: '#93c5fd', textAlign: 'center' }}>
+              <p className="dt-neon-text-pulse" style={{ fontSize: '14px', color: '#ffffff', textAlign: 'center' }}>
                 Congratulations! You&apos;ve unlocked full access!
               </p>
             )}
           </div>
           
           {/* Trust indicator */}
-          <p className="dt-neon-text" style={{ fontSize: '12px', color: 'rgba(96, 165, 250, 0.6)', textAlign: 'center' }}>
+          <p className="dt-neon-text" style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)', textAlign: 'center' }}>
             Join traders already in our community • 100% Free Forever
           </p>
         </div>

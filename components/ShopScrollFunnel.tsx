@@ -133,31 +133,31 @@ const DIFFICULTY_CONFIG = {
 // Theme color configurations
 const THEMES = {
   blue: {
-    shell: 'from-blue-400 to-blue-600',
-    border: 'border-blue-800',
+    shell: 'from-white to-white',
+    border: 'border-white',
     screen: 'from-gray-900 via-slate-900 to-black',
-    accent: 'text-cyan-400',
-    glow: 'rgba(34,211,238,0.8)',
-    wall: 'from-blue-600/90 to-blue-700/80',
-    wallBorder: 'border-cyan-500/40'
+    accent: 'text-white',
+    glow: 'rgba(255, 255, 255,0.8)',
+    wall: 'from-white/90 to-white/80',
+    wallBorder: 'border-white/40'
   },
   green: {
-    shell: 'from-green-400 to-green-600',
-    border: 'border-green-800',
-    screen: 'from-gray-900 via-blue-900 to-black',
-    accent: 'text-green-400',
-    glow: 'rgba(34,197,94,0.8)',
-    wall: 'from-green-600/90 to-green-700/80',
-    wallBorder: 'border-green-500/40'
+    shell: 'from-white to-white',
+    border: 'border-white',
+    screen: 'from-gray-900 via-white to-black',
+    accent: 'text-white',
+    glow: 'rgba(255,255,255,0.8)',
+    wall: 'from-white/90 to-white/80',
+    wallBorder: 'border-white/40'
   },
   purple: {
-    shell: 'from-purple-400 to-purple-600',
-    border: 'border-purple-800',
-    screen: 'from-gray-900 via-purple-900 to-black',
-    accent: 'text-purple-400',
-    glow: 'rgba(168,85,247,0.8)',
-    wall: 'from-purple-600/90 to-purple-700/80',
-    wallBorder: 'border-purple-500/40'
+    shell: 'from-white to-white',
+    border: 'border-white',
+    screen: 'from-gray-900 via-white to-black',
+    accent: 'text-white',
+    glow: 'rgba(255, 255, 255,0.8)',
+    wall: 'from-white/90 to-white/80',
+    wallBorder: 'border-white/40'
   },
   red: {
     shell: 'from-red-400 to-red-600',
@@ -203,9 +203,9 @@ const GameBoyPacman = () => {
         style={{ minHeight: '600px' }}
       >
         <div className="relative w-full max-w-[300px] sm:max-w-md lg:max-w-lg">
-          <div className="relative bg-gradient-to-b from-blue-400 to-blue-600 rounded-xl sm:rounded-3xl p-2 sm:p-4 lg:p-6 shadow-2xl border-2 sm:border-4 lg:border-8 border-blue-800">
+          <div className="relative bg-gradient-to-b from-white to-white rounded-xl sm:rounded-3xl p-2 sm:p-4 lg:p-6 shadow-2xl border-2 sm:border-4 lg:border-8 border-white">
             <div className="bg-black rounded-lg p-20 flex items-center justify-center">
-              <div className="text-cyan-400 text-lg sm:text-xl font-bold animate-pulse">
+              <div className="text-white text-lg sm:text-xl font-bold animate-pulse">
                 🎮 Loading...
               </div>
             </div>
@@ -924,7 +924,7 @@ const GameBoyPacmanGame = () => {
           <div 
             key={key}
             className={`flex items-center justify-center ${
-              wall ? `bg-gradient-to-br ${currentTheme.wall} border ${currentTheme.wallBorder} rounded-sm shadow-[inset_0_0_8px_rgba(34,211,238,0.5),0_0_4px_rgba(59,130,246,0.3)]` : 
+              wall ? `bg-gradient-to-br ${currentTheme.wall} border ${currentTheme.wallBorder} rounded-sm shadow-[inset_0_0_8px_rgba(255, 255, 255,0.5),0_0_4px_rgba(255, 255, 255,0.3)]` : 
               isEmpty ? 'bg-black' : 'bg-black/60'
             }`}
             style={{ aspectRatio: '1/1' }}
@@ -941,7 +941,7 @@ const GameBoyPacmanGame = () => {
             )}
             {hasPower && (
               <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-white animate-pulse" style={{
-                boxShadow: '0 0 15px rgba(255,255,255,1), 0 0 8px rgba(34,211,238,0.8)',
+                boxShadow: '0 0 15px rgba(255,255,255,1), 0 0 8px rgba(255, 255, 255,0.8)',
                 animation: 'pulse 0.5s ease-in-out infinite'
               }} />
             )}
@@ -978,8 +978,8 @@ const GameBoyPacmanGame = () => {
                   {/* Pupils */}
                   {!isPowerActive ? (
                     <>
-                      <div className="absolute top-[28%] left-[30%] w-[12%] h-[16%] bg-blue-900 rounded-full" />
-                      <div className="absolute top-[28%] right-[30%] w-[12%] h-[16%] bg-blue-900 rounded-full" />
+                      <div className="absolute top-[28%] left-[30%] w-[12%] h-[16%] bg-white rounded-full" />
+                      <div className="absolute top-[28%] right-[30%] w-[12%] h-[16%] bg-white rounded-full" />
                     </>
                   ) : (
                     <>
@@ -1038,39 +1038,39 @@ const GameBoyPacmanGame = () => {
         <div className={`relative bg-gradient-to-b ${THEMES[theme as keyof typeof THEMES].shell} rounded-xl sm:rounded-3xl p-2 sm:p-4 lg:p-6 shadow-2xl border-2 sm:border-4 lg:border-8 ${THEMES[theme as keyof typeof THEMES].border}`}>
           {/* Enhanced shimmer effect */}
           <div className="absolute inset-0 rounded-xl sm:rounded-3xl opacity-60 pointer-events-none" style={{
-            background: 'linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.6), transparent)',
+            background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent)',
             backgroundSize: '200% 100%',
             animation: 'shimmer 3s infinite'
           }} />
           
           {/* Pulsing glow effect */}
           <div className="absolute inset-0 rounded-xl sm:rounded-3xl opacity-30 pointer-events-none" style={{
-            background: 'radial-gradient(circle at 50% 50%, rgba(34, 211, 238, 0.4), transparent)',
+            background: 'radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.4), transparent)',
             animation: 'pulse 2s ease-in-out infinite'
           }} />
           
           <div className="relative mb-2 sm:mb-4 lg:mb-6">
-            <div className="absolute -inset-0.5 sm:-inset-1 bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-500 rounded-lg sm:rounded-xl blur opacity-75" style={{
+            <div className="absolute -inset-0.5 sm:-inset-1 bg-gradient-to-r from-white via-white to-white rounded-lg sm:rounded-xl blur opacity-75" style={{
               backgroundSize: '200% 100%',
               animation: 'shimmer 2s infinite'
             }} />
-            <div className={`relative bg-gradient-to-br ${THEMES[theme as keyof typeof THEMES].screen} rounded-lg sm:rounded-xl p-1.5 sm:p-3 lg:p-4 border border-blue-900 sm:border-2 lg:border-4 shadow-inner`}>
+            <div className={`relative bg-gradient-to-br ${THEMES[theme as keyof typeof THEMES].screen} rounded-lg sm:rounded-xl p-1.5 sm:p-3 lg:p-4 border border-white sm:border-2 lg:border-4 shadow-inner`}>
               <div className="flex justify-between items-center mb-1 sm:mb-2 px-1 sm:px-2">
                 <div className="flex gap-0.5 sm:gap-1 lg:gap-2">
                   {[...Array(lives)].map((_, i) => (
-                    <Heart key={i} className="w-2 h-2 sm:w-3 sm:h-3 lg:w-4 lg:h-4 fill-cyan-400 text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+                    <Heart key={i} className="w-2 h-2 sm:w-3 sm:h-3 lg:w-4 lg:h-4 fill-cyan-400 text-white drop-shadow-[0_0_8px_rgba(255, 255, 255,0.8)]" />
                   ))}
                 </div>
                 <div className="flex flex-col items-center">
                   <div 
-                    className={`text-cyan-400 font-bold text-[9px] sm:text-xs lg:text-sm drop-shadow-[0_0_8px_rgba(34,211,238,0.8)] transition-all ${
-                      scorePulse ? 'scale-125 drop-shadow-[0_0_15px_rgba(34,211,238,1)]' : ''
+                    className={`text-white font-bold text-[9px] sm:text-xs lg:text-sm drop-shadow-[0_0_8px_rgba(255, 255, 255,0.8)] transition-all ${
+                      scorePulse ? 'scale-125 drop-shadow-[0_0_15px_rgba(255, 255, 255,1)]' : ''
                     }`}
                   >
                     {score}
                   </div>
                   {highScore > 0 && (
-                    <div className="text-blue-400 text-[7px] sm:text-[10px] flex items-center gap-0.5">
+                    <div className="text-white text-[7px] sm:text-[10px] flex items-center gap-0.5">
                       <Trophy className="w-1.5 h-1.5 sm:w-2 sm:h-2" />
                       {highScore}
                     </div>
@@ -1078,12 +1078,12 @@ const GameBoyPacmanGame = () => {
                 </div>
                 <button
                   onClick={() => setSoundOn(!soundOn)}
-                  className="p-0.5 sm:p-1 rounded hover:bg-blue-500/30 transition-all touch-manipulation"
+                  className="p-0.5 sm:p-1 rounded hover:bg-white/30 transition-all touch-manipulation"
                 >
                   {soundOn ? (
-                    <Volume2 className="w-2 h-2 sm:w-3 sm:h-3 lg:w-4 lg:h-4 text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+                    <Volume2 className="w-2 h-2 sm:w-3 sm:h-3 lg:w-4 lg:h-4 text-white drop-shadow-[0_0_8px_rgba(255, 255, 255,0.8)]" />
                   ) : (
-                    <VolumeX className="w-2 h-2 sm:w-3 sm:h-3 lg:w-4 lg:h-4 text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+                    <VolumeX className="w-2 h-2 sm:w-3 sm:h-3 lg:w-4 lg:h-4 text-white drop-shadow-[0_0_8px_rgba(255, 255, 255,0.8)]" />
                   )}
                 </button>
               </div>
@@ -1091,11 +1091,11 @@ const GameBoyPacmanGame = () => {
               <div 
                 className={`relative bg-black rounded-md sm:rounded-lg p-0.5 sm:p-1.5 lg:p-2 overflow-hidden sm:border-2 transition-all ${screenShake ? 'animate-shake' : ''}`}
                 style={{
-                  border: dangerLevel === 0 ? '1px solid rgba(30,64,175,0.5)' : 
+                  border: dangerLevel === 0 ? '1px solid rgba(255, 255, 255,0.5)' : 
                           dangerLevel === 1 ? '2px solid rgba(234,179,8,0.6)' :
                           dangerLevel === 2 ? '2px solid rgba(249,115,22,0.8)' :
                           '2px solid rgba(239,68,68,1)',
-                  boxShadow: dangerLevel === 0 ? 'inset 0 0 20px rgba(59,130,246,0.3)' :
+                  boxShadow: dangerLevel === 0 ? 'inset 0 0 20px rgba(255, 255, 255,0.3)' :
                              dangerLevel === 1 ? 'inset 0 0 25px rgba(234,179,8,0.4), 0 0 10px rgba(234,179,8,0.3)' :
                              dangerLevel === 2 ? 'inset 0 0 30px rgba(249,115,22,0.5), 0 0 15px rgba(249,115,22,0.4)' :
                              'inset 0 0 35px rgba(239,68,68,0.6), 0 0 20px rgba(239,68,68,0.5)',
@@ -1139,7 +1139,7 @@ const GameBoyPacmanGame = () => {
                       top: `${(showFruitScore.y / HEIGHT) * 100}%`
                     }}
                   >
-                    <div className="text-cyan-400 font-bold text-sm sm:text-base drop-shadow-[0_0_10px_rgba(34,211,238,1)]">
+                    <div className="text-white font-bold text-sm sm:text-base drop-shadow-[0_0_10px_rgba(255, 255, 255,1)]">
                       +{showFruitScore.points}
                     </div>
                   </div>
@@ -1151,10 +1151,10 @@ const GameBoyPacmanGame = () => {
                       <div className="text-3xl sm:text-4xl mb-2 animate-bounce">
                         {gameState === 'won' ? '🎉' : '💀'}
                       </div>
-                      <h3 className="text-cyan-400 font-bold text-lg sm:text-xl mb-2 drop-shadow-[0_0_10px_rgba(34,211,238,1)]">
+                      <h3 className="text-white font-bold text-lg sm:text-xl mb-2 drop-shadow-[0_0_10px_rgba(255, 255, 255,1)]">
                         {gameState === 'won' ? 'YOU WIN!' : 'GAME OVER'}
                       </h3>
-                      <p className="text-blue-400 mb-4 text-sm sm:text-base drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]">Score: {score}</p>
+                      <p className="text-white mb-4 text-sm sm:text-base drop-shadow-[0_0_8px_rgba(255, 255, 255,0.8)]">Score: {score}</p>
                       {score === highScore && highScore > 0 && (
                         <p className="text-yellow-400 mb-2 text-xs sm:text-sm animate-pulse drop-shadow-[0_0_10px_rgba(250,204,21,1)]">
                           🏆 NEW HIGH SCORE! 🏆
@@ -1162,7 +1162,7 @@ const GameBoyPacmanGame = () => {
                       )}
                       <button
                         onClick={resetBoard}
-                        className="px-4 sm:px-6 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white rounded-lg font-bold shadow-[0_0_20px_rgba(34,211,238,0.6)] transition-all touch-manipulation active:scale-95"
+                        className="px-4 sm:px-6 py-2 bg-gradient-to-r from-white to-white hover:from-white hover:to-white text-white rounded-lg font-bold shadow-[0_0_20px_rgba(255, 255, 255,0.6)] transition-all touch-manipulation active:scale-95"
                       >
                         PLAY AGAIN
                       </button>
@@ -1172,19 +1172,19 @@ const GameBoyPacmanGame = () => {
                 
                 {showHighScore && (
                   <div className="absolute inset-0 bg-black/90 flex items-center justify-center backdrop-blur-sm z-10">
-                    <div className="text-center bg-gradient-to-br from-blue-900 to-indigo-900 p-6 rounded-xl border-2 border-cyan-400 shadow-[0_0_30px_rgba(34,211,238,0.6)]">
+                    <div className="text-center bg-gradient-to-br from-white to-indigo-900 p-6 rounded-xl border-2 border-white shadow-[0_0_30px_rgba(255, 255, 255,0.6)]">
                       <Trophy className="w-12 h-12 mx-auto mb-3 text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,1)]" />
-                      <h3 className="text-cyan-400 font-bold text-xl mb-3 drop-shadow-[0_0_10px_rgba(34,211,238,1)]">
+                      <h3 className="text-white font-bold text-xl mb-3 drop-shadow-[0_0_10px_rgba(255, 255, 255,1)]">
                         HIGH SCORE
                       </h3>
                       <div className="text-6xl font-bold text-yellow-400 mb-4 drop-shadow-[0_0_20px_rgba(250,204,21,1)]">
                         {highScore}
                       </div>
-                      <p className="text-blue-300 text-sm mb-4">Current Score: {score}</p>
+                      <p className="text-white text-sm mb-4">Current Score: {score}</p>
                       <div className="flex gap-2 justify-center">
                         <button
                           onClick={() => setShowHighScore(false)}
-                          className="px-6 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white rounded-lg font-bold shadow-[0_0_20px_rgba(34,211,238,0.6)] transition-all touch-manipulation active:scale-95"
+                          className="px-6 py-2 bg-gradient-to-r from-white to-white hover:from-white hover:to-white text-white rounded-lg font-bold shadow-[0_0_20px_rgba(255, 255, 255,0.6)] transition-all touch-manipulation active:scale-95"
                         >
                           CLOSE
                         </button>
@@ -1208,8 +1208,8 @@ const GameBoyPacmanGame = () => {
                 {/* Settings Modal */}
                 {showSettings && (
                   <div className="absolute inset-0 bg-black/90 flex items-center justify-center backdrop-blur-sm z-20">
-                    <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-4 sm:p-6 rounded-xl border-2 border-purple-400 shadow-[0_0_30px_rgba(168,85,247,0.6)] max-w-xs w-full mx-4">
-                      <h3 className="text-purple-400 font-bold text-lg sm:text-xl mb-4 text-center drop-shadow-[0_0_10px_rgba(168,85,247,1)]">
+                    <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-4 sm:p-6 rounded-xl border-2 border-white shadow-[0_0_30px_rgba(255, 255, 255,0.6)] max-w-xs w-full mx-4">
+                      <h3 className="text-white font-bold text-lg sm:text-xl mb-4 text-center drop-shadow-[0_0_10px_rgba(255, 255, 255,1)]">
                         SETTINGS
                       </h3>
                       
@@ -1223,7 +1223,7 @@ const GameBoyPacmanGame = () => {
                               onClick={() => setDifficulty(diff)}
                               className={`py-2 px-3 rounded-lg font-bold text-xs transition-all touch-manipulation ${
                                 difficulty === diff
-                                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-[0_0_15px_rgba(168,85,247,0.8)]'
+                                  ? 'bg-gradient-to-r from-white to-pink-500 text-white shadow-[0_0_15px_rgba(255, 255, 255,0.8)]'
                                   : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                               }`}
                             >
@@ -1253,9 +1253,9 @@ const GameBoyPacmanGame = () => {
                                   : 'opacity-70 hover:opacity-100'
                               }`}
                               style={{
-                                background: t === 'blue' ? 'linear-gradient(to bottom, #60a5fa, #2563eb)' :
-                                           t === 'green' ? 'linear-gradient(to bottom, #4ade80, #16a34a)' :
-                                           t === 'purple' ? 'linear-gradient(to bottom, #c084fc, #9333ea)' :
+                                background: t === 'blue' ? 'linear-gradient(to bottom, #ffffff, #ffffff)' :
+                                           t === 'green' ? 'linear-gradient(to bottom, #ffffff, #ffffff)' :
+                                           t === 'purple' ? 'linear-gradient(to bottom, #ffffff, #ffffff)' :
                                            'linear-gradient(to bottom, #f87171, #dc2626)'
                               }}
                             />
@@ -1265,7 +1265,7 @@ const GameBoyPacmanGame = () => {
                       
                       <button
                         onClick={() => setShowSettings(false)}
-                        className="w-full py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-lg font-bold shadow-[0_0_20px_rgba(168,85,247,0.6)] transition-all touch-manipulation active:scale-95"
+                        className="w-full py-2 bg-gradient-to-r from-white to-pink-600 hover:from-white hover:to-pink-500 text-white rounded-lg font-bold shadow-[0_0_20px_rgba(255, 255, 255,0.6)] transition-all touch-manipulation active:scale-95"
                       >
                         CLOSE
                       </button>
@@ -1276,14 +1276,14 @@ const GameBoyPacmanGame = () => {
 
               {isPowerActive && (
                 <div className="mt-0.5 sm:mt-2 flex items-center justify-center gap-1 sm:gap-2">
-                  <Zap className="w-2 h-2 sm:w-3 sm:h-3 lg:w-4 lg:h-4 text-cyan-400 animate-pulse drop-shadow-[0_0_8px_rgba(34,211,238,1)]" />
-                  <span className="text-cyan-400 text-[7px] sm:text-[10px] lg:text-xs font-bold drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]">POWER MODE!</span>
+                  <Zap className="w-2 h-2 sm:w-3 sm:h-3 lg:w-4 lg:h-4 text-white animate-pulse drop-shadow-[0_0_8px_rgba(255, 255, 255,1)]" />
+                  <span className="text-white text-[7px] sm:text-[10px] lg:text-xs font-bold drop-shadow-[0_0_8px_rgba(255, 255, 255,0.8)]">POWER MODE!</span>
                 </div>
               )}
               
               {/* FPS and stats indicator */}
               {gameState === 'playing' && (
-                <div className="mt-1 flex items-center justify-center gap-2 text-[6px] sm:text-[8px] text-blue-400/70">
+                <div className="mt-1 flex items-center justify-center gap-2 text-[6px] sm:text-[8px] text-white/70">
                   <span>FPS: {fps}</span>
                   <span>•</span>
                   <span>Pellets: {pellets.size}</span>
@@ -1300,12 +1300,12 @@ const GameBoyPacmanGame = () => {
             {/* Enhanced Joystick */}
             <div 
               ref={joystickRef}
-              className="relative w-20 h-20 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full border-2 border-blue-700 shadow-[inset_0_4px_8px_rgba(0,0,0,0.3)] flex items-center justify-center touch-manipulation transition-all"
+              className="relative w-20 h-20 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full border-2 border-white shadow-[inset_0_4px_8px_rgba(0,0,0,0.3)] flex items-center justify-center touch-manipulation transition-all"
               style={{
-                background: 'radial-gradient(circle at 50% 50%, rgba(30, 58, 138, 0.8), rgba(30, 64, 175, 0.6))',
+                background: 'radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.6))',
                 boxShadow: isJoystickActive 
-                  ? '0 0 25px rgba(34, 211, 238, 0.6), inset 0 4px 8px rgba(0,0,0,0.3)' 
-                  : '0 0 15px rgba(59, 130, 246, 0.4), inset 0 4px 8px rgba(0,0,0,0.3)'
+                  ? '0 0 25px rgba(255, 255, 255, 0.6), inset 0 4px 8px rgba(0,0,0,0.3)' 
+                  : '0 0 15px rgba(255, 255, 255, 0.4), inset 0 4px 8px rgba(0,0,0,0.3)'
               }}
               onMouseDown={handleJoystickStart}
               onMouseMove={handleJoystickMove}
@@ -1316,51 +1316,51 @@ const GameBoyPacmanGame = () => {
               onTouchEnd={handleJoystickEnd}
             >
               {/* Animated base rings */}
-              <div className="absolute inset-2 rounded-full border-2 border-blue-600/30 animate-pulse" />
-              <div className="absolute inset-4 rounded-full border border-blue-500/20" />
+              <div className="absolute inset-2 rounded-full border-2 border-white/30 animate-pulse" />
+              <div className="absolute inset-4 rounded-full border border-white/20" />
               
               {/* Joystick stick with enhanced 3D effect */}
               <div 
                 className="absolute w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-full shadow-[0_4px_8px_rgba(0,0,0,0.4)] transition-all duration-100"
                 style={{
                   transform: `translate(${joystickPos.x}px, ${joystickPos.y}px) ${isJoystickActive ? 'scale(1.05)' : 'scale(1)'}`,
-                  background: 'radial-gradient(circle at 30% 30%, rgba(103, 232, 249, 1), rgba(59, 130, 246, 1))',
+                  background: 'radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 1), rgba(255, 255, 255, 1))',
                   boxShadow: isJoystickActive 
-                    ? '0 0 30px rgba(34,211,238,1), 0 4px 12px rgba(0,0,0,0.5), inset 0 2px 6px rgba(255,255,255,0.5)' 
-                    : '0 0 20px rgba(34,211,238,0.8), 0 4px 8px rgba(0,0,0,0.4), inset 0 2px 4px rgba(255,255,255,0.4)'
+                    ? '0 0 30px rgba(255, 255, 255,1), 0 4px 12px rgba(0,0,0,0.5), inset 0 2px 6px rgba(255,255,255,0.5)' 
+                    : '0 0 20px rgba(255, 255, 255,0.8), 0 4px 8px rgba(0,0,0,0.4), inset 0 2px 4px rgba(255,255,255,0.4)'
                 }}
               >
                 {/* Enhanced highlight */}
                 <div className="absolute top-1 left-1 w-4 h-4 sm:w-5 sm:h-5 bg-white/50 rounded-full blur-sm" />
                 {/* Center dot */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-cyan-300 rounded-full shadow-inner" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-white rounded-full shadow-inner" />
               </div>
               
               {/* Direction indicators with glow */}
-              <div className="absolute top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-cyan-400 rounded-full shadow-[0_0_4px_rgba(34,211,238,0.8)]" />
-              <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-cyan-400 rounded-full shadow-[0_0_4px_rgba(34,211,238,0.8)]" />
-              <div className="absolute left-1 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-cyan-400 rounded-full shadow-[0_0_4px_rgba(34,211,238,0.8)]" />
-              <div className="absolute right-1 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-cyan-400 rounded-full shadow-[0_0_4px_rgba(34,211,238,0.8)]" />
+              <div className="absolute top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_4px_rgba(255, 255, 255,0.8)]" />
+              <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_4px_rgba(255, 255, 255,0.8)]" />
+              <div className="absolute left-1 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_4px_rgba(255, 255, 255,0.8)]" />
+              <div className="absolute right-1 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_4px_rgba(255, 255, 255,0.8)]" />
             </div>
 
             <div className="flex gap-1.5 sm:gap-3 lg:gap-4">
               <button
                 onClick={resetBoard}
-                className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 rounded-full shadow-[0_0_20px_rgba(34,211,238,0.6)] flex items-center justify-center active:scale-95 transition-all border-2 border-cyan-400 touch-manipulation hover:shadow-[0_0_30px_rgba(34,211,238,0.9)]"
+                className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-white to-white hover:from-white hover:to-white rounded-full shadow-[0_0_20px_rgba(255, 255, 255,0.6)] flex items-center justify-center active:scale-95 transition-all border-2 border-white touch-manipulation hover:shadow-[0_0_30px_rgba(255, 255, 255,0.9)]"
                 title="Restart"
               >
                 <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
               </button>
               <button
                 onClick={() => setShowHighScore(!showHighScore)}
-                className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.6)] flex items-center justify-center active:scale-95 transition-all border-2 border-blue-400 touch-manipulation hover:shadow-[0_0_30px_rgba(59,130,246,0.9)]"
+                className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-white to-indigo-600 hover:from-white hover:to-indigo-500 rounded-full shadow-[0_0_20px_rgba(255, 255, 255,0.6)] flex items-center justify-center active:scale-95 transition-all border-2 border-white touch-manipulation hover:shadow-[0_0_30px_rgba(255, 255, 255,0.9)]"
                 title="High Score"
               >
                 <Trophy className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
               </button>
               <button
                 onClick={() => setShowSettings(!showSettings)}
-                className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-purple-500 to-pink-600 hover:from-purple-400 hover:to-pink-500 rounded-full shadow-[0_0_20px_rgba(168,85,247,0.6)] flex items-center justify-center active:scale-95 transition-all border-2 border-purple-400 touch-manipulation hover:shadow-[0_0_30px_rgba(168,85,247,0.9)]"
+                className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-white to-pink-600 hover:from-white hover:to-pink-500 rounded-full shadow-[0_0_20px_rgba(255, 255, 255,0.6)] flex items-center justify-center active:scale-95 transition-all border-2 border-white touch-manipulation hover:shadow-[0_0_30px_rgba(255, 255, 255,0.9)]"
                 title="Settings"
               >
                 <svg className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1372,13 +1372,13 @@ const GameBoyPacmanGame = () => {
           </div>
 
           <div className="text-center">
-            <div className="text-blue-900 font-bold text-[9px] sm:text-xs tracking-wider drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
+            <div className="text-white font-bold text-[9px] sm:text-xs tracking-wider drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
               PAC-BOY™
             </div>
-            <div className="text-blue-800 text-[7px] sm:text-[10px] mt-0.5 hidden sm:block">
+            <div className="text-white text-[7px] sm:text-[10px] mt-0.5 hidden sm:block">
               WASD or Arrow Keys • R to Restart
             </div>
-            <div className="text-blue-800 text-[7px] mt-0.5 sm:hidden">
+            <div className="text-white text-[7px] mt-0.5 sm:hidden">
               Use Joystick to Play
             </div>
           </div>
@@ -1411,12 +1411,12 @@ const GameBoyPacmanGame = () => {
           0%, 100% { 
             opacity: 0.3; 
             transform: scale(1);
-            filter: drop-shadow(0 0 2px rgba(59, 130, 246, 0.3));
+            filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3));
           }
           50% { 
             opacity: 0.7; 
             transform: scale(1.05);
-            filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6));
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.6));
           }
         }
         
@@ -1430,12 +1430,12 @@ const GameBoyPacmanGame = () => {
           0% {
             opacity: 1;
             transform: translate(0, 0) scale(1);
-            filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.8));
+            filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8));
           }
           100% {
             opacity: 0;
             transform: translate(0, -20px) scale(0.5);
-            filter: drop-shadow(0 0 0px rgba(59, 130, 246, 0));
+            filter: drop-shadow(0 0 0px rgba(255, 255, 255, 0));
           }
         }
         
@@ -1443,7 +1443,7 @@ const GameBoyPacmanGame = () => {
           0% {
             opacity: 0.8;
             transform: scale(1);
-            filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.6));
+            filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.6));
           }
           100% {
             opacity: 0;

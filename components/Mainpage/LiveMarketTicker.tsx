@@ -185,25 +185,25 @@ export const LiveMarketTicker: React.FC = () => {
         <div
           className="w-full h-full"
           style={{
-            backgroundImage: `linear-gradient(90deg, rgba(34, 197, 94, 0.2) 1px, transparent 1px)`,
+            backgroundImage: `linear-gradient(90deg, rgba(255, 255, 255, 0.2) 1px, transparent 1px)`,
             backgroundSize: '20px 20px',
           }}
         />
       </div>
 
       {/* Top accent line */}
-      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-green-500/50 to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent" />
 
       {/* Ticker content */}
       <div className="relative flex items-center h-10 px-4">
         {/* Live indicator */}
         <div className="flex items-center gap-2 mr-4 shrink-0 hidden sm:flex">
           <motion.div
-            className="w-2 h-2 rounded-full bg-green-500"
+            className="w-2 h-2 rounded-full bg-white"
             animate={{ opacity: [1, 0.3, 1] }}
             transition={{ duration: 1.5, repeat: Infinity }}
           />
-          <span className="text-[10px] font-bold text-green-400 uppercase tracking-wider">
+          <span className="text-[10px] font-bold text-white uppercase tracking-wider">
             LIVE
           </span>
         </div>
@@ -230,7 +230,7 @@ export const LiveMarketTicker: React.FC = () => {
                   className={`flex items-center gap-2 shrink-0 px-2 py-1 rounded-lg transition-all min-w-[140px] ${
                     isFlashing
                       ? coin.isUp
-                        ? 'bg-green-500/20 shadow-[0_0_10px_rgba(34,197,94,0.4)]'
+                        ? 'bg-white/20 shadow-[0_0_10px_rgba(255,255,255,0.4)]'
                         : 'bg-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.4)]'
                       : ''
                   }`}
@@ -243,7 +243,7 @@ export const LiveMarketTicker: React.FC = () => {
                   </span>
                   <motion.span
                     className={`text-xs font-bold font-mono ${
-                      coin.isUp ? 'text-green-400' : 'text-red-400'
+                      coin.isUp ? 'text-white' : 'text-red-400'
                     }`}
                   >
                     {coin.isUp ? '▲' : '▼'} {Math.abs(coin.change)}%

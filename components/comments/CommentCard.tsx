@@ -71,7 +71,7 @@ export const CommentCard = memo(({
       <div className="flex gap-3">
         {/* Avatar */}
         <div className="flex-shrink-0">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center overflow-hidden">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-white to-white flex items-center justify-center overflow-hidden">
             {author?.avatar_url ? (
               <img src={author.avatar_url} alt={author.username} className="w-full h-full object-cover" />
             ) : (
@@ -90,7 +90,7 @@ export const CommentCard = memo(({
               @{author?.username || 'Anonymous'}
             </span>
             {author?.is_verified && (
-              <CheckCircle className="w-3.5 h-3.5 text-blue-400" />
+              <CheckCircle className="w-3.5 h-3.5 text-white" />
             )}
             {author?.is_smart_money && (
               <Trophy className="w-3.5 h-3.5 text-yellow-400" />
@@ -125,7 +125,7 @@ export const CommentCard = memo(({
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleReply}
-              className="flex items-center gap-1 text-neutral-500 hover:text-blue-400 text-xs transition-colors"
+              className="flex items-center gap-1 text-neutral-500 hover:text-white text-xs transition-colors"
             >
               <Reply className="w-3.5 h-3.5" />
               Reply
@@ -153,7 +153,7 @@ export const CommentCard = memo(({
                   >
                     <button
                       onClick={handleEdit}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-neutral-300 hover:bg-blue-500/20 hover:text-white transition-colors"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-neutral-300 hover:bg-white/20 hover:text-white transition-colors"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
                       Edit

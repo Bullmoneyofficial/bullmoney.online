@@ -65,7 +65,7 @@ export default ShopMarketingSection;
 // --- PROMO BANNER ---
 export const PromoBanner = () => {
   return (
-    <div className="relative z-50 w-full overflow-hidden bg-blue-950/50 backdrop-blur-sm py-3 text-white shadow-[0_4px_30px_-5px_rgba(37,99,235,0.4)] border-y border-blue-500/20">
+    <div className="relative z-50 w-full overflow-hidden bg-white/10/50 backdrop-blur-sm py-3 text-white shadow-[0_4px_30px_-5px_rgba(255, 255, 255,0.4)] border-y border-white/20">
       <div className="absolute inset-0 z-0 h-full w-full opacity-30">
         <SparklesCore
           id="promo-sparkles"
@@ -74,7 +74,7 @@ export const PromoBanner = () => {
           maxSize={1.4}
           particleDensity={70}
           className="h-full w-full"
-          particleColor="#93c5fd"
+          particleColor="#ffffff"
         />
       </div>
 
@@ -86,15 +86,15 @@ export const PromoBanner = () => {
           className="flex whitespace-nowrap will-change-transform"
         >
           {[...Array(10)].map((_, i) => (
-            <div key={i} className="mx-8 flex items-center gap-8 text-sm font-bold uppercase tracking-widest sm:text-base text-blue-100">
+            <div key={i} className="mx-8 flex items-center gap-8 text-sm font-bold uppercase tracking-widest sm:text-base text-white">
               <span className="flex items-center gap-3">
-                 Code <span className="rounded bg-blue-500 px-2 py-0.5 text-white shadow-[0_0_10px_rgba(59,130,246,0.5)]">BULLMONEY</span> for Vantage
+                 Code <span className="rounded bg-white px-2 py-0.5 text-black shadow-[0_0_10px_rgba(255, 255, 255,0.5)]">BULLMONEY</span> for Vantage
               </span>
-              <span className="h-1.5 w-1.5 rounded-full bg-blue-400"></span>
+              <span className="h-1.5 w-1.5 rounded-full bg-white"></span>
               <span className="flex items-center gap-3">
-                 Code <span className="rounded bg-blue-500 px-2 py-0.5 text-white shadow-[0_0_10px_rgba(59,130,246,0.5)]">X3R7P</span> for XM
+                 Code <span className="rounded bg-white px-2 py-0.5 text-black shadow-[0_0_10px_rgba(255, 255, 255,0.5)]">X3R7P</span> for XM
               </span>
-              <span className="h-1.5 w-1.5 rounded-full bg-blue-400"></span>
+              <span className="h-1.5 w-1.5 rounded-full bg-white"></span>
             </div>
           ))}
         </motion.div>
@@ -170,7 +170,7 @@ export const SocialsRow = () => {
               {/* Icon Container */}
               <div className="relative h-12 w-12 sm:h-16 sm:w-16">
                  {/* Glow behind icon */}
-                 <div className="absolute inset-0 rounded-full bg-blue-500/50 opacity-0 transition-opacity duration-500 group-hover:opacity-100 blur-2xl"></div>
+                 <div className="absolute inset-0 rounded-full bg-white/50 opacity-0 transition-opacity duration-500 group-hover:opacity-100 blur-2xl"></div>
                  
                  <div className="relative w-full h-full drop-shadow-[0_0_15px_rgba(255,255,255,0.1)] group-hover:drop-shadow-[0_0_25px_rgba(255,255,255,0.8)] text-neutral-400 group-hover:text-white transition-colors duration-300">
                     <s.Icon />
@@ -190,7 +190,7 @@ const SimpleSparkle = ({ delay, top, left }: { delay: number, top: string, left:
     initial={{ scale: 0, opacity: 0 }}
     animate={{ scale: [0, 1.2, 0], opacity: [0, 1, 0], rotate: [0, 45, 90] }}
     transition={{ duration: 1.5, repeat: Infinity, delay: delay, ease: "easeInOut" }}
-    className="absolute h-5 w-5 text-blue-300"
+    className="absolute h-5 w-5 text-white"
     style={{ top, left }}
   >
     <svg viewBox="0 0 24 24" fill="currentColor" className="drop-shadow-[0_0_8px_rgba(255,255,255,1)]">
@@ -244,8 +244,8 @@ const MiniTradingChart = () => {
       <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
         <defs>
           <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.5" />
-            <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
           </linearGradient>
         </defs>
         
@@ -261,7 +261,7 @@ const MiniTradingChart = () => {
         <motion.path
           d={linePath}
           fill="none"
-          stroke="#4ade80"
+          stroke="#ffffff"
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -291,18 +291,18 @@ export const LiveViewers = () => {
   }, []);
 
   return (
-    <div className="group relative flex items-center gap-4 rounded-full border border-green-500/30 bg-green-500/10 px-6 py-2.5 shadow-[0_0_30px_-5px_rgba(34,197,94,0.3)] backdrop-blur-md transition-all duration-300 hover:border-green-400 hover:bg-green-500/20 hover:scale-105 hover:shadow-[0_0_50px_-10px_rgba(34,197,94,0.6)]">
+    <div className="group relative flex items-center gap-4 rounded-full border border-white/30 bg-white/10 px-6 py-2.5 shadow-[0_0_30px_-5px_rgba(255,255,255,0.3)] backdrop-blur-md transition-all duration-300 hover:border-white hover:bg-white/20 hover:scale-105 hover:shadow-[0_0_50px_-10px_rgba(255,255,255,0.6)]">
       <div className="flex flex-col items-center justify-center">
         <MiniTradingChart />
       </div>
 
-      <div className="h-8 w-[1px] bg-green-500/30"></div>
+      <div className="h-8 w-[1px] bg-white/30"></div>
 
       <div className="flex flex-col leading-none">
-        <span className="text-xl font-bold text-green-400 tabular-nums drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]">
+        <span className="text-xl font-bold text-white tabular-nums drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">
           {viewers}
         </span>
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-green-200/80">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-white/80">
           Traders Online
         </span>
       </div>
@@ -337,10 +337,10 @@ export const DealTimer = () => {
   }, []);
 
   return (
-    <div className="group relative flex items-center gap-3 rounded-full border border-blue-500/30 bg-blue-500/10 px-6 py-3 shadow-[0_0_30px_-5px_rgba(59,130,246,0.3)] backdrop-blur-md transition-all duration-300 hover:border-blue-400 hover:bg-blue-500/20 hover:scale-105 hover:shadow-[0_0_50px_-10px_rgba(59,130,246,0.6)]">
-      <Clock className="h-6 w-6 text-blue-400 animate-pulse drop-shadow-[0_0_8px_rgba(96,165,250,0.6)]" />
-      <span className="text-sm font-semibold text-blue-100">
-        Code <span className="text-lg font-bold text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]">BULL</span> on Whop expires in <span className="font-mono text-lg font-bold text-white tabular-nums drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">{timeLeft}</span>
+    <div className="group relative flex items-center gap-3 rounded-full border border-white/30 bg-white/10 px-6 py-3 shadow-[0_0_30px_-5px_rgba(255, 255, 255,0.3)] backdrop-blur-md transition-all duration-300 hover:border-white hover:bg-white/20 hover:scale-105 hover:shadow-[0_0_50px_-10px_rgba(255, 255, 255,0.6)]">
+      <Clock className="h-6 w-6 text-white animate-pulse drop-shadow-[0_0_8px_rgba(255, 255, 255,0.6)]" />
+      <span className="text-sm font-semibold text-white">
+        Code <span className="text-lg font-bold text-white drop-shadow-[0_0_8px_rgba(255, 255, 255,0.5)]">BULL</span> on Whop expires in <span className="font-mono text-lg font-bold text-white tabular-nums drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">{timeLeft}</span>
       </span>
     </div>
   );
@@ -358,7 +358,7 @@ const BackgroundGrids = () => {
         <GridLineVertical className="left-0" />
         <GridLineVertical className="left-auto right-0" />
       </div>
-      <div className="relative h-full w-full bg-gradient-to-b from-transparent via-blue-900/10 to-transparent">
+      <div className="relative h-full w-full bg-gradient-to-b from-transparent via-white/10 to-transparent">
         <GridLineVertical className="left-0" />
         <GridLineVertical className="left-auto right-0" />
       </div>
@@ -376,12 +376,12 @@ const GridLineVertical = ({ className, offset }: { className?: string; offset?: 
       style={
         {
           "--background": "#ffffff",
-          "--color": "rgba(59, 130, 246, 0.1)",
+          "--color": "rgba(255, 255, 255, 0.1)",
           "--height": "5px",
           "--width": "1px",
           "--fade-stop": "90%",
           "--offset": offset || "150px",
-          "--color-dark": "rgba(59, 130, 246, 0.1)",
+          "--color-dark": "rgba(255, 255, 255, 0.1)",
           maskComposite: "exclude",
         } as React.CSSProperties
       }

@@ -155,7 +155,7 @@ const TelegramChannelEmbed = React.memo(function TelegramChannelEmbed({ channel 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <Loader className="w-5 h-5 text-blue-400 animate-spin mb-2" />
+        <Loader className="w-5 h-5 text-white animate-spin mb-2" />
         <span className="text-[10px] text-zinc-400">Loading live feed...</span>
       </div>
     );
@@ -164,13 +164,13 @@ const TelegramChannelEmbed = React.memo(function TelegramChannelEmbed({ channel 
   if (error || posts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-8">
-        <MessageCircle className="w-10 h-10 text-blue-400/30 mb-3" />
+        <MessageCircle className="w-10 h-10 text-white/30 mb-3" />
         <p className="text-[11px] text-zinc-400 mb-2">Live feed loading...</p>
         <a
           href={`https://t.me/${channelConfig.handle}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[10px] text-blue-400 hover:text-blue-300 flex items-center gap-1"
+          className="text-[10px] text-white hover:text-white flex items-center gap-1"
         >
           <ExternalLink className="w-3 h-3" />
           Open in Telegram
@@ -190,17 +190,17 @@ const TelegramChannelEmbed = React.memo(function TelegramChannelEmbed({ channel 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: idx * 0.05 }}
-          className="block bg-white/5 hover:bg-white/10 rounded-lg p-3 border border-white/10 hover:border-blue-500/40 transition-all group"
+          className="block bg-white/5 hover:bg-white/10 rounded-lg p-3 border border-white/10 hover:border-white/40 transition-all group"
         >
           <div className="flex items-start gap-2">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ${
               channel === 'vip' 
                 ? 'bg-gradient-to-br from-amber-500 to-orange-500' 
                 : channel === 'shop'
-                ? 'bg-gradient-to-br from-emerald-500 to-teal-500'
+                ? 'bg-gradient-to-br from-white to-teal-500'
                 : channel === 'trades'
-                ? 'bg-gradient-to-br from-cyan-500 to-blue-500'
-                : 'bg-gradient-to-br from-blue-500 to-cyan-500'
+                ? 'bg-gradient-to-br from-white to-white'
+                : 'bg-gradient-to-br from-white to-white'
             }`}>
               {channel === 'vip' ? <Star className="w-4 h-4" /> : channel === 'shop' ? <ShoppingBag className="w-4 h-4" /> : channel === 'trades' ? <TrendingUp className="w-4 h-4" /> : 'B'}
             </div>
@@ -213,7 +213,7 @@ const TelegramChannelEmbed = React.memo(function TelegramChannelEmbed({ channel 
                 {post.text}
               </p>
               {post.hasMedia && (
-                <span className="inline-block mt-1.5 text-[8px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded">
+                <span className="inline-block mt-1.5 text-[8px] bg-white/20 text-white px-1.5 py-0.5 rounded">
                   📷 Media
                 </span>
               )}
@@ -223,7 +223,7 @@ const TelegramChannelEmbed = React.memo(function TelegramChannelEmbed({ channel 
                 </span>
               )}
             </div>
-            <ExternalLink className="w-3 h-3 text-zinc-600 group-hover:text-blue-400 transition-colors flex-shrink-0" />
+            <ExternalLink className="w-3 h-3 text-zinc-600 group-hover:text-white transition-colors flex-shrink-0" />
           </div>
         </motion.a>
       ))}
@@ -315,9 +315,9 @@ const LiveTradesTicker = React.memo(function LiveTradesTicker() {
 
   if (loading || !currentMessage) {
     return (
-      <div className="mt-0 -translate-y-0.5 px-1 py-0.5 bg-zinc-900/80 rounded-b-lg border-x border-b border-cyan-500/20 min-w-[100px] xs:min-w-[120px] sm:min-w-[150px] md:min-w-[180px] lg:min-w-[220px] xl:min-w-[260px] 2xl:min-w-[300px] max-w-[100px] xs:max-w-[120px] sm:max-w-[150px] md:max-w-[180px] lg:max-w-[220px] xl:max-w-[260px] 2xl:max-w-[300px]">
+      <div className="mt-0 -translate-y-0.5 px-1 py-0.5 bg-zinc-900/80 rounded-b-lg border-x border-b border-white/20 min-w-[100px] xs:min-w-[120px] sm:min-w-[150px] md:min-w-[180px] lg:min-w-[220px] xl:min-w-[260px] 2xl:min-w-[300px] max-w-[100px] xs:max-w-[120px] sm:max-w-[150px] md:max-w-[180px] lg:max-w-[220px] xl:max-w-[260px] 2xl:max-w-[300px]">
         <div className="flex items-center gap-1">
-          <Loader className="w-2 h-2 text-cyan-400 animate-spin" />
+          <Loader className="w-2 h-2 text-white animate-spin" />
           <span className="text-[5px] text-zinc-500">Loading...</span>
         </div>
       </div>
@@ -336,19 +336,19 @@ const LiveTradesTicker = React.memo(function LiveTradesTicker() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
     >
-      <div className="px-1 py-0.5 xs:py-1 bg-gradient-to-br from-zinc-900/95 via-zinc-800/95 to-zinc-900/90 backdrop-blur-xl rounded-b-lg border-x border-b border-cyan-500/30 hover:border-cyan-400/50 hover:bg-zinc-800/95 transition-all overflow-hidden min-w-[100px] xs:min-w-[120px] sm:min-w-[150px] md:min-w-[180px] lg:min-w-[220px] xl:min-w-[260px] 2xl:min-w-[300px] max-w-[100px] xs:max-w-[120px] sm:max-w-[150px] md:max-w-[180px] lg:max-w-[220px] xl:max-w-[260px] 2xl:max-w-[300px]">
+      <div className="px-1 py-0.5 xs:py-1 bg-gradient-to-br from-zinc-900/95 via-zinc-800/95 to-zinc-900/90 backdrop-blur-xl rounded-b-lg border-x border-b border-white/30 hover:border-white/50 hover:bg-zinc-800/95 transition-all overflow-hidden min-w-[100px] xs:min-w-[120px] sm:min-w-[150px] md:min-w-[180px] lg:min-w-[220px] xl:min-w-[260px] 2xl:min-w-[300px] max-w-[100px] xs:max-w-[120px] sm:max-w-[150px] md:max-w-[180px] lg:max-w-[220px] xl:max-w-[260px] 2xl:max-w-[300px]">
         {/* Header row */}
         <div className="flex items-center justify-between mb-0.5">
           <div className="flex items-center gap-0.5">
             <motion.div
-              className="w-1 h-1 bg-green-400 rounded-full"
+              className="w-1 h-1 bg-white rounded-full"
               animate={{ 
                 opacity: [1, 0.3, 1],
-                boxShadow: ['0 0 0px rgba(74,222,128,0.8)', '0 0 6px rgba(74,222,128,0.8)', '0 0 0px rgba(74,222,128,0.8)']
+                boxShadow: ['0 0 0px rgba(255,255,255,0.8)', '0 0 6px rgba(255,255,255,0.8)', '0 0 0px rgba(255,255,255,0.8)']
               }}
               transition={{ duration: 1, repeat: Infinity }}
             />
-            <span className="text-[4px] font-bold text-cyan-400/80 uppercase tracking-wider">Live</span>
+            <span className="text-[4px] font-bold text-white/80 uppercase tracking-wider">Live</span>
           </div>
           {/* Views & Stats */}
           <div className="flex items-center gap-0.5">
@@ -383,7 +383,7 @@ const LiveTradesTicker = React.memo(function LiveTradesTicker() {
         {/* Progress bar - OPTIMIZED: Use will-change for better performance */}
         <div className="mt-0.5 h-[1px] bg-zinc-700/40 rounded-full overflow-hidden">
           <motion.div
-            className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-400"
+            className="h-full bg-gradient-to-r from-white via-white to-white"
             initial={{ width: '0%' }}
             animate={{ width: '100%' }}
             transition={{ duration: 4, ease: 'linear' }}
@@ -948,7 +948,7 @@ export function CommunityQuickAccess() {
           whileHover={{ 
             x: 12, 
             scale: 1.05,
-            boxShadow: '0 0 30px rgba(96, 165, 250, 0.6)'
+            boxShadow: '0 0 30px rgba(255, 255, 255, 0.6)'
           }}
           className="relative pointer-events-auto cursor-pointer"
           onClick={() => canOpen && setIsExpanded(!isExpanded)}
@@ -966,10 +966,10 @@ export function CommunityQuickAccess() {
           }}
         >
           {/* Pill Content */}
-          <div className="relative rounded-r-2xl bg-gradient-to-br from-cyan-600/30 via-cyan-500/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-cyan-500/50 shadow-2xl hover:border-cyan-400/70 hover:shadow-cyan-600/40 min-w-[100px] xs:min-w-[120px] sm:min-w-[150px] md:min-w-[180px] lg:min-w-[220px] xl:min-w-[260px] 2xl:min-w-[300px]">
+          <div className="relative rounded-r-2xl bg-gradient-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl hover:border-white/70 hover:shadow-white/40 min-w-[100px] xs:min-w-[120px] sm:min-w-[150px] md:min-w-[180px] lg:min-w-[220px] xl:min-w-[260px] 2xl:min-w-[300px]">
             {/* Enhanced pulsing glow background - OPTIMIZED: reduced animation speed to 3s */}
             <motion.div
-              className="absolute inset-0 rounded-r-2xl bg-gradient-to-r from-cyan-500/20 via-blue-500/10 to-transparent opacity-0"
+              className="absolute inset-0 rounded-r-2xl bg-gradient-to-r from-white/20 via-white/10 to-transparent opacity-0"
               animate={{
                 opacity: [0.3, 0.8, 0.3],
                 scale: [1, 1.05, 1],
@@ -987,9 +987,9 @@ export function CommunityQuickAccess() {
               className="absolute inset-0 rounded-r-2xl"
               animate={{
                 boxShadow: [
-                  '0 0 10px rgba(34, 211, 238, 0)',
-                  '0 0 20px rgba(34, 211, 238, 0.4)',
-                  '0 0 10px rgba(34, 211, 238, 0)'
+                  '0 0 10px rgba(255, 255, 255, 0)',
+                  '0 0 20px rgba(255, 255, 255, 0.4)',
+                  '0 0 10px rgba(255, 255, 255, 0)'
                 ]
               }}
               transition={{
@@ -1002,14 +1002,14 @@ export function CommunityQuickAccess() {
             <div className="px-1 py-1 xs:px-1.5 xs:py-1 sm:px-2 sm:py-1.5 md:px-3 md:py-2.5 flex items-center gap-0.5 sm:gap-1 md:gap-1.5 relative z-10">
               {/* Live Indicator - OPTIMIZED: increased duration to 1.5s */}
               <motion.div
-                className="w-1 h-1 xs:w-1.5 xs:h-1.5 sm:w-2 sm:h-2 bg-cyan-400 rounded-full"
+                className="w-1 h-1 xs:w-1.5 xs:h-1.5 sm:w-2 sm:h-2 bg-white rounded-full"
                 animate={{ 
                   opacity: [1, 0.4, 1],
                   scale: [1, 1.2, 1],
                   boxShadow: [
-                    '0 0 0px rgba(34, 211, 238, 1)',
-                    '0 0 8px rgba(34, 211, 238, 0.8)',
-                    '0 0 0px rgba(34, 211, 238, 1)'
+                    '0 0 0px rgba(255, 255, 255, 1)',
+                    '0 0 8px rgba(255, 255, 255, 0.8)',
+                    '0 0 0px rgba(255, 255, 255, 1)'
                   ]
                 }}
                 transition={{ duration: 1.5, repeat: Infinity }}
@@ -1017,8 +1017,8 @@ export function CommunityQuickAccess() {
 
               {/* Text */}
               <div className="flex items-center gap-0.5 sm:gap-0.5 md:gap-1">
-                <TrendingUp className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 text-cyan-300 drop-shadow-[0_0_3px_rgba(34,211,238,0.5)]" />
-                <span className="text-[6px] xs:text-[7px] sm:text-[9px] md:text-[10px] font-bold text-cyan-200">
+                <TrendingUp className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 text-white drop-shadow-[0_0_3px_rgba(255, 255, 255,0.5)]" />
+                <span className="text-[6px] xs:text-[7px] sm:text-[9px] md:text-[10px] font-bold text-white">
                   Live Trades
                 </span>
               </div>
@@ -1028,7 +1028,7 @@ export function CommunityQuickAccess() {
                 animate={{ rotate: isExpanded ? 180 : 0 }}
                 transition={{ type: "spring", stiffness: 400 }}
               >
-                <ChevronRight className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 text-cyan-400/70" />
+                <ChevronRight className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 text-white/70" />
               </motion.div>
             </div>
             
@@ -1058,7 +1058,7 @@ export function CommunityQuickAccess() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: [0.4, 0.7, 0.4], y: 0 }}
                   transition={{ opacity: { duration: 2, repeat: Infinity }, y: { duration: 0.3 } }}
-                  className="absolute top-4 sm:top-8 left-1/2 -translate-x-1/2 flex items-center gap-2 text-blue-300/50 text-xs sm:text-sm pointer-events-none"
+                  className="absolute top-4 sm:top-8 left-1/2 -translate-x-1/2 flex items-center gap-2 text-white/50 text-xs sm:text-sm pointer-events-none"
                 >
                   <span>↑</span>
                   <span>Tap anywhere to close</span>
@@ -1070,7 +1070,7 @@ export function CommunityQuickAccess() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: [0.4, 0.7, 0.4], y: 0 }}
                   transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.5 }, y: { duration: 0.3 } }}
-                  className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 text-blue-300/50 text-xs sm:text-sm pointer-events-none"
+                  className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 text-white/50 text-xs sm:text-sm pointer-events-none"
                 >
                   <span>↓</span>
                   <span>Tap anywhere to close</span>
@@ -1082,7 +1082,7 @@ export function CommunityQuickAccess() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: [0.3, 0.6, 0.3], x: 0 }}
                   transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.25 }, x: { duration: 0.3 } }}
-                  className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-blue-300/40 text-[10px] sm:text-xs pointer-events-none"
+                  className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-white/40 text-[10px] sm:text-xs pointer-events-none"
                 >
                   <span>←</span>
                   <span style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Tap to close</span>
@@ -1096,7 +1096,7 @@ export function CommunityQuickAccess() {
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: [0.3, 0.6, 0.3], x: 0 }}
                 transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.75 }, x: { duration: 0.3 } }}
-                className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-blue-300/40 text-[10px] sm:text-xs pointer-events-none"
+                className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-white/40 text-[10px] sm:text-xs pointer-events-none"
               >
                 <span>→</span>
                 <span style={{ writingMode: 'vertical-rl' }}>Tap to close</span>
@@ -1111,32 +1111,32 @@ export function CommunityQuickAccess() {
               exit={animations.modalContent.exit as TargetAndTransition}
               transition={animations.modalContent.transition}
               onClick={(e) => e.stopPropagation()}
-              className={`relative w-full max-w-[520px] max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 border border-blue-500/30 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl shadow-blue-900/20'}`}
+              className={`relative w-full max-w-[520px] max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 border border-white/30 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl shadow-white/20'}`}
             >
                 {/* Header */}
-                <div className="p-2 sm:p-3 md:p-4 border-b border-blue-500/20 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 flex-shrink-0">
+                <div className="p-2 sm:p-3 md:p-4 border-b border-white/20 bg-gradient-to-r from-white/10 to-white/10 flex-shrink-0">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 min-w-0">
-                      <MessageSquare className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 text-blue-400 flex-shrink-0" />
+                      <MessageSquare className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 text-white flex-shrink-0" />
                       <h3 className="text-[10px] sm:text-xs md:text-sm font-bold text-white truncate">Live Community</h3>
                     </div>
                     <div className="flex items-center gap-1.5 flex-shrink-0">
                       <span className="text-[8px] sm:text-[9px] text-zinc-500 hidden sm:inline">Click outside to close</span>
                       <motion.div
-                        className="w-1.5 h-1.5 bg-green-400 rounded-full"
+                        className="w-1.5 h-1.5 bg-white rounded-full"
                         animate={{ opacity: [1, 0.4, 1] }}
                         transition={{ duration: 1.5, repeat: Infinity }}
                       />
-                      <span className="text-[7px] sm:text-[8px] text-green-400 font-medium">LIVE</span>
+                      <span className="text-[7px] sm:text-[8px] text-white font-medium">LIVE</span>
                       {/* Close Button */}
                       <motion.button
                         whileHover={{ scale: 1.1, rotate: 90 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={() => setIsExpanded(false)}
-                        className="ml-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-blue-500/30 hover:bg-blue-500/50 border border-blue-400/40 flex items-center justify-center transition-colors flex-shrink-0"
+                        className="ml-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white/30 hover:bg-white/50 border border-white/40 flex items-center justify-center transition-colors flex-shrink-0"
                         title="Close"
                       >
-                        <span className="text-blue-200 text-xs sm:text-sm font-bold">×</span>
+                        <span className="text-white text-xs sm:text-sm font-bold">×</span>
                       </motion.button>
                     </div>
                   </div>
@@ -1162,10 +1162,10 @@ export function CommunityQuickAccess() {
                             ? ch.color === 'amber'
                               ? 'bg-amber-500/30 text-amber-300 border border-amber-500/40'
                               : ch.color === 'emerald'
-                              ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/40'
+                              ? 'bg-white/30 text-white border border-white/40'
                               : ch.color === 'cyan'
-                              ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/40'
-                              : 'bg-blue-500/30 text-blue-300 border border-blue-500/40'
+                              ? 'bg-white/30 text-white border border-white/40'
+                              : 'bg-white/30 text-white border border-white/40'
                             : 'bg-white/5 text-zinc-400 border border-transparent hover:bg-white/10'
                         }`}
                       >
@@ -1189,7 +1189,7 @@ export function CommunityQuickAccess() {
                     }}
                     className={`flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-lg text-[8px] sm:text-xs font-semibold transition-all whitespace-nowrap ml-auto flex-shrink-0 ${
                       isAdmin 
-                        ? 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white border border-blue-400/60 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50'
+                        ? 'bg-gradient-to-r from-white to-white hover:from-white hover:to-white text-white border border-white/60 shadow-lg shadow-white/30 hover:shadow-white/50'
                         : 'bg-zinc-800/80 hover:bg-zinc-700/80 text-zinc-300 hover:text-white border border-zinc-600/40 hover:border-zinc-500/60'
                     }`}
                     title="Admin Panel - Manage VIP Status & Users (Cmd+Shift+A)"
@@ -1205,12 +1205,12 @@ export function CommunityQuickAccess() {
                 </div>
 
                 {/* View All Link */}
-                <div className="px-2 sm:px-3 py-1.5 border-t border-blue-500/10 flex-shrink-0">
+                <div className="px-2 sm:px-3 py-1.5 border-t border-white/10 flex-shrink-0">
                   <a
                     href={`https://t.me/${CHANNELS[activeChannel].handle}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-1 text-[9px] text-blue-400 hover:text-blue-300 transition-colors"
+                    className="flex items-center justify-center gap-1 text-[9px] text-white hover:text-white transition-colors"
                   >
                     <ExternalLink className="w-2.5 h-2.5" />
                     View all on Telegram
@@ -1218,7 +1218,7 @@ export function CommunityQuickAccess() {
                 </div>
 
                 {/* Divider */}
-                <div className="h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent mx-2" />
+                <div className="h-px bg-gradient-to-r from-transparent via-white/30 to-transparent mx-2" />
 
                 {/* Browser Switcher Section - Compact with detached hover menu */}
                 <div className="p-1.5 sm:p-2.5 md:p-3 flex-shrink-0">
@@ -1233,10 +1233,10 @@ export function CommunityQuickAccess() {
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       className="flex-1 flex items-center justify-center gap-0.5 sm:gap-1.5 md:gap-2 py-1 sm:py-2 px-1.5 sm:px-2.5 md:px-3 rounded-lg
-                        bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500
+                        bg-gradient-to-r from-white to-white hover:from-white hover:to-white
                         text-white font-semibold text-[8px] sm:text-xs md:text-xs whitespace-nowrap
-                        border border-blue-500/30
-                        shadow-lg shadow-blue-500/25
+                        border border-white/30
+                        shadow-lg shadow-white/25
                         transition-all duration-300"
                     >
                       <Monitor className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 flex-shrink-0" />
@@ -1252,12 +1252,12 @@ export function CommunityQuickAccess() {
                       className={`
                         flex items-center justify-center gap-0.5 sm:gap-1.5 py-1 sm:py-2 px-1.5 sm:px-3 rounded-lg
                         ${copied 
-                          ? 'bg-gradient-to-r from-blue-600 to-cyan-600' 
-                          : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500'
+                          ? 'bg-gradient-to-r from-white to-white' 
+                          : 'bg-gradient-to-r from-white to-white hover:from-white hover:to-white'
                         }
                         text-white font-semibold text-[8px] sm:text-xs
-                        border border-blue-500/30
-                        shadow-lg shadow-blue-500/25
+                        border border-white/30
+                        shadow-lg shadow-white/25
                         transition-all duration-300
                       `}
                     >
@@ -1272,7 +1272,7 @@ export function CommunityQuickAccess() {
                 </div>
 
                 {/* Divider */}
-                <div className="h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent mx-2" />
+                <div className="h-px bg-gradient-to-r from-transparent via-white/30 to-transparent mx-2" />
 
                 {/* Social Buttons Section - Compact for mobile */}
                 <div className="p-1.5 sm:p-2.5 md:p-3 space-y-1 sm:space-y-1.5 md:space-y-2 flex-shrink-0">
@@ -1283,10 +1283,10 @@ export function CommunityQuickAccess() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className="w-full flex items-center justify-center gap-0.5 sm:gap-1.5 md:gap-2 py-1 sm:py-1.5 md:py-2 px-1.5 sm:px-2.5 md:px-3 rounded-lg
-                      bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500
+                      bg-gradient-to-r from-white to-white hover:from-white hover:to-white
                       text-white font-semibold text-[8px] sm:text-xs md:text-xs
-                      border border-blue-500/30
-                      shadow-lg shadow-blue-500/25
+                      border border-white/30
+                      shadow-lg shadow-white/25
                       transition-all duration-300"
                   >
                     <MessageSquare className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 flex-shrink-0" />
@@ -1299,10 +1299,10 @@ export function CommunityQuickAccess() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className="w-full flex items-center justify-center gap-0.5 sm:gap-1.5 md:gap-2 py-1 sm:py-1.5 md:py-2 px-1.5 sm:px-2.5 md:px-3 rounded-lg
-                      bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400
+                      bg-gradient-to-r from-white to-white hover:from-white hover:to-white
                       text-white font-semibold text-[8px] sm:text-xs md:text-xs
-                      border border-blue-500/30
-                      shadow-lg shadow-blue-500/25
+                      border border-white/30
+                      shadow-lg shadow-white/25
                       transition-all duration-300"
                   >
                     <MessageCircle className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 flex-shrink-0" />
@@ -1315,10 +1315,10 @@ export function CommunityQuickAccess() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className="w-full flex items-center justify-center gap-0.5 sm:gap-1.5 md:gap-2 py-1 sm:py-1.5 md:py-2 px-1.5 sm:px-2.5 md:px-3 rounded-lg
-                      bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500
+                      bg-gradient-to-r from-white to-white hover:from-white hover:to-white
                       text-white font-semibold text-[8px] sm:text-xs md:text-xs
-                      border border-blue-500/30
-                      shadow-lg shadow-blue-500/25
+                      border border-white/30
+                      shadow-lg shadow-white/25
                       transition-all duration-300"
                   >
                     <Instagram className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 flex-shrink-0" />
@@ -1331,10 +1331,10 @@ export function CommunityQuickAccess() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className="w-full flex items-center justify-center gap-0.5 sm:gap-1.5 md:gap-2 py-1 sm:py-1.5 md:py-2 px-1.5 sm:px-2.5 md:px-3 rounded-lg
-                      bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500
+                      bg-gradient-to-r from-white to-white hover:from-white hover:to-white
                       text-white font-semibold text-[8px] sm:text-xs md:text-xs
-                      border border-blue-500/30
-                      shadow-lg shadow-blue-500/25
+                      border border-white/30
+                      shadow-lg shadow-white/25
                       transition-all duration-300"
                   >
                     <Youtube className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 flex-shrink-0" />
@@ -1347,10 +1347,10 @@ export function CommunityQuickAccess() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className="w-full flex items-center justify-center gap-0.5 sm:gap-1.5 md:gap-2 py-1.5 sm:py-2 px-1.5 sm:px-2.5 md:px-3 rounded-lg
-                      bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400
+                      bg-gradient-to-r from-white to-white hover:from-white hover:to-white
                       text-white font-bold text-[8px] sm:text-xs md:text-xs
-                      border border-blue-500/30
-                      shadow-lg shadow-blue-500/30
+                      border border-white/30
+                      shadow-lg shadow-white/30
                       transition-all duration-300"
                   >
                     <Crown className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 flex-shrink-0" />
@@ -1383,12 +1383,12 @@ export function CommunityQuickAccess() {
               className="relative w-[90vw] max-w-[320px] pointer-events-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className={`bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 rounded-2xl border border-blue-500/40 overflow-hidden ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl shadow-blue-900/30'}`}>
+              <div className={`bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 rounded-2xl border border-white/40 overflow-hidden ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl shadow-white/30'}`}>
                 {/* Header */}
-                <div className="p-4 border-b border-blue-500/20 bg-gradient-to-r from-blue-500/10 to-cyan-500/10">
+                <div className="p-4 border-b border-white/20 bg-gradient-to-r from-white/10 to-white/10">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Monitor className="w-5 h-5 text-blue-400" />
+                      <Monitor className="w-5 h-5 text-white" />
                       <h3 className="text-sm font-bold text-white">Open in Browser</h3>
                     </div>
                     <motion.button
@@ -1425,15 +1425,15 @@ export function CommunityQuickAccess() {
                         whileTap={{ scale: 0.98 }}
                         disabled={isLoading}
                         className="w-full flex items-center justify-between p-3 rounded-lg
-                          bg-gradient-to-r from-blue-500/10 to-cyan-500/10 hover:from-blue-500/20 hover:to-cyan-500/20
+                          bg-gradient-to-r from-white/10 to-white/10 hover:from-white/20 hover:to-white/20
                           text-white font-medium text-xs
-                          border border-blue-500/30 hover:border-blue-400/50
+                          border border-white/30 hover:border-white/50
                           transition-all duration-200
                           disabled:opacity-50"
                       >
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center">
-                            <Icon className="w-4 h-4 text-blue-400" />
+                          <div className="w-8 h-8 rounded-lg bg-white/20 border border-white/30 flex items-center justify-center">
+                            <Icon className="w-4 h-4 text-white" />
                           </div>
                           <span>{browser.fullName}</span>
                         </div>
@@ -1442,10 +1442,10 @@ export function CommunityQuickAccess() {
                           <motion.div
                             animate={{ rotate: 360 }}
                             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                            className="w-4 h-4 border-2 border-t-transparent border-blue-400 rounded-full"
+                            className="w-4 h-4 border-2 border-t-transparent border-white rounded-full"
                           />
                         ) : (
-                          <ExternalLink className="w-4 h-4 text-blue-400 opacity-50" />
+                          <ExternalLink className="w-4 h-4 text-white opacity-50" />
                         )}
                       </motion.button>
                     );

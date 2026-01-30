@@ -95,7 +95,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
             bottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)',
           }}
         >
-          <div className="max-w-md mx-auto bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-2xl border border-white/20 overflow-hidden">
+          <div className="max-w-md mx-auto bg-gradient-to-r from-white to-white rounded-2xl shadow-2xl border border-white/20 overflow-hidden">
             {/* Close Button */}
             <button
               onClick={handleDismiss}
@@ -127,11 +127,11 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
                       <span className="text-xs font-medium text-white">Faster</span>
                     </div>
                     <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/10 rounded-full">
-                      <Smartphone size={12} className="text-green-300" />
+                      <Smartphone size={12} className="text-white" />
                       <span className="text-xs font-medium text-white">App-like</span>
                     </div>
                     <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/10 rounded-full">
-                      <svg className="w-3 h-3 text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                       <span className="text-xs font-medium text-white">Offline</span>
@@ -142,7 +142,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
                   <motion.button
                     onClick={handleInstall}
                     whileTap={{ scale: 0.97 }}
-                    className="w-full py-3 px-4 bg-white text-blue-600 font-bold rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-95 min-h-[52px] touch-manipulation"
+                    className="w-full py-3 px-4 bg-white text-black font-bold rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-95 min-h-[52px] touch-manipulation"
                     style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                   >
                     Install Now

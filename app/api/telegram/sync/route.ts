@@ -8,13 +8,22 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.
 // Mr.Bullmoney Bot Token - @MrBullmoneybot
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8554647051:AAE-FBW0qW0ZL4VVvUPlytlDXdo9lH7T9A8';
 
-// VAPID keys for push notifications
-const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
-const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
-const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@bullmoney.com';
+// Configure VAPID lazily to avoid build-time errors
+let vapidConfigured = false;
 
-if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
-  webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+function configureVapid() {
+  if (vapidConfigured) return true;
+  
+  const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
+  const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
+  const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@bullmoney.com';
+
+  if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+    webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+    vapidConfigured = true;
+    return true;
+  }
+  return false;
 }
 
 // Channel info for notifications
@@ -76,7 +85,7 @@ export async function GET(request: NextRequest) {
       console.log('[TG Sync] getUpdates failed (webhook may be set), checking database for recent messages');
 
       // Check database for recent messages and send notifications
-      if (supabaseUrl && supabaseServiceKey && VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+      if (supabaseUrl && supabaseServiceKey && configureVapid()) {
         try {
           const adminSupabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -226,7 +235,7 @@ export async function GET(request: NextRequest) {
           saved++;
 
           // Send push notification for this new message
-          if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY && supabaseServiceKey) {
+          if (configureVapid() && supabaseServiceKey) {
             const chatUsername = (post.chat?.username || '').toLowerCase();
             const channelInfo = CHANNEL_INFO[chatUsername] || { name: 'BullMoney', channel: 'trades', priority: 'high' as const };
 

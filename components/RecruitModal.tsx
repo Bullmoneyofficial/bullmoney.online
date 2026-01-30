@@ -12,7 +12,7 @@ const RecruitPage = dynamic(() => import('@/app/recruit/RecruitPage'), {
   ssr: false,
   loading: () => (
     <div className="min-h-[400px] flex items-center justify-center">
-      <div className="w-12 h-12 border-t-2 border-l-2 border-blue-500 rounded-full animate-spin" />
+      <div className="w-12 h-12 border-t-2 border-l-2 border-white rounded-full animate-spin" />
     </div>
   ),
 });
@@ -81,7 +81,7 @@ export default function RecruitModal({ isOpen, onClose }: RecruitModalProps) {
             animate={animations.modalContent.animate as TargetAndTransition}
             exit={animations.modalContent.exit as TargetAndTransition}
             transition={animations.modalContent.transition}
-            className={`relative w-[98%] md:w-[90%] max-w-2xl max-h-[95vh] bg-[#050B14] border border-blue-500/20 rounded-2xl ${isMobile ? '' : 'shadow-[0_0_50px_rgba(59,130,246,0.15)]'} overflow-hidden flex flex-col gpu-accelerated`}
+            className={`relative w-[98%] md:w-[90%] max-w-2xl max-h-[95vh] bg-[#050B14] border border-white/20 rounded-2xl ${isMobile ? '' : 'shadow-[0_0_50px_rgba(255, 255, 255,0.15)]'} overflow-hidden flex flex-col gpu-accelerated`}
           >
             {/* Close Button */}
             <button

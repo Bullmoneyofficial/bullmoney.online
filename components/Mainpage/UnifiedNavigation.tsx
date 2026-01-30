@@ -40,7 +40,7 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
   totalPages,
   pages,
   onPageChange,
-  accentColor = '#3b82f6',
+  accentColor = '#ffffff',
   disabled = false
 }) => {
   const [isGridOpen, setIsGridOpen] = useState(false);
@@ -89,7 +89,7 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
               bottom: 'calc(4.75rem + env(safe-area-inset-bottom, 0px))',
             }}
           >
-            <div className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-black/60 backdrop-blur-xl border border-blue-500/20">
+            <div className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-black/60 backdrop-blur-xl border border-white/20">
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                 <motion.div
                   key={page}
@@ -136,7 +136,7 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
                 className={`
                   relative z-10 w-11 h-11 md:w-14 md:h-14 rounded-full
                   bg-gradient-to-br from-slate-950 to-black
-                  border border-blue-500/30
+                  border border-white/30
                   flex items-center justify-center
                   transition-all duration-300 touch-manipulation
                   hover:from-slate-900 hover:to-neutral-900
@@ -190,7 +190,7 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
                 className={`
                   relative z-10 w-11 h-11 md:w-14 md:h-14 rounded-full
                   bg-gradient-to-br from-slate-950 to-black
-                  border border-blue-500/30
+                  border border-white/30
                   flex items-center justify-center
                   transition-all duration-300 touch-manipulation
                   hover:from-slate-900 hover:to-neutral-900
@@ -246,7 +246,7 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
               disabled={disabled}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="relative z-10 w-full h-full rounded-full bg-gradient-to-br from-slate-900 via-slate-950 to-black border border-blue-500/30 flex items-center justify-center group"
+              className="relative z-10 w-full h-full rounded-full bg-gradient-to-br from-slate-900 via-slate-950 to-black border border-white/30 flex items-center justify-center group"
               style={{
                 WebkitTapHighlightColor: 'transparent',
                 touchAction: 'manipulation',
@@ -269,7 +269,7 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
                 >
                   <Grid3x3 
                     size={24} 
-                    className="text-blue-400 group-hover:text-blue-300 transition-colors"
+                    className="text-white group-hover:text-white transition-colors"
                   />
                 </motion.div>
                 
@@ -324,7 +324,7 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
                   e.stopPropagation();
                   toggleGrid();
                 }}
-                className="relative z-10 w-12 h-12 rounded-full bg-slate-950 border border-blue-500/30 hover:bg-slate-900 flex items-center justify-center transition-all hover:scale-110 active:scale-95 touch-manipulation"
+                className="relative z-10 w-12 h-12 rounded-full bg-slate-950 border border-white/30 hover:bg-slate-900 flex items-center justify-center transition-all hover:scale-110 active:scale-95 touch-manipulation"
                 style={{
                   WebkitTapHighlightColor: 'transparent',
                   touchAction: 'manipulation',
@@ -334,7 +334,7 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
                 onMouseEnter={() => playHover()}
                 aria-label="Close navigation"
               >
-                <X size={20} className="text-blue-400" />
+                <X size={20} className="text-white" />
               </button>
             </motion.div>
 
@@ -386,7 +386,7 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
                         <h3 className="text-base font-bold text-white mb-1 uppercase tracking-wider">
                           {page.label || page.labelA || `Page ${page.id}`}
                         </h3>
-                        <p className="text-xs text-blue-200/60 uppercase tracking-wider">
+                        <p className="text-xs text-white/60 uppercase tracking-wider">
                           {page.type}
                         </p>
                       </div>

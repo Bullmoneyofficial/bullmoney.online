@@ -93,7 +93,7 @@ const ShopScrollFunnel: React.FC<ShopScrollFunnelProps> = ({ isMenuOpen = false 
                 <div className="flex items-center justify-between mb-4">
                   <span className="label" style={{ 
                     opacity: 0.7 + (progress * 0.3),
-                    color: isUnlocked ? '#4ade80' : '#fff'
+                    color: isUnlocked ? '#ffffff' : '#fff'
                   }}>
                     {isUnlocked ? 'ACCESS GRANTED' : 'ENCRYPTED CONNECTION'}
                   </span>
@@ -111,7 +111,7 @@ const ShopScrollFunnel: React.FC<ShopScrollFunnelProps> = ({ isMenuOpen = false 
 
                 <div className="mt-6 grid gap-3 text-sm text-white/70">
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(74,222,128,0.8)]" />
+                    <span className="w-2 h-2 rounded-full bg-white animate-pulse shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
                     <span className="font-mono uppercase tracking-[0.2em] text-xs">Controller Ready</span>
                   </div>
                   <p className="text-white/60">
@@ -162,10 +162,10 @@ const ShopScrollFunnel: React.FC<ShopScrollFunnelProps> = ({ isMenuOpen = false 
             <div className="p-4 rounded-2xl bg-black/70 border border-white/10 backdrop-blur-lg text-white shadow-[0_0_30px_rgba(0,0,0,0.35)]">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-300 text-[10px] font-mono uppercase border border-emerald-500/30">FPS Safe</span>
+                  <span className="px-2 py-1 rounded-md bg-white/10 text-white text-[10px] font-mono uppercase border border-white/30">FPS Safe</span>
                   <span className="text-xs text-white/60">Pac-Guard removed</span>
                 </div>
-                <span className="text-xs font-mono text-emerald-300">Stable</span>
+                <span className="text-xs font-mono text-white">Stable</span>
               </div>
               <p className="text-sm text-white/70">
                 This funnel stays lightweight for mobile—no extra mini-game overhead. The full Pac-Man experience is still available below without slowing down the entry flow.

@@ -18,8 +18,8 @@ import { useUnifiedPerformance } from "@/hooks/useDesktopPerformance";
 // Neon Blue Sign Style from Chartnews (STATIC for performance)
 const NEON_STYLES = `
   .neon-blue-text {
-    color: #3b82f6;
-    text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+    color: #ffffff;
+    text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
   }
 
   .neon-white-text {
@@ -32,17 +32,17 @@ const NEON_STYLES = `
   }
 
   .neon-blue-icon {
-    filter: drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6);
+    filter: drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff);
   }
 
   .neon-blue-border {
-    border: 2px solid #3b82f6;
-    box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff;
   }
 
   .neon-blue-bg {
-    background: #3b82f6;
-    box-shadow: 0 0 8px #3b82f6, 0 0 16px #3b82f6;
+    background: #ffffff;
+    box-shadow: 0 0 8px #ffffff, 0 0 16px #ffffff;
   }
 
   .gpu-layer {
@@ -120,8 +120,8 @@ const FooterModal = memo(({
               <div 
                 className="flex items-center justify-between p-4"
                 style={{
-                  borderBottom: '2px solid #3b82f6',
-                  boxShadow: '0 2px 8px #3b82f6, 0 4px 16px rgba(59, 130, 246, 0.4)'
+                  borderBottom: '2px solid #ffffff',
+                  boxShadow: '0 2px 8px #ffffff, 0 4px 16px rgba(255, 255, 255, 0.4)'
                 }}
               >
                 <h2 className="text-lg font-bold neon-blue-text">
@@ -181,7 +181,7 @@ const AppsToolsContent = memo(() => {
               {app.desc}
             </p>
           </div>
-          <ExternalLink className="w-4 h-4 neon-blue-icon" style={{ color: '#3b82f6' }} />
+          <ExternalLink className="w-4 h-4 neon-blue-icon" style={{ color: '#ffffff' }} />
         </a>
       ))}
     </div>
@@ -238,7 +238,7 @@ export function Footer() {
       >
         {/* Inner Content Container - Static Neon Style on desktop, simplified on mobile */}
         <div 
-          className={`relative max-w-7xl mx-auto flex flex-col items-center gap-6 sm:gap-8 bg-black rounded-2xl p-4 sm:p-6 ${shouldSkipHeavyEffects ? 'border border-blue-500/50' : 'neon-blue-border'}`}
+          className={`relative max-w-7xl mx-auto flex flex-col items-center gap-6 sm:gap-8 bg-black rounded-2xl p-4 sm:p-6 ${shouldSkipHeavyEffects ? 'border border-white/50' : 'neon-blue-border'}`}
         >
           {/* Top: Logo */}
           <div className="scale-110 sm:scale-125 md:scale-150 origin-center p-1">
@@ -256,13 +256,13 @@ export function Footer() {
           <div className="lg:hidden flex flex-wrap justify-center gap-2 sm:gap-3">
             <button
               onClick={handleDisclaimerClick}
-              className={`px-4 py-2 text-sm font-medium bg-black rounded-full transition-all hover:brightness-110 active:scale-95 ${shouldSkipHeavyEffects ? 'border border-blue-500/50 text-blue-400' : 'neon-blue-border neon-blue-text'}`}
+              className={`px-4 py-2 text-sm font-medium bg-black rounded-full transition-all hover:brightness-110 active:scale-95 ${shouldSkipHeavyEffects ? 'border border-white/50 text-white' : 'neon-blue-border neon-blue-text'}`}
             >
               Disclaimer
             </button>
             <button
               onClick={handleAppsClick}
-              className={`px-4 py-2 text-sm font-medium bg-black rounded-full transition-all hover:brightness-110 active:scale-95 ${shouldSkipHeavyEffects ? 'border border-blue-500/50 text-blue-400' : 'neon-blue-border neon-blue-text'}`}
+              className={`px-4 py-2 text-sm font-medium bg-black rounded-full transition-all hover:brightness-110 active:scale-95 ${shouldSkipHeavyEffects ? 'border border-white/50 text-white' : 'neon-blue-border neon-blue-text'}`}
             >
               Apps & Tools
             </button>

@@ -70,8 +70,8 @@ const OptimizedNewsImage = memo(({
 
   if (!src || error) {
     return (
-      <div className={cn("bg-gradient-to-br from-blue-900/20 to-black flex items-center justify-center", aspectRatio, className)}>
-        <Newspaper className="w-8 h-8 text-blue-500/30" />
+      <div className={cn("bg-gradient-to-br from-white/20 to-black flex items-center justify-center", aspectRatio, className)}>
+        <Newspaper className="w-8 h-8 text-white/30" />
       </div>
     );
   }
@@ -256,11 +256,11 @@ const NewsCard = memo(({
 
   const categoryColors: Record<string, string> = {
     crypto: "from-amber-500/20 to-orange-600/20 border-amber-500/30 text-amber-300",
-    stocks: "from-emerald-500/20 to-green-600/20 border-emerald-500/30 text-emerald-300",
-    forex: "from-blue-500/20 to-cyan-600/20 border-blue-500/30 text-blue-300",
+    stocks: "from-white/20 to-white/20 border-white/30 text-white",
+    forex: "from-white/20 to-white/20 border-white/30 text-white",
     metals: "from-yellow-500/20 to-amber-600/20 border-yellow-500/30 text-yellow-300",
     other: "from-slate-500/20 to-zinc-600/20 border-slate-500/30 text-slate-300",
-    all: "from-indigo-500/20 to-purple-600/20 border-indigo-500/30 text-indigo-300",
+    all: "from-indigo-500/20 to-white/20 border-indigo-500/30 text-indigo-300",
   };
 
   const colorClass = categoryColors[item.category || "other"] || categoryColors.other;
@@ -272,8 +272,8 @@ const NewsCard = memo(({
         onClick={handleClick}
         className="relative rounded-xl overflow-hidden cursor-pointer group"
         style={{
-          background: "linear-gradient(145deg, rgba(59, 130, 246, 0.1), rgba(0, 0, 0, 0.9))",
-          border: "1px solid rgba(59, 130, 246, 0.3)",
+          background: "linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.9))",
+          border: "1px solid rgba(255, 255, 255, 0.3)",
         }}
       >
         {/* Image */}
@@ -293,7 +293,7 @@ const NewsCard = memo(({
           {/* Preview Button */}
           <button
             onClick={handlePreviewClick}
-            className="absolute top-3 right-3 px-3 py-1.5 rounded-lg bg-black/70 backdrop-blur-sm border border-blue-500/30 text-[10px] font-bold uppercase tracking-wider text-blue-300 hover:bg-blue-600/30 transition-all z-10"
+            className="absolute top-3 right-3 px-3 py-1.5 rounded-lg bg-black/70 backdrop-blur-sm border border-white/30 text-[10px] font-bold uppercase tracking-wider text-white hover:bg-white/30 transition-all z-10"
           >
             Preview
           </button>
@@ -307,23 +307,23 @@ const NewsCard = memo(({
         {/* Content */}
         <div className="p-5 md:p-6">
           <div className="flex items-center gap-3 mb-3">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-blue-400/70">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-white/70">
               {item.source || "News"}
             </span>
             {item.published_at && (
               <>
-                <span className="text-blue-500/30">•</span>
-                <span className="text-[10px] font-mono text-blue-400/70">{timeAgo(item.published_at)}</span>
+                <span className="text-white/30">•</span>
+                <span className="text-[10px] font-mono text-white/70">{timeAgo(item.published_at)}</span>
               </>
             )}
           </div>
-          <h3 className="text-lg md:text-xl font-bold text-white mb-2 line-clamp-2 group-hover:text-blue-300 transition-colors">
+          <h3 className="text-lg md:text-xl font-bold text-white mb-2 line-clamp-2 group-hover:text-white transition-colors">
             {item.title}
           </h3>
           <p className="text-sm text-slate-400 line-clamp-2 mb-4">
             {preview?.description || "Click to read the full story."}
           </p>
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-blue-400">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-white">
             Read Full Story
             <IconExternalLink className="w-3.5 h-3.5" />
           </div>
@@ -339,8 +339,8 @@ const NewsCard = memo(({
       onClick={handleClick}
       className="relative rounded-xl overflow-hidden cursor-pointer group"
       style={{
-        background: "linear-gradient(145deg, rgba(59, 130, 246, 0.05), rgba(0, 0, 0, 0.8))",
-        border: "1px solid rgba(59, 130, 246, 0.2)",
+        background: "linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.8))",
+        border: "1px solid rgba(255, 255, 255, 0.2)",
       }}
     >
       <div className="flex gap-4 p-4">
@@ -365,7 +365,7 @@ const NewsCard = memo(({
             </span>
             <span className="text-[10px] font-mono text-slate-500">{timeAgo(item.published_at)}</span>
           </div>
-          <h4 className="text-sm font-semibold text-white mb-1 line-clamp-2 group-hover:text-blue-300 transition-colors">
+          <h4 className="text-sm font-semibold text-white mb-1 line-clamp-2 group-hover:text-white transition-colors">
             {item.title}
           </h4>
           <p className="text-[11px] text-slate-500 font-mono">{item.source || "Unknown Source"}</p>
@@ -565,22 +565,22 @@ const NewsFeedContent = memo(() => {
         )}
 
         {/* Inner Container */}
-        <div className="relative z-10 bg-gradient-to-b from-neutral-900 to-black rounded-2xl border border-blue-500/30 overflow-hidden max-h-[90vh] flex flex-col">
+        <div className="relative z-10 bg-gradient-to-b from-neutral-900 to-black rounded-2xl border border-white/30 overflow-hidden max-h-[90vh] flex flex-col">
           {!shouldSkipHeavyEffects && <ShimmerLine color="blue" />}
 
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-blue-500/20 flex-shrink-0">
+          <div className="flex items-center justify-between p-4 border-b border-white/20 flex-shrink-0">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600/40 to-cyan-600/30 border border-blue-500/40 flex items-center justify-center">
-                <Newspaper className="w-5 h-5 text-blue-300" />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-white/40 to-white/30 border border-white/40 flex items-center justify-center">
+                <Newspaper className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h2 className="text-lg sm:text-xl font-bold text-white">BullMoney News</h2>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="inline-flex items-center gap-1.5 text-xs text-blue-400/70">
+                  <span className="inline-flex items-center gap-1.5 text-xs text-white/70">
                     <span className="relative flex h-1.5 w-1.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-full w-full bg-blue-500"></span>
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-full w-full bg-white"></span>
                     </span>
                     Live Feed
                   </span>
@@ -598,7 +598,7 @@ const NewsFeedContent = memo(() => {
                 whileHover={shouldSkipHeavyEffects || isMobile ? {} : { scale: 1.05, rotate: 180 }}
                 whileTap={shouldSkipHeavyEffects ? {} : { scale: 0.95 }}
                 onClick={handleRefresh}
-                className="p-2 rounded-full bg-neutral-800 text-blue-400 hover:bg-neutral-700 transition-colors"
+                className="p-2 rounded-full bg-neutral-800 text-white hover:bg-neutral-700 transition-colors"
                 title="Refresh"
               >
                 <IconRefresh className={cn("w-4 h-4", loading && "animate-spin")} />
@@ -622,7 +622,7 @@ const NewsFeedContent = memo(() => {
           </div>
 
           {/* Filter Bar - Horizontal scrollable on mobile */}
-          <div className="p-3 border-b border-blue-500/20 flex-shrink-0 overflow-x-auto scrollbar-hide">
+          <div className="p-3 border-b border-white/20 flex-shrink-0 overflow-x-auto scrollbar-hide">
             <div className="flex gap-2 min-w-max">
               {MARKET_FILTERS.map(({ value, label }) => {
                 const Icon = FILTER_ICONS[value];
@@ -633,8 +633,8 @@ const NewsFeedContent = memo(() => {
                     className={cn(
                       "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wide transition-all whitespace-nowrap",
                       activeMarket === value
-                        ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/25"
-                        : "bg-neutral-800/50 border border-blue-500/20 text-slate-400 hover:border-blue-500/50 hover:text-white"
+                        ? "bg-gradient-to-r from-white to-white text-white shadow-lg shadow-white/25"
+                        : "bg-neutral-800/50 border border-white/20 text-slate-400 hover:border-white/50 hover:text-white"
                     )}
                   >
                     <Icon className="w-3.5 h-3.5" />
@@ -660,7 +660,7 @@ const NewsFeedContent = memo(() => {
                 <p className="text-sm text-slate-500 mb-4">The feed may have timed out. Try refreshing.</p>
                 <button
                   onClick={handleRefresh}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-bold transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-white/90 text-black rounded-lg text-sm font-bold transition-colors"
                 >
                   <IconRefresh className="w-4 h-4" />
                   Retry
@@ -687,9 +687,9 @@ const NewsFeedContent = memo(() => {
                 {featured && (
                   <div>
                     <div className="flex items-center gap-3 mb-3">
-                      <TrendingUp className="w-4 h-4 text-blue-400" />
-                      <h3 className="text-[10px] font-bold uppercase tracking-widest text-blue-400">Featured Story</h3>
-                      <div className="flex-1 h-px bg-gradient-to-r from-blue-500/30 to-transparent" />
+                      <TrendingUp className="w-4 h-4 text-white" />
+                      <h3 className="text-[10px] font-bold uppercase tracking-widest text-white">Featured Story</h3>
+                      <div className="flex-1 h-px bg-gradient-to-r from-white/30 to-transparent" />
                     </div>
                     <NewsCard
                       item={featured}
@@ -706,9 +706,9 @@ const NewsFeedContent = memo(() => {
                 {topStories.length > 0 && (
                   <div>
                     <div className="flex items-center gap-3 mb-3">
-                      <Newspaper className="w-4 h-4 text-blue-400" />
-                      <h3 className="text-[10px] font-bold uppercase tracking-widest text-blue-400">Top Stories</h3>
-                      <div className="flex-1 h-px bg-gradient-to-r from-blue-500/30 to-transparent" />
+                      <Newspaper className="w-4 h-4 text-white" />
+                      <h3 className="text-[10px] font-bold uppercase tracking-widest text-white">Top Stories</h3>
+                      <div className="flex-1 h-px bg-gradient-to-r from-white/30 to-transparent" />
                     </div>
                     <div className="grid gap-3 md:grid-cols-2">
                       {topStories.map((item, i) => (
@@ -753,7 +753,7 @@ const NewsFeedContent = memo(() => {
                             SoundEffects.click();
                             setDisplayCount((c) => c + 10);
                           }}
-                          className="px-6 py-2 rounded-lg bg-neutral-800/50 border border-blue-500/30 text-sm font-bold text-blue-400 hover:bg-blue-600/20 hover:border-blue-500/50 transition-all"
+                          className="px-6 py-2 rounded-lg bg-neutral-800/50 border border-white/30 text-sm font-bold text-white hover:bg-white/20 hover:border-white/50 transition-all"
                         >
                           Load More ({totalCount - 5 - displayCount} remaining)
                         </button>
@@ -792,11 +792,11 @@ const NewsFeedContent = memo(() => {
               exit={shouldSkipHeavyEffects ? { opacity: 0 } : { scale: 0.95, opacity: 0 }}
               transition={shouldSkipHeavyEffects ? { duration: 0.15 } : { type: "spring", damping: 30, stiffness: 400 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-4xl h-[80vh] overflow-hidden rounded-2xl bg-black border-2 border-blue-500/40"
-              style={shouldSkipHeavyEffects ? {} : { boxShadow: "0 0 60px rgba(59, 130, 246, 0.3)" }}
+              className="relative w-full max-w-4xl h-[80vh] overflow-hidden rounded-2xl bg-black border-2 border-white/40"
+              style={shouldSkipHeavyEffects ? {} : { boxShadow: "0 0 60px rgba(255, 255, 255, 0.3)" }}
             >
               {/* Preview Header */}
-              <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-blue-500/20 bg-neutral-900">
+              <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-white/20 bg-neutral-900">
                 <div className="min-w-0">
                   <div className="text-[10px] font-mono uppercase tracking-widest text-slate-500">Article Preview</div>
                   <div className="truncate text-sm font-semibold text-white">
@@ -808,7 +808,7 @@ const NewsFeedContent = memo(() => {
                     href={previewUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold uppercase tracking-wider transition-colors"
+                    className="px-3 py-1.5 rounded-lg bg-white hover:bg-white/90 text-black text-xs font-bold uppercase tracking-wider transition-colors"
                   >
                     Open Full Article
                   </a>
@@ -826,7 +826,7 @@ const NewsFeedContent = memo(() => {
                 {/* Loading indicator */}
                 <div className="absolute inset-0 flex items-center justify-center bg-neutral-900 z-0">
                   <div className="flex flex-col items-center gap-3">
-                    <IconRefresh className="w-6 h-6 text-blue-400 animate-spin" />
+                    <IconRefresh className="w-6 h-6 text-white animate-spin" />
                     <span className="text-xs text-slate-500">Loading preview...</span>
                   </div>
                 </div>
@@ -840,7 +840,7 @@ const NewsFeedContent = memo(() => {
               </div>
 
               {/* CSP Notice */}
-              <div className="absolute bottom-0 left-0 right-0 px-4 py-2 bg-neutral-900/90 backdrop-blur-sm border-t border-blue-500/20">
+              <div className="absolute bottom-0 left-0 right-0 px-4 py-2 bg-neutral-900/90 backdrop-blur-sm border-t border-white/20">
                 <p className="text-[10px] text-slate-500 text-center">
                   Some sites block iframe previews. Use &ldquo;Open Full Article&rdquo; if content doesn&apos;t load.
                 </p>
@@ -987,12 +987,12 @@ export const NewsFeedButton = memo(({ className }: { className?: string }) => {
         onClick={handleClick}
         className={cn(
           "inline-flex items-center gap-2 px-4 py-2 rounded-xl",
-          "bg-gradient-to-r from-blue-600/50 to-cyan-600/50",
-          "border border-blue-400/60 text-sm font-bold text-white",
-          "hover:from-blue-600/70 hover:to-cyan-600/70 transition-all",
+          "bg-gradient-to-r from-white/50 to-white/50",
+          "border border-white/60 text-sm font-bold text-white",
+          "hover:from-white/70 hover:to-white/70 transition-all",
           className
         )}
-        style={{ boxShadow: "0 0 16px rgba(59, 130, 246, 0.4)" }}
+        style={{ boxShadow: "0 0 16px rgba(255, 255, 255, 0.4)" }}
       >
         <Newspaper className="w-5 h-5" />
         Open News Feed

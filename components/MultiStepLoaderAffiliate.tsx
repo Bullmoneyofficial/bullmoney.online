@@ -183,14 +183,14 @@ const TradingViewBackground = memo(({ assetKey }: { assetKey: AssetKey }) => {
       hide_volume: true,
       // --- AFFILIATE CYBER THEME ---
       backgroundColor: "rgba(3, 7, 18, 1)", // Dark Indigo/Black
-      gridLineColor: "rgba(56, 189, 248, 0.1)", // Cyan Grid
+      gridLineColor: "rgba(255, 255, 255, 0.1)", // Cyan Grid
       scaleFontColor: "rgba(134, 137, 147, 0)",
       // --- CYAN & WHITE CANDLES ---
-      upColor: "#06B6D4", // Cyan
+      upColor: "#ffffff", // Cyan
       downColor: "#FFFFFF", // White
-      borderUpColor: "#06B6D4",
+      borderUpColor: "#ffffff",
       borderDownColor: "#FFFFFF",
-      wickUpColor: "#06B6D4",
+      wickUpColor: "#ffffff",
       wickDownColor: "#FFFFFF",
     });
     
@@ -249,8 +249,8 @@ const LiveChromeHeader = memo(({
               className={cn(
                 "group relative flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 border backdrop-blur-md cursor-pointer overflow-hidden",
                 isActive 
-                  ? "bg-indigo-900/40 border-cyan-500/50 shadow-[0_0_25px_rgba(34,211,238,0.4)]" 
-                  : "bg-black/20 border-white/5 hover:bg-indigo-900/20 hover:border-cyan-500/20"
+                  ? "bg-indigo-900/40 border-white/50 shadow-[0_0_25px_rgba(255, 255, 255,0.4)]" 
+                  : "bg-black/20 border-white/5 hover:bg-indigo-900/20 hover:border-white/20"
               )}
             >
               <div 
@@ -271,7 +271,7 @@ const LiveChromeHeader = memo(({
                   {asset.name}
                 </span>
                 {isActive && (
-                   <span className="text-[8px] text-cyan-200/50 leading-none tracking-widest mt-0.5">
+                   <span className="text-[8px] text-white/50 leading-none tracking-widest mt-0.5">
                      PARTNER FEED
                    </span>
                 )}
@@ -292,7 +292,7 @@ const LiveChromeHeader = memo(({
           <span
             className={cn(
               "w-2 h-2 rounded-full animate-pulse",
-              isUp ? "bg-cyan-500" : "bg-white"
+              isUp ? "bg-white" : "bg-white"
             )}
           />
           <span className="text-xs md:text-sm font-mono font-bold text-white/50 tracking-widest">
@@ -345,7 +345,7 @@ const ReactiveLiquidLogo = ({ src }: { src: string }) => {
       </svg>
       <motion.div
         className="relative w-full h-full cursor-pointer will-change-transform select-none"
-        style={{ filter: "url(#velocity-liquid) drop-shadow(0 0 25px rgba(34, 211, 238, 0.5))" }}
+        style={{ filter: "url(#velocity-liquid) drop-shadow(0 0 25px rgba(255, 255, 255, 0.5))" }}
       >
         <img src={src} alt="BullMoney Logo" className="w-full h-full object-contain select-none pointer-events-none" draggable={false} />
       </motion.div>
@@ -471,11 +471,11 @@ export const MultiStepLoader = ({ loadingStates, loading }: { loadingStates: Loa
               /* Affiliate Gradient: Indigo -> White -> Cyan -> Indigo */
               background: linear-gradient(
                 110deg, 
-                #4338ca 20%,   /* Indigo */
+                #ffffff 20%,   /* Indigo */
                 #ffffff 45%,   /* White Peak */
-                #06b6d4 50%,   /* Cyan Flash */
+                #ffffff 50%,   /* Cyan Flash */
                 #ffffff 55%,   /* White Peak */
-                #4338ca 80%    /* Indigo */
+                #ffffff 80%    /* Indigo */
               );
               background-size: 200% auto;
               background-clip: text;
@@ -483,7 +483,7 @@ export const MultiStepLoader = ({ loadingStates, loading }: { loadingStates: Loa
               -webkit-text-fill-color: transparent;
               color: transparent;
               animation: text-shimmer 3.5s linear infinite;
-              filter: drop-shadow(0 0 4px rgba(6, 182, 212, 0.6));
+              filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.6));
             }
           `}</style>
 
@@ -503,10 +503,10 @@ export const MultiStepLoader = ({ loadingStates, loading }: { loadingStates: Loa
             </div>
 
             <div className="relative text-center mb-8 md:mb-12">
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter animate-text-shimmer-affiliate drop-shadow-[0_0_35px_rgba(34,211,238,0.5)]">
+              <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter animate-text-shimmer-affiliate drop-shadow-[0_0_35px_rgba(255, 255, 255,0.5)]">
                 AFFILIATE
               </h1>
-              <span className="block text-sm md:text-lg tracking-[0.5em] text-cyan-400/50 uppercase font-bold mt-2">
+              <span className="block text-sm md:text-lg tracking-[0.5em] text-white/50 uppercase font-bold mt-2">
                 Partner Program
               </span>
             </div>
@@ -517,10 +517,10 @@ export const MultiStepLoader = ({ loadingStates, loading }: { loadingStates: Loa
                 {[1, 2, 3].map((ring) => (
                   <motion.div
                     key={ring}
-                    initial={{ width: "100px", height: "100px", opacity: 0, border: "1px solid #6366F1" }}
+                    initial={{ width: "100px", height: "100px", opacity: 0, border: "1px solid #ffffff" }}
                     animate={{ width: ["100px", "600px"], height: ["100px", "600px"], opacity: [0.5, 0], borderWidth: ["3px", "0px"] }}
                     transition={{ duration: 2.5, repeat: Infinity, delay: ring * 0.6, ease: "easeOut" }}
-                    className="absolute rounded-full border-indigo-500/60 shadow-[0_0_30px_rgba(6,182,212,0.3)] bg-indigo-900/5"
+                    className="absolute rounded-full border-indigo-500/60 shadow-[0_0_30px_rgba(255, 255, 255,0.3)] bg-indigo-900/5"
                   />
                 ))}
               </div>
@@ -533,14 +533,14 @@ export const MultiStepLoader = ({ loadingStates, loading }: { loadingStates: Loa
               </div>
 
               {/* Status Pill */}
-              <div className="relative z-30 flex items-center justify-center bg-indigo-950/60 backdrop-blur-xl px-6 py-2 rounded-full border border-cyan-500/30 shadow-[0_4px_30px_rgba(6,182,212,0.2)]">
+              <div className="relative z-30 flex items-center justify-center bg-indigo-950/60 backdrop-blur-xl px-6 py-2 rounded-full border border-white/30 shadow-[0_4px_30px_rgba(255, 255, 255,0.2)]">
                 <span className="relative flex h-2 w-2 md:h-3 md:w-3 mr-4">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-500 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-full w-full bg-cyan-600"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-full w-full bg-white"></span>
                 </span>
                 <EncryptedText
                   text={loadingStates[currentStep]?.text || "INITIALIZING PROTOCOLS"}
-                  className="font-mono text-[10px] md:text-xs tracking-[0.2em] uppercase font-bold text-cyan-100"
+                  className="font-mono text-[10px] md:text-xs tracking-[0.2em] uppercase font-bold text-white"
                 />
               </div>
             </div>

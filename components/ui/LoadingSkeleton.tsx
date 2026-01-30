@@ -199,7 +199,7 @@ function LoadingSkeletonComponent({
       )}
 
       {/* Inner Container */}
-      <div className="relative z-10 w-full h-full bg-black rounded-xl border border-blue-500/20 overflow-hidden flex items-center justify-center">
+      <div className="relative z-10 w-full h-full bg-black rounded-xl border border-white/20 overflow-hidden flex items-center justify-center">
         {/* Top Shimmer Line */}
         {animated && <ShimmerLine color={color} intensity={intensity} />}
 
@@ -254,7 +254,7 @@ export const SplineSkeleton = memo(function SplineSkeleton({
     >
       <div className="flex flex-col items-center gap-2">
         <ShimmerSpinner size={40} color="blue" />
-        <p className="text-xs text-blue-400/60">Loading 3D Scene...</p>
+        <p className="text-xs text-white/60">Loading 3D Scene...</p>
       </div>
     </LoadingSkeleton>
   );

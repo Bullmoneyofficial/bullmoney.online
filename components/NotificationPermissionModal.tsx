@@ -7,7 +7,7 @@ import { Bell, BellOff, X, Zap, TrendingUp, Shield } from 'lucide-react';
 
 // ============================================================================
 // NOTIFICATION PERMISSION MODAL - COMPACT ULTIMATE HUB STYLE
-// Smaller, sleek neon blue design matching UltimateHub aesthetic
+// Smaller, sleek neon white design matching UltimateHub aesthetic
 // ============================================================================
 
 const NOTIFICATION_STORAGE_KEY = 'bullmoney_notification_preference';
@@ -265,23 +265,23 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
           className="relative w-full max-w-[280px] overflow-hidden rounded-xl"
           style={{
             background: 'linear-gradient(135deg, rgba(15, 15, 20, 0.98) 0%, rgba(20, 25, 35, 0.98) 100%)',
-            border: '1px solid rgba(59, 130, 246, 0.4)',
-            boxShadow: '0 0 30px rgba(59, 130, 246, 0.3), 0 0 60px rgba(59, 130, 246, 0.15), inset 0 0 30px rgba(59, 130, 246, 0.03)',
+            border: '1px solid rgba(255, 255, 255, 0.4)',
+            boxShadow: '0 0 30px rgba(255, 255, 255, 0.3), 0 0 60px rgba(255, 255, 255, 0.15), inset 0 0 30px rgba(255, 255, 255, 0.03)',
             cursor: 'auto',
           }}
         >
           {/* Close button */}
           <button
             onClick={handleClose}
-            className="absolute top-2 right-2 z-10 p-1 rounded-lg transition-all hover:bg-blue-500/20"
-            style={{ color: 'rgba(96, 165, 250, 0.6)' }}
+            className="absolute top-2 right-2 z-10 p-1 rounded-lg transition-all hover:bg-white/20"
+            style={{ color: 'rgba(255, 255, 255, 0.6)' }}
           >
             <X size={14} />
           </button>
 
           {/* Glow effect */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-16 bg-blue-500/15 blur-[40px]" />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-16 bg-white/15 blur-[40px]" />
           </div>
 
           <div className="relative z-10 p-4">
@@ -294,12 +294,12 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
                     transition={{ duration: 2, repeat: Infinity }}
                     className="relative p-2.5 rounded-lg"
                     style={{
-                      background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(29, 78, 216, 0.3) 100%)',
-                      border: '1px solid rgba(59, 130, 246, 0.4)',
-                      boxShadow: '0 0 15px rgba(59, 130, 246, 0.3)',
+                      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.3) 100%)',
+                      border: '1px solid rgba(255, 255, 255, 0.4)',
+                      boxShadow: '0 0 15px rgba(255, 255, 255, 0.3)',
                     }}
                   >
-                    <Bell size={22} className="text-blue-400" style={{ filter: 'drop-shadow(0 0 6px #3b82f6)' }} />
+                    <Bell size={22} className="text-white" style={{ filter: 'drop-shadow(0 0 6px #ffffff)' }} />
                     <motion.div
                       animate={{ scale: [1, 1.3, 1], opacity: [1, 0.5, 1] }}
                       transition={{ duration: 1.5, repeat: Infinity }}
@@ -312,13 +312,13 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
                 {/* Title */}
                 <h2 
                   className="text-sm font-black text-center mb-1 uppercase tracking-wide"
-                  style={{ color: '#93c5fd', textShadow: '0 0 10px rgba(59, 130, 246, 0.5)' }}
+                  style={{ color: '#ffffff', textShadow: '0 0 10px rgba(255, 255, 255, 0.5)' }}
                 >
                   Trade Alerts
                 </h2>
 
                 {/* Subtitle */}
-                <p className="text-center text-[10px] mb-3 font-medium" style={{ color: 'rgba(147, 197, 253, 0.7)' }}>
+                <p className="text-center text-[10px] mb-3 font-medium" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                   Get instant notifications for trades & signals
                 </p>
 
@@ -336,12 +336,12 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
                       transition={{ delay: i * 0.05 }}
                       className="flex flex-col items-center gap-1 p-2 rounded-lg"
                       style={{ 
-                        background: 'rgba(59, 130, 246, 0.1)', 
-                        border: '1px solid rgba(59, 130, 246, 0.2)' 
+                        background: 'rgba(255, 255, 255, 0.1)', 
+                        border: '1px solid rgba(255, 255, 255, 0.2)' 
                       }}
                     >
-                      <feature.icon size={14} className="text-blue-400" style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
-                      <span className="text-[8px] font-bold uppercase tracking-wide" style={{ color: 'rgba(147, 197, 253, 0.9)' }}>
+                      <feature.icon size={14} className="text-white" style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }} />
+                      <span className="text-[8px] font-bold uppercase tracking-wide" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
                         {feature.text}
                       </span>
                     </motion.div>
@@ -357,9 +357,9 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
                     disabled={isLoading}
                     className="w-full py-2.5 px-4 rounded-lg font-black text-[11px] uppercase tracking-wider text-white transition-all disabled:opacity-50"
                     style={{
-                      background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-                      border: '1px solid rgba(96, 165, 250, 0.5)',
-                      boxShadow: '0 0 15px rgba(59, 130, 246, 0.4), inset 0 1px 0 rgba(255,255,255,0.1)',
+                      background: 'linear-gradient(135deg, #ffffff 0%, #ffffff 100%)',
+                      border: '1px solid rgba(255, 255, 255, 0.5)',
+                      boxShadow: '0 0 15px rgba(255, 255, 255, 0.4), inset 0 1px 0 rgba(255,255,255,0.1)',
                       textShadow: '0 0 8px rgba(255,255,255,0.5)'
                     }}
                   >
@@ -382,10 +382,10 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
 
                   <button
                     onClick={handleDecline}
-                    className="w-full py-2 px-4 rounded-lg font-bold text-[10px] uppercase tracking-wide transition-all hover:bg-blue-500/10"
+                    className="w-full py-2 px-4 rounded-lg font-bold text-[10px] uppercase tracking-wide transition-all hover:bg-white/10"
                     style={{ 
-                      color: 'rgba(96, 165, 250, 0.5)',
-                      border: '1px solid rgba(59, 130, 246, 0.15)'
+                      color: 'rgba(255, 255, 255, 0.5)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)'
                     }}
                   >
                     Maybe Later
@@ -406,21 +406,21 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
                   transition={{ type: 'spring', damping: 12 }}
                   className="inline-flex items-center justify-center w-12 h-12 rounded-lg mb-3"
                   style={{
-                    background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.3) 0%, rgba(22, 163, 74, 0.3) 100%)',
-                    border: '1px solid rgba(34, 197, 94, 0.4)',
-                    boxShadow: '0 0 20px rgba(34, 197, 94, 0.4)',
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.3) 100%)',
+                    border: '1px solid rgba(255, 255, 255, 0.4)',
+                    boxShadow: '0 0 20px rgba(255, 255, 255, 0.4)',
                   }}
                 >
                   <motion.svg
                     initial={{ pathLength: 0 }}
                     animate={{ pathLength: 1 }}
                     transition={{ duration: 0.4, delay: 0.1 }}
-                    className="w-6 h-6 text-green-400"
+                    className="w-6 h-6 text-white"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
                     strokeWidth={3}
-                    style={{ filter: 'drop-shadow(0 0 6px #22c55e)' }}
+                    style={{ filter: 'drop-shadow(0 0 6px #ffffff)' }}
                   >
                     <motion.path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </motion.svg>
@@ -428,11 +428,11 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
 
                 <h3 
                   className="text-sm font-black mb-1 uppercase tracking-wide" 
-                  style={{ color: '#86efac', textShadow: '0 0 10px rgba(34, 197, 94, 0.5)' }}
+                  style={{ color: '#ffffff', textShadow: '0 0 10px rgba(255, 255, 255, 0.5)' }}
                 >
                   All Set!
                 </h3>
-                <p className="text-[10px] font-medium" style={{ color: 'rgba(134, 239, 172, 0.7)' }}>
+                <p className="text-[10px] font-medium" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                   You&apos;ll receive instant trade alerts
                 </p>
               </motion.div>

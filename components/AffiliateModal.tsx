@@ -47,25 +47,25 @@ const AFFILIATE_ADMIN_EMAILS = (process.env.NEXT_PUBLIC_AFFILIATE_ADMIN_EMAILS |
 // --- NEON BLUE THEME COLORS (Matching Navbar) ---
 const NEON_BLUE = {
   // Primary neon blue (theme-driven)
-  primary: 'var(--accent-color, #3b82f6)',
-  primaryLight: 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)',
-  primaryDark: 'rgba(var(--accent-rgb, 59, 130, 246), 1)',
+  primary: 'var(--accent-color, #ffffff)',
+  primaryLight: 'rgba(var(--accent-rgb, 255, 255, 255), 0.8)',
+  primaryDark: 'rgba(var(--accent-rgb, 255, 255, 255), 1)',
   // Cyan accent (kept for contrast)
-  cyan: '#22d3ee',
-  cyanLight: '#67e8f9',
+  cyan: '#ffffff',
+  cyanLight: '#ffffff',
   // Static neon glow values
-  border: 'rgba(var(--accent-rgb, 59, 130, 246), 0.6)',
-  borderHover: 'rgba(var(--accent-rgb, 59, 130, 246), 0.9)',
-  glow: '0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.4)',
-  glowStrong: '0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.6)',
-  glowIntense: '0 0 40px rgba(var(--accent-rgb, 59, 130, 246), 0.8)',
+  border: 'rgba(var(--accent-rgb, 255, 255, 255), 0.6)',
+  borderHover: 'rgba(var(--accent-rgb, 255, 255, 255), 0.9)',
+  glow: '0 0 20px rgba(var(--accent-rgb, 255, 255, 255), 0.4)',
+  glowStrong: '0 0 30px rgba(var(--accent-rgb, 255, 255, 255), 0.6)',
+  glowIntense: '0 0 40px rgba(var(--accent-rgb, 255, 255, 255), 0.8)',
   // Background
   bgDark: 'rgba(0, 0, 0, 0.95)',
   bgCard: 'rgba(0, 0, 0, 0.8)',
   // Text
-  textPrimary: 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)',
-  textSecondary: 'rgba(var(--accent-rgb, 59, 130, 246), 0.7)',
-  textMuted: 'rgba(var(--accent-rgb, 59, 130, 246), 0.5)',
+  textPrimary: 'rgba(var(--accent-rgb, 255, 255, 255), 0.8)',
+  textSecondary: 'rgba(var(--accent-rgb, 255, 255, 255), 0.7)',
+  textMuted: 'rgba(var(--accent-rgb, 255, 255, 255), 0.5)',
   textWhite: '#ffffff',
 };
 
@@ -126,7 +126,7 @@ const AFFILIATE_TIERS = [
     commissionPercent: 25, 
     xmRate: 11, 
     vantageRate: 5.50,
-    color: '#00d4ff',
+    color: '#ffffff',
     icon: Sparkles 
   },
 ];
@@ -238,20 +238,20 @@ const NeonButton = memo(({
   const variantStyles = {
     primary: {
       background: 'transparent',
-      border: `2px solid ${disabled ? 'rgba(59, 130, 246, 0.3)' : NEON_BLUE.border}`,
-      color: disabled ? 'rgba(147, 197, 253, 0.4)' : NEON_BLUE.textPrimary,
+      border: `2px solid ${disabled ? 'rgba(255, 255, 255, 0.3)' : NEON_BLUE.border}`,
+      color: disabled ? 'rgba(255, 255, 255, 0.4)' : NEON_BLUE.textPrimary,
       boxShadow: disabled ? 'none' : NEON_BLUE.glow,
     },
     secondary: {
-      background: 'rgba(59, 130, 246, 0.1)',
-      border: `2px solid ${disabled ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.4)'}`,
-      color: disabled ? 'rgba(147, 197, 253, 0.4)' : NEON_BLUE.textPrimary,
+      background: 'rgba(255, 255, 255, 0.1)',
+      border: `2px solid ${disabled ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.4)'}`,
+      color: disabled ? 'rgba(255, 255, 255, 0.4)' : NEON_BLUE.textPrimary,
       boxShadow: 'none',
     },
     ghost: {
       background: 'transparent',
       border: '2px solid transparent',
-      color: disabled ? 'rgba(147, 197, 253, 0.4)' : NEON_BLUE.textSecondary,
+      color: disabled ? 'rgba(255, 255, 255, 0.4)' : NEON_BLUE.textSecondary,
       boxShadow: 'none',
     }
   };
@@ -306,7 +306,7 @@ const NeonInput = memo(({
       {Icon && (
         <Icon 
           className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors"
-          style={{ color: 'rgba(59, 130, 246, 0.5)' }}
+          style={{ color: 'rgba(255, 255, 255, 0.5)' }}
         />
       )}
       <input
@@ -326,7 +326,7 @@ const NeonInput = memo(({
           disabled && "opacity-50 cursor-not-allowed"
         )}
         style={{
-          borderColor: 'rgba(59, 130, 246, 0.3)',
+          borderColor: 'rgba(255, 255, 255, 0.3)',
         }}
       />
     </div>
@@ -354,7 +354,7 @@ const StatCard = memo(({
       "bg-black/40"
     )}
     style={{
-      borderColor: highlight ? NEON_BLUE.primary : 'rgba(59, 130, 246, 0.3)',
+      borderColor: highlight ? NEON_BLUE.primary : 'rgba(255, 255, 255, 0.3)',
       boxShadow: highlight ? NEON_BLUE.glow : 'none',
     }}
   >
@@ -425,14 +425,14 @@ const CollapsibleSection = memo(({ title, subtitle, icon: Icon, children, defaul
 }) => (
   <details
     className="group rounded-2xl border-2 bg-black/70"
-    style={{ borderColor: 'rgba(59, 130, 246, 0.35)' }}
+    style={{ borderColor: 'rgba(255, 255, 255, 0.35)' }}
     open={defaultOpen}
   >
     <summary className="flex items-center justify-between gap-3 cursor-pointer list-none p-4">
       <div className="flex items-center gap-3">
         <div
           className="w-9 h-9 rounded-full border-2 flex items-center justify-center"
-          style={{ borderColor: NEON_BLUE.primary, background: 'rgba(59, 130, 246, 0.12)' }}
+          style={{ borderColor: NEON_BLUE.primary, background: 'rgba(255, 255, 255, 0.12)' }}
         >
           <Icon className="w-4 h-4" style={{ color: NEON_BLUE.cyan }} />
         </div>
@@ -464,7 +464,7 @@ const CodeVaultCard = memo(({ label, code, onCopy, copied }: {
     <div
       className="absolute inset-0 opacity-30"
       style={{
-        background: 'conic-gradient(from 180deg at 50% 50%, rgba(59,130,246,0.0), rgba(34,211,238,0.35), rgba(59,130,246,0.0))'
+        background: 'conic-gradient(from 180deg at 50% 50%, rgba(255, 255, 255,0.0), rgba(255, 255, 255,0.35), rgba(255, 255, 255,0.0))'
       }}
     />
     <div className="relative z-10">
@@ -477,7 +477,7 @@ const CodeVaultCard = memo(({ label, code, onCopy, copied }: {
           style={{
             borderColor: NEON_BLUE.border,
             color: NEON_BLUE.textPrimary,
-            background: 'rgba(59, 130, 246, 0.12)'
+            background: 'rgba(255, 255, 255, 0.12)'
           }}
         >
           {copied ? 'COPIED' : 'COPY'}
@@ -839,7 +839,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
           style={{ 
             borderColor: NEON_BLUE.primary,
             boxShadow: NEON_BLUE.glowStrong,
-            background: 'rgba(59, 130, 246, 0.1)'
+            background: 'rgba(255, 255, 255, 0.1)'
           }}
         >
           <DollarSign className="w-10 h-10" style={{ color: NEON_BLUE.cyan }} />
@@ -926,7 +926,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
           defaultOpen
         >
           <div className="space-y-3">
-            <div className="flex gap-3 p-3 rounded-xl border-2" style={{ borderColor: 'rgba(59, 130, 246, 0.3)', background: 'rgba(0, 0, 0, 0.4)' }}>
+            <div className="flex gap-3 p-3 rounded-xl border-2" style={{ borderColor: 'rgba(255, 255, 255, 0.3)', background: 'rgba(0, 0, 0, 0.4)' }}>
               <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 font-bold text-xs" style={{ background: NEON_BLUE.primary, color: NEON_BLUE.textWhite }}>1</div>
               <div>
                 <h3 className="font-semibold mb-1" style={{ color: NEON_BLUE.textWhite }}>Recruit Traders</h3>
@@ -935,7 +935,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
                 </p>
               </div>
             </div>
-            <div className="flex gap-3 p-3 rounded-xl border-2" style={{ borderColor: 'rgba(59, 130, 246, 0.3)', background: 'rgba(0, 0, 0, 0.4)' }}>
+            <div className="flex gap-3 p-3 rounded-xl border-2" style={{ borderColor: 'rgba(255, 255, 255, 0.3)', background: 'rgba(0, 0, 0, 0.4)' }}>
               <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 font-bold text-xs" style={{ background: NEON_BLUE.primary, color: NEON_BLUE.textWhite }}>2</div>
               <div>
                 <h3 className="font-semibold mb-1" style={{ color: NEON_BLUE.textWhite }}>They Trade, You Earn</h3>
@@ -944,7 +944,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
                 </p>
               </div>
             </div>
-            <div className="flex gap-3 p-3 rounded-xl border-2" style={{ borderColor: 'rgba(59, 130, 246, 0.3)', background: 'rgba(0, 0, 0, 0.4)' }}>
+            <div className="flex gap-3 p-3 rounded-xl border-2" style={{ borderColor: 'rgba(255, 255, 255, 0.3)', background: 'rgba(0, 0, 0, 0.4)' }}>
               <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 font-bold text-xs" style={{ background: NEON_BLUE.primary, color: NEON_BLUE.textWhite }}>3</div>
               <div>
                 <h3 className="font-semibold mb-1" style={{ color: NEON_BLUE.textWhite }}>Boost With Bonuses</h3>
@@ -995,8 +995,8 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
                   onClick={() => setActiveBroker(broker)}
                   className="px-4 py-2 rounded-full text-sm font-semibold transition-all border-2"
                   style={{
-                    borderColor: activeBroker === broker ? NEON_BLUE.primary : 'rgba(59, 130, 246, 0.3)',
-                    background: activeBroker === broker ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
+                    borderColor: activeBroker === broker ? NEON_BLUE.primary : 'rgba(255, 255, 255, 0.3)',
+                    background: activeBroker === broker ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
                     color: activeBroker === broker ? NEON_BLUE.textWhite : NEON_BLUE.textMuted,
                     boxShadow: activeBroker === broker ? NEON_BLUE.glow : 'none',
                   }}
@@ -1020,7 +1020,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
                   onChange={(e) => setCalcTraders(Number(e.target.value))}
                   className="w-full h-2 rounded-full appearance-none cursor-pointer"
                   style={{ 
-                    background: `linear-gradient(to right, ${NEON_BLUE.primary} ${calcTraders}%, rgba(59, 130, 246, 0.2) ${calcTraders}%)` 
+                    background: `linear-gradient(to right, ${NEON_BLUE.primary} ${calcTraders}%, rgba(255, 255, 255, 0.2) ${calcTraders}%)` 
                   }}
                 />
               </div>
@@ -1038,7 +1038,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
                   onChange={(e) => setCalcLots(Number(e.target.value))}
                   className="w-full h-2 rounded-full appearance-none cursor-pointer"
                   style={{ 
-                    background: `linear-gradient(to right, ${NEON_BLUE.primary} ${calcLots * 2}%, rgba(59, 130, 246, 0.2) ${calcLots * 2}%)` 
+                    background: `linear-gradient(to right, ${NEON_BLUE.primary} ${calcLots * 2}%, rgba(255, 255, 255, 0.2) ${calcLots * 2}%)` 
                   }}
                 />
               </div>
@@ -1056,7 +1056,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
                   onChange={(e) => setCalcPosts(Number(e.target.value))}
                   className="w-full h-2 rounded-full appearance-none cursor-pointer"
                   style={{ 
-                    background: `linear-gradient(to right, ${NEON_BLUE.primary} ${(calcPosts / 7) * 100}%, rgba(59, 130, 246, 0.2) ${(calcPosts / 7) * 100}%)` 
+                    background: `linear-gradient(to right, ${NEON_BLUE.primary} ${(calcPosts / 7) * 100}%, rgba(255, 255, 255, 0.2) ${(calcPosts / 7) * 100}%)` 
                   }}
                 />
               </div>
@@ -1064,7 +1064,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
 
             <div 
               className="p-4 rounded-xl border-2"
-              style={{ borderColor: NEON_BLUE.primary, background: 'rgba(59, 130, 246, 0.1)' }}
+              style={{ borderColor: NEON_BLUE.primary, background: 'rgba(255, 255, 255, 0.1)' }}
             >
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm" style={{ color: NEON_BLUE.textSecondary }}>Your Tier</span>
@@ -1150,8 +1150,8 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
               onClick={() => setActiveBroker(broker)}
               className="px-6 py-3 rounded-xl text-base font-bold transition-all border-2"
               style={{
-                borderColor: activeBroker === broker ? NEON_BLUE.primary : 'rgba(59, 130, 246, 0.3)',
-                background: activeBroker === broker ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
+                borderColor: activeBroker === broker ? NEON_BLUE.primary : 'rgba(255, 255, 255, 0.3)',
+                background: activeBroker === broker ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
                 color: activeBroker === broker ? NEON_BLUE.textWhite : NEON_BLUE.textMuted,
                 boxShadow: activeBroker === broker ? NEON_BLUE.glowStrong : 'none',
               }}
@@ -1167,15 +1167,15 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
-          <div className="rounded-xl border-2 p-3 text-center" style={{ borderColor: NEON_BLUE.border, background: 'rgba(59,130,246,0.08)' }}>
+          <div className="rounded-xl border-2 p-3 text-center" style={{ borderColor: NEON_BLUE.border, background: 'rgba(255, 255, 255,0.08)' }}>
             <p className="text-[11px]" style={{ color: NEON_BLUE.textMuted }}>Step A</p>
             <p className="text-xs font-semibold" style={{ color: NEON_BLUE.textWhite }}>Open account</p>
           </div>
-          <div className="rounded-xl border-2 p-3 text-center" style={{ borderColor: NEON_BLUE.border, background: 'rgba(59,130,246,0.08)' }}>
+          <div className="rounded-xl border-2 p-3 text-center" style={{ borderColor: NEON_BLUE.border, background: 'rgba(255, 255, 255,0.08)' }}>
             <p className="text-[11px]" style={{ color: NEON_BLUE.textMuted }}>Step B</p>
             <p className="text-xs font-semibold" style={{ color: NEON_BLUE.textWhite }}>Paste code</p>
           </div>
-          <div className="rounded-xl border-2 p-3 text-center" style={{ borderColor: NEON_BLUE.border, background: 'rgba(59,130,246,0.08)' }}>
+          <div className="rounded-xl border-2 p-3 text-center" style={{ borderColor: NEON_BLUE.border, background: 'rgba(255, 255, 255,0.08)' }}>
             <p className="text-[11px]" style={{ color: NEON_BLUE.textMuted }}>Step C</p>
             <p className="text-xs font-semibold" style={{ color: NEON_BLUE.textWhite }}>Start earning</p>
           </div>
@@ -1245,7 +1245,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
         {isReturningUser && savedSession && (
           <div 
             className="p-3 rounded-xl mb-4 border-2"
-            style={{ borderColor: 'rgba(59, 130, 246, 0.3)', background: 'rgba(59, 130, 246, 0.1)' }}
+            style={{ borderColor: 'rgba(255, 255, 255, 0.3)', background: 'rgba(255, 255, 255, 0.1)' }}
           >
             <p className="text-xs" style={{ color: NEON_BLUE.textSecondary }}>
               Welcome back, <span style={{ color: NEON_BLUE.cyan }}>{savedSession.email}</span>
@@ -1409,14 +1409,14 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
             onClick={() => setAcceptedTerms(!acceptedTerms)}
             className="flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-colors"
             style={{ 
-              borderColor: 'rgba(59, 130, 246, 0.3)', 
-              background: acceptedTerms ? 'rgba(59, 130, 246, 0.1)' : 'transparent' 
+              borderColor: 'rgba(255, 255, 255, 0.3)', 
+              background: acceptedTerms ? 'rgba(255, 255, 255, 0.1)' : 'transparent' 
             }}
           >
             <div 
               className="w-5 h-5 rounded border-2 flex items-center justify-center mt-0.5 shrink-0 transition-colors"
               style={{ 
-                borderColor: acceptedTerms ? NEON_BLUE.primary : 'rgba(59, 130, 246, 0.4)',
+                borderColor: acceptedTerms ? NEON_BLUE.primary : 'rgba(255, 255, 255, 0.4)',
                 background: acceptedTerms ? NEON_BLUE.primary : 'transparent'
               }}
             >
@@ -1545,7 +1545,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
           {/* Header */}
           <div 
             className="flex items-center justify-between p-4 border-b"
-            style={{ borderColor: 'rgba(59, 130, 246, 0.3)', background: 'rgba(0, 0, 0, 0.8)' }}
+            style={{ borderColor: 'rgba(255, 255, 255, 0.3)', background: 'rgba(0, 0, 0, 0.8)' }}
           >
             <div className="flex items-center gap-2">
               <h1 className="text-lg font-bold" style={{ color: NEON_BLUE.textPrimary }}>
@@ -1565,7 +1565,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
                 onClick={handleClose}
                 className="p-2 rounded-full transition-all border-2"
                 style={{ 
-                  borderColor: 'rgba(59, 130, 246, 0.3)',
+                  borderColor: 'rgba(255, 255, 255, 0.3)',
                   color: NEON_BLUE.textMuted
                 }}
               >
@@ -1593,7 +1593,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
         {/* Header */}
         <div 
           className="flex items-center justify-between p-4 border-b"
-          style={{ borderColor: 'rgba(59, 130, 246, 0.3)', background: 'rgba(0, 0, 0, 0.8)' }}
+          style={{ borderColor: 'rgba(255, 255, 255, 0.3)', background: 'rgba(0, 0, 0, 0.8)' }}
         >
           <div className="flex items-center gap-4">
             <h1 className="text-lg font-bold" style={{ color: NEON_BLUE.textPrimary }}>
@@ -1606,7 +1606,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
                   "px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all",
                   dashboardTab === 'dashboard' ? "bg-white/10" : "bg-transparent"
                 )}
-                style={{ borderColor: 'rgba(59, 130, 246, 0.3)', color: NEON_BLUE.textPrimary }}
+                style={{ borderColor: 'rgba(255, 255, 255, 0.3)', color: NEON_BLUE.textPrimary }}
               >
                 Dashboard
               </button>
@@ -1617,7 +1617,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
                     "px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all flex items-center gap-1",
                     dashboardTab === 'admin' ? "bg-white/10" : "bg-transparent"
                   )}
-                  style={{ borderColor: 'rgba(59, 130, 246, 0.3)', color: NEON_BLUE.textPrimary }}
+                  style={{ borderColor: 'rgba(255, 255, 255, 0.3)', color: NEON_BLUE.textPrimary }}
                 >
                   <Shield className="w-3 h-3" /> Admin Panel
                 </button>
@@ -1641,7 +1641,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
               onClick={handleClose}
               className="p-2 rounded-full transition-all border-2"
               style={{ 
-                borderColor: 'rgba(59, 130, 246, 0.3)',
+                borderColor: 'rgba(255, 255, 255, 0.3)',
                 color: NEON_BLUE.textMuted
               }}
             >
@@ -1690,7 +1690,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
         onClick={handleClose}
         className="absolute top-4 right-4 z-50 p-2 rounded-full transition-all border-2"
         style={{ 
-          borderColor: 'rgba(59, 130, 246, 0.3)',
+          borderColor: 'rgba(255, 255, 255, 0.3)',
           background: 'rgba(0, 0, 0, 0.8)',
           color: NEON_BLUE.textMuted
         }}

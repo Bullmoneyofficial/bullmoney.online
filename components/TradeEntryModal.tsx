@@ -10,35 +10,35 @@ import { calculateTradePnL, calculateRiskReward, determineOutcome } from '@/lib/
 // Neon styling from Ultimate Hub
 const NEON_STYLES = `
   .neon-blue-btn {
-    background: #3b82f6;
+    background: #ffffff;
     color: #ffffff;
-    border: 2px solid #3b82f6;
-    box-shadow: 0 0 8px #3b82f6, 0 0 16px #3b82f6, inset 0 0 4px rgba(255,255,255,0.2);
-    text-shadow: 0 0 4px #3b82f6;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 8px #ffffff, 0 0 16px #ffffff, inset 0 0 4px rgba(255,255,255,0.2);
+    text-shadow: 0 0 4px #ffffff;
     transition: all 0.3s ease;
   }
 
   .neon-blue-btn:hover:not(:disabled) {
-    box-shadow: 0 0 12px #3b82f6, 0 0 20px #3b82f6, 0 0 32px #3b82f6, inset 0 0 4px rgba(255,255,255,0.3);
+    box-shadow: 0 0 12px #ffffff, 0 0 20px #ffffff, 0 0 32px #ffffff, inset 0 0 4px rgba(255,255,255,0.3);
   }
 
   .neon-cancel-btn {
-    border: 2px solid #3b82f6;
-    color: #3b82f6;
-    text-shadow: 0 0 4px #3b82f6;
-    box-shadow: 0 0 4px #3b82f6, inset 0 0 4px #3b82f6;
+    border: 2px solid #ffffff;
+    color: #ffffff;
+    text-shadow: 0 0 4px #ffffff;
+    box-shadow: 0 0 4px #ffffff, inset 0 0 4px #ffffff;
     transition: all 0.3s ease;
   }
 
   .neon-cancel-btn:hover {
-    background: rgba(59, 130, 246, 0.1);
-    box-shadow: 0 0 8px #3b82f6, 0 0 12px #3b82f6, inset 0 0 4px #3b82f6;
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 8px #ffffff, 0 0 12px #ffffff, inset 0 0 4px #ffffff;
   }
 
   /* Force white text on all inputs and textareas */
   input, textarea, select {
     color: #ffffff !important;
-    caret-color: #3b82f6;
+    caret-color: #ffffff;
   }
 
   input::placeholder, textarea::placeholder {
@@ -53,7 +53,7 @@ const NEON_STYLES = `
     -webkit-box-shadow: 0 0 0 30px #1e293b inset !important;
     box-shadow: 0 0 0 30px #1e293b inset !important;
     -webkit-text-fill-color: #ffffff !important;
-    caret-color: #3b82f6 !important;
+    caret-color: #ffffff !important;
   }
 `;
 
@@ -354,14 +354,14 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
-        className="bg-black rounded-2xl border border-blue-500/30 
+        className="bg-black rounded-2xl border border-white/30 
                    max-w-4xl w-full max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Sticky Header with Close Button */}
-        <div className="sticky top-0 bg-slate-900/95 backdrop-blur-xl border-b border-blue-500/50 z-10">
+        <div className="sticky top-0 bg-slate-900/95 backdrop-blur-xl border-b border-white/50 z-10">
           <div className="flex items-center justify-between p-4 gap-3">
-            <h2 className="text-lg sm:text-2xl font-bold text-white flex-shrink-0" style={{textShadow: '0 0 4px #3b82f6'}}>
+            <h2 className="text-lg sm:text-2xl font-bold text-white flex-shrink-0" style={{textShadow: '0 0 4px #ffffff'}}>
               {trade ? 'Edit Trade' : 'New Trade'}
             </h2>
             <button
@@ -402,7 +402,7 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
                       onChange={handleInputChange}
                       required
                       className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
-                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               focus:outline-none focus:ring-2 focus:ring-white"
                     />
                   </div>
 
@@ -418,7 +418,7 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
                       placeholder="BTC, AAPL, EUR/USD..."
                       required
                       className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
-                               placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
                     />
                   </div>
 
@@ -432,7 +432,7 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
                       onChange={handleInputChange}
                       required
                       className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
-                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               focus:outline-none focus:ring-2 focus:ring-white"
                     >
                       <option value="stock">Stock</option>
                       <option value="crypto">Crypto</option>
@@ -455,7 +455,7 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
                       onChange={handleInputChange}
                       required
                       className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
-                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               focus:outline-none focus:ring-2 focus:ring-white"
                     >
                       <option value="long">Long</option>
                       <option value="short">Short</option>
@@ -474,7 +474,7 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
                       step="0.00000001"
                       required
                       className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
-                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               focus:outline-none focus:ring-2 focus:ring-white"
                     />
                   </div>
 
@@ -489,7 +489,7 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
                       onChange={handleInputChange}
                       step="0.00000001"
                       className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
-                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               focus:outline-none focus:ring-2 focus:ring-white"
                     />
                   </div>
 
@@ -505,7 +505,7 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
                       step="0.00000001"
                       required
                       className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
-                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               focus:outline-none focus:ring-2 focus:ring-white"
                     />
                   </div>
 
@@ -521,7 +521,7 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
                       step="0.1"
                       min="1"
                       className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
-                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               focus:outline-none focus:ring-2 focus:ring-white"
                     />
                   </div>
                 </div>
@@ -557,7 +557,7 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
                       onChange={handleInputChange}
                       step="0.00000001"
                       className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
-                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               focus:outline-none focus:ring-2 focus:ring-white"
                     />
                   </div>
 
@@ -572,7 +572,7 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
                       onChange={handleInputChange}
                       step="0.00000001"
                       className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
-                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               focus:outline-none focus:ring-2 focus:ring-white"
                     />
                   </div>
 
@@ -588,7 +588,7 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
                       min="1"
                       max="5"
                       className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
-                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               focus:outline-none focus:ring-2 focus:ring-white"
                     />
                   </div>
                 </div>
@@ -624,7 +624,7 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
                       onChange={handleInputChange}
                       step="0.01"
                       className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
-                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               focus:outline-none focus:ring-2 focus:ring-white"
                     />
                   </div>
 
@@ -639,7 +639,7 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
                       onChange={handleInputChange}
                       step="0.01"
                       className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
-                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               focus:outline-none focus:ring-2 focus:ring-white"
                     />
                   </div>
 
@@ -654,7 +654,7 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
                       onChange={handleInputChange}
                       step="0.01"
                       className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
-                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               focus:outline-none focus:ring-2 focus:ring-white"
                     />
                   </div>
                 </div>
@@ -690,7 +690,7 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
                       onChange={handleInputChange}
                       placeholder="Breakout, Reversal..."
                       className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
-                               placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
                     />
                   </div>
 
@@ -705,7 +705,7 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
                       onChange={handleInputChange}
                       placeholder="1h, 4h, 1d..."
                       className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
-                               placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
                     />
                   </div>
 
@@ -720,7 +720,7 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
                       onChange={handleInputChange}
                       placeholder="Trending, Ranging..."
                       className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
-                               placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
                     />
                   </div>
                 </div>
@@ -736,7 +736,7 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
                     rows={2}
                     placeholder="Why did you enter this trade?"
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
-                             placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                             placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
                   />
                 </div>
 
@@ -751,7 +751,7 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
                     rows={2}
                     placeholder="Why did you exit this trade?"
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
-                             placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                             placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
                   />
                 </div>
               </div>
@@ -785,7 +785,7 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
                     onChange={handleInputChange}
                     placeholder="Confident, Anxious, Neutral..."
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
-                             placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                             placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
                   />
                 </div>
 
@@ -827,7 +827,7 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
                       rows={2}
                       placeholder="Describe the mistake and what you learned..."
                       className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
-                               placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
                     />
                   </div>
                 )}
@@ -842,7 +842,7 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
                     value={formData.session_number || ''}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
-                             focus:outline-none focus:ring-2 focus:ring-blue-500"
+                             focus:outline-none focus:ring-2 focus:ring-white"
                   />
                 </div>
               </div>
@@ -869,7 +869,7 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
             {expandedSections.images && (
               <div className="px-4 pb-4 space-y-3 border-t border-white/10">
                 <label className="flex items-center justify-center w-full px-4 py-8 border-2 border-dashed 
-                               border-white/20 rounded-lg cursor-pointer hover:border-blue-500 
+                               border-white/20 rounded-lg cursor-pointer hover:border-white 
                                transition-colors bg-white/5">
                   <div className="text-center">
                     <Upload className="mx-auto mb-2 text-gray-400" size={32} />
@@ -937,7 +937,7 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
                     onChange={handleInputChange}
                     placeholder="breakout, high-volume, news-driven"
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
-                             placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                             placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
                   />
                 </div>
 
@@ -952,7 +952,7 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
                     rows={3}
                     placeholder="Additional notes about this trade..."
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
-                             placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                             placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
                   />
                 </div>
               </div>
@@ -961,7 +961,7 @@ export default function TradeEntryModal({ trade, onClose, onSubmit }: TradeEntry
         </form>
 
         {/* Sticky Footer with Action Buttons for Mobile */}
-        <div className="sticky bottom-0 bg-slate-900/95 backdrop-blur-xl border-t border-blue-500/50 p-4 flex gap-3 sm:hidden">
+        <div className="sticky bottom-0 bg-slate-900/95 backdrop-blur-xl border-t border-white/50 p-4 flex gap-3 sm:hidden">
           <button
             type="button"
             onClick={onClose}

@@ -11,7 +11,7 @@
 #theme-global-overlay,
 #theme-edge-glow {
   pointer-events: none !important;
-  touch-action: none !important;
+  touch-action: auto !important; /* FIXED: Allow touch/scroll passthrough */
   user-select: none !important;
   -webkit-user-select: none !important;
   -webkit-touch-callout: none !important;
@@ -52,13 +52,13 @@ html[data-active-theme]::before {
   z-index: 99999;
   background: radial-gradient(
     ellipse at 50% 30%,
-    rgba(var(--accent-rgb, 59, 130, 246), 0.08) 0%,
-    rgba(var(--accent-rgb, 59, 130, 246), 0.04) 40%,
-    rgba(var(--accent-rgb, 59, 130, 246), 0.02) 70%,
+    rgba(var(--accent-rgb, 255, 255, 255), 0.08) 0%,
+    rgba(var(--accent-rgb, 255, 255, 255), 0.04) 40%,
+    rgba(var(--accent-rgb, 255, 255, 255), 0.02) 70%,
     transparent 100%
   );
   pointer-events: none !important;
-  touch-action: none !important;
+  touch-action: auto !important; /* FIXED: Allow touch/scroll passthrough */
   mix-blend-mode: soft-light;
   opacity: var(--theme-overlay-opacity, 0.6);
   transition: opacity 0.5s ease-in-out, background 0.5s ease-in-out;
@@ -73,8 +73,8 @@ html[data-active-theme]::before {
   html[data-active-theme]::before {
     background: radial-gradient(
       ellipse at 50% 20%,
-      rgba(var(--accent-rgb, 59, 130, 246), 0.06) 0%,
-      rgba(var(--accent-rgb, 59, 130, 246), 0.02) 50%,
+      rgba(var(--accent-rgb, 255, 255, 255), 0.06) 0%,
+      rgba(var(--accent-rgb, 255, 255, 255), 0.02) 50%,
       transparent 100%
     );
     opacity: 0.4;
@@ -85,7 +85,7 @@ html[data-active-theme]::before {
 html.fps-minimal[data-active-theme]::before,
 html.fps-low[data-active-theme]::before {
   opacity: 0.2;
-  background: rgba(var(--accent-rgb, 59, 130, 246), 0.02);
+  background: rgba(var(--accent-rgb, 255, 255, 255), 0.02);
 }
 
 /* Light theme inversion */
@@ -106,7 +106,7 @@ body::after,
 [id*="theme-overlay"],
 [class*="theme-overlay"] {
   pointer-events: none !important;
-  touch-action: none !important;
+  touch-action: auto !important; /* FIXED: Allow touch/scroll passthrough */
   -webkit-overflow-scrolling: unset !important;
   overflow: visible !important;
 }
@@ -145,18 +145,18 @@ html[data-active-theme] [role="dialog"],
 html[data-active-theme] .card,
 html[data-active-theme] .theme-glow-border {
   box-shadow: 
-    0 0 1px rgba(var(--accent-rgb, 59, 130, 246), 0.3),
-    0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.05),
-    inset 0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.02);
-  border-color: rgba(var(--accent-rgb, 59, 130, 246), 0.2) !important;
+    0 0 1px rgba(var(--accent-rgb, 255, 255, 255), 0.3),
+    0 0 20px rgba(var(--accent-rgb, 255, 255, 255), 0.05),
+    inset 0 0 30px rgba(var(--accent-rgb, 255, 255, 255), 0.02);
+  border-color: rgba(var(--accent-rgb, 255, 255, 255), 0.2) !important;
 }
 
 html[data-active-theme] nav:hover,
 html[data-active-theme] .theme-glow-border:hover {
   box-shadow: 
-    0 0 2px rgba(var(--accent-rgb, 59, 130, 246), 0.5),
-    0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.1),
-    inset 0 0 40px rgba(var(--accent-rgb, 59, 130, 246), 0.03);
+    0 0 2px rgba(var(--accent-rgb, 255, 255, 255), 0.5),
+    0 0 30px rgba(var(--accent-rgb, 255, 255, 255), 0.1),
+    inset 0 0 40px rgba(var(--accent-rgb, 255, 255, 255), 0.03);
 }
 
 /* ============================================
@@ -164,17 +164,17 @@ html[data-active-theme] .theme-glow-border:hover {
    ============================================ */
 html[data-active-theme] nav[class*="fixed"],
 html[data-active-theme] header[class*="fixed"] {
-  border-bottom-color: rgba(var(--accent-rgb, 59, 130, 246), 0.15) !important;
+  border-bottom-color: rgba(var(--accent-rgb, 255, 255, 255), 0.15) !important;
 }
 
 html[data-active-theme] [class*="fixed"][class*="z-"] {
-  --modal-border-color: rgba(var(--accent-rgb, 59, 130, 246), 0.25);
+  --modal-border-color: rgba(var(--accent-rgb, 255, 255, 255), 0.25);
 }
 
 html[data-active-theme] button:not([data-no-theme]),
 html[data-active-theme] [role="button"]:not([data-no-theme]) {
-  --btn-accent: var(--accent-color, #3b82f6);
-  --btn-accent-rgb: var(--accent-rgb, 59, 130, 246);
+  --btn-accent: var(--accent-color, #ffffff);
+  --btn-accent-rgb: var(--accent-rgb, 255, 255, 255);
 }
 
 /* ============================================
@@ -193,7 +193,7 @@ html[data-active-theme] [role="button"]:not([data-no-theme]) {
   pointer-events: none;
   background: radial-gradient(
     ellipse at 50% 30%,
-    rgba(var(--accent-rgb, 59, 130, 246), 0.08) 0%,
+    rgba(var(--accent-rgb, 255, 255, 255), 0.08) 0%,
     transparent 60%
   );
   mix-blend-mode: screen;
@@ -207,8 +207,8 @@ html[data-active-theme] [role="button"]:not([data-no-theme]) {
 section#hero [data-spline]::after {
   background: radial-gradient(
     ellipse at 50% 40%,
-    rgba(var(--accent-rgb, 59, 130, 246), 0.12) 0%,
-    rgba(var(--accent-rgb, 59, 130, 246), 0.05) 40%,
+    rgba(var(--accent-rgb, 255, 255, 255), 0.12) 0%,
+    rgba(var(--accent-rgb, 255, 255, 255), 0.05) 40%,
     transparent 70%
   );
 }

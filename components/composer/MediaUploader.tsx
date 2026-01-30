@@ -130,8 +130,8 @@ export const MediaUploader = memo(({
         className={`
           relative border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all
           ${isDragActive 
-            ? 'border-blue-500 bg-blue-500/10' 
-            : 'border-neutral-700 hover:border-blue-500/50'
+            ? 'border-white bg-white/10' 
+            : 'border-neutral-700 hover:border-white/50'
           }
           ${uploading || attachments.length >= maxFiles 
             ? 'opacity-50 cursor-not-allowed' 
@@ -144,19 +144,19 @@ export const MediaUploader = memo(({
         
         {uploading ? (
           <div className="flex flex-col items-center gap-2">
-            <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+            <Loader2 className="w-8 h-8 text-white animate-spin" />
             <p className="text-sm text-neutral-400">Uploading...</p>
           </div>
         ) : isDragActive ? (
           <div className="flex flex-col items-center gap-2">
-            <Upload className="w-8 h-8 text-blue-400" />
-            <p className="text-sm text-blue-400">Drop files here</p>
+            <Upload className="w-8 h-8 text-white" />
+            <p className="text-sm text-white">Drop files here</p>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2">
             <Upload className="w-8 h-8 text-neutral-500" />
             <p className="text-sm text-neutral-400">
-              Drag & drop files, or <span className="text-blue-400">browse</span>
+              Drag & drop files, or <span className="text-white">browse</span>
             </p>
             <p className="text-xs text-neutral-600">
               Images, PDFs, CSV/Excel • Max {maxSizeMB}MB each • {maxFiles - attachments.length} remaining

@@ -142,7 +142,7 @@ const { shouldDisableBackdropBlur } = useMobilePerformance();
 ```tsx
 const { isMobile } = useMobilePerformance();
 
-<div className={isMobile ? '' : 'shadow-[0_0_50px_rgba(59,130,246,0.3)]'}>
+<div className={isMobile ? '' : 'shadow-[0_0_50px_rgba(255, 255, 255,0.3)]'}>
 ```
 
 ### 3. Use Simpler Transitions

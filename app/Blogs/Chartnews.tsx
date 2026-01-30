@@ -30,27 +30,27 @@ const useIsMobile = () => {
 const GLOBAL_STYLES = `
   @keyframes neon-pulse {
     0%, 100% { 
-      text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+      text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
       filter: brightness(1);
     }
     50% { 
-      text-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6;
+      text-shadow: 0 0 6px #ffffff, 0 0 12px #ffffff;
       filter: brightness(1.1);
     }
   }
 
   @keyframes neon-glow {
     0%, 100% { 
-      box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+      box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff;
     }
     50% { 
-      box-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6, inset 0 0 6px #3b82f6;
+      box-shadow: 0 0 6px #ffffff, 0 0 12px #ffffff, inset 0 0 6px #ffffff;
     }
   }
 
   .neon-blue-text {
-    color: #3b82f6;
-    text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+    color: #ffffff;
+    text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
     animation: neon-pulse 2s ease-in-out infinite;
   }
 
@@ -64,18 +64,18 @@ const GLOBAL_STYLES = `
   }
 
   .neon-blue-icon {
-    filter: drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6);
+    filter: drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff);
   }
 
   .neon-blue-border {
-    border: 2px solid #3b82f6;
-    box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff;
     animation: neon-glow 2s ease-in-out infinite;
   }
 
   .neon-blue-bg {
-    background: #3b82f6;
-    box-shadow: 0 0 8px #3b82f6, 0 0 16px #3b82f6;
+    background: #ffffff;
+    box-shadow: 0 0 8px #ffffff, 0 0 16px #ffffff;
   }
 
   .gpu-layer {
@@ -759,7 +759,7 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                             <div className="lg:col-span-8">
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-[10px] font-black uppercase tracking-widest neon-blue-text">Featured</h3>
-                                    <div className="h-px w-1/2 ml-4 hidden md:block" style={{ background: 'linear-gradient(90deg, #3b82f6 0%, transparent 100%)', boxShadow: '0 0 4px #3b82f6' }} />
+                                    <div className="h-px w-1/2 ml-4 hidden md:block" style={{ background: 'linear-gradient(90deg, #ffffff 0%, transparent 100%)', boxShadow: '0 0 4px #ffffff' }} />
                                 </div>
 
                                 <div className="mt-3">
@@ -832,7 +832,7 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                 <div className="mt-6">
                                     <div className="flex items-center justify-between">
                                         <h3 className="text-[10px] font-black uppercase tracking-widest neon-blue-text">Top Stories</h3>
-                                        <div className="h-px w-1/2 ml-4 hidden md:block" style={{ background: 'linear-gradient(90deg, #3b82f6 0%, transparent 100%)', boxShadow: '0 0 4px #3b82f6' }} />
+                                        <div className="h-px w-1/2 ml-4 hidden md:block" style={{ background: 'linear-gradient(90deg, #ffffff 0%, transparent 100%)', boxShadow: '0 0 4px #ffffff' }} />
                                     </div>
 
                                     <div className="mt-3 grid gap-3 md:grid-cols-2">
@@ -1085,14 +1085,14 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                         href={previewUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="rounded-full bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-neutral-200 ring-1 ring-white/10 hover:ring-sky-500/30"
+                                        className="rounded-full bg-black text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest border border-white/20 hover:border-white/40 hover:bg-neutral-900 transition-colors"
                                     >
                                         Open
                                     </a>
                                     <button
                                         type="button"
                                         onClick={() => setPreviewUrl(null)}
-                                        className="rounded-full bg-white/5 p-2 text-white ring-1 ring-white/10 hover:ring-sky-500/30"
+                                        className="rounded-full bg-black p-2 text-white border border-white/20 hover:border-white/40 hover:bg-neutral-900 transition-colors"
                                         aria-label="Close preview"
                                     >
                                         <X className="h-4 w-4" />
@@ -1101,7 +1101,7 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                             </div>
 
                             <div className="h-[calc(100%-52px)] p-3">
-                                <div className="h-full overflow-hidden rounded-2xl ring-1 ring-white/10 bg-white/[0.02]">
+                                <div className="h-full overflow-hidden rounded-2xl border border-white/10 bg-black/90">
                                     <iframe
                                         title="News preview"
                                         src={previewUrl}
@@ -1286,7 +1286,7 @@ function NewsFeedModal({ activeMarket, showTip }: { activeMarket: string; showTi
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
                                 className="fixed inset-0 z-[9999999] flex items-center justify-center p-3 md:p-6 overflow-hidden [overscroll-behavior:contain]"
-                                style={{ overscrollBehavior: "contain", touchAction: "none" }}
+                                style={{ overscrollBehavior: "contain", touchAction: "manipulation" }}
                             >
                                 {/* Backdrop */}
                                 <motion.div

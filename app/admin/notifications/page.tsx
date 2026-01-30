@@ -98,8 +98,8 @@ export default function NotificationAdminPanel() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-blue-500/20 border border-blue-500/30">
-              <Bell className="w-6 h-6 text-blue-400" />
+            <div className="p-3 rounded-xl bg-white/20 border border-white/30">
+              <Bell className="w-6 h-6 text-white" />
             </div>
             <div>
               <h1 className="text-2xl font-bold">Push Notifications</h1>
@@ -116,27 +116,27 @@ export default function NotificationAdminPanel() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20">
+          <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20">
             <div className="flex items-center gap-3">
-              <Users className="w-5 h-5 text-blue-400" />
+              <Users className="w-5 h-5 text-white" />
               <span className="text-sm text-gray-400">Total Subscribers</span>
             </div>
             <p className="text-3xl font-bold mt-2">
               {isLoading ? '...' : stats?.total_subscribers || 0}
             </p>
           </div>
-          <div className="p-4 rounded-xl bg-gradient-to-br from-green-500/10 to-green-500/5 border border-green-500/20">
+          <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20">
             <div className="flex items-center gap-3">
-              <Send className="w-5 h-5 text-green-400" />
+              <Send className="w-5 h-5 text-white" />
               <span className="text-sm text-gray-400">Notifications Sent</span>
             </div>
             <p className="text-3xl font-bold mt-2">
               {history.reduce((acc, h) => acc + h.sent_count, 0)}
             </p>
           </div>
-          <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-purple-500/5 border border-purple-500/20">
+          <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20">
             <div className="flex items-center gap-3">
-              <History className="w-5 h-5 text-purple-400" />
+              <History className="w-5 h-5 text-white" />
               <span className="text-sm text-gray-400">Total Campaigns</span>
             </div>
             <p className="text-3xl font-bold mt-2">{history.length}</p>
@@ -160,7 +160,7 @@ export default function NotificationAdminPanel() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="🚀 New Trade Alert!"
-                className="w-full px-4 py-3 rounded-xl bg-black border border-white/20 focus:border-blue-500 focus:outline-none transition-colors"
+                className="w-full px-4 py-3 rounded-xl bg-black border border-white/20 focus:border-white focus:outline-none transition-colors"
               />
             </div>
 
@@ -173,7 +173,7 @@ export default function NotificationAdminPanel() {
                 onChange={(e) => setBody(e.target.value)}
                 placeholder="XAUUSD Buy @ 2650 | TP: 2680 | SL: 2640"
                 rows={3}
-                className="w-full px-4 py-3 rounded-xl bg-black border border-white/20 focus:border-blue-500 focus:outline-none transition-colors resize-none"
+                className="w-full px-4 py-3 rounded-xl bg-black border border-white/20 focus:border-white focus:outline-none transition-colors resize-none"
               />
             </div>
 
@@ -184,7 +184,7 @@ export default function NotificationAdminPanel() {
               <select
                 value={channel}
                 onChange={(e) => setChannel(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-black border border-white/20 focus:border-blue-500 focus:outline-none transition-colors"
+                className="w-full px-4 py-3 rounded-xl bg-black border border-white/20 focus:border-white focus:outline-none transition-colors"
               >
                 <option value="trades">📈 Free Trades</option>
                 <option value="main">🔴 Livestreams</option>
@@ -197,7 +197,7 @@ export default function NotificationAdminPanel() {
               <div
                 className={`p-4 rounded-xl flex items-center gap-3 ${
                   result.success
-                    ? 'bg-green-500/10 border border-green-500/30 text-green-400'
+                    ? 'bg-white/10 border border-white/30 text-white'
                     : 'bg-red-500/10 border border-red-500/30 text-red-400'
                 }`}
               >
@@ -209,7 +209,7 @@ export default function NotificationAdminPanel() {
             <button
               type="submit"
               disabled={isSending || !title || !body}
-              className="w-full py-4 rounded-xl font-semibold bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+              className="w-full py-4 rounded-xl font-semibold bg-gradient-to-r from-white to-white hover:from-white hover:to-white disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
             >
               {isSending ? (
                 <>
@@ -247,7 +247,7 @@ export default function NotificationAdminPanel() {
                       <h3 className="font-medium">{item.title}</h3>
                       <p className="text-sm text-gray-400 mt-1">{item.body}</p>
                     </div>
-                    <span className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-400">
+                    <span className="text-xs px-2 py-1 rounded-full bg-white/20 text-white">
                       {item.channel}
                     </span>
                   </div>

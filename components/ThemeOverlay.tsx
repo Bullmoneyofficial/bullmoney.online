@@ -85,7 +85,7 @@ export const ThemeOverlay = memo(function ThemeOverlay({
         // CRITICAL: These prevent the overlay from blocking interactions
         pointerEvents: 'none',
         userSelect: 'none',
-        touchAction: 'none',
+        touchAction: 'auto', // FIXED: Was 'none' - must be 'auto' to allow passthrough
         // Apply the theme filter
         filter: filter,
         WebkitFilter: filter,

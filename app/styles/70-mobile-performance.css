@@ -375,6 +375,38 @@ html.is-mobile.is-scrolling .shimmer-border {
   animation-play-state: paused !important;
 }
 
+/* ==========================================================================
+   MOBILE VIEWPORT WITH MOUSE (DESKTOP RESPONSIVE MODE)
+   Ensure mouse clicks behave like desktop even at mobile widths
+   ============================================================================ */
+
+@media (max-width: 1024px) and (hover: hover) and (pointer: fine) {
+  html,
+  body {
+    touch-action: auto !important;
+  }
+
+  button,
+  a,
+  [role="button"],
+  input,
+  select,
+  textarea,
+  .cursor-pointer,
+  [data-interactive] {
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+    cursor: pointer;
+  }
+
+  [role="dialog"],
+  [aria-modal="true"],
+  .modal-content,
+  .fixed.inset-0 {
+    pointer-events: auto !important;
+  }
+}
+
 /* ============================================================================
    MOBILE MODAL SCROLL FIXES (2026.01 - AdminHub, UltimateHub, NewsModal)
    Prevent sideways scroll bleed and ensure smooth vertical scrolling

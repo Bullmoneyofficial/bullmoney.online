@@ -37,13 +37,13 @@ const GlobalLiteModeToggle = memo(function GlobalLiteModeToggle() {
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="bg-black/90 backdrop-blur-sm rounded-xl p-4 border border-blue-500/30 shadow-lg"
+            className="bg-black/90 backdrop-blur-sm rounded-xl p-4 border border-white/30 shadow-lg"
             style={{
-              boxShadow: '0 0 20px rgba(59, 130, 246, 0.2)',
+              boxShadow: '0 0 20px rgba(255, 255, 255, 0.2)',
               minWidth: '220px'
             }}
           >
-            <div className="text-xs text-blue-400 font-bold uppercase tracking-wider mb-3">
+            <div className="text-xs text-white font-bold uppercase tracking-wider mb-3">
               Performance Settings
             </div>
             
@@ -67,7 +67,7 @@ const GlobalLiteModeToggle = memo(function GlobalLiteModeToggle() {
               {/* Toggle Switch */}
               <div 
                 className={`w-10 h-5 rounded-full relative transition-colors ${
-                  liteMode ? 'bg-blue-500' : 'bg-gray-600'
+                  liteMode ? 'bg-white' : 'bg-gray-600'
                 }`}
               >
                 <motion.div
@@ -101,14 +101,14 @@ const GlobalLiteModeToggle = memo(function GlobalLiteModeToggle() {
           relative w-12 h-12 rounded-full flex items-center justify-center
           transition-all duration-300 group
           ${liteMode 
-            ? 'bg-blue-500/20 border-blue-500/50 hover:bg-blue-500/30' 
+            ? 'bg-white/20 border-white/50 hover:bg-white/30' 
             : 'bg-black/80 border-white/20 hover:bg-black/90 hover:border-white/30'
           }
           border backdrop-blur-sm
         `}
         style={{
           boxShadow: liteMode 
-            ? '0 0 20px rgba(59, 130, 246, 0.4), inset 0 0 10px rgba(59, 130, 246, 0.2)'
+            ? '0 0 20px rgba(255, 255, 255, 0.4), inset 0 0 10px rgba(255, 255, 255, 0.2)'
             : '0 4px 20px rgba(0, 0, 0, 0.5)'
         }}
         whileHover={{ scale: 1.05 }}
@@ -122,11 +122,11 @@ const GlobalLiteModeToggle = memo(function GlobalLiteModeToggle() {
         {/* Active indicator */}
         {liteMode && (
           <motion.div
-            className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-blue-500"
+            className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-white"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             style={{
-              boxShadow: '0 0 8px rgba(59, 130, 246, 0.8)'
+              boxShadow: '0 0 8px rgba(255, 255, 255, 0.8)'
             }}
           />
         )}

@@ -15,7 +15,7 @@ interface MobileScrollIndicatorProps {
  */
 export const MobileScrollIndicator: React.FC<MobileScrollIndicatorProps> = ({
   scrollContainerRef,
-  accentColor = '#3b82f6',
+  accentColor = '#ffffff',
   position = 'right',
   showOnDesktop = false
 }) => {
@@ -256,11 +256,13 @@ export const MobileScrollIndicator: React.FC<MobileScrollIndicatorProps> = ({
         )}
       </div>
 
-      {/* Touch target area (invisible) */}
-      <div
-        className="absolute inset-y-0 -inset-x-4"
-        style={{ touchAction: 'none' }}
-      />
+      {/* Touch target area - ONLY active when indicator is visible and being interacted with */}
+      {(isVisible && (isHolding || isDragging)) && (
+        <div
+          className="absolute inset-y-0 -inset-x-4"
+          style={{ touchAction: 'none' }}
+        />
+      )}
     </div>
   );
 };

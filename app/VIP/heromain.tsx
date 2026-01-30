@@ -55,7 +55,7 @@ const getYoutubeId = (url: string | undefined): string | null => {
   return (match && match[2]?.length === 11) ? match[2] : null;
 };
 
-const SHIMMER_GRADIENT = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #3b82f6 50%, #00000000 100%)";
+const SHIMMER_GRADIENT = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #ffffff 50%, #00000000 100%)";
 
 // Simple Typewriter helper for the overlay
 const Typewriter = ({ text, speed }: { text: string, speed: number }) => {
@@ -98,7 +98,7 @@ const SystemOverrideOverlay = ({ onClose, embedded = false }: { onClose: () => v
         animate={{ y: "0%" }}
         exit={{ y: "-100%" }}
         transition={{ duration: 0.5, ease: "circInOut" }}
-        className={`${embedded ? "absolute" : "fixed"} inset-0 z-[100000] bg-black flex flex-col items-center justify-center font-mono text-blue-500 overflow-hidden`}
+        className={`${embedded ? "absolute" : "fixed"} inset-0 z-[100000] bg-black flex flex-col items-center justify-center font-mono text-white overflow-hidden`}
     >
         {/* Matrix Rain Background (Simplified) */}
         <div className="absolute inset-0 opacity-10 pointer-events-none">
@@ -122,7 +122,7 @@ const SystemOverrideOverlay = ({ onClose, embedded = false }: { onClose: () => v
                 <motion.div 
                     initial={{ scale: 0 }} 
                     animate={{ scale: 1 }} 
-                    className="p-6 rounded-full border-2 border-blue-500/50 bg-blue-500/10"
+                    className="p-6 rounded-full border-2 border-white/50 bg-white/10"
                 >
                     <Lock size={48} className="animate-pulse" />
                 </motion.div>
@@ -144,7 +144,7 @@ const SystemOverrideOverlay = ({ onClose, embedded = false }: { onClose: () => v
                             initial={{ width: 0 }} 
                             animate={{ width: "100%" }} 
                             transition={{ duration: 1 }} 
-                            className="h-full bg-blue-500" 
+                            className="h-full bg-white" 
                         />
                     </div>
                 </motion.div>
@@ -163,7 +163,7 @@ const SystemOverrideOverlay = ({ onClose, embedded = false }: { onClose: () => v
                     <h2 className="text-4xl font-black text-white tracking-tighter uppercase mb-2">
                         System Override
                     </h2>
-                    <div className="inline-block px-4 py-1 bg-blue-600 text-black font-bold text-sm rounded">
+                    <div className="inline-block px-4 py-1 bg-white text-black font-bold text-sm rounded">
                         ACCESS GRANTED
                     </div>
                 </motion.div>
@@ -200,7 +200,7 @@ const SystemOverrideOverlay = ({ onClose, embedded = false }: { onClose: () => v
   return (
     <div className="relative w-[100px] h-[30px] flex items-center justify-center overflow-hidden">
       {!decoded ? (
-        <span className="font-mono text-xs text-blue-500 font-bold animate-pulse tracking-widest">
+        <span className="font-mono text-xs text-white font-bold animate-pulse tracking-widest">
           {text}
         </span>
       ) : (
@@ -361,7 +361,7 @@ const ShimmerBorder = ({
 }) => {
   return (
     <div className={cn("relative p-[1px] overflow-hidden group/shimmer", rounded, className)}>
-      <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent,45%,#3b82f6,55%,transparent)] bg-[length:250%_100%] animate-shimmer opacity-100" />
+      <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent,45%,#ffffff,55%,transparent)] bg-[length:250%_100%] animate-shimmer opacity-100" />
       <div className={cn("relative h-full w-full overflow-hidden", background, rounded)}>
         {children}
       </div>
@@ -460,7 +460,7 @@ const VideoCard = React.memo(({
       onClick={() => setActive(product, uniqueLayoutId)}
       className="group/product h-[14rem] w-[18rem] md:h-[22rem] md:w-[32rem] relative flex-shrink-0 cursor-pointer backface-hidden transform-gpu"
     >
-      <div className="relative block h-full w-full md:group-hover/product:shadow-[0_0_40px_rgba(59,130,246,0.2)] transition-all duration-500 rounded-[20px] md:rounded-[24px] safari-fix-layer">
+      <div className="relative block h-full w-full md:group-hover/product:shadow-[0_0_40px_rgba(255, 255, 255,0.2)] transition-all duration-500 rounded-[20px] md:rounded-[24px] safari-fix-layer">
         <AnimatePresence>
             {showTip && (
                 <HelperTip text="Check me out" position="top" />
@@ -469,7 +469,7 @@ const VideoCard = React.memo(({
 
         <motion.div 
             layoutId={uniqueLayoutId}
-            className="relative h-full w-full rounded-[20px] md:rounded-[24px] overflow-hidden bg-neutral-900 border border-blue-900/30 md:group-hover/product:border-blue-500/50 transition-colors safari-mask-fix"
+            className="relative h-full w-full rounded-[20px] md:rounded-[24px] overflow-hidden bg-neutral-900 border border-white/30 md:group-hover/product:border-white/50 transition-colors safari-mask-fix"
         >
             {videoId ? (
                 <div className="absolute inset-0 w-full h-full bg-black pointer-events-none">
@@ -505,15 +505,15 @@ const VideoCard = React.memo(({
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90 pointer-events-none"></div>
             
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                 <div className="bg-blue-500/10 backdrop-blur-sm p-3 md:p-4 rounded-full opacity-100 md:opacity-0 md:group-hover/product:opacity-100 transition-opacity duration-300 scale-100 md:scale-75 md:group-hover/product:scale-100 border border-blue-500/30">
+                 <div className="bg-white/10 backdrop-blur-sm p-3 md:p-4 rounded-full opacity-100 md:opacity-0 md:group-hover/product:opacity-100 transition-opacity duration-300 scale-100 md:scale-75 md:group-hover/product:scale-100 border border-white/30">
                     <PlayCircle className="text-white w-6 h-6 md:w-8 md:h-8 fill-blue-600/20" />
                  </div>
             </div>
 
             <div className="absolute bottom-0 left-0 w-full p-4 md:p-6 translate-y-0 md:translate-y-2 md:group-hover/product:translate-y-0 transition-transform duration-500 pointer-events-none">
                  <div className="flex items-center gap-2 mb-2">
-                    <span className="px-2 py-0.5 md:py-1 rounded bg-blue-950/80 md:bg-black/60 text-blue-200 text-[8px] md:text-[10px] font-bold uppercase tracking-wider md:backdrop-blur-md flex items-center gap-1 border border-blue-500/20">
-                    <Youtube size={10} className="text-blue-500" />
+                    <span className="px-2 py-0.5 md:py-1 rounded bg-white/10/80 md:bg-black/60 text-white text-[8px] md:text-[10px] font-bold uppercase tracking-wider md:backdrop-blur-md flex items-center gap-1 border border-white/20">
+                    <Youtube size={10} className="text-white" />
                     {product.category || "VIDEO"}
                     </span>
                 </div>
@@ -723,7 +723,7 @@ const HeroParallax = ({ embedded = false }: { embedded?: boolean }) => {
   }
 
   return (
-    <div className="bg-black relative selection:bg-blue-500/30 overflow-hidden w-full">
+    <div className="bg-black relative selection:bg-white/30 overflow-hidden w-full">
         
     <style jsx global>{`
       @keyframes shimmer {
@@ -738,7 +738,7 @@ const HeroParallax = ({ embedded = false }: { embedded?: boolean }) => {
         100% { background-position: -200% 50%; }
       }
       .animate-text-shimmer {
-        background: linear-gradient(110deg, #64748b 20%, #ffffff 48%, #a5b4fc 52%, #64748b 80%);
+        background: linear-gradient(110deg, #64748b 20%, #ffffff 48%, #ffffff 52%, #64748b 80%);
         background-size: 200% auto;
         background-clip: text;
         -webkit-background-clip: text;
@@ -749,8 +749,8 @@ const HeroParallax = ({ embedded = false }: { embedded?: boolean }) => {
       }
       .custom-scrollbar::-webkit-scrollbar { width: 6px; }
       .custom-scrollbar::-webkit-scrollbar-track { background: #171717; }
-      .custom-scrollbar::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 3px; }
-      .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #60a5fa; }
+      .custom-scrollbar::-webkit-scrollbar-thumb { background: #ffffff; border-radius: 3px; }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #ffffff; }
       .backface-hidden { -webkit-backface-visibility: hidden; backface-visibility: hidden; }
       .transform-gpu { transform: translate3d(0,0,0); -webkit-transform: translate3d(0,0,0); }
       .safari-mask-fix { -webkit-mask-image: -webkit-radial-gradient(white, black); mask-image: radial-gradient(white, black); isolation: isolate; }
@@ -783,7 +783,7 @@ const HeroParallax = ({ embedded = false }: { embedded?: boolean }) => {
                     className="bg-neutral-900 hover:bg-neutral-800 text-white p-3 md:p-4 rounded-full flex items-center justify-center transition-colors"
                     title="Add New Video Card"
                 >
-                    {isSaving ? <Loader2 className="animate-spin" /> : <Plus size={20} className="text-blue-500" />}
+                    {isSaving ? <Loader2 className="animate-spin" /> : <Plus size={20} className="text-white" />}
                 </button>
             </ShimmerBorder>
         </div>
@@ -807,21 +807,21 @@ const HeroParallax = ({ embedded = false }: { embedded?: boolean }) => {
                 >
                     <div className="absolute top-24 md:top-4 left-4 z-50">
                         <ShimmerBorder rounded="rounded-full">
-                            <button onClick={handleClose} className="p-2 bg-black/80 text-white hover:bg-neutral-800 transition-colors flex items-center justify-center group"><ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform text-blue-400" /></button>
+                            <button onClick={handleClose} className="p-2 bg-black/80 text-white hover:bg-neutral-800 transition-colors flex items-center justify-center group"><ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform text-white" /></button>
                         </ShimmerBorder>
                     </div>
                     <div className="absolute top-24 md:top-4 right-4 z-50">
                         <ShimmerBorder rounded="rounded-full">
-                            <button onClick={handleClose} className="p-2 bg-black/80 text-white hover:bg-neutral-800 transition-colors group"><X size={20} className="group-hover:rotate-90 transition-transform text-blue-400" /></button>
+                            <button onClick={handleClose} className="p-2 bg-black/80 text-white hover:bg-neutral-800 transition-colors group"><X size={20} className="group-hover:rotate-90 transition-transform text-white" /></button>
                         </ShimmerBorder>
                     </div>
                     
-                    <div className="w-full md:w-3/4 bg-black flex flex-col relative group h-[35vh] sm:h-[45vh] md:h-full shrink-0 border-r border-blue-900/20">
+                    <div className="w-full md:w-3/4 bg-black flex flex-col relative group h-[35vh] sm:h-[45vh] md:h-full shrink-0 border-r border-white/20">
                          <div className="relative w-full h-full">
                             {getYoutubeId(activeProduct.buyUrl) ? (
                                 <iframe className="w-full h-full absolute inset-0" src={`https://www.youtube.com/embed/${getYoutubeId(activeProduct.buyUrl)}?autoplay=1&rel=0&modestbranding=1&playsinline=1`} title={activeProduct.name} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
                             ) : (
-                                <div className="w-full h-full grid place-items-center text-neutral-500"><Youtube size={48} className="mx-auto mb-2 opacity-50 text-blue-500" /><p>Invalid YouTube Link</p></div>
+                                <div className="w-full h-full grid place-items-center text-neutral-500"><Youtube size={48} className="mx-auto mb-2 opacity-50 text-white" /><p>Invalid YouTube Link</p></div>
                             )}
                          </div>
                     </div>
@@ -830,9 +830,9 @@ const HeroParallax = ({ embedded = false }: { embedded?: boolean }) => {
                            <h3 className="text-xl md:text-2xl font-sans font-bold text-white mb-4 leading-tight">{activeProduct.name}</h3>
                            <div className="text-neutral-400 text-xs md:text-sm leading-relaxed whitespace-pre-line">{activeProduct.description || "No description provided."}</div>
                         </div>
-                         <div className="p-4 md:p-6 border-t border-blue-900/20 bg-neutral-900 shrink-0">
+                         <div className="p-4 md:p-6 border-t border-white/20 bg-neutral-900 shrink-0">
                                 <ShimmerBorder rounded="rounded-xl">
-                                    <motion.a href={activeProduct.buyUrl || "#"} target="_blank" rel="noopener noreferrer" className="w-full py-3 md:py-4 bg-neutral-800/50 text-white font-bold uppercase tracking-widest hover:bg-neutral-800 transition-all flex items-center justify-center gap-2 text-xs md:text-sm">Open on YouTube <ExternalLink size={16} className="text-blue-500" /></motion.a>
+                                    <motion.a href={activeProduct.buyUrl || "#"} target="_blank" rel="noopener noreferrer" className="w-full py-3 md:py-4 bg-neutral-800/50 text-white font-bold uppercase tracking-widest hover:bg-neutral-800 transition-all flex items-center justify-center gap-2 text-xs md:text-sm">Open on YouTube <ExternalLink size={16} className="text-white" /></motion.a>
                                 </ShimmerBorder>
                          </div>
                     </div>
@@ -859,7 +859,7 @@ const HeroParallax = ({ embedded = false }: { embedded?: boolean }) => {
                     particleDensity={isMobile ? 15 : 50} 
                     isMobile={isMobile}
                     className="w-full h-full"
-                    particleColor="#3b82f6"
+                    particleColor="#ffffff"
                 />
             </div>
             
@@ -868,7 +868,7 @@ const HeroParallax = ({ embedded = false }: { embedded?: boolean }) => {
                     <motion.div 
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-400 text-[10px] md:text-xs font-mono tracking-wider uppercase md:backdrop-blur-md"
+                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/30 bg-white/10 text-white text-[10px] md:text-xs font-mono tracking-wider uppercase md:backdrop-blur-md"
                         >
                         <Zap size={10} className="fill-blue-400" /> {hero.badge}
                     </motion.div>
@@ -886,7 +886,7 @@ const HeroParallax = ({ embedded = false }: { embedded?: boolean }) => {
                     {(hero?.title || "Welcome VIP").split(" ").map((word: string, i: number) => (
                         <span 
                             key={i} 
-                            className="inline-block mr-3 text-transparent bg-clip-text bg-[linear-gradient(110deg,#FFFFFF,45%,#3b82f6,55%,#FFFFFF)] bg-[length:250%_100%] animate-shimmer"
+                            className="inline-block mr-3 text-transparent bg-clip-text bg-[linear-gradient(110deg,#FFFFFF,45%,#ffffff,55%,#FFFFFF)] bg-[length:250%_100%] animate-shimmer"
                         >
                         {word}
                         </span>
@@ -919,7 +919,7 @@ const HeroParallax = ({ embedded = false }: { embedded?: boolean }) => {
                         ))}
                     </div>
                     <div className="text-xs">
-                        <div className="text-white font-bold flex items-center gap-1">2.5k+ Members <ShieldCheck size={10} className="text-blue-500" /></div>
+                        <div className="text-white font-bold flex items-center gap-1">2.5k+ Members <ShieldCheck size={10} className="text-white" /></div>
                         <div className="text-neutral-500 flex items-center gap-1">
                             <Star size={10} className="fill-yellow-500 text-yellow-500" /> 4.9/5 Rating
                         </div>
@@ -1060,7 +1060,7 @@ const HeroParallax = ({ embedded = false }: { embedded?: boolean }) => {
                             style={{ background: SHIMMER_GRADIENT }}
                         />
                         <div className="relative z-10 bg-neutral-900 rounded-full p-2 border border-white/5 hover:bg-neutral-800 transition-colors">
-                            <BarChart3 className="w-5 h-5 text-blue-500" />
+                            <BarChart3 className="w-5 h-5 text-white" />
                         </div>
                     </Link>
                 </TipWrapper>
@@ -1088,7 +1088,7 @@ const HeroParallax = ({ embedded = false }: { embedded?: boolean }) => {
                             style={{ background: SHIMMER_GRADIENT }}
                         />
                         <div className="relative z-10 bg-neutral-900 rounded-full p-2 border border-white/5">
-                            <ShieldCheck className="w-5 h-5 text-blue-500" />
+                            <ShieldCheck className="w-5 h-5 text-white" />
                         </div>
                     </div>
                 </TipWrapper>

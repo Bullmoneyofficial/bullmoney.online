@@ -67,10 +67,10 @@ import {
 const PinchZoomIcon = ZoomIn;
 
 // ============================================================================
-// NEON BLUE GLOW THEME - OLED BLACK BACKGROUND (MATCHING CHARTNEWS #3b82f6)
+// NEON BLUE GLOW THEME - OLED BLACK BACKGROUND (MATCHING CHARTNEWS #ffffff)
 // ============================================================================
-const NEON_BLUE = "#3b82f6";
-const NEON_BLUE_RGB = "59, 130, 246";
+const NEON_BLUE = "#ffffff";
+const NEON_BLUE_RGB = "255, 255, 255";
 
 const NEON_STYLES = `
   @keyframes ring-rotate {
@@ -106,8 +106,8 @@ const NEON_STYLES = `
   }
 
   @keyframes streak-glow {
-    0%, 100% { box-shadow: 0 0 5px #3b82f6, 0 0 10px #3b82f6; }
-    50% { box-shadow: 0 0 15px #3b82f6, 0 0 30px #3b82f6, 0 0 45px #3b82f6; }
+    0%, 100% { box-shadow: 0 0 5px #ffffff, 0 0 10px #ffffff; }
+    50% { box-shadow: 0 0 15px #ffffff, 0 0 30px #ffffff, 0 0 45px #ffffff; }
   }
 
   @keyframes achievement-pop {
@@ -148,23 +148,23 @@ const NEON_STYLES = `
     text-shadow: 
       0 0 4px #fff,
       0 0 8px #fff,
-      0 0 12px #3b82f6,
-      0 0 20px #3b82f6;
+      0 0 12px #ffffff,
+      0 0 20px #ffffff;
   }
 
   .neon-border {
-    border: 2px solid #3b82f6;
+    border: 2px solid #ffffff;
     border-radius: 9999px;
     box-shadow: 
-      0 0 4px #3b82f6,
-      0 0 8px #3b82f6,
-      0 0 16px #3b82f6,
-      inset 0 0 4px rgba(59, 130, 246, 0.3);
+      0 0 4px #ffffff,
+      0 0 8px #ffffff,
+      0 0 16px #ffffff,
+      inset 0 0 4px rgba(255, 255, 255, 0.3);
   }
 
   .neon-icon {
-    color: #3b82f6;
-    filter: drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6);
+    color: #ffffff;
+    filter: drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff);
   }
 
   .candlestick {
@@ -214,20 +214,20 @@ const AchievementBadge: React.FC<{ icon: React.ReactNode; label: string; show: b
       <motion.div
         className="fixed top-20 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-xl"
         style={{
-          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(0, 0, 0, 0.9))',
-          border: '2px solid #3b82f6',
-          boxShadow: '0 0 30px rgba(59, 130, 246, 0.5)',
+          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(0, 0, 0, 0.9))',
+          border: '2px solid #ffffff',
+          boxShadow: '0 0 30px rgba(255, 255, 255, 0.5)',
         }}
         initial={{ x: 100, opacity: 0, scale: 0.5 }}
         animate={{ x: 0, opacity: 1, scale: 1 }}
         exit={{ x: 100, opacity: 0, scale: 0.5 }}
         transition={{ type: 'spring', bounce: 0.5 }}
       >
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-white to-white flex items-center justify-center">
           {icon}
         </div>
         <div>
-          <p className="text-xs text-blue-400 font-medium">ACHIEVEMENT</p>
+          <p className="text-xs text-white font-medium">ACHIEVEMENT</p>
           <p className="text-white font-bold">{label}</p>
         </div>
       </motion.div>
@@ -242,8 +242,8 @@ const FloatingScore: React.FC<{ value: string; x: number; y: number; id: number 
     style={{
       left: x,
       top: y,
-      color: '#3b82f6',
-      textShadow: '0 0 10px #3b82f6, 0 0 20px #3b82f6',
+      color: '#ffffff',
+      textShadow: '0 0 10px #ffffff, 0 0 20px #ffffff',
       zIndex: 60,
     }}
     initial={{ opacity: 1, y: 0, scale: 1 }}
@@ -1219,12 +1219,12 @@ const useFeedback = () => {
 // CANDLESTICK COMPONENT
 // ============================================================================
 const CandlestickBars: React.FC<{ progress: number }> = ({ progress }) => {
-  // Using consistent #3b82f6 (#3b82f6) color scheme with opacity variations
+  // Using consistent #ffffff (#ffffff) color scheme with opacity variations
   const bars = [
-    { delay: 0.1, color: progress > 20 ? "#3b82f6" : "rgba(59, 130, 246, 0.3)", height: 24 },
-    { delay: 0.2, color: progress > 40 ? "#3b82f6" : "rgba(59, 130, 246, 0.3)", height: 36 },
-    { delay: 0.1, color: progress > 60 ? "#3b82f6" : "rgba(59, 130, 246, 0.3)", height: 28 },
-    { delay: 0.3, color: progress > 80 ? "#3b82f6" : "rgba(59, 130, 246, 0.3)", height: 32 },
+    { delay: 0.1, color: progress > 20 ? "#ffffff" : "rgba(255, 255, 255, 0.3)", height: 24 },
+    { delay: 0.2, color: progress > 40 ? "#ffffff" : "rgba(255, 255, 255, 0.3)", height: 36 },
+    { delay: 0.1, color: progress > 60 ? "#ffffff" : "rgba(255, 255, 255, 0.3)", height: 28 },
+    { delay: 0.3, color: progress > 80 ? "#ffffff" : "rgba(255, 255, 255, 0.3)", height: 32 },
   ];
 
   return (
@@ -1317,7 +1317,7 @@ const BackgroundCandlesticks: React.FC = () => {
               style={{
                 width: 3,
                 height: stick.wickTop,
-                backgroundColor: "#3b82f6",
+                backgroundColor: "#ffffff",
               }}
             />
             {/* Body */}
@@ -1326,8 +1326,8 @@ const BackgroundCandlesticks: React.FC = () => {
               style={{
                 width: 12, // Wider bodies
                 height: stick.bodyHeight,
-                backgroundColor: "#3b82f6",
-                boxShadow: "0 0 15px rgba(59, 130, 246, 0.5)",
+                backgroundColor: "#ffffff",
+                boxShadow: "0 0 15px rgba(255, 255, 255, 0.5)",
               }}
             />
             {/* Bottom wick */}
@@ -1336,7 +1336,7 @@ const BackgroundCandlesticks: React.FC = () => {
               style={{
                 width: 3,
                 height: stick.wickBottom,
-                backgroundColor: "#3b82f6",
+                backgroundColor: "#ffffff",
               }}
             />
           </div>
@@ -1369,7 +1369,7 @@ const NeonRing: React.FC<{ progress: number; size: number }> = ({ progress, size
         cx={size / 2}
         cy={size / 2}
         r={size / 2 - 4}
-        stroke="rgba(59, 130, 246, 0.1)"
+        stroke="rgba(255, 255, 255, 0.1)"
         strokeWidth="3"
         fill="none"
       />
@@ -1386,14 +1386,14 @@ const NeonRing: React.FC<{ progress: number; size: number }> = ({ progress, size
         strokeDashoffset={strokeDashoffset}
         style={{
           transition: "stroke-dashoffset 0.15s ease-out",
-          filter: "drop-shadow(0 0 6px #3b82f6) drop-shadow(0 0 12px #3b82f6)",
+          filter: "drop-shadow(0 0 6px #ffffff) drop-shadow(0 0 12px #ffffff)",
         }}
       />
       <defs>
         <linearGradient id="neonGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#3b82f6" />
+          <stop offset="0%" stopColor="#ffffff" />
           <stop offset="50%" stopColor="#fff" />
-          <stop offset="100%" stopColor="#3b82f6" />
+          <stop offset="100%" stopColor="#ffffff" />
         </linearGradient>
       </defs>
     </svg>
@@ -2020,7 +2020,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
   // ===== CONFETTI EXPLOSION =====
   const triggerConfetti = useCallback(() => {
     setShowConfetti(true);
-    const colors = ['#3b82f6', '#60a5fa', '#93c5fd', '#2563eb', '#1d4ed8', '#818cf8', '#a5b4fc'];
+    const colors = ['#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff'];
     const particles = Array.from({ length: 50 }, (_, i) => ({
       id: i,
       left: Math.random() * 100,
@@ -3720,9 +3720,9 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
               <div 
                 className="relative px-4 py-2 rounded-xl"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(0, 0, 0, 0.8))',
-                  border: '2px solid #3b82f6',
-                  boxShadow: streakActive ? '0 0 20px #3b82f6, 0 0 40px rgba(59, 130, 246, 0.3)' : '0 0 10px #3b82f6',
+                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(0, 0, 0, 0.8))',
+                  border: '2px solid #ffffff',
+                  boxShadow: streakActive ? '0 0 20px #ffffff, 0 0 40px rgba(255, 255, 255, 0.3)' : '0 0 10px #ffffff',
                 }}
               >
                 {/* Electric effect on high combos */}
@@ -3731,7 +3731,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                     <div 
                       className="absolute inset-0"
                       style={{
-                        background: 'linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.2), transparent)',
+                        background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)',
                         animation: 'shimmer 1s linear infinite',
                         backgroundSize: '200% 100%',
                       }}
@@ -3753,8 +3753,8 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                     <Zap 
                       size={24} 
                       style={{ 
-                        color: comboCount >= 10 ? '#60a5fa' : '#3b82f6',
-                        filter: `drop-shadow(0 0 ${Math.min(comboCount * 2, 20)}px #3b82f6)`,
+                        color: comboCount >= 10 ? '#ffffff' : '#ffffff',
+                        filter: `drop-shadow(0 0 ${Math.min(comboCount * 2, 20)}px #ffffff)`,
                       }} 
                     />
                   </motion.div>
@@ -3762,7 +3762,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                     <motion.p 
                       className="text-2xl font-black text-white"
                       style={{ 
-                        textShadow: '0 0 10px #3b82f6',
+                        textShadow: '0 0 10px #ffffff',
                       }}
                       key={comboCount}
                       initial={{ scale: 1.5, y: -10 }}
@@ -3771,7 +3771,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                     >
                       x{comboCount}
                     </motion.p>
-                    <p className="text-[10px] font-medium" style={{ color: '#3b82f6' }}>
+                    <p className="text-[10px] font-medium" style={{ color: '#ffffff' }}>
                       {comboMultiplier > 1 ? `${comboMultiplier.toFixed(1)}x MULTI` : 'COMBO'}
                     </p>
                   </div>
@@ -3787,18 +3787,18 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 >
                   {comboCount >= 20 ? (
                     <>
-                      <Sparkles size={14} style={{ color: '#60a5fa', filter: 'drop-shadow(0 0 4px #60a5fa)' }} />
-                      <span className="text-xs font-bold" style={{ color: '#60a5fa', textShadow: '0 0 10px #60a5fa' }}>LEGENDARY</span>
+                      <Sparkles size={14} style={{ color: '#ffffff', filter: 'drop-shadow(0 0 4px #ffffff)' }} />
+                      <span className="text-xs font-bold" style={{ color: '#ffffff', textShadow: '0 0 10px #ffffff' }}>LEGENDARY</span>
                     </>
                   ) : comboCount >= 10 ? (
                     <>
-                      <Zap size={14} style={{ color: '#3b82f6', filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
-                      <span className="text-xs font-bold" style={{ color: '#3b82f6', textShadow: '0 0 10px #3b82f6' }}>ON FIRE</span>
+                      <Zap size={14} style={{ color: '#ffffff', filter: 'drop-shadow(0 0 4px #ffffff)' }} />
+                      <span className="text-xs font-bold" style={{ color: '#ffffff', textShadow: '0 0 10px #ffffff' }}>ON FIRE</span>
                     </>
                   ) : (
                     <>
-                      <Star size={14} style={{ color: '#3b82f6', filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
-                      <span className="text-xs font-bold" style={{ color: '#3b82f6', textShadow: '0 0 10px #3b82f6' }}>NICE</span>
+                      <Star size={14} style={{ color: '#ffffff', filter: 'drop-shadow(0 0 4px #ffffff)' }} />
+                      <span className="text-xs font-bold" style={{ color: '#ffffff', textShadow: '0 0 10px #ffffff' }}>NICE</span>
                     </>
                   )}
                 </motion.div>
@@ -3826,8 +3826,8 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 <p 
                   className="text-6xl sm:text-8xl font-black"
                   style={{
-                    color: '#3b82f6',
-                    textShadow: '0 0 30px #3b82f6, 0 0 60px #3b82f6, 0 0 90px rgba(59, 130, 246, 0.5)',
+                    color: '#ffffff',
+                    textShadow: '0 0 30px #ffffff, 0 0 60px #ffffff, 0 0 90px rgba(255, 255, 255, 0.5)',
                   }}
                 >
                   {milestoneReached}%
@@ -3859,7 +3859,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 className="text-xl sm:text-2xl font-bold text-center px-4"
                 style={{
                   color: '#fff',
-                  textShadow: '0 0 15px #3b82f6, 0 0 30px #3b82f6, 0 0 45px rgba(59, 130, 246, 0.5)',
+                  textShadow: '0 0 15px #ffffff, 0 0 30px #ffffff, 0 0 45px rgba(255, 255, 255, 0.5)',
                 }}
               >
                 {encouragementText}
@@ -3874,12 +3874,12 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
             className="fixed top-4 right-4 z-40 px-3 py-2 rounded-lg"
             style={{
               background: 'rgba(0, 0, 0, 0.7)',
-              border: '1px solid rgba(59, 130, 246, 0.3)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
             }}
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <p className="text-xs text-blue-400 font-medium">SCORE</p>
+            <p className="text-xs text-white font-medium">SCORE</p>
             <motion.p 
               className="text-lg font-bold text-white"
               key={totalScore}
@@ -3910,8 +3910,8 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
             <div
               className="w-full h-full rounded-full"
               style={{
-                border: "2px solid #3b82f6",
-                boxShadow: "0 0 20px #3b82f6, inset 0 0 10px rgba(59, 130, 246, 0.3)",
+                border: "2px solid #ffffff",
+                boxShadow: "0 0 20px #ffffff, inset 0 0 10px rgba(255, 255, 255, 0.3)",
               }}
             />
           </motion.div>
@@ -3922,8 +3922,8 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
           <svg className="absolute inset-0 pointer-events-none" style={{ zIndex: 5 }}>
             <defs>
               <linearGradient id="trailGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="rgba(59, 130, 246, 0)" />
-                <stop offset="100%" stopColor="#3b82f6" />
+                <stop offset="0%" stopColor="rgba(255, 255, 255, 0)" />
+                <stop offset="100%" stopColor="#ffffff" />
               </linearGradient>
             </defs>
             {trailPoints.length > 1 && (
@@ -3935,7 +3935,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 style={{
-                  filter: "drop-shadow(0 0 6px #3b82f6)",
+                  filter: "drop-shadow(0 0 6px #ffffff)",
                 }}
                 initial={{ pathLength: 0, opacity: 0 }}
                 animate={{ pathLength: 1, opacity: 1 }}
@@ -3949,9 +3949,9 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 cx={point.x}
                 cy={point.y}
                 r={2 + i * 0.5}
-                fill="#3b82f6"
+                fill="#ffffff"
                 style={{
-                  filter: "drop-shadow(0 0 4px #3b82f6)",
+                  filter: "drop-shadow(0 0 4px #ffffff)",
                 }}
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ opacity: 0.3 + i * 0.1, scale: 1 }}
@@ -3972,7 +3972,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
               width: 60,
               height: 60,
               borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%)",
+              background: "radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%)",
               filter: "blur(5px)",
             }}
             animate={{
@@ -3990,9 +3990,9 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 key={kp.id}
                 className="absolute px-3 py-2 rounded-lg font-bold text-sm"
                 style={{
-                  backgroundColor: "rgba(59, 130, 246, 0.3)",
-                  border: "2px solid #3b82f6",
-                  boxShadow: "0 0 15px #3b82f6",
+                  backgroundColor: "rgba(255, 255, 255, 0.3)",
+                  border: "2px solid #ffffff",
+                  boxShadow: "0 0 15px #ffffff",
                   color: "#fff",
                   left: `${i * 10 - 20}px`,
                 }}
@@ -4012,7 +4012,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
           <motion.div
             className="absolute inset-0 pointer-events-none"
             style={{
-              background: `radial-gradient(circle at center, rgba(59, 130, 246, ${scrollPulse * 0.1}) 0%, transparent 50%)`,
+              background: `radial-gradient(circle at center, rgba(255, 255, 255, ${scrollPulse * 0.1}) 0%, transparent 50%)`,
             }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -4031,8 +4031,8 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
               width: 250,
               height: 250,
               borderRadius: "50%",
-              border: "3px solid rgba(59, 130, 246, 0.5)",
-              boxShadow: "0 0 40px rgba(59, 130, 246, 0.4), inset 0 0 40px rgba(59, 130, 246, 0.2)",
+              border: "3px solid rgba(255, 255, 255, 0.5)",
+              boxShadow: "0 0 40px rgba(255, 255, 255, 0.4), inset 0 0 40px rgba(255, 255, 255, 0.2)",
             }}
             animate={{
               scale: [1, 1.1, 1],
@@ -4051,8 +4051,8 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
           className="absolute inset-0 opacity-5"
           style={{
             backgroundImage: `
-              linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px)
+              linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px)
             `,
             backgroundSize: '40px 40px',
           }}
@@ -4069,8 +4069,8 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
             className="px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl flex items-center gap-2 sm:gap-3"
             style={{
               backgroundColor: "rgba(0, 0, 0, 0.8)",
-              border: "1px solid rgba(59, 130, 246, 0.4)",
-              boxShadow: "0 0 15px rgba(59, 130, 246, 0.15)",
+              border: "1px solid rgba(255, 255, 255, 0.4)",
+              boxShadow: "0 0 15px rgba(255, 255, 255, 0.15)",
             }}
           >
             {/* Asset selector - smaller buttons */}
@@ -4084,10 +4084,10 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                     selectedAsset === key && "scale-110"
                   )}
                   style={{
-                    backgroundColor: selectedAsset === key ? "rgba(59, 130, 246, 0.2)" : "transparent",
-                    border: `1px solid ${selectedAsset === key ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
-                    color: selectedAsset === key ? "#fff" : "#3b82f6",
-                    boxShadow: selectedAsset === key ? "0 0 8px #3b82f6" : "none",
+                    backgroundColor: selectedAsset === key ? "rgba(255, 255, 255, 0.2)" : "transparent",
+                    border: `1px solid ${selectedAsset === key ? "#ffffff" : "rgba(255, 255, 255, 0.3)"}`,
+                    color: selectedAsset === key ? "#fff" : "#ffffff",
+                    boxShadow: selectedAsset === key ? "0 0 8px #ffffff" : "none",
                   }}
                 >
                   {ASSETS[key].icon}
@@ -4101,14 +4101,14 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 className="text-sm font-bold neon-text"
                 style={{ 
                   fontFamily: "monospace",
-                  textShadow: "0 0 8px #fff, 0 0 15px #3b82f6",
+                  textShadow: "0 0 8px #fff, 0 0 15px #ffffff",
                 }}
               >
                 {price > 0 ? formatPrice(price) : "..."}
               </span>
               <span 
                 className="text-xs flex items-center"
-                style={{ color: change24h >= 0 ? "#22c55e" : "#ef4444" }}
+                style={{ color: change24h >= 0 ? "#ffffff" : "#ef4444" }}
               >
                 {change24h >= 0 ? <TrendingUp size={10} /> : <ArrowUpRight size={10} className="rotate-90" />}
                 {change24h.toFixed(1)}%
@@ -4131,7 +4131,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
             <div 
               className="absolute w-36 h-36 sm:w-40 sm:h-40 md:w-44 md:h-44 rounded-full"
               style={{
-                background: "radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%)",
+                background: "radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%)",
                 animation: isHolding ? "none" : "ring-rotate 10s linear infinite",
               }}
             />
@@ -4145,9 +4145,9 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 <motion.div
                   className="absolute -top-12 left-1/2 -translate-x-1/2 flex items-center gap-2 px-3 py-1.5 rounded-full"
                   style={{
-                    backgroundColor: "rgba(59, 130, 246, 0.2)",
-                    border: "1px solid rgba(59, 130, 246, 0.5)",
-                    boxShadow: "0 0 15px rgba(59, 130, 246, 0.3)",
+                    backgroundColor: "rgba(255, 255, 255, 0.2)",
+                    border: "1px solid rgba(255, 255, 255, 0.5)",
+                    boxShadow: "0 0 15px rgba(255, 255, 255, 0.3)",
                   }}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -4157,9 +4157,9 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                     animate={{ scale: [1, 1.2, 1] }}
                     transition={shouldSkipHeavyEffects ? {} : { duration: 1, repeat: Infinity }}
                   >
-                    <Timer size={14} style={{ color: "#60a5fa" }} />
+                    <Timer size={14} style={{ color: "#ffffff" }} />
                   </motion.div>
-                  <span className="text-xs font-medium" style={{ color: "#60a5fa" }}>
+                  <span className="text-xs font-medium" style={{ color: "#ffffff" }}>
                     Keep going!
                   </span>
                 </motion.div>
@@ -4200,8 +4200,8 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
               <div 
                 className="neon-icon"
                 style={{
-                  color: "#3b82f6",
-                  filter: "drop-shadow(0 0 8px #3b82f6) drop-shadow(0 0 15px #3b82f6)",
+                  color: "#ffffff",
+                  filter: "drop-shadow(0 0 8px #ffffff) drop-shadow(0 0 15px #ffffff)",
                 }}
               >
                 <currentMode.icon size={36} />
@@ -4214,7 +4214,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 className="text-xl font-bold neon-text"
                 style={{ 
                   fontFamily: "monospace",
-                  textShadow: "0 0 10px #fff, 0 0 20px #3b82f6",
+                  textShadow: "0 0 10px #fff, 0 0 20px #ffffff",
                 }}
               >
                 {Math.round(progress)}%
@@ -4248,8 +4248,8 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                       key={i}
                       className="absolute w-1 h-1 rounded-full"
                       style={{
-                        backgroundColor: '#3b82f6',
-                        boxShadow: '0 0 10px #3b82f6, 0 0 20px #3b82f6',
+                        backgroundColor: '#ffffff',
+                        boxShadow: '0 0 10px #ffffff, 0 0 20px #ffffff',
                         left: `${Math.random() * 100}%`,
                         top: `${Math.random() * 100}%`,
                       }}
@@ -4276,8 +4276,8 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                       style={{
                         width: 150 + ring * 80,
                         height: 150 + ring * 80,
-                        border: '1px solid rgba(59, 130, 246, 0.3)',
-                        boxShadow: `0 0 ${20 + ring * 10}px rgba(59, 130, 246, 0.1)`,
+                        border: '1px solid rgba(255, 255, 255, 0.3)',
+                        boxShadow: `0 0 ${20 + ring * 10}px rgba(255, 255, 255, 0.1)`,
                       }}
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{ 
@@ -4311,7 +4311,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                     <motion.div
                       className="absolute inset-0 rounded-full"
                       style={{
-                        background: 'radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, transparent 70%)',
+                        background: 'radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 70%)',
                         filter: 'blur(30px)',
                         transform: 'scale(2)',
                       }}
@@ -4333,13 +4333,13 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                       style={{
                         width: 120,
                         height: 120,
-                        filter: 'drop-shadow(0 0 15px #3b82f6) drop-shadow(0 0 30px #3b82f6) drop-shadow(0 0 45px rgba(59, 130, 246, 0.5))',
+                        filter: 'drop-shadow(0 0 15px #ffffff) drop-shadow(0 0 30px #ffffff) drop-shadow(0 0 45px rgba(255, 255, 255, 0.5))',
                       }}
                       animate={{
                         filter: [
-                          'drop-shadow(0 0 15px #3b82f6) drop-shadow(0 0 30px #3b82f6) drop-shadow(0 0 45px rgba(59, 130, 246, 0.5))',
-                          'drop-shadow(0 0 25px #3b82f6) drop-shadow(0 0 50px #3b82f6) drop-shadow(0 0 75px rgba(59, 130, 246, 0.7))',
-                          'drop-shadow(0 0 15px #3b82f6) drop-shadow(0 0 30px #3b82f6) drop-shadow(0 0 45px rgba(59, 130, 246, 0.5))',
+                          'drop-shadow(0 0 15px #ffffff) drop-shadow(0 0 30px #ffffff) drop-shadow(0 0 45px rgba(255, 255, 255, 0.5))',
+                          'drop-shadow(0 0 25px #ffffff) drop-shadow(0 0 50px #ffffff) drop-shadow(0 0 75px rgba(255, 255, 255, 0.7))',
+                          'drop-shadow(0 0 15px #ffffff) drop-shadow(0 0 30px #ffffff) drop-shadow(0 0 45px rgba(255, 255, 255, 0.5))',
                         ],
                       }}
                       transition={shouldSkipHeavyEffects ? {} : {
@@ -4360,13 +4360,13 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                       className="text-3xl md:text-4xl font-bold mb-2"
                       style={{
                         color: '#fff',
-                        textShadow: '0 0 10px #fff, 0 0 20px #3b82f6, 0 0 40px #3b82f6, 0 0 60px rgba(59, 130, 246, 0.5)',
+                        textShadow: '0 0 10px #fff, 0 0 20px #ffffff, 0 0 40px #ffffff, 0 0 60px rgba(255, 255, 255, 0.5)',
                       }}
                       animate={{
                         textShadow: [
-                          '0 0 10px #fff, 0 0 20px #3b82f6, 0 0 40px #3b82f6, 0 0 60px rgba(59, 130, 246, 0.5)',
-                          '0 0 15px #fff, 0 0 30px #3b82f6, 0 0 60px #3b82f6, 0 0 90px rgba(59, 130, 246, 0.7)',
-                          '0 0 10px #fff, 0 0 20px #3b82f6, 0 0 40px #3b82f6, 0 0 60px rgba(59, 130, 246, 0.5)',
+                          '0 0 10px #fff, 0 0 20px #ffffff, 0 0 40px #ffffff, 0 0 60px rgba(255, 255, 255, 0.5)',
+                          '0 0 15px #fff, 0 0 30px #ffffff, 0 0 60px #ffffff, 0 0 90px rgba(255, 255, 255, 0.7)',
+                          '0 0 10px #fff, 0 0 20px #ffffff, 0 0 40px #ffffff, 0 0 60px rgba(255, 255, 255, 0.5)',
                         ],
                       }}
                       transition={shouldSkipHeavyEffects ? {} : { duration: 2, repeat: Infinity }}
@@ -4376,8 +4376,8 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                     <motion.p
                       className="text-lg mb-4"
                       style={{
-                        color: '#3b82f6',
-                        textShadow: '0 0 10px rgba(59, 130, 246, 0.5)',
+                        color: '#ffffff',
+                        textShadow: '0 0 10px rgba(255, 255, 255, 0.5)',
                       }}
                     >
                       Welcome to Bull Money
@@ -4395,13 +4395,13 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                         <div 
                           className="px-4 py-2 rounded-lg flex items-center gap-2"
                           style={{
-                            background: 'rgba(59, 130, 246, 0.2)',
-                            border: '1px solid rgba(59, 130, 246, 0.4)',
+                            background: 'rgba(255, 255, 255, 0.2)',
+                            border: '1px solid rgba(255, 255, 255, 0.4)',
                           }}
                         >
-                          <Star size={16} className="text-blue-400" />
+                          <Star size={16} className="text-white" />
                           <span className="text-white font-bold">{totalScore}</span>
-                          <span className="text-blue-400 text-sm">pts</span>
+                          <span className="text-white text-sm">pts</span>
                         </div>
                         
                         {/* Max Combo */}
@@ -4409,13 +4409,13 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                           <div 
                             className="px-4 py-2 rounded-lg flex items-center gap-2"
                             style={{
-                              background: 'rgba(59, 130, 246, 0.2)',
-                              border: '1px solid rgba(59, 130, 246, 0.4)',
+                              background: 'rgba(255, 255, 255, 0.2)',
+                              border: '1px solid rgba(255, 255, 255, 0.4)',
                             }}
                           >
-                            <Zap size={16} className="text-blue-400" />
+                            <Zap size={16} className="text-white" />
                             <span className="text-white font-bold">x{comboCount}</span>
-                            <span className="text-blue-400 text-sm">combo</span>
+                            <span className="text-white text-sm">combo</span>
                           </div>
                         )}
                         
@@ -4424,13 +4424,13 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                           <div 
                             className="px-4 py-2 rounded-lg flex items-center gap-2"
                             style={{
-                              background: 'rgba(59, 130, 246, 0.2)',
-                              border: '1px solid rgba(59, 130, 246, 0.4)',
+                              background: 'rgba(255, 255, 255, 0.2)',
+                              border: '1px solid rgba(255, 255, 255, 0.4)',
                             }}
                           >
-                            <Heart size={16} className="text-blue-400" />
+                            <Heart size={16} className="text-white" />
                             <span className="text-white font-bold">{achievements.size}</span>
-                            <span className="text-blue-400 text-sm">{achievements.size === 1 ? 'badge' : 'badges'}</span>
+                            <span className="text-white text-sm">{achievements.size === 1 ? 'badge' : 'badges'}</span>
                           </div>
                         )}
                       </motion.div>
@@ -4446,19 +4446,19 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                   >
                     <motion.div
                       className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: '#3b82f6', boxShadow: '0 0 10px #3b82f6' }}
+                      style={{ backgroundColor: '#ffffff', boxShadow: '0 0 10px #ffffff' }}
                       animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
                       transition={shouldSkipHeavyEffects ? {} : { duration: 0.6, repeat: Infinity, delay: 0 }}
                     />
                     <motion.div
                       className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: '#3b82f6', boxShadow: '0 0 10px #3b82f6' }}
+                      style={{ backgroundColor: '#ffffff', boxShadow: '0 0 10px #ffffff' }}
                       animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
                       transition={shouldSkipHeavyEffects ? {} : { duration: 0.6, repeat: Infinity, delay: 0.2 }}
                     />
                     <motion.div
                       className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: '#3b82f6', boxShadow: '0 0 10px #3b82f6' }}
+                      style={{ backgroundColor: '#ffffff', boxShadow: '0 0 10px #ffffff' }}
                       animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
                       transition={shouldSkipHeavyEffects ? {} : { duration: 0.6, repeat: Infinity, delay: 0.4 }}
                     />
@@ -4481,7 +4481,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
             <p 
               className="text-base sm:text-lg md:text-xl font-bold mb-2 neon-text"
               style={{
-                textShadow: "0 0 10px #fff, 0 0 20px #3b82f6, 0 0 40px #3b82f6",
+                textShadow: "0 0 10px #fff, 0 0 20px #ffffff, 0 0 40px #ffffff",
               }}
             >
               {currentMode.mode === "breath" 
@@ -4490,7 +4490,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
             </p>
             <p 
               className="text-xs sm:text-sm opacity-70"
-              style={{ color: "#3b82f6" }}
+              style={{ color: "#ffffff" }}
             >
               {currentMode.tradingMetaphor}
             </p>
@@ -4508,8 +4508,8 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
             <p 
               className="text-center text-[10px] sm:text-xs italic"
               style={{ 
-                color: "rgba(59, 130, 246, 0.5)",
-                textShadow: "0 0 5px rgba(59, 130, 246, 0.3)",
+                color: "rgba(255, 255, 255, 0.5)",
+                textShadow: "0 0 5px rgba(255, 255, 255, 0.3)",
               }}
             >
               &ldquo;{quote}&rdquo;
@@ -4530,9 +4530,9 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
               <motion.div
                 className="flex flex-col items-center gap-4 p-8 rounded-2xl"
                 style={{
-                  background: "linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(0, 0, 0, 0.9))",
-                  border: "1px solid rgba(59, 130, 246, 0.3)",
-                  boxShadow: "0 0 30px rgba(59, 130, 246, 0.2), inset 0 0 20px rgba(59, 130, 246, 0.05)",
+                  background: "linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.9))",
+                  border: "1px solid rgba(255, 255, 255, 0.3)",
+                  boxShadow: "0 0 30px rgba(255, 255, 255, 0.2), inset 0 0 20px rgba(255, 255, 255, 0.05)",
                 }}
                 initial={{ scale: 0.8, y: 20 }}
                 animate={{ scale: 1, y: 0 }}
@@ -4543,8 +4543,8 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                   <p 
                     className="text-lg font-bold mb-2"
                     style={{ 
-                      color: "#3b82f6",
-                      textShadow: "0 0 10px rgba(59, 130, 246, 0.5)",
+                      color: "#ffffff",
+                      textShadow: "0 0 10px rgba(255, 255, 255, 0.5)",
                     }}
                   >
                     {isTimedOut ? "Taking too long?" : "Need another try?"}
@@ -4563,8 +4563,8 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                       key={i}
                       className="w-3 h-3 rounded-full transition-all"
                       style={{
-                        backgroundColor: i < failureCount ? "rgba(239, 68, 68, 0.8)" : "rgba(59, 130, 246, 0.3)",
-                        boxShadow: i < failureCount ? "0 0 10px rgba(239, 68, 68, 0.5)" : "0 0 5px rgba(59, 130, 246, 0.2)",
+                        backgroundColor: i < failureCount ? "rgba(239, 68, 68, 0.8)" : "rgba(255, 255, 255, 0.3)",
+                        boxShadow: i < failureCount ? "0 0 10px rgba(239, 68, 68, 0.5)" : "0 0 5px rgba(255, 255, 255, 0.2)",
                       }}
                     />
                   ))}
@@ -4575,13 +4575,13 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                   onClick={handleRetry}
                   className="px-8 py-3 rounded-xl font-bold text-white transition-all"
                   style={{
-                    background: "linear-gradient(135deg, #3b82f6, #2563eb)",
-                    boxShadow: "0 0 20px rgba(59, 130, 246, 0.4), 0 4px 15px rgba(0, 0, 0, 0.3)",
-                    border: "1px solid rgba(59, 130, 246, 0.5)",
+                    background: "linear-gradient(135deg, #ffffff, #ffffff)",
+                    boxShadow: "0 0 20px rgba(255, 255, 255, 0.4), 0 4px 15px rgba(0, 0, 0, 0.3)",
+                    border: "1px solid rgba(255, 255, 255, 0.5)",
                   }}
                   whileHover={{ 
                     scale: 1.05,
-                    boxShadow: "0 0 30px rgba(59, 130, 246, 0.6), 0 4px 20px rgba(0, 0, 0, 0.4)",
+                    boxShadow: "0 0 30px rgba(255, 255, 255, 0.6), 0 4px 20px rgba(0, 0, 0, 0.4)",
                   }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -4623,13 +4623,13 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
           <svg className="absolute inset-0 pointer-events-none" style={{ zIndex: 10 }}>
             <motion.path
               d={`M ${patternPoints.map(p => `${p.x},${p.y}`).join(' L ')}`}
-              stroke="#3b82f6"
+              stroke="#ffffff"
               strokeWidth="3"
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
               style={{
-                filter: "drop-shadow(0 0 5px #3b82f6) drop-shadow(0 0 10px #3b82f6)",
+                filter: "drop-shadow(0 0 5px #ffffff) drop-shadow(0 0 10px #ffffff)",
               }}
               initial={{ pathLength: 0 }}
               animate={{ pathLength: 1 }}
@@ -4648,8 +4648,8 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
             <p className="text-4xl font-bold neon-text">
               {shakeCount}
             </p>
-            <p className="text-xs" style={{ color: "#3b82f6" }}>shakes</p>
-            <p className="text-xs mt-1 opacity-50" style={{ color: "#3b82f6" }}>
+            <p className="text-xs" style={{ color: "#ffffff" }}>shakes</p>
+            <p className="text-xs mt-1 opacity-50" style={{ color: "#ffffff" }}>
               Tap quickly (or shake if your browser supports it)
             </p>
           </motion.div>
@@ -4665,7 +4665,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
             <p className="text-4xl font-bold neon-text">
               {tapCount}
             </p>
-            <p className="text-xs" style={{ color: "#3b82f6" }}>taps</p>
+            <p className="text-xs" style={{ color: "#ffffff" }}>taps</p>
           </motion.div>
         )}
 
@@ -4680,23 +4680,23 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
               <motion.div
                 className="w-24 h-24 mx-auto mb-2 rounded-full flex items-center justify-center relative"
                 style={{
-                  border: "3px dashed rgba(59, 130, 246, 0.5)",
+                  border: "3px dashed rgba(255, 255, 255, 0.5)",
                 }}
                 animate={{ rotate: rotationAngle }}
               >
                 <div 
                   className="absolute w-3 h-3 rounded-full -top-1"
                   style={{ 
-                    backgroundColor: "#3b82f6",
-                    boxShadow: "0 0 10px #3b82f6, 0 0 20px #3b82f6" 
+                    backgroundColor: "#ffffff",
+                    boxShadow: "0 0 10px #ffffff, 0 0 20px #ffffff" 
                   }}
                 />
-                <RefreshCw size={32} style={{ color: "#3b82f6" }} />
+                <RefreshCw size={32} style={{ color: "#ffffff" }} />
               </motion.div>
               <p className="text-4xl font-bold neon-text">
                 {Math.floor(rotationAngle)}°
               </p>
-              <p className="text-xs" style={{ color: "#3b82f6" }}>rotation</p>
+              <p className="text-xs" style={{ color: "#ffffff" }}>rotation</p>
             </motion.div>
           </>
         )}
@@ -4716,7 +4716,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 }}
                 transition={{ duration: 0.2 }}
               >
-                <ArrowLeft size={32} style={{ color: "#3b82f6" }} />
+                <ArrowLeft size={32} style={{ color: "#ffffff" }} />
               </motion.div>
               <motion.div
                 animate={{ 
@@ -4725,13 +4725,13 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 }}
                 transition={{ duration: 0.2 }}
               >
-                <ArrowRight size={32} style={{ color: "#3b82f6" }} />
+                <ArrowRight size={32} style={{ color: "#ffffff" }} />
               </motion.div>
             </div>
             <p className="text-4xl font-bold neon-text">
               {zigzagCount}/6
             </p>
-            <p className="text-xs" style={{ color: "#3b82f6" }}>
+            <p className="text-xs" style={{ color: "#ffffff" }}>
               {zigzagDirection ? `→ Now go ${zigzagDirection === "right" ? "LEFT" : "RIGHT"}` : "Swipe left or right"}
             </p>
           </motion.div>
@@ -4748,7 +4748,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
             <motion.div
               className="w-20 h-20 mx-auto mb-3 rounded-full flex items-center justify-center relative"
               style={{
-                border: '3px solid rgba(59, 130, 246, 0.5)',
+                border: '3px solid rgba(255, 255, 255, 0.5)',
                 backgroundColor: 'rgba(0, 0, 0, 0.5)',
               }}
             >
@@ -4756,8 +4756,8 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
               <motion.div
                 className="absolute inset-2 rounded-full"
                 style={{
-                  border: '2px solid #3b82f6',
-                  boxShadow: '0 0 15px #3b82f6, inset 0 0 15px rgba(59, 130, 246, 0.3)',
+                  border: '2px solid #ffffff',
+                  boxShadow: '0 0 15px #ffffff, inset 0 0 15px rgba(255, 255, 255, 0.3)',
                 }}
                 animate={{
                   scale: [1, 1.3, 1],
@@ -4773,8 +4773,8 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 size={28} 
                 className="relative z-10"
                 style={{ 
-                  color: '#3b82f6',
-                  filter: 'drop-shadow(0 0 8px #3b82f6)',
+                  color: '#ffffff',
+                  filter: 'drop-shadow(0 0 8px #ffffff)',
                 }} 
               />
             </motion.div>
@@ -4786,18 +4786,18 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                   key={i}
                   className="w-3 h-3 rounded-full"
                   style={{
-                    backgroundColor: pulseTaps.length > i ? "#3b82f6" : "rgba(59, 130, 246, 0.3)",
-                    boxShadow: pulseTaps.length > i ? "0 0 10px #3b82f6" : "none",
+                    backgroundColor: pulseTaps.length > i ? "#ffffff" : "rgba(255, 255, 255, 0.3)",
+                    boxShadow: pulseTaps.length > i ? "0 0 10px #ffffff" : "none",
                   }}
                   animate={pulseTaps.length === i + 1 ? { scale: [1, 1.5, 1] } : {}}
                   transition={{ duration: 0.2 }}
                 />
               ))}
             </div>
-            <p className="text-sm font-medium" style={{ color: "#3b82f6" }}>
+            <p className="text-sm font-medium" style={{ color: "#ffffff" }}>
               Tap with the pulse!
             </p>
-            <p className="text-[10px] mt-1" style={{ color: "rgba(59, 130, 246, 0.6)" }}>
+            <p className="text-[10px] mt-1" style={{ color: "rgba(255, 255, 255, 0.6)" }}>
               Stay in rhythm for bonus points
             </p>
           </motion.div>
@@ -4813,19 +4813,19 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
             <motion.div 
               className="w-16 h-16 mx-auto mb-2 rounded-full flex items-center justify-center"
               style={{
-                backgroundColor: isHolding ? "rgba(59, 130, 246, 0.3)" : "transparent",
-                border: `2px solid ${isHolding ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
-                boxShadow: isHolding ? "0 0 20px #3b82f6" : "none",
+                backgroundColor: isHolding ? "rgba(255, 255, 255, 0.3)" : "transparent",
+                border: `2px solid ${isHolding ? "#ffffff" : "rgba(255, 255, 255, 0.3)"}`,
+                boxShadow: isHolding ? "0 0 20px #ffffff" : "none",
               }}
               animate={isHolding ? { scale: [1, 1.1, 1] } : {}}
               transition={{ duration: 0.5, repeat: isHolding ? Infinity : 0 }}
             >
-              <span className="text-lg" style={{ color: "#3b82f6" }}>
+              <span className="text-lg" style={{ color: "#ffffff" }}>
                 {breathPhase === "hold" ? "⬇" : "⬆"}
               </span>
             </motion.div>
             <p className="text-2xl font-bold neon-text">{breathCount}/8</p>
-            <p className="text-xs" style={{ color: "#3b82f6" }}>cycles</p>
+            <p className="text-xs" style={{ color: "#ffffff" }}>cycles</p>
           </motion.div>
         )}
 
@@ -4839,14 +4839,14 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
             <motion.div
               className="w-20 h-20 mx-auto mb-2 rounded-full flex items-center justify-center"
               style={{
-                backgroundColor: isHolding ? "rgba(59, 130, 246, 0.2)" : "transparent",
-                border: `3px solid ${isHolding ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
-                boxShadow: isHolding ? "0 0 30px #3b82f6, inset 0 0 20px rgba(59, 130, 246, 0.3)" : "none",
+                backgroundColor: isHolding ? "rgba(255, 255, 255, 0.2)" : "transparent",
+                border: `3px solid ${isHolding ? "#ffffff" : "rgba(255, 255, 255, 0.3)"}`,
+                boxShadow: isHolding ? "0 0 30px #ffffff, inset 0 0 20px rgba(255, 255, 255, 0.3)" : "none",
               }}
             >
               <span className="text-2xl font-bold neon-text">{Math.ceil((100 - progress) / 33.3) || 0}s</span>
             </motion.div>
-            <p className="text-xs" style={{ color: "#3b82f6" }}>{isHolding ? "Keep holding..." : "Press and hold"}</p>
+            <p className="text-xs" style={{ color: "#ffffff" }}>{isHolding ? "Keep holding..." : "Press and hold"}</p>
           </motion.div>
         )}
 
@@ -4861,25 +4861,25 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
               <motion.div
                 className="w-8 h-8 rounded-full flex items-center justify-center"
                 style={{
-                  backgroundColor: lastTapTime ? "rgba(59, 130, 246, 0.3)" : "transparent",
-                  border: "2px solid rgba(59, 130, 246, 0.5)",
-                  boxShadow: lastTapTime ? "0 0 10px #3b82f6" : "none",
+                  backgroundColor: lastTapTime ? "rgba(255, 255, 255, 0.3)" : "transparent",
+                  border: "2px solid rgba(255, 255, 255, 0.5)",
+                  boxShadow: lastTapTime ? "0 0 10px #ffffff" : "none",
                 }}
                 animate={lastTapTime ? { scale: [1, 1.2, 1] } : {}}
               >
-                <span style={{ color: "#3b82f6" }}>1</span>
+                <span style={{ color: "#ffffff" }}>1</span>
               </motion.div>
               <motion.div
                 className="w-8 h-8 rounded-full flex items-center justify-center"
                 style={{
                   backgroundColor: "transparent",
-                  border: "2px solid rgba(59, 130, 246, 0.3)",
+                  border: "2px solid rgba(255, 255, 255, 0.3)",
                 }}
               >
-                <span style={{ color: "rgba(59, 130, 246, 0.5)" }}>2</span>
+                <span style={{ color: "rgba(255, 255, 255, 0.5)" }}>2</span>
               </motion.div>
             </div>
-            <p className="text-xs" style={{ color: "#3b82f6" }}>Double tap quickly!</p>
+            <p className="text-xs" style={{ color: "#ffffff" }}>Double tap quickly!</p>
           </motion.div>
         )}
 
@@ -4896,16 +4896,16 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                   key={i}
                   className="w-8 h-8 rounded-full flex items-center justify-center"
                   style={{
-                    backgroundColor: tripleTapTimes.length >= i ? "rgba(59, 130, 246, 0.3)" : "transparent",
-                    border: `2px solid ${tripleTapTimes.length >= i ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
-                    boxShadow: tripleTapTimes.length >= i ? "0 0 10px #3b82f6" : "none",
+                    backgroundColor: tripleTapTimes.length >= i ? "rgba(255, 255, 255, 0.3)" : "transparent",
+                    border: `2px solid ${tripleTapTimes.length >= i ? "#ffffff" : "rgba(255, 255, 255, 0.3)"}`,
+                    boxShadow: tripleTapTimes.length >= i ? "0 0 10px #ffffff" : "none",
                   }}
                 >
-                  <span style={{ color: tripleTapTimes.length >= i ? "#3b82f6" : "rgba(59, 130, 246, 0.5)" }}>{i}</span>
+                  <span style={{ color: tripleTapTimes.length >= i ? "#ffffff" : "rgba(255, 255, 255, 0.5)" }}>{i}</span>
                 </motion.div>
               ))}
             </div>
-            <p className="text-xs" style={{ color: "#3b82f6" }}>Triple tap quickly!</p>
+            <p className="text-xs" style={{ color: "#ffffff" }}>Triple tap quickly!</p>
           </motion.div>
         )}
 
@@ -4917,9 +4917,9 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
             animate={{ opacity: 1 }}
           >
             <p className="text-5xl font-bold neon-text">{speedTapCount}</p>
-            <p className="text-sm" style={{ color: "#3b82f6" }}>/20 taps</p>
+            <p className="text-sm" style={{ color: "#ffffff" }}>/20 taps</p>
             {speedTapStartTime > 0 && (
-              <p className="text-xs mt-1" style={{ color: "rgba(59, 130, 246, 0.7)" }}>
+              <p className="text-xs mt-1" style={{ color: "rgba(255, 255, 255, 0.7)" }}>
                 {Math.max(0, 5 - Math.floor((Date.now() - speedTapStartTime) / 1000))}s remaining
               </p>
             )}
@@ -4941,14 +4941,14 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                   style={{
                     width: expected === "long" ? 40 : 20,
                     height: 20,
-                    backgroundColor: morseTaps[i] === expected ? "#3b82f6" : "rgba(59, 130, 246, 0.2)",
+                    backgroundColor: morseTaps[i] === expected ? "#ffffff" : "rgba(255, 255, 255, 0.2)",
                     borderRadius: 4,
-                    boxShadow: morseTaps[i] === expected ? "0 0 10px #3b82f6" : "none",
+                    boxShadow: morseTaps[i] === expected ? "0 0 10px #ffffff" : "none",
                   }}
                 />
               ))}
             </div>
-            <p className="text-xs" style={{ color: "#3b82f6" }}>
+            <p className="text-xs" style={{ color: "#ffffff" }}>
               {isHolding ? "Release for short, keep holding for long..." : "Tap: • • —"}
             </p>
           </motion.div>
@@ -4965,24 +4965,24 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
               <motion.div
                 className="w-12 h-12 rounded-lg flex items-center justify-center"
                 style={{
-                  backgroundColor: alternateSide === "left" ? "rgba(59, 130, 246, 0.3)" : "transparent",
-                  border: `2px solid ${alternateSide === "left" ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
-                  boxShadow: alternateSide === "left" ? "0 0 15px #3b82f6" : "none",
+                  backgroundColor: alternateSide === "left" ? "rgba(255, 255, 255, 0.3)" : "transparent",
+                  border: `2px solid ${alternateSide === "left" ? "#ffffff" : "rgba(255, 255, 255, 0.3)"}`,
+                  boxShadow: alternateSide === "left" ? "0 0 15px #ffffff" : "none",
                 }}
                 animate={alternateSide === "left" ? { scale: [1, 1.1, 1] } : {}}
               >
-                <ArrowLeft size={24} style={{ color: "#3b82f6" }} />
+                <ArrowLeft size={24} style={{ color: "#ffffff" }} />
               </motion.div>
               <motion.div
                 className="w-12 h-12 rounded-lg flex items-center justify-center"
                 style={{
-                  backgroundColor: alternateSide === "right" ? "rgba(59, 130, 246, 0.3)" : "transparent",
-                  border: `2px solid ${alternateSide === "right" ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
-                  boxShadow: alternateSide === "right" ? "0 0 15px #3b82f6" : "none",
+                  backgroundColor: alternateSide === "right" ? "rgba(255, 255, 255, 0.3)" : "transparent",
+                  border: `2px solid ${alternateSide === "right" ? "#ffffff" : "rgba(255, 255, 255, 0.3)"}`,
+                  boxShadow: alternateSide === "right" ? "0 0 15px #ffffff" : "none",
                 }}
                 animate={alternateSide === "right" ? { scale: [1, 1.1, 1] } : {}}
               >
-                <ArrowRight size={24} style={{ color: "#3b82f6" }} />
+                <ArrowRight size={24} style={{ color: "#ffffff" }} />
               </motion.div>
             </div>
             <p className="text-xl font-bold neon-text">{alternateCount}/10</p>
@@ -5001,13 +5001,13 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                   bottom: corner.includes("b") ? 150 : "auto",
                   left: corner.includes("l") ? 20 : "auto",
                   right: corner.includes("r") ? 20 : "auto",
-                  backgroundColor: cornersHit.has(corner) ? "rgba(59, 130, 246, 0.3)" : "rgba(0, 0, 0, 0.5)",
-                  border: `2px solid ${cornersHit.has(corner) ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
-                  boxShadow: cornersHit.has(corner) ? "0 0 20px #3b82f6" : "none",
+                  backgroundColor: cornersHit.has(corner) ? "rgba(255, 255, 255, 0.3)" : "rgba(0, 0, 0, 0.5)",
+                  border: `2px solid ${cornersHit.has(corner) ? "#ffffff" : "rgba(255, 255, 255, 0.3)"}`,
+                  boxShadow: cornersHit.has(corner) ? "0 0 20px #ffffff" : "none",
                 }}
                 animate={cornersHit.has(corner) ? { scale: [1, 1.2, 1] } : {}}
               >
-                <Target size={24} style={{ color: cornersHit.has(corner) ? "#3b82f6" : "rgba(59, 130, 246, 0.3)" }} />
+                <Target size={24} style={{ color: cornersHit.has(corner) ? "#ffffff" : "rgba(255, 255, 255, 0.3)" }} />
               </motion.div>
             ))}
           </>
@@ -5023,16 +5023,16 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
             <motion.div
               className="w-24 h-24 mx-auto mb-2 rounded-full flex items-center justify-center"
               style={{
-                backgroundColor: isHolding ? "rgba(59, 130, 246, 0.2)" : "transparent",
-                border: `4px solid ${isHolding ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
-                boxShadow: isHolding ? "0 0 40px #3b82f6" : "none",
+                backgroundColor: isHolding ? "rgba(255, 255, 255, 0.2)" : "transparent",
+                border: `4px solid ${isHolding ? "#ffffff" : "rgba(255, 255, 255, 0.3)"}`,
+                boxShadow: isHolding ? "0 0 40px #ffffff" : "none",
               }}
               animate={isHolding ? { scale: [1, 1.05, 1] } : {}}
               transition={shouldSkipHeavyEffects ? {} : { duration: 1, repeat: Infinity }}
             >
               <span className="text-4xl font-bold neon-text">{countdownValue}</span>
             </motion.div>
-            <p className="text-xs" style={{ color: "#3b82f6" }}>{isHolding ? "Keep holding..." : "Press and hold"}</p>
+            <p className="text-xs" style={{ color: "#ffffff" }}>{isHolding ? "Keep holding..." : "Press and hold"}</p>
           </motion.div>
         )}
 
@@ -5045,20 +5045,20 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
           >
             <div 
               className="relative h-4 rounded-full overflow-hidden"
-              style={{ backgroundColor: "rgba(59, 130, 246, 0.2)", border: "2px solid rgba(59, 130, 246, 0.3)" }}
+              style={{ backgroundColor: "rgba(255, 255, 255, 0.2)", border: "2px solid rgba(255, 255, 255, 0.3)" }}
             >
               <motion.div
                 className="absolute left-0 top-0 bottom-0 rounded-full"
                 style={{ 
                   width: `${sliderProgress}%`,
-                  backgroundColor: "#3b82f6",
-                  boxShadow: "0 0 15px #3b82f6",
+                  backgroundColor: "#ffffff",
+                  boxShadow: "0 0 15px #ffffff",
                 }}
               />
             </div>
             <div className="flex justify-between mt-1">
-              <ArrowRight size={16} style={{ color: "#3b82f6" }} />
-              <span className="text-xs" style={{ color: "#3b82f6" }}>Drag right →</span>
+              <ArrowRight size={16} style={{ color: "#ffffff" }} />
+              <span className="text-xs" style={{ color: "#ffffff" }}>Drag right →</span>
             </div>
           </motion.div>
         )}
@@ -5073,14 +5073,14 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
             <motion.div
               className="w-20 h-20 mx-auto mb-2 rounded-full flex items-center justify-center"
               style={{
-                border: `3px dashed rgba(59, 130, 246, 0.5)`,
+                border: `3px dashed rgba(255, 255, 255, 0.5)`,
               }}
               animate={{ rotate: 360 }}
               transition={shouldSkipHeavyEffects ? {} : { duration: 3, repeat: Infinity, ease: "linear" }}
             >
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "#3b82f6", boxShadow: "0 0 10px #3b82f6" }} />
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "#ffffff", boxShadow: "0 0 10px #ffffff" }} />
             </motion.div>
-            <p className="text-xs" style={{ color: "#3b82f6" }}>
+            <p className="text-xs" style={{ color: "#ffffff" }}>
               {currentMode.mode === "spiral" ? "Draw inward spiral" : `${Math.round(progress)}% complete`}
             </p>
           </motion.div>
@@ -5095,7 +5095,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
           >
             <div 
               className="w-36 h-36 grid grid-cols-5 gap-0.5 p-1 rounded-lg"
-              style={{ backgroundColor: "rgba(0, 0, 0, 0.5)", border: "2px solid rgba(59, 130, 246, 0.3)" }}
+              style={{ backgroundColor: "rgba(0, 0, 0, 0.5)", border: "2px solid rgba(255, 255, 255, 0.3)" }}
             >
               {Array.from({ length: 25 }).map((_, i) => {
                 const x = i % 5;
@@ -5106,14 +5106,14 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                     key={i}
                     className="rounded-sm"
                     style={{
-                      backgroundColor: scratchArea.has(key) ? "transparent" : "rgba(59, 130, 246, 0.3)",
-                      boxShadow: scratchArea.has(key) ? "none" : "inset 0 0 5px rgba(59, 130, 246, 0.5)",
+                      backgroundColor: scratchArea.has(key) ? "transparent" : "rgba(255, 255, 255, 0.3)",
+                      boxShadow: scratchArea.has(key) ? "none" : "inset 0 0 5px rgba(255, 255, 255, 0.5)",
                     }}
                   />
                 );
               })}
             </div>
-            <p className="text-xs text-center mt-2" style={{ color: "#3b82f6" }}>Scratch to reveal!</p>
+            <p className="text-xs text-center mt-2" style={{ color: "#ffffff" }}>Scratch to reveal!</p>
           </motion.div>
         )}
 
@@ -5124,9 +5124,9 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <div className="text-4xl mb-2" style={{ color: "#3b82f6", textShadow: "0 0 10px #3b82f6" }}>∞</div>
+            <div className="text-4xl mb-2" style={{ color: "#ffffff", textShadow: "0 0 10px #ffffff" }}>∞</div>
             <p className="text-xl font-bold neon-text">{infinityPhase}/8</p>
-            <p className="text-xs" style={{ color: "#3b82f6" }}>Draw figure-8 pattern</p>
+            <p className="text-xs" style={{ color: "#ffffff" }}>Draw figure-8 pattern</p>
           </motion.div>
         )}
 
@@ -5141,9 +5141,9 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
               className="w-16 h-16 mx-auto mb-2"
               animate={{ rotateX: tiltProgress * 0.45 }}
             >
-              <Smartphone size={64} style={{ color: "#3b82f6" }} />
+              <Smartphone size={64} style={{ color: "#ffffff" }} />
             </motion.div>
-            <p className="text-xs" style={{ color: "#3b82f6" }}>Tilt device forward</p>
+            <p className="text-xs" style={{ color: "#ffffff" }}>Tilt device forward</p>
           </motion.div>
         )}
 
@@ -5158,23 +5158,23 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
               <div 
                 className="w-10 h-10 rounded-full flex items-center justify-center"
                 style={{
-                  backgroundColor: flipState !== "normal" ? "rgba(59, 130, 246, 0.3)" : "transparent",
-                  border: `2px solid ${flipState !== "normal" ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
+                  backgroundColor: flipState !== "normal" ? "rgba(255, 255, 255, 0.3)" : "transparent",
+                  border: `2px solid ${flipState !== "normal" ? "#ffffff" : "rgba(255, 255, 255, 0.3)"}`,
                 }}
               >
-                <FlipVertical size={20} style={{ color: "#3b82f6" }} />
+                <FlipVertical size={20} style={{ color: "#ffffff" }} />
               </div>
               <div 
                 className="w-10 h-10 rounded-full flex items-center justify-center"
                 style={{
-                  backgroundColor: flipState === "returned" ? "rgba(59, 130, 246, 0.3)" : "transparent",
-                  border: `2px solid ${flipState === "returned" ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
+                  backgroundColor: flipState === "returned" ? "rgba(255, 255, 255, 0.3)" : "transparent",
+                  border: `2px solid ${flipState === "returned" ? "#ffffff" : "rgba(255, 255, 255, 0.3)"}`,
                 }}
               >
-                <Smartphone size={20} style={{ color: "#3b82f6" }} />
+                <Smartphone size={20} style={{ color: "#ffffff" }} />
               </div>
             </div>
-            <p className="text-xs" style={{ color: "#3b82f6" }}>
+            <p className="text-xs" style={{ color: "#ffffff" }}>
               {flipState === "normal" ? "Tap to flip down" : flipState === "flipped" ? "Tap again to flip up" : "Complete!"}
             </p>
           </motion.div>
@@ -5190,15 +5190,15 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
             <motion.div
               className="w-20 h-20 mx-auto mb-2 rounded-full flex items-center justify-center"
               style={{
-                border: "3px solid rgba(59, 130, 246, 0.5)",
+                border: "3px solid rgba(255, 255, 255, 0.5)",
                 backgroundColor: "rgba(0, 0, 0, 0.5)",
               }}
               animate={{ rotate: -compassHeading }}
             >
-              <Navigation size={32} style={{ color: "#3b82f6", transform: "rotate(-45deg)" }} />
+              <Navigation size={32} style={{ color: "#ffffff", transform: "rotate(-45deg)" }} />
             </motion.div>
             <p className="text-lg font-bold neon-text">N</p>
-            <p className="text-xs" style={{ color: "#3b82f6" }}>Rotate to face North</p>
+            <p className="text-xs" style={{ color: "#ffffff" }}>Rotate to face North</p>
           </motion.div>
         )}
 
@@ -5215,14 +5215,14 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                   key={i}
                   className="w-4 h-4 rounded-full"
                   style={{
-                    backgroundColor: proximityTriggered >= i ? "#3b82f6" : "rgba(59, 130, 246, 0.2)",
-                    boxShadow: proximityTriggered >= i ? "0 0 10px #3b82f6" : "none",
+                    backgroundColor: proximityTriggered >= i ? "#ffffff" : "rgba(255, 255, 255, 0.2)",
+                    boxShadow: proximityTriggered >= i ? "0 0 10px #ffffff" : "none",
                   }}
                 />
               ))}
             </div>
-            <Eye size={32} className="mx-auto mb-2" style={{ color: "#3b82f6" }} />
-            <p className="text-xs" style={{ color: "#3b82f6" }}>
+            <Eye size={32} className="mx-auto mb-2" style={{ color: "#ffffff" }} />
+            <p className="text-xs" style={{ color: "#ffffff" }}>
               {isMobile ? "Cover and uncover screen" : "Tap the center"}
             </p>
           </motion.div>
@@ -5243,10 +5243,10 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                   key={i}
                   className="w-8 h-8 rounded flex items-center justify-center text-sm font-bold"
                   style={{
-                    backgroundColor: konamiSequence.length > i ? "rgba(59, 130, 246, 0.3)" : "rgba(0, 0, 0, 0.5)",
-                    border: `2px solid ${konamiSequence.length > i ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
-                    boxShadow: konamiSequence.length > i ? "0 0 10px #3b82f6" : "none",
-                    color: konamiSequence.length > i ? "#3b82f6" : "rgba(59, 130, 246, 0.5)",
+                    backgroundColor: konamiSequence.length > i ? "rgba(255, 255, 255, 0.3)" : "rgba(0, 0, 0, 0.5)",
+                    border: `2px solid ${konamiSequence.length > i ? "#ffffff" : "rgba(255, 255, 255, 0.3)"}`,
+                    boxShadow: konamiSequence.length > i ? "0 0 10px #ffffff" : "none",
+                    color: konamiSequence.length > i ? "#ffffff" : "rgba(255, 255, 255, 0.5)",
                   }}
                   animate={konamiSequence.length === i + 1 ? { scale: [1, 1.2, 1] } : {}}
                 >
@@ -5254,8 +5254,8 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 </motion.div>
               ))}
             </div>
-            <Gamepad2 size={24} className="mx-auto mb-2" style={{ color: "#3b82f6" }} />
-            <p className="text-xs" style={{ color: "#3b82f6" }}>Enter the legendary code!</p>
+            <Gamepad2 size={24} className="mx-auto mb-2" style={{ color: "#ffffff" }} />
+            <p className="text-xs" style={{ color: "#ffffff" }}>Enter the legendary code!</p>
           </motion.div>
         )}
 
@@ -5272,10 +5272,10 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                   key={i}
                   className="w-8 h-10 rounded flex items-center justify-center text-lg font-bold"
                   style={{
-                    backgroundColor: typedWord.length > i ? "rgba(59, 130, 246, 0.3)" : "rgba(0, 0, 0, 0.5)",
-                    border: `2px solid ${typedWord.length > i ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
-                    boxShadow: typedWord.length > i ? "0 0 10px #3b82f6" : "none",
-                    color: typedWord.length > i ? "#fff" : "rgba(59, 130, 246, 0.5)",
+                    backgroundColor: typedWord.length > i ? "rgba(255, 255, 255, 0.3)" : "rgba(0, 0, 0, 0.5)",
+                    border: `2px solid ${typedWord.length > i ? "#ffffff" : "rgba(255, 255, 255, 0.3)"}`,
+                    boxShadow: typedWord.length > i ? "0 0 10px #ffffff" : "none",
+                    color: typedWord.length > i ? "#fff" : "rgba(255, 255, 255, 0.5)",
                   }}
                   animate={typedWord.length === i + 1 ? { scale: [1, 1.1, 1] } : {}}
                 >
@@ -5283,8 +5283,8 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 </motion.div>
               ))}
             </div>
-            <Keyboard size={24} className="mx-auto mb-2" style={{ color: "#3b82f6" }} />
-            <p className="text-xs" style={{ color: "#3b82f6" }}>Type it out!</p>
+            <Keyboard size={24} className="mx-auto mb-2" style={{ color: "#ffffff" }} />
+            <p className="text-xs" style={{ color: "#ffffff" }}>Type it out!</p>
           </motion.div>
         )}
 
@@ -5301,9 +5301,9 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                   key={i}
                   className="w-10 h-16 rounded-b flex items-end justify-center pb-2 text-sm font-bold mx-0.5"
                   style={{
-                    backgroundColor: pianoSequence.length > i ? "#3b82f6" : "#fff",
-                    border: "2px solid rgba(59, 130, 246, 0.5)",
-                    boxShadow: pianoSequence.length > i ? "0 0 15px #3b82f6" : "inset 0 -5px 10px rgba(0,0,0,0.1)",
+                    backgroundColor: pianoSequence.length > i ? "#ffffff" : "#fff",
+                    border: "2px solid rgba(255, 255, 255, 0.5)",
+                    boxShadow: pianoSequence.length > i ? "0 0 15px #ffffff" : "inset 0 -5px 10px rgba(0,0,0,0.1)",
                     color: pianoSequence.length > i ? "#fff" : "#333",
                   }}
                   animate={pianoSequence.length === i + 1 ? { y: [0, 5, 0] } : {}}
@@ -5312,8 +5312,8 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 </motion.div>
               ))}
             </div>
-            <Music size={24} className="mx-auto mb-2" style={{ color: "#3b82f6" }} />
-            <p className="text-xs" style={{ color: "#3b82f6" }}>Play the melody!</p>
+            <Music size={24} className="mx-auto mb-2" style={{ color: "#ffffff" }} />
+            <p className="text-xs" style={{ color: "#ffffff" }}>Play the melody!</p>
           </motion.div>
         )}
 
@@ -5329,10 +5329,10 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 <motion.div
                   className="w-10 h-10 rounded flex items-center justify-center text-lg font-bold"
                   style={{
-                    backgroundColor: wasdSequence.includes("KeyW") ? "rgba(59, 130, 246, 0.3)" : "rgba(0, 0, 0, 0.5)",
-                    border: `2px solid ${wasdSequence.includes("KeyW") ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
-                    boxShadow: wasdSequence.includes("KeyW") ? "0 0 10px #3b82f6" : "none",
-                    color: wasdSequence.includes("KeyW") ? "#fff" : "rgba(59, 130, 246, 0.5)",
+                    backgroundColor: wasdSequence.includes("KeyW") ? "rgba(255, 255, 255, 0.3)" : "rgba(0, 0, 0, 0.5)",
+                    border: `2px solid ${wasdSequence.includes("KeyW") ? "#ffffff" : "rgba(255, 255, 255, 0.3)"}`,
+                    boxShadow: wasdSequence.includes("KeyW") ? "0 0 10px #ffffff" : "none",
+                    color: wasdSequence.includes("KeyW") ? "#fff" : "rgba(255, 255, 255, 0.5)",
                   }}
                 >
                   W
@@ -5344,10 +5344,10 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                     key={key}
                     className="w-10 h-10 rounded flex items-center justify-center text-lg font-bold"
                     style={{
-                      backgroundColor: wasdSequence.includes(`Key${key}`) ? "rgba(59, 130, 246, 0.3)" : "rgba(0, 0, 0, 0.5)",
-                      border: `2px solid ${wasdSequence.includes(`Key${key}`) ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
-                      boxShadow: wasdSequence.includes(`Key${key}`) ? "0 0 10px #3b82f6" : "none",
-                      color: wasdSequence.includes(`Key${key}`) ? "#fff" : "rgba(59, 130, 246, 0.5)",
+                      backgroundColor: wasdSequence.includes(`Key${key}`) ? "rgba(255, 255, 255, 0.3)" : "rgba(0, 0, 0, 0.5)",
+                      border: `2px solid ${wasdSequence.includes(`Key${key}`) ? "#ffffff" : "rgba(255, 255, 255, 0.3)"}`,
+                      boxShadow: wasdSequence.includes(`Key${key}`) ? "0 0 10px #ffffff" : "none",
+                      color: wasdSequence.includes(`Key${key}`) ? "#fff" : "rgba(255, 255, 255, 0.5)",
                     }}
                   >
                     {key}
@@ -5355,8 +5355,8 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 ))}
               </div>
             </div>
-            <Gamepad2 size={24} className="mx-auto mb-2" style={{ color: "#3b82f6" }} />
-            <p className="text-xs" style={{ color: "#3b82f6" }}>Press in order: W → A → S → D</p>
+            <Gamepad2 size={24} className="mx-auto mb-2" style={{ color: "#ffffff" }} />
+            <p className="text-xs" style={{ color: "#ffffff" }}>Press in order: W → A → S → D</p>
           </motion.div>
         )}
 
@@ -5372,48 +5372,48 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 <motion.div
                   className="w-10 h-10 rounded flex items-center justify-center"
                   style={{
-                    backgroundColor: arrowSequence.includes("ArrowUp") ? "rgba(59, 130, 246, 0.3)" : "rgba(0, 0, 0, 0.5)",
-                    border: `2px solid ${arrowSequence.includes("ArrowUp") ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
-                    boxShadow: arrowSequence.includes("ArrowUp") ? "0 0 10px #3b82f6" : "none",
+                    backgroundColor: arrowSequence.includes("ArrowUp") ? "rgba(255, 255, 255, 0.3)" : "rgba(0, 0, 0, 0.5)",
+                    border: `2px solid ${arrowSequence.includes("ArrowUp") ? "#ffffff" : "rgba(255, 255, 255, 0.3)"}`,
+                    boxShadow: arrowSequence.includes("ArrowUp") ? "0 0 10px #ffffff" : "none",
                   }}
                 >
-                  <ArrowUp size={20} style={{ color: arrowSequence.includes("ArrowUp") ? "#3b82f6" : "rgba(59, 130, 246, 0.5)" }} />
+                  <ArrowUp size={20} style={{ color: arrowSequence.includes("ArrowUp") ? "#ffffff" : "rgba(255, 255, 255, 0.5)" }} />
                 </motion.div>
               </div>
               <div className="flex justify-center gap-1">
                 <motion.div
                   className="w-10 h-10 rounded flex items-center justify-center"
                   style={{
-                    backgroundColor: arrowSequence.includes("ArrowLeft") ? "rgba(59, 130, 246, 0.3)" : "rgba(0, 0, 0, 0.5)",
-                    border: `2px solid ${arrowSequence.includes("ArrowLeft") ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
-                    boxShadow: arrowSequence.includes("ArrowLeft") ? "0 0 10px #3b82f6" : "none",
+                    backgroundColor: arrowSequence.includes("ArrowLeft") ? "rgba(255, 255, 255, 0.3)" : "rgba(0, 0, 0, 0.5)",
+                    border: `2px solid ${arrowSequence.includes("ArrowLeft") ? "#ffffff" : "rgba(255, 255, 255, 0.3)"}`,
+                    boxShadow: arrowSequence.includes("ArrowLeft") ? "0 0 10px #ffffff" : "none",
                   }}
                 >
-                  <ArrowLeft size={20} style={{ color: arrowSequence.includes("ArrowLeft") ? "#3b82f6" : "rgba(59, 130, 246, 0.5)" }} />
+                  <ArrowLeft size={20} style={{ color: arrowSequence.includes("ArrowLeft") ? "#ffffff" : "rgba(255, 255, 255, 0.5)" }} />
                 </motion.div>
                 <motion.div
                   className="w-10 h-10 rounded flex items-center justify-center"
                   style={{
-                    backgroundColor: arrowSequence.includes("ArrowDown") ? "rgba(59, 130, 246, 0.3)" : "rgba(0, 0, 0, 0.5)",
-                    border: `2px solid ${arrowSequence.includes("ArrowDown") ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
-                    boxShadow: arrowSequence.includes("ArrowDown") ? "0 0 10px #3b82f6" : "none",
+                    backgroundColor: arrowSequence.includes("ArrowDown") ? "rgba(255, 255, 255, 0.3)" : "rgba(0, 0, 0, 0.5)",
+                    border: `2px solid ${arrowSequence.includes("ArrowDown") ? "#ffffff" : "rgba(255, 255, 255, 0.3)"}`,
+                    boxShadow: arrowSequence.includes("ArrowDown") ? "0 0 10px #ffffff" : "none",
                   }}
                 >
-                  <ArrowDown size={20} style={{ color: arrowSequence.includes("ArrowDown") ? "#3b82f6" : "rgba(59, 130, 246, 0.5)" }} />
+                  <ArrowDown size={20} style={{ color: arrowSequence.includes("ArrowDown") ? "#ffffff" : "rgba(255, 255, 255, 0.5)" }} />
                 </motion.div>
                 <motion.div
                   className="w-10 h-10 rounded flex items-center justify-center"
                   style={{
-                    backgroundColor: arrowSequence.includes("ArrowRight") ? "rgba(59, 130, 246, 0.3)" : "rgba(0, 0, 0, 0.5)",
-                    border: `2px solid ${arrowSequence.includes("ArrowRight") ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
-                    boxShadow: arrowSequence.includes("ArrowRight") ? "0 0 10px #3b82f6" : "none",
+                    backgroundColor: arrowSequence.includes("ArrowRight") ? "rgba(255, 255, 255, 0.3)" : "rgba(0, 0, 0, 0.5)",
+                    border: `2px solid ${arrowSequence.includes("ArrowRight") ? "#ffffff" : "rgba(255, 255, 255, 0.3)"}`,
+                    boxShadow: arrowSequence.includes("ArrowRight") ? "0 0 10px #ffffff" : "none",
                   }}
                 >
-                  <ArrowRight size={20} style={{ color: arrowSequence.includes("ArrowRight") ? "#3b82f6" : "rgba(59, 130, 246, 0.5)" }} />
+                  <ArrowRight size={20} style={{ color: arrowSequence.includes("ArrowRight") ? "#ffffff" : "rgba(255, 255, 255, 0.5)" }} />
                 </motion.div>
               </div>
             </div>
-            <p className="text-xs" style={{ color: "#3b82f6" }}>↑ → ↓ ← in sequence</p>
+            <p className="text-xs" style={{ color: "#ffffff" }}>↑ → ↓ ← in sequence</p>
           </motion.div>
         )}
 
@@ -5428,16 +5428,16 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
               className="w-48 h-12 mx-auto mb-3 rounded flex items-center justify-center text-sm font-bold"
               style={{
                 backgroundColor: "rgba(0, 0, 0, 0.5)",
-                border: `3px solid #3b82f6`,
-                boxShadow: spaceCount > 0 ? "0 0 20px #3b82f6" : "none",
+                border: `3px solid #ffffff`,
+                boxShadow: spaceCount > 0 ? "0 0 20px #ffffff" : "none",
               }}
               animate={spaceCount > 0 ? { scale: [1, 0.95, 1] } : {}}
               transition={{ duration: 0.1 }}
             >
-              <span style={{ color: "#3b82f6" }}>SPACE</span>
+              <span style={{ color: "#ffffff" }}>SPACE</span>
             </motion.div>
             <p className="text-4xl font-bold neon-text">{spaceCount}/15</p>
-            <p className="text-xs mt-2" style={{ color: "#3b82f6" }}>MASH THAT SPACEBAR!</p>
+            <p className="text-xs mt-2" style={{ color: "#ffffff" }}>MASH THAT SPACEBAR!</p>
           </motion.div>
         )}
 
@@ -5453,19 +5453,19 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 className="px-4 py-2 rounded text-sm font-bold"
                 style={{
                   backgroundColor: "rgba(0, 0, 0, 0.5)",
-                  border: "2px solid #3b82f6",
-                  color: "#3b82f6",
+                  border: "2px solid #ffffff",
+                  color: "#ffffff",
                 }}
               >
                 Ctrl
               </div>
-              <span className="text-2xl" style={{ color: "#3b82f6" }}>+</span>
+              <span className="text-2xl" style={{ color: "#ffffff" }}>+</span>
               <div
                 className="px-4 py-2 rounded text-sm font-bold"
                 style={{
                   backgroundColor: "rgba(0, 0, 0, 0.5)",
-                  border: "2px solid #3b82f6",
-                  color: "#3b82f6",
+                  border: "2px solid #ffffff",
+                  color: "#ffffff",
                 }}
               >
                 B
@@ -5477,14 +5477,14 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                   key={i}
                   className="w-6 h-6 rounded-full"
                   style={{
-                    backgroundColor: ctrlBCount >= i ? "#3b82f6" : "rgba(59, 130, 246, 0.2)",
-                    boxShadow: ctrlBCount >= i ? "0 0 10px #3b82f6" : "none",
+                    backgroundColor: ctrlBCount >= i ? "#ffffff" : "rgba(255, 255, 255, 0.2)",
+                    boxShadow: ctrlBCount >= i ? "0 0 10px #ffffff" : "none",
                   }}
                   animate={ctrlBCount === i ? { scale: [1, 1.3, 1] } : {}}
                 />
               ))}
             </div>
-            <p className="text-xs" style={{ color: "#3b82f6" }}>Bulls always come back! (Cmd+B on Mac)</p>
+            <p className="text-xs" style={{ color: "#ffffff" }}>Bulls always come back! (Cmd+B on Mac)</p>
           </motion.div>
         )}
 
@@ -5497,20 +5497,20 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <Mouse size={48} className="mx-auto mb-3" style={{ color: "#3b82f6" }} />
+            <Mouse size={48} className="mx-auto mb-3" style={{ color: "#ffffff" }} />
             <div className="flex gap-2 justify-center mb-2">
               {[1, 2, 3, 4, 5].map((i) => (
                 <motion.div
                   key={i}
                   className="w-4 h-4 rounded-full"
                   style={{
-                    backgroundColor: doubleClickCount >= i ? "#3b82f6" : "rgba(59, 130, 246, 0.2)",
-                    boxShadow: doubleClickCount >= i ? "0 0 10px #3b82f6" : "none",
+                    backgroundColor: doubleClickCount >= i ? "#ffffff" : "rgba(255, 255, 255, 0.2)",
+                    boxShadow: doubleClickCount >= i ? "0 0 10px #ffffff" : "none",
                   }}
                 />
               ))}
             </div>
-            <p className="text-xs" style={{ color: "#3b82f6" }}>Double-click 5 times!</p>
+            <p className="text-xs" style={{ color: "#ffffff" }}>Double-click 5 times!</p>
           </motion.div>
         )}
 
@@ -5521,22 +5521,22 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <Mouse size={48} className="mx-auto mb-3" style={{ color: "#3b82f6" }} />
+            <Mouse size={48} className="mx-auto mb-3" style={{ color: "#ffffff" }} />
             <div className="flex gap-2 justify-center mb-2">
               {[1, 2, 3].map((i) => (
                 <motion.div
                   key={i}
                   className="w-6 h-6 rounded-full flex items-center justify-center"
                   style={{
-                    backgroundColor: rightClickCount >= i ? "#3b82f6" : "rgba(59, 130, 246, 0.2)",
-                    boxShadow: rightClickCount >= i ? "0 0 10px #3b82f6" : "none",
+                    backgroundColor: rightClickCount >= i ? "#ffffff" : "rgba(255, 255, 255, 0.2)",
+                    boxShadow: rightClickCount >= i ? "0 0 10px #ffffff" : "none",
                   }}
                 >
-                  <span style={{ color: rightClickCount >= i ? "#fff" : "rgba(59, 130, 246, 0.5)", fontSize: 12 }}>{i}</span>
+                  <span style={{ color: rightClickCount >= i ? "#fff" : "rgba(255, 255, 255, 0.5)", fontSize: 12 }}>{i}</span>
                 </motion.div>
               ))}
             </div>
-            <p className="text-xs" style={{ color: "#3b82f6" }}>Right-click 3 times!</p>
+            <p className="text-xs" style={{ color: "#ffffff" }}>Right-click 3 times!</p>
           </motion.div>
         )}
 
@@ -5550,21 +5550,21 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
             <motion.div
               className="w-8 h-16 mx-auto mb-3 rounded-full relative"
               style={{
-                border: "3px solid #3b82f6",
+                border: "3px solid #ffffff",
                 backgroundColor: "rgba(0, 0, 0, 0.5)",
               }}
             >
               <motion.div
                 className="absolute w-2 h-4 left-1/2 -translate-x-1/2 rounded-full"
                 style={{
-                  backgroundColor: "#3b82f6",
-                  boxShadow: "0 0 10px #3b82f6",
+                  backgroundColor: "#ffffff",
+                  boxShadow: "0 0 10px #ffffff",
                   top: `${Math.max(4, 40 - scrollAmount / 15)}px`,
                 }}
               />
             </motion.div>
-            <ScrollText size={24} className="mx-auto mb-2" style={{ color: "#3b82f6" }} />
-            <p className="text-xs" style={{ color: "#3b82f6" }}>Scroll up to unlock!</p>
+            <ScrollText size={24} className="mx-auto mb-2" style={{ color: "#ffffff" }} />
+            <p className="text-xs" style={{ color: "#ffffff" }}>Scroll up to unlock!</p>
           </motion.div>
         )}
 
@@ -5588,9 +5588,9 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
               <div
                 className="w-16 h-16 rounded-full flex items-center justify-center text-2xl"
                 style={{
-                  backgroundColor: "rgba(59, 130, 246, 0.3)",
-                  border: "3px solid #3b82f6",
-                  boxShadow: "0 0 20px #3b82f6",
+                  backgroundColor: "rgba(255, 255, 255, 0.3)",
+                  border: "3px solid #ffffff",
+                  boxShadow: "0 0 20px #ffffff",
                 }}
               >
                 💰
@@ -5606,14 +5606,14 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
               <div
                 className="w-24 h-20 rounded-lg flex items-center justify-center text-3xl"
                 style={{
-                  backgroundColor: dragComplete ? "rgba(59, 130, 246, 0.5)" : "rgba(0, 0, 0, 0.5)",
-                  border: `3px dashed ${dragComplete ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
-                  boxShadow: dragComplete ? "0 0 30px #3b82f6" : "none",
+                  backgroundColor: dragComplete ? "rgba(255, 255, 255, 0.5)" : "rgba(0, 0, 0, 0.5)",
+                  border: `3px dashed ${dragComplete ? "#ffffff" : "rgba(255, 255, 255, 0.3)"}`,
+                  boxShadow: dragComplete ? "0 0 30px #ffffff" : "none",
                 }}
               >
                 🏦
               </div>
-              <p className="text-xs mt-2" style={{ color: "#3b82f6" }}>
+              <p className="text-xs mt-2" style={{ color: "#ffffff" }}>
                 {dragComplete ? "Secured!" : "Drop here"}
               </p>
             </motion.div>
@@ -5634,10 +5634,10 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 className="absolute w-20 h-20 rounded-xl flex items-center justify-center text-2xl font-bold"
                 style={{
                   ...pos,
-                  backgroundColor: hoverZones.has(zone) ? "rgba(59, 130, 246, 0.3)" : "rgba(0, 0, 0, 0.5)",
-                  border: `3px solid ${hoverZones.has(zone) ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
-                  boxShadow: hoverZones.has(zone) ? "0 0 20px #3b82f6" : "none",
-                  color: hoverZones.has(zone) ? "#3b82f6" : "rgba(59, 130, 246, 0.5)",
+                  backgroundColor: hoverZones.has(zone) ? "rgba(255, 255, 255, 0.3)" : "rgba(0, 0, 0, 0.5)",
+                  border: `3px solid ${hoverZones.has(zone) ? "#ffffff" : "rgba(255, 255, 255, 0.3)"}`,
+                  boxShadow: hoverZones.has(zone) ? "0 0 20px #ffffff" : "none",
+                  color: hoverZones.has(zone) ? "#ffffff" : "rgba(255, 255, 255, 0.5)",
                 }}
                 onMouseEnter={() => handleHoverZone(zone)}
                 animate={hoverZones.has(zone) ? { scale: [1, 1.1, 1] } : {}}
@@ -5660,18 +5660,18 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
             <motion.div
               className="w-16 h-24 mx-auto mb-3 rounded-xl"
               style={{
-                backgroundColor: faceDownProgress > 0 ? "rgba(59, 130, 246, 0.3)" : "rgba(0, 0, 0, 0.5)",
-                border: "3px solid #3b82f6",
-                boxShadow: faceDownProgress > 0 ? "0 0 20px #3b82f6" : "none",
+                backgroundColor: faceDownProgress > 0 ? "rgba(255, 255, 255, 0.3)" : "rgba(0, 0, 0, 0.5)",
+                border: "3px solid #ffffff",
+                boxShadow: faceDownProgress > 0 ? "0 0 20px #ffffff" : "none",
               }}
               animate={{ rotateX: faceDownProgress > 0 ? 180 : 0 }}
               transition={{ duration: 0.5 }}
             >
               <div className="w-full h-full flex items-center justify-center">
-                <Smartphone size={32} style={{ color: "#3b82f6" }} />
+                <Smartphone size={32} style={{ color: "#ffffff" }} />
               </div>
             </motion.div>
-            <p className="text-xs" style={{ color: "#3b82f6" }}>Press and hold to finish</p>
+            <p className="text-xs" style={{ color: "#ffffff" }}>Press and hold to finish</p>
           </motion.div>
         )}
 
@@ -5682,9 +5682,9 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <Footprints size={48} className="mx-auto mb-3" style={{ color: "#3b82f6" }} />
+            <Footprints size={48} className="mx-auto mb-3" style={{ color: "#ffffff" }} />
             <p className="text-4xl font-bold neon-text">{stepCount}/5</p>
-            <p className="text-xs mt-2" style={{ color: "#3b82f6" }}>Tap like you’re walking</p>
+            <p className="text-xs mt-2" style={{ color: "#ffffff" }}>Tap like you’re walking</p>
           </motion.div>
         )}
 
@@ -5701,17 +5701,17 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                   key={i}
                   className="w-10 h-10 rounded-full flex items-center justify-center"
                   style={{
-                    backgroundColor: touchCount >= i ? "#3b82f6" : "rgba(59, 130, 246, 0.2)",
-                    border: `2px solid ${touchCount >= i ? "#3b82f6" : "rgba(59, 130, 246, 0.3)"}`,
-                    boxShadow: touchCount >= i ? "0 0 10px #3b82f6" : "none",
+                    backgroundColor: touchCount >= i ? "#ffffff" : "rgba(255, 255, 255, 0.2)",
+                    border: `2px solid ${touchCount >= i ? "#ffffff" : "rgba(255, 255, 255, 0.3)"}`,
+                    boxShadow: touchCount >= i ? "0 0 10px #ffffff" : "none",
                   }}
                 >
-                  <Hand size={20} style={{ color: touchCount >= i ? "#fff" : "rgba(59, 130, 246, 0.5)" }} />
+                  <Hand size={20} style={{ color: touchCount >= i ? "#fff" : "rgba(255, 255, 255, 0.5)" }} />
                 </motion.div>
               ))}
             </div>
-            <Layers size={24} className="mx-auto mb-2" style={{ color: "#3b82f6" }} />
-            <p className="text-xs" style={{ color: "#3b82f6" }}>Use 3 fingers at once!</p>
+            <Layers size={24} className="mx-auto mb-2" style={{ color: "#ffffff" }} />
+            <p className="text-xs" style={{ color: "#ffffff" }}>Use 3 fingers at once!</p>
           </motion.div>
         )}
 
@@ -5725,16 +5725,16 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
             <motion.div
               className="w-20 h-20 mx-auto mb-3 rounded-full flex items-center justify-center"
               style={{
-                border: "3px dashed #3b82f6",
+                border: "3px dashed #ffffff",
                 backgroundColor: "rgba(0, 0, 0, 0.5)",
               }}
               animate={{ scale: [1, 1.2, 1] }}
               transition={shouldSkipHeavyEffects ? {} : { duration: 1.5, repeat: Infinity }}
             >
-              <ZoomIn size={32} style={{ color: "#3b82f6" }} />
+              <ZoomIn size={32} style={{ color: "#ffffff" }} />
             </motion.div>
             <p className="text-2xl font-bold neon-text">{pinchCount}/6</p>
-            <p className="text-xs mt-2" style={{ color: "#3b82f6" }}>Pinch in and out!</p>
+            <p className="text-xs mt-2" style={{ color: "#ffffff" }}>Pinch in and out!</p>
           </motion.div>
         )}
 
@@ -5750,24 +5750,24 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 animate={{ x: [-5, 0, -5] }}
                 transition={shouldSkipHeavyEffects ? {} : { duration: 1, repeat: Infinity }}
               >
-                <Hand size={32} style={{ color: "#3b82f6", transform: "scaleX(-1)" }} />
+                <Hand size={32} style={{ color: "#ffffff", transform: "scaleX(-1)" }} />
               </motion.div>
               <div
                 className="w-12 h-20 rounded-lg"
                 style={{
                   backgroundColor: "rgba(0, 0, 0, 0.5)",
-                  border: "3px solid #3b82f6",
-                  boxShadow: "0 0 15px rgba(59, 130, 246, 0.3)",
+                  border: "3px solid #ffffff",
+                  boxShadow: "0 0 15px rgba(255, 255, 255, 0.3)",
                 }}
               />
               <motion.div
                 animate={{ x: [5, 0, 5] }}
                 transition={shouldSkipHeavyEffects ? {} : { duration: 1, repeat: Infinity }}
               >
-                <Hand size={32} style={{ color: "#3b82f6" }} />
+                <Hand size={32} style={{ color: "#ffffff" }} />
               </motion.div>
             </div>
-            <p className="text-xs" style={{ color: "#3b82f6" }}>Squeeze both sides!</p>
+            <p className="text-xs" style={{ color: "#ffffff" }}>Squeeze both sides!</p>
           </motion.div>
         )}
 
@@ -5782,10 +5782,10 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
               animate={{ opacity: [1, 0.3, 1] }}
               transition={shouldSkipHeavyEffects ? {} : { duration: 2, repeat: Infinity }}
             >
-              <Sun size={48} className="mx-auto mb-3" style={{ color: "#3b82f6" }} />
+              <Sun size={48} className="mx-auto mb-3" style={{ color: "#ffffff" }} />
             </motion.div>
-            <p className="text-xs" style={{ color: "#3b82f6" }}>Cover camera, then expose to light</p>
-            <p className="text-xs mt-1 opacity-50" style={{ color: "#3b82f6" }}>(or tap to simulate)</p>
+            <p className="text-xs" style={{ color: "#ffffff" }}>Cover camera, then expose to light</p>
+            <p className="text-xs mt-1 opacity-50" style={{ color: "#ffffff" }}>(or tap to simulate)</p>
           </motion.div>
         )}
 
@@ -5808,18 +5808,18 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 <div
                   className="w-24 h-24 rounded-full flex items-center justify-center"
                   style={{
-                    backgroundColor: "rgba(59, 130, 246, 0.2)",
-                    border: "3px solid #3b82f6",
-                    boxShadow: "0 0 20px #3b82f6, 0 0 40px #3b82f6, 0 0 60px #3b82f6",
+                    backgroundColor: "rgba(255, 255, 255, 0.2)",
+                    border: "3px solid #ffffff",
+                    boxShadow: "0 0 20px #ffffff, 0 0 40px #ffffff, 0 0 60px #ffffff",
                   }}
                 >
-                  <Unlock size={48} style={{ color: "#3b82f6" }} />
+                  <Unlock size={48} style={{ color: "#ffffff" }} />
                 </div>
                 
                 <h2 
                   className="text-3xl font-bold neon-text"
                   style={{
-                    textShadow: "0 0 10px #fff, 0 0 20px #3b82f6, 0 0 40px #3b82f6, 0 0 80px #3b82f6",
+                    textShadow: "0 0 10px #fff, 0 0 20px #ffffff, 0 0 40px #ffffff, 0 0 80px #ffffff",
                   }}
                 >
                   UNLOCKED
@@ -5827,7 +5827,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                 
                 <p 
                   className="text-sm"
-                  style={{ color: "rgba(59, 130, 246, 0.7)" }}
+                  style={{ color: "rgba(255, 255, 255, 0.7)" }}
                 >
                   Welcome to Bull Money
                 </p>

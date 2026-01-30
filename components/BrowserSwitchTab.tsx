@@ -236,7 +236,7 @@ export function BrowserSwitchTab() {
           whileHover={{ 
             x: 12, 
             scale: 1.05,
-            boxShadow: '0 0 30px rgba(96, 165, 250, 0.6)'
+            boxShadow: '0 0 30px rgba(255, 255, 255, 0.6)'
           }}
           className="relative pointer-events-auto cursor-pointer"
           onClick={() => canOpen && setIsExpanded(!isExpanded)}
@@ -254,10 +254,10 @@ export function BrowserSwitchTab() {
           }}
         >
           {/* Pill Content */}
-          <div className="relative rounded-r-full bg-gradient-to-br from-blue-600/30 via-blue-500/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-blue-500/50 shadow-2xl hover:border-blue-400/70 hover:shadow-blue-600/40">
+          <div className="relative rounded-r-full bg-gradient-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl hover:border-white/70 hover:shadow-white/40">
             {/* Enhanced pulsing glow background */}
             <motion.div
-              className="absolute inset-0 rounded-r-full bg-gradient-to-r from-blue-500/20 via-cyan-500/10 to-transparent opacity-0"
+              className="absolute inset-0 rounded-r-full bg-gradient-to-r from-white/20 via-white/10 to-transparent opacity-0"
               animate={{
                 opacity: [0.3, 0.8, 0.3],
                 scale: [1, 1.05, 1],
@@ -275,9 +275,9 @@ export function BrowserSwitchTab() {
               className="absolute inset-0 rounded-r-full"
               animate={{
                 boxShadow: [
-                  '0 0 10px rgba(96, 165, 250, 0)',
-                  '0 0 20px rgba(96, 165, 250, 0.4)',
-                  '0 0 10px rgba(96, 165, 250, 0)'
+                  '0 0 10px rgba(255, 255, 255, 0)',
+                  '0 0 20px rgba(255, 255, 255, 0.4)',
+                  '0 0 10px rgba(255, 255, 255, 0)'
                 ]
               }}
               transition={{
@@ -290,14 +290,14 @@ export function BrowserSwitchTab() {
             <div className="px-1.5 py-1 xs:px-2 xs:py-1.5 sm:px-2.5 sm:py-1.5 md:px-4 md:py-2.5 flex items-center gap-0.5 xs:gap-1 sm:gap-1.5 md:gap-2 relative z-10">
               {/* Live Indicator */}
               <motion.div
-                className="w-1.5 h-1.5 xs:w-2 xs:h-2 bg-blue-400 rounded-full"
+                className="w-1.5 h-1.5 xs:w-2 xs:h-2 bg-white rounded-full"
                 animate={{ 
                   opacity: [1, 0.4, 1],
                   scale: [1, 1.2, 1],
                   boxShadow: [
-                    '0 0 0px rgba(96, 165, 250, 1)',
-                    '0 0 8px rgba(96, 165, 250, 0.8)',
-                    '0 0 0px rgba(96, 165, 250, 1)'
+                    '0 0 0px rgba(255, 255, 255, 1)',
+                    '0 0 8px rgba(255, 255, 255, 0.8)',
+                    '0 0 0px rgba(255, 255, 255, 1)'
                   ]
                 }}
                 transition={{ duration: 1, repeat: Infinity }}
@@ -305,8 +305,8 @@ export function BrowserSwitchTab() {
 
               {/* Text */}
               <div className="flex items-center gap-0.5 xs:gap-1 sm:gap-1.5 md:gap-2">
-                <TrendingUp className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 text-blue-300 drop-shadow-[0_0_3px_rgba(147,197,253,0.5)]" />
-                <span className="text-[7px] xs:text-[8px] sm:text-[9px] md:text-[10px] font-bold text-blue-200">
+                <TrendingUp className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 text-white drop-shadow-[0_0_3px_rgba(255, 255, 255,0.5)]" />
+                <span className="text-[7px] xs:text-[8px] sm:text-[9px] md:text-[10px] font-bold text-white">
                   Pro Trading
                 </span>
               </div>
@@ -316,7 +316,7 @@ export function BrowserSwitchTab() {
                 animate={{ rotate: isExpanded ? 180 : 0 }}
                 transition={{ type: "spring", stiffness: 400 }}
               >
-                <ChevronRight className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 text-blue-400/70" />
+                <ChevronRight className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 text-white/70" />
               </motion.div>
             </div>
           </div>
@@ -351,11 +351,11 @@ export function BrowserSwitchTab() {
               }}
               onMouseLeave={() => setIsExpanded(false)}
             >
-              <div className="bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl rounded-2xl border border-emerald-500/30 shadow-2xl shadow-emerald-900/20 overflow-hidden">
+              <div className="bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl rounded-2xl border border-white/30 shadow-2xl shadow-white/20 overflow-hidden">
                 {/* Header */}
-                <div className="p-4 border-b border-emerald-500/20 bg-gradient-to-r from-emerald-500/10 to-cyan-500/10">
+                <div className="p-4 border-b border-white/20 bg-gradient-to-r from-white/10 to-white/10">
                   <div className="flex items-center gap-2 mb-2">
-                    <Monitor className="w-4 h-4 text-emerald-400" />
+                    <Monitor className="w-4 h-4 text-white" />
                     <h3 className="text-sm font-bold text-white">Best on Chrome + Desktop</h3>
                   </div>
                   <p className="text-[10px] text-zinc-400">
@@ -382,23 +382,23 @@ export function BrowserSwitchTab() {
                         className={`
                           w-full flex items-center justify-between p-2.5 rounded-lg
                           bg-gradient-to-r from-zinc-800/50 to-zinc-900/50
-                          border border-emerald-500/20
-                          hover:border-emerald-400/40
-                          hover:bg-emerald-500/10
+                          border border-white/20
+                          hover:border-white/40
+                          hover:bg-white/10
                           transition-all duration-200
                           disabled:opacity-50 group
                         `}
                       >
                         <div className="flex items-center gap-2">
-                          <div className="p-1.5 rounded-md bg-emerald-500/20 border border-emerald-500/30">
-                            <Icon className="w-4 h-4 text-emerald-400" />
+                          <div className="p-1.5 rounded-md bg-white/20 border border-white/30">
+                            <Icon className="w-4 h-4 text-white" />
                           </div>
                           <div className="text-left">
                             <span className="text-xs font-medium text-white block">
                               {browser.fullName}
                             </span>
                             {browser.recommended && (
-                              <span className="text-[9px] text-emerald-400 uppercase font-bold">
+                              <span className="text-[9px] text-white uppercase font-bold">
                                 ★ Recommended
                               </span>
                             )}
@@ -409,10 +409,10 @@ export function BrowserSwitchTab() {
                           <motion.div
                             animate={{ rotate: 360 }}
                             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                            className="w-4 h-4 border-2 border-t-transparent border-emerald-400 rounded-full"
+                            className="w-4 h-4 border-2 border-t-transparent border-white rounded-full"
                           />
                         ) : (
-                          <ExternalLink className="w-4 h-4 text-emerald-400 opacity-50 group-hover:opacity-100 transition-opacity" />
+                          <ExternalLink className="w-4 h-4 text-white opacity-50 group-hover:opacity-100 transition-opacity" />
                         )}
                       </motion.button>
                     );
@@ -420,7 +420,7 @@ export function BrowserSwitchTab() {
                 </div>
 
                 {/* Copy Link Button */}
-                <div className="p-3 border-t border-emerald-500/20">
+                <div className="p-3 border-t border-white/20">
                   <motion.button
                     onClick={handleCopyLink}
                     whileHover={{ scale: 1.02 }}
@@ -428,7 +428,7 @@ export function BrowserSwitchTab() {
                     className={`
                       w-full flex items-center justify-center gap-2 py-2 px-3
                       ${copied 
-                        ? 'bg-gradient-to-r from-emerald-600 to-emerald-500' 
+                        ? 'bg-gradient-to-r from-white to-white' 
                         : 'bg-gradient-to-r from-zinc-700 to-zinc-600 hover:from-zinc-600 hover:to-zinc-500'
                       }
                       text-white font-semibold text-xs rounded-lg

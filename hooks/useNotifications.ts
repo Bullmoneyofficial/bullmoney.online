@@ -361,7 +361,7 @@ if (typeof window !== 'undefined') {
   (window as any).debugNotifications = async () => {
     const results: Record<string, unknown> = {};
     
-    console.log('%c=== Notification Debug Info ===', 'color: #3b82f6; font-weight: bold; font-size: 14px;');
+    console.log('%c=== Notification Debug Info ===', 'color: #ffffff; font-weight: bold; font-size: 14px;');
     
     // 1. Protocol check
     results.protocol = window.location.protocol;

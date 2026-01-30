@@ -122,14 +122,14 @@ export const FALLBACK_THEME: Partial<Theme> = {
 
 // --- THEME COLOR MAPPING ---
 export const THEME_ACCENTS: Record<string, string> = {
-  't01': '#3b82f6', // Blue
-  't02': '#a855f7', // Purple
-  't03': '#22c55e', // Green
+  't01': '#ffffff', // White
+  't02': '#ffffff', // White
+  't03': '#ffffff', // Green
   't04': '#ef4444', // Red
   't05': '#f59e0b', // Amber
   't06': '#ec4899', // Pink
-  't07': '#06b6d4', // Cyan
-  'default': '#3b82f6'
+  't07': '#ffffff', // White
+  'default': '#ffffff'
 };
 
 export const getThemeColor = (id: string) => THEME_ACCENTS[id] || THEME_ACCENTS['default'];

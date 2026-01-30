@@ -9,7 +9,7 @@
 /* Bottom-to-Top Theme Transition Reveal Overlay */
 #theme-transition-reveal {
   pointer-events: none !important;
-  touch-action: none !important;
+  touch-action: auto !important; /* FIXED: Allow touch/scroll passthrough */
   user-select: none !important;
   overflow: visible !important;
   /* Extra glow effects */
@@ -36,13 +36,13 @@
 @keyframes themeTransitionGlow {
   0%, 100% {
     box-shadow: 
-      0 -20px 60px rgba(var(--accent-rgb, 59, 130, 246), 0.4),
-      0 -10px 30px rgba(var(--accent-rgb, 59, 130, 246), 0.3);
+      0 -20px 60px rgba(var(--accent-rgb, 255, 255, 255), 0.4),
+      0 -10px 30px rgba(var(--accent-rgb, 255, 255, 255), 0.3);
   }
   50% {
     box-shadow: 
-      0 -30px 80px rgba(var(--accent-rgb, 59, 130, 246), 0.6),
-      0 -15px 45px rgba(var(--accent-rgb, 59, 130, 246), 0.5);
+      0 -30px 80px rgba(var(--accent-rgb, 255, 255, 255), 0.6),
+      0 -15px 45px rgba(var(--accent-rgb, 255, 255, 255), 0.5);
   }
 }
 
@@ -92,15 +92,15 @@ footer,
 
 /* Theme-aware slider thumb styling */
 [data-audio-widget] input[type="range"]::-webkit-slider-thumb {
-  background-color: var(--accent-color, #60a5fa);
-  box-shadow: 0 10px 15px -3px rgba(var(--accent-rgb, 59, 130, 246), 0.3);
-  border-color: rgba(var(--accent-rgb, 59, 130, 246), 0.5);
+  background-color: var(--accent-color, #ffffff);
+  box-shadow: 0 10px 15px -3px rgba(var(--accent-rgb, 255, 255, 255), 0.3);
+  border-color: rgba(var(--accent-rgb, 255, 255, 255), 0.5);
 }
 
 [data-audio-widget] input[type="range"]::-moz-range-thumb {
-  background-color: var(--accent-color, #60a5fa);
-  box-shadow: 0 10px 15px -3px rgba(var(--accent-rgb, 59, 130, 246), 0.3);
-  border-color: rgba(var(--accent-rgb, 59, 130, 246), 0.5);
+  background-color: var(--accent-color, #ffffff);
+  box-shadow: 0 10px 15px -3px rgba(var(--accent-rgb, 255, 255, 255), 0.3);
+  border-color: rgba(var(--accent-rgb, 255, 255, 255), 0.5);
 }
 
 /* 
@@ -141,7 +141,7 @@ html, body {
 #theme-edge-glow {
   /* CRITICAL: Never block any interactions */
   pointer-events: none !important;
-  touch-action: none !important;
+  touch-action: auto !important; /* FIXED: Allow touch/scroll passthrough */
   user-select: none !important;
   -webkit-user-select: none !important;
   -webkit-touch-callout: none !important;
@@ -190,14 +190,14 @@ html[data-active-theme]::before {
   /* Color overlay using theme's accent color */
   background: radial-gradient(
     ellipse at 50% 30%,
-    rgba(var(--accent-rgb, 59, 130, 246), 0.08) 0%,
-    rgba(var(--accent-rgb, 59, 130, 246), 0.04) 40%,
-    rgba(var(--accent-rgb, 59, 130, 246), 0.02) 70%,
+    rgba(var(--accent-rgb, 255, 255, 255), 0.08) 0%,
+    rgba(var(--accent-rgb, 255, 255, 255), 0.04) 40%,
+    rgba(var(--accent-rgb, 255, 255, 255), 0.02) 70%,
     transparent 100%
   );
   /* CRITICAL: Allow clicks/touches to pass through */
   pointer-events: none !important;
-  touch-action: none !important;
+  touch-action: auto !important; /* FIXED: Allow touch/scroll passthrough */
   /* Blend naturally with underlying content */
   mix-blend-mode: soft-light;
   opacity: var(--theme-overlay-opacity, 0.6);
@@ -216,8 +216,8 @@ html[data-active-theme]::before {
   html[data-active-theme]::before {
     background: radial-gradient(
       ellipse at 50% 20%,
-      rgba(var(--accent-rgb, 59, 130, 246), 0.06) 0%,
-      rgba(var(--accent-rgb, 59, 130, 246), 0.02) 50%,
+      rgba(var(--accent-rgb, 255, 255, 255), 0.06) 0%,
+      rgba(var(--accent-rgb, 255, 255, 255), 0.02) 50%,
       transparent 100%
     );
     opacity: 0.4;
@@ -228,7 +228,7 @@ html[data-active-theme]::before {
 html.fps-minimal[data-active-theme]::before,
 html.fps-low[data-active-theme]::before {
   opacity: 0.2;
-  background: rgba(var(--accent-rgb, 59, 130, 246), 0.02);
+  background: rgba(var(--accent-rgb, 255, 255, 255), 0.02);
 }
 
 /* Light themes need inverted overlay */
@@ -252,7 +252,7 @@ body::after,
 [id*="theme-overlay"],
 [class*="theme-overlay"] {
   pointer-events: none !important;
-  touch-action: none !important;
+  touch-action: auto !important; /* FIXED: Allow touch/scroll passthrough */
   -webkit-overflow-scrolling: unset !important;
   overflow: visible !important;
 }
@@ -314,19 +314,19 @@ html[data-active-theme] [role="dialog"],
 html[data-active-theme] .card,
 html[data-active-theme] .theme-glow-border {
   box-shadow: 
-    0 0 1px rgba(var(--accent-rgb, 59, 130, 246), 0.3),
-    0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.05),
-    inset 0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.02);
-  border-color: rgba(var(--accent-rgb, 59, 130, 246), 0.2) !important;
+    0 0 1px rgba(var(--accent-rgb, 255, 255, 255), 0.3),
+    0 0 20px rgba(var(--accent-rgb, 255, 255, 255), 0.05),
+    inset 0 0 30px rgba(var(--accent-rgb, 255, 255, 255), 0.02);
+  border-color: rgba(var(--accent-rgb, 255, 255, 255), 0.2) !important;
 }
 
 /* Enhanced glow on hover */
 html[data-active-theme] nav:hover,
 html[data-active-theme] .theme-glow-border:hover {
   box-shadow: 
-    0 0 2px rgba(var(--accent-rgb, 59, 130, 246), 0.5),
-    0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.1),
-    inset 0 0 40px rgba(var(--accent-rgb, 59, 130, 246), 0.03);
+    0 0 2px rgba(var(--accent-rgb, 255, 255, 255), 0.5),
+    0 0 30px rgba(var(--accent-rgb, 255, 255, 255), 0.1),
+    inset 0 0 40px rgba(var(--accent-rgb, 255, 255, 255), 0.03);
 }
 
 /* ============================================
@@ -338,26 +338,26 @@ html[data-active-theme] .theme-glow-border:hover {
 html[data-active-theme] nav[class*="fixed"],
 html[data-active-theme] header[class*="fixed"] {
   /* Subtle colored border on bottom */
-  border-bottom-color: rgba(var(--accent-rgb, 59, 130, 246), 0.15) !important;
+  border-bottom-color: rgba(var(--accent-rgb, 255, 255, 255), 0.15) !important;
 }
 
 /* Fixed modals and dialogs */
 html[data-active-theme] [class*="fixed"][class*="z-"] {
   /* Theme-colored borders for visibility */
-  --modal-border-color: rgba(var(--accent-rgb, 59, 130, 246), 0.25);
+  --modal-border-color: rgba(var(--accent-rgb, 255, 255, 255), 0.25);
 }
 
 /* Buttons across the app get theme awareness */
 html[data-active-theme] button:not([data-no-theme]),
 html[data-active-theme] [role="button"]:not([data-no-theme]) {
-  --btn-accent: var(--accent-color, #3b82f6);
-  --btn-accent-rgb: var(--accent-rgb, 59, 130, 246);
+  --btn-accent: var(--accent-color, #ffffff);
+  --btn-accent-rgb: var(--accent-rgb, 255, 255, 255);
 }
 
 /* Links get theme color on hover */
 html[data-active-theme] a:not([data-no-theme]):hover {
-  color: var(--accent-color, #3b82f6);
-  text-shadow: 0 0 10px rgba(var(--accent-rgb, 59, 130, 246), 0.3);
+  color: var(--accent-color, #ffffff);
+  text-shadow: 0 0 10px rgba(var(--accent-rgb, 255, 255, 255), 0.3);
 }
 
 /* Disable filter blur on any element */
@@ -412,34 +412,34 @@ body[data-theme]::before {
 
 /* Theme-aware accent colors */
 .theme-accent {
-  color: var(--accent-color, #3b82f6);
+  color: var(--accent-color, #ffffff);
 }
 
 .theme-accent-bg {
-  background-color: var(--accent-color, #3b82f6);
+  background-color: var(--accent-color, #ffffff);
 }
 
 .theme-accent-border {
-  border-color: var(--accent-color, #3b82f6);
+  border-color: var(--accent-color, #ffffff);
 }
 
 .theme-accent-glow {
-  box-shadow: 0 0 20px var(--theme-accent-light, rgba(59, 130, 246, 0.25)),
-              0 0 40px var(--theme-accent-glow, rgba(59, 130, 246, 0.15));
+  box-shadow: 0 0 20px var(--theme-accent-light, rgba(255, 255, 255, 0.25)),
+              0 0 40px var(--theme-accent-glow, rgba(255, 255, 255, 0.15));
 }
 
 /* Theme-aware text with accent */
 .theme-text-accent {
-  color: var(--accent-color, #3b82f6);
-  text-shadow: 0 0 10px var(--theme-accent-light, rgba(59, 130, 246, 0.25));
+  color: var(--accent-color, #ffffff);
+  text-shadow: 0 0 10px var(--theme-accent-light, rgba(255, 255, 255, 0.25));
 }
 
 /* Theme-aware gradients */
 .theme-gradient {
   background: linear-gradient(135deg, 
-    var(--theme-accent-dark, rgba(59, 130, 246, 0.5)) 0%, 
+    var(--theme-accent-dark, rgba(255, 255, 255, 0.5)) 0%, 
     transparent 50%,
-    var(--theme-accent-light, rgba(59, 130, 246, 0.25)) 100%);
+    var(--theme-accent-light, rgba(255, 255, 255, 0.25)) 100%);
 }
 
 /* Theme gradient overlays */
@@ -453,7 +453,7 @@ body[data-theme]::before {
   inset: 0;
   background: radial-gradient(
     ellipse at center,
-    var(--theme-accent-subtle, rgba(59, 130, 246, 0.1)) 0%,
+    var(--theme-accent-subtle, rgba(255, 255, 255, 0.1)) 0%,
     transparent 70%
   );
   pointer-events: none;
@@ -479,7 +479,7 @@ body[data-theme]::before {
   pointer-events: none;
   background: radial-gradient(
     ellipse at 50% 30%,
-    rgba(var(--accent-rgb, 59, 130, 246), 0.08) 0%,
+    rgba(var(--accent-rgb, 255, 255, 255), 0.08) 0%,
     transparent 60%
   );
   mix-blend-mode: screen;
@@ -493,55 +493,55 @@ body[data-theme]::before {
 section#hero [data-spline]::after {
   background: radial-gradient(
     ellipse at 50% 40%,
-    rgba(var(--accent-rgb, 59, 130, 246), 0.12) 0%,
-    rgba(var(--accent-rgb, 59, 130, 246), 0.05) 40%,
+    rgba(var(--accent-rgb, 255, 255, 255), 0.12) 0%,
+    rgba(var(--accent-rgb, 255, 255, 255), 0.05) 40%,
     transparent 70%
   );
 }
 
 /* Theme-aware borders with glow */
 .theme-border-glow {
-  border: 1px solid var(--theme-accent-border, rgba(59, 130, 246, 0.3));
-  box-shadow: 0 0 15px var(--theme-accent-subtle, rgba(59, 130, 246, 0.1)),
-              inset 0 0 15px var(--theme-accent-subtle, rgba(59, 130, 246, 0.05));
+  border: 1px solid var(--theme-accent-border, rgba(255, 255, 255, 0.3));
+  box-shadow: 0 0 15px var(--theme-accent-subtle, rgba(255, 255, 255, 0.1)),
+              inset 0 0 15px var(--theme-accent-subtle, rgba(255, 255, 255, 0.05));
 }
 
 /* Theme-aware button hover states */
 .theme-button {
-  background: rgba(var(--accent-rgb, 59, 130, 246), 0.1);
-  border: 1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.2);
-  color: var(--accent-color, #3b82f6);
+  background: rgba(var(--accent-rgb, 255, 255, 255), 0.1);
+  border: 1px solid rgba(var(--accent-rgb, 255, 255, 255), 0.2);
+  color: var(--accent-color, #ffffff);
   transition: all 0.3s ease;
 }
 
 .theme-button:hover {
-  background: rgba(var(--accent-rgb, 59, 130, 246), 0.2);
-  border-color: rgba(var(--accent-rgb, 59, 130, 246), 0.5);
-  box-shadow: 0 0 20px var(--theme-accent-glow, rgba(59, 130, 246, 0.3));
+  background: rgba(var(--accent-rgb, 255, 255, 255), 0.2);
+  border-color: rgba(var(--accent-rgb, 255, 255, 255), 0.5);
+  box-shadow: 0 0 20px var(--theme-accent-glow, rgba(255, 255, 255, 0.3));
 }
 
 /* Theme-aware cards - NO BLUR */
 .theme-card {
   background: rgba(0, 0, 0, 0.8);
-  border: 1px solid var(--theme-accent-border, rgba(59, 130, 246, 0.2));
+  border: 1px solid var(--theme-accent-border, rgba(255, 255, 255, 0.2));
   /* NO BLUR - removed for performance */
 }
 
 .theme-card:hover {
-  border-color: var(--theme-accent-border, rgba(59, 130, 246, 0.4));
-  box-shadow: 0 0 30px var(--theme-accent-subtle, rgba(59, 130, 246, 0.1));
+  border-color: var(--theme-accent-border, rgba(255, 255, 255, 0.4));
+  box-shadow: 0 0 30px var(--theme-accent-subtle, rgba(255, 255, 255, 0.1));
 }
 
 /* Theme-aware inputs */
 .theme-input {
   background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.2);
+  border: 1px solid rgba(var(--accent-rgb, 255, 255, 255), 0.2);
   color: white;
 }
 
 .theme-input:focus {
-  border-color: var(--accent-color, #3b82f6);
-  box-shadow: 0 0 0 2px var(--theme-accent-subtle, rgba(59, 130, 246, 0.2));
+  border-color: var(--accent-color, #ffffff);
+  box-shadow: 0 0 0 2px var(--theme-accent-subtle, rgba(255, 255, 255, 0.2));
   outline: none;
 }
 
@@ -558,13 +558,13 @@ html[data-active-theme] .text-blue-600,
 [data-active-theme] .text-blue-400,
 [data-active-theme] .text-blue-500,
 [data-active-theme] .text-blue-600 {
-  color: var(--accent-color, #3b82f6) !important;
+  color: var(--accent-color, #ffffff) !important;
 }
 
 /* Text with opacity variants - uses wildcard to match all variants */
 html[data-active-theme] [class*="text-blue-4"],
 html[data-active-theme] [class*="text-blue-5"] {
-  color: var(--accent-color, #3b82f6) !important;
+  color: var(--accent-color, #ffffff) !important;
 }
 
 /* BORDER COLORS - All blue borders become theme color */
@@ -574,13 +574,13 @@ html[data-active-theme] .border-blue-600,
 [data-active-theme] .border-blue-400,
 [data-active-theme] .border-blue-500,
 [data-active-theme] .border-blue-600 {
-  border-color: var(--accent-color, #3b82f6) !important;
+  border-color: var(--accent-color, #ffffff) !important;
 }
 
 /* Border with opacity variants - uses wildcard to match all variants */
 html[data-active-theme] [class*="border-blue-4"],
 html[data-active-theme] [class*="border-blue-5"] {
-  border-color: rgba(var(--accent-rgb, 59, 130, 246), var(--tw-border-opacity, 0.3)) !important;
+  border-color: rgba(var(--accent-rgb, 255, 255, 255), var(--tw-border-opacity, 0.3)) !important;
 }
 
 /* BACKGROUND COLORS - All blue backgrounds become theme color */
@@ -590,13 +590,13 @@ html[data-active-theme] .bg-blue-600,
 [data-active-theme] .bg-blue-400,
 [data-active-theme] .bg-blue-500,
 [data-active-theme] .bg-blue-600 {
-  background-color: var(--accent-color, #3b82f6) !important;
+  background-color: var(--accent-color, #ffffff) !important;
 }
 
 /* Background with opacity variants - uses wildcard to match all variants */
 html[data-active-theme] [class*="bg-blue-4"],
 html[data-active-theme] [class*="bg-blue-5"] {
-  background-color: rgba(var(--accent-rgb, 59, 130, 246), var(--tw-bg-opacity, 0.2)) !important;
+  background-color: rgba(var(--accent-rgb, 255, 255, 255), var(--tw-bg-opacity, 0.2)) !important;
 }
 
 /* RING COLORS */
@@ -605,7 +605,7 @@ html[data-active-theme] .ring-blue-500,
 html[data-active-theme] .ring-blue-600,
 html[data-active-theme] [class*="focus\:ring-blue-4"]:focus,
 html[data-active-theme] [class*="focus\:ring-blue-5"]:focus {
-  --tw-ring-color: var(--accent-color, #3b82f6) !important;
+  --tw-ring-color: var(--accent-color, #ffffff) !important;
 }
 
 /* GRADIENT COLORS */
@@ -613,31 +613,31 @@ html[data-active-theme] .from-blue-400,
 html[data-active-theme] .from-blue-500,
 html[data-active-theme] .from-blue-600,
 html[data-active-theme] [class*="from-blue-"] {
-  --tw-gradient-from: var(--accent-color, #3b82f6) !important;
+  --tw-gradient-from: var(--accent-color, #ffffff) !important;
 }
 
 html[data-active-theme] .to-blue-400,
 html[data-active-theme] .to-blue-500,
 html[data-active-theme] .to-blue-600,
 html[data-active-theme] [class*="to-blue-"] {
-  --tw-gradient-to: var(--accent-color, #3b82f6) !important;
+  --tw-gradient-to: var(--accent-color, #ffffff) !important;
 }
 
 html[data-active-theme] .via-blue-400,
 html[data-active-theme] .via-blue-500,
 html[data-active-theme] [class*="via-blue-"] {
-  --tw-gradient-via: var(--accent-color, #3b82f6) !important;
+  --tw-gradient-via: var(--accent-color, #ffffff) !important;
 }
 
 /* SHADOW COLORS */
 html[data-active-theme] [class*="shadow-blue"] {
-  --tw-shadow-color: rgba(var(--accent-rgb, 59, 130, 246), 0.3) !important;
+  --tw-shadow-color: rgba(var(--accent-rgb, 255, 255, 255), 0.3) !important;
 }
 
 /* DROP SHADOW - Override inline and class-based blue drop-shadows */
 html[data-active-theme] [class*="drop-shadow"][class*="blue"],
 html[data-active-theme] [style*="drop-shadow"][style*="59"][style*="130"][style*="246"] {
-  filter: drop-shadow(0 0 10px rgba(var(--accent-rgb, 59, 130, 246), 0.5)) !important;
+  filter: drop-shadow(0 0 10px rgba(var(--accent-rgb, 255, 255, 255), 0.5)) !important;
 }
 
 /* HOVER STATES - Blue hover colors become theme color */
@@ -647,25 +647,25 @@ html[data-active-theme] [class*="hover\:border-blue-4"]:hover,
 html[data-active-theme] [class*="hover\:border-blue-5"]:hover,
 html[data-active-theme] [class*="hover\:bg-blue-4"]:hover,
 html[data-active-theme] [class*="hover\:bg-blue-5"]:hover {
-  color: var(--accent-color, #3b82f6) !important;
-  border-color: var(--accent-color, #3b82f6) !important;
+  color: var(--accent-color, #ffffff) !important;
+  border-color: var(--accent-color, #ffffff) !important;
 }
 
 /* FOCUS STATES */
 html[data-active-theme] [class*="focus\:border-blue-5"]:focus,
 html[data-active-theme] [class*="focus\:border-blue-4"]:focus {
-  border-color: var(--accent-color, #3b82f6) !important;
+  border-color: var(--accent-color, #ffffff) !important;
 }
 
 /* Theme-aware links */
 .theme-link {
-  color: var(--accent-color, #3b82f6);
+  color: var(--accent-color, #ffffff);
   text-decoration: none;
   transition: all 0.2s ease;
 }
 
 .theme-link:hover {
-  text-shadow: 0 0 10px var(--theme-accent-glow, rgba(59, 130, 246, 0.5));
+  text-shadow: 0 0 10px var(--theme-accent-glow, rgba(255, 255, 255, 0.5));
 }
 
 /* ============================================
@@ -816,9 +816,9 @@ html[data-active-theme] {
   background: linear-gradient(
     90deg,
     rgba(255, 255, 255, 0.9) 0%,
-    var(--accent-color, #3b82f6) 25%,
-    rgba(147, 197, 253, 1) 50%,
-    var(--accent-color, #3b82f6) 75%,
+    var(--accent-color, #ffffff) 25%,
+    rgba(255, 255, 255, 1) 50%,
+    var(--accent-color, #ffffff) 75%,
     rgba(255, 255, 255, 0.9) 100%
   );
   background-size: 300% 100%;

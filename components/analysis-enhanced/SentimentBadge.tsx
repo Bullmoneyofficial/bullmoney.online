@@ -18,11 +18,11 @@ const directionConfig = {
     label: 'LONG',
     shortLabel: 'L',
     icon: TrendingUp,
-    bgColor: 'bg-green-500/20',
-    borderColor: 'border-green-500/50',
-    textColor: 'text-green-400',
-    hoverBg: 'hover:bg-green-500/30',
-    glowColor: 'shadow-green-500/20',
+    bgColor: 'bg-white/20',
+    borderColor: 'border-white/50',
+    textColor: 'text-white',
+    hoverBg: 'hover:bg-white/30',
+    glowColor: 'shadow-white/20',
   },
   bearish: {
     label: 'SHORT',
@@ -122,8 +122,8 @@ export const SentimentButtons = memo(({
           px-4 py-2 rounded-lg font-bold text-sm uppercase flex items-center gap-2
           border transition-all
           ${direction === 'bullish'
-            ? 'bg-green-500 text-white border-green-400 shadow-lg shadow-green-500/30'
-            : 'bg-green-500/10 text-green-400 border-green-500/30 hover:bg-green-500/20'
+            ? 'bg-white text-black border-white shadow-lg shadow-white/30'
+            : 'bg-white/10 text-white border-white/30 hover:bg-white/20'
           }
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
         `}

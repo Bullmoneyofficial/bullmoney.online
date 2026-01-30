@@ -589,8 +589,8 @@ export default function Orb({
       <GhostCursorBackground color="#4aa0ff" />
       <button
         onClick={onButtonClick}
-        className="relative z-20 px-6 py-3 rounded-full font-semibold text-white bg-gradient-to-r from-blue-500 to-sky-400
-          shadow-[0_0_25px_rgba(56,189,248,0.4)] hover:shadow-[0_0_45px_rgba(56,189,248,0.7)]
+        className="relative z-20 px-6 py-3 rounded-full font-semibold text-white bg-gradient-to-r from-white to-sky-400
+          shadow-[0_0_25px_rgba(255, 255, 255,0.4)] hover:shadow-[0_0_45px_rgba(255, 255, 255,0.7)]
           transition-all duration-300"
       >
         {buttonLabel}

@@ -212,8 +212,8 @@ class Pixel {
 
 const VARIANTS = {
   default: { activeColor: null, gap: 5, speed: 35, colors: '#f8fafc,#f1f5f9,#cbd5e1', noFocus: false },
-  blue: { activeColor: '#e0f2fe', gap: 10, speed: 25, colors: '#60a5fa,#3b82f6,#2563eb', noFocus: false },
-  green: { activeColor: '#dcfce7', gap: 6, speed: 20, colors: '#4ade80,#22c55e,#86efac', noFocus: true }
+  blue: { activeColor: '#e0f2fe', gap: 10, speed: 25, colors: '#ffffff,#ffffff,#ffffff', noFocus: false },
+  green: { activeColor: '#ffffff', gap: 6, speed: 20, colors: '#ffffff,#ffffff,#ffffff', noFocus: true }
 };
 
 interface PixelCardProps {
@@ -256,7 +256,7 @@ const PixelCard = ({ variant = 'default', gap, speed, colors, noFocus, className
     const effGap = parseInt(finalGap.toString(), 10); 
     for (let x = 0; x < width; x += effGap) {
       for (let y = 0; y < height; y += effGap) {
-        const color = colorsArray[Math.floor(Math.random() * colorsArray.length)] || '#3b82f6';
+        const color = colorsArray[Math.floor(Math.random() * colorsArray.length)] || '#ffffff';
         const dx = x - width / 2;
         const dy = y - height / 2;
         const distance = Math.sqrt(dx * dx + dy * dy);
@@ -358,18 +358,18 @@ const RIGHT_CLIP = generateJaggedPath('right');
 const CardDesign = () => (
   <div className="absolute inset-0 flex flex-col justify-between p-8 bg-zinc-950 border border-zinc-800 overflow-hidden">
     <div className="absolute inset-0 opacity-[0.08] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] pointer-events-none mix-blend-overlay" />
-    <div className="absolute -top-20 -right-20 w-64 h-64 bg-blue-900/20 rounded-full blur-3xl pointer-events-none" />
-    <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-blue-900/20 rounded-full blur-3xl pointer-events-none" />
+    <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/20 rounded-full blur-3xl pointer-events-none" />
+    <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-white/20 rounded-full blur-3xl pointer-events-none" />
 
     <div className="flex justify-between items-start z-10">
       <div className="flex flex-col">
         <div className="flex items-center gap-2 mb-1">
-            <Sparkles className="w-4 h-4 text-blue-400" />
+            <Sparkles className="w-4 h-4 text-white" />
             <span className="font-bold text-white text-lg tracking-wide uppercase">BullMoney</span>
         </div>
         <span className="text-[10px] text-zinc-500 uppercase tracking-[0.2em]">Loyalty Program</span>
       </div>
-      <div className="px-3 py-1 bg-blue-600/20 text-blue-200 border border-blue-500/30 rounded-full text-[10px] font-bold uppercase tracking-widest">
+      <div className="px-3 py-1 bg-white/20 text-white border border-white/30 rounded-full text-[10px] font-bold uppercase tracking-widest">
         VIP
       </div>
     </div>
@@ -385,11 +385,11 @@ const CardDesign = () => (
       </div>
       
       <div className="w-full h-[1px] bg-zinc-800 mt-2 relative">
-        <div className="absolute top-0 left-0 h-full w-[80%] bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
+        <div className="absolute top-0 left-0 h-full w-[80%] bg-white shadow-[0_0_15px_rgba(255, 255, 255,0.5)]" />
       </div>
       <div className="flex justify-between mt-2">
          <span className="text-[9px] text-zinc-600 font-mono">ID: 8829-22</span>
-         <span className="text-[9px] text-blue-400/80 font-mono">TIER: PLATINUM</span>
+         <span className="text-[9px] text-white/80 font-mono">TIER: PLATINUM</span>
       </div>
     </div>
   </div>
@@ -431,7 +431,7 @@ const BullRewardsCard = () => {
                   <CardDesign />
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-zinc-950/60 backdrop-blur-[2px]">
                     <div className="flex flex-col items-center text-white">
-                      <Scissors className="w-6 h-6 mb-3 animate-pulse text-blue-400" strokeWidth={1.5} />
+                      <Scissors className="w-6 h-6 mb-3 animate-pulse text-white" strokeWidth={1.5} />
                       <span className="font-medium text-lg tracking-wide uppercase">Click to Tear</span>
                     </div>
                   </div>
@@ -479,11 +479,11 @@ const BullRewardsCard = () => {
 
 const ShopMarketingSection = () => {
   return (
-    <div className="relative flex min-h-0 w-full flex-col overflow-hidden bg-neutral-950 text-white selection:bg-blue-500/30 selection:text-blue-200 sm:min-h-[500px]">
+    <div className="relative flex min-h-0 w-full flex-col overflow-hidden bg-neutral-950 text-white selection:bg-white/30 selection:text-white sm:min-h-[500px]">
       <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-950/20 via-neutral-950 to-neutral-950" />
       <BackgroundGrids />
       <div className="absolute inset-0 z-0 h-full w-full pointer-events-none">
-        <SparklesCore id="shop-fullpage-sparkles" background="transparent" minSize={1} maxSize={3} className="h-full w-full" particleColor="#60a5fa" />
+        <SparklesCore id="shop-fullpage-sparkles" background="transparent" minSize={1} maxSize={3} className="h-full w-full" particleColor="#ffffff" />
       </div>
       
       {/* 1. PROMO BANNER */}
@@ -544,7 +544,7 @@ export const LiveViewersDashboard = () => {
 
   return (
     <motion.div animate={{ y: [0, -2, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}>
-      <PixelCard variant="green" gap={5} speed={20} className="group relative rounded-2xl shadow-xl transition-all duration-300 hover:shadow-[0_0_40px_-5px_rgba(34,197,94,0.3)] bg-zinc-950/80" noFocus={true}>
+      <PixelCard variant="green" gap={5} speed={20} className="group relative rounded-2xl shadow-xl transition-all duration-300 hover:shadow-[0_0_40px_-5px_rgba(255,255,255,0.3)] bg-zinc-950/80" noFocus={true}>
         
         {/* Responsive Layout: Column on Mobile, Row on Desktop */}
         <div className="flex flex-col md:flex-row items-center justify-between p-6 gap-6 md:gap-8">
@@ -560,10 +560,10 @@ export const LiveViewersDashboard = () => {
                     <div className="flex flex-col leading-none items-end">
                         <div className="flex items-center gap-2">
                             <span className="relative flex h-2.5 w-2.5">
-                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
-                            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-green-500"></span>
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75"></span>
+                            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-white"></span>
                             </span>
-                            <span className="text-2xl font-bold text-green-400 tabular-nums shadow-green-500/50 drop-shadow-sm">{viewers}</span>
+                            <span className="text-2xl font-bold text-white tabular-nums shadow-white/50 drop-shadow-sm">{viewers}</span>
                         </div>
                         <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Live Traders</span>
                     </div>
@@ -585,13 +585,13 @@ export const LiveViewersDashboard = () => {
                         <motion.div 
                             whileHover={{ scale: 1.05 }} 
                             whileTap={{ scale: 0.95 }}
-                            className="flex items-center justify-between md:justify-center gap-3 bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 px-4 py-2 rounded-lg transition-colors group/btn w-full md:w-auto"
+                            className="flex items-center justify-between md:justify-center gap-3 bg-white/10 border border-white/20 hover:bg-white/20 px-4 py-2 rounded-lg transition-colors group/btn w-full md:w-auto"
                         >
                             <div className="flex items-center gap-2">
-                                <Timer className="w-4 h-4 text-blue-400 animate-pulse" />
-                                <span className="font-mono text-sm font-bold text-blue-100 tabular-nums">{timeLeft}</span>
+                                <Timer className="w-4 h-4 text-white animate-pulse" />
+                                <span className="font-mono text-sm font-bold text-white tabular-nums">{timeLeft}</span>
                             </div>
-                            <span className="text-[10px] uppercase font-bold text-blue-400 tracking-wider md:hidden">Claim</span>
+                            <span className="text-[10px] uppercase font-bold text-white tracking-wider md:hidden">Claim</span>
                         </motion.div>
                     </ModalTrigger>
                     <ModalBody>
@@ -614,7 +614,7 @@ export const LiveViewersDashboard = () => {
                          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                             <div className="text-left">
                                 <h3 className="text-2xl font-bold text-white mb-1 flex items-center gap-2">
-                                    <Sparkles className="w-5 h-5 text-blue-400" />
+                                    <Sparkles className="w-5 h-5 text-white" />
                                     Community
                                 </h3>
                                 <p className="text-neutral-400 text-sm">Follow for setups & rewards.</p>
@@ -635,8 +635,8 @@ export const LiveViewersDashboard = () => {
 
 export const PromoBanner = () => {
   return (
-    <PixelCard variant="blue" gap={6} speed={20} noFocus={true} className="group relative z-50 w-full border-b border-blue-500/20 bg-blue-950/30 py-3 backdrop-blur-md transition-colors hover:bg-blue-900/40">
-      <div className="absolute left-0 top-0 h-[1px] w-full bg-gradient-to-r from-transparent via-blue-400 to-transparent opacity-50 shadow-[0_0_10px_rgba(59,130,246,0.8)]" />
+    <PixelCard variant="blue" gap={6} speed={20} noFocus={true} className="group relative z-50 w-full border-b border-white/20 bg-white/10/30 py-3 backdrop-blur-md transition-colors hover:bg-white/40">
+      <div className="absolute left-0 top-0 h-[1px] w-full bg-gradient-to-r from-transparent via-white to-transparent opacity-50 shadow-[0_0_10px_rgba(255, 255, 255,0.8)]" />
       <div className="relative flex w-full items-center overflow-hidden">
         <div className="pointer-events-none absolute left-0 z-10 h-full w-20 bg-gradient-to-r from-neutral-950 to-transparent" />
         <div className="pointer-events-none absolute right-0 z-10 h-full w-20 bg-gradient-to-l from-neutral-950 to-transparent" />
@@ -663,18 +663,18 @@ const PromoItem = ({ code, label }: { code: string; label: string }) => {
     setTimeout(() => setCopied(false), 2000);
   };
   return (
-    <div onClick={handleCopy} className="mx-6 flex cursor-pointer items-center gap-2 rounded-lg border border-transparent px-2 py-1 transition-all hover:border-blue-500/30 hover:bg-blue-500/10 active:scale-95">
-      <span className="text-xs font-medium uppercase tracking-widest text-blue-200/80 sm:text-sm">Use Code</span>
+    <div onClick={handleCopy} className="mx-6 flex cursor-pointer items-center gap-2 rounded-lg border border-transparent px-2 py-1 transition-all hover:border-white/30 hover:bg-white/10 active:scale-95">
+      <span className="text-xs font-medium uppercase tracking-widest text-white/80 sm:text-sm">Use Code</span>
       <div className="relative flex items-center gap-2 rounded bg-white/10 px-2 py-0.5 font-mono text-sm font-bold text-white shadow-sm backdrop-blur-sm">
         {code}
-        {copied ? <Check className="h-3 w-3 text-green-400" /> : <Copy className="h-3 w-3 text-blue-300" />}
+        {copied ? <Check className="h-3 w-3 text-white" /> : <Copy className="h-3 w-3 text-white" />}
       </div>
-      <span className="text-xs font-bold text-blue-100 sm:text-sm">for {label}</span>
+      <span className="text-xs font-bold text-white sm:text-sm">for {label}</span>
     </div>
   );
 };
 
-const Separator = () => (<div className="h-1 w-1 rounded-full bg-blue-500/50 shadow-[0_0_5px_#3b82f6]" />);
+const Separator = () => (<div className="h-1 w-1 rounded-full bg-white/50 shadow-[0_0_5px_#ffffff]" />);
 
 // ==========================================
 // NEW: Evervault Social Components
@@ -701,7 +701,7 @@ export const SocialsRow = () => {
       { href: "https://youtube.com/@bullmoney.online", Icon: BrandIcons.Youtube, color: "text-red-500", label: "YouTube" },
       { href: "https://www.instagram.com/bullmoney.online/", Icon: BrandIcons.Instagram, color: "text-pink-500", label: "Instagram" },
       { href: "https://discord.com/invite/9vVB44ZrNA", Icon: BrandIcons.Discord, color: "text-indigo-500", label: "Discord" },
-      { href: "https://t.me/bullmoneyfx", Icon: BrandIcons.Telegram, color: "text-blue-400", label: "Telegram" },
+      { href: "https://t.me/bullmoneyfx", Icon: BrandIcons.Telegram, color: "text-white", label: "Telegram" },
     ];
     return [...socials, ...socials, ...socials, ...socials];
   }, []);
@@ -738,17 +738,17 @@ const LightweightEvervaultCard = ({ href, Icon, color, label }: { href: string; 
     <a href={href} target="_blank" rel="noopener noreferrer" className="group relative block h-28 w-28 shrink-0 sm:h-32 sm:w-32" onMouseMove={onMouseMove}>
       <div className="relative h-full w-full overflow-hidden rounded-xl bg-neutral-950 border border-white/10">
         <div className="absolute inset-0 block sm:hidden">
-            <div className="absolute inset-0 animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_270deg,rgba(59,130,246,0.2)_360deg)] opacity-50" />
+            <div className="absolute inset-0 animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_270deg,rgba(255, 255, 255,0.2)_360deg)] opacity-50" />
         </div>
         <motion.div
           className="pointer-events-none absolute -inset-px rounded-xl opacity-0 transition duration-300 group-hover:opacity-100 hidden sm:block"
           style={{
-            background: useMotionTemplate`radial-gradient(400px circle at ${mouseX}px ${mouseY}px, rgba(59, 130, 246, 0.15), transparent 80%)`,
+            background: useMotionTemplate`radial-gradient(400px circle at ${mouseX}px ${mouseY}px, rgba(255, 255, 255, 0.15), transparent 80%)`,
           }}
         />
         <div className="relative flex h-full w-full flex-col items-center justify-center gap-2">
             <div className="relative flex items-center justify-center">
-                <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute inset-0 bg-white/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                 <Icon className={cn("h-8 w-8 transition-all duration-300 group-hover:scale-110", color)} />
             </div>
             <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 transition-colors group-hover:text-white">
@@ -800,19 +800,19 @@ const MiniTradingChart = ({ width = 60, height = 24 }: { width?: number; height?
     return () => clearInterval(interval);
   }, [generatePaths]);
 
-  if (!path) return <div style={{ width, height }} className="animate-pulse bg-green-500/10 rounded" />;
+  if (!path) return <div style={{ width, height }} className="animate-pulse bg-white/10 rounded" />;
 
   return (
     <div style={{ width, height }} className="relative overflow-hidden">
       <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
         <defs>
           <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#4ade80" stopOpacity="0.4" />
-            <stop offset="100%" stopColor="#4ade80" stopOpacity="0" />
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
           </linearGradient>
         </defs>
         <motion.path d={areaPath} fill="url(#chartFill)" stroke="none" animate={{ d: areaPath }} transition={{ duration: 1, ease: "linear" }} />
-        <motion.path d={path} fill="none" stroke="#4ade80" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" animate={{ d: path }} transition={{ duration: 1, ease: "linear" }} style={{ filter: "drop-shadow(0 0 2px rgba(74, 222, 128, 0.5))" }} />
+        <motion.path d={path} fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" animate={{ d: path }} transition={{ duration: 1, ease: "linear" }} style={{ filter: "drop-shadow(0 0 2px rgba(255, 255, 255, 0.5))" }} />
       </svg>
     </div>
   );
@@ -821,7 +821,7 @@ const MiniTradingChart = ({ width = 60, height = 24 }: { width?: number; height?
 const BackgroundGrids = React.memo(() => {
   return (
     <div className="pointer-events-none absolute inset-0 z-0 h-full w-full opacity-20">
-      <div className="absolute left-1/2 top-0 h-[1000px] w-[1000px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-600/20 blur-[100px]" />
+      <div className="absolute left-1/2 top-0 h-[1000px] w-[1000px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/20 blur-[100px]" />
       <div className="absolute bottom-0 h-full w-full bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
     </div>
   );

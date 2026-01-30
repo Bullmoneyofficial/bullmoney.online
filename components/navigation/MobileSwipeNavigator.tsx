@@ -324,8 +324,8 @@ export default function MobileSwipeNavigator() {
           50% { opacity: 1; }
         }
         @keyframes swipe-glow {
-          0%, 100% { box-shadow: 0 0 20px rgba(59,130,246,0.3), 0 4px 30px rgba(0,0,0,0.5); }
-          50% { box-shadow: 0 0 35px rgba(59,130,246,0.5), 0 4px 30px rgba(0,0,0,0.5); }
+          0%, 100% { box-shadow: 0 0 20px rgba(255, 255, 255,0.3), 0 4px 30px rgba(0,0,0,0.5); }
+          50% { box-shadow: 0 0 35px rgba(255, 255, 255,0.5), 0 4px 30px rgba(0,0,0,0.5); }
         }
         .swipe-animate {
           animation: swipe-fade-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -340,11 +340,11 @@ export default function MobileSwipeNavigator() {
 
       <div className="fixed inset-x-0 bottom-6 z-[99998] flex justify-center px-6 pointer-events-none swipe-animate">
         <div className="relative overflow-hidden rounded-3xl shadow-2xl max-w-xs w-full swipe-glow">
-          <div className="relative bg-black/95 backdrop-blur-2xl border border-blue-500/40 rounded-3xl overflow-hidden">
+          <div className="relative bg-black/95 backdrop-blur-2xl border border-white/40 rounded-3xl overflow-hidden">
             {/* Shimmer effect */}
             <div className="absolute inset-x-0 top-0 h-[2px] overflow-hidden">
               <div 
-                className="absolute inset-y-0 left-[-100%] w-full bg-gradient-to-r from-transparent via-blue-400/80 to-transparent"
+                className="absolute inset-y-0 left-[-100%] w-full bg-gradient-to-r from-transparent via-white/80 to-transparent"
                 style={{ animation: "swipe-shimmer 2s linear infinite" }} 
               />
             </div>
@@ -352,12 +352,12 @@ export default function MobileSwipeNavigator() {
             {/* Hint Mode */}
             {showHint && !lastAction && (
               <div className="px-5 py-4">
-                <div className="text-[10px] uppercase tracking-[0.3em] font-bold text-blue-300/70 mb-3 text-center flex items-center justify-center gap-2">
+                <div className="text-[10px] uppercase tracking-[0.3em] font-bold text-white/70 mb-3 text-center flex items-center justify-center gap-2">
                   <span className="text-base">👆</span> Quick Navigation
                 </div>
                 
                 <div className="flex justify-center">
-                  <div className="bg-blue-500/10 rounded-xl p-3 border border-blue-500/20 text-center">
+                  <div className="bg-white/10 rounded-xl p-3 border border-white/20 text-center">
                     <div className="text-xl mb-1">← →</div>
                     <div className="text-[10px] text-white/60 uppercase tracking-wider">Swipe to Jump Sections</div>
                   </div>
@@ -369,9 +369,9 @@ export default function MobileSwipeNavigator() {
                 
                 <div className="mt-2 flex justify-center">
                   <div className="flex gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 swipe-pulse" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400/60 swipe-pulse" style={{ animationDelay: '0.2s' }} />
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400/40 swipe-pulse" style={{ animationDelay: '0.4s' }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-white/80 swipe-pulse" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-white/60 swipe-pulse" style={{ animationDelay: '0.2s' }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-white/40 swipe-pulse" style={{ animationDelay: '0.4s' }} />
                   </div>
                 </div>
               </div>
@@ -386,7 +386,7 @@ export default function MobileSwipeNavigator() {
                     <div className="text-base font-bold text-white">
                       {lastAction}
                     </div>
-                    <div className="text-[10px] text-blue-300/60 uppercase tracking-wider">
+                    <div className="text-[10px] text-white/60 uppercase tracking-wider">
                       Section {SECTIONS.indexOf(currentSection) + 1} of {SECTIONS.length}
                     </div>
                   </div>
@@ -399,7 +399,7 @@ export default function MobileSwipeNavigator() {
                       key={s}
                       className={`w-2 h-2 rounded-full transition-all duration-300 ${
                         s === currentSection 
-                          ? 'bg-blue-400 scale-125' 
+                          ? 'bg-white scale-125' 
                           : 'bg-white/20'
                       }`}
                     />

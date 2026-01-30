@@ -160,7 +160,7 @@ export default function AdminPanel({ editing, clearEditing }: Props) {
     <div className="space-y-8">
       
       {/* 1. BLOG POST FORM */}
-      <div className="rounded-3xl border border-sky-500/40 bg-gradient-to-r from-slate-900/90 via-slate-950 to-slate-900 p-[1px] shadow-[0_0_45px_rgba(56,189,248,0.4)]">
+      <div className="rounded-3xl border border-sky-500/40 bg-gradient-to-r from-slate-900/90 via-slate-950 to-slate-900 p-[1px] shadow-[0_0_45px_rgba(255, 255, 255,0.4)]">
         <div className="rounded-3xl bg-slate-950 px-5 sm:px-7 py-6">
           <div className="flex items-center justify-between gap-3 mb-5">
             <div>
@@ -267,7 +267,7 @@ export default function AdminPanel({ editing, clearEditing }: Props) {
             <div className="sm:col-span-2 flex justify-end gap-3 pt-1">
               <button
                 type="submit"
-                className="text-xs px-5 py-2 rounded-full bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500 font-semibold shadow-[0_0_25px_rgba(56,189,248,0.45)]"
+                className="text-xs px-5 py-2 rounded-full bg-gradient-to-r from-sky-400 via-white to-indigo-500 font-semibold shadow-[0_0_25px_rgba(255, 255, 255,0.45)]"
               >
                 {editing ? "Save Changes" : "Create Post"}
               </button>

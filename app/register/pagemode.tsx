@@ -661,11 +661,11 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         <CursorStyles />
         <TargetCursor />
         
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/10 via-[#010309] to-[#010309] gpu-accel" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white/10 via-[#010309] to-[#010309] gpu-accel" />
         
-        <div className="bg-[#0A1120] border border-blue-500/20 p-6 md:p-8 rounded-2xl shadow-[0_0_50px_rgba(30,58,138,0.2)] text-center max-w-md w-full relative z-10 animate-in fade-in zoom-in duration-500">
+        <div className="bg-[#0A1120] border border-white/15 p-6 md:p-8 rounded-2xl shadow-[0_0_50px_rgba(255, 255, 255,0.2)] text-center max-w-md w-full relative z-10 animate-in fade-in zoom-in duration-500">
           <div className="mx-auto w-24 h-24 relative mb-6">
-            <div className="absolute inset-0 rounded-full border-4 border-blue-900 animate-[spin_3s_linear_infinite]" />
+            <div className="absolute inset-0 rounded-full border-4 border-white/10 animate-[spin_3s_linear_infinite]" />
             <div className="absolute inset-0 bg-green-500 rounded-full scale-0 animate-[scale-up_0.5s_ease-out_forwards_0.2s] flex items-center justify-center">
               <Check className="w-12 h-12 text-white stroke-[3] opacity-0 animate-[fade-in_0.3s_ease-out_forwards_0.6s]" />
             </div>
@@ -678,7 +678,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
           
           <button 
             onClick={onUnlock}
-            className="w-full py-4 bg-[#229ED9] hover:bg-[#1b8bc2] text-white rounded-xl font-bold tracking-wide transition-all shadow-[0_0_20px_rgba(34,158,217,0.3)] hover:shadow-[0_0_30px_rgba(34,158,217,0.5)] group flex items-center justify-center mb-4 cursor-target"
+            className="w-full py-4 bg-white text-black rounded-xl font-bold tracking-wide transition-all shadow-[0_0_20px_rgba(255,255,255,0.25)] hover:shadow-[0_0_30px_rgba(255,255,255,0.35)] hover:bg-neutral-200 group flex items-center justify-center mb-4 cursor-target"
           >
             Go to Dashboard  
             <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
@@ -703,8 +703,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   if (step === 4) {
     return (
       <div className="min-h-screen bg-[#010309] flex flex-col items-center justify-center relative">
-         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-900/10 rounded-full blur-[60px] pointer-events-none" />
-        <Loader2 className="w-16 h-16 text-blue-500 animate-spin mb-4" />
+         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/10 rounded-full blur-[60px] pointer-events-none" />
+        <Loader2 className="w-16 h-16 text-white animate-spin mb-4" />
         <h2 className="text-xl font-bold text-white">Unlocking Platform...</h2>
       </div>
     );
@@ -744,16 +744,16 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         {/* Existing background elements */}
         <div className={cn(
           "absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent to-transparent opacity-50 transition-colors duration-500",
-          isVantage ? "via-purple-900" : "via-blue-900"
+          isVantage ? "via-purple-900" : "via-neutral-900"
         )} />
         <div className={cn(
           "absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full blur-[80px] pointer-events-none transition-colors duration-500 gpu-accel",
-          isVantage ? "bg-purple-900/10" : "bg-blue-900/10"
+          isVantage ? "bg-purple-900/10" : "bg-neutral-900/20"
         )} />
 
         <div className="mb-6 md:mb-8 text-center">
            <h1 className="text-xl md:text-2xl font-black text-white tracking-tight opacity-50">
-            BULLMONEY <span className={cn("transition-colors duration-300", isVantage ? "text-purple-600" : "text-blue-600")}>FREE</span>
+            BULLMONEY <span className="transition-colors duration-300 text-white">FREE</span>
           </h1>
         </div>
 
@@ -784,7 +784,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         value={loginEmail}
                         onChange={(e) => setLoginEmail(e.target.value)}
                         placeholder="Email Address"
-                        className="w-full bg-black/40 border border-white/10 rounded-xl pl-10 pr-4 py-3.5 md:py-4 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500/50 transition-all cursor-target text-base"
+                        className="w-full bg-black/40 border border-white/15 rounded-xl pl-10 pr-4 py-3.5 md:py-4 text-white placeholder-white/40 focus:outline-none focus:border-white/60 transition-all cursor-target text-base"
                       />
                     </div>
 
@@ -798,12 +798,12 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
                         placeholder="Password"
-                        className="w-full bg-black/40 border border-white/10 rounded-xl pl-10 pr-12 py-3.5 md:py-4 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500/50 transition-all cursor-target text-base"
+                        className="w-full bg-black/40 border border-white/15 rounded-xl pl-10 pr-12 py-3.5 md:py-4 text-white placeholder-white/40 focus:outline-none focus:border-white/60 transition-all cursor-target text-base"
                       />
                       <button 
                         type="button" 
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors cursor-target"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white transition-colors cursor-target"
                       >
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -818,7 +818,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     <button
                       type="submit"
                       disabled={!loginEmail || !loginPassword}
-                      className="w-full py-3.5 md:py-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-xl font-bold tracking-wide transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-target text-base"
+                      className="w-full py-3.5 md:py-4 bg-white text-black rounded-xl font-bold tracking-wide transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:bg-neutral-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-target text-base"
                     >
                       LOGIN
                       <ArrowRight className="w-4 h-4" />
@@ -855,8 +855,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                           className={cn(
                             "absolute inset-0 -z-10 rounded-full",
                             partner === "Vantage"
-                              ? "bg-gradient-to-r from-purple-500 to-violet-600 shadow-[0_0_25px_rgba(168,85,247,0.45)]"
-                              : "bg-gradient-to-r from-sky-500 to-blue-600 shadow-[0_0_25px_rgba(56,189,248,0.45)]"
+                              ? "bg-gradient-to-r from-purple-500 to-violet-600 shadow-[0_0_25px_rgba(255, 255, 255,0.45)]"
+                              : "bg-gradient-to-r from-sky-500 to-blue-600 shadow-[0_0_25px_rgba(255, 255, 255,0.45)]"
                           )}
                           transition={{ type: "spring", stiffness: 400, damping: 28 }}
                         />
@@ -884,8 +884,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                       </div>
 
                       <div className="mb-6 flex justify-center">
-                         <div className="h-16 w-16 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.2)]">
-                            <ShieldCheck className="w-8 h-8 text-blue-400" />
+                         <div className="h-16 w-16 rounded-full bg-white/10 flex items-center justify-center border border-white/20 shadow-[0_0_30px_rgba(255, 255, 255,0.2)]">
+                           <ShieldCheck className="w-8 h-8 text-white" />
                          </div>
                       </div>
 
@@ -899,7 +899,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         onClick={handleNext}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="w-full py-3.5 md:py-4 bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-xl font-bold text-base md:text-lg tracking-wide transition-all shadow-[0_0_20px_rgba(34,158,217,0.3)] hover:shadow-[0_0_30px_rgba(34,158,217,0.5)] flex items-center justify-center cursor-target"
+                        className="w-full py-3.5 md:py-4 bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-xl font-bold text-base md:text-lg tracking-wide transition-all shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] flex items-center justify-center cursor-target"
                       >
                         Start Free Access <ArrowRight className="w-5 h-5 ml-2" />
                       </motion.button>
@@ -913,12 +913,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                          <motion.button 
                            onClick={toggleViewMode}
                            whileHover={{ scale: 1.01 }}
-                           className={cn(
-                               "w-full py-3 rounded-lg text-sm font-semibold transition-all border border-transparent hover:border-white/10 mt-2",
-                               isVantage
-                                 ? "bg-purple-900/30 text-purple-200 hover:bg-purple-900/50"
-                                 : "bg-blue-900/30 text-blue-200 hover:bg-blue-900/50"
-                           )}
+                           className="w-full py-3 rounded-lg text-sm font-semibold transition-all border border-white/15 bg-white/10 text-white hover:bg-white/20 mt-2"
                          >
                             Already a member? Login here
                          </motion.button>

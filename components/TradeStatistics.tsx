@@ -85,7 +85,7 @@ export default function TradeStatistics({ trades, stats }: TradeStatisticsProps)
         </div>
         {trend && (
           <div className={`flex items-center gap-1 text-sm ${
-            trend === 'up' ? 'text-green-400' : trend === 'down' ? 'text-red-400' : 'text-gray-400'
+            trend === 'up' ? 'text-white' : trend === 'down' ? 'text-red-400' : 'text-gray-400'
           }`}>
             {trend === 'up' ? <TrendingUp size={16} /> : trend === 'down' ? <TrendingDown size={16} /> : null}
           </div>
@@ -145,7 +145,7 @@ export default function TradeStatistics({ trades, stats }: TradeStatisticsProps)
           <div>
             <div className="text-gray-400 text-sm mb-1">Expectancy</div>
             <div className={`text-2xl font-bold ${
-              stats.expectancy >= 0 ? 'text-green-400' : 'text-red-400'
+              stats.expectancy >= 0 ? 'text-white' : 'text-red-400'
             }`}>
               ${stats.expectancy.toFixed(2)}
             </div>
@@ -155,7 +155,7 @@ export default function TradeStatistics({ trades, stats }: TradeStatisticsProps)
           <div>
             <div className="text-gray-400 text-sm mb-1">Sharpe Ratio</div>
             <div className={`text-2xl font-bold ${
-              stats.sharpeRatio >= 1 ? 'text-green-400' : 'text-yellow-400'
+              stats.sharpeRatio >= 1 ? 'text-white' : 'text-yellow-400'
             }`}>
               {stats.sharpeRatio.toFixed(2)}
             </div>
@@ -165,7 +165,7 @@ export default function TradeStatistics({ trades, stats }: TradeStatisticsProps)
           <div>
             <div className="text-gray-400 text-sm mb-1">Sortino Ratio</div>
             <div className={`text-2xl font-bold ${
-              stats.sortinioRatio >= 1 ? 'text-green-400' : 'text-yellow-400'
+              stats.sortinioRatio >= 1 ? 'text-white' : 'text-yellow-400'
             }`}>
               {stats.sortinioRatio.toFixed(2)}
             </div>
@@ -174,7 +174,7 @@ export default function TradeStatistics({ trades, stats }: TradeStatisticsProps)
 
           <div>
             <div className="text-gray-400 text-sm mb-1">Average Win</div>
-            <div className="text-2xl font-bold text-green-400">
+            <div className="text-2xl font-bold text-white">
               ${stats.averageWin.toFixed(2)}
             </div>
             <div className="text-xs text-gray-500 mt-1">Per winning trade</div>
@@ -191,7 +191,7 @@ export default function TradeStatistics({ trades, stats }: TradeStatisticsProps)
           <div>
             <div className="text-gray-400 text-sm mb-1">Avg Risk/Reward</div>
             <div className={`text-2xl font-bold ${
-              stats.averageRiskReward >= 2 ? 'text-green-400' : 'text-yellow-400'
+              stats.averageRiskReward >= 2 ? 'text-white' : 'text-yellow-400'
             }`}>
               1:{stats.averageRiskReward.toFixed(2)}
             </div>
@@ -210,7 +210,7 @@ export default function TradeStatistics({ trades, stats }: TradeStatisticsProps)
 
           <div>
             <div className="text-gray-400 text-sm mb-1">Best Trade</div>
-            <div className="text-2xl font-bold text-green-400">
+            <div className="text-2xl font-bold text-white">
               ${stats.largestWin.toFixed(2)}
             </div>
             <div className="text-xs text-gray-500 mt-1">Largest winning trade</div>
@@ -233,11 +233,11 @@ export default function TradeStatistics({ trades, stats }: TradeStatisticsProps)
           <div className="flex items-center justify-between">
             <div>
               <div className="text-gray-400 text-sm">Longest Win Streak</div>
-              <div className="text-3xl font-bold text-green-400">
+              <div className="text-3xl font-bold text-white">
                 {stats.consecutiveWins}
               </div>
             </div>
-            <TrendingUp className="text-green-400" size={48} />
+            <TrendingUp className="text-white" size={48} />
           </div>
         </div>
 
@@ -271,7 +271,7 @@ export default function TradeStatistics({ trades, stats }: TradeStatisticsProps)
                   <span className="text-white font-medium capitalize">{type}</span>
                   <div className="flex items-center gap-4">
                     <span className="text-gray-400">{data.trades} trades</span>
-                    <span className={data.pnl >= 0 ? 'text-green-400' : 'text-red-400'}>
+                    <span className={data.pnl >= 0 ? 'text-white' : 'text-red-400'}>
                       ${data.pnl.toFixed(2)}
                     </span>
                   </div>
@@ -279,7 +279,7 @@ export default function TradeStatistics({ trades, stats }: TradeStatisticsProps)
                 <div className="w-full bg-white/5 rounded-full h-2">
                   <div
                     className={`h-2 rounded-full ${
-                      data.pnl >= 0 ? 'bg-green-500' : 'bg-red-500'
+                      data.pnl >= 0 ? 'bg-white' : 'bg-red-500'
                     }`}
                     style={{ width: `${percentage}%` }}
                   />
@@ -320,7 +320,7 @@ export default function TradeStatistics({ trades, stats }: TradeStatisticsProps)
                         <td className="px-4 py-3 text-center">
                           <span className={`px-2 py-1 rounded text-xs font-medium ${
                             winRate >= 60 
-                              ? 'bg-green-500/20 text-green-400'
+                              ? 'bg-white/20 text-white'
                               : winRate >= 40
                               ? 'bg-yellow-500/20 text-yellow-400'
                               : 'bg-red-500/20 text-red-400'
@@ -329,7 +329,7 @@ export default function TradeStatistics({ trades, stats }: TradeStatisticsProps)
                           </span>
                         </td>
                         <td className={`px-4 py-3 text-right font-medium ${
-                          data.pnl >= 0 ? 'text-green-400' : 'text-red-400'
+                          data.pnl >= 0 ? 'text-white' : 'text-red-400'
                         }`}>
                           ${data.pnl.toFixed(2)}
                         </td>
@@ -359,7 +359,7 @@ export default function TradeStatistics({ trades, stats }: TradeStatisticsProps)
                       {data.trades} trades
                     </div>
                     <div className={`text-sm font-medium ${
-                      winRate >= 50 ? 'text-green-400' : 'text-red-400'
+                      winRate >= 50 ? 'text-white' : 'text-red-400'
                     }`}>
                       {winRate.toFixed(0)}% Win Rate
                     </div>
@@ -380,14 +380,14 @@ export default function TradeStatistics({ trades, stats }: TradeStatisticsProps)
             <div className="space-y-3">
               <div>
                 <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="text-green-400">Gross Profit</span>
+                  <span className="text-white">Gross Profit</span>
                   <span className="text-white font-medium">
                     ${stats.totalGrossProfit.toFixed(2)}
                   </span>
                 </div>
                 <div className="w-full bg-white/5 rounded-full h-3">
                   <div
-                    className="bg-green-500 h-3 rounded-full"
+                    className="bg-white h-3 rounded-full"
                     style={{ 
                       width: `${(stats.totalGrossProfit / (stats.totalGrossProfit + Math.abs(stats.totalGrossLoss))) * 100}%` 
                     }}
@@ -418,14 +418,14 @@ export default function TradeStatistics({ trades, stats }: TradeStatisticsProps)
             <div className="space-y-3">
               <div>
                 <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="text-green-400">Wins</span>
+                  <span className="text-white">Wins</span>
                   <span className="text-white font-medium">
                     {stats.winningTrades} ({stats.winRate.toFixed(1)}%)
                   </span>
                 </div>
                 <div className="w-full bg-white/5 rounded-full h-3">
                   <div
-                    className="bg-green-500 h-3 rounded-full"
+                    className="bg-white h-3 rounded-full"
                     style={{ width: `${stats.winRate}%` }}
                   />
                 </div>

@@ -80,12 +80,12 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
         <defs>
           <linearGradient id="gradRed" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stop-color="#000" />
-            <stop offset="50%" stop-color="#f00" />
+            <stop offset="50%" stop-color="#fff" />
             <stop offset="100%" stop-color="#000" />
           </linearGradient>
           <linearGradient id="gradBlue" x1="100%" y1="0%" x2="0%" y2="100%">
              <stop offset="0%" stop-color="#000" />
-             <stop offset="50%" stop-color="#00f" />
+             <stop offset="50%" stop-color="#fff" />
              <stop offset="100%" stop-color="#000" />
           </linearGradient>
         </defs>

@@ -287,8 +287,8 @@ export default function Orb({
             console.log("Pac-Man button clicked!"); // Debug log
             onButtonClick();
           }}
-          className="relative z-[100] px-8 py-4 text-lg rounded-full font-bold text-white bg-gradient-to-r from-blue-500 via-cyan-500 to-blue-500
-            shadow-[0_0_30px_rgba(56,189,248,0.5)] hover:shadow-[0_0_60px_rgba(56,189,248,0.8)]
+          className="relative z-[100] px-8 py-4 text-lg rounded-full font-bold text-white bg-gradient-to-r from-white via-white to-white
+            shadow-[0_0_30px_rgba(255, 255, 255,0.5)] hover:shadow-[0_0_60px_rgba(255, 255, 255,0.8)]
             hover:scale-110 active:scale-95
             transition-all duration-300 cursor-pointer
             border-2 border-white/30 hover:border-white/60

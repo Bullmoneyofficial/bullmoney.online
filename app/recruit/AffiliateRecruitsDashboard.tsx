@@ -74,11 +74,11 @@ interface DashboardStats {
 
 // --- TIER DEFINITIONS ---
 const AFFILIATE_TIERS: AffiliateTier[] = [
-  { name: 'Starter', minTraders: 1, maxTraders: 4, commissionPercent: 5, xmRatePerLot: 11, vantageRatePerLot: 5.5, bonusMultiplier: 1.0, color: '#3b82f6', icon: 'target', perks: ['Basic dashboard access', 'Monthly payouts', 'Email support'] },
+  { name: 'Starter', minTraders: 1, maxTraders: 4, commissionPercent: 5, xmRatePerLot: 11, vantageRatePerLot: 5.5, bonusMultiplier: 1.0, color: '#ffffff', icon: 'target', perks: ['Basic dashboard access', 'Monthly payouts', 'Email support'] },
   { name: 'Bronze', minTraders: 5, maxTraders: 14, commissionPercent: 10, xmRatePerLot: 11, vantageRatePerLot: 5.5, bonusMultiplier: 1.1, color: '#cd7f32', icon: 'award', perks: ['Priority email support', 'Weekly performance reports', 'Custom referral link'] },
   { name: 'Silver', minTraders: 15, maxTraders: 29, commissionPercent: 15, xmRatePerLot: 11, vantageRatePerLot: 5.5, bonusMultiplier: 1.2, color: '#c0c0c0', icon: 'star', perks: ['Telegram support', 'Marketing materials', 'Bi-weekly payouts'] },
   { name: 'Gold', minTraders: 30, maxTraders: 49, commissionPercent: 20, xmRatePerLot: 11, vantageRatePerLot: 5.5, bonusMultiplier: 1.35, color: '#ffd700', icon: 'trophy', perks: ['1-on-1 support calls', 'Co-branded landing pages', 'Weekly payouts'] },
-  { name: 'Elite', minTraders: 50, maxTraders: null, commissionPercent: 25, xmRatePerLot: 11, vantageRatePerLot: 5.5, bonusMultiplier: 1.5, color: '#00d4ff', icon: 'sparkles', perks: ['Dedicated account manager', 'Custom commission rates', 'Instant payouts', 'Exclusive bonuses'] },
+  { name: 'Elite', minTraders: 50, maxTraders: null, commissionPercent: 25, xmRatePerLot: 11, vantageRatePerLot: 5.5, bonusMultiplier: 1.5, color: '#ffffff', icon: 'sparkles', perks: ['Dedicated account manager', 'Custom commission rates', 'Instant payouts', 'Exclusive bonuses'] },
 ];
 
 // --- HELPERS ---
@@ -421,18 +421,18 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
   return (
     <div className={cn(
       "min-h-screen bg-[#050B14] text-white font-sans",
-      isXMUser ? "selection:bg-red-500/30" : "selection:bg-cyan-500/30"
+      isXMUser ? "selection:bg-red-500/30" : "selection:bg-white/30"
     )}>
       
       {/* Background Effects */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className={cn(
           "absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full blur-[150px] opacity-30",
-          isXMUser ? "bg-red-600" : "bg-cyan-600"
+          isXMUser ? "bg-red-600" : "bg-white"
         )} />
         <div className={cn(
           "absolute bottom-[-20%] left-[-10%] w-[400px] h-[400px] rounded-full blur-[120px] opacity-20",
-          isXMUser ? "bg-orange-600" : "bg-cyan-600"
+          isXMUser ? "bg-orange-600" : "bg-white"
         )} />
       </div>
 
@@ -454,11 +454,11 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                 </h1>
                 <div className={cn(
                   "hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border",
-                  currentTier.name === 'Elite' ? "bg-cyan-500/10 text-cyan-300 border-cyan-500/20" :
+                  currentTier.name === 'Elite' ? "bg-white/10 text-white border-white/20" :
                   currentTier.name === 'Gold' ? "bg-yellow-500/10 text-yellow-300 border-yellow-500/20" :
                   currentTier.name === 'Silver' ? "bg-slate-400/10 text-slate-300 border-slate-400/20" :
                   currentTier.name === 'Bronze' ? "bg-orange-500/10 text-orange-300 border-orange-500/20" :
-                  isXMUser ? "bg-red-500/10 text-red-300 border-red-500/20" : "bg-cyan-500/10 text-cyan-300 border-cyan-500/20"
+                  isXMUser ? "bg-red-500/10 text-red-300 border-red-500/20" : "bg-white/10 text-white border-white/20"
                 )}>
                   {React.createElement(getTierIcon(currentTier.icon), { className: "w-3.5 h-3.5" })}
                   {currentTier.name} Partner
@@ -483,7 +483,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
               "flex items-center gap-2 px-4 py-2.5 rounded-lg text-white font-semibold text-sm transition-all",
               isXMUser 
                 ? "bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 shadow-lg shadow-red-900/20" 
-                : "bg-gradient-to-r from-cyan-600 to-cyan-600 hover:from-cyan-500 hover:to-cyan-500 shadow-lg shadow-cyan-900/20"
+                : "bg-gradient-to-r from-white to-white hover:from-white hover:to-white shadow-lg shadow-white/20"
             )}>
               <Download className="w-4 h-4" /> Export Report
             </button>
@@ -507,13 +507,13 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
           "mb-8 p-4 md:p-6 rounded-2xl border backdrop-blur-xl",
           isXMUser 
             ? "bg-gradient-to-r from-red-950/40 to-orange-950/40 border-red-500/20" 
-            : "bg-gradient-to-r from-cyan-950/40 to-cyan-950/40 border-cyan-500/20"
+            : "bg-gradient-to-r from-cyan-950/40 to-cyan-950/40 border-white/20"
         )}>
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div className="flex items-start gap-4">
               <div className={cn(
                 "p-3 rounded-xl",
-                isXMUser ? "bg-red-500/10 text-red-400" : "bg-cyan-500/10 text-cyan-400"
+                isXMUser ? "bg-red-500/10 text-red-400" : "bg-white/10 text-white"
               )}>
                 <Link2 className="w-6 h-6" />
               </div>
@@ -525,7 +525,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                     "px-3 py-2 rounded-lg text-sm font-mono border truncate max-w-[300px] md:max-w-[400px]",
                     isXMUser 
                       ? "bg-red-500/5 border-red-500/20 text-red-200" 
-                      : "bg-cyan-500/5 border-cyan-500/20 text-cyan-200"
+                      : "bg-white/5 border-white/20 text-white"
                   )}>
                     {referralLink}
                   </code>
@@ -535,10 +535,10 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                       className={cn(
                         "flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold border transition-all",
                         copiedLink 
-                          ? "bg-green-500/20 border-green-500/30 text-green-300"
+                          ? "bg-white/20 border-white/30 text-white"
                           : isXMUser
                             ? "bg-red-500/10 border-red-500/20 text-red-300 hover:bg-red-500/20"
-                            : "bg-cyan-500/10 border-cyan-500/20 text-cyan-300 hover:bg-cyan-500/20"
+                            : "bg-white/10 border-white/20 text-white hover:bg-white/20"
                       )}
                     >
                       {copiedLink ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
@@ -549,7 +549,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                       className={cn(
                         "flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold border transition-all",
                         copiedCode
-                          ? "bg-green-500/20 border-green-500/30 text-green-300"
+                          ? "bg-white/20 border-white/30 text-white"
                           : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10"
                       )}
                     >
@@ -584,7 +584,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                 activeTab === tab.id
                   ? isXMUser 
                     ? "bg-red-500/10 text-red-300 border border-red-500/20"
-                    : "bg-cyan-500/10 text-cyan-300 border border-cyan-500/20"
+                    : "bg-white/10 text-white border border-white/20"
                   : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent"
               )}
             >
@@ -651,11 +651,11 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                     </div>
                     <div className={cn(
                       "flex items-center gap-2 px-4 py-2 rounded-xl border",
-                      currentTier.name === 'Elite' ? "bg-cyan-500/10 border-cyan-500/20" :
+                      currentTier.name === 'Elite' ? "bg-white/10 border-white/20" :
                       currentTier.name === 'Gold' ? "bg-yellow-500/10 border-yellow-500/20" :
                       currentTier.name === 'Silver' ? "bg-slate-400/10 border-slate-400/20" :
                       currentTier.name === 'Bronze' ? "bg-orange-500/10 border-orange-500/20" :
-                      "bg-cyan-500/10 border-cyan-500/20"
+                      "bg-white/10 border-white/20"
                     )}>
                       {React.createElement(getTierIcon(currentTier.icon), { 
                         className: "w-5 h-5",
@@ -683,7 +683,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                           "h-full rounded-full",
                           isXMUser 
                             ? "bg-gradient-to-r from-red-600 to-orange-500" 
-                            : "bg-gradient-to-r from-cyan-600 to-cyan-500"
+                            : "bg-gradient-to-r from-white to-white"
                         )}
                       />
                     </div>
@@ -716,7 +716,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                         >
                           {isActive && (
                             <div className="absolute -top-2 -right-2">
-                              <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                              <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center">
                                 <CheckCircle2 className="w-3 h-3 text-white" />
                               </div>
                             </div>
@@ -744,7 +744,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                       <div key={i} className="flex items-start gap-3">
                         <div className={cn(
                           "p-1.5 rounded-lg mt-0.5",
-                          isXMUser ? "bg-red-500/10 text-red-400" : "bg-cyan-500/10 text-cyan-400"
+                          isXMUser ? "bg-red-500/10 text-red-400" : "bg-white/10 text-white"
                         )}>
                           <CheckCircle2 className="w-3.5 h-3.5" />
                         </div>
@@ -817,13 +817,13 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                       <div className="text-center">
                         <div className={cn(
                           "w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3",
-                          isXMUser ? "bg-red-500/10 text-red-400" : "bg-cyan-500/10 text-cyan-400"
+                          isXMUser ? "bg-red-500/10 text-red-400" : "bg-white/10 text-white"
                         )}>
                           <item.icon className="w-6 h-6" />
                         </div>
                         <div className={cn(
                           "text-xs font-bold mb-1",
-                          isXMUser ? "text-red-400" : "text-cyan-400"
+                          isXMUser ? "text-red-400" : "text-white"
                         )}>
                           Step {item.step}
                         </div>
@@ -843,7 +843,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                     onClick={() => setActiveTab('recruits')}
                     className={cn(
                       "text-sm font-medium flex items-center gap-1",
-                      isXMUser ? "text-red-400 hover:text-red-300" : "text-cyan-400 hover:text-cyan-300"
+                      isXMUser ? "text-red-400 hover:text-red-300" : "text-white hover:text-white"
                     )}
                   >
                     View All <ChevronRight className="w-4 h-4" />
@@ -860,7 +860,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                         <div className={cn(
                           "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold",
                           recruit.status === 'Active'
-                            ? isXMUser ? "bg-red-500/20 text-red-300" : "bg-cyan-500/20 text-cyan-300"
+                            ? isXMUser ? "bg-red-500/20 text-red-300" : "bg-white/20 text-white"
                             : "bg-neutral-800 text-slate-500"
                         )}>
                           {recruit.email.charAt(0).toUpperCase()}
@@ -910,7 +910,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                   <div className="relative w-full md:w-96 group">
                     <Search className={cn(
                       "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 transition-colors",
-                      isXMUser ? "group-focus-within:text-red-400" : "group-focus-within:text-cyan-400"
+                      isXMUser ? "group-focus-within:text-red-400" : "group-focus-within:text-white"
                     )} />
                     <input 
                       type="text" 
@@ -919,7 +919,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className={cn(
                         "w-full bg-black/40 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none transition-all placeholder:text-slate-600",
-                        isXMUser ? "focus:border-red-500/50" : "focus:border-cyan-500/50"
+                        isXMUser ? "focus:border-red-500/50" : "focus:border-white/50"
                       )}
                     />
                   </div>
@@ -934,7 +934,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                             filter === f 
                               ? isXMUser 
                                 ? "bg-red-500 text-white" 
-                                : "bg-cyan-500 text-white"
+                                : "bg-white text-black"
                               : "text-slate-400 hover:text-white"
                           )}
                         >
@@ -1010,7 +1010,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                                     recruit.status === 'Active'
                                       ? isXMUser 
                                         ? "bg-red-500/20 text-red-300 border-red-500/20" 
-                                        : "bg-cyan-500/20 text-cyan-300 border-cyan-500/20"
+                                        : "bg-white/20 text-white border-white/20"
                                       : "bg-neutral-800 text-slate-500 border-white/5"
                                   )}>
                                     {recruit.email.charAt(0).toUpperCase()}
@@ -1031,7 +1031,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                                     "font-mono text-xs px-2.5 py-1 rounded-lg border",
                                     isXMUser 
                                       ? "bg-red-500/10 text-red-300 border-red-500/20" 
-                                      : "bg-cyan-500/10 text-cyan-300 border-cyan-500/20"
+                                      : "bg-white/10 text-white border-white/20"
                                   )}>
                                     {recruit.mt5_id}
                                   </span>
@@ -1048,7 +1048,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                                 <p className={cn(
                                   "text-sm font-bold",
                                   recruit.status === 'Active' 
-                                    ? "text-green-400" 
+                                    ? "text-white" 
                                     : "text-slate-600"
                                 )}>
                                   {recruit.status === 'Active' 
@@ -1087,7 +1087,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                             recruit.status === 'Active'
                               ? isXMUser 
                                 ? "bg-red-500/5 border-red-500/20 hover:border-red-500/40" 
-                                : "bg-cyan-500/5 border-cyan-500/20 hover:border-cyan-500/40"
+                                : "bg-white/5 border-white/20 hover:border-white/40"
                               : "bg-white/5 border-white/10 hover:border-white/20"
                           )}
                         >
@@ -1096,7 +1096,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                               <div className={cn(
                                 "w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold",
                                 recruit.status === 'Active'
-                                  ? isXMUser ? "bg-red-500/20 text-red-300" : "bg-cyan-500/20 text-cyan-300"
+                                  ? isXMUser ? "bg-red-500/20 text-red-300" : "bg-white/20 text-white"
                                   : "bg-neutral-800 text-slate-500"
                               )}>
                                 {recruit.email.charAt(0).toUpperCase()}
@@ -1120,7 +1120,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                               <p className="text-[10px] text-slate-500 uppercase tracking-wide mb-1">Your Earnings</p>
                               <p className={cn(
                                 "text-lg font-bold",
-                                recruit.status === 'Active' ? "text-green-400" : "text-slate-600"
+                                recruit.status === 'Active' ? "text-white" : "text-slate-600"
                               )}>
                                 {recruit.status === 'Active' 
                                   ? formatCurrency(recruit.estimated_earnings || 0)
@@ -1164,16 +1164,16 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                   "p-6 rounded-2xl border",
                   isXMUser 
                     ? "bg-gradient-to-br from-red-950/50 to-orange-950/50 border-red-500/20" 
-                    : "bg-gradient-to-br from-cyan-950/50 to-cyan-950/50 border-cyan-500/20"
+                    : "bg-gradient-to-br from-cyan-950/50 to-cyan-950/50 border-white/20"
                 )}>
                   <div className="flex items-center justify-between mb-4">
                     <div className={cn(
                       "p-3 rounded-xl",
-                      isXMUser ? "bg-red-500/20 text-red-400" : "bg-cyan-500/20 text-cyan-400"
+                      isXMUser ? "bg-red-500/20 text-red-400" : "bg-white/20 text-white"
                     )}>
                       <DollarSign className="w-6 h-6" />
                     </div>
-                    <span className="text-xs font-medium text-green-400 bg-green-500/10 px-2 py-1 rounded-full">
+                    <span className="text-xs font-medium text-white bg-white/10 px-2 py-1 rounded-full">
                       +{monthlyGrowth}%
                     </span>
                   </div>
@@ -1198,7 +1198,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
 
                 <div className="p-6 rounded-2xl bg-neutral-900/60 border border-white/5">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="p-3 rounded-xl bg-green-500/10 text-green-400">
+                    <div className="p-3 rounded-xl bg-white/10 text-white">
                       <CheckCircle2 className="w-6 h-6" />
                     </div>
                   </div>
@@ -1219,7 +1219,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                       <div className="flex items-center gap-3">
                         <div className={cn(
                           "p-2 rounded-lg",
-                          isXMUser ? "bg-red-500/10 text-red-400" : "bg-cyan-500/10 text-cyan-400"
+                          isXMUser ? "bg-red-500/10 text-red-400" : "bg-white/10 text-white"
                         )}>
                           <Target className="w-5 h-5" />
                         </div>
@@ -1235,7 +1235,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                       <div className="flex items-center gap-3">
                         <div className={cn(
                           "p-2 rounded-lg",
-                          isXMUser ? "bg-red-500/10 text-red-400" : "bg-cyan-500/10 text-cyan-400"
+                          isXMUser ? "bg-red-500/10 text-red-400" : "bg-white/10 text-white"
                         )}>
                           <BarChart3 className="w-5 h-5" />
                         </div>
@@ -1251,7 +1251,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
 
                     <div className="flex items-center justify-between p-4 rounded-xl bg-white/5">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-purple-500/10 text-purple-400">
+                        <div className="p-2 rounded-lg bg-white/10 text-white">
                           <Zap className="w-5 h-5" />
                         </div>
                         <div>
@@ -1322,7 +1322,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                         <p className="text-sm text-slate-400 mb-1">{lots} lots/month</p>
                         <p className={cn(
                           "text-2xl font-black",
-                          isXMUser ? "text-red-400" : "text-cyan-400"
+                          isXMUser ? "text-red-400" : "text-white"
                         )}>
                           {formatCurrency(calcEarnings)}
                         </p>
@@ -1347,7 +1347,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-neutral-900/60 border border-white/5 rounded-2xl p-5">
                   <div className="flex items-center gap-2 mb-3">
-                    <PieChart className={cn("w-5 h-5", isXMUser ? "text-red-400" : "text-cyan-400")} />
+                    <PieChart className={cn("w-5 h-5", isXMUser ? "text-red-400" : "text-white")} />
                     <span className="text-xs text-slate-500 uppercase tracking-wide">Conversion</span>
                   </div>
                   <p className="text-3xl font-black text-white">{stats.conversionRate}</p>
@@ -1356,7 +1356,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
 
                 <div className="bg-neutral-900/60 border border-white/5 rounded-2xl p-5">
                   <div className="flex items-center gap-2 mb-3">
-                    <Activity className={cn("w-5 h-5", isXMUser ? "text-red-400" : "text-cyan-400")} />
+                    <Activity className={cn("w-5 h-5", isXMUser ? "text-red-400" : "text-white")} />
                     <span className="text-xs text-slate-500 uppercase tracking-wide">Avg Lots</span>
                   </div>
                   <p className="text-3xl font-black text-white">
@@ -1367,13 +1367,13 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
 
                 <div className="bg-neutral-900/60 border border-white/5 rounded-2xl p-5">
                   <div className="flex items-center gap-2 mb-3">
-                    <TrendingUp className={cn("w-5 h-5", isXMUser ? "text-red-400" : "text-cyan-400")} />
+                    <TrendingUp className={cn("w-5 h-5", isXMUser ? "text-red-400" : "text-white")} />
                     <span className="text-xs text-slate-500 uppercase tracking-wide">Growth</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <p className="text-3xl font-black text-white">+{monthlyGrowth}%</p>
                     {Number(monthlyGrowth) >= 0 ? (
-                      <ArrowUpRight className="w-5 h-5 text-green-400" />
+                      <ArrowUpRight className="w-5 h-5 text-white" />
                     ) : (
                       <ArrowDownRight className="w-5 h-5 text-red-400" />
                     )}
@@ -1383,7 +1383,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
 
                 <div className="bg-neutral-900/60 border border-white/5 rounded-2xl p-5">
                   <div className="flex items-center gap-2 mb-3">
-                    <Eye className={cn("w-5 h-5", isXMUser ? "text-red-400" : "text-cyan-400")} />
+                    <Eye className={cn("w-5 h-5", isXMUser ? "text-red-400" : "text-white")} />
                     <span className="text-xs text-slate-500 uppercase tracking-wide">Link Clicks</span>
                   </div>
                   <p className="text-3xl font-black text-white">{stats.total * 3 + 42}</p>
@@ -1415,7 +1415,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                             "h-full rounded-full",
                             isXMUser 
                               ? "bg-gradient-to-r from-red-600 to-orange-500" 
-                              : "bg-gradient-to-r from-cyan-600 to-cyan-500"
+                              : "bg-gradient-to-r from-white to-white"
                           )}
                         />
                       </div>
@@ -1438,7 +1438,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                       <div key={i} className="flex items-start gap-3">
                         <div className={cn(
                           "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0",
-                          isXMUser ? "bg-red-500/20 text-red-400" : "bg-cyan-500/20 text-cyan-400"
+                          isXMUser ? "bg-red-500/20 text-red-400" : "bg-white/20 text-white"
                         )}>
                           {i + 1}
                         </div>
@@ -1455,24 +1455,24 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                       "w-full p-4 rounded-xl border text-left transition-all flex items-center justify-between group",
                       isXMUser 
                         ? "bg-red-500/5 border-red-500/20 hover:bg-red-500/10" 
-                        : "bg-cyan-500/5 border-cyan-500/20 hover:bg-cyan-500/10"
+                        : "bg-white/5 border-white/20 hover:bg-white/10"
                     )}>
                       <div className="flex items-center gap-3">
-                        <Share2 className={cn("w-5 h-5", isXMUser ? "text-red-400" : "text-cyan-400")} />
+                        <Share2 className={cn("w-5 h-5", isXMUser ? "text-red-400" : "text-white")} />
                         <span className="text-sm font-medium text-white">Share on Social Media</span>
                       </div>
                       <ExternalLink className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors" />
                     </button>
                     <button className="w-full p-4 rounded-xl border bg-white/5 border-white/10 text-left transition-all hover:bg-white/10 flex items-center justify-between group">
                       <div className="flex items-center gap-3">
-                        <Gift className="w-5 h-5 text-purple-400" />
+                        <Gift className="w-5 h-5 text-white" />
                         <span className="text-sm font-medium text-white">Request Promo Materials</span>
                       </div>
                       <ExternalLink className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors" />
                     </button>
                     <button className="w-full p-4 rounded-xl border bg-white/5 border-white/10 text-left transition-all hover:bg-white/10 flex items-center justify-between group">
                       <div className="flex items-center gap-3">
-                        <MessageSquare className="w-5 h-5 text-green-400" />
+                        <MessageSquare className="w-5 h-5 text-white" />
                         <span className="text-sm font-medium text-white">Contact Support</span>
                       </div>
                       <ExternalLink className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors" />
@@ -1536,7 +1536,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                             "w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold text-white shadow-lg",
                             isXMUser 
                               ? "bg-gradient-to-br from-red-600 to-orange-600" 
-                              : "bg-gradient-to-br from-cyan-600 to-cyan-600"
+                              : "bg-gradient-to-br from-white to-white"
                           )}>
                             {selectedRecruit.email.charAt(0).toUpperCase()}
                          </div>
@@ -1567,7 +1567,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                     <div className="grid grid-cols-2 gap-3">
                         <div className="p-4 rounded-xl bg-neutral-900/80 border border-white/5">
                             <div className="flex items-center gap-2 mb-2">
-                                <div className="p-1.5 rounded-lg bg-green-500/10 text-green-400">
+                                <div className="p-1.5 rounded-lg bg-white/10 text-white">
                                     <BarChart3 className="w-4 h-4" />
                                 </div>
                                 <span className="text-xs text-slate-400 font-medium">Total Lots Traded</span>
@@ -1583,7 +1583,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                              <div className="flex items-center gap-2 mb-2">
                                 <div className={cn(
                                   "p-1.5 rounded-lg",
-                                  isXMUser ? "bg-red-500/10 text-red-400" : "bg-cyan-500/10 text-cyan-400"
+                                  isXMUser ? "bg-red-500/10 text-red-400" : "bg-white/10 text-white"
                                 )}>
                                     <DollarSign className="w-4 h-4" />
                                 </div>
@@ -1591,7 +1591,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                             </div>
                             <p className={cn(
                               "text-2xl font-bold",
-                              selectedRecruit.status === 'Active' ? "text-green-400" : "text-slate-600"
+                              selectedRecruit.status === 'Active' ? "text-white" : "text-slate-600"
                             )}>
                                 {selectedRecruit.status === 'Active' 
                                   ? formatCurrency(selectedRecruit.estimated_earnings || 0)
@@ -1607,12 +1607,12 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                         <div className="relative pl-6 space-y-6 border-l-2 border-white/10 ml-2">
                             {/* Step 1: Registered */}
                             <div className="relative">
-                                <div className="absolute -left-[25px] top-0 w-4 h-4 rounded-full bg-green-500 flex items-center justify-center shadow-[0_0_10px_rgba(34,197,94,0.5)]">
+                                <div className="absolute -left-[25px] top-0 w-4 h-4 rounded-full bg-white flex items-center justify-center shadow-[0_0_10px_rgba(255,255,255,0.5)]">
                                   <CheckCircle2 className="w-2.5 h-2.5 text-white" />
                                 </div>
                                 <h4 className="text-white font-semibold text-sm">Account Created</h4>
                                 <p className="text-xs text-slate-500 mt-1">
-                                    Registered via code <span className={cn("font-mono", isXMUser ? "text-red-400" : "text-cyan-400")}>{selectedRecruit.referred_by_code}</span>
+                                    Registered via code <span className={cn("font-mono", isXMUser ? "text-red-400" : "text-white")}>{selectedRecruit.referred_by_code}</span>
                                 </p>
                                 <p className="text-[10px] text-slate-600 mt-0.5">
                                     {formatDate(selectedRecruit.created_at)} at {formatTime(selectedRecruit.created_at)}
@@ -1624,7 +1624,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                                 <div className={cn(
                                     "absolute -left-[25px] top-0 w-4 h-4 rounded-full flex items-center justify-center",
                                     selectedRecruit.mt5_id 
-                                      ? "bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]" 
+                                      ? "bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]" 
                                       : "bg-neutral-700 border-2 border-neutral-600"
                                 )}>
                                   {selectedRecruit.mt5_id && <CheckCircle2 className="w-2.5 h-2.5 text-white" />}
@@ -1634,7 +1634,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                                 </h4>
                                 {selectedRecruit.mt5_id ? (
                                     <p className="text-xs text-slate-500 mt-1">
-                                        Account ID: <span className="text-green-400 font-mono">{selectedRecruit.mt5_id}</span>
+                                        Account ID: <span className="text-white font-mono">{selectedRecruit.mt5_id}</span>
                                     </p>
                                 ) : (
                                     <p className="text-xs text-amber-400/80 mt-1">
@@ -1648,7 +1648,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                                 <div className={cn(
                                     "absolute -left-[25px] top-0 w-4 h-4 rounded-full flex items-center justify-center",
                                     selectedRecruit.status === 'Active' 
-                                      ? "bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]" 
+                                      ? "bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]" 
                                       : "bg-neutral-700 border-2 border-neutral-600"
                                 )}>
                                   {selectedRecruit.status === 'Active' && <CheckCircle2 className="w-2.5 h-2.5 text-white" />}
@@ -1672,7 +1672,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-slate-500">Referral Code Used</span>
-                          <span className={cn("font-mono", isXMUser ? "text-red-400" : "text-cyan-400")}>
+                          <span className={cn("font-mono", isXMUser ? "text-red-400" : "text-white")}>
                             {selectedRecruit.referred_by_code || 'Unknown'}
                           </span>
                         </div>
@@ -1714,7 +1714,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                       "flex-1 py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-colors",
                       isXMUser 
                         ? "bg-red-600 hover:bg-red-500 text-white" 
-                        : "bg-cyan-600 hover:bg-cyan-500 text-white"
+                        : "bg-white hover:bg-white/90 text-black"
                     )}
                   >
                     Close
@@ -1755,14 +1755,14 @@ const EarningsCard = ({
     primary 
       ? isXMUser 
         ? "bg-gradient-to-br from-red-950/60 to-orange-950/60 border-red-500/20" 
-        : "bg-gradient-to-br from-cyan-950/60 to-cyan-950/60 border-cyan-500/20"
+        : "bg-gradient-to-br from-cyan-950/60 to-cyan-950/60 border-white/20"
       : "bg-neutral-900/60 border-white/5"
   )}>
     <div className="flex items-center justify-between mb-3">
       <div className={cn(
         "p-2.5 rounded-xl",
         primary
-          ? isXMUser ? "bg-red-500/20 text-red-400" : "bg-cyan-500/20 text-cyan-400"
+          ? isXMUser ? "bg-red-500/20 text-red-400" : "bg-white/20 text-white"
           : "bg-white/5 text-slate-400"
       )}>
         <Icon className="w-5 h-5" />
@@ -1770,7 +1770,7 @@ const EarningsCard = ({
       {trend && (
         <div className={cn(
           "flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full",
-          trendUp ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"
+          trendUp ? "bg-white/10 text-white" : "bg-red-500/10 text-red-400"
         )}>
           {trendUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
           {trend}
@@ -1797,9 +1797,9 @@ const QuickStatCard = ({
   isXMUser: boolean;
 }) => {
   const colorClasses = {
-    accent: isXMUser ? "bg-red-500/10 text-red-400" : "bg-cyan-500/10 text-cyan-400",
-    green: "bg-green-500/10 text-green-400",
-    purple: "bg-purple-500/10 text-purple-400",
+    accent: isXMUser ? "bg-red-500/10 text-red-400" : "bg-white/10 text-white",
+    green: "bg-white/10 text-white",
+    purple: "bg-white/10 text-white",
     orange: "bg-orange-500/10 text-orange-400",
   };
   
@@ -1826,7 +1826,7 @@ const StatusBadge = ({ status }: { status: string }) => {
     <div className={cn(
       "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border",
       isActive 
-        ? "bg-green-500/10 text-green-400 border-green-500/20" 
+        ? "bg-white/10 text-white border-white/20" 
         : "bg-amber-500/10 text-amber-400 border-amber-500/20"
     )}>
       {isActive ? <CheckCircle2 className="w-3 h-3" /> : <Clock className="w-3 h-3" />}

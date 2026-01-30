@@ -98,7 +98,7 @@ export function QuickThemePicker({ isOpen, onClose, activeThemeId, onThemeChange
               }}
               className={`p-3 sm:p-4 rounded-xl border transition-all hover:scale-105 active:scale-95 min-h-[68px] touch-manipulation ${
                 theme.id === activeThemeId
-                  ? 'bg-blue-500/20 border-blue-500'
+                  ? 'bg-white/20 border-white'
                   : 'bg-white/5 border-white/10 hover:bg-white/10'
               }`}
               style={{

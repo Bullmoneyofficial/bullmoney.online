@@ -92,7 +92,7 @@ const SplineFallback = memo(function SplineFallback() {
   return (
     <div className="w-full h-full bg-gradient-to-br from-black via-blue-950/30 to-black rounded-xl overflow-hidden relative">
       {/* Animated gradient */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-600/10 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent" />
       
       {/* Shimmer effect */}
       <div className="absolute inset-0 overflow-hidden">
@@ -104,22 +104,22 @@ const SplineFallback = memo(function SplineFallback() {
             width: '200%',
             height: '200%',
             transform: 'translate(-50%, -50%)',
-            background: 'conic-gradient(from 90deg at 50% 50%, transparent 0deg, rgba(59,130,246,0.4) 120deg, transparent 240deg)',
+            background: 'conic-gradient(from 90deg at 50% 50%, transparent 0deg, rgba(255, 255, 255,0.4) 120deg, transparent 240deg)',
           }}
         />
       </div>
       
       {/* Center content */}
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-        <div className="w-16 h-16 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center">
+        <div className="w-16 h-16 rounded-full bg-white/10 border border-white/30 flex items-center justify-center">
           <span className="text-2xl">🚀</span>
         </div>
-        <p className="text-xs text-blue-300/60 text-center px-4">3D View</p>
-        <p className="text-[10px] text-blue-400/40">Optimized for your device</p>
+        <p className="text-xs text-white/60 text-center px-4">3D View</p>
+        <p className="text-[10px] text-white/40">Optimized for your device</p>
       </div>
       
       {/* Border glow */}
-      <div className="absolute inset-0 rounded-xl border border-blue-500/20" />
+      <div className="absolute inset-0 rounded-xl border border-white/20" />
     </div>
   );
 });
@@ -130,7 +130,7 @@ const SplineFallback = memo(function SplineFallback() {
 const LoadingSpinner = memo(function LoadingSpinner() {
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-black via-blue-950/20 to-black rounded-xl">
-      <div className="w-8 h-8 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin-gpu" />
+      <div className="w-8 h-8 border-2 border-white/30 border-t-blue-500 rounded-full animate-spin-gpu" />
     </div>
   );
 });
@@ -241,7 +241,7 @@ export const SplineCanvasWrapper = memo(function SplineCanvasWrapper({
         // Placeholder when not visible - saves GPU memory
         <div className="absolute inset-0 bg-gradient-to-br from-black via-blue-950/10 to-black rounded-xl">
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-6 h-6 rounded-full bg-blue-500/20" />
+            <div className="w-6 h-6 rounded-full bg-white/20" />
           </div>
         </div>
       )}

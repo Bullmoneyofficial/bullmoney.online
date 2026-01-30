@@ -83,14 +83,14 @@ const FALLBACK_THEME: Partial<Theme> = {
 // --- THEME COLOR MAPPING ---
 // Maps Theme IDs to their primary accent colors for the UI widgets
 const THEME_ACCENTS: Record<string, string> = {
-    't01': '#3b82f6', // Blue
-    't02': '#a855f7', // Purple
-    't03': '#22c55e', // Green
+    't01': '#ffffff', // Blue
+    't02': '#ffffff', // Purple
+    't03': '#ffffff', // Green
     't04': '#ef4444', // Red
     't05': '#f59e0b', // Amber
     't06': '#ec4899', // Pink
-    't07': '#06b6d4', // Cyan
-    'default': '#3b82f6'
+    't07': '#ffffff', // Cyan
+    'default': '#ffffff'
 };
 
 const getThemeColor = (id: string) => THEME_ACCENTS[id] || THEME_ACCENTS['default'];
@@ -106,10 +106,10 @@ const OnboardingHelper = ({ onDismiss }: { onDismiss: () => void }) => {
         >
             <div className="relative w-full h-full">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
-                    <h2 className="text-4xl md:text-6xl font-bold text-white mb-4 tracking-tighter drop-shadow-[0_0_25px_rgba(59,130,246,0.6)] animate-pulse">
+                    <h2 className="text-4xl md:text-6xl font-bold text-white mb-4 tracking-tighter drop-shadow-[0_0_25px_rgba(255, 255, 255,0.6)] animate-pulse">
                         Customize Your Vibe
                     </h2>
-                    <p className="text-blue-200 text-lg md:text-xl font-mono opacity-90">
+                    <p className="text-white text-lg md:text-xl font-mono opacity-90">
                         Choose a Theme & Soundtrack
                     </p>
                     <div className="mt-4 text-xs text-white/40 uppercase tracking-widest">Click anywhere to start</div>

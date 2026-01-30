@@ -194,9 +194,9 @@ select,
   user-select: auto;
 }
 
-/* Draggable elements */
-[draggable],
-[data-draggable] {
+/* Draggable elements - ONLY these should have touch-action:none */
+[draggable]:not(.pointer-events-none),
+[data-draggable]:not(.pointer-events-none) {
   touch-action: none !important;
   -webkit-user-drag: element;
 }
@@ -384,13 +384,58 @@ select,
 }
 
 /* ============================================================================
-   PREVENT SCROLL CONFLICTS
+   DESKTOP PAGE ON MOBILE FIX
+   When users access /desktop on mobile devices, ensure clicks/taps work
    ============================================================================ */
 
-/* Prevent parent scroll when child is scrolling */
-[data-scroll-lock] {
-  overscroll-behavior: contain !important;
+/* Desktop page elements that need touch interaction */
+[data-desktop-mode="true"],
+[data-desktop-only],
+.desktop-only-mode {
+  touch-action: manipulation !important;
+  pointer-events: auto !important;
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Desktop page interactive elements */
+[data-desktop-mode="true"] button,
+[data-desktop-mode="true"] a,
+[data-desktop-mode="true"] [role="button"],
+[data-desktop-mode="true"] .cursor-pointer,
+[data-desktop-only] button,
+[data-desktop-only] a,
+[data-desktop-only] [role="button"],
+.desktop-only-mode button,
+.desktop-only-mode a,
+.desktop-only-mode [role="button"] {
+  touch-action: manipulation !important;
+  pointer-events: auto !important;
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
+  min-height: 44px; /* iOS minimum touch target */
+  min-width: 44px;
+}
+
+/* Desktop page Spline containers - allow touch interaction */
+[data-desktop-mode="true"] .spline-container,
+[data-desktop-mode="true"] [data-spline-scene],
+.desktop-only-mode .spline-container,
+.desktop-only-mode [data-spline-scene] {
+  touch-action: manipulation !important;
+  pointer-events: auto !important;
+  cursor: grab;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Desktop page sections - ensure touchable */
+[data-desktop-mode="true"] section,
+.desktop-only-mode section,
+[data-allow-scroll][data-desktop-only] {
   touch-action: pan-y pan-x !important;
+  pointer-events: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ============================================================================
 }
 
 /* Horizontal scrollers - prevent Y scroll */

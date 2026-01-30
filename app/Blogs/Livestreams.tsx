@@ -98,9 +98,9 @@ export default function RecruitPage() {
                 className="relative w-full sm:w-[92%] sm:max-w-3xl rounded-t-3xl sm:rounded-3xl overflow-hidden p-[2px]"
                 style={{
                   background:
-                    "linear-gradient(145deg, rgba(56,189,248,0.6), rgba(99,102,241,0.4))",
+                    "linear-gradient(145deg, rgba(255, 255, 255,0.6), rgba(255, 255, 255,0.4))",
                   boxShadow:
-                    "0 0 50px rgba(56,189,248,0.3), inset 0 0 40px rgba(56,189,248,0.2)",
+                    "0 0 50px rgba(255, 255, 255,0.3), inset 0 0 40px rgba(255, 255, 255,0.2)",
                   maxHeight: "90vh",
                 }}
               >
@@ -137,7 +137,7 @@ export default function RecruitPage() {
 
                     {/* Header */}
                     <div className="relative z-10 text-center mb-8">
-                      <h2 className="text-3xl sm:text-5xl font-extrabold bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-400 bg-clip-text text-transparent">
+                      <h2 className="text-3xl sm:text-5xl font-extrabold bg-gradient-to-r from-sky-400 via-white to-indigo-400 bg-clip-text text-transparent">
                         BULLMONEY VIP
                       </h2>
                       <p className="mt-3 text-neutral-400 text-sm sm:text-base">
@@ -153,12 +153,12 @@ export default function RecruitPage() {
                         className="relative p-6 rounded-lg shadow-lg hover:shadow-2xl transition-all cursor-pointer transform hover:scale-105"
                         style={{
                           background:
-                            "linear-gradient(145deg, #1E40AF, #3B82F6)",
+                            "linear-gradient(145deg, #ffffff, #ffffff)",
                           boxShadow:
                             "0 12px 24px rgba(0,0,0,0.15), 0 4px 6px rgba(0,0,0,0.1)",
                         }}
                       >
-                        <h3 className="text-2xl text-white font-bold bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent">
+                        <h3 className="text-2xl text-white font-bold bg-gradient-to-r from-white to-indigo-600 bg-clip-text text-transparent">
                           VIP Access
                         </h3>
                         <p className="text-sm text-white mt-2">
@@ -166,7 +166,7 @@ export default function RecruitPage() {
                         </p>
                         <button
                           onClick={handleVIPAccessClick}
-                          className="mt-4 px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full hover:opacity-80 transition-all"
+                          className="mt-4 px-6 py-2 bg-gradient-to-r from-white to-indigo-600 text-white rounded-full hover:opacity-80 transition-all"
                         >
                           Access Now
                         </button>
@@ -177,12 +177,12 @@ export default function RecruitPage() {
                         className="relative p-6 rounded-lg shadow-lg hover:shadow-2xl transition-all cursor-pointer transform hover:scale-105"
                         style={{
                           background:
-                            "linear-gradient(145deg, #1E40AF, #3B82F6)",
+                            "linear-gradient(145deg, #ffffff, #ffffff)",
                           boxShadow:
                             "0 12px 24px rgba(0,0,0,0.15), 0 4px 6px rgba(0,0,0,0.1)",
                         }}
                       >
-                        <h3 className="text-2xl text-white font-bold bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent">
+                        <h3 className="text-2xl text-white font-bold bg-gradient-to-r from-white to-indigo-600 bg-clip-text text-transparent">
                           Live Streams
                         </h3>
                         <p className="text-sm text-white mt-2">
@@ -216,7 +216,7 @@ export default function RecruitPage() {
 
                         <button
                           onClick={handleLiveStreamClick}
-                          className="mt-4 px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full hover:opacity-80 transition-all"
+                          className="mt-4 px-6 py-2 bg-gradient-to-r from-white to-indigo-600 text-white rounded-full hover:opacity-80 transition-all"
                         >
                           Watch Now
                         </button>
@@ -227,12 +227,12 @@ export default function RecruitPage() {
                         className="relative p-6 rounded-lg shadow-lg hover:shadow-2xl transition-all cursor-pointer transform hover:scale-105"
                         style={{
                           background:
-                            "linear-gradient(145deg, #1E40AF, #3B82F6)",
+                            "linear-gradient(145deg, #ffffff, #ffffff)",
                           boxShadow:
                             "0 12px 24px rgba(0,0,0,0.15), 0 4px 6px rgba(0,0,0,0.1)",
                         }}
                       >
-                        <h3 className="text-2xl text-white font-bold bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent">
+                        <h3 className="text-2xl text-white font-bold bg-gradient-to-r from-white to-indigo-600 bg-clip-text text-transparent">
                           Mentorship
                         </h3>
                         <p className="text-sm text-white mt-2">
@@ -240,7 +240,7 @@ export default function RecruitPage() {
                         </p>
                         <button
                           onClick={handleMentorshipClick}
-                          className="mt-4 px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full hover:opacity-80 transition-all"
+                          className="mt-4 px-6 py-2 bg-gradient-to-r from-white to-indigo-600 text-white rounded-full hover:opacity-80 transition-all"
                         >
                           Join Now
                         </button>

@@ -94,7 +94,7 @@ const ModalLoadingFallback = memo(function ModalLoadingFallback({
 }) {
   return (
     <div className="fixed inset-0 z-[999999] flex flex-col items-center justify-center bg-black/90 backdrop-blur-sm">
-      <Loader2 className="w-10 h-10 text-blue-400 animate-spin" />
+      <Loader2 className="w-10 h-10 text-white animate-spin" />
       <p className="text-white/60 text-sm mt-4 font-medium">{text}</p>
     </div>
   );

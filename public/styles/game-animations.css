@@ -157,13 +157,13 @@
 
 /* Glow effect */
 .button-glow {
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
   transition: box-shadow 0.3s ease;
 }
 
 .button-glow:hover {
-  box-shadow: 0 0 30px rgba(59, 130, 246, 0.8),
-              0 0 60px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.8),
+              0 0 60px rgba(255, 255, 255, 0.4);
 }
 
 /* ===== CARD ANIMATIONS ===== */
@@ -269,11 +269,11 @@
 @keyframes powerUp {
   0%, 100% {
     transform: scale(1);
-    filter: brightness(1) drop-shadow(0 0 0px rgba(59, 130, 246, 0));
+    filter: brightness(1) drop-shadow(0 0 0px rgba(255, 255, 255, 0));
   }
   50% {
     transform: scale(1.15);
-    filter: brightness(1.3) drop-shadow(0 0 20px rgba(59, 130, 246, 0.8));
+    filter: brightness(1.3) drop-shadow(0 0 20px rgba(255, 255, 255, 0.8));
   }
 }
 
@@ -524,7 +524,7 @@
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+  background: linear-gradient(90deg, #ffffff, #ffffff, #ec4899);
   background-size: 200% 100%;
   animation: gradient-shift 3s ease infinite;
   transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -582,16 +582,16 @@
   background: rgba(0, 0, 0, 0.5);
   border-radius: 12px;
   overflow: hidden;
-  border: 2px solid rgba(59, 130, 246, 0.3);
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
 }
 
 .xp-fill {
   height: 100%;
-  background: linear-gradient(90deg, #22c55e, #10b981, #059669);
+  background: linear-gradient(90deg, #ffffff, #ffffff, #ffffff);
   transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: relative;
-  box-shadow: 0 0 20px rgba(34, 197, 94, 0.6), 0 0 8px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.6), 0 0 8px rgba(255, 255, 255, 0.3);
 }
 
 .xp-fill::before {
@@ -604,7 +604,7 @@
     transparent
   );
   animation: xp-shimmer 2s infinite;
-  filter: drop-shadow(0 0 2px rgba(59, 130, 246, 0.4));
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.4));
 }
 
 @keyframes xp-shimmer {
@@ -640,7 +640,7 @@
   position: fixed;
   top: 20px;
   right: 20px;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.95), rgba(139, 92, 246, 0.95));
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.95));
   /* NO BLUR - removed for performance */
   border-radius: 12px;
   padding: 16px 20px;
@@ -648,7 +648,7 @@
   align-items: center;
   gap: 12px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5),
-              0 0 20px rgba(59, 130, 246, 0.5);
+              0 0 20px rgba(255, 255, 255, 0.5);
   animation: achievement 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   z-index: 999999;
 }
@@ -735,9 +735,47 @@
     left: 10px;
     top: 10px;
   }
+}
 
-  .game-button:hover {
-    transform: scale(1.02); /* Smaller scale on mobile */
+/* Disable ALL hover effects on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  /* Disable button hover effects */
+  .game-button:hover,
+  .button-glow:hover,
+  .hover-glow:hover,
+  .hover-lift:hover,
+  .hover-flip:hover,
+  .hover-scale:hover,
+  .card-tilt:hover,
+  .glass-card:hover,
+  .glow-effect:hover::after {
+    transform: none !important;
+    box-shadow: inherit !important;
+    filter: inherit !important;
+    background: inherit !important;
+    opacity: inherit !important;
+  }
+  
+  .game-button:hover::before {
+    opacity: 0 !important;
+  }
+  
+  /* Add touch feedback with active state instead */
+  .game-button:active,
+  .button-glow:active,
+  .glass-card:active {
+    transform: scale(0.98) !important;
+    opacity: 0.9;
+    transition: transform 0.1s ease-out, opacity 0.1s ease-out !important;
+  }
+  
+  /* Make interactive elements clearly tappable */
+  .game-button,
+  button,
+  [role="button"],
+  a {
+    cursor: pointer;
+    -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
   }
 }
 

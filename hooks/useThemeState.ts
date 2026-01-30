@@ -19,7 +19,7 @@ export function useThemeState() {
     return ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
   }, [activeThemeId]);
 
-  const accentColor = useMemo(() => getThemeColor(activeThemeId) || '#3b82f6', [activeThemeId]);
+  const accentColor = useMemo(() => getThemeColor(activeThemeId) || '#ffffff', [activeThemeId]);
 
   const handleThemeChange = useCallback((themeId: string, _sound: SoundProfile, muted: boolean, safePlay: () => void) => {
     console.log('[Theme] Changing theme to:', themeId, 'muted:', muted);

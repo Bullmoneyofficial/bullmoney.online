@@ -16,12 +16,12 @@ export const ParticleEffect = memo(({ trigger }: { trigger: number }) => {
   useEffect(() => {
     if (trigger === 0) return;
     
-    const colors = ['#3b82f6', '#a855f7', '#22c55e', '#ef4444', '#f59e0b'];
+    const colors = ['#ffffff', '#ffffff', '#ffffff', '#ef4444', '#f59e0b'];
     const newParticles = Array.from({ length: 15 }, (_, i) => ({
       id: Date.now() + i,
       x: Math.random() * window.innerWidth,
       y: Math.random() * window.innerHeight,
-      color: colors[Math.floor(Math.random() * colors.length)] || '#3b82f6'
+      color: colors[Math.floor(Math.random() * colors.length)] || '#ffffff'
     }));
     
     setParticles(prev => [...prev, ...newParticles]);
@@ -82,7 +82,7 @@ export const ShineButton = ({ children, onClick, active, className = "", disable
       touchAction: 'manipulation',
     }}
   >
-    <div className="relative z-10 w-full h-full flex items-center justify-center text-blue-100">
+    <div className="relative z-10 w-full h-full flex items-center justify-center text-white">
       {children}
     </div>
   </button>
@@ -124,7 +124,7 @@ export const OrientationOverlay = ({ onDismiss }: { onDismiss: () => void }) => 
       onTouchEnd={handleTouchEnd}
     >
       <div className="mb-6 relative">
-         <Smartphone className="w-16 h-16 text-blue-500 animate-pulse" />
+         <Smartphone className="w-16 h-16 text-white animate-pulse" />
          <div className="absolute top-0 right-0 -mr-4 -mt-2">
             <Monitor className="w-8 h-8 text-white/30" />
          </div>

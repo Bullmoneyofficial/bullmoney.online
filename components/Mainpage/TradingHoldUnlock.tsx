@@ -20,7 +20,7 @@ export const TradingHoldUnlock = ({ onUnlock }: TradingHoldUnlockProps) => {
       </p>
       <button
         onClick={onUnlock}
-        className="px-8 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+        className="px-8 py-3 bg-white text-black rounded-lg hover:bg-white transition-colors"
       >
         Unlock Trading
       </button>

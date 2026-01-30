@@ -474,7 +474,7 @@ html.is-scrolling [style*="transform"]:not([style*="translateZ"]) {
 /* Kill conic gradients with spin - MAJOR CPU/GPU drain */
 [class*="conic-gradient"],
 [style*="conic-gradient"] {
-  background: linear-gradient(90deg, rgba(59, 130, 246, 0.3), transparent) !important;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.3), transparent) !important;
   animation: none !important;
 }
 

@@ -391,7 +391,7 @@ export default function TradingJournal({ isEmbedded = false, onClose }: TradingJ
   if (loading) {
     return (
       <div className="h-full bg-black flex items-center justify-center p-4">
-        <div className="text-blue-300 text-sm md:text-base neon-blue-text" style={{ textShadow: '0 0 8px #3b82f6' }}>Loading journal...</div>
+        <div className="text-white text-sm md:text-base neon-blue-text" style={{ textShadow: '0 0 8px #ffffff' }}>Loading journal...</div>
       </div>
     );
   }
@@ -419,15 +419,15 @@ export default function TradingJournal({ isEmbedded = false, onClose }: TradingJ
           <div className="mb-2 md:mb-4">
             <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
               <div className="flex-1 min-w-0">
-                <h1 className={`${isEmbedded ? 'text-sm' : 'text-base'} md:text-2xl font-bold text-blue-300 neon-blue-text truncate`} style={{ textShadow: '0 0 4px #3b82f6' }}>
+                <h1 className={`${isEmbedded ? 'text-sm' : 'text-base'} md:text-2xl font-bold text-white neon-blue-text truncate`} style={{ textShadow: '0 0 4px #ffffff' }}>
                   Trading Journal
                 </h1>
-                <p className="text-blue-400/50 text-[10px] md:text-xs mt-0.5 truncate">
+                <p className="text-white/50 text-[10px] md:text-xs mt-0.5 truncate">
                   Preview Mode
                 </p>
               </div>
               
-              <div className="flex items-center justify-center gap-1 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-blue-500 
+              <div className="flex items-center justify-center gap-1 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-white 
                          text-white rounded-lg font-semibold text-xs md:text-sm whitespace-nowrap">
                 <Plus size={14} className="md:w-4 md:h-4" />
                 Add Trade
@@ -436,28 +436,28 @@ export default function TradingJournal({ isEmbedded = false, onClose }: TradingJ
 
             {/* Preview Quick Stats */}
             <div className="grid grid-cols-4 gap-1 md:gap-2 mt-2">
-              <div className="bg-black rounded p-1.5 md:p-2 border border-blue-500/30" style={{ boxShadow: '0 0 4px rgba(59, 130, 246, 0.2)' }}>
-                <div className="text-blue-400/70 text-[8px] md:text-[10px] mb-0.5">Trades</div>
-                <div className="text-xs md:text-base font-bold text-blue-300">{PREVIEW_STATS.totalTrades}</div>
+              <div className="bg-black rounded p-1.5 md:p-2 border border-white/30" style={{ boxShadow: '0 0 4px rgba(255, 255, 255, 0.2)' }}>
+                <div className="text-white/70 text-[8px] md:text-[10px] mb-0.5">Trades</div>
+                <div className="text-xs md:text-base font-bold text-white">{PREVIEW_STATS.totalTrades}</div>
               </div>
-              <div className="bg-black rounded p-1.5 md:p-2 border border-blue-500/30" style={{ boxShadow: '0 0 4px rgba(59, 130, 246, 0.2)' }}>
-                <div className="text-blue-400/70 text-[8px] md:text-[10px] mb-0.5">Win Rate</div>
-                <div className="text-xs md:text-base font-bold text-blue-300">{PREVIEW_STATS.winRate}%</div>
+              <div className="bg-black rounded p-1.5 md:p-2 border border-white/30" style={{ boxShadow: '0 0 4px rgba(255, 255, 255, 0.2)' }}>
+                <div className="text-white/70 text-[8px] md:text-[10px] mb-0.5">Win Rate</div>
+                <div className="text-xs md:text-base font-bold text-white">{PREVIEW_STATS.winRate}%</div>
               </div>
-              <div className="bg-black rounded p-1.5 md:p-2 border border-blue-500/30" style={{ boxShadow: '0 0 4px rgba(59, 130, 246, 0.2)' }}>
-                <div className="text-blue-400/70 text-[8px] md:text-[10px] mb-0.5">P. Factor</div>
-                <div className="text-xs md:text-base font-bold text-blue-300">{PREVIEW_STATS.profitFactor}</div>
+              <div className="bg-black rounded p-1.5 md:p-2 border border-white/30" style={{ boxShadow: '0 0 4px rgba(255, 255, 255, 0.2)' }}>
+                <div className="text-white/70 text-[8px] md:text-[10px] mb-0.5">P. Factor</div>
+                <div className="text-xs md:text-base font-bold text-white">{PREVIEW_STATS.profitFactor}</div>
               </div>
-              <div className="bg-black rounded p-1.5 md:p-2 border border-blue-500/30" style={{ boxShadow: '0 0 4px rgba(59, 130, 246, 0.2)' }}>
-                <div className="text-blue-400/70 text-[8px] md:text-[10px] mb-0.5">P&L</div>
-                <div className="text-xs md:text-base font-bold text-green-400">+$12.5k</div>
+              <div className="bg-black rounded p-1.5 md:p-2 border border-white/30" style={{ boxShadow: '0 0 4px rgba(255, 255, 255, 0.2)' }}>
+                <div className="text-white/70 text-[8px] md:text-[10px] mb-0.5">P&L</div>
+                <div className="text-xs md:text-base font-bold text-white">+$12.5k</div>
               </div>
             </div>
           </div>
 
           {/* Preview Tabs */}
           <div className="flex flex-wrap gap-1 md:gap-2 mb-2 md:mb-4">
-            <div className="flex items-center gap-1 px-2 md:px-3 py-1 md:py-1.5 rounded text-xs md:text-sm font-medium bg-blue-500 text-white">
+            <div className="flex items-center gap-1 px-2 md:px-3 py-1 md:py-1.5 rounded text-xs md:text-sm font-medium bg-white text-black">
               <Calendar size={12} className="md:w-4 md:h-4" />
               <span className="hidden md:inline">Calendar</span>
             </div>
@@ -476,16 +476,16 @@ export default function TradingJournal({ isEmbedded = false, onClose }: TradingJ
             {PREVIEW_TRADES.map((trade) => (
               <div 
                 key={trade.id}
-                className="bg-black/50 border border-blue-500/20 rounded-lg p-3 flex items-center justify-between"
+                className="bg-black/50 border border-white/20 rounded-lg p-3 flex items-center justify-between"
               >
                 <div className="flex items-center gap-3">
-                  <div className={`w-2 h-8 rounded-full ${trade.outcome === 'win' ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <div className={`w-2 h-8 rounded-full ${trade.outcome === 'win' ? 'bg-white' : 'bg-red-500'}`} />
                   <div>
-                    <div className="text-blue-300 font-bold text-sm">{trade.asset_symbol}</div>
-                    <div className="text-blue-400/50 text-xs capitalize">{trade.direction}</div>
+                    <div className="text-white font-bold text-sm">{trade.asset_symbol}</div>
+                    <div className="text-white/50 text-xs capitalize">{trade.direction}</div>
                   </div>
                 </div>
-                <div className={`font-bold text-sm ${trade.net_pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                <div className={`font-bold text-sm ${trade.net_pnl >= 0 ? 'text-white' : 'text-red-400'}`}>
                   {trade.net_pnl >= 0 ? '+' : ''}{trade.net_pnl < 0 ? '-' : ''}${Math.abs(trade.net_pnl)}
                 </div>
               </div>
@@ -504,24 +504,24 @@ export default function TradingJournal({ isEmbedded = false, onClose }: TradingJ
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
-            className="text-center max-w-sm mx-4 p-6 bg-black/80 border border-blue-500/30 rounded-2xl"
-            style={{ boxShadow: '0 0 20px rgba(59, 130, 246, 0.3), 0 0 40px rgba(59, 130, 246, 0.1)' }}
+            className="text-center max-w-sm mx-4 p-6 bg-black/80 border border-white/30 rounded-2xl"
+            style={{ boxShadow: '0 0 20px rgba(255, 255, 255, 0.3), 0 0 40px rgba(255, 255, 255, 0.1)' }}
             onClick={(e) => e.stopPropagation()}
           >
             <motion.div 
-              className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/20 flex items-center justify-center"
+              className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/20 flex items-center justify-center"
               animate={{ 
-                boxShadow: ['0 0 20px rgba(59, 130, 246, 0.3)', '0 0 30px rgba(59, 130, 246, 0.5)', '0 0 20px rgba(59, 130, 246, 0.3)']
+                boxShadow: ['0 0 20px rgba(255, 255, 255, 0.3)', '0 0 30px rgba(255, 255, 255, 0.5)', '0 0 20px rgba(255, 255, 255, 0.3)']
               }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <Lock className="w-8 h-8 text-blue-400" />
+              <Lock className="w-8 h-8 text-white" />
             </motion.div>
             
-            <h3 className="text-xl font-bold text-blue-300 mb-2 neon-blue-text" style={{ textShadow: '0 0 8px #3b82f6' }}>
+            <h3 className="text-xl font-bold text-white mb-2 neon-blue-text" style={{ textShadow: '0 0 8px #ffffff' }}>
               Unlock Your Journal
             </h3>
-            <p className="text-blue-400/70 text-sm mb-5">
+            <p className="text-white/70 text-sm mb-5">
               Create a free account to track your trades, analyze performance, and improve your trading strategy.
             </p>
             
@@ -529,15 +529,15 @@ export default function TradingJournal({ isEmbedded = false, onClose }: TradingJ
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleLoginClick}
-              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-blue-500 
-                       text-white rounded-xl font-semibold shadow-lg hover:bg-blue-400 transition-all"
-              style={{ boxShadow: '0 0 15px rgba(59, 130, 246, 0.5)' }}
+              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-white 
+                       text-black rounded-xl font-semibold shadow-lg hover:bg-white transition-all"
+              style={{ boxShadow: '0 0 15px rgba(255, 255, 255, 0.5)' }}
             >
               <LogIn size={18} />
               {isEmbedded ? 'Sign Up Free' : 'Log In to Continue'}
             </motion.button>
             
-            <div className="flex items-center justify-center gap-3 text-blue-400/40 text-xs mt-3">
+            <div className="flex items-center justify-center gap-3 text-white/40 text-xs mt-3">
               <span className="flex items-center gap-1"><TrendingUp size={12} /> Unlimited trades</span>
               <span className="flex items-center gap-1"><BarChart3 size={12} /> Analytics</span>
               <span className="flex items-center gap-1"><Lock size={12} /> Secure</span>
@@ -555,11 +555,11 @@ export default function TradingJournal({ isEmbedded = false, onClose }: TradingJ
         <div className="mb-2 md:mb-4">
           <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
             <div className="flex-1 min-w-0">
-              <h1 className={`${isEmbedded ? 'text-sm' : 'text-base'} md:text-2xl font-bold text-blue-300 neon-blue-text truncate`} style={{ textShadow: '0 0 4px #3b82f6' }}>
+              <h1 className={`${isEmbedded ? 'text-sm' : 'text-base'} md:text-2xl font-bold text-white neon-blue-text truncate`} style={{ textShadow: '0 0 4px #ffffff' }}>
                 Trading Journal
               </h1>
               {currentUser && (
-                <p className="text-blue-400/50 text-[10px] md:text-xs mt-0.5 truncate">
+                <p className="text-white/50 text-[10px] md:text-xs mt-0.5 truncate">
                   {currentUser.email || 'Your Account'}
                 </p>
               )}
@@ -569,9 +569,9 @@ export default function TradingJournal({ isEmbedded = false, onClose }: TradingJ
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleAddTrade}
-              className="flex items-center justify-center gap-1 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-blue-500 
+              className="flex items-center justify-center gap-1 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-white 
                        text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all text-xs md:text-sm whitespace-nowrap"
-              style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.5)' }}
+              style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.5)' }}
             >
               <Plus size={14} className="md:w-4 md:h-4" />
               Add Trade
@@ -580,26 +580,26 @@ export default function TradingJournal({ isEmbedded = false, onClose }: TradingJ
 
           {/* Compact Quick Stats */}
           <div className="grid grid-cols-4 gap-1 md:gap-2 mt-2">
-            <div className="bg-black rounded p-1.5 md:p-2 border border-blue-500/30" style={{ boxShadow: '0 0 4px rgba(59, 130, 246, 0.2)' }}>
-              <div className="text-blue-400/70 text-[8px] md:text-[10px] mb-0.5">Trades</div>
-              <div className="text-xs md:text-base font-bold text-blue-300">{stats.totalTrades}</div>
+            <div className="bg-black rounded p-1.5 md:p-2 border border-white/30" style={{ boxShadow: '0 0 4px rgba(255, 255, 255, 0.2)' }}>
+              <div className="text-white/70 text-[8px] md:text-[10px] mb-0.5">Trades</div>
+              <div className="text-xs md:text-base font-bold text-white">{stats.totalTrades}</div>
             </div>
-            <div className="bg-black rounded p-1.5 md:p-2 border border-blue-500/30" style={{ boxShadow: '0 0 4px rgba(59, 130, 246, 0.2)' }}>
-              <div className="text-blue-400/70 text-[8px] md:text-[10px] mb-0.5">Win Rate</div>
-              <div className="text-xs md:text-base font-bold text-blue-300">
+            <div className="bg-black rounded p-1.5 md:p-2 border border-white/30" style={{ boxShadow: '0 0 4px rgba(255, 255, 255, 0.2)' }}>
+              <div className="text-white/70 text-[8px] md:text-[10px] mb-0.5">Win Rate</div>
+              <div className="text-xs md:text-base font-bold text-white">
                 {stats.winRate.toFixed(0)}%
               </div>
             </div>
-            <div className="bg-black rounded p-1.5 md:p-2 border border-blue-500/30" style={{ boxShadow: '0 0 4px rgba(59, 130, 246, 0.2)' }}>
-              <div className="text-blue-400/70 text-[8px] md:text-[10px] mb-0.5">P. Factor</div>
-              <div className="text-xs md:text-base font-bold text-blue-300">
+            <div className="bg-black rounded p-1.5 md:p-2 border border-white/30" style={{ boxShadow: '0 0 4px rgba(255, 255, 255, 0.2)' }}>
+              <div className="text-white/70 text-[8px] md:text-[10px] mb-0.5">P. Factor</div>
+              <div className="text-xs md:text-base font-bold text-white">
                 {stats.profitFactor.toFixed(1)}
               </div>
             </div>
-            <div className="bg-black rounded p-1.5 md:p-2 border border-blue-500/30" style={{ boxShadow: '0 0 4px rgba(59, 130, 246, 0.2)' }}>
-              <div className="text-blue-400/70 text-[8px] md:text-[10px] mb-0.5">P&L</div>
+            <div className="bg-black rounded p-1.5 md:p-2 border border-white/30" style={{ boxShadow: '0 0 4px rgba(255, 255, 255, 0.2)' }}>
+              <div className="text-white/70 text-[8px] md:text-[10px] mb-0.5">P&L</div>
               <div className={`text-xs md:text-base font-bold ${
-                stats.totalNetProfit >= 0 ? 'text-blue-300' : 'text-blue-400/70'
+                stats.totalNetProfit >= 0 ? 'text-white' : 'text-white/70'
               }`}>
                 {stats.totalNetProfit >= 0 ? '+' : '-'}${Math.abs(stats.totalNetProfit) >= 1000 ? (Math.abs(stats.totalNetProfit)/1000).toFixed(1) + 'k' : Math.abs(stats.totalNetProfit).toFixed(0)}
               </div>
@@ -613,7 +613,7 @@ export default function TradingJournal({ isEmbedded = false, onClose }: TradingJ
             onClick={() => setViewMode('calendar')}
             className={`flex items-center gap-1 px-2 md:px-3 py-1 md:py-1.5 rounded text-xs md:text-sm font-medium transition-all ${
               viewMode === 'calendar'
-                ? 'bg-blue-500 text-white'
+                ? 'bg-white text-black'
                 : 'bg-white/5 text-gray-400 hover:bg-white/10'
             }`}
           >
@@ -624,7 +624,7 @@ export default function TradingJournal({ isEmbedded = false, onClose }: TradingJ
             onClick={() => setViewMode('list')}
             className={`flex items-center gap-1 px-2 md:px-3 py-1 md:py-1.5 rounded text-xs md:text-sm font-medium transition-all ${
               viewMode === 'list'
-                ? 'bg-blue-500 text-white'
+                ? 'bg-white text-black'
                 : 'bg-white/5 text-gray-400 hover:bg-white/10'
             }`}
           >
@@ -635,7 +635,7 @@ export default function TradingJournal({ isEmbedded = false, onClose }: TradingJ
             onClick={() => setViewMode('statistics')}
             className={`flex items-center gap-1 px-2 md:px-3 py-1 md:py-1.5 rounded text-xs md:text-sm font-medium transition-all ${
               viewMode === 'statistics'
-                ? 'bg-blue-500 text-white'
+                ? 'bg-white text-black'
                 : 'bg-white/5 text-gray-400 hover:bg-white/10'
             }`}
           >
@@ -649,7 +649,7 @@ export default function TradingJournal({ isEmbedded = false, onClose }: TradingJ
               value={filterAssetType}
               onChange={(e) => setFilterAssetType(e.target.value)}
               className="px-2 md:px-3 py-1 bg-white/5 border border-white/10 rounded text-white text-[10px] md:text-xs
-                       focus:outline-none focus:ring-1 focus:ring-blue-500"
+                       focus:outline-none focus:ring-1 focus:ring-white"
             >
               <option value="all">All</option>
               <option value="stock">Stock</option>
@@ -663,7 +663,7 @@ export default function TradingJournal({ isEmbedded = false, onClose }: TradingJ
               value={filterOutcome}
               onChange={(e) => setFilterOutcome(e.target.value)}
               className="px-2 md:px-3 py-1 bg-white/5 border border-white/10 rounded text-white text-[10px] md:text-xs
-                       focus:outline-none focus:ring-1 focus:ring-blue-500"
+                       focus:outline-none focus:ring-1 focus:ring-white"
             >
               <option value="all">All</option>
               <option value="win">Wins</option>
@@ -708,56 +708,56 @@ export default function TradingJournal({ isEmbedded = false, onClose }: TradingJ
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
-              className="bg-black/50 backdrop-blur-xl rounded-lg border border-blue-500/30 overflow-hidden"
-              style={{ boxShadow: '0 0 4px rgba(59, 130, 246, 0.2)' }}
+              className="bg-black/50 backdrop-blur-xl rounded-lg border border-white/30 overflow-hidden"
+              style={{ boxShadow: '0 0 4px rgba(255, 255, 255, 0.2)' }}
             >
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-blue-500/10 border-b border-blue-500/30">
+                  <thead className="bg-white/10 border-b border-white/30">
                     <tr>
-                      <th className="px-2 md:px-4 py-2 text-left text-[10px] md:text-sm font-medium text-blue-400/70">Date</th>
-                      <th className="px-2 md:px-4 py-2 text-left text-[10px] md:text-sm font-medium text-blue-400/70">Symbol</th>
-                      <th className="hidden md:table-cell px-4 py-2 text-left text-sm font-medium text-blue-400/70">Type</th>
-                      <th className="px-2 md:px-4 py-2 text-left text-[10px] md:text-sm font-medium text-blue-400/70">Dir</th>
-                      <th className="hidden md:table-cell px-4 py-2 text-right text-sm font-medium text-blue-400/70">Entry</th>
-                      <th className="hidden md:table-cell px-4 py-2 text-right text-sm font-medium text-blue-400/70">Exit</th>
-                      <th className="px-2 md:px-4 py-2 text-right text-[10px] md:text-sm font-medium text-blue-400/70">P&L</th>
-                      <th className="px-2 md:px-4 py-2 text-center text-[10px] md:text-sm font-medium text-blue-400/70">Result</th>
+                      <th className="px-2 md:px-4 py-2 text-left text-[10px] md:text-sm font-medium text-white/70">Date</th>
+                      <th className="px-2 md:px-4 py-2 text-left text-[10px] md:text-sm font-medium text-white/70">Symbol</th>
+                      <th className="hidden md:table-cell px-4 py-2 text-left text-sm font-medium text-white/70">Type</th>
+                      <th className="px-2 md:px-4 py-2 text-left text-[10px] md:text-sm font-medium text-white/70">Dir</th>
+                      <th className="hidden md:table-cell px-4 py-2 text-right text-sm font-medium text-white/70">Entry</th>
+                      <th className="hidden md:table-cell px-4 py-2 text-right text-sm font-medium text-white/70">Exit</th>
+                      <th className="px-2 md:px-4 py-2 text-right text-[10px] md:text-sm font-medium text-white/70">P&L</th>
+                      <th className="px-2 md:px-4 py-2 text-center text-[10px] md:text-sm font-medium text-white/70">Result</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-blue-500/10">
                     {filteredTrades.slice(0, 50).map((trade) => (
                       <tr
                         key={trade.id}
-                        className="hover:bg-blue-500/10 transition-colors cursor-pointer"
+                        className="hover:bg-white/10 transition-colors cursor-pointer"
                         onClick={() => handleEditTrade(trade)}
                       >
-                        <td className="px-2 md:px-4 py-2 text-[10px] md:text-sm text-blue-300">
+                        <td className="px-2 md:px-4 py-2 text-[10px] md:text-sm text-white">
                           {new Date(trade.trade_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         </td>
-                        <td className="px-2 md:px-4 py-2 text-[10px] md:text-sm font-medium text-blue-300">
+                        <td className="px-2 md:px-4 py-2 text-[10px] md:text-sm font-medium text-white">
                           {trade.asset_symbol}
                         </td>
-                        <td className="hidden md:table-cell px-4 py-2 text-sm text-blue-400/70">
+                        <td className="hidden md:table-cell px-4 py-2 text-sm text-white/70">
                           {trade.asset_type}
                         </td>
                         <td className="px-2 md:px-4 py-2 text-[10px] md:text-sm">
                           <span className={`px-1 md:px-2 py-0.5 md:py-1 rounded text-[8px] md:text-xs font-medium ${
                             trade.direction === 'long' 
-                              ? 'bg-blue-500/30 text-blue-300 border border-blue-400/60'
-                              : 'bg-blue-500/20 text-blue-400/70 border border-blue-500/30'
+                              ? 'bg-white/30 text-white border border-white/60'
+                              : 'bg-white/20 text-white/70 border border-white/30'
                           }`}>
                             {trade.direction === 'long' ? 'L' : 'S'}
                           </span>
                         </td>
-                        <td className="hidden md:table-cell px-4 py-2 text-sm text-right text-blue-300">
+                        <td className="hidden md:table-cell px-4 py-2 text-sm text-right text-white">
                           ${trade.entry_price.toFixed(2)}
                         </td>
-                        <td className="hidden md:table-cell px-4 py-2 text-sm text-right text-blue-300">
+                        <td className="hidden md:table-cell px-4 py-2 text-sm text-right text-white">
                           {trade.exit_price ? `$${trade.exit_price.toFixed(2)}` : '-'}
                         </td>
                         <td className={`px-2 md:px-4 py-2 text-[10px] md:text-sm text-right font-medium ${
-                          (trade.net_pnl || 0) >= 0 ? 'text-blue-300' : 'text-blue-400/70'
+                          (trade.net_pnl || 0) >= 0 ? 'text-white' : 'text-white/70'
                         }`}>
                           {trade.net_pnl ? `${trade.net_pnl >= 0 ? '+' : '-'}$${Math.abs(trade.net_pnl).toFixed(2)}` : '-'}
                         </td>
@@ -765,10 +765,10 @@ export default function TradingJournal({ isEmbedded = false, onClose }: TradingJ
                           {trade.outcome && (
                             <span className={`inline-block w-2 h-2 md:w-3 md:h-3 rounded-full ${
                               trade.outcome === 'win' 
-                                ? 'bg-blue-400'
+                                ? 'bg-white'
                                 : trade.outcome === 'loss'
-                                ? 'bg-blue-500/40'
-                                : 'bg-blue-500/20'
+                                ? 'bg-white/40'
+                                : 'bg-white/20'
                             }`} />
                           )}
                         </td>
@@ -776,7 +776,7 @@ export default function TradingJournal({ isEmbedded = false, onClose }: TradingJ
                     ))}
                     {filteredTrades.length === 0 && (
                       <tr>
-                        <td colSpan={8} className="px-4 py-8 text-center text-blue-400/70 text-sm">
+                        <td colSpan={8} className="px-4 py-8 text-center text-white/70 text-sm">
                           No trades found. Add your first trade to get started!
                         </td>
                       </tr>

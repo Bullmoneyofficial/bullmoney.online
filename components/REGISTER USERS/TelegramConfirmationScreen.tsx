@@ -37,19 +37,19 @@ const GlobalStyles = () => (
     
     @keyframes neonPulse {
       0%, 100% { 
-        filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.8)) drop-shadow(0 0 6px rgba(59, 130, 246, 0.6));
+        filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 6px rgba(255, 255, 255, 0.6));
       }
       50% { 
-        filter: drop-shadow(0 0 6px rgba(59, 130, 246, 1)) drop-shadow(0 0 12px rgba(59, 130, 246, 0.8));
+        filter: drop-shadow(0 0 6px rgba(255, 255, 255, 1)) drop-shadow(0 0 12px rgba(255, 255, 255, 0.8));
       }
     }
     
     @keyframes textGlow {
       0%, 100% { 
-        text-shadow: 0 0 4px rgba(59, 130, 246, 0.8), 0 0 8px rgba(59, 130, 246, 0.6), 0 0 12px rgba(59, 130, 246, 0.4);
+        text-shadow: 0 0 4px rgba(255, 255, 255, 0.8), 0 0 8px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.4);
       }
       50% { 
-        text-shadow: 0 0 6px rgba(59, 130, 246, 1), 0 0 12px rgba(59, 130, 246, 0.8), 0 0 20px rgba(59, 130, 246, 0.6);
+        text-shadow: 0 0 6px rgba(255, 255, 255, 1), 0 0 12px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.6);
       }
     }
     
@@ -66,7 +66,7 @@ const GlobalStyles = () => (
     }
     
     .neon-icon {
-      filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.9)) drop-shadow(0 0 8px rgba(59, 130, 246, 0.7)) drop-shadow(0 0 12px rgba(59, 130, 246, 0.5));
+      filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 8px rgba(255, 255, 255, 0.7)) drop-shadow(0 0 12px rgba(255, 255, 255, 0.5));
     }
     
     .neon-icon-pulse {
@@ -74,7 +74,7 @@ const GlobalStyles = () => (
     }
     
     .neon-text {
-      text-shadow: 0 0 4px rgba(59, 130, 246, 0.8), 0 0 8px rgba(59, 130, 246, 0.6), 0 0 12px rgba(59, 130, 246, 0.4);
+      text-shadow: 0 0 4px rgba(255, 255, 255, 0.8), 0 0 8px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.4);
     }
     
     .neon-text-pulse {
@@ -82,27 +82,27 @@ const GlobalStyles = () => (
     }
     
     .neon-border {
-      box-shadow: 0 0 5px rgba(59, 130, 246, 0.5), 0 0 10px rgba(59, 130, 246, 0.3), 0 0 20px rgba(59, 130, 246, 0.2), inset 0 0 5px rgba(59, 130, 246, 0.1);
+      box-shadow: 0 0 5px rgba(255, 255, 255, 0.5), 0 0 10px rgba(255, 255, 255, 0.3), 0 0 20px rgba(255, 255, 255, 0.2), inset 0 0 5px rgba(255, 255, 255, 0.1);
     }
     
     .neon-border-strong {
-      box-shadow: 0 0 8px rgba(59, 130, 246, 0.7), 0 0 16px rgba(59, 130, 246, 0.5), 0 0 24px rgba(59, 130, 246, 0.3), inset 0 0 8px rgba(59, 130, 246, 0.15);
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.7), 0 0 16px rgba(255, 255, 255, 0.5), 0 0 24px rgba(255, 255, 255, 0.3), inset 0 0 8px rgba(255, 255, 255, 0.15);
     }
     
     .neon-container {
-      border-color: rgba(59, 130, 246, 0.5);
-      box-shadow: 0 0 10px rgba(59, 130, 246, 0.3), 0 0 20px rgba(59, 130, 246, 0.2), 0 0 30px rgba(59, 130, 246, 0.1), inset 0 0 15px rgba(59, 130, 246, 0.05);
+      border-color: rgba(255, 255, 255, 0.5);
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.3), 0 0 20px rgba(255, 255, 255, 0.2), 0 0 30px rgba(255, 255, 255, 0.1), inset 0 0 15px rgba(255, 255, 255, 0.05);
     }
   `}</style>
 );
 
 // What users unlock by joining
 const UNLOCK_BENEFITS = [
-  { icon: TrendingUp, label: "Free Trades", color: "text-blue-400" },
-  { icon: Video, label: "Live Streams", color: "text-blue-400" },
-  { icon: Bell, label: "Real-time Updates", color: "text-blue-400" },
-  { icon: Newspaper, label: "Market News", color: "text-cyan-400" },
-  { icon: Gift, label: "Exclusive Groups", color: "text-blue-400" },
+  { icon: TrendingUp, label: "Free Trades", color: "text-white" },
+  { icon: Video, label: "Live Streams", color: "text-white" },
+  { icon: Bell, label: "Real-time Updates", color: "text-white" },
+  { icon: Newspaper, label: "Market News", color: "text-white" },
+  { icon: Gift, label: "Exclusive Groups", color: "text-white" },
 ];
 
 interface TelegramConfirmationScreenProps {
@@ -183,37 +183,37 @@ export const TelegramConfirmationScreen: React.FC<TelegramConfirmationScreenProp
       
       {/* Content wrapper */}
       <div className="w-full max-w-xs flex flex-col items-center justify-center gap-5" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div className={cn("absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 md:w-96 h-72 md:h-96 rounded-full blur-[60px] pointer-events-none", isXM ? "bg-red-500/10" : "bg-blue-500/10")} />
+        <div className={cn("absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 md:w-96 h-72 md:h-96 rounded-full blur-[60px] pointer-events-none", isXM ? "bg-red-500/10" : "bg-white/10")} />
         
         {/* Progress indicator - Almost there! */}
         <div className="relative z-10 flex items-center gap-2 mb-2">
           <div className="flex gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8),0_0_16px_rgba(59,130,246,0.5)]" />
-            <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8),0_0_16px_rgba(59,130,246,0.5)]" />
+            <div className="w-2.5 h-2.5 rounded-full bg-white shadow-[0_0_8px_rgba(255, 255, 255,0.8),0_0_16px_rgba(255, 255, 255,0.5)]" />
+            <div className="w-2.5 h-2.5 rounded-full bg-white shadow-[0_0_8px_rgba(255, 255, 255,0.8),0_0_16px_rgba(255, 255, 255,0.5)]" />
             <div className={cn("w-2.5 h-2.5 rounded-full transition-all duration-500", 
               joinedTelegram 
-                ? "bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8),0_0_16px_rgba(59,130,246,0.5)]" 
-                : "bg-blue-500/50 animate-pulse shadow-[0_0_6px_rgba(59,130,246,0.4)]"
+                ? "bg-white shadow-[0_0_8px_rgba(255, 255, 255,0.8),0_0_16px_rgba(255, 255, 255,0.5)]" 
+                : "bg-white/50 animate-pulse shadow-[0_0_6px_rgba(255, 255, 255,0.4)]"
             )} />
           </div>
-          <span className="text-xs text-blue-300/80 font-medium neon-text">Final Step!</span>
+          <span className="text-xs text-white/80 font-medium neon-text">Final Step!</span>
         </div>
 
         {/* Main heading */}
         <div className="text-center relative z-10 space-y-1">
-          <h2 className={cn("text-xl md:text-2xl font-bold shimmer-text neon-text-pulse", isXM ? "neon-red-text" : "text-blue-400")}>
+          <h2 className={cn("text-xl md:text-2xl font-bold shimmer-text neon-text-pulse", isXM ? "neon-red-text" : "text-white")}>
             You&apos;re Almost In!
           </h2>
-          <p className="text-blue-200/70 text-sm md:text-base neon-text">
-            One tap unlocks <span className="text-blue-300 font-semibold">everything</span> completely FREE
+          <p className="text-white/70 text-sm md:text-base neon-text">
+            One tap unlocks <span className="text-white font-semibold">everything</span> completely FREE
           </p>
         </div>
         
         {/* Benefits grid */}
-        <div className="relative z-10 w-full bg-neutral-900/60 backdrop-blur-sm rounded-xl border border-blue-500/40 p-4 space-y-3 neon-container">
+        <div className="relative z-10 w-full bg-neutral-900/60 backdrop-blur-sm rounded-xl border border-white/40 p-4 space-y-3 neon-container">
           <div className="flex items-center gap-2 text-center justify-center">
-            <Gift className="w-4 h-4 text-blue-400 neon-icon" />
-            <span className="text-xs md:text-sm font-semibold text-blue-300 neon-text">What You&apos;re Unlocking:</span>
+            <Gift className="w-4 h-4 text-white neon-icon" />
+            <span className="text-xs md:text-sm font-semibold text-white neon-text">What You&apos;re Unlocking:</span>
           </div>
           
           <div className="grid grid-cols-2 gap-2">
@@ -221,15 +221,15 @@ export const TelegramConfirmationScreen: React.FC<TelegramConfirmationScreenProp
               <div 
                 key={benefit.label}
                 className={cn(
-                  "flex items-center gap-2 p-2 rounded-lg bg-blue-950/30 border border-blue-500/30 transition-all duration-300 neon-border",
-                  joinedTelegram && "border-blue-400/50 bg-blue-500/10 neon-border-strong"
+                  "flex items-center gap-2 p-2 rounded-lg bg-white/10/30 border border-white/30 transition-all duration-300 neon-border",
+                  joinedTelegram && "border-white/50 bg-white/10 neon-border-strong"
                 )}
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <benefit.icon className={cn("w-4 h-4 flex-shrink-0 neon-icon", benefit.color)} />
-                <span className="text-xs text-blue-200 font-medium neon-text">{benefit.label}</span>
+                <span className="text-xs text-white font-medium neon-text">{benefit.label}</span>
                 {joinedTelegram && (
-                  <Check className="w-3 h-3 text-blue-400 ml-auto checkmark-pop neon-icon" />
+                  <Check className="w-3 h-3 text-white ml-auto checkmark-pop neon-icon" />
                 )}
               </div>
             ))}
@@ -239,18 +239,18 @@ export const TelegramConfirmationScreen: React.FC<TelegramConfirmationScreenProp
           <div className={cn(
             "flex items-center justify-center gap-2 p-2.5 rounded-lg border transition-all duration-500",
             joinedTelegram 
-              ? "bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-blue-400/60 neon-border-strong" 
-              : "bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-blue-500/40 neon-border"
+              ? "bg-gradient-to-r from-white/20 to-white/20 border-white/60 neon-border-strong" 
+              : "bg-gradient-to-r from-white/10 to-white/10 border-white/40 neon-border"
           )}>
             {joinedTelegram ? (
-              <Unlock className="w-4 h-4 text-blue-400 neon-icon" />
+              <Unlock className="w-4 h-4 text-white neon-icon" />
             ) : (
-              <Lock className="w-4 h-4 text-blue-400 animate-pulse neon-icon-pulse" />
+              <Lock className="w-4 h-4 text-white animate-pulse neon-icon-pulse" />
             )}
-            <span className="text-xs md:text-sm font-bold text-blue-300 neon-text">
+            <span className="text-xs md:text-sm font-bold text-white neon-text">
               {joinedTelegram ? "Website Access Unlocked!" : "+ Full Website Access"}
             </span>
-            {joinedTelegram && <Sparkles className="w-4 h-4 text-cyan-400 neon-icon" />}
+            {joinedTelegram && <Sparkles className="w-4 h-4 text-white neon-icon" />}
           </div>
         </div>
         
@@ -272,8 +272,8 @@ export const TelegramConfirmationScreen: React.FC<TelegramConfirmationScreenProp
               className={cn(
                 "w-20 h-20 md:w-24 md:h-24 rounded-full border-2 flex items-center justify-center transition-all group cursor-target", 
                 joinedTelegram 
-                  ? "border-cyan-400 bg-cyan-500/20 shadow-[0_0_20px_rgba(0,200,255,0.8),0_0_40px_rgba(0,200,255,0.6),0_0_60px_rgba(0,200,255,0.4),0_0_80px_rgba(0,200,255,0.2)] celebrate-pulse" 
-                  : "border-cyan-400 bg-gradient-to-br from-blue-600/30 to-cyan-500/30 shadow-[0_0_20px_rgba(0,200,255,0.7),0_0_40px_rgba(0,200,255,0.5),0_0_60px_rgba(0,200,255,0.3),0_0_80px_rgba(0,200,255,0.15)] hover:shadow-[0_0_30px_rgba(0,200,255,0.9),0_0_60px_rgba(0,200,255,0.7),0_0_90px_rgba(0,200,255,0.5),0_0_120px_rgba(0,200,255,0.3)] hover:scale-105 animate-pulse"
+                  ? "border-white bg-white/20 shadow-[0_0_20px_rgba(0,200,255,0.8),0_0_40px_rgba(0,200,255,0.6),0_0_60px_rgba(0,200,255,0.4),0_0_80px_rgba(0,200,255,0.2)] celebrate-pulse" 
+                  : "border-white bg-gradient-to-br from-white/30 to-white/30 shadow-[0_0_20px_rgba(0,200,255,0.7),0_0_40px_rgba(0,200,255,0.5),0_0_60px_rgba(0,200,255,0.3),0_0_80px_rgba(0,200,255,0.15)] hover:shadow-[0_0_30px_rgba(0,200,255,0.9),0_0_60px_rgba(0,200,255,0.7),0_0_90px_rgba(0,200,255,0.5),0_0_120px_rgba(0,200,255,0.3)] hover:scale-105 animate-pulse"
               )}
             >
               {joinedTelegram ? (
@@ -296,8 +296,8 @@ export const TelegramConfirmationScreen: React.FC<TelegramConfirmationScreenProp
             className={cn(
               "w-full max-w-xs px-6 py-3 md:px-8 md:py-4 border-2 rounded-xl font-bold transition-all text-sm md:text-base", 
               canUnlock 
-                ? "border-blue-400 text-blue-300 shadow-[0_0_15px_rgba(59,130,246,0.6),0_0_30px_rgba(59,130,246,0.4),0_0_45px_rgba(59,130,246,0.2)] hover:shadow-[0_0_20px_rgba(59,130,246,0.8),0_0_40px_rgba(59,130,246,0.6),0_0_60px_rgba(59,130,246,0.4)] cursor-pointer bg-blue-500/20 hover:bg-blue-500/30 celebrate-pulse neon-text" 
-                : "border-blue-500/30 text-blue-500/50 cursor-not-allowed shadow-[0_0_8px_rgba(59,130,246,0.2)] bg-transparent"
+                ? "border-white text-white shadow-[0_0_15px_rgba(255, 255, 255,0.6),0_0_30px_rgba(255, 255, 255,0.4),0_0_45px_rgba(255, 255, 255,0.2)] hover:shadow-[0_0_20px_rgba(255, 255, 255,0.8),0_0_40px_rgba(255, 255, 255,0.6),0_0_60px_rgba(255, 255, 255,0.4)] cursor-pointer bg-white/20 hover:bg-white/30 celebrate-pulse neon-text" 
+                : "border-white/30 text-white/50 cursor-not-allowed shadow-[0_0_8px_rgba(255, 255, 255,0.2)] bg-transparent"
             )}
           >
             {canUnlock ? (
@@ -320,14 +320,14 @@ export const TelegramConfirmationScreen: React.FC<TelegramConfirmationScreenProp
           
           {/* Success message */}
           {showCelebration && (
-            <p className="text-blue-300 text-xs md:text-sm text-center neon-text-pulse">
+            <p className="text-white text-xs md:text-sm text-center neon-text-pulse">
               Congratulations! You&apos;ve unlocked full access!
             </p>
           )}
         </div>
         
         {/* Trust indicator */}
-        <p className="text-blue-400/60 text-[10px] md:text-xs text-center relative z-10 mt-2 neon-text">
+        <p className="text-white/60 text-[10px] md:text-xs text-center relative z-10 mt-2 neon-text">
           Join traders already in our community • 100% Free Forever
         </p>
       </div>

@@ -44,7 +44,7 @@ const ControlButton = forwardRef<HTMLButtonElement, {
     className={cn(
       "relative flex items-center justify-center w-10 h-10 rounded-full transition-colors duration-300 group outline-offset-2 outline-blue-500",
       active 
-        ? "bg-blue-500/20 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)] border-blue-500/30" 
+        ? "bg-white/20 text-white shadow-[0_0_15px_rgba(255, 255, 255,0.3)] border-white/30" 
         : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border-white/5 hover:border-white/10",
       "border backdrop-blur-sm",
       className
@@ -261,7 +261,7 @@ export const BottomControls = ({
                 onClick={onOpenTheme} 
                 icon={Palette} 
                 label="Change Theme" 
-                className="hover:border-purple-500/50 hover:text-purple-400"
+                className="hover:border-white/50 hover:text-white"
               />
 
               <div className="w-px h-6 bg-white/10" />
@@ -294,7 +294,7 @@ export const BottomControls = ({
                     max="100"
                     value={volume}
                     onChange={(e) => onVolumeChange(parseInt(e.target.value))}
-                    className="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                    className="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-white"
                   />
                 </motion.div>
               </div>
@@ -308,7 +308,7 @@ export const BottomControls = ({
                   className="pl-3"
                 >
                   <div className="flex items-center gap-2">
-                    <Music size={12} className="text-blue-400" />
+                    <Music size={12} className="text-white" />
                     <span className="text-xs text-gray-200 font-medium">
                       {themeName} Radio
                     </span>

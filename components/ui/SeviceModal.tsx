@@ -278,7 +278,7 @@ const ServiceDetailItem = ({ item }: { item: ServiceItem }) => {
             ) : <PhotoIcon className="text-neutral-400" />}
             
             <label className="flex-1 cursor-pointer">
-                <span className="text-xs text-blue-500 font-bold hover:underline">
+                <span className="text-xs text-white font-bold hover:underline">
                     {isUploading ? "Uploading..." : (formData.image_url ? "Change Picture" : "Upload Picture")}
                 </span>
                 <input type="file" className="hidden" accept="image/*" onChange={handleUploadImage} disabled={isUploading} />
@@ -327,7 +327,7 @@ const ServiceDetailItem = ({ item }: { item: ServiceItem }) => {
              {/* 🔒 STRICT ADMIN CHECK */}
              {state.isAdmin && (
                 <div className="flex gap-2">
-                  <button onClick={(e) => { e.stopPropagation(); setIsEditing(true); }} className="text-neutral-400 hover:text-blue-500 p-1">
+                  <button onClick={(e) => { e.stopPropagation(); setIsEditing(true); }} className="text-neutral-400 hover:text-white p-1">
                     <EditIcon className="w-3 h-3" />
                   </button>
                   <button onClick={handleDelete} className="text-neutral-400 hover:text-red-500 p-1">
@@ -473,7 +473,7 @@ const AddServiceForm = ({ categoryId, onCancel }: { categoryId: number; onCancel
                 {formData.image_url ? "Image Uploaded" : "Upload Image (Optional)"}
                 <input type="file" hidden accept="image/*" onChange={handleUpload} />
             </label>
-            {formData.image_url && <span className="text-xs text-green-500 font-bold">✓</span>}
+            {formData.image_url && <span className="text-xs text-white font-bold">✓</span>}
         </div>
         <textarea className="w-full p-2 rounded text-sm bg-white dark:bg-black border border-neutral-300 dark:border-neutral-700" rows={2} placeholder="Includes..." value={formData.detail_includes} onChange={e => setFormData({...formData, detail_includes: e.target.value})} />
         <div className="flex justify-end gap-2">
@@ -558,7 +558,7 @@ function ServiceCategoryItem({ category, items }: { category: ServiceCategory; i
                       className="text-2xl font-light bg-transparent border-b border-black dark:border-white w-full outline-none"
                       autoFocus
                     />
-                    <button onClick={saveCat}><SaveIcon className="w-5 h-5 text-green-600" /></button>
+                    <button onClick={saveCat}><SaveIcon className="w-5 h-5 text-white" /></button>
                     <button onClick={() => setIsEditingCat(false)} className="text-xs uppercase">Cancel</button>
                 </div>
             ) : (

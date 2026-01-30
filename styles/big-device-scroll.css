@@ -86,12 +86,12 @@
     overflow: visible !important;
   }
 
-  /* Fix for theme overlays blocking scroll */
+  /* Fix for theme overlays blocking scroll - FIXED: use touch-action:auto */
   .big-display #theme-global-overlay,
   .big-display #theme-edge-glow,
   .big-display #theme-filter-overlay {
     pointer-events: none !important;
-    touch-action: none !important;
+    touch-action: auto !important; /* FIXED: Allow touch/scroll passthrough */
     z-index: 0 !important; /* FIXED: Was -1, now 0 to be valid */
   }
 

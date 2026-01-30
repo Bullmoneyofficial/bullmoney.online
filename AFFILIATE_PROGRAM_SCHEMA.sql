@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS public.affiliate_tiers (
     vantage_rate_per_lot DECIMAL(10,2) NOT NULL,
     bonus_multiplier DECIMAL(3,2) DEFAULT 1.00,
     perks TEXT[], -- Array of perk descriptions
-    color TEXT DEFAULT '#3b82f6',
+    color TEXT DEFAULT '#ffffff',
     icon TEXT DEFAULT 'target',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -74,11 +74,11 @@ CREATE TABLE IF NOT EXISTS public.affiliate_tiers (
 
 -- Insert default tiers
 INSERT INTO public.affiliate_tiers (name, min_traders, max_traders, commission_percent, xm_rate_per_lot, vantage_rate_per_lot, bonus_multiplier, color, icon, perks) VALUES 
-('Starter', 1, 4, 5.00, 11.00, 5.50, 1.00, '#3b82f6', 'target', ARRAY['Basic dashboard access', 'Monthly payouts', 'Email support']),
+('Starter', 1, 4, 5.00, 11.00, 5.50, 1.00, '#ffffff', 'target', ARRAY['Basic dashboard access', 'Monthly payouts', 'Email support']),
 ('Bronze', 5, 14, 10.00, 11.00, 5.50, 1.10, '#cd7f32', 'award', ARRAY['Priority email support', 'Weekly performance reports', 'Custom referral link']),
 ('Silver', 15, 29, 15.00, 11.00, 5.50, 1.20, '#c0c0c0', 'star', ARRAY['Telegram support', 'Marketing materials', 'Bi-weekly payouts']),
 ('Gold', 30, 49, 20.00, 11.00, 5.50, 1.35, '#ffd700', 'trophy', ARRAY['1-on-1 support calls', 'Co-branded landing pages', 'Weekly payouts']),
-('Elite', 50, NULL, 25.00, 11.00, 5.50, 1.50, '#00d4ff', 'sparkles', ARRAY['Dedicated account manager', 'Custom commission rates', 'Instant payouts', 'Exclusive bonuses'])
+('Elite', 50, NULL, 25.00, 11.00, 5.50, 1.50, '#ffffff', 'sparkles', ARRAY['Dedicated account manager', 'Custom commission rates', 'Instant payouts', 'Exclusive bonuses'])
 ON CONFLICT (name) DO UPDATE SET 
     min_traders = EXCLUDED.min_traders,
     max_traders = EXCLUDED.max_traders,

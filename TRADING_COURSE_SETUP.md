@@ -164,10 +164,10 @@ To get YouTube embed URL:
 
 ## 🎨 Styling
 
-All components use consistent **neon blue (#00d4ff)** styling:
-- Borders: `border-[#00d4ff]/30`
-- Backgrounds: `bg-[#00d4ff]/10`
-- Text: `text-[#00d4ff]`
+All components use consistent **neon blue (#ffffff)** styling:
+- Borders: `border-[#ffffff]/30`
+- Backgrounds: `bg-[#ffffff]/10`
+- Text: `text-[#ffffff]`
 - Glows: `shadow-[0_0_20px_rgba(0,212,255,0.3)]`
 
 ## ✨ Features

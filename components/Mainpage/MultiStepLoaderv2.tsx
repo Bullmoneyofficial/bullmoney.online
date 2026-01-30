@@ -111,7 +111,7 @@ export const MultiStepLoaderV2 = ({
                   animate={{ scale: 1 }}
                   transition={animationConfig.useReducedMotion ? { duration: 0 } : { duration: 0.2 }}
                   className={`h-3 w-3 rounded-full ${
-                    index === currentState ? "bg-blue-500" : "bg-white/30"
+                    index === currentState ? "bg-white" : "bg-white/30"
                   }`}
                 />
               ))}

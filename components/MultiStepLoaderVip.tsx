@@ -186,14 +186,14 @@ const TradingViewBackground = memo(({ assetKey }: { assetKey: AssetKey }) => {
       hide_volume: true,
       // --- VIP COLOR SCHEME ---
       backgroundColor: "rgba(5, 1, 13, 1)", // Almost black purple (Void)
-      gridLineColor: "rgba(107, 33, 168, 0.15)", // Subtle purple grid
+      gridLineColor: "rgba(255, 255, 255, 0.15)", // Subtle purple grid
       scaleFontColor: "rgba(134, 137, 147, 0)",
       // --- PURPLE & WHITE CANDLES ---
-      upColor: "#A855F7", // Neon Purple for UP
+      upColor: "#ffffff", // Neon Purple for UP
       downColor: "#FFFFFF", // White for DOWN
-      borderUpColor: "#A855F7",
+      borderUpColor: "#ffffff",
       borderDownColor: "#FFFFFF",
-      wickUpColor: "#A855F7",
+      wickUpColor: "#ffffff",
       wickDownColor: "#FFFFFF",
     });
     container.appendChild(script);
@@ -255,8 +255,8 @@ const LiveChromeHeader = memo(({
               className={cn(
                 "group relative flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 border cursor-pointer overflow-hidden",
                 isActive 
-                  ? "bg-purple-900/40 border-purple-500/50" 
-                  : "bg-black/20 border-white/5 hover:bg-purple-900/20 hover:border-purple-500/20"
+                  ? "bg-white/40 border-white/50" 
+                  : "bg-black/20 border-white/5 hover:bg-white/20 hover:border-white/20"
               )}
             >
               <div 
@@ -277,7 +277,7 @@ const LiveChromeHeader = memo(({
                   {asset.name}
                 </span>
                 {isActive && (
-                   <span className="text-[8px] text-purple-200/50 leading-none tracking-widest mt-0.5">
+                   <span className="text-[8px] text-white/50 leading-none tracking-widest mt-0.5">
                      VIP FEED
                    </span>
                 )}
@@ -296,7 +296,7 @@ const LiveChromeHeader = memo(({
           <span
             className={cn(
               "w-2 h-2 rounded-full animate-pulse",
-              isUp ? "bg-purple-500" : "bg-white"
+              isUp ? "bg-white" : "bg-white"
             )}
           />
           <span className="text-xs md:text-sm font-mono font-bold text-white/50 tracking-widest">
@@ -350,7 +350,7 @@ const ReactiveLiquidLogo = ({ src }: { src: string }) => {
       </svg>
       <motion.div
         className="relative w-full h-full cursor-pointer will-change-transform select-none"
-        style={{ filter: "url(#velocity-liquid) drop-shadow(0 0 25px rgba(168, 85, 247, 0.5))" }}
+        style={{ filter: "url(#velocity-liquid) drop-shadow(0 0 25px rgba(255, 255, 255, 0.5))" }}
       >
         <img src={src} alt="BullMoney Logo" className="w-full h-full object-contain select-none pointer-events-none" draggable={false} />
       </motion.div>
@@ -477,11 +477,11 @@ export const MultiStepLoaderVip = ({ loadingStates, loading }: { loadingStates: 
               /* VIP Gradient: Dark Purple -> White -> Gold -> Dark Purple */
               background: linear-gradient(
                 110deg, 
-                #581c87 20%,   /* Deep Purple */
+                #ffffff 20%,   /* Deep Purple */
                 #ffffff 45%,   /* White Peak */
                 #fcd34d 50%,   /* Gold Flash */
                 #ffffff 55%,   /* White Peak */
-                #581c87 80%    /* Deep Purple */
+                #ffffff 80%    /* Deep Purple */
               );
               background-size: 200% auto;
               background-clip: text;
@@ -511,11 +511,11 @@ export const MultiStepLoaderVip = ({ loadingStates, loading }: { loadingStates: 
             <div className="relative text-center mb-8 md:mb-12">
               <h1 className={cn(
                 "text-5xl md:text-7xl lg:text-9xl font-black tracking-tighter animate-text-shimmer-vip",
-                !shouldSkipHeavyEffects && "drop-shadow-[0_0_40px_rgba(168,85,247,0.4)]"
+                !shouldSkipHeavyEffects && "drop-shadow-[0_0_40px_rgba(255, 255, 255,0.4)]"
               )}>
                 BULLMONEY
               </h1>
-              <span className="block text-sm md:text-lg tracking-[0.5em] text-purple-400/50 uppercase font-bold mt-2">
+              <span className="block text-sm md:text-lg tracking-[0.5em] text-white/50 uppercase font-bold mt-2">
                 VIP Access
               </span>
             </div>
@@ -527,10 +527,10 @@ export const MultiStepLoaderVip = ({ loadingStates, loading }: { loadingStates: 
                   {[1, 2, 3].map((ring) => (
                     <motion.div
                       key={ring}
-                      initial={{ width: "100px", height: "100px", opacity: 0, border: "1px solid #7C3AED" }}
+                      initial={{ width: "100px", height: "100px", opacity: 0, border: "1px solid #ffffff" }}
                       animate={{ width: ["100px", "600px"], height: ["100px", "600px"], opacity: [0.5, 0], borderWidth: ["3px", "0px"] }}
                       transition={{ duration: 2.5, repeat: Infinity, delay: ring * 0.6, ease: "easeOut" }}
-                      className="absolute rounded-full border-purple-600/60 shadow-[0_0_30px_rgba(147,51,234,0.4)] bg-purple-900/5"
+                      className="absolute rounded-full border-white/60 shadow-[0_0_30px_rgba(255, 255, 255,0.4)] bg-white/5"
                     />
                   ))}
                 </div>
@@ -545,16 +545,16 @@ export const MultiStepLoaderVip = ({ loadingStates, loading }: { loadingStates: 
 
               {/* Status Pill */}
               <div className={cn(
-                "relative z-30 flex items-center justify-center bg-[#1e1b4b]/60 px-6 py-2 rounded-full border border-purple-500/30",
-                !shouldSkipHeavyEffects && "backdrop-blur-xl shadow-[0_0_30px_rgba(168,85,247,0.25)]"
+                "relative z-30 flex items-center justify-center bg-[#1e1b4b]/60 px-6 py-2 rounded-full border border-white/30",
+                !shouldSkipHeavyEffects && "backdrop-blur-xl shadow-[0_0_30px_rgba(255, 255, 255,0.25)]"
               )}>
                 <span className="relative flex h-2 w-2 md:h-3 md:w-3 mr-4">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-500 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-full w-full bg-purple-600"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-full w-full bg-white"></span>
                 </span>
                 <EncryptedText
                   text={loadingStates[currentStep]?.text || "INITIALIZING VIP"}
-                  className="font-mono text-[10px] md:text-xs tracking-[0.2em] uppercase font-bold text-purple-100"
+                  className="font-mono text-[10px] md:text-xs tracking-[0.2em] uppercase font-bold text-white"
                 />
               </div>
             </div>

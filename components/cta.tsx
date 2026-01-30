@@ -116,20 +116,20 @@ const ContactSelectionModal = ({
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.9 }}
                         onClick={(e) => e.stopPropagation()}
-                        className="bg-neutral-950 border border-blue-500/30 p-8 pt-12 rounded-3xl shadow-2xl w-full max-w-sm relative overflow-hidden"
+                        className="bg-neutral-950 border border-white/30 p-8 pt-12 rounded-3xl shadow-2xl w-full max-w-sm relative overflow-hidden"
                     >
                         {/* Background Effects */}
                         <div className="absolute inset-0 pointer-events-none opacity-20 mix-blend-overlay bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
-                        <div className="absolute inset-0 pointer-events-none opacity-30 bg-gradient-to-br from-blue-500/10 to-transparent"></div>
+                        <div className="absolute inset-0 pointer-events-none opacity-30 bg-gradient-to-br from-white/10 to-transparent"></div>
 
                         <button 
                             onClick={onClose} 
-                            className="absolute top-3 right-3 z-50 p-2 bg-neutral-900 border border-neutral-800 rounded-full text-neutral-400 hover:text-white hover:border-blue-500 hover:bg-neutral-800 transition-all shadow-lg"
+                            className="absolute top-3 right-3 z-50 p-2 bg-neutral-900 border border-neutral-800 rounded-full text-neutral-400 hover:text-white hover:border-white hover:bg-neutral-800 transition-all shadow-lg"
                         >
                             <BsX size={20} />
                         </button>
                         
-                        <h3 className="text-2xl font-serif font-bold text-center mb-2 text-blue-500 z-10 relative">Choose Platform</h3>
+                        <h3 className="text-2xl font-serif font-bold text-center mb-2 text-white z-10 relative">Choose Platform</h3>
                         <p className="text-center text-neutral-400 text-sm mb-6 z-10 relative">How would you like to connect?</p>
 
                         <div className="space-y-4 z-10 relative">
@@ -138,14 +138,14 @@ const ContactSelectionModal = ({
                                 href={instagramLink}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="group relative block w-full overflow-hidden rounded-xl p-[1px] focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-50"
+                                className="group relative block w-full overflow-hidden rounded-xl p-[1px] focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-slate-50"
                             >
-                                <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#3b82f6_0%,#bfdbfe_50%,#3b82f6_100%)]" />
+                                <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#ffffff_0%,#ffffff_50%,#ffffff_100%)]" />
                                 <span className="flex h-full w-full cursor-pointer items-center justify-center rounded-xl bg-neutral-950 px-6 py-3 text-sm font-medium text-white backdrop-blur-3xl transition-colors group-hover:bg-neutral-900">
-                                    <div className="bg-blue-500/20 p-2 rounded-full mr-4">
-                                        <BsInstagram size={20} className="text-blue-500" />
+                                    <div className="bg-white/20 p-2 rounded-full mr-4">
+                                        <BsInstagram size={20} className="text-white" />
                                     </div>
-                                    <span className="font-bold tracking-wide text-lg text-blue-400">Instagram</span>
+                                    <span className="font-bold tracking-wide text-lg text-white">Instagram</span>
                                 </span>
                             </a>
 
@@ -154,14 +154,14 @@ const ContactSelectionModal = ({
                                 href={telegramLink}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="group relative block w-full overflow-hidden rounded-xl p-[1px] focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-50"
+                                className="group relative block w-full overflow-hidden rounded-xl p-[1px] focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-slate-50"
                             >
-                                <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#3b82f6_0%,#bfdbfe_50%,#3b82f6_100%)]" />
+                                <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#ffffff_0%,#ffffff_50%,#ffffff_100%)]" />
                                 <span className="flex h-full w-full cursor-pointer items-center justify-center rounded-xl bg-neutral-950 px-6 py-3 text-sm font-medium text-white backdrop-blur-3xl transition-colors group-hover:bg-neutral-900">
-                                    <div className="bg-blue-500/20 p-2 rounded-full mr-4">
-                                        <BsTelegram size={20} className="text-blue-500" />
+                                    <div className="bg-white/20 p-2 rounded-full mr-4">
+                                        <BsTelegram size={20} className="text-white" />
                                     </div>
-                                    <span className="font-bold tracking-wide text-lg text-blue-400">Telegram</span>
+                                    <span className="font-bold tracking-wide text-lg text-white">Telegram</span>
                                 </span>
                             </a>
                         </div>
@@ -397,7 +397,7 @@ export function CTA() {
                    )}
                 </div>
                 <div className="flex items-center gap-1 pl-3 border-l border-neutral-200 dark:border-neutral-800">
-                  <BsStarFill className="w-3.5 h-3.5 text-#3b82f6" />
+                  <BsStarFill className="w-3.5 h-3.5 text-#ffffff" />
                   <span className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
                       4.9/5 based on 100+ reviews
                   </span>
@@ -427,7 +427,7 @@ export function CTA() {
               </button>
 
               <div className="mt-20 w-full max-w-md lg:max-w-lg">
-                <p className="text-xs font-bold uppercase tracking-widest text-#60a5fa dark:text-#3b82f6 mb-6 text-center lg:text-left">
+                <p className="text-xs font-bold uppercase tracking-widest text-#ffffff dark:text-#ffffff mb-6 text-center lg:text-left">
                   Trusted Platforms
                 </p>
                 <LogoMarquee items={BRANDS} />
@@ -436,7 +436,7 @@ export function CTA() {
 
             {/* RIGHT: Card Swap Visual */}
             <div className="relative h-[650px] w-full flex items-center justify-center lg:justify-end perspective-1000">
-               <div className="absolute top-1/2 left-1/2 lg:left-[60%] -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-gradient-to-r from-purple-200 to-pink-200 dark:from-purple-900/40 dark:to-pink-900/40 rounded-full blur-[100px] opacity-60 pointer-events-none" />
+               <div className="absolute top-1/2 left-1/2 lg:left-[60%] -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-gradient-to-r from-white to-pink-200 dark:from-white/40 dark:to-pink-900/40 rounded-full blur-[100px] opacity-60 pointer-events-none" />
                
                <div className="mr-0 lg:mr-20"> 
                   <CardSwap 

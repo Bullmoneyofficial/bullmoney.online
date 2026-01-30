@@ -121,27 +121,27 @@ export default function TradingCalendar({
   return (
     <div className="space-y-3 md:space-y-6">
       {/* Calendar Header */}
-      <div className="bg-black rounded-lg md:rounded-xl border border-blue-500/30 p-3 md:p-6" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
+      <div className="bg-black rounded-lg md:rounded-xl border border-white/30 p-3 md:p-6" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3), inset 0 0 8px rgba(255, 255, 255, 0.1)' }}>
         <div className="flex items-center justify-between mb-3 md:mb-6">
           <button
             onClick={previousMonth}
-            className="p-1.5 md:p-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 transition-colors border border-blue-500/30"
+            className="p-1.5 md:p-2 rounded-lg bg-white/20 hover:bg-white/30 transition-colors border border-white/30"
           >
-            <ChevronLeft className="text-blue-300" size={20} style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+            <ChevronLeft className="text-white" size={20} style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
           </button>
 
           <div className="text-center">
-            <h2 className="text-lg md:text-2xl font-bold text-blue-300 neon-blue-text" style={{ textShadow: '0 0 4px #3b82f6' }}>
+            <h2 className="text-lg md:text-2xl font-bold text-white neon-blue-text" style={{ textShadow: '0 0 4px #ffffff' }}>
               {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
             </h2>
             <div className="flex gap-2 md:gap-4 mt-1 md:mt-2 text-xs md:text-sm">
-              <span className="text-green-400">
+              <span className="text-white">
                 {monthStats.wins}W
               </span>
               <span className="text-red-400">
                 {monthStats.losses}L
               </span>
-              <span className={monthStats.totalPnL >= 0 ? 'text-green-400' : 'text-red-400'}>
+              <span className={monthStats.totalPnL >= 0 ? 'text-white' : 'text-red-400'}>
                 ${monthStats.totalPnL.toFixed(0)}
               </span>
             </div>
@@ -149,9 +149,9 @@ export default function TradingCalendar({
 
           <button
             onClick={nextMonth}
-            className="p-1.5 md:p-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 transition-colors border border-blue-500/30"
+            className="p-1.5 md:p-2 rounded-lg bg-white/20 hover:bg-white/30 transition-colors border border-white/30"
           >
-            <ChevronRight className="text-blue-300" size={20} style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+            <ChevronRight className="text-white" size={20} style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
           </button>
         </div>
 
@@ -161,7 +161,7 @@ export default function TradingCalendar({
           {weekDays.map(day => (
             <div
               key={day}
-              className="text-center text-[10px] md:text-sm font-medium text-blue-400/70 py-1 md:py-2"
+              className="text-center text-[10px] md:text-sm font-medium text-white/70 py-1 md:py-2"
             >
               {day.substring(0, 3)}
             </div>
@@ -182,13 +182,13 @@ export default function TradingCalendar({
                 onClick={() => onDateChange(date)}
                 className={`
                   relative aspect-square rounded-md md:rounded-lg p-1 md:p-2 cursor-pointer transition-all overflow-hidden
-                  ${isCurrentMonth(date) ? 'bg-black border border-blue-500/30' : 'bg-black/50 border border-blue-500/10'}
-                  ${isToday(date) ? 'ring-1 md:ring-2 ring-blue-500' : ''}
-                  ${isSelected(date) ? 'ring-1 md:ring-2 ring-purple-500' : ''}
+                  ${isCurrentMonth(date) ? 'bg-black border border-white/30' : 'bg-black/50 border border-white/10'}
+                  ${isToday(date) ? 'ring-1 md:ring-2 ring-white' : ''}
+                  ${isSelected(date) ? 'ring-1 md:ring-2 ring-white' : ''}
                   ${!isCurrentMonth(date) ? 'opacity-40' : ''}
-                  hover:bg-blue-500/10
+                  hover:bg-white/10
                 `}
-                style={{ boxShadow: isCurrentMonth(date) ? '0 0 4px rgba(59, 130, 246, 0.2)' : 'none' }}
+                style={{ boxShadow: isCurrentMonth(date) ? '0 0 4px rgba(255, 255, 255, 0.2)' : 'none' }}
               >
                 {/* Background image if exists */}
                 {dayImages.length > 0 && (
@@ -203,7 +203,7 @@ export default function TradingCalendar({
 
                 {/* Date number */}
                 <div className={`relative text-[10px] md:text-sm font-medium mb-0.5 md:mb-1 ${
-                  isToday(date) ? 'text-blue-400 neon-blue-text' : 'text-blue-300'
+                  isToday(date) ? 'text-white neon-blue-text' : 'text-white'
                 }`}>
                   {date.getDate()}
                 </div>
@@ -213,7 +213,7 @@ export default function TradingCalendar({
                   <div className="relative space-y-0.5 md:space-y-1">
                     <div className="flex items-center justify-center gap-0.5 md:gap-1">
                       {hasWins && (
-                        <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-green-500" style={{ boxShadow: '0 0 4px #22c55e' }} />
+                        <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-white" style={{ boxShadow: '0 0 4px #ffffff' }} />
                       )}
                       {hasLosses && (
                         <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-red-500" style={{ boxShadow: '0 0 4px #ef4444' }} />
@@ -221,12 +221,12 @@ export default function TradingCalendar({
                     </div>
                     
                     <div className={`text-[8px] md:text-xs font-semibold text-center ${
-                      dayPnL >= 0 ? 'text-green-400' : 'text-red-400'
+                      dayPnL >= 0 ? 'text-white' : 'text-red-400'
                     }`}>
                       {dayPnL >= 0 ? '+' : ''}{Math.abs(dayPnL) > 999 ? (dayPnL/1000).toFixed(1) + 'k' : dayPnL.toFixed(0)}
                     </div>
 
-                    <div className="hidden md:block text-[8px] text-blue-400/70 text-center">
+                    <div className="hidden md:block text-[8px] text-white/70 text-center">
                       {dayTrades.length} trade{dayTrades.length > 1 ? 's' : ''}
                     </div>
                   </div>
@@ -239,8 +239,8 @@ export default function TradingCalendar({
 
       {/* Selected Day Details */}
       {getDayTrades(selectedDate).length > 0 && (
-        <div className="bg-black rounded-lg md:rounded-xl border border-blue-500/30 p-3 md:p-6" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
-          <h3 className="text-base md:text-xl font-bold text-blue-300 mb-3 md:mb-4 neon-blue-text" style={{ textShadow: '0 0 4px #3b82f6' }}>
+        <div className="bg-black rounded-lg md:rounded-xl border border-white/30 p-3 md:p-6" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3), inset 0 0 8px rgba(255, 255, 255, 0.1)' }}>
+          <h3 className="text-base md:text-xl font-bold text-white mb-3 md:mb-4 neon-blue-text" style={{ textShadow: '0 0 4px #ffffff' }}>
             {selectedDate.toLocaleDateString('en-US', { 
               month: 'short', 
               day: 'numeric' 
@@ -255,24 +255,24 @@ export default function TradingCalendar({
                 key={trade.id}
                 whileHover={{ scale: 1.02 }}
                 onClick={() => onTradeClick(trade)}
-                className="bg-black/50 rounded-lg p-3 md:p-4 cursor-pointer hover:bg-blue-500/10 transition-all
-                         border border-blue-500/30"
-                style={{ boxShadow: '0 0 4px rgba(59, 130, 246, 0.2)' }}
+                className="bg-black/50 rounded-lg p-3 md:p-4 cursor-pointer hover:bg-white/10 transition-all
+                         border border-white/30"
+                style={{ boxShadow: '0 0 4px rgba(255, 255, 255, 0.2)' }}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 md:gap-3 mb-2 flex-wrap">
-                      <span className="text-sm md:text-lg font-bold text-blue-300 neon-blue-text" style={{ textShadow: '0 0 2px #3b82f6' }}>
+                      <span className="text-sm md:text-lg font-bold text-white neon-blue-text" style={{ textShadow: '0 0 2px #ffffff' }}>
                         {trade.asset_symbol}
                       </span>
                       <span className={`px-1.5 md:px-2 py-0.5 md:py-1 rounded text-[10px] md:text-xs font-medium ${
                         trade.direction === 'long' 
-                          ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                          ? 'bg-white/20 text-white border border-white/30'
                           : 'bg-red-500/20 text-red-400 border border-red-500/30'
                       }`}>
                         {trade.direction.toUpperCase()}
                       </span>
-                      <span className="text-[10px] md:text-sm text-blue-400/70">
+                      <span className="text-[10px] md:text-sm text-white/70">
                         {trade.asset_type}
                       </span>
                     </div>
@@ -285,12 +285,12 @@ export default function TradingCalendar({
                             key={idx}
                             src={img}
                             alt={`Trade ${idx + 1}`}
-                            className="w-12 h-12 md:w-16 md:h-16 object-cover rounded border border-blue-500/30"
-                            style={{ boxShadow: '0 0 4px rgba(59, 130, 246, 0.3)' }}
+                            className="w-12 h-12 md:w-16 md:h-16 object-cover rounded border border-white/30"
+                            style={{ boxShadow: '0 0 4px rgba(255, 255, 255, 0.3)' }}
                           />
                         ))}
                         {tradeImgs.length > 3 && (
-                          <div className="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center bg-blue-500/20 rounded border border-blue-500/30 text-[10px] md:text-xs text-blue-300">
+                          <div className="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center bg-white/20 rounded border border-white/30 text-[10px] md:text-xs text-white">
                             +{tradeImgs.length - 3}
                           </div>
                         )}
@@ -299,21 +299,21 @@ export default function TradingCalendar({
 
                     <div className="grid grid-cols-2 gap-2 md:gap-3 text-[10px] md:text-sm">
                       <div>
-                        <div className="text-blue-400/70">Entry</div>
-                        <div className="text-blue-300 font-medium">
+                        <div className="text-white/70">Entry</div>
+                        <div className="text-white font-medium">
                           ${trade.entry_price.toFixed(2)}
                         </div>
                       </div>
                       <div>
-                        <div className="text-blue-400/70">Exit</div>
-                        <div className="text-blue-300 font-medium">
+                        <div className="text-white/70">Exit</div>
+                        <div className="text-white font-medium">
                           {trade.exit_price ? `$${trade.exit_price.toFixed(2)}` : 'Open'}
                         </div>
                       </div>
                       <div className="md:hidden">
-                        <div className="text-blue-400/70">P&L</div>
+                        <div className="text-white/70">P&L</div>
                         <div className={`font-bold ${
-                          (trade.net_pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'
+                          (trade.net_pnl || 0) >= 0 ? 'text-white' : 'text-red-400'
                         }`}>
                           {trade.net_pnl ? `$${trade.net_pnl.toFixed(2)}` : '-'}
                         </div>
@@ -322,15 +322,15 @@ export default function TradingCalendar({
 
                     <div className="hidden md:grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mt-2">
                       <div>
-                        <div className="text-blue-400/70">Quantity</div>
-                        <div className="text-blue-300 font-medium">
+                        <div className="text-white/70">Quantity</div>
+                        <div className="text-white font-medium">
                           {trade.quantity}
                         </div>
                       </div>
                       <div>
-                        <div className="text-blue-400/70">P&L</div>
+                        <div className="text-white/70">P&L</div>
                         <div className={`font-bold ${
-                          (trade.net_pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'
+                          (trade.net_pnl || 0) >= 0 ? 'text-white' : 'text-red-400'
                         }`}>
                           {trade.net_pnl ? `$${trade.net_pnl.toFixed(2)}` : '-'}
                         </div>
@@ -338,8 +338,8 @@ export default function TradingCalendar({
                     </div>
 
                     {trade.strategy && (
-                      <div className="mt-2 text-[10px] md:text-sm text-blue-400/70">
-                        <span className="text-blue-300">{trade.strategy}</span>
+                      <div className="mt-2 text-[10px] md:text-sm text-white/70">
+                        <span className="text-white">{trade.strategy}</span>
                       </div>
                     )}
                   </div>
@@ -347,7 +347,7 @@ export default function TradingCalendar({
                   {trade.outcome && (
                     <div className="ml-2 flex-shrink-0">
                       {trade.outcome === 'win' ? (
-                        <TrendingUp className="text-green-400" size={16} style={{ filter: 'drop-shadow(0 0 2px #22c55e)' }} />
+                        <TrendingUp className="text-white" size={16} style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
                       ) : trade.outcome === 'loss' ? (
                         <TrendingDown className="text-red-400" size={16} style={{ filter: 'drop-shadow(0 0 2px #ef4444)' }} />
                       ) : (
@@ -362,25 +362,25 @@ export default function TradingCalendar({
           </div>
 
           {/* Day Summary */}
-          <div className="mt-3 md:mt-4 pt-3 md:pt-4 border-t border-blue-500/30">
+          <div className="mt-3 md:mt-4 pt-3 md:pt-4 border-t border-white/30">
             <div className="grid grid-cols-3 gap-2 md:gap-4 text-center">
               <div>
-                <div className="text-blue-400/70 text-[10px] md:text-sm">Trades</div>
-                <div className="text-blue-300 text-base md:text-xl font-bold neon-blue-text" style={{ textShadow: '0 0 2px #3b82f6' }}>
+                <div className="text-white/70 text-[10px] md:text-sm">Trades</div>
+                <div className="text-white text-base md:text-xl font-bold neon-blue-text" style={{ textShadow: '0 0 2px #ffffff' }}>
                   {getDayTrades(selectedDate).length}
                 </div>
               </div>
               <div>
-                <div className="text-blue-400/70 text-[10px] md:text-sm">Win Rate</div>
-                <div className="text-green-400 text-base md:text-xl font-bold">
+                <div className="text-white/70 text-[10px] md:text-sm">Win Rate</div>
+                <div className="text-white text-base md:text-xl font-bold">
                   {((getDayTrades(selectedDate).filter(t => t.outcome === 'win').length / 
                     getDayTrades(selectedDate).length) * 100).toFixed(0)}%
                 </div>
               </div>
               <div>
-                <div className="text-blue-400/70 text-[10px] md:text-sm">P&L</div>
+                <div className="text-white/70 text-[10px] md:text-sm">P&L</div>
                 <div className={`text-base md:text-xl font-bold ${
-                  getDayPnL(selectedDate) >= 0 ? 'text-green-400' : 'text-red-400'
+                  getDayPnL(selectedDate) >= 0 ? 'text-white' : 'text-red-400'
                 }`}>
                   ${getDayPnL(selectedDate).toFixed(2)}
                 </div>

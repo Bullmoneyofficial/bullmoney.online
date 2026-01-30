@@ -780,13 +780,13 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ type: "spring", damping: 25 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-4xl max-h-[92vh] sm:max-h-[90vh] overflow-hidden rounded-2xl bg-gradient-to-b from-slate-950 via-slate-900 to-black shadow-2xl shadow-blue-900/40 border border-blue-500/40"
+            className="relative w-full max-w-4xl max-h-[92vh] sm:max-h-[90vh] overflow-hidden rounded-2xl bg-gradient-to-b from-slate-950 via-slate-900 to-black shadow-2xl shadow-white/40 border border-white/40"
           >
             {/* Header */}
-            <div className="sticky top-0 z-10 bg-blue-500/10 px-4 sm:px-6 py-3 sm:py-4 border-b border-blue-500/30">
+            <div className="sticky top-0 z-10 bg-white/10 px-4 sm:px-6 py-3 sm:py-4 border-b border-white/30">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <User className="h-5 w-5 sm:h-6 sm:w-6 text-cyan-300 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+                  <User className="h-5 w-5 sm:h-6 sm:w-6 text-white drop-shadow-[0_0_8px_rgba(255, 255, 255,0.8)]" />
                   <h2 className="text-xl sm:text-2xl font-bold text-white neon-text-blue">Account Manager</h2>
                   {accountData?.is_vip && (
                     <Crown className="h-5 w-5 text-yellow-400 animate-pulse" />
@@ -807,7 +807,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
             <div className="overflow-y-auto max-h-[calc(92vh-72px)] sm:max-h-[calc(90vh-80px)] p-4 sm:p-6 space-y-5 sm:space-y-6">
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-20">
-                  <Loader2 className="h-12 w-12 text-blue-500 animate-spin mb-4" />
+                  <Loader2 className="h-12 w-12 text-white animate-spin mb-4" />
                   <p className="text-slate-400">Loading your account...</p>
                 </div>
               ) : error && !accountData ? (
@@ -816,7 +816,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                   <p className="text-red-300 mb-4">{error}</p>
                   <button
                     onClick={fetchAccountData}
-                    className="px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/40 rounded-lg transition-colors"
+                    className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white border border-white/40 rounded-lg transition-colors"
                   >
                     Retry
                   </button>
@@ -824,9 +824,9 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
               ) : accountData ? (
                 <>
                   {/* Logged-in User Indicator */}
-                  <div className="bg-blue-500/10 border border-blue-500/40 rounded-lg p-3 mb-4">
+                  <div className="bg-white/10 border border-white/40 rounded-lg p-3 mb-4">
                     <div className="flex items-center gap-2 text-sm">
-                      <Mail className="h-4 w-4 text-cyan-300" />
+                      <Mail className="h-4 w-4 text-white" />
                       <span className="text-slate-400">Logged in as:</span>
                       <span className="text-white font-semibold">{accountData.email}</span>
                     </div>
@@ -839,7 +839,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                       animate={{ opacity: 1, y: 0 }}
                       className={`p-4 rounded-lg border ${
                         success 
-                          ? 'bg-blue-500/10 border-blue-500/40 text-blue-300' 
+                          ? 'bg-white/10 border-white/40 text-white' 
                           : 'bg-red-500/10 border-red-500/40 text-red-300'
                       }`}
                     >
@@ -858,13 +858,13 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                   <div className="bg-slate-900/70 rounded-xl p-6 border border-slate-800">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg sm:text-xl font-bold text-white neon-text-cyan flex items-center gap-2">
-                        <User className="h-5 w-5 text-cyan-300 drop-shadow-[0_0_6px_rgba(34,211,238,0.7)]" />
+                        <User className="h-5 w-5 text-white drop-shadow-[0_0_6px_rgba(255, 255, 255,0.7)]" />
                         Profile Information
                       </h3>
                       {!isEditingProfile ? (
                         <button
                           onClick={() => setIsEditingProfile(true)}
-                          className="flex items-center gap-2 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/40 rounded-lg transition-colors text-sm"
+                          className="flex items-center gap-2 px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white border border-white/40 rounded-lg transition-colors text-sm"
                         >
                           <Edit2 className="h-4 w-4" />
                           Edit Profile
@@ -874,7 +874,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                           <button
                             onClick={handleSaveProfile}
                             disabled={saving}
-                            className="flex items-center gap-2 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 disabled:bg-slate-800 text-blue-300 border border-blue-500/40 rounded-lg transition-colors text-sm"
+                            className="flex items-center gap-2 px-3 py-1.5 bg-white/20 hover:bg-white/30 disabled:bg-slate-800 text-white border border-white/40 rounded-lg transition-colors text-sm"
                           >
                             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                             Save
@@ -898,7 +898,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                     <div className="flex flex-col md:flex-row gap-6">
                       {/* Profile Picture */}
                       <div className="flex flex-col items-center gap-3">
-                        <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-blue-500/40 bg-slate-900/60">
+                        <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-white/40 bg-slate-900/60">
                           {accountData.image_url ? (
                             <Image
                               src={accountData.image_url}
@@ -913,14 +913,14 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                           )}
                           {uploadingImage && (
                             <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
-                              <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
+                              <Loader2 className="h-8 w-8 text-white animate-spin" />
                             </div>
                           )}
                         </div>
                         <button
                           onClick={() => fileInputRef.current?.click()}
                           disabled={uploadingImage}
-                          className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 disabled:bg-slate-800 disabled:cursor-not-allowed text-blue-300 border border-blue-500/40 rounded-lg transition-colors text-sm"
+                          className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 disabled:bg-slate-800 disabled:cursor-not-allowed text-white border border-white/40 rounded-lg transition-colors text-sm"
                         >
                           <Upload className="h-4 w-4" />
                           Upload Photo
@@ -944,12 +944,12 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                               type="email"
                               value={editEmail}
                               onChange={(e) => setEditEmail(e.target.value)}
-                              className="w-full px-4 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                              className="w-full px-4 py-2 bg-slate-900/70 border border-white/40 rounded-lg !text-white placeholder-slate-500 focus:outline-none focus:border-white focus:bg-white/5"
                               style={{ color: '#ffffff' }}
                             />
                           ) : (
                             <div className="flex items-center gap-2 px-4 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
-                              <Mail className="h-4 w-4 text-cyan-300" />
+                              <Mail className="h-4 w-4 text-white" />
                               <span className="text-white">{accountData.email}</span>
                             </div>
                           )}
@@ -964,12 +964,12 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                               value={editFullName}
                               onChange={(e) => setEditFullName(e.target.value)}
                               placeholder="Enter your full name"
-                              className="w-full px-4 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                              className="w-full px-4 py-2 bg-slate-900/70 border border-white/40 rounded-lg !text-white placeholder-slate-500 focus:outline-none focus:border-white focus:bg-white/5"
                               style={{ color: '#ffffff' }}
                             />
                           ) : (
                             <div className="flex items-center gap-2 px-4 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
-                              <User className="h-4 w-4 text-cyan-300" />
+                              <User className="h-4 w-4 text-white" />
                               <span className="text-white">{accountData.full_name || 'Not set'}</span>
                             </div>
                           )}
@@ -978,7 +978,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                         {/* Social Usernames */}
                         <div className="space-y-3">
                           <h4 className="text-sm font-semibold text-slate-300 flex items-center gap-2">
-                            <MessageCircle className="h-4 w-4 text-cyan-300" />
+                            <MessageCircle className="h-4 w-4 text-white" />
                             Social Media Accounts
                           </h4>
                           
@@ -994,7 +994,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                                   value={editTelegram}
                                   onChange={(e) => setEditTelegram(e.target.value)}
                                   placeholder="@username"
-                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                  className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-white focus:bg-white/5"
                                   style={{ color: '#ffffff' }}
                                 />
                               ) : (
@@ -1015,7 +1015,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                                   value={editDiscord}
                                   onChange={(e) => setEditDiscord(e.target.value)}
                                   placeholder="username#0000"
-                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                  className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-white focus:bg-white/5"
                                   style={{ color: '#ffffff' }}
                                 />
                               ) : (
@@ -1037,7 +1037,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                                   value={editInstagram}
                                   onChange={(e) => setEditInstagram(e.target.value)}
                                   placeholder="@username"
-                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                  className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-white focus:bg-white/5"
                                   style={{ color: '#ffffff' }}
                                 />
                               ) : (
@@ -1059,7 +1059,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                                   value={editFacebook}
                                   onChange={(e) => setEditFacebook(e.target.value)}
                                   placeholder="username"
-                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                  className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-white focus:bg-white/5"
                                   style={{ color: '#ffffff' }}
                                 />
                               ) : (
@@ -1081,7 +1081,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                                   value={editTwitter}
                                   onChange={(e) => setEditTwitter(e.target.value)}
                                   placeholder="@username"
-                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                  className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-white focus:bg-white/5"
                                   style={{ color: '#ffffff' }}
                                 />
                               ) : (
@@ -1103,7 +1103,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                                   value={editYoutube}
                                   onChange={(e) => setEditYoutube(e.target.value)}
                                   placeholder="@channel"
-                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                  className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-white focus:bg-white/5"
                                   style={{ color: '#ffffff' }}
                                 />
                               ) : (
@@ -1125,7 +1125,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                                   value={editTwitch}
                                   onChange={(e) => setEditTwitch(e.target.value)}
                                   placeholder="username"
-                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                  className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-white focus:bg-white/5"
                                   style={{ color: '#ffffff' }}
                                 />
                               ) : (
@@ -1146,7 +1146,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                                   value={editTiktok}
                                   onChange={(e) => setEditTiktok(e.target.value)}
                                   placeholder="@username"
-                                  className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                  className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-white focus:bg-white/5"
                                   style={{ color: '#ffffff' }}
                                 />
                               ) : (
@@ -1165,13 +1165,13 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                   <div className="bg-slate-900/70 rounded-xl p-6 border border-slate-800">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                        <Shield className="h-5 w-5 text-cyan-300" />
+                        <Shield className="h-5 w-5 text-white" />
                         Password & Security
                       </h3>
                       {!isEditingPassword && (
                         <button
                           onClick={() => setIsEditingPassword(true)}
-                          className="flex items-center gap-2 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/40 rounded-lg transition-colors text-sm"
+                          className="flex items-center gap-2 px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white border border-white/40 rounded-lg transition-colors text-sm"
                         >
                           <Edit2 className="h-4 w-4" />
                           Change Password
@@ -1183,7 +1183,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                       <div>
                         <label className="block text-sm font-medium text-slate-400 mb-1">Current Password</label>
                         <div className="flex items-center gap-2 px-4 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
-                          <Shield className="h-4 w-4 text-cyan-300" />
+                          <Shield className="h-4 w-4 text-white" />
                           <span className="text-white font-mono flex-1">
                             {showPassword ? (accountData.password || '••••••••') : '••••••••'}
                           </span>
@@ -1209,7 +1209,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                               value={editNewPassword}
                               onChange={(e) => setEditNewPassword(e.target.value)}
                               placeholder="Enter new password"
-                              className="w-full px-4 py-2 pr-10 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                              className="w-full px-4 py-2 pr-10 bg-slate-900/70 border border-white/40 rounded-lg !text-white placeholder-slate-500 focus:outline-none focus:border-white focus:bg-white/5"
                               style={{ color: '#ffffff' }}
                             />
                             <button
@@ -1229,7 +1229,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             value={editConfirmPassword}
                             onChange={(e) => setEditConfirmPassword(e.target.value)}
                             placeholder="Confirm new password"
-                            className="w-full px-4 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            className="w-full px-4 py-2 bg-slate-900/70 border border-white/40 rounded-lg !text-white placeholder-slate-500 focus:outline-none focus:border-white focus:bg-white/5"
                             style={{ color: '#ffffff' }}
                           />
                         </div>
@@ -1238,7 +1238,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                           <button
                             onClick={handleUpdatePassword}
                             disabled={saving}
-                            className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 disabled:bg-slate-800 text-blue-300 border border-blue-500/40 rounded-lg transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 disabled:bg-slate-800 text-white border border-white/40 rounded-lg transition-colors"
                           >
                             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                             Update Password
@@ -1262,7 +1262,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                   {/* Contact Information & Location */}
                   <div className="bg-slate-900/70 rounded-xl p-6 border border-slate-800">
                     <h3 className="text-lg sm:text-xl font-bold text-white neon-text-cyan mb-4 flex items-center gap-2">
-                      <Mail className="h-5 w-5 text-cyan-300 drop-shadow-[0_0_6px_rgba(34,211,238,0.7)]" />
+                      <Mail className="h-5 w-5 text-white drop-shadow-[0_0_6px_rgba(255, 255, 255,0.7)]" />
                       Contact & Location
                     </h3>
                     
@@ -1275,7 +1275,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             value={editCellNumber}
                             onChange={(e) => setEditCellNumber(e.target.value)}
                             placeholder="+1 234 567 8900"
-                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-white focus:bg-white/5"
                             style={{ color: '#ffffff' }}
                           />
                         </div>
@@ -1284,7 +1284,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                           <select
                             value={editPreferredContact}
                             onChange={(e) => setEditPreferredContact(e.target.value)}
-                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg text-white text-sm focus:outline-none focus:border-white focus:bg-white/5"
                           >
                             <option value="">Select method</option>
                             <option value="Email">Email</option>
@@ -1301,7 +1301,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             value={editCountry}
                             onChange={(e) => setEditCountry(e.target.value)}
                             placeholder="United States"
-                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-white focus:bg-white/5"
                             style={{ color: '#ffffff' }}
                           />
                         </div>
@@ -1312,7 +1312,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             value={editCity}
                             onChange={(e) => setEditCity(e.target.value)}
                             placeholder="New York"
-                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-white focus:bg-white/5"
                             style={{ color: '#ffffff' }}
                           />
                         </div>
@@ -1323,7 +1323,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             value={editTimezone}
                             onChange={(e) => setEditTimezone(e.target.value)}
                             placeholder="EST, PST, UTC+3"
-                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-white focus:bg-white/5"
                             style={{ color: '#ffffff' }}
                           />
                         </div>
@@ -1333,7 +1333,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             type="date"
                             value={editBirthDate}
                             onChange={(e) => setEditBirthDate(e.target.value)}
-                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg !text-white text-sm focus:outline-none focus:border-white focus:bg-white/5"
                             style={{ color: '#ffffff' }}
                           />
                         </div>
@@ -1371,7 +1371,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                   {/* Trading Profile */}
                   <div className="bg-slate-900/70 rounded-xl p-6 border border-slate-800">
                     <h3 className="text-lg sm:text-xl font-bold text-white neon-text-cyan mb-4 flex items-center gap-2">
-                      <TrendingUp className="h-5 w-5 text-cyan-300 drop-shadow-[0_0_6px_rgba(34,211,238,0.7)]" />
+                      <TrendingUp className="h-5 w-5 text-white drop-shadow-[0_0_6px_rgba(255, 255, 255,0.7)]" />
                       Trading Profile
                     </h3>
                     
@@ -1386,7 +1386,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                               onChange={(e) => setEditTradingYears(e.target.value)}
                               placeholder="3"
                               min="0"
-                              className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                              className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-white focus:bg-white/5"
                             />
                           </div>
                           <div>
@@ -1394,7 +1394,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             <select
                               value={editTradingStyle}
                               onChange={(e) => setEditTradingStyle(e.target.value)}
-                              className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                              className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg text-white text-sm focus:outline-none focus:border-white focus:bg-white/5"
                             >
                               <option value="">Select style</option>
                               <option value="Scalper">Scalper</option>
@@ -1409,7 +1409,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             <select
                               value={editRiskTolerance}
                               onChange={(e) => setEditRiskTolerance(e.target.value)}
-                              className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                              className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg text-white text-sm focus:outline-none focus:border-white focus:bg-white/5"
                             >
                               <option value="">Select tolerance</option>
                               <option value="Conservative">Conservative (1-2%)</option>
@@ -1424,7 +1424,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                               value={editPreferredInstruments}
                               onChange={(e) => setEditPreferredInstruments(e.target.value)}
                               placeholder="Forex, Stocks, Crypto"
-                              className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                              className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-white focus:bg-white/5"
                               style={{ color: '#ffffff' }}
                             />
                           </div>
@@ -1433,7 +1433,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             <select
                               value={editAccountBalance}
                               onChange={(e) => setEditAccountBalance(e.target.value)}
-                              className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                              className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg text-white text-sm focus:outline-none focus:border-white focus:bg-white/5"
                             >
                               <option value="">Select range</option>
                               <option value="$0-$500">$0-$500</option>
@@ -1448,7 +1448,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             <select
                               value={editPreferredLeverage}
                               onChange={(e) => setEditPreferredLeverage(e.target.value)}
-                              className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                              className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg text-white text-sm focus:outline-none focus:border-white focus:bg-white/5"
                             >
                               <option value="">Select leverage</option>
                               <option value="1:50">1:50</option>
@@ -1466,7 +1466,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             value={editFavoritePairs}
                             onChange={(e) => setEditFavoritePairs(e.target.value)}
                             placeholder="EURUSD, GBPUSD, GOLD, BTC/USD"
-                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-white focus:bg-white/5"
                             style={{ color: '#ffffff' }}
                           />
                         </div>
@@ -1477,7 +1477,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             onChange={(e) => setEditTradingStrategy(e.target.value)}
                             placeholder="Describe your primary trading strategy..."
                             rows={3}
-                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-white focus:bg-white/5"
                             style={{ color: '#ffffff' }}
                           />
                         </div>
@@ -1492,7 +1492,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                               min="0"
                               max="100"
                               step="0.1"
-                              className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                              className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-white focus:bg-white/5"
                               style={{ color: '#ffffff' }}
                             />
                           </div>
@@ -1503,7 +1503,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                               value={editMonthlyTarget}
                               onChange={(e) => setEditMonthlyTarget(e.target.value)}
                               placeholder="$500, 10%, etc."
-                              className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                              className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-white focus:bg-white/5"
                               style={{ color: '#ffffff' }}
                             />
                           </div>
@@ -1512,7 +1512,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             <select
                               value={editChartTimeframe}
                               onChange={(e) => setEditChartTimeframe(e.target.value)}
-                              className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                              className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg text-white text-sm focus:outline-none focus:border-white focus:bg-white/5"
                             >
                               <option value="">Select timeframe</option>
                               <option value="M1">M1 (1 Minute)</option>
@@ -1532,7 +1532,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                               value={editTradingTimezone}
                               onChange={(e) => setEditTradingTimezone(e.target.value)}
                               placeholder="London, New York, Asian"
-                              className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                              className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-white focus:bg-white/5"
                               style={{ color: '#ffffff' }}
                             />
                           </div>
@@ -1543,7 +1543,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                               type="checkbox"
                               checked={editUsesAutomated}
                               onChange={(e) => setEditUsesAutomated(e.target.checked)}
-                              className="w-4 h-4 rounded border-blue-500/40 bg-slate-900/70 text-blue-500 focus:ring-blue-500 focus:ring-offset-0"
+                              className="w-4 h-4 rounded border-white/40 bg-slate-900/70 text-white focus:ring-white focus:ring-offset-0"
                             />
                             <span className="text-sm text-slate-300">Uses Automated Trading</span>
                           </label>
@@ -1552,7 +1552,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                               type="checkbox"
                               checked={editAttendsLive}
                               onChange={(e) => setEditAttendsLive(e.target.checked)}
-                              className="w-4 h-4 rounded border-blue-500/40 bg-slate-900/70 text-blue-500 focus:ring-blue-500 focus:ring-offset-0"
+                              className="w-4 h-4 rounded border-white/40 bg-slate-900/70 text-white focus:ring-white focus:ring-offset-0"
                             />
                             <span className="text-sm text-slate-300">Attends Live Sessions</span>
                           </label>
@@ -1608,12 +1608,12 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                         </div>
                         <div className="flex gap-3">
                           {accountData.uses_automated_trading && (
-                            <span className="px-3 py-1 bg-blue-500/20 border border-blue-500/40 rounded-full text-blue-300 text-xs">
+                            <span className="px-3 py-1 bg-white/20 border border-white/40 rounded-full text-white text-xs">
                               Automated Trading
                             </span>
                           )}
                           {accountData.attends_live_sessions && (
-                            <span className="px-3 py-1 bg-cyan-500/20 border border-cyan-500/40 rounded-full text-cyan-300 text-xs">
+                            <span className="px-3 py-1 bg-white/20 border border-white/40 rounded-full text-white text-xs">
                               Attends Live Sessions
                             </span>
                           )}
@@ -1625,7 +1625,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                   {/* Personality & Interests */}
                   <div className="bg-slate-900/70 rounded-xl p-6 border border-slate-800">
                     <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                      <User className="h-5 w-5 text-cyan-300" />
+                      <User className="h-5 w-5 text-white" />
                       Personality & Interests
                     </h3>
                     
@@ -1638,7 +1638,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             onChange={(e) => setEditHobbies(e.target.value)}
                             placeholder="Gaming, fitness, reading, travel, etc."
                             rows={2}
-                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-white focus:bg-white/5"
                             style={{ color: '#ffffff' }}
                           />
                         </div>
@@ -1649,7 +1649,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             onChange={(e) => setEditPersonalityTraits(e.target.value)}
                             placeholder="Analytical, patient, risk-taker, disciplined, etc."
                             rows={2}
-                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-white focus:bg-white/5"
                             style={{ color: '#ffffff' }}
                           />
                         </div>
@@ -1660,7 +1660,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             onChange={(e) => setEditTradingGoals(e.target.value)}
                             placeholder="What are your short-term and long-term trading goals?"
                             rows={3}
-                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-white focus:bg-white/5"
                             style={{ color: '#ffffff' }}
                           />
                         </div>
@@ -1669,7 +1669,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                           <select
                             value={editLearningStyle}
                             onChange={(e) => setEditLearningStyle(e.target.value)}
-                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg text-white text-sm focus:outline-none focus:border-white focus:bg-white/5"
                           >
                             <option value="">Select learning style</option>
                             <option value="Visual">Visual (Charts, Videos)</option>
@@ -1686,7 +1686,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             onChange={(e) => setEditBio(e.target.value)}
                             placeholder="Tell us about yourself and your trading journey..."
                             rows={4}
-                            className="w-full px-3 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                            className="w-full px-3 py-2 bg-slate-900/70 border border-white/40 rounded-lg !text-white text-sm placeholder-slate-500 focus:outline-none focus:border-white focus:bg-white/5"
                             style={{ color: '#ffffff' }}
                           />
                         </div>
@@ -1738,7 +1738,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                         VIP Status
                       </h3>
                       {accountData.is_vip ? (
-                        <span className="px-3 py-1 bg-cyan-500/20 border border-cyan-500/40 rounded-full text-cyan-300 text-sm font-semibold">
+                        <span className="px-3 py-1 bg-white/20 border border-white/40 rounded-full text-white text-sm font-semibold">
                           Active
                         </span>
                       ) : (
@@ -1758,7 +1758,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                   {accountData.affiliate_code && (
                     <div className="bg-slate-900/70 rounded-xl p-6 border border-slate-800">
                       <h3 className="text-lg sm:text-xl font-bold text-white neon-text-cyan mb-4 flex items-center gap-2">
-                        <TrendingUp className="h-5 w-5 text-cyan-300 drop-shadow-[0_0_6px_rgba(34,211,238,0.7)]" />
+                        <TrendingUp className="h-5 w-5 text-white drop-shadow-[0_0_6px_rgba(255, 255, 255,0.7)]" />
                         Affiliate Dashboard
                       </h3>
                       
@@ -1769,9 +1769,9 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                             <span className="text-lg font-bold text-white">{accountData.affiliate_code}</span>
                             <button
                               onClick={copyAffiliateCode}
-                              className="p-2 hover:bg-blue-600/20 rounded border border-transparent hover:border-blue-500/40 transition-colors"
+                              className="p-2 hover:bg-white/20 rounded border border-transparent hover:border-white/40 transition-colors"
                             >
-                              <Copy className="h-4 w-4 text-cyan-300" />
+                              <Copy className="h-4 w-4 text-white" />
                             </button>
                           </div>
                         </div>
@@ -1783,7 +1783,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                         
                         <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
                           <p className="text-sm text-slate-400 mb-1">Commission Balance</p>
-                          <span className="text-lg font-bold text-cyan-300">${(accountData.commission_balance || 0).toFixed(2)}</span>
+                          <span className="text-lg font-bold text-white">${(accountData.commission_balance || 0).toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
@@ -1792,7 +1792,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                   {/* MT5 Accounts Section */}
                   <div className="bg-slate-900/70 rounded-xl p-6 border border-slate-800">
                     <h3 className="text-lg sm:text-xl font-bold text-white neon-text-cyan mb-4 flex items-center gap-2">
-                      <Shield className="h-5 w-5 text-cyan-300 drop-shadow-[0_0_6px_rgba(34,211,238,0.7)]" />
+                      <Shield className="h-5 w-5 text-white drop-shadow-[0_0_6px_rgba(255, 255, 255,0.7)]" />
                       MT5 Trading Accounts
                     </h3>
 
@@ -1805,14 +1805,14 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                           placeholder="MT5 Account ID"
                           value={newMT5Id}
                           onChange={(e) => setNewMT5Id(e.target.value)}
-                          className="w-full px-4 py-2 bg-slate-900/70 border border-slate-800 rounded-lg !text-white placeholder-slate-500 focus:outline-none focus:border-blue-500/70 focus:bg-blue-500/5"
+                          className="w-full px-4 py-2 bg-slate-900/70 border border-slate-800 rounded-lg !text-white placeholder-slate-500 focus:outline-none focus:border-white/70 focus:bg-white/5"
                           style={{ color: '#ffffff' }}
                         />
                         <div className="flex flex-col sm:flex-row gap-3">
                           <select
                             value={newBrokerName}
                             onChange={(e) => setNewBrokerName(e.target.value as "XM" | "Vantage" | "")}
-                            className="flex-1 px-4 py-2 bg-slate-900/70 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-blue-500/70 focus:bg-blue-500/5"
+                            className="flex-1 px-4 py-2 bg-slate-900/70 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-white/70 focus:bg-white/5"
                           >
                             <option value="">Select Broker</option>
                             <option value="XM">XM</option>
@@ -1821,7 +1821,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                           <button
                             onClick={handleAddMT5Account}
                             disabled={saving || !newMT5Id.trim() || !newBrokerName}
-                            className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 disabled:bg-slate-800 disabled:cursor-not-allowed text-blue-300 border border-blue-500/40 rounded-lg transition-colors whitespace-nowrap"
+                            className="flex items-center justify-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 disabled:bg-slate-800 disabled:cursor-not-allowed text-white border border-white/40 rounded-lg transition-colors whitespace-nowrap"
                           >
                             {saving ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
@@ -1840,7 +1840,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                         {accountData.mt5_accounts.map((account) => (
                           <div
                             key={account.id}
-                            className="p-4 bg-slate-900/70 rounded-lg border border-slate-800 hover:border-blue-500/40 transition-colors"
+                            className="p-4 bg-slate-900/70 rounded-lg border border-slate-800 hover:border-white/40 transition-colors"
                           >
                             {editingMT5Id === account.mt5_id ? (
                               // Edit Mode
@@ -1850,12 +1850,12 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                                   value={editMT5AccountId}
                                   onChange={(e) => setEditMT5AccountId(e.target.value)}
                                   placeholder="MT5 Account ID"
-                                  className="w-full px-4 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                  className="w-full px-4 py-2 bg-slate-900/70 border border-white/40 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-white focus:bg-white/5"
                                 />
                                 <select
                                   value={editMT5Broker}
                                   onChange={(e) => setEditMT5Broker(e.target.value as "XM" | "Vantage")}
-                                  className="w-full px-4 py-2 bg-slate-900/70 border border-blue-500/40 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+                                  className="w-full px-4 py-2 bg-slate-900/70 border border-white/40 rounded-lg text-white focus:outline-none focus:border-white focus:bg-white/5"
                                 >
                                   <option value="">Select Broker</option>
                                   <option value="XM">XM</option>
@@ -1865,7 +1865,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                                   <button
                                     onClick={() => handleEditMT5Account(account.mt5_id)}
                                     disabled={saving || !editMT5AccountId.trim() || !editMT5Broker}
-                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 disabled:bg-slate-800 text-blue-300 border border-blue-500/40 rounded-lg transition-colors"
+                                    className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 disabled:bg-slate-800 text-white border border-white/40 rounded-lg transition-colors"
                                   >
                                     {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                                     Save Changes
@@ -1889,7 +1889,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                                   <div className="flex items-center gap-2 mb-1">
                                     <span className="font-mono text-white font-semibold">{account.mt5_id}</span>
                                     {account.is_primary && (
-                                      <span className="px-2 py-0.5 bg-cyan-500/20 border border-cyan-500/40 rounded text-cyan-300 text-xs">
+                                      <span className="px-2 py-0.5 bg-white/20 border border-white/40 rounded text-white text-xs">
                                         Primary
                                       </span>
                                     )}
@@ -1898,8 +1898,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                                     <span>Broker: {account.broker_name || 'Unknown'}</span>
                                     <span className={`px-2 py-0.5 rounded ${
                                       account.status === 'Verified' 
-                                        ? 'bg-blue-500/20 border border-blue-500/40 text-blue-300' 
-                                        : 'bg-cyan-500/20 border border-cyan-500/40 text-cyan-300'
+                                        ? 'bg-white/20 border border-white/40 text-white' 
+                                        : 'bg-white/20 border border-white/40 text-white'
                                     }`}>
                                       {account.status}
                                     </span>
@@ -1913,9 +1913,9 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                                       setEditMT5Broker((account.broker_name === "XM" || account.broker_name === "Vantage" ? account.broker_name : "") as "XM" | "Vantage" | "");
                                     }}
                                     disabled={saving}
-                                    className="p-2 hover:bg-blue-600/20 rounded border border-transparent hover:border-blue-500/40 transition-colors disabled:opacity-50"
+                                    className="p-2 hover:bg-white/20 rounded border border-transparent hover:border-white/40 transition-colors disabled:opacity-50"
                                   >
-                                    <Edit2 className="h-4 w-4 text-cyan-300" />
+                                    <Edit2 className="h-4 w-4 text-white" />
                                   </button>
                                   {!account.is_primary && (
                                     <button
@@ -1942,7 +1942,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                   </div>
 
                   {/* Broker Registration Link */}
-                  <div className="bg-blue-500/10 rounded-xl p-6 border border-blue-500/40">
+                  <div className="bg-white/10 rounded-xl p-6 border border-white/40">
                     <h3 className="text-lg font-bold text-white neon-text-blue mb-2">Need a Broker Account?</h3>
                     <p className="text-sm text-slate-400 mb-4">
                       Register with our partner brokers to start trading and unlock exclusive benefits.
@@ -1955,7 +1955,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                           onClose(); // Close modal
                           router.push('/recruit'); // Navigate to recruit page
                         }}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/40 rounded-lg transition-colors"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white border border-white/40 rounded-lg transition-colors"
                       >
                         <ExternalLink className="h-4 w-4" />
                         Register with Brokers

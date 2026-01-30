@@ -154,8 +154,8 @@ const OptimizedNewsImage = memo(({
 
   if (!src || error) {
     return (
-      <div className={`bg-gradient-to-br from-blue-900/20 to-black flex items-center justify-center ${className}`}>
-        <Newspaper className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500/30" />
+      <div className={`bg-gradient-to-br from-white/20 to-black flex items-center justify-center ${className}`}>
+        <Newspaper className="w-6 h-6 sm:w-8 sm:h-8 text-white/30" />
       </div>
     );
   }
@@ -168,7 +168,7 @@ const OptimizedNewsImage = memo(({
   return (
     <div className={`relative overflow-hidden bg-neutral-900 ${className}`}>
       {!loaded && (
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 to-neutral-800 animate-pulse" />
+        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-neutral-800 animate-pulse" />
       )}
       <img
         src={optimizedSrc}
@@ -200,13 +200,13 @@ const NewsCard = memo(({ item, preview, skipAnimations }: { item: NewsItem; prev
 
   const categoryColors: Record<string, string> = {
     crypto: "from-amber-500/20 to-orange-600/20 border-amber-500/30 text-amber-300",
-    stocks: "from-emerald-500/20 to-green-600/20 border-emerald-500/30 text-emerald-300",
-    forex: "from-blue-500/20 to-cyan-600/20 border-blue-500/30 text-blue-300",
+    stocks: "from-white/20 to-white/20 border-white/30 text-white",
+    forex: "from-white/20 to-white/20 border-white/30 text-white",
     metals: "from-yellow-500/20 to-amber-600/20 border-yellow-500/30 text-yellow-300",
     geopolitics: "from-red-500/20 to-rose-600/20 border-red-500/30 text-red-300",
-    economics: "from-purple-500/20 to-violet-600/20 border-purple-500/30 text-purple-300",
-    tech: "from-cyan-500/20 to-blue-600/20 border-cyan-500/30 text-cyan-300",
-    markets: "from-indigo-500/20 to-purple-600/20 border-indigo-500/30 text-indigo-300",
+    economics: "from-white/20 to-white/20 border-white/30 text-white",
+    tech: "from-white/20 to-white/20 border-white/30 text-white",
+    markets: "from-indigo-500/20 to-white/20 border-indigo-500/30 text-indigo-300",
     trending: "from-orange-500/20 to-red-600/20 border-orange-500/30 text-orange-300",
     other: "from-slate-500/20 to-zinc-600/20 border-slate-500/30 text-slate-300",
   };
@@ -224,8 +224,8 @@ const NewsCard = memo(({ item, preview, skipAnimations }: { item: NewsItem; prev
     <CardWrapper
       {...cardProps}
       onClick={handleClick}
-      className="relative rounded-lg overflow-hidden cursor-pointer group bg-black border border-blue-500/20 hover:border-blue-500/40 transition-all"
-      style={{ boxShadow: '0 0 4px rgba(59, 130, 246, 0.1)' }}
+      className="relative rounded-lg overflow-hidden cursor-pointer group bg-black border border-white/20 hover:border-white/40 transition-all"
+      style={{ boxShadow: '0 0 4px rgba(255, 255, 255, 0.1)' }}
     >
       <div className="flex gap-2 sm:gap-3 p-2 sm:p-3">
         {/* Image Thumbnail */}
@@ -244,23 +244,23 @@ const NewsCard = memo(({ item, preview, skipAnimations }: { item: NewsItem; prev
             <span className={`px-1.5 py-0.5 sm:px-2 rounded-full bg-gradient-to-r ${colorClass} text-[8px] sm:text-[9px] font-bold uppercase tracking-wider border shrink-0`}>
               {item.category || "News"}
             </span>
-            <span className="text-[8px] sm:text-[9px] font-mono text-blue-400/70 truncate">
+            <span className="text-[8px] sm:text-[9px] font-mono text-white/70 truncate">
               {item.source || "Unknown"}
             </span>
           </div>
 
           {/* Title */}
-          <h4 className="text-xs sm:text-sm font-semibold text-white line-clamp-2 group-hover:text-blue-300 transition-colors leading-tight">
+          <h4 className="text-xs sm:text-sm font-semibold text-white line-clamp-2 group-hover:text-white transition-colors leading-tight">
             {item.title}
           </h4>
 
           {/* Footer - Time and Read More */}
           <div className="flex items-center justify-between gap-2 mt-auto">
-            <div className="flex items-center gap-1 text-[8px] sm:text-[9px] text-blue-400/50">
+            <div className="flex items-center gap-1 text-[8px] sm:text-[9px] text-white/50">
               <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
               <span>{timeAgo(item.published_at)}</span>
             </div>
-            <div className="flex items-center gap-0.5 sm:gap-1 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-blue-400/70 group-hover:text-blue-400 transition-colors">
+            <div className="flex items-center gap-0.5 sm:gap-1 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-white/70 group-hover:text-white transition-colors">
               <span className="hidden sm:inline">Read</span>
               <ExternalLink className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
             </div>
@@ -390,17 +390,17 @@ export const UltimateHubNewsTab = memo(() => {
   return (
     <div className="flex flex-col h-full bg-black">
       {/* Header with Filters */}
-      <div className="shrink-0 border-b border-blue-500/30 bg-black" style={{ boxShadow: '0 2px 8px rgba(59, 130, 246, 0.2)' }}>
+      <div className="shrink-0 border-b border-white/30 bg-black" style={{ boxShadow: '0 2px 8px rgba(255, 255, 255, 0.2)' }}>
         <div className="p-1.5 sm:p-2 md:p-3 space-y-1.5 sm:space-y-2">
           {/* Top Bar */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1">
-              <Newspaper className="w-3 h-3 sm:w-4 sm:h-4 text-blue-400 shrink-0" style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
-              <h2 className="text-xs sm:text-sm font-bold text-blue-300 truncate" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
+              <Newspaper className="w-3 h-3 sm:w-4 sm:h-4 text-white shrink-0" style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }} />
+              <h2 className="text-xs sm:text-sm font-bold text-white truncate" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
                 News
               </h2>
               {lastUpdated && !isMobile && (
-                <span className="text-[8px] text-blue-400/50 font-mono">
+                <span className="text-[8px] text-white/50 font-mono">
                   {lastUpdated.toLocaleTimeString()}
                 </span>
               )}
@@ -418,8 +418,8 @@ export const UltimateHubNewsTab = memo(() => {
                   </button>
                   <button
                     onClick={handleRefresh}
-                    className="p-1 sm:p-1.5 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-400/30 hover:bg-blue-500/30 transition-all"
-                    style={{ boxShadow: '0 0 4px rgba(59, 130, 246, 0.3)' }}
+                    className="p-1 sm:p-1.5 rounded-lg bg-white/20 text-white border border-white/30 hover:bg-white/30 transition-all"
+                    style={{ boxShadow: '0 0 4px rgba(255, 255, 255, 0.3)' }}
                   >
                     <RefreshCw className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   </button>
@@ -427,10 +427,10 @@ export const UltimateHubNewsTab = memo(() => {
                     onClick={() => setShowFilters(!showFilters)}
                     className={`p-1 sm:p-1.5 rounded-lg transition-all ${
                       showFilters 
-                        ? 'bg-blue-500/40 text-blue-200 border-blue-400/60' 
-                        : 'bg-blue-500/20 text-blue-300 border-blue-400/30'
+                        ? 'bg-white/40 text-white border-white/60' 
+                        : 'bg-white/20 text-white border-white/30'
                     } border`}
-                    style={{ boxShadow: showFilters ? '0 0 8px rgba(59, 130, 246, 0.4)' : '0 0 4px rgba(59, 130, 246, 0.3)' }}
+                    style={{ boxShadow: showFilters ? '0 0 8px rgba(255, 255, 255, 0.4)' : '0 0 4px rgba(255, 255, 255, 0.3)' }}
                   >
                     <Filter className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   </button>
@@ -451,8 +451,8 @@ export const UltimateHubNewsTab = memo(() => {
                     onClick={handleRefresh}
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9, rotate: 180 }}
-                    className="p-1 sm:p-1.5 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-400/30 hover:bg-blue-500/30 transition-all"
-                    style={{ boxShadow: '0 0 4px rgba(59, 130, 246, 0.3)' }}
+                    className="p-1 sm:p-1.5 rounded-lg bg-white/20 text-white border border-white/30 hover:bg-white/30 transition-all"
+                    style={{ boxShadow: '0 0 4px rgba(255, 255, 255, 0.3)' }}
                   >
                     <RefreshCw className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   </motion.button>
@@ -462,10 +462,10 @@ export const UltimateHubNewsTab = memo(() => {
                     whileTap={{ scale: 0.95 }}
                     className={`p-1 sm:p-1.5 rounded-lg transition-all ${
                       showFilters 
-                        ? 'bg-blue-500/40 text-blue-200 border-blue-400/60' 
-                        : 'bg-blue-500/20 text-blue-300 border-blue-400/30'
+                        ? 'bg-white/40 text-white border-white/60' 
+                        : 'bg-white/20 text-white border-white/30'
                     } border`}
-                    style={{ boxShadow: showFilters ? '0 0 8px rgba(59, 130, 246, 0.4)' : '0 0 4px rgba(59, 130, 246, 0.3)' }}
+                    style={{ boxShadow: showFilters ? '0 0 8px rgba(255, 255, 255, 0.4)' : '0 0 4px rgba(255, 255, 255, 0.3)' }}
                   >
                     <Filter className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   </motion.button>
@@ -498,13 +498,13 @@ export const UltimateHubNewsTab = memo(() => {
                           onClick={() => setActiveMarket(filter.value)}
                           className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-wider border transition-all ${
                             isActive
-                              ? 'bg-blue-500/40 text-blue-200 border-blue-400/60'
-                              : 'bg-blue-500/10 text-blue-400/70 border-blue-400/20 hover:bg-blue-500/20'
+                              ? 'bg-white/40 text-white border-white/60'
+                              : 'bg-white/10 text-white/70 border-white/20 hover:bg-white/20'
                           }`}
                           style={{ 
                             boxShadow: isActive 
-                              ? '0 0 8px rgba(59, 130, 246, 0.4)' 
-                              : '0 0 4px rgba(59, 130, 246, 0.1)' 
+                              ? '0 0 8px rgba(255, 255, 255, 0.4)' 
+                              : '0 0 4px rgba(255, 255, 255, 0.1)' 
                           }}
                         >
                           <Icon className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
@@ -548,13 +548,13 @@ export const UltimateHubNewsTab = memo(() => {
                             onClick={() => setActiveMarket(filter.value)}
                             className={`flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[8px] sm:text-[9px] font-bold uppercase tracking-wider border transition-all ${
                               isActive
-                                ? 'bg-blue-500/40 text-blue-200 border-blue-400/60'
-                                : 'bg-blue-500/10 text-blue-400/70 border-blue-400/20 hover:bg-blue-500/20'
+                                ? 'bg-white/40 text-white border-white/60'
+                                : 'bg-white/10 text-white/70 border-white/20 hover:bg-white/20'
                             }`}
                             style={{ 
                               boxShadow: isActive 
-                                ? '0 0 8px rgba(59, 130, 246, 0.4)' 
-                                : '0 0 4px rgba(59, 130, 246, 0.1)' 
+                                ? '0 0 8px rgba(255, 255, 255, 0.4)' 
+                                : '0 0 4px rgba(255, 255, 255, 0.1)' 
                             }}
                           >
                             <Icon className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
@@ -573,13 +573,13 @@ export const UltimateHubNewsTab = memo(() => {
                           whileTap={{ scale: 0.95 }}
                           className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-wider border transition-all ${
                             isActive
-                              ? 'bg-blue-500/40 text-blue-200 border-blue-400/60'
-                              : 'bg-blue-500/10 text-blue-400/70 border-blue-400/20 hover:bg-blue-500/20'
+                              ? 'bg-white/40 text-white border-white/60'
+                              : 'bg-white/10 text-white/70 border-white/20 hover:bg-white/20'
                           }`}
                           style={{ 
                             boxShadow: isActive 
-                              ? '0 0 8px rgba(59, 130, 246, 0.4)' 
-                              : '0 0 4px rgba(59, 130, 246, 0.1)' 
+                              ? '0 0 8px rgba(255, 255, 255, 0.4)' 
+                              : '0 0 4px rgba(255, 255, 255, 0.1)' 
                           }}
                         >
                           <Icon className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
@@ -596,7 +596,7 @@ export const UltimateHubNewsTab = memo(() => {
           )}
 
           {/* Stats Bar */}
-          <div className="flex items-center justify-between text-[8px] sm:text-[9px] text-blue-400/60">
+          <div className="flex items-center justify-between text-[8px] sm:text-[9px] text-white/60">
             <div className="flex items-center gap-1 flex-1 min-w-0">
               <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0" />
               <span className="truncate">{filteredItems.length} {filteredItems.length === 1 ? 'story' : 'stories'}</span>
@@ -619,12 +619,12 @@ export const UltimateHubNewsTab = memo(() => {
                   animate={{ rotate: 360 }}
                   transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                 >
-                  <RefreshCw className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400 mx-auto" />
+                  <RefreshCw className="w-6 h-6 sm:w-8 sm:h-8 text-white mx-auto" />
                 </motion.div>
               ) : (
-                <RefreshCw className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400 mx-auto" />
+                <RefreshCw className="w-6 h-6 sm:w-8 sm:h-8 text-white mx-auto" />
               )}
-              <p className="text-xs sm:text-sm text-blue-400/70">Loading news...</p>
+              <p className="text-xs sm:text-sm text-white/70">Loading news...</p>
             </div>
           </div>
         ) : error && items.length === 0 ? (
@@ -636,7 +636,7 @@ export const UltimateHubNewsTab = memo(() => {
                 onClick={handleRefresh}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-4 py-2 rounded-lg bg-blue-500/30 text-blue-300 text-xs font-semibold border border-blue-400/60"
+                className="px-4 py-2 rounded-lg bg-white/30 text-white text-xs font-semibold border border-white/60"
               >
                 Try Again
               </motion.button>
@@ -645,13 +645,13 @@ export const UltimateHubNewsTab = memo(() => {
         ) : filteredItems.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center space-y-3">
-              <Filter className="w-8 h-8 text-blue-400/50 mx-auto" />
-              <p className="text-sm text-blue-400/70">No news in this category</p>
+              <Filter className="w-8 h-8 text-white/50 mx-auto" />
+              <p className="text-sm text-white/70">No news in this category</p>
               <motion.button
                 onClick={() => setActiveMarket("all")}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-4 py-2 rounded-lg bg-blue-500/30 text-blue-300 text-xs font-semibold border border-blue-400/60"
+                className="px-4 py-2 rounded-lg bg-white/30 text-white text-xs font-semibold border border-white/60"
               >
                 Show All News
               </motion.button>

@@ -155,8 +155,8 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
             pointerEvents: 'auto',
             filter: themeFilter,
             transition: 'filter 0.3s ease-out, border-color 0.3s ease-out, box-shadow 0.3s ease-out',
-            border: `2px solid rgba(var(--accent-rgb, ${isXMUser ? '239, 68, 68' : '59, 130, 246'}), 0.5)`,
-            boxShadow: `0 0 50px rgba(var(--accent-rgb, ${isXMUser ? '239, 68, 68' : '59, 130, 246'}), 0.4), inset 0 0 30px rgba(var(--accent-rgb, ${isXMUser ? '239, 68, 68' : '59, 130, 246'}), 0.08)`,
+            border: `2px solid rgba(var(--accent-rgb, ${isXMUser ? '239, 68, 68' : '255, 255, 255'}), 0.5)`,
+            boxShadow: `0 0 50px rgba(var(--accent-rgb, ${isXMUser ? '239, 68, 68' : '255, 255, 255'}), 0.4), inset 0 0 30px rgba(var(--accent-rgb, ${isXMUser ? '239, 68, 68' : '255, 255, 255'}), 0.08)`,
             position: 'fixed',
             isolation: 'isolate',
             // HIGHEST z-index - mobile menu appears on top of ALL other components
@@ -195,14 +195,14 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
                 onTouchStart={() => SoundEffects.click()}
                 className="w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold cursor-pointer px-4 sm:px-6 py-3 sm:py-4 rounded-xl transition-all duration-200"
                 style={{
-                  color: isXMUser ? 'rgb(252, 165, 165)' : 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)',
-                  backgroundColor: isXMUser ? 'rgba(239, 68, 68, 0.08)' : 'rgba(var(--accent-rgb, 59, 130, 246), 0.08)',
-                  border: isXMUser ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
+                  color: isXMUser ? 'rgb(252, 165, 165)' : 'rgba(var(--accent-rgb, 255, 255, 255), 0.8)',
+                  backgroundColor: isXMUser ? 'rgba(239, 68, 68, 0.08)' : 'rgba(var(--accent-rgb, 255, 255, 255), 0.08)',
+                  border: isXMUser ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(var(--accent-rgb, 255, 255, 255), 0.3)',
                   fontWeight: isXMUser ? 'bold' : 'semibold'
                 }}
                 onClick={handleAffiliateClick}
               >
-                <IconUsersGroup className="h-5 w-5" stroke={1.5} style={{ color: isXMUser ? '#f87171' : 'var(--accent-color, #60a5fa)' }} />
+                <IconUsersGroup className="h-5 w-5" stroke={1.5} style={{ color: isXMUser ? '#f87171' : 'var(--accent-color, #ffffff)' }} />
                 Affiliates
                 {isXMUser && (
                   <span
@@ -226,13 +226,13 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
                 onTouchStart={() => SoundEffects.click()}
                 className="w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold hover:text-white cursor-pointer px-4 sm:px-6 py-3 sm:py-4 rounded-xl transition-all duration-200"
                 style={{
-                  color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)',
-                  backgroundColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.08)',
-                  border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.3)'
+                  color: 'rgba(var(--accent-rgb, 255, 255, 255), 0.8)',
+                  backgroundColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.08)',
+                  border: '1px solid rgba(var(--accent-rgb, 255, 255, 255), 0.3)'
                 }}
                 onClick={handleFaqClick}
               >
-                <IconHelp className="h-5 w-5" stroke={1.5} style={{ color: 'var(--accent-color, #60a5fa)' }} />
+                <IconHelp className="h-5 w-5" stroke={1.5} style={{ color: 'var(--accent-color, #ffffff)' }} />
                 FAQ
               </motion.button>
             </motion.div>
@@ -251,13 +251,13 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
                   onTouchStart={() => SoundEffects.click()}
                   className="w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold hover:text-white cursor-pointer px-4 sm:px-6 py-3 sm:py-4 rounded-xl transition-all duration-200"
                   style={{
-                    color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)',
-                    backgroundColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.08)',
-                    border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.3)'
+                    color: 'rgba(var(--accent-rgb, 255, 255, 255), 0.8)',
+                    backgroundColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.08)',
+                    border: '1px solid rgba(var(--accent-rgb, 255, 255, 255), 0.3)'
                   }}
                   onClick={handleAccountManagerClick}
                 >
-                  <IconUser className="h-5 w-5" stroke={1.5} style={{ color: 'var(--accent-color, #60a5fa)' }} />
+                  <IconUser className="h-5 w-5" stroke={1.5} style={{ color: 'var(--accent-color, #ffffff)' }} />
                   Account Manager
                 </motion.button>
               </motion.div>
@@ -270,7 +270,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
               transition={{ delay: 0.20 }}
               className="h-px my-1"
               style={{
-                background: 'linear-gradient(to right, transparent, rgba(var(--accent-rgb, 59, 130, 246), 0.3), transparent)'
+                background: 'linear-gradient(to right, transparent, rgba(var(--accent-rgb, 255, 255, 255), 0.3), transparent)'
               }}
             />
 
@@ -288,12 +288,12 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
                 onClick={handleProductsClick}
                 className="w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold px-4 sm:px-6 py-3 sm:py-4 rounded-xl transition-all duration-200 cursor-pointer"
                 style={{
-                  color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)',
-                  backgroundColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.08)',
-                  border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
+                  color: 'rgba(var(--accent-rgb, 255, 255, 255), 0.8)',
+                  backgroundColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.08)',
+                  border: '1px solid rgba(var(--accent-rgb, 255, 255, 255), 0.3)',
                 }}
               >
-                <IconBuildingStore className="h-5 w-5" stroke={1.5} style={{ color: 'var(--accent-color, #60a5fa)' }} />
+                <IconBuildingStore className="h-5 w-5" stroke={1.5} style={{ color: 'var(--accent-color, #ffffff)' }} />
                 <span>Products</span>
               </motion.button>
             </motion.div>
@@ -313,12 +313,12 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
                 onClick={handleThemeClick}
                 className="w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold hover:text-white transition-all duration-200 px-4 sm:px-6 py-3 sm:py-4 rounded-xl"
                 style={{
-                  color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)',
-                  backgroundColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.08)',
-                  border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.3)'
+                  color: 'rgba(var(--accent-rgb, 255, 255, 255), 0.8)',
+                  backgroundColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.08)',
+                  border: '1px solid rgba(var(--accent-rgb, 255, 255, 255), 0.3)'
                 }}
               >
-                <IconPalette className="h-5 w-5" stroke={1.5} style={{ color: 'var(--accent-color, #60a5fa)' }} />
+                <IconPalette className="h-5 w-5" stroke={1.5} style={{ color: 'var(--accent-color, #ffffff)' }} />
                 Theme
               </motion.button>
             </motion.div>
@@ -339,13 +339,13 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
                   onClick={handleAdminClick}
                   className="w-full flex items-center justify-center gap-3 text-xs sm:text-sm uppercase tracking-widest transition-all duration-200 py-2.5 sm:py-3 rounded-xl px-4 sm:px-6"
                   style={{
-                    color: 'var(--accent-color, #60a5fa)',
-                    backgroundColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.15)',
-                    border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.4)',
+                    color: 'var(--accent-color, #ffffff)',
+                    backgroundColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.15)',
+                    border: '1px solid rgba(var(--accent-rgb, 255, 255, 255), 0.4)',
                     fontWeight: 'bold'
                   }}
                 >
-                  <IconSettings className="h-5 w-5" stroke={1.5} style={{ color: 'var(--accent-color, #60a5fa)' }} /> Admin Dashboard
+                  <IconSettings className="h-5 w-5" stroke={1.5} style={{ color: 'var(--accent-color, #ffffff)' }} /> Admin Dashboard
                 </motion.button>
               </motion.div>
             )}
@@ -377,15 +377,15 @@ const ThemedMenuItem = memo(({ delay, href, onClick, icon, label, highlighted = 
         onTouchStart={() => SoundEffects.click()}
         className="flex items-center justify-center gap-3 text-sm sm:text-base font-semibold w-full px-4 sm:px-6 py-3 sm:py-4 rounded-xl transition-all duration-200"
         style={{
-          color: highlighted ? '#000000' : 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)',
-          backgroundColor: highlighted ? 'var(--accent-color, #3b82f6)' : 'rgba(var(--accent-rgb, 59, 130, 246), 0.08)',
-          border: highlighted ? '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.6)' : '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
-          boxShadow: highlighted ? '0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.5)' : 'none',
+          color: highlighted ? '#000000' : 'rgba(var(--accent-rgb, 255, 255, 255), 0.8)',
+          backgroundColor: highlighted ? 'var(--accent-color, #ffffff)' : 'rgba(var(--accent-rgb, 255, 255, 255), 0.08)',
+          border: highlighted ? '1px solid rgba(var(--accent-rgb, 255, 255, 255), 0.6)' : '1px solid rgba(var(--accent-rgb, 255, 255, 255), 0.3)',
+          boxShadow: highlighted ? '0 0 30px rgba(var(--accent-rgb, 255, 255, 255), 0.5)' : 'none',
           textShadow: highlighted ? '0 1px 2px rgba(0, 0, 0, 0.3)' : 'none'
         }}
       >
         <span style={{ 
-          color: highlighted ? '#000000' : 'var(--accent-color, #60a5fa)',
+          color: highlighted ? '#000000' : 'var(--accent-color, #ffffff)',
           filter: highlighted ? 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3))' : 'none'
         }}>{icon}</span>
         {label}

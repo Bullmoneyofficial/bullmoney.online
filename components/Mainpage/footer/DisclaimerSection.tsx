@@ -21,8 +21,8 @@ export const DisclaimerSection = ({ number, title, text, isOpen, onToggle }: Dis
       className="group relative rounded-lg overflow-hidden transition-all duration-300"
       style={{
         background: 'black',
-        border: '1px solid #3b82f6',
-        boxShadow: isOpen ? '0 0 8px rgba(59, 130, 246, 0.5)' : '0 0 4px rgba(59, 130, 246, 0.3)'
+        border: '1px solid #ffffff',
+        boxShadow: isOpen ? '0 0 8px rgba(255, 255, 255, 0.5)' : '0 0 4px rgba(255, 255, 255, 0.3)'
       }}
     >
       <button
@@ -37,11 +37,11 @@ export const DisclaimerSection = ({ number, title, text, isOpen, onToggle }: Dis
           <span 
             className="flex h-4 w-4 xs:h-4.5 xs:w-4.5 sm:h-5 sm:w-5 items-center justify-center rounded text-[7px] xs:text-[8px] sm:text-[9px] font-bold font-mono flex-shrink-0"
             style={{
-              color: '#3b82f6',
-              textShadow: '0 0 4px #3b82f6',
-              border: '1px solid #3b82f6',
-              boxShadow: '0 0 4px rgba(59, 130, 246, 0.5)',
-              background: 'rgba(59, 130, 246, 0.1)'
+              color: '#ffffff',
+              textShadow: '0 0 4px #ffffff',
+              border: '1px solid #ffffff',
+              boxShadow: '0 0 4px rgba(255, 255, 255, 0.5)',
+              background: 'rgba(255, 255, 255, 0.1)'
             }}
           >
             {number}
@@ -59,8 +59,8 @@ export const DisclaimerSection = ({ number, title, text, isOpen, onToggle }: Dis
             isOpen ? "rotate-90" : "rotate-0"
           )}
           style={{ 
-            color: '#3b82f6',
-            filter: 'drop-shadow(0 0 4px #3b82f6)'
+            color: '#ffffff',
+            filter: 'drop-shadow(0 0 4px #ffffff)'
           }}
         />
       </button>

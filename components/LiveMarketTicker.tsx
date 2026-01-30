@@ -178,31 +178,31 @@ export const LiveMarketTicker: React.FC = () => {
     // FIX APPLIED HERE:
     // Changed 'relative' to 'fixed bottom-0 left-0 z-50'
     // This pins it to the bottom of the viewport
-    <div className="fixed bottom-0 left-0 right-0 z-50 w-full overflow-hidden bg-black border-t-2 border-blue-500/60" style={{ boxShadow: '0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3), inset 0 0 15px rgba(59, 130, 246, 0.1)' }}>
+    <div className="fixed bottom-0 left-0 right-0 z-50 w-full overflow-hidden bg-black border-t-2 border-white/60" style={{ boxShadow: '0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(255, 255, 255, 0.3), inset 0 0 15px rgba(255, 255, 255, 0.1)' }}>
       
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-5 pointer-events-none">
         <div
           className="w-full h-full"
           style={{
-            backgroundImage: `linear-gradient(90deg, rgba(34, 197, 94, 0.2) 1px, transparent 1px)`,
+            backgroundImage: `linear-gradient(90deg, rgba(255, 255, 255, 0.2) 1px, transparent 1px)`,
             backgroundSize: '20px 20px',
           }}
         />
       </div>
 
       {/* Top accent line - static glow */}
-      <div className="absolute top-0 left-0 right-0 h-[2px] bg-blue-500/50" style={{ boxShadow: '0 0 10px rgba(59, 130, 246, 0.8), 0 0 20px rgba(59, 130, 246, 0.5)' }} />
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/50" style={{ boxShadow: '0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.5)' }} />
 
       {/* Ticker content */}
       <div className="relative flex items-center h-10 px-4">
         {/* Live indicator - static dot */}
         <div className="flex items-center gap-2 mr-4 shrink-0 hidden sm:flex">
           <div
-            className="w-2 h-2 rounded-full bg-green-500"
-            style={{ boxShadow: '0 0 5px #22c55e, 0 0 10px #22c55e' }}
+            className="w-2 h-2 rounded-full bg-white"
+            style={{ boxShadow: '0 0 5px #ffffff, 0 0 10px #ffffff' }}
           />
-          <span className="text-[10px] font-bold text-green-400 uppercase tracking-wider" style={{ textShadow: '0 0 5px #4ade80' }}>
+          <span className="text-[10px] font-bold text-white uppercase tracking-wider" style={{ textShadow: '0 0 5px #ffffff' }}>
             LIVE
           </span>
         </div>
@@ -230,7 +230,7 @@ export const LiveMarketTicker: React.FC = () => {
                   className={`flex items-center gap-2 shrink-0 px-3 py-1 rounded-lg transition-all ${
                     isFlashing
                       ? coin.isUp
-                        ? 'bg-green-500/20 shadow-[0_0_10px_rgba(34,197,94,0.4)]'
+                        ? 'bg-white/20 shadow-[0_0_10px_rgba(255,255,255,0.4)]'
                         : 'bg-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.4)]'
                       : ''
                   }`}
@@ -243,7 +243,7 @@ export const LiveMarketTicker: React.FC = () => {
                   </span>
                   <span
                     className={`text-xs font-bold font-mono whitespace-nowrap ${
-                      coin.isUp ? 'text-green-400' : 'text-red-400'
+                      coin.isUp ? 'text-white' : 'text-red-400'
                     }`}
                   >
                     {coin.isUp ? '▲' : '▼'} {Math.abs(coin.change)}%

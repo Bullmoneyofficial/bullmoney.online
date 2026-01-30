@@ -468,7 +468,7 @@ export function formatPercentage(value: number, decimals: number = 2): string {
  * Get color for P&L value
  */
 export function getPnLColor(value: number): string {
-  if (value > 0) return 'text-green-500';
+  if (value > 0) return 'text-white';
   if (value < 0) return 'text-red-500';
   return 'text-gray-500';
 }

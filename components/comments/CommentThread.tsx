@@ -188,7 +188,7 @@ export const CommentThread = memo(({
               {/* Loading */}
               {loading && (
                 <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
+                  <Loader2 className="w-6 h-6 text-white animate-spin" />
                 </div>
               )}
 

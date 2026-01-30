@@ -5,7 +5,7 @@ export const GLOBAL_STYLES = `
     --apple-border: rgba(255,255,255,0.12);
     --apple-highlight: rgba(255,255,255,0.75);
     --apple-shadow: 0 30px 80px rgba(0,0,0,0.45);
-    --apple-gradient: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.06), transparent 40%), radial-gradient(circle at 80% 0%, rgba(59,130,246,0.08), transparent 35%), radial-gradient(circle at 50% 100%, rgba(255,255,255,0.05), transparent 40%);
+    --apple-gradient: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.06), transparent 40%), radial-gradient(circle at 80% 0%, rgba(255, 255, 255,0.08), transparent 35%), radial-gradient(circle at 50% 100%, rgba(255,255,255,0.05), transparent 40%);
   }
 
   body, button, input, textarea {

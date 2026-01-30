@@ -294,7 +294,7 @@ export interface SwipeIndicatorProps {
   color?: string;
 }
 
-export function SwipeIndicator({ direction, show, color = '#3b82f6' }: SwipeIndicatorProps) {
+export function SwipeIndicator({ direction, show, color = '#ffffff' }: SwipeIndicatorProps) {
   if (!show) return null;
 
   const positions = {

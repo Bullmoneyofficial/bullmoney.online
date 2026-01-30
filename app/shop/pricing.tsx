@@ -21,8 +21,8 @@ import { useRef } from "react";
 import { supabase } from "@/lib/supabaseClient"; // <-- ENSURED CORRECT SUPABASE IMPORT
 
 // --- THEME CONSTANTS FOR HELPERS ---
-const BLUE_SHIMMER_GRADIENT = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #38bdf8 50%, #00000000 100%)";
-const BLUE_TEXT_GRADIENT = "bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-400";
+const BLUE_SHIMMER_GRADIENT = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #ffffff 50%, #00000000 100%)";
+const BLUE_TEXT_GRADIENT = "bg-gradient-to-r from-sky-400 via-white to-indigo-400";
 
 // ============================================================================
 // HELPER TIP COMPONENT (BLUE/BLACK THEME)
@@ -142,7 +142,7 @@ export function Pricing() {
       
       {/* SEO / Hero Header */}
       <header className="text-center">
-        <p className="text-[11px] uppercase tracking-[0.18em] text-purple-500">
+        <p className="text-[11px] uppercase tracking-[0.18em] text-white">
           TELEGRAM • DISCORD • TRADING COMMUNITY
         </p>
 
@@ -156,8 +156,8 @@ export function Pricing() {
     className={cn(
       "bg-clip-text text-transparent inline-block transition-all duration-300",
       activePartner === "Vantage broker"
-        ? "bg-gradient-to-r from-purple-400 via-violet-500 to-fuchsia-400 drop-shadow-[0_8px_28px_rgba(168,85,247,0.35)]"
-        : "bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-400 drop-shadow-[0_8px_28px_rgba(56,189,248,0.35)]"
+        ? "bg-gradient-to-r from-white via-white to-fuchsia-400 drop-shadow-[0_8px_28px_rgba(255, 255, 255,0.35)]"
+        : "bg-gradient-to-r from-sky-400 via-white to-indigo-400 drop-shadow-[0_8px_28px_rgba(255, 255, 255,0.35)]"
     )}
   >
     BULLMONEY ALSO HAS A FREE OPTION!
@@ -182,7 +182,7 @@ export function Pricing() {
             </span>
           </div>
 
-          <p className="mt-2 text-[11px] uppercase tracking-[0.2em] text-purple-500 dark:text-neutral-400">
+          <p className="mt-2 text-[11px] uppercase tracking-[0.2em] text-white dark:text-neutral-400">
             1. SIGN UP • 2. USE OUR CODE • 3. SUBMIT PROOF
           </p>
         </div>
@@ -229,8 +229,8 @@ export function Pricing() {
                   className={cn(
                     "absolute inset-0 -z-10 rounded-full",
                     partner === "Vantage broker"
-                      ? "bg-gradient-to-r from-purple-500 to-violet-600 shadow-[0_0_25px_rgba(168,85,247,0.45)]"
-                      : "bg-gradient-to-r from-sky-500 to-blue-600 shadow-[0_0_25px_rgba(56,189,248,0.45)]"
+                      ? "bg-gradient-to-r from-white to-white shadow-[0_0_25px_rgba(255, 255, 255,0.45)]"
+                      : "bg-gradient-to-r from-sky-500 to-white shadow-[0_0_25px_rgba(255, 255, 255,0.45)]"
                   )}
                   transition={{ type: "spring", stiffness: 400, damping: 28 }}
                 />
@@ -301,7 +301,7 @@ export function Pricing() {
       className={cn(
         "inline-flex items-center gap-2 text-[11px] tracking-[0.22em] uppercase",
         activePartner === "Vantage broker"
-          ? "text-purple-300/70"
+          ? "text-white/70"
           : "text-sky-300/70"
       )}
     >
@@ -309,8 +309,8 @@ export function Pricing() {
         className={cn(
           "h-[6px] w-[6px] rounded-full shadow-[0_0_18px_rgba(233,215,168,0.45)]",
           activePartner === "Vantage broker"
-            ? "bg-gradient-to-r from-purple-400 to-violet-500 shadow-[0_0_18px_rgba(168,85,247,0.45)]"
-            : "bg-gradient-to-r from-sky-400 to-blue-500 shadow-[0_0_18px_rgba(56,189,248,0.45)]"
+            ? "bg-gradient-to-r from-white to-white shadow-[0_0_18px_rgba(255, 255, 255,0.45)]"
+            : "bg-gradient-to-r from-sky-400 to-white shadow-[0_0_18px_rgba(255, 255, 255,0.45)]"
         )}
       />
       LIMITED BENEFITS • FREE COMMUNITY
@@ -321,8 +321,8 @@ export function Pricing() {
         className={cn(
           "bg-clip-text text-transparent",
           activePartner === "Vantage broker"
-            ? "bg-gradient-to-r from-purple-400 via-violet-500 to-fuchsia-400"
-            : "bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-400"
+            ? "bg-gradient-to-r from-white via-white to-fuchsia-400"
+            : "bg-gradient-to-r from-sky-400 via-white to-indigo-400"
         )}
       >
         WHAT YOU GET WITH FREE ACCESS
@@ -345,7 +345,7 @@ export function Pricing() {
           className={cn(
             "relative inline-grid place-items-center h-5 w-5 rounded-full ring-1",
             activePartner === "Vantage broker"
-              ? "bg-[#0E0F12] ring-purple-500/25"
+              ? "bg-[#0E0F12] ring-white/25"
               : "bg-[#0E0F12] ring-sky-500/25"
           )}
         >
@@ -353,8 +353,8 @@ export function Pricing() {
             className={cn(
               "h-[9px] w-[9px] rotate-45 rounded-[2px] shadow-[0_0_14px]",
               activePartner === "Vantage broker"
-                ? "bg-gradient-to-br from-purple-400 via-violet-500 to-fuchsia-400 shadow-[0_0_14px_rgba(168,85,247,0.4)]"
-                : "bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-400 shadow-[0_0_14px_rgba(56,189,248,0.4)]"
+                ? "bg-gradient-to-br from-white via-white to-fuchsia-400 shadow-[0_0_14px_rgba(255, 255, 255,0.4)]"
+                : "bg-gradient-to-br from-sky-400 via-white to-indigo-400 shadow-[0_0_14px_rgba(255, 255, 255,0.4)]"
             )}
           />
         </span>
@@ -369,7 +369,7 @@ export function Pricing() {
     <span
       className={cn(
         "font-semibold",
-        activePartner === "Vantage broker" ? "text-purple-300" : "text-sky-300"
+        activePartner === "Vantage broker" ? "text-white" : "text-sky-300"
       )}
     >
       Elite Mentorship
@@ -378,7 +378,7 @@ export function Pricing() {
     <span
       className={cn(
         "font-semibold",
-        activePartner === "Vantage broker" ? "text-purple-300" : "text-sky-300"
+        activePartner === "Vantage broker" ? "text-white" : "text-sky-300"
       )}
     >
       High Trade Setups
@@ -387,7 +387,7 @@ export function Pricing() {
     <span
       className={cn(
         "font-semibold",
-        activePartner === "Vantage broker" ? "text-purple-300" : "text-sky-300"
+        activePartner === "Vantage broker" ? "text-white" : "text-sky-300"
       )}
     >
       Free Access is a preview — VIP is the full experience.
@@ -452,7 +452,7 @@ function XMThreeSteps({ copyPartnerCode, copied, showCodeTip, showSubmitTip }: a
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold
-                         text-white bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700
+                         text-white bg-gradient-to-r from-sky-500 to-white hover:from-sky-600 hover:to-white
                          shadow transition"
             >
               <span>Open XM account</span>
@@ -533,7 +533,7 @@ function XMThreeSteps({ copyPartnerCode, copied, showCodeTip, showSubmitTip }: a
             <button
               onClick={() => copyPartnerCode("X3R7P")}
               className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold
-                text-blue-300 ring-1 ring-inset ring-blue-500/40 hover:bg-blue-500/10 transition"
+                text-white ring-1 ring-inset ring-white/40 hover:bg-white/10 transition"
             >
               {copied ? (
                 <>
@@ -553,7 +553,7 @@ function XMThreeSteps({ copyPartnerCode, copied, showCodeTip, showSubmitTip }: a
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold
-                text-white bg-gradient-to-r from-purple-blue to-blue-600 hover:from-blue-600 hover:to-fuchsia-700
+                text-white bg-gradient-to-r from-purple-blue to-white hover:from-white hover:to-fuchsia-700
                 shadow transition"
             >
               <span>Open XM account</span>
@@ -614,7 +614,7 @@ function VantageThreeSteps({ copyPartnerCode, copied, showCodeTip, showSubmitTip
             <button
               onClick={() => copyPartnerCode("BULLMONEY")}
               className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold
-                text-purple-300 ring-1 ring-inset ring-purple-500/40 hover:bg-purple-500/10 transition"
+                text-white ring-1 ring-inset ring-white/40 hover:bg-white/10 transition"
             >
               {copied ? (
                 <>
@@ -634,7 +634,7 @@ function VantageThreeSteps({ copyPartnerCode, copied, showCodeTip, showSubmitTip
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold
-                text-white bg-gradient-to-r from-purple-500 to-violet-600 hover:from-violet-600 hover:to-fuchsia-700
+                text-white bg-gradient-to-r from-white to-white hover:from-white hover:to-fuchsia-700
                 shadow transition"
             >
               <span>Open Vantage account</span>
@@ -666,7 +666,7 @@ function VantageThreeSteps({ copyPartnerCode, copied, showCodeTip, showSubmitTip
           <div className="space-y-3 text-xs md:text-sm text-neutral-300">
             <p>
               This is your official{" "}
-              <span className="font-semibold text-purple-300">BullMoney Vantage code</span>.
+              <span className="font-semibold text-white">BullMoney Vantage code</span>.
             </p>
 
             <div className="flex flex-wrap gap-2">
@@ -698,7 +698,7 @@ function VantageThreeSteps({ copyPartnerCode, copied, showCodeTip, showSubmitTip
             <button
               onClick={() => copyPartnerCode("BULLMONEY")}
               className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold
-                text-purple-300 ring-1 ring-inset ring-purple-500/40 hover:bg-purple-500/10 transition"
+                text-white ring-1 ring-inset ring-white/40 hover:bg-white/10 transition"
             >
               {copied ? (
                 <>
@@ -718,7 +718,7 @@ function VantageThreeSteps({ copyPartnerCode, copied, showCodeTip, showSubmitTip
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold
-                text-white bg-gradient-to-r from-purple-500 to-violet-600 hover:from-violet-600 hover:to-fuchsia-700
+                text-white bg-gradient-to-r from-white to-white hover:from-white hover:to-fuchsia-700
                 shadow transition"
             >
               <span>Open Vantage account</span>
@@ -793,7 +793,7 @@ function StepCard({
         className
       )}
     >
-      <div className="pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-gradient-to-l from-sky-500/15 via-blue-500/10 to-indigo-500/0 blur-2xl" />
+      <div className="pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-gradient-to-l from-sky-500/15 via-white/10 to-indigo-500/0 blur-2xl" />
       <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10" />
 
       <div className="flex items-center justify-between">
@@ -801,7 +801,7 @@ function StepCard({
           className={cn(
             "inline-flex items-center gap-2 text-[10px] md:text-[11px] uppercase tracking-[0.18em] px-2 py-1 rounded-md ring-1",
             useRed
-              ? "text-purple-300/90 ring-purple-500/30 bg-purple-500/10"
+              ? "text-white/90 ring-white/30 bg-white/10"
               : "text-sky-300/90 ring-sky-500/30 bg-sky-500/10"
           )}
         >
@@ -813,8 +813,8 @@ function StepCard({
             className={cn(
               "bg-gradient-to-br bg-clip-text text-transparent",
               useRed
-                ? "from-purple-400 via-violet-500 to-fuchsia-400"
-                : "from-sky-400 via-blue-500 to-indigo-400"
+                ? "from-white via-white to-fuchsia-400"
+                : "from-sky-400 via-white to-indigo-400"
             )}
           >
             {n}
@@ -823,8 +823,8 @@ function StepCard({
             className={cn(
               "pointer-events-none absolute inset-0 -z-10 blur-2xl bg-gradient-to-br",
               useRed
-                ? "from-purple-500/40 via-violet-600/30 to-fuchsia-500/40"
-                : "from-sky-500/40 via-blue-600/30 to-indigo-500/40"
+                ? "from-white/40 via-white/30 to-fuchsia-500/40"
+                : "from-sky-500/40 via-white/30 to-indigo-500/40"
             )}
           />
         </span>
@@ -895,8 +895,8 @@ function AccordionItem({ title, children, defaultOpen = false }: any) {
 function ProofItem({ children }: { children: React.ReactNode }) {
   return (
     <li className="flex items-center gap-2 text-neutral-300">
-      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/15 ring-1 ring-emerald-400/30">
-        <IconCheck className="h-3.5 w-3.5 text-emerald-300" />
+      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/15 ring-1 ring-white/30">
+        <IconCheck className="h-3.5 w-3.5 text-white" />
       </span>
       <span className="font-medium">{children}</span>
     </li>
@@ -917,7 +917,7 @@ function FeatureItem({ children }: { children: React.ReactNode }) {
 function TrustPill({ children }: { children: React.ReactNode }) {
   return (
     <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[10px] uppercase tracking-[0.16em] text-neutral-200">
-      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+      <span className="h-1.5 w-1.5 rounded-full bg-white" />
       {children}
     </span>
   );
@@ -925,14 +925,14 @@ function TrustPill({ children }: { children: React.ReactNode }) {
 
 function Accent({ children }: { children: React.ReactNode }) {
   return (
-    <span className="font-extrabold bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-400 bg-clip-text text-transparent">
+    <span className="font-extrabold bg-gradient-to-r from-sky-400 via-white to-indigo-400 bg-clip-text text-transparent">
       {children}
     </span>
   );
 }
 export function Accent2({ children }: { children: React.ReactNode }) {
   return (
-    <span className="font-extrabold bg-gradient-to-r from-purple-400 via-violet-500 to-fuchsia-400 bg-clip-text text-transparent">
+    <span className="font-extrabold bg-gradient-to-r from-white via-white to-fuchsia-400 bg-clip-text text-transparent">
       {children}
     </span>
   );
@@ -1035,7 +1035,7 @@ function CardPattern({
     <div className="pointer-events-none">
       <div className="absolute inset-0 rounded-2xl [mask-image:linear-gradient(white,transparent)] group-hover/card:opacity-50" />
       <motion.div
-        className="absolute inset-0 rounded-2xl bg-gradient-to-r from-green-500 to-blue-700 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500"
+        className="absolute inset-0 rounded-2xl bg-gradient-to-r from-white to-white opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500"
         style={style}
       />
       <motion.div
@@ -1120,7 +1120,7 @@ function CardPatternRed({
       <div className="absolute inset-0 rounded-2xl [mask-image:linear-gradient(white,transparent)] group-hover/card:opacity-50" />
       {/* interactive red gradient glow */}
       <motion.div
-        className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-500 to-violet-600 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500"
+        className="absolute inset-0 rounded-2xl bg-gradient-to-r from-white to-white opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500"
         style={style}
       />
       {/* binary/monospace overlay with red tint */}
@@ -1128,12 +1128,12 @@ function CardPatternRed({
         className="absolute inset-0 rounded-2xl opacity-0 mix-blend-overlay group-hover/card:opacity-100"
         style={style}
       >
-        <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-violet-50/90 dark:text-violet-100/90 font-mono font-bold transition duration-500">
+        <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-white/90 dark:text-white/90 font-mono font-bold transition duration-500">
           {randomString}
         </p>
       </motion.div>
       {/* soft ambient red bloom when hovered (outside the mask) */}
-      <div className="absolute inset-0 rounded-2xl ring-1 ring-purple-500/20" />
+      <div className="absolute inset-0 rounded-2xl ring-1 ring-white/20" />
     </div>
   );
 }
@@ -1219,7 +1219,7 @@ function SubmitProofForm({ showTip }: { showTip: boolean }) {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="mt-1 w-full rounded-lg bg-neutral-900/60 ring-1 ring-white/10 px-3 py-2 text-white outline-none focus:ring-purple-500/40"
+          className="mt-1 w-full rounded-lg bg-neutral-900/60 ring-1 ring-white/10 px-3 py-2 text-white outline-none focus:ring-white/40"
           placeholder="you@example.com"
         />
       </label>
@@ -1231,7 +1231,7 @@ function SubmitProofForm({ showTip }: { showTip: boolean }) {
           required
           value={mt5Id}
           onChange={(e) => setMt5Id(e.target.value)}
-          className="mt-1 w-full rounded-lg bg-neutral-900/60 ring-1 ring-white/10 px-3 py-2 text-white outline-none focus:ring-purple-500/40"
+          className="mt-1 w-full rounded-lg bg-neutral-900/60 ring-1 ring-white/10 px-3 py-2 text-white outline-none focus:ring-white/40"
           placeholder="e.g. 12345678"
         />
       </label>
@@ -1242,7 +1242,7 @@ function SubmitProofForm({ showTip }: { showTip: boolean }) {
         <select
           value={usedCode}
           onChange={(e) => setUsedCode(e.target.value)}
-          className="mt-1 w-full rounded-lg bg-neutral-900/60 ring-1 ring-white/10 px-3 py-2 text-white outline-none focus:ring-purple-500/40"
+          className="mt-1 w-full rounded-lg bg-neutral-900/60 ring-1 ring-white/10 px-3 py-2 text-white outline-none focus:ring-white/40"
         >
           <option value="yes">Yes</option>
           <option value="no">No</option>
@@ -1255,7 +1255,7 @@ function SubmitProofForm({ showTip }: { showTip: boolean }) {
         <input
           value={socialHandle}
           onChange={(e) => setSocialHandle(e.target.value)}
-          className="mt-1 w-full rounded-lg bg-neutral-900/60 ring-1 ring-white/10 px-3 py-2 text-white outline-none focus:ring-purple-500/40"
+          className="mt-1 w-full rounded-lg bg-neutral-900/60 ring-1 ring-white/10 px-3 py-2 text-white outline-none focus:ring-white/40"
           placeholder="e.g. @bullmoney_user"
         />
       </label>
@@ -1266,7 +1266,7 @@ function SubmitProofForm({ showTip }: { showTip: boolean }) {
         <input
           value={referredByCode}
           onChange={(e) => setReferredByCode(e.target.value)}
-          className="mt-1 w-full rounded-lg bg-neutral-900/60 ring-1 ring-white/10 px-3 py-2 text-white outline-none focus:ring-purple-500/40"
+          className="mt-1 w-full rounded-lg bg-neutral-900/60 ring-1 ring-white/10 px-3 py-2 text-white outline-none focus:ring-white/40"
           placeholder="Code you used (e.g., BULLMONEY or bmt_justin)"
         />
       </label>
@@ -1295,7 +1295,7 @@ function SubmitProofForm({ showTip }: { showTip: boolean }) {
 
       {error && <p className="text-center text-red-400 text-sm">{error}</p>}
       {success && (
-        <p className="text-center text-emerald-400 text-sm">
+        <p className="text-center text-white text-sm">
           ✅ Submission successful! Redirecting you to Telegram...
         </p>
       )}
@@ -1320,24 +1320,24 @@ export function LuxeCardReactive({
 
   const theme = {
     vantage: {
-      glow1: "rgba(168,85,247,0.20)", 
-      glow2: "rgba(147,51,234,0.10)",
-      ring: "rgba(147,51,234,0.35)",
-      border: "rgba(168,85,247,0.25)",
-      particle1: "#A855F7",
-      particle2: "#9333EA",
+      glow1: "rgba(255, 255, 255,0.20)", 
+      glow2: "rgba(255, 255, 255,0.10)",
+      ring: "rgba(255, 255, 255,0.35)",
+      border: "rgba(255, 255, 255,0.25)",
+      particle1: "#ffffff",
+      particle2: "#ffffff",
       conic:
-        "conic-gradient(from 180deg, rgba(168,85,247,.22), rgba(147,51,234,.22), rgba(126,34,206,.22), rgba(168,85,247,.22))",
+        "conic-gradient(from 180deg, rgba(255, 255, 255,.22), rgba(255, 255, 255,.22), rgba(255, 255, 255,.22), rgba(255, 255, 255,.22))",
     },
     xm: {
-      glow1: "rgba(16,185,129,0.20)", 
-      glow2: "rgba(5,150,105,0.10)",
-      ring: "rgba(5,150,105,0.35)",
-      border: "rgba(16,185,129,0.25)",
+      glow1: "rgba(255,255,255,0.20)", 
+      glow2: "rgba(255,255,255,0.10)",
+      ring: "rgba(255,255,255,0.35)",
+      border: "rgba(255,255,255,0.25)",
       particle1: "#10B981",
-      particle2: "#059669",
+      particle2: "#ffffff",
       conic:
-        "conic-gradient(from 180deg, rgba(16,185,129,.22), rgba(5,150,105,.22), rgba(4,120,87,.22), rgba(16,185,129,.22))",
+        "conic-gradient(from 180deg, rgba(255,255,255,.22), rgba(255,255,255,.22), rgba(255,255,255,.22), rgba(255,255,255,.22))",
     },
     neutral: {
       glow1: "rgba(125,125,125,0.20)",
@@ -1497,8 +1497,8 @@ function ThreeBadge({ activePartner }: { activePartner: "Vantage broker" | "XM" 
       className={cn(
         "relative inline-block text-5xl md:text-7xl font-black bg-clip-text text-transparent",
         isVantage
-          ? "bg-gradient-to-r from-purple-400 via-violet-500 to-fuchsia-400 drop-shadow-[0_10px_35px_rgba(168,85,247,0.28)]"
-          : "bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-400 drop-shadow-[0_10px_35px_rgba(56,189,248,0.25)]"
+          ? "bg-gradient-to-r from-white via-white to-fuchsia-400 drop-shadow-[0_10px_35px_rgba(255, 255, 255,0.28)]"
+          : "bg-gradient-to-r from-sky-400 via-white to-indigo-400 drop-shadow-[0_10px_35px_rgba(255, 255, 255,0.25)]"
       )}
     >
       3
@@ -1506,8 +1506,8 @@ function ThreeBadge({ activePartner }: { activePartner: "Vantage broker" | "XM" 
         className={cn(
           "pointer-events-none absolute inset-0 -z-10 blur-2xl bg-gradient-to-r",
           isVantage
-            ? "from-purple-500/30 via-violet-600/30 to-fuchsia-500/30"
-            : "from-sky-500/30 via-blue-600/30 to-indigo-500/30"
+            ? "from-white/30 via-white/30 to-fuchsia-500/30"
+            : "from-sky-500/30 via-white/30 to-indigo-500/30"
         )}
       />
     </motion.span>
@@ -1535,14 +1535,14 @@ function SignUpCTA({
 
   const glowFrames = isVantage
     ? [
-        "0 0 20px rgba(168,85,247,0.30)",
-        "0 0 45px rgba(147,51,234,0.50)",
-        "0 0 20px rgba(168,85,247,0.30)",
+        "0 0 20px rgba(255, 255, 255,0.30)",
+        "0 0 45px rgba(255, 255, 255,0.50)",
+        "0 0 20px rgba(255, 255, 255,0.30)",
       ]
     : [
-        "0 0 20px rgba(56,189,248,0.30)",
-        "0 0 45px rgba(59,130,246,0.50)",
-        "0 0 20px rgba(56,189,248,0.30)",
+        "0 0 20px rgba(255, 255, 255,0.30)",
+        "0 0 45px rgba(255, 255, 255,0.50)",
+        "0 0 20px rgba(255, 255, 255,0.30)",
       ];
 
   return (
@@ -1559,24 +1559,24 @@ function SignUpCTA({
           "relative inline-flex items-center gap-2 rounded-full px-10 py-4 text-[15px] font-semibold tracking-wide transition-all duration-500 backdrop-blur-md text-white",
           isVantage
             ? // VANTAGE
-              "border border-purple-500/40 shadow-[0_0_25px_rgba(168,85,247,0.35)] hover:border-purple-400/70 hover:shadow-[0_0_55px_rgba(168,85,247,0.6)] \
-       bg-[linear-gradient(115deg,rgba(109,40,217,0.85)_0%,rgba(124,58,237,0.92)_45%,rgba(147,51,234,0.95)_100%)] \
-       before:absolute before:inset-0 before:-z-10 before:rounded-full before:bg-[radial-gradient(60%_80%_at_50%_0%,rgba(168,85,247,0.25),transparent_60%)]"
+              "border border-white/40 shadow-[0_0_25px_rgba(255, 255, 255,0.35)] hover:border-white/70 hover:shadow-[0_0_55px_rgba(255, 255, 255,0.6)] \
+       bg-[linear-gradient(115deg,rgba(255, 255, 255,0.85)_0%,rgba(255, 255, 255,0.92)_45%,rgba(255, 255, 255,0.95)_100%)] \
+       before:absolute before:inset-0 before:-z-10 before:rounded-full before:bg-[radial-gradient(60%_80%_at_50%_0%,rgba(255, 255, 255,0.25),transparent_60%)]"
             : // XM
-              "border border-sky-500/50 shadow-[0_0_35px_rgba(56,189,248,0.45)] hover:border-sky-400/80 hover:shadow-[0_0_65px_rgba(56,189,248,0.75)] \
-       bg-[linear-gradient(115deg,rgba(14,165,233,0.98)_0%,rgba(37,99,235,0.97)_45%,rgba(59,130,246,0.95)_100%)] \
+              "border border-sky-500/50 shadow-[0_0_35px_rgba(255, 255, 255,0.45)] hover:border-sky-400/80 hover:shadow-[0_0_65px_rgba(255, 255, 255,0.75)] \
+       bg-[linear-gradient(115deg,rgba(255, 255, 255,0.98)_0%,rgba(255, 255, 255,0.97)_45%,rgba(255, 255, 255,0.95)_100%)] \
        before:absolute before:inset-0 before:-z-10 before:rounded-full before:blur-xl before:opacity-60 \
-       before:bg-[radial-gradient(70%_90%_at_50%_0%,rgba(56,189,248,0.45),transparent_70%)]"
+       before:bg-[radial-gradient(70%_90%_at_50%_0%,rgba(255, 255, 255,0.45),transparent_70%)]"
         )}
       >
         {label}
         <IconExternalLink
-          className={cn("h-4 w-4", isVantage ? "text-purple-300" : "text-sky-300")}
+          className={cn("h-4 w-4", isVantage ? "text-white" : "text-sky-300")}
         />
         <motion.span
           className={cn(
             "absolute inset-0 rounded-full opacity-0 blur-md ring-2",
-            isVantage ? "ring-purple-500/20" : "ring-sky-500/20"
+            isVantage ? "ring-white/20" : "ring-sky-500/20"
           )}
           whileHover={{ opacity: 0.6, scale: 1.1 }}
           transition={{ duration: 0.5 }}

@@ -44,7 +44,7 @@ export const AffiliateAdminDashboard = ({
                   <td className="text-white py-3 px-4">{affiliate.name}</td>
                   <td className="text-gray-400 py-3 px-4">{affiliate.email}</td>
                   <td className="text-white py-3 px-4">{affiliate.referrals}</td>
-                  <td className="text-green-500 py-3 px-4">
+                  <td className="text-white py-3 px-4">
                     ${affiliate.earnings}
                   </td>
                 </tr>

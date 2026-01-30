@@ -110,7 +110,7 @@ export const PremiumButton = ({
           "relative w-full h-full flex items-center justify-center gap-2",
           "bg-gradient-to-r from-blue-950/40 via-slate-950 to-neutral-950",
           "text-white font-bold uppercase tracking-wider",
-          "hover:from-blue-900/60 transition-all duration-300",
+          "hover:from-white/60 transition-all duration-300",
           "touch-manipulation",
           sizes[size],
           disabled && "opacity-50 cursor-not-allowed"
@@ -124,7 +124,7 @@ export const PremiumButton = ({
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="w-4 h-4 border-2 border-blue-400/50 border-t-blue-400 rounded-full"
+            className="w-4 h-4 border-2 border-white/50 border-t-blue-400 rounded-full"
           />
         )}
         {children}
@@ -178,9 +178,9 @@ export const PremiumBadge = ({
   size?: "sm" | "md" | "lg";
 }) => {
   const variantStyles = {
-    info: "bg-blue-500/20 text-blue-200 border-blue-500/40",
-    blue: "bg-blue-500/20 text-blue-200 border-blue-500/40",
-    success: "bg-emerald-500/20 text-emerald-200 border-emerald-500/40",
+    info: "bg-white/20 text-white border-white/40",
+    blue: "bg-white/20 text-white border-white/40",
+    success: "bg-white/20 text-white border-white/40",
     warning: "bg-amber-500/20 text-amber-200 border-amber-500/40",
     error: "bg-red-500/20 text-red-200 border-red-500/40",
   };
@@ -198,7 +198,7 @@ export const PremiumBadge = ({
         "border backdrop-blur-sm min-h-[32px] flex items-center",
         variantStyles[variant],
         sizeStyles[size],
-        glowing && `shadow-[0_0_10px_${variant === "blue" || variant === "info" ? "rgba(59,130,246,0.3)" : "rgba(59,130,246,0.3)"}]`
+        glowing && `shadow-[0_0_10px_${variant === "blue" || variant === "info" ? "rgba(255, 255, 255,0.3)" : "rgba(255, 255, 255,0.3)"}]`
       )}
     >
       {text}
@@ -233,8 +233,8 @@ export const PremiumGlassCard = ({
           "relative rounded-xl p-4 backdrop-blur-xl",
           GLASS_STYLES.gradient,
           GLASS_STYLES.border,
-          interactive && "cursor-pointer hover:border-blue-400/40 transition-colors",
-          glowing && "shadow-lg shadow-blue-500/20"
+          interactive && "cursor-pointer hover:border-white/40 transition-colors",
+          glowing && "shadow-lg shadow-white/20"
         )}
       >
         {children}
@@ -298,7 +298,7 @@ export const PremiumFloatingButton = ({
         }}
         title={label}
       >
-        <Icon size={24} className="text-blue-400 group-hover:text-blue-300 transition-colors" />
+        <Icon size={24} className="text-white group-hover:text-white transition-colors" />
       </motion.button>
     </PremiumShimmerBorder>
   );

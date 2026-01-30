@@ -24,7 +24,7 @@ export function Pricing() {
   return (
     <section
       id="pricing"
-      className="relative isolate w-full bg-blue dark:bg-neutral-950 px-4 py-12 sm:py-16 lg:px-4 overflow-hidden"
+      className="relative isolate w-full bg-neutral-950 px-4 py-12 sm:py-16 lg:px-4 overflow-hidden text-white"
     >
    
 
@@ -51,17 +51,12 @@ export function Pricing() {
             <span
               className={cn(
                 "inline-flex items-center gap-2 text-[11px] tracking-[0.22em] uppercase",
-                activePartner === "Vantage broker"
-                  ? "text-blue-300/70"
-                  : "text-blue-300/70"
+                "text-white"
               )}
             >
               <span
                 className={cn(
-                  "h-[6px] w-[6px] rounded-full shadow-[0_0_18px_rgba(233,215,168,0.45)]",
-                  activePartner === "Vantage broker"
-                    ? "bg-gradient-to-r from-blue-400 to-blue-500 shadow-[0_0_18px_rgba(168,85,247,0.45)]"
-                    : "bg-gradient-to-r from-sky-400 to-blue-500 shadow-[0_0_18px_rgba(56,189,248,0.45)]"
+                  "h-[6px] w-[6px] rounded-full shadow-[0_0_18px_rgba(233,215,168,0.45)] bg-white shadow-[0_0_18px_rgba(255,255,255,0.45)]"
                 )}
               />
               BENEFITS • COMMUNITY
@@ -70,10 +65,7 @@ export function Pricing() {
             <h3 className="mt-1 text-2xl md:text-3xl font-black leading-tight">
               <span
                 className={cn(
-                  "bg-clip-text text-transparent",
-                  activePartner === "Vantage broker"
-                    ? "bg-gradient-to-r from-blue-400 via-blue-500 to-blue-400"
-                    : "bg-gradient-to-r from-sky-400 via-blue-500 to-blue-400"
+                  "bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white"
                 )}
               >
                 WHAT YOU GET
@@ -96,18 +88,12 @@ export function Pricing() {
               >
                 <span
                   className={cn(
-                    "relative inline-grid place-items-center h-5 w-5 rounded-full ring-1",
-                    activePartner === "Vantage broker"
-                      ? "bg-[#0E0F12] ring-blue-500/25"
-                      : "bg-[#0E0F12] ring-sky-500/25"
+                    "relative inline-grid place-items-center h-5 w-5 rounded-full ring-1 bg-[#0E0F12] ring-white/25",
                   )}
                 >
                   <span
                     className={cn(
-                      "h-[9px] w-[9px] rotate-45 rounded-[2px] shadow-[0_0_14px]",
-                      activePartner === "Vantage broker"
-                        ? "bg-gradient-to-br from-blue-400 via-blue-500 to-blue-400 shadow-[0_0_14px_rgba(168,85,247,0.4)]"
-                        : "bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-400 shadow-[0_0_14px_rgba(56,189,248,0.4)]"
+                      "h-[9px] w-[9px] rotate-45 rounded-[2px] shadow-[0_0_14px] bg-gradient-to-br from-white via-white to-white shadow-[0_0_14px_rgba(255,255,255,0.4)]",
                     )}
                   />
                 </span>
@@ -121,10 +107,7 @@ export function Pricing() {
             Expect{" "}
             <span
               className={cn(
-                "font-semibold",
-                activePartner === "Vantage broker"
-                  ? "text-blue-300"
-                  : "text-sky-300"
+                "font-semibold text-white",
               )}
             >
               Elite Mentorship
@@ -132,10 +115,7 @@ export function Pricing() {
             ,{" "}
             <span
               className={cn(
-                "font-semibold",
-                activePartner === "Vantage broker"
-                  ? "text-blue-300"
-                  : "text-sky-300"
+                "font-semibold text-white",
               )}
             >
               High Trade Setups
@@ -143,10 +123,7 @@ export function Pricing() {
             and powerful tools tailored for you.{" "}
             <span
               className={cn(
-                "font-semibold",
-                activePartner === "Vantage broker"
-                  ? "text-blue-300"
-                  : "text-sky-300"
+                "font-semibold text-white",
               )}
             >
               Free Access is a preview of us but VIP is the full experience.
@@ -180,7 +157,7 @@ function ShimmerPanel({
     my.set(e.clientY - r.top);
   };
 
-  const glow = useMotionTemplate`radial-gradient(220px at ${mx}px ${my}px, rgba(56,189,248,.20), transparent 30%)`;
+  const glow = useMotionTemplate`radial-gradient(220px at ${mx}px ${my}px, rgba(255, 255, 255,.20), transparent 30%)`;
 
   return (
     <div
@@ -198,7 +175,7 @@ function ShimmerPanel({
         className="pointer-events-none absolute inset-0 rounded-2xl p-[1px]"
         style={{
           background:
-            "conic-gradient(from 180deg at 50% 50%, rgba(56,189,248,.25), rgba(34, 37, 236, 1), rgba(129,140,248,.3), rgba(56,189,248,.25))",
+            "conic-gradient(from 180deg at 50% 50%, rgba(255, 255, 255,.25), rgba(34, 37, 236, 1), rgba(255, 255, 255,.3), rgba(255, 255, 255,.25))",
           WebkitMask:
             "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
           WebkitMaskComposite: "xor",
@@ -291,7 +268,7 @@ function CardPattern({
     <div className="pointer-events-none">
       <div className="absolute inset-0 rounded-2xl [mask-image:linear-gradient(white,transparent)] group-hover/card:opacity-50" />
       <motion.div
-        className="absolute inset-0 rounded-2xl bg-gradient-to-r from-green-500 to-blue-700 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500"
+        className="absolute inset-0 rounded-2xl bg-gradient-to-r from-white to-white opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500"
         style={style}
       />
       <motion.div
@@ -378,18 +355,18 @@ function CardPatternRed({
     <div className="pointer-events-none">
       <div className="absolute inset-0 rounded-2xl [mask-image:linear-gradient(white,transparent)] group-hover/card:opacity-50" />
       <motion.div
-        className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500"
+        className="absolute inset-0 rounded-2xl bg-gradient-to-r from-white to-white opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500"
         style={style}
       />
       <motion.div
         className="absolute inset-0 rounded-2xl opacity-0 mix-blend-overlay group-hover/card:opacity-100"
         style={style}
       >
-        <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-violet-50/90 dark:text-violet-100/90 font-mono font-bold transition duration-500">
+        <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-white/90 dark:text-white/90 font-mono font-bold transition duration-500">
           {randomString}
         </p>
       </motion.div>
-      <div className="absolute inset-0 rounded-2xl ring-1 ring-blue-500/20" />
+      <div className="absolute inset-0 rounded-2xl ring-1 ring-white/20" />
     </div>
   );
 }
@@ -423,21 +400,21 @@ export function LuxeCardReactive({
       glow1: "rgba(30, 34, 253, 0.23)", 
       glow2: "rgba(42, 45, 241, 0.22)",
       ring: "rgba(51, 54, 234, 0.35)",
-      border: "rgba(168,85,247,0.25)",
+      border: "rgba(255, 255, 255,0.25)",
       particle1: "#5570f7ff",
       particle2: "#3355eaff",
       conic:
-        "conic-gradient(from 180deg, rgba(85, 101, 247, 0.22), rgba(60, 51, 234, 0.22), rgba(126,34,206,.22), rgba(85, 115, 247, 0.22))",
+        "conic-gradient(from 180deg, rgba(85, 101, 247, 0.22), rgba(60, 51, 234, 0.22), rgba(255, 255, 255,.22), rgba(85, 115, 247, 0.22))",
     },
     xm: {
-      glow1: "rgba(16,185,129,0.20)", 
-      glow2: "rgba(5,150,105,0.10)",
-      ring: "rgba(5,150,105,0.35)",
-      border: "rgba(16,185,129,0.25)",
+      glow1: "rgba(255,255,255,0.20)", 
+      glow2: "rgba(255,255,255,0.10)",
+      ring: "rgba(255,255,255,0.35)",
+      border: "rgba(255,255,255,0.25)",
       particle1: "#10B981",
-      particle2: "#059669",
+      particle2: "#ffffff",
       conic:
-        "conic-gradient(from 180deg, rgba(16,185,129,.22), rgba(5,150,105,.22), rgba(4,120,87,.22), rgba(16,185,129,.22))",
+        "conic-gradient(from 180deg, rgba(255,255,255,.22), rgba(255,255,255,.22), rgba(255,255,255,.22), rgba(255,255,255,.22))",
     },
     neutral: {
       glow1: "rgba(62, 68, 222, 0.38)",

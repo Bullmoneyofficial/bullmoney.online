@@ -30,7 +30,7 @@ export const ShopMainpage = ({ products = [] }: ShopMainpageProps) => {
               {product.name}
             </h3>
             <p className="text-gray-400 mb-4">{product.description}</p>
-            <p className="text-2xl font-bold text-blue-500">${product.price}</p>
+            <p className="text-2xl font-bold text-white">${product.price}</p>
           </motion.div>
         ))}
       </div>

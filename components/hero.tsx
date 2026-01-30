@@ -558,22 +558,22 @@ const ContactSelectionModal = ({
                         exit={{ opacity: 0, scale: 0.9 }}
                         onClick={(e) => e.stopPropagation()}
                         className="bg-neutral-950 p-8 pt-12 rounded-3xl shadow-2xl w-full max-w-sm relative overflow-hidden"
-                        style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.3)', borderWidth: '1px', borderStyle: 'solid' }}
+                        style={{ borderColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.3)', borderWidth: '1px', borderStyle: 'solid' }}
                     >
                         <div className="absolute inset-0 pointer-events-none opacity-20 mix-blend-overlay bg-[url('/noise.png')]"></div>
-                         <div className="absolute inset-0 pointer-events-none opacity-30" style={{ background: 'linear-gradient(to bottom right, rgba(var(--accent-rgb, 59, 130, 246), 0.1), transparent)' }}></div>
+                         <div className="absolute inset-0 pointer-events-none opacity-30" style={{ background: 'linear-gradient(to bottom right, rgba(var(--accent-rgb, 255, 255, 255), 0.1), transparent)' }}></div>
 
                         <button 
                             onClick={onClose} 
                             className="absolute top-3 right-3 z-50 p-2 bg-neutral-900 border border-neutral-800 rounded-full text-neutral-400 hover:text-white hover:bg-neutral-800 transition-all shadow-lg"
-                            style={{ '--hover-border': 'var(--accent-color, #3b82f6)' } as React.CSSProperties}
-                            onMouseOver={(e) => (e.currentTarget.style.borderColor = 'var(--accent-color, #3b82f6)')}
+                            style={{ '--hover-border': 'var(--accent-color, #ffffff)' } as React.CSSProperties}
+                            onMouseOver={(e) => (e.currentTarget.style.borderColor = 'var(--accent-color, #ffffff)')}
                             onMouseOut={(e) => (e.currentTarget.style.borderColor = '')}
                         >
                             <X size={20} />
                         </button>
                         
-                        <h3 className="text-2xl font-serif font-bold text-center mb-2 z-10 relative theme-accent" style={{ color: 'var(--accent-color, #3b82f6)' }}>Choose Platform</h3>
+                        <h3 className="text-2xl font-serif font-bold text-center mb-2 z-10 relative theme-accent" style={{ color: 'var(--accent-color, #ffffff)' }}>Choose Platform</h3>
                         <p className="text-center text-neutral-400 text-sm mb-6 z-10 relative">How would you like to connect?</p>
 
                         <div className="space-y-4 z-10 relative">
@@ -582,14 +582,14 @@ const ContactSelectionModal = ({
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="group relative block w-full overflow-hidden rounded-xl p-[1px] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-50"
-                                style={{ '--tw-ring-color': 'var(--accent-color, #3b82f6)' } as React.CSSProperties}
+                                style={{ '--tw-ring-color': 'var(--accent-color, #ffffff)' } as React.CSSProperties}
                             >
-                                <span className="absolute inset-[-1000%] shimmer-conic-border" style={{ background: `conic-gradient(from 90deg at 50% 50%, var(--accent-color, #3b82f6) 0%, rgba(var(--accent-rgb, 59, 130, 246), 0.3) 50%, var(--accent-color, #3b82f6) 100%)` }} />
+                                <span className="absolute inset-[-1000%] shimmer-conic-border" style={{ background: `conic-gradient(from 90deg at 50% 50%, var(--accent-color, #ffffff) 0%, rgba(var(--accent-rgb, 255, 255, 255), 0.3) 50%, var(--accent-color, #ffffff) 100%)` }} />
                                 <span className="flex h-full w-full cursor-pointer items-center justify-center rounded-xl bg-neutral-950 px-6 py-3 text-sm font-medium text-white transition-colors group-hover:bg-neutral-900">
-                                     <div className="p-2 rounded-full mr-4" style={{ backgroundColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.2)' }}>
-                                        <Instagram size={24} className="theme-accent" style={{ color: 'var(--accent-color, #3b82f6)' }} />
+                                     <div className="p-2 rounded-full mr-4" style={{ backgroundColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.2)' }}>
+                                        <Instagram size={24} className="theme-accent" style={{ color: 'var(--accent-color, #ffffff)' }} />
                                     </div>
-                                    <span className="font-bold tracking-wide text-lg theme-accent" style={{ color: 'var(--accent-color, #3b82f6)' }}>Instagram</span>
+                                    <span className="font-bold tracking-wide text-lg theme-accent" style={{ color: 'var(--accent-color, #ffffff)' }}>Instagram</span>
                                 </span>
                             </a>
 
@@ -598,14 +598,14 @@ const ContactSelectionModal = ({
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="group relative block w-full overflow-hidden rounded-xl p-[1px] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-50"
-                                style={{ '--tw-ring-color': 'var(--accent-color, #3b82f6)' } as React.CSSProperties}
+                                style={{ '--tw-ring-color': 'var(--accent-color, #ffffff)' } as React.CSSProperties}
                             >
-                                <span className="absolute inset-[-1000%] shimmer-conic-border" style={{ background: `conic-gradient(from 90deg at 50% 50%, var(--accent-color, #3b82f6) 0%, rgba(var(--accent-rgb, 59, 130, 246), 0.3) 50%, var(--accent-color, #3b82f6) 100%)` }} />
+                                <span className="absolute inset-[-1000%] shimmer-conic-border" style={{ background: `conic-gradient(from 90deg at 50% 50%, var(--accent-color, #ffffff) 0%, rgba(var(--accent-rgb, 255, 255, 255), 0.3) 50%, var(--accent-color, #ffffff) 100%)` }} />
                                 <span className="flex h-full w-full cursor-pointer items-center justify-center rounded-xl bg-neutral-950 px-6 py-3 text-sm font-medium text-white transition-colors group-hover:bg-neutral-900">
-                                    <div className="p-2 rounded-full mr-4" style={{ backgroundColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.2)' }}>
-                                        <Send size={24} className="theme-accent" style={{ color: 'var(--accent-color, #3b82f6)' }} />
+                                    <div className="p-2 rounded-full mr-4" style={{ backgroundColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.2)' }}>
+                                        <Send size={24} className="theme-accent" style={{ color: 'var(--accent-color, #ffffff)' }} />
                                     </div>
-                                    <span className="font-bold tracking-wide text-lg theme-accent" style={{ color: 'var(--accent-color, #3b82f6)' }}>Telegram</span>
+                                    <span className="font-bold tracking-wide text-lg theme-accent" style={{ color: 'var(--accent-color, #ffffff)' }}>Telegram</span>
                                 </span>
                             </a>
                         </div>
@@ -658,7 +658,7 @@ const ProductCard = React.memo(({
                    {project.title}
                 </h2>
                 {project.price && (
-                    <p className="font-bold text-sm mt-1 flex items-center gap-2 theme-accent" style={{ color: 'var(--accent-color, #3b82f6)' }}>
+                    <p className="font-bold text-sm mt-1 flex items-center gap-2 theme-accent" style={{ color: 'var(--accent-color, #ffffff)' }}>
                         {project.price} 
                         {project.duration && (
                             <>
@@ -1634,7 +1634,7 @@ const HeroParallax = () => {
 
   if (loading) {
       return (
-          <div className="h-screen w-full flex items-center justify-center bg-neutral-950" style={{ color: 'var(--accent-color, #3b82f6)' }}>
+          <div className="h-screen w-full flex items-center justify-center bg-neutral-950" style={{ color: 'var(--accent-color, #ffffff)' }}>
               <Loader2 className="animate-spin w-10 h-10 theme-accent" />
           </div>
       )
@@ -1656,7 +1656,7 @@ const HeroParallax = () => {
       .safari-fix-layer { transform: translateZ(0); -webkit-transform: translateZ(0); }
       .custom-scrollbar::-webkit-scrollbar { width: 6px; }
       .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-      .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--accent-color, #3b82f6); border-radius: 3px; }
+      .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--accent-color, #ffffff); border-radius: 3px; }
     `}</style>
 
     {/* modals removed from hero for simplified UI */}
@@ -1760,7 +1760,7 @@ const HeroParallax = () => {
               <button
                 onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
                 className="absolute top-4 left-4 md:left-auto md:right-16 z-50 p-2 rounded-full text-black transition-colors shadow-lg flex gap-2 items-center px-4 font-bold text-xs theme-accent-bg"
-                style={{ backgroundColor: 'var(--accent-color, #3b82f6)' }}
+                style={{ backgroundColor: 'var(--accent-color, #ffffff)' }}
                 onMouseOver={(e) => (e.currentTarget.style.opacity = '0.85')}
                 onMouseOut={(e) => (e.currentTarget.style.opacity = '1')}
               >
@@ -1782,10 +1782,10 @@ const HeroParallax = () => {
                     className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:bg-black/70 transition-colors z-20"
                   >
                     {isUploadingImage ? (
-                        <Loader2 className="animate-spin text-blue-500 w-8 h-8" />
+                        <Loader2 className="animate-spin text-white w-8 h-8" />
                       ) : (
                         <>
-                          <Upload className="text-blue-500 w-8 h-8 mb-2" />
+                          <Upload className="text-white w-8 h-8 mb-2" />
                           <p className="text-white text-xs font-bold uppercase tracking-widest">Click to Change Image</p>
                         </>
                       )}
@@ -1818,8 +1818,8 @@ const HeroParallax = () => {
                               value={editForm.title} 
                               onChange={(e) => setEditForm({...editForm, title: e.target.value})}
                               className="w-full bg-transparent p-2 border-b border-neutral-300 dark:border-neutral-700 outline-none text-neutral-900 dark:text-white text-base md:text-sm"
-                              style={{ '--focus-border': 'var(--accent-color, #3b82f6)' } as React.CSSProperties}
-                              onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--accent-color, #3b82f6)')}
+                              style={{ '--focus-border': 'var(--accent-color, #ffffff)' } as React.CSSProperties}
+                              onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--accent-color, #ffffff)')}
                               onBlur={(e) => (e.currentTarget.style.borderColor = '')}
                             />
                           </div>
@@ -1830,7 +1830,7 @@ const HeroParallax = () => {
                               value={editForm.description || ""} 
                               onChange={(e) => setEditForm({...editForm, description: e.target.value})}
                               className="w-full bg-transparent p-2 border-b border-neutral-300 dark:border-neutral-700 outline-none text-neutral-900 dark:text-white resize-none text-base md:text-sm"
-                              onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--accent-color, #3b82f6)')}
+                              onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--accent-color, #ffffff)')}
                               onBlur={(e) => (e.currentTarget.style.borderColor = '')}
                             />
                           </div>
@@ -1843,7 +1843,7 @@ const HeroParallax = () => {
                             value={editForm.price || ""} 
                             onChange={(e) => setEditForm({...editForm, price: e.target.value})}
                             className="w-full bg-neutral-100 dark:bg-neutral-800 p-3 rounded-lg outline-none border border-transparent text-base md:text-sm"
-                            onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--accent-color, #3b82f6)')}
+                            onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--accent-color, #ffffff)')}
                             onBlur={(e) => (e.currentTarget.style.borderColor = 'transparent')}
                           />
                         </div>
@@ -1853,7 +1853,7 @@ const HeroParallax = () => {
                             value={editForm.duration || ""} 
                             onChange={(e) => setEditForm({...editForm, duration: e.target.value})}
                             className="w-full bg-neutral-100 dark:bg-neutral-800 p-3 rounded-lg outline-none border border-transparent text-base md:text-sm"
-                            onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--accent-color, #3b82f6)')}
+                            onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--accent-color, #ffffff)')}
                             onBlur={(e) => (e.currentTarget.style.borderColor = 'transparent')}
                           />
                         </div>
@@ -1865,7 +1865,7 @@ const HeroParallax = () => {
                             value={editForm.technique || ""} 
                             onChange={(e) => setEditForm({...editForm, technique: e.target.value})}
                             className="w-full bg-neutral-100 dark:bg-neutral-800 p-3 rounded-lg outline-none border border-transparent text-base md:text-sm"
-                            onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--accent-color, #3b82f6)')}
+                            onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--accent-color, #ffffff)')}
                             onBlur={(e) => (e.currentTarget.style.borderColor = 'transparent')}
                         />
                       </div>
@@ -1875,7 +1875,7 @@ const HeroParallax = () => {
                           onClick={handleSaveEdit} 
                           disabled={isSaving || isUploadingImage}
                           className="flex-1 text-black font-bold py-3 rounded-xl flex items-center justify-center gap-2 text-sm disabled:opacity-50 theme-accent-bg"
-                          style={{ backgroundColor: 'var(--accent-color, #3b82f6)' }}
+                          style={{ backgroundColor: 'var(--accent-color, #ffffff)' }}
                         >
                           {isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : <><Save size={16} /> Save</>}
                         </button>
@@ -1906,7 +1906,7 @@ const HeroParallax = () => {
                          <h3 className="text-4xl md:text-5xl font-serif font-bold text-neutral-900 dark:text-white mb-2 leading-tight">
                             {activeProject.title}
                         </h3>
-                         <div className="h-1 w-20 mb-6 theme-accent-bg" style={{ backgroundColor: 'var(--accent-color, #3b82f6)' }} />
+                         <div className="h-1 w-20 mb-6 theme-accent-bg" style={{ backgroundColor: 'var(--accent-color, #ffffff)' }} />
                     </motion.div>
 
                     <motion.div 
@@ -1939,7 +1939,7 @@ const HeroParallax = () => {
                         {activeProject.price && (
                             <div className="flex justify-between items-center border-b border-neutral-200 dark:border-neutral-700 pb-3 last:border-b-0">
                                 <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Investment</span>
-                                <span className="text-xl font-bold theme-accent" style={{ color: 'var(--accent-color, #3b82f6)' }}>{activeProject.price}</span>
+                                <span className="text-xl font-bold theme-accent" style={{ color: 'var(--accent-color, #ffffff)' }}>{activeProject.price}</span>
                             </div>
                         )}
                     </motion.div>
@@ -2092,7 +2092,7 @@ const HeroParallax = () => {
               onClick={handleOpenScenePicker}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-xs font-semibold uppercase tracking-[0.25em] bg-black/50 text-white/90 border border-white/10 shadow-[0_10px_25px_rgba(0,0,0,0.35)] backdrop-blur"
             >
-              <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: 'var(--accent-color, #3b82f6)' }} />
+              <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: 'var(--accent-color, #ffffff)' }} />
               Choose Scene
             </motion.button>
             {/* viewing label removed */}

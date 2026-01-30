@@ -49,9 +49,9 @@ textarea {
   background: linear-gradient(
     90deg,
     rgba(255, 255, 255, 0.9) 0%,
-    var(--accent-color, #3b82f6) 25%,
-    rgba(147, 197, 253, 1) 50%,
-    var(--accent-color, #3b82f6) 75%,
+    var(--accent-color, #ffffff) 25%,
+    rgba(255, 255, 255, 1) 50%,
+    var(--accent-color, #ffffff) 75%,
     rgba(255, 255, 255, 0.9) 100%
   );
   background-size: 300% 100%;
@@ -71,9 +71,9 @@ textarea {
    ============================================ */
 .text-glow {
   text-shadow:
-    0 0 5px var(--accent-color, #3b82f6),
-    0 0 10px var(--theme-accent-light, rgba(59, 130, 246, 0.5)),
-    0 0 20px var(--theme-accent-subtle, rgba(59, 130, 246, 0.3));
+    0 0 5px var(--accent-color, #ffffff),
+    0 0 10px var(--theme-accent-light, rgba(255, 255, 255, 0.5)),
+    0 0 20px var(--theme-accent-subtle, rgba(255, 255, 255, 0.3));
 }
 
 /* ============================================
@@ -102,23 +102,23 @@ textarea {
 
 /* Theme-aware text with accent */
 .theme-text-accent {
-  color: var(--accent-color, #3b82f6);
-  text-shadow: 0 0 10px var(--theme-accent-light, rgba(59, 130, 246, 0.25));
+  color: var(--accent-color, #ffffff);
+  text-shadow: 0 0 10px var(--theme-accent-light, rgba(255, 255, 255, 0.25));
 }
 
 /* Theme-aware links */
 .theme-link {
-  color: var(--accent-color, #3b82f6);
+  color: var(--accent-color, #ffffff);
   text-decoration: none;
   transition: all 0.2s ease;
 }
 
 .theme-link:hover {
-  text-shadow: 0 0 10px var(--theme-accent-glow, rgba(59, 130, 246, 0.5));
+  text-shadow: 0 0 10px var(--theme-accent-glow, rgba(255, 255, 255, 0.5));
 }
 
 /* Links get theme color on hover */
 html[data-active-theme] a:not([data-no-theme]):hover {
-  color: var(--accent-color, #3b82f6);
-  text-shadow: 0 0 10px rgba(var(--accent-rgb, 59, 130, 246), 0.3);
+  color: var(--accent-color, #ffffff);
+  text-shadow: 0 0 10px rgba(var(--accent-rgb, 255, 255, 255), 0.3);
 }

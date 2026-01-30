@@ -87,15 +87,15 @@ const DraggableSplit: React.FC<DraggableSplitProps> = ({ children, initialRatio 
         onPointerUp={handlePointerUp}
         // "touch-action: none" is CRITICAL for mobile performance
         className={`h-3 -mt-1.5 z-50 flex-shrink-0 cursor-row-resize relative group transition-colors duration-200 select-none touch-none ${
-          isDragging ? 'bg-blue-500' : 'bg-transparent hover:bg-blue-500/10'
+          isDragging ? 'bg-white' : 'bg-transparent hover:bg-white/10'
         }`}
       >
         {/* Visual Line (Purely decorative, does not handle events) */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
            <div className={`h-1 w-12 rounded-full transition-all duration-300 shadow-sm ${
              isDragging 
-               ? 'bg-blue-500 w-16 scale-110' 
-               : 'bg-white/40 backdrop-blur-md group-hover:bg-blue-500'
+               ? 'bg-white w-16 scale-110' 
+               : 'bg-white/40 backdrop-blur-md group-hover:bg-white'
            }`} />
         </div>
       </div>

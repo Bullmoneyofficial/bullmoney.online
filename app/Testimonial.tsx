@@ -11,8 +11,8 @@ import { useUnifiedPerformance } from "@/hooks/useDesktopPerformance";
 // Neon Blue Sign Style from Chartnews (STATIC for performance)
 const NEON_STYLES = `
   .neon-blue-text {
-    color: #3b82f6;
-    text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+    color: #ffffff;
+    text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
   }
 
   .neon-white-text {
@@ -25,17 +25,17 @@ const NEON_STYLES = `
   }
 
   .neon-blue-icon {
-    filter: drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6);
+    filter: drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff);
   }
 
   .neon-blue-border {
-    border: 2px solid #3b82f6;
-    box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff;
   }
 
   .neon-blue-bg {
-    background: #3b82f6;
-    box-shadow: 0 0 8px #3b82f6, 0 0 16px #3b82f6;
+    background: #ffffff;
+    box-shadow: 0 0 8px #ffffff, 0 0 16px #ffffff;
   }
 
   .gpu-layer {
@@ -79,16 +79,16 @@ export function AboutContent() {
         </motion.section>
 
         {/* Divider */}
-        <div className="my-8 h-px w-full bg-gradient-to-r from-sky-500/20 via-blue-500/20 to-indigo-500/20" />
+        <div className="my-8 h-px w-full bg-gradient-to-r from-sky-500/20 via-white/20 to-indigo-500/20" />
         <TestimonialsCarousel />
 
         {/* CTA / Footer */}
-        <div className="mt-8 h-px w-full bg-gradient-to-r from-sky-500/20 via-blue-500/20 to-indigo-500/20" />
+        <div className="mt-8 h-px w-full bg-gradient-to-r from-sky-500/20 via-white/20 to-indigo-500/20" />
         <footer className="mt-6 flex items-center justify-between">
           <Link href="/" className="rounded-full px-3 py-1 text-sm font-semibold text-white bg-neutral-900 ring-1 ring-sky-500/30 hover:ring-sky-400/60">
             Back
           </Link>
-          <span className="text-sm bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-400 bg-clip-text text-transparent font-semibold">
+          <span className="text-sm bg-gradient-to-r from-sky-400 via-white to-indigo-400 bg-clip-text text-transparent font-semibold">
              •  •  •
           </span>
         </footer>
@@ -153,13 +153,13 @@ export function TestimonialsCarousel() {
       {...(shouldSkipHeavyEffects ? mobileFade : fade)}
       className="relative mt-16 w-full max-w-4xl mx-auto"
     >
-      <h2 className={cn("text-xl font-extrabold text-center mb-8", shouldSkipHeavyEffects ? "text-blue-400" : "neon-blue-text")}>
+      <h2 className={cn("text-xl font-extrabold text-center mb-8", shouldSkipHeavyEffects ? "text-white" : "neon-blue-text")}>
         Testimonials
       </h2>
 
       <div className={cn(
         "relative h-[320px] overflow-hidden rounded-3xl bg-black shadow-lg",
-        shouldSkipHeavyEffects ? "border border-blue-500/50" : "neon-blue-border",
+        shouldSkipHeavyEffects ? "border border-white/50" : "neon-blue-border",
         shouldDisableBackdropBlur ? "" : "backdrop-blur-md"
       )}>
         <AnimatePresence mode="wait">
@@ -180,7 +180,7 @@ export function TestimonialsCarousel() {
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent" />
             <div className="absolute bottom-10 left-8 text-white max-w-sm space-y-3">
               <div className="flex items-center gap-3">
-                <div className={cn("relative w-10 h-10 rounded-full overflow-hidden bg-black", shouldSkipHeavyEffects ? "border border-blue-500/50" : "neon-blue-border")}>
+                <div className={cn("relative w-10 h-10 rounded-full overflow-hidden bg-black", shouldSkipHeavyEffects ? "border border-white/50" : "neon-blue-border")}>
                   <Image
                     src={currentTestimonial.icon}
                     alt={`${currentTestimonial.name} icon`}
@@ -188,7 +188,7 @@ export function TestimonialsCarousel() {
                     className="object-contain p-1.5"
                   />
                 </div>
-                <p className={cn("text-lg font-semibold", shouldSkipHeavyEffects ? "text-blue-400" : "neon-blue-text")}>{currentTestimonial.name}</p>
+                <p className={cn("text-lg font-semibold", shouldSkipHeavyEffects ? "text-white" : "neon-blue-text")}>{currentTestimonial.name}</p>
               </div>
               <p className={cn("text-sm italic leading-relaxed", shouldSkipHeavyEffects ? "text-white" : "neon-white-text")}>
                 &ldquo;{currentTestimonial.text}&rdquo;
@@ -202,7 +202,7 @@ export function TestimonialsCarousel() {
           onClick={prevSlide}
           className={cn(
             "absolute left-3 top-1/2 -translate-y-1/2 bg-black p-2 rounded-full transition-all",
-            shouldSkipHeavyEffects ? "border border-blue-500/50 text-white hover:bg-blue-500/20" : "neon-blue-border hover:neon-blue-bg neon-white-text"
+            shouldSkipHeavyEffects ? "border border-white/50 text-white hover:bg-white/20" : "neon-blue-border hover:neon-blue-bg neon-white-text"
           )}
         >
           <ChevronLeft size={20} />
@@ -211,7 +211,7 @@ export function TestimonialsCarousel() {
           onClick={nextSlide}
           className={cn(
             "absolute right-3 top-1/2 -translate-y-1/2 bg-black p-2 rounded-full transition-all",
-            shouldSkipHeavyEffects ? "border border-blue-500/50 text-white hover:bg-blue-500/20" : "neon-blue-border hover:neon-blue-bg neon-white-text"
+            shouldSkipHeavyEffects ? "border border-white/50 text-white hover:bg-white/20" : "neon-blue-border hover:neon-blue-bg neon-white-text"
           )}
         >
           <ChevronRight size={20} />
@@ -227,7 +227,7 @@ export function TestimonialsCarousel() {
             className={cn(
               "h-2 w-2 rounded-full transition-all",
               i === index
-                ? (shouldSkipHeavyEffects ? "bg-blue-500 w-4" : "neon-blue-bg w-4")
+                ? (shouldSkipHeavyEffects ? "bg-white w-4" : "neon-blue-bg w-4")
                 : "bg-white/30 hover:bg-white/50"
             )}
           />

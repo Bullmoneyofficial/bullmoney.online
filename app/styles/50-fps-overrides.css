@@ -46,9 +46,9 @@ html.shimmer-quality-disabled [class*="backdrop-blur"] {
 /* Text glow effect for active theme elements */
 .text-glow {
   text-shadow:
-    0 0 5px var(--accent-color, #3b82f6),
-    0 0 10px var(--theme-accent-light, rgba(59, 130, 246, 0.5)),
-    0 0 20px var(--theme-accent-subtle, rgba(59, 130, 246, 0.3));
+    0 0 5px var(--accent-color, #ffffff),
+    0 0 10px var(--theme-accent-light, rgba(255, 255, 255, 0.5)),
+    0 0 20px var(--theme-accent-subtle, rgba(255, 255, 255, 0.3));
 }
 
 /* =================================================================
@@ -228,7 +228,7 @@ html, body {
 /* Replace conic-gradient spinning borders with static gradients */
 [class*="conic-gradient"],
 [style*="conic-gradient"] {
-  background: linear-gradient(90deg, rgba(59, 130, 246, 0.5), rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.5)) !important;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.5)) !important;
   animation: none !important;
 }
 
@@ -257,7 +257,7 @@ html, body {
 /* EXCEPTION: Allow drop-shadow inside fps-chart-container */
 .fps-chart-container [class*="drop-shadow"],
 [data-fps-chart] [class*="drop-shadow"] {
-  filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.8)) !important;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8)) !important;
 }
 
 /* Optimize will-change - don't over-use it */
@@ -349,7 +349,7 @@ html.is-scrolling [data-fps-chart] [style*="transform"] {
   .fps-chart-container [class*="drop-shadow"],
   [data-fps-chart] [class*="filter"],
   [data-fps-chart] [class*="drop-shadow"] {
-    filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.8)) !important;
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8)) !important;
   }
   
   /* Disable 3D transforms on mobile for battery */
@@ -485,7 +485,7 @@ html.is-scrolling [data-fps-chart] * {
     overflow: visible !important;
   }
   
-  /* Ensure all theme overlays don't block scroll */
+  /* Ensure all theme overlays don't block scroll - FIXED: use touch-action:auto */
   #theme-global-overlay,
   #theme-edge-glow,
   #theme-transition-reveal,
@@ -495,7 +495,7 @@ html.is-scrolling [data-fps-chart] * {
   body::before,
   body::after {
     pointer-events: none !important;
-    touch-action: none !important;
+    touch-action: auto !important; /* FIXED: Allow touch/scroll passthrough */
     position: fixed !important;
     overflow: visible !important;
   }

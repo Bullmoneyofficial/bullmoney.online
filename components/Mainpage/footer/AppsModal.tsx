@@ -9,15 +9,15 @@ import { EnhancedModal } from "./EnhancedModal";
 // Neon styles for apps modal
 const APPS_NEON_STYLES = `
   .apps-neon-blue-text {
-    color: #3b82f6;
-    text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+    color: #ffffff;
+    text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
   }
   .apps-neon-white-text {
     color: #ffffff;
     text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
   }
   .apps-neon-blue-icon {
-    filter: drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6);
+    filter: drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff);
   }
 `;
 
@@ -65,7 +65,7 @@ export const AppsModal = ({ isOpen, onClose, apps = defaultApps }: AppsModalProp
       onClose={onClose}
       title={
         <div className="flex items-center gap-2">
-          <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5 apps-neon-blue-icon" style={{ color: '#3b82f6' }} />
+          <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5 apps-neon-blue-icon" style={{ color: '#ffffff' }} />
           <span className="apps-neon-white-text">Apps & Tools</span>
         </div>
       }
@@ -95,20 +95,20 @@ export const AppsModal = ({ isOpen, onClose, apps = defaultApps }: AppsModalProp
                   <div 
                     className="absolute inset-0 bg-black rounded-lg xs:rounded-lg sm:rounded-xl md:rounded-xl transition-all duration-300"
                     style={{
-                      border: '1px solid #3b82f6',
-                      boxShadow: '0 0 4px rgba(59, 130, 246, 0.5)'
+                      border: '1px solid #ffffff',
+                      boxShadow: '0 0 4px rgba(255, 255, 255, 0.5)'
                     }}
                   />
                   {/* Hover state - brighter neon */}
                   <div 
                     className="absolute inset-0 rounded-lg xs:rounded-lg sm:rounded-xl md:rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
                     style={{
-                      border: '1px solid #3b82f6',
-                      boxShadow: '0 0 8px #3b82f6, 0 0 16px rgba(59, 130, 246, 0.5), inset 0 0 4px rgba(59, 130, 246, 0.2)'
+                      border: '1px solid #ffffff',
+                      boxShadow: '0 0 8px #ffffff, 0 0 16px rgba(255, 255, 255, 0.5), inset 0 0 4px rgba(255, 255, 255, 0.2)'
                     }}
                   />
                   <span className="relative z-10 apps-neon-white-text truncate">{link.label}</span>
-                  <ExternalLink className="relative z-10 h-2.5 w-2.5 xs:h-3 xs:w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 opacity-0 transition-all group-hover:opacity-100 apps-neon-blue-icon flex-shrink-0 ml-1.5" style={{ color: '#3b82f6' }} />
+                  <ExternalLink className="relative z-10 h-2.5 w-2.5 xs:h-3 xs:w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 opacity-0 transition-all group-hover:opacity-100 apps-neon-blue-icon flex-shrink-0 ml-1.5" style={{ color: '#ffffff' }} />
                 </Link>
               ))}
               {app.title === "Bullmoney Indicators" && (
@@ -121,14 +121,14 @@ export const AppsModal = ({ isOpen, onClose, apps = defaultApps }: AppsModalProp
                   <span 
                     className="absolute inset-0 rounded-lg xs:rounded-lg sm:rounded-xl md:rounded-xl"
                     style={{
-                      border: '2px solid #3b82f6',
-                      boxShadow: '0 0 8px #3b82f6, 0 0 16px #3b82f6, inset 0 0 8px rgba(59, 130, 246, 0.3)'
+                      border: '2px solid #ffffff',
+                      boxShadow: '0 0 8px #ffffff, 0 0 16px #ffffff, inset 0 0 8px rgba(255, 255, 255, 0.3)'
                     }}
                   />
                   <span className="absolute inset-[2px] bg-black rounded-lg xs:rounded-lg sm:rounded-xl md:rounded-xl" />
                   <span className="relative z-10 flex items-center gap-1.5 xs:gap-2 sm:gap-2 md:gap-2 apps-neon-white-text">
                     Premium PDFs
-                    <ChevronRight className="h-2.5 w-2.5 xs:h-3 xs:w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 group-hover:translate-x-1 transition-transform apps-neon-blue-icon" style={{ color: '#3b82f6' }} />
+                    <ChevronRight className="h-2.5 w-2.5 xs:h-3 xs:w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 group-hover:translate-x-1 transition-transform apps-neon-blue-icon" style={{ color: '#ffffff' }} />
                   </span>
                 </Link>
               )}

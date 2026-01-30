@@ -24,7 +24,7 @@
     box-shadow: 
       0 8px 32px 0 rgba(0, 0, 0, 0.37),
       inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
-      0 0 20px rgba(139, 92, 246, 0.1) !important;
+      0 0 20px rgba(255, 255, 255, 0.1) !important;
   }
   
   /* Shiny hover effects for interactive elements */
@@ -34,8 +34,8 @@
   .cursor-pointer:hover {
     transform: translateY(-2px) scale(1.02) !important;
     box-shadow: 
-      0 12px 40px rgba(139, 92, 246, 0.4),
-      0 0 30px rgba(139, 92, 246, 0.3),
+      0 12px 40px rgba(255, 255, 255, 0.4),
+      0 0 30px rgba(255, 255, 255, 0.3),
       inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
     filter: brightness(1.1) !important;
   }
@@ -43,10 +43,10 @@
   /* Premium glow animation */
   @keyframes premium-glow {
     0%, 100% {
-      box-shadow: 0 0 20px rgba(139, 92, 246, 0.3), 0 0 40px rgba(59, 130, 246, 0.2);
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.3), 0 0 40px rgba(255, 255, 255, 0.2);
     }
     50% {
-      box-shadow: 0 0 30px rgba(139, 92, 246, 0.5), 0 0 60px rgba(59, 130, 246, 0.3);
+      box-shadow: 0 0 30px rgba(255, 255, 255, 0.5), 0 0 60px rgba(255, 255, 255, 0.3);
     }
   }
   
@@ -250,10 +250,10 @@
     backdrop-filter: blur(20px) saturate(180%) !important;
     -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
     background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 100%) !important;
-    border-bottom: 1px solid rgba(139, 92, 246, 0.2) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
     box-shadow: 
       0 4px 30px rgba(0, 0, 0, 0.5),
-      0 0 20px rgba(139, 92, 246, 0.1),
+      0 0 20px rgba(255, 255, 255, 0.1),
       inset 0 -1px 0 rgba(255, 255, 255, 0.05) !important;
   }
   
@@ -344,12 +344,12 @@
     backdrop-filter: blur(40px) saturate(200%) !important;
     -webkit-backdrop-filter: blur(40px) saturate(200%) !important;
     background: linear-gradient(135deg, rgba(30,20,50,0.95), rgba(15,10,30,0.98)) !important;
-    border: 1px solid rgba(139, 92, 246, 0.3) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
     box-shadow: 
       0 20px 60px rgba(0, 0, 0, 0.8),
-      0 0 40px rgba(139, 92, 246, 0.2),
+      0 0 40px rgba(255, 255, 255, 0.2),
       inset 0 1px 0 rgba(255, 255, 255, 0.1),
-      0 0 100px rgba(59, 130, 246, 0.1) !important;
+      0 0 100px rgba(255, 255, 255, 0.1) !important;
     animation: premium-glow 3s ease-in-out infinite !important;
   }
   
@@ -420,11 +420,11 @@
     animation: float 6s ease-in-out infinite !important;
     backdrop-filter: blur(30px) saturate(180%) !important;
     -webkit-backdrop-filter: blur(30px) saturate(180%) !important;
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.15)) !important;
-    border: 1px solid rgba(139, 92, 246, 0.4) !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.15)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
     box-shadow: 
-      0 8px 32px rgba(139, 92, 246, 0.3),
-      0 0 40px rgba(139, 92, 246, 0.2),
+      0 8px 32px rgba(255, 255, 255, 0.3),
+      0 0 40px rgba(255, 255, 255, 0.2),
       inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
   }
   
@@ -447,16 +447,16 @@
     backdrop-filter: blur(25px) saturate(180%) !important;
     -webkit-backdrop-filter: blur(25px) saturate(180%) !important;
     box-shadow: 
-      -4px 0 30px rgba(139, 92, 246, 0.2),
-      -2px 0 15px rgba(59, 130, 246, 0.15),
+      -4px 0 30px rgba(255, 255, 255, 0.2),
+      -2px 0 15px rgba(255, 255, 255, 0.15),
       inset 1px 0 0 rgba(255, 255, 255, 0.1) !important;
     transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease !important;
   }
   
   .control-panel-themed:hover {
     box-shadow: 
-      -8px 0 50px rgba(139, 92, 246, 0.4),
-      -4px 0 25px rgba(59, 130, 246, 0.3),
+      -8px 0 50px rgba(255, 255, 255, 0.4),
+      -4px 0 25px rgba(255, 255, 255, 0.3),
       inset 1px 0 0 rgba(255, 255, 255, 0.15) !important;
   }
 
@@ -511,7 +511,7 @@
     backdrop-filter: blur(10px) !important;
     -webkit-backdrop-filter: blur(10px) !important;
     box-shadow: 
-      0 4px 15px rgba(139, 92, 246, 0.3),
+      0 4px 15px rgba(255, 255, 255, 0.3),
       inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
   }
@@ -520,7 +520,7 @@
   [role="button"]:active:not(.unstyled) {
     transform: translateY(1px) scale(0.98) !important;
     box-shadow: 
-      0 2px 8px rgba(139, 92, 246, 0.4),
+      0 2px 8px rgba(255, 255, 255, 0.4),
       inset 0 1px 2px rgba(0, 0, 0, 0.2) !important;
     /* Ensure content doesn't wrap */
     white-space: nowrap !important;

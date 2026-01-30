@@ -49,7 +49,7 @@ export const RichTextEditor = memo(({
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: 'text-blue-400 underline cursor-pointer hover:text-blue-300',
+          class: 'text-white underline cursor-pointer hover:text-white',
         },
       }),
       Image.configure({
@@ -85,7 +85,7 @@ export const RichTextEditor = memo(({
   if (!editor) {
     return (
       <div 
-        className="bg-black/50 border border-blue-500/30 rounded-xl p-4 animate-pulse"
+        className="bg-black/50 border border-white/30 rounded-xl p-4 animate-pulse"
         style={{ minHeight }}
       >
         <div className="h-4 bg-neutral-700 rounded w-3/4 mb-2"></div>
@@ -95,7 +95,7 @@ export const RichTextEditor = memo(({
   }
 
   return (
-    <div className={`rounded-xl border border-blue-500/30 bg-black/50 overflow-hidden ${className}`}>
+    <div className={`rounded-xl border border-white/30 bg-black/50 overflow-hidden ${className}`}>
       {/* Toolbar */}
       <EditorToolbar editor={editor} />
       
@@ -213,7 +213,7 @@ const EditorToolbar = memo(({ editor }: EditorToolbarProps) => {
   ];
 
   return (
-    <div className="flex items-center gap-1 p-2 border-b border-blue-500/20 bg-black/30 flex-wrap">
+    <div className="flex items-center gap-1 p-2 border-b border-white/20 bg-black/30 flex-wrap">
       {buttons.map((button, index) => {
         if ('divider' in button && button.divider) {
           return <div key={index} className="w-px h-5 bg-neutral-700 mx-1" />;
@@ -238,7 +238,7 @@ const EditorToolbar = memo(({ editor }: EditorToolbarProps) => {
             className={`
               p-2 rounded-lg transition-colors
               ${btn.isActive 
-                ? 'bg-blue-500 text-white' 
+                ? 'bg-white text-black' 
                 : 'text-neutral-400 hover:text-white hover:bg-neutral-800'
               }
               ${btn.disabled ? 'opacity-50 cursor-not-allowed' : ''}

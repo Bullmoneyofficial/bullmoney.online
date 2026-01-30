@@ -288,11 +288,11 @@
 }
 
 .form-input-success {
-  border-color: #22c55e !important;
+  border-color: #ffffff !important;
 }
 
 .form-input-success:focus {
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15) !important;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15) !important;
 }
 
 .form-input:disabled {
@@ -318,7 +318,7 @@
 
 .form-success {
   font-size: 0.8125rem;
-  color: #22c55e;
+  color: #ffffff;
   margin-top: 4px;
 }
 

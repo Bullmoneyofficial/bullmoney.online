@@ -227,9 +227,9 @@ export const LiveMiniPreview = ({
   }, [history, lastYRef]);
 
   // Dynamic colors for the Order Book simulation
-  const mainFlowColor = isUp ? 'text-green-400' : 'text-red-400';
-  const altFlowColor = isUp ? 'text-red-400' : 'text-green-400';
-  const orderBookColor = isUp ? 'bg-green-600/10' : 'bg-red-600/10';
+  const mainFlowColor = isUp ? 'text-white' : 'text-red-400';
+  const altFlowColor = isUp ? 'text-red-400' : 'text-white';
+  const orderBookColor = isUp ? 'bg-white/10' : 'bg-red-600/10';
 
   return (
     <div 
@@ -256,7 +256,7 @@ export const LiveMiniPreview = ({
             <div className="text-lg font-bold text-white tabular-nums tracking-tighter" style={{ textShadow: `0 0 10px ${color}60` }}>
                 {price.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}
             </div>
-            <div className={`text-[8px] font-mono flex items-center gap-0.5 ${isUp ? 'text-green-400' : 'text-red-400'}`}>
+            <div className={`text-[8px] font-mono flex items-center gap-0.5 ${isUp ? 'text-white' : 'text-red-400'}`}>
                 {isUp ? <ArrowUpRight size={8} /> : <ArrowDownRight size={8} />}
                 {priceChangePercent.toFixed(2)}%
             </div>

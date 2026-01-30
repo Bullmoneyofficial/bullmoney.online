@@ -29,7 +29,7 @@ function twcn(...inputs: ClassValue[]) {
 // ==========================================
 
 // Blue/Sky gradient
-const shimmerGradient = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #38bdf8 50%, #00000000 100%)";
+const shimmerGradient = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #ffffff 50%, #00000000 100%)";
 
 interface ShimmerBorderProps {
     children: ReactNode;
@@ -237,7 +237,7 @@ const CursorStyles = () => (
     /* SHIMMER TEXT STYLES (Injected for consistency) */
     @keyframes text-shimmer { 0% { background-position: 0% 50%; } 100% { background-position: -200% 50%; } }
     .animate-text-shimmer {
-        background: linear-gradient(110deg, #38bdf8 20%, #ffffff 48%, #818cf8 52%, #38bdf8 80%);
+        background: linear-gradient(110deg, #ffffff 20%, #ffffff 48%, #ffffff 52%, #ffffff 80%);
         background-size: 200% auto;
         background-clip: text;
         -webkit-background-clip: text;

@@ -10,14 +10,23 @@ function getServerSupabase() {
   return createClient(supabaseUrl, supabaseServiceKey);
 }
 
-// Configure web-push with VAPID keys
+// Configure web-push with VAPID keys lazily (not at build time)
 // You need to generate these: npx web-push generate-vapid-keys
-const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
-const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
-const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@bullmoney.com';
+let vapidConfigured = false;
 
-if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
-  webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+function configureVapid() {
+  if (vapidConfigured) return true;
+  
+  const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
+  const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
+  const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@bullmoney.com';
+
+  if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+    webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+    vapidConfigured = true;
+    return true;
+  }
+  return false;
 }
 
 // Admin secret for sending notifications (optional security)
@@ -67,7 +76,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
+    if (!configureVapid()) {
       return NextResponse.json(
         { error: 'VAPID keys not configured. Please set NEXT_PUBLIC_VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY environment variables.' },
         { status: 500 }

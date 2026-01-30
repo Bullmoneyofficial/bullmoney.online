@@ -70,12 +70,12 @@ const MinimizedIcon = memo(({
       {localHover && (
         <div className={cn(
           "minimized-tooltip absolute -bottom-10 left-1/2 whitespace-nowrap px-3 py-1.5 rounded-xl text-[10px] font-bold bg-black z-50",
-          item.isXMHighlight ? "text-red-400" : "text-blue-500"
+          item.isXMHighlight ? "text-red-400" : "text-white"
         )}
         style={{
           textShadow: item.isXMHighlight 
             ? '0 0 4px #ef4444' 
-            : '0 0 4px #3b82f6'
+            : '0 0 4px #ffffff'
         }}
         >
           {item.label}

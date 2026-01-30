@@ -1,5 +1,5 @@
 /**
- * Premium UI System - Unified Blue Shimmer Design System
+ * Premium UI System - Unified White Shimmer Design System
  * 2025 Edition - Production Ready
  * 
  * This system provides consistent premium styling across the entire application.
@@ -8,9 +8,9 @@
 
 export const PREMIUM_THEME = {
   // Core gradients
-  SHIMMER_GRADIENT: "conic-gradient(from 90deg at 50% 50%, #00000000 0%, var(--accent-color, #3b82f6) 50%, #00000000 100%)",
-  BLUE_GLOW: "0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.4)",
-  BLUE_GLOW_STRONG: "0 0 40px rgba(var(--accent-rgb, 59, 130, 246), 0.6)",
+  SHIMMER_GRADIENT: "conic-gradient(from 90deg at 50% 50%, #00000000 0%, var(--accent-color, #ffffff) 50%, #00000000 100%)",
+  BLUE_GLOW: "0 0 20px rgba(var(--accent-rgb, 255, 255, 255), 0.4)",
+  BLUE_GLOW_STRONG: "0 0 40px rgba(var(--accent-rgb, 255, 255, 255), 0.6)",
   GLASS_BG: "rgba(15, 23, 42, 0.6)", // slate-950 with transparency
   
   // Animation configs - SLOW animations for better performance
@@ -30,10 +30,10 @@ export const PREMIUM_THEME = {
   
   // Colors
   COLORS: {
-    PRIMARY_BLUE: "var(--accent-color, #3b82f6)",
-    SECONDARY_BLUE: "rgba(var(--accent-rgb, 59, 130, 246), 1)",
-    ACCENT_BLUE: "rgba(var(--accent-rgb, 59, 130, 246), 0.7)",
-    LIGHT_BLUE: "rgba(var(--accent-rgb, 59, 130, 246), 0.8)",
+    PRIMARY_BLUE: "var(--accent-color, #ffffff)",
+    SECONDARY_BLUE: "rgba(var(--accent-rgb, 255, 255, 255), 1)",
+    ACCENT_BLUE: "rgba(var(--accent-rgb, 255, 255, 255), 0.7)",
+    LIGHT_BLUE: "rgba(var(--accent-rgb, 255, 255, 255), 0.8)",
     DARK_BG: "#050505",
     PANEL_BG: "#0f172a",
     TEXT_PRIMARY: "#ffffff",
@@ -44,10 +44,10 @@ export const PREMIUM_THEME = {
 
 export const GLASS_STYLES = {
   backdrop: "",  // NO BLUR - removed for performance
-  border: "border border-blue-500/20",
-  shadow: "shadow-lg shadow-blue-500/10",
-  gradient: "bg-gradient-to-br from-blue-950/40 via-slate-950 to-neutral-950",
-  gradientAlt: `bg-gradient-to-br from-slate-950/60 via-neutral-950 to-black/80`,
+  border: "border border-white/20",
+  shadow: "shadow-lg shadow-white/10",
+  gradient: "bg-gradient-to-br from-white/15 via-slate-950 to-neutral-950",
+  gradientAlt: `bg-gradient-to-br from-white/10 via-neutral-950 to-black/80`,
 } as const;
 
 // Mobile-specific optimizations

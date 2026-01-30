@@ -13,11 +13,11 @@ export const FooterStyles = () => (
       border-radius: 3px;
     }
     .footer-scrollbar::-webkit-scrollbar-thumb {
-      background: rgba(59, 130, 246, 0.4);
+      background: rgba(255, 255, 255, 0.4);
       border-radius: 3px;
     }
     .footer-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: rgba(59, 130, 246, 0.6);
+      background: rgba(255, 255, 255, 0.6);
     }
   `}</style>
 );

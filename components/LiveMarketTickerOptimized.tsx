@@ -51,11 +51,11 @@ const TickerStyles = () => (
     @keyframes pulse-gpu {
       0%, 100% { 
         opacity: 0.4;
-        filter: drop-shadow(0 0 2px rgba(59, 130, 246, 0.3));
+        filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3));
       }
       50% { 
         opacity: 1;
-        filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.8));
+        filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
       }
     }
     
@@ -63,7 +63,7 @@ const TickerStyles = () => (
     html.shimmer-quality-disabled .animate-pulse-gpu {
       animation: none;
       opacity: 1;
-      filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.5));
+      filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.5));
     }
   `}</style>
 );
@@ -129,7 +129,7 @@ const TickerItem = memo(function TickerItem({
     >
       <span className="text-xs font-bold text-white/80 font-mono">{symbol}</span>
       <span className="ticker-price text-xs text-white/60 font-mono">—</span>
-      <span className="ticker-change text-xs font-bold font-mono text-green-400">▲ 0%</span>
+      <span className="ticker-change text-xs font-bold font-mono text-white">▲ 0%</span>
     </div>
   );
 });
@@ -138,8 +138,8 @@ const TickerItem = memo(function TickerItem({
 const LiveIndicator = memo(function LiveIndicator() {
   return (
     <div className="flex items-center gap-2 mr-4 shrink-0 hidden sm:flex">
-      <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse-gpu" />
-      <span className="text-[10px] font-bold text-green-400 uppercase tracking-wider">
+      <div className="w-2 h-2 rounded-full bg-white animate-pulse-gpu" />
+      <span className="text-[10px] font-bold text-white uppercase tracking-wider">
         LIVE
       </span>
     </div>
@@ -174,13 +174,13 @@ export const LiveMarketTickerOptimized: React.FC = memo(function LiveMarketTicke
     if (changeEl) {
       const arrow = data.isUp ? '▲' : '▼';
       changeEl.textContent = `${arrow} ${Math.abs(data.change).toFixed(2)}%`;
-      changeEl.className = `ticker-change text-xs font-bold font-mono ${data.isUp ? 'text-green-400' : 'text-red-400'}`;
+      changeEl.className = `ticker-change text-xs font-bold font-mono ${data.isUp ? 'text-white' : 'text-red-400'}`;
     }
     
     // Flash effect via class toggle
     if (shouldFlash) {
       const flashClass = data.isUp 
-        ? 'bg-green-500/20 shadow-[0_0_10px_rgba(34,197,94,0.4)]'
+        ? 'bg-white/20 shadow-[0_0_10px_rgba(255,255,255,0.4)]'
         : 'bg-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.4)]';
       
       el.classList.add(...flashClass.split(' '));
@@ -270,14 +270,14 @@ export const LiveMarketTickerOptimized: React.FC = memo(function LiveMarketTicke
         <div
           className="w-full h-full"
           style={{
-            backgroundImage: `linear-gradient(90deg, rgba(34, 197, 94, 0.2) 1px, transparent 1px)`,
+            backgroundImage: `linear-gradient(90deg, rgba(255, 255, 255, 0.2) 1px, transparent 1px)`,
             backgroundSize: '20px 20px',
           }}
         />
       </div>
 
       {/* Top accent line */}
-      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-green-500/50 to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent" />
 
       {/* Ticker content */}
       <div className="relative flex items-center h-10 px-4">

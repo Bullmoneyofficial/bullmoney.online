@@ -107,7 +107,7 @@ export const BASE_THEMES: Theme[] = [
     filter: 'none', 
     mobileFilter: 'none', 
     illusion: 'NONE', 
-    accentColor: '#3b82f6', 
+    accentColor: '#ffffff', 
     status: 'AVAILABLE',
     bgImage: undefined,
     audioUrl: SFX.click.scifi,
@@ -238,7 +238,7 @@ export const BASE_THEMES: Theme[] = [
   { 
     id: 'o04', name: 'Cyberdeck', description: 'Netrunner Interface', category: 'OPTICS', 
     filter: 'hue-rotate(190deg) saturate(2) contrast(1.2) brightness(0.8)', 
-    mobileFilter: 'hue-rotate(190deg) saturate(1.5)', illusion: 'SCANLINES', accentColor: '#0EA5E9', status: 'AVAILABLE', 
+    mobileFilter: 'hue-rotate(190deg) saturate(1.5)', illusion: 'SCANLINES', accentColor: '#ffffff', status: 'AVAILABLE', 
     bgImage: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=1000', bgBlendMode: 'screen', bgOpacity: 0.15, 
     audioUrl: SFX.click.scifi,
     hoverUrl: SFX.hover.scifi,
@@ -394,7 +394,7 @@ export const LOCATION_THEMES: Theme[] = [
   { 
     id: 'loc01', name: 'Wall Street', description: 'New York City', category: 'LOCATION', 
     filter: 'sepia(1) hue-rotate(200deg) saturate(1.5) contrast(1.2)', 
-    mobileFilter: 'hue-rotate(200deg)', illusion: 'NONE', accentColor: '#1D4ED8', status: 'AVAILABLE', 
+    mobileFilter: 'hue-rotate(200deg)', illusion: 'NONE', accentColor: '#ffffff', status: 'AVAILABLE', 
     bgImage: 'https://images.unsplash.com/photo-1617155093730-a8bf47e3179d?auto=format&fit=crop&q=80&w=1000', bgBlendMode: 'overlay', bgOpacity: 0.3, 
     audioUrl: 'https://cdn.pixabay.com/download/audio/2022/03/10/audio_59663e0ac1ad.mp3', 
     hoverUrl: SFX.hover.low,
@@ -909,7 +909,7 @@ export const SEASONAL_THEMES: Theme[] = [
   { 
     id: 'szn08', name: 'Hallows Eve', description: 'Halloween', category: 'SEASONAL', 
     filter: 'invert(1) hue-rotate(260deg) contrast(1.5) brightness(0.7)', 
-    mobileFilter: 'invert(1) hue-rotate(260deg)', illusion: 'GLITCH', overlay: 'PUMPKINS', accentColor: '#A855F7', status: 'AVAILABLE', 
+    mobileFilter: 'invert(1) hue-rotate(260deg)', illusion: 'GLITCH', overlay: 'PUMPKINS', accentColor: '#ffffff', status: 'AVAILABLE', 
     bgImage: 'https://images.unsplash.com/photo-1509557965875-b88c97052f0e?auto=format&fit=crop&q=80&w=1000', bgBlendMode: 'overlay', bgOpacity: 0.4,
     audioUrl: SFX.click.error, 
     hoverUrl: SFX.hover.low,

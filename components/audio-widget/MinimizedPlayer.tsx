@@ -110,7 +110,7 @@ export function MinimizedPlayer({
               shouldSkipHeavyEffects ? "" : "backdrop-blur-2xl",
               "bg-gradient-to-br from-slate-900/98 via-gray-900/98 to-black/98",
               "border-2 border-slate-500/60 shadow-2xl",
-              "hover:shadow-green-500/40 hover:border-green-400/60 hover:scale-105",
+              "hover:shadow-white/40 hover:border-white/60 hover:scale-105",
               "active:scale-95",
               isPlaying && "animate-pulse-subtle",
               // Expanded state styles
@@ -131,7 +131,7 @@ export function MinimizedPlayer({
               boxShadow: shouldSkipHeavyEffects 
                 ? 'none' 
                 : (isPlaying 
-                  ? '0 0 30px rgba(34, 197, 94, 0.3), 0 10px 40px rgba(0,0,0,0.5)' 
+                  ? '0 0 30px rgba(255, 255, 255, 0.3), 0 10px 40px rgba(0,0,0,0.5)' 
                   : '0 10px 40px rgba(0,0,0,0.5)'),
             }}
           >
@@ -160,7 +160,7 @@ export function MinimizedPlayer({
             >
               <motion.div
                 className={cn(
-                  "absolute -inset-2 bg-green-500/25 rounded-2xl",
+                  "absolute -inset-2 bg-white/25 rounded-2xl",
                   shouldSkipHeavyEffects ? "" : "blur-lg"
                 )}
                 animate={shouldSkipHeavyEffects ? {} : { 
@@ -194,7 +194,7 @@ export function MinimizedPlayer({
                         scale: shouldSkipHeavyEffects ? { duration: 0.15 } : { duration: 0.8, repeat: Infinity, ease: "easeInOut" }
                       }}
                     >
-                      <IconMusic className="w-4 h-4 text-green-400" />
+                      <IconMusic className="w-4 h-4 text-white" />
                     </motion.div>
                   ) : (
                     <motion.div
@@ -221,7 +221,7 @@ export function MinimizedPlayer({
                   {[1, 2, 3, 4].map(i => (
                     <motion.div
                       key={i}
-                      className="w-[3px] bg-green-400 rounded-full origin-bottom"
+                      className="w-[3px] bg-white rounded-full origin-bottom"
                       animate={{ scaleY: isPlaying && !shouldSkipHeavyEffects ? [0.3, 1, 0.3] : 0.3 }}
                       transition={shouldSkipHeavyEffects ? { duration: 0.15 } : { 
                         duration: 0.5, 
@@ -257,7 +257,7 @@ export function MinimizedPlayer({
               className="flex flex-col"
             >
               <span className="text-[10px] font-bold text-white/90">{sourceLabel[musicSource]}</span>
-              <span className="text-[8px] text-green-400/80 font-medium">♪ Playing</span>
+              <span className="text-[8px] text-white/80 font-medium">♪ Playing</span>
             </motion.div>
             
             {/* Left side chevron */}

@@ -472,8 +472,8 @@ function SplineWithAudioComponent({
             transition={{ duration: 0.3 }}
             className="absolute inset-0 z-[5] pointer-events-none rounded-xl"
             style={{
-              background: 'radial-gradient(ellipse at center, rgba(var(--accent-rgb, 59, 130, 246), 0.08) 0%, transparent 70%)',
-              boxShadow: 'inset 0 0 60px rgba(var(--accent-rgb, 59, 130, 246), 0.1)',
+              background: 'radial-gradient(ellipse at center, rgba(var(--accent-rgb, 255, 255, 255), 0.08) 0%, transparent 70%)',
+              boxShadow: 'inset 0 0 60px rgba(var(--accent-rgb, 255, 255, 255), 0.1)',
             }}
           />
         )}
@@ -493,8 +493,8 @@ function SplineWithAudioComponent({
             width: 16,
             height: 16,
             borderRadius: '50%',
-            background: `radial-gradient(circle, rgba(var(--accent-rgb, 59, 130, 246), ${0.8 - index * 0.05}) 0%, transparent 70%)`,
-            boxShadow: `0 0 ${12 - index}px rgba(var(--accent-rgb, 59, 130, 246), 0.6)`,
+            background: `radial-gradient(circle, rgba(var(--accent-rgb, 255, 255, 255), ${0.8 - index * 0.05}) 0%, transparent 70%)`,
+            boxShadow: `0 0 ${12 - index}px rgba(var(--accent-rgb, 255, 255, 255), 0.6)`,
           }}
         />
       ))}
@@ -528,11 +528,11 @@ function SplineWithAudioComponent({
                 style={{
                   filter: shouldSkipHeavyEffects ? 'none' : `drop-shadow(0 0 10px ${isScrubbing 
                     ? (dragVelocity.x < 0 ? 'rgba(255, 100, 100, 0.9)' : 'rgba(100, 255, 100, 0.9)')
-                    : 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)'})`,
+                    : 'rgba(var(--accent-rgb, 255, 255, 255), 0.8)'})`,
                   transform: isScrubbing ? 'none' : 'scaleX(1.5)',
                   color: isScrubbing 
                     ? (dragVelocity.x < 0 ? '#ff6b6b' : '#51cf66')
-                    : 'rgba(var(--accent-rgb, 59, 130, 246), 1)',
+                    : 'rgba(var(--accent-rgb, 255, 255, 255), 1)',
                 }}
               >
                 {isScrubbing ? (dragVelocity.x < 0 ? '⏪' : '⏩') : '→'}
@@ -559,8 +559,8 @@ function SplineWithAudioComponent({
               top: lastMousePos.current.y - 30,
               width: 60,
               height: 60,
-              border: '2px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)',
-              boxShadow: `0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.4), inset 0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.2)`,
+              border: '2px solid rgba(var(--accent-rgb, 255, 255, 255), 0.5)',
+              boxShadow: `0 0 20px rgba(var(--accent-rgb, 255, 255, 255), 0.4), inset 0 0 20px rgba(var(--accent-rgb, 255, 255, 255), 0.2)`,
             }}
           />
         )}
@@ -578,8 +578,8 @@ function SplineWithAudioComponent({
             transition={{ duration: 0.1 }}
             className="absolute inset-0 z-[5] pointer-events-none rounded-xl overflow-hidden"
             style={{
-              background: `radial-gradient(ellipse at ${lastMousePos.current.x}px ${lastMousePos.current.y}px, rgba(var(--accent-rgb, 59, 130, 246), 0.25) 0%, transparent 50%)`,
-              boxShadow: 'inset 0 0 100px rgba(var(--accent-rgb, 59, 130, 246), 0.25), 0 0 60px rgba(var(--accent-rgb, 59, 130, 246), 0.2)',
+              background: `radial-gradient(ellipse at ${lastMousePos.current.x}px ${lastMousePos.current.y}px, rgba(var(--accent-rgb, 255, 255, 255), 0.25) 0%, transparent 50%)`,
+              boxShadow: 'inset 0 0 100px rgba(var(--accent-rgb, 255, 255, 255), 0.25), 0 0 60px rgba(var(--accent-rgb, 255, 255, 255), 0.2)',
             }}
           />
         )}
@@ -597,8 +597,8 @@ function SplineWithAudioComponent({
             exit={{ opacity: 0 }}
             className="absolute inset-0 z-[4] pointer-events-none rounded-xl"
             style={{
-              border: '2px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)',
-              boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
+              border: '2px solid rgba(var(--accent-rgb, 255, 255, 255), 0.5)',
+              boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 30px rgba(var(--accent-rgb, 255, 255, 255), 0.3)',
             }}
           />
         )}
@@ -617,7 +617,7 @@ function SplineWithAudioComponent({
             top: ripple.y - 30,
             width: 60,
             height: 60,
-            background: 'radial-gradient(circle, rgba(var(--accent-rgb, 59, 130, 246), 0.5) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(var(--accent-rgb, 255, 255, 255), 0.5) 0%, transparent 70%)',
           }}
         />
       ))}
@@ -636,9 +636,9 @@ function SplineWithAudioComponent({
               className={`px-5 py-2.5 rounded-full text-sm font-semibold shadow-2xl flex items-center gap-2 ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-xl'}`}
               style={{
                 background: shouldSkipHeavyEffects ? 'rgba(0, 0, 0, 0.9)' : 'rgba(0, 0, 0, 0.75)',
-                border: '1.5px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)',
-                color: 'rgba(var(--accent-rgb, 59, 130, 246), 1)',
-                boxShadow: shouldSkipHeavyEffects ? 'none' : '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.2)',
+                border: '1.5px solid rgba(var(--accent-rgb, 255, 255, 255), 0.5)',
+                color: 'rgba(var(--accent-rgb, 255, 255, 255), 1)',
+                boxShadow: shouldSkipHeavyEffects ? 'none' : '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(var(--accent-rgb, 255, 255, 255), 0.2)',
               }}
             >
               {interactionHint}
@@ -659,7 +659,7 @@ function SplineWithAudioComponent({
             className={`flex items-center gap-2 px-3 py-2 rounded-full ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-xl'}`}
             style={{
               background: shouldSkipHeavyEffects ? 'rgba(0, 0, 0, 0.85)' : 'rgba(0, 0, 0, 0.6)',
-              border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.35)',
+              border: '1px solid rgba(var(--accent-rgb, 255, 255, 255), 0.35)',
             }}
           >
             <motion.div
@@ -674,7 +674,7 @@ function SplineWithAudioComponent({
             </motion.div>
             <span 
               className="text-xs font-medium"
-              style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.9)' }}
+              style={{ color: 'rgba(var(--accent-rgb, 255, 255, 255), 0.9)' }}
             >
               {isDragging ? 'Rotating' : isHovering ? 'Interactive' : '3D Scene'}
             </span>
@@ -696,8 +696,8 @@ function SplineWithAudioComponent({
             className={`flex items-center gap-3 px-4 py-3 rounded-2xl ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-xl'}`}
             style={{
               background: shouldSkipHeavyEffects ? 'rgba(0, 0, 0, 0.95)' : 'rgba(0, 0, 0, 0.85)',
-              border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.4)',
-              boxShadow: shouldSkipHeavyEffects ? 'none' : '0 4px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.15)',
+              border: '1px solid rgba(var(--accent-rgb, 255, 255, 255), 0.4)',
+              boxShadow: shouldSkipHeavyEffects ? 'none' : '0 4px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(var(--accent-rgb, 255, 255, 255), 0.15)',
             }}
           >
             {/* Rotate Left Button */}
@@ -705,19 +705,19 @@ function SplineWithAudioComponent({
               onClick={rewindAnimation}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl cursor-pointer"
               style={{
-                background: 'rgba(var(--accent-rgb, 59, 130, 246), 0.15)',
-                border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
+                background: 'rgba(var(--accent-rgb, 255, 255, 255), 0.15)',
+                border: '1px solid rgba(var(--accent-rgb, 255, 255, 255), 0.3)',
               }}
               whileHover={{ 
                 scale: 1.05,
-                background: 'rgba(var(--accent-rgb, 59, 130, 246), 0.25)',
+                background: 'rgba(var(--accent-rgb, 255, 255, 255), 0.25)',
               }}
               whileTap={{ scale: 0.95 }}
             >
               <span className="text-base">⬅️</span>
               <span 
                 className="text-xs font-medium hidden sm:inline"
-                style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 1)' }}
+                style={{ color: 'rgba(var(--accent-rgb, 255, 255, 255), 1)' }}
               >
                 Left
               </span>
@@ -728,13 +728,13 @@ function SplineWithAudioComponent({
               onClick={resetScene}
               className="flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer"
               style={{
-                background: 'rgba(var(--accent-rgb, 59, 130, 246), 0.25)',
-                border: '2px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)',
-                boxShadow: '0 0 15px rgba(var(--accent-rgb, 59, 130, 246), 0.2)',
+                background: 'rgba(var(--accent-rgb, 255, 255, 255), 0.25)',
+                border: '2px solid rgba(var(--accent-rgb, 255, 255, 255), 0.5)',
+                boxShadow: '0 0 15px rgba(var(--accent-rgb, 255, 255, 255), 0.2)',
               }}
               whileHover={{ 
                 scale: 1.08,
-                boxShadow: '0 0 25px rgba(var(--accent-rgb, 59, 130, 246), 0.4)',
+                boxShadow: '0 0 25px rgba(var(--accent-rgb, 255, 255, 255), 0.4)',
               }}
               whileTap={{ scale: 0.92 }}
             >
@@ -747,7 +747,7 @@ function SplineWithAudioComponent({
               </motion.span>
               <span 
                 className="text-xs font-bold"
-                style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 1)' }}
+                style={{ color: 'rgba(var(--accent-rgb, 255, 255, 255), 1)' }}
               >
                 Reset
               </span>
@@ -758,18 +758,18 @@ function SplineWithAudioComponent({
               onClick={fastForwardAnimation}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl cursor-pointer"
               style={{
-                background: 'rgba(var(--accent-rgb, 59, 130, 246), 0.15)',
-                border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
+                background: 'rgba(var(--accent-rgb, 255, 255, 255), 0.15)',
+                border: '1px solid rgba(var(--accent-rgb, 255, 255, 255), 0.3)',
               }}
               whileHover={{ 
                 scale: 1.05,
-                background: 'rgba(var(--accent-rgb, 59, 130, 246), 0.25)',
+                background: 'rgba(var(--accent-rgb, 255, 255, 255), 0.25)',
               }}
               whileTap={{ scale: 0.95 }}
             >
               <span 
                 className="text-xs font-medium hidden sm:inline"
-                style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 1)' }}
+                style={{ color: 'rgba(var(--accent-rgb, 255, 255, 255), 1)' }}
               >
                 Right
               </span>
@@ -779,7 +779,7 @@ function SplineWithAudioComponent({
             {/* Divider */}
             <div 
               className="w-px h-8 mx-1"
-              style={{ background: 'rgba(var(--accent-rgb, 59, 130, 246), 0.3)' }}
+              style={{ background: 'rgba(var(--accent-rgb, 255, 255, 255), 0.3)' }}
             />
 
             {/* Rotation indicator */}
@@ -792,7 +792,7 @@ function SplineWithAudioComponent({
               </span>
               <span 
                 className="text-sm font-bold tabular-nums"
-                style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 1)' }}
+                style={{ color: 'rgba(var(--accent-rgb, 255, 255, 255), 1)' }}
               >
                 {Math.round(sceneTransform.rotateY)}°
               </span>
@@ -819,8 +819,8 @@ function SplineWithAudioComponent({
               className={`px-6 py-3 rounded-2xl flex items-center gap-3 shadow-2xl ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-xl'}`}
               style={{
                 background: shouldSkipHeavyEffects ? 'rgba(0, 0, 0, 0.95)' : 'rgba(0, 0, 0, 0.8)',
-                border: '2px solid rgba(var(--accent-rgb, 59, 130, 246), 0.6)',
-                boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 40px rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
+                border: '2px solid rgba(var(--accent-rgb, 255, 255, 255), 0.6)',
+                boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 40px rgba(var(--accent-rgb, 255, 255, 255), 0.3)',
               }}
             >
               <motion.span 
@@ -833,7 +833,7 @@ function SplineWithAudioComponent({
               <div className="flex flex-col">
                 <span 
                   className="font-bold text-sm"
-                  style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 1)' }}
+                  style={{ color: 'rgba(var(--accent-rgb, 255, 255, 255), 1)' }}
                 >
                   Touch to interact
                 </span>
@@ -897,8 +897,8 @@ function SplineWithAudioComponent({
               className={`px-6 py-3 rounded-2xl ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-xl'}`}
               style={{
                 background: shouldSkipHeavyEffects ? 'rgba(0, 0, 0, 0.95)' : 'rgba(0, 0, 0, 0.85)',
-                border: '2px solid rgba(var(--accent-rgb, 59, 130, 246), 0.7)',
-                boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.4)',
+                border: '2px solid rgba(var(--accent-rgb, 255, 255, 255), 0.7)',
+                boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 30px rgba(var(--accent-rgb, 255, 255, 255), 0.4)',
               }}
             >
               {/* Progress bar */}
@@ -907,13 +907,13 @@ function SplineWithAudioComponent({
                   className="h-full rounded-full"
                   style={{
                     width: `${animationProgress * 100}%`,
-                    background: 'linear-gradient(90deg, rgba(var(--accent-rgb, 59, 130, 246), 1), rgba(var(--accent-rgb, 59, 130, 246), 0.7))',
-                    boxShadow: '0 0 10px rgba(var(--accent-rgb, 59, 130, 246), 0.8)',
+                    background: 'linear-gradient(90deg, rgba(var(--accent-rgb, 255, 255, 255), 1), rgba(var(--accent-rgb, 255, 255, 255), 0.7))',
+                    boxShadow: '0 0 10px rgba(var(--accent-rgb, 255, 255, 255), 0.8)',
                   }}
                   animate={{
                     boxShadow: isScrubbing 
-                      ? ['0 0 10px rgba(var(--accent-rgb, 59, 130, 246), 0.8)', '0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 1)', '0 0 10px rgba(var(--accent-rgb, 59, 130, 246), 0.8)']
-                      : '0 0 10px rgba(var(--accent-rgb, 59, 130, 246), 0.8)',
+                      ? ['0 0 10px rgba(var(--accent-rgb, 255, 255, 255), 0.8)', '0 0 20px rgba(var(--accent-rgb, 255, 255, 255), 1)', '0 0 10px rgba(var(--accent-rgb, 255, 255, 255), 0.8)']
+                      : '0 0 10px rgba(var(--accent-rgb, 255, 255, 255), 0.8)',
                   }}
                   transition={{ duration: 0.5, repeat: isScrubbing ? Infinity : 0 }}
                 />
@@ -928,8 +928,8 @@ function SplineWithAudioComponent({
                 <span 
                   className="font-bold px-2 py-0.5 rounded-full text-[10px]"
                   style={{ 
-                    background: 'rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
-                    color: 'rgba(var(--accent-rgb, 59, 130, 246), 1)',
+                    background: 'rgba(var(--accent-rgb, 255, 255, 255), 0.3)',
+                    color: 'rgba(var(--accent-rgb, 255, 255, 255), 1)',
                   }}
                 >
                   {Math.round(animationProgress * 100)}%

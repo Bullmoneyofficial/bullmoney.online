@@ -131,9 +131,9 @@ function calculate3DPerformance(info: DeviceInfo): number {
  * Get performance grade
  */
 function getPerformanceGrade(score: number): { grade: string; color: string; label: string } {
-  if (score >= 90) return { grade: 'S', color: '#22c55e', label: 'Excellent' };
-  if (score >= 80) return { grade: 'A', color: '#3b82f6', label: 'Great' };
-  if (score >= 70) return { grade: 'B', color: '#a855f7', label: 'Good' };
+  if (score >= 90) return { grade: 'S', color: '#ffffff', label: 'Excellent' };
+  if (score >= 80) return { grade: 'A', color: '#ffffff', label: 'Great' };
+  if (score >= 70) return { grade: 'B', color: '#ffffff', label: 'Good' };
   if (score >= 60) return { grade: 'C', color: '#f59e0b', label: 'Fair' };
   if (score >= 50) return { grade: 'D', color: '#ef4444', label: 'Poor' };
   return { grade: 'F', color: '#dc2626', label: 'Critical' };
@@ -146,7 +146,7 @@ function getPerformanceGrade(score: number): { grade: string; color: string; lab
 /**
  * Stat Card Component - Glass & Shimmer UI
  */
-function StatCard({ icon: Icon, label, value, sublabel, color = '#3b82f6' }: {
+function StatCard({ icon: Icon, label, value, sublabel, color = '#ffffff' }: {
   icon: any;
   label: string;
   value: string;
@@ -160,7 +160,7 @@ function StatCard({ icon: Icon, label, value, sublabel, color = '#3b82f6' }: {
       className="relative p-3 rounded-xl overflow-hidden group isolate"
     >
       {/* Glass background - solid with subtle transparency, no blur */}
-      <div className="absolute inset-0 bg-slate-900/90 border border-blue-400/30 rounded-xl transition-all duration-300 group-hover:border-blue-300/50 shadow-lg shadow-blue-900/20" />
+      <div className="absolute inset-0 bg-slate-900/90 border border-white/30 rounded-xl transition-all duration-300 group-hover:border-white/50 shadow-lg shadow-white/20" />
       
       {/* Inner highlight for depth */}
       <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/8 via-transparent to-transparent pointer-events-none" />
@@ -169,7 +169,7 @@ function StatCard({ icon: Icon, label, value, sublabel, color = '#3b82f6' }: {
       <div 
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none overflow-hidden rounded-xl"
       >
-        <div className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-500/0 via-blue-400/30 to-blue-500/0" />
+        <div className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-white/0 via-white/30 to-white/0" />
       </div>
       
       {/* Accent glow */}
@@ -187,14 +187,14 @@ function StatCard({ icon: Icon, label, value, sublabel, color = '#3b82f6' }: {
           <Icon size={18} style={{ color, filter: `drop-shadow(0 0 3px ${color}60)` }} />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[10px] text-blue-200/90 uppercase tracking-wider font-semibold">
+          <div className="text-[10px] text-white/90 uppercase tracking-wider font-semibold">
             {label}
           </div>
           <div className="text-sm font-bold text-white truncate mt-0.5">
             {value}
           </div>
           {sublabel && (
-            <div className="text-[10px] text-blue-200/70 mt-0.5">
+            <div className="text-[10px] text-white/70 mt-0.5">
               {sublabel}
             </div>
           )}
@@ -219,14 +219,14 @@ function PerformanceRing({ score, size = 120 }: { score: number; size?: number }
   return (
     <div className="relative group isolate" style={{ width: size, height: size }}>
       {/* Glass background - solid, no blur */}
-      <div className="absolute inset-0 rounded-full bg-slate-900/90 border border-blue-400/30 transition-all duration-300 group-hover:border-blue-300/50 shadow-lg shadow-blue-900/20" />
+      <div className="absolute inset-0 rounded-full bg-slate-900/90 border border-white/30 transition-all duration-300 group-hover:border-white/50 shadow-lg shadow-white/20" />
       <div className="absolute inset-[1px] rounded-full bg-gradient-to-br from-white/8 via-transparent to-transparent pointer-events-none" />
       
       {/* Unified Shimmer - LEFT TO RIGHT using CSS animation */}
       <div 
         className="absolute inset-0 opacity-15 group-hover:opacity-25 transition-opacity pointer-events-none overflow-hidden rounded-full panel-shimmer"
       >
-        <div className="shimmer-ltr shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-600/0 via-blue-500/30 to-blue-600/0" style={{ animationDuration: '5s' }} />
+        <div className="shimmer-ltr shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-white/0 via-white/30 to-white/0" style={{ animationDuration: '5s' }} />
       </div>
       
       {/* SVG Ring - properly centered */}
@@ -242,7 +242,7 @@ function PerformanceRing({ score, size = 120 }: { score: number; size?: number }
           cy={center}
           r={radius}
           fill="none"
-          stroke="rgba(59,130,246,0.15)"
+          stroke="rgba(255, 255, 255,0.15)"
           strokeWidth={strokeWidth}
         />
         {/* Progress circle */}
@@ -271,10 +271,10 @@ function PerformanceRing({ score, size = 120 }: { score: number; size?: number }
         >
           {grade}
         </div>
-        <div className="text-xs text-blue-200/80 font-semibold">
+        <div className="text-xs text-white/80 font-semibold">
           {label}
         </div>
-        <div className="text-[10px] text-blue-300/60 mt-1">
+        <div className="text-[10px] text-white/60 mt-1">
           {score}/100
         </div>
       </div>
@@ -330,8 +330,8 @@ function MinimizedFpsNumber() {
 
   // Color based on FPS performance
   const getColors = (fps: number) => {
-    if (fps >= 58) return { text: '#34d399', glow: 'rgba(52, 211, 153, 0.9)', bg: 'rgba(52, 211, 153, 0.15)' };
-    if (fps >= 50) return { text: '#60a5fa', glow: 'rgba(96, 165, 250, 0.9)', bg: 'rgba(96, 165, 250, 0.15)' };
+    if (fps >= 58) return { text: '#ffffff', glow: 'rgba(255, 255, 255, 0.9)', bg: 'rgba(255, 255, 255, 0.15)' };
+    if (fps >= 50) return { text: '#ffffff', glow: 'rgba(255, 255, 255, 0.9)', bg: 'rgba(255, 255, 255, 0.15)' };
     if (fps >= 40) return { text: '#fbbf24', glow: 'rgba(251, 191, 36, 0.8)', bg: 'rgba(251, 191, 36, 0.15)' };
     if (fps >= 30) return { text: '#fb923c', glow: 'rgba(251, 146, 60, 0.8)', bg: 'rgba(251, 146, 60, 0.15)' };
     return { text: '#f87171', glow: 'rgba(248, 113, 113, 0.8)', bg: 'rgba(248, 113, 113, 0.15)' };
@@ -352,7 +352,7 @@ function MinimizedFpsNumber() {
         }}
         transition={{ duration: 0.15, ease: 'easeOut' }}
         className="text-[8px] font-bold"
-        style={{ color: direction === 'up' ? '#34d399' : direction === 'down' ? '#f87171' : colors.text }}
+        style={{ color: direction === 'up' ? '#ffffff' : direction === 'down' ? '#f87171' : colors.text }}
       >
         {direction === 'up' ? '▲' : direction === 'down' ? '▼' : '●'}
       </motion.div>
@@ -393,7 +393,7 @@ function MinimizedFpsNumber() {
           scale: direction !== 'neutral' ? [1, 1.1, 1] : 1,
         }}
         transition={{ duration: 0.2 }}
-        className="text-[7px] text-blue-400/90 font-bold uppercase tracking-wider ml-0.5"
+        className="text-[7px] text-white/90 font-bold uppercase tracking-wider ml-0.5"
       >
         fps
       </motion.span>
@@ -417,7 +417,7 @@ function FpsPerformancePanel({ deviceInfo }: { deviceInfo: DeviceInfo | null }) 
   const { shouldSkipHeavyEffects } = useMobilePerformance();
 
   const getColorClass = (fpsValue: number) => {
-    if (fpsValue >= 58) return 'text-green-300';
+    if (fpsValue >= 58) return 'text-white';
     if (fpsValue >= 50) return 'text-lime-300';
     if (fpsValue >= 40) return 'text-yellow-300';
     if (fpsValue >= 30) return 'text-orange-300';
@@ -427,9 +427,9 @@ function FpsPerformancePanel({ deviceInfo }: { deviceInfo: DeviceInfo | null }) 
   const getTierColor = (tier: string) => {
     switch (tier) {
       case 'ultra':
-        return 'bg-purple-500/20 border-purple-400/40 text-purple-300';
+        return 'bg-white/20 border-white/40 text-white';
       case 'high':
-        return 'bg-green-500/20 border-green-400/40 text-green-300';
+        return 'bg-white/20 border-white/40 text-white';
       case 'medium':
         return 'bg-yellow-500/20 border-yellow-400/40 text-yellow-300';
       case 'low':
@@ -445,7 +445,7 @@ function FpsPerformancePanel({ deviceInfo }: { deviceInfo: DeviceInfo | null }) 
     switch (quality) {
       case 'high':
       case 'ultra':
-        return 'text-green-300';
+        return 'text-white';
       case 'medium':
         return 'text-yellow-300';
       case 'low':
@@ -465,49 +465,49 @@ function FpsPerformancePanel({ deviceInfo }: { deviceInfo: DeviceInfo | null }) 
     >
       {/* Main FPS Card */}
       <div className="relative p-4 rounded-xl overflow-hidden group">
-        <div className="absolute inset-0 bg-gradient-to-br from-green-950/40 via-slate-900/50 to-blue-900/40 border border-green-400/40 rounded-xl transition-all duration-300 group-hover:border-green-300/60 shadow-lg shadow-green-500/10" />
+        <div className="absolute inset-0 bg-gradient-to-br from-green-950/40 via-slate-900/50 to-white/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
         <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
           <motion.div 
             animate={{ x: ['0%', '200%'] }}
             transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: "linear" }}
-            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-green-500/0 via-green-400/40 to-green-500/0 opacity-100"
+            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-white/0 via-white/40 to-white/0 opacity-100"
           />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl" />
+        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/10 rounded-xl" />
         <div className="relative z-10 space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm text-blue-200/60">Current FPS</div>
+              <div className="text-sm text-white/60">Current FPS</div>
               <div className={`text-4xl font-black drop-shadow-lg ${getColorClass(currentFps)}`}>
                 {currentFps}
               </div>
             </div>
             <div className="text-right">
-              <div className="text-xs text-blue-200/60">Target</div>
-              <div className="text-xl font-bold text-blue-300">{targetFrameRate}fps</div>
+              <div className="text-xs text-white/60">Target</div>
+              <div className="text-xl font-bold text-white">{targetFrameRate}fps</div>
             </div>
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 gap-2 text-sm border-t border-green-400/20 pt-3">
+          <div className="grid grid-cols-2 gap-2 text-sm border-t border-white/20 pt-3">
             <div>
-              <span className="text-blue-200/60">Average:</span>
+              <span className="text-white/60">Average:</span>
               <span className={`ml-2 font-semibold drop-shadow-lg ${getColorClass(averageFps)}`}>{averageFps}fps</span>
             </div>
             <div>
-              <span className="text-blue-200/60">Frame Time:</span>
-              <span className={`ml-2 font-semibold drop-shadow-lg ${(deviceInfo?.live?.frameTime ?? 0) > (1000 / targetFrameRate) * 1.1 ? 'text-orange-300' : 'text-green-300'}`}>
+              <span className="text-white/60">Frame Time:</span>
+              <span className={`ml-2 font-semibold drop-shadow-lg ${(deviceInfo?.live?.frameTime ?? 0) > (1000 / targetFrameRate) * 1.1 ? 'text-orange-300' : 'text-white'}`}>
                 {(deviceInfo?.live?.frameTime ?? 0).toFixed(2)}ms
               </span>
             </div>
             <div>
-              <span className="text-blue-200/60">Target Frame:</span>
-              <span className="ml-2 font-semibold text-blue-300 drop-shadow-lg">{(1000 / targetFrameRate).toFixed(2)}ms</span>
+              <span className="text-white/60">Target Frame:</span>
+              <span className="ml-2 font-semibold text-white drop-shadow-lg">{(1000 / targetFrameRate).toFixed(2)}ms</span>
             </div>
             <div>
-              <span className="text-blue-200/60">Status:</span>
-              <span className={`ml-2 font-semibold drop-shadow-lg ${currentFps >= targetFrameRate * 0.95 ? 'text-green-300' : 'text-yellow-300'}`}>
+              <span className="text-white/60">Status:</span>
+              <span className={`ml-2 font-semibold drop-shadow-lg ${currentFps >= targetFrameRate * 0.95 ? 'text-white' : 'text-yellow-300'}`}>
                 {currentFps >= targetFrameRate * 0.95 ? '✓ Good' : '⚠ Low'}
               </span>
             </div>
@@ -517,31 +517,31 @@ function FpsPerformancePanel({ deviceInfo }: { deviceInfo: DeviceInfo | null }) 
 
       {/* Device Tier & Quality Settings */}
       <div className="relative p-4 rounded-xl overflow-hidden group">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-purple-900/40 border border-blue-400/40 rounded-xl transition-all duration-300 group-hover:border-blue-300/60 shadow-lg shadow-blue-500/10" />
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-white/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
         <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
           <motion.div 
             animate={{ x: ['0%', '200%'] }}
             transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: "linear" }}
-            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-500/0 via-blue-400/40 to-blue-500/0 opacity-100"
+            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-white/0 via-white/40 to-white/0 opacity-100"
           />
         </div>
         <div className="relative z-10 space-y-3">
-          <div className="text-sm text-blue-200/60 mb-3">Performance Configuration</div>
+          <div className="text-sm text-white/60 mb-3">Performance Configuration</div>
           
           {/* Device Tier Badge */}
           <div className="flex items-center justify-between">
-            <span className="text-blue-200/70">Device Tier</span>
+            <span className="text-white/70">Device Tier</span>
             <span className={`px-3 py-1 rounded-lg border font-semibold text-sm ${getTierColor(deviceTier)} capitalize drop-shadow-lg`}>
               {deviceTier}
             </span>
           </div>
 
           {/* Quality Settings */}
-          <div className="space-y-2 border-t border-blue-400/20 pt-3">
+          <div className="space-y-2 border-t border-white/20 pt-3">
             <div className="flex items-center justify-between text-sm">
               <span className="flex items-center gap-2">
-                <span className="text-blue-200/70">Shimmer Quality</span>
+                <span className="text-white/70">Shimmer Quality</span>
               </span>
               <span className={`font-semibold drop-shadow-lg ${getQualityColor(shimmerQuality)} capitalize`}>
                 {shimmerQuality}
@@ -549,7 +549,7 @@ function FpsPerformancePanel({ deviceInfo }: { deviceInfo: DeviceInfo | null }) 
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="flex items-center gap-2">
-                <span className="text-blue-200/70">3D/Spline Quality</span>
+                <span className="text-white/70">3D/Spline Quality</span>
               </span>
               <span className={`font-semibold drop-shadow-lg ${getQualityColor(splineQuality)} capitalize`}>
                 {splineQuality}
@@ -557,9 +557,9 @@ function FpsPerformancePanel({ deviceInfo }: { deviceInfo: DeviceInfo | null }) 
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="flex items-center gap-2">
-                <span className="text-blue-200/70">3D Effects</span>
+                <span className="text-white/70">3D Effects</span>
               </span>
-              <span className={`font-semibold drop-shadow-lg ${enable3D ? 'text-green-300' : 'text-gray-400'}`}>
+              <span className={`font-semibold drop-shadow-lg ${enable3D ? 'text-white' : 'text-gray-400'}`}>
                 {enable3D ? '✓ Enabled' : '✗ Disabled'}
               </span>
             </div>
@@ -596,7 +596,7 @@ export function UltimateControlPanel({
 }: UltimateControlPanelProps) {
   // Use global theme context for accent color and theme filter (matches navbar)
   const { accentColor: themeAccentColor, activeTheme } = useGlobalTheme();
-  const accentColor = propAccentColor || themeAccentColor || '#3b82f6';
+  const accentColor = propAccentColor || themeAccentColor || '#ffffff';
   
   // Get CSS filter for current theme - matches navbar exactly
   const themeFilter = activeTheme?.mobileFilter || 'none';
@@ -1014,7 +1014,7 @@ export function UltimateControlPanel({
                   <div 
                     className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%]"
                     style={{
-                      background: 'linear-gradient(to right, transparent, rgba(59, 130, 246, 0.4), transparent)',
+                      background: 'linear-gradient(to right, transparent, rgba(255, 255, 255, 0.4), transparent)',
                       animationDuration: shimmerSettings.speed === 'slow' ? '5s' : '3s',
                     }}
                   />
@@ -1029,8 +1029,8 @@ export function UltimateControlPanel({
                   minimized: { x: 2, scale: 0.95 }
                 }}
                 transition={{ type: 'spring', damping: 28, stiffness: 500, mass: 0.8 }}
-                className={`relative rounded-l-3xl bg-gradient-to-br from-blue-600/30 via-blue-500/15 to-slate-900/40 ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-2xl'} border-y border-l border-blue-500/50 transition-colors duration-200 hover:border-blue-400/70 shadow-2xl hover:shadow-blue-600/40 hover:shadow-xl`}
-                whileHover={shouldSkipHeavyEffects ? {} : { boxShadow: "0 0 40px rgba(59, 130, 246, 0.6), inset 0 0 20px rgba(59, 130, 246, 0.15)" }}
+                className={`relative rounded-l-3xl bg-gradient-to-br from-white/30 via-white/15 to-slate-900/40 ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-2xl'} border-y border-l border-white/50 transition-colors duration-200 hover:border-white/70 shadow-2xl hover:shadow-white/40 hover:shadow-xl`}
+                whileHover={shouldSkipHeavyEffects ? {} : { boxShadow: "0 0 40px rgba(255, 255, 255, 0.6), inset 0 0 20px rgba(255, 255, 255, 0.15)" }}
               >
                 {/* FPS Display - Animated between full and minimized pill states */}
                 <AnimatePresence mode="popLayout" initial={false}>
@@ -1084,7 +1084,7 @@ export function UltimateControlPanel({
                         >
                           <Activity 
                             size={11} 
-                            className={`text-blue-400 ${shouldSkipHeavyEffects ? '' : 'drop-shadow-[0_0_8px_rgba(59,130,246,0.9)]'}`}
+                            className={`text-white ${shouldSkipHeavyEffects ? '' : 'drop-shadow-[0_0_8px_rgba(255, 255, 255,0.9)]'}`}
                           />
                         </motion.div>
                         <MinimizedFpsNumber />
@@ -1141,7 +1141,7 @@ export function UltimateControlPanel({
                       <div className="flex items-center gap-1">
                         <ChevronRight 
                           size={14} 
-                          className={`text-blue-500 group-hover:text-blue-400 transition-colors drop-shadow-[0_0_6px_rgba(59,130,246,0.8)] ${isMobileExpanded ? 'rotate-90' : 'rotate-180'}`}
+                          className={`text-white group-hover:text-white transition-colors drop-shadow-[0_0_6px_rgba(255, 255, 255,0.8)] ${isMobileExpanded ? 'rotate-90' : 'rotate-180'}`}
                         />
                         <FpsDisplayWithOptimizer />
                       </div>
@@ -1156,14 +1156,14 @@ export function UltimateControlPanel({
                     hover: { height: 'auto', opacity: 1, pointerEvents: 'auto' as const }
                   }}
                   transition={{ duration: 0.2 }}
-                  className="overflow-hidden border-t border-blue-400/25 bg-black/30"
+                  className="overflow-hidden border-t border-white/25 bg-black/30"
                   style={{ pointerEvents: isMobileExpanded ? 'auto' : undefined }}
                 >
                   {/* Services Button */}
                   {showServicesButton && (
                     <button
                       type="button"
-                      className={`w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/20 active:bg-blue-500/30 transition-colors border-b border-blue-400/15 flex items-center touch-manipulation ${activeModal === 'services' ? 'bg-blue-500/25' : ''}`}
+                      className={`w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-white/20 active:bg-white/30 transition-colors border-b border-white/15 flex items-center touch-manipulation ${activeModal === 'services' ? 'bg-white/25' : ''}`}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -1177,8 +1177,8 @@ export function UltimateControlPanel({
                       }}
                     >
                       <div className="flex items-center gap-2">
-                        <Sparkles size={14} className={`${activeModal === 'services' ? 'text-blue-300' : 'text-blue-400'}`} />
-                        <span className="text-blue-100 text-xs font-bold drop-shadow-lg">
+                        <Sparkles size={14} className={`${activeModal === 'services' ? 'text-white' : 'text-white'}`} />
+                        <span className="text-white text-xs font-bold drop-shadow-lg">
                           {activeModal === 'services' ? 'Close' : 'Services'}
                         </span>
                       </div>
@@ -1189,7 +1189,7 @@ export function UltimateControlPanel({
                   {showContactButton && (
                     <button
                       type="button"
-                      className={`w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/20 active:bg-blue-500/30 transition-colors border-b border-blue-400/15 flex items-center touch-manipulation ${activeModal === 'contact' ? 'bg-blue-500/25' : ''}`}
+                      className={`w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-white/20 active:bg-white/30 transition-colors border-b border-white/15 flex items-center touch-manipulation ${activeModal === 'contact' ? 'bg-white/25' : ''}`}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -1203,8 +1203,8 @@ export function UltimateControlPanel({
                       }}
                     >
                       <div className="flex items-center gap-2">
-                        <Send size={14} className={`${activeModal === 'contact' ? 'text-blue-300' : 'text-blue-400'}`} />
-                        <span className="text-blue-100 text-xs font-bold drop-shadow-lg">
+                        <Send size={14} className={`${activeModal === 'contact' ? 'text-white' : 'text-white'}`} />
+                        <span className="text-white text-xs font-bold drop-shadow-lg">
                           {activeModal === 'contact' ? 'Close' : 'Contact'}
                         </span>
                       </div>
@@ -1215,7 +1215,7 @@ export function UltimateControlPanel({
                   {showThemeButton && (
                     <button
                       type="button"
-                      className={`w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/20 active:bg-blue-500/30 transition-colors border-b border-blue-400/15 flex items-center touch-manipulation ${activeModal === 'theme' ? 'bg-blue-500/25' : ''}`}
+                      className={`w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-white/20 active:bg-white/30 transition-colors border-b border-white/15 flex items-center touch-manipulation ${activeModal === 'theme' ? 'bg-white/25' : ''}`}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -1229,8 +1229,8 @@ export function UltimateControlPanel({
                       }}
                     >
                       <div className="flex items-center gap-2">
-                        <Settings size={14} className={`${activeModal === 'theme' ? 'text-blue-300' : 'text-blue-400'}`} />
-                        <span className="text-blue-100 text-xs font-bold drop-shadow-lg">
+                        <Settings size={14} className={`${activeModal === 'theme' ? 'text-white' : 'text-white'}`} />
+                        <span className="text-white text-xs font-bold drop-shadow-lg">
                           {activeModal === 'theme' ? 'Close' : 'Theme'}
                         </span>
                       </div>
@@ -1241,7 +1241,7 @@ export function UltimateControlPanel({
                   {isAdmin && showAdminButton && (
                     <button
                       type="button"
-                      className={`w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/20 active:bg-blue-500/30 transition-colors border-b border-blue-400/15 flex items-center touch-manipulation ${activeModal === 'admin' ? 'bg-blue-500/25' : ''}`}
+                      className={`w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-white/20 active:bg-white/30 transition-colors border-b border-white/15 flex items-center touch-manipulation ${activeModal === 'admin' ? 'bg-white/25' : ''}`}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -1255,8 +1255,8 @@ export function UltimateControlPanel({
                       }}
                     >
                       <div className="flex items-center gap-2">
-                        <Edit2 size={14} className={`${activeModal === 'admin' ? 'text-blue-300' : 'text-blue-400'}`} />
-                        <span className="text-blue-100 text-xs font-bold drop-shadow-lg">
+                        <Edit2 size={14} className={`${activeModal === 'admin' ? 'text-white' : 'text-white'}`} />
+                        <span className="text-white text-xs font-bold drop-shadow-lg">
                           {activeModal === 'admin' ? 'Close' : 'Admin'}
                         </span>
                       </div>
@@ -1265,10 +1265,10 @@ export function UltimateControlPanel({
 
                   {/* VIP Badge */}
                   {!isAdmin && isAuthenticated && (
-                    <div className="px-4 py-3 min-h-[48px] border-b border-blue-400/15 flex items-center bg-blue-500/10">
+                    <div className="px-4 py-3 min-h-[48px] border-b border-white/15 flex items-center bg-white/10">
                       <div className="flex items-center gap-2">
-                        <Sparkles size={14} className="text-blue-400" />
-                        <span className="text-blue-100 text-xs font-bold drop-shadow-lg">
+                        <Sparkles size={14} className="text-white" />
+                        <span className="text-white text-xs font-bold drop-shadow-lg">
                           VIP Member
                         </span>
                       </div>
@@ -1279,7 +1279,7 @@ export function UltimateControlPanel({
                   {!isAdmin && !isAuthenticated && showIdentityButton && (
                     <button
                       type="button"
-                      className={`w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-blue-500/20 active:bg-blue-500/30 transition-colors flex items-center touch-manipulation ${activeModal === 'identity' ? 'bg-blue-500/25' : ''}`}
+                      className={`w-full px-4 py-3 min-h-[48px] cursor-pointer hover:bg-white/20 active:bg-white/30 transition-colors flex items-center touch-manipulation ${activeModal === 'identity' ? 'bg-white/25' : ''}`}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -1293,8 +1293,8 @@ export function UltimateControlPanel({
                       }}
                     >
                       <div className="flex items-center gap-2">
-                        <Fingerprint size={14} className={`${activeModal === 'identity' ? 'text-blue-300' : 'text-blue-400'}`} />
-                        <span className="text-blue-100 text-xs font-bold drop-shadow-lg">
+                        <Fingerprint size={14} className={`${activeModal === 'identity' ? 'text-white' : 'text-white'}`} />
+                        <span className="text-white text-xs font-bold drop-shadow-lg">
                           {activeModal === 'identity' ? 'Close' : 'Identity'}
                         </span>
                       </div>
@@ -1305,7 +1305,7 @@ export function UltimateControlPanel({
                 {/* Drag indicator */}
                 {dragProgress > 0 && (
                   <motion.div
-                    className="absolute top-0 left-0 bottom-0 w-1 bg-blue-400/50 rounded-r-full"
+                    className="absolute top-0 left-0 bottom-0 w-1 bg-white/50 rounded-r-full"
                     style={{
                       scaleY: dragProgress,
                       transformOrigin: 'center'
@@ -1353,7 +1353,7 @@ export function UltimateControlPanel({
               onDrag={handlePanelDrag}
               onDragEnd={handlePanelDragEnd}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className={`fixed right-0 top-0 bottom-0 z-[250000] w-full max-w-md overflow-hidden bg-black/60 ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-3xl'} border-l border-blue-500/30 shadow-2xl shadow-blue-900/20 control-panel-themed`}
+              className={`fixed right-0 top-0 bottom-0 z-[250000] w-full max-w-md overflow-hidden bg-black/60 ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-3xl'} border-l border-white/30 shadow-2xl shadow-white/20 control-panel-themed`}
               style={{
                 paddingRight: 'env(safe-area-inset-right, 0px)',
                 paddingBottom: 'env(safe-area-inset-bottom, 0px)'
@@ -1364,22 +1364,22 @@ export function UltimateControlPanel({
                 <div 
                   className="shimmer-spin shimmer-gpu absolute w-full h-full"
                   style={{
-                    background: 'conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(59,130,246,0.08) 30deg, rgba(59,130,246,0.12) 60deg, rgba(59,130,246,0.08) 90deg, transparent 120deg, transparent 360deg)',
+                    background: 'conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(255, 255, 255,0.08) 30deg, rgba(255, 255, 255,0.12) 60deg, rgba(255, 255, 255,0.08) 90deg, transparent 120deg, transparent 360deg)',
                     animationDuration: '15s'
                   }}
                 />
               </div>
               
               {/* Gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-950/10 via-transparent to-blue-900/5 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-950/10 via-transparent to-white/5 pointer-events-none" />
               
               {/* Drag handle */}
               <div className="absolute left-0 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 py-3 px-2 cursor-grab active:cursor-grabbing z-20">
                 <div
-                  className="h-12 w-1.5 rounded-full bg-blue-400/40"
+                  className="h-12 w-1.5 rounded-full bg-white/40"
                   style={{ backgroundColor: `${accentColor}60` }}
                 />
-                <div className="text-[9px] text-blue-300/40 font-mono tracking-wider [writing-mode:vertical-lr] rotate-180">
+                <div className="text-[9px] text-white/40 font-mono tracking-wider [writing-mode:vertical-lr] rotate-180">
                   SWIPE
                 </div>
               </div>
@@ -1387,14 +1387,14 @@ export function UltimateControlPanel({
               {/* Header */}
               <div className="px-6 pt-6 pb-4 relative z-10">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-blue-100 drop-shadow-lg">
+                  <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-white drop-shadow-lg">
                     Device Center
                   </h2>
                   <div className="flex items-center gap-2">
                     {/* Mobile Minimize Button - Cyberpunk style */}
                     {isMobile && (
                       <motion.button
-                        whileHover={{ scale: 1.1, backgroundColor: "rgba(34, 211, 238, 0.15)" }}
+                        whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.15)" }}
                         whileTap={{ scale: 0.9 }}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -1414,24 +1414,24 @@ export function UltimateControlPanel({
                           setIsMobilePanelMinimized(true);
                           onOpenChange(false);
                         }}
-                        className="relative p-3 rounded-full bg-gradient-to-br from-cyan-900/40 to-slate-900/60 hover:from-cyan-800/50 hover:to-slate-800/70 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation border border-cyan-500/40 shadow-lg shadow-cyan-900/20 overflow-hidden group"
+                        className="relative p-3 rounded-full bg-gradient-to-br from-white/40 to-slate-900/60 hover:from-white/50 hover:to-slate-800/70 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation border border-white/40 shadow-lg shadow-white/20 overflow-hidden group"
                         style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                         aria-label="Minimize panel"
                       >
                         {/* Animated glow effect */}
                         <motion.div
-                          className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-500/0 via-cyan-500/20 to-cyan-500/0"
+                          className="absolute inset-0 rounded-full bg-gradient-to-r from-white/0 via-white/20 to-white/0"
                           animate={shouldSkipHeavyEffects ? {} : { x: ['-100%', '100%'] }}
                           transition={shouldSkipHeavyEffects ? {} : { duration: 2, repeat: Infinity, ease: 'linear' }}
                         />
                         <ChevronDown
                           size={18}
-                          className={`text-cyan-300 ${shouldSkipHeavyEffects ? '' : 'drop-shadow-[0_0_6px_rgba(34,211,238,0.6)]'} relative z-10 group-hover:text-cyan-200`}
+                          className={`text-white ${shouldSkipHeavyEffects ? '' : 'drop-shadow-[0_0_6px_rgba(255, 255, 255,0.6)]'} relative z-10 group-hover:text-white`}
                         />
                       </motion.button>
                     )}
                     <motion.button
-                      whileHover={{ scale: 1.1, rotate: 180, backgroundColor: "rgba(59, 130, 246, 0.15)" }}
+                      whileHover={{ scale: 1.1, rotate: 180, backgroundColor: "rgba(255, 255, 255, 0.15)" }}
                       whileTap={{ scale: 0.9 }}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1448,19 +1448,19 @@ export function UltimateControlPanel({
                         e.currentTarget.style.transform = '';
                         SoundEffects.click();
                       }}
-                      className="p-3 rounded-full bg-black/40 hover:bg-blue-500/25 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation border border-blue-500/30 shadow-lg shadow-blue-900/10"
+                      className="p-3 rounded-full bg-black/40 hover:bg-white/25 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation border border-white/30 shadow-lg shadow-white/10"
                       style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                       disabled={isRefreshing}
                       aria-label="Refresh device info"
                     >
                       <RefreshCw
                         size={18}
-                        className={`text-blue-200/70 ${isRefreshing ? 'shimmer-spin' : ''}`}
+                        className={`text-white/70 ${isRefreshing ? 'shimmer-spin' : ''}`}
                         style={isRefreshing ? { animationDuration: '1s' } : undefined}
                       />
                     </motion.button>
                     <motion.button
-                      whileHover={{ scale: 1.1, backgroundColor: "rgba(59, 130, 246, 0.15)" }}
+                      whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.15)" }}
                       whileTap={{ scale: 0.9 }}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1477,11 +1477,11 @@ export function UltimateControlPanel({
                         e.currentTarget.style.transform = '';
                         SoundEffects.close();
                       }}
-                      className="p-3 rounded-full bg-black/40 hover:bg-blue-500/25 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation border border-blue-500/30 shadow-lg shadow-blue-900/10"
+                      className="p-3 rounded-full bg-black/40 hover:bg-white/25 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation border border-white/30 shadow-lg shadow-white/10"
                       style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                       aria-label="Close device center"
                     >
-                      <ChevronRight size={18} className="text-blue-200/70" />
+                      <ChevronRight size={18} className="text-white/70" />
                     </motion.button>
                   </div>
                 </div>
@@ -1489,7 +1489,7 @@ export function UltimateControlPanel({
 
               {/* Tabs */}
               <div className="px-6 pb-4 relative z-10">
-                <div className="relative flex gap-1 p-1.5 rounded-xl bg-gradient-to-r from-blue-950/50 via-slate-900/60 to-blue-950/50 border border-blue-400/40 overflow-hidden isolate shadow-lg">
+                <div className="relative flex gap-1 p-1.5 rounded-xl bg-gradient-to-r from-blue-950/50 via-slate-900/60 to-blue-950/50 border border-white/40 overflow-hidden isolate shadow-lg">
                   {/* Inner highlight */}
                   <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                   {/* Unified Shimmer for tabs */}
@@ -1498,7 +1498,7 @@ export function UltimateControlPanel({
                       <div 
                         className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%]"
                         style={{
-                          background: 'linear-gradient(to right, transparent, rgba(59, 130, 246, 0.2), transparent)',
+                          background: 'linear-gradient(to right, transparent, rgba(255, 255, 255, 0.2), transparent)',
                           animationDuration: '4s',
                         }}
                       />
@@ -1531,8 +1531,8 @@ export function UltimateControlPanel({
                       }}
                       className={`relative z-10 flex-1 px-3 py-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation ${
                         activeTab === tab.id
-                          ? 'bg-blue-500/25 text-blue-100 border border-blue-400/40 shadow-[0_0_20px_rgba(59,130,246,0.4)]'
-                          : 'text-blue-200/70 hover:text-blue-100 hover:bg-blue-500/15 active:scale-95 border border-transparent'
+                          ? 'bg-white/25 text-white border border-white/40 shadow-[0_0_20px_rgba(255, 255, 255,0.4)]'
+                          : 'text-white/70 hover:text-white hover:bg-white/15 active:scale-95 border border-transparent'
                       }`}
                       style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                       aria-label={`View ${tab.label}`}
@@ -1571,21 +1571,21 @@ export function UltimateControlPanel({
                             label="Device"
                             value={device.device.model || 'Unknown'}
                             sublabel={device.device.manufacturer || 'Unknown'}
-                          color="#3b82f6"
+                          color="#ffffff"
                         />
                         <StatCard
                           icon={Monitor}
                             label="OS"
                             value={device.device.os || 'Unknown'}
                             sublabel={`v${device.device.osVersion || '?'}`}
-                          color="#8b5cf6"
+                          color="#ffffff"
                         />
                         <StatCard
                           icon={Cpu}
                             label="CPU"
                             value={device.performance.cpu.name || `${device.performance.cpu.cores || 4} Cores`}
                             sublabel={`${device.performance.cpu.cores || 4}C/${device.performance.cpu.threads || 4}T • ${device.performance.cpu.architecture || 'Unknown'}`}
-                          color="#22c55e"
+                          color="#ffffff"
                         />
                         <StatCard
                           icon={HardDrive}
@@ -1610,7 +1610,7 @@ export function UltimateControlPanel({
                           label="Platform"
                           value={browserInfo.platform}
                           sublabel={`${browserInfo.locale}${browserInfo.onLine ? ' • Online' : ' • Offline'}`}
-                          color="#06b6d4"
+                          color="#ffffff"
                         />
                       </div>
 
@@ -1621,14 +1621,14 @@ export function UltimateControlPanel({
                           label="Storage"
                           value={`${storageInfo?.used || 0}GB / ${storageInfo?.total || 64}GB`}
                           sublabel={`${storageInfo?.percentage || 0}% • ${storageInfo?.type || 'Detecting...'}`}
-                          color="#d946ef"
+                          color="#ffffff"
                         />
                         <StatCard
                           icon={HardDrive}
                           label="Cache"
                           value={`${cacheStats?.usage?.toFixed(1) || '0.0'}MB`}
                           sublabel={`${cacheStats?.percentage || 0}% • Quota: ${cacheStats?.quota?.toFixed(1) || '0.0'}MB`}
-                          color="#06b6d4"
+                          color="#ffffff"
                         />
                       </div>
 
@@ -1639,51 +1639,51 @@ export function UltimateControlPanel({
                           label="Session length"
                           value={`${Math.max(1, Math.floor(sessionMs / 1000 / 60))} min`}
                           sublabel="Current tab"
-                          color="#22c55e"
+                          color="#ffffff"
                         />
                       </div>
 
                       {/* Screen Info */}
                       <div className="relative p-4 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-purple-900/40 border border-blue-400/40 rounded-xl transition-all duration-300 group-hover:border-blue-300/60 shadow-lg shadow-blue-500/10" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-white/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
                         <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                         {shimmerEnabled && (
                           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                             <div 
                               className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%]"
                               style={{
-                                background: 'linear-gradient(to right, transparent, rgba(59, 130, 246, 0.4), transparent)',
+                                background: 'linear-gradient(to right, transparent, rgba(255, 255, 255, 0.4), transparent)',
                                 animationDuration: '4s',
                               }}
                             />
                           </div>
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/10 rounded-xl" />
                         <div className="relative z-10">
-                          <div className="text-xs text-blue-200/80 uppercase tracking-wider font-semibold mb-2">
+                          <div className="text-xs text-white/80 uppercase tracking-wider font-semibold mb-2">
                             Display
                           </div>
                           <div className="grid grid-cols-2 gap-2 text-sm">
                             <div>
-                              <span className="text-blue-200/60">Display:</span>
+                              <span className="text-white/60">Display:</span>
                               <span className="text-white font-semibold ml-2 drop-shadow-lg">
                                 {device.screen.physicalWidth}×{device.screen.physicalHeight}
                               </span>
                             </div>
                             <div>
-                              <span className="text-blue-200/60">PPI:</span>
+                              <span className="text-white/60">PPI:</span>
                               <span className="text-white font-semibold ml-2 drop-shadow-lg">
                                 {device.screen.ppi || Math.round(device.screen.physicalWidth / 6)} ppi
                               </span>
                             </div>
                             <div>
-                              <span className="text-blue-200/60">Screen:</span>
+                              <span className="text-white/60">Screen:</span>
                               <span className="text-white font-semibold ml-2 drop-shadow-lg">
                                 {device.screen.diagonal || '?'}&quot; @ {device.screen.refreshRate || 60}Hz
                               </span>
                             </div>
                             <div>
-                              <span className="text-blue-200/60">HDR:</span>
+                              <span className="text-white/60">HDR:</span>
                               <span className="text-white font-semibold ml-2 drop-shadow-lg">
                                 {device.screen.hdr ? 'Yes' : 'No'}
                               </span>
@@ -1695,29 +1695,29 @@ export function UltimateControlPanel({
                       {/* Battery */}
                       {deviceInfo && deviceInfo.battery.level >= 0 && (
                         <div className="relative p-4 rounded-xl overflow-hidden group">
-                          <div className="absolute inset-0 bg-gradient-to-br from-green-950/40 via-slate-900/50 to-blue-900/40 border border-green-400/40 rounded-xl transition-all duration-300 group-hover:border-green-300/60 shadow-lg shadow-green-500/10" />
+                          <div className="absolute inset-0 bg-gradient-to-br from-green-950/40 via-slate-900/50 to-white/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
                           <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                           {shimmerEnabled && (
                             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                               <div 
                                 className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%]"
                                 style={{
-                                  background: 'linear-gradient(to right, transparent, rgba(34, 197, 94, 0.4), transparent)',
+                                  background: 'linear-gradient(to right, transparent, rgba(255, 255, 255, 0.4), transparent)',
                                   animationDuration: '4s',
                                 }}
                               />
                             </div>
                           )}
-                          <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl" />
+                          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/10 rounded-xl" />
                           <div className="relative z-10 flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <Battery size={18} className="text-green-400 drop-shadow-lg" />
+                              <Battery size={18} className="text-white drop-shadow-lg" />
                               <span className="text-white font-semibold drop-shadow-lg">
                                 {device.battery.level}%
                               </span>
                             </div>
                             {device.battery.charging && (
-                              <div className="text-xs text-green-400 flex items-center gap-1 drop-shadow-lg">
+                              <div className="text-xs text-white flex items-center gap-1 drop-shadow-lg">
                                 <Zap size={12} />
                                 Charging
                               </div>
@@ -1744,7 +1744,7 @@ export function UltimateControlPanel({
                           label="Speed"
                           value={`${liveSpeed.toFixed(2)} Mbps`}
                           sublabel="Measured download"
-                          color="#22c55e"
+                          color="#ffffff"
                         />
                         <StatCard
                           icon={Activity}
@@ -1758,30 +1758,30 @@ export function UltimateControlPanel({
                           label="Upload"
                           value={`${liveUpload.toFixed(2)} Mbps`}
                           sublabel="Measured upload"
-                          color="#a855f7"
+                          color="#ffffff"
                         />
                       </div>
 
                       {/* Connection Type */}
                       <div className="relative p-4 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-cyan-900/40 border border-blue-400/40 rounded-xl transition-all duration-300 group-hover:border-blue-300/60 shadow-lg shadow-blue-500/10" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-white/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
                         <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                           <motion.div 
                             animate={{ x: ['0%', '200%'] }}
                             transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-500/0 via-blue-400/40 to-blue-500/0 opacity-100"
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-white/0 via-white/40 to-white/0 opacity-100"
                           />
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-xl" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/10 rounded-xl" />
                         <div className="relative z-10 flex items-center gap-3">
-                          <Wifi size={24} className={`text-blue-400 ${shouldSkipHeavyEffects ? '' : 'drop-shadow-lg'}`} />
+                          <Wifi size={24} className={`text-white ${shouldSkipHeavyEffects ? '' : 'drop-shadow-lg'}`} />
                           <div className="flex-1">
-                            <div className="text-sm text-blue-200/60">Connection</div>
+                            <div className="text-sm text-white/60">Connection</div>
                               <div className="text-lg font-bold text-white drop-shadow-lg">
                               {measuredType}
                             </div>
-                            <div className="text-xs text-blue-300/50">
+                            <div className="text-xs text-white/50">
                               {device.network.type}
                             </div>
                           </div>
@@ -1794,33 +1794,33 @@ export function UltimateControlPanel({
                       </div>
 
                       <div className="relative p-4 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-blue-900/40 border border-blue-400/40 rounded-xl transition-all duration-300 group-hover:border-blue-300/60 shadow-lg shadow-blue-500/10" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-white/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
                         <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                           <motion.div 
                             animate={{ x: ['0%', '200%'] }}
                             transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-500/0 via-blue-400/40 to-blue-500/0 opacity-100"
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-white/0 via-white/40 to-white/0 opacity-100"
                           />
                         </div>
                         <div className="relative z-10">
                           <div className="flex items-center justify-between mb-3">
-                            <span className="text-sm text-blue-200/70">Link quality</span>
-                            <span className="text-xs text-blue-300/50">
+                            <span className="text-sm text-white/70">Link quality</span>
+                            <span className="text-xs text-white/50">
                               Last test: {device.network.testTimestamp ? new Date(device.network.testTimestamp).toLocaleTimeString() : 'Just now'}
                             </span>
                           </div>
                           <div className="grid grid-cols-2 gap-2 text-sm">
-                            <div className="text-blue-200/60">
+                            <div className="text-white/60">
                               Measured: <span className="text-white font-semibold drop-shadow-lg">{liveSpeed.toFixed(2)} Mbps</span>
                             </div>
-                            <div className="text-blue-200/60">
+                            <div className="text-white/60">
                               Reported: <span className="text-white font-semibold drop-shadow-lg">{reportedDownlink.toFixed(2)} Mbps</span>
                             </div>
-                            <div className="text-blue-200/60">
+                            <div className="text-white/60">
                               Latency: <span className="text-white font-semibold drop-shadow-lg">{Math.round(liveLatency)}ms</span>
                             </div>
-                            <div className="text-blue-200/60">
+                            <div className="text-white/60">
                               Jitter: <span className="text-white font-semibold drop-shadow-lg">{Math.round(liveJitter)}ms</span>
                             </div>
                           </div>
@@ -1829,12 +1829,12 @@ export function UltimateControlPanel({
 
                       {/* Manual Speed Test */}
                       <div className="relative p-4 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-slate-900/40 to-blue-900/30 border border-emerald-400/30 rounded-xl shadow-lg shadow-emerald-500/10" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-slate-900/40 to-white/30 border border-white/30 rounded-xl shadow-lg shadow-white/10" />
                         <div className="relative z-10 space-y-3">
                           <div className="flex items-center justify-between">
                             <div>
-                              <div className="text-sm text-emerald-200/70">Speed test</div>
-                              <div className="text-xs text-emerald-200/50">Quick download/upload pulse</div>
+                              <div className="text-sm text-white/70">Speed test</div>
+                              <div className="text-xs text-white/50">Quick download/upload pulse</div>
                             </div>
                             <button
                               onClick={() => { SoundEffects.click(); void handleSpeedTest(); }}
@@ -1847,19 +1847,19 @@ export function UltimateControlPanel({
                           </div>
                           {speedTestResult && (
                             <div className="grid grid-cols-2 gap-2 text-sm">
-                              <div className="text-emerald-100/70">
+                              <div className="text-white/70">
                                 Download: <span className="text-white font-semibold drop-shadow-lg">{speedTestResult.downMbps.toFixed(2)} Mbps</span>
                               </div>
-                              <div className="text-emerald-100/70">
+                              <div className="text-white/70">
                                 Upload: <span className="text-white font-semibold drop-shadow-lg">{speedTestResult.upMbps.toFixed(2)} Mbps</span>
                               </div>
-                              <div className="text-emerald-100/70">
+                              <div className="text-white/70">
                                 Latency: <span className="text-white font-semibold drop-shadow-lg">{Math.round(speedTestResult.latency)}ms</span>
                               </div>
-                              <div className="text-emerald-100/70">
+                              <div className="text-white/70">
                                 Jitter: <span className="text-white font-semibold drop-shadow-lg">{Math.round(speedTestResult.jitter)}ms</span>
                               </div>
-                              <div className="text-[11px] text-emerald-100/50 col-span-2">
+                              <div className="text-[11px] text-white/50 col-span-2">
                                 Tested at {new Date(speedTestResult.timestamp).toLocaleTimeString()}
                               </div>
                             </div>
@@ -1869,35 +1869,35 @@ export function UltimateControlPanel({
 
                       {/* Location */}
                       <div className="relative p-4 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-purple-950/40 via-slate-900/50 to-pink-900/40 border border-purple-400/40 rounded-xl transition-all duration-300 group-hover:border-purple-300/60 shadow-lg shadow-purple-500/10" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-purple-950/40 via-slate-900/50 to-pink-900/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
                         <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                           <motion.div 
                             animate={{ x: ['0%', '200%'] }}
                             transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-purple-500/0 via-purple-400/40 to-purple-500/0 opacity-100"
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-white/0 via-white/40 to-white/0 opacity-100"
                           />
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-xl" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-pink-500/10 rounded-xl" />
                         <div className="relative z-10 flex items-start justify-between gap-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                              <MapPin size={18} className={`text-purple-400 ${shouldSkipHeavyEffects ? '' : 'drop-shadow-lg'}`} />
-                              <span className="text-sm text-blue-200/60">Location</span>
+                              <MapPin size={18} className={`text-white ${shouldSkipHeavyEffects ? '' : 'drop-shadow-lg'}`} />
+                              <span className="text-sm text-white/60">Location</span>
                             </div>
                             <div className="text-white font-semibold mb-1 drop-shadow-lg">
                               {showSensitive ? device.network.location : '••••••'}
                             </div>
-                            <div className="text-xs text-blue-300/50">
+                            <div className="text-xs text-white/50">
                               IP: {showSensitive ? device.network.ip : '•••.•••.•••.•••'}
                             </div>
-                            <div className="text-xs text-blue-300/50">
+                            <div className="text-xs text-white/50">
                               ISP: {device.network.isp}
                             </div>
-                            <div className="text-xs text-blue-300/50">
+                            <div className="text-xs text-white/50">
                               Browser: {device.device.browser} {device.device.browserVersion}
                             </div>
-                            <div className="text-xs text-blue-300/50">
+                            <div className="text-xs text-white/50">
                               App Build: {device.app?.buildId || 'n/a'}
                             </div>
                           </div>
@@ -1905,12 +1905,12 @@ export function UltimateControlPanel({
                             onClick={() => { SoundEffects.click(); setShowSensitive(!showSensitive); }}
                             onMouseEnter={() => SoundEffects.hover()}
                             onTouchStart={() => SoundEffects.click()}
-                            className="p-2 rounded-lg bg-black/30 border border-blue-500/40 hover:bg-blue-500/15 transition-colors backdrop-blur-sm"
+                            className="p-2 rounded-lg bg-black/30 border border-white/40 hover:bg-white/15 transition-colors backdrop-blur-sm"
                           >
                             {showSensitive ? (
-                              <EyeOff size={16} className="text-blue-200/70" />
+                              <EyeOff size={16} className="text-white/70" />
                             ) : (
-                              <Eye size={16} className="text-blue-200/70" />
+                              <Eye size={16} className="text-white/70" />
                             )}
                           </button>
                         </div>
@@ -1942,48 +1942,48 @@ export function UltimateControlPanel({
                         value={device.performance.gpu.tier.toUpperCase() + ' Tier'}
                         sublabel={`Score ${Math.round(device.performance.gpu.score ?? 0) || 0}/100 • ${device.performance.gpu.vendor || ''} ${device.performance.gpu.renderer || ''}`}
                         color={
-                          device.performance.gpu.tier === 'high' ? '#22c55e' :
+                          device.performance.gpu.tier === 'high' ? '#ffffff' :
                           device.performance.gpu.tier === 'medium' ? '#f59e0b' : '#ef4444'
                         }
                       />
 
                       <div className="relative p-4 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-blue-900/40 border border-blue-400/40 rounded-xl transition-all duration-300 group-hover:border-blue-300/60 shadow-lg shadow-blue-500/10" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-white/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
                         <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                           <motion.div 
                             animate={{ x: ['0%', '200%'] }}
                             transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-500/0 via-blue-400/40 to-blue-500/0 opacity-100"
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-white/0 via-white/40 to-white/0 opacity-100"
                           />
                         </div>
-                        <div className="relative z-10 text-sm text-blue-200/80 mb-3">Device Snapshot</div>
+                        <div className="relative z-10 text-sm text-white/80 mb-3">Device Snapshot</div>
                         <div className="relative z-10 grid grid-cols-2 gap-2 text-sm">
-                          <div className="text-blue-200/60">CPU: <span className="text-white font-semibold drop-shadow-lg">{device.performance.cpu.name || `${device.performance.cpu.cores} cores`}</span></div>
-                          <div className="text-blue-200/60">Threads: <span className="text-white font-semibold drop-shadow-lg">{device.performance.cpu.threads}</span></div>
-                          <div className="text-blue-200/60">RAM: <span className="text-white font-semibold drop-shadow-lg">{device.performance.memory.total}GB {device.performance.memory.type || ''}</span></div>
-                          <div className="text-blue-200/60">VRAM: <span className="text-white font-semibold drop-shadow-lg">{device.performance.gpu.vram ? `${device.performance.gpu.vram}GB` : 'Unknown'}</span></div>
-                          <div className="text-blue-200/60">Display: <span className="text-white font-semibold drop-shadow-lg">{device.screen.physicalWidth}×{device.screen.physicalHeight}</span></div>
-                          <div className="text-blue-200/60">Refresh: <span className="text-white font-semibold drop-shadow-lg">{device.screen.refreshRate || 60}Hz</span></div>
-                          <div className="text-blue-200/60">Storage: <span className="text-white font-semibold drop-shadow-lg">{device.performance.storage ? `${device.performance.storage.available}/${device.performance.storage.total}GB` : 'Unknown'}</span></div>
-                          <div className="text-blue-200/60">Battery: <span className="text-white font-semibold drop-shadow-lg">{device.battery.level >= 0 ? `${device.battery.level}%` : 'N/A'}</span></div>
+                          <div className="text-white/60">CPU: <span className="text-white font-semibold drop-shadow-lg">{device.performance.cpu.name || `${device.performance.cpu.cores} cores`}</span></div>
+                          <div className="text-white/60">Threads: <span className="text-white font-semibold drop-shadow-lg">{device.performance.cpu.threads}</span></div>
+                          <div className="text-white/60">RAM: <span className="text-white font-semibold drop-shadow-lg">{device.performance.memory.total}GB {device.performance.memory.type || ''}</span></div>
+                          <div className="text-white/60">VRAM: <span className="text-white font-semibold drop-shadow-lg">{device.performance.gpu.vram ? `${device.performance.gpu.vram}GB` : 'Unknown'}</span></div>
+                          <div className="text-white/60">Display: <span className="text-white font-semibold drop-shadow-lg">{device.screen.physicalWidth}×{device.screen.physicalHeight}</span></div>
+                          <div className="text-white/60">Refresh: <span className="text-white font-semibold drop-shadow-lg">{device.screen.refreshRate || 60}Hz</span></div>
+                          <div className="text-white/60">Storage: <span className="text-white font-semibold drop-shadow-lg">{device.performance.storage ? `${device.performance.storage.available}/${device.performance.storage.total}GB` : 'Unknown'}</span></div>
+                          <div className="text-white/60">Battery: <span className="text-white font-semibold drop-shadow-lg">{device.battery.level >= 0 ? `${device.battery.level}%` : 'N/A'}</span></div>
                         </div>
                       </div>
 
                       {/* Memory */}
                       <div className="relative p-4 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-purple-900/40 border border-blue-400/40 rounded-xl transition-all duration-300 group-hover:border-blue-300/60 shadow-lg shadow-blue-500/10" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-white/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
                         <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                           <motion.div 
                             animate={{ x: ['0%', '200%'] }}
                             transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-500/0 via-purple-400/40 to-purple-500/0 opacity-100"
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-white/0 via-white/40 to-white/0 opacity-100"
                           />
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/10 rounded-xl" />
                         <div className="relative z-10 flex items-center justify-between mb-3">
-                          <span className="text-sm text-blue-200/60">Memory Usage</span>
+                          <span className="text-sm text-white/60">Memory Usage</span>
                           <span className="text-sm font-semibold text-white drop-shadow-lg">
                             {device.performance.memory.percentage}%
                           </span>
@@ -1992,10 +1992,10 @@ export function UltimateControlPanel({
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${device.performance.memory.percentage}%` }}
-                            className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
+                            className="h-full bg-gradient-to-r from-white to-white rounded-full"
                           />
                         </div>
-                        <div className="text-xs text-blue-200/50 mt-2">
+                        <div className="text-xs text-white/50 mt-2">
                           {device.performance.memory.used}MB / {device.performance.memory.limit}MB
                         </div>
                       </div>
@@ -2012,22 +2012,22 @@ export function UltimateControlPanel({
                           />
                         </div>
                         <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-xl" />
-                        <div className="relative z-10 text-sm text-blue-200/60 mb-2">Scene Loading</div>
+                        <div className="relative z-10 text-sm text-white/60 mb-2">Scene Loading</div>
                         <div className="relative z-10 grid grid-cols-2 gap-2 text-sm">
                           <div>
-                            <span className="text-blue-200/60">Loaded:</span>
+                            <span className="text-white/60">Loaded:</span>
                             <span className="text-white font-semibold ml-2 drop-shadow-lg">{queueStats.loaded}</span>
                           </div>
                           <div>
-                            <span className="text-blue-200/60">Loading:</span>
+                            <span className="text-white/60">Loading:</span>
                             <span className="text-white font-semibold ml-2 drop-shadow-lg">{queueStats.loading}</span>
                           </div>
                           <div>
-                            <span className="text-blue-200/60">Pending:</span>
+                            <span className="text-white/60">Pending:</span>
                             <span className="text-white font-semibold ml-2 drop-shadow-lg">{queueStats.pending}</span>
                           </div>
                           <div>
-                            <span className="text-blue-200/60">Failed:</span>
+                            <span className="text-white/60">Failed:</span>
                             <span className="text-white font-semibold ml-2 drop-shadow-lg">{queueStats.failed}</span>
                           </div>
                         </div>
@@ -2046,18 +2046,18 @@ export function UltimateControlPanel({
                     >
                       {/* User Info */}
                       <div className="relative p-6 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-purple-900/40 border border-blue-400/40 rounded-xl transition-all duration-300 group-hover:border-blue-300/60 shadow-lg shadow-blue-500/10" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-white/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
                         <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                           <motion.div 
                             animate={{ x: ['0%', '200%'] }}
                             transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-500/0 via-purple-400/40 to-purple-500/0 opacity-100"
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-white/0 via-white/40 to-white/0 opacity-100"
                           />
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/10 rounded-xl" />
                         <div className="relative z-10 flex items-center gap-4 mb-4">
-                          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+                          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-white to-white flex items-center justify-center">
                             <User size={32} className="text-white" />
                           </div>
                           <div className="flex-1">
@@ -2071,26 +2071,26 @@ export function UltimateControlPanel({
                         </div>
 
                         <div className="relative z-10 grid grid-cols-2 gap-3">
-                          <div className="p-3 rounded-lg bg-black/30 backdrop-blur-sm border border-blue-500/20">
-                            <div className="text-xs text-blue-200/60">Status</div>
-                            <div className="text-sm font-semibold text-green-400 drop-shadow-lg">
+                          <div className="p-3 rounded-lg bg-black/30 backdrop-blur-sm border border-white/20">
+                            <div className="text-xs text-white/60">Status</div>
+                            <div className="text-sm font-semibold text-white drop-shadow-lg">
                               {userEmail ? 'Active' : 'Guest'}
                             </div>
                           </div>
-                          <div className="p-3 rounded-lg bg-black/30 backdrop-blur-sm border border-blue-500/20">
-                            <div className="text-xs text-blue-200/60">Session</div>
+                          <div className="p-3 rounded-lg bg-black/30 backdrop-blur-sm border border-white/20">
+                            <div className="text-xs text-white/60">Session</div>
                             <div className="text-sm font-semibold text-white drop-shadow-lg">
                               {sessionDuration}
                             </div>
                           </div>
-                          <div className="p-3 rounded-lg bg-black/30 backdrop-blur-sm border border-blue-500/20">
-                            <div className="text-xs text-blue-200/60">IP</div>
+                          <div className="p-3 rounded-lg bg-black/30 backdrop-blur-sm border border-white/20">
+                            <div className="text-xs text-white/60">IP</div>
                             <div className="text-sm font-semibold text-white truncate drop-shadow-lg">
                               {showSensitive ? device.network.ip : '•••.•••.•••.•••'}
                             </div>
                           </div>
-                          <div className="p-3 rounded-lg bg-black/30 backdrop-blur-sm border border-blue-500/20">
-                            <div className="text-xs text-blue-200/60">ISP</div>
+                          <div className="p-3 rounded-lg bg-black/30 backdrop-blur-sm border border-white/20">
+                            <div className="text-xs text-white/60">ISP</div>
                             <div className="text-sm font-semibold text-white truncate drop-shadow-lg">
                               {device.network.isp || 'Unknown'}
                             </div>
@@ -2103,7 +2103,7 @@ export function UltimateControlPanel({
                         <button
                           onClick={() => { SoundEffects.click(); handleRefresh(); }}
                           onMouseEnter={() => SoundEffects.hover()}
-                          className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/40 text-white font-semibold hover:from-blue-500/30 hover:to-purple-500/30 hover:border-blue-400/70 transition-all flex items-center justify-center gap-2"
+                          className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-white/20 to-white/20 border border-white/40 text-white font-semibold hover:from-white/30 hover:to-white/30 hover:border-white/70 transition-all flex items-center justify-center gap-2"
                         >
                           <RefreshCw size={18} />
                           Refresh Website
@@ -2117,7 +2117,7 @@ export function UltimateControlPanel({
                             alert('Device info logged to console (F12)');
                           }}
                           onMouseEnter={() => SoundEffects.hover()}
-                          className="w-full px-4 py-3 rounded-xl bg-black/40 border border-blue-500/40 text-blue-200/70 font-semibold hover:bg-blue-500/15 hover:text-white hover:border-blue-400/70 transition-all flex items-center justify-center gap-2"
+                          className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/40 text-white/70 font-semibold hover:bg-white/15 hover:text-white hover:border-white/70 transition-all flex items-center justify-center gap-2"
                         >
                           <Globe size={18} />
                           View Full Details
@@ -2136,7 +2136,7 @@ export function UltimateControlPanel({
                             }
                           }}
                           onMouseEnter={() => SoundEffects.hover()}
-                          className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500/20 to-blue-500/20 border border-blue-500/40 text-white font-semibold hover:from-blue-500/30 hover:to-blue-500/30 hover:border-blue-400/70 transition-all flex items-center justify-center gap-2"
+                          className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-white/20 to-white/20 border border-white/40 text-white font-semibold hover:from-white/30 hover:to-white/30 hover:border-white/70 transition-all flex items-center justify-center gap-2"
                         >
                           <Globe size={18} />
                           Copy Device Snapshot

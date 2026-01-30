@@ -101,11 +101,11 @@
 @keyframes powerUp {
   0%, 100% {
     transform: scale(1);
-    filter: brightness(1) drop-shadow(0 0 0px rgba(59, 130, 246, 0));
+    filter: brightness(1) drop-shadow(0 0 0px rgba(255, 255, 255, 0));
   }
   50% {
     transform: scale(1.15);
-    filter: brightness(1.3) drop-shadow(0 0 20px rgba(59, 130, 246, 0.8));
+    filter: brightness(1.3) drop-shadow(0 0 20px rgba(255, 255, 255, 0.8));
   }
 }
 
@@ -169,13 +169,13 @@
 
 /* Button glow effect */
 .button-glow {
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
   transition: box-shadow 0.3s ease;
 }
 
 .button-glow:hover {
-  box-shadow: 0 0 30px rgba(59, 130, 246, 0.8),
-              0 0 60px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.8),
+              0 0 60px rgba(255, 255, 255, 0.4);
 }
 
 /* ============================================
@@ -296,4 +296,47 @@
 .scroll-scale.is-visible {
   opacity: 1;
   transform: scale(1) translateZ(0);
+}
+
+/* ============================================
+   TOUCH DEVICE HOVER FIX
+   ============================================ */
+/* Disable hover effects on touch devices to prevent sticky states */
+@media (hover: none) and (pointer: coarse) {
+  /* Remove all hover state transforms and effects */
+  .game-button:hover,
+  .button-glow:hover,
+  .hover-glow:hover,
+  .hover-lift:hover,
+  .hover-flip:hover,
+  .hover-scale:hover,
+  .card-tilt:hover,
+  .glow-effect:hover::after {
+    transform: none !important;
+    box-shadow: inherit !important;
+    filter: inherit !important;
+    opacity: inherit !important;
+  }
+  
+  .game-button:hover::before {
+    opacity: 0 !important;
+  }
+  
+  /* Replace hover with active state for touch feedback */
+  .game-button:active,
+  .button-glow:active,
+  .hover-scale:active {
+    transform: scale(0.98) !important;
+    opacity: 0.9;
+    transition: transform 0.1s ease-out, opacity 0.1s ease-out !important;
+  }
+  
+  /* Ensure touch-friendly interactions */
+  .game-button,
+  button,
+  [role="button"] {
+    cursor: pointer;
+    -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
+    touch-action: manipulation;
+  }
 }

@@ -173,7 +173,7 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
       <div
         className="absolute inset-0"
         style={{
-          background: 'radial-gradient(ellipse at 50% 30%, rgba(59, 130, 246, 0.12) 0%, rgba(59, 130, 246, 0.04) 30%, transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(147, 51, 234, 0.08) 0%, transparent 40%), #000',
+          background: 'radial-gradient(ellipse at 50% 30%, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 30%, transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 40%), #000',
           opacity: showFallback || !isLoaded ? 1 : 0.2,
           transition: 'opacity 500ms ease-out',
         }}
@@ -183,7 +183,7 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
           <div
             className="absolute inset-0"
             style={{
-              background: 'radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)',
+              background: 'radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.15) 0%, transparent 50%)',
               animation: 'pulse 4s ease-in-out infinite',
             }}
           />
@@ -261,27 +261,27 @@ const useIsDesktop = () => {
 const NEON_GLOBAL_STYLES = `
   @keyframes neon-pulse {
     0%, 100% { 
-      text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+      text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
       filter: brightness(1);
     }
     50% { 
-      text-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6;
+      text-shadow: 0 0 6px #ffffff, 0 0 12px #ffffff;
       filter: brightness(1.1);
     }
   }
 
   @keyframes neon-glow {
     0%, 100% { 
-      box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+      box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff;
     }
     50% { 
-      box-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6, inset 0 0 6px #3b82f6;
+      box-shadow: 0 0 6px #ffffff, 0 0 12px #ffffff, inset 0 0 6px #ffffff;
     }
   }
 
   .neon-blue-text {
-    color: #3b82f6;
-    text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+    color: #ffffff;
+    text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
     animation: neon-pulse 2s ease-in-out infinite;
   }
 
@@ -295,7 +295,7 @@ const NEON_GLOBAL_STYLES = `
   }
 
   .neon-blue-icon {
-    filter: drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6);
+    filter: drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff);
   }
 
   .neon-red-icon {
@@ -303,14 +303,14 @@ const NEON_GLOBAL_STYLES = `
   }
 
   .neon-blue-border {
-    border: 2px solid #3b82f6;
-    box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff;
     animation: neon-glow 2s ease-in-out infinite;
   }
 
   .neon-blue-bg {
-    background: #3b82f6;
-    box-shadow: 0 0 8px #3b82f6, 0 0 16px #3b82f6;
+    background: #ffffff;
+    box-shadow: 0 0 8px #ffffff, 0 0 16px #ffffff;
   }
 
   /* Pulse animation for Spline fallback */
@@ -399,9 +399,9 @@ const GlobalStyles = () => (
       background: linear-gradient(
         90deg,
         transparent 0%,
-        rgba(59, 130, 246, 0.15) 25%,
-        rgba(59, 130, 246, 0.3) 50%,
-        rgba(59, 130, 246, 0.15) 75%,
+        rgba(255, 255, 255, 0.15) 25%,
+        rgba(255, 255, 255, 0.3) 50%,
+        rgba(255, 255, 255, 0.15) 75%,
         transparent 100%
       );
       animation: unified-shimmer-ltr 2.5s ease-in-out infinite;
@@ -414,11 +414,11 @@ const GlobalStyles = () => (
     .shimmer-text {
       background: linear-gradient(
         90deg,
-        #60a5fa 0%,
-        #93c5fd 25%,
+        #ffffff 0%,
+        #ffffff 25%,
         #dbeafe 50%,
-        #93c5fd 75%,
-        #60a5fa 100%
+        #ffffff 75%,
+        #ffffff 100%
       );
       background-size: 200% auto;
       -webkit-background-clip: text;
@@ -1110,7 +1110,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
       {/* Shared Spline background for welcome/guest to survive resizes */}
       {/* INTERACTIVE: Touch and mouse events pass through to Spline 3D scene */}
-      {isWelcomeScreen && (
+      {isWelcomeScreen && !loading && (
         <div
           className="fixed inset-0 w-full h-full overflow-hidden"
           style={{
@@ -1176,7 +1176,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       )} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
 
         {/* Existing background elements */}
-        <div className={cn("absolute bottom-0 right-0 w-[300px] md:w-[500px] h-[300px] md:h-[500px] rounded-full blur-[80px] pointer-events-none transition-colors duration-500 gpu-accel -z-10", isXM ? "bg-red-900/10" : "bg-blue-900/10")} />
+        <div className={cn("absolute bottom-0 right-0 w-[300px] md:w-[500px] h-[300px] md:h-[500px] rounded-full blur-[80px] pointer-events-none transition-colors duration-500 gpu-accel -z-10", isXM ? "bg-red-900/10" : "bg-white/10")} />
 
         {/* ================= WELCOME SCREEN (Step -1) ================= */}
         {step === -1 && (
@@ -1227,7 +1227,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     <div
                       className="absolute inset-0 pointer-events-none"
                       style={{
-                        background: 'radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 60%)',
+                        background: 'radial-gradient(ellipse at 50% 50%, rgba(255, 255, 255, 0.15) 0%, transparent 60%)',
                         filter: 'blur(20px)',
                       }}
                     />
@@ -1235,13 +1235,13 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   <motion.h1
                     className="relative text-4xl font-black tracking-wider uppercase"
                     style={{
-                      color: '#60a5fa',
+                      color: '#ffffff',
                       textShadow: `
-                        0 0 5px #3b82f6,
-                        0 0 10px #3b82f6,
-                        0 0 20px #3b82f6,
-                        0 0 40px #3b82f6,
-                        0 0 80px #2563eb
+                        0 0 5px #ffffff,
+                        0 0 10px #ffffff,
+                        0 0 20px #ffffff,
+                        0 0 40px #ffffff,
+                        0 0 80px #ffffff
                       `,
                       letterSpacing: '0.15em',
                     }}
@@ -1250,9 +1250,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         ? undefined
                         : {
                             textShadow: [
-                              '0 0 5px #3b82f6, 0 0 10px #3b82f6, 0 0 20px #3b82f6, 0 0 40px #3b82f6, 0 0 80px #2563eb',
-                              '0 0 8px #60a5fa, 0 0 15px #60a5fa, 0 0 30px #3b82f6, 0 0 60px #3b82f6, 0 0 100px #2563eb',
-                              '0 0 5px #3b82f6, 0 0 10px #3b82f6, 0 0 20px #3b82f6, 0 0 40px #3b82f6, 0 0 80px #2563eb',
+                              '0 0 5px #ffffff, 0 0 10px #ffffff, 0 0 20px #ffffff, 0 0 40px #ffffff, 0 0 80px #ffffff',
+                              '0 0 8px #ffffff, 0 0 15px #ffffff, 0 0 30px #ffffff, 0 0 60px #ffffff, 0 0 100px #ffffff',
+                              '0 0 5px #ffffff, 0 0 10px #ffffff, 0 0 20px #ffffff, 0 0 40px #ffffff, 0 0 80px #ffffff',
                             ],
                           }
                     }
@@ -1269,9 +1269,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     BULLMONEY
                   </motion.h1>
                   <motion.p
-                    className="relative text-sm text-blue-200/80 mt-2 font-semibold tracking-[0.2em] uppercase"
+                    className="relative text-sm text-white/80 mt-2 font-semibold tracking-[0.2em] uppercase"
                     style={{
-                      textShadow: '0 0 10px rgba(147, 197, 253, 0.5), 0 0 20px rgba(59, 130, 246, 0.3)',
+                      textShadow: '0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(255, 255, 255, 0.3)',
                     }}
                     animate={
                       shouldReduceEffects
@@ -1357,10 +1357,10 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         whileTap={{ scale: 0.98 }}
                         className="w-full py-2 rounded-lg font-bold text-xs tracking-wide transition-all flex items-center justify-center gap-1.5 text-white"
                         style={{
-                          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.5) 0%, rgba(37, 99, 235, 0.6) 100%)',
+                          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.6) 100%)',
                           backdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(8px)',
-                          boxShadow: shouldReduceEffects ? 'none' : '0 4px 20px rgba(59, 130, 246, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                          border: '1px solid rgba(96, 165, 250, 0.3)',
+                          boxShadow: shouldReduceEffects ? 'none' : '0 4px 20px rgba(255, 255, 255, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                          border: '1px solid rgba(255, 255, 255, 0.3)',
                         }}
                       >
                         <span>Create Account</span>
@@ -1374,11 +1374,11 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                           setStep(0);
                         }}
                         whileTap={{ scale: 0.98 }}
-                        className="w-full py-2 rounded-lg font-bold text-xs tracking-wide transition-all flex items-center justify-center gap-1.5 text-blue-300"
+                        className="w-full py-2 rounded-lg font-bold text-xs tracking-wide transition-all flex items-center justify-center gap-1.5 text-white"
                         style={{
-                          background: 'rgba(59, 130, 246, 0.08)',
+                          background: 'rgba(255, 255, 255, 0.08)',
                           backdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(6px)',
-                          border: '1px solid rgba(59, 130, 246, 0.2)',
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
                         }}
                       >
                         <span>Login</span>
@@ -1416,7 +1416,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                       <button 
                         type="button"
                         onClick={() => { setLegalModalTab('terms'); setIsLegalModalOpen(true); }}
-                        className="text-blue-400/50 hover:text-blue-400 underline underline-offset-1 transition-colors"
+                        className="text-white/60 hover:text-white underline underline-offset-1 transition-colors"
                       >
                         Terms
                       </button>
@@ -1424,7 +1424,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                       <button 
                         type="button"
                         onClick={() => { setLegalModalTab('privacy'); setIsLegalModalOpen(true); }}
-                        className="text-blue-400/50 hover:text-blue-400 underline underline-offset-1 transition-colors"
+                        className="text-white/60 hover:text-white underline underline-offset-1 transition-colors"
                       >
                         Privacy
                       </button>
@@ -1481,13 +1481,13 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
               {/* Ultra-transparent Back Button - Top Right (UltimateHub is on left) */}
               <button
                 onClick={() => setStep(-1)}
-                className="fixed top-5 right-4 flex items-center gap-2 text-blue-300 text-sm font-medium transition-all cursor-target py-2 px-3.5 rounded-xl z-50"
+                className="fixed top-5 right-4 flex items-center gap-2 text-white text-sm font-medium transition-all cursor-target py-2 px-3.5 rounded-xl z-50"
                 style={{
                   pointerEvents: 'auto',
                   background: 'rgba(0, 0, 0, 0.25)',
                   backdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(12px)',
                   WebkitBackdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(12px)',
-                  border: '1px solid rgba(59, 130, 246, 0.2)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
                 }}
               >
                 <ChevronLeft className="w-4 h-4" /> Back
@@ -1504,8 +1504,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 <h1
                   className="text-2xl font-black tracking-tight"
                   style={{
-                    color: '#3b82f6',
-                    textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6, 0 0 16px #3b82f6',
+                    color: '#ffffff',
+                    textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff, 0 0 16px #ffffff',
                   }}
                 >
                   BULLMONEY
@@ -1614,7 +1614,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
              <button 
                onClick={() => setStep(-1)} 
                className={cn(
-                 "fixed top-20 left-4 lg:top-24 lg:left-6 flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm lg:text-base font-semibold transition-all cursor-target py-2.5 px-4 rounded-xl bg-black/90 border border-blue-500/40 hover:border-blue-400/60 shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] z-[2147483646]",
+                 "fixed top-20 left-4 lg:top-24 lg:left-6 flex items-center gap-2 text-white hover:text-white/80 text-sm lg:text-base font-semibold transition-all cursor-target py-2.5 px-4 rounded-xl bg-black/90 border border-white/25 hover:border-white/40 shadow-[0_0_15px_rgba(255, 255, 255,0.3)] hover:shadow-[0_0_20px_rgba(255, 255, 255,0.5)] z-[2147483646]",
                  shouldDisableBackdropBlur ? '' : 'backdrop-blur-xl'
                )}
              >
@@ -1628,15 +1628,15 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 )}
                 
                 <div className="absolute top-0 right-0 p-3 md:p-4 opacity-10 z-0">
-                    <Lock className={cn("w-24 h-24 md:w-32 md:h-32", isXM ? "text-red-400" : "text-blue-400", neonIconClass)} />
+                  <Lock className={cn("w-24 h-24 md:w-32 md:h-32", isXM ? "text-red-400" : "text-white", neonIconClass)} />
                 </div>
                 
                 <h2 className={cn("text-xl md:text-2xl font-bold shimmer-text mb-2 relative z-10", neonTextClass)}>Member Login</h2>
-                <p className={cn("mb-5 md:mb-6 relative z-10 text-sm md:text-base neon-white-text", isXM ? "text-red-200/60" : "text-blue-200/60")}>Sign in to access the platform.</p>
+                    <p className={cn("mb-5 md:mb-6 relative z-10 text-sm md:text-base neon-white-text", isXM ? "text-red-200/60" : "text-white/70")}>Sign in to access the platform.</p>
 
                 <form onSubmit={handleLoginSubmit} className="space-y-4 relative z-10" autoComplete="on">
                    <div className="relative group">
-                      <Mail className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors", isXM ? "text-red-400/50 group-focus-within:text-red-400" : "text-blue-400/50 group-focus-within:text-blue-400", neonIconClass)} />
+                      <Mail className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors", isXM ? "text-red-400/50 group-focus-within:text-red-400" : "text-white/60 group-focus-within:text-white", neonIconClass)} />
                       <input
                         autoFocus
                         type="email"
@@ -1649,7 +1649,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         className={cn("w-full bg-black/60 border-2 rounded-xl pl-10 pr-4 py-3 md:py-4 !text-white transition-all cursor-target text-base", 
                           isXM 
                             ? "border-red-500/30 placeholder-red-300/30 focus:border-red-500/60 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]" 
-                            : "border-blue-500/30 placeholder-blue-300/30 focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)]",
+                            : "border-white/25 placeholder-white/40 focus:border-white/60 focus:shadow-[0_0_15px_rgba(255,255,255,0.3)]",
                           "focus:outline-none"
                         )}
                         style={{ color: '#ffffff' }}
@@ -1657,7 +1657,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     </div>
 
                    <div className="relative group">
-                      <Lock className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors", isXM ? "text-red-400/50 group-focus-within:text-red-400" : "text-blue-400/50 group-focus-within:text-blue-400", neonIconClass)} />
+                      <Lock className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors", isXM ? "text-red-400/50 group-focus-within:text-red-400" : "text-white/60 group-focus-within:text-white", neonIconClass)} />
                       <input
                         type={showPassword ? "text" : "password"}
                         name="password"
@@ -1669,7 +1669,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         className={cn("w-full bg-black/60 border-2 rounded-xl pl-10 pr-12 py-3 md:py-4 !text-white transition-all cursor-target text-base",
                           isXM 
                             ? "border-red-500/30 placeholder-red-300/30 focus:border-red-500/60 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]" 
-                            : "border-blue-500/30 placeholder-blue-300/30 focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)]",
+                            : "border-white/25 placeholder-white/40 focus:border-white/60 focus:shadow-[0_0_15px_rgba(255,255,255,0.3)]",
                           "focus:outline-none"
                         )}
                         style={{ color: '#ffffff' }}
@@ -1678,7 +1678,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         type="button" 
                         onClick={() => setShowPassword(!showPassword)}
                         className={cn("absolute right-3 top-1/2 -translate-y-1/2 transition-colors cursor-target", 
-                          isXM ? "text-red-400/50 hover:text-red-400" : "text-blue-400/50 hover:text-blue-400",
+                          isXM ? "text-red-400/50 hover:text-red-400" : "text-white/60 hover:text-white",
                           neonIconClass
                         )}
                       >
@@ -1704,9 +1704,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     </button>
                 </form>
 
-                <div className={cn("mt-5 md:mt-6 text-center border-t pt-4", isXM ? "border-red-500/40" : "border-blue-500/40")}>
-                  <button onClick={toggleViewMode} className={cn("text-sm transition-colors cursor-target", isXM ? "text-red-300/60 hover:text-red-300 neon-red-text" : "text-blue-300/60 hover:text-blue-300 neon-blue-text")}>
-                    Don&apos;t have a password? <span className={cn("underline", isXM ? "text-red-400 neon-red-text" : "text-blue-400 neon-blue-text")}>Register Now</span>
+                <div className={cn("mt-5 md:mt-6 text-center border-t pt-4", isXM ? "border-red-500/40" : "border-white/20")}> 
+                  <button onClick={toggleViewMode} className={cn("text-sm transition-colors cursor-target", isXM ? "text-red-300/60 hover:text-red-300 neon-red-text" : "text-white/70 hover:text-white neon-white-text")}>
+                    Don&apos;t have a password? <span className={cn("underline", isXM ? "text-red-400 neon-red-text" : "text-white neon-white-text")}>Register Now</span>
                   </button>
                 </div>
              </div>
@@ -1726,15 +1726,15 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                       className={cn(
                         "relative px-5 md:px-6 py-2 rounded-full font-semibold transition-all duration-300 z-20 cursor-target text-sm md:text-base",
                         isActive 
-                          ? cn("shimmer-text", isPartnerXM ? "text-red-400 neon-red-text" : "text-blue-400 neon-blue-text")
-                          : cn("bg-black/60 border-2", isPartnerXM ? "border-red-500/20 text-red-300/60 hover:border-red-500/40" : "border-blue-500/20 text-blue-300/60 hover:border-blue-500/40")
+                          ? cn("shimmer-text", isPartnerXM ? "text-red-400 neon-red-text" : "text-white neon-white-text")
+                          : cn("bg-black/60 border-2", isPartnerXM ? "border-red-500/20 text-red-300/60 hover:border-red-500/40" : "border-white/20 text-white/60 hover:border-white/40")
                       )}
                     >
                       {partner}
                       {isActive && (
                         <motion.span
                           layoutId="tab-pill"
-                          className={cn("absolute inset-0 -z-10 rounded-full bg-black border-2", isPartnerXM ? "border-red-500/60 shadow-[0_0_25px_rgba(239,68,68,0.4)]" : "border-blue-500/60 shadow-[0_0_25px_rgba(59,130,246,0.4)]")}
+                          className={cn("absolute inset-0 -z-10 rounded-full bg-black border-2", isPartnerXM ? "border-red-500/60 shadow-[0_0_25px_rgba(239,68,68,0.4)]" : "border-white/40 shadow-[0_0_25px_rgba(255,255,255,0.35)]")}
                           transition={{ type: "spring", stiffness: 400, damping: 28 }}
                         />
                       )}
@@ -1772,7 +1772,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                        }
                      }} 
                      className={cn(
-                       "fixed top-20 left-4 lg:top-24 lg:left-6 flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm lg:text-base font-semibold transition-all cursor-target py-2.5 px-4 rounded-xl bg-black/90 border border-blue-500/40 hover:border-blue-400/60 shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] z-[2147483646]",
+                       "fixed top-20 left-4 lg:top-24 lg:left-6 flex items-center gap-2 text-white hover:text-white/80 text-sm lg:text-base font-semibold transition-all cursor-target py-2.5 px-4 rounded-xl bg-black/90 border border-white/25 hover:border-white/40 shadow-[0_0_15px_rgba(255,255,255,0.3)] hover:shadow-[0_0_20px_rgba(255,255,255,0.5)] z-[2147483646]",
                        shouldDisableBackdropBlur ? '' : 'backdrop-blur-xl'
                      )}
                    >
@@ -1786,19 +1786,19 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                       )}
                       
                       <div className="absolute top-0 right-0 p-3 md:p-4 opacity-5 z-0">
-                        <Lock className={cn("w-24 h-24 md:w-32 md:h-32", isXM ? "text-red-400" : "text-blue-400", neonIconClass)} />
+                        <Lock className={cn("w-24 h-24 md:w-32 md:h-32", isXM ? "text-red-400" : "text-white", neonIconClass)} />
                       </div>
 
                       <div className="mb-5 md:mb-6 flex justify-center">
                          <div className={cn("h-14 w-14 md:h-16 md:w-16 rounded-full bg-black flex items-center justify-center", neonBorderClass)}>
-                            <ShieldCheck className={cn("w-7 h-7 md:w-8 md:h-8", isXM ? "text-red-400" : "text-blue-400", neonIconClass)} />
+                           <ShieldCheck className={cn("w-7 h-7 md:w-8 md:h-8", isXM ? "text-red-400" : "text-white", neonIconClass)} />
                          </div>
                       </div>
 
                       <h2 className={cn("text-xl md:text-3xl font-extrabold shimmer-text mb-3 relative z-10", neonTextClass)}>Unlock Free BullMoney Access</h2>
-                      <p className={cn("text-sm md:text-base mb-6 md:mb-8 max-w-sm mx-auto leading-relaxed relative z-10 neon-white-text", isXM ? "text-red-200/70" : "text-blue-200/70")}>
+                       <p className={cn("text-sm md:text-base mb-6 md:mb-8 max-w-sm mx-auto leading-relaxed relative z-10 neon-white-text", isXM ? "text-red-200/70" : "text-white/70")}> 
                         Get free trading setups and community access. <br/>
-                        <span className={cn("text-blue-300/60", isXM ? "text-red-300/60" : "text-blue-300/60", neonTextClass)}>No payment. Takes about 2 minutes.</span>
+                        <span className={cn(isXM ? "text-red-300/70" : "text-white/70", neonTextClass)}>No payment. Takes about 2 minutes.</span>
                       </p>
 
                       <motion.button 
@@ -1813,7 +1813,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                       </motion.button>
                       
                       <div className="mt-4 space-y-3 relative z-10">
-                         <div className={cn("flex items-center justify-center gap-2 text-xs", isXM ? "text-red-400/60" : "text-blue-400/60", neonTextClass)}>
+                         <div className={cn("flex items-center justify-center gap-2 text-xs", isXM ? "text-red-400/60" : "text-white/60", neonTextClass)}>
                              <Lock className={cn("w-3 h-3", neonIconClass)} /> No credit card required
                          </div>
 
@@ -1821,7 +1821,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                          <motion.button 
                            onClick={toggleViewMode}
                            whileHover={{ scale: 1.01 }}
-                           className={cn("w-full py-3 rounded-lg text-sm font-semibold transition-all mt-2 bg-black/60", neonBorderClass, neonTextClass)}
+                          className={cn("w-full py-3 rounded-lg text-sm font-semibold transition-all mt-2 bg-black/60 text-white", neonBorderClass)}
                          >
                             Already a member? Login here
                          </motion.button>
@@ -1886,7 +1886,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                       </div>
                     }
                   >
-                    <p className={cn("text-sm md:text-[15px] leading-relaxed mb-4 text-center neon-white-text", isXM ? "text-red-200/70" : "text-blue-200/70")}>
+                    <p className={cn("text-sm md:text-[15px] leading-relaxed mb-4 text-center neon-white-text", isXM ? "text-red-200/70" : "text-white/70")}>
                       BullMoney works with regulated brokers. <br className="hidden md:block" />
                       This free account lets us verify your access.
                     </p>
@@ -1895,7 +1895,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     <div className={cn(
                       "relative mx-auto w-full max-w-[240px] md:max-w-[280px] h-28 md:h-40 rounded-3xl overflow-visible mb-2 opacity-80 hover:opacity-100 transition-opacity",
                       neonBorderClass
-                    )} style={{ filter: isXM ? 'drop-shadow(0 0 20px rgba(239, 68, 68, 0.6)) drop-shadow(0 0 40px rgba(220, 38, 38, 0.4))' : 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.6)) drop-shadow(0 0 40px rgba(147, 51, 234, 0.4))' }}>
+                    )} style={{ filter: isXM ? 'drop-shadow(0 0 20px rgba(239, 68, 68, 0.6)) drop-shadow(0 0 40px rgba(220, 38, 38, 0.4))' : 'drop-shadow(0 0 20px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 40px rgba(255, 255, 255, 0.4))' }}>
                       <IconPlusCorners />
                       <div className="absolute inset-0 p-2 overflow-hidden rounded-3xl">
                         {isVantage ? <EvervaultCardRed text="VANTAGE" /> : <EvervaultCard text="X3R7P" />}
@@ -1993,21 +1993,21 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         className={cn(
                           "w-full py-3 md:py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-target text-base relative overflow-hidden",
                           (!formData.email || !formData.password || !acceptedTerms) 
-                            ? cn("opacity-50 cursor-not-allowed bg-black/60 border-2", isXM ? "border-red-500/20 text-red-300/50" : "border-blue-500/20 text-blue-300/50")
-                            : cn("bg-black", isXM ? "neon-red-border text-red-400 neon-red-text" : "neon-blue-border text-blue-400 neon-blue-text")
+                            ? cn("opacity-50 cursor-not-allowed bg-black/60 border-2", isXM ? "border-red-500/20 text-red-300/50" : "border-white/25 text-white/50")
+                            : cn("bg-black", isXM ? "neon-red-border text-red-400 neon-red-text" : "border-2 border-white/60 text-white")
                         )}
                       >
-                        <span className={cn("relative z-10 flex items-center gap-2", (formData.email && formData.password && acceptedTerms) && cn("shimmer-text", isXM ? "neon-red-text" : "neon-blue-text"))}>
+                        <span className={cn("relative z-10 flex items-center gap-2", (formData.email && formData.password && acceptedTerms) && cn("shimmer-text", isXM ? "neon-red-text" : "neon-white-text"))}>
                           Unlock My Access <ArrowRight className="w-4 h-4" />
                         </span>
                       </button>
                     }
                   >
-                     <p className={cn("text-xs md:text-sm mb-3 md:mb-4 neon-white-text", isXM ? "text-red-200/60" : "text-blue-200/60")}>This lets you access <span className={cn("shimmer-text font-medium", isXM ? "neon-red-text" : "neon-blue-text")}>setups</span>, tools, and the community.</p>
+                     <p className={cn("text-xs md:text-sm mb-3 md:mb-4 neon-white-text", isXM ? "text-red-200/60" : "text-white/70")}>This lets you access <span className={cn("shimmer-text font-medium", isXM ? "neon-red-text" : "neon-white-text")}>setups</span>, tools, and the community.</p>
                     <div className="space-y-3 md:space-y-4 pt-1">
                       <div>
                         <div className="relative group">
-                          <Mail className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors", isXM ? "text-red-400/50 group-focus-within:text-red-400" : "text-blue-400/50 group-focus-within:text-blue-400", neonIconClass)} />
+                          <Mail className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors", isXM ? "text-red-400/50 group-focus-within:text-red-400" : "text-white/60 group-focus-within:text-white", neonIconClass)} />
                           <input
                             autoFocus
                             type="email"
@@ -2019,18 +2019,18 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             className={cn("w-full bg-black/60 border-2 rounded-lg pl-10 pr-4 py-3.5 !text-white transition-all cursor-target text-base",
                               isXM 
                                 ? "border-red-500/30 placeholder-red-300/30 focus:border-red-500/60 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]" 
-                                : "border-blue-500/30 placeholder-blue-300/30 focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)]",
+                                : "border-white/25 placeholder-white/40 focus:border-white/60 focus:shadow-[0_0_15px_rgba(255,255,255,0.3)]",
                               "focus:outline-none"
                             )}
                             style={{ color: '#ffffff' }}
                           />
                         </div>
-                        <p className={cn("text-[10px] mt-1 ml-1", isXM ? "text-red-300/40 neon-red-text" : "text-blue-300/40 neon-blue-text")}>We&apos;ll send your login details here.</p>
+                        <p className={cn("text-[10px] mt-1 ml-1", isXM ? "text-red-300/40 neon-red-text" : "text-white/60")}>We&apos;ll send your login details here.</p>
                       </div>
 
                       <div>
                         <div className="relative group">
-                          <Lock className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors", isXM ? "text-red-400/50 group-focus-within:text-red-400" : "text-blue-400/50 group-focus-within:text-blue-400", neonIconClass)} />
+                          <Lock className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors", isXM ? "text-red-400/50 group-focus-within:text-red-400" : "text-white/60 group-focus-within:text-white", neonIconClass)} />
                           <input
                             type={showPassword ? "text" : "password"}
                             name="password"
@@ -2041,7 +2041,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             className={cn("w-full bg-black/60 border-2 rounded-lg pl-10 pr-12 py-3.5 !text-white transition-all cursor-target text-base",
                               isXM 
                                 ? "border-red-500/30 placeholder-red-300/30 focus:border-red-500/60 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]" 
-                                : "border-blue-500/30 placeholder-blue-300/30 focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)]",
+                                : "border-white/25 placeholder-white/40 focus:border-white/60 focus:shadow-[0_0_15px_rgba(255,255,255,0.3)]",
                               "focus:outline-none"
                             )}
                             style={{ color: '#ffffff' }}
@@ -2050,19 +2050,19 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             type="button" 
                             onClick={() => setShowPassword(!showPassword)}
                             className={cn("absolute right-3 top-1/2 -translate-y-1/2 transition-colors cursor-target",
-                              isXM ? "text-red-400/50 hover:text-red-400" : "text-blue-400/50 hover:text-blue-400",
+                              isXM ? "text-red-400/50 hover:text-red-400" : "text-white/60 hover:text-white",
                               neonIconClass
                             )}
                           >
                             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                           </button>
                         </div>
-                        <p className={cn("text-[10px] mt-1 ml-1", isXM ? "text-red-300/40 neon-red-text" : "text-blue-300/40 neon-blue-text")}>Must be at least 6 characters.</p>
+                        <p className={cn("text-[10px] mt-1 ml-1", isXM ? "text-red-300/40 neon-red-text" : "text-white/60")}>Must be at least 6 characters.</p>
                       </div>
 
                       <div>
                         <div className="relative group">
-                          <User className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors", isXM ? "text-red-400/50 group-focus-within:text-red-400" : "text-blue-400/50 group-focus-within:text-blue-400", neonIconClass)} />
+                          <User className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors", isXM ? "text-red-400/50 group-focus-within:text-red-400" : "text-white/60 group-focus-within:text-white", neonIconClass)} />
                           <input
                             type="text"
                             name="referralCode"
@@ -2072,18 +2072,18 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             className={cn("w-full bg-black/60 border-2 rounded-lg pl-10 pr-4 py-3.5 !text-white transition-all cursor-target text-base",
                               isXM 
                                 ? "border-red-500/30 placeholder-red-300/30 focus:border-red-500/60 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]" 
-                                : "border-blue-500/30 placeholder-blue-300/30 focus:border-blue-500/60 focus:shadow-[0_0_15px_rgba(59,130,246,0.3)]",
+                                : "border-white/25 placeholder-white/40 focus:border-white/60 focus:shadow-[0_0_15px_rgba(255,255,255,0.3)]",
                               "focus:outline-none"
                             )}
                             style={{ color: '#ffffff' }}
                           />
                         </div>
-                        <p className={cn("text-[10px] mt-1 ml-1", isXM ? "text-red-300/40 neon-red-text" : "text-blue-300/40 neon-blue-text")}>Leave blank if you don&apos;t have one.</p>
+                        <p className={cn("text-[10px] mt-1 ml-1", isXM ? "text-red-300/40 neon-red-text" : "text-white/60")}>Leave blank if you don&apos;t have one.</p>
                       </div>
 
                         <div
                         onClick={() => setAcceptedTerms(!acceptedTerms)}
-                        className={cn("flex items-start gap-3 p-3 rounded-lg bg-black/60 cursor-pointer transition-colors cursor-target", isXM ? "neon-red-border" : "neon-blue-border")}
+                        className={cn("flex items-start gap-3 p-3 rounded-lg bg-black/60 cursor-pointer transition-colors cursor-target", isXM ? "neon-red-border" : "border-2 border-white/30")}
                       >
                         <div 
                           onClick={() => setAcceptedTerms(!acceptedTerms)}
@@ -2096,12 +2096,12 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                           {acceptedTerms && <Check className="w-3.5 h-3.5 text-white" />}
                         </div>
                         <div className="flex-1">
-                          <p className="text-xs text-blue-200/70 leading-tight neon-white-text">
+                          <p className="text-xs text-white/70 leading-tight neon-white-text">
                             I agree to the{' '}
                             <button 
                               type="button"
                               onClick={(e) => { e.stopPropagation(); setLegalModalTab('terms'); setIsLegalModalOpen(true); }}
-                              className="text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors"
+                              className="text-white hover:text-white/80 underline underline-offset-2 transition-colors"
                             >
                               Terms of Service
                             </button>
@@ -2109,7 +2109,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             <button 
                               type="button"
                               onClick={(e) => { e.stopPropagation(); setLegalModalTab('privacy'); setIsLegalModalOpen(true); }}
-                              className="text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors"
+                              className="text-white hover:text-white/80 underline underline-offset-2 transition-colors"
                             >
                               Privacy Policy
                             </button>
@@ -2117,7 +2117,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             <button 
                               type="button"
                               onClick={(e) => { e.stopPropagation(); setLegalModalTab('disclaimer'); setIsLegalModalOpen(true); }}
-                              className="text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors"
+                              className="text-white hover:text-white/80 underline underline-offset-2 transition-colors"
                             >
                               Disclaimer
                             </button>
@@ -2135,7 +2135,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     )}
                   </StepCard>
 
-                  <button onClick={handleBack} className={cn("mt-3 md:mt-4 flex items-center text-sm mx-auto transition-colors cursor-target", isXM ? "text-red-300/60 hover:text-red-300 neon-red-text" : "text-blue-300/60 hover:text-blue-300 neon-blue-text")}>
+                  <button onClick={handleBack} className={cn("mt-3 md:mt-4 flex items-center text-sm mx-auto transition-colors cursor-target", isXM ? "text-red-300/60 hover:text-red-300 neon-red-text" : "text-white/70 hover:text-white neon-white-text")}> 
                     <ChevronLeft className="w-4 h-4 mr-1" /> Back
                   </button>
                 </motion.div>
@@ -2172,7 +2172,7 @@ const StepCard = memo(({ number, number2, title, children, actions, className, i
       )}
       
       {!disableEffects && (
-        <div className="pointer-events-none absolute -top-12 right-0 h-24 w-2/3 blur-2xl z-0" style={{background: isXM ? 'linear-gradient(to left, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1), transparent)' : 'linear-gradient(to left, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.1), transparent)'}} />
+        <div className="pointer-events-none absolute -top-12 right-0 h-24 w-2/3 blur-2xl z-0" style={{background: isXM ? 'linear-gradient(to left, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1), transparent)' : 'linear-gradient(to left, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1), transparent)'}} />
       )}
       <div className={cn("pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset z-0", isXM ? "ring-red-500/10" : "ring-blue-500/10")} />
       <div className="flex items-center justify-between mb-3 md:mb-6 relative z-10">
@@ -2279,7 +2279,7 @@ export const EvervaultCardRed = memo(({ text }: { text?: string }) => {
     <div className="w-full h-full flex items-center justify-center bg-transparent" onMouseMove={onMouseMove}>
       <div className="group/card rounded-3xl w-full h-full relative overflow-hidden bg-black/40 flex items-center justify-center" 
            style={{ 
-             boxShadow: '0 0 30px rgba(59, 130, 246, 0.8), 0 0 60px rgba(37, 99, 235, 0.6), inset 0 0 40px rgba(59, 130, 246, 0.3)'
+             boxShadow: '0 0 30px rgba(255, 255, 255, 0.8), 0 0 60px rgba(255, 255, 255, 0.6), inset 0 0 40px rgba(255, 255, 255, 0.3)'
            }}>
         <CardPatternRed mouseX={mouseX} mouseY={mouseY} randomString={randomString} />
         <div className="relative z-10 flex items-center justify-center">
@@ -2304,14 +2304,14 @@ function CardPatternRed({ mouseX, mouseY, randomString }: any) {
         className="absolute inset-0 bg-gradient-to-br from-cyan-400 via-blue-600 to-blue-700 opacity-30 group-hover/card:opacity-90 backdrop-blur-xl transition duration-500" 
         style={{
           ...style,
-          boxShadow: '0 0 40px rgba(34, 211, 238, 0.9), 0 0 80px rgba(59, 130, 246, 0.8), 0 0 120px rgba(37, 99, 235, 0.7), inset 0 0 50px rgba(59, 130, 246, 0.6)'
+          boxShadow: '0 0 40px rgba(255, 255, 255, 0.9), 0 0 80px rgba(255, 255, 255, 0.8), 0 0 120px rgba(255, 255, 255, 0.7), inset 0 0 50px rgba(255, 255, 255, 0.6)'
         }} 
       />
       <motion.div className="absolute inset-0 opacity-20 mix-blend-screen group-hover/card:opacity-60" style={style}>
         <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words font-mono font-bold transition duration-500" 
            style={{
-             color: '#93c5fd',
-             textShadow: '0 0 8px #3b82f6, 0 0 16px #2563eb, 0 0 24px #1d4ed8'
+             color: '#ffffff',
+             textShadow: '0 0 8px #ffffff, 0 0 16px #ffffff, 0 0 24px #ffffff'
            }}>{randomString}</p>
       </motion.div>
     </div>

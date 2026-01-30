@@ -106,7 +106,7 @@ const SceneWrapper = memo<SceneWrapperProps>(({
         />
       ) : (
         <div className="w-full h-full flex items-center justify-center bg-black">
-          <div className="animate-pulse text-blue-400">
+          <div className="animate-pulse text-white">
             Preparing scene...
           </div>
         </div>
@@ -404,28 +404,28 @@ export const DraggableSplitSection = memo<DraggableSplitSectionProps>(({
       {/* Controls */}
       <div className="absolute top-4 left-4 z-[70] flex flex-col gap-2 max-w-[calc(100vw-2rem)]">
         <div className="px-4 py-2 rounded-2xl bg-black/70 border border-white/10 backdrop-blur-md text-white">
-          <div className="text-xs uppercase tracking-wider text-blue-300 font-bold flex items-center gap-2">
-            <Zap size={12} className="text-blue-500" /> Split View
+          <div className="text-xs uppercase tracking-wider text-white font-bold flex items-center gap-2">
+            <Zap size={12} className="text-white" /> Split View
           </div>
           <div className="mt-1 flex items-center gap-3 text-xs">
-            <span className="font-mono text-blue-400">Score {score}</span>
+            <span className="font-mono text-white">Score {score}</span>
           </div>
           <div className="mt-2 flex gap-2">
             <button
               onClick={() => nudgeSplit(isMobile ? -4 : -3)}
               className="min-w-[44px] min-h-[44px] rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all"
             >
-              <ChevronUp size={18} className="text-blue-400" />
+              <ChevronUp size={18} className="text-white" />
             </button>
             <button
               onClick={() => nudgeSplit(isMobile ? 4 : 3)}
               className="min-w-[44px] min-h-[44px] rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all"
             >
-              <ChevronDown size={18} className="text-blue-400" />
+              <ChevronDown size={18} className="text-white" />
             </button>
             <button
               onClick={handleTargetHit}
-              className="flex-1 min-h-[44px] px-4 rounded-lg bg-blue-500/20 border border-blue-500/40 text-sm font-bold text-blue-100 hover:bg-blue-500/30 transition-colors"
+              className="flex-1 min-h-[44px] px-4 rounded-lg bg-white/20 border border-white/40 text-sm font-bold text-white hover:bg-white/30 transition-colors"
             >
               Fire
             </button>
@@ -445,7 +445,7 @@ export const DraggableSplitSection = memo<DraggableSplitSectionProps>(({
         >
           <button
             onClick={handleTargetHit}
-            className="w-16 h-16 rounded-full bg-blue-500/10 border border-blue-500/40 hover:scale-105 transition-transform"
+            className="w-16 h-16 rounded-full bg-white/10 border border-white/40 hover:scale-105 transition-transform"
           >
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-0.5 h-full bg-white/60" />
@@ -491,7 +491,7 @@ export const DraggableSplitSection = memo<DraggableSplitSectionProps>(({
         <div
           className={`${
             isMobile ? 'w-full h-[1px]' : 'w-[1px] h-full'
-          } bg-blue-500/50`}
+          } bg-white/50`}
         />
         <div className="absolute w-12 h-12 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
           {isMobile ? (

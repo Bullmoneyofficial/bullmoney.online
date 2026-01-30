@@ -748,9 +748,9 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
                 className="absolute inset-0"
                 animate={{
                   background: [
-                    'radial-gradient(ellipse at center, rgba(59, 130, 246, 0.08) 0%, transparent 60%)',
-                    'radial-gradient(ellipse at center, rgba(59, 130, 246, 0.12) 0%, transparent 55%)',
-                    'radial-gradient(ellipse at center, rgba(59, 130, 246, 0.08) 0%, transparent 60%)',
+                    'radial-gradient(ellipse at center, rgba(255, 255, 255, 0.08) 0%, transparent 60%)',
+                    'radial-gradient(ellipse at center, rgba(255, 255, 255, 0.12) 0%, transparent 55%)',
+                    'radial-gradient(ellipse at center, rgba(255, 255, 255, 0.08) 0%, transparent 60%)',
                   ]
                 }}
                 transition={shouldSkipHeavyEffects ? {} : {
@@ -766,7 +766,7 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
               <div 
                 className="absolute inset-0"
                 style={{
-                  background: 'radial-gradient(ellipse at center, rgba(59, 130, 246, 0.1) 0%, transparent 60%)',
+                  background: 'radial-gradient(ellipse at center, rgba(255, 255, 255, 0.1) 0%, transparent 60%)',
                 }}
               />
             )}
@@ -775,7 +775,7 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
             <div 
               className="absolute inset-0 opacity-5"
               style={{
-                backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(59, 130, 246, 0.05) 3px, rgba(59, 130, 246, 0.05) 6px)',
+                backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255, 255, 255, 0.05) 3px, rgba(255, 255, 255, 0.05) 6px)',
               }}
             />
             
@@ -802,7 +802,7 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
                   className="absolute text-4xl sm:text-6xl md:text-7xl font-black tracking-widest"
                   style={{
                     color: 'transparent',
-                    WebkitTextStroke: '2px rgba(59, 130, 246, 0.2)',
+                    WebkitTextStroke: '2px rgba(255, 255, 255, 0.2)',
                     filter: 'blur(10px)',
                     transform: 'translate(-2px, -2px)',
                   }}
@@ -813,8 +813,8 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
                   <span 
                     className="relative text-4xl sm:text-6xl md:text-7xl font-black tracking-widest"
                     style={{
-                      color: '#3b82f6',
-                      textShadow: '0 0 20px #3b82f6, 0 0 40px rgba(59, 130, 246, 0.6), 0 0 60px rgba(59, 130, 246, 0.3)',
+                      color: '#ffffff',
+                      textShadow: '0 0 20px #ffffff, 0 0 40px rgba(255, 255, 255, 0.6), 0 0 60px rgba(255, 255, 255, 0.3)',
                     }}
                   >
                     BULLMONEY
@@ -824,9 +824,9 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
                     className="relative text-4xl sm:text-6xl md:text-7xl font-black tracking-widest"
                     animate={shouldSkipHeavyEffects ? {} : {
                       textShadow: [
-                        '0 0 20px #3b82f6, 0 0 40px rgba(59, 130, 246, 0.6), 0 0 60px rgba(59, 130, 246, 0.3)',
-                        '0 0 30px #3b82f6, 0 0 60px rgba(59, 130, 246, 0.7), 0 0 90px rgba(59, 130, 246, 0.4)',
-                        '0 0 20px #3b82f6, 0 0 40px rgba(59, 130, 246, 0.6), 0 0 60px rgba(59, 130, 246, 0.3)',
+                        '0 0 20px #ffffff, 0 0 40px rgba(255, 255, 255, 0.6), 0 0 60px rgba(255, 255, 255, 0.3)',
+                        '0 0 30px #ffffff, 0 0 60px rgba(255, 255, 255, 0.7), 0 0 90px rgba(255, 255, 255, 0.4)',
+                        '0 0 20px #ffffff, 0 0 40px rgba(255, 255, 255, 0.6), 0 0 60px rgba(255, 255, 255, 0.3)',
                       ],
                     }}
                     transition={shouldSkipHeavyEffects ? {} : {
@@ -835,8 +835,8 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
                       ease: 'easeInOut',
                     }}
                     style={{
-                      color: '#3b82f6',
-                      textShadow: shouldSkipHeavyEffects ? '0 0 20px #3b82f6, 0 0 40px rgba(59, 130, 246, 0.6)' : undefined,
+                      color: '#ffffff',
+                      textShadow: shouldSkipHeavyEffects ? '0 0 20px #ffffff, 0 0 40px rgba(255, 255, 255, 0.6)' : undefined,
                     }}
                   >
                     BULLMONEY
@@ -864,13 +864,13 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
                   }
                   className="w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mb-2"
                   style={{
-                    background: 'rgba(59, 130, 246, 0.15)',
-                    border: '2px solid rgba(59, 130, 246, 0.4)',
-                    boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 20px rgba(59, 130, 246, 0.3)',
+                    background: 'rgba(255, 255, 255, 0.15)',
+                    border: '2px solid rgba(255, 255, 255, 0.4)',
+                    boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 20px rgba(255, 255, 255, 0.3)',
                   }}
                 >
                   <svg 
-                    className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500" 
+                    className="w-6 h-6 sm:w-8 sm:h-8 text-white" 
                     fill="none" 
                     viewBox="0 0 24 24" 
                     stroke="currentColor" 
@@ -899,7 +899,7 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
                   className="text-lg sm:text-xl md:text-2xl font-semibold tracking-wide text-center"
                   style={{
                     color: 'rgba(255, 255, 255, 0.9)',
-                    textShadow: '0 0 10px rgba(59, 130, 246, 0.3)',
+                    textShadow: '0 0 10px rgba(255, 255, 255, 0.3)',
                   }}
                 >
                   we boosted the website for you
@@ -916,7 +916,7 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
                   }}
                   className="text-sm sm:text-base font-medium tracking-wider uppercase mt-3"
                   style={{
-                    color: 'rgba(59, 130, 246, 0.7)',
+                    color: 'rgba(255, 255, 255, 0.7)',
                     opacity: shouldSkipHeavyEffects ? 0.7 : undefined,
                   }}
                 >
@@ -943,15 +943,15 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
                     }}
                     className="flex items-center gap-2 px-4 py-2 rounded-full"
                     style={{
-                      background: 'rgba(59, 130, 246, 0.1)',
-                      border: '1px solid rgba(59, 130, 246, 0.2)',
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
                       opacity: (shouldReduceAnimations || shouldSkipHeavyEffects) ? 0.6 : undefined,
                     }}
                   >
-                    <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4zM13 18h-2v-2h2v2zm0-4h-2V9h2v5z"/>
                     </svg>
-                    <span className="text-xs text-blue-500/70 font-medium">battery saver active</span>
+                    <span className="text-xs text-white/70 font-medium">battery saver active</span>
                   </motion.div>
                 </motion.div>
               )}

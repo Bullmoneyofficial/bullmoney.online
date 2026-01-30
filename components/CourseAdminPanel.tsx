@@ -384,8 +384,8 @@ export default function CourseAdminPanel() {
       <div className="w-full">
         {/* Header */}
         <div className="mb-4">
-          <h1 className="text-xl sm:text-3xl font-bold text-blue-400 flex items-center gap-2" style={{ textShadow: '0 0 10px #3b82f6' }}>
-            <BookOpen className="text-blue-400" size={24} style={{ filter: 'drop-shadow(0 0 8px #3b82f6)' }} />
+          <h1 className="text-xl sm:text-3xl font-bold text-white flex items-center gap-2" style={{ textShadow: '0 0 10px #ffffff' }}>
+            <BookOpen className="text-white" size={24} style={{ filter: 'drop-shadow(0 0 8px #ffffff)' }} />
             Course Admin Panel
           </h1>
           <p className="text-gray-400 mt-1 text-xs sm:text-sm">Manage your trading course content</p>
@@ -399,7 +399,7 @@ export default function CourseAdminPanel() {
               onClick={() => setSelectedLevel(level.id)}
               className={`px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
                 selectedLevel === level.id
-                  ? 'bg-blue-500 text-white'
+                  ? 'bg-white text-black'
                   : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
               }`}
             >
@@ -410,12 +410,12 @@ export default function CourseAdminPanel() {
 
         <div className="grid lg:grid-cols-2 gap-3 sm:gap-6">
           {/* Modules Section */}
-          <div className="bg-gradient-to-br from-gray-900/80 to-black border border-blue-500/30 rounded-xl p-3 sm:p-6">
+          <div className="bg-gradient-to-br from-gray-900/80 to-black border border-white/30 rounded-xl p-3 sm:p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg sm:text-2xl font-bold text-blue-400" style={{ textShadow: '0 0 8px #3b82f6' }}>Modules</h2>
+              <h2 className="text-lg sm:text-2xl font-bold text-white" style={{ textShadow: '0 0 8px #ffffff' }}>Modules</h2>
               <button
                 onClick={() => setEditingModule({ title: '', description: '', is_published: false, order_index: modules.length })}
-                className="bg-blue-500 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold hover:bg-blue-400 transition-all flex items-center gap-2"
+                className="bg-white text-black px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold hover:bg-white/80 transition-all flex items-center gap-2"
               >
                 <Plus size={16} />
                 Add Module
@@ -425,7 +425,7 @@ export default function CourseAdminPanel() {
             {/* Module List */}
             <div className="space-y-3 max-h-[50vh] sm:max-h-[600px] overflow-y-auto">
               {modules.map((module) => (
-                <div key={module.id} className="border border-blue-500/30 rounded-lg p-3 sm:p-4">
+                <div key={module.id} className="border border-white/30 rounded-lg p-3 sm:p-4">
                   <div className="flex items-start justify-between">
                     <div 
                       className="flex-1 cursor-pointer"
@@ -437,7 +437,7 @@ export default function CourseAdminPanel() {
                       <div className="flex items-center gap-2 mb-2">
                         <h3 className="font-bold text-white text-sm sm:text-base">{module.title}</h3>
                         {module.is_published ? (
-                          <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Published</span>
+                          <span className="text-xs bg-white/20 text-white px-2 py-1 rounded">Published</span>
                         ) : (
                           <span className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded">Draft</span>
                         )}
@@ -450,7 +450,7 @@ export default function CourseAdminPanel() {
                           e.stopPropagation();
                           setEditingModule(module);
                         }}
-                        className="text-blue-400 hover:text-white p-2"
+                        className="text-white hover:text-white/80 p-2"
                       >
                         <Edit size={18} />
                       </button>
@@ -477,7 +477,7 @@ export default function CourseAdminPanel() {
                   
                   {/* Show lesson count */}
                   {expandedModule === module.id && (
-                    <div className="mt-3 pt-3 border-t border-blue-500/20 text-sm text-gray-400">
+                    <div className="mt-3 pt-3 border-t border-white/20 text-sm text-gray-400">
                       {lessons.filter(l => l.module_id === module.id).length} lessons
                     </div>
                   )}
@@ -488,9 +488,9 @@ export default function CourseAdminPanel() {
             {/* Module Edit Form */}
             {editingModule && (
               <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4">
-                <div className="bg-gray-900 border-2 border-blue-500 rounded-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
-                  <div className="flex items-center justify-between p-4 sm:p-6 pb-3 sm:pb-4 border-b border-blue-500/30">
-                    <h3 className="text-lg sm:text-2xl font-bold text-blue-400" style={{ textShadow: '0 0 8px #3b82f6' }}>
+                <div className="bg-gray-900 border-2 border-white rounded-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
+                  <div className="flex items-center justify-between p-4 sm:p-6 pb-3 sm:pb-4 border-b border-white/30">
+                    <h3 className="text-lg sm:text-2xl font-bold text-white" style={{ textShadow: '0 0 8px #ffffff' }}>
                       {editingModule.id ? 'Edit Module' : 'New Module'}
                     </h3>
                     <button onClick={() => setEditingModule(null)} className="text-gray-400 hover:text-white">
@@ -500,33 +500,33 @@ export default function CourseAdminPanel() {
 
                   <div className="space-y-4 overflow-y-auto flex-1 p-4 sm:p-6">
                     <div>
-                      <label className="block text-sm font-semibold text-blue-400 mb-2">Title</label>
+                      <label className="block text-sm font-semibold text-white mb-2">Title</label>
                       <input
                         type="text"
                         value={editingModule.title || ''}
                         onChange={(e) => setEditingModule({ ...editingModule, title: e.target.value })}
-                        className="w-full bg-black border border-blue-500/30 rounded-lg px-4 py-3 text-white focus:border-blue-400 focus:outline-none"
+                        className="w-full bg-black border border-white/30 rounded-lg px-4 py-3 text-white focus:border-white focus:outline-none"
                         placeholder="Module title"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-blue-400 mb-2">Description</label>
+                      <label className="block text-sm font-semibold text-white mb-2">Description</label>
                       <textarea
                         value={editingModule.description || ''}
                         onChange={(e) => setEditingModule({ ...editingModule, description: e.target.value })}
-                        className="w-full bg-black border border-blue-500/30 rounded-lg px-4 py-3 text-white focus:border-blue-400 focus:outline-none h-24"
+                        className="w-full bg-black border border-white/30 rounded-lg px-4 py-3 text-white focus:border-white focus:outline-none h-24"
                         placeholder="Module description"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-blue-400 mb-2">Order Index</label>
+                      <label className="block text-sm font-semibold text-white mb-2">Order Index</label>
                       <input
                         type="number"
                         value={editingModule.order_index || 0}
                         onChange={(e) => setEditingModule({ ...editingModule, order_index: parseInt(e.target.value) })}
-                        className="w-full bg-black border border-blue-500/30 rounded-lg px-4 py-3 text-white focus:border-blue-400 focus:outline-none"
+                        className="w-full bg-black border border-white/30 rounded-lg px-4 py-3 text-white focus:border-white focus:outline-none"
                       />
                     </div>
 
@@ -535,25 +535,25 @@ export default function CourseAdminPanel() {
                         type="checkbox"
                         checked={editingModule.is_published || false}
                         onChange={(e) => setEditingModule({ ...editingModule, is_published: e.target.checked })}
-                        className="w-5 h-5 accent-blue-500"
+                        className="w-5 h-5 accent-white"
                       />
                       <label className="text-white font-semibold">Published</label>
                     </div>
 
                   </div>
                   
-                  <div className="border-t border-blue-500/30 p-4 bg-gray-900">
+                  <div className="border-t border-white/30 p-4 bg-gray-900">
                     <div className="flex gap-3">
                       <button
                         onClick={saveModule}
-                        className="flex-1 bg-blue-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-400 transition-all flex items-center justify-center gap-2"
+                        className="flex-1 bg-white text-white px-6 py-3 rounded-lg font-bold hover:bg-white/80 transition-all flex items-center justify-center gap-2"
                       >
                         <Save size={20} />
                         Save Module
                       </button>
                       <button
                         onClick={() => setEditingModule(null)}
-                        className="px-6 py-3 border border-blue-500/30 rounded-lg text-white hover:border-blue-400 transition-all"
+                        className="px-6 py-3 border border-white/30 rounded-lg text-white hover:border-white transition-all"
                       >
                         Cancel
                       </button>
@@ -565,9 +565,9 @@ export default function CourseAdminPanel() {
           </div>
 
           {/* Lessons Section */}
-          <div className="bg-gradient-to-br from-gray-900/80 to-black border border-blue-500/30 rounded-xl p-3 sm:p-6">
+          <div className="bg-gradient-to-br from-gray-900/80 to-black border border-white/30 rounded-xl p-3 sm:p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg sm:text-2xl font-bold text-blue-400" style={{ textShadow: '0 0 8px #3b82f6' }}>Lessons</h2>
+              <h2 className="text-lg sm:text-2xl font-bold text-white" style={{ textShadow: '0 0 8px #ffffff' }}>Lessons</h2>
               <button
                 onClick={() => selectedModule && setEditingLesson({ 
                   title: '', 
@@ -578,7 +578,7 @@ export default function CourseAdminPanel() {
                   order_index: lessons.length 
                 })}
                 disabled={!selectedModule}
-                className="bg-blue-500 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold hover:bg-blue-400 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-white text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold hover:bg-white/80 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Plus size={16} />
                 Add Lesson
@@ -592,18 +592,18 @@ export default function CourseAdminPanel() {
             ) : (
               <div className="space-y-3 max-h-[50vh] sm:max-h-[600px] overflow-y-auto">
                 {lessons.map((lesson) => (
-                  <div key={lesson.id} className="border border-blue-500/30 rounded-lg p-3 sm:p-4">
+                  <div key={lesson.id} className="border border-white/30 rounded-lg p-3 sm:p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <h3 className="font-bold text-white text-sm sm:text-base">{lesson.title}</h3>
                           {lesson.is_published ? (
-                            <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Published</span>
+                            <span className="text-xs bg-white/20 text-white px-2 py-1 rounded">Published</span>
                           ) : (
                             <span className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded">Draft</span>
                           )}
                           {lesson.is_free && (
-                            <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">Free</span>
+                            <span className="text-xs bg-white/20 text-white px-2 py-1 rounded">Free</span>
                           )}
                         </div>
                         <p className="text-xs sm:text-sm text-gray-400 mb-2">{lesson.description}</p>
@@ -618,7 +618,7 @@ export default function CourseAdminPanel() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => setEditingLesson(lesson)}
-                          className="text-blue-400 hover:text-white p-2"
+                          className="text-white hover:text-white p-2"
                         >
                           <Edit size={18} />
                         </button>
@@ -638,9 +638,9 @@ export default function CourseAdminPanel() {
             {/* Lesson Edit Form */}
             {editingLesson && (
               <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4">
-                <div className="bg-gray-900 border-2 border-blue-500 rounded-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
-                  <div className="flex items-center justify-between p-4 sm:p-6 pb-3 sm:pb-4 border-b border-blue-500/30">
-                    <h3 className="text-lg sm:text-2xl font-bold text-blue-400" style={{ textShadow: '0 0 8px #3b82f6' }}>
+                <div className="bg-gray-900 border-2 border-white rounded-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
+                  <div className="flex items-center justify-between p-4 sm:p-6 pb-3 sm:pb-4 border-b border-white/30">
+                    <h3 className="text-lg sm:text-2xl font-bold text-white" style={{ textShadow: '0 0 8px #ffffff' }}>
                       {editingLesson.id ? 'Edit Lesson' : 'New Lesson'}
                     </h3>
                     <button onClick={() => setEditingLesson(null)} className="text-gray-400 hover:text-white">
@@ -650,33 +650,33 @@ export default function CourseAdminPanel() {
 
                   <div className="space-y-4 overflow-y-auto flex-1 p-4 sm:p-6">
                     <div>
-                      <label className="block text-sm font-semibold text-blue-400 mb-2">Title</label>
+                      <label className="block text-sm font-semibold text-white mb-2">Title</label>
                       <input
                         type="text"
                         value={editingLesson.title || ''}
                         onChange={(e) => setEditingLesson({ ...editingLesson, title: e.target.value })}
-                        className="w-full bg-black border border-blue-500/30 rounded-lg px-4 py-3 text-white focus:border-blue-400 focus:outline-none"
+                        className="w-full bg-black border border-white/30 rounded-lg px-4 py-3 text-white focus:border-white focus:outline-none"
                         placeholder="Lesson title"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-blue-400 mb-2">Description</label>
+                      <label className="block text-sm font-semibold text-white mb-2">Description</label>
                       <textarea
                         value={editingLesson.description || ''}
                         onChange={(e) => setEditingLesson({ ...editingLesson, description: e.target.value })}
-                        className="w-full bg-black border border-blue-500/30 rounded-lg px-4 py-3 text-white focus:border-blue-400 focus:outline-none h-20"
+                        className="w-full bg-black border border-white/30 rounded-lg px-4 py-3 text-white focus:border-white focus:outline-none h-20"
                         placeholder="Lesson description"
                       />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-semibold text-blue-400 mb-2">Content Type</label>
+                        <label className="block text-sm font-semibold text-white mb-2">Content Type</label>
                         <select
                           value={editingLesson.content_type || 'video'}
                           onChange={(e) => setEditingLesson({ ...editingLesson, content_type: e.target.value })}
-                          className="w-full bg-black border border-blue-500/30 rounded-lg px-4 py-3 text-white focus:border-blue-400 focus:outline-none"
+                          className="w-full bg-black border border-white/30 rounded-lg px-4 py-3 text-white focus:border-white focus:outline-none"
                         >
                           <option value="video">Video</option>
                           <option value="article">Article</option>
@@ -686,19 +686,19 @@ export default function CourseAdminPanel() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-blue-400 mb-2">Duration (minutes)</label>
+                        <label className="block text-sm font-semibold text-white mb-2">Duration (minutes)</label>
                         <input
                           type="number"
                           value={editingLesson.duration_minutes || ''}
                           onChange={(e) => setEditingLesson({ ...editingLesson, duration_minutes: parseInt(e.target.value) || null })}
-                          className="w-full bg-black border border-blue-500/30 rounded-lg px-4 py-3 text-white focus:border-blue-400 focus:outline-none"
+                          className="w-full bg-black border border-white/30 rounded-lg px-4 py-3 text-white focus:border-white focus:outline-none"
                           placeholder="30"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-blue-400 mb-2 flex items-center gap-2">
+                      <label className="block text-sm font-semibold text-white mb-2 flex items-center gap-2">
                         <LinkIcon size={16} />
                         Video URL (YouTube/Vimeo embed)
                       </label>
@@ -706,29 +706,29 @@ export default function CourseAdminPanel() {
                         type="text"
                         value={editingLesson.video_url || ''}
                         onChange={(e) => setEditingLesson({ ...editingLesson, video_url: e.target.value })}
-                        className="w-full bg-black border border-blue-500/30 rounded-lg px-4 py-3 text-white focus:border-blue-400 focus:outline-none"
+                        className="w-full bg-black border border-white/30 rounded-lg px-4 py-3 text-white focus:border-white focus:outline-none"
                         placeholder="https://www.youtube.com/embed/..."
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-blue-400 mb-2">Article Content</label>
+                      <label className="block text-sm font-semibold text-white mb-2">Article Content</label>
                       <textarea
                         value={editingLesson.article_content || ''}
                         onChange={(e) => setEditingLesson({ ...editingLesson, article_content: e.target.value })}
-                        className="w-full bg-black border border-blue-500/30 rounded-lg px-4 py-3 text-white focus:border-blue-400 focus:outline-none h-32 font-mono text-sm"
+                        className="w-full bg-black border border-white/30 rounded-lg px-4 py-3 text-white focus:border-white focus:outline-none h-32 font-mono text-sm"
                         placeholder="Lesson content (supports HTML)"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-blue-400 mb-2 flex items-center gap-2">
+                      <label className="block text-sm font-semibold text-white mb-2 flex items-center gap-2">
                         <ImageIcon size={16} />
                         Images
                       </label>
                       <div className="space-y-2">
                         {editingLesson.image_urls?.map((url, index) => (
-                          <div key={index} className="flex items-center gap-2 bg-black border border-blue-500/30 rounded-lg p-2">
+                          <div key={index} className="flex items-center gap-2 bg-black border border-white/30 rounded-lg p-2">
                             <img src={url} alt="" className="w-16 h-16 object-cover rounded" />
                             <span className="flex-1 text-sm text-gray-400 truncate">{url}</span>
                             <button
@@ -743,9 +743,9 @@ export default function CourseAdminPanel() {
                             </button>
                           </div>
                         ))}
-                        <label className="flex items-center justify-center gap-2 bg-black border-2 border-dashed border-blue-500/30 hover:border-blue-400 rounded-lg p-4 cursor-pointer transition-all">
-                          <Upload size={20} className="text-blue-400" style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
-                          <span className="text-blue-400 font-semibold" style={{ textShadow: '0 0 4px #3b82f6' }}>
+                        <label className="flex items-center justify-center gap-2 bg-black border-2 border-dashed border-white/30 hover:border-white rounded-lg p-4 cursor-pointer transition-all">
+                          <Upload size={20} className="text-white" style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }} />
+                          <span className="text-white font-semibold" style={{ textShadow: '0 0 4px #ffffff' }}>
                             {uploading ? 'Uploading...' : 'Upload Image'}
                           </span>
                           <input
@@ -761,12 +761,12 @@ export default function CourseAdminPanel() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-semibold text-blue-400 mb-2">Order Index</label>
+                        <label className="block text-sm font-semibold text-white mb-2">Order Index</label>
                         <input
                           type="number"
                           value={editingLesson.order_index || 0}
                           onChange={(e) => setEditingLesson({ ...editingLesson, order_index: parseInt(e.target.value) })}
-                          className="w-full bg-black border border-blue-500/30 rounded-lg px-4 py-3 text-white focus:border-blue-400 focus:outline-none"
+                          className="w-full bg-black border border-white/30 rounded-lg px-4 py-3 text-white focus:border-white focus:outline-none"
                         />
                       </div>
                     </div>
@@ -777,7 +777,7 @@ export default function CourseAdminPanel() {
                           type="checkbox"
                           checked={editingLesson.is_published || false}
                           onChange={(e) => setEditingLesson({ ...editingLesson, is_published: e.target.checked })}
-                          className="w-5 h-5 accent-blue-500"
+                          className="w-5 h-5 accent-white"
                         />
                         <label className="text-white font-semibold">Published</label>
                       </div>
@@ -786,7 +786,7 @@ export default function CourseAdminPanel() {
                           type="checkbox"
                           checked={editingLesson.is_free || false}
                           onChange={(e) => setEditingLesson({ ...editingLesson, is_free: e.target.checked })}
-                          className="w-5 h-5 accent-blue-500"
+                          className="w-5 h-5 accent-white"
                         />
                         <label className="text-white font-semibold">Free Preview</label>
                       </div>
@@ -795,12 +795,12 @@ export default function CourseAdminPanel() {
                     {/* Resources + Quizzes */}
                     {editingLesson.id ? (
                       <div className="pt-2">
-                        <div className="border-t border-blue-500/20 pt-4">
+                        <div className="border-t border-white/20 pt-4">
                           <div className="flex items-center justify-between gap-3 mb-3">
-                            <h4 className="text-lg font-bold text-blue-400" style={{ textShadow: '0 0 6px #3b82f6' }}>Lesson Resources</h4>
+                            <h4 className="text-lg font-bold text-white" style={{ textShadow: '0 0 6px #ffffff' }}>Lesson Resources</h4>
                             <button
                               onClick={() => setEditingResource({ title: '', description: '', resource_type: 'pdf', file_url: '', file_size_kb: null })}
-                              className="bg-blue-500/20 text-blue-400 px-3 py-2 rounded-lg font-semibold hover:bg-blue-500/30 transition-all flex items-center gap-2"
+                              className="bg-white/20 text-white px-3 py-2 rounded-lg font-semibold hover:bg-white/30 transition-all flex items-center gap-2"
                             >
                               <Plus size={18} />
                               Add Resource
@@ -808,13 +808,13 @@ export default function CourseAdminPanel() {
                           </div>
 
                           {lessonResources.length === 0 ? (
-                            <div className="text-sm text-gray-400 bg-black/40 border border-blue-500/20 rounded-lg p-3">
+                            <div className="text-sm text-gray-400 bg-black/40 border border-white/20 rounded-lg p-3">
                               No resources yet for this lesson.
                             </div>
                           ) : (
                             <div className="space-y-2">
                               {lessonResources.map((r) => (
-                                <div key={r.id} className="flex items-start gap-3 bg-black border border-blue-500/20 rounded-lg p-3">
+                                <div key={r.id} className="flex items-start gap-3 bg-black border border-white/20 rounded-lg p-3">
                                   <div className="flex-1 min-w-0">
                                     <div className="text-white font-semibold truncate">{r.title}</div>
                                     {r.description && <div className="text-xs text-gray-400 mt-0.5">{r.description}</div>}
@@ -823,7 +823,7 @@ export default function CourseAdminPanel() {
                                   <div className="flex gap-2">
                                     <button
                                       onClick={() => setEditingResource(r)}
-                                      className="text-blue-400 hover:text-white p-2"
+                                      className="text-white hover:text-white p-2"
                                     >
                                       <Edit size={18} />
                                     </button>
@@ -840,7 +840,7 @@ export default function CourseAdminPanel() {
                           )}
 
                           {editingResource && (
-                            <div className="mt-3 bg-black/60 border border-blue-500/30 rounded-xl p-4">
+                            <div className="mt-3 bg-black/60 border border-white/30 rounded-xl p-4">
                               <div className="flex items-center justify-between mb-3">
                                 <div className="text-white font-bold">{editingResource.id ? 'Edit Resource' : 'New Resource'}</div>
                                 <button onClick={() => setEditingResource(null)} className="text-gray-400 hover:text-white">
@@ -850,20 +850,20 @@ export default function CourseAdminPanel() {
 
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <div>
-                                  <label className="block text-sm font-semibold text-blue-400 mb-1">Title</label>
+                                  <label className="block text-sm font-semibold text-white mb-1">Title</label>
                                   <input
                                     type="text"
                                     value={editingResource.title || ''}
                                     onChange={(e) => setEditingResource({ ...editingResource, title: e.target.value })}
-                                    className="w-full bg-black border border-blue-500/30 rounded-lg px-3 py-2 text-white focus:border-blue-400 focus:outline-none"
+                                    className="w-full bg-black border border-white/30 rounded-lg px-3 py-2 text-white focus:border-white focus:outline-none"
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-sm font-semibold text-blue-400 mb-1">Type</label>
+                                  <label className="block text-sm font-semibold text-white mb-1">Type</label>
                                   <select
                                     value={editingResource.resource_type || 'pdf'}
                                     onChange={(e) => setEditingResource({ ...editingResource, resource_type: e.target.value })}
-                                    className="w-full bg-black border border-blue-500/30 rounded-lg px-3 py-2 text-white focus:border-blue-400 focus:outline-none"
+                                    className="w-full bg-black border border-white/30 rounded-lg px-3 py-2 text-white focus:border-white focus:outline-none"
                                   >
                                     <option value="pdf">PDF</option>
                                     <option value="template">Template</option>
@@ -873,30 +873,30 @@ export default function CourseAdminPanel() {
                                   </select>
                                 </div>
                                 <div className="md:col-span-2">
-                                  <label className="block text-sm font-semibold text-blue-400 mb-1">File URL</label>
+                                  <label className="block text-sm font-semibold text-white mb-1">File URL</label>
                                   <input
                                     type="text"
                                     value={editingResource.file_url || ''}
                                     onChange={(e) => setEditingResource({ ...editingResource, file_url: e.target.value })}
-                                    className="w-full bg-black border border-blue-500/30 rounded-lg px-3 py-2 text-white focus:border-blue-400 focus:outline-none"
+                                    className="w-full bg-black border border-white/30 rounded-lg px-3 py-2 text-white focus:border-white focus:outline-none"
                                     placeholder="https://..."
                                   />
                                 </div>
                                 <div className="md:col-span-2">
-                                  <label className="block text-sm font-semibold text-blue-400 mb-1">Description</label>
+                                  <label className="block text-sm font-semibold text-white mb-1">Description</label>
                                   <textarea
                                     value={editingResource.description || ''}
                                     onChange={(e) => setEditingResource({ ...editingResource, description: e.target.value })}
-                                    className="w-full bg-black border border-blue-500/30 rounded-lg px-3 py-2 text-white focus:border-blue-400 focus:outline-none h-20"
+                                    className="w-full bg-black border border-white/30 rounded-lg px-3 py-2 text-white focus:border-white focus:outline-none h-20"
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-sm font-semibold text-blue-400 mb-1">File Size (KB)</label>
+                                  <label className="block text-sm font-semibold text-white mb-1">File Size (KB)</label>
                                   <input
                                     type="number"
                                     value={editingResource.file_size_kb ?? ''}
                                     onChange={(e) => setEditingResource({ ...editingResource, file_size_kb: parseInt(e.target.value) || null })}
-                                    className="w-full bg-black border border-blue-500/30 rounded-lg px-3 py-2 text-white focus:border-blue-400 focus:outline-none"
+                                    className="w-full bg-black border border-white/30 rounded-lg px-3 py-2 text-white focus:border-white focus:outline-none"
                                   />
                                 </div>
                               </div>
@@ -904,13 +904,13 @@ export default function CourseAdminPanel() {
                               <div className="flex gap-3 mt-4">
                                 <button
                                   onClick={saveResource}
-                                  className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-400 transition-all"
+                                  className="flex-1 bg-white text-white px-4 py-2 rounded-lg font-bold hover:bg-white/80 transition-all"
                                 >
                                   Save Resource
                                 </button>
                                 <button
                                   onClick={() => setEditingResource(null)}
-                                  className="px-4 py-2 border border-blue-500/30 rounded-lg text-white hover:border-blue-400 transition-all"
+                                  className="px-4 py-2 border border-white/30 rounded-lg text-white hover:border-white transition-all"
                                 >
                                   Cancel
                                 </button>
@@ -919,15 +919,15 @@ export default function CourseAdminPanel() {
                           )}
                         </div>
 
-                        <div className="border-t border-blue-500/20 pt-4 mt-5">
+                        <div className="border-t border-white/20 pt-4 mt-5">
                           <div className="flex items-center justify-between gap-3 mb-3">
-                            <h4 className="text-lg font-bold text-blue-400" style={{ textShadow: '0 0 6px #3b82f6' }}>Lesson Quizzes</h4>
+                            <h4 className="text-lg font-bold text-white" style={{ textShadow: '0 0 6px #ffffff' }}>Lesson Quizzes</h4>
                             <button
                               onClick={() => {
                                 setEditingQuiz({ question: '', explanation: '', correct_answer: 0, order_index: lessonQuizzes.length + 1 });
                                 setQuizOptionsText('');
                               }}
-                              className="bg-blue-500/20 text-blue-400 px-3 py-2 rounded-lg font-semibold hover:bg-blue-500/30 transition-all flex items-center gap-2"
+                              className="bg-white/20 text-white px-3 py-2 rounded-lg font-semibold hover:bg-white/30 transition-all flex items-center gap-2"
                             >
                               <Plus size={18} />
                               Add Quiz
@@ -935,13 +935,13 @@ export default function CourseAdminPanel() {
                           </div>
 
                           {lessonQuizzes.length === 0 ? (
-                            <div className="text-sm text-gray-400 bg-black/40 border border-blue-500/20 rounded-lg p-3">
+                            <div className="text-sm text-gray-400 bg-black/40 border border-white/20 rounded-lg p-3">
                               No quizzes yet for this lesson.
                             </div>
                           ) : (
                             <div className="space-y-2">
                               {lessonQuizzes.map((q) => (
-                                <div key={q.id} className="flex items-start gap-3 bg-black border border-blue-500/20 rounded-lg p-3">
+                                <div key={q.id} className="flex items-start gap-3 bg-black border border-white/20 rounded-lg p-3">
                                   <div className="flex-1 min-w-0">
                                     <div className="text-white font-semibold">{q.order_index}. {q.question}</div>
                                     <div className="text-xs text-gray-400 mt-1">Options: {q.options?.length ?? 0} · Correct: {q.correct_answer}</div>
@@ -952,7 +952,7 @@ export default function CourseAdminPanel() {
                                         setEditingQuiz(q);
                                         setQuizOptionsText((q.options || []).join('\n'));
                                       }}
-                                      className="text-blue-400 hover:text-white p-2"
+                                      className="text-white hover:text-white p-2"
                                     >
                                       <Edit size={18} />
                                     </button>
@@ -969,7 +969,7 @@ export default function CourseAdminPanel() {
                           )}
 
                           {editingQuiz && (
-                            <div className="mt-3 bg-black/60 border border-blue-500/30 rounded-xl p-4">
+                            <div className="mt-3 bg-black/60 border border-white/30 rounded-xl p-4">
                               <div className="flex items-center justify-between mb-3">
                                 <div className="text-white font-bold">{editingQuiz.id ? 'Edit Quiz' : 'New Quiz'}</div>
                                 <button onClick={() => setEditingQuiz(null)} className="text-gray-400 hover:text-white">
@@ -979,64 +979,64 @@ export default function CourseAdminPanel() {
 
                               <div className="space-y-3">
                                 <div>
-                                  <label className="block text-sm font-semibold text-blue-400 mb-1">Question</label>
+                                  <label className="block text-sm font-semibold text-white mb-1">Question</label>
                                   <textarea
                                     value={editingQuiz.question || ''}
                                     onChange={(e) => setEditingQuiz({ ...editingQuiz, question: e.target.value })}
-                                    className="w-full bg-black border border-blue-500/30 rounded-lg px-3 py-2 text-white focus:border-blue-400 focus:outline-none h-20"
+                                    className="w-full bg-black border border-white/30 rounded-lg px-3 py-2 text-white focus:border-white focus:outline-none h-20"
                                   />
                                 </div>
 
                                 <div>
-                                  <label className="block text-sm font-semibold text-blue-400 mb-1">Options (one per line)</label>
+                                  <label className="block text-sm font-semibold text-white mb-1">Options (one per line)</label>
                                   <textarea
                                     value={quizOptionsText}
                                     onChange={(e) => setQuizOptionsText(e.target.value)}
-                                    className="w-full bg-black border border-blue-500/30 rounded-lg px-3 py-2 text-white focus:border-blue-400 focus:outline-none h-24 font-mono text-sm"
+                                    className="w-full bg-black border border-white/30 rounded-lg px-3 py-2 text-white focus:border-white focus:outline-none h-24 font-mono text-sm"
                                     placeholder="Option 1\nOption 2\nOption 3"
                                   />
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3">
                                   <div>
-                                    <label className="block text-sm font-semibold text-blue-400 mb-1">Correct Answer Index (0-based)</label>
+                                    <label className="block text-sm font-semibold text-white mb-1">Correct Answer Index (0-based)</label>
                                     <input
                                       type="number"
                                       value={editingQuiz.correct_answer ?? 0}
                                       onChange={(e) => setEditingQuiz({ ...editingQuiz, correct_answer: parseInt(e.target.value) || 0 })}
-                                      className="w-full bg-black border border-blue-500/30 rounded-lg px-3 py-2 text-white focus:border-blue-400 focus:outline-none"
+                                      className="w-full bg-black border border-white/30 rounded-lg px-3 py-2 text-white focus:border-white focus:outline-none"
                                     />
                                   </div>
                                   <div>
-                                    <label className="block text-sm font-semibold text-blue-400 mb-1">Order Index</label>
+                                    <label className="block text-sm font-semibold text-white mb-1">Order Index</label>
                                     <input
                                       type="number"
                                       value={editingQuiz.order_index ?? 1}
                                       onChange={(e) => setEditingQuiz({ ...editingQuiz, order_index: parseInt(e.target.value) || 1 })}
-                                      className="w-full bg-black border border-blue-500/30 rounded-lg px-3 py-2 text-white focus:border-blue-400 focus:outline-none"
+                                      className="w-full bg-black border border-white/30 rounded-lg px-3 py-2 text-white focus:border-white focus:outline-none"
                                     />
                                   </div>
                                 </div>
 
                                 <div>
-                                  <label className="block text-sm font-semibold text-blue-400 mb-1">Explanation</label>
+                                  <label className="block text-sm font-semibold text-white mb-1">Explanation</label>
                                   <textarea
                                     value={editingQuiz.explanation || ''}
                                     onChange={(e) => setEditingQuiz({ ...editingQuiz, explanation: e.target.value })}
-                                    className="w-full bg-black border border-blue-500/30 rounded-lg px-3 py-2 text-white focus:border-blue-400 focus:outline-none h-20"
+                                    className="w-full bg-black border border-white/30 rounded-lg px-3 py-2 text-white focus:border-white focus:outline-none h-20"
                                   />
                                 </div>
 
                                 <div className="flex gap-3 pt-1">
                                   <button
                                     onClick={saveQuiz}
-                                    className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-400 transition-all"
+                                    className="flex-1 bg-white text-white px-4 py-2 rounded-lg font-bold hover:bg-white/80 transition-all"
                                   >
                                     Save Quiz
                                   </button>
                                   <button
                                     onClick={() => setEditingQuiz(null)}
-                                    className="px-4 py-2 border border-blue-500/30 rounded-lg text-white hover:border-blue-400 transition-all"
+                                    className="px-4 py-2 border border-white/30 rounded-lg text-white hover:border-white transition-all"
                                   >
                                     Cancel
                                   </button>
@@ -1047,8 +1047,8 @@ export default function CourseAdminPanel() {
                         </div>
                       </div>
                     ) : (
-                      <div className="border-t border-blue-500/20 pt-4">
-                        <div className="text-sm text-gray-400 bg-black/40 border border-blue-500/20 rounded-lg p-3">
+                      <div className="border-t border-white/20 pt-4">
+                        <div className="text-sm text-gray-400 bg-black/40 border border-white/20 rounded-lg p-3">
                           Save the lesson first to add resources and quiz questions.
                         </div>
                       </div>
@@ -1056,18 +1056,18 @@ export default function CourseAdminPanel() {
 
                   </div>
                   
-                  <div className="border-t border-blue-500/30 p-4 bg-gray-900">
+                  <div className="border-t border-white/30 p-4 bg-gray-900">
                     <div className="flex gap-3">
                       <button
                         onClick={saveLesson}
-                        className="flex-1 bg-blue-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-400 transition-all flex items-center justify-center gap-2"
+                        className="flex-1 bg-white text-white px-6 py-3 rounded-lg font-bold hover:bg-white/80 transition-all flex items-center justify-center gap-2"
                       >
                         <Save size={20} />
                         Save Lesson
                       </button>
                       <button
                         onClick={() => setEditingLesson(null)}
-                        className="px-6 py-3 border border-blue-500/30 rounded-lg text-white hover:border-blue-400 transition-all"
+                        className="px-6 py-3 border border-white/30 rounded-lg text-white hover:border-white transition-all"
                       >
                         Cancel
                       </button>

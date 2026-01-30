@@ -31,7 +31,7 @@ const providerLabels: Record<MusicProvider, string> = {
 };
 
 const providerColors: Record<MusicProvider, { bg: string; border: string; text: string }> = {
-  SPOTIFY: { bg: "bg-green-500/20", border: "border-green-500/30", text: "text-green-300" },
+  SPOTIFY: { bg: "bg-white/20", border: "border-white/30", text: "text-white" },
   APPLE_MUSIC: { bg: "bg-pink-500/20", border: "border-pink-500/30", text: "text-pink-300" },
   YOUTUBE: { bg: "bg-red-500/20", border: "border-red-500/30", text: "text-red-300" },
 };
@@ -242,12 +242,12 @@ export function MusicEmbedModal({
             <div className="relative flex items-center px-5 sm:px-8 py-5 sm:py-6 border-b border-white/10 shrink-0">
               {/* Glow */}
               <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                <div className="absolute -top-10 left-1/3 h-24 w-24 rounded-full bg-blue-500/20 blur-3xl" />
-                <div className="absolute -top-10 right-1/3 h-20 w-20 rounded-full bg-purple-500/15 blur-3xl" />
+                <div className="absolute -top-10 left-1/3 h-24 w-24 rounded-full bg-white/20 blur-3xl" />
+                <div className="absolute -top-10 right-1/3 h-20 w-20 rounded-full bg-white/15 blur-3xl" />
               </div>
 
               <div className="flex items-center gap-4 min-w-0">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-white/20 to-white/20 border border-white/10 flex items-center justify-center">
                   <IconMusic className="w-6 h-6 sm:w-7 sm:h-7 text-white/80" />
                 </div>
                 <div className="min-w-0">
@@ -278,7 +278,7 @@ export function MusicEmbedModal({
                     <div className="flex items-center gap-3">
                       <div className={cn(
                         "w-3 h-3 rounded-full",
-                        spotifyConnected ? "bg-green-400 shadow-[0_0_12px_rgba(74,222,128,0.6)]" : "bg-white/20"
+                        spotifyConnected ? "bg-white shadow-[0_0_12px_rgba(255,255,255,0.6)]" : "bg-white/20"
                       )} />
                       <span className="text-sm sm:text-base text-white/70">
                         {spotifyStatusText}
@@ -290,7 +290,7 @@ export function MusicEmbedModal({
                           SoundEffects.click();
                           window.location.href = "/api/spotify/login";
                         }}
-                        className="h-11 sm:h-12 px-5 sm:px-6 rounded-xl bg-green-500/20 border border-green-500/30 text-sm font-medium text-green-300 hover:bg-green-500/30 transition-colors"
+                        className="h-11 sm:h-12 px-5 sm:px-6 rounded-xl bg-white/20 border border-white/30 text-sm font-medium text-white hover:bg-white/30 transition-colors"
                         type="button"
                       >
                         Connect Spotify
@@ -459,7 +459,7 @@ export function MusicEmbedModal({
                 <div className="flex items-center gap-3">
                   <div className={cn(
                     "w-2 h-2 rounded-full animate-pulse",
-                    provider === "SPOTIFY" && "bg-green-400",
+                    provider === "SPOTIFY" && "bg-white",
                     provider === "APPLE_MUSIC" && "bg-pink-400",
                     provider === "YOUTUBE" && "bg-red-400",
                   )} />

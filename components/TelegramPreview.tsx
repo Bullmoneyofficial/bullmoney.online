@@ -73,10 +73,10 @@ export function TelegramPreview({ limit = 3, onViewMore }: TelegramPreviewProps)
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              className="bg-white/5 hover:bg-white/10 rounded-lg p-3 border border-white/10 hover:border-blue-500/30 transition-all cursor-pointer group"
+              className="bg-white/5 hover:bg-white/10 rounded-lg p-3 border border-white/10 hover:border-white/30 transition-all cursor-pointer group"
             >
               <div className="flex items-start gap-2">
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-white to-white flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                   {message.author.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -97,7 +97,7 @@ export function TelegramPreview({ limit = 3, onViewMore }: TelegramPreviewProps)
           {onViewMore && (
             <button
               onClick={onViewMore}
-              className="w-full mt-3 flex items-center justify-center gap-1 py-2 px-3 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 hover:text-blue-300 text-xs font-semibold transition-colors border border-blue-500/20"
+              className="w-full mt-3 flex items-center justify-center gap-1 py-2 px-3 rounded-lg bg-white/20 hover:bg-white/30 text-white hover:text-white text-xs font-semibold transition-colors border border-white/20"
             >
               View all messages
               <ChevronRight className="w-3 h-3" />

@@ -178,7 +178,7 @@ function Form() {
                 <button
                   type="button"
                   onClick={() => { setLegalModalTab('terms'); setIsLegalModalOpen(true); }}
-                  className="text-neutral-500 dark:text-neutral-300 hover:text-blue-500 dark:hover:text-blue-400 underline underline-offset-2 transition-colors"
+                  className="text-neutral-500 dark:text-neutral-300 hover:text-white dark:hover:text-white underline underline-offset-2 transition-colors"
                 >
                   Terms of Service
                 </button>{" "}
@@ -186,7 +186,7 @@ function Form() {
                 <button
                   type="button"
                   onClick={() => { setLegalModalTab('privacy'); setIsLegalModalOpen(true); }}
-                  className="text-neutral-500 dark:text-neutral-300 hover:text-blue-500 dark:hover:text-blue-400 underline underline-offset-2 transition-colors"
+                  className="text-neutral-500 dark:text-neutral-300 hover:text-white dark:hover:text-white underline underline-offset-2 transition-colors"
                 >
                   Privacy Policy
                 </button>

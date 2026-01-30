@@ -20,10 +20,10 @@ import { useAuthModalUI } from '@/contexts/UIStateContext';
 
 // Market badge colors
 const marketColors: Record<string, string> = {
-  forex: 'bg-green-500/90',
+  forex: 'bg-white/90',
   crypto: 'bg-orange-500/90',
-  stocks: 'bg-blue-500/90',
-  indices: 'bg-purple-500/90',
+  stocks: 'bg-white/90',
+  indices: 'bg-white/90',
 };
 
 // Content type badges
@@ -103,7 +103,7 @@ export const FeedCard = memo(({
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
       onClick={handleClick}
-      className="group cursor-pointer rounded-2xl bg-gradient-to-b from-neutral-900/90 to-black/90 border border-neutral-800/50 hover:border-blue-500/30 overflow-hidden transition-all duration-300"
+      className="group cursor-pointer rounded-2xl bg-gradient-to-b from-neutral-900/90 to-black/90 border border-neutral-800/50 hover:border-white/30 overflow-hidden transition-all duration-300"
     >
       {/* Chart/Image Section */}
       <div className="relative aspect-[16/10] bg-neutral-900 overflow-hidden">
@@ -126,11 +126,11 @@ export const FeedCard = memo(({
         
         {/* Market & Direction Badges */}
         <div className="absolute top-3 left-3 flex items-center gap-2">
-          <span className={`px-2 py-1 rounded-lg text-xs font-bold uppercase text-white ${marketColors[analysis.market] || 'bg-blue-500'}`}>
+          <span className={`px-2 py-1 rounded-lg text-xs font-bold uppercase ${marketColors[analysis.market] === 'bg-orange-500/90' ? 'text-white bg-orange-500/90' : 'text-black bg-white/90'}`}>
             {analysis.market}
           </span>
           {analysis.direction === 'bullish' && (
-            <span className="px-2 py-1 rounded-lg bg-green-500/90 text-white text-xs font-bold flex items-center gap-1">
+            <span className="px-2 py-1 rounded-lg bg-white/90 text-black text-xs font-bold flex items-center gap-1">
               <TrendingUp className="w-3 h-3" /> LONG
             </span>
           )}
@@ -144,7 +144,7 @@ export const FeedCard = memo(({
         {/* Pro Badge */}
         {analysis.is_pro_only && (
           <div className="absolute top-3 right-3">
-            <span className="px-2 py-1 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold flex items-center gap-1">
+            <span className="px-2 py-1 rounded-lg bg-gradient-to-r from-white to-pink-500 text-white text-xs font-bold flex items-center gap-1">
               <Lock className="w-3 h-3" /> PRO
             </span>
           </div>
@@ -156,7 +156,7 @@ export const FeedCard = memo(({
             {displayTickers.map((ticker) => (
               <span 
                 key={ticker}
-                className="px-2 py-1 rounded-lg bg-black/60 backdrop-blur-sm text-blue-400 text-xs font-mono font-bold"
+                className="px-2 py-1 rounded-lg bg-black/60 backdrop-blur-sm text-white text-xs font-mono font-bold"
               >
                 ${ticker}
               </span>
@@ -177,7 +177,7 @@ export const FeedCard = memo(({
         {/* Author Row */}
         {author && (
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center overflow-hidden">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-white to-white flex items-center justify-center overflow-hidden">
               {author.avatar_url ? (
                 <img src={author.avatar_url} alt={author.username} className="w-full h-full object-cover" />
               ) : (
@@ -192,14 +192,14 @@ export const FeedCard = memo(({
                   @{author.username}
                 </span>
                 {author.is_verified && (
-                  <CheckCircle className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
+                  <CheckCircle className="w-3.5 h-3.5 text-white flex-shrink-0" />
                 )}
                 {author.is_smart_money && (
                   <Trophy className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0" />
                 )}
               </div>
               {author.win_rate !== null && author.win_rate !== undefined && (
-                <span className="text-xs text-green-400">
+                <span className="text-xs text-white">
                   {author.win_rate.toFixed(0)}% Win Rate
                 </span>
               )}
@@ -211,7 +211,7 @@ export const FeedCard = memo(({
         )}
         
         {/* Title */}
-        <h3 className="text-white font-bold text-base line-clamp-2 mb-2 group-hover:text-blue-400 transition-colors">
+        <h3 className="text-white font-bold text-base line-clamp-2 mb-2 group-hover:text-white transition-colors">
           {analysis.title}
         </h3>
         
@@ -240,8 +240,8 @@ export const FeedCard = memo(({
               onClick={(e) => handleReaction(e, 'bull')}
               className={`flex items-center gap-1 text-sm transition-colors ${
                 localReaction === 'bull' 
-                  ? 'text-green-400' 
-                  : 'text-neutral-500 hover:text-green-400'
+                  ? 'text-white' 
+                  : 'text-neutral-500 hover:text-white'
               }`}
             >
               <span>🐂</span>

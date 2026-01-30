@@ -42,18 +42,18 @@
   
   /* ============================================
      THEME OVERLAY VARIABLES
-     Default to BullMoney Blue signature color
+     Default accent now white (updated from blue)
      Set by GlobalThemeProvider & Early Theme Script
      ============================================ */
-  --accent-color: #3b82f6;
-  --accent-rgb: 59, 130, 246;
+  --accent-color: #ffffff;
+  --accent-rgb: 255, 255, 255;
   --theme-id: 'bullmoney-blue';
   --theme-name: 'BullMoney Blue';
-  --theme-accent-light: rgba(59, 130, 246, 0.25);
-  --theme-accent-dark: rgba(59, 130, 246, 0.5);
-  --theme-accent-glow: rgba(59, 130, 246, 0.4);
-  --theme-accent-subtle: rgba(59, 130, 246, 0.1);
-  --theme-accent-border: rgba(59, 130, 246, 0.3);
+  --theme-accent-light: rgba(255, 255, 255, 0.25);
+  --theme-accent-dark: rgba(255, 255, 255, 0.5);
+  --theme-accent-glow: rgba(255, 255, 255, 0.4);
+  --theme-accent-subtle: rgba(255, 255, 255, 0.1);
+  --theme-accent-border: rgba(255, 255, 255, 0.3);
   
   /* ============================================
      ANIMATION EASING CURVES
@@ -99,8 +99,8 @@
   /* ============================================
      NAVBAR DERIVED COLORS
      ============================================ */
-  --navbar-accent: var(--accent-color, #3b82f6);
-  --navbar-accent-rgb: var(--accent-rgb, 59, 130, 246);
+  --navbar-accent: var(--accent-color, #ffffff);
+  --navbar-accent-rgb: var(--accent-rgb, 255, 255, 255);
   --navbar-border: rgba(var(--navbar-accent-rgb), 0.3);
   --navbar-glow: rgba(var(--navbar-accent-rgb), 0.15);
   --navbar-hover: rgba(var(--navbar-accent-rgb), 0.2);

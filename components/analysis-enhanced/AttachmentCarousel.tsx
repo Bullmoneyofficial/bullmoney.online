@@ -64,7 +64,7 @@ export const AttachmentCarousel = memo(({
     <>
       <div className={`relative ${className}`}>
         {/* Main Display */}
-        <div className="relative aspect-video bg-black/50 rounded-lg overflow-hidden border border-blue-500/20">
+        <div className="relative aspect-video bg-black/50 rounded-lg overflow-hidden border border-white/20">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentIndex}
@@ -83,7 +83,7 @@ export const AttachmentCarousel = memo(({
               ) : (
                 <div className="text-center">
                   {React.createElement(getAttachmentIcon(currentAttachment.type), {
-                    className: 'w-16 h-16 text-blue-400 mx-auto mb-3',
+                    className: 'w-16 h-16 text-white mx-auto mb-3',
                   })}
                   <p className="text-white font-medium text-sm">{currentAttachment.name}</p>
                   {currentAttachment.size && (
@@ -159,7 +159,7 @@ export const AttachmentCarousel = memo(({
                   className={`
                     flex-shrink-0 w-16 h-12 rounded-lg overflow-hidden border-2 transition-all
                     ${isActive
-                      ? 'border-blue-500 ring-2 ring-blue-500/30'
+                      ? 'border-white ring-2 ring-white/30'
                       : 'border-neutral-700 hover:border-neutral-500'
                     }
                   `}

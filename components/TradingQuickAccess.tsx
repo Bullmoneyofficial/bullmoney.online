@@ -38,10 +38,10 @@ const symbols = [
 ];
 
 const importanceLevels = [
-  { value: '0', label: 'Low', color: 'bg-blue-900/30' },
-  { value: '1', label: 'Medium', color: 'bg-blue-700/50' },
-  { value: '2', label: 'High', color: 'bg-blue-500/70' },
-  { value: '3', label: 'Critical', color: 'bg-blue-400/90' }
+  { value: '0', label: 'Low', color: 'bg-white/30' },
+  { value: '1', label: 'Medium', color: 'bg-white/50' },
+  { value: '2', label: 'High', color: 'bg-white/70' },
+  { value: '3', label: 'Critical', color: 'bg-white/90' }
 ];
 
 const currencies = [
@@ -484,7 +484,7 @@ export function TradingQuickAccess() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: [0.4, 0.7, 0.4], y: 0 }}
                 transition={{ opacity: { duration: 2, repeat: Infinity }, y: { duration: 0.3 } }}
-                className="absolute top-4 sm:top-8 left-1/2 -translate-x-1/2 flex items-center gap-2 text-purple-300/50 text-xs sm:text-sm pointer-events-none"
+                className="absolute top-4 sm:top-8 left-1/2 -translate-x-1/2 flex items-center gap-2 text-white/50 text-xs sm:text-sm pointer-events-none"
               >
                 <span>↑</span>
                 <span>Tap anywhere to close</span>
@@ -496,7 +496,7 @@ export function TradingQuickAccess() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: [0.4, 0.7, 0.4], y: 0 }}
                 transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.5 }, y: { duration: 0.3 } }}
-                className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 text-purple-300/50 text-xs sm:text-sm pointer-events-none"
+                className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 text-white/50 text-xs sm:text-sm pointer-events-none"
               >
                 <span>↓</span>
                 <span>Tap anywhere to close</span>
@@ -508,7 +508,7 @@ export function TradingQuickAccess() {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: [0.3, 0.6, 0.3], x: 0 }}
                 transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.25 }, x: { duration: 0.3 } }}
-                className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-purple-300/40 text-[10px] sm:text-xs pointer-events-none"
+                className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-white/40 text-[10px] sm:text-xs pointer-events-none"
               >
                 <span>←</span>
                 <span style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Tap to close</span>
@@ -519,7 +519,7 @@ export function TradingQuickAccess() {
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: [0.3, 0.6, 0.3], x: 0 }}
                 transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.75 }, x: { duration: 0.3 } }}
-                className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-purple-300/40 text-[10px] sm:text-xs pointer-events-none"
+                className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-white/40 text-[10px] sm:text-xs pointer-events-none"
               >
                 <span>→</span>
                 <span style={{ writingMode: 'vertical-rl' }}>Tap to close</span>
@@ -534,16 +534,16 @@ export function TradingQuickAccess() {
             exit={animations.modalContent.exit as TargetAndTransition}
             transition={animations.modalContent.transition}
             onClick={(e) => e.stopPropagation()}
-            className={`relative w-full max-w-[500px] max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-purple-950/98 via-purple-900/95 to-zinc-900/98 border border-purple-500/50 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl shadow-purple-900/50'}`}
+            className={`relative w-full max-w-[500px] max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-purple-950/98 via-white/95 to-zinc-900/98 border border-white/50 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl shadow-white/50'}`}
           >
               {/* Header */}
-              <div className="p-3 sm:p-4 border-b border-purple-500/30 bg-purple-900/40">
+              <div className="p-3 sm:p-4 border-b border-white/30 bg-white/40">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" viewBox="0 0 24 24" fill="currentColor">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M8 5v14l11-7z"/>
                     </svg>
-                    <h3 className="text-xs sm:text-sm md:text-base font-bold text-purple-100">
+                    <h3 className="text-xs sm:text-sm md:text-base font-bold text-white">
                       BullMoney TV
                     </h3>
                     {isLive && (
@@ -561,12 +561,12 @@ export function TradingQuickAccess() {
                     whileHover={{ scale: 1.1, rotate: 90 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={() => setDiscordStageModalOpen(false)}
-                    className="flex items-center gap-1.5 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-purple-500/30 hover:bg-purple-500/50 border border-purple-400/40 justify-center transition-colors group"
+                    className="flex items-center gap-1.5 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/30 hover:bg-white/50 border border-white/40 justify-center transition-colors group"
                   >
-                    <span className="text-purple-200 text-sm sm:text-base font-bold">×</span>
+                    <span className="text-white text-sm sm:text-base font-bold">×</span>
                   </motion.button>
                 </div>
-                <p className="text-[9px] sm:text-[10px] text-purple-300/60 mt-1">Click outside or press ESC to close</p>
+                <p className="text-[9px] sm:text-[10px] text-white/60 mt-1">Click outside or press ESC to close</p>
                 
                 {/* Tab Buttons - Featured First, Live Second */}
                 <div className="flex gap-2 mt-3">
@@ -603,7 +603,7 @@ export function TradingQuickAccess() {
                     whileTap={{ scale: 0.98 }}
                     className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
                       activeTab === 'live'
-                        ? isLive ? 'bg-red-500 text-white shadow-lg shadow-red-500/30' : 'bg-purple-500 text-white shadow-lg shadow-purple-500/30'
+                        ? isLive ? 'bg-red-500 text-white shadow-lg shadow-red-500/30' : 'bg-white text-black shadow-lg shadow-white/30'
                         : 'bg-white/10 text-white/70 hover:bg-white/20'
                     }`}
                   >
@@ -669,7 +669,7 @@ export function TradingQuickAccess() {
                   
                   {/* Live indicator overlay when on Live tab */}
                   {activeTab === 'live' && (
-                    <div className={`absolute top-2 left-2 flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-bold text-white ${isLive ? 'bg-red-600/90' : 'bg-purple-600/90'}`}>
+                    <div className={`absolute top-2 left-2 flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-bold text-white ${isLive ? 'bg-red-600/90' : 'bg-white/90'}`}>
                       {isLive ? (
                         <>
                           <motion.div
@@ -700,7 +700,7 @@ export function TradingQuickAccess() {
                         }}
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 bg-purple-600/90 hover:bg-purple-500 rounded text-[10px] font-bold text-white"
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/90 hover:bg-white rounded text-[10px] font-bold text-white"
                       >
                         Next Channel
                         <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
@@ -793,7 +793,7 @@ export function TradingQuickAccess() {
                     whileTap={{ scale: 0.98 }}
                     className="w-full px-3 py-2 bg-[#2f2f2f] hover:bg-[#3f3f3f] border border-white/10 text-white/80 font-semibold rounded-lg flex items-center justify-center gap-2 text-xs transition-all"
                   >
-                    <svg className="w-4 h-4 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
                       <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
                       <path d="M12 19v3"/>
@@ -873,7 +873,7 @@ export function TradingQuickAccess() {
           whileHover={{ 
             x: 12, 
             scale: 1.05,
-            boxShadow: '0 0 30px rgba(96, 165, 250, 0.6)'
+            boxShadow: '0 0 30px rgba(255, 255, 255, 0.6)'
           }}
           className="relative pointer-events-auto cursor-pointer"
           onClick={() => canOpen && setIsExpanded(!isExpanded)}
@@ -891,10 +891,10 @@ export function TradingQuickAccess() {
           }}
         >
           {/* Pill Content */}
-          <div className="relative rounded-r-full bg-gradient-to-br from-blue-600/30 via-blue-500/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-blue-500/50 shadow-2xl hover:border-blue-400/70 hover:shadow-blue-600/40">
+          <div className="relative rounded-r-full bg-gradient-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl hover:border-white/70 hover:shadow-white/40">
             {/* Enhanced pulsing glow background - OPTIMIZED: reduced from 2s to 3s to reduce jank */}
             <motion.div
-              className="absolute inset-0 rounded-r-full bg-gradient-to-r from-blue-500/20 via-cyan-500/10 to-transparent opacity-0"
+              className="absolute inset-0 rounded-r-full bg-gradient-to-r from-white/20 via-white/10 to-transparent opacity-0"
               animate={{
                 opacity: [0.3, 0.8, 0.3],
                 scale: [1, 1.05, 1],
@@ -912,9 +912,9 @@ export function TradingQuickAccess() {
               className="absolute inset-0 rounded-r-full"
               animate={{
                 boxShadow: [
-                  '0 0 10px rgba(96, 165, 250, 0)',
-                  '0 0 20px rgba(96, 165, 250, 0.4)',
-                  '0 0 10px rgba(96, 165, 250, 0)'
+                  '0 0 10px rgba(255, 255, 255, 0)',
+                  '0 0 20px rgba(255, 255, 255, 0.4)',
+                  '0 0 10px rgba(255, 255, 255, 0)'
                 ]
               }}
               transition={{
@@ -927,14 +927,14 @@ export function TradingQuickAccess() {
             <div className="px-1 py-1 xs:px-1.5 xs:py-1 sm:px-2 sm:py-1.5 md:px-3 md:py-2.5 flex items-center gap-0.5 sm:gap-1 md:gap-1.5 relative z-10">
               {/* Live Indicator */}
               <motion.div
-                className="w-1 h-1 xs:w-1.5 xs:h-1.5 sm:w-2 sm:h-2 bg-blue-400 rounded-full"
+                className="w-1 h-1 xs:w-1.5 xs:h-1.5 sm:w-2 sm:h-2 bg-white rounded-full"
                 animate={{ 
                   opacity: [1, 0.4, 1],
                   scale: [1, 1.2, 1],
                   boxShadow: [
-                    '0 0 0px rgba(96, 165, 250, 1)',
-                    '0 0 8px rgba(96, 165, 250, 0.8)',
-                    '0 0 0px rgba(96, 165, 250, 1)'
+                    '0 0 0px rgba(255, 255, 255, 1)',
+                    '0 0 8px rgba(255, 255, 255, 0.8)',
+                    '0 0 0px rgba(255, 255, 255, 1)'
                   ]
                 }}
                 transition={{ duration: 1, repeat: Infinity }}
@@ -943,15 +943,15 @@ export function TradingQuickAccess() {
               {/* Prices */}
               <div className="flex items-center gap-0.5 xs:gap-1 sm:gap-1.5 md:gap-2">
                 <div className="flex items-center gap-0.5">
-                  <Coins className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 text-blue-300 drop-shadow-[0_0_3px_rgba(147,197,253,0.5)]" />
-                  <span className="text-[6px] xs:text-[7px] sm:text-[9px] md:text-[10px] font-bold text-blue-200">
+                  <Coins className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 text-white drop-shadow-[0_0_3px_rgba(255, 255, 255,0.5)]" />
+                  <span className="text-[6px] xs:text-[7px] sm:text-[9px] md:text-[10px] font-bold text-white">
                     ${prices.xauusd}
                   </span>
                 </div>
-                <div className="w-px h-1.5 xs:h-2 sm:h-2.5 md:h-3 bg-blue-500/30" />
+                <div className="w-px h-1.5 xs:h-2 sm:h-2.5 md:h-3 bg-white/30" />
                 <div className="flex items-center gap-0.5">
-                  <Bitcoin className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 text-blue-300 drop-shadow-[0_0_3px_rgba(147,197,253,0.5)]" />
-                  <span className="text-[6px] xs:text-[7px] sm:text-[9px] md:text-[10px] font-bold text-blue-200">
+                  <Bitcoin className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 text-white drop-shadow-[0_0_3px_rgba(255, 255, 255,0.5)]" />
+                  <span className="text-[6px] xs:text-[7px] sm:text-[9px] md:text-[10px] font-bold text-white">
                     ${prices.btcusd}
                   </span>
                 </div>
@@ -962,7 +962,7 @@ export function TradingQuickAccess() {
                 animate={{ rotate: isExpanded ? 180 : 0 }}
                 transition={{ type: "spring", stiffness: 400 }}
               >
-                <ChevronRight className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 text-blue-400/70" />
+                <ChevronRight className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 text-white/70" />
               </motion.div>
             </div>
           </div>
@@ -983,10 +983,10 @@ export function TradingQuickAccess() {
               className="mt-1 sm:mt-1.5 trading-tip-pill-container"
             >
               {/* Pill Container - Same style as price UI */}
-              <div className="trading-tip-pill relative rounded-r-full bg-gradient-to-br from-blue-600/30 via-blue-500/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-blue-500/50 shadow-2xl hover:border-blue-400/70 hover:shadow-blue-600/40 transition-all duration-300 px-1.5 py-1 xs:px-2 xs:py-1 sm:px-3 sm:py-1.5 overflow-hidden max-w-[150px] xs:max-w-[180px] sm:max-w-none lg:min-w-[140px] xl:min-w-[160px] 2xl:min-w-[180px]">
+              <div className="trading-tip-pill relative rounded-r-full bg-gradient-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl hover:border-white/70 hover:shadow-white/40 transition-all duration-300 px-1.5 py-1 xs:px-2 xs:py-1 sm:px-3 sm:py-1.5 overflow-hidden max-w-[150px] xs:max-w-[180px] sm:max-w-none lg:min-w-[140px] xl:min-w-[160px] 2xl:min-w-[180px]">
                 {/* Animated tip pulse background */}
                 <motion.div
-                  className="absolute inset-0 rounded-r-full bg-gradient-to-r from-cyan-500/15 via-blue-500/10 to-transparent"
+                  className="absolute inset-0 rounded-r-full bg-gradient-to-r from-white/15 via-white/10 to-transparent"
                   animate={{
                     opacity: [0, 0.5, 0],
                   }}
@@ -1008,7 +1008,7 @@ export function TradingQuickAccess() {
                     transition={{ duration: 0.5 }}
                     className="flex-shrink-0"
                   >
-                    <Sparkles className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 text-blue-400" />
+                    <Sparkles className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 text-white" />
                   </motion.div>
                   
                   {/* Tip Text Window */}
@@ -1030,7 +1030,7 @@ export function TradingQuickAccess() {
                           {[0, 1, 2].map((i) => (
                             <motion.span
                               key={i}
-                              className="text-[6px] xs:text-[7px] sm:text-[8px] md:text-[9px] text-blue-300/50 font-medium whitespace-nowrap"
+                              className="text-[6px] xs:text-[7px] sm:text-[8px] md:text-[9px] text-white/50 font-medium whitespace-nowrap"
                               style={{ filter: 'blur(1px)' }}
                             >
                               {tradingTips[(tipIndex + i) % tradingTips.length].slice(0, 28)}
@@ -1052,15 +1052,15 @@ export function TradingQuickAccess() {
                           className="absolute inset-0 flex items-center"
                         >
                           <motion.span 
-                            className="text-[6px] xs:text-[7px] sm:text-[8px] md:text-[9px] text-blue-200/90 font-medium whitespace-nowrap truncate"
+                            className="text-[6px] xs:text-[7px] sm:text-[8px] md:text-[9px] text-white/90 font-medium whitespace-nowrap truncate"
                             animate={tradingTips[tipIndex].length > 40 ? {
                               x: [0, -20, 0]
                             } : {
                               opacity: [1, 1, 1],
                               textShadow: [
-                                '0 0 0px rgba(96, 165, 250, 0)',
-                                '0 0 8px rgba(96, 165, 250, 0.5)',
-                                '0 0 0px rgba(96, 165, 250, 0)'
+                                '0 0 0px rgba(255, 255, 255, 0)',
+                                '0 0 8px rgba(255, 255, 255, 0.5)',
+                                '0 0 0px rgba(255, 255, 255, 0)'
                               ]
                             }}
                             transition={{
@@ -1081,7 +1081,7 @@ export function TradingQuickAccess() {
                 </div>
                 
                 {/* Subtle inner glow */}
-                <div className="absolute inset-0 rounded-r-full bg-gradient-to-r from-blue-500/5 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 rounded-r-full bg-gradient-to-r from-white/5 to-transparent pointer-events-none" />
               </div>
             </motion.div>
           )}
@@ -1106,7 +1106,7 @@ export function TradingQuickAccess() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: [0.4, 0.7, 0.4], y: 0 }}
                   transition={{ opacity: { duration: 2, repeat: Infinity }, y: { duration: 0.3 } }}
-                  className="absolute top-4 sm:top-8 left-1/2 -translate-x-1/2 flex items-center gap-2 text-blue-300/50 text-xs sm:text-sm pointer-events-none"
+                  className="absolute top-4 sm:top-8 left-1/2 -translate-x-1/2 flex items-center gap-2 text-white/50 text-xs sm:text-sm pointer-events-none"
                 >
                   <span>↑</span>
                   <span>Tap anywhere to close</span>
@@ -1118,7 +1118,7 @@ export function TradingQuickAccess() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: [0.4, 0.7, 0.4], y: 0 }}
                   transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.5 }, y: { duration: 0.3 } }}
-                  className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 text-blue-300/50 text-xs sm:text-sm pointer-events-none"
+                  className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 text-white/50 text-xs sm:text-sm pointer-events-none"
                 >
                   <span>↓</span>
                   <span>Tap anywhere to close</span>
@@ -1130,7 +1130,7 @@ export function TradingQuickAccess() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: [0.3, 0.6, 0.3], x: 0 }}
                   transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.25 }, x: { duration: 0.3 } }}
-                  className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-blue-300/40 text-[10px] sm:text-xs pointer-events-none"
+                  className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-white/40 text-[10px] sm:text-xs pointer-events-none"
                 >
                   <span>←</span>
                   <span style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Tap to close</span>
@@ -1141,7 +1141,7 @@ export function TradingQuickAccess() {
                   initial={{ opacity: 0, x: 10 }}
                   animate={{ opacity: [0.3, 0.6, 0.3], x: 0 }}
                   transition={{ opacity: { duration: 2, repeat: Infinity, delay: 0.75 }, x: { duration: 0.3 } }}
-                  className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-blue-300/40 text-[10px] sm:text-xs pointer-events-none"
+                  className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-white/40 text-[10px] sm:text-xs pointer-events-none"
                 >
                   <span>→</span>
                   <span style={{ writingMode: 'vertical-rl' }}>Tap to close</span>
@@ -1157,23 +1157,23 @@ export function TradingQuickAccess() {
               exit={animations.modalContent.exit as TargetAndTransition}
               transition={animations.modalContent.transition}
               onClick={(e) => e.stopPropagation()}
-              className={`relative w-full max-w-[520px] max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 border border-blue-500/30 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl shadow-blue-900/20'}`}
+              className={`relative w-full max-w-[520px] max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 border border-white/30 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl shadow-white/20'}`}
             >
                 {/* Header */}
-                <div className="p-2 sm:p-3 md:p-4 border-b border-blue-500/20 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 flex-shrink-0">
+                <div className="p-2 sm:p-3 md:p-4 border-b border-white/20 bg-gradient-to-r from-white/10 to-white/10 flex-shrink-0">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5 sm:gap-2">
-                      <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400 flex-shrink-0" />
+                      <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white flex-shrink-0" />
                       <h3 className="text-[11px] sm:text-xs md:text-sm font-bold text-white truncate">Trading Quick Access</h3>
                     </div>
                     <motion.button
                       whileHover={isMobile ? {} : { scale: 1.1, rotate: 90 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => setIsExpanded(false)}
-                      className="flex items-center gap-1 p-1.5 sm:p-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/40 border border-blue-400/30 transition-colors group"
+                      className="flex items-center gap-1 p-1.5 sm:p-2 rounded-lg bg-white/20 hover:bg-white/40 border border-white/30 transition-colors group"
                     >
-                      <span className="text-[8px] sm:text-[10px] text-blue-300/70 group-hover:text-blue-200 hidden sm:inline">ESC</span>
-                      <X className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-300 group-hover:text-white" />
+                      <span className="text-[8px] sm:text-[10px] text-white/70 group-hover:text-white hidden sm:inline">ESC</span>
+                      <X className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white group-hover:text-white" />
                     </motion.button>
                   </div>
                   <p className="text-[8px] sm:text-[9px] md:text-[10px] text-zinc-400 mt-0.5">
@@ -1182,7 +1182,7 @@ export function TradingQuickAccess() {
                 </div>
 
                 {/* Chart Selector Tabs */}
-                <div className="p-2 sm:p-2.5 md:p-3 border-b border-blue-500/20 flex-shrink-0">
+                <div className="p-2 sm:p-2.5 md:p-3 border-b border-white/20 flex-shrink-0">
                   <div className="flex gap-1.5 sm:gap-2">
                     {symbols.map((sym) => {
                       const Icon = sym.icon;
@@ -1197,12 +1197,12 @@ export function TradingQuickAccess() {
                             flex-1 flex items-center justify-center gap-0.5 sm:gap-1 md:gap-2 py-1.5 sm:py-2 px-1.5 sm:px-2.5 md:px-3 rounded-lg text-[10px] sm:text-xs md:text-xs font-semibold
                             transition-all duration-200 whitespace-nowrap
                             ${activeChart === sym.id && !showForexFactory
-                              ? 'bg-blue-500/30 border border-blue-400/50' 
-                              : 'bg-zinc-800/50 border border-blue-500/20 hover:border-blue-400/40'
+                              ? 'bg-white/30 border border-white/50' 
+                              : 'bg-zinc-800/50 border border-white/20 hover:border-white/40'
                             }
                           `}
                         >
-                          <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 text-blue-400 flex-shrink-0" />
+                          <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 text-white flex-shrink-0" />
                           <span className="text-white hidden sm:inline">
                             {sym.displayName}
                           </span>
@@ -1248,10 +1248,10 @@ export function TradingQuickAccess() {
 
                 {/* Calendar Filters - Only show when calendar is active */}
                 {showForexFactory && (
-                  <div className="p-2 sm:p-2.5 md:p-3 border-t border-blue-500/20 bg-zinc-900/50 space-y-1.5 sm:space-y-2 md:space-y-3 max-h-[140px] overflow-y-auto flex-shrink-0">
+                  <div className="p-2 sm:p-2.5 md:p-3 border-t border-white/20 bg-zinc-900/50 space-y-1.5 sm:space-y-2 md:space-y-3 max-h-[140px] overflow-y-auto flex-shrink-0">
                     {/* Importance Filter */}
                     <div>
-                      <p className="text-[8px] sm:text-[9px] md:text-[10px] text-blue-300 font-semibold mb-1 uppercase tracking-wider">
+                      <p className="text-[8px] sm:text-[9px] md:text-[10px] text-white font-semibold mb-1 uppercase tracking-wider">
                         Importance
                       </p>
                       <div className="flex flex-wrap gap-0.5 sm:gap-1">
@@ -1263,8 +1263,8 @@ export function TradingQuickAccess() {
                               px-1.5 sm:px-2 md:px-2.5 py-0.5 text-[7px] sm:text-[8px] md:text-[9px] font-semibold rounded-md whitespace-nowrap
                               transition-all duration-200
                               ${calendarImportance.includes(level.value)
-                                ? `${level.color} border border-blue-400/70 text-white shadow-sm shadow-blue-500/20`
-                                : 'bg-zinc-800/50 border border-blue-500/20 text-blue-400/60 hover:border-blue-400/40'
+                                ? `${level.color} border border-white/70 text-white shadow-sm shadow-white/20`
+                                : 'bg-zinc-800/50 border border-white/20 text-white/60 hover:border-white/40'
                               }
                             `}
                           >
@@ -1276,7 +1276,7 @@ export function TradingQuickAccess() {
 
                     {/* Currency Filter */}
                     <div>
-                      <p className="text-[8px] sm:text-[9px] md:text-[10px] text-blue-300 font-semibold mb-1 uppercase tracking-wider">
+                      <p className="text-[8px] sm:text-[9px] md:text-[10px] text-white font-semibold mb-1 uppercase tracking-wider">
                         Currencies
                       </p>
                       <div className="flex flex-wrap gap-0.5 sm:gap-1">
@@ -1288,8 +1288,8 @@ export function TradingQuickAccess() {
                               px-1.5 sm:px-2 md:px-2.5 py-0.5 text-[7px] sm:text-[8px] md:text-[9px] font-bold rounded-md whitespace-nowrap
                               transition-all duration-200
                               ${calendarCurrencies.includes(currency)
-                                ? 'bg-blue-500/70 border border-blue-400/70 text-white shadow-sm shadow-blue-500/20'
-                                : 'bg-zinc-800/50 border border-blue-500/20 text-blue-400/60 hover:border-blue-400/40'
+                                ? 'bg-white/70 border border-white/70 text-white shadow-sm shadow-white/20'
+                                : 'bg-zinc-800/50 border border-white/20 text-white/60 hover:border-white/40'
                               }
                             `}
                           >
@@ -1302,7 +1302,7 @@ export function TradingQuickAccess() {
                 )}
 
                 {/* Quick Links */}
-                <div className="p-2 sm:p-2.5 md:p-3 border-t border-blue-500/20 space-y-1.5 sm:space-y-2 flex-shrink-0">
+                <div className="p-2 sm:p-2.5 md:p-3 border-t border-white/20 space-y-1.5 sm:space-y-2 flex-shrink-0">
                   {/* Forex Factory Toggle */}
                   <motion.button
                     onClick={() => setShowForexFactory(!showForexFactory)}
@@ -1312,12 +1312,12 @@ export function TradingQuickAccess() {
                       w-full flex items-center justify-center gap-1 sm:gap-1.5 md:gap-2 py-1.5 sm:py-2 px-2 sm:px-2.5 md:px-3 rounded-lg text-[10px] sm:text-xs md:text-xs font-semibold
                       transition-all duration-200 whitespace-nowrap
                       ${showForexFactory
-                        ? 'bg-blue-500/30 border border-blue-400/50' 
-                        : 'bg-gradient-to-r from-zinc-700 to-zinc-600 hover:from-zinc-600 hover:to-zinc-500 border border-blue-500/20'
+                        ? 'bg-white/30 border border-white/50' 
+                        : 'bg-gradient-to-r from-zinc-700 to-zinc-600 hover:from-zinc-600 hover:to-zinc-500 border border-white/20'
                       }
                     `}
                   >
-                    <Globe className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 text-blue-400 flex-shrink-0" />
+                    <Globe className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 text-white flex-shrink-0" />
                     <span className="text-white hidden sm:inline">
                       {showForexFactory ? 'Show Charts' : 'Show Economic Calendar'}
                     </span>
@@ -1355,7 +1355,7 @@ export function TradingQuickAccess() {
             whileHover={{ 
               x: 12, 
               scale: 1.05,
-              boxShadow: '0 0 30px rgba(168, 85, 247, 0.6)'
+              boxShadow: '0 0 30px rgba(255, 255, 255, 0.6)'
             }}
             className="relative pointer-events-auto cursor-pointer"
             onClick={() => setDiscordStageModalOpen(!isDiscordStageModalOpen)}
@@ -1373,10 +1373,10 @@ export function TradingQuickAccess() {
             }}
           >
             {/* Purple Pill Content */}
-            <div className="relative rounded-r-full bg-gradient-to-br from-purple-600/30 via-purple-500/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-purple-500/50 shadow-2xl hover:border-purple-400/70 hover:shadow-purple-600/40">
+            <div className="relative rounded-r-full bg-gradient-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl hover:border-white/70 hover:shadow-white/40">
               {/* Enhanced pulsing glow background */}
               <motion.div
-                className="absolute inset-0 rounded-r-full bg-gradient-to-r from-purple-500/20 via-fuchsia-500/10 to-transparent opacity-0"
+                className="absolute inset-0 rounded-r-full bg-gradient-to-r from-white/20 via-fuchsia-500/10 to-transparent opacity-0"
                 animate={{
                   opacity: [0.3, 0.8, 0.3],
                   scale: [1, 1.05, 1],
@@ -1394,9 +1394,9 @@ export function TradingQuickAccess() {
                 className="absolute inset-0 rounded-r-full"
                 animate={{
                   boxShadow: [
-                    '0 0 10px rgba(168, 85, 247, 0)',
-                    '0 0 20px rgba(168, 85, 247, 0.4)',
-                    '0 0 10px rgba(168, 85, 247, 0)'
+                    '0 0 10px rgba(255, 255, 255, 0)',
+                    '0 0 20px rgba(255, 255, 255, 0.4)',
+                    '0 0 10px rgba(255, 255, 255, 0)'
                   ]
                 }}
                 transition={{
@@ -1409,14 +1409,14 @@ export function TradingQuickAccess() {
               <div className="px-1.5 py-1.5 sm:px-2 sm:py-1.5 md:px-3 md:py-2.5 flex items-center gap-0.5 sm:gap-1 md:gap-1.5 relative z-10">
                 {/* Live Indicator */}
                 <motion.div
-                  className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-purple-400 rounded-full"
+                  className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full"
                   animate={{ 
                     opacity: [1, 0.4, 1],
                     scale: [1, 1.2, 1],
                     boxShadow: [
-                      '0 0 0px rgba(168, 85, 247, 1)',
-                      '0 0 8px rgba(168, 85, 247, 0.8)',
-                      '0 0 0px rgba(168, 85, 247, 1)'
+                      '0 0 0px rgba(255, 255, 255, 1)',
+                      '0 0 8px rgba(255, 255, 255, 0.8)',
+                      '0 0 0px rgba(255, 255, 255, 1)'
                     ]
                   }}
                   transition={{ duration: 1, repeat: Infinity }}
@@ -1424,8 +1424,8 @@ export function TradingQuickAccess() {
 
                 {/* Text */}
                 <div className="flex items-center gap-0.5 sm:gap-0.5 md:gap-1">
-                  <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 text-purple-300 drop-shadow-[0_0_3px_rgba(216,180,254,0.5)]" />
-                  <span className="text-[8px] sm:text-[9px] md:text-[10px] font-bold text-purple-200">
+                  <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 text-white drop-shadow-[0_0_3px_rgba(216,180,254,0.5)]" />
+                  <span className="text-[8px] sm:text-[9px] md:text-[10px] font-bold text-white">
                     LIVE STAGE
                   </span>
                 </div>
@@ -1435,7 +1435,7 @@ export function TradingQuickAccess() {
                   animate={{ rotate: isDiscordStageModalOpen ? 180 : 0 }}
                   transition={{ type: "spring", stiffness: 400 }}
                 >
-                  <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3 md:h-3 text-purple-400/70" />
+                  <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3 md:h-3 text-white/70" />
                 </motion.div>
               </div>
             </div>

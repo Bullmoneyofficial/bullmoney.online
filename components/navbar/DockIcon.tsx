@@ -32,8 +32,8 @@ export const DockIcon = memo(React.forwardRef<HTMLDivElement, DockIconProps>(
             {/* Notification Dot if Shining */}
             {showShine && (
               <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-                <span className="absolute inline-flex h-full w-full rounded-full opacity-75 bg-blue-500" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500" />
+                <span className="absolute inline-flex h-full w-full rounded-full opacity-75 bg-white" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white" />
               </span>
             )}
           </div>
@@ -41,7 +41,7 @@ export const DockIcon = memo(React.forwardRef<HTMLDivElement, DockIconProps>(
           <span 
             className={cn(
               "dock-icon-label text-[9px] uppercase tracking-widest font-bold z-10 pointer-events-none",
-              isXMUser ? "text-red-400" : "text-blue-500"
+              isXMUser ? "text-red-400" : "text-white"
             )}
           >
             {label}

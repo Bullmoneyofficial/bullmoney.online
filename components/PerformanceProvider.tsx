@@ -983,10 +983,10 @@ export function FPSCounter({
 
   // Neon color schemes
   const neonBlue = {
-    color: '#0066ff',
-    textShadow: '0 0 5px #0066ff, 0 0 10px #0066ff, 0 0 20px #0066ff, 0 0 40px #0044cc',
-    boxShadow: '0 0 5px #0066ff, 0 0 10px #0066ff, 0 0 20px #0066ff, inset 0 0 10px rgba(0, 102, 255, 0.3)',
-    borderColor: '#0066ff',
+    color: '#ffffff',
+    textShadow: '0 0 5px #ffffff, 0 0 10px #ffffff, 0 0 20px #ffffff, 0 0 40px #ffffff',
+    boxShadow: '0 0 5px #ffffff, 0 0 10px #ffffff, 0 0 20px #ffffff, inset 0 0 10px rgba(255, 255, 255, 0.3)',
+    borderColor: '#ffffff',
   };
 
   const neonRed = {
@@ -1003,9 +1003,9 @@ export function FPSCounter({
   };
 
   const neonCyan = {
-    color: '#00d4ff',
-    textShadow: '0 0 5px #00d4ff, 0 0 10px #00d4ff',
-    borderColor: '#00d4ff',
+    color: '#ffffff',
+    textShadow: '0 0 5px #ffffff, 0 0 10px #ffffff',
+    borderColor: '#ffffff',
   };
 
   const fpsStyle = isLow ? neonRed : neonBlue;

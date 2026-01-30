@@ -387,11 +387,11 @@ export function Hero() {
                 className="relative z-20 mx-auto mt-0 max-w-2xl px-4 text-center text-xs sm:text-base/6 text-gray-200 uppercase"
               >
                 MASTER{" "}
-                <FlipWords words={["CHARTS", "PRICE ACTION", "ORDER FLOW", "PATTERNS"]} duration={4000} className="px-0 font-bold text-blue-500" />
+                <FlipWords words={["CHARTS", "PRICE ACTION", "ORDER FLOW", "PATTERNS"]} duration={4000} className="px-0 font-bold text-white" />
                 , SHARPEN YOUR{" "}
-                <FlipWords words={["PSYCHOLOGY", "DISCIPLINE", "PATIENCE", "RISK CONTROL"]} duration={4000} className="px-0 font-bold text-blue-500" />
+                <FlipWords words={["PSYCHOLOGY", "DISCIPLINE", "PATIENCE", "RISK CONTROL"]} duration={4000} className="px-0 font-bold text-white" />
                 , AND TRADE{" "}
-                <FlipWords words={["CRYPTO", "GOLD", "INDICES", "FOREX"]} duration={4000} className="px-0 font-bold text-blue-500" />
+                <FlipWords words={["CRYPTO", "GOLD", "INDICES", "FOREX"]} duration={4000} className="px-0 font-bold text-white" />
                 WITH CONFIDENCE.
               </motion.p>
             </div>

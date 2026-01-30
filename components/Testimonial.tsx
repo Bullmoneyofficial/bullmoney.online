@@ -11,27 +11,27 @@ import Link from "next/link";
 const NEON_STYLES = `
   @keyframes neon-pulse {
     0%, 100% { 
-      text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+      text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
       filter: brightness(1);
     }
     50% { 
-      text-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6;
+      text-shadow: 0 0 6px #ffffff, 0 0 12px #ffffff;
       filter: brightness(1.1);
     }
   }
 
   @keyframes neon-glow {
     0%, 100% { 
-      box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+      box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff;
     }
     50% { 
-      box-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6, inset 0 0 6px #3b82f6;
+      box-shadow: 0 0 6px #ffffff, 0 0 12px #ffffff, inset 0 0 6px #ffffff;
     }
   }
 
   .neon-blue-text {
-    color: #3b82f6;
-    text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+    color: #ffffff;
+    text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
     animation: neon-pulse 2s ease-in-out infinite;
   }
 
@@ -45,18 +45,18 @@ const NEON_STYLES = `
   }
 
   .neon-blue-icon {
-    filter: drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6);
+    filter: drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff);
   }
 
   .neon-blue-border {
-    border: 2px solid #3b82f6;
-    box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff;
     animation: neon-glow 2s ease-in-out infinite;
   }
 
   .neon-blue-bg {
-    background: #3b82f6;
-    box-shadow: 0 0 8px #3b82f6, 0 0 16px #3b82f6;
+    background: #ffffff;
+    box-shadow: 0 0 8px #ffffff, 0 0 16px #ffffff;
   }
 
   .gpu-layer {
@@ -100,16 +100,16 @@ export function AboutContent() {
         </motion.section>
 
         {/* Divider */}
-        <div className="my-8 h-px w-full bg-gradient-to-r from-sky-500/20 via-blue-500/20 to-indigo-500/20" />
+        <div className="my-8 h-px w-full bg-gradient-to-r from-sky-500/20 via-white/20 to-indigo-500/20" />
         <TestimonialsCarousel />
 
         {/* CTA / Footer */}
-        <div className="mt-8 h-px w-full bg-gradient-to-r from-sky-500/20 via-blue-500/20 to-indigo-500/20" />
+        <div className="mt-8 h-px w-full bg-gradient-to-r from-sky-500/20 via-white/20 to-indigo-500/20" />
         <footer className="mt-6 flex items-center justify-between">
           <Link href="/" className="rounded-full px-3 py-1 text-sm font-semibold text-white bg-neutral-900 ring-1 ring-sky-500/30 hover:ring-sky-400/60">
             Back
           </Link>
-          <span className="text-sm bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-400 bg-clip-text text-transparent font-semibold">
+          <span className="text-sm bg-gradient-to-r from-sky-400 via-white to-indigo-400 bg-clip-text text-transparent font-semibold">
              •  •  •
           </span>
         </footer>

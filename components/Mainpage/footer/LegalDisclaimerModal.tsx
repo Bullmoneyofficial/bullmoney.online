@@ -9,8 +9,8 @@ import { DisclaimerSection } from "./DisclaimerSection";
 // Neon styles for legal disclaimer modal
 const LEGAL_NEON_STYLES = `
   .legal-neon-blue-text {
-    color: #3b82f6;
-    text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+    color: #ffffff;
+    text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
   }
   .legal-neon-white-text {
     color: #ffffff;
@@ -24,16 +24,16 @@ const LEGAL_NEON_STYLES = `
     filter: drop-shadow(0 0 4px #ef4444) drop-shadow(0 0 8px #ef4444);
   }
   .legal-neon-green-icon {
-    filter: drop-shadow(0 0 4px #22c55e) drop-shadow(0 0 8px #22c55e);
+    filter: drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff);
   }
   .legal-tab-active {
-    background: rgba(59, 130, 246, 0.2);
-    border-color: #3b82f6;
-    color: #3b82f6;
+    background: rgba(255, 255, 255, 0.2);
+    border-color: #ffffff;
+    color: #ffffff;
   }
   .legal-tab-inactive {
     background: transparent;
-    border-color: rgba(59, 130, 246, 0.3);
+    border-color: rgba(255, 255, 255, 0.3);
     color: rgba(255, 255, 255, 0.6);
   }
 `;
@@ -396,11 +396,11 @@ export const LegalDisclaimerModal = ({ isOpen, onClose, initialTab = 'disclaimer
       >
         <div className="flex flex-col -mx-3 xs:-mx-4 sm:-mx-5 md:-mx-6 -mt-3 xs:-mt-4 sm:-mt-5 md:-mt-6 -mb-3 xs:-mb-4 sm:-mb-5 md:-mb-6" style={{ height: 'calc(85vh - 60px)', maxHeight: 'calc(85vh - 60px)', minHeight: '300px' }}>
           {/* Tab Navigation - Fixed at top */}
-          <div className="flex gap-1 xs:gap-1.5 sm:gap-2 px-3 xs:px-4 sm:px-5 md:px-6 py-2 xs:py-2.5 sm:py-3 overflow-x-auto flex-shrink-0 bg-black border-b border-blue-500/30">
+          <div className="flex gap-1 xs:gap-1.5 sm:gap-2 px-3 xs:px-4 sm:px-5 md:px-6 py-2 xs:py-2.5 sm:py-3 overflow-x-auto flex-shrink-0 bg-black border-b border-white/30">
             <button
               onClick={() => { setActiveTab('terms'); setOpenSection("01"); }}
               className={`flex items-center gap-1 sm:gap-1.5 px-2 xs:px-2.5 sm:px-3 py-1 xs:py-1.5 sm:py-2 rounded-md sm:rounded-lg border-2 text-[9px] xs:text-[10px] sm:text-sm font-semibold transition-all whitespace-nowrap ${
-                activeTab === 'terms' ? 'legal-tab-active' : 'legal-tab-inactive hover:border-blue-500/50'
+                activeTab === 'terms' ? 'legal-tab-active' : 'legal-tab-inactive hover:border-white/50'
               }`}
             >
               <FileText className="w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-3.5 sm:h-3.5" />
@@ -410,7 +410,7 @@ export const LegalDisclaimerModal = ({ isOpen, onClose, initialTab = 'disclaimer
             <button
               onClick={() => { setActiveTab('privacy'); setOpenSection("01"); }}
               className={`flex items-center gap-1 sm:gap-1.5 px-2 xs:px-2.5 sm:px-3 py-1 xs:py-1.5 sm:py-2 rounded-md sm:rounded-lg border-2 text-[9px] xs:text-[10px] sm:text-sm font-semibold transition-all whitespace-nowrap ${
-                activeTab === 'privacy' ? 'legal-tab-active' : 'legal-tab-inactive hover:border-blue-500/50'
+                activeTab === 'privacy' ? 'legal-tab-active' : 'legal-tab-inactive hover:border-white/50'
               }`}
             >
               <Lock className="w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-3.5 sm:h-3.5" />
@@ -419,7 +419,7 @@ export const LegalDisclaimerModal = ({ isOpen, onClose, initialTab = 'disclaimer
             <button
               onClick={() => { setActiveTab('disclaimer'); setOpenSection("01"); }}
               className={`flex items-center gap-1 sm:gap-1.5 px-2 xs:px-2.5 sm:px-3 py-1 xs:py-1.5 sm:py-2 rounded-md sm:rounded-lg border-2 text-[9px] xs:text-[10px] sm:text-sm font-semibold transition-all whitespace-nowrap ${
-                activeTab === 'disclaimer' ? 'legal-tab-active' : 'legal-tab-inactive hover:border-blue-500/50'
+                activeTab === 'disclaimer' ? 'legal-tab-active' : 'legal-tab-inactive hover:border-white/50'
               }`}
             >
               <ShieldAlert className="w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-3.5 sm:h-3.5" />
@@ -472,37 +472,37 @@ export const LegalDisclaimerModal = ({ isOpen, onClose, initialTab = 'disclaimer
             <div 
               className="relative overflow-hidden rounded-lg p-2 xs:p-2.5 sm:p-3 bg-black/50"
               style={{
-                border: '1px solid #3b82f6',
-                boxShadow: '0 0 4px rgba(59, 130, 246, 0.3)'
+                border: '1px solid #ffffff',
+                boxShadow: '0 0 4px rgba(255, 255, 255, 0.3)'
               }}
             >
               <h3 className="text-[9px] xs:text-[10px] sm:text-xs font-bold legal-neon-blue-text mb-1.5">Quick Summary</h3>
               <ul className="space-y-1 text-[8px] xs:text-[9px] sm:text-[10px]" style={{ color: '#9ca3af' }}>
                 {activeTab === 'terms' && (
                   <>
-                    <li className="flex items-start gap-2"><span className="text-blue-400">•</span> You must be 18+ to use this platform</li>
-                    <li className="flex items-start gap-2"><span className="text-blue-400">•</span> This is educational content ONLY, not financial advice</li>
-                    <li className="flex items-start gap-2"><span className="text-blue-400">•</span> All digital product sales are FINAL - no refunds</li>
-                    <li className="flex items-start gap-2"><span className="text-blue-400">•</span> We may use affiliate links and receive compensation</li>
-                    <li className="flex items-start gap-2"><span className="text-blue-400">•</span> You are solely responsible for your trading decisions</li>
+                    <li className="flex items-start gap-2"><span className="text-white">•</span> You must be 18+ to use this platform</li>
+                    <li className="flex items-start gap-2"><span className="text-white">•</span> This is educational content ONLY, not financial advice</li>
+                    <li className="flex items-start gap-2"><span className="text-white">•</span> All digital product sales are FINAL - no refunds</li>
+                    <li className="flex items-start gap-2"><span className="text-white">•</span> We may use affiliate links and receive compensation</li>
+                    <li className="flex items-start gap-2"><span className="text-white">•</span> You are solely responsible for your trading decisions</li>
                   </>
                 )}
                 {activeTab === 'privacy' && (
                   <>
-                    <li className="flex items-start gap-2"><span className="text-blue-400">•</span> We collect account, trading, and technical data</li>
-                    <li className="flex items-start gap-2"><span className="text-blue-400">•</span> Your data is stored securely with encryption</li>
-                    <li className="flex items-start gap-2"><span className="text-blue-400">•</span> We do NOT sell your personal data to third parties</li>
-                    <li className="flex items-start gap-2"><span className="text-blue-400">•</span> You have rights to access, correct, and delete your data</li>
-                    <li className="flex items-start gap-2"><span className="text-blue-400">•</span> Compliant with GDPR, CCPA, LGPD, and other privacy laws</li>
+                    <li className="flex items-start gap-2"><span className="text-white">•</span> We collect account, trading, and technical data</li>
+                    <li className="flex items-start gap-2"><span className="text-white">•</span> Your data is stored securely with encryption</li>
+                    <li className="flex items-start gap-2"><span className="text-white">•</span> We do NOT sell your personal data to third parties</li>
+                    <li className="flex items-start gap-2"><span className="text-white">•</span> You have rights to access, correct, and delete your data</li>
+                    <li className="flex items-start gap-2"><span className="text-white">•</span> Compliant with GDPR, CCPA, LGPD, and other privacy laws</li>
                   </>
                 )}
                 {activeTab === 'disclaimer' && (
                   <>
                     <li className="flex items-start gap-2"><span className="text-red-400">⚠</span> <span className="text-red-300">70-90% of retail traders LOSE money</span></li>
                     <li className="flex items-start gap-2"><span className="text-red-400">⚠</span> <span className="text-red-300">You could lose ALL your invested capital</span></li>
-                    <li className="flex items-start gap-2"><span className="text-blue-400">•</span> We are NOT licensed financial advisors</li>
-                    <li className="flex items-start gap-2"><span className="text-blue-400">•</span> Past performance does NOT guarantee future results</li>
-                    <li className="flex items-start gap-2"><span className="text-blue-400">•</span> Never trade with money you cannot afford to lose</li>
+                    <li className="flex items-start gap-2"><span className="text-white">•</span> We are NOT licensed financial advisors</li>
+                    <li className="flex items-start gap-2"><span className="text-white">•</span> Past performance does NOT guarantee future results</li>
+                    <li className="flex items-start gap-2"><span className="text-white">•</span> Never trade with money you cannot afford to lose</li>
                   </>
                 )}
               </ul>
@@ -526,8 +526,8 @@ export const LegalDisclaimerModal = ({ isOpen, onClose, initialTab = 'disclaimer
               <div 
                 className="h-px w-full"
                 style={{
-                  background: '#3b82f6',
-                  boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6'
+                  background: '#ffffff',
+                  boxShadow: '0 0 4px #ffffff, 0 0 8px #ffffff'
                 }}
               />
             </div>
@@ -536,21 +536,21 @@ export const LegalDisclaimerModal = ({ isOpen, onClose, initialTab = 'disclaimer
             <div 
               className="relative overflow-hidden rounded-lg p-2 xs:p-2.5 sm:p-3 bg-black/50"
               style={{
-                border: '1px solid rgba(59, 130, 246, 0.3)'
+                border: '1px solid rgba(255, 255, 255, 0.3)'
               }}
             >
               <div className="flex items-center gap-1.5 mb-1">
-                <Globe className="w-3 h-3 xs:w-3.5 xs:h-3.5" style={{ color: '#3b82f6' }} />
+                <Globe className="w-3 h-3 xs:w-3.5 xs:h-3.5" style={{ color: '#ffffff' }} />
                 <h3 className="text-[8px] xs:text-[9px] sm:text-xs font-bold legal-neon-blue-text">International Compliance</h3>
               </div>
               <p className="text-[7px] xs:text-[8px] sm:text-[10px]" style={{ color: '#9ca3af' }}>
                 Compliant with:
-                <span className="text-blue-400"> GDPR</span> (EU),
-                <span className="text-blue-400"> CCPA</span> (CA),
-                <span className="text-blue-400"> LGPD</span> (BR),
-                <span className="text-blue-400"> POPIA</span> (ZA),
-                <span className="text-blue-400"> PDPA</span> (SG),
-                <span className="text-blue-400"> PIPEDA</span> (CA)
+                <span className="text-white"> GDPR</span> (EU),
+                <span className="text-white"> CCPA</span> (CA),
+                <span className="text-white"> LGPD</span> (BR),
+                <span className="text-white"> POPIA</span> (ZA),
+                <span className="text-white"> PDPA</span> (SG),
+                <span className="text-white"> PIPEDA</span> (CA)
               </p>
             </div>
 
@@ -566,7 +566,7 @@ export const LegalDisclaimerModal = ({ isOpen, onClose, initialTab = 'disclaimer
 
           {/* Footer button - Fixed at bottom */}
           <div 
-            className="flex-shrink-0 bg-black px-3 xs:px-4 sm:px-5 py-3 xs:py-3.5 sm:py-4 flex justify-center sm:justify-end border-t-2 border-blue-500/50"
+            className="flex-shrink-0 bg-black px-3 xs:px-4 sm:px-5 py-3 xs:py-3.5 sm:py-4 flex justify-center sm:justify-end border-t-2 border-white/50"
             style={{
               boxShadow: '0 -4px 16px rgba(0, 0, 0, 0.9)',
               paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))'
@@ -578,14 +578,14 @@ export const LegalDisclaimerModal = ({ isOpen, onClose, initialTab = 'disclaimer
               whileTap={{ scale: 0.98 }}
               className="group relative flex w-full sm:w-auto items-center justify-center gap-1.5 px-4 xs:px-5 sm:px-6 py-2.5 xs:py-3 sm:py-3.5 overflow-hidden rounded-lg sm:rounded-xl text-xs xs:text-sm sm:text-base font-bold transition-all active:scale-95"
               style={{
-                border: '2px solid #22c55e',
-                boxShadow: '0 0 12px #22c55e, 0 0 24px rgba(34, 197, 94, 0.6)',
+                border: '2px solid #ffffff',
+                boxShadow: '0 0 12px #ffffff, 0 0 24px rgba(255, 255, 255, 0.6)',
                 background: 'black'
               }}
             >
-              <span className="relative z-10 flex items-center gap-1.5 xs:gap-2 whitespace-nowrap" style={{ color: '#22c55e', textShadow: '0 0 6px #22c55e, 0 0 12px #22c55e' }}>
+              <span className="relative z-10 flex items-center gap-1.5 xs:gap-2 whitespace-nowrap" style={{ color: '#ffffff', textShadow: '0 0 6px #ffffff, 0 0 12px #ffffff' }}>
                 I Agree & Understand
-                <CheckCircle2 className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5" style={{ color: '#22c55e' }} />
+                <CheckCircle2 className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5" style={{ color: '#ffffff' }} />
               </span>
             </motion.button>
           </div>

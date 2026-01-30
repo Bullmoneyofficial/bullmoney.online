@@ -132,7 +132,7 @@ export const CameraModal = React.memo(function CameraModal({
               <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30">
                 <div className="bg-black rounded-full px-6 py-2 flex items-center gap-3">
                   <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 ring-1 ring-slate-600">
-                    <motion.div className="w-full h-full rounded-full bg-green-500/40" animate={{ opacity: [0.4, 0.8, 0.4] }} transition={shouldSkipHeavyEffects ? {} : { duration: 1.5, repeat: Infinity }} />
+                    <motion.div className="w-full h-full rounded-full bg-white/40" animate={{ opacity: [0.4, 0.8, 0.4] }} transition={shouldSkipHeavyEffects ? {} : { duration: 1.5, repeat: Infinity }} />
                   </div>
                   <span className="text-[9px] text-white/60 font-medium">Recording</span>
                 </div>
@@ -193,7 +193,7 @@ export const CameraModal = React.memo(function CameraModal({
                           onClick={() => setFilter(f)}
                           className={`w-9 h-9 rounded-full ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-md'} flex items-center justify-center text-[7px] font-bold uppercase border ${
                             filter === f 
-                              ? "bg-blue-500 text-white border-blue-400" 
+                              ? "bg-white text-black border-white" 
                               : "bg-black/60 text-white/70 border-white/10"
                           }`}
                         >
@@ -208,7 +208,7 @@ export const CameraModal = React.memo(function CameraModal({
                     <motion.div
                       animate={{ 
                         scale: [1, 1.03, 1],
-                        borderColor: ['rgba(255,255,255,0.2)', 'rgba(59,130,246,0.5)', 'rgba(255,255,255,0.2)']
+                        borderColor: ['rgba(255,255,255,0.2)', 'rgba(255, 255, 255,0.5)', 'rgba(255,255,255,0.2)']
                       }}
                       transition={shouldSkipHeavyEffects ? {} : { duration: 2, repeat: Infinity }}
                       className="w-40 h-40 rounded-full border-2 flex items-center justify-center"

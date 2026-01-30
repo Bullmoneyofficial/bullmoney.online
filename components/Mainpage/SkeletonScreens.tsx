@@ -102,8 +102,8 @@ export const SplineSkeleton = ({ label }: { label?: string }) => (
       <div
         className="w-full h-full"
         style={{
-          backgroundImage: `linear-gradient(rgba(59, 130, 246, 0.3) 1px, transparent 1px),
-                           linear-gradient(90deg, rgba(59, 130, 246, 0.3) 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.3) 1px, transparent 1px),
+                           linear-gradient(90deg, rgba(255, 255, 255, 0.3) 1px, transparent 1px)`,
           backgroundSize: '40px 40px',
         }}
       />
@@ -112,8 +112,8 @@ export const SplineSkeleton = ({ label }: { label?: string }) => (
     {/* Loading indicator */}
     <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
       <div className="relative w-20 h-20">
-        <div className="absolute inset-0 border-4 border-blue-500/20 rounded-full" />
-        <div className="absolute inset-0 border-4 border-blue-500/40 border-t-blue-500 rounded-full animate-spin" />
+        <div className="absolute inset-0 border-4 border-white/20 rounded-full" />
+        <div className="absolute inset-0 border-4 border-white/40 border-t-blue-500 rounded-full animate-spin" />
       </div>
       {label && (
         <div className="text-sm text-white/60 font-mono">
@@ -182,7 +182,7 @@ export const LoadingProgress = ({ progress }: { progress: number }) => (
   <div className="w-full max-w-md mx-auto">
     <div className="relative h-2 bg-white/10 rounded-full overflow-hidden">
       <div
-        className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300 ease-out"
+        className="absolute inset-y-0 left-0 bg-gradient-to-r from-white to-white transition-all duration-300 ease-out"
         style={{ width: `${progress}%` }}
       />
       <div

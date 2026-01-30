@@ -32,8 +32,8 @@ import { detectBrowserCapabilities, selectOptimalMeasurementConfig } from '@/lib
 // --- GLOBAL NEON BLUE STYLES (Neon Blue Sign Style) ---
 const GLOBAL_NEON_STYLES = `
   .neon-blue-text {
-    color: #3b82f6;
-    text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+    color: #ffffff;
+    text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
   }
 
   .neon-white-text {
@@ -46,22 +46,22 @@ const GLOBAL_NEON_STYLES = `
   }
 
   .neon-blue-icon {
-    filter: drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6);
+    filter: drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff);
   }
 
   .neon-blue-border {
-    border: 2px solid #3b82f6;
-    box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff;
   }
 
   .neon-blue-bg {
-    background: #3b82f6;
-    box-shadow: 0 0 8px #3b82f6, 0 0 16px #3b82f6;
+    background: #ffffff;
+    box-shadow: 0 0 8px #ffffff, 0 0 16px #ffffff;
   }
 
   .neon-subtle-border {
-    border: 1px solid rgba(59, 130, 246, 0.8);
-    box-shadow: 0 0 4px #3b82f6, inset 0 0 4px #3b82f6;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 4px #ffffff, inset 0 0 4px #ffffff;
   }
 
   .gpu-layer {
@@ -448,31 +448,31 @@ const useHub = () => {
 
 // Neon blue glow styles for trading theme
 const NEON_STYLES = {
-  blueText: 'text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.9)]',
-  blueTextBright: 'text-blue-300 drop-shadow-[0_0_12px_rgba(59,130,246,1)]',
-  cyanText: 'text-cyan-400 drop-shadow-[0_0_8px_rgba(6,182,212,0.9)]',
+  blueText: 'text-white drop-shadow-[0_0_8px_rgba(255, 255, 255,0.9)]',
+  blueTextBright: 'text-white drop-shadow-[0_0_12px_rgba(255, 255, 255,1)]',
+  cyanText: 'text-white drop-shadow-[0_0_8px_rgba(255, 255, 255,0.9)]',
   amberText: 'text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.9)]',
   orangeText: 'text-orange-400 drop-shadow-[0_0_8px_rgba(251,146,60,0.9)]',
-  purpleText: 'text-purple-400 drop-shadow-[0_0_8px_rgba(168,85,247,0.9)]',
-  emeraldText: 'text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.9)]',
+  purpleText: 'text-white drop-shadow-[0_0_8px_rgba(255, 255, 255,0.9)]',
+  emeraldText: 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.9)]',
   whiteGlow: 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]',
   
-  blueBorder: 'border-blue-500/60 shadow-[0_0_12px_rgba(59,130,246,0.6),inset_0_0_8px_rgba(59,130,246,0.3)]',
-  cyanBorder: 'border-cyan-500/60 shadow-[0_0_12px_rgba(6,182,212,0.6),inset_0_0_8px_rgba(6,182,212,0.3)]',
-  purpleBorder: 'border-purple-500/60 shadow-[0_0_12px_rgba(168,85,247,0.6),inset_0_0_8px_rgba(168,85,247,0.3)]',
-  emeraldBorder: 'border-emerald-500/60 shadow-[0_0_12px_rgba(52,211,153,0.6),inset_0_0_8px_rgba(52,211,153,0.3)]',
+  blueBorder: 'border-white/60 shadow-[0_0_12px_rgba(255, 255, 255,0.6),inset_0_0_8px_rgba(255, 255, 255,0.3)]',
+  cyanBorder: 'border-white/60 shadow-[0_0_12px_rgba(255, 255, 255,0.6),inset_0_0_8px_rgba(255, 255, 255,0.3)]',
+  purpleBorder: 'border-white/60 shadow-[0_0_12px_rgba(255, 255, 255,0.6),inset_0_0_8px_rgba(255, 255, 255,0.3)]',
+  emeraldBorder: 'border-white/60 shadow-[0_0_12px_rgba(255,255,255,0.6),inset_0_0_8px_rgba(255,255,255,0.3)]',
   
-  blueBg: 'bg-gradient-to-br from-blue-600/40 via-blue-500/25 to-cyan-600/30 shadow-[0_0_20px_rgba(59,130,246,0.4)]',
-  cyanBg: 'bg-gradient-to-br from-cyan-600/40 via-cyan-500/25 to-blue-600/30 shadow-[0_0_20px_rgba(6,182,212,0.4)]',
-  purpleBg: 'bg-gradient-to-br from-purple-600/40 via-purple-500/25 to-fuchsia-600/30 shadow-[0_0_20px_rgba(168,85,247,0.4)]',
+  blueBg: 'bg-gradient-to-br from-white/40 via-white/25 to-white/30 shadow-[0_0_20px_rgba(255, 255, 255,0.4)]',
+  cyanBg: 'bg-gradient-to-br from-white/40 via-white/25 to-white/30 shadow-[0_0_20px_rgba(255, 255, 255,0.4)]',
+  purpleBg: 'bg-gradient-to-br from-white/40 via-white/25 to-fuchsia-600/30 shadow-[0_0_20px_rgba(255, 255, 255,0.4)]',
   darkBg: 'bg-gradient-to-br from-zinc-900/98 via-zinc-800/95 to-black/98 backdrop-blur-3xl',
   
-  iconGlow: 'drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]',
-  iconGlowCyan: 'drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]',
-  iconGlowPurple: 'drop-shadow-[0_0_8px_rgba(168,85,247,0.8)]',
+  iconGlow: 'drop-shadow-[0_0_8px_rgba(255, 255, 255,0.8)]',
+  iconGlowCyan: 'drop-shadow-[0_0_8px_rgba(255, 255, 255,0.8)]',
+  iconGlowPurple: 'drop-shadow-[0_0_8px_rgba(255, 255, 255,0.8)]',
   iconGlowAmber: 'drop-shadow-[0_0_8px_rgba(251,191,36,0.8)]',
   iconGlowOrange: 'drop-shadow-[0_0_8px_rgba(251,146,60,0.8)]',
-  iconGlowEmerald: 'drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]',
+  iconGlowEmerald: 'drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]',
 };
 
 const SoundEffects = {
@@ -566,8 +566,8 @@ const SoundEffects = {
 };
 
 const getFpsColor = (fps: number) => {
-  if (fps >= 58) return { text: '#34d399', glow: 'rgba(52, 211, 153, 0.9)', bg: 'rgba(52, 211, 153, 0.15)' };
-  if (fps >= 50) return { text: '#60a5fa', glow: 'rgba(96, 165, 250, 0.9)', bg: 'rgba(96, 165, 250, 0.15)' };
+  if (fps >= 58) return { text: '#ffffff', glow: 'rgba(255, 255, 255, 0.9)', bg: 'rgba(255, 255, 255, 0.15)' };
+  if (fps >= 50) return { text: '#ffffff', glow: 'rgba(255, 255, 255, 0.9)', bg: 'rgba(255, 255, 255, 0.15)' };
   if (fps >= 40) return { text: '#fbbf24', glow: 'rgba(251, 191, 36, 0.8)', bg: 'rgba(251, 191, 36, 0.15)' };
   if (fps >= 30) return { text: '#fb923c', glow: 'rgba(251, 146, 60, 0.8)', bg: 'rgba(251, 146, 60, 0.15)' };
   return { text: '#f87171', glow: 'rgba(248, 113, 113, 0.8)', bg: 'rgba(248, 113, 113, 0.15)' };
@@ -2115,9 +2115,9 @@ function calculate3DPerformanceScore(fps: number, memoryPercentage: number, gpuS
  * Get Performance Grade from Score
  */
 function getPerformanceGrade(score: number): { grade: string; color: string; label: string } {
-  if (score >= 90) return { grade: 'S', color: '#22c55e', label: 'Excellent' };
-  if (score >= 80) return { grade: 'A', color: '#3b82f6', label: 'Great' };
-  if (score >= 70) return { grade: 'B', color: '#a855f7', label: 'Good' };
+  if (score >= 90) return { grade: 'S', color: '#ffffff', label: 'Excellent' };
+  if (score >= 80) return { grade: 'A', color: '#ffffff', label: 'Great' };
+  if (score >= 70) return { grade: 'B', color: '#ffffff', label: 'Good' };
   if (score >= 60) return { grade: 'C', color: '#f59e0b', label: 'Fair' };
   if (score >= 50) return { grade: 'D', color: '#ef4444', label: 'Poor' };
   return { grade: 'F', color: '#dc2626', label: 'Critical' };
@@ -2365,7 +2365,7 @@ const FpsCandlestickChart = memo(({ fps, width = 80, height = 48, candleCount = 
 
   return (
     <div className="relative overflow-hidden rounded-lg" style={{ width, height }}>
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-600/15 via-blue-500/5 to-slate-900/25 border border-blue-500/20" />
+      <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-white/5 to-slate-900/25 border border-white/20" />
       <svg width={width} height={height} className="relative z-10">
         {/* Grid lines */}
         {[0.25, 0.5, 0.75].map(pct => (
@@ -2409,12 +2409,12 @@ const FpsDisplay = memo(({ fps, deviceTier, jankScore }: { fps: number; deviceTi
   
   return (
     <div className="relative">
-      <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-blue-600/30 via-blue-500/15 to-slate-900/40 border border-blue-500/40" />
+      <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-white/30 via-white/15 to-slate-900/40 border border-white/40" />
       <div className="relative px-2 py-1.5 flex items-center gap-2">
         <FpsCandlestickChart fps={fps} />
         <div className="flex flex-col gap-0.5 min-w-[40px]">
           <div className="flex items-center gap-1">
-            <Activity size={10} className="text-blue-400 neon-blue-icon" />
+            <Activity size={10} className="text-white neon-blue-icon" />
             <span className="text-sm font-black neon-blue-text" style={{ color: colors.text }}>{fps}</span>
           </div>
           <div className="text-[8px] font-mono font-bold uppercase neon-blue-text tracking-wide">
@@ -2440,7 +2440,7 @@ const MinimizedFpsDisplay = memo(({ fps }: { fps: number }) => {
         animate={{ scale: [1, 1.2, 1], opacity: [0.7, 1, 0.7] }}
         transition={{ duration: 1.5, repeat: Infinity }}
       >
-        <Activity size={11} className="text-blue-400 neon-blue-icon drop-shadow-[0_0_8px_rgba(59,130,246,0.9)]" />
+        <Activity size={11} className="text-white neon-blue-icon drop-shadow-[0_0_8px_rgba(255, 255, 255,0.9)]" />
       </motion.div>
       <div className="flex overflow-hidden rounded" style={{ background: colors.bg }}>
         {digits.map((digit, idx) => (
@@ -2482,12 +2482,12 @@ const StatCard = memo(({
   dataSource?: 'device' | 'browser' | 'estimated';
 }) => {
   const colorClasses = {
-    blue: 'from-blue-500/20 to-blue-600/10 border-blue-500/30 text-blue-400',
-    green: 'from-emerald-500/20 to-emerald-600/10 border-emerald-500/30 text-emerald-400',
+    blue: 'from-white/20 to-white/10 border-white/30 text-white',
+    green: 'from-white/20 to-white/10 border-white/30 text-white',
     amber: 'from-amber-500/20 to-amber-600/10 border-amber-500/30 text-amber-400',
     red: 'from-red-500/20 to-red-600/10 border-red-500/30 text-red-400',
-    cyan: 'from-cyan-500/20 to-cyan-600/10 border-cyan-500/30 text-cyan-400',
-    purple: 'from-purple-500/20 to-purple-600/10 border-purple-500/30 text-purple-400',
+    cyan: 'from-white/20 to-white/10 border-white/30 text-white',
+    purple: 'from-white/20 to-white/10 border-white/30 text-white',
   };
   
   const sourceLabels = {
@@ -2497,12 +2497,12 @@ const StatCard = memo(({
   };
   
   const sourceColors = {
-    device: 'text-blue-400',
-    browser: 'text-blue-400',
-    estimated: 'text-blue-400'
+    device: 'text-white',
+    browser: 'text-white',
+    estimated: 'text-white'
   };
   
-  const sourceGlow = '0 0 6px #3b82f6';
+  const sourceGlow = '0 0 6px #ffffff';
 
   return (
     <motion.div
@@ -2549,11 +2549,11 @@ const PerformanceRing = memo(({
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   const colors = {
-    blue: { stroke: '#3b82f6', glow: 'rgba(59, 130, 246, 0.5)' },
-    green: { stroke: '#22c55e', glow: 'rgba(34, 197, 94, 0.5)' },
+    blue: { stroke: '#ffffff', glow: 'rgba(255, 255, 255, 0.5)' },
+    green: { stroke: '#ffffff', glow: 'rgba(255, 255, 255, 0.5)' },
     amber: { stroke: '#f59e0b', glow: 'rgba(245, 158, 11, 0.5)' },
     red: { stroke: '#ef4444', glow: 'rgba(239, 68, 68, 0.5)' },
-    cyan: { stroke: '#06b6d4', glow: 'rgba(6, 182, 212, 0.5)' },
+    cyan: { stroke: '#ffffff', glow: 'rgba(255, 255, 255, 0.5)' },
   };
 
   return (
@@ -2605,7 +2605,7 @@ const ConnectionStatusBadge = memo(({ isOnline, effectiveType }: { isOnline: boo
 
   const color = getSpeedColor();
   const colorClasses = {
-    green: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40',
+    green: 'bg-white/20 text-white border-white/40',
     amber: 'bg-amber-500/20 text-amber-400 border-amber-500/40',
     red: 'bg-red-500/20 text-red-400 border-red-500/40',
   };
@@ -2613,7 +2613,7 @@ const ConnectionStatusBadge = memo(({ isOnline, effectiveType }: { isOnline: boo
   return (
     <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full border ${colorClasses[color]}`}>
       <motion.div
-        className={`w-2 h-2 rounded-full ${color === 'green' ? 'bg-emerald-400' : color === 'amber' ? 'bg-amber-400' : 'bg-red-400'}`}
+        className={`w-2 h-2 rounded-full ${color === 'green' ? 'bg-white' : color === 'amber' ? 'bg-amber-400' : 'bg-red-400'}`}
         animate={{ scale: [1, 1.2, 1], opacity: [1, 0.7, 1] }}
         transition={{ duration: 1.5, repeat: Infinity }}
       />
@@ -2693,7 +2693,7 @@ const DeviceCenterPanel = memo(({
           dragElastic={0.2}
           onDragStart={() => setIsDragging(true)}
           onDragEnd={handleDragEnd}
-          className="fixed right-0 top-0 bottom-0 z-[2147483646] w-[320px] max-w-[90vw] bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl border-l border-blue-500/30 shadow-2xl shadow-blue-900/30 flex flex-col"
+          className="fixed right-0 top-0 bottom-0 z-[2147483646] w-[320px] max-w-[90vw] bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl border-l border-white/30 shadow-2xl shadow-white/30 flex flex-col"
           style={{ paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
         >
           {/* Drag Handle */}
@@ -2702,10 +2702,10 @@ const DeviceCenterPanel = memo(({
           </div>
 
           {/* Header */}
-          <div className="px-4 pb-3 border-b border-blue-500/20">
+          <div className="px-4 pb-3 border-b border-white/20">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-white to-white flex items-center justify-center">
                   <Smartphone className="w-4 h-4 text-white neon-white-icon" />
                 </div>
                 <div>
@@ -2717,7 +2717,7 @@ const DeviceCenterPanel = memo(({
                 whileHover={{ scale: 1.1, rotate: 90 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={onClose}
-                className="w-8 h-8 rounded-lg bg-blue-500/20 hover:bg-blue-500/40 border border-blue-400/30 flex items-center justify-center neon-blue-border"
+                className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/40 border border-white/30 flex items-center justify-center neon-blue-border"
               >
                 <X className="w-4 h-4 neon-blue-icon" />
               </motion.button>
@@ -2734,7 +2734,7 @@ const DeviceCenterPanel = memo(({
           </div>
 
           {/* Tabs */}
-          <div className="flex border-b border-blue-500/20 overflow-x-auto overflow-y-hidden scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ touchAction: 'pan-x pinch-zoom' }}>
+          <div className="flex border-b border-white/20 overflow-x-auto overflow-y-hidden scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ touchAction: 'pan-x pinch-zoom' }}>
             {DEVICE_PANEL_TABS.map(tab => {
               const Icon = tab.icon;
               return (
@@ -2743,7 +2743,7 @@ const DeviceCenterPanel = memo(({
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex-1 min-w-[70px] flex items-center justify-center gap-1.5 py-5 sm:py-3 px-2 sm:px-3 text-[10px] sm:text-[11px] font-semibold transition-all whitespace-nowrap min-h-[48px] sm:min-h-0 ${
                     activeTab === tab.id
-                      ? 'text-blue-400 border-b-2 border-blue-400 bg-blue-500/10'
+                      ? 'text-white border-b-2 border-white bg-white/10'
                       : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5'
                   }`}
                 >
@@ -2767,8 +2767,8 @@ const DeviceCenterPanel = memo(({
                   className="space-y-3"
                 >
                   {/* Device Info */}
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/5 border border-blue-500/20">
-                    <h4 className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-2">Device</h4>
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20">
+                    <h4 className="text-[10px] font-bold text-white uppercase tracking-wider mb-2">Device</h4>
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-[10px]">
                         <span className="text-zinc-400">Platform</span>
@@ -2827,8 +2827,8 @@ const DeviceCenterPanel = memo(({
                   </div>
 
                   {/* GPU Info */}
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/10 to-fuchsia-500/5 border border-purple-500/20">
-                    <h4 className="text-[10px] font-bold text-purple-400 uppercase tracking-wider mb-2">Graphics</h4>
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-white/10 to-fuchsia-500/5 border border-white/20">
+                    <h4 className="text-[10px] font-bold text-white uppercase tracking-wider mb-2">Graphics</h4>
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-[10px]">
                         <span className="text-zinc-400">GPU</span>
@@ -2847,8 +2847,8 @@ const DeviceCenterPanel = memo(({
                       <div className="flex justify-between text-[10px]">
                         <span className="text-zinc-400">GPU Tier</span>
                         <span className={`font-semibold uppercase ${
-                          gpuInfo.tier === 'ultra' ? 'text-purple-400' :
-                          gpuInfo.tier === 'high' ? 'text-emerald-400' :
+                          gpuInfo.tier === 'ultra' ? 'text-white' :
+                          gpuInfo.tier === 'high' ? 'text-white' :
                           gpuInfo.tier === 'medium' ? 'text-amber-400' : 'text-red-400'
                         }`}>
                           {gpuInfo.tier}
@@ -2862,8 +2862,8 @@ const DeviceCenterPanel = memo(({
                   </div>
 
                   {/* Screen Info */}
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20">
-                    <h4 className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider mb-2">Display</h4>
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20">
+                    <h4 className="text-[10px] font-bold text-white uppercase tracking-wider mb-2">Display</h4>
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-[10px]">
                         <span className="text-zinc-400">Resolution</span>
@@ -2883,7 +2883,7 @@ const DeviceCenterPanel = memo(({
                       </div>
                       <div className="flex justify-between text-[10px]">
                         <span className="text-zinc-400">HDR</span>
-                        <span className={`font-semibold ${screenInfo.hdr ? 'text-emerald-400' : 'text-zinc-500'}`}>
+                        <span className={`font-semibold ${screenInfo.hdr ? 'text-white' : 'text-zinc-500'}`}>
                           {screenInfo.hdr ? 'Supported' : 'Not supported'}
                         </span>
                       </div>
@@ -2896,8 +2896,8 @@ const DeviceCenterPanel = memo(({
 
                   {/* Battery Info (if supported) */}
                   {batteryInfo.supported && (
-                    <div className="p-3 rounded-xl bg-gradient-to-br from-green-500/10 to-emerald-500/5 border border-green-500/20">
-                      <h4 className="text-[10px] font-bold text-green-400 uppercase tracking-wider mb-2">Battery</h4>
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20">
+                      <h4 className="text-[10px] font-bold text-white uppercase tracking-wider mb-2">Battery</h4>
                       <div className="space-y-1.5">
                         <div className="flex justify-between text-[10px]">
                           <span className="text-zinc-400">Level</span>
@@ -2905,7 +2905,7 @@ const DeviceCenterPanel = memo(({
                             <div className="w-16 h-2 bg-zinc-700 rounded-full overflow-hidden">
                               <motion.div
                                 className={`h-full rounded-full ${
-                                  batteryInfo.level > 50 ? 'bg-emerald-500' :
+                                  batteryInfo.level > 50 ? 'bg-white' :
                                   batteryInfo.level > 20 ? 'bg-amber-500' : 'bg-red-500'
                                 }`}
                                 initial={{ width: 0 }}
@@ -2918,7 +2918,7 @@ const DeviceCenterPanel = memo(({
                         </div>
                         <div className="flex justify-between text-[10px]">
                           <span className="text-zinc-400">Status</span>
-                          <span className={`font-semibold flex items-center gap-1 ${batteryInfo.charging ? 'text-emerald-400' : 'text-zinc-400'}`}>
+                          <span className={`font-semibold flex items-center gap-1 ${batteryInfo.charging ? 'text-white' : 'text-zinc-400'}`}>
                             {batteryInfo.charging ? (
                               <>
                                 <Zap className="w-3 h-3" />
@@ -3026,9 +3026,9 @@ const DeviceCenterPanel = memo(({
                   className="space-y-3"
                 >
                   {/* Connection Status */}
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/5 border border-blue-500/20">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20">
                     <div className="flex items-center justify-between mb-3">
-                      <h4 className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Connection</h4>
+                      <h4 className="text-[10px] font-bold text-white uppercase tracking-wider">Connection</h4>
                       <ConnectionStatusBadge 
                         isOnline={networkStats.isOnline} 
                         effectiveType={networkStats.effectiveType} 
@@ -3049,7 +3049,7 @@ const DeviceCenterPanel = memo(({
                       </div>
                       <div className="flex justify-between text-[10px]">
                         <span className="text-zinc-400">Data Saver</span>
-                        <span className={`font-semibold ${networkStats.saveData ? 'text-amber-400' : 'text-emerald-400'}`}>
+                        <span className={`font-semibold ${networkStats.saveData ? 'text-amber-400' : 'text-white'}`}>
                           {networkStats.saveData ? 'Enabled' : 'Disabled'}
                         </span>
                       </div>
@@ -3065,7 +3065,7 @@ const DeviceCenterPanel = memo(({
                         whileTap={{ scale: 0.95 }}
                         onClick={networkStats.runSpeedTest}
                         disabled={networkStats.testing}
-                        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 text-[9px] font-semibold text-blue-400 disabled:opacity-50"
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/20 hover:bg-white/30 border border-white/30 text-[9px] font-semibold text-white disabled:opacity-50"
                       >
                         {networkStats.testing ? (
                           <Loader className="w-3 h-3 animate-spin" />
@@ -3139,24 +3139,24 @@ const DeviceCenterPanel = memo(({
                   className="space-y-3"
                 >
                   {/* Core Web Vitals */}
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/5 border border-blue-500/20">
-                    <h4 className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-2">Core Web Vitals</h4>
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20">
+                    <h4 className="text-[10px] font-bold text-white uppercase tracking-wider mb-2">Core Web Vitals</h4>
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-[10px]">
                         <span className="text-zinc-400">First Contentful Paint</span>
-                        <span className={`font-semibold ${perfStats.firstContentfulPaint < 1800 ? 'text-emerald-400' : perfStats.firstContentfulPaint < 3000 ? 'text-amber-400' : 'text-red-400'}`}>
+                        <span className={`font-semibold ${perfStats.firstContentfulPaint < 1800 ? 'text-white' : perfStats.firstContentfulPaint < 3000 ? 'text-amber-400' : 'text-red-400'}`}>
                           {perfStats.firstContentfulPaint}ms
                         </span>
                       </div>
                       <div className="flex justify-between text-[10px]">
                         <span className="text-zinc-400">Largest Contentful Paint</span>
-                        <span className={`font-semibold ${perfStats.largestContentfulPaint < 2500 ? 'text-emerald-400' : perfStats.largestContentfulPaint < 4000 ? 'text-amber-400' : 'text-red-400'}`}>
+                        <span className={`font-semibold ${perfStats.largestContentfulPaint < 2500 ? 'text-white' : perfStats.largestContentfulPaint < 4000 ? 'text-amber-400' : 'text-red-400'}`}>
                           {perfStats.largestContentfulPaint || 'Measuring...'}ms
                         </span>
                       </div>
                       <div className="flex justify-between text-[10px]">
                         <span className="text-zinc-400">Cumulative Layout Shift</span>
-                        <span className={`font-semibold ${perfStats.cumulativeLayoutShift < 0.1 ? 'text-emerald-400' : perfStats.cumulativeLayoutShift < 0.25 ? 'text-amber-400' : 'text-red-400'}`}>
+                        <span className={`font-semibold ${perfStats.cumulativeLayoutShift < 0.1 ? 'text-white' : perfStats.cumulativeLayoutShift < 0.25 ? 'text-amber-400' : 'text-red-400'}`}>
                           {perfStats.cumulativeLayoutShift.toFixed(3)}
                         </span>
                       </div>
@@ -3243,12 +3243,12 @@ const DeviceCenterPanel = memo(({
                   className="space-y-3"
                 >
                   {/* User Info */}
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/5 border border-blue-500/20">
-                    <h4 className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-2">Account Status</h4>
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20">
+                    <h4 className="text-[10px] font-bold text-white uppercase tracking-wider mb-2">Account Status</h4>
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-[10px]">
                         <span className="text-zinc-400">Status</span>
-                        <span className={`font-semibold ${userId ? 'text-emerald-400' : 'text-zinc-500'}`}>
+                        <span className={`font-semibold ${userId ? 'text-white' : 'text-zinc-500'}`}>
                           {userId ? 'Signed In' : 'Guest'}
                         </span>
                       </div>
@@ -3267,7 +3267,7 @@ const DeviceCenterPanel = memo(({
                       </div>
                       <div className="flex justify-between text-[10px]">
                         <span className="text-zinc-400">Role</span>
-                        <span className={`font-semibold flex items-center gap-1 ${isAdmin ? 'text-blue-400' : 'text-zinc-400'}`}>
+                        <span className={`font-semibold flex items-center gap-1 ${isAdmin ? 'text-white' : 'text-zinc-400'}`}>
                           {isAdmin ? <Shield className="w-3 h-3" /> : null}
                           {isAdmin ? 'Admin' : 'User'}
                         </span>
@@ -3282,7 +3282,7 @@ const DeviceCenterPanel = memo(({
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => window.location.href = '/login'}
-                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-bold text-xs"
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-white to-white text-white font-bold text-xs"
                       >
                         <User className="w-4 h-4" />
                         Sign In / Register
@@ -3295,7 +3295,7 @@ const DeviceCenterPanel = memo(({
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => window.dispatchEvent(new CustomEvent('openAdminVIPPanel'))}
-                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold text-xs"
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-white to-white text-white font-bold text-xs"
                       >
                         <Shield className="w-4 h-4" />
                         Admin Panel
@@ -3310,8 +3310,8 @@ const DeviceCenterPanel = memo(({
                       <div className="flex justify-between text-[10px]">
                         <span className="text-zinc-400">Device Tier</span>
                         <span className={`font-semibold uppercase ${
-                          deviceTier === 'ultra' ? 'text-emerald-400' :
-                          deviceTier === 'high' ? 'text-blue-400' :
+                          deviceTier === 'ultra' ? 'text-white' :
+                          deviceTier === 'high' ? 'text-white' :
                           deviceTier === 'medium' ? 'text-amber-400' : 'text-red-400'
                         }`}>
                           {deviceTier}
@@ -3337,7 +3337,7 @@ const DeviceCenterPanel = memo(({
           </div>
 
           {/* Footer */}
-          <div className="p-3 border-t border-blue-500/20 bg-gradient-to-r from-blue-500/5 to-cyan-500/5">
+          <div className="p-3 border-t border-white/20 bg-gradient-to-r from-white/5 to-white/5">
             <div className="text-[8px] text-zinc-500 text-center">
               All data from real device APIs • Auto-refreshing
             </div>
@@ -3455,7 +3455,7 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false, onNewMessa
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <Loader className="w-5 h-5 text-blue-400 animate-spin mb-2" />
+        <Loader className="w-5 h-5 text-white animate-spin mb-2" />
         <span className="text-[10px] text-zinc-400">Loading live feed...</span>
       </div>
     );
@@ -3472,18 +3472,18 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false, onNewMessa
     return (
       <div className="flex flex-col items-center justify-center py-8 px-4">
         <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${
-          isVipChannel ? 'bg-gradient-to-r from-amber-500 to-orange-500' : 'bg-blue-500/20'
+          isVipChannel ? 'bg-gradient-to-r from-amber-500 to-orange-500' : 'bg-white/20'
         }`}>
           {isVipChannel ? (
             <Crown className="w-6 h-6 text-white" />
           ) : (
-            <MessageCircle className="w-6 h-6 text-blue-400" />
+            <MessageCircle className="w-6 h-6 text-white" />
           )}
         </div>
         {isVipChannel && effectiveIsVip && (
-          <div className="flex items-center gap-1 mb-2 px-2 py-1 bg-emerald-500/20 rounded-full">
-            <CheckCircle className="w-3 h-3 text-emerald-400" />
-            <span className="text-[9px] text-emerald-400 font-bold">VIP ACCESS UNLOCKED</span>
+          <div className="flex items-center gap-1 mb-2 px-2 py-1 bg-white/20 rounded-full">
+            <CheckCircle className="w-3 h-3 text-white" />
+            <span className="text-[9px] text-white font-bold">VIP ACCESS UNLOCKED</span>
           </div>
         )}
         <p className="text-[11px] text-zinc-400 mb-1 text-center">
@@ -3507,7 +3507,7 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false, onNewMessa
             rel="noopener noreferrer"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 bg-blue-500/20 text-blue-400 border border-blue-500/40"
+            className="px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 bg-white/20 text-white border border-white/40"
           >
             <ExternalLink className="w-3.5 h-3.5" />
             Open in Telegram
@@ -3538,14 +3538,14 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false, onNewMessa
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: idx * 0.05 }}
-          className="block bg-white/5 hover:bg-white/10 rounded-lg p-3 border border-white/10 hover:border-blue-500/40 transition-all group"
+          className="block bg-white/5 hover:bg-white/10 rounded-lg p-3 border border-white/10 hover:border-white/40 transition-all group"
         >
           <div className="flex items-start gap-2">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 bg-gradient-to-br ${
               channel === 'vip' ? 'from-amber-500 to-orange-500' :
-              channel === 'shop' ? 'from-emerald-500 to-teal-500' :
-              channel === 'trades' ? 'from-cyan-500 to-blue-500' :
-              'from-blue-500 to-cyan-500'
+              channel === 'shop' ? 'from-white to-teal-500' :
+              channel === 'trades' ? 'from-white to-white' :
+              'from-white to-white'
             }`}>
               {channel === 'vip' ? <Star className="w-4 h-4" /> : 
                channel === 'shop' ? <ShoppingBag className="w-4 h-4" /> : 
@@ -3558,10 +3558,10 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false, onNewMessa
               </div>
               <p className="text-[10px] text-zinc-300 line-clamp-3 leading-relaxed">{post.text}</p>
               {post.hasMedia && (
-                <span className="inline-block mt-1.5 text-[8px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded">📷 Media</span>
+                <span className="inline-block mt-1.5 text-[8px] bg-white/20 text-white px-1.5 py-0.5 rounded">📷 Media</span>
               )}
             </div>
-            <ExternalLink className="w-3 h-3 text-zinc-600 group-hover:text-blue-400 transition-colors flex-shrink-0" />
+            <ExternalLink className="w-3 h-3 text-zinc-600 group-hover:text-white transition-colors flex-shrink-0" />
           </div>
         </motion.a>
       ))}
@@ -3600,9 +3600,9 @@ const LiveTradesTicker = memo(() => {
   
   if (loading || !currentMessage) {
     return (
-      <div className="mt-0 -translate-y-0.5 px-1 py-0.5 bg-zinc-900/80 rounded-b-lg border-x border-b border-cyan-500/20">
+      <div className="mt-0 -translate-y-0.5 px-1 py-0.5 bg-zinc-900/80 rounded-b-lg border-x border-b border-white/20">
         <div className="flex items-center gap-1">
-          <Loader className="w-2 h-2 text-cyan-400 animate-spin" />
+          <Loader className="w-2 h-2 text-white animate-spin" />
           <span className="text-[5px] text-zinc-500">Loading...</span>
         </div>
       </div>
@@ -3619,13 +3619,13 @@ const LiveTradesTicker = memo(() => {
       rel="noopener noreferrer"
       className="block mt-0 -translate-y-0.5"
     >
-      <div className="px-1 py-0.5 bg-gradient-to-br from-zinc-900/95 via-zinc-800/95 to-zinc-900/90 backdrop-blur-xl rounded-b-lg border-x border-b border-cyan-500/30 hover:border-cyan-400/50 transition-all overflow-hidden">
+      <div className="px-1 py-0.5 bg-gradient-to-br from-zinc-900/95 via-zinc-800/95 to-zinc-900/90 backdrop-blur-xl rounded-b-lg border-x border-b border-white/30 hover:border-white/50 transition-all overflow-hidden">
         <div className="flex items-center justify-between mb-0.5">
           <div className="flex items-center gap-0.5">
-            <motion.div className="w-1 h-1 bg-green-400 rounded-full"
-              animate={{ opacity: [1, 0.3, 1], boxShadow: ['0 0 0px rgba(74,222,128,0.8)', '0 0 6px rgba(74,222,128,0.8)', '0 0 0px rgba(74,222,128,0.8)'] }}
+            <motion.div className="w-1 h-1 bg-white rounded-full"
+              animate={{ opacity: [1, 0.3, 1], boxShadow: ['0 0 0px rgba(255,255,255,0.8)', '0 0 6px rgba(255,255,255,0.8)', '0 0 0px rgba(255,255,255,0.8)'] }}
               transition={{ duration: 1, repeat: Infinity }} />
-            <span className="text-[4px] font-bold text-cyan-400/80 uppercase tracking-wider">Live</span>
+            <span className="text-[4px] font-bold text-white/80 uppercase tracking-wider">Live</span>
           </div>
           <span className="text-[5px] text-zinc-500">{currentIndex + 1}/{messages.length}</span>
         </div>
@@ -3643,7 +3643,7 @@ const LiveTradesTicker = memo(() => {
         </AnimatePresence>
         
         <div className="mt-0.5 h-[1px] bg-zinc-700/40 rounded-full overflow-hidden">
-          <motion.div className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-400"
+          <motion.div className="h-full bg-gradient-to-r from-white via-white to-white"
             initial={{ width: '0%' }}
             animate={{ width: '100%' }}
             transition={{ duration: 4, ease: 'linear' }}
@@ -3675,10 +3675,10 @@ const TradingTipPill = memo(() => {
   }, []);
 
   return (
-    <div className="relative rounded-r-full bg-gradient-to-br from-blue-600/30 via-blue-500/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-blue-500/50 shadow-2xl px-1.5 py-1 overflow-hidden max-w-[180px]">
+    <div className="relative rounded-r-full bg-gradient-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl px-1.5 py-1 overflow-hidden max-w-[180px]">
       <div className="flex items-center gap-1.5 relative z-10">
         <motion.div animate={isSpinning ? { rotate: 360, scale: [1, 1.2, 1] } : {}} transition={{ duration: 0.5 }}>
-          <Sparkles className="w-2.5 h-2.5 text-blue-400" />
+          <Sparkles className="w-2.5 h-2.5 text-white" />
         </motion.div>
         <div className="h-3 flex-1 overflow-hidden relative">
           <AnimatePresence mode="wait">
@@ -3687,7 +3687,7 @@ const TradingTipPill = memo(() => {
               initial={{ x: 20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -20, opacity: 0 }}
-              className="absolute inset-0 flex items-center text-[7px] text-blue-200/90 font-medium whitespace-nowrap truncate"
+              className="absolute inset-0 flex items-center text-[7px] text-white/90 font-medium whitespace-nowrap truncate"
             >
               {TRADING_TIPS[tipIndex]}
             </motion.span>
@@ -3719,9 +3719,9 @@ const ModalWrapper = memo(({
   const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects } = useMobilePerformance();
   
   const colorClasses = {
-    blue: 'border-blue-500/30 shadow-blue-900/20',
-    purple: 'border-purple-500/50 shadow-purple-900/50',
-    cyan: 'border-cyan-500/30 shadow-cyan-900/20'
+    blue: 'border-white/30 shadow-white/20',
+    purple: 'border-white/50 shadow-white/50',
+    cyan: 'border-white/30 shadow-white/20'
   };
 
   return (
@@ -3799,25 +3799,25 @@ const TradingModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () =
   return (
     <ModalWrapper isOpen={isOpen} onClose={onClose}>
       {/* Header */}
-      <div className="p-3 border-b border-blue-500/20 bg-gradient-to-r from-blue-500/10 to-cyan-500/10">
+      <div className="p-3 border-b border-white/20 bg-gradient-to-r from-white/10 to-white/10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-blue-400" />
+            <BarChart3 className="w-4 h-4 text-white" />
             <h3 className="text-sm font-bold text-white">Trading Quick Access</h3>
           </div>
           <motion.button
             whileHover={{ scale: 1.1, rotate: 90 }}
             whileTap={{ scale: 0.9 }}
             onClick={onClose}
-            className="p-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/40 border border-blue-400/30"
+            className="p-2 rounded-lg bg-white/20 hover:bg-white/40 border border-white/30"
           >
-            <X className="w-4 h-4 text-blue-300" />
+            <X className="w-4 h-4 text-white" />
           </motion.button>
         </div>
       </div>
 
       {/* Chart Tabs */}
-      <div className="p-3 border-b border-blue-500/20">
+      <div className="p-3 border-b border-white/20">
         <div className="flex gap-2">
           {TRADING_SYMBOLS.map(sym => {
             const Icon = sym.icon;
@@ -3827,11 +3827,11 @@ const TradingModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                 onClick={() => { setActiveChart(sym.id); setShowCalendar(false); }}
                 className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
                   activeChart === sym.id && !showCalendar
-                    ? 'bg-blue-500/30 border border-blue-400/50'
-                    : 'bg-zinc-800/50 border border-blue-500/20 hover:border-blue-400/40'
+                    ? 'bg-white/30 border border-white/50'
+                    : 'bg-zinc-800/50 border border-white/20 hover:border-white/40'
                 }`}
               >
-                <Icon className="w-4 h-4 text-blue-400" />
+                <Icon className="w-4 h-4 text-white" />
                 <span className="text-white">{sym.displayName}</span>
               </button>
             );
@@ -3860,17 +3860,17 @@ const TradingModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () =
       </div>
 
       {/* Calendar Toggle & Filters */}
-      <div className="p-3 border-t border-blue-500/20 space-y-2">
+      <div className="p-3 border-t border-white/20 space-y-2">
         <div className="flex gap-2">
           <motion.button
             onClick={() => setShowCalendar(!showCalendar)}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
-              showCalendar ? 'bg-blue-500/30 border border-blue-400/50' : 'bg-zinc-700 hover:bg-zinc-600 border border-blue-500/20'
+              showCalendar ? 'bg-white/30 border border-white/50' : 'bg-zinc-700 hover:bg-zinc-600 border border-white/20'
             }`}
           >
-            <Calendar className="w-4 h-4 text-blue-400" />
+            <Calendar className="w-4 h-4 text-white" />
             <span className="text-white">{showCalendar ? 'Show Charts' : 'Economic Calendar'}</span>
           </motion.button>
           
@@ -3882,10 +3882,10 @@ const TradingModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () =
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
-                showFilters ? 'bg-cyan-500/30 border border-cyan-400/50' : 'bg-zinc-700 hover:bg-zinc-600 border border-zinc-500/20'
+                showFilters ? 'bg-white/30 border border-white/50' : 'bg-zinc-700 hover:bg-zinc-600 border border-zinc-500/20'
               }`}
             >
-              <Filter className="w-3.5 h-3.5 text-cyan-400" />
+              <Filter className="w-3.5 h-3.5 text-white" />
               <span className="text-white">Filters</span>
             </motion.button>
           )}
@@ -3912,8 +3912,8 @@ const TradingModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                         calendarImpact === impact
                           ? impact === 'high' ? 'bg-red-500/30 text-red-300 border border-red-500/40'
                           : impact === 'medium' ? 'bg-amber-500/30 text-amber-300 border border-amber-500/40'
-                          : impact === 'low' ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/40'
-                          : 'bg-blue-500/30 text-blue-300 border border-blue-500/40'
+                          : impact === 'low' ? 'bg-white/30 text-white border border-white/40'
+                          : 'bg-white/30 text-white border border-white/40'
                           : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/40 hover:bg-zinc-700/50'
                       }`}
                     >
@@ -3933,7 +3933,7 @@ const TradingModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                       onClick={() => setCalendarCountry(country.id)}
                       className={`flex items-center gap-0.5 py-1 px-1.5 rounded text-[9px] font-semibold transition-all whitespace-nowrap ${
                         calendarCountry === country.id
-                          ? 'bg-blue-500/30 text-blue-300 border border-blue-500/40'
+                          ? 'bg-white/30 text-white border border-white/40'
                           : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/40 hover:bg-zinc-700/50'
                       }`}
                     >
@@ -3976,33 +3976,33 @@ const CommunityModal = memo(({ isOpen, onClose, isVip, isAdmin }: {
   };
 
   const socialLinks = [
-    { name: 'Discord', icon: MessageSquare, url: 'https://discord.com/invite/9vVB44ZrNA', color: 'from-blue-600 to-cyan-600' },
-    { name: 'Telegram', icon: MessageCircle, url: 'https://t.me/bullmoneywebsite', color: 'from-blue-600 to-blue-500' },
-    { name: 'Instagram', icon: Instagram, url: 'https://www.instagram.com/bullmoney.online/', color: 'from-blue-600 to-cyan-600' },
-    { name: 'YouTube', icon: Youtube, url: 'https://youtube.com/@bullmoney.online', color: 'from-blue-600 to-cyan-600' },
+    { name: 'Discord', icon: MessageSquare, url: 'https://discord.com/invite/9vVB44ZrNA', color: 'from-white to-white' },
+    { name: 'Telegram', icon: MessageCircle, url: 'https://t.me/bullmoneywebsite', color: 'from-white to-white' },
+    { name: 'Instagram', icon: Instagram, url: 'https://www.instagram.com/bullmoney.online/', color: 'from-white to-white' },
+    { name: 'YouTube', icon: Youtube, url: 'https://youtube.com/@bullmoney.online', color: 'from-white to-white' },
   ];
 
   return (
     <ModalWrapper isOpen={isOpen} onClose={onClose} color="cyan">
       {/* Header */}
-      <div className="p-3 border-b border-blue-500/20 bg-gradient-to-r from-blue-500/10 to-cyan-500/10">
+      <div className="p-3 border-b border-white/20 bg-gradient-to-r from-white/10 to-white/10">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <MessageSquare className="w-4 h-4 text-blue-400" />
+            <MessageSquare className="w-4 h-4 text-white" />
             <h3 className="text-sm font-bold text-white">Live Community</h3>
           </div>
           <div className="flex items-center gap-1.5">
-            <motion.div className="w-1.5 h-1.5 bg-green-400 rounded-full"
+            <motion.div className="w-1.5 h-1.5 bg-white rounded-full"
               animate={{ opacity: [1, 0.4, 1] }}
               transition={{ duration: 1.5, repeat: Infinity }} />
-            <span className="text-[8px] text-green-400 font-medium">LIVE</span>
+            <span className="text-[8px] text-white font-medium">LIVE</span>
             <motion.button
               whileHover={{ scale: 1.1, rotate: 90 }}
               whileTap={{ scale: 0.9 }}
               onClick={onClose}
-              className="ml-1 w-6 h-6 rounded-full bg-blue-500/30 hover:bg-blue-500/50 border border-blue-400/40 flex items-center justify-center"
+              className="ml-1 w-6 h-6 rounded-full bg-white/30 hover:bg-white/50 border border-white/40 flex items-center justify-center"
             >
-              <span className="text-blue-200 text-sm font-bold">×</span>
+              <span className="text-white text-sm font-bold">×</span>
             </motion.button>
           </div>
         </div>
@@ -4031,9 +4031,9 @@ const CommunityModal = memo(({ isOpen, onClose, isVip, isAdmin }: {
               className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all whitespace-nowrap flex-shrink-0 min-h-[32px] ${
                 isActive
                   ? ch.color === 'amber' ? 'bg-amber-500/30 text-amber-300 border border-amber-500/40'
-                  : ch.color === 'emerald' ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/40'
-                  : ch.color === 'cyan' ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/40'
-                  : 'bg-blue-500/30 text-blue-300 border border-blue-500/40'
+                  : ch.color === 'emerald' ? 'bg-white/30 text-white border border-white/40'
+                  : ch.color === 'cyan' ? 'bg-white/30 text-white border border-white/40'
+                  : 'bg-white/30 text-white border border-white/40'
                   : 'bg-white/5 text-zinc-400 border border-transparent hover:bg-white/10'
               }`}
             >
@@ -4055,7 +4055,7 @@ const CommunityModal = memo(({ isOpen, onClose, isVip, isAdmin }: {
           }}
           className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ml-auto flex-shrink-0 ${
             isAdmin 
-              ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white border border-blue-400/60'
+              ? 'bg-gradient-to-r from-white to-white text-white border border-white/60'
               : 'bg-zinc-800/80 text-zinc-300 border border-zinc-600/40'
           }`}
         >
@@ -4071,23 +4071,23 @@ const CommunityModal = memo(({ isOpen, onClose, isVip, isAdmin }: {
 
       {/* View All Link */}
       {activeChannel !== 'vip' && (
-        <div className="px-3 py-1.5 border-t border-blue-500/10">
+        <div className="px-3 py-1.5 border-t border-white/10">
           <a href={`https://t.me/${TELEGRAM_CHANNELS[activeChannel].handle}`}
             target="_blank" rel="noopener noreferrer"
-            className="flex items-center justify-center gap-1 text-[9px] text-blue-400 hover:text-blue-300">
+            className="flex items-center justify-center gap-1 text-[9px] text-white hover:text-white">
             <ExternalLink className="w-2.5 h-2.5" /> View all on Telegram
           </a>
         </div>
       )}
 
       {/* Social Links */}
-      <div className="p-3 space-y-1.5 border-t border-blue-500/20">
+      <div className="p-3 space-y-1.5 border-t border-white/20">
         <div className="flex gap-2">
           <motion.button
             onClick={handleCopyLink}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold text-xs"
+            className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-gradient-to-r from-white to-white text-white font-semibold text-xs"
           >
             {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
             {copied ? 'Copied!' : 'Copy Link'}
@@ -4149,13 +4149,13 @@ const BullMoneyTVModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: 
   return (
     <ModalWrapper isOpen={isOpen} onClose={onClose} maxWidth="500px" color="purple">
       {/* Header */}
-      <div className="p-3 border-b border-purple-500/30 bg-purple-900/40">
+      <div className="p-3 border-b border-white/30 bg-white/40">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-purple-400" viewBox="0 0 24 24" fill="currentColor">
+            <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
               <path d="M8 5v14l11-7z"/>
             </svg>
-            <h3 className="text-sm font-bold text-purple-100">BullMoney TV</h3>
+            <h3 className="text-sm font-bold text-white">BullMoney TV</h3>
             {isLive && (
               <motion.div
                 className="flex items-center gap-1 px-1.5 py-0.5 bg-red-500/20 rounded-full"
@@ -4171,9 +4171,9 @@ const BullMoneyTVModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: 
             whileHover={{ scale: 1.1, rotate: 90 }}
             whileTap={{ scale: 0.9 }}
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-purple-500/30 hover:bg-purple-500/50 border border-purple-400/40 flex items-center justify-center"
+            className="w-8 h-8 rounded-full bg-white/30 hover:bg-white/50 border border-white/40 flex items-center justify-center"
           >
-            <span className="text-purple-200 font-bold">×</span>
+            <span className="text-white font-bold">×</span>
           </motion.button>
         </div>
         
@@ -4202,7 +4202,7 @@ const BullMoneyTVModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: 
             whileTap={{ scale: 0.98 }}
             className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold ${
               activeTab === 'live'
-                ? isLive ? 'bg-red-500 text-white' : 'bg-purple-500 text-white'
+                ? isLive ? 'bg-red-500 text-white' : 'bg-white text-black'
                 : 'bg-white/10 text-white/70 hover:bg-white/20'
             }`}
           >
@@ -4263,7 +4263,7 @@ const BullMoneyTVModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: 
               onClick={() => { setTradingChannelIndex(p => (p + 1) % TRADING_LIVE_CHANNELS.length); setPlayerKey(p => p + 1); }}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-purple-600/90 hover:bg-purple-500 rounded text-[10px] font-bold text-white"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/90 hover:bg-white rounded text-[10px] font-bold text-white"
             >
               Next Channel ▶
             </motion.button>
@@ -4340,12 +4340,12 @@ const BrowserModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () =
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             onClick={e => e.stopPropagation()}
-            className="w-[90vw] max-w-[320px] bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl rounded-2xl border border-blue-500/40 shadow-2xl overflow-hidden"
+            className="w-[90vw] max-w-[320px] bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl rounded-2xl border border-white/40 shadow-2xl overflow-hidden"
           >
-            <div className="p-4 border-b border-blue-500/20 bg-gradient-to-r from-blue-500/10 to-cyan-500/10">
+            <div className="p-4 border-b border-white/20 bg-gradient-to-r from-white/10 to-white/10">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Monitor className="w-5 h-5 text-blue-400" />
+                  <Monitor className="w-5 h-5 text-white" />
                   <h3 className="text-sm font-bold text-white">Open in Browser</h3>
                 </div>
                 <motion.button
@@ -4373,11 +4373,11 @@ const BrowserModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                     whileHover={{ scale: 1.02, x: 4 }}
                     whileTap={{ scale: 0.98 }}
                     disabled={isLoading}
-                    className="w-full flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-blue-500/10 to-cyan-500/10 hover:from-blue-500/20 hover:to-cyan-500/20 text-white font-medium text-xs border border-blue-500/30 hover:border-blue-400/50 disabled:opacity-50"
+                    className="w-full flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-white/10 to-white/10 hover:from-white/20 hover:to-white/20 text-white font-medium text-xs border border-white/30 hover:border-white/50 disabled:opacity-50"
                   >
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center">
-                        <Icon className="w-4 h-4 text-blue-400" />
+                      <div className="w-8 h-8 rounded-lg bg-white/20 border border-white/30 flex items-center justify-center">
+                        <Icon className="w-4 h-4 text-white" />
                       </div>
                       <span>{browser.fullName}</span>
                     </div>
@@ -4386,10 +4386,10 @@ const BrowserModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                       <motion.div
                         animate={{ rotate: 360 }}
                         transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                        className="w-4 h-4 border-2 border-t-transparent border-blue-400 rounded-full"
+                        className="w-4 h-4 border-2 border-t-transparent border-white rounded-full"
                       />
                     ) : (
-                      <ExternalLink className="w-4 h-4 text-blue-400 opacity-50" />
+                      <ExternalLink className="w-4 h-4 text-white opacity-50" />
                     )}
                   </motion.button>
                 );
@@ -4756,9 +4756,9 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
   };
 
   const socialLinks = [
-    { name: 'Discord', icon: MessageSquare, url: 'https://discord.com/invite/9vVB44ZrNA', color: 'from-indigo-600 to-blue-600' },
-    { name: 'Telegram', icon: MessageCircle, url: 'https://t.me/bullmoneywebsite', color: 'from-blue-500 to-cyan-500' },
-    { name: 'Instagram', icon: Instagram, url: 'https://www.instagram.com/bullmoney.online/', color: 'from-pink-500 to-purple-500' },
+    { name: 'Discord', icon: MessageSquare, url: 'https://discord.com/invite/9vVB44ZrNA', color: 'from-indigo-600 to-white' },
+    { name: 'Telegram', icon: MessageCircle, url: 'https://t.me/bullmoneywebsite', color: 'from-white to-white' },
+    { name: 'Instagram', icon: Instagram, url: 'https://www.instagram.com/bullmoney.online/', color: 'from-pink-500 to-white' },
     { name: 'YouTube', icon: Youtube, url: 'https://youtube.com/@bullmoney.online', color: 'from-red-600 to-red-500' },
   ];
 
@@ -4846,11 +4846,11 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
             dragElastic={enableDrag ? { top: 0.2, bottom: 0.2 } : undefined}
             onDragStart={enableDrag ? () => setIsDragging(true) : undefined}
             onDragEnd={enableDrag ? handleDragEnd : undefined}
-            className="fixed left-1/2 top-1/2 z-[2147483647] -translate-x-1/2 -translate-y-1/2 w-[90vw] h-[75vh] max-h-[650px] sm:w-[80vw] sm:h-[80vh] sm:max-h-[700px] md:w-[75vw] md:h-[75vh] md:max-h-[750px] lg:w-[1200px] lg:h-[700px] lg:max-h-[800px] max-w-sm sm:max-w-md md:max-w-2xl lg:max-w-6xl flex flex-col bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 border border-blue-500/30 shadow-2xl overflow-hidden rounded-2xl [overscroll-behavior:contain] [-webkit-overflow-scrolling:touch]"
+            className="fixed left-1/2 top-1/2 z-[2147483647] -translate-x-1/2 -translate-y-1/2 w-[90vw] h-[75vh] max-h-[650px] sm:w-[80vw] sm:h-[80vh] sm:max-h-[700px] md:w-[75vw] md:h-[75vh] md:max-h-[750px] lg:w-[1200px] lg:h-[700px] lg:max-h-[800px] max-w-sm sm:max-w-md md:max-w-2xl lg:max-w-6xl flex flex-col bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 border border-white/30 shadow-2xl overflow-hidden rounded-2xl [overscroll-behavior:contain] [-webkit-overflow-scrolling:touch]"
             style={{ touchAction: 'pan-y pan-x', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' }}
           >
             {/* Header with FPS Display */}
-            <div className="p-3 border-b border-blue-500/30 bg-black" style={{ boxShadow: '0 0 12px rgba(59, 130, 246, 0.3), inset 0 0 12px rgba(59, 130, 246, 0.1)' }}>
+            <div className="p-3 border-b border-white/30 bg-black" style={{ boxShadow: '0 0 12px rgba(255, 255, 255, 0.3), inset 0 0 12px rgba(255, 255, 255, 0.1)' }}>
               <div className="flex items-center justify-between gap-2">
                 {/* FPS Badge */}
                 <div className="flex items-center gap-2">
@@ -4859,24 +4859,24 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                   </div>
                   <div className="flex flex-col">
                     <div className="flex items-center gap-1">
-                      <Activity size={12} className="text-blue-400" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
-                      <span className="text-lg font-black tabular-nums text-blue-300 neon-blue-text" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>{fps}</span>
-                      <span className="text-[8px] text-blue-400 font-bold neon-blue-text" style={{ textShadow: '0 0 4px #3b82f6' }}>FPS</span>
+                      <Activity size={12} className="text-white" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
+                      <span className="text-lg font-black tabular-nums text-white neon-blue-text" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>{fps}</span>
+                      <span className="text-[8px] text-white font-bold neon-blue-text" style={{ textShadow: '0 0 4px #ffffff' }}>FPS</span>
                     </div>
-                    <div className="text-[9px] font-mono font-bold uppercase text-blue-300 neon-blue-text tracking-wide" style={{ textShadow: '0 0 4px #3b82f6' }}>{deviceTier}</div>
+                    <div className="text-[9px] font-mono font-bold uppercase text-white neon-blue-text tracking-wide" style={{ textShadow: '0 0 4px #ffffff' }}>{deviceTier}</div>
                   </div>
                 </div>
                 
                 {/* Live Prices */}
-                <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-black border border-blue-500/30" style={{ boxShadow: '0 0 6px rgba(59, 130, 246, 0.2)' }}>
+                <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-black border border-white/30" style={{ boxShadow: '0 0 6px rgba(255, 255, 255, 0.2)' }}>
                   <div className="flex items-center gap-1">
-                    <Coins className="w-3 h-3 text-blue-400" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
-                    <span className="text-[10px] font-bold text-blue-300 neon-blue-text" style={{ textShadow: '0 0 4px #3b82f6' }}>${prices.xauusd}</span>
+                    <Coins className="w-3 h-3 text-white" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
+                    <span className="text-[10px] font-bold text-white neon-blue-text" style={{ textShadow: '0 0 4px #ffffff' }}>${prices.xauusd}</span>
                   </div>
-                  <div className="w-px h-3 bg-blue-500/30" />
+                  <div className="w-px h-3 bg-white/30" />
                   <div className="flex items-center gap-1">
-                    <Bitcoin className="w-3 h-3 text-blue-400" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
-                    <span className="text-[10px] font-bold text-blue-300 neon-blue-text" style={{ textShadow: '0 0 4px #3b82f6' }}>${prices.btcusd}</span>
+                    <Bitcoin className="w-3 h-3 text-white" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
+                    <span className="text-[10px] font-bold text-white neon-blue-text" style={{ textShadow: '0 0 4px #ffffff' }}>${prices.btcusd}</span>
                   </div>
                 </div>
                 
@@ -4885,10 +4885,10 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                   whileHover={{ scale: 1.1, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={onClose}
-                  className="w-8 h-8 rounded-full bg-blue-500/20 hover:bg-blue-500/40 border border-blue-400/60 flex items-center justify-center"
-                  style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}
+                  className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/40 border border-white/60 flex items-center justify-center"
+                  style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}
                 >
-                  <X className="w-4 h-4 text-blue-300" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                  <X className="w-4 h-4 text-white" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
                 </motion.button>
                 
                 {/* Hidden Admin Button - Triple tap on header to open (Mobile friendly) */}
@@ -4906,7 +4906,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
               
               {/* Swipe hint for mobile - subtle, slower animation */}
               <motion.div 
-                className="flex items-center justify-center gap-1 mt-2 text-[9px] text-blue-400/60 sm:hidden"
+                className="flex items-center justify-center gap-1 mt-2 text-[9px] text-white/60 sm:hidden"
                 animate={{ y: [0, -2, 0] }}
                 transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
               >
@@ -4916,7 +4916,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
             </div>
             
             {/* Tab Navigation */}
-            <div className="flex items-stretch border-b border-blue-500/30 bg-black overflow-x-auto overflow-y-hidden scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ boxShadow: '0 0 12px rgba(59, 130, 246, 0.3), inset 0 0 12px rgba(59, 130, 246, 0.1)', touchAction: 'pan-x pinch-zoom' }}>
+            <div className="flex items-stretch border-b border-white/30 bg-black overflow-x-auto overflow-y-hidden scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ boxShadow: '0 0 12px rgba(255, 255, 255, 0.3), inset 0 0 12px rgba(255, 255, 255, 0.1)', touchAction: 'pan-x pinch-zoom' }}>
               {UNIFIED_HUB_TABS.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -4932,12 +4932,12 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     whileTap={{ scale: 0.98 }}
                     className={`flex-1 min-w-[80px] sm:min-w-[100px] flex flex-col items-center justify-center gap-1.5 py-5 sm:py-3 px-3 sm:px-4 border-b-2 transition-all whitespace-nowrap min-h-[60px] sm:min-h-0 ${
                       isActive 
-                        ? 'bg-blue-500/20 text-blue-300 border-blue-400 neon-blue-text' 
-                        : 'text-blue-400/50 border-transparent hover:text-blue-300/70 hover:bg-blue-500/10'
+                        ? 'bg-white/20 text-white border-white neon-blue-text' 
+                        : 'text-white/50 border-transparent hover:text-white/70 hover:bg-white/10'
                     }`}
-                    style={isActive ? { textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' } : {}}
+                    style={isActive ? { textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' } : {}}
                   >
-                    <Icon className="w-4 h-4 sm:w-5 sm:h-5" style={isActive ? { filter: 'drop-shadow(0 0 4px #3b82f6)' } : {}} />
+                    <Icon className="w-4 h-4 sm:w-5 sm:h-5" style={isActive ? { filter: 'drop-shadow(0 0 4px #ffffff)' } : {}} />
                     <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">{tab.label}</span>
                   </motion.button>
                 );
@@ -4961,7 +4961,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     className="h-full flex flex-col"
                   >
                     {/* Symbol Selector */}
-                    <div className="flex gap-1.5 sm:gap-2 p-2 sm:p-3 overflow-x-auto overflow-y-hidden border-b border-blue-500/30 bg-black scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)', touchAction: 'pan-x pinch-zoom' }}>
+                    <div className="flex gap-1.5 sm:gap-2 p-2 sm:p-3 overflow-x-auto overflow-y-hidden border-b border-white/30 bg-black scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)', touchAction: 'pan-x pinch-zoom' }}>
                       {TRADING_SYMBOLS.map(symbol => {
                         const Icon = symbol.icon;
                         const isActive = selectedSymbol.id === symbol.id;
@@ -4973,12 +4973,12 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                             whileTap={{ scale: 0.95 }}
                             className={`flex items-center gap-1.5 min-w-[65px] px-3 py-2 rounded-lg text-[10px] sm:text-[11px] font-semibold whitespace-nowrap transition-all ${
                               isActive
-                                ? 'bg-blue-500/30 text-blue-300 border border-blue-400/60 neon-blue-text'
-                                : 'bg-black/40 text-blue-400/60 border border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400'
+                                ? 'bg-white/30 text-white border border-white/60 neon-blue-text'
+                                : 'bg-black/40 text-white/60 border border-white/20 hover:bg-white/10 hover:text-white'
                             }`}
-                            style={isActive ? { boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)' } : {}}
+                            style={isActive ? { boxShadow: '0 0 8px rgba(255, 255, 255, 0.4)' } : {}}
                           >
-                            <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={isActive ? { filter: 'drop-shadow(0 0 2px #3b82f6)' } : {}} />
+                            <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={isActive ? { filter: 'drop-shadow(0 0 2px #ffffff)' } : {}} />
                             <span>{symbol.abbr}</span>
                           </motion.button>
                         );
@@ -5006,18 +5006,18 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     </div>
                     
                     {/* Toggle & Filters */}
-                    <div className="p-2 space-y-2 border-t border-blue-500/30 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}>
+                    <div className="p-2 space-y-2 border-t border-white/30 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)' }}>
                       <div className="flex gap-2">
                         <motion.button
                           onClick={() => setShowCalendar(!showCalendar)}
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
                           className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
-                            showCalendar ? 'bg-blue-500/30 border border-blue-400/60 text-blue-300 neon-blue-text' : 'bg-black/40 hover:bg-blue-500/15 border border-blue-500/30 text-blue-400 hover:text-blue-300'
+                            showCalendar ? 'bg-white/30 border border-white/60 text-white neon-blue-text' : 'bg-black/40 hover:bg-white/15 border border-white/30 text-white hover:text-white'
                           }`}
-                          style={showCalendar ? { boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)' } : {}}
+                          style={showCalendar ? { boxShadow: '0 0 8px rgba(255, 255, 255, 0.4)' } : {}}
                         >
-                          <Calendar className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                          <Calendar className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
                           <span>{showCalendar ? 'Show Charts' : 'Calendar'}</span>
                         </motion.button>
                         
@@ -5029,11 +5029,11 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
                             className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
-                              showFilters ? 'bg-blue-500/30 border border-blue-400/60 text-blue-300 neon-blue-text' : 'bg-black/40 hover:bg-blue-500/15 border border-blue-500/30 text-blue-400 hover:text-blue-300'
+                              showFilters ? 'bg-white/30 border border-white/60 text-white neon-blue-text' : 'bg-black/40 hover:bg-white/15 border border-white/30 text-white hover:text-white'
                             }`}
-                            style={showFilters ? { boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)' } : {}}
+                            style={showFilters ? { boxShadow: '0 0 8px rgba(255, 255, 255, 0.4)' } : {}}
                           >
-                            <Filter className="w-3.5 h-3.5" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                            <Filter className="w-3.5 h-3.5" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
                             <span>Filters</span>
                           </motion.button>
                         )}
@@ -5058,10 +5058,10 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                                     onClick={() => setCalendarImpact(impact)}
                                     className={`flex-1 min-w-[52px] py-1.5 px-2 rounded text-[10px] font-semibold transition-all whitespace-nowrap ${
                                       calendarImpact === impact
-                                        ? 'bg-blue-500/30 text-blue-300 border border-blue-400/60 neon-blue-text'
-                                        : 'bg-black/40 text-blue-400/60 border border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400'
+                                        ? 'bg-white/30 text-white border border-white/60 neon-blue-text'
+                                        : 'bg-black/40 text-white/60 border border-white/20 hover:bg-white/10 hover:text-white'
                                     }`}
-                            style={calendarImpact === impact ? { boxShadow: '0 0 6px rgba(59, 130, 246, 0.3)' } : {}}
+                            style={calendarImpact === impact ? { boxShadow: '0 0 6px rgba(255, 255, 255, 0.3)' } : {}}
                                   >
                                     {impact === 'all' ? 'All' : impact.charAt(0).toUpperCase() + impact.slice(1)}
                                   </button>
@@ -5079,10 +5079,10 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                                     onClick={() => setCalendarCountry(country.id)}
                                     className={`flex items-center gap-1 py-1.5 px-2.5 rounded text-[10px] font-semibold transition-all whitespace-nowrap flex-shrink-0 ${
                                       calendarCountry === country.id
-                                        ? 'bg-blue-500/30 text-blue-300 border border-blue-400/60 neon-blue-text'
-                                        : 'bg-black/40 text-blue-400/60 border border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400'
+                                        ? 'bg-white/30 text-white border border-white/60 neon-blue-text'
+                                        : 'bg-black/40 text-white/60 border border-white/20 hover:bg-white/10 hover:text-white'
                                     }`}
-                            style={calendarCountry === country.id ? { boxShadow: '0 0 6px rgba(59, 130, 246, 0.3)' } : {}}
+                            style={calendarCountry === country.id ? { boxShadow: '0 0 6px rgba(255, 255, 255, 0.3)' } : {}}
                                   >
                                     <span>{country.flag}</span>
                                     <span>{country.name}</span>
@@ -5111,14 +5111,14 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                   >
                     {/* 🔔 NOTIFICATION SETTINGS */}
                     <div 
-                      className="px-2 py-1.5 border-b border-blue-500/20 bg-black/50 relative z-10"
+                      className="px-2 py-1.5 border-b border-white/20 bg-black/50 relative z-10"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <NotificationToggle showChannelSettings={true} />
                     </div>
                     
                     {/* Channel Tabs */}
-                    <div className="flex items-center gap-1.5 sm:gap-2 p-2 sm:p-3 border-b border-blue-500/30 overflow-x-auto overflow-y-hidden min-h-[48px] sm:min-h-[52px] flex-shrink-0 bg-black scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)', touchAction: 'pan-x pinch-zoom' }}>
+                    <div className="flex items-center gap-1.5 sm:gap-2 p-2 sm:p-3 border-b border-white/30 overflow-x-auto overflow-y-hidden min-h-[48px] sm:min-h-[52px] flex-shrink-0 bg-black scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)', touchAction: 'pan-x pinch-zoom' }}>
                       {(Object.keys(TELEGRAM_CHANNELS) as ChannelKey[]).map(key => {
                         const ch = TELEGRAM_CHANNELS[key];
                         const Icon = ch.icon;
@@ -5131,12 +5131,12 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                             onClick={() => setActiveChannel(key)}
                             className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] sm:text-[11px] font-medium transition-all whitespace-nowrap flex-shrink-0 min-h-[36px] sm:min-h-[40px] ${
                               isActive
-                                ? 'bg-blue-500/30 text-blue-300 border border-blue-400/60 neon-blue-text'
-                                : 'bg-black/40 text-blue-400/60 border border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400'
+                                ? 'bg-white/30 text-white border border-white/60 neon-blue-text'
+                                : 'bg-black/40 text-white/60 border border-white/20 hover:bg-white/10 hover:text-white'
                             }`}
-                            style={isActive ? { boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' } : {}}
+                            style={isActive ? { boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' } : {}}
                           >
-                            <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={isActive ? { filter: 'drop-shadow(0 0 2px #3b82f6)' } : {}} />
+                            <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={isActive ? { filter: 'drop-shadow(0 0 2px #ffffff)' } : {}} />
                             <span>{ch.name}</span>
                             {isLocked && <Lock className="w-3 h-3 opacity-60" />}
                           </button>
@@ -5154,19 +5154,19 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         }}
                         className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] sm:text-[11px] font-semibold transition-all whitespace-nowrap ml-auto flex-shrink-0 ${
                           isAdmin 
-                            ? 'bg-blue-500/30 text-blue-300 border border-blue-400/60 neon-blue-text'
-                            : 'bg-black/40 text-blue-400/60 border border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400'
+                            ? 'bg-white/30 text-white border border-white/60 neon-blue-text'
+                            : 'bg-black/40 text-white/60 border border-white/20 hover:bg-white/10 hover:text-white'
                         }`}
-                        style={isAdmin ? { boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)' } : {}}
+                        style={isAdmin ? { boxShadow: '0 0 8px rgba(255, 255, 255, 0.4)' } : {}}
                       >
-                        <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={isAdmin ? { filter: 'drop-shadow(0 0 2px #3b82f6)' } : {}} />
+                        <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={isAdmin ? { filter: 'drop-shadow(0 0 2px #ffffff)' } : {}} />
                         <span>Admin</span>
                       </motion.button>
                     </div>
                     
                     {/* Feed */}
                     <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 min-h-[200px] bg-black [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]" 
-                      style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)', touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
+                      style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)', touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
                       data-scrollable
                     >
                       <TelegramChannelEmbed channel={activeChannel} isVip={isVip} onNewMessage={onNewMessage} />
@@ -5174,27 +5174,27 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     
                     {/* View All Link */}
                     {activeChannel !== 'vip' && (
-                      <div className="px-3 py-1.5 border-t border-blue-500/30 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}>
+                      <div className="px-3 py-1.5 border-t border-white/30 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)' }}>
                         <a href={`https://t.me/${TELEGRAM_CHANNELS[activeChannel].handle}`}
                           target="_blank" rel="noopener noreferrer"
-                          className="flex items-center justify-center gap-1 text-[9px] text-blue-400 hover:text-blue-300 neon-blue-text transition-all"
-                          style={{ textShadow: '0 0 4px rgba(59, 130, 246, 0.5)' }}>
-                          <ExternalLink className="w-2.5 h-2.5" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} /> View all on Telegram
+                          className="flex items-center justify-center gap-1 text-[9px] text-white hover:text-white neon-blue-text transition-all"
+                          style={{ textShadow: '0 0 4px rgba(255, 255, 255, 0.5)' }}>
+                          <ExternalLink className="w-2.5 h-2.5" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} /> View all on Telegram
                         </a>
                       </div>
                     )}
                     
                     {/* Social Links */}
-                    <div className="p-3 space-y-2 border-t border-blue-500/30 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}>
+                    <div className="p-3 space-y-2 border-t border-white/30 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)' }}>
                       <div className="flex gap-2">
                         <motion.button
                           onClick={handleCopyLink}
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-blue-500/30 text-blue-300 font-semibold text-xs sm:text-sm border border-blue-400/60 neon-blue-text"
-                          style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}
+                          className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-white/30 text-white font-semibold text-xs sm:text-sm border border-white/60 neon-blue-text"
+                          style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}
                         >
-                          {copied ? <Check className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} /> : <Copy className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />}
+                          {copied ? <Check className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} /> : <Copy className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />}
                           {copied ? 'Copied!' : 'Copy Link'}
                         </motion.button>
                         
@@ -5212,10 +5212,10 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                               rel="noopener noreferrer"
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
-                              className="flex flex-col items-center justify-center gap-1.5 py-3 px-2 rounded-lg bg-blue-500/30 text-blue-300 font-semibold text-[10px] border border-blue-400/60 neon-blue-text transition-all"
-                              style={{ boxShadow: '0 0 6px rgba(59, 130, 246, 0.3)' }}
+                              className="flex flex-col items-center justify-center gap-1.5 py-3 px-2 rounded-lg bg-white/30 text-white font-semibold text-[10px] border border-white/60 neon-blue-text transition-all"
+                              style={{ boxShadow: '0 0 6px rgba(255, 255, 255, 0.3)' }}
                             >
-                              <Icon className="w-5 h-5" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                              <Icon className="w-5 h-5" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
                               <span className="hidden sm:block">{link.name}</span>
                             </motion.a>
                           );
@@ -5235,7 +5235,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     className="h-full flex flex-col bg-black"
                   >
                     {/* Category Tabs */}
-                    <div className="flex gap-2 p-2 sm:p-3 border-b border-blue-500/30 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}>
+                    <div className="flex gap-2 p-2 sm:p-3 border-b border-white/30 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)' }}>
                       {(['crypto', 'stocks', 'sentiment'] as const).map(category => (
                         <motion.button
                           key={category}
@@ -5244,14 +5244,14 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                           whileTap={{ scale: 0.98 }}
                           className={`flex-1 min-w-[90px] flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
                             indicatorCategory === category
-                              ? 'bg-blue-500/30 text-blue-300 border border-blue-400/60 neon-blue-text'
-                              : 'bg-black/40 text-blue-400/60 border border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400'
+                              ? 'bg-white/30 text-white border border-white/60 neon-blue-text'
+                              : 'bg-black/40 text-white/60 border border-white/20 hover:bg-white/10 hover:text-white'
                           }`}
-                          style={indicatorCategory === category ? { boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)', textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' } : {}}
+                          style={indicatorCategory === category ? { boxShadow: '0 0 8px rgba(255, 255, 255, 0.4)', textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' } : {}}
                         >
-                          {category === 'crypto' && <Bitcoin className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />}
-                          {category === 'stocks' && <TrendingUp className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />}
-                          {category === 'sentiment' && <Target className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />}
+                          {category === 'crypto' && <Bitcoin className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />}
+                          {category === 'stocks' && <TrendingUp className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />}
+                          {category === 'sentiment' && <Target className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />}
                           <span className="neon-blue-text">{category === 'crypto' ? 'Crypto' : category === 'stocks' ? 'Stocks & Gold' : 'Sentiment'}</span>
                         </motion.button>
                       ))}
@@ -5261,9 +5261,9 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     {indicatorCategory === 'crypto' && (
                       <div className="flex-1 overflow-y-auto p-3 space-y-3" style={{ touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}>
                         {/* Bitcoin Live Chart */}
-                        <div className="border border-blue-500/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
-                            <Globe className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
+                            <Globe className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
                             Bitcoin Live Chart
                           </h3>
                           <div className="w-full h-[200px] sm:h-[250px] md:h-[300px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
@@ -5277,9 +5277,9 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         </div>
 
                         {/* Top Crypto & Markets */}
-                        <div className="border border-blue-500/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
-                            <Activity className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
+                            <Activity className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
                             Top Markets Overview
                           </h3>
                           <div className="w-full h-[300px] sm:h-[400px] md:h-[500px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
@@ -5293,9 +5293,9 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         </div>
 
                         {/* Crypto Ticker */}
-                        <div className="border border-blue-500/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
-                            <Bitcoin className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
+                            <Bitcoin className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
                             Live Crypto Prices
                           </h3>
                           <div className="w-full h-[50px] sm:h-[60px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
@@ -5309,9 +5309,9 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         </div>
 
                         {/* Crypto Heat Map */}
-                        <div className="border border-blue-500/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
-                            <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
+                            <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
                             Crypto Heat Map
                           </h3>
                           <div className="w-full h-[250px] sm:h-[350px] md:h-[400px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
@@ -5325,9 +5325,9 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         </div>
 
                         {/* Crypto Hot Lists */}
-                        <div className="border border-blue-500/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
-                            <Flame className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
+                            <Flame className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
                             Top Gainers & Losers
                           </h3>
                           <div className="w-full h-[250px] sm:h-[350px] md:h-[400px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
@@ -5341,9 +5341,9 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         </div>
 
                         {/* Market Data */}
-                        <div className="border border-blue-500/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
-                            <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
+                            <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
                             Market Data
                           </h3>
                           <div className="w-full h-[250px] sm:h-[350px] md:h-[400px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
@@ -5362,9 +5362,9 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     {indicatorCategory === 'stocks' && (
                       <div className="flex-1 overflow-y-auto p-3 space-y-3" style={{ touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}>
                         {/* Gold & Commodities */}
-                        <div className="border border-blue-500/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
-                            <Coins className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
+                            <Coins className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
                             Gold & Commodities
                           </h3>
                           <div className="w-full h-[200px] sm:h-[250px] md:h-[300px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
@@ -5378,9 +5378,9 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         </div>
 
                         {/* Market Overview */}
-                        <div className="border border-blue-500/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
-                            <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
+                            <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
                             Market Overview
                           </h3>
                           <div className="w-full h-[250px] sm:h-[350px] md:h-[400px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
@@ -5394,9 +5394,9 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         </div>
 
                         {/* Screener */}
-                        <div className="border border-blue-500/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
-                            <Eye className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
+                            <Eye className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
                             Stock Screener
                           </h3>
                           <div className="w-full h-[300px] sm:h-[400px] md:h-[500px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
@@ -5410,9 +5410,9 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         </div>
 
                         {/* Heat Map */}
-                        <div className="border border-blue-500/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
-                            <LineChart className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
+                            <LineChart className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
                             Market Heat Map
                           </h3>
                           <div className="w-full h-[250px] sm:h-[350px] md:h-[400px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
@@ -5431,9 +5431,9 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     {indicatorCategory === 'sentiment' && (
                       <div className="flex-1 overflow-y-auto p-3 space-y-3" style={{ touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}>
                         {/* Economic Calendar */}
-                        <div className="border border-blue-500/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
-                            <Calendar className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
+                            <Calendar className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
                             Economic Calendar
                           </h3>
                           <div className="w-full h-[250px] sm:h-[350px] md:h-[400px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
@@ -5447,9 +5447,9 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         </div>
 
                         {/* Crypto Timeline */}
-                        <div className="border border-blue-500/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
-                            <Target className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
+                            <Target className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
                             Latest Crypto News
                           </h3>
                           <div className="w-full h-[300px] sm:h-[400px] md:h-[450px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch', overflowY: 'auto' }}>
@@ -5463,9 +5463,9 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         </div>
 
                         {/* Technical Analysis Summary */}
-                        <div className="border border-blue-500/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
-                            <Activity className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
+                            <Activity className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
                             Technical Analysis
                           </h3>
                           <div className="w-full h-[250px] sm:h-[350px] md:h-[400px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch', overflowY: 'auto' }}>
@@ -5479,9 +5479,9 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         </div>
 
                         {/* Forex Cross Rates */}
-                        <div className="border border-blue-500/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
-                            <Globe className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
+                            <Globe className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
                             Forex Cross Rates
                           </h3>
                           <div className="w-full h-[250px] sm:h-[350px] md:h-[400px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch', overflowY: 'auto' }}>
@@ -5495,9 +5495,9 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         </div>
 
                         {/* Market Movers */}
-                        <div className="border border-blue-500/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
-                            <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
+                            <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
                             Market Movers
                           </h3>
                           <div className="w-full h-[250px] sm:h-[350px] md:h-[400px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch', overflowY: 'auto' }}>
@@ -5522,7 +5522,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     className="h-full overflow-hidden bg-black"
-                    style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}
+                    style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)' }}
                   >
                     <UltimateHubNewsTab />
                   </motion.div>
@@ -5536,7 +5536,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     className="h-full overflow-hidden bg-black"
-                    style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}
+                    style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)' }}
                   >
                     <UltimateHubLiveStreamTab />
                   </motion.div>
@@ -5550,7 +5550,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     className="h-full overflow-hidden bg-black"
-                    style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}
+                    style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)' }}
                   >
                     <UltimateHubAnalysisTab />
                   </motion.div>
@@ -5564,7 +5564,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     className="h-full overflow-hidden bg-black"
-                    style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}
+                    style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)' }}
                   >
                     <UltimateHubCommunityPostsTab />
                   </motion.div>
@@ -5578,7 +5578,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     className="h-full overflow-hidden bg-black"
-                    style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}
+                    style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)' }}
                   >
                     <TradingJournal isEmbedded onClose={onClose} />
                   </motion.div>
@@ -5592,7 +5592,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     className="h-full bg-black overflow-hidden"
-                    style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}
+                    style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)' }}
                   >
                     <TradingCourse />
                   </motion.div>
@@ -5606,14 +5606,14 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     className="p-3 space-y-3 bg-black flex flex-col h-full overflow-y-auto [-webkit-overflow-scrolling:touch]"
-                    style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)', touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
+                    style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)', touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
                   >
                     {/* Connection Status */}
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-black border border-blue-500/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}>
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-black border border-white/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
                       <div className="flex items-center gap-3">
                         <div className={`w-3 h-3 rounded-full animate-pulse`} style={{ 
-                          backgroundColor: brokerConnected ? '#10b981' : '#ef4444',
-                          boxShadow: brokerConnected ? '0 0 12px #10b981' : '0 0 12px #ef4444'
+                          backgroundColor: brokerConnected ? '#ffffff' : '#ef4444',
+                          boxShadow: brokerConnected ? '0 0 12px #ffffff' : '0 0 12px #ef4444'
                         }} />
                         <div>
                           <div className="text-sm font-bold text-white">
@@ -5639,8 +5639,8 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                           onClick={() => setShowBrokerSetup(true)}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
-                          className="px-3 py-1.5 rounded-lg bg-blue-500/30 text-blue-300 text-xs font-semibold border border-blue-400/60 neon-blue-text"
-                          style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}
+                          className="px-3 py-1.5 rounded-lg bg-white/30 text-white text-xs font-semibold border border-white/60 neon-blue-text"
+                          style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}
                         >
                           <Zap className="w-3 h-3 inline mr-1" />Connect
                         </motion.button>
@@ -5659,11 +5659,11 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         >
                           <motion.div
                             onClick={(e) => e.stopPropagation()}
-                            className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 border border-blue-500/30 rounded-2xl p-6 max-w-md w-full mx-4 space-y-4"
-                            style={{ boxShadow: '0 0 20px rgba(59, 130, 246, 0.4)' }}
+                            className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 border border-white/30 rounded-2xl p-6 max-w-md w-full mx-4 space-y-4"
+                            style={{ boxShadow: '0 0 20px rgba(255, 255, 255, 0.4)' }}
                           >
                             <div className="flex items-center justify-between">
-                              <h3 className="text-lg font-bold text-blue-300 neon-blue-text" style={{ textShadow: '0 0 8px #3b82f6' }}>Connect Broker</h3>
+                              <h3 className="text-lg font-bold text-white neon-blue-text" style={{ textShadow: '0 0 8px #ffffff' }}>Connect Broker</h3>
                               <button onClick={() => setShowBrokerSetup(false)} className="text-zinc-400 hover:text-white">
                                 <X className="w-5 h-5" />
                               </button>
@@ -5685,7 +5685,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                     disabled={connectingBroker}
-                                    className="p-3 rounded-lg bg-blue-500/20 border border-blue-400/40 text-blue-300 font-semibold text-sm hover:bg-blue-500/30 disabled:opacity-50"
+                                    className="p-3 rounded-lg bg-white/20 border border-white/40 text-white font-semibold text-sm hover:bg-white/30 disabled:opacity-50"
                                   >
                                     {connectingBroker ? 'Connecting...' : 'MetaTrader 4'}
                                   </motion.button>
@@ -5700,7 +5700,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                     disabled={connectingBroker}
-                                    className="p-3 rounded-lg bg-blue-500/20 border border-blue-400/40 text-blue-300 font-semibold text-sm hover:bg-blue-500/30 disabled:opacity-50"
+                                    className="p-3 rounded-lg bg-white/20 border border-white/40 text-white font-semibold text-sm hover:bg-white/30 disabled:opacity-50"
                                   >
                                     {connectingBroker ? 'Connecting...' : 'MetaTrader 5'}
                                   </motion.button>
@@ -5708,12 +5708,12 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                               </div>
 
                               {/* Info */}
-                              <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-400/30">
-                                <div className="flex gap-2 text-xs text-blue-300">
+                              <div className="p-3 rounded-lg bg-white/10 border border-white/30">
+                                <div className="flex gap-2 text-xs text-white">
                                   <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
                                   <div>
                                     <p className="font-semibold mb-1">Demo Mode Active</p>
-                                    <p className="text-blue-400/70">Click a platform to connect with demo credentials. For live trading, configure your MT4/MT5 API credentials in settings.</p>
+                                    <p className="text-white/70">Click a platform to connect with demo credentials. For live trading, configure your MT4/MT5 API credentials in settings.</p>
                                   </div>
                                 </div>
                               </div>
@@ -5727,37 +5727,37 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                       <>
                         {/* Account Overview */}
                         <div className="grid grid-cols-2 gap-2">
-                          <div className="p-3 rounded-xl bg-black border border-blue-500/30" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2)' }}>
+                          <div className="p-3 rounded-xl bg-black border border-white/30" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2)' }}>
                             <div className="text-[10px] text-zinc-400 mb-1">Balance</div>
-                            <div className="text-lg font-bold text-blue-300 neon-blue-text" style={{ textShadow: '0 0 4px #3b82f6' }}>
+                            <div className="text-lg font-bold text-white neon-blue-text" style={{ textShadow: '0 0 4px #ffffff' }}>
                               ${brokerAccount?.balance?.toLocaleString() || '10,000.00'}
                             </div>
                           </div>
-                          <div className="p-3 rounded-xl bg-black border border-blue-500/30" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2)' }}>
+                          <div className="p-3 rounded-xl bg-black border border-white/30" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2)' }}>
                             <div className="text-[10px] text-zinc-400 mb-1">Equity</div>
-                            <div className="text-lg font-bold text-blue-300 neon-blue-text" style={{ textShadow: '0 0 4px #3b82f6' }}>
+                            <div className="text-lg font-bold text-white neon-blue-text" style={{ textShadow: '0 0 4px #ffffff' }}>
                               ${brokerAccount?.equity?.toLocaleString() || '10,245.50'}
                             </div>
                           </div>
-                          <div className="p-3 rounded-xl bg-black border border-blue-500/30" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2)' }}>
+                          <div className="p-3 rounded-xl bg-black border border-white/30" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2)' }}>
                             <div className="text-[10px] text-zinc-400 mb-1">Margin</div>
-                            <div className="text-sm font-bold text-blue-400">
+                            <div className="text-sm font-bold text-white">
                               ${brokerAccount?.margin?.toLocaleString() || '245.50'}
                             </div>
                           </div>
-                          <div className="p-3 rounded-xl bg-black border border-blue-500/30" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2)' }}>
+                          <div className="p-3 rounded-xl bg-black border border-white/30" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2)' }}>
                             <div className="text-[10px] text-zinc-400 mb-1">Free Margin</div>
-                            <div className="text-sm font-bold text-green-400">
+                            <div className="text-sm font-bold text-white">
                               ${brokerAccount?.freeMargin?.toLocaleString() || '9,754.50'}
                             </div>
                           </div>
                         </div>
 
                         {/* One-Click Trading */}
-                        <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-400/40" style={{ boxShadow: '0 0 12px rgba(59, 130, 246, 0.4)' }}>
+                        <div className="p-3 rounded-xl bg-gradient-to-br from-white/20 to-white/20 border border-white/40" style={{ boxShadow: '0 0 12px rgba(255, 255, 255, 0.4)' }}>
                           <div className="flex items-center justify-between mb-3">
-                            <h4 className="text-sm font-bold text-blue-300 neon-blue-text flex items-center gap-2" style={{ textShadow: '0 0 4px #3b82f6' }}>
-                              <Zap className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
+                            <h4 className="text-sm font-bold text-white neon-blue-text flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff' }}>
+                              <Zap className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }} />
                               One-Click Trading
                             </h4>
                             <div className="flex items-center gap-2">
@@ -5768,7 +5768,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                                 onChange={(e) => setTradeAmount(e.target.value)}
                                 step="0.01"
                                 min="0.01"
-                                className="w-16 px-2 py-1 text-xs bg-black border border-blue-500/30 rounded text-blue-300 font-mono"
+                                className="w-16 px-2 py-1 text-xs bg-black border border-white/30 rounded text-white font-mono"
                               />
                             </div>
                           </div>
@@ -5779,8 +5779,8 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                               onClick={() => executeTrade(selectedSymbol.id.toUpperCase(), 'buy', tradeAmount)}
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
-                              className="p-3 rounded-lg bg-green-500/30 border border-green-400/60 text-green-300 font-bold text-sm flex items-center justify-center gap-2"
-                              style={{ boxShadow: '0 0 12px rgba(34, 197, 94, 0.4)' }}
+                              className="p-3 rounded-lg bg-white/30 border border-white/60 text-white font-bold text-sm flex items-center justify-center gap-2"
+                              style={{ boxShadow: '0 0 12px rgba(255, 255, 255, 0.4)' }}
                             >
                               <TrendingUp className="w-4 h-4" />
                               BUY {selectedSymbol.abbr}
@@ -5805,8 +5805,8 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                                 onClick={() => setSelectedSymbol(sym)}
                                 className={`flex-shrink-0 px-2 py-1 rounded text-xs font-semibold transition-all ${
                                   selectedSymbol.id === sym.id
-                                    ? 'bg-blue-500/40 text-blue-300 border border-blue-400/60'
-                                    : 'bg-black/40 text-blue-400/60 border border-blue-500/20 hover:bg-blue-500/20'
+                                    ? 'bg-white/40 text-white border border-white/60'
+                                    : 'bg-black/40 text-white/60 border border-white/20 hover:bg-white/20'
                                 }`}
                               >
                                 {sym.abbr}
@@ -5817,12 +5817,12 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
 
                         {/* Open Positions */}
                         <div className="space-y-2">
-                          <h4 className="text-sm font-bold text-blue-300 flex items-center gap-2">
+                          <h4 className="text-sm font-bold text-white flex items-center gap-2">
                             <Activity className="w-4 h-4" />
                             Open Positions ({brokerPositions.length})
                           </h4>
                           {brokerPositions.length === 0 ? (
-                            <div className="p-4 text-center text-zinc-500 text-xs border border-blue-500/20 rounded-lg bg-black/40">
+                            <div className="p-4 text-center text-zinc-500 text-xs border border-white/20 rounded-lg bg-black/40">
                               No open positions
                             </div>
                           ) : (
@@ -5832,17 +5832,17 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                                   key={idx}
                                   initial={{ opacity: 0, y: 10 }}
                                   animate={{ opacity: 1, y: 0 }}
-                                  className="p-3 rounded-lg bg-black border border-blue-500/30" 
-                                  style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2)' }}
+                                  className="p-3 rounded-lg bg-black border border-white/30" 
+                                  style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2)' }}
                                 >
                                   <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2">
                                       <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                                        pos.type === 'buy' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                                        pos.type === 'buy' ? 'bg-white/20 text-white' : 'bg-red-500/20 text-red-400'
                                       }`}>
                                         {pos.type?.toUpperCase() || 'BUY'}
                                       </span>
-                                      <span className="font-bold text-blue-300">{pos.symbol || 'XAUUSD'}</span>
+                                      <span className="font-bold text-white">{pos.symbol || 'XAUUSD'}</span>
                                     </div>
                                     <motion.button
                                       onClick={() => closePosition(pos.id || idx.toString())}
@@ -5856,16 +5856,16 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                                   <div className="grid grid-cols-3 gap-2 text-xs">
                                     <div>
                                       <div className="text-zinc-500">Volume</div>
-                                      <div className="text-blue-300 font-semibold">{pos.volume || '0.01'}</div>
+                                      <div className="text-white font-semibold">{pos.volume || '0.01'}</div>
                                     </div>
                                     <div>
                                       <div className="text-zinc-500">Entry</div>
-                                      <div className="text-blue-300 font-semibold">{pos.entryPrice || '2650.50'}</div>
+                                      <div className="text-white font-semibold">{pos.entryPrice || '2650.50'}</div>
                                     </div>
                                     <div>
                                       <div className="text-zinc-500">P/L</div>
                                       <div className={`font-bold ${
-                                        (pos.profit || 24.50) >= 0 ? 'text-green-400' : 'text-red-400'
+                                        (pos.profit || 24.50) >= 0 ? 'text-white' : 'text-red-400'
                                       }`}>
                                         ${(pos.profit || 24.50).toFixed(2)}
                                       </div>
@@ -5879,12 +5879,12 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
 
                         {/* Pending Orders */}
                         <div className="space-y-2">
-                          <h4 className="text-sm font-bold text-blue-300 flex items-center gap-2">
+                          <h4 className="text-sm font-bold text-white flex items-center gap-2">
                             <Clock className="w-4 h-4" />
                             Pending Orders ({brokerOrders.length})
                           </h4>
                           {brokerOrders.length === 0 ? (
-                            <div className="p-4 text-center text-zinc-500 text-xs border border-blue-500/20 rounded-lg bg-black/40">
+                            <div className="p-4 text-center text-zinc-500 text-xs border border-white/20 rounded-lg bg-black/40">
                               No pending orders
                             </div>
                           ) : (
@@ -5892,12 +5892,12 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                               {brokerOrders.map((order, idx) => (
                                 <div
                                   key={idx}
-                                  className="p-3 rounded-lg bg-black border border-blue-500/30" 
-                                  style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2)' }}
+                                  className="p-3 rounded-lg bg-black border border-white/30" 
+                                  style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2)' }}
                                 >
                                   <div className="flex items-center justify-between">
                                     <div>
-                                      <span className="font-bold text-blue-300">{order.symbol}</span>
+                                      <span className="font-bold text-white">{order.symbol}</span>
                                       <span className="ml-2 text-xs text-zinc-400">{order.type}</span>
                                     </div>
                                     <button className="text-xs text-red-400 hover:text-red-300">Cancel</button>
@@ -5909,12 +5909,12 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         </div>
 
                         {/* Trading Tips */}
-                        <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-400/30">
-                          <div className="flex gap-2 text-xs text-blue-300">
+                        <div className="p-3 rounded-lg bg-white/10 border border-white/30">
+                          <div className="flex gap-2 text-xs text-white">
                             <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
                             <div>
                               <p className="font-semibold mb-1">Risk Management</p>
-                              <p className="text-blue-400/70">Always use stop-loss orders. Never risk more than 1-2% of your account on a single trade.</p>
+                              <p className="text-white/70">Always use stop-loss orders. Never risk more than 1-2% of your account on a single trade.</p>
                             </div>
                           </div>
                         </div>
@@ -5924,11 +5924,11 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     {/* Not Connected State */}
                     {!brokerConnected && (
                       <div className="flex-1 flex flex-col items-center justify-center py-12 px-4 text-center">
-                        <div className="w-20 h-20 rounded-full bg-blue-500/20 border-2 border-blue-400/40 flex items-center justify-center mb-4"
-                          style={{ boxShadow: '0 0 20px rgba(59, 130, 246, 0.3)' }}>
-                          <Zap className="w-10 h-10 text-blue-400" style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
+                        <div className="w-20 h-20 rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center mb-4"
+                          style={{ boxShadow: '0 0 20px rgba(255, 255, 255, 0.3)' }}>
+                          <Zap className="w-10 h-10 text-white" style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }} />
                         </div>
-                        <h3 className="text-lg font-bold text-blue-300 mb-2 neon-blue-text" style={{ textShadow: '0 0 8px #3b82f6' }}>
+                        <h3 className="text-lg font-bold text-white mb-2 neon-blue-text" style={{ textShadow: '0 0 8px #ffffff' }}>
                           Connect Your Broker
                         </h3>
                         <p className="text-sm text-zinc-400 mb-6 max-w-sm">
@@ -5938,8 +5938,8 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                           onClick={() => setShowBrokerSetup(true)}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
-                          className="px-6 py-3 rounded-lg bg-gradient-to-r from-blue-500/30 to-cyan-500/30 text-blue-300 font-bold border border-blue-400/60 neon-blue-text flex items-center gap-2"
-                          style={{ boxShadow: '0 0 16px rgba(59, 130, 246, 0.4)' }}
+                          className="px-6 py-3 rounded-lg bg-gradient-to-r from-white/30 to-white/30 text-white font-bold border border-white/60 neon-blue-text flex items-center gap-2"
+                          style={{ boxShadow: '0 0 16px rgba(255, 255, 255, 0.4)' }}
                         >
                           <Zap className="w-5 h-5" />
                           Get Started
@@ -5948,23 +5948,23 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         {/* Features List */}
                         <div className="mt-8 space-y-3 text-left max-w-md w-full">
                           <div className="flex items-start gap-3">
-                            <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                            <CheckCircle className="w-5 h-5 text-white flex-shrink-0 mt-0.5" />
                             <div>
-                              <div className="text-sm font-semibold text-blue-300">Instant Execution</div>
+                              <div className="text-sm font-semibold text-white">Instant Execution</div>
                               <div className="text-xs text-zinc-500">Execute trades in milliseconds with one click</div>
                             </div>
                           </div>
                           <div className="flex items-start gap-3">
-                            <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                            <CheckCircle className="w-5 h-5 text-white flex-shrink-0 mt-0.5" />
                             <div>
-                              <div className="text-sm font-semibold text-blue-300">Live Account Sync</div>
+                              <div className="text-sm font-semibold text-white">Live Account Sync</div>
                               <div className="text-xs text-zinc-500">Real-time balance, positions, and orders</div>
                             </div>
                           </div>
                           <div className="flex items-start gap-3">
-                            <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                            <CheckCircle className="w-5 h-5 text-white flex-shrink-0 mt-0.5" />
                             <div>
-                              <div className="text-sm font-semibold text-blue-300">Multi-Platform Support</div>
+                              <div className="text-sm font-semibold text-white">Multi-Platform Support</div>
                               <div className="text-xs text-zinc-500">Works with MT4 and MT5 brokers</div>
                             </div>
                           </div>
@@ -5982,24 +5982,24 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     className="p-3 space-y-3 bg-black flex flex-col h-full"
-                    style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}
+                    style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)' }}
                   >
                     {/* Copy Button */}
                     <motion.button
                       onClick={handleCopyDeviceSnapshot}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-blue-500/30 text-blue-300 font-semibold text-xs border border-blue-400/60 neon-blue-text w-full"
-                      style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}
+                      className="flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-white/30 text-white font-semibold text-xs border border-white/60 neon-blue-text w-full"
+                      style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}
                     >
-                      <Copy className="w-3.5 h-3.5" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                      <Copy className="w-3.5 h-3.5" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
                       Copy Snapshot
                     </motion.button>
 
                     {/* Scrollable Content */}
                     <div className="flex-1 overflow-y-auto min-h-0 space-y-3 pr-1 [-webkit-overflow-scrolling:touch]" style={{ touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
                     {/* Performance Grade */}
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-black border border-blue-500/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-black border border-white/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3), inset 0 0 8px rgba(255, 255, 255, 0.1)' }}>
                       <div className="flex items-center gap-3">
                         <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl font-black"
                           style={{ backgroundColor: `${performanceGrade.color}20`, color: performanceGrade.color, border: `2px solid ${performanceGrade.color}40` }}>
@@ -6028,88 +6028,88 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     {/* Network & Battery Row */}
                     <div className="grid grid-cols-2 gap-2">
                       {/* Network */}
-                      <div className="p-2.5 rounded-xl bg-black border border-blue-500/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
+                      <div className="p-2.5 rounded-xl bg-black border border-white/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.1)' }}>
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-1.5">
                             <span className="text-[10px] font-medium text-zinc-400">Network</span>
-                            <span className="text-[7px] font-medium text-blue-400" style={{ textShadow: '0 0 4px #3b82f6' }}>Browser API</span>
+                            <span className="text-[7px] font-medium text-white" style={{ textShadow: '0 0 4px #ffffff' }}>Browser API</span>
                           </div>
                           {networkStats.connectionType === 'wifi' ? (
-                            <Wifi className="w-3 h-3 text-blue-400" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                            <Wifi className="w-3 h-3 text-white" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
                           ) : !networkStats.isOnline ? (
                             <WifiOff className="w-3 h-3 text-red-400" />
                           ) : (
-                            <Signal className="w-3 h-3 text-blue-400" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                            <Signal className="w-3 h-3 text-white" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
                           )}
                         </div>
-                        <div className="text-sm font-bold text-blue-200">
+                        <div className="text-sm font-bold text-white">
                           {networkStats.connectionType === 'wifi' ? 'WiFi' : networkStats.connectionType === 'cellular' || networkStats.connectionType === '4g' || networkStats.connectionType === '3g' ? 'Cellular' : networkStats.effectiveType.toUpperCase()}
                         </div>
-                        <div className="text-[9px] text-blue-300/70">{networkStats.downlink} Mbps • {networkStats.rtt}ms</div>
+                        <div className="text-[9px] text-white/70">{networkStats.downlink} Mbps • {networkStats.rtt}ms</div>
                       </div>
                       
                       {/* Battery */}
-                      <div className="p-2.5 rounded-xl bg-black border border-blue-500/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
+                      <div className="p-2.5 rounded-xl bg-black border border-white/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.1)' }}>
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-1.5">
                             <span className="text-[10px] font-medium text-zinc-400">Battery</span>
-                            {batteryInfo.supported && <span className="text-[7px] font-medium text-blue-400" style={{ textShadow: '0 0 4px #3b82f6' }}>Device API</span>}
+                            {batteryInfo.supported && <span className="text-[7px] font-medium text-white" style={{ textShadow: '0 0 4px #ffffff' }}>Device API</span>}
                           </div>
-                          {batteryInfo.charging ? <Zap className="w-3 h-3 text-blue-400" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} /> : <Battery className="w-3 h-3 text-blue-400" />}
+                          {batteryInfo.charging ? <Zap className="w-3 h-3 text-white" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} /> : <Battery className="w-3 h-3 text-white" />}
                         </div>
                         {batteryInfo.supported && batteryInfo.level >= 0 ? (
                           <>
-                            <div className="text-sm font-bold text-blue-200">{Math.round(batteryInfo.level)}%</div>
-                            <div className="text-[9px] text-blue-300/70">{batteryInfo.charging ? 'Charging' : 'On Battery'}</div>
+                            <div className="text-sm font-bold text-white">{Math.round(batteryInfo.level)}%</div>
+                            <div className="text-[9px] text-white/70">{batteryInfo.charging ? 'Charging' : 'On Battery'}</div>
                           </>
                         ) : (
-                          <div className="text-xs text-blue-300/70">Not available</div>
+                          <div className="text-xs text-white/70">Not available</div>
                         )}
                       </div>
                     </div>
                     
                     {/* Screen Info */}
-                    <div className="p-2.5 rounded-xl bg-black border border-blue-500/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
+                    <div className="p-2.5 rounded-xl bg-black border border-white/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.1)' }}>
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wide">Display</span>
-                        <Monitor className="w-3.5 h-3.5 text-blue-400" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                        <Monitor className="w-3.5 h-3.5 text-white" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
                       </div>
-                      <div className="text-xs font-semibold text-blue-200">{screenInfo.width} × {screenInfo.height}</div>
-                      <div className="text-[9px] text-blue-300/70">
+                      <div className="text-xs font-semibold text-white">{screenInfo.width} × {screenInfo.height}</div>
+                      <div className="text-[9px] text-white/70">
                         {screenInfo.pixelRatio}x DPR • {screenInfo.refreshRate}Hz • {screenInfo.colorDepth}-bit
-                        {screenInfo.hdr && <span className="ml-1 text-blue-400">HDR</span>}
+                        {screenInfo.hdr && <span className="ml-1 text-white">HDR</span>}
                       </div>
                     </div>
                     
                     {/* Browser Info */}
-                    <div className="p-2.5 rounded-xl bg-black border border-blue-500/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
+                    <div className="p-2.5 rounded-xl bg-black border border-white/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.1)' }}>
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wide">Browser</span>
-                        <Globe className="w-3.5 h-3.5 text-blue-400" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                        <Globe className="w-3.5 h-3.5 text-white" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
                       </div>
-                      <div className="text-xs font-semibold text-blue-200">{browserInfo.name} {browserInfo.version.split('.')[0]}</div>
-                      <div className="text-[9px] text-blue-300/70">{browserInfo.engine} • {browserInfo.platform}</div>
+                      <div className="text-xs font-semibold text-white">{browserInfo.name} {browserInfo.version.split('.')[0]}</div>
+                      <div className="text-[9px] text-white/70">{browserInfo.engine} • {browserInfo.platform}</div>
                     </div>
                     
                     {/* Lite Mode Toggle - Performance Settings */}
-                    <div className="p-2.5 rounded-xl bg-black border border-blue-500/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
+                    <div className="p-2.5 rounded-xl bg-black border border-white/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.1)' }}>
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wide">Performance Mode</span>
-                        <Zap className="w-3.5 h-3.5 text-blue-400" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                        <Zap className="w-3.5 h-3.5 text-white" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
                       </div>
                       <button
                         onClick={toggleLiteMode}
                         className="w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all"
                         style={{
-                          background: liteMode ? 'rgba(59, 130, 246, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                          border: liteMode ? '1px solid rgba(59, 130, 246, 0.5)' : '1px solid rgba(255, 255, 255, 0.1)',
+                          background: liteMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                          border: liteMode ? '1px solid rgba(255, 255, 255, 0.5)' : '1px solid rgba(255, 255, 255, 0.1)',
                         }}
                       >
                         <div className="flex items-center gap-2">
                           <span className="text-lg">{liteMode ? '🌙' : '✨'}</span>
                           <div className="text-left">
-                            <div className="text-xs font-semibold text-blue-200">Lite Mode</div>
-                            <div className="text-[9px] text-blue-300/60">
+                            <div className="text-xs font-semibold text-white">Lite Mode</div>
+                            <div className="text-[9px] text-white/60">
                               {liteMode ? 'Heavy effects disabled' : 'Full effects enabled'}
                             </div>
                           </div>
@@ -6117,7 +6117,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         {/* Toggle Switch */}
                         <div 
                           className={`w-9 h-5 rounded-full relative transition-colors ${
-                            liteMode ? 'bg-blue-500' : 'bg-zinc-700'
+                            liteMode ? 'bg-white' : 'bg-zinc-700'
                           }`}
                         >
                           <motion.div
@@ -6137,20 +6137,20 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     
                     {/* Account Info */}
                     {userId && (
-                      <div className="p-2.5 rounded-xl bg-black border border-blue-500/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
+                      <div className="p-2.5 rounded-xl bg-black border border-white/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.1)' }}>
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wide">Account</span>
-                          <User className="w-3.5 h-3.5 text-blue-400" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                          <User className="w-3.5 h-3.5 text-white" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
                         </div>
-                        <div className="text-xs font-semibold text-blue-200 truncate">{userEmail || 'Signed In'}</div>
+                        <div className="text-xs font-semibold text-white truncate">{userEmail || 'Signed In'}</div>
                         <div className="flex items-center gap-2 mt-1">
                           {isVip && (
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-white/20 text-white border border-white/30">
                               <Crown className="w-2.5 h-2.5 inline mr-0.5" />VIP
                             </span>
                           )}
                           {isAdmin && (
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-white/20 text-white border border-white/30">
                               <Shield className="w-2.5 h-2.5 inline mr-0.5" />Admin
                             </span>
                           )}
@@ -6159,63 +6159,63 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     )}
 
                     {/* Browser Capabilities */}
-                    <div className="p-2.5 rounded-xl bg-black border border-blue-500/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
+                    <div className="p-2.5 rounded-xl bg-black border border-white/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.1)' }}>
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wide">Browser Features</span>
                       </div>
                       <div className="grid grid-cols-2 gap-1.5">
                         {/* Graphics */}
                         <div className="text-[9px]">
-                          <div className="font-bold text-blue-300 mb-1">Graphics</div>
-                          <div className="space-y-0.5 text-blue-400/70">
+                          <div className="font-bold text-white mb-1">Graphics</div>
+                          <div className="space-y-0.5 text-white/70">
                             <div>✓ WebGL 2: {browserCapabilities.webgl2 ? '✓' : '✗'}</div>
                             <div>✓ WebGPU: {browserCapabilities.webgpu ? '✓' : '✗'}</div>
                           </div>
                         </div>
                         {/* Storage */}
                         <div className="text-[9px]">
-                          <div className="font-bold text-blue-300 mb-1">Storage</div>
-                          <div className="space-y-0.5 text-blue-400/70">
+                          <div className="font-bold text-white mb-1">Storage</div>
+                          <div className="space-y-0.5 text-white/70">
                             <div>✓ IndexedDB: {browserCapabilities.indexedDb ? '✓' : '✗'}</div>
                             <div>✓ LocalStorage: {browserCapabilities.localStorage ? '✓' : '✗'}</div>
                           </div>
                         </div>
                         {/* Workers & APIs */}
                         <div className="text-[9px]">
-                          <div className="font-bold text-blue-300 mb-1">Workers</div>
-                          <div className="space-y-0.5 text-blue-400/70">
+                          <div className="font-bold text-white mb-1">Workers</div>
+                          <div className="space-y-0.5 text-white/70">
                             <div>✓ WebWorker: {browserCapabilities.webWorker ? '✓' : '✗'}</div>
                             <div>✓ SharedArrayBuffer: {browserCapabilities.sharedArrayBuffer ? '✓' : '✗'}</div>
                           </div>
                         </div>
                         {/* Media */}
                         <div className="text-[9px]">
-                          <div className="font-bold text-blue-300 mb-1">Media</div>
-                          <div className="space-y-0.5 text-blue-400/70">
+                          <div className="font-bold text-white mb-1">Media</div>
+                          <div className="space-y-0.5 text-white/70">
                             <div>✓ AudioContext: {browserCapabilities.audioContext ? '✓' : '✗'}</div>
                             <div>✓ MediaRecorder: {browserCapabilities.mediaRecorder ? '✓' : '✗'}</div>
                           </div>
                         </div>
                         {/* Sensors */}
                         <div className="text-[9px]">
-                          <div className="font-bold text-blue-300 mb-1">Sensors</div>
-                          <div className="space-y-0.5 text-blue-400/70">
+                          <div className="font-bold text-white mb-1">Sensors</div>
+                          <div className="space-y-0.5 text-white/70">
                             <div>✓ Accel: {browserCapabilities.accelerometer ? '✓' : '✗'}</div>
                             <div>✓ Gyro: {browserCapabilities.gyroscope ? '✓' : '✗'}</div>
                           </div>
                         </div>
                         {/* Hardware */}
                         <div className="text-[9px]">
-                          <div className="font-bold text-blue-300 mb-1">Hardware</div>
-                          <div className="space-y-0.5 text-blue-400/70">
+                          <div className="font-bold text-white mb-1">Hardware</div>
+                          <div className="space-y-0.5 text-white/70">
                             <div>✓ Bluetooth: {browserCapabilities.bluetooth ? '✓' : '✗'}</div>
                             <div>✓ USB: {browserCapabilities.usb ? '✓' : '✗'}</div>
                           </div>
                         </div>
                         {/* XR */}
                         <div className="text-[9px]">
-                          <div className="font-bold text-blue-300 mb-1">XR</div>
-                          <div className="space-y-0.5 text-blue-400/70">
+                          <div className="font-bold text-white mb-1">XR</div>
+                          <div className="space-y-0.5 text-white/70">
                             <div>✓ VR: {browserCapabilities.vr ? '✓' : '✗'}</div>
                             <div>✓ AR: {browserCapabilities.ar ? '✓' : '✗'}</div>
                           </div>
@@ -6224,18 +6224,18 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
 
                       {/* Codecs */}
                       {(browserCapabilities.videoCodecs.length > 0 || browserCapabilities.audioCodecs.length > 0) && (
-                        <div className="mt-2 pt-2 border-t border-blue-500/30">
+                        <div className="mt-2 pt-2 border-t border-white/30">
                           <div className="text-[9px]">
                             {browserCapabilities.videoCodecs.length > 0 && (
                               <div className="mb-1">
-                                <span className="font-bold text-blue-300">Video: </span>
-                                <span className="text-blue-400/70">{browserCapabilities.videoCodecs.join(', ')}</span>
+                                <span className="font-bold text-white">Video: </span>
+                                <span className="text-white/70">{browserCapabilities.videoCodecs.join(', ')}</span>
                               </div>
                             )}
                             {browserCapabilities.audioCodecs.length > 0 && (
                               <div>
-                                <span className="font-bold text-blue-300">Audio: </span>
-                                <span className="text-blue-400/70">{browserCapabilities.audioCodecs.join(', ')}</span>
+                                <span className="font-bold text-white">Audio: </span>
+                                <span className="text-white/70">{browserCapabilities.audioCodecs.join(', ')}</span>
                               </div>
                             )}
                           </div>
@@ -6254,7 +6254,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     className="p-3 space-y-3 bg-black flex flex-col h-full"
-                    style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05)' }}
+                    style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)' }}
                   >
                     {/* Controls */}
                     <div className="flex gap-2">
@@ -6283,33 +6283,33 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         }}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-blue-500/30 text-blue-300 font-semibold text-xs border border-blue-400/60"
-                        style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.3)' }}
+                        className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-white/30 text-white font-semibold text-xs border border-white/60"
+                        style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}
                       >
-                        <Copy className="w-3.5 h-3.5" style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }} />
+                        <Copy className="w-3.5 h-3.5" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
                         Copy Logs
                       </motion.button>
                     </div>
 
                     {/* Log Count */}
-                    <div className="text-[9px] text-blue-400/70 px-1">
+                    <div className="text-[9px] text-white/70 px-1">
                       Total Logs: {consoleLogs.length}
                     </div>
 
                     {/* Logs Container */}
-                    <div className="flex-1 overflow-y-auto min-h-0 bg-black/50 rounded-lg border border-blue-500/20 p-2 font-mono text-[8px] space-y-1 [-webkit-overflow-scrolling:touch]" style={{ touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
+                    <div className="flex-1 overflow-y-auto min-h-0 bg-black/50 rounded-lg border border-white/20 p-2 font-mono text-[8px] space-y-1 [-webkit-overflow-scrolling:touch]" style={{ touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
                       {consoleLogs.length === 0 ? (
-                        <div className="text-blue-400/50 text-center py-4">No logs captured yet</div>
+                        <div className="text-white/50 text-center py-4">No logs captured yet</div>
                       ) : (
                         consoleLogs.map(log => (
-                          <div key={log.id} className={`flex gap-2 pb-1 border-b border-blue-500/10 ${
+                          <div key={log.id} className={`flex gap-2 pb-1 border-b border-white/10 ${
                             log.level === 'error' ? 'text-red-400' :
                             log.level === 'warn' ? 'text-yellow-400' :
-                            log.level === 'info' ? 'text-cyan-400' :
-                            log.level === 'debug' ? 'text-purple-400' :
-                            'text-blue-300'
+                            log.level === 'info' ? 'text-white' :
+                            log.level === 'debug' ? 'text-white' :
+                            'text-white'
                           }`}>
-                            <span className="text-blue-500/70 flex-shrink-0 w-16">
+                            <span className="text-white/70 flex-shrink-0 w-16">
                               {new Date(log.timestamp).toLocaleTimeString()}
                             </span>
                             <span className="font-bold flex-shrink-0 w-12 uppercase">
@@ -6367,7 +6367,7 @@ const MiniGoldChart = memo(() => {
       allow_symbol_change: false,
       save_image: false,
       backgroundColor: "rgba(0, 0, 0, 0)",
-      gridColor: "rgba(59, 130, 246, 0.1)",
+      gridColor: "rgba(255, 255, 255, 0.1)",
       hide_volume: true,
       support_host: "https://www.tradingview.com"
     });
@@ -6469,11 +6469,11 @@ const LiveSignalsViewer = memo(() => {
       <motion.div 
         className="px-3 py-2.5 rounded-md overflow-hidden transition-all"
         style={{
-          background: 'linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(59,130,246,0.05) 100%)',
+          background: 'linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(255, 255, 255,0.05) 100%)',
           backdropFilter: 'blur(8px)',
           WebkitBackdropFilter: 'blur(8px)',
-          border: '1px solid #3b82f6',
-          boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6'
+          border: '1px solid #ffffff',
+          boxShadow: '0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff'
         }}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
@@ -6487,8 +6487,8 @@ const LiveSignalsViewer = memo(() => {
             <span 
               className="text-sm font-bold uppercase tracking-wider animate-neon-pulse-optimized"
               style={{ 
-                color: '#3b82f6',
-                textShadow: '0 0 4px #3b82f6',
+                color: '#ffffff',
+                textShadow: '0 0 4px #ffffff',
                 willChange: 'text-shadow'
               }}
             >
@@ -6498,13 +6498,13 @@ const LiveSignalsViewer = memo(() => {
           <div className="flex items-center gap-1.5">
             <div
               className="w-2 h-2 rounded-full animate-pulse-glow-green"
-              style={{ background: '#22c55e', willChange: 'opacity' }}
+              style={{ background: '#ffffff', willChange: 'opacity' }}
             />
             <span 
               className="text-[8px] font-semibold uppercase tracking-wider"
               style={{ 
-                color: '#22c55e',
-                textShadow: '0 0 4px #22c55e'
+                color: '#ffffff',
+                textShadow: '0 0 4px #ffffff'
               }}
             >
               LIVE
@@ -6528,31 +6528,31 @@ const LiveSignalsViewer = memo(() => {
               <div 
                 className="p-2 rounded"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(0,0,0,0.8) 100%)',
-                  border: '1px solid #3b82f6',
-                  boxShadow: '0 0 2px #3b82f6, inset 0 0 2px #3b82f6'
+                  background: 'linear-gradient(135deg, rgba(255, 255, 255,0.1) 0%, rgba(0,0,0,0.8) 100%)',
+                  border: '1px solid #ffffff',
+                  boxShadow: '0 0 2px #ffffff, inset 0 0 2px #ffffff'
                 }}
               >
                 <div className="flex items-center justify-between mb-1.5">
                   <span 
                     className="text-xs font-bold"
                     style={{ 
-                      color: '#3b82f6',
-                      textShadow: '0 0 4px #3b82f6'
+                      color: '#ffffff',
+                      textShadow: '0 0 4px #ffffff'
                     }}
                   >
                     {currentSignal.pair}
                   </span>
                   <span 
                     className={`text-[10px] font-black px-1.5 py-0.5 rounded animate-pulse-scale ${
-                      currentSignal.action === 'BUY' ? 'bg-green-500/20' : 'bg-red-500/20'
+                      currentSignal.action === 'BUY' ? 'bg-white/20' : 'bg-red-500/20'
                     }`}
                     style={{ 
-                      color: currentSignal.action === 'BUY' ? '#22c55e' : '#ef4444',
+                      color: currentSignal.action === 'BUY' ? '#ffffff' : '#ef4444',
                       textShadow: currentSignal.action === 'BUY' 
-                        ? '0 0 4px #22c55e' 
+                        ? '0 0 4px #ffffff' 
                         : '0 0 4px #ef4444',
-                      border: `1px solid ${currentSignal.action === 'BUY' ? '#22c55e' : '#ef4444'}`,
+                      border: `1px solid ${currentSignal.action === 'BUY' ? '#ffffff' : '#ef4444'}`,
                       willChange: 'transform'
                     }}
                   >
@@ -6564,8 +6564,8 @@ const LiveSignalsViewer = memo(() => {
                   <span 
                     className="text-[11px] font-semibold"
                     style={{ 
-                      color: '#60a5fa',
-                      textShadow: '0 0 2px #3b82f6'
+                      color: '#ffffff',
+                      textShadow: '0 0 2px #ffffff'
                     }}
                   >
                     Entry {currentSignal.entry}
@@ -6573,8 +6573,8 @@ const LiveSignalsViewer = memo(() => {
                   <span 
                     className="text-[9px]"
                     style={{ 
-                      color: '#3b82f6',
-                      textShadow: '0 0 2px #3b82f6'
+                      color: '#ffffff',
+                      textShadow: '0 0 2px #ffffff'
                     }}
                   >
                     {currentSignal.time}
@@ -6585,14 +6585,14 @@ const LiveSignalsViewer = memo(() => {
               {/* Typing Indicator */}
               {isTyping && (
                 <div className="flex items-center gap-1.5 px-2 animate-fade-in">
-                  <MessageCircle className="w-3 h-3 text-blue-400" />
+                  <MessageCircle className="w-3 h-3 text-white" />
                   <div className="flex gap-1">
                     {[0, 1, 2].map((i) => (
                       <div
                         key={i}
                         className="w-1 h-1 rounded-full animate-bounce-dot"
                         style={{ 
-                          background: '#3b82f6',
+                          background: '#ffffff',
                           animationDelay: `${i * 150}ms`,
                           willChange: 'transform'
                         }}
@@ -6602,8 +6602,8 @@ const LiveSignalsViewer = memo(() => {
                   <span 
                     className="text-[9px]"
                     style={{ 
-                      color: '#3b82f6',
-                      textShadow: '0 0 2px #3b82f6'
+                      color: '#ffffff',
+                      textShadow: '0 0 2px #ffffff'
                     }}
                   >
                     New signal incoming...
@@ -6615,19 +6615,19 @@ const LiveSignalsViewer = memo(() => {
         </div>
         
         {/* Footer */}
-        <div className="flex items-center justify-between pt-2 mt-2 border-t border-blue-500/20">
+        <div className="flex items-center justify-between pt-2 mt-2 border-t border-white/20">
           <span 
             className="text-[9px] font-medium flex items-center gap-1"
             style={{ 
-              color: '#3b82f6',
-              textShadow: '0 0 2px #3b82f6'
+              color: '#ffffff',
+              textShadow: '0 0 2px #ffffff'
             }}
           >
             <Radio className="w-3 h-3" />
             @bullmoneywebsite
           </span>
           <div className="animate-nudge-x">
-            <ExternalLink className="w-3 h-3 text-white group-hover:text-blue-400" />
+            <ExternalLink className="w-3 h-3 text-white group-hover:text-white" />
           </div>
         </div>
       </motion.div>
@@ -7289,23 +7289,23 @@ export const UnifiedFpsPill = memo(({
     
     // Simplified box-shadow - max 4 layers instead of 10+
     const boxShadow = `
-      0 0 ${borderGlow}px rgba(59, 130, 246, 0.9),
-      0 0 ${shadowSpread}px rgba(59, 130, 246, 0.6),
-      ${deepScrollProgress > 0.3 ? `0 0 ${shadowSpread * 1.5}px rgba(59, 130, 246, 0.4),` : ''}
-      inset 0 0 ${innerGlow}px rgba(59, 130, 246, 0.3)
+      0 0 ${borderGlow}px rgba(255, 255, 255, 0.9),
+      0 0 ${shadowSpread}px rgba(255, 255, 255, 0.6),
+      ${deepScrollProgress > 0.3 ? `0 0 ${shadowSpread * 1.5}px rgba(255, 255, 255, 0.4),` : ''}
+      inset 0 0 ${innerGlow}px rgba(255, 255, 255, 0.3)
     `.replace(/,\s*$/, '').replace(/,\s*,/g, ',');
     
     // Simplified text shadow - max 3 layers
     const textShadow = `
-      0 0 ${6 * neonIntensity}px #3b82f6,
-      0 0 ${12 * neonIntensity}px #3b82f6,
-      0 0 ${20 * neonIntensity}px rgba(59, 130, 246, 0.7)
+      0 0 ${6 * neonIntensity}px #ffffff,
+      0 0 ${12 * neonIntensity}px #ffffff,
+      0 0 ${20 * neonIntensity}px rgba(255, 255, 255, 0.7)
     `;
     
     // Simplified icon filter - max 2 drop-shadows
     const iconFilter = `
-      drop-shadow(0 0 ${4 * glowIntensity}px #3b82f6) 
-      drop-shadow(0 0 ${8 * glowIntensity}px #3b82f6)
+      drop-shadow(0 0 ${4 * glowIntensity}px #ffffff) 
+      drop-shadow(0 0 ${8 * glowIntensity}px #ffffff)
     `.trim();
     
     return { boxShadow, textShadow, iconFilter, borderGlow, shadowSpread, innerGlow };
@@ -7389,11 +7389,11 @@ export const UnifiedFpsPill = memo(({
           }
           className="relative rounded-r-3xl ultimate-hub-scroll-effect"
           style={{
-            background: 'linear-gradient(135deg, rgba(0,0,0,0.85) 0%, rgba(59,130,246,0.15) 50%, rgba(59, 130, 246, 0.1) 100%)',
+            background: 'linear-gradient(135deg, rgba(0,0,0,0.85) 0%, rgba(255, 255, 255,0.15) 50%, rgba(255, 255, 255, 0.1) 100%)',
             // Reduce blur on mobile for better performance
             backdropFilter: isMobile ? 'blur(8px)' : 'blur(12px)',
             WebkitBackdropFilter: isMobile ? 'blur(8px)' : 'blur(12px)',
-            border: '2px solid rgba(59, 130, 246, 0.8)',
+            border: '2px solid rgba(255, 255, 255, 0.8)',
             boxShadow: dynamicStyles.boxShadow,
             // Disable 3D transforms on mobile to prevent FPS drops
             transform: isMobile ? undefined : 'perspective(1000px)',
@@ -7431,7 +7431,7 @@ export const UnifiedFpsPill = memo(({
                   <TrendingUp 
                     className="w-4 h-4 text-white neon-white-icon" 
                     style={{ 
-                      filter: 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #3b82f6)'
+                      filter: 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff)'
                     }} 
                   />
                   {/* New Message Notification Badge - Minimized View */}
@@ -7444,8 +7444,8 @@ export const UnifiedFpsPill = memo(({
                       <div 
                         className="w-3 h-3 rounded-full flex items-center justify-center"
                         style={{
-                          background: '#3b82f6',
-                          boxShadow: '0 0 8px #3b82f6, 0 0 16px #3b82f6',
+                          background: '#ffffff',
+                          boxShadow: '0 0 8px #ffffff, 0 0 16px #ffffff',
                         }}
                       >
                         <Bell className="w-2 h-2 text-white" />
@@ -7453,7 +7453,7 @@ export const UnifiedFpsPill = memo(({
                       {/* Pulse animation */}
                       <div 
                         className="absolute inset-0 rounded-full animate-ping"
-                        style={{ background: '#3b82f6', opacity: 0.6 }}
+                        style={{ background: '#ffffff', opacity: 0.6 }}
                       />
                     </motion.div>
                   )}
@@ -7476,9 +7476,9 @@ export const UnifiedFpsPill = memo(({
                   <div 
                     className="absolute -top-1 -right-1 px-1.5 py-0.5 rounded text-[7px] font-bold uppercase tracking-wide z-20"
                     style={{
-                      background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(37, 99, 235, 0.9) 100%)',
+                      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.9) 100%)',
                       color: '#fff',
-                      boxShadow: '0 0 8px rgba(59, 130, 246, 0.6)',
+                      boxShadow: '0 0 8px rgba(255, 255, 255, 0.6)',
                       border: '1px solid rgba(255, 255, 255, 0.2)',
                     }}
                   >
@@ -7497,8 +7497,8 @@ export const UnifiedFpsPill = memo(({
                     <div 
                       className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full"
                       style={{
-                        background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-                        boxShadow: '0 0 12px #3b82f6, 0 0 24px rgba(59, 130, 246, 0.5)',
+                        background: 'linear-gradient(135deg, #ffffff 0%, #ffffff 100%)',
+                        boxShadow: '0 0 12px #ffffff, 0 0 24px rgba(255, 255, 255, 0.5)',
                         border: '1px solid rgba(255, 255, 255, 0.3)',
                       }}
                     >
@@ -7519,7 +7519,7 @@ export const UnifiedFpsPill = memo(({
                     <div 
                       className="absolute inset-0 rounded-full animate-ping"
                       style={{ 
-                        background: 'rgba(59, 130, 246, 0.4)',
+                        background: 'rgba(255, 255, 255, 0.4)',
                         animationDuration: '1.5s' 
                       }}
                     />
@@ -7541,9 +7541,9 @@ export const UnifiedFpsPill = memo(({
                       className="absolute -top-1 -right-0.5"
                     >
                       <Bell 
-                        className="w-2.5 h-2.5 text-blue-400" 
+                        className="w-2.5 h-2.5 text-white" 
                         style={{ 
-                          filter: 'drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6)'
+                          filter: 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff)'
                         }}
                       />
                     </motion.div>
@@ -7551,12 +7551,12 @@ export const UnifiedFpsPill = memo(({
                   <div className="flex items-center gap-1">
                     <div className="flex items-center gap-0.5">
                       <Coins 
-                        className="w-2 h-2 text-blue-400 neon-blue-icon" 
-                        style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }}
+                        className="w-2 h-2 text-white neon-blue-icon" 
+                        style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }}
                       />
                       <span 
                         className="text-[7px] font-bold neon-blue-text"
-                        style={{ textShadow: '0 0 4px #3b82f6' }}
+                        style={{ textShadow: '0 0 4px #ffffff' }}
                       >
                         ${prices.xauusd}
                       </span>
@@ -7564,18 +7564,18 @@ export const UnifiedFpsPill = memo(({
                     <div 
                       className="w-px h-2.5" 
                       style={{ 
-                        background: 'rgba(59, 130, 246, 0.7)',
-                        boxShadow: '0 0 4px #3b82f6'
+                        background: 'rgba(255, 255, 255, 0.7)',
+                        boxShadow: '0 0 4px #ffffff'
                       }}
                     />
                     <div className="flex items-center gap-0.5">
                       <Bitcoin 
-                        className="w-2 h-2 text-blue-400 neon-blue-icon" 
-                        style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }}
+                        className="w-2 h-2 text-white neon-blue-icon" 
+                        style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }}
                       />
                       <span 
                         className="text-[7px] font-bold neon-blue-text"
-                        style={{ textShadow: '0 0 4px #3b82f6' }}
+                        style={{ textShadow: '0 0 4px #ffffff' }}
                       >
                         ${prices.btcusd}
                       </span>
@@ -7614,7 +7614,7 @@ export const UnifiedFpsPill = memo(({
                             <span 
                               className="text-2xl font-black tracking-widest uppercase neon-blue-text"
                               style={{ 
-                                color: '#3b82f6',
+                                color: '#ffffff',
                                 textShadow: dynamicStyles.textShadow,
                                 letterSpacing: '0.15em'
                               }}
@@ -7622,8 +7622,8 @@ export const UnifiedFpsPill = memo(({
                               TRADING HUB
                             </span>
                           </div>
-                          <div className="h-px w-48 bg-gradient-to-r from-transparent via-blue-500 to-transparent"
-                            style={{ boxShadow: '0 0 8px #3b82f6' }}
+                          <div className="h-px w-48 bg-gradient-to-r from-transparent via-white to-transparent"
+                            style={{ boxShadow: '0 0 8px #ffffff' }}
                           />
                         </div>
                         
@@ -7631,12 +7631,12 @@ export const UnifiedFpsPill = memo(({
                         <div 
                           className="w-full h-[120px] rounded-lg overflow-hidden relative"
                           style={{
-                            background: 'linear-gradient(135deg, rgba(0,0,0,0.98) 0%, rgba(59,130,246,0.15) 100%)',
-                            border: '2px solid #3b82f6',
-                            boxShadow: '0 0 8px #3b82f6, 0 0 16px rgba(59,130,246,0.5), inset 0 0 8px rgba(59,130,246,0.3)'
+                            background: 'linear-gradient(135deg, rgba(0,0,0,0.98) 0%, rgba(255, 255, 255,0.15) 100%)',
+                            border: '2px solid #ffffff',
+                            boxShadow: '0 0 8px #ffffff, 0 0 16px rgba(255, 255, 255,0.5), inset 0 0 8px rgba(255, 255, 255,0.3)'
                           }}
                         >
-                          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/15 via-transparent to-cyan-500/15 pointer-events-none z-10" />
+                          <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-white/15 pointer-events-none z-10" />
                           <MiniGoldChart />
                         </div>
                         
@@ -7644,26 +7644,26 @@ export const UnifiedFpsPill = memo(({
                         <div 
                           className="flex items-center justify-around gap-4 px-4 py-3 rounded-lg neon-subtle-border"
                           style={{
-                            background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(59,130,246,0.12) 100%)',
-                            border: '1px solid rgba(59, 130, 246, 0.8)',
-                            boxShadow: '0 0 4px #3b82f6, inset 0 0 4px #3b82f6'
+                            background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(255, 255, 255,0.12) 100%)',
+                            border: '1px solid rgba(255, 255, 255, 0.8)',
+                            boxShadow: '0 0 4px #ffffff, inset 0 0 4px #ffffff'
                           }}
                         >
                           <div className="flex flex-col items-center gap-1">
                             <Coins className="w-6 h-6 text-amber-400 neon-blue-icon" style={{ filter: 'drop-shadow(0 0 6px #fbbf24)' }} />
                             <div className="flex flex-col items-center">
                               <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Gold</span>
-                              <span className="text-lg font-black tabular-nums neon-blue-text" style={{ color: '#3b82f6', textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
+                              <span className="text-lg font-black tabular-nums neon-blue-text" style={{ color: '#ffffff', textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
                                 ${prices.xauusd}
                               </span>
                             </div>
                           </div>
-                          <div className="h-12 w-px bg-gradient-to-b from-transparent via-blue-500 to-transparent" style={{ boxShadow: '0 0 6px #3b82f6' }} />
+                          <div className="h-12 w-px bg-gradient-to-b from-transparent via-white to-transparent" style={{ boxShadow: '0 0 6px #ffffff' }} />
                           <div className="flex flex-col items-center gap-1">
                             <Bitcoin className="w-6 h-6 text-orange-400 neon-blue-icon" style={{ filter: 'drop-shadow(0 0 6px #fb923c)' }} />
                             <div className="flex flex-col items-center">
                               <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Bitcoin</span>
-                              <span className="text-lg font-black tabular-nums neon-blue-text" style={{ color: '#3b82f6', textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }}>
+                              <span className="text-lg font-black tabular-nums neon-blue-text" style={{ color: '#ffffff', textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
                                 ${prices.btcusd}
                               </span>
                             </div>
@@ -7688,26 +7688,26 @@ export const UnifiedFpsPill = memo(({
                         <TrendingUp className="w-6 h-6 text-white neon-white-icon" style={{ filter: dynamicStyles.iconFilter }} />
                         <div className="flex flex-col items-center gap-2">
                           <div className="flex items-center gap-1">
-                            <Coins className="w-4 h-4 text-blue-400 neon-blue-icon" style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
-                            <span className="text-sm font-bold neon-blue-text" style={{ textShadow: '0 0 4px #3b82f6' }}>${prices.xauusd}</span>
+                            <Coins className="w-4 h-4 text-white neon-blue-icon" style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }} />
+                            <span className="text-sm font-bold neon-blue-text" style={{ textShadow: '0 0 4px #ffffff' }}>${prices.xauusd}</span>
                           </div>
                           <div 
                             className="w-12 h-px" 
                             style={{ 
-                              background: 'rgba(59, 130, 246, 0.7)',
-                              boxShadow: '0 0 4px #3b82f6'
+                              background: 'rgba(255, 255, 255, 0.7)',
+                              boxShadow: '0 0 4px #ffffff'
                             }}
                           />
                           <div className="flex items-center gap-1">
-                            <Bitcoin className="w-4 h-4 text-blue-400 neon-blue-icon" style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
-                            <span className="text-sm font-bold neon-blue-text" style={{ textShadow: '0 0 4px #3b82f6' }}>${prices.btcusd}</span>
+                            <Bitcoin className="w-4 h-4 text-white neon-blue-icon" style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }} />
+                            <span className="text-sm font-bold neon-blue-text" style={{ textShadow: '0 0 4px #ffffff' }}>${prices.btcusd}</span>
                           </div>
                         </div>
                         <span 
                           className="text-[10px] font-bold uppercase tracking-wider mt-1 neon-blue-text"
                           style={{ 
-                            color: 'rgba(96, 165, 250, 0.85)',
-                            textShadow: '0 0 4px #3b82f6'
+                            color: 'rgba(255, 255, 255, 0.85)',
+                            textShadow: '0 0 4px #ffffff'
                           }}
                         >
                           Hub
@@ -7730,9 +7730,9 @@ export const UnifiedFpsPill = memo(({
             className="absolute -bottom-5 left-0 whitespace-nowrap sm:hidden flex items-center gap-0.5 cursor-pointer pointer-events-auto px-1.5 py-0.5 rounded-r-full neon-subtle-border"
             style={{
               background: 'rgba(0, 0, 0, 0.5)',
-              borderTop: '1px solid rgba(59, 130, 246, 0.3)',
-              borderRight: '1px solid rgba(59, 130, 246, 0.3)',
-              borderBottom: '1px solid rgba(59, 130, 246, 0.3)',
+              borderTop: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRight: '1px solid rgba(255, 255, 255, 0.3)',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.3)',
             }}
             onClick={(e) => {
               e.stopPropagation();
@@ -7745,7 +7745,7 @@ export const UnifiedFpsPill = memo(({
           >
             <span className="text-[6px] neon-blue-text font-medium">Tap to open</span>
             <svg 
-              className="w-1.5 h-1.5 text-blue-400/80" 
+              className="w-1.5 h-1.5 text-white/80" 
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24"
@@ -7787,9 +7787,9 @@ export const UnifiedFpsPill = memo(({
               className="absolute inset-0"
               style={{
                 background: `
-                  radial-gradient(ellipse at center, rgba(59, 130, 246, 0.3) 0%, transparent 50%),
-                  radial-gradient(ellipse at 30% 30%, rgba(59, 130, 246, 0.15) 0%, transparent 40%),
-                  radial-gradient(ellipse at 70% 70%, rgba(59, 130, 246, 0.15) 0%, transparent 40%)
+                  radial-gradient(ellipse at center, rgba(255, 255, 255, 0.3) 0%, transparent 50%),
+                  radial-gradient(ellipse at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 40%),
+                  radial-gradient(ellipse at 70% 70%, rgba(255, 255, 255, 0.15) 0%, transparent 40%)
                 `,
               }}
             />
@@ -7798,7 +7798,7 @@ export const UnifiedFpsPill = memo(({
             <div 
               className="absolute inset-0 opacity-20"
               style={{
-                backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(59, 130, 246, 0.1) 2px, rgba(59, 130, 246, 0.1) 4px)',
+                backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 255, 255, 0.1) 2px, rgba(255, 255, 255, 0.1) 4px)',
                 animation: 'bullmoney-scanlines 0.1s linear infinite',
               }}
             />
@@ -7832,7 +7832,7 @@ export const UnifiedFpsPill = memo(({
                   className="absolute text-5xl sm:text-7xl md:text-8xl font-black tracking-widest"
                   style={{
                     color: 'transparent',
-                    WebkitTextStroke: '2px rgba(59, 130, 246, 0.3)',
+                    WebkitTextStroke: '2px rgba(255, 255, 255, 0.3)',
                     filter: 'blur(8px)',
                     transform: 'translate(-2px, -2px)',
                   }}
@@ -7843,7 +7843,7 @@ export const UnifiedFpsPill = memo(({
                   className="absolute text-5xl sm:text-7xl md:text-8xl font-black tracking-widest"
                   style={{
                     color: 'transparent',
-                    WebkitTextStroke: '1px rgba(59, 130, 246, 0.5)',
+                    WebkitTextStroke: '1px rgba(255, 255, 255, 0.5)',
                     filter: 'blur(4px)',
                     transform: 'translate(-1px, -1px)',
                   }}
@@ -7853,15 +7853,15 @@ export const UnifiedFpsPill = memo(({
                 <span 
                   className="relative text-5xl sm:text-7xl md:text-8xl font-black tracking-widest"
                   style={{
-                    color: '#3b82f6',
+                    color: '#ffffff',
                     textShadow: `
-                      0 0 10px #3b82f6,
-                      0 0 20px #3b82f6,
-                      0 0 40px #3b82f6,
-                      0 0 80px #3b82f6,
-                      0 0 120px rgba(59, 130, 246, 0.8),
-                      0 0 160px rgba(59, 130, 246, 0.6),
-                      0 0 200px rgba(59, 130, 246, 0.4)
+                      0 0 10px #ffffff,
+                      0 0 20px #ffffff,
+                      0 0 40px #ffffff,
+                      0 0 80px #ffffff,
+                      0 0 120px rgba(255, 255, 255, 0.8),
+                      0 0 160px rgba(255, 255, 255, 0.6),
+                      0 0 200px rgba(255, 255, 255, 0.4)
                     `,
                     animation: isFlickeringOut ? undefined : 'bullmoney-neon-flicker 0.1s ease-in-out infinite alternate',
                   }}
@@ -7874,8 +7874,8 @@ export const UnifiedFpsPill = memo(({
               <span 
                 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-[0.3em] uppercase"
                 style={{
-                  color: '#3b82f6',
-                  textShadow: '0 0 10px #3b82f6, 0 0 20px #3b82f6, 0 0 40px #3b82f6',
+                  color: '#ffffff',
+                  textShadow: '0 0 10px #ffffff, 0 0 20px #ffffff, 0 0 40px #ffffff',
                   animation: isFlickeringOut ? undefined : 'bullmoney-neon-flicker 0.15s ease-in-out infinite alternate',
                 }}
               >
@@ -7897,12 +7897,12 @@ export const UnifiedFpsPill = memo(({
                 }}
                 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-[0.2em] uppercase mt-4 sm:mt-6"
                 style={{
-                  color: '#3b82f6',
+                  color: '#ffffff',
                   textShadow: `
-                    0 0 ${15 + scrollIntensity * 20}px #3b82f6,
-                    0 0 ${30 + scrollIntensity * 30}px #3b82f6,
-                    0 0 ${60 + scrollIntensity * 40}px #3b82f6,
-                    0 0 ${100 + scrollIntensity * 50}px rgba(59, 130, 246, ${0.9 + scrollIntensity * 0.1})
+                    0 0 ${15 + scrollIntensity * 20}px #ffffff,
+                    0 0 ${30 + scrollIntensity * 30}px #ffffff,
+                    0 0 ${60 + scrollIntensity * 40}px #ffffff,
+                    0 0 ${100 + scrollIntensity * 50}px rgba(255, 255, 255, ${0.9 + scrollIntensity * 0.1})
                   `,
                   animation: isFlickeringOut ? undefined : 'bullmoney-slow-pulse 1.2s ease-in-out infinite',
                 }}
@@ -7955,14 +7955,14 @@ const FpsPill = memo(({
           className="text-left"
         >
           <div 
-            className="text-base font-bold text-blue-400 whitespace-nowrap mb-1"
-            style={{ textShadow: '0 0 10px #3b82f6, 0 0 20px #3b82f6, 0 0 30px #3b82f6' }}
+            className="text-base font-bold text-white whitespace-nowrap mb-1"
+            style={{ textShadow: '0 0 10px #ffffff, 0 0 20px #ffffff, 0 0 30px #ffffff' }}
           >
             📊 Click for Device Info
           </div>
           <div 
-            className="text-sm text-blue-300 whitespace-nowrap font-medium"
-            style={{ textShadow: '0 0 8px #3b82f6, 0 0 16px #3b82f6' }}
+            className="text-sm text-white whitespace-nowrap font-medium"
+            style={{ textShadow: '0 0 8px #ffffff, 0 0 16px #ffffff' }}
           >
             Trades • Live Streams • Performance
           </div>
@@ -7980,7 +7980,7 @@ const FpsPill = memo(({
             hover: { x: -8, scale: 1.02 },
             minimized: { x: 2, scale: 0.95 }
           }}
-          className="relative rounded-l-3xl bg-gradient-to-br from-blue-600/30 via-blue-500/15 to-slate-900/40 backdrop-blur-2xl border-y border-l border-blue-500/50 shadow-2xl hover:border-blue-400/70 hover:shadow-blue-600/40"
+          className="relative rounded-l-3xl bg-gradient-to-br from-white/30 via-white/15 to-slate-900/40 backdrop-blur-2xl border-y border-l border-white/50 shadow-2xl hover:border-white/70 hover:shadow-white/40"
           onClick={(e) => {
             e.preventDefault();
             SoundEffects.click();
@@ -8012,7 +8012,7 @@ const FpsPill = memo(({
                 className="px-2 py-2"
               >
                 <div className="flex items-center gap-1">
-                  <ChevronRight size={14} className="text-blue-500 rotate-180" />
+                  <ChevronRight size={14} className="text-white rotate-180" />
                   <FpsDisplay fps={fps} deviceTier={deviceTier} jankScore={jankScore} />
                 </div>
               </motion.div>
@@ -8038,15 +8038,15 @@ const TradingPill = memo(({ prices, isExpanded, onToggle }: {
       style={{ top: 'calc(5rem + env(safe-area-inset-top, 0px) + 28px)', paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 2px)' }}
     >
       <motion.div
-        whileHover={{ x: 12, scale: 1.05, boxShadow: '0 0 30px rgba(96, 165, 250, 0.6)' }}
+        whileHover={{ x: 12, scale: 1.05, boxShadow: '0 0 30px rgba(255, 255, 255, 0.6)' }}
         className="relative pointer-events-auto cursor-pointer"
         onClick={onToggle}
         animate={{ x: [0, 8, 0, 6, 0] }}
         transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3, ease: 'easeInOut' }}
       >
-        <div className="relative rounded-r-full bg-gradient-to-br from-blue-600/30 via-blue-500/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-blue-500/50 shadow-2xl hover:border-blue-400/70">
+        <div className="relative rounded-r-full bg-gradient-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl hover:border-white/70">
           <motion.div
-            className="absolute inset-0 rounded-r-full bg-gradient-to-r from-blue-500/20 via-cyan-500/10 to-transparent"
+            className="absolute inset-0 rounded-r-full bg-gradient-to-r from-white/20 via-white/10 to-transparent"
             animate={{ opacity: [0.3, 0.8, 0.3], scale: [1, 1.05, 1] }}
             transition={{ duration: 3, repeat: Infinity }}
             style={{ filter: 'blur(8px)' }}
@@ -8054,25 +8054,25 @@ const TradingPill = memo(({ prices, isExpanded, onToggle }: {
           
           <div className="px-2 py-1.5 flex items-center gap-1.5 relative z-10">
             <motion.div
-              className="w-2 h-2 bg-blue-400 rounded-full"
-              animate={{ opacity: [1, 0.4, 1], scale: [1, 1.2, 1], boxShadow: ['0 0 0px rgba(96, 165, 250, 1)', '0 0 8px rgba(96, 165, 250, 0.8)', '0 0 0px rgba(96, 165, 250, 1)'] }}
+              className="w-2 h-2 bg-white rounded-full"
+              animate={{ opacity: [1, 0.4, 1], scale: [1, 1.2, 1], boxShadow: ['0 0 0px rgba(255, 255, 255, 1)', '0 0 8px rgba(255, 255, 255, 0.8)', '0 0 0px rgba(255, 255, 255, 1)'] }}
               transition={{ duration: 1, repeat: Infinity }}
             />
 
             <div className="flex items-center gap-1.5">
               <div className="flex items-center gap-0.5">
-                <Coins className="w-3 h-3 text-blue-300" />
-                <span className="text-[9px] font-bold text-blue-200">${prices.xauusd}</span>
+                <Coins className="w-3 h-3 text-white" />
+                <span className="text-[9px] font-bold text-white">${prices.xauusd}</span>
               </div>
-              <div className="w-px h-2.5 bg-blue-500/30" />
+              <div className="w-px h-2.5 bg-white/30" />
               <div className="flex items-center gap-0.5">
-                <Bitcoin className="w-3 h-3 text-blue-300" />
-                <span className="text-[9px] font-bold text-blue-200">${prices.btcusd}</span>
+                <Bitcoin className="w-3 h-3 text-white" />
+                <span className="text-[9px] font-bold text-white">${prices.btcusd}</span>
               </div>
             </div>
 
             <motion.div animate={{ rotate: isExpanded ? 180 : 0 }}>
-              <ChevronRight className="w-3 h-3 text-blue-400/70" />
+              <ChevronRight className="w-3 h-3 text-white/70" />
             </motion.div>
           </div>
         </div>
@@ -8102,15 +8102,15 @@ const CommunityPill = memo(({ isExpanded, onToggle }: { isExpanded: boolean; onT
       style={{ top: 'calc(5rem + env(safe-area-inset-top, 0px) + 126px)', paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 2px)' }}
     >
       <motion.div
-        whileHover={{ x: 12, scale: 1.05, boxShadow: '0 0 30px rgba(34, 211, 238, 0.6)' }}
+        whileHover={{ x: 12, scale: 1.05, boxShadow: '0 0 30px rgba(255, 255, 255, 0.6)' }}
         className="relative pointer-events-auto cursor-pointer"
         onClick={onToggle}
         animate={{ x: [0, 8, 0, 6, 0] }}
         transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3, ease: 'easeInOut' }}
       >
-        <div className="relative rounded-r-2xl bg-gradient-to-br from-cyan-600/30 via-cyan-500/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-cyan-500/50 shadow-2xl hover:border-cyan-400/70 min-w-[150px]">
+        <div className="relative rounded-r-2xl bg-gradient-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl hover:border-white/70 min-w-[150px]">
           <motion.div
-            className="absolute inset-0 rounded-r-2xl bg-gradient-to-r from-cyan-500/20 via-blue-500/10 to-transparent"
+            className="absolute inset-0 rounded-r-2xl bg-gradient-to-r from-white/20 via-white/10 to-transparent"
             animate={{ opacity: [0.3, 0.8, 0.3], scale: [1, 1.05, 1] }}
             transition={{ duration: 3, repeat: Infinity }}
             style={{ filter: 'blur(8px)' }}
@@ -8118,18 +8118,18 @@ const CommunityPill = memo(({ isExpanded, onToggle }: { isExpanded: boolean; onT
           
           <div className="px-2 py-1.5 flex items-center gap-1.5 relative z-10">
             <motion.div
-              className="w-2 h-2 bg-cyan-400 rounded-full"
+              className="w-2 h-2 bg-white rounded-full"
               animate={{ opacity: [1, 0.4, 1], scale: [1, 1.2, 1] }}
               transition={{ duration: 1.5, repeat: Infinity }}
             />
 
             <div className="flex items-center gap-1">
-              <TrendingUp className="w-3 h-3 text-cyan-300" />
-              <span className="text-[9px] font-bold text-cyan-200">Live Trades</span>
+              <TrendingUp className="w-3 h-3 text-white" />
+              <span className="text-[9px] font-bold text-white">Live Trades</span>
             </div>
 
             <motion.div animate={{ rotate: isExpanded ? 180 : 0 }}>
-              <ChevronRight className="w-3 h-3 text-cyan-400/70" />
+              <ChevronRight className="w-3 h-3 text-white/70" />
             </motion.div>
           </div>
           
@@ -8151,15 +8151,15 @@ const BullMoneyTVPill = memo(({ isExpanded, onToggle }: { isExpanded: boolean; o
       style={{ top: 'calc(5rem + env(safe-area-inset-top, 0px) + 238px)', paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 8px)' }}
     >
       <motion.div
-        whileHover={{ x: 12, scale: 1.05, boxShadow: '0 0 30px rgba(168, 85, 247, 0.6)' }}
+        whileHover={{ x: 12, scale: 1.05, boxShadow: '0 0 30px rgba(255, 255, 255, 0.6)' }}
         className="relative pointer-events-auto cursor-pointer"
         onClick={onToggle}
         animate={{ x: [0, 8, 0, 6, 0] }}
         transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3, ease: 'easeInOut' }}
       >
-        <div className="relative rounded-r-full bg-gradient-to-br from-purple-600/30 via-purple-500/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-purple-500/50 shadow-2xl hover:border-purple-400/70">
+        <div className="relative rounded-r-full bg-gradient-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl hover:border-white/70">
           <motion.div
-            className="absolute inset-0 rounded-r-full bg-gradient-to-r from-purple-500/20 via-fuchsia-500/10 to-transparent"
+            className="absolute inset-0 rounded-r-full bg-gradient-to-r from-white/20 via-fuchsia-500/10 to-transparent"
             animate={{ opacity: [0.3, 0.8, 0.3], scale: [1, 1.05, 1] }}
             transition={{ duration: 2, repeat: Infinity }}
             style={{ filter: 'blur(8px)' }}
@@ -8167,18 +8167,18 @@ const BullMoneyTVPill = memo(({ isExpanded, onToggle }: { isExpanded: boolean; o
           
           <div className="px-2 py-1.5 flex items-center gap-1.5 relative z-10">
             <motion.div
-              className="w-2 h-2 bg-purple-400 rounded-full"
+              className="w-2 h-2 bg-white rounded-full"
               animate={{ opacity: [1, 0.4, 1], scale: [1, 1.2, 1] }}
               transition={{ duration: 1, repeat: Infinity }}
             />
 
             <div className="flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-purple-300" />
-              <span className="text-[9px] font-bold text-purple-200">LIVE STAGE</span>
+              <Sparkles className="w-3 h-3 text-white" />
+              <span className="text-[9px] font-bold text-white">LIVE STAGE</span>
             </div>
 
             <motion.div animate={{ rotate: isExpanded ? 180 : 0 }}>
-              <ChevronRight className="w-3 h-3 text-purple-400/70" />
+              <ChevronRight className="w-3 h-3 text-white/70" />
             </motion.div>
           </div>
         </div>

@@ -189,11 +189,11 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
   }
 
   return (
-    <div className="min-h-screen bg-[#050B14] text-white font-sans selection:bg-blue-500/30">
+    <div className="min-h-screen bg-[#050B14] text-white font-sans selection:bg-white/30">
       
       {/* Background Ambience */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px]" />
+        <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-white/10 rounded-full blur-[120px]" />
       </div>
 
       <div className="max-w-6xl mx-auto p-4 md:p-8 relative z-10">
@@ -205,12 +205,12 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
               <ArrowLeft className="w-4 h-4 mr-1" /> Overview
             </button>
             <h1 className="text-3xl font-black tracking-tighter text-white">
-              MY <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">RECRUITS</span>
+              MY <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-white">RECRUITS</span>
             </h1>
             
             <div className="flex items-center gap-3 mt-3">
               <p className="text-slate-400 text-sm">Tracking data for Code:</p>
-              <div className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded text-blue-300 text-sm font-bold font-mono shadow-[0_0_15px_rgba(59,130,246,0.15)]">
+              <div className="flex items-center gap-2 bg-white/10 border border-white/20 px-3 py-1 rounded text-white text-sm font-bold font-mono shadow-[0_0_15px_rgba(255, 255, 255,0.15)]">
                 <Tag className="w-3.5 h-3.5" />
                 {myTrackingCode}
               </div>
@@ -221,7 +221,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
             <button onClick={() => checkAuthAndLoad(false)} className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/5 transition-all">
               <RefreshCw className={cn("w-5 h-5", loading && "animate-spin")} />
             </button>
-            <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-lg shadow-blue-900/20">
+            <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white hover:bg-white text-black font-bold text-sm shadow-lg shadow-white/20">
               <Download className="w-4 h-4" /> Export CSV
             </button>
           </div>
@@ -249,13 +249,13 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
           {/* Controls */}
           <div className="p-4 border-b border-white/5 flex flex-col md:flex-row gap-4 justify-between items-center">
             <div className="relative w-full md:w-96 group">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-white transition-colors" />
               <input 
                 type="text" 
                 placeholder="Search recruits..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-black/40 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500/50 transition-all placeholder:text-slate-600"
+                className="w-full bg-black/40 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-white/50 transition-all placeholder:text-slate-600"
               />
             </div>
             <div className="flex gap-2 w-full md:w-auto overflow-x-auto">
@@ -311,11 +311,11 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                     >
                       <td className="p-4 pl-6">
                         <div className="flex items-center gap-3">
-                          <motion.div layoutId={`avatar-${recruit.id}`} className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center border border-white/10 text-xs font-bold text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                          <motion.div layoutId={`avatar-${recruit.id}`} className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center border border-white/10 text-xs font-bold text-slate-400 group-hover:bg-white group-hover:text-black transition-colors">
                             {recruit.email.charAt(0).toUpperCase()}
                           </motion.div>
                           <div>
-                            <p className="text-sm font-medium text-white group-hover:text-blue-400 transition-colors">
+                            <p className="text-sm font-medium text-white group-hover:text-white transition-colors">
                               {maskEmail(recruit.email)}
                             </p>
                             <p className="text-[10px] text-slate-500">ID: {formatId(recruit.id)}</p>
@@ -323,7 +323,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                         </div>
                       </td>
                       <td className="p-4">
-                        <span className="flex items-center gap-1 text-xs text-blue-300 bg-blue-500/10 w-fit px-2 py-0.5 rounded border border-blue-500/20">
+                        <span className="flex items-center gap-1 text-xs text-white bg-white/10 w-fit px-2 py-0.5 rounded border border-white/20">
                           <AtSign className="w-3 h-3" />
                           {recruit.referred_by_code || 'Unknown'}
                         </span>
@@ -332,7 +332,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                       <td className="p-4">
                         <span className={cn(
                           "font-mono text-xs px-2 py-1 rounded border",
-                          recruit.mt5_id ? "bg-blue-500/10 text-blue-300 border-blue-500/20" : "bg-white/5 text-slate-600 border-white/5"
+                          recruit.mt5_id ? "bg-white/10 text-white border-white/20" : "bg-white/5 text-slate-600 border-white/5"
                         )}>
                            {recruit.mt5_id || 'Unlinked'}
                         </span>
@@ -378,7 +378,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                 {/* Header */}
                 <div className="p-8 pb-6 bg-gradient-to-b from-neutral-800/50 to-transparent border-b border-white/5">
                     <div className="flex items-start gap-5">
-                         <motion.div layoutId={`avatar-${selectedRecruit.id}`} className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-3xl font-bold text-white shadow-lg shadow-blue-900/40">
+                         <motion.div layoutId={`avatar-${selectedRecruit.id}`} className="w-20 h-20 rounded-2xl bg-gradient-to-br from-white to-indigo-700 flex items-center justify-center text-3xl font-bold text-white shadow-lg shadow-white/40">
                             {selectedRecruit.email.charAt(0).toUpperCase()}
                          </motion.div>
                          <div className="flex-1 pt-1">
@@ -395,7 +395,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                                 <button className="px-3 py-1.5 rounded bg-white/5 border border-white/10 hover:bg-white/10 text-xs text-white font-medium flex items-center gap-2">
                                     <Copy className="w-3 h-3" /> Copy ID
                                 </button>
-                                <button className="px-3 py-1.5 rounded bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 text-xs text-blue-300 font-medium flex items-center gap-2">
+                                <button className="px-3 py-1.5 rounded bg-white/10 border border-white/20 hover:bg-white/20 text-xs text-white font-medium flex items-center gap-2">
                                     <Activity className="w-3 h-3" /> View Activity
                                 </button>
                              </div>
@@ -416,25 +416,25 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                         <div className="relative pl-4 space-y-8 border-l border-white/10 ml-2">
                             {/* Step 1: Registered */}
                             <div className="relative">
-                                <div className="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
+                                <div className="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
                                 <h4 className="text-white font-bold text-sm">Account Registered</h4>
                                 <p className="text-xs text-slate-500 mt-1">
-                                    User signed up using code <span className="text-blue-400">{selectedRecruit.referred_by_code}</span> on {formatDate(selectedRecruit.created_at)} at {formatTime(selectedRecruit.created_at)}.
+                                    User signed up using code <span className="text-white">{selectedRecruit.referred_by_code}</span> on {formatDate(selectedRecruit.created_at)} at {formatTime(selectedRecruit.created_at)}.
                                 </p>
                             </div>
 
                             {/* Step 2: Broker Connection */}
                             <div className="relative">
                                 <div className={cn(
-                                    "absolute -left-[21px] top-1 w-3 h-3 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.5)]",
-                                    selectedRecruit.mt5_id ? "bg-green-500" : "bg-neutral-700 border border-white/20"
+                                    "absolute -left-[21px] top-1 w-3 h-3 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)]",
+                                    selectedRecruit.mt5_id ? "bg-white" : "bg-neutral-700 border border-white/20"
                                 )} />
                                 <h4 className={cn("font-bold text-sm", selectedRecruit.mt5_id ? "text-white" : "text-slate-500")}>
                                     Broker Account Linked
                                 </h4>
                                 {selectedRecruit.mt5_id ? (
                                     <p className="text-xs text-slate-500 mt-1">
-                                        MT5 ID <span className="text-green-400 font-mono">{selectedRecruit.mt5_id}</span> verified.
+                                        MT5 ID <span className="text-white font-mono">{selectedRecruit.mt5_id}</span> verified.
                                     </p>
                                 ) : (
                                     <p className="text-xs text-orange-400/80 mt-1 italic">
@@ -447,7 +447,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                             <div className="relative">
                                 <div className={cn(
                                     "absolute -left-[21px] top-1 w-3 h-3 rounded-full",
-                                    selectedRecruit.status === 'Active' ? "bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]" : "bg-neutral-700 border border-white/20"
+                                    selectedRecruit.status === 'Active' ? "bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]" : "bg-neutral-700 border border-white/20"
                                 )} />
                                 <h4 className={cn("font-bold text-sm", selectedRecruit.status === 'Active' ? "text-white" : "text-slate-500")}>
                                     Active Trading
@@ -465,7 +465,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                     <div className="grid grid-cols-2 gap-4">
                         <div className="p-4 rounded-xl bg-neutral-900 border border-white/5">
                             <div className="flex items-center gap-2 mb-2">
-                                <div className="p-1.5 rounded bg-green-500/10 text-green-400">
+                                <div className="p-1.5 rounded bg-white/10 text-white">
                                     <CreditCard className="w-4 h-4" />
                                 </div>
                                 <span className="text-xs text-slate-400 font-bold uppercase">BULLMONEY RANDOM LOTS BEING TRADED </span>
@@ -476,7 +476,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                         </div>
                         <div className="p-4 rounded-xl bg-neutral-900 border border-white/5">
                              <div className="flex items-center gap-2 mb-2">
-                                <div className="p-1.5 rounded bg-blue-500/10 text-blue-400">
+                                <div className="p-1.5 rounded bg-white/10 text-white">
                                     <DollarSign className="w-4 h-4" />
                                 </div>
                                 <span className="text-xs text-slate-400 font-bold uppercase">DOLLARS RANDOMLY BEING TRADED IN BULLMONEY</span>
@@ -512,8 +512,8 @@ const ClockIcon = ({ className }: { className?: string }) => (
 
 const StatCard = ({ title, value, icon: Icon, trend, color }: any) => {
   const colors: any = {
-    blue: "text-blue-400 bg-blue-500/10", green: "text-green-400 bg-green-500/10",
-    orange: "text-orange-400 bg-orange-500/10", purple: "text-purple-400 bg-purple-500/10",
+    blue: "text-white bg-white/10", green: "text-white bg-white/10",
+    orange: "text-orange-400 bg-orange-500/10", purple: "text-white bg-white/10",
   };
   return (
     <div className="bg-neutral-900/40 border border-white/5 p-5 rounded-xl">
@@ -534,7 +534,7 @@ const StatusBadge = ({ status }: { status: string }) => {
   return (
     <div className={cn(
       "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border",
-      isActive ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+      isActive ? "bg-white/10 text-white border-white/20" : "bg-amber-500/10 text-amber-400 border-amber-500/20"
     )}>
       {isActive ? <Shield className="w-3 h-3" /> : <ClockIcon className="w-3 h-3" />}
       {status}

@@ -19,10 +19,10 @@ interface GlobalThemeContextType {
 const GlobalThemeContext = createContext<GlobalThemeContextType | undefined>(undefined);
 
 export function GlobalThemeProvider({ children }: { children: React.ReactNode }) {
-  // Default to BullMoney Blue (#3b82f6) - the signature theme
+  // Default to BullMoney Blue (#ffffff) - the signature theme
   const [activeThemeId, setActiveThemeId] = useState<string>('bullmoney-blue');
   const [activeTheme, setActiveTheme] = useState<Theme | null>(null);
-  const [accentColor, setAccentColor] = useState<string>('#3b82f6');
+  const [accentColor, setAccentColor] = useState<string>('#ffffff');
   const [isInitialized, setIsInitialized] = useState(false);
   const [isXMUser, setIsXMUserState] = useState(false);
   const [isAppLoading, setAppLoading] = useState(true);
@@ -80,7 +80,7 @@ export function GlobalThemeProvider({ children }: { children: React.ReactNode })
     
     const theme = ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0] || null;
     setActiveTheme(theme);
-    setAccentColor(theme?.accentColor || '#3b82f6');
+    setAccentColor(theme?.accentColor || '#ffffff');
 
     // Apply theme as persistent overlay across website
     if (typeof document !== 'undefined' && theme) {
@@ -96,7 +96,7 @@ export function GlobalThemeProvider({ children }: { children: React.ReactNode })
       body.style.filter = 'none';
       
       // Set comprehensive CSS variables for dynamic theming across entire app
-      const accentHex = theme.accentColor || '#3b82f6';
+      const accentHex = theme.accentColor || '#ffffff';
       root.style.setProperty('--accent-color', accentHex);
       root.style.setProperty('--theme-id', `'${theme.id}'`);
       root.style.setProperty('--theme-name', `'${theme.name}'`);
@@ -215,7 +215,7 @@ export function GlobalThemeProvider({ children }: { children: React.ReactNode })
         height: '0%',
         zIndex: '9999999', // Above everything during transition
         pointerEvents: 'none',
-        touchAction: 'none',
+        touchAction: 'auto', // FIXED: Allow touch passthrough
         userSelect: 'none',
         // Theme color with glow
         background: `linear-gradient(
@@ -267,7 +267,7 @@ export function GlobalThemeProvider({ children }: { children: React.ReactNode })
         inset: '0',
         zIndex: '999999', // Above everything including Spline
         pointerEvents: 'none', // CRITICAL: Pass through ALL interactions
-        touchAction: 'none', // Don't capture touch events
+        touchAction: 'auto', // FIXED: Allow touch passthrough
         userSelect: 'none',
         webkitUserSelect: 'none',
         // Color tint using theme accent
@@ -303,7 +303,7 @@ export function GlobalThemeProvider({ children }: { children: React.ReactNode })
         inset: '0',
         zIndex: '999998',
         pointerEvents: 'none',
-        touchAction: 'none',
+        touchAction: 'auto', // FIXED: Allow touch passthrough
         userSelect: 'none',
         // Vignette-style edge glow
         boxShadow: `inset 0 0 150px rgba(${r}, ${g}, ${b}, 0.15), 

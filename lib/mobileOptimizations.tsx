@@ -395,7 +395,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
     >
       {pullDistance > threshold && (
         <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full py-2">
-          <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-500 border-t-transparent" />
+          <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent" />
         </div>
       )}
       {children}

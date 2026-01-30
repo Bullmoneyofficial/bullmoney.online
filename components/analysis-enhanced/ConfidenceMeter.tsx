@@ -16,8 +16,8 @@ interface ConfidenceMeterProps {
 const getConfidenceColor = (score: number): string => {
   if (score <= 3) return 'from-red-500 to-red-600';
   if (score <= 5) return 'from-yellow-500 to-orange-500';
-  if (score <= 7) return 'from-blue-500 to-blue-600';
-  return 'from-green-500 to-emerald-500';
+  if (score <= 7) return 'from-white to-white';
+  return 'from-white to-white';
 };
 
 const getConfidenceLabel = (score: number): string => {

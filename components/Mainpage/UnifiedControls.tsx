@@ -44,7 +44,7 @@ export const UnifiedControls: React.FC<UnifiedControlsProps> = ({
   onSettingsClick,
   isMobile = false,
   controlCenterOpen = false,
-  accentColor = '#3b82f6',
+  accentColor = '#ffffff',
   disabled = false
 }) => {
   const [showHint, setShowHint] = React.useState(true);
@@ -215,7 +215,7 @@ export const UnifiedControls: React.FC<UnifiedControlsProps> = ({
         >
           {nudgeVisible && disableSpline && (
             <div
-              className="pointer-events-none absolute -top-8 sm:-top-10 right-2 sm:right-4 rounded-full px-3 sm:px-4 py-1 text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.2em] text-white bg-blue-500/80 shadow-[0_10px_30px_rgba(59,130,246,0.45)] animate-pulse max-w-[90vw]"
+              className="pointer-events-none absolute -top-8 sm:-top-10 right-2 sm:right-4 rounded-full px-3 sm:px-4 py-1 text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.2em] text-white bg-white/80 shadow-[0_10px_30px_rgba(255, 255, 255,0.45)] animate-pulse max-w-[90vw]"
               style={{ boxShadow: `0 0 30px ${accentColor}80` }}
             >
               Click me
@@ -251,11 +251,11 @@ export const UnifiedControls: React.FC<UnifiedControlsProps> = ({
       {isMobile && showHint && (
         <button
           onClick={handleControlCenterToggle}
-          className="pointer-events-auto fixed right-2 sm:right-3 flex items-center gap-2 rounded-full px-3 sm:px-4 py-2 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.15em] sm:tracking-[0.2em] shadow-[0_10px_50px_rgba(59,130,246,0.35)] animate-pulse max-w-[calc(100vw-1rem)]"
+          className="pointer-events-auto fixed right-2 sm:right-3 flex items-center gap-2 rounded-full px-3 sm:px-4 py-2 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.15em] sm:tracking-[0.2em] shadow-[0_10px_50px_rgba(255, 255, 255,0.35)] animate-pulse max-w-[calc(100vw-1rem)]"
           style={{
             zIndex: UI_LAYERS.CONTROL_CENTER_BTN + 1,
             bottom: 'calc(4.5rem + env(safe-area-inset-bottom, 0px))',
-            backgroundColor: 'rgba(59,130,246,0.85)',
+            backgroundColor: 'rgba(255, 255, 255,0.85)',
             color: '#0b1224',
             boxShadow: `0 0 30px ${accentColor}70`,
             border: `1px solid ${accentColor}`,

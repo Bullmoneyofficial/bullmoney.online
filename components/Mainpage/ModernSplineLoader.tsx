@@ -63,8 +63,8 @@ function LoadingScreen({ progress, message, priority }: {
           className="w-full h-full"
           style={{
             backgroundImage: `
-              radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.4) 0%, transparent 50%),
-              radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.3) 0%, transparent 50%)
+              radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.4) 0%, transparent 50%),
+              radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.3) 0%, transparent 50%)
             `,
           }}
         />
@@ -82,9 +82,9 @@ function LoadingScreen({ progress, message, priority }: {
           />
           <defs>
             <linearGradient id="loadGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#3b82f6" />
-              <stop offset="50%" stopColor="#8b5cf6" />
-              <stop offset="100%" stopColor="#3b82f6" />
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="50%" stopColor="#ffffff" />
+              <stop offset="100%" stopColor="#ffffff" />
             </linearGradient>
           </defs>
         </svg>
@@ -95,38 +95,38 @@ function LoadingScreen({ progress, message, priority }: {
         {/* Loader */}
         <div className="relative w-24 h-24 mx-auto">
           <div
-            className="absolute inset-0 rounded-full border border-blue-500/30 bg-blue-500/10"
+            className="absolute inset-0 rounded-full border border-white/30 bg-white/10"
             style={{ animationDuration: '2s' }}
           />
-          <div className="absolute inset-2 rounded-full border border-blue-400/30" />
+          <div className="absolute inset-2 rounded-full border border-white/30" />
           <Loader2
-            className="absolute inset-0 m-auto h-10 w-10 text-blue-300 animate-spin"
+            className="absolute inset-0 m-auto h-10 w-10 text-white animate-spin"
             style={{ animationDuration: '1.2s' }}
           />
         </div>
 
         {/* Status */}
         <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-400/30">
-            <span className="h-2 w-2 rounded-full bg-blue-400 animate-pulse" />
-            <span className="text-xs font-semibold text-blue-200 uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/30">
+            <span className="h-2 w-2 rounded-full bg-white animate-pulse" />
+            <span className="text-xs font-semibold text-white uppercase tracking-wider">
               {isCritical ? 'Priority Load' : 'Optimizing'}
             </span>
           </div>
 
-          <h3 className="text-xl font-semibold text-blue-100">
+          <h3 className="text-xl font-semibold text-white">
             {message}
           </h3>
 
           {/* Progress bar */}
           <div className="space-y-2">
-            <div className="flex justify-between text-xs font-mono text-blue-100/60">
+            <div className="flex justify-between text-xs font-mono text-white/60">
               <span>Loading Scene</span>
               <span>{Math.round(progress)}%</span>
             </div>
-            <div className="w-full h-1.5 bg-blue-100/10 rounded-full overflow-hidden">
+            <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-blue-500 via-blue-400 to-blue-500 rounded-full transition-all duration-300"
+                className="h-full bg-gradient-to-r from-white via-white to-white rounded-full transition-all duration-300"
                 style={{
                   width: `${progress}%`,
                   backgroundSize: '200% 100%',
@@ -140,18 +140,18 @@ function LoadingScreen({ progress, message, priority }: {
           {isCritical && (
             <div className="grid grid-cols-3 gap-2 mt-4">
               {[
-                { label: 'BTC', value: '+24.3%', color: 'text-green-400' },
-                { label: 'ETH', value: '+18.7%', color: 'text-green-400' },
-                { label: 'SOL', value: '+31.2%', color: 'text-blue-400' },
+                { label: 'BTC', value: '+24.3%', color: 'text-white' },
+                { label: 'ETH', value: '+18.7%', color: 'text-white' },
+                { label: 'SOL', value: '+31.2%', color: 'text-white' },
               ].map((stat) => (
                 <div
                   key={stat.label}
-                  className="p-2 rounded-lg bg-blue-500/10 border border-blue-400/20"
+                  className="p-2 rounded-lg bg-white/10 border border-white/20"
                 >
                   <div className={`text-xs font-mono font-bold ${stat.color}`}>
                     {stat.value}
                   </div>
-                  <div className="text-[10px] text-blue-200/60">{stat.label}</div>
+                  <div className="text-[10px] text-white/60">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -200,7 +200,7 @@ function ErrorScreen({
 
         <button
           onClick={onRetry}
-          className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold hover:from-blue-600 hover:to-purple-600 transition-all shadow-lg active:scale-95"
+          className="px-6 py-3 rounded-xl bg-gradient-to-r from-white to-white text-white font-semibold hover:from-white hover:to-white transition-all shadow-lg active:scale-95"
         >
           🔄 Retry Loading
         </button>
@@ -454,7 +454,7 @@ export function ModernSplineLoader({
           <Suspense
             fallback={
               <div className="flex items-center justify-center w-full h-full">
-                <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
+                <Loader2 className="w-12 h-12 text-white animate-spin" />
               </div>
             }
           >

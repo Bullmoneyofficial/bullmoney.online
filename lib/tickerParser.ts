@@ -149,7 +149,7 @@ export function getTickerSuggestions(query: string, limit: number = 10): TickerI
  */
 export function renderCashtagsAsHtml(
   text: string,
-  linkClassName: string = 'text-blue-400 hover:text-blue-300 cursor-pointer'
+  linkClassName: string = 'text-white hover:text-white/80 cursor-pointer'
 ): string {
   return text.replace(
     CASHTAG_REGEX,
@@ -221,15 +221,15 @@ export function isValidTicker(symbol: string): boolean {
 export function getTickerTypeColor(type: TickerInfo['type']): string {
   switch (type) {
     case 'crypto':
-      return 'text-orange-400';
+      return 'text-white';
     case 'stock':
-      return 'text-blue-400';
+      return 'text-white';
     case 'forex':
-      return 'text-green-400';
+      return 'text-white';
     case 'commodity':
-      return 'text-yellow-400';
+      return 'text-white';
     case 'index':
-      return 'text-purple-400';
+      return 'text-white';
     default:
       return 'text-neutral-400';
   }

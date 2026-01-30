@@ -281,12 +281,12 @@ function SplinePageComponent({
             transition={{ duration: 0.5 }}
             className="absolute inset-0 z-20 flex items-center justify-center"
             style={{
-              background: 'radial-gradient(ellipse at 50% 30%, rgba(59, 130, 246, 0.1) 0%, transparent 50%), #000',
+              background: 'radial-gradient(ellipse at 50% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%), #000',
             }}
           >
             <div className="flex flex-col items-center gap-4">
-              <div className="w-12 h-12 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
-              <p className="text-blue-400/60 text-sm font-medium">Loading 3D Scene...</p>
+              <div className="w-12 h-12 border-2 border-white/30 border-t-blue-500 rounded-full animate-spin" />
+              <p className="text-white/60 text-sm font-medium">Loading 3D Scene...</p>
             </div>
           </motion.div>
         )}
@@ -304,7 +304,7 @@ function SplinePageComponent({
             className="flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-md"
             style={{
               background: 'rgba(0, 0, 0, 0.5)',
-              border: '1px solid rgba(59, 130, 246, 0.3)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
             }}
           >
             <motion.span
@@ -316,7 +316,7 @@ function SplinePageComponent({
             >
               {isDragging ? '🔄' : isHovering ? '👆' : '🎮'}
             </motion.span>
-            <span className="text-xs text-blue-400/80 font-medium">
+            <span className="text-xs text-white/80 font-medium">
               {isDragging ? 'Rotating' : isHovering ? 'Interactive' : '3D Scene'}
             </span>
           </div>
@@ -336,8 +336,8 @@ function SplinePageComponent({
               className="px-4 py-2 rounded-full backdrop-blur-md text-sm font-medium"
               style={{
                 background: 'rgba(0, 0, 0, 0.7)',
-                border: '1px solid rgba(59, 130, 246, 0.4)',
-                color: '#60a5fa',
+                border: '1px solid rgba(255, 255, 255, 0.4)',
+                color: '#ffffff',
               }}
             >
               {isMobile ? '👆 Touch & drag to interact' : '🖱️ Click & drag to rotate'}
@@ -423,7 +423,7 @@ function SplinePageComponent({
                   setDesktopScene(pickNextDesktopScene());
                 }
               }}
-              className="mt-4 px-4 py-2 rounded-lg bg-blue-500/20 text-blue-400 text-sm hover:bg-blue-500/30 transition-colors"
+              className="mt-4 px-4 py-2 rounded-lg bg-white/20 text-white text-sm hover:bg-white/30 transition-colors"
             >
               Try Again
             </button>

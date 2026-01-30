@@ -23,9 +23,9 @@ export const streamingOptions: {
   color: string; 
   recommended?: boolean 
 }[] = [
-  { value: "SPOTIFY", label: "Spotify", icon: React.createElement(IconBrandSpotify, { className: "w-5 h-5" }), color: "blue" },
-  { value: "APPLE_MUSIC", label: "Apple", icon: React.createElement(IconBrandApple, { className: "w-5 h-5" }), color: "blue" },
-  { value: "YOUTUBE", label: "YouTube", icon: React.createElement(IconBrandYoutube, { className: "w-5 h-5" }), color: "blue", recommended: true },
+  { value: "SPOTIFY", label: "Spotify", icon: React.createElement(IconBrandSpotify, { className: "w-5 h-5" }), color: "white" },
+  { value: "APPLE_MUSIC", label: "Apple", icon: React.createElement(IconBrandApple, { className: "w-5 h-5" }), color: "white" },
+  { value: "YOUTUBE", label: "YouTube", icon: React.createElement(IconBrandYoutube, { className: "w-5 h-5" }), color: "white", recommended: true },
 ];
 
 export const sourceIcons: Partial<Record<MusicSource, React.ComponentType<IconProps>>> = {

@@ -147,8 +147,8 @@ const ProductCard = memo(({
       onClick={onClick}
       className="relative rounded-xl overflow-hidden cursor-pointer group"
       style={{
-        background: 'linear-gradient(145deg, rgba(79, 70, 229, 0.1), rgba(0, 0, 0, 0.8))',
-        border: '1px solid rgba(79, 70, 229, 0.3)'
+        background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.8))',
+        border: '1px solid rgba(255, 255, 255, 0.3)'
       }}
     >
       {/* Image */}
@@ -412,8 +412,8 @@ const ProductsContent = memo(() => {
               className="relative w-full max-w-3xl max-h-[85vh] overflow-hidden rounded-2xl"
               style={{
                 background: 'linear-gradient(145deg, #0a0015, #000)',
-                border: '2px solid rgba(79, 70, 229, 0.4)',
-                boxShadow: '0 0 60px rgba(79, 70, 229, 0.3)'
+                border: '2px solid rgba(255, 255, 255, 0.4)',
+                boxShadow: '0 0 60px rgba(255, 255, 255, 0.3)'
               }}
             >
               {/* Close Button */}

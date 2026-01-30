@@ -107,7 +107,7 @@ export const OptimizedComponentLoader = memo<{
         data-component={componentName}
         data-state="suspended"
       >
-        <div className="w-8 h-8 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-white/20 border-t-blue-500 rounded-full animate-spin" />
       </div>
     );
   }
@@ -148,7 +148,7 @@ const LoadingSkeleton = memo<{
       {/* Animated Background Grid */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0" style={{
-          backgroundImage: `linear-gradient(#3b82f6 1px, transparent 1px), linear-gradient(90deg, #3b82f6 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(90deg, #ffffff 1px, transparent 1px)`,
           backgroundSize: '20px 20px'
         }} />
       </div>
@@ -157,7 +157,7 @@ const LoadingSkeleton = memo<{
       <div className="relative z-10 flex flex-col items-center gap-6">
         {/* Spinner */}
         <div className="relative">
-          <div className="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+          <div className="w-16 h-16 border-4 border-white/20 border-t-blue-500 rounded-full animate-spin" />
           <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-b-cyan-500/40 rounded-full animate-spin animation-delay-150" />
         </div>
 
@@ -179,9 +179,9 @@ const LoadingSkeleton = memo<{
             className="flex items-center gap-2"
           >
             <span className={`w-2 h-2 rounded-full ${
-              priority === 'high' ? 'bg-green-500' :
+              priority === 'high' ? 'bg-white' :
               priority === 'medium' ? 'bg-yellow-500' :
-              'bg-blue-500'
+              'bg-white'
             }`} />
             <span className="text-xs text-white/40 font-mono uppercase">
               {priority} Priority
@@ -194,7 +194,7 @@ const LoadingSkeleton = memo<{
           {[0, 1, 2].map((i) => (
             <motion.div
               key={i}
-              className="w-2 h-2 bg-blue-500 rounded-full"
+              className="w-2 h-2 bg-white rounded-full"
               animate={{
                 scale: [1, 1.5, 1],
                 opacity: [0.5, 1, 0.5],
@@ -211,7 +211,7 @@ const LoadingSkeleton = memo<{
 
       {/* Scan Line Effect */}
       <motion.div
-        className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-blue-500/50 to-transparent"
+        className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/50 to-transparent"
         animate={{
           top: ['0%', '100%'],
         }}
@@ -309,7 +309,7 @@ export const MemoryMonitor = memo(() => {
               className={`h-full transition-all duration-500 ${
                 memoryInfo.percentage > 80 ? 'bg-red-500' :
                 memoryInfo.percentage > 60 ? 'bg-yellow-500' :
-                'bg-green-500'
+                'bg-white'
               }`}
               style={{ width: `${memoryInfo.percentage}%` }}
             />

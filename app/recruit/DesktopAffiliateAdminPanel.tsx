@@ -43,7 +43,7 @@ export default function DesktopAffiliateAdminPanel({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search email, ID, MT5, affiliate code"
-                className="w-full bg-slate-900/80 border border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                className="w-full bg-slate-900/80 border border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/40"
               />
             </div>
           </div>
@@ -112,7 +112,7 @@ export default function DesktopAffiliateAdminPanel({
                           <span
                             className={cn(
                               "px-2 py-1 rounded text-xs font-semibold inline-block",
-                              r.status === "active" ? "bg-green-500/20 text-green-300" : "bg-slate-700/50 text-slate-400"
+                              r.status === "active" ? "bg-white/20 text-white" : "bg-slate-700/50 text-slate-400"
                             )}
                           >
                             {r.status || "—"}
@@ -121,13 +121,13 @@ export default function DesktopAffiliateAdminPanel({
                         <td className="px-6 py-4 text-sm text-right text-slate-300 font-mono whitespace-nowrap">
                           {Number(r.total_lots_traded || 0).toFixed(2)}
                         </td>
-                        <td className="px-6 py-4 text-sm text-right text-cyan-400 font-mono whitespace-nowrap">
+                        <td className="px-6 py-4 text-sm text-right text-white font-mono whitespace-nowrap">
                           ${Number(r.total_earnings || 0).toFixed(2)}
                         </td>
                         <td className="px-6 py-4 text-center whitespace-nowrap">
                           <button
                             onClick={() => onOpenEditor(r)}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-blue-200 text-sm transition-colors"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 border border-white/30 text-white text-sm transition-colors"
                           >
                             <Edit3 className="w-4 h-4" /> Edit
                           </button>

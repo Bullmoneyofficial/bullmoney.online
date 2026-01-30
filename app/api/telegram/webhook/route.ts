@@ -6,12 +6,22 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8554647051:AAE-FBW0qW0ZL4VVvUPlytlDXdo9lH7T9A8';
 
-const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
-const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
-const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@bullmoney.com';
+// Configure VAPID lazily to avoid build-time errors
+let vapidConfigured = false;
 
-if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
-  webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+function configureVapid() {
+  if (vapidConfigured) return true;
+  
+  const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
+  const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
+  const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@bullmoney.com';
+
+  if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+    webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+    vapidConfigured = true;
+    return true;
+  }
+  return false;
 }
 
 const CHANNEL_INFO: Record<string, { name: string; channel: string; priority: 'high' | 'normal' }> = {
@@ -75,7 +85,7 @@ export async function POST(request: NextRequest) {
     }
     
     // PUSH NOTIFICATIONS - Works when browser is closed!
-    if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
+    if (!configureVapid()) {
       console.warn('[Webhook] ⚠️ VAPID keys not configured - push notifications DISABLED');
       console.warn('[Webhook] Set NEXT_PUBLIC_VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY env vars');
     } else {
@@ -198,7 +208,7 @@ export async function GET(request: NextRequest) {
   }
   
   if (action === 'test') {
-    if (!VAPID_PUBLIC_KEY || !supabaseUrl) {
+    if (!configureVapid() || !supabaseUrl) {
       return NextResponse.json({ error: 'VAPID or DB not configured' });
     }
     

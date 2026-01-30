@@ -111,7 +111,7 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
       <div
         className="absolute inset-0"
         style={{
-          background: 'radial-gradient(ellipse at 40% 30%, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 35%, transparent 60%), radial-gradient(ellipse at 70% 70%, rgba(147, 51, 234, 0.1) 0%, transparent 45%), #000',
+          background: 'radial-gradient(ellipse at 40% 30%, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 35%, transparent 60%), radial-gradient(ellipse at 70% 70%, rgba(255, 255, 255, 0.1) 0%, transparent 45%), #000',
           opacity: !isLoaded ? 1 : 0.2,
           transition: 'opacity 600ms ease-out',
         }}
@@ -139,21 +139,21 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
 const NEON_STYLES = `
   @keyframes neon-pulse-desktop {
     0%, 100% { 
-      text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, 0 0 16px #3b82f6;
+      text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, 0 0 16px #ffffff;
       filter: brightness(1);
     }
     50% { 
-      text-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6, 0 0 20px #3b82f6;
+      text-shadow: 0 0 6px #ffffff, 0 0 12px #ffffff, 0 0 20px #ffffff;
       filter: brightness(1.1);
     }
   }
 
   @keyframes neon-glow-desktop {
     0%, 100% { 
-      box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px rgba(59,130,246,0.3);
+      box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px rgba(255, 255, 255,0.3);
     }
     50% { 
-      box-shadow: 0 0 8px #3b82f6, 0 0 16px #3b82f6, inset 0 0 6px rgba(59,130,246,0.4);
+      box-shadow: 0 0 8px #ffffff, 0 0 16px #ffffff, inset 0 0 6px rgba(255, 255, 255,0.4);
     }
   }
 
@@ -163,14 +163,14 @@ const NEON_STYLES = `
   }
 
   .neon-title-desktop {
-    color: #3b82f6;
-    text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, 0 0 16px #3b82f6;
+    color: #ffffff;
+    text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, 0 0 16px #ffffff;
     animation: neon-pulse-desktop 2s ease-in-out infinite;
   }
 
   .neon-border-desktop {
-    border: 2px solid #3b82f6;
-    box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px rgba(59,130,246,0.2);
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px rgba(255, 255, 255,0.2);
     animation: neon-glow-desktop 2s ease-in-out infinite;
   }
 
@@ -309,7 +309,7 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
                 background: 'rgba(0, 0, 0, 0.3)',
                 backdropFilter: 'blur(16px)',
                 WebkitBackdropFilter: 'blur(16px)',
-                boxShadow: '0 8px 40px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.06), 0 0 60px rgba(59, 130, 246, 0.12)',
+                boxShadow: '0 8px 40px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.06), 0 0 60px rgba(255, 255, 255, 0.12)',
               }}
             >
               {/* Card Header - Only show on smaller desktop */}
@@ -341,10 +341,10 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
                   whileTap={{ scale: 0.98 }}
                   className="w-full py-4 xl:py-5 rounded-xl font-bold text-lg xl:text-xl tracking-wide transition-all flex items-center justify-center gap-3 text-white"
                   style={{
-                    background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.5) 0%, rgba(37, 99, 235, 0.6) 100%)',
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.6) 100%)',
                     backdropFilter: 'blur(8px)',
-                    boxShadow: '0 4px 30px rgba(59, 130, 246, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                    border: '1px solid rgba(96, 165, 250, 0.3)',
+                    boxShadow: '0 4px 30px rgba(255, 255, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
                   }}
                 >
                   <span>Create Account</span>
@@ -356,11 +356,11 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
                   onClick={onLogin}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full py-4 xl:py-5 rounded-xl font-bold text-lg xl:text-xl tracking-wide transition-all flex items-center justify-center gap-3 text-blue-300"
+                  className="w-full py-4 xl:py-5 rounded-xl font-bold text-lg xl:text-xl tracking-wide transition-all flex items-center justify-center gap-3 text-white"
                   style={{
-                    background: 'rgba(59, 130, 246, 0.1)',
+                    background: 'rgba(255, 255, 255, 0.1)',
                     backdropFilter: 'blur(6px)',
-                    border: '1px solid rgba(59, 130, 246, 0.25)',
+                    border: '1px solid rgba(255, 255, 255, 0.25)',
                   }}
                 >
                   <span>Login</span>
@@ -396,7 +396,7 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
                 <button 
                   type="button"
                   onClick={() => { setLegalModalTab('terms'); setIsLegalModalOpen(true); }}
-                  className="text-blue-400/70 hover:text-blue-400 underline underline-offset-2 transition-colors"
+                  className="text-white/70 hover:text-white underline underline-offset-2 transition-colors"
                 >
                   Terms of Service
                 </button>
@@ -404,7 +404,7 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
                 <button 
                   type="button"
                   onClick={() => { setLegalModalTab('privacy'); setIsLegalModalOpen(true); }}
-                  className="text-blue-400/70 hover:text-blue-400 underline underline-offset-2 transition-colors"
+                  className="text-white/70 hover:text-white underline underline-offset-2 transition-colors"
                 >
                   Privacy Policy
                 </button>
@@ -412,7 +412,7 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
                 <button 
                   type="button"
                   onClick={() => { setLegalModalTab('disclaimer'); setIsLegalModalOpen(true); }}
-                  className="text-blue-400/70 hover:text-blue-400 underline underline-offset-2 transition-colors"
+                  className="text-white/70 hover:text-white underline underline-offset-2 transition-colors"
                 >
                   Disclaimer
                 </button>

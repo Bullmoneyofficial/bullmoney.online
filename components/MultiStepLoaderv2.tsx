@@ -26,38 +26,38 @@ import { trackEvent } from "@/lib/analytics";
 const NEON_STYLES = `
   @keyframes neon-pulse {
     0%, 100% { 
-      text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+      text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
       filter: brightness(1);
     }
     50% { 
-      text-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6;
+      text-shadow: 0 0 6px #ffffff, 0 0 12px #ffffff;
       filter: brightness(1.1);
     }
   }
 
   @keyframes neon-glow {
     0%, 100% { 
-      box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+      box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff;
     }
     50% { 
-      box-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6, inset 0 0 6px #3b82f6;
+      box-shadow: 0 0 6px #ffffff, 0 0 12px #ffffff, inset 0 0 6px #ffffff;
     }
   }
 
   .loader-neon-text {
-    color: #3b82f6;
-    text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+    color: #ffffff;
+    text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
     animation: neon-pulse 2s ease-in-out infinite;
   }
 
   .loader-neon-border {
-    border: 2px solid #3b82f6;
-    box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff;
     animation: neon-glow 2s ease-in-out infinite;
   }
 
   .loader-neon-glow {
-    box-shadow: 0 0 8px #3b82f6, 0 0 16px #3b82f6;
+    box-shadow: 0 0 8px #ffffff, 0 0 16px #ffffff;
   }
 `;
 
@@ -894,7 +894,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
   // Helper to render particle icon - now theme-aware
   const renderParticleIcon = (iconType: ParticleIcon) => {
     const iconClass = "w-5 h-5 theme-accent";
-    const iconStyle = { color: 'var(--accent-color, #60a5fa)' };
+    const iconStyle = { color: 'var(--accent-color, #ffffff)' };
     switch (iconType) {
       case "rocket": return <Rocket className={iconClass} style={iconStyle} />;
       case "dollar": return <CircleDollarSign className={iconClass} style={iconStyle} />;
@@ -1153,7 +1153,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
           <motion.div
             exit={{ opacity: 0, scale: 1.05, filter: isMobile ? "none" : "blur(20px)" }}
             transition={{ duration: isMobile ? 0.5 : 0.8, ease: [0.43, 0.13, 0.23, 0.96] }}
-            className="fixed inset-0 z-[9999999] flex flex-col items-center justify-center text-white select-none"
+            className="fixed inset-0 z-[9999999] flex flex-col items-center justify-center text-white select-none w-full h-full"
             style={{ 
               isolation: 'isolate', 
               backgroundColor: '#000000', // Pure OLED black
@@ -1169,15 +1169,6 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
               WebkitTouchCallout: 'none',
               WebkitUserSelect: 'none',
               userSelect: 'none',
-              // Lock viewport
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              width: '100vw',
-              height: '100vh',
-              maxHeight: '100vh',
             }}
             onMouseDown={!vaultUnlocked ? handleInteractionStart : undefined}
             onMouseUp={!vaultUnlocked ? handleInteractionEnd : undefined}
@@ -1203,7 +1194,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                     animate={{ x: "-100%" }}
                     transition={{ duration: 0.7, ease: [0.43, 0.13, 0.23, 0.96] }}
                     className="fixed inset-y-0 left-0 w-1/2 z-[99999999] border-r-4"
-                    style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)', backgroundColor: 'rgba(0, 0, 0, 0.98)' }}
+                    style={{ borderColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.8)', backgroundColor: 'rgba(0, 0, 0, 0.98)' }}
                   >
                     {/* Vault door details - left */}
                     <div className="absolute inset-0 flex items-center justify-end pr-8">
@@ -1212,14 +1203,14 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                         animate={{ opacity: 0, scale: 0.8 }}
                         transition={{ duration: 0.3 }}
                         className="w-24 h-24 rounded-full border-4 flex items-center justify-center"
-                        style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.6)' }}
+                        style={{ borderColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.6)' }}
                       >
-                        <div className="w-16 h-16 rounded-full border-2" style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.4)' }} />
+                        <div className="w-16 h-16 rounded-full border-2" style={{ borderColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.4)' }} />
                       </motion.div>
                     </div>
                     {/* Horizontal bars */}
-                    <div className="absolute right-4 top-1/4 w-12 h-1 rounded" style={{ background: 'rgba(var(--accent-rgb, 59, 130, 246), 0.5)' }} />
-                    <div className="absolute right-4 bottom-1/4 w-12 h-1 rounded" style={{ background: 'rgba(var(--accent-rgb, 59, 130, 246), 0.5)' }} />
+                    <div className="absolute right-4 top-1/4 w-12 h-1 rounded" style={{ background: 'rgba(var(--accent-rgb, 255, 255, 255), 0.5)' }} />
+                    <div className="absolute right-4 bottom-1/4 w-12 h-1 rounded" style={{ background: 'rgba(var(--accent-rgb, 255, 255, 255), 0.5)' }} />
                   </motion.div>
                   
                   {/* Right vault door */}
@@ -1228,7 +1219,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                     animate={{ x: "100%" }}
                     transition={{ duration: 0.7, ease: [0.43, 0.13, 0.23, 0.96] }}
                     className="fixed inset-y-0 right-0 w-1/2 z-[99999999] border-l-4"
-                    style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)', backgroundColor: 'rgba(0, 0, 0, 0.98)' }}
+                    style={{ borderColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.8)', backgroundColor: 'rgba(0, 0, 0, 0.98)' }}
                   >
                     {/* Vault door details - right */}
                     <div className="absolute inset-0 flex items-center justify-start pl-8">
@@ -1237,14 +1228,14 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                         animate={{ opacity: 0, scale: 0.8, rotate: -180 }}
                         transition={{ duration: 0.5 }}
                         className="w-24 h-24 rounded-full border-4 flex items-center justify-center"
-                        style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.6)' }}
+                        style={{ borderColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.6)' }}
                       >
-                        <div className="w-16 h-16 rounded-full border-2" style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.4)' }} />
+                        <div className="w-16 h-16 rounded-full border-2" style={{ borderColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.4)' }} />
                       </motion.div>
                     </div>
                     {/* Horizontal bars */}
-                    <div className="absolute left-4 top-1/4 w-12 h-1 rounded" style={{ background: 'rgba(var(--accent-rgb, 59, 130, 246), 0.5)' }} />
-                    <div className="absolute left-4 bottom-1/4 w-12 h-1 rounded" style={{ background: 'rgba(var(--accent-rgb, 59, 130, 246), 0.5)' }} />
+                    <div className="absolute left-4 top-1/4 w-12 h-1 rounded" style={{ background: 'rgba(var(--accent-rgb, 255, 255, 255), 0.5)' }} />
+                    <div className="absolute left-4 bottom-1/4 w-12 h-1 rounded" style={{ background: 'rgba(var(--accent-rgb, 255, 255, 255), 0.5)' }} />
                   </motion.div>
                   
                   {/* Center light beam effect */}
@@ -1253,7 +1244,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                     animate={{ scaleY: 1, opacity: [0, 1, 0.8] }}
                     transition={{ duration: 0.5, delay: 0.1 }}
                     className="fixed inset-y-0 left-1/2 w-2 -translate-x-1/2 z-[999999999]"
-                    style={{ background: 'linear-gradient(to bottom, transparent, rgba(var(--accent-rgb, 59, 130, 246), 0.8), transparent)' }}
+                    style={{ background: 'linear-gradient(to bottom, transparent, rgba(var(--accent-rgb, 255, 255, 255), 0.8), transparent)' }}
                   />
                 </>
               )}
@@ -1272,7 +1263,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                   }}
                   className="w-full h-full absolute inset-0"
                   style={{
-                    backgroundImage: `linear-gradient(rgba(var(--accent-rgb, 59, 130, 246), 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--accent-rgb, 59, 130, 246), 0.3) 1px, transparent 1px)`,
+                    backgroundImage: `linear-gradient(rgba(var(--accent-rgb, 255, 255, 255), 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--accent-rgb, 255, 255, 255), 0.3) 1px, transparent 1px)`,
                     backgroundSize: "50px 50px",
                     willChange: 'background-position',
                   }}
@@ -1286,7 +1277,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                 <div
                   className="absolute inset-0 opacity-20"
                   style={{ 
-                    background: 'radial-gradient(ellipse at 50% 30%, rgba(59, 130, 246, 0.15), transparent 60%)',
+                    background: 'radial-gradient(ellipse at 50% 30%, rgba(255, 255, 255, 0.15), transparent 60%)',
                   }}
                 />
               </div>
@@ -1296,8 +1287,8 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
             <div 
               className="absolute top-0 left-0 right-0 h-10 bg-[#000000] overflow-hidden z-40"
               style={{ 
-                borderBottom: '2px solid #3b82f6', 
-                boxShadow: '0 0 8px #3b82f6, 0 0 16px rgba(59, 130, 246, 0.4)',
+                borderBottom: '2px solid #ffffff', 
+                boxShadow: '0 0 8px #ffffff, 0 0 16px rgba(255, 255, 255, 0.4)',
                 transform: 'translateZ(0)',
               }}
             >
@@ -1308,11 +1299,11 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
               >
                 {[...Array(3)].map((_, i) => (
                   <React.Fragment key={i}>
-                    <span className="text-blue-400 flex items-center gap-1"><span className="text-green-400">▲</span> BTC/USD +2.45%</span>
-                    <span className="text-blue-300/70 flex items-center gap-1"><span className="text-red-400">▼</span> ETH/USD -1.23%</span>
-                    <span className="text-blue-400 flex items-center gap-1"><span className="text-green-400">▲</span> SOL/USD +5.67%</span>
-                    <span className="text-blue-400 flex items-center gap-1"><span className="text-green-400">▲</span> BNB/USD +3.21%</span>
-                    <span className="text-blue-300/70 flex items-center gap-1"><span className="text-red-400">▼</span> ADA/USD -0.89%</span>
+                    <span className="text-white flex items-center gap-1"><span className="text-white">▲</span> BTC/USD +2.45%</span>
+                    <span className="text-white/70 flex items-center gap-1"><span className="text-red-400">▼</span> ETH/USD -1.23%</span>
+                    <span className="text-white flex items-center gap-1"><span className="text-white">▲</span> SOL/USD +5.67%</span>
+                    <span className="text-white flex items-center gap-1"><span className="text-white">▲</span> BNB/USD +3.21%</span>
+                    <span className="text-white/70 flex items-center gap-1"><span className="text-red-400">▼</span> ADA/USD -0.89%</span>
                     <span className="text-yellow-400 flex items-center gap-1"><Activity className="w-3 h-3 animate-pulse" /> BULLMONEY LIVE</span>
                     <span className="text-yellow-400 flex items-center gap-1"><Activity className="w-3 h-3 animate-pulse" /> BULLMONEY LIVE</span>
                   </React.Fragment>
@@ -1325,7 +1316,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
               <motion.div
                 className="absolute inset-0 pointer-events-none"
                 style={{
-                  background: `radial-gradient(circle at 50% 50%, rgba(var(--accent-rgb, 59, 130, 246), 0.2), rgba(var(--accent-rgb, 59, 130, 246), 0.08) 40%, transparent 70%)`,
+                  background: `radial-gradient(circle at 50% 50%, rgba(var(--accent-rgb, 255, 255, 255), 0.2), rgba(var(--accent-rgb, 255, 255, 255), 0.08) 40%, transparent 70%)`,
                   willChange: 'opacity',
                 }}
                 animate={{
@@ -1348,7 +1339,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                   style={{
                     top: '10%',
                     left: '5%',
-                    background: `radial-gradient(circle at 40% 40%, rgba(var(--accent-rgb, 59, 130, 246), 0.12), transparent 60%)`,
+                    background: `radial-gradient(circle at 40% 40%, rgba(var(--accent-rgb, 255, 255, 255), 0.12), transparent 60%)`,
                     filter: 'blur(60px)',
                     willChange: 'transform',
                   }}
@@ -1369,7 +1360,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                   style={{
                     bottom: '15%',
                     right: '10%',
-                    background: `radial-gradient(circle at 50% 50%, rgba(var(--accent-rgb, 59, 130, 246), 0.1), transparent 55%)`,
+                    background: `radial-gradient(circle at 50% 50%, rgba(var(--accent-rgb, 255, 255, 255), 0.1), transparent 55%)`,
                     filter: 'blur(50px)',
                     willChange: 'transform',
                   }}
@@ -1390,7 +1381,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                   style={{
                     top: '40%',
                     right: '20%',
-                    background: `radial-gradient(circle, rgba(var(--accent-rgb, 59, 130, 246), 0.15), transparent 50%)`,
+                    background: `radial-gradient(circle, rgba(var(--accent-rgb, 255, 255, 255), 0.15), transparent 50%)`,
                     filter: 'blur(40px)',
                     willChange: 'transform',
                   }}
@@ -1411,7 +1402,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                   style={{
                     bottom: '30%',
                     left: '25%',
-                    background: `radial-gradient(circle, rgba(var(--accent-rgb, 59, 130, 246), 0.18), transparent 50%)`,
+                    background: `radial-gradient(circle, rgba(var(--accent-rgb, 255, 255, 255), 0.18), transparent 50%)`,
                     filter: 'blur(30px)',
                     willChange: 'transform',
                   }}
@@ -1463,8 +1454,8 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                     className={cn(
                       "rounded-full font-black border-2 transition-all flex items-center shadow-lg relative overflow-hidden",
                       key === selectedAsset
-                        ? "text-blue-300 border-blue-500/90 shadow-[0_0_35px_rgba(59,130,246,0.7)]" + " bg-black"
-                        : "text-blue-200 border-blue-500/50 hover:border-blue-400/80" + " bg-black hover:bg-black/95"
+                        ? "text-white border-white/90 shadow-[0_0_35px_rgba(255, 255, 255,0.7)]" + " bg-black"
+                        : "text-white border-white/50 hover:border-white/80" + " bg-black hover:bg-black/95"
                     )}
                     style={{
                       touchAction: 'manipulation',
@@ -1499,7 +1490,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                           layoutId="activeAsset"
                           className="absolute inset-0 rounded-full z-0"
                           style={{
-                            boxShadow: '0 0 12px #3b82f6, 0 0 24px rgba(59, 130, 246, 0.5), inset 0 0 8px rgba(59, 130, 246, 0.3)',
+                            boxShadow: '0 0 12px #ffffff, 0 0 24px rgba(255, 255, 255, 0.5), inset 0 0 8px rgba(255, 255, 255, 0.3)',
                           }}
                           transition={{ type: "spring", stiffness: 400, damping: 25 }}
                         />
@@ -1574,13 +1565,13 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                     strokeDashoffset={377 - (377 * progress) / 100}
                     style={{
                       // Skip drop-shadow filter on mobile - causes rendering issues
-                      filter: (!isMobile && isHolding) ? "drop-shadow(0 0 8px rgba(59,130,246,0.8))" : "none",
+                      filter: (!isMobile && isHolding) ? "drop-shadow(0 0 8px rgba(255, 255, 255,0.8))" : "none",
                     }}
                   />
                   <defs>
                     <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#60a5fa" />
-                      <stop offset="100%" stopColor="#06b6d4" />
+                      <stop offset="0%" stopColor="#ffffff" />
+                      <stop offset="100%" stopColor="#ffffff" />
                     </linearGradient>
                   </defs>
                 </svg>
@@ -1594,8 +1585,8 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                         }
                       : {
                           boxShadow: isHolding
-                            ? "0 0 60px rgba(59, 130, 246, 0.9), 0 0 120px rgba(59, 130, 246, 0.5)"
-                            : "0 0 40px rgba(59, 130, 246, 0.6)",
+                            ? "0 0 60px rgba(255, 255, 255, 0.9), 0 0 120px rgba(255, 255, 255, 0.5)"
+                            : "0 0 40px rgba(255, 255, 255, 0.6)",
                         }
                   }
                   style={{ 
@@ -1603,7 +1594,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                     width: `${responsiveScale.iconSize}px`,
                     height: `${responsiveScale.iconSize}px`,
                   }}
-                  className={`relative rounded-full bg-black border-2 border-blue-500/50 flex items-center justify-center font-bold ${isMobile ? 'shadow-[0_0_30px_rgba(59,130,246,0.5)]' : 'shadow-[inset_0_0_30px_rgba(59,130,246,0.3)]'}`}
+                  className={`relative rounded-full bg-black border-2 border-white/50 flex items-center justify-center font-bold ${isMobile ? 'shadow-[0_0_30px_rgba(255, 255, 255,0.5)]' : 'shadow-[inset_0_0_30px_rgba(255, 255, 255,0.3)]'}`}
                 >
                   <span
                     className={`relative z-10 leading-none ${responsiveScale.fontSize}`}
@@ -1624,7 +1615,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: [1, 1.4, 1], opacity: [0.6, 0, 0.6] }}
                       transition={{ duration: isMobile ? 1.5 : 1, repeat: Infinity }}
-                      className="absolute rounded-full border-2 border-blue-500"
+                      className="absolute rounded-full border-2 border-white"
                       style={{ 
                         willChange: 'transform, opacity',
                         top: '-8px',
@@ -1638,7 +1629,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: [1, 1.6, 1], opacity: [0.4, 0, 0.4] }}
                         transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
-                        className="absolute rounded-full border-2 border-blue-400/60"
+                        className="absolute rounded-full border-2 border-white/60"
                         style={{ 
                           willChange: 'transform, opacity',
                           top: '-12px',
@@ -1661,7 +1652,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
               >
                 <motion.div
                   animate={{
-                    color: isHolding ? "#60a5fa" : "#ffffff",
+                    color: isHolding ? "#ffffff" : "#ffffff",
                     scale: isHolding && !isMobile ? [1, 1.03, 1] : 1,
                   }}
                   transition={{
@@ -1677,7 +1668,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                     'text-3xl sm:text-4xl'
                   }`}
                   style={{
-                    textShadow: isHolding && !isMobile ? "0 0 30px rgba(59, 130, 246, 1)" : "0 2px 20px rgba(0,0,0,0.8)",
+                    textShadow: isHolding && !isMobile ? "0 0 30px rgba(255, 255, 255, 1)" : "0 2px 20px rgba(0,0,0,0.8)",
                     willChange: isHolding ? 'transform' : 'auto',
                   }}
                 >
@@ -1687,7 +1678,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                         initial={{ opacity: 0, scale: 0.9, y: 0 }}
                         animate={{ opacity: [0, 0.65, 0], scale: [0.9, 1.2, 1.6], y: [0, -6, 14] }}
                         transition={{ duration: 0.55, ease: [0.2, 0.9, 0.2, 1] }}
-                        className="pointer-events-none absolute inset-0 -z-10 text-blue-200/70 blur-[2px]"
+                        className="pointer-events-none absolute inset-0 -z-10 text-white/70 blur-[2px]"
                         style={{ willChange: 'transform, opacity' }}
                       >
                         {activePriceText}
@@ -1705,7 +1696,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                         initial={{ opacity: 0, scale: 0.6 }}
                         animate={{ opacity: [0, 0.6, 0], scale: [0.6, 1.6, 2.2] }}
                         transition={{ duration: 0.55, ease: "easeOut" }}
-                        className="pointer-events-none absolute inset-0 -z-10 rounded-full border border-blue-300/70 blur-[2px]"
+                        className="pointer-events-none absolute inset-0 -z-10 rounded-full border border-white/70 blur-[2px]"
                         style={{ willChange: 'transform, opacity' }}
                       />
                       <motion.div
@@ -1719,13 +1710,13 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                         initial={{ opacity: 0, scale: 0.8, rotate: -8 }}
                         animate={{ opacity: [0, 0.4, 0], scale: [0.8, 1.1, 1.5], rotate: [0, 6, 12] }}
                         transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-                        className="pointer-events-none absolute inset-[-12px] -z-10 rounded-full bg-gradient-to-r from-blue-400/20 via-cyan-400/30 to-rose-400/20 blur-[10px]"
+                        className="pointer-events-none absolute inset-[-12px] -z-10 rounded-full bg-gradient-to-r from-white/20 via-white/30 to-rose-400/20 blur-[10px]"
                         style={{ willChange: 'transform, opacity' }}
                       />
                       {Array.from({ length: 10 }).map((_, i) => (
                         <motion.span
                           key={`deflate-spark-${i}`}
-                          className="pointer-events-none absolute left-1/2 top-1/2 h-1.5 w-1.5 rounded-full bg-blue-200 shadow-[0_0_14px_rgba(59,130,246,0.9)]"
+                          className="pointer-events-none absolute left-1/2 top-1/2 h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_14px_rgba(255, 255, 255,0.9)]"
                           style={{ rotate: i * 36, willChange: 'transform, opacity' }}
                           initial={{ opacity: 0, scale: 0.2, x: 0, y: 0 }}
                           animate={{ opacity: [0, 1, 0], scale: [0.2, 1, 0.1], x: [0, 68], y: [0, -6, 12] }}
@@ -1735,7 +1726,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                       {Array.from({ length: 6 }).map((_, i) => (
                         <motion.span
                           key={`deflate-flare-${i}`}
-                          className="pointer-events-none absolute left-1/2 top-1/2 text-xs text-blue-100/80 drop-shadow-[0_0_10px_rgba(147,197,253,0.9)]"
+                          className="pointer-events-none absolute left-1/2 top-1/2 text-xs text-white/80 drop-shadow-[0_0_10px_rgba(255, 255, 255,0.9)]"
                           style={{ rotate: i * 60, willChange: 'transform, opacity' }}
                           initial={{ opacity: 0, scale: 0.3, x: 0 }}
                           animate={{ opacity: [0, 1, 0], scale: [0.3, 1.2, 0.2], x: [0, 54] }}
@@ -1752,7 +1743,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: [0, 0.5, 0], scale: [0.9, 1.3, 1.6] }}
                       transition={{ duration: 0.4, ease: "easeOut" }}
-                      className="pointer-events-none absolute inset-0 -z-10 rounded-full border border-blue-400/50"
+                      className="pointer-events-none absolute inset-0 -z-10 rounded-full border border-white/50"
                       style={{ willChange: 'transform, opacity' }}
                     />
                   )}
@@ -1765,7 +1756,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                               scale: [1, 1.1, 0.8],
                               y: [0, 5, 20],
                               opacity: [1, 0.8, 0.3],
-                              color: ["#bfdbfe", "#fca5a5", "#fca5a5"],
+                              color: ["#ffffff", "#fca5a5", "#fca5a5"],
                             }
                           : {
                               scale: [1.03, 1.12, 1.02, 0.72],
@@ -1775,9 +1766,9 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                               x: [0, -6, 8, -6],
                               y: [0, 10, 22, 40],
                               opacity: [1, 0.92, 0.65, 0.32],
-                              color: ["#bfdbfe", "#fca5a5", "#fb7185", "#fca5a5"],
+                              color: ["#ffffff", "#fca5a5", "#fb7185", "#fca5a5"],
                               textShadow: [
-                                "0 0 28px rgba(59,130,246,0.9)",
+                                "0 0 28px rgba(255, 255, 255,0.9)",
                                 "0 0 20px rgba(248,113,113,0.9)",
                                 "0 0 12px rgba(248,113,113,0.6)",
                                 "0 0 0 rgba(0,0,0,0)",
@@ -1792,8 +1783,8 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                             x: 0,
                             y: 0,
                             opacity: 1,
-                            color: "#93c5fd",
-                            textShadow: isMobile ? "none" : "0 0 18px rgba(59,130,246,0.6)",
+                            color: "#ffffff",
+                            textShadow: isMobile ? "none" : "0 0 18px rgba(255, 255, 255,0.6)",
                             filter: "none",
                           }
                     }
@@ -1814,7 +1805,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                         initial={{ scale: 0, rotate: -20 }}
                         animate={{ scale: 1, rotate: 0 }}
                         exit={{ scale: 0, rotate: 20 }}
-                        className="text-sm font-bold text-green-400 flex items-center gap-2"
+                        className="text-sm font-bold text-white flex items-center gap-2"
                       >
                         <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 0.5, repeat: Infinity }}>
                           <Trophy className="w-5 h-5" />
@@ -1827,7 +1818,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                         initial={{ y: 10, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         exit={{ y: -10, opacity: 0 }}
-                        className="text-xs font-bold text-blue-400 flex items-center gap-2"
+                        className="text-xs font-bold text-white flex items-center gap-2"
                       >
                         <motion.div animate={{ y: [0, -3, 0] }} transition={{ duration: 0.4, repeat: Infinity }}>
                           <Rocket className="w-4 h-4" />
@@ -1851,7 +1842,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                         <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 0.2, repeat: Infinity }}>
                           <Zap className="w-4 h-4" />
                         </motion.div>
-                        <span className="flex items-center gap-1">Don&apos;t let go! <motion.span animate={{ rotate: [0, 15, -15, 0] }} transition={{ duration: 0.5, repeat: Infinity }}><Diamond className="w-4 h-4 text-cyan-400" /></motion.span></span>
+                        <span className="flex items-center gap-1">Don&apos;t let go! <motion.span animate={{ rotate: [0, 15, -15, 0] }} transition={{ duration: 0.5, repeat: Infinity }}><Diamond className="w-4 h-4 text-white" /></motion.span></span>
                       </motion.div>
                     ) : null}
                   </AnimatePresence>
@@ -1874,25 +1865,25 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                         className="relative mt-4 inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:px-5 sm:py-2.5 min-h-[44px] rounded-full font-extrabold text-[11px] sm:text-sm uppercase tracking-[0.2em] overflow-hidden group"
                         style={{
                           background: 'linear-gradient(180deg, rgba(2,6,23,0.98) 0%, rgba(2,6,23,0.9) 100%)',
-                          border: '1px solid rgba(59, 130, 246, 0.5)',
-                          boxShadow: '0 0 25px rgba(59,130,246,0.55), inset 0 0 18px rgba(59,130,246,0.15)',
-                          color: '#93c5fd',
+                          border: '1px solid rgba(255, 255, 255, 0.5)',
+                          boxShadow: '0 0 25px rgba(255, 255, 255,0.55), inset 0 0 18px rgba(255, 255, 255,0.15)',
+                          color: '#ffffff',
                         }}
-                        whileHover={{ scale: 1.03, boxShadow: '0 0 45px rgba(59,130,246,0.8), inset 0 0 26px rgba(59,130,246,0.25)' }}
+                        whileHover={{ scale: 1.03, boxShadow: '0 0 45px rgba(255, 255, 255,0.8), inset 0 0 26px rgba(255, 255, 255,0.25)' }}
                         whileTap={{ scale: 0.97 }}
                       >
                         {/* Neon pulsing glow - NO SHIMMER */}
                         <motion.div
                           className="absolute inset-0 rounded-full"
                           style={{ 
-                            border: '2px solid #3b82f6',
-                            boxShadow: '0 0 12px #3b82f6, 0 0 24px rgba(59, 130, 246, 0.5)',
+                            border: '2px solid #ffffff',
+                            boxShadow: '0 0 12px #ffffff, 0 0 24px rgba(255, 255, 255, 0.5)',
                           }}
                           animate={{ 
                             boxShadow: [
-                              '0 0 12px #3b82f6, 0 0 24px rgba(59, 130, 246, 0.5)',
-                              '0 0 20px #3b82f6, 0 0 40px rgba(59, 130, 246, 0.7)',
-                              '0 0 12px #3b82f6, 0 0 24px rgba(59, 130, 246, 0.5)',
+                              '0 0 12px #ffffff, 0 0 24px rgba(255, 255, 255, 0.5)',
+                              '0 0 20px #ffffff, 0 0 40px rgba(255, 255, 255, 0.7)',
+                              '0 0 12px #ffffff, 0 0 24px rgba(255, 255, 255, 0.5)',
                             ],
                           }}
                           transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
@@ -1901,7 +1892,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                         {/* Button content */}
                         <span className="relative z-10 flex items-center gap-2">
                           <motion.span
-                            className="text-blue-300 drop-shadow-[0_0_12px_rgba(59,130,246,0.9)]"
+                            className="text-white drop-shadow-[0_0_12px_rgba(255, 255, 255,0.9)]"
                             animate={{ scale: [1, 1.1, 1], opacity: [0.7, 1, 0.7] }}
                             transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
                           >
@@ -1954,8 +1945,8 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                       ease: "easeInOut",
                     }}
                     style={{
-                      color: progress > 50 ? "#60a5fa" : "#ffffff",
-                      textShadow: progress > 50 && !isMobile ? "0 0 25px rgba(59,130,246,0.8)" : "0 2px 10px rgba(0,0,0,0.5)",
+                      color: progress > 50 ? "#ffffff" : "#ffffff",
+                      textShadow: progress > 50 && !isMobile ? "0 0 25px rgba(255, 255, 255,0.8)" : "0 2px 10px rgba(0,0,0,0.5)",
                     }}
                   >
                     {progress === 0 ? "HOLD TO PUMP" : progress >= 100 ? "TO THE MOON" : `${Math.floor(progress)}%`}
@@ -1978,7 +1969,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                                 viewportSize.width >= BREAKPOINTS.DESKTOP ? 'w-9 h-9' :
                                 'w-7 h-7'}
                       style={{
-                        color: progress > 50 ? "#60a5fa" : "#ffffff",
+                        color: progress > 50 ? "#ffffff" : "#ffffff",
                       }}
                     />
                   </motion.div>
@@ -1991,16 +1982,16 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                            viewportSize.width >= BREAKPOINTS.QHD ? '12px' :
                            viewportSize.width >= BREAKPOINTS.DESKTOP ? '10px' :
                            '10px',
-                    border: '2px solid #3b82f6',
-                    boxShadow: '0 0 8px #3b82f6, 0 0 16px rgba(59, 130, 246, 0.4), inset 0 0 4px rgba(59, 130, 246, 0.2)',
+                    border: '2px solid #ffffff',
+                    boxShadow: '0 0 8px #ffffff, 0 0 16px rgba(255, 255, 255, 0.4), inset 0 0 4px rgba(255, 255, 255, 0.2)',
                   }}
                 >
                   <motion.div
-                    className="h-full bg-gradient-to-r from-blue-600 via-blue-500 to-blue-400 relative origin-left"
+                    className="h-full bg-gradient-to-r from-white via-white to-white relative origin-left"
                     style={{ 
                       width: `${progress}%`,
                       willChange: 'width',
-                      boxShadow: '0 0 12px #3b82f6',
+                      boxShadow: '0 0 12px #ffffff',
                     }}
                     transition={{ type: "spring", stiffness: 100, damping: 20 }}
                   />
@@ -2034,19 +2025,19 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                     initial={{ y: 12, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     exit={{ y: -12, opacity: 0 }}
-                    className="pointer-events-none mt-6 flex items-center gap-2 text-xs text-blue-50 bg-[#000000] px-5 py-2.5 rounded-full relative overflow-hidden"
+                    className="pointer-events-none mt-6 flex items-center gap-2 text-xs text-white bg-[#000000] px-5 py-2.5 rounded-full relative overflow-hidden"
                     style={{
-                      border: '2px solid #3b82f6',
-                      boxShadow: '0 0 8px #3b82f6, 0 0 16px rgba(59, 130, 246, 0.4)',
+                      border: '2px solid #ffffff',
+                      boxShadow: '0 0 8px #ffffff, 0 0 16px rgba(255, 255, 255, 0.4)',
                       transform: 'translateZ(0)',
                     }}
                   >
                     {/* Pulse indicator */}
                     <div className="relative flex h-2 w-2 shrink-0 z-10">
                       {!isMobile && (
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
                       )}
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" style={{ boxShadow: '0 0 6px #3b82f6' }} />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-white" style={{ boxShadow: '0 0 6px #ffffff' }} />
                     </div>
                     <span className="relative z-10 flex items-center gap-1 font-medium"><Diamond className="w-3 h-3" /> Hold anywhere until 100% <Rocket className="w-3 h-3" /></span>
                   </motion.div>
@@ -2062,7 +2053,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: isMobile ? 2 : 2.5, opacity: [0, isMobile ? 0.3 : 0.9, 0] }}
                   transition={{ duration: isMobile ? 0.4 : 0.5 }}
-                  className={`absolute inset-0 rounded-full pointer-events-none ${isMobile ? 'bg-white/20' : 'bg-blue-500/40 blur-3xl'}`}
+                  className={`absolute inset-0 rounded-full pointer-events-none ${isMobile ? 'bg-white/20' : 'bg-white/40 blur-3xl'}`}
                   style={{ willChange: 'transform, opacity' }}
                 />
                 {/* Fewer icons on mobile - only 6 instead of 12, no rotation */}
@@ -2091,7 +2082,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                       className="absolute"
                       style={{ willChange: 'transform, opacity' }}
                     >
-                      <Icon className={`${isMobile ? 'w-6 h-6' : 'w-8 h-8'} text-blue-400`} />
+                      <Icon className={`${isMobile ? 'w-6 h-6' : 'w-8 h-8'} text-white`} />
                     </motion.div>
                   ))}
                 </motion.div>
@@ -2122,7 +2113,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
               <motion.div
                 className="absolute inset-0"
                 style={{
-                  background: 'radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 70%)',
+                  background: 'radial-gradient(ellipse at 50% 50%, rgba(255, 255, 255, 0.15) 0%, transparent 70%)',
                 }}
                 animate={{
                   scale: [1, 1.2, 1],
@@ -2141,7 +2132,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
               <div 
                 className="absolute inset-0 opacity-[0.03]"
                 style={{
-                  backgroundImage: 'linear-gradient(rgba(59, 130, 246, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.5) 1px, transparent 1px)',
+                  backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.5) 1px, transparent 1px)',
                   backgroundSize: '40px 40px',
                 }}
               />
@@ -2161,7 +2152,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                   <motion.div
                     className="absolute inset-[-12px] rounded-full"
                     style={{
-                      background: 'radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, transparent 70%)',
+                      background: 'radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 70%)',
                     }}
                     animate={{
                       scale: [1, 1.3, 1],
@@ -2177,15 +2168,15 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                 
                 {/* Logo container - NEON GLOW, NO SHIMMER */}
                 <motion.div
-                  className="relative w-20 h-20 rounded-full bg-[#000000] border-2 border-blue-500 flex items-center justify-center overflow-hidden"
+                  className="relative w-20 h-20 rounded-full bg-[#000000] border-2 border-white flex items-center justify-center overflow-hidden"
                   style={{
-                    boxShadow: '0 0 12px #3b82f6, 0 0 24px rgba(59, 130, 246, 0.5), inset 0 0 8px rgba(59, 130, 246, 0.2)',
+                    boxShadow: '0 0 12px #ffffff, 0 0 24px rgba(255, 255, 255, 0.5), inset 0 0 8px rgba(255, 255, 255, 0.2)',
                   }}
                   animate={{
                     boxShadow: [
-                      '0 0 12px #3b82f6, 0 0 24px rgba(59, 130, 246, 0.5), inset 0 0 8px rgba(59, 130, 246, 0.2)',
-                      '0 0 20px #3b82f6, 0 0 40px rgba(59, 130, 246, 0.7), inset 0 0 12px rgba(59, 130, 246, 0.3)',
-                      '0 0 12px #3b82f6, 0 0 24px rgba(59, 130, 246, 0.5), inset 0 0 8px rgba(59, 130, 246, 0.2)',
+                      '0 0 12px #ffffff, 0 0 24px rgba(255, 255, 255, 0.5), inset 0 0 8px rgba(255, 255, 255, 0.2)',
+                      '0 0 20px #ffffff, 0 0 40px rgba(255, 255, 255, 0.7), inset 0 0 12px rgba(255, 255, 255, 0.3)',
+                      '0 0 12px #ffffff, 0 0 24px rgba(255, 255, 255, 0.5), inset 0 0 8px rgba(255, 255, 255, 0.2)',
                     ],
                   }}
                   transition={{
@@ -2200,7 +2191,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                     width={48}
                     height={48}
                     className="relative z-10"
-                    style={{ filter: 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.6))' }}
+                    style={{ filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.6))' }}
                   />
                 </motion.div>
 
@@ -2210,13 +2201,13 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                     {[0, 1, 2].map((i) => (
                       <motion.div
                         key={i}
-                        className="absolute w-2 h-2 rounded-full bg-blue-400"
+                        className="absolute w-2 h-2 rounded-full bg-white"
                         style={{
                           left: '50%',
                           top: '50%',
                           marginLeft: '-4px',
                           marginTop: '-4px',
-                          boxShadow: '0 0 10px rgba(59, 130, 246, 0.8)',
+                          boxShadow: '0 0 10px rgba(255, 255, 255, 0.8)',
                         }}
                         animate={{
                           x: [
@@ -2253,7 +2244,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                 <h2 className="text-xl font-bold text-white tracking-wide">
                   {transitionProgress < 30 ? "Initializing..." : transitionProgress < 60 ? "Loading Experience..." : transitionProgress < 90 ? "Almost Ready..." : "Welcome!"}
                 </h2>
-                <p className="text-sm text-blue-200/60">
+                <p className="text-sm text-white/60">
                   {transitionProgress < 50 ? "Preparing your trading environment" : "Setting up 3D visualization"}
                 </p>
               </motion.div>
@@ -2267,10 +2258,10 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                   }}
                 >
                   <motion.div
-                    className="h-full bg-gradient-to-r from-blue-600 via-blue-400 to-cyan-400 rounded-full relative"
+                    className="h-full bg-gradient-to-r from-white via-white to-white rounded-full relative"
                     style={{ 
                       width: `${transitionProgress}%`,
-                      boxShadow: '0 0 12px #3b82f6, 0 0 24px rgba(59, 130, 246, 0.6)',
+                      boxShadow: '0 0 12px #ffffff, 0 0 24px rgba(255, 255, 255, 0.6)',
                     }}
                     transition={{ type: "spring", stiffness: 100, damping: 20 }}
                   />
@@ -2278,7 +2269,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                 
                 {/* Progress percentage */}
                 <motion.p
-                  className="text-center mt-3 text-sm font-mono text-blue-300/80"
+                  className="text-center mt-3 text-sm font-mono text-white/80"
                   key={Math.floor(transitionProgress / 10)}
                   initial={{ opacity: 0.5, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -2309,7 +2300,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                       ease: "easeInOut",
                     }}
                   >
-                    <Icon className="w-5 h-5 text-blue-400/60" />
+                    <Icon className="w-5 h-5 text-white/60" />
                   </motion.div>
                 ))}
               </motion.div>
@@ -2320,7 +2311,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
               <div 
                 className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
                 style={{
-                  background: 'linear-gradient(to top, rgba(59, 130, 246, 0.1), transparent)',
+                  background: 'linear-gradient(to top, rgba(255, 255, 255, 0.1), transparent)',
                 }}
               />
             )}

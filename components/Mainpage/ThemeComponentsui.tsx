@@ -58,7 +58,7 @@ export const THEMES: Theme[] = [
   { id: 't01', name: 'Terminal', description: 'Default', category: 'SENTIMENT', filter: 'none', mobileFilter: 'none', illusion: 'NONE', accentColor: '#ffffff', status: 'AVAILABLE' },
   { id: 't02', name: 'God Candle', description: 'Up Only', category: 'SENTIMENT', filter: 'sepia(1) hue-rotate(60deg) saturate(3) brightness(1.1)', mobileFilter: 'sepia(1) hue-rotate(60deg) saturate(2)', illusion: 'VIGNETTE', accentColor: '#10B981', status: 'AVAILABLE' },
   { id: 'a01', name: 'Gold Bullion', description: 'XAU/USD', category: 'ASSETS', filter: 'url(#gold-shine) sepia(1) hue-rotate(10deg) saturate(3) brightness(0.9)', mobileFilter: 'sepia(1) hue-rotate(10deg) saturate(2)', illusion: 'NONE', accentColor: '#FBBF24', status: 'AVAILABLE' },
-  { id: 'o04', name: 'Cyberdeck', description: 'Hacker', category: 'OPTICS', filter: 'hue-rotate(220deg) saturate(2) contrast(1.3) brightness(0.7)', mobileFilter: 'hue-rotate(220deg)', illusion: 'SCANLINES', accentColor: '#0EA5E9', status: 'AVAILABLE' },
+  { id: 'o04', name: 'Cyberdeck', description: 'Hacker', category: 'OPTICS', filter: 'hue-rotate(220deg) saturate(2) contrast(1.3) brightness(0.7)', mobileFilter: 'hue-rotate(220deg)', illusion: 'SCANLINES', accentColor: '#ffffff', status: 'AVAILABLE' },
   { id: 'e05', name: 'Matrix', description: 'Source', category: 'EXOTIC', filter: 'sepia(1) hue-rotate(50deg) saturate(5) contrast(1.5) brightness(0.8)', mobileFilter: 'sepia(1) hue-rotate(50deg) saturate(3)', illusion: 'SCANLINES', accentColor: '#22C55E', status: 'AVAILABLE' },
   { id: 'a02', name: 'Silver Spot', description: 'XAG/USD', category: 'ASSETS', filter: 'grayscale(1) brightness(1.2) contrast(1.2) drop-shadow(0 0 2px rgba(255,255,255,0.5))', mobileFilter: 'grayscale(1) brightness(1.2)', illusion: 'NONE', accentColor: '#E5E5E5', status: 'AVAILABLE' },
   { id: 'e01', name: 'Miami Vice', description: 'OTC Desk', category: 'EXOTIC', filter: 'sepia(0.5) hue-rotate(300deg) saturate(2) contrast(1.1)', mobileFilter: 'sepia(0.5) hue-rotate(300deg)', illusion: 'NONE', accentColor: '#EC4899', status: 'AVAILABLE' },
@@ -69,17 +69,17 @@ export const THEMES: Theme[] = [
   { id: 'c05', name: 'Monero Dark', description: 'Privacy', category: 'CRYPTO', filter: 'grayscale(1) contrast(2) brightness(0.4)', mobileFilter: 'grayscale(1) contrast(1.5)', illusion: 'NOISE', accentColor: '#FF6600', status: 'UNAVAILABLE' },
   { id: 't03', name: 'Blood Bath', description: 'Capitulation', category: 'SENTIMENT', filter: 'sepia(1) hue-rotate(320deg) saturate(4) contrast(1.2)', mobileFilter: 'sepia(1) hue-rotate(320deg)', illusion: 'NOISE', accentColor: '#EF4444', status: 'UNAVAILABLE' },
   { id: 't04', name: 'Moon Mission', description: 'ATH Break', category: 'SENTIMENT', filter: 'brightness(1.2) contrast(1.1) saturate(0) sepia(0.2) drop-shadow(0 0 5px white)', mobileFilter: 'brightness(1.2) grayscale(1)', illusion: 'VIGNETTE', accentColor: '#FFFFFF', status: 'UNAVAILABLE' },
-  { id: 't05', name: 'Whale Watch', description: 'Ocean', category: 'SENTIMENT', filter: 'sepia(1) hue-rotate(170deg) saturate(2) brightness(0.8)', mobileFilter: 'hue-rotate(170deg)', illusion: 'SCANLINES', accentColor: '#1E3A8A', status: 'UNAVAILABLE' },
+  { id: 't05', name: 'Whale Watch', description: 'Ocean', category: 'SENTIMENT', filter: 'sepia(1) hue-rotate(170deg) saturate(2) brightness(0.8)', mobileFilter: 'hue-rotate(170deg)', illusion: 'SCANLINES', accentColor: '#ffffff', status: 'UNAVAILABLE' },
   { id: 't06', name: 'FUD Storm', description: 'Panic', category: 'SENTIMENT', filter: 'grayscale(1) contrast(2) brightness(0.6)', mobileFilter: 'contrast(1.5)', illusion: 'NOISE', accentColor: '#525252', status: 'UNAVAILABLE' },
   { id: 'a03', name: 'Crude Oil', description: 'WTI Barrel', category: 'ASSETS', filter: 'sepia(1) hue-rotate(350deg) saturate(0.5) brightness(0.4) contrast(1.5)', mobileFilter: 'sepia(1) brightness(0.5)', illusion: 'NOISE', accentColor: '#1C1917', status: 'UNAVAILABLE' },
   { id: 'a04', name: 'US Dollar', description: 'Fiat', category: 'ASSETS', filter: 'sepia(1) hue-rotate(70deg) saturate(1.5) contrast(0.9)', mobileFilter: 'sepia(1) hue-rotate(70deg)', illusion: 'VIGNETTE', accentColor: '#22C55E', status: 'UNAVAILABLE' },
-  { id: 'a05', name: 'Lithium', description: 'Battery', category: 'ASSETS', filter: 'sepia(1) hue-rotate(290deg) saturate(0.5) contrast(2)', mobileFilter: 'contrast(1.5)', illusion: 'NONE', accentColor: '#A855F7', status: 'UNAVAILABLE' },
+  { id: 'a05', name: 'Lithium', description: 'Battery', category: 'ASSETS', filter: 'sepia(1) hue-rotate(290deg) saturate(0.5) contrast(2)', mobileFilter: 'contrast(1.5)', illusion: 'NONE', accentColor: '#ffffff', status: 'UNAVAILABLE' },
   { id: 'o01', name: 'Night Vis', description: 'NVG-11', category: 'OPTICS', filter: 'grayscale(1) sepia(1) hue-rotate(70deg) saturate(3) brightness(0.8) contrast(1.2)', mobileFilter: 'grayscale(1) sepia(1) hue-rotate(70deg)', illusion: 'SCANLINES', accentColor: '#22C55E', status: 'UNAVAILABLE' },
   { id: 'o02', name: 'Thermal', description: 'Predator', category: 'OPTICS', filter: 'invert(1) hue-rotate(180deg) saturate(2) contrast(1.5)', mobileFilter: 'invert(1)', isLight: true, illusion: 'NONE', accentColor: '#F43F5E', status: 'UNAVAILABLE' },
   { id: 'o03', name: 'CRT 1999', description: 'Legacy', category: 'OPTICS', filter: 'sepia(0.5) contrast(1.2) brightness(0.9) grayscale(0.2)', mobileFilter: 'sepia(0.5)', illusion: 'SCANLINES', accentColor: '#A3A3A3', status: 'UNAVAILABLE' },
-  { id: 'e02', name: 'Vaporwave', description: 'Aesthetic', category: 'EXOTIC', filter: 'sepia(0.4) hue-rotate(290deg) saturate(1.5) contrast(1.1)', mobileFilter: 'sepia(0.4) hue-rotate(290deg)', illusion: 'SCANLINES', accentColor: '#D946EF', status: 'UNAVAILABLE' },
+  { id: 'e02', name: 'Vaporwave', description: 'Aesthetic', category: 'EXOTIC', filter: 'sepia(0.4) hue-rotate(290deg) saturate(1.5) contrast(1.1)', mobileFilter: 'sepia(0.4) hue-rotate(290deg)', illusion: 'SCANLINES', accentColor: '#ffffff', status: 'UNAVAILABLE' },
   { id: 'e03', name: 'Bank Note', description: 'Cash', category: 'EXOTIC', filter: 'url(#banknote) contrast(0.8)', mobileFilter: 'contrast(1.5)', illusion: 'NONE', accentColor: '#84CC16', status: 'UNAVAILABLE' },
-  { id: 'e04', name: 'Blueprint', description: 'Architect', category: 'EXOTIC', filter: 'invert(1) sepia(1) hue-rotate(180deg) saturate(3) contrast(1.2)', mobileFilter: 'invert(1) sepia(1) hue-rotate(180deg)', isLight: true, illusion: 'NONE', accentColor: '#3B82F6', status: 'UNAVAILABLE' },
+  { id: 'e04', name: 'Blueprint', description: 'Architect', category: 'EXOTIC', filter: 'invert(1) sepia(1) hue-rotate(180deg) saturate(3) contrast(1.2)', mobileFilter: 'invert(1) sepia(1) hue-rotate(180deg)', isLight: true, illusion: 'NONE', accentColor: '#ffffff', status: 'UNAVAILABLE' },
 ];
 
 export const getAvailableThemes = (): Theme[] => {
@@ -90,18 +90,18 @@ export const getAvailableThemes = (): Theme[] => {
 // --- 2. CORE PRIMITIVES (Styles & Components) ---
 // ====================================================================
 
-const SHIMMER_GRADIENT_BLUE = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #2563eb 50%, #00000000 100%)";
+const SHIMMER_GRADIENT_BLUE = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #ffffff 50%, #00000000 100%)";
 const GLOBAL_STYLES = `
   .mac-gpu-accelerate { transform: translateZ(0); will-change: transform, opacity; backface-visibility: hidden; }
   @keyframes textShine { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
   .text-shimmer-effect {
-    background: linear-gradient(to right, #3b82f6 20%, #ffffff 50%, #3b82f6 80%);
+    background: linear-gradient(to right, #ffffff 20%, #ffffff 50%, #ffffff 80%);
     background-size: 200% auto;
-    color: #3b82f6;
+    color: #ffffff;
     background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     animation: textShine 3s linear infinite;
   }
-  .text-glow { text-shadow: 0 0 10px rgba(37, 99, 235, 0.5), 0 0 20px rgba(37, 99, 235, 0.3); }
+  .text-glow { text-shadow: 0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(255, 255, 255, 0.3); }
   .animate-marquee { animation: marquee 20s linear infinite; }
   @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
   .locked-theme-preview {
@@ -131,7 +131,7 @@ interface ShimmerCardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 export const ShimmerCard = ({ children, className = "", onClick, ...props }: ShimmerCardProps) => (
-    <div onClick={onClick} className={cn("relative group w-full rounded-2xl p-[1px] shadow-[0_0_30px_-10px_rgba(37,99,235,0.2)] overflow-hidden", className)} {...props}>
+    <div onClick={onClick} className={cn("relative group w-full rounded-2xl p-[1px] shadow-[0_0_30px_-10px_rgba(255, 255, 255,0.2)] overflow-hidden", className)} {...props}>
         {/* ShimmerBorder is correctly used here */}
         <div className="absolute inset-0 rounded-2xl overflow-hidden"><ShimmerBorder active={true} /></div>
         <div className="relative bg-[#050505] rounded-[15px] h-full z-10 overflow-hidden backdrop-blur-xl">{children}</div>
@@ -155,10 +155,10 @@ export const ShimmerButton = ({ onClick = () => {}, children, className = "", ic
         {/* ShimmerBorder is correctly used here */}
         <ShimmerBorder active={!disabled} />
         <div className="absolute inset-[1px] bg-[#0a0a0a] group-hover/btn:bg-[#151515] transition-colors rounded-[11px] flex items-center justify-center gap-2">
-            <span className="font-bold text-blue-500 text-[10px] md:text-xs tracking-[0.2em] uppercase text-glow">{children}</span>
+            <span className="font-bold text-white text-[10px] md:text-xs tracking-[0.2em] uppercase text-glow">{children}</span>
             {Icon && (
                 <Icon
-                    className="w-4 h-4 text-blue-500 group-hover/btn:translate-x-1 transition-transform drop-shadow-[0_0_5px_rgba(59,130,246,1)]"
+                    className="w-4 h-4 text-white group-hover/btn:translate-x-1 transition-transform drop-shadow-[0_0_5px_rgba(255, 255, 255,1)]"
                     aria-hidden={true}
                 />
             )}
@@ -167,7 +167,7 @@ export const ShimmerButton = ({ onClick = () => {}, children, className = "", ic
 );
 
 export const GlowText = ({ text, className = "" }: { text: string | number, className?: string }) => (
-    <span className={`text-blue-200/90 text-glow font-mono ${className}`}>{text}</span>
+    <span className={`text-white/90 text-glow font-mono ${className}`}>{text}</span>
 );
 
 // ====================================================================
@@ -228,7 +228,7 @@ export const TickerTape = ({ liveData: _liveData = [] }: { liveData?: LiveCrypto
     // FIX: Added A11y attributes for marquee
     return (
         <div 
-            className="relative w-full h-10 shrink-0 z-40 bg-black border-b border-blue-900/30"
+            className="relative w-full h-10 shrink-0 z-40 bg-black border-b border-white/30"
             role="marquee"
             aria-label="Live Cryptocurrency Prices"
         >
@@ -236,13 +236,13 @@ export const TickerTape = ({ liveData: _liveData = [] }: { liveData?: LiveCrypto
                 {/* FIX: Removed duplicate animate-marquee on inner div. Assuming outer div is the actual marquee */}
                 <div className="animate-marquee whitespace-nowrap flex text-[10px] md:text-xs">
                      {[1,2,3,4].map((i) => (
-                         <div key={i} className="flex items-center gap-2 px-4 border-r border-blue-900/30 h-full">
-                            <GlowText text="BTC" className="font-bold text-blue-400" />
+                         <div key={i} className="flex items-center gap-2 px-4 border-r border-white/30 h-full">
+                            <GlowText text="BTC" className="font-bold text-white" />
                             <GlowText text="$98,000.20" className="text-white" />
-                            <span className="text-[10px] ml-1 text-blue-500 animate-pulse">+1.2%</span>
+                            <span className="text-[10px] ml-1 text-white animate-pulse">+1.2%</span>
                          </div>
                      ))}
-                     <div className="px-4 text-blue-500 font-mono text-[10px] animate-pulse">| SYSTEM_OPTIMAL |</div>
+                     <div className="px-4 text-white font-mono text-[10px] animate-pulse">| SYSTEM_OPTIMAL |</div>
                 </div>
             </div>
         </div>
@@ -265,14 +265,14 @@ export const WelcomeBackModal = ({ isOpen, onContinue, onSkip }: { isOpen: boole
                     <ShimmerCard className="p-0">
                         <div className="px-8 py-10 flex flex-col items-center justify-center text-center">
                             <h2 className="text-3xl font-bold tracking-tight mb-4 text-shimmer-effect uppercase">Welcome Back</h2>
-                            <div className="flex items-center gap-2 px-3 py-1.5 bg-[#0f172a] border border-blue-900/30 rounded-full mb-10 shadow-[0_0_15px_rgba(37,99,235,0.4)]">
-                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"/>
+                            <div className="flex items-center gap-2 px-3 py-1.5 bg-[#0f172a] border border-white/30 rounded-full mb-10 shadow-[0_0_15px_rgba(255, 255, 255,0.4)]">
+                                <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"/>
                                 <GlowText text="TERMINAL DETECTED" className="text-[10px] font-bold" />
                             </div>
                             <ShimmerButton onClick={onContinue} icon={ArrowRight}>Continue Setup</ShimmerButton>
                             <button onClick={onSkip} className="mt-6 flex items-center gap-2 group" aria-label="Skip to Dashboard">
                                 <GlowText text="Skip to Dashboard" className="text-xs group-hover:text-white transition-colors" />
-                                <SkipForward className="w-3 h-3 text-blue-500 group-hover:text-white" aria-hidden="true" />
+                                <SkipForward className="w-3 h-3 text-white group-hover:text-white" aria-hidden="true" />
                             </button>
                         </div>
                     </ShimmerCard>
@@ -285,12 +285,12 @@ export const WelcomeBackModal = ({ isOpen, onContinue, onSkip }: { isOpen: boole
 export const SupportWidget = () => (
     <div className="fixed bottom-6 right-6 z-[90]">
         <button 
-            className="relative flex items-center justify-center w-14 h-14 rounded-full bg-[#050505] border border-blue-900/50 shadow-[0_0_30px_rgba(37,99,235,0.4)] overflow-hidden group hover:scale-110 transition-transform"
+            className="relative flex items-center justify-center w-14 h-14 rounded-full bg-[#050505] border border-white/50 shadow-[0_0_30px_rgba(255, 255, 255,0.4)] overflow-hidden group hover:scale-110 transition-transform"
             aria-label="Open Support Chat" // Added A11y Label
         >
             <ShimmerBorder active={true} />
             <div className="absolute inset-[2px] rounded-full bg-black flex items-center justify-center z-10">
-                <MessageCircle className="w-6 h-6 text-blue-500 text-glow" aria-hidden="true" />
+                <MessageCircle className="w-6 h-6 text-white text-glow" aria-hidden="true" />
             </div>
         </button>
     </div>
@@ -310,7 +310,7 @@ export const SoundSelector = ({ active, onSelect }: { active: SoundProfile, onSe
                     key={pack.id} 
                     onClick={() => onSelect(pack.id)} 
                     icon={pack.icon} 
-                    className={active !== pack.id ? "opacity-50 hover:opacity-100" : "ring-2 ring-blue-500 shadow-lg shadow-blue-500/30"}
+                    className={active !== pack.id ? "opacity-50 hover:opacity-100" : "ring-2 ring-white shadow-lg shadow-white/30"}
                     role="radio"
                     aria-checked={active === pack.id}
                     title={`${pack.label} Sound Pack`}
@@ -369,11 +369,11 @@ export const ThemePreviewCard = ({ theme, active, onClick, isMobile = false }: {
             )}
             aria-label={`Select theme ${theme.name}. Status: ${isDisabled ? 'Unavailable' : 'Available'}.`}
         >
-            <ShimmerCard className={cn('aspect-[4/3]', active ? 'ring-1 ring-blue-500' : 'opacity-80 hover:opacity-100')}>
+            <ShimmerCard className={cn('aspect-[4/3]', active ? 'ring-1 ring-white' : 'opacity-80 hover:opacity-100')}>
                 <div className="p-2 flex flex-col justify-between h-full">
                     <div 
                         className={cn(
-                            "w-full flex-1 bg-black rounded-lg mb-2 border border-blue-500/10 relative overflow-hidden transition-all duration-300",
+                            "w-full flex-1 bg-black rounded-lg mb-2 border border-white/10 relative overflow-hidden transition-all duration-300",
                             isDisabled && "locked-theme-preview" // Use a dedicated class for styling unavailable state
                         )}
                         style={{ filter: filterToApply }}
@@ -389,7 +389,7 @@ export const ThemePreviewCard = ({ theme, active, onClick, isMobile = false }: {
                     </div>
                     <div className="flex justify-between items-center px-2">
                         <GlowText text={theme.name} className={cn('text-[10px] font-bold', isDisabled && 'text-gray-400')} />
-                        {active && <Check className="w-4 h-4 text-blue-500" aria-hidden="true" />}
+                        {active && <Check className="w-4 h-4 text-white" aria-hidden="true" />}
                     </div>
                 </div>
             </ShimmerCard>

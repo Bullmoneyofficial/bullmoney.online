@@ -120,9 +120,9 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
               onMouseEnter={() => setHoveredButton('camera')}
               onMouseLeave={() => setHoveredButton(null)}
             >
-              <div className="absolute inset-[2px] rounded-full bg-gradient-to-br from-blue-900/60 to-purple-900/60" />
+              <div className="absolute inset-[2px] rounded-full bg-gradient-to-br from-white/60 to-white/60" />
               <motion.div 
-                className="absolute inset-0 rounded-full bg-blue-400/30"
+                className="absolute inset-0 rounded-full bg-white/30"
                 animate={shouldSkipHeavyEffects ? {} : { opacity: [0.2, 0.5, 0.2] }}
                 transition={shouldSkipHeavyEffects ? {} : { duration: 2, repeat: Infinity }}
               />
@@ -143,7 +143,7 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
                     {[1, 2, 3, 4].map(i => (
                       <motion.div
                         key={i}
-                        className="w-[2px] bg-green-400 rounded-full"
+                        className="w-[2px] bg-white rounded-full"
                         animate={shouldSkipHeavyEffects ? { height: 6 } : { height: [3, 10, 3] }}
                         transition={shouldSkipHeavyEffects ? {} : { duration: 0.4, repeat: Infinity, delay: i * 0.08 }}
                       />
@@ -277,7 +277,7 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
               </div>
               <span className="ml-0.5">5G</span>
               <div className="ml-1.5 w-6 h-[10px] border border-white/50 rounded-[3px] relative">
-                <div className="absolute inset-[1px] rounded-[2px] bg-green-400" style={{ width: '75%' }} />
+                <div className="absolute inset-[1px] rounded-[2px] bg-white" style={{ width: '75%' }} />
                 <div className="absolute -right-[3px] top-1/2 -translate-y-1/2 w-[2px] h-[5px] bg-white/50 rounded-r-sm" />
               </div>
             </div>
@@ -286,7 +286,7 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
           {/* Player Header */}
           <div className={`relative flex items-center justify-between px-3 py-2.5 bg-gradient-to-r from-slate-900/90 to-slate-800/90 rounded-t-2xl border-b border-white/5 mt-2 ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-sm'}`}>
             <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-xl bg-gradient-to-br from-blue-500/30 to-purple-500/30 shadow-inner">
+              <div className="p-1.5 rounded-xl bg-gradient-to-br from-white/30 to-white/30 shadow-inner">
                 {SourceIcon && <SourceIcon className="w-5 h-5 text-sky-300" />}
               </div>
               <div>
@@ -294,9 +294,9 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
                 <span className="text-[8px] text-white/50">Now Playing</span>
               </div>
               <div className="flex gap-[2px] ml-1">
-                <motion.div className="w-[2px] h-2 bg-blue-400 rounded-full" animate={shouldSkipHeavyEffects ? {} : { scaleY: [1, 2, 1] }} transition={shouldSkipHeavyEffects ? {} : { duration: 0.35, repeat: Infinity }} />
-                <motion.div className="w-[2px] h-2.5 bg-cyan-400 rounded-full" animate={shouldSkipHeavyEffects ? {} : { scaleY: [1, 0.4, 1] }} transition={shouldSkipHeavyEffects ? {} : { duration: 0.35, repeat: Infinity, delay: 0.1 }} />
-                <motion.div className="w-[2px] h-2 bg-blue-400 rounded-full" animate={shouldSkipHeavyEffects ? {} : { scaleY: [1, 1.6, 1] }} transition={shouldSkipHeavyEffects ? {} : { duration: 0.35, repeat: Infinity, delay: 0.2 }} />
+                <motion.div className="w-[2px] h-2 bg-white rounded-full" animate={shouldSkipHeavyEffects ? {} : { scaleY: [1, 2, 1] }} transition={shouldSkipHeavyEffects ? {} : { duration: 0.35, repeat: Infinity }} />
+                <motion.div className="w-[2px] h-2.5 bg-white rounded-full" animate={shouldSkipHeavyEffects ? {} : { scaleY: [1, 0.4, 1] }} transition={shouldSkipHeavyEffects ? {} : { duration: 0.35, repeat: Infinity, delay: 0.1 }} />
+                <motion.div className="w-[2px] h-2 bg-white rounded-full" animate={shouldSkipHeavyEffects ? {} : { scaleY: [1, 1.6, 1] }} transition={shouldSkipHeavyEffects ? {} : { duration: 0.35, repeat: Infinity, delay: 0.2 }} />
               </div>
             </div>
             <motion.button
@@ -375,11 +375,11 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
                 initial={{ opacity: 0, y: 10, height: 0 }}
                 animate={{ opacity: 1, y: 0, height: 'auto' }}
                 exit={{ opacity: 0, y: -10, height: 0 }}
-                className="mt-3 mx-1 p-2.5 rounded-xl bg-gradient-to-br from-blue-500/15 to-purple-500/15 border border-white/10 overflow-hidden"
+                className="mt-3 mx-1 p-2.5 rounded-xl bg-gradient-to-br from-white/15 to-white/15 border border-white/10 overflow-hidden"
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-1.5">
-                    <IconInfoCircle className="w-3.5 h-3.5 text-blue-400" />
+                    <IconInfoCircle className="w-3.5 h-3.5 text-white" />
                     <span className="text-[9px] text-white/80 font-semibold">iPhone Controls</span>
                   </div>
                   <button 
@@ -395,7 +395,7 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
                     <span>Orange switch = Mute toggle</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <div className="w-1 h-1 rounded-full bg-blue-400" />
+                    <div className="w-1 h-1 rounded-full bg-white" />
                     <span>Left buttons = Volume Up/Down</span>
                   </div>
                   <div className="flex items-center gap-1.5">
@@ -403,7 +403,7 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
                     <span>Right button = Sleep/Wake</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <div className="w-1 h-1 rounded-full bg-purple-400" />
+                    <div className="w-1 h-1 rounded-full bg-white" />
                     <span>Dynamic Island camera = Selfie!</span>
                   </div>
                 </div>

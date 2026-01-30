@@ -122,7 +122,7 @@ const VARIANTS = {
     activeColor: "#e0f2fe",
     gap: 10,
     speed: 25,
-    colors: "#60a5fa,#3b82f6,#2563eb",
+    colors: "#ffffff,#ffffff,#ffffff",
     noFocus: false,
   },
 };

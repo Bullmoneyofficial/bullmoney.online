@@ -37,15 +37,15 @@ export default function CommunityContent() {
         {/* Community Stats */}
         <div className="grid grid-cols-3 gap-4 mb-16">
           <div className="bg-white/5 backdrop-blur border border-white/10 rounded-lg p-6 text-center">
-            <div className="text-2xl sm:text-3xl font-bold text-blue-400 mb-2">10K+</div>
+            <div className="text-2xl sm:text-3xl font-bold text-white mb-2">10K+</div>
             <div className="text-sm text-gray-400">Active Members</div>
           </div>
           <div className="bg-white/5 backdrop-blur border border-white/10 rounded-lg p-6 text-center">
-            <div className="text-2xl sm:text-3xl font-bold text-cyan-400 mb-2">24/7</div>
+            <div className="text-2xl sm:text-3xl font-bold text-white mb-2">24/7</div>
             <div className="text-sm text-gray-400">Live Updates</div>
           </div>
           <div className="bg-white/5 backdrop-blur border border-white/10 rounded-lg p-6 text-center">
-            <div className="text-2xl sm:text-3xl font-bold text-purple-400 mb-2">4+</div>
+            <div className="text-2xl sm:text-3xl font-bold text-white mb-2">4+</div>
             <div className="text-sm text-gray-400">Platforms</div>
           </div>
         </div>
@@ -56,11 +56,11 @@ export default function CommunityContent() {
             href="https://discord.com/invite/9vVB44ZrNA"
             target="_blank"
             rel="noopener noreferrer"
-            className="group bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 rounded-lg p-6 text-center transition-all hover:scale-105"
+            className="group bg-gradient-to-br from-white to-white hover:from-white hover:to-white rounded-lg p-6 text-center transition-all hover:scale-105"
           >
             <div className="text-3xl mb-2">💬</div>
             <h3 className="text-white font-bold mb-1">Discord Server</h3>
-            <p className="text-blue-200 text-sm mb-4">Join 8K+ traders</p>
+            <p className="text-white text-sm mb-4">Join 8K+ traders</p>
             <button className="w-full bg-white/20 hover:bg-white/30 text-white rounded py-2 transition-colors">
               Join Now
             </button>
@@ -70,11 +70,11 @@ export default function CommunityContent() {
             href="https://t.me/bullmoneyfx"
             target="_blank"
             rel="noopener noreferrer"
-            className="group bg-gradient-to-br from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-lg p-6 text-center transition-all hover:scale-105"
+            className="group bg-gradient-to-br from-white to-white hover:from-white hover:to-white rounded-lg p-6 text-center transition-all hover:scale-105"
           >
             <div className="text-3xl mb-2">✈️</div>
             <h3 className="text-white font-bold mb-1">Telegram Channel</h3>
-            <p className="text-blue-200 text-sm mb-4">Real-time alerts</p>
+            <p className="text-white text-sm mb-4">Real-time alerts</p>
             <button className="w-full bg-white/20 hover:bg-white/30 text-white rounded py-2 transition-colors">
               Join Now
             </button>
@@ -84,7 +84,7 @@ export default function CommunityContent() {
             href="https://www.instagram.com/bullmoney.online/"
             target="_blank"
             rel="noopener noreferrer"
-            className="group bg-gradient-to-br from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-lg p-6 text-center transition-all hover:scale-105"
+            className="group bg-gradient-to-br from-white to-pink-600 hover:from-white hover:to-pink-500 rounded-lg p-6 text-center transition-all hover:scale-105"
           >
             <div className="text-3xl mb-2">📸</div>
             <h3 className="text-white font-bold mb-1">Instagram</h3>
@@ -111,7 +111,7 @@ export default function CommunityContent() {
 
         {/* Telegram Feed Section */}
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 via-cyan-600/5 to-transparent rounded-2xl blur-3xl -z-10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-white/10 via-white/5 to-transparent rounded-2xl blur-3xl -z-10" />
           
           <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-8">
             <TelegramFeed limit={15} refreshInterval={300000} />
@@ -131,7 +131,7 @@ export default function CommunityContent() {
               href="https://discord.com/invite/9vVB44ZrNA"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg transition-colors"
+              className="px-8 py-3 bg-white hover:bg-white/90 text-black font-semibold rounded-lg transition-colors"
             >
               Join Discord
             </a>
@@ -139,7 +139,7 @@ export default function CommunityContent() {
               href="https://t.me/bullmoneyfx"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-8 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-lg transition-colors"
+              className="px-8 py-3 bg-white hover:bg-white/90 text-black font-semibold rounded-lg transition-colors"
             >
               Join Telegram
             </a>

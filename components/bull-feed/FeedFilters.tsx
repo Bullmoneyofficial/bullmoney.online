@@ -77,7 +77,7 @@ export const FeedFilters = memo(({
               relative flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm
               whitespace-nowrap transition-all duration-200
               ${isActive 
-                ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30' 
+                ? 'bg-white text-black shadow-lg shadow-white/30' 
                 : 'bg-neutral-800/50 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200'
               }
             `}
@@ -86,7 +86,7 @@ export const FeedFilters = memo(({
             {isActive && (
               <motion.div
                 layoutId="activeTabIndicator"
-                className="absolute inset-0 bg-blue-500 rounded-xl -z-10"
+                className="absolute inset-0 bg-white rounded-xl -z-10"
                 transition={{ type: 'spring', stiffness: 380, damping: 30 }}
               />
             )}
@@ -124,11 +124,11 @@ interface MarketFilterProps {
 }
 
 const markets = [
-  { id: 'all', label: 'All', color: 'bg-blue-500' },
-  { id: 'forex', label: 'Forex', color: 'bg-green-500' },
-  { id: 'crypto', label: 'Crypto', color: 'bg-orange-500' },
-  { id: 'stocks', label: 'Stocks', color: 'bg-blue-500' },
-  { id: 'indices', label: 'Indices', color: 'bg-purple-500' },
+  { id: 'all', label: 'All', color: 'bg-white' },
+  { id: 'forex', label: 'Forex', color: 'bg-white' },
+  { id: 'crypto', label: 'Crypto', color: 'bg-white' },
+  { id: 'stocks', label: 'Stocks', color: 'bg-white' },
+  { id: 'indices', label: 'Indices', color: 'bg-white' },
 ];
 
 export const MarketFilter = memo(({

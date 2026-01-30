@@ -13,23 +13,23 @@
  * - Music Controls: 999999999999997 (sits below overlay)
  * 
  * NEON BLUE THEME COLORS:
- * - Primary: #3b82f6
- * - Light: #60a5fa / #93c5fd
- * - Dark: #2563eb
- * - Glow: rgba(59, 130, 246, 0.4-0.8)
+ * - Primary: #ffffff
+ * - Light: #ffffff / #ffffff
+ * - Dark: #ffffff
+ * - Glow: rgba(255, 255, 255, 0.4-0.8)
  * 
  * IMPORTANT: Do not use these z-index values anywhere else in the application.
  */
 
 /* Theme-driven neon variables */
 :root {
-  --neon-blue: var(--accent-color, #3b82f6);
-  --neon-blue-light: rgba(var(--accent-rgb, 59, 130, 246), 0.8);
-  --neon-blue-dark: rgba(var(--accent-rgb, 59, 130, 246), 1);
-  --neon-blue-glow: 0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.4);
-  --neon-blue-glow-strong: 0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.6);
-  --neon-blue-glow-intense: 0 0 40px rgba(var(--accent-rgb, 59, 130, 246), 0.8);
-  --neon-blue-border: rgba(var(--accent-rgb, 59, 130, 246), 0.6);
+  --neon-blue: var(--accent-color, #ffffff);
+  --neon-blue-light: rgba(var(--accent-rgb, 255, 255, 255), 0.8);
+  --neon-blue-dark: rgba(var(--accent-rgb, 255, 255, 255), 1);
+  --neon-blue-glow: 0 0 20px rgba(var(--accent-rgb, 255, 255, 255), 0.4);
+  --neon-blue-glow-strong: 0 0 30px rgba(var(--accent-rgb, 255, 255, 255), 0.6);
+  --neon-blue-glow-intense: 0 0 40px rgba(var(--accent-rgb, 255, 255, 255), 0.8);
+  --neon-blue-border: rgba(var(--accent-rgb, 255, 255, 255), 0.6);
 }
 
 /* Theme Selector Modal - Absolute Top Layer */
@@ -52,7 +52,7 @@
   position: fixed !important;
   inset: 0 !important;
   pointer-events: none !important; /* Critical: Allows interaction through overlay */
-  touch-action: none !important;
+  touch-action: auto !important; /* FIXED: Allow touch/scroll through overlay */
   user-select: none !important;
 }
 
@@ -84,6 +84,7 @@
 .theme-preview-overlay-supreme * {
   pointer-events: none !important;
   user-select: none !important;
+  touch-action: auto !important; /* FIXED: Allow touch/scroll through */
 }
 
 /* Performance optimization */
@@ -136,15 +137,15 @@
 }
 
 .neon-blue-text-glow {
-  text-shadow: 0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3);
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(255, 255, 255, 0.3);
 }
 
 .neon-blue-border-glow {
   border-color: var(--neon-blue-border);
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
 }
 
 /* Neon Blue Icon Glow */
 .neon-blue-icon-glow {
-  filter: drop-shadow(0 0 4px #3b82f6);
+  filter: drop-shadow(0 0 4px #ffffff);
 }

@@ -15,23 +15,23 @@ import { useFooterModalsUI } from "@/contexts/UIStateContext";
 // Neon Blue Sign Styles (Static glow like Chartnews)
 const NEON_STYLES = `
   .neon-blue-text {
-    color: #3b82f6;
-    text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, 0 0 12px #3b82f6;
+    color: #ffffff;
+    text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, 0 0 12px #ffffff;
   }
   .neon-white-text {
     color: #ffffff;
     text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
   }
   .neon-blue-border {
-    border: 2px solid #3b82f6;
-    box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px rgba(59, 130, 246, 0.3);
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px rgba(255, 255, 255, 0.3);
   }
   .neon-blue-border-light {
-    border: 1px solid #3b82f6;
-    box-shadow: 0 0 3px #3b82f6, 0 0 6px #3b82f6;
+    border: 1px solid #ffffff;
+    box-shadow: 0 0 3px #ffffff, 0 0 6px #ffffff;
   }
   .neon-glow-bg {
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4), 0 0 30px rgba(59, 130, 246, 0.2);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.4), 0 0 30px rgba(255, 255, 255, 0.2);
   }
 `;
 
@@ -62,7 +62,7 @@ export function Footer() {
               style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
             >
               {/* Join the Community Section - Neon styled */}
-              <div className="relative w-full pb-6 sm:pb-8" style={{ borderBottom: '1px solid #3b82f6', boxShadow: '0 1px 0 0 rgba(59, 130, 246, 0.5)' }}>
+              <div className="relative w-full pb-6 sm:pb-8" style={{ borderBottom: '1px solid #ffffff', boxShadow: '0 1px 0 0 rgba(255, 255, 255, 0.5)' }}>
                 <div className="relative overflow-hidden rounded-xl sm:rounded-2xl p-4 sm:p-6 bg-black neon-blue-border-light neon-glow-bg">
                   <p className="relative text-center text-[9px] sm:text-[10px] uppercase tracking-[0.2em] sm:tracking-[0.25em] font-bold neon-blue-text mb-4 sm:mb-6">
                     Join the Community
@@ -95,7 +95,7 @@ export function Footer() {
               </div>
 
               {/* Elite Trading Community Section - Neon styled */}
-              <div className="relative text-center pt-4 sm:pt-6" style={{ borderTop: '1px solid #3b82f6', boxShadow: '0 -1px 0 0 rgba(59, 130, 246, 0.5)' }}>
+              <div className="relative text-center pt-4 sm:pt-6" style={{ borderTop: '1px solid #ffffff', boxShadow: '0 -1px 0 0 rgba(255, 255, 255, 0.5)' }}>
                 <div className="relative inline-block p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-black neon-blue-border-light neon-glow-bg overflow-hidden">
                   <p className="text-xl sm:text-2xl md:text-3xl font-serif font-black tracking-tight">
                     <span className="relative inline-block">
@@ -110,9 +110,9 @@ export function Footer() {
 
                   {/* Static neon dots */}
                   <div className="flex justify-center gap-1 sm:gap-1.5 mt-3 sm:mt-4">
-                    <span className="w-1 h-1 rounded-full bg-blue-500" style={{ boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }} />
-                    <span className="w-1 h-1 rounded-full bg-blue-400" style={{ boxShadow: '0 0 4px #60a5fa, 0 0 8px #60a5fa' }} />
-                    <span className="w-1 h-1 rounded-full bg-blue-500" style={{ boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6' }} />
+                    <span className="w-1 h-1 rounded-full bg-white" style={{ boxShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }} />
+                    <span className="w-1 h-1 rounded-full bg-white" style={{ boxShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }} />
+                    <span className="w-1 h-1 rounded-full bg-white" style={{ boxShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }} />
                   </div>
                 </div>
               </div>

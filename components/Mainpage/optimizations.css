@@ -245,12 +245,12 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(59, 130, 246, 0.5);
+  background: rgba(255, 255, 255, 0.5);
   border-radius: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(59, 130, 246, 0.8);
+  background: rgba(255, 255, 255, 0.8);
 }
 
 /* Hide scrollbar but keep functionality */
@@ -345,7 +345,7 @@
 
 /* --- FOCUS VISIBLE --- */
 .focus-visible-ring:focus-visible {
-  outline: 2px solid rgb(59, 130, 246);
+  outline: 2px solid rgb(255, 255, 255);
   outline-offset: 2px;
 }
 
@@ -473,6 +473,24 @@
   font-family: 'Courier New', monospace;
   font-size: 0.75rem;
   color: white;
+}
+
+/* --- TOUCH DEVICE HOVER FIX --- */
+@media (hover: none) and (pointer: coarse) {
+  /* Disable hover effects on touch devices */
+  .hover-lift:hover,
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    transform: none !important;
+    box-shadow: inherit !important;
+    background-color: inherit !important;
+  }
+  
+  /* Add active state for touch feedback */
+  .hover-lift:active {
+    transform: scale(0.98) !important;
+    opacity: 0.9;
+    transition: transform 0.1s ease-out, opacity 0.1s ease-out !important;
+  }
 }
 
 /* --- END --- */

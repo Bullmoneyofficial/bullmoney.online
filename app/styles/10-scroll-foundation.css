@@ -81,27 +81,28 @@ body {
 /* ============================================
    SCROLL PASSTHROUGH FOR OVERLAYS
    Ensures theme overlays don't block scroll
+   FIXED: touch-action: auto allows scroll through
    ============================================ */
 
-/* Any overlay with pointer-events:none should not affect scroll */
+/* Any overlay with pointer-events:none should pass through ALL interactions */
 [style*="pointer-events: none"],
 [style*="pointer-events:none"],
 .pointer-events-none {
-  /* Double ensure scroll passthrough */
-  touch-action: none !important;
+  /* FIXED: Use auto to allow scroll/touch passthrough */
+  touch-action: auto !important;
   user-select: none !important;
   -webkit-user-select: none !important;
 }
 
-/* Theme overlay elements - CRITICAL for scroll */
+/* Theme overlay elements - CRITICAL for scroll passthrough */
 #theme-global-overlay,
 #theme-edge-glow,
 #theme-filter-overlay,
 html[data-active-theme]::before,
 html[data-active-theme]::after {
-  /* These are set inline but ensure CSS backup */
+  /* These must allow interactions to pass through */
   pointer-events: none !important;
-  touch-action: none !important;
+  touch-action: auto !important; /* FIXED: Allow touch/scroll through */
   -webkit-touch-callout: none !important;
   overflow: visible !important;
 }
@@ -125,7 +126,7 @@ html[data-active-theme]::after {
 /* Custom scrollbar for content areas that need visible scroll */
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(59, 130, 246, 0.3) transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -138,10 +139,10 @@ html[data-active-theme]::after {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(59, 130, 246, 0.3);
+  background: rgba(255, 255, 255, 0.3);
   border-radius: 3px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(59, 130, 246, 0.5);
+  background: rgba(255, 255, 255, 0.5);
 }

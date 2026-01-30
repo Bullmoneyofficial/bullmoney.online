@@ -234,12 +234,12 @@ html.is-safari ::-webkit-scrollbar-track {
 }
 
 html.is-safari ::-webkit-scrollbar-thumb {
-  background: rgba(59, 130, 246, 0.3);
+  background: rgba(255, 255, 255, 0.3);
   border-radius: 4px;
 }
 
 html.is-safari ::-webkit-scrollbar-thumb:hover {
-  background: rgba(59, 130, 246, 0.5);
+  background: rgba(255, 255, 255, 0.5);
 }
 
 /* Hide scrollbars on mobile Safari */
@@ -349,11 +349,11 @@ html.is-safari .dock-icon-static {
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   /* Use box-shadow instead of filter for glow */
-  box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+  box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
 }
 
 html.is-safari .dock-icon-static:hover {
-  box-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6;
+  box-shadow: 0 0 6px #ffffff, 0 0 12px #ffffff;
 }
 
 /* Safari: Fix dock container blur artifacts */

@@ -94,9 +94,9 @@ export const StaticPageWrapper = memo<StaticPageWrapperProps>(({
     smoothProgress,
     [0, 0.5, 1],
     [
-      'radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.1) 0%, transparent 50%)',
-      'radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)',
-      'radial-gradient(circle at 50% 100%, rgba(59, 130, 246, 0.1) 0%, transparent 50%)',
+      'radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.1) 0%, transparent 50%)',
+      'radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.15) 0%, transparent 50%)',
+      'radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.1) 0%, transparent 50%)',
     ]
   );
 
@@ -308,7 +308,7 @@ export const SectionDivider = memo(() => {
   return (
     <div className="relative w-full h-px my-8 overflow-hidden">
       <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/50 to-transparent"
+        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent"
         initial={{ x: '-100%' }}
         whileInView={{ x: '100%' }}
         viewport={{ once: false }}

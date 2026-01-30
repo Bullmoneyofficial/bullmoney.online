@@ -89,10 +89,10 @@ const contentTypes: { id: ContentType; label: string; icon: string; description:
 ];
 
 const markets: { id: MarketType; label: string; color: string }[] = [
-  { id: 'forex', label: 'Forex', color: 'bg-green-500' },
+  { id: 'forex', label: 'Forex', color: 'bg-white' },
   { id: 'crypto', label: 'Crypto', color: 'bg-orange-500' },
-  { id: 'stocks', label: 'Stocks', color: 'bg-blue-500' },
-  { id: 'indices', label: 'Indices', color: 'bg-purple-500' },
+  { id: 'stocks', label: 'Stocks', color: 'bg-white' },
+  { id: 'indices', label: 'Indices', color: 'bg-white' },
 ];
 
 // Main Content
@@ -303,7 +303,7 @@ const PostComposerContent = memo(() => {
         )}
         
         {/* Inner Container */}
-        <div className="relative z-10 h-full bg-gradient-to-b from-neutral-900 to-black rounded-2xl border border-blue-500/30 overflow-hidden flex flex-col max-h-[95vh]">
+        <div className="relative z-10 h-full bg-gradient-to-b from-neutral-900 to-black rounded-2xl border border-white/30 overflow-hidden flex flex-col max-h-[95vh]">
           {!shouldSkipHeavyEffects && <ShimmerLine color="blue" />}
           
           {/* Header */}
@@ -360,7 +360,7 @@ const PostComposerContent = memo(() => {
                     className={`
                       p-3 rounded-xl border text-left transition-all
                       ${contentType === type.id 
-                        ? 'bg-blue-500/20 border-blue-500 text-white' 
+                        ? 'bg-white/20 border-white text-white' 
                         : 'bg-neutral-800/50 border-neutral-700 text-neutral-400 hover:border-neutral-600'
                       }
                     `}
@@ -410,7 +410,7 @@ const PostComposerContent = memo(() => {
                     className={`
                       flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium transition-all
                       ${direction === 'bullish' 
-                        ? 'bg-green-500 text-white' 
+                        ? 'bg-white text-black' 
                         : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
                       }
                     `}
@@ -459,7 +459,7 @@ const PostComposerContent = memo(() => {
                 value={pair}
                 onChange={(e) => setPair(e.target.value)}
                 placeholder="EUR/USD, BTC, AAPL..."
-                className="w-full px-4 py-3 bg-black/50 border border-blue-500/30 rounded-xl text-white focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full px-4 py-3 bg-black/50 border border-white/30 rounded-xl text-white focus:outline-none focus:border-white transition-colors"
               />
             </div>
 
@@ -471,7 +471,7 @@ const PostComposerContent = memo(() => {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Your analysis title..."
-                className="w-full px-4 py-3 bg-black/50 border border-blue-500/30 rounded-xl text-white focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full px-4 py-3 bg-black/50 border border-white/30 rounded-xl text-white focus:outline-none focus:border-white transition-colors"
               />
             </div>
 
@@ -489,7 +489,7 @@ const PostComposerContent = memo(() => {
                   onChange={(e) => setContent(e.target.value.slice(0, 280))}
                   placeholder="Share your quick take..."
                   rows={4}
-                  className="w-full px-4 py-3 bg-black/50 border border-blue-500/30 rounded-xl text-white resize-none focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full px-4 py-3 bg-black/50 border border-white/30 rounded-xl text-white resize-none focus:outline-none focus:border-white transition-colors"
                 />
               ) : (
                 <RichTextEditor
@@ -563,7 +563,7 @@ const PostComposerContent = memo(() => {
                             value={entryPrice}
                             onChange={(e) => setEntryPrice(e.target.value)}
                             placeholder="0.00"
-                            className="w-full px-3 py-2 bg-black/50 border border-blue-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+                            className="w-full px-3 py-2 bg-black/50 border border-white/30 rounded-lg text-white text-sm focus:outline-none focus:border-white"
                           />
                         </div>
                         <div>
@@ -574,7 +574,7 @@ const PostComposerContent = memo(() => {
                             value={targetPrice}
                             onChange={(e) => setTargetPrice(e.target.value)}
                             placeholder="0.00"
-                            className="w-full px-3 py-2 bg-black/50 border border-green-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-green-500"
+                            className="w-full px-3 py-2 bg-black/50 border border-white/30 rounded-lg text-white text-sm focus:outline-none focus:border-white"
                           />
                         </div>
                         <div>
@@ -597,7 +597,7 @@ const PostComposerContent = memo(() => {
                             type="checkbox"
                             checked={isPublished}
                             onChange={(e) => setIsPublished(e.target.checked)}
-                            className="w-4 h-4 rounded border-blue-500/30 bg-black/50 text-blue-500"
+                            className="w-4 h-4 rounded border-white/30 bg-black/50 text-white"
                           />
                           <span className="text-sm text-neutral-400 flex items-center gap-1">
                             {isPublished ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
@@ -610,7 +610,7 @@ const PostComposerContent = memo(() => {
                             type="checkbox"
                             checked={isProOnly}
                             onChange={(e) => setIsProOnly(e.target.checked)}
-                            className="w-4 h-4 rounded border-purple-500/30 bg-black/50 text-purple-500"
+                            className="w-4 h-4 rounded border-white/30 bg-black/50 text-white"
                           />
                           <span className="text-sm text-neutral-400">🔒 Pro members only</span>
                         </label>
@@ -648,7 +648,7 @@ const PostComposerContent = memo(() => {
                 whileTap={{ scale: 0.98 }}
                 onClick={handleSubmit}
                 disabled={saving || !isValid}
-                className="px-6 py-2.5 bg-blue-500 text-white rounded-xl font-medium text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-2.5 bg-white text-black rounded-xl font-medium text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? (
                   <>

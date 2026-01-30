@@ -2,8 +2,8 @@
 
 .minimized-dock-container {
   background: black;
-  border: 2px solid #3b82f6;
-  box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff;
   transform: translateZ(0);
   will-change: auto;
   contain: layout style;
@@ -11,8 +11,8 @@
 
 .minimized-icon {
   background: black;
-  border: 2px solid #3b82f6;
-  box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff;
   transform: translateZ(0);
   contain: layout style;
   transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
@@ -20,7 +20,7 @@
 
 .minimized-icon:hover {
   transform: translateY(-2px) translateZ(0);
-  box-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6, inset 0 0 6px #3b82f6;
+  box-shadow: 0 0 6px #ffffff, 0 0 12px #ffffff, inset 0 0 6px #ffffff;
 }
 
 .minimized-icon--xm {
@@ -33,30 +33,30 @@
 }
 
 .minimized-logo {
-  border: 2px solid #3b82f6;
-  box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff;
 }
 
 .minimized-divider {
-  background: linear-gradient(to bottom, transparent, #3b82f6, transparent);
+  background: linear-gradient(to bottom, transparent, #ffffff, transparent);
 }
 
 .minimized-expand {
   background: black;
-  border: 2px solid #3b82f6;
-  box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff;
   transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
 }
 
 .minimized-expand:hover {
   transform: translateY(-2px) translateZ(0);
-  box-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6, inset 0 0 6px #3b82f6;
+  box-shadow: 0 0 6px #ffffff, 0 0 12px #ffffff, inset 0 0 6px #ffffff;
 }
 
 .minimized-tooltip {
   transform: translateX(-50%) translateZ(0);
-  border: 2px solid #3b82f6;
-  box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
 }
 
 /* Icon styling to match DockIcon */
@@ -66,6 +66,6 @@
 }
 
 .minimized-icon-label {
-  color: #3b82f6;
-  text-shadow: 0 0 4px #3b82f6;
+  color: #ffffff;
+  text-shadow: 0 0 4px #ffffff;
 }

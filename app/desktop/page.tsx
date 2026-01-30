@@ -49,7 +49,7 @@ const DesktopKeyNavigator = dynamic(() => import("@/components/navigation/Deskto
 
 // Import loaders
 const PageMode = dynamic(() => import("@/components/REGISTER USERS/pagemode"), { ssr: false }) as any;
-const TradingUnlockLoader = dynamic(() => import("@/components/MultiStepLoaderv3"), { ssr: false }) as any;
+const TradingUnlockLoader = dynamic(() => import("@/components/MultiStepLoaderv3Simple"), { ssr: false }) as any;
 
 // Lazy imports for 3D components - Desktop optimized
 const DraggableSplit = dynamic(() => import('@/components/DraggableSplit'), { ssr: false }) as any;
@@ -140,7 +140,7 @@ function LazySplineContainer({ scene }: { scene: string }) {
           <div className="absolute inset-0 flex items-center justify-center">
             <ShimmerSpinner size={32} color="blue" speed="slow" />
           </div>
-          <div className="absolute inset-0 rounded-xl pointer-events-none" style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.2)', borderWidth: '1px', borderStyle: 'solid' }} />
+          <div className="absolute inset-0 rounded-xl pointer-events-none" style={{ borderColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.2)', borderWidth: '1px', borderStyle: 'solid' }} />
         </div>
       )}
 
@@ -500,7 +500,7 @@ function DesktopHomeContent() {
       {currentView === 'content' && (
         <>
           {/* Desktop Screen Category Indicator */}
-          <div className="fixed top-4 right-4 z-50 px-3 py-1.5 rounded-full text-xs font-medium bg-black/50 border border-blue-500/30 text-blue-400">
+          <div className="fixed top-4 right-4 z-50 px-3 py-1.5 rounded-full text-xs font-medium bg-black/50 border border-white/30 text-white">
             Desktop {screenCategory}
           </div>
 
@@ -533,12 +533,12 @@ function DesktopHomeContent() {
               }}
             >
               <div className="relative text-center mb-8" style={{ minHeight: '80px' }}>
-                <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(to right, white, var(--accent-color, #3b82f6), white)', filter: 'drop-shadow(0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.5))' }}>
+                <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(to right, white, var(--accent-color, #ffffff), white)', filter: 'drop-shadow(0 0 20px rgba(var(--accent-rgb, 255, 255, 255), 0.5))' }}>
                   Interactive 3D Experience
                 </h2>
-                <p className="text-xs mt-2 uppercase tracking-widest font-medium" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.6)' }}>Drag to explore</p>
+                <p className="text-xs mt-2 uppercase tracking-widest font-medium" style={{ color: 'rgba(var(--accent-rgb, 255, 255, 255), 0.6)' }}>Drag to explore</p>
                 <div className="flex justify-center mt-4">
-                  <div className="w-24 h-[2px]" style={{ background: 'linear-gradient(to right, transparent, var(--accent-color, #3b82f6), transparent)' }} />
+                  <div className="w-24 h-[2px]" style={{ background: 'linear-gradient(to right, transparent, var(--accent-color, #ffffff), transparent)' }} />
                 </div>
               </div>
               
@@ -556,7 +556,7 @@ function DesktopHomeContent() {
               >
                 <ShimmerBorder color="blue" intensity="low" speed="normal" />
                 
-                <div className="relative z-10 w-full h-full bg-black rounded-2xl overflow-hidden" style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.2)', borderWidth: '1px', borderStyle: 'solid' }}>
+                <div className="relative z-10 w-full h-full bg-black rounded-2xl overflow-hidden" style={{ borderColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.2)', borderWidth: '1px', borderStyle: 'solid' }}>
                   <ShimmerLine color="blue" className="z-20" />
                   
                   <Suspense fallback={<SplineSkeleton className="w-full h-full" aspectRatio="auto" style={{ height: '800px', minHeight: '800px' }} />}>
@@ -572,7 +572,7 @@ function DesktopHomeContent() {
             {/* Desktop Testimonials Section */}
             <section id="testimonials" className="w-full max-w-6xl mx-auto px-4 py-12" data-allow-scroll data-content data-theme-aware>
               <div className="relative text-center mb-6">
-                <h2 className="text-xl lg:text-2xl font-bold text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(to right, white, var(--accent-color, #3b82f6), white)', filter: 'drop-shadow(0 0 15px rgba(var(--accent-rgb, 59, 130, 246), 0.5))' }}>
+                <h2 className="text-xl lg:text-2xl font-bold text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(to right, white, var(--accent-color, #ffffff), white)', filter: 'drop-shadow(0 0 15px rgba(var(--accent-rgb, 255, 255, 255), 0.5))' }}>
                   What Traders Say
                 </h2>
                 <div className="flex justify-center gap-1 mt-3">
@@ -585,7 +585,7 @@ function DesktopHomeContent() {
               <div className="relative rounded-2xl overflow-hidden">
                 <ShimmerBorder color="blue" intensity="low" speed="slow" />
                 
-                <div className="relative z-10 bg-black rounded-2xl overflow-hidden" style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.2)', borderWidth: '1px', borderStyle: 'solid' }}>
+                <div className="relative z-10 bg-black rounded-2xl overflow-hidden" style={{ borderColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.2)', borderWidth: '1px', borderStyle: 'solid' }}>
                   <Suspense fallback={<LoadingSkeleton variant="card" height={320} />}>
                     <TestimonialsCarousel />
                   </Suspense>

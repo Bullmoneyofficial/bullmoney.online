@@ -72,7 +72,7 @@ const HeroSection = memo(function HeroSection() {
         direction="up"
       >
         <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-900 to-black" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.15),transparent_70%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255, 255, 255,0.15),transparent_70%)]" />
       </ParallaxDiv>
       
       {/* Content */}
@@ -91,7 +91,7 @@ const HeroSection = memo(function HeroSection() {
         
         <Reveal direction="scale" delay={0.6}>
           <MagneticButton 
-            className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-semibold transition-colors"
+            className="px-8 py-4 bg-white hover:bg-white/90 text-black rounded-full font-semibold transition-colors"
             magneticStrength={0.4}
           >
             Get Started
@@ -168,7 +168,7 @@ const InteractiveDemo = memo(function InteractiveDemo() {
   const scrollProgress = useScrollProgress();
   
   return (
-    <section className="py-24 px-4 bg-gradient-to-b from-transparent via-blue-900/10 to-transparent">
+    <section className="py-24 px-4 bg-gradient-to-b from-transparent via-white/10 to-transparent">
       <div className="max-w-4xl mx-auto">
         <Reveal direction="up">
           <h2 className="text-4xl font-bold text-white text-center mb-8">
@@ -183,15 +183,15 @@ const InteractiveDemo = memo(function InteractiveDemo() {
         >
           <div className="grid grid-cols-3 gap-8 text-center">
             <div>
-              <div className="text-4xl font-bold text-blue-400">{currentFps}</div>
+              <div className="text-4xl font-bold text-white">{currentFps}</div>
               <div className="text-gray-400 text-sm">Current FPS</div>
             </div>
             <div>
-              <div className="text-4xl font-bold text-green-400 capitalize">{scrollDirection}</div>
+              <div className="text-4xl font-bold text-white capitalize">{scrollDirection}</div>
               <div className="text-gray-400 text-sm">Scroll Direction</div>
             </div>
             <div>
-              <div className="text-4xl font-bold text-purple-400">{(scrollProgress * 100).toFixed(0)}%</div>
+              <div className="text-4xl font-bold text-white">{(scrollProgress * 100).toFixed(0)}%</div>
               <div className="text-gray-400 text-sm">Page Progress</div>
             </div>
           </div>
@@ -207,9 +207,9 @@ const InteractiveDemo = memo(function InteractiveDemo() {
           </InteractiveCard>
           
           <InteractiveCard 
-            className="p-6 rounded-xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 aspect-square flex items-center justify-center"
+            className="p-6 rounded-xl bg-gradient-to-br from-white/20 to-white/20 aspect-square flex items-center justify-center"
             tiltIntensity={20}
-            glowColor="rgba(96, 165, 250, 0.3)"
+            glowColor="rgba(255, 255, 255, 0.3)"
           >
             <p className="text-white text-center">
               Enhanced tilt<br/>

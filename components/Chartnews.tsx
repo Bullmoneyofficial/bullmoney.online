@@ -32,27 +32,27 @@ const useIsMobile = () => {
 const GLOBAL_STYLES = `
   @keyframes neon-pulse {
     0%, 100% { 
-      text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+      text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
       filter: brightness(1);
     }
     50% { 
-      text-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6;
+      text-shadow: 0 0 6px #ffffff, 0 0 12px #ffffff;
       filter: brightness(1.1);
     }
   }
 
   @keyframes neon-glow {
     0%, 100% { 
-      box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+      box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff;
     }
     50% { 
-      box-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6, inset 0 0 6px #3b82f6;
+      box-shadow: 0 0 6px #ffffff, 0 0 12px #ffffff, inset 0 0 6px #ffffff;
     }
   }
 
   .neon-blue-text {
-    color: #3b82f6;
-    text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+    color: #ffffff;
+    text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
     animation: neon-pulse 2s ease-in-out infinite;
   }
 
@@ -66,18 +66,18 @@ const GLOBAL_STYLES = `
   }
 
   .neon-blue-icon {
-    filter: drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6);
+    filter: drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff);
   }
 
   .neon-blue-border {
-    border: 2px solid #3b82f6;
-    box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff;
     animation: neon-glow 2s ease-in-out infinite;
   }
 
   .neon-blue-bg {
-    background: #3b82f6;
-    box-shadow: 0 0 8px #3b82f6, 0 0 16px #3b82f6;
+    background: #ffffff;
+    box-shadow: 0 0 8px #ffffff, 0 0 16px #ffffff;
   }
 
   .gpu-layer {
@@ -180,15 +180,15 @@ const HighAestheticCard = memo(({
                   </AnimatePresence>
                 )}
 
-                <div className={cn("flex h-16 w-16 items-center justify-center rounded-xl bg-black mb-4", shouldSkipHeavyEffects ? "border border-blue-500/50" : "neon-blue-border")}>
+                <div className={cn("flex h-16 w-16 items-center justify-center rounded-xl bg-black mb-4", shouldSkipHeavyEffects ? "border border-white/50" : "neon-blue-border")}>
                     <Icon className={cn("h-8 w-8 text-white", shouldSkipHeavyEffects ? "" : "neon-white-icon")} />
                 </div>
 
-                <h2 className={cn("mt-2 text-3xl font-black tracking-tight md:text-4xl", shouldSkipHeavyEffects ? "text-blue-400" : "neon-blue-text")}>
+                <h2 className={cn("mt-2 text-3xl font-black tracking-tight md:text-4xl", shouldSkipHeavyEffects ? "text-white" : "neon-blue-text")}>
                     {title}
                 </h2>
                 
-                <p className={cn("mt-2 text-sm max-w-sm px-4", shouldSkipHeavyEffects ? "text-blue-400" : "neon-blue-text")}>
+                <p className={cn("mt-2 text-sm max-w-sm px-4", shouldSkipHeavyEffects ? "text-white" : "neon-blue-text")}>
                     {subtitle}
                 </p>
 
@@ -203,9 +203,9 @@ const HighAestheticCard = memo(({
                     )}
 
                     {shouldSkipHeavyEffects ? (
-                      <div className="relative z-10 flex items-center gap-2 rounded-full px-8 py-3 text-lg font-bold bg-blue-500 transition-all duration-300 group hover:brightness-110">
-                          <span className="text-white">Launch Terminal</span>
-                          <ArrowRight className="h-4 w-4 text-white transition-transform group-hover:translate-x-1" />
+                      <div className="relative z-10 flex items-center gap-2 rounded-full px-8 py-3 text-lg font-bold bg-white transition-all duration-300 group hover:brightness-110">
+                          <span className="text-black">Launch Terminal</span>
+                          <ArrowRight className="h-4 w-4 text-black transition-transform group-hover:translate-x-1" />
                       </div>
                     ) : (
                       <NeonBorder borderRadius="rounded-full">
@@ -289,7 +289,7 @@ export const TradingViewDropdown = memo(({ onMarketChange, showTip }: { onMarket
   if (!selected) return null;
 
   return (
-    <div className={cn("relative mx-auto w-full max-w-screen-xl rounded-3xl bg-black p-4 md:p-6", shouldSkipHeavyEffects ? "border border-blue-500/50" : "neon-blue-border")}>
+    <div className={cn("relative mx-auto w-full max-w-screen-xl rounded-3xl bg-black p-4 md:p-6", shouldSkipHeavyEffects ? "border border-white/50" : "neon-blue-border")}>
       {!showChart && (
         <HighAestheticCard
             title="Show Live Market Charts"
@@ -317,10 +317,10 @@ export const TradingViewDropdown = memo(({ onMarketChange, showTip }: { onMarket
                 {shouldSkipHeavyEffects ? (
                   <button
                     onClick={() => setOpen((p) => !p)}
-                    className="group relative flex items-center gap-3 rounded-full bg-black px-6 py-2 text-sm font-semibold text-white border border-blue-500/50"
+                    className="group relative flex items-center gap-3 rounded-full bg-black px-6 py-2 text-sm font-semibold text-white border border-white/50"
                   >
                     <span className="relative z-10">{selected.label}</span>
-                    <ChevronDown className={`h-4 w-4 relative z-10 text-blue-400 transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
+                    <ChevronDown className={`h-4 w-4 relative z-10 text-white transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
                   </button>
                 ) : (
                   <NeonBorder borderRadius="rounded-full">
@@ -342,7 +342,7 @@ export const TradingViewDropdown = memo(({ onMarketChange, showTip }: { onMarket
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: shouldSkipHeavyEffects ? 0 : -10 }}
                   transition={{ duration: shouldSkipHeavyEffects ? 0.1 : 0.2 }}
-                  className={cn("absolute z-20 mt-2 w-64 overflow-hidden rounded-xl bg-black", shouldSkipHeavyEffects ? "border border-blue-500/50" : "neon-blue-border")}
+                  className={cn("absolute z-20 mt-2 w-64 overflow-hidden rounded-xl bg-black", shouldSkipHeavyEffects ? "border border-white/50" : "neon-blue-border")}
                 >
                   {CHARTS.map((chart, idx) => (
                     <button
@@ -351,7 +351,7 @@ export const TradingViewDropdown = memo(({ onMarketChange, showTip }: { onMarket
                       className={cn(
                         "block w-full px-4 py-3 text-left text-sm transition-all duration-200",
                         shouldSkipHeavyEffects 
-                          ? (selected.label === chart.label ? "text-white bg-blue-500 font-bold" : "text-blue-400 hover:text-white")
+                          ? (selected.label === chart.label ? "text-black bg-white font-bold" : "text-white hover:text-white")
                           : cn("neon-blue-text hover:neon-white-text", selected.label === chart.label && "neon-white-text neon-blue-bg font-bold")
                       )}
                     >
@@ -362,14 +362,14 @@ export const TradingViewDropdown = memo(({ onMarketChange, showTip }: { onMarket
               )}
             </AnimatePresence>
 
-            <div className={cn("relative mt-4 w-full rounded-2xl bg-black p-1 md:p-2", shouldSkipHeavyEffects ? "border border-blue-500/50" : "neon-blue-border")} style={{ minHeight: chartHeight }}>
+            <div className={cn("relative mt-4 w-full rounded-2xl bg-black p-1 md:p-2", shouldSkipHeavyEffects ? "border border-white/50" : "neon-blue-border")} style={{ minHeight: chartHeight }}>
               <TradingViewMarketOverview height={chartHeight} tabs={selected.tabConfig} />
             </div>
 
             <div className="mt-6 flex justify-center">
                 <button
                     onClick={() => { setOpen(false); setShowChart(false); }}
-                    className={cn("text-xs uppercase tracking-widest transition-colors py-2", shouldSkipHeavyEffects ? "text-blue-400 hover:text-white" : "neon-blue-text hover:neon-white-text")}
+                    className={cn("text-xs uppercase tracking-widest transition-colors py-2", shouldSkipHeavyEffects ? "text-white hover:text-white" : "neon-blue-text hover:neon-white-text")}
                 >
                     Close Chart Viewer
                 </button>
@@ -793,7 +793,7 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                             <div className="lg:col-span-8">
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-[10px] font-black uppercase tracking-widest neon-blue-text">Featured</h3>
-                                    <div className="h-px w-1/2 ml-4 hidden md:block" style={{ background: 'linear-gradient(90deg, #3b82f6 0%, transparent 100%)', boxShadow: '0 0 4px #3b82f6' }} />
+                                    <div className="h-px w-1/2 ml-4 hidden md:block" style={{ background: 'linear-gradient(90deg, #ffffff 0%, transparent 100%)', boxShadow: '0 0 4px #ffffff' }} />
                                 </div>
 
                                 <div className="mt-3">
@@ -866,7 +866,7 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                 <div className="mt-6">
                                     <div className="flex items-center justify-between">
                                         <h3 className="text-[10px] font-black uppercase tracking-widest neon-blue-text">Top Stories</h3>
-                                        <div className="h-px w-1/2 ml-4 hidden md:block" style={{ background: 'linear-gradient(90deg, #3b82f6 0%, transparent 100%)', boxShadow: '0 0 4px #3b82f6' }} />
+                                        <div className="h-px w-1/2 ml-4 hidden md:block" style={{ background: 'linear-gradient(90deg, #ffffff 0%, transparent 100%)', boxShadow: '0 0 4px #ffffff' }} />
                                     </div>
 
                                     <div className="mt-3 grid gap-3 md:grid-cols-2">

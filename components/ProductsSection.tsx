@@ -62,7 +62,7 @@ const ShimmerBorder = ({
   return (
     <div onClick={onClick} className={cn("relative p-[1px] overflow-hidden group/shimmer cursor-pointer", rounded, className)}>
       {/* The Moving Gradient */}
-      <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent,45%,#4f46e5,55%,transparent)] bg-[length:250%_100%] animate-shimmer opacity-100" />
+      <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent,45%,#ffffff,55%,transparent)] bg-[length:250%_100%] animate-shimmer opacity-100" />
       {/* The Content Container */}
       <div className={cn("relative h-full w-full overflow-hidden", background, rounded)}>
         {children}
@@ -220,7 +220,7 @@ function ProductBentoCard({
       disableAnimations={disableAnimations}
       onClick={onClick}
     >
-      <ShimmerBorder rounded="rounded-2xl" className="h-full hover:shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-shadow duration-500">
+      <ShimmerBorder rounded="rounded-2xl" className="h-full hover:shadow-[0_0_20px_rgba(255, 255, 255,0.3)] transition-shadow duration-500">
         <div className="p-4 md:p-5 w-full h-full relative flex flex-col justify-between bg-[#060010]"> 
           
           {/* HEADER */}
@@ -407,7 +407,7 @@ export default function ProductsSection() {
       <div 
         className="pointer-events-none fixed inset-0 z-0 transition-opacity duration-300"
         style={{
-            background: `radial-gradient(600px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(79, 70, 229, 0.15), transparent 40%)`
+            background: `radial-gradient(600px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(255, 255, 255, 0.15), transparent 40%)`
         }}
       />
       
@@ -417,7 +417,7 @@ export default function ProductsSection() {
         <div className="flex flex-col items-center justify-center mb-16 text-center">
             <div className="relative mb-6">
                 <h1 className="text-4xl md:text-7xl font-bold text-white tracking-tighter">
-                   BULLMONEY <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">VIP</span>
+                   BULLMONEY <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-white">VIP</span>
                 </h1>
                 {/* Decorative Line */}
                 <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-transparent via-indigo-500 to-transparent blur-[1px]" />

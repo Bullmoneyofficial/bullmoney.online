@@ -20,22 +20,22 @@ const SocialIcon = ({ href, icon, alt: _alt }: { href: string; icon: React.React
       className="relative flex h-12 w-16 sm:h-14 sm:w-20 md:h-16 md:w-24 shrink-0 items-center justify-center rounded-xl overflow-hidden"
       style={{
         background: 'black',
-        border: '1px solid #3b82f6',
-        boxShadow: '0 0 4px rgba(59, 130, 246, 0.5)'
+        border: '1px solid #ffffff',
+        boxShadow: '0 0 4px rgba(255, 255, 255, 0.5)'
       }}
     >
       {/* Hover state with stronger neon glow */}
       <motion.div 
         className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
         style={{
-          boxShadow: '0 0 8px #3b82f6, 0 0 16px rgba(59, 130, 246, 0.5), inset 0 0 8px rgba(59, 130, 246, 0.2)'
+          boxShadow: '0 0 8px #ffffff, 0 0 16px rgba(255, 255, 255, 0.5), inset 0 0 8px rgba(255, 255, 255, 0.2)'
         }}
       />
       <div 
         className="relative z-10 transition-colors duration-300"
         style={{ 
-          color: '#3b82f6',
-          filter: 'drop-shadow(0 0 4px #3b82f6)'
+          color: '#ffffff',
+          filter: 'drop-shadow(0 0 4px #ffffff)'
         }}
       >
         {icon}

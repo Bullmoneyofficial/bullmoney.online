@@ -203,7 +203,7 @@ function AccessPortal() {
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                 className="absolute inset-0 rounded-full border border-sky-500/30"
               />
-              <div className="absolute inset-4 rounded-full bg-gradient-to-br from-slate-900 to-black flex items-center justify-center border border-slate-700 shadow-[0_0_60px_rgba(14,165,233,0.15)] group-hover:shadow-[0_0_100px_rgba(14,165,233,0.4)] transition-shadow duration-500">
+              <div className="absolute inset-4 rounded-full bg-gradient-to-br from-slate-900 to-black flex items-center justify-center border border-slate-700 shadow-[0_0_60px_rgba(255, 255, 255,0.15)] group-hover:shadow-[0_0_100px_rgba(255, 255, 255,0.4)] transition-shadow duration-500">
                 <div className="text-center space-y-2">
                   <Lock className="w-10 h-10 text-white mx-auto mb-2 group-hover:text-sky-400 transition-colors" />
                   <p className="text-sm font-bold text-white tracking-[0.2em] group-hover:text-sky-300 transition-colors">ACCESS</p>
@@ -362,14 +362,14 @@ const handleSave = async (e: React.FormEvent) => {
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-400 uppercase">Commission ($)</label>
               <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500" />
+                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white" />
                 <input
                   name="commission_balance"
                   type="number"
                   step="0.01"
                   value={formData.commission_balance}
                   onChange={handleChange}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-white focus:border-green-500 outline-none font-mono"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-white focus:border-white outline-none font-mono"
                 />
               </div>
             </div>
@@ -377,12 +377,12 @@ const handleSave = async (e: React.FormEvent) => {
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-400 uppercase">Affiliate Code</label>
               <div className="relative">
-                <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-500" />
+                <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white" />
                 <input
                   name="affiliate_code"
                   value={formData.affiliate_code || ''}
                   onChange={handleChange}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-lg pl-9 py-2 text-white focus:border-purple-500 outline-none"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-lg pl-9 py-2 text-white focus:border-white outline-none"
                 />
               </div>
             </div>
@@ -433,14 +433,14 @@ const handleSave = async (e: React.FormEvent) => {
                 <span className="text-sm text-slate-300">Broker Verified</span>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input type="checkbox" name="task_broker_verified" checked={!!formData.task_broker_verified} onChange={handleChange} className="sr-only peer" />
-                  <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                  <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-white"></div>
                 </label>
              </div>
              <div className="flex items-center justify-between">
                 <span className="text-sm text-slate-300">Social Verified</span>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input type="checkbox" name="task_social_verified" checked={!!formData.task_social_verified} onChange={handleChange} className="sr-only peer" />
-                  <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                  <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-white"></div>
                 </label>
              </div>
           </div>
@@ -529,7 +529,7 @@ function AdminDashboard() {
                        </p>
                     </div>
                   </div>
-                  <div className={`px-2 py-1 rounded text-[10px] font-bold border ${user.task_broker_verified ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-orange-500/10 text-orange-400 border-orange-500/20'}`}>
+                  <div className={`px-2 py-1 rounded text-[10px] font-bold border ${user.task_broker_verified ? 'bg-white/10 text-white border-white/20' : 'bg-orange-500/10 text-orange-400 border-orange-500/20'}`}>
                     {user.task_broker_verified ? 'VERIFIED' : 'PENDING'}
                   </div>
                 </div>
@@ -537,7 +537,7 @@ function AdminDashboard() {
                 <div className="grid grid-cols-2 gap-2 mb-4">
                   <div className="bg-black/30 rounded-lg p-3 border border-slate-800/50">
                     <p className="text-[10px] text-slate-500 uppercase font-bold">Balance</p>
-                    <p className="text-lg font-mono text-green-400">${user.commission_balance?.toFixed(2) || '0.00'}</p>
+                    <p className="text-lg font-mono text-white">${user.commission_balance?.toFixed(2) || '0.00'}</p>
                   </div>
                   <div className="bg-black/30 rounded-lg p-3 border border-slate-800/50 relative overflow-hidden">
                     <p className="text-[10px] text-slate-500 uppercase font-bold">Referrals</p>

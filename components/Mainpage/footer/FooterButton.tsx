@@ -29,10 +29,10 @@ export const FooterButton = ({ onClick, children, variant = "secondary", icon }:
       )}
       style={{
         background: 'black',
-        border: isPrimary ? '2px solid #3b82f6' : '1px solid #3b82f6',
+        border: isPrimary ? '2px solid #ffffff' : '1px solid #ffffff',
         boxShadow: isPrimary 
-          ? '0 0 8px #3b82f6, 0 0 16px rgba(59, 130, 246, 0.5)' 
-          : '0 0 4px rgba(59, 130, 246, 0.5)'
+          ? '0 0 8px #ffffff, 0 0 16px rgba(255, 255, 255, 0.5)' 
+          : '0 0 4px rgba(255, 255, 255, 0.5)'
       }}
     >
       <span 
@@ -45,8 +45,8 @@ export const FooterButton = ({ onClick, children, variant = "secondary", icon }:
         {icon && (
           <span 
             style={{ 
-              color: '#3b82f6',
-              filter: 'drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6)'
+              color: '#ffffff',
+              filter: 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff)'
             }}
           >
             {icon}

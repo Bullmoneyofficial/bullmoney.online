@@ -9,35 +9,35 @@ import { useUnifiedPerformance } from "@/hooks/useDesktopPerformance";
 // Neon Blue Sign Styles (Static glow like Chartnews)
 const NEON_MODAL_STYLES = `
   .modal-neon-blue-text {
-    color: #3b82f6;
-    text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, 0 0 12px #3b82f6;
+    color: #ffffff;
+    text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, 0 0 12px #ffffff;
   }
   .modal-neon-white-text {
     color: #ffffff;
     text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
   }
   .modal-neon-blue-border {
-    border: 2px solid #3b82f6;
-    box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, 0 0 16px #3b82f6, inset 0 0 4px rgba(59, 130, 246, 0.3);
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, 0 0 16px #ffffff, inset 0 0 4px rgba(255, 255, 255, 0.3);
   }
   .modal-neon-blue-icon {
-    filter: drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6);
+    filter: drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff);
   }
 `;
 
 // Mobile-optimized styles (no glows)
 const MOBILE_MODAL_STYLES = `
   .modal-neon-blue-text {
-    color: #3b82f6;
+    color: #ffffff;
   }
   .modal-neon-white-text {
     color: #ffffff;
   }
   .modal-neon-blue-border {
-    border: 2px solid #3b82f6;
+    border: 2px solid #ffffff;
   }
   .modal-neon-blue-icon {
-    color: #3b82f6;
+    color: #ffffff;
   }
 `;
 
@@ -107,7 +107,7 @@ export const EnhancedModal = ({
                 maxWidth
               )}
               style={shouldSkipHeavyEffects ? {} : {
-                boxShadow: '0 0 20px rgba(59, 130, 246, 0.5), 0 0 40px rgba(59, 130, 246, 0.3)'
+                boxShadow: '0 0 20px rgba(255, 255, 255, 0.5), 0 0 40px rgba(255, 255, 255, 0.3)'
               }}
               onClick={(e) => e.stopPropagation()}
             >
@@ -123,9 +123,9 @@ export const EnhancedModal = ({
                 {/* Header with neon styling */}
                 <div 
                   className="relative flex flex-row items-center justify-between px-3 xs:px-4 sm:px-5 md:px-6 py-2.5 xs:py-3 sm:py-3.5 md:py-4 bg-black shrink-0"
-                  style={shouldSkipHeavyEffects ? { borderBottom: '2px solid #3b82f6' } : { 
-                    borderBottom: '2px solid #3b82f6',
-                    boxShadow: '0 2px 8px rgba(59, 130, 246, 0.4)'
+                  style={shouldSkipHeavyEffects ? { borderBottom: '2px solid #ffffff' } : { 
+                    borderBottom: '2px solid #ffffff',
+                    boxShadow: '0 2px 8px rgba(255, 255, 255, 0.4)'
                   }}
                 >
                   {/* Static neon line at top - skip on mobile */}
@@ -133,8 +133,8 @@ export const EnhancedModal = ({
                     <div 
                       className="absolute inset-x-0 top-0 h-[2px]"
                       style={{ 
-                        background: '#3b82f6',
-                        boxShadow: '0 0 8px #3b82f6, 0 0 16px #3b82f6'
+                        background: '#ffffff',
+                        boxShadow: '0 0 8px #ffffff, 0 0 16px #ffffff'
                       }}
                     />
                   )}
@@ -149,11 +149,11 @@ export const EnhancedModal = ({
                     onClick={onClose}
                     className="relative z-[9999] p-1.5 xs:p-2 sm:p-2 md:p-2.5 rounded-full bg-black text-white min-w-[36px] min-h-[36px] xs:min-w-[40px] xs:min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] flex items-center justify-center group flex-shrink-0 transition-all duration-300 order-2 ml-auto"
                     style={{
-                      border: '2px solid #3b82f6',
-                      boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6'
+                      border: '2px solid #ffffff',
+                      boxShadow: '0 0 4px #ffffff, 0 0 8px #ffffff'
                     }}
                   >
-                    <X className="h-3.5 w-3.5 xs:h-4 xs:w-4 sm:h-5 sm:w-5 transition-transform group-hover:rotate-90 duration-300 modal-neon-blue-icon" style={{ color: '#3b82f6' }} />
+                    <X className="h-3.5 w-3.5 xs:h-4 xs:w-4 sm:h-5 sm:w-5 transition-transform group-hover:rotate-90 duration-300 modal-neon-blue-icon" style={{ color: '#ffffff' }} />
                   </button>
                 </div>
 

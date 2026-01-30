@@ -18,7 +18,7 @@ const AFFILIATE_TIERS = [
     commissionPercent: 5, 
     xmRate: 11, 
     vantageRate: 5.50,
-    color: '#3b82f6',
+    color: '#ffffff',
     icon: Target 
   },
   { 
@@ -58,7 +58,7 @@ const AFFILIATE_TIERS = [
     commissionPercent: 25, 
     xmRate: 11, 
     vantageRate: 5.50,
-    color: '#00d4ff',
+    color: '#ffffff',
     icon: Sparkles 
   },
 ];
@@ -127,8 +127,8 @@ export function AdminAffiliateCalculator() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
-          <Calculator className="w-6 h-6 text-blue-400" />
+        <div className="p-3 rounded-lg bg-white/10 border border-white/30">
+          <Calculator className="w-6 h-6 text-white" />
         </div>
         <div>
           <h2 className="text-xl font-bold text-white">Affiliate Earnings Calculator</h2>
@@ -141,7 +141,7 @@ export function AdminAffiliateCalculator() {
         {/* Number of Traders */}
         <div className="bg-slate-900/70 rounded-lg border border-slate-800 p-4">
           <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-3">
-            <Users className="w-4 h-4 text-blue-400" />
+            <Users className="w-4 h-4 text-white" />
             Number of Referred Traders
           </label>
           <input
@@ -150,7 +150,7 @@ export function AdminAffiliateCalculator() {
             max="100"
             value={traders}
             onChange={(e) => setTraders(Math.max(1, parseInt(e.target.value) || 1))}
-            className="w-full px-4 py-3 bg-black/50 border border-slate-700 rounded-lg text-white text-lg font-semibold focus:border-blue-500 focus:outline-none"
+            className="w-full px-4 py-3 bg-black/50 border border-slate-700 rounded-lg text-white text-lg font-semibold focus:border-white focus:outline-none"
           />
           <div className="mt-2 flex items-center gap-2">
             <input
@@ -168,7 +168,7 @@ export function AdminAffiliateCalculator() {
         {/* Avg Lots Per Trader */}
         <div className="bg-slate-900/70 rounded-lg border border-slate-800 p-4">
           <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-3">
-            <BarChart3 className="w-4 h-4 text-blue-400" />
+            <BarChart3 className="w-4 h-4 text-white" />
             Avg Lots Per Trader (Monthly)
           </label>
           <input
@@ -177,7 +177,7 @@ export function AdminAffiliateCalculator() {
             max="50"
             value={avgLotsPerTrader}
             onChange={(e) => setAvgLotsPerTrader(Math.max(1, parseInt(e.target.value) || 1))}
-            className="w-full px-4 py-3 bg-black/50 border border-slate-700 rounded-lg text-white text-lg font-semibold focus:border-blue-500 focus:outline-none"
+            className="w-full px-4 py-3 bg-black/50 border border-slate-700 rounded-lg text-white text-lg font-semibold focus:border-white focus:outline-none"
           />
           <div className="mt-2 flex items-center gap-2">
             <input
@@ -195,7 +195,7 @@ export function AdminAffiliateCalculator() {
         {/* Broker Selection */}
         <div className="bg-slate-900/70 rounded-lg border border-slate-800 p-4">
           <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-3">
-            <TrendingUp className="w-4 h-4 text-blue-400" />
+            <TrendingUp className="w-4 h-4 text-white" />
             Broker
           </label>
           <div className="flex gap-2">
@@ -204,7 +204,7 @@ export function AdminAffiliateCalculator() {
               className={cn(
                 "flex-1 py-3 rounded-lg font-medium transition-all",
                 broker === 'XM'
-                  ? "bg-blue-500 text-white border-2 border-blue-400"
+                  ? "bg-white text-black border-2 border-white"
                   : "bg-black/50 text-slate-400 border border-slate-700 hover:border-slate-600"
               )}
             >
@@ -215,7 +215,7 @@ export function AdminAffiliateCalculator() {
               className={cn(
                 "flex-1 py-3 rounded-lg font-medium transition-all",
                 broker === 'Vantage'
-                  ? "bg-blue-500 text-white border-2 border-blue-400"
+                  ? "bg-white text-black border-2 border-white"
                   : "bg-black/50 text-slate-400 border border-slate-700 hover:border-slate-600"
               )}
             >
@@ -227,7 +227,7 @@ export function AdminAffiliateCalculator() {
         {/* Social Posts Per Week */}
         <div className="bg-slate-900/70 rounded-lg border border-slate-800 p-4">
           <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-3">
-            <Award className="w-4 h-4 text-blue-400" />
+            <Award className="w-4 h-4 text-white" />
             Social Posts Per Week
           </label>
           <input
@@ -236,7 +236,7 @@ export function AdminAffiliateCalculator() {
             max="10"
             value={socialPosts}
             onChange={(e) => setSocialPosts(Math.max(0, parseInt(e.target.value) || 0))}
-            className="w-full px-4 py-3 bg-black/50 border border-slate-700 rounded-lg text-white text-lg font-semibold focus:border-blue-500 focus:outline-none"
+            className="w-full px-4 py-3 bg-black/50 border border-slate-700 rounded-lg text-white text-lg font-semibold focus:border-white focus:outline-none"
           />
           <div className="mt-2 flex items-center gap-2">
             <input
@@ -293,10 +293,10 @@ export function AdminAffiliateCalculator() {
           transition={{ duration: 0.2 }}
         >
           <div className="flex items-center gap-2 mb-2">
-            <DollarSign className="w-5 h-5 text-green-400" />
+            <DollarSign className="w-5 h-5 text-white" />
             <p className="text-sm font-medium text-slate-300">Base Commission</p>
           </div>
-          <p className="text-3xl font-bold text-green-400">${earnings.commission.toFixed(2)}</p>
+          <p className="text-3xl font-bold text-white">${earnings.commission.toFixed(2)}</p>
           <p className="text-xs text-slate-500 mt-1">
             {earnings.breakdown.totalLots} lots × ${earnings.breakdown.commissionPerLot.toFixed(2)}/lot
           </p>
@@ -318,25 +318,25 @@ export function AdminAffiliateCalculator() {
         </motion.div>
 
         <motion.div 
-          className="bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg border-2 border-blue-500/50 p-5"
+          className="bg-gradient-to-br from-white/20 to-white/20 rounded-lg border-2 border-white/50 p-5"
           whileHover={{ scale: 1.02 }}
           transition={{ duration: 0.2 }}
         >
           <div className="flex items-center gap-2 mb-2">
-            <Trophy className="w-5 h-5 text-blue-400" />
+            <Trophy className="w-5 h-5 text-white" />
             <p className="text-sm font-medium text-white">Total Earnings</p>
           </div>
           <p className="text-3xl font-bold text-white">${earnings.total.toFixed(2)}</p>
-          <p className="text-xs text-blue-300 mt-1">Monthly Potential</p>
+          <p className="text-xs text-white mt-1">Monthly Potential</p>
         </motion.div>
       </div>
 
       {/* Calculation Breakdown */}
-      <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+      <div className="bg-white/10 border border-white/30 rounded-lg p-4">
         <div className="flex items-start gap-3">
-          <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+          <Info className="w-5 h-5 text-white flex-shrink-0 mt-0.5" />
           <div className="text-sm text-slate-300 space-y-2 w-full">
-            <p className="font-semibold text-blue-300">Step-by-Step Calculation:</p>
+            <p className="font-semibold text-white">Step-by-Step Calculation:</p>
             
             <div className="space-y-3 mt-3">
               <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-700">
@@ -344,7 +344,7 @@ export function AdminAffiliateCalculator() {
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-slate-300">Broker: <strong className="text-white">{broker}</strong></span>
                   <span className="text-slate-500">→</span>
-                  <span className="text-blue-300 font-mono text-lg">${earnings.breakdown.baseRate.toFixed(2)}/lot</span>
+                  <span className="text-white font-mono text-lg">${earnings.breakdown.baseRate.toFixed(2)}/lot</span>
                 </div>
               </div>
 
@@ -353,7 +353,7 @@ export function AdminAffiliateCalculator() {
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-slate-300">Tier: <strong className="text-white">{earnings.tier.name}</strong></span>
                   <span className="text-slate-500">→</span>
-                  <span className="text-blue-300 font-mono text-lg">{earnings.tier.commissionPercent}%</span>
+                  <span className="text-white font-mono text-lg">{earnings.tier.commissionPercent}%</span>
                 </div>
               </div>
 
@@ -364,7 +364,7 @@ export function AdminAffiliateCalculator() {
                   <span className="text-slate-500">×</span>
                   <span className="text-slate-300">{earnings.tier.commissionPercent}%</span>
                   <span className="text-slate-500">=</span>
-                  <span className="text-green-300 font-mono text-lg">${earnings.breakdown.commissionPerLot.toFixed(2)}/lot</span>
+                  <span className="text-white font-mono text-lg">${earnings.breakdown.commissionPerLot.toFixed(2)}/lot</span>
                 </div>
               </div>
 
@@ -375,7 +375,7 @@ export function AdminAffiliateCalculator() {
                   <span className="text-slate-500">×</span>
                   <span className="text-slate-300">{avgLotsPerTrader} lots</span>
                   <span className="text-slate-500">=</span>
-                  <span className="text-blue-300 font-mono text-lg">{earnings.breakdown.totalLots} lots</span>
+                  <span className="text-white font-mono text-lg">{earnings.breakdown.totalLots} lots</span>
                 </div>
               </div>
 
@@ -386,7 +386,7 @@ export function AdminAffiliateCalculator() {
                   <span className="text-slate-500">×</span>
                   <span className="text-slate-300">${earnings.breakdown.commissionPerLot.toFixed(2)}</span>
                   <span className="text-slate-500">=</span>
-                  <span className="text-green-400 font-mono text-lg font-bold">${earnings.commission.toFixed(2)}</span>
+                  <span className="text-white font-mono text-lg font-bold">${earnings.commission.toFixed(2)}</span>
                 </div>
               </div>
 
@@ -399,7 +399,7 @@ export function AdminAffiliateCalculator() {
                       <span className="text-slate-500">×</span>
                       <span className="text-slate-300">4 weeks</span>
                       <span className="text-slate-500">=</span>
-                      <span className="text-blue-300">{earnings.breakdown.monthlyPosts} posts/mo</span>
+                      <span className="text-white">{earnings.breakdown.monthlyPosts} posts/mo</span>
                       <span className="text-slate-500">→</span>
                       <span className="text-yellow-300 font-mono">{earnings.breakdown.socialMultiplier}x</span>
                     </div>
@@ -412,7 +412,7 @@ export function AdminAffiliateCalculator() {
                       <span className="text-slate-500">=</span>
                       <span className="text-yellow-400 font-mono text-lg font-bold">${earnings.bonus.toFixed(2)}</span>
                     </div>
-                    <div className="text-xs text-green-400">
+                    <div className="text-xs text-white">
                       ✓ {earnings.breakdown.monthlyPosts >= 8 ? '2x bonus! (8+ posts)' : earnings.breakdown.monthlyPosts >= 6 ? '1.5x bonus! (6+ posts)' : 'Post more!'}
                     </div>
                   </div>
@@ -423,15 +423,15 @@ export function AdminAffiliateCalculator() {
                 )}
               </div>
 
-              <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-lg p-4 border-2 border-blue-500/50">
-                <div className="text-xs text-blue-300 mb-2 font-semibold">TOTAL EARNINGS</div>
+              <div className="bg-gradient-to-r from-white/20 to-white/20 rounded-lg p-4 border-2 border-white/50">
+                <div className="text-xs text-white mb-2 font-semibold">TOTAL EARNINGS</div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-white">${earnings.commission.toFixed(2)}</span>
                   <span className="text-slate-400">+</span>
                   <span className="text-white">${earnings.bonus.toFixed(2)}</span>
                   <span className="text-slate-400">=</span>
                   <span className="text-white font-mono text-2xl font-bold">${earnings.total.toFixed(2)}</span>
-                  <span className="text-xs text-blue-300">/month</span>
+                  <span className="text-xs text-white">/month</span>
                 </div>
               </div>
             </div>

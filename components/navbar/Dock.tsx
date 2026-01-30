@@ -46,7 +46,7 @@ const DockLabelInline = memo(({
   position: { x: number; y: number };
   isXMUser?: boolean;
 }) => {
-  const effectiveColor = isXMUser ? '#ef4444' : '#3b82f6';
+  const effectiveColor = isXMUser ? '#ef4444' : '#ffffff';
   const currentTip = tips?.[0] || '';
 
   if (!isVisible) return null;
@@ -86,7 +86,7 @@ const DockLabelInline = memo(({
         {currentTip && (
           <>
             <div className="w-[1px] h-3" style={{ backgroundColor: `${effectiveColor}40` }} />
-            <span className="text-xs font-medium whitespace-nowrap" style={{ color: isXMUser ? '#fca5a5' : '#93c5fd' }}>
+            <span className="text-xs font-medium whitespace-nowrap" style={{ color: isXMUser ? '#fca5a5' : '#ffffff' }}>
               {currentTip}
             </span>
           </>

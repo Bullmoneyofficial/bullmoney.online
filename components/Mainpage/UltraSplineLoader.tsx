@@ -71,8 +71,8 @@ function UltraLoadingScreen({ progress, priority, fps }: {
           className="w-full h-full"
           style={{
             backgroundImage: `
-              linear-gradient(rgba(59, 130, 246, 0.5) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(59, 130, 246, 0.5) 1px, transparent 1px)
+              linear-gradient(rgba(255, 255, 255, 0.5) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255, 255, 255, 0.5) 1px, transparent 1px)
             `,
             backgroundSize: '50px 50px',
             animation: 'gridMove 20s linear infinite'
@@ -90,8 +90,8 @@ function UltraLoadingScreen({ progress, priority, fps }: {
               width: '300px',
               height: '300px',
               background: `radial-gradient(circle, ${
-                i === 0 ? 'rgba(59, 130, 246, 0.15)' :
-                i === 1 ? 'rgba(139, 92, 246, 0.12)' :
+                i === 0 ? 'rgba(255, 255, 255, 0.15)' :
+                i === 1 ? 'rgba(255, 255, 255, 0.12)' :
                 'rgba(236, 72, 153, 0.10)'
               }, transparent)`,
               left: `${20 + i * 30}%`,
@@ -108,16 +108,16 @@ function UltraLoadingScreen({ progress, priority, fps }: {
         {/* Advanced loader with FPS indicator */}
         <div className="relative w-32 h-32 mx-auto">
           {/* Outer rotating ring */}
-          <div className="absolute inset-0 rounded-full border-2 border-blue-500/20" />
+          <div className="absolute inset-0 rounded-full border-2 border-white/20" />
           <div
             className="absolute inset-0 rounded-full border-2 border-transparent border-t-blue-500 border-r-blue-400"
             style={{ animation: 'spin 1.5s linear infinite' }}
           />
 
           {/* Middle pulse ring */}
-          <div className="absolute inset-3 rounded-full border border-blue-400/30 bg-blue-500/5" />
+          <div className="absolute inset-3 rounded-full border border-white/30 bg-white/5" />
           <div
-            className="absolute inset-3 rounded-full border border-blue-400/50"
+            className="absolute inset-3 rounded-full border border-white/50"
             style={{ animation: 'pulse 2s ease-in-out infinite' }}
           />
 
@@ -125,12 +125,12 @@ function UltraLoadingScreen({ progress, priority, fps }: {
           <div className="absolute inset-0 flex items-center justify-center">
             {fps > 0 ? (
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-300">{fps}</div>
-                <div className="text-[8px] text-blue-400/60 font-mono">FPS</div>
+                <div className="text-2xl font-bold text-white">{fps}</div>
+                <div className="text-[8px] text-white/60 font-mono">FPS</div>
               </div>
             ) : (
               <Loader2
-                className="h-12 w-12 text-blue-300 animate-spin"
+                className="h-12 w-12 text-white animate-spin"
                 style={{ animationDuration: '1s' }}
               />
             )}
@@ -144,7 +144,7 @@ function UltraLoadingScreen({ progress, priority, fps }: {
                 cy="50%"
                 r="60"
                 fill="none"
-                stroke="rgba(59, 130, 246, 0.3)"
+                stroke="rgba(255, 255, 255, 0.3)"
                 strokeWidth="3"
               />
               <circle
@@ -161,8 +161,8 @@ function UltraLoadingScreen({ progress, priority, fps }: {
               />
               <defs>
                 <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#3b82f6" />
-                  <stop offset="100%" stopColor="#8b5cf6" />
+                  <stop offset="0%" stopColor="#ffffff" />
+                  <stop offset="100%" stopColor="#ffffff" />
                 </linearGradient>
               </defs>
             </svg>
@@ -171,14 +171,14 @@ function UltraLoadingScreen({ progress, priority, fps }: {
 
         {/* Status */}
         <div className="space-y-4">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-400/30 backdrop-blur-sm">
-            <Zap className="w-3 h-3 text-blue-400 animate-pulse" />
-            <span className="text-xs font-semibold text-blue-200 uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/30 backdrop-blur-sm">
+            <Zap className="w-3 h-3 text-white animate-pulse" />
+            <span className="text-xs font-semibold text-white uppercase tracking-wider">
               {isCritical ? 'Ultra Priority' : 'Optimizing Experience'}
             </span>
           </div>
 
-          <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-200 via-blue-100 to-purple-200">
+          <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-white">
             {progress
               ? `${((progress.loaded / progress.total) * 100).toFixed(0)}% Loaded`
               : 'Preparing Scene'}
@@ -188,9 +188,9 @@ function UltraLoadingScreen({ progress, priority, fps }: {
           {progress && (
             <div className="space-y-3">
               {/* Progress bar */}
-              <div className="w-full h-2 bg-blue-100/10 rounded-full overflow-hidden border border-blue-400/20">
+              <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden border border-white/20">
                 <div
-                  className="h-full bg-gradient-to-r from-blue-500 via-blue-400 to-purple-500 rounded-full relative overflow-hidden"
+                  className="h-full bg-gradient-to-r from-white via-white to-white rounded-full relative overflow-hidden"
                   style={{
                     width: `${(progress.loaded / progress.total) * 100}%`,
                     transition: 'width 0.3s ease'
@@ -208,30 +208,30 @@ function UltraLoadingScreen({ progress, priority, fps }: {
 
               {/* Stats grid */}
               <div className="grid grid-cols-3 gap-2 text-xs">
-                <div className="p-2 rounded-lg bg-blue-500/5 border border-blue-400/20">
-                  <div className="text-blue-300 font-mono font-bold">
+                <div className="p-2 rounded-lg bg-white/5 border border-white/20">
+                  <div className="text-white font-mono font-bold">
                     {speedMBps} MB/s
                   </div>
-                  <div className="text-blue-200/50 text-[10px]">Speed</div>
+                  <div className="text-white/50 text-[10px]">Speed</div>
                 </div>
-                <div className="p-2 rounded-lg bg-purple-500/5 border border-purple-400/20">
-                  <div className="text-purple-300 font-mono font-bold">
+                <div className="p-2 rounded-lg bg-white/5 border border-white/20">
+                  <div className="text-white font-mono font-bold">
                     {etaSeconds}s
                   </div>
-                  <div className="text-purple-200/50 text-[10px]">ETA</div>
+                  <div className="text-white/50 text-[10px]">ETA</div>
                 </div>
-                <div className="p-2 rounded-lg bg-green-500/5 border border-green-400/20">
-                  <div className="text-green-300 font-mono font-bold">
+                <div className="p-2 rounded-lg bg-white/5 border border-white/20">
+                  <div className="text-white font-mono font-bold">
                     {progress.chunks}
                   </div>
-                  <div className="text-green-200/50 text-[10px]">Chunks</div>
+                  <div className="text-white/50 text-[10px]">Chunks</div>
                 </div>
               </div>
             </div>
           )}
 
           {/* Tips */}
-          <p className="text-xs text-blue-100/40 mt-2">
+          <p className="text-xs text-white/40 mt-2">
             <TrendingUp className="inline w-3 h-3 mr-1" />
             Auto-adjusting quality for your device...
           </p>
@@ -532,7 +532,7 @@ export function UltraSplineLoader({
             </p>
             <button
               onClick={() => window.location.reload()}
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold hover:from-blue-600 hover:to-purple-600 transition-all"
+              className="px-6 py-3 rounded-xl bg-gradient-to-r from-white to-white text-white font-semibold hover:from-white hover:to-white transition-all"
             >
               Retry
             </button>

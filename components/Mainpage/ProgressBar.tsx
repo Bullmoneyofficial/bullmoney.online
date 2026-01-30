@@ -19,7 +19,7 @@ export function ProgressBar({ isVisible, activePage, totalPages }: ProgressBarPr
       }}
     >
       <div
-        className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
+        className="h-full bg-gradient-to-r from-white to-white transition-all duration-300"
         style={{ width: `${totalPages > 1 ? ((activePage - 1) / (totalPages - 1)) * 100 : 0}%` }}
       />
     </div>

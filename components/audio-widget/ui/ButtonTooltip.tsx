@@ -19,10 +19,10 @@ export const ButtonTooltip = React.memo(function ButtonTooltip({
 }: ButtonTooltipProps) {
   const { shouldSkipHeavyEffects } = useMobilePerformance();
   const colorClasses = {
-    blue: "from-blue-600/95 via-cyan-500/95 to-blue-600/95 border-blue-400/50 shadow-blue-500/30",
-    purple: "from-purple-600/95 via-pink-500/95 to-purple-600/95 border-purple-400/50 shadow-purple-500/30",
+    blue: "from-white/95 via-white/95 to-white/95 border-white/50 shadow-white/30",
+    purple: "from-white/95 via-pink-500/95 to-white/95 border-white/50 shadow-white/30",
     red: "from-red-600/95 via-rose-500/95 to-red-600/95 border-red-400/50 shadow-red-500/30",
-    green: "from-green-600/95 via-emerald-500/95 to-green-600/95 border-green-400/50 shadow-green-500/30",
+    green: "from-white/95 via-white/95 to-white/95 border-white/50 shadow-white/30",
     orange: "from-orange-600/95 via-amber-500/95 to-orange-600/95 border-orange-400/50 shadow-orange-500/30"
   };
 

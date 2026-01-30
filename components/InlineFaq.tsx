@@ -24,8 +24,8 @@ const TrueFocus: React.FC<TrueFocusProps> = ({
   sentence = 'True Focus',
   separator = ' ',
   blurAmount = 5,
-  borderColor = '#3b82f6',
-  glowColor = 'rgba(59, 130, 246, 0.6)',
+  borderColor = '#ffffff',
+  glowColor = 'rgba(255, 255, 255, 0.6)',
   animationDuration = 0.5,
   pauseBetweenAnimations = 1
 }) => {
@@ -150,7 +150,7 @@ const FAQ_CONTENT: FAQCategoryData[] = [
         answer: (
           <div className="space-y-2">
              <p><strong>Free Access:</strong> Provides a glimpse into our world with Public Chat and occasional streams.</p>
-             <p className="text-blue-400"><strong>VIP Access:</strong> Includes Daily Live Trading, Daily Premium Setups, and a Private Mentor.</p>
+             <p className="text-white"><strong>VIP Access:</strong> Includes Daily Live Trading, Daily Premium Setups, and a Private Mentor.</p>
           </div>
         )
       },
@@ -173,11 +173,11 @@ const InlineFaq = () => {
         className="absolute inset-0 rounded-3xl blur-2xl opacity-20"
         animate={{
           background: [
-            "radial-gradient(circle at 0% 0%, #3b82f6 0%, transparent 50%)",
-            "radial-gradient(circle at 100% 100%, #3b82f6 0%, transparent 50%)",
-            "radial-gradient(circle at 0% 100%, #3b82f6 0%, transparent 50%)",
-            "radial-gradient(circle at 100% 0%, #3b82f6 0%, transparent 50%)",
-            "radial-gradient(circle at 0% 0%, #3b82f6 0%, transparent 50%)",
+            "radial-gradient(circle at 0% 0%, #ffffff 0%, transparent 50%)",
+            "radial-gradient(circle at 100% 100%, #ffffff 0%, transparent 50%)",
+            "radial-gradient(circle at 0% 100%, #ffffff 0%, transparent 50%)",
+            "radial-gradient(circle at 100% 0%, #ffffff 0%, transparent 50%)",
+            "radial-gradient(circle at 0% 0%, #ffffff 0%, transparent 50%)",
           ],
         }}
         transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
@@ -188,7 +188,7 @@ const InlineFaq = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="relative bg-black/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-10 shadow-[0_0_50px_rgba(59,130,246,0.1)]"
+        className="relative bg-black/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-10 shadow-[0_0_50px_rgba(255, 255, 255,0.1)]"
       >
         {/* Header Section */}
         <motion.div
@@ -203,9 +203,9 @@ const InlineFaq = () => {
             transition={{ delay: 0.3 }}
             className="flex items-center gap-2 mb-4"
           >
-            <div className="h-[1px] w-8 bg-gradient-to-r from-blue-500 to-transparent" />
-            <Sparkles className="w-3 h-3 text-blue-400" />
-            <p className="text-xs uppercase text-blue-300 font-mono tracking-[0.25em]">
+            <div className="h-[1px] w-8 bg-gradient-to-r from-white to-transparent" />
+            <Sparkles className="w-3 h-3 text-white" />
+            <p className="text-xs uppercase text-white/80 font-mono tracking-[0.25em]">
               About Us
             </p>
           </motion.div>
@@ -213,8 +213,8 @@ const InlineFaq = () => {
           <div className="text-3xl md:text-5xl font-black tracking-tighter text-white uppercase">
             <TrueFocus 
               sentence="Frequently Asked Questions"
-              borderColor="#3b82f6"
-              glowColor="rgba(59, 130, 246, 0.6)"
+              borderColor="#ffffff"
+              glowColor="rgba(255, 255, 255, 0.6)"
               blurAmount={4}
               animationDuration={0.5}
               pauseBetweenAnimations={1.5}
@@ -248,8 +248,8 @@ const InlineFaq = () => {
                 transition={{ delay: 0.2 + 0.1 * categoryIndex }}
                 className="flex items-center gap-2 mb-4"
               >
-                <div className="h-[2px] w-8 bg-gradient-to-r from-blue-500 to-transparent" />
-                <p className="text-[11px] uppercase text-blue-400 font-mono tracking-[0.2em]">
+                <div className="h-[2px] w-8 bg-gradient-to-r from-white to-transparent" />
+                <p className="text-[11px] uppercase text-white/80 font-mono tracking-[0.2em]">
                   {category.category}
                 </p>
               </motion.div>
@@ -278,7 +278,7 @@ const InlineFaq = () => {
                           className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                           style={{
                             background:
-                              "linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent)",
+                              "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent)",
                           }}
                           animate={{
                             x: ["-100%", "100%"],
@@ -304,7 +304,7 @@ const InlineFaq = () => {
                               animate={{ rotate: isOpen ? 180 : 0 }}
                               transition={{ duration: 0.3, ease: "easeOut" }}
                             >
-                              <ChevronDown className="w-4 h-4 text-blue-300 flex-shrink-0" />
+                              <ChevronDown className="w-4 h-4 text-white/80 flex-shrink-0" />
                             </motion.div>
                           </button>
 
@@ -366,7 +366,7 @@ const InlineFaq = () => {
                 }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   index === currentCategoryIndex 
-                    ? 'w-10 bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]' 
+                    ? 'w-10 bg-white shadow-[0_0_10px_rgba(255, 255, 255,0.5)]' 
                     : 'w-2 bg-white/30'
                 }`}
                 whileTap={{ scale: 0.9 }}
@@ -408,11 +408,11 @@ const InlineFaq = () => {
             animate={{ opacity: 1, y: 0 }}
             className="flex items-center gap-2 mb-4 px-2"
           >
-            <div className="h-[2px] flex-1 bg-gradient-to-r from-blue-500 to-transparent" />
-            <p className="text-xs uppercase text-blue-400 font-mono tracking-[0.2em] whitespace-nowrap">
+            <div className="h-[2px] flex-1 bg-gradient-to-r from-white to-transparent" />
+            <p className="text-xs uppercase text-white/80 font-mono tracking-[0.2em] whitespace-nowrap">
               {FAQ_CONTENT[currentCategoryIndex]?.category}
             </p>
-            <div className="h-[2px] flex-1 bg-gradient-to-l from-blue-500 to-transparent" />
+            <div className="h-[2px] flex-1 bg-gradient-to-l from-white to-transparent" />
           </motion.div>
 
           {/* Horizontal Scroll Container */}
@@ -430,7 +430,7 @@ const InlineFaq = () => {
                     animate={{ x: [-2, 2, -2] }}
                     transition={{ duration: 1.5, repeat: Infinity }}
                   >
-                    <ChevronDown className="w-4 h-4 text-blue-400 rotate-90" />
+                    <ChevronDown className="w-4 h-4 text-white/80 rotate-90" />
                   </motion.div>
                 </motion.div>
               )}
@@ -449,7 +449,7 @@ const InlineFaq = () => {
                     animate={{ x: [2, -2, 2] }}
                     transition={{ duration: 1.5, repeat: Infinity }}
                   >
-                    <ChevronDown className="w-4 h-4 text-blue-400 -rotate-90" />
+                    <ChevronDown className="w-4 h-4 text-white/80 -rotate-90" />
                   </motion.div>
                 </motion.div>
               )}
@@ -516,7 +516,7 @@ const InlineFaq = () => {
                                     transition={{ duration: 0.3, ease: "easeOut" }}
                                     className="flex-shrink-0"
                                   >
-                                    <ChevronDown className="w-5 h-5 text-blue-300" />
+                                    <ChevronDown className="w-5 h-5 text-white/80" />
                                   </motion.div>
                                 </button>
 
@@ -581,7 +581,7 @@ const InlineFaq = () => {
                 "flex items-center gap-2 px-5 py-3 rounded-full font-semibold text-sm transition-all touch-manipulation",
                 currentCategoryIndex === 0
                   ? "bg-white/5 border border-white/10 text-white/30 cursor-not-allowed"
-                  : "bg-blue-500/20 border border-blue-500/30 text-blue-300 active:bg-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.2)]"
+                  : "bg-white/20 border border-white/30 text-white/80 active:bg-white/30 shadow-[0_0_15px_rgba(255, 255, 255,0.2)]"
               )}
               whileTap={currentCategoryIndex > 0 ? { scale: 0.95 } : {}}
             >
@@ -609,7 +609,7 @@ const InlineFaq = () => {
                 "flex items-center gap-2 px-5 py-3 rounded-full font-semibold text-sm transition-all touch-manipulation",
                 currentCategoryIndex === FAQ_CONTENT.length - 1
                   ? "bg-white/5 border border-white/10 text-white/30 cursor-not-allowed"
-                  : "bg-blue-500/20 border border-blue-500/30 text-blue-300 active:bg-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.2)]"
+                  : "bg-white/20 border border-white/30 text-white/80 active:bg-white/30 shadow-[0_0_15px_rgba(255, 255, 255,0.2)]"
               )}
               whileTap={currentCategoryIndex < FAQ_CONTENT.length - 1 ? { scale: 0.95 } : {}}
             >
@@ -621,7 +621,7 @@ const InlineFaq = () => {
 
         {/* Decorative Bottom Glow */}
         <motion.div
-          className="absolute -bottom-20 left-1/2 -translate-x-1/2 w-1/2 h-40 bg-blue-500/20 blur-[100px] rounded-full"
+          className="absolute -bottom-20 left-1/2 -translate-x-1/2 w-1/2 h-40 bg-white/20 blur-[100px] rounded-full"
           animate={{
             scale: [1, 1.2, 1],
             opacity: [0.3, 0.5, 0.3],

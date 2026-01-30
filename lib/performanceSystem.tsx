@@ -362,15 +362,15 @@ export const FPSMonitor = memo(({ enabled = false, position = 'bottom-right' }: 
     'bottom-right': 'bottom-2 right-2',
   };
 
-  // Neon blue and red color scheme
-  const fpsColor = fps >= 55 ? 'text-blue-400' : fps >= 30 ? 'text-yellow-400' : 'text-red-500';
-  const glowColor = fps >= 55 ? 'rgba(59, 130, 246, 0.5)' : fps >= 30 ? 'rgba(250, 204, 21, 0.3)' : 'rgba(239, 68, 68, 0.6)';
+  // White-focused scheme with warning fallbacks
+  const fpsColor = fps >= 55 ? 'text-white' : fps >= 30 ? 'text-yellow-400' : 'text-red-500';
+  const glowColor = fps >= 55 ? 'rgba(255, 255, 255, 0.5)' : fps >= 30 ? 'rgba(250, 204, 21, 0.3)' : 'rgba(239, 68, 68, 0.6)';
   const pulsAnimation = fps >= 55 ? `
-    @keyframes fps-pulse-blue {
-      0%, 100% { text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6; }
-      50% { text-shadow: 0 0 8px #3b82f6, 0 0 16px #3b82f6; }
+    @keyframes fps-pulse-white {
+      0%, 100% { text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff; }
+      50% { text-shadow: 0 0 8px #ffffff, 0 0 16px #ffffff; }
     }
-    .fps-monitor { animation: fps-pulse-blue 1.5s ease-in-out infinite; }
+    .fps-monitor { animation: fps-pulse-white 1.5s ease-in-out infinite; }
   ` : fps >= 30 ? '' : `
     @keyframes fps-pulse-red {
       0%, 100% { text-shadow: 0 0 4px #ef4444, 0 0 8px #ef4444; }
@@ -382,7 +382,7 @@ export const FPSMonitor = memo(({ enabled = false, position = 'bottom-right' }: 
   return (
     <>
       <style>{pulsAnimation}</style>
-      <div className={`fixed ${positionClasses[position]} z-[99999] px-3 py-1.5 bg-black/90 border border-blue-500/40 rounded-lg text-xs font-mono font-bold ${fpsColor} fps-monitor`} style={{
+      <div className={`fixed ${positionClasses[position]} z-[99999] px-3 py-1.5 bg-black/90 border border-white/40 rounded-lg text-xs font-mono font-bold ${fpsColor} fps-monitor`} style={{
         boxShadow: `0 0 8px ${glowColor}`
       }}>
         ● {fps} FPS
@@ -485,12 +485,12 @@ export const PerformanceProvider = memo(({ children, showFPS = false }: Performa
         }
         
         html.desktop-optimized::-webkit-scrollbar-thumb {
-          background: rgba(59, 130, 246, 0.4);
+          background: rgba(255, 255, 255, 0.4);
           border-radius: 4px;
         }
         
         html.desktop-optimized::-webkit-scrollbar-thumb:hover {
-          background: rgba(59, 130, 246, 0.6);
+          background: rgba(255, 255, 255, 0.6);
         }
       }
       

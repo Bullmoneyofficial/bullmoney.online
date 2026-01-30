@@ -17,8 +17,8 @@ const getShimmerGradient = (color: string) =>
 export function PerfToast({ toast }: PerfToastProps) {
   if (!toast) return null;
 
-  const primaryBlue = '#3b82f6';
-  const successColor = '#10b981';
+  const primaryBlue = '#ffffff';
+  const successColor = '#ffffff';
   const warningColor = '#f97316';
 
   const color = toast.type === 'success' ? successColor : toast.type === 'warning' ? warningColor : primaryBlue;

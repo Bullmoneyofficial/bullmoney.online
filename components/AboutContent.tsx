@@ -37,8 +37,8 @@ export function AboutContent() {
           />
         </div>
 
-        {/* chrome-blue accent stripe */}
-        <div className="pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-gradient-to-l from-sky-500/20 via-blue-500/15 to-indigo-500/0 blur-2xl z-0" />
+        {/* chrome-white accent stripe */}
+        <div className="pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-gradient-to-l from-white/20 via-white/15 to-white/0 blur-2xl z-0" />
 
         {/* decorative SVG */}
         <svg
@@ -67,11 +67,11 @@ export function AboutContent() {
                   priority
                 />
               </div>
-              <h1 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-400 bg-clip-text text-transparent">
+              <h1 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-white via-white to-white bg-clip-text text-transparent">
                 About Us
               </h1>
             </div>
-            <span className="text-[10px] md:text-[11px] uppercase tracking-[0.18em] text-sky-300/80 ring-1 ring-sky-500/30 px-2 py-1 rounded-md bg-sky-500/10">
+            <span className="text-[10px] md:text-[11px] uppercase tracking-[0.18em] text-white ring-1 ring-white/30 px-2 py-1 rounded-md bg-white/10">
               Since 20XX
             </span>
           </motion.header>
@@ -111,7 +111,7 @@ export function AboutContent() {
           </motion.section>
 
           {/* Divider */}
-          <div className="my-8 h-px w-full bg-gradient-to-r from-sky-500/20 via-blue-500/20 to-indigo-500/20" />
+          <div className="my-8 h-px w-full bg-gradient-to-r from-white/20 via-white/20 to-white/20" />
 
           {/* Our Brokers */}
           <motion.section {...fade}>
@@ -169,7 +169,7 @@ export function AboutContent() {
           </motion.section>
 
           {/* Divider */}
-          <div className="my-8 h-px w-full bg-gradient-to-r from-sky-500/20 via-blue-500/20 to-indigo-500/20" />
+          <div className="my-8 h-px w-full bg-gradient-to-r from-white/20 via-white/20 to-white/20" />
 
           {/* Funded Firms */}
           <motion.section {...fade}>
@@ -227,15 +227,15 @@ export function AboutContent() {
           <TestimonialsCarousel />
 
           {/* CTA / Footer */}
-          <div className="mt-8 h-px w-full bg-gradient-to-r from-sky-500/20 via-blue-500/20 to-indigo-500/20" />
+          <div className="mt-8 h-px w-full bg-gradient-to-r from-white/20 via-white/20 to-white/20" />
           <footer className="mt-6 flex items-center justify-between">
             <Link
               href="/"
-              className="rounded-full px-3 py-1 text-sm font-semibold text-white bg-neutral-900 ring-1 ring-sky-500/30 hover:ring-sky-400/60"
+              className="rounded-full px-3 py-1 text-sm font-semibold text-white bg-neutral-900 ring-1 ring-white/30 hover:ring-white/60"
             >
               Back
             </Link>
-            <span className="text-sm bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-400 bg-clip-text text-transparent font-semibold">
+            <span className="text-sm bg-gradient-to-r from-white via-white to-white bg-clip-text text-transparent font-semibold">
               • • •
             </span>
           </footer>

@@ -120,8 +120,8 @@ export const PostComposerInline = memo(({ onSuccess }: PostComposerInlineProps) 
   if (!authLoading && !isAuthenticated) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-4 px-4">
-        <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center">
-          <User className="w-8 h-8 text-blue-400" />
+        <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center">
+          <User className="w-8 h-8 text-white" />
         </div>
         <h3 className="text-lg font-bold text-white">Sign in to Create Posts</h3>
         <p className="text-sm text-neutral-400 text-center max-w-sm">
@@ -131,7 +131,7 @@ export const PostComposerInline = memo(({ onSuccess }: PostComposerInlineProps) 
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => { SoundEffects.click(); setAuthModalOpen(true); }}
-          className="px-6 py-3 bg-blue-500 text-white rounded-xl font-medium flex items-center gap-2"
+          className="px-6 py-3 bg-white text-black rounded-xl font-medium flex items-center gap-2"
         >
           Sign In
         </motion.button>
@@ -162,7 +162,7 @@ export const PostComposerInline = memo(({ onSuccess }: PostComposerInlineProps) 
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Give your analysis a title..."
-          className="w-full px-4 py-3 bg-black/50 border border-blue-500/30 rounded-xl text-white placeholder:text-neutral-500 focus:outline-none focus:border-blue-500 transition-colors"
+          className="w-full px-4 py-3 bg-black/50 border border-white/30 rounded-xl text-white placeholder:text-neutral-500 focus:outline-none focus:border-white transition-colors"
         />
       </div>
       
@@ -174,7 +174,7 @@ export const PostComposerInline = memo(({ onSuccess }: PostComposerInlineProps) 
           <select
             value={market}
             onChange={(e) => setMarket(e.target.value as MarketType)}
-            className="w-full px-3 py-2 bg-black/50 border border-blue-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 bg-black/50 border border-white/30 rounded-lg text-white text-sm focus:outline-none focus:border-white"
           >
             <option value="forex">Forex</option>
             <option value="crypto">Crypto</option>
@@ -191,7 +191,7 @@ export const PostComposerInline = memo(({ onSuccess }: PostComposerInlineProps) 
             value={pair}
             onChange={(e) => setPair(e.target.value.toUpperCase())}
             placeholder="EUR/USD"
-            className="w-full px-3 py-2 bg-black/50 border border-blue-500/30 rounded-lg text-white text-sm placeholder:text-neutral-500 focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 bg-black/50 border border-white/30 rounded-lg text-white text-sm placeholder:text-neutral-500 focus:outline-none focus:border-white"
           />
         </div>
         
@@ -203,7 +203,7 @@ export const PostComposerInline = memo(({ onSuccess }: PostComposerInlineProps) 
               onClick={() => setDirection('bullish')}
               className={`flex-1 p-2 rounded-lg transition-all ${
                 direction === 'bullish' 
-                  ? 'bg-green-500 text-white' 
+                  ? 'bg-white text-black' 
                   : 'bg-neutral-800/50 text-neutral-400 hover:bg-neutral-800'
               }`}
             >
@@ -238,7 +238,7 @@ export const PostComposerInline = memo(({ onSuccess }: PostComposerInlineProps) 
           <select
             value={contentType}
             onChange={(e) => setContentType(e.target.value as ContentType)}
-            className="w-full px-3 py-2 bg-black/50 border border-blue-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 bg-black/50 border border-white/30 rounded-lg text-white text-sm focus:outline-none focus:border-white"
           >
             <option value="quick_take">Quick Take</option>
             <option value="deep_dive">Deep Dive</option>
@@ -256,7 +256,7 @@ export const PostComposerInline = memo(({ onSuccess }: PostComposerInlineProps) 
           onChange={(e) => setContent(e.target.value)}
           placeholder="Share your trading analysis, insights, and reasoning..."
           rows={5}
-          className="w-full px-4 py-3 bg-black/50 border border-blue-500/30 rounded-xl text-white placeholder:text-neutral-500 focus:outline-none focus:border-blue-500 transition-colors resize-none"
+          className="w-full px-4 py-3 bg-black/50 border border-white/30 rounded-xl text-white placeholder:text-neutral-500 focus:outline-none focus:border-white transition-colors resize-none"
         />
       </div>
       
@@ -275,7 +275,7 @@ export const PostComposerInline = memo(({ onSuccess }: PostComposerInlineProps) 
       {/* Advanced Options Toggle */}
       <button
         onClick={() => setShowAdvanced(!showAdvanced)}
-        className="flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+        className="flex items-center gap-2 text-sm text-white hover:text-white transition-colors"
       >
         <ChevronDown className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
         {showAdvanced ? 'Hide' : 'Show'} Price Targets
@@ -297,7 +297,7 @@ export const PostComposerInline = memo(({ onSuccess }: PostComposerInlineProps) 
               value={entryPrice}
               onChange={(e) => setEntryPrice(e.target.value)}
               placeholder="0.00"
-              className="w-full px-3 py-2 bg-black/50 border border-blue-500/30 rounded-lg text-white text-sm placeholder:text-neutral-500 focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 bg-black/50 border border-white/30 rounded-lg text-white text-sm placeholder:text-neutral-500 focus:outline-none focus:border-white"
             />
           </div>
           <div>
@@ -308,7 +308,7 @@ export const PostComposerInline = memo(({ onSuccess }: PostComposerInlineProps) 
               value={targetPrice}
               onChange={(e) => setTargetPrice(e.target.value)}
               placeholder="0.00"
-              className="w-full px-3 py-2 bg-black/50 border border-green-500/30 rounded-lg text-white text-sm placeholder:text-neutral-500 focus:outline-none focus:border-green-500"
+              className="w-full px-3 py-2 bg-black/50 border border-white/30 rounded-lg text-white text-sm placeholder:text-neutral-500 focus:outline-none focus:border-white"
             />
           </div>
           <div>
@@ -334,7 +334,7 @@ export const PostComposerInline = memo(({ onSuccess }: PostComposerInlineProps) 
             value={imageUrl}
             onChange={(e) => setImageUrl(e.target.value)}
             placeholder="https://example.com/chart.png"
-            className="flex-1 px-3 py-2 bg-black/50 border border-blue-500/30 rounded-lg text-white text-sm placeholder:text-neutral-500 focus:outline-none focus:border-blue-500"
+            className="flex-1 px-3 py-2 bg-black/50 border border-white/30 rounded-lg text-white text-sm placeholder:text-neutral-500 focus:outline-none focus:border-white"
           />
           <button className="p-2 bg-neutral-800 rounded-lg text-neutral-400 hover:bg-neutral-700 hover:text-white transition-colors">
             <ImageIcon className="w-5 h-5" />
@@ -348,7 +348,7 @@ export const PostComposerInline = memo(({ onSuccess }: PostComposerInlineProps) 
         whileTap={{ scale: 0.98 }}
         onClick={handleSubmit}
         disabled={isSubmitting || !title.trim() || !content.trim() || !pair.trim()}
-        className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-bold text-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/25"
+        className="w-full py-4 bg-gradient-to-r from-white to-white text-white rounded-xl font-bold text-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-white/25"
       >
         {isSubmitting ? (
           <>

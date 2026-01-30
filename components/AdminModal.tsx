@@ -73,7 +73,7 @@ const Toast = ({ message, type, onClose }: { message: string; type: 'success' | 
     animate={{ opacity: 1, y: 0, scale: 1 }}
     exit={{ opacity: 0, y: 20, scale: 0.9 }}
     className={`fixed bottom-6 right-6 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 ${
-      type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+      type === 'success' ? 'bg-white text-black' : 'bg-red-500 text-white'
     }`}
     style={{ zIndex: 2147483647 }}
   >
@@ -544,7 +544,7 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
       {/* Header */}
       <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-neutral-800 bg-neutral-900/50">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl">
+          <div className="p-2 bg-gradient-to-br from-white to-white rounded-xl">
             <Tv className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -584,14 +584,14 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
       >
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+            <Loader2 className="w-8 h-8 text-white animate-spin" />
           </div>
         ) : (
           <>
             {/* Stream Settings */}
             <div className="bg-neutral-900 rounded-xl border border-neutral-800 p-5">
               <div className="flex items-center gap-2 mb-4">
-                <Settings className="w-5 h-5 text-blue-400" />
+                <Settings className="w-5 h-5 text-white" />
                 <h3 className="text-white font-semibold">Stream Settings</h3>
               </div>
               
@@ -606,7 +606,7 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                     value={channelUrl}
                     onChange={(e) => setChannelUrl(e.target.value)}
                     placeholder="https://youtube.com/@YourChannel"
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 placeholder-neutral-500"
+                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm focus:outline-none focus:border-white placeholder-neutral-500"
                   />
                 </div>
                 
@@ -618,7 +618,7 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                   <select
                     value={currentVideoId}
                     onChange={(e) => setCurrentVideoId(e.target.value)}
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm focus:outline-none focus:border-white"
                   >
                     <option value="">-- Select default video --</option>
                     {videos.map((video) => (
@@ -657,7 +657,7 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
               <button
                 onClick={handleSaveConfig}
                 disabled={saving}
-                className="mt-4 w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                className="mt-4 w-full py-3 bg-white hover:bg-white/90 text-black font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 Save Settings
@@ -667,7 +667,7 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
             {/* Add New Video */}
             <div className="bg-neutral-900 rounded-xl border border-neutral-800 p-5">
               <div className="flex items-center gap-2 mb-4">
-                <Plus className="w-5 h-5 text-green-400" />
+                <Plus className="w-5 h-5 text-white" />
                 <h3 className="text-white font-semibold">Add New Video</h3>
               </div>
               
@@ -681,7 +681,7 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                     value={newVideoTitle}
                     onChange={(e) => setNewVideoTitle(e.target.value)}
                     placeholder="e.g., Day Trading Strategies"
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm focus:outline-none focus:border-green-500 placeholder-neutral-500"
+                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm focus:outline-none focus:border-white placeholder-neutral-500"
                   />
                 </div>
                 
@@ -694,7 +694,7 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                     value={newVideoUrl}
                     onChange={(e) => setNewVideoUrl(e.target.value)}
                     placeholder="https://youtu.be/xxxxx or video ID"
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm focus:outline-none focus:border-green-500 placeholder-neutral-500"
+                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm focus:outline-none focus:border-white placeholder-neutral-500"
                   />
                 </div>
               </div>
@@ -735,7 +735,7 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                     <select
                       value={newVideoPlaylist}
                       onChange={(e) => setNewVideoPlaylist(e.target.value)}
-                      className="px-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-neutral-300 text-sm focus:outline-none focus:border-green-500"
+                      className="px-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-neutral-300 text-sm focus:outline-none focus:border-white"
                     >
                       <option value="">No playlist</option>
                       {playlists.map(p => (
@@ -748,7 +748,7 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                 <button
                   onClick={handleAddVideo}
                   disabled={saving || !newVideoTitle.trim() || !newVideoUrl.trim()}
-                  className="px-6 py-2.5 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-2.5 bg-white hover:bg-white/90 text-black font-semibold rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                   Add Video
@@ -834,7 +834,7 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
               <div className="flex flex-col gap-4 mb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Video className="w-5 h-5 text-purple-400" />
+                    <Video className="w-5 h-5 text-white" />
                     <h3 className="text-white font-semibold">Video Library</h3>
                   </div>
                   <div className="flex items-center gap-2">
@@ -845,7 +845,7 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                       <button
                         onClick={handleSaveAllVideos}
                         disabled={saving}
-                        className="px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1"
+                        className="px-3 py-1.5 bg-white hover:bg-white/90 text-black text-xs font-semibold rounded-lg transition-colors flex items-center gap-1"
                       >
                         {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
                         Save All ({editingVideos.size})
@@ -860,7 +860,7 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                   <select
                     value={selectedPlaylistFilter}
                     onChange={(e) => setSelectedPlaylistFilter(e.target.value)}
-                    className="px-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-neutral-300 text-xs focus:outline-none focus:border-purple-500"
+                    className="px-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-neutral-300 text-xs focus:outline-none focus:border-white"
                   >
                     <option value="all">All Videos</option>
                     <option value="none">No Playlist</option>
@@ -876,7 +876,7 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                       if (bulkEditMode) setSelectedVideos(new Set());
                     }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                      bulkEditMode ? 'bg-purple-500 text-white' : 'bg-neutral-800 text-neutral-400 hover:text-white'
+                      bulkEditMode ? 'bg-white text-black' : 'bg-neutral-800 text-neutral-400 hover:text-white'
                     }`}
                   >
                     <Edit3 className="w-3 h-3 inline mr-1" />
@@ -914,7 +914,7 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                   
                   {bulkEditMode && (
                     <div className="flex items-center gap-1 ml-auto">
-                      <button onClick={selectAllVideos} className="text-xs text-blue-400 hover:underline">Select All</button>
+                      <button onClick={selectAllVideos} className="text-xs text-white hover:underline">Select All</button>
                       <span className="text-neutral-600">|</span>
                       <button onClick={deselectAllVideos} className="text-xs text-neutral-400 hover:underline">Deselect</button>
                     </div>
@@ -944,9 +944,9 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                         transition={{ delay: index * 0.03 }}
                         className={`flex items-center gap-3 p-3 rounded-lg border transition-all group ${
                           isEditing 
-                            ? 'bg-blue-900/20 border-blue-500/50' 
+                            ? 'bg-white/20 border-white/50' 
                             : isSelected
-                            ? 'bg-purple-900/20 border-purple-500/50'
+                            ? 'bg-white/20 border-white/50'
                             : 'bg-neutral-800/50 border-neutral-700 hover:border-neutral-600'
                         }`}
                       >
@@ -956,7 +956,7 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => toggleVideoSelection(video.id)}
-                            className="w-4 h-4 rounded border-neutral-600 bg-neutral-800 text-purple-500 focus:ring-purple-500"
+                            className="w-4 h-4 rounded border-neutral-600 bg-neutral-800 text-white focus:ring-white"
                           />
                         )}
                         
@@ -992,7 +992,7 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                                 value={editingData!.title}
                                 onChange={(e) => updateEditingVideo(video.id, { title: e.target.value })}
                                 placeholder="Video Title"
-                                className="w-full px-2 py-1 bg-neutral-700 border border-neutral-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
+                                className="w-full px-2 py-1 bg-neutral-700 border border-neutral-600 rounded text-white text-sm focus:outline-none focus:border-white"
                               />
                               <div className="flex gap-2">
                                 <input
@@ -1000,12 +1000,12 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                                   value={editingData!.youtube_id}
                                   onChange={(e) => updateEditingVideo(video.id, { youtube_id: extractYouTubeId(e.target.value) })}
                                   placeholder="YouTube URL or ID"
-                                  className="flex-1 px-2 py-1 bg-neutral-700 border border-neutral-600 rounded text-white text-xs font-mono focus:outline-none focus:border-blue-500"
+                                  className="flex-1 px-2 py-1 bg-neutral-700 border border-neutral-600 rounded text-white text-xs font-mono focus:outline-none focus:border-white"
                                 />
                                 <select
                                   value={editingData!.playlist_id || ''}
                                   onChange={(e) => updateEditingVideo(video.id, { playlist_id: e.target.value || null })}
-                                  className="px-2 py-1 bg-neutral-700 border border-neutral-600 rounded text-white text-xs focus:outline-none focus:border-blue-500"
+                                  className="px-2 py-1 bg-neutral-700 border border-neutral-600 rounded text-white text-xs focus:outline-none focus:border-white"
                                 >
                                   <option value="">No playlist</option>
                                   {playlists.map(p => (
@@ -1044,7 +1044,7 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
                               <button
                                 onClick={() => handleSaveVideo(video.id)}
                                 disabled={saving}
-                                className="p-2 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors"
+                                className="p-2 rounded-lg bg-white/20 text-white hover:bg-white/30 transition-colors"
                                 title="Save"
                               >
                                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
@@ -1149,7 +1149,7 @@ function AdminLogin({ onLogin }: { onLogin: () => void }) {
     >
       <div className="p-8">
         <div className="flex flex-col items-center mb-8">
-          <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4">
+          <div className="p-3 bg-gradient-to-br from-white to-white rounded-2xl mb-4">
             <Tv className="w-8 h-8 text-white" />
           </div>
           <h2 className="text-white font-bold text-xl">Admin Access</h2>
@@ -1166,7 +1166,7 @@ function AdminLogin({ onLogin }: { onLogin: () => void }) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="admin@email.com"
-              className="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-xl text-white focus:outline-none focus:border-blue-500 placeholder-neutral-500"
+              className="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-xl text-white focus:outline-none focus:border-white placeholder-neutral-500"
               autoFocus
             />
           </div>
@@ -1180,7 +1180,7 @@ function AdminLogin({ onLogin }: { onLogin: () => void }) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••••••"
-              className="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-xl text-white focus:outline-none focus:border-blue-500 placeholder-neutral-500"
+              className="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-xl text-white focus:outline-none focus:border-white placeholder-neutral-500"
             />
           </div>
           
@@ -1194,7 +1194,7 @@ function AdminLogin({ onLogin }: { onLogin: () => void }) {
           <button
             type="submit"
             disabled={loading || !email || !password}
-            className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full py-3 bg-white hover:bg-white/90 text-black font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Login'}
           </button>

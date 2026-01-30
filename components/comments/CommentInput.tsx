@@ -129,7 +129,7 @@ export const CommentInput = memo(({
       <div className="flex gap-3">
         {/* User Avatar */}
         <div className="flex-shrink-0">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center overflow-hidden">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-white to-white flex items-center justify-center overflow-hidden">
             {user?.avatar_url ? (
               <img src={user.avatar_url} alt={user.username} className="w-full h-full object-cover" />
             ) : (
@@ -142,7 +142,7 @@ export const CommentInput = memo(({
         
         {/* Input Area */}
         <div className="flex-1">
-          <div className="bg-neutral-900/50 border border-neutral-700 rounded-xl overflow-hidden focus-within:border-blue-500 transition-colors">
+          <div className="bg-neutral-900/50 border border-neutral-700 rounded-xl overflow-hidden focus-within:border-white transition-colors">
             {/* Textarea */}
             <textarea
               ref={textareaRef}
@@ -189,7 +189,7 @@ export const CommentInput = memo(({
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => { SoundEffects.click(); handleImageUrl(); }}
-                  className="p-1.5 text-neutral-500 hover:text-blue-400 transition-colors"
+                  className="p-1.5 text-neutral-500 hover:text-white transition-colors"
                   title="Add image"
                 >
                   <ImageIcon className="w-4 h-4" />
@@ -205,7 +205,7 @@ export const CommentInput = memo(({
                 whileTap={{ scale: 0.95 }}
                 onClick={handleSubmit}
                 disabled={isSubmitting || !content.trim() || !isAuthenticated}
-                className="px-4 py-1.5 bg-blue-500 text-white rounded-lg text-sm font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors"
+                className="px-4 py-1.5 bg-white text-black rounded-lg text-sm font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white transition-colors"
               >
                 {isSubmitting ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

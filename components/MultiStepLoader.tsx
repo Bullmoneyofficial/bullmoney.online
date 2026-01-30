@@ -185,13 +185,13 @@ const TradingViewBackground = memo(({ assetKey }: { assetKey: AssetKey }) => {
       calendar: false,
       hide_volume: true,
       backgroundColor: "rgba(2, 6, 23, 1)", 
-      gridLineColor: "rgba(30, 58, 138, 0.1)",
+      gridLineColor: "rgba(255, 255, 255, 0.1)",
       scaleFontColor: "rgba(134, 137, 147, 0)",
-      upColor: "#2563EB", 
+      upColor: "#ffffff", 
       downColor: "#FFFFFF", 
-      borderUpColor: "#2563EB",
+      borderUpColor: "#ffffff",
       borderDownColor: "#FFFFFF",
-      wickUpColor: "#2563EB",
+      wickUpColor: "#ffffff",
       wickDownColor: "#FFFFFF",
     });
     container.appendChild(script);
@@ -203,7 +203,7 @@ const TradingViewBackground = memo(({ assetKey }: { assetKey: AssetKey }) => {
 
   return (
     <div className="absolute inset-0 z-0 pointer-events-none">
-      <div className="absolute inset-0 bg-blue-950/20 z-10 mix-blend-overlay" />
+      <div className="absolute inset-0 bg-white/10/20 z-10 mix-blend-overlay" />
       <div
         ref={containerRef}
         className="w-full h-full opacity-60 grayscale-[20%] contrast-125 scale-110"
@@ -252,7 +252,7 @@ const LiveChromeHeader = memo(({
               className={cn(
                 "group relative flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 border backdrop-blur-md cursor-pointer",
                 isActive 
-                  ? "bg-white/10 border-white/20 shadow-[0_0_20px_rgba(37,99,235,0.3)]" 
+                  ? "bg-white/10 border-white/20 shadow-[0_0_20px_rgba(255, 255, 255,0.3)]" 
                   : "bg-black/20 border-white/5 hover:bg-white/5 hover:border-white/10"
               )}
             >
@@ -274,7 +274,7 @@ const LiveChromeHeader = memo(({
                   {asset.name}
                 </span>
                 {isActive && (
-                   <span className="text-[8px] text-blue-200/50 leading-none tracking-widest mt-0.5">
+                   <span className="text-[8px] text-white/50 leading-none tracking-widest mt-0.5">
                      VIEWING
                    </span>
                 )}
@@ -293,7 +293,7 @@ const LiveChromeHeader = memo(({
           <span
             className={cn(
               "w-2 h-2 rounded-full animate-pulse",
-              isUp ? "bg-green-500" : "bg-red-500"
+              isUp ? "bg-white" : "bg-red-500"
             )}
           />
           <span className="text-xs md:text-sm font-mono font-bold text-white/50 tracking-widest">
@@ -347,7 +347,7 @@ const ReactiveLiquidLogo = ({ src }: { src: string }) => {
       </svg>
       <motion.div
         className="relative w-full h-full cursor-pointer will-change-transform select-none"
-        style={{ filter: "url(#velocity-liquid) drop-shadow(0 0 20px rgba(37, 99, 235, 0.4))" }}
+        style={{ filter: "url(#velocity-liquid) drop-shadow(0 0 20px rgba(255, 255, 255, 0.4))" }}
       >
         <img src={src} alt="Logo" className="w-full h-full object-contain select-none pointer-events-none" draggable={false} />
       </motion.div>
@@ -507,7 +507,7 @@ export const MultiStepLoader = ({ loadingStates, loading }: { loadingStates: Loa
                 110deg, 
                 #475569 20%,   
                 #ffffff 48%,   
-                #3b82f6 52%,   
+                #ffffff 52%,   
                 #475569 80%    
               );
               background-size: 200% auto;
@@ -516,7 +516,7 @@ export const MultiStepLoader = ({ loadingStates, loading }: { loadingStates: Loa
               -webkit-text-fill-color: transparent;
               color: transparent;
               animation: text-shimmer 3.5s linear infinite;
-              filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.5));
+              filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.5));
             }
           `}</style>
 
@@ -539,7 +539,7 @@ export const MultiStepLoader = ({ loadingStates, loading }: { loadingStates: Loa
               <h1 className="text-5xl md:text-7xl lg:text-9xl font-black tracking-tighter animate-text-shimmer drop-shadow-2xl">
                 BULLMONEY
               </h1>
-              <span className="block text-sm md:text-lg tracking-[0.5em] text-blue-500/50 uppercase font-bold mt-2">
+              <span className="block text-sm md:text-lg tracking-[0.5em] text-white/50 uppercase font-bold mt-2">
                 Premium Gateway
               </span>
             </div>
@@ -551,10 +551,10 @@ export const MultiStepLoader = ({ loadingStates, loading }: { loadingStates: Loa
                   {[1, 2, 3].map((ring) => (
                     <motion.div
                       key={ring}
-                      initial={{ width: "100px", height: "100px", opacity: 0, border: "1px solid #1E40AF" }}
+                      initial={{ width: "100px", height: "100px", opacity: 0, border: "1px solid #ffffff" }}
                       animate={{ width: ["100px", "600px"], height: ["100px", "600px"], opacity: [0.5, 0], borderWidth: ["3px", "0px"] }}
                       transition={{ duration: 2.5, repeat: Infinity, delay: ring * 0.6, ease: "easeOut" }}
-                      className="absolute rounded-full border-blue-600/50 shadow-[0_0_30px_rgba(37,99,235,0.2)] bg-blue-900/5"
+                      className="absolute rounded-full border-white/50 shadow-[0_0_30px_rgba(255, 255, 255,0.2)] bg-white/5"
                     />
                   ))}
                 </div>

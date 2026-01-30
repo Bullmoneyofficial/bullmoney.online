@@ -128,7 +128,7 @@ const FpsCandlestickChart: React.FC<FpsCandlestickChartProps> = ({
   return (
     <div className="fps-chart-container relative overflow-hidden rounded-lg" style={{ width, height }} data-fps-chart>
       {/* Glass background - NO BLUR */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-600/15 via-blue-500/5 to-slate-900/25 border border-blue-500/20" />
+      <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-white/10 to-slate-900/25 border border-white/20" />
 
       {/* SVG Chart */}
       <svg width={width} height={height} className="relative z-10">
@@ -288,11 +288,11 @@ const FpsCandlestickChart: React.FC<FpsCandlestickChartProps> = ({
         @keyframes pulse {
           0%, 100% {
             opacity: 0.5;
-            filter: drop-shadow(0 0 2px rgba(59, 130, 246, 0.3));
+            filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3));
           }
           50% {
             opacity: 1;
-            filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.8));
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
           }
         }
       `}</style>

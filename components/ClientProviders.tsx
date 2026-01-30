@@ -9,7 +9,7 @@ import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
 import { MobilePerformanceProvider } from "@/contexts/MobilePerformanceProvider";
 
 // ✅ LOADING FALLBACKS - Mobile optimized
-import { MinimalFallback, FooterSkeleton } from "@/components/MobileLazyLoadingFallback";
+import { MinimalFallback } from "@/components/MobileLazyLoadingFallback";
 
 // CRITICAL: Import FPS scroll optimizer for pause-during-scroll behavior
 const FpsScrollOptimizer = dynamic(
@@ -81,11 +81,7 @@ const AutoRefreshPrompt = dynamic(
   { ssr: false }
 );
 
-// ✅ FOOTER - Lazy loaded with skeleton fallback for mobile
-const FooterComponent = dynamic(
-  () => import("@/components/Mainpage/footer").then((mod) => ({ default: mod.Footer })),
-  { ssr: false, loading: () => <FooterSkeleton /> }
-);
+// NOTE: Footer removed from layout - now only in page.tsx
 
 // SMART MOUNT: Import lazy modal wrappers (mount/unmount with zero cost when closed)
 import {
@@ -244,7 +240,7 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
                 >
                   {children}
                 </main>
-                {allowMobileComponents && <FooterComponent />}
+                {/* NOTE: Footer moved to page.tsx only */}
               </div>
               <FPSCounter />
               
@@ -282,4 +278,4 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
   );
 }
 
-export { FooterComponent as Footer };
+// Footer export removed - now only in page.tsx

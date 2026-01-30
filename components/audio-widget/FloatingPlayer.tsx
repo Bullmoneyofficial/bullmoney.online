@@ -500,8 +500,8 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               className="fixed bottom-[70px] pointer-events-none"
               style={{ 
                 zIndex: 100201,
-                // Mobile: RIGHT, Desktop: LEFT
-                ...(isMobileDevice
+                // Follow playerSide for swipe-to-side behavior
+                ...(playerSide === 'right'
                   ? { right: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
                   : { left: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
                 )
@@ -543,11 +543,11 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                 className="relative flex items-center justify-center h-10 w-10 rounded-full transition-all pointer-events-auto"
                 data-theme-aware
                 style={{
-                  background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(59,130,246,0.1) 100%)',
+                  background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(255, 255, 255,0.1) 100%)',
                   backdropFilter: 'blur(12px)',
                   WebkitBackdropFilter: 'blur(12px)',
-                  border: '2px solid #3b82f6',
-                  boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6',
+                  border: '2px solid #ffffff',
+                  boxShadow: '0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff',
                 }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -561,8 +561,8 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                   <IconMusic 
                     className="w-4 h-4"
                     style={{ 
-                      color: isPlaying ? 'var(--accent-color, #93c5fd)' : 'rgba(var(--accent-rgb, 59, 130, 246), 0.7)',
-                      filter: shouldSkipHeavyEffects ? undefined : (isPlaying ? 'drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6)' : 'drop-shadow(0 0 4px #3b82f6)')
+                      color: isPlaying ? 'var(--accent-color, #ffffff)' : 'rgba(var(--accent-rgb, 255, 255, 255), 0.7)',
+                      filter: shouldSkipHeavyEffects ? undefined : (isPlaying ? 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff)' : 'drop-shadow(0 0 4px #ffffff)')
                     }}
                   />
                   {/* Playing indicator dot */}
@@ -570,8 +570,8 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                     <motion.div
                       animate={shouldSkipHeavyEffects ? {} : { scale: [1, 1.4, 1], opacity: [0.7, 1, 0.7] }}
                       transition={shouldSkipHeavyEffects ? {} : { duration: 1, repeat: Infinity }}
-                      className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-green-400"
-                      style={{ boxShadow: shouldSkipHeavyEffects ? undefined : "0 0 4px rgba(74, 222, 128, 0.8)" }}
+                      className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-white"
+                      style={{ boxShadow: shouldSkipHeavyEffects ? undefined : "0 0 4px rgba(255, 255, 255, 0.8)" }}
                     />
                   )}
                 </motion.div>
@@ -584,8 +584,8 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               className="fixed bottom-[70px] pointer-events-none"
               style={{ 
                 zIndex: 100201,
-                // Mobile: RIGHT, Desktop: LEFT  
-                ...(isMobileDevice
+                // Follow playerSide for swipe-to-side behavior
+                ...(playerSide === 'right'
                   ? { right: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
                   : { left: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
                 )
@@ -631,11 +631,11 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                 className="relative flex items-center justify-center h-10 w-10 rounded-full transition-all pointer-events-auto"
                 data-theme-aware
                 style={{
-                  background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(59,130,246,0.1) 100%)',
+                  background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(255, 255, 255,0.1) 100%)',
                   backdropFilter: 'blur(12px)',
                   WebkitBackdropFilter: 'blur(12px)',
-                  border: '2px solid #3b82f6',
-                  boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6',
+                  border: '2px solid #ffffff',
+                  boxShadow: '0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff',
                 }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -649,8 +649,8 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                   <IconMusic 
                     className="w-4 h-4"
                     style={{ 
-                      color: isPlaying ? 'var(--accent-color, #93c5fd)' : 'rgba(var(--accent-rgb, 59, 130, 246), 0.7)',
-                      filter: shouldSkipHeavyEffects ? undefined : (isPlaying ? 'drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6)' : 'drop-shadow(0 0 4px #3b82f6)')
+                      color: isPlaying ? 'var(--accent-color, #ffffff)' : 'rgba(var(--accent-rgb, 255, 255, 255), 0.7)',
+                      filter: shouldSkipHeavyEffects ? undefined : (isPlaying ? 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff)' : 'drop-shadow(0 0 4px #ffffff)')
                     }}
                   />
                   {/* Playing indicator dot */}
@@ -658,8 +658,8 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                     <motion.div
                       animate={shouldSkipHeavyEffects ? {} : { scale: [1, 1.4, 1], opacity: [0.7, 1, 0.7] }}
                       transition={shouldSkipHeavyEffects ? {} : { duration: 1, repeat: Infinity }}
-                      className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-green-400"
-                      style={{ boxShadow: shouldSkipHeavyEffects ? undefined : "0 0 4px rgba(74, 222, 128, 0.8)" }}
+                      className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-white"
+                      style={{ boxShadow: shouldSkipHeavyEffects ? undefined : "0 0 4px rgba(255, 255, 255, 0.8)" }}
                     />
                   )}
                 </motion.div>
@@ -690,16 +690,16 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
             }}
             className={cn(
               "fixed bottom-[70px] flex items-center gap-1.5 px-2.5 py-2 rounded-xl",
-              "bg-gradient-to-br from-blue-600/40 via-blue-500/25 to-slate-900/50",
-              "backdrop-blur-2xl border border-blue-500/50",
-              "shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30",
-              "hover:border-blue-400/70 transition-all duration-200",
+              "bg-gradient-to-br from-white/40 via-white/25 to-slate-900/50",
+              "backdrop-blur-2xl border border-white/50",
+              "shadow-lg shadow-white/20 hover:shadow-white/30",
+              "hover:border-white/70 transition-all duration-200",
               "pointer-events-auto"
             )}
             style={{
               zIndex: 100201, // Just above MainWidget z-[100200]
-              // Mobile: RIGHT, Desktop: LEFT
-              ...(isMobileDevice
+              // Follow playerSide for swipe-to-side behavior
+              ...(playerSide === 'right'
                 ? { right: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
                 : { left: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
               ),
@@ -716,10 +716,10 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               <IconMusic 
                 className={cn(
                   "w-4 h-4",
-                  isPlaying ? "text-blue-300" : "text-blue-400/70"
+                  isPlaying ? "text-white" : "text-white/70"
                 )} 
                 style={isPlaying && !shouldSkipHeavyEffects ? {
-                  filter: "drop-shadow(0 0 6px rgba(96, 165, 250, 0.8))"
+                  filter: "drop-shadow(0 0 6px rgba(255, 255, 255, 0.8))"
                 } : {}}
               />
               {/* Playing indicator dot */}
@@ -727,8 +727,8 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                 <motion.div
                   animate={shouldSkipHeavyEffects ? {} : { scale: [1, 1.4, 1], opacity: [0.7, 1, 0.7] }}
                   transition={shouldSkipHeavyEffects ? {} : { duration: 1, repeat: Infinity }}
-                  className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-green-400"
-                  style={{ boxShadow: shouldSkipHeavyEffects ? undefined : "0 0 4px rgba(74, 222, 128, 0.8)" }}
+                  className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-white"
+                  style={{ boxShadow: shouldSkipHeavyEffects ? undefined : "0 0 4px rgba(255, 255, 255, 0.6)" }}
                 />
               )}
             </motion.div>
@@ -740,10 +740,8 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                   key={i}
                   className="w-[3px] rounded-full origin-bottom"
                   style={{ 
-                    backgroundColor: isPlaying ? "#34d399" : "#60a5fa",
-                    boxShadow: shouldSkipHeavyEffects ? undefined : (isPlaying 
-                      ? "0 0 4px rgba(52, 211, 153, 0.6)"
-                      : "0 0 4px rgba(96, 165, 250, 0.6)"),
+                    backgroundColor: "#ffffff",
+                    boxShadow: shouldSkipHeavyEffects ? undefined : "0 0 4px rgba(255, 255, 255, 0.6)",
                   }}
                   animate={isPlaying && !shouldSkipHeavyEffects ? {
                     height: [
@@ -854,17 +852,17 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
           onClick={() => { SoundEffects.click(); setPlayerHidden(false); }}
           className={cn(
             "fixed flex flex-col items-center justify-center gap-1 py-2 px-1.5 rounded-lg backdrop-blur-md transition-colors",
-            "bg-gradient-to-br from-blue-600/60 via-blue-500/40 to-cyan-500/30 hover:from-blue-500/70 hover:to-cyan-500/50",
-            "border border-blue-400/70 shadow-lg hover:shadow-blue-500/50"
+            "bg-gradient-to-br from-white/20 via-white/10 to-black/60 hover:from-white/30 hover:to-black/70",
+            "border border-white/50 shadow-lg hover:shadow-white/60"
           )}
           style={{ bottom: 200, zIndex: Z_INDEX.PULL_TAB, left: '8px' }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
           <motion.div animate={shouldSkipHeavyEffects ? {} : { y: [0, 2, 0] }} transition={shouldSkipHeavyEffects ? {} : { duration: 1.5, repeat: Infinity }}>
-            <IconGripVertical className="w-3 h-3 text-white/80" style={{ filter: shouldSkipHeavyEffects ? undefined : 'drop-shadow(0 0 3px #3b82f6)' }} />
+            <IconGripVertical className="w-3 h-3 text-white/80" style={{ filter: shouldSkipHeavyEffects ? undefined : 'drop-shadow(0 0 3px #ffffff)' }} />
           </motion.div>
-          <span className="text-[7px] font-bold text-blue-100 whitespace-nowrap" style={{ textShadow: shouldSkipHeavyEffects ? undefined : '0 0 4px #3b82f6' }}>iPhone</span>
+          <span className="text-[7px] font-bold text-white whitespace-nowrap" style={{ textShadow: shouldSkipHeavyEffects ? undefined : '0 0 4px #ffffff' }}>iPhone</span>
         </motion.button>
       )}
       
@@ -931,11 +929,11 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                     shouldSkipHeavyEffects ? "" : "backdrop-blur-xl"
                   )}>
                     <motion.div animate={shouldSkipHeavyEffects ? {} : { x: [-4, 4, -4] }} transition={shouldSkipHeavyEffects ? {} : { duration: 1.5, repeat: Infinity, ease: "easeInOut" }}>
-                      <IconChevronLeft className="w-4 h-4 text-blue-400" />
+                      <IconChevronLeft className="w-4 h-4 text-white" />
                     </motion.div>
                     <span>Swipe to minimize</span>
                     <motion.div animate={shouldSkipHeavyEffects ? {} : { x: [4, -4, 4] }} transition={shouldSkipHeavyEffects ? {} : { duration: 1.5, repeat: Infinity, ease: "easeInOut" }}>
-                      <IconChevronRight className="w-4 h-4 text-blue-400" />
+                      <IconChevronRight className="w-4 h-4 text-white" />
                     </motion.div>
                   </div>
                   {/* Arrow pointing down to iPhone */}
@@ -985,9 +983,9 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                   onMouseEnter={() => setHoveredButton('camera')}
                   onMouseLeave={() => setHoveredButton(null)}
                 >
-                  <div className="absolute inset-[2px] rounded-full bg-gradient-to-br from-blue-900/60 to-purple-900/60" />
+                  <div className="absolute inset-[2px] rounded-full bg-gradient-to-br from-black/80 to-black/60" />
                   <motion.div 
-                    className="absolute inset-0 rounded-full bg-blue-400/30"
+                    className="absolute inset-0 rounded-full bg-white/30"
                     animate={shouldSkipHeavyEffects ? {} : { opacity: [0.2, 0.5, 0.2] }}
                     transition={shouldSkipHeavyEffects ? {} : { duration: 2, repeat: Infinity }}
                   />
@@ -1008,7 +1006,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                         {[1, 2, 3, 4].map(i => (
                           <motion.div
                             key={i}
-                            className="w-[2px] bg-blue-400 rounded-full"
+                            className="w-[2px] bg-white rounded-full"
                             animate={shouldSkipHeavyEffects ? { height: 6 } : { height: [3, 10, 3] }}
                             transition={shouldSkipHeavyEffects ? {} : { duration: 0.4, repeat: Infinity, delay: i * 0.08 }}
                           />
@@ -1037,11 +1035,11 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                   className={cn(
                     "w-[5px] h-7 rounded-l-sm transition-all shadow-lg",
                     isIframeMuted 
-                      ? "bg-gradient-to-b from-orange-400 to-orange-600 shadow-orange-500/40" 
-                      : "bg-gradient-to-b from-slate-500 to-slate-600"
+                      ? "bg-gradient-to-b from-white to-black shadow-white/40" 
+                      : "bg-gradient-to-b from-white/30 to-black/60"
                   )}
                 />
-                <ButtonTooltip show={hoveredButton === 'mute'} text={isIframeMuted ? "🔇 Tap to Unmute" : "🔊 Tap to Mute"} position="right" color="orange" />
+                <ButtonTooltip show={hoveredButton === 'mute'} text={isIframeMuted ? "🔇 Tap to Unmute" : "🔊 Tap to Mute"} position="right" color="blue" />
               </div>
               
               {/* Volume Up */}
@@ -1086,11 +1084,11 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                 className={cn(
                   "w-[5px] h-14 rounded-r-sm transition-all shadow-lg",
                   isLocked 
-                    ? "bg-gradient-to-b from-red-400 to-red-600 shadow-red-500/40" 
-                    : "bg-gradient-to-b from-slate-500 to-slate-600 hover:from-slate-400 hover:to-slate-500"
+                    ? "bg-gradient-to-b from-white to-black shadow-white/40" 
+                    : "bg-gradient-to-b from-white/30 to-black/60 hover:from-white/40 hover:to-black/70"
                 )}
               />
-              <ButtonTooltip show={hoveredButton === 'power'} text={isLocked ? "🔓 Tap to Wake" : "🔒 Sleep/Wake"} position="left" color="red" />
+              <ButtonTooltip show={hoveredButton === 'power'} text={isLocked ? "🔓 Tap to Wake" : "🔒 Sleep/Wake"} position="left" color="blue" />
             </div>
 
             {/* Volume Slider Overlay */}
@@ -1164,7 +1162,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                   </div>
                   <span className="ml-0.5">5G</span>
                   <div className="ml-1.5 w-6 h-[10px] border border-white/50 rounded-[3px] relative">
-                    <div className="absolute inset-[1px] rounded-[2px] bg-blue-400" style={{ width: '75%' }} />
+                    <div className="absolute inset-[1px] rounded-[2px] bg-white" style={{ width: '75%' }} />
                     <div className="absolute -right-[3px] top-1/2 -translate-y-1/2 w-[2px] h-[5px] bg-white/50 rounded-r-sm" />
                   </div>
                 </div>
@@ -1181,25 +1179,25 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               )}
 
               {/* Player Header */}
-              <div className="relative flex items-center justify-between px-3 py-2.5 bg-gradient-to-r from-slate-900/90 to-slate-800/90 rounded-t-2xl border-b border-white/5 backdrop-blur-sm mt-2">
+              <div className="relative flex items-center justify-between px-3 py-2.5 bg-gradient-to-r from-black/80 to-black/60 rounded-t-2xl border-b border-white/5 backdrop-blur-sm mt-2">
                 <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-xl bg-gradient-to-br from-blue-500/30 to-purple-500/30 shadow-inner">
-                    {sourceIcons[musicSource] && React.createElement(sourceIcons[musicSource]!, { className: "w-5 h-5 text-sky-300" })}
+                  <div className="p-1.5 rounded-xl bg-gradient-to-br from-white/15 to-black/40 shadow-inner">
+                    {sourceIcons[musicSource] && React.createElement(sourceIcons[musicSource]!, { className: "w-5 h-5 text-white" })}
                   </div>
                   <div>
                     <span className="text-[10px] text-white/90 font-semibold block">{sourceLabel[musicSource]}</span>
                     <span className="text-[8px] text-white/50">Now Playing</span>
                   </div>
                   <div className="flex gap-[2px] ml-1">
-                    <motion.div className="w-[2px] h-2 bg-blue-400 rounded-full" animate={shouldSkipHeavyEffects ? {} : { scaleY: [1, 2, 1] }} transition={shouldSkipHeavyEffects ? {} : { duration: 0.35, repeat: Infinity }} />
-                    <motion.div className="w-[2px] h-2.5 bg-cyan-400 rounded-full" animate={shouldSkipHeavyEffects ? {} : { scaleY: [1, 0.4, 1] }} transition={shouldSkipHeavyEffects ? {} : { duration: 0.35, repeat: Infinity, delay: 0.1 }} />
-                    <motion.div className="w-[2px] h-2 bg-blue-400 rounded-full" animate={shouldSkipHeavyEffects ? {} : { scaleY: [1, 1.6, 1] }} transition={shouldSkipHeavyEffects ? {} : { duration: 0.35, repeat: Infinity, delay: 0.2 }} />
+                    <motion.div className="w-[2px] h-2 bg-white rounded-full" animate={shouldSkipHeavyEffects ? {} : { scaleY: [1, 2, 1] }} transition={shouldSkipHeavyEffects ? {} : { duration: 0.35, repeat: Infinity }} />
+                    <motion.div className="w-[2px] h-2.5 bg-white/70 rounded-full" animate={shouldSkipHeavyEffects ? {} : { scaleY: [1, 0.4, 1] }} transition={shouldSkipHeavyEffects ? {} : { duration: 0.35, repeat: Infinity, delay: 0.1 }} />
+                    <motion.div className="w-[2px] h-2 bg-white rounded-full" animate={shouldSkipHeavyEffects ? {} : { scaleY: [1, 1.6, 1] }} transition={shouldSkipHeavyEffects ? {} : { duration: 0.35, repeat: Infinity, delay: 0.2 }} />
                   </div>
                 </div>
                 <motion.button
                   whileTap={{ scale: 0.85 }}
                   onClick={(e) => { e.stopPropagation(); SoundEffects.click(); handlePlayerInteraction(); setStreamingActive(false); setMusicEnabled(false); }}
-                  className="w-7 h-7 flex items-center justify-center rounded-full bg-red-500/20 hover:bg-red-500/40 text-red-300 transition-colors"
+                  className="w-7 h-7 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
                 >
                   <IconX className="w-3.5 h-3.5" />
                 </motion.button>
@@ -1269,11 +1267,11 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                     initial={{ opacity: 0, y: 10, height: 0 }}
                     animate={{ opacity: 1, y: 0, height: 'auto' }}
                     exit={{ opacity: 0, y: -10, height: 0 }}
-                    className="mt-3 mx-1 p-2.5 rounded-xl bg-gradient-to-br from-blue-500/15 to-purple-500/15 border border-white/10 overflow-hidden"
+                    className="mt-3 mx-1 p-2.5 rounded-xl bg-gradient-to-br from-white/10 to-black/30 border border-white/10 overflow-hidden"
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-1.5">
-                        <IconInfoCircle className="w-3.5 h-3.5 text-blue-400" />
+                        <IconInfoCircle className="w-3.5 h-3.5 text-white" />
                         <span className="text-[9px] text-white/80 font-semibold">iPhone Controls</span>
                       </div>
                       <button 
@@ -1285,19 +1283,19 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                     </div>
                     <div className="space-y-1 text-[8px] text-white/60">
                       <div className="flex items-center gap-1.5">
-                        <div className="w-1 h-1 rounded-full bg-orange-400" />
-                        <span>Orange switch = Mute toggle</span>
+                        <div className="w-1 h-1 rounded-full bg-white" />
+                        <span>Mute toggle</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <div className="w-1 h-1 rounded-full bg-blue-400" />
+                        <div className="w-1 h-1 rounded-full bg-white" />
                         <span>Left buttons = Volume Up/Down</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <div className="w-1 h-1 rounded-full bg-red-400" />
+                        <div className="w-1 h-1 rounded-full bg-white" />
                         <span>Right button = Sleep/Wake</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <div className="w-1 h-1 rounded-full bg-purple-400" />
+                        <div className="w-1 h-1 rounded-full bg-white" />
                         <span>Dynamic Island camera = Selfie!</span>
                       </div>
                     </div>
@@ -1394,7 +1392,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               style={{ zIndex: Z_INDEX.HELPERS }}
             >
               <div className={cn(
-                "px-3 py-2 rounded-xl bg-gradient-to-r from-blue-600/90 to-purple-600/90 border border-white/30 shadow-xl text-[9px] text-white font-medium flex items-center gap-2",
+                "px-3 py-2 rounded-xl bg-gradient-to-r from-white/30 to-black/70 border border-white/30 shadow-xl text-[9px] text-white font-medium flex items-center gap-2",
                 shouldSkipHeavyEffects ? "" : "backdrop-blur-xl"
               )}>
                 <IconInfoCircle className="w-3.5 h-3.5" />

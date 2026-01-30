@@ -95,9 +95,9 @@ function calculate3DPerformance(info: DeviceInfo): number {
  * Get performance grade
  */
 function getPerformanceGrade(score: number): { grade: string; color: string; label: string } {
-  if (score >= 90) return { grade: 'S', color: '#22c55e', label: 'Excellent' };
-  if (score >= 80) return { grade: 'A', color: '#3b82f6', label: 'Great' };
-  if (score >= 70) return { grade: 'B', color: '#a855f7', label: 'Good' };
+  if (score >= 90) return { grade: 'S', color: '#ffffff', label: 'Excellent' };
+  if (score >= 80) return { grade: 'A', color: '#ffffff', label: 'Great' };
+  if (score >= 70) return { grade: 'B', color: '#ffffff', label: 'Good' };
   if (score >= 60) return { grade: 'C', color: '#f59e0b', label: 'Fair' };
   if (score >= 50) return { grade: 'D', color: '#ef4444', label: 'Poor' };
   return { grade: 'F', color: '#dc2626', label: 'Critical' };
@@ -110,7 +110,7 @@ function getPerformanceGrade(score: number): { grade: string; color: string; lab
 /**
  * Stat Card Component
  */
-function StatCard({ icon: Icon, label, value, sublabel, color = '#3b82f6' }: {
+function StatCard({ icon: Icon, label, value, sublabel, color = '#ffffff' }: {
   icon: any;
   label: string;
   value: string;
@@ -124,7 +124,7 @@ function StatCard({ icon: Icon, label, value, sublabel, color = '#3b82f6' }: {
       className="relative p-3 rounded-xl overflow-hidden group isolate"
     >
       {/* Glass background - solid with subtle transparency */}
-      <div className="absolute inset-0 bg-slate-900/90 border border-blue-400/30 rounded-xl transition-all duration-300 group-hover:border-blue-300/50 shadow-lg shadow-blue-900/20" />
+      <div className="absolute inset-0 bg-slate-900/90 border border-white/30 rounded-xl transition-all duration-300 group-hover:border-white/50 shadow-lg shadow-white/20" />
       
       {/* Inner highlight for depth */}
       <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/8 via-transparent to-transparent pointer-events-none" />
@@ -133,7 +133,7 @@ function StatCard({ icon: Icon, label, value, sublabel, color = '#3b82f6' }: {
       <div 
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none overflow-hidden rounded-xl"
       >
-        <div className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-500/0 via-blue-400/30 to-blue-500/0" />
+        <div className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-white/0 via-white/30 to-white/0" />
       </div>
       
       {/* Accent glow */}
@@ -151,14 +151,14 @@ function StatCard({ icon: Icon, label, value, sublabel, color = '#3b82f6' }: {
           <Icon size={18} style={{ color, filter: `drop-shadow(0 0 3px ${color}60)` }} />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[10px] text-blue-200/90 uppercase tracking-wider font-semibold">
+          <div className="text-[10px] text-white/90 uppercase tracking-wider font-semibold">
             {label}
           </div>
           <div className="text-sm font-bold text-white truncate mt-0.5">
             {value}
           </div>
           {sublabel && (
-            <div className="text-[10px] text-blue-200/70 mt-0.5">
+            <div className="text-[10px] text-white/70 mt-0.5">
               {sublabel}
             </div>
           )}
@@ -183,14 +183,14 @@ function PerformanceRing({ score, size = 120 }: { score: number; size?: number }
   return (
     <div className="relative group isolate" style={{ width: size, height: size }}>
       {/* Glass background - solid, no blur */}
-      <div className="absolute inset-0 rounded-full bg-slate-900/90 border border-blue-400/30 transition-all duration-300 group-hover:border-blue-300/50 shadow-lg shadow-blue-900/20" />
+      <div className="absolute inset-0 rounded-full bg-slate-900/90 border border-white/30 transition-all duration-300 group-hover:border-white/50 shadow-lg shadow-white/20" />
       <div className="absolute inset-[1px] rounded-full bg-gradient-to-br from-white/8 via-transparent to-transparent pointer-events-none" />
       
       {/* Unified Shimmer - LEFT TO RIGHT using CSS animation */}
       <div 
         className="absolute inset-0 opacity-15 group-hover:opacity-25 transition-opacity pointer-events-none overflow-hidden rounded-full panel-shimmer"
       >
-        <div className="shimmer-ltr shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-blue-600/0 via-blue-500/30 to-blue-600/0" style={{ animationDuration: '5s' }} />
+        <div className="shimmer-ltr shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-white/0 via-white/30 to-white/0" style={{ animationDuration: '5s' }} />
       </div>
       
       {/* SVG Ring - properly centered */}
@@ -206,7 +206,7 @@ function PerformanceRing({ score, size = 120 }: { score: number; size?: number }
           cy={center}
           r={radius}
           fill="none"
-          stroke="rgba(59,130,246,0.15)"
+          stroke="rgba(255, 255, 255,0.15)"
           strokeWidth={strokeWidth}
         />
         {/* Progress circle */}
@@ -235,10 +235,10 @@ function PerformanceRing({ score, size = 120 }: { score: number; size?: number }
         >
           {grade}
         </div>
-        <div className="text-xs text-blue-200/80 font-semibold">
+        <div className="text-xs text-white/80 font-semibold">
           {label}
         </div>
-        <div className="text-[10px] text-blue-300/60 mt-1">
+        <div className="text-[10px] text-white/60 mt-1">
           {score}/100
         </div>
       </div>
@@ -255,7 +255,7 @@ export function UltimateControlPanel({
   onOpenChange,
   userEmail,
   userName,
-  accentColor = '#3b82f6'
+  accentColor = '#ffffff'
 }: UltimateControlPanelProps) {
   // FPS Optimizer integration for component lifecycle tracking
   const { registerComponent, unregisterComponent, shouldEnableShimmer, setComponentVisibility } = useFpsOptimizer();
@@ -405,7 +405,7 @@ export function UltimateControlPanel({
               onDragEnd={handleDragEnd}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="relative px-6 py-2.5 rounded-full bg-gradient-to-r from-blue-500/90 to-purple-500/90 backdrop-blur-xl border border-white/20 shadow-2xl flex items-center gap-2 pointer-events-auto group overflow-hidden"
+              className="relative px-6 py-2.5 rounded-full bg-gradient-to-r from-white/90 to-white/90 backdrop-blur-xl border border-white/20 shadow-2xl flex items-center gap-2 pointer-events-auto group overflow-hidden"
               style={{
                 boxShadow: `0 8px 32px ${accentColor}40, 0 0 0 1px rgba(255,255,255,0.1)`
               }}
@@ -466,7 +466,7 @@ export function UltimateControlPanel({
               dragElastic={0.1}
               onDragEnd={handleDragEnd}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 z-[250000] max-h-[85vh] overflow-hidden rounded-t-3xl bg-gradient-to-b from-slate-900/95 to-black/95 backdrop-blur-xl border-t border-blue-400/30 shadow-2xl panel-shimmer"
+              className="fixed bottom-0 left-0 right-0 z-[250000] max-h-[85vh] overflow-hidden rounded-t-3xl bg-gradient-to-b from-slate-900/95 to-black/95 backdrop-blur-xl border-t border-white/30 shadow-2xl panel-shimmer"
               style={{
                 paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)'
               }}
@@ -480,7 +480,7 @@ export function UltimateControlPanel({
                   className="w-12 h-1.5 rounded-full shimmer-pulse"
                   style={{ backgroundColor: `${accentColor}60` }}
                 />
-                <div className="text-[9px] text-blue-200/50 font-mono tracking-wider">SWIPE DOWN</div>
+                <div className="text-[9px] text-white/50 font-mono tracking-wider">SWIPE DOWN</div>
               </div>
 
               {/* Header */}
@@ -605,21 +605,21 @@ export function UltimateControlPanel({
                           label="Device"
                           value={deviceInfo.device.model}
                           sublabel={deviceInfo.device.manufacturer}
-                          color="#3b82f6"
+                          color="#ffffff"
                         />
                         <StatCard
                           icon={Monitor}
                           label="OS"
                           value={deviceInfo.device.os}
                           sublabel={`v${deviceInfo.device.osVersion}`}
-                          color="#8b5cf6"
+                          color="#ffffff"
                         />
                         <StatCard
                           icon={Cpu}
                           label="CPU"
                           value={`${deviceInfo.performance.cpu.cores} Cores`}
                           sublabel={deviceInfo.performance.cpu.architecture}
-                          color="#22c55e"
+                          color="#ffffff"
                         />
                         <StatCard
                           icon={HardDrive}
@@ -631,7 +631,7 @@ export function UltimateControlPanel({
                       </div>
 
                       {/* Screen Info */}
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-white/10">
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-white/10 border border-white/10">
                         <div className="text-xs text-white/50 uppercase tracking-wider font-semibold mb-2">
                           Display
                         </div>
@@ -653,19 +653,19 @@ export function UltimateControlPanel({
 
                       {/* Session + Cache */}
                       <div className="grid grid-cols-2 gap-3">
-                        <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-400/30">
-                          <div className="text-xs text-emerald-200/70">Session length</div>
+                        <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/30">
+                          <div className="text-xs text-white/70">Session length</div>
                           <div className="text-lg font-bold text-white">
                             {Math.max(1, Math.floor(sessionMs / 1000 / 60))} min
                           </div>
                         </div>
-                        <div className="p-4 rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-400/30">
-                          <div className="text-xs text-cyan-200/70">Cache usage</div>
+                        <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/30">
+                          <div className="text-xs text-white/70">Cache usage</div>
                           <div className="text-lg font-bold text-white">
                             {cacheUsageMB !== undefined ? `${cacheUsageMB.toFixed(1)} MB` : 'Measuring…'}
                           </div>
                           {cacheQuotaMB !== undefined && (
-                            <div className="text-[11px] text-cyan-200/60">Quota: {cacheQuotaMB.toFixed(1)} MB</div>
+                            <div className="text-[11px] text-white/60">Quota: {cacheQuotaMB.toFixed(1)} MB</div>
                           )}
                         </div>
                         <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-400/30">
@@ -685,16 +685,16 @@ export function UltimateControlPanel({
 
                       {/* Battery */}
                       {deviceInfo.battery.level >= 0 && (
-                        <div className="p-4 rounded-xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-white/10">
+                        <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-white/10 border border-white/10">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <Battery size={18} className="text-green-400" />
+                              <Battery size={18} className="text-white" />
                               <span className="text-white font-semibold">
                                 {deviceInfo.battery.level}%
                               </span>
                             </div>
                             {deviceInfo.battery.charging && (
-                              <div className="text-xs text-green-400 flex items-center gap-1">
+                              <div className="text-xs text-white flex items-center gap-1">
                                 <Zap size={12} />
                                 Charging
                               </div>
@@ -721,7 +721,7 @@ export function UltimateControlPanel({
                           label="Speed"
                           value={`${liveSpeed.toFixed(2)} Mbps`}
                           sublabel="Measured download"
-                          color="#22c55e"
+                          color="#ffffff"
                         />
                         <StatCard
                           icon={Activity}
@@ -735,14 +735,14 @@ export function UltimateControlPanel({
                           label="Upload"
                           value={`${liveUpload.toFixed(2)} Mbps`}
                           sublabel="Measured upload"
-                          color="#a855f7"
+                          color="#ffffff"
                         />
                       </div>
 
                       {/* Connection Type */}
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-white/10">
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-white/10 border border-white/10">
                         <div className="flex items-center gap-3">
-                          <Wifi size={24} className="text-blue-400" />
+                          <Wifi size={24} className="text-white" />
                           <div className="flex-1">
                             <div className="text-sm text-white/50">Connection</div>
                             <div className="text-lg font-bold text-white">
@@ -784,7 +784,7 @@ export function UltimateControlPanel({
                       </div>
 
                       {/* Manual Speed Test */}
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 to-blue-500/10 border border-white/10 space-y-3">
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-white/10 border border-white/10 space-y-3">
                         <div className="flex items-center justify-between">
                           <div>
                             <div className="text-sm text-white/60">Speed test</div>
@@ -820,11 +820,11 @@ export function UltimateControlPanel({
                       </div>
 
                       {/* Location */}
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-white/10">
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-pink-500/10 border border-white/10">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                              <MapPin size={18} className="text-purple-400" />
+                              <MapPin size={18} className="text-white" />
                               <span className="text-sm text-white/50">Location</span>
                             </div>
                             <div className="text-white font-semibold mb-1">
@@ -873,7 +873,7 @@ export function UltimateControlPanel({
                       </div>
 
                       {/* FPS */}
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-white/10">
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-white/10 border border-white/10">
                         <div className="flex items-center justify-between">
                           <div>
                             <div className="text-sm text-white/50">Current FPS</div>
@@ -884,7 +884,7 @@ export function UltimateControlPanel({
                               Frame time: {deviceInfo.live.frameTime.toFixed(2)}ms
                             </div>
                           </div>
-                          <Activity size={40} className="text-green-400 opacity-20" />
+                          <Activity size={40} className="text-white opacity-20" />
                         </div>
                       </div>
 
@@ -895,7 +895,7 @@ export function UltimateControlPanel({
                         value={deviceInfo.performance.gpu.tier.toUpperCase() + ' Tier'}
                         sublabel={`Score ${Math.round(deviceInfo.performance.gpu.score ?? 0) || 0}/100 • ${deviceInfo.performance.gpu.vendor || ''} ${deviceInfo.performance.gpu.renderer || ''}`}
                         color={
-                          deviceInfo.performance.gpu.tier === 'high' ? '#22c55e' :
+                          deviceInfo.performance.gpu.tier === 'high' ? '#ffffff' :
                           deviceInfo.performance.gpu.tier === 'medium' ? '#f59e0b' : '#ef4444'
                         }
                       />
@@ -913,7 +913,7 @@ export function UltimateControlPanel({
                       </div>
 
                       {/* Memory */}
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-white/10">
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-white/10 border border-white/10">
                         <div className="flex items-center justify-between mb-3">
                           <span className="text-sm text-white/50">Memory Usage</span>
                           <span className="text-sm font-semibold text-white">
@@ -924,7 +924,7 @@ export function UltimateControlPanel({
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${deviceInfo.performance.memory.percentage}%` }}
-                            className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
+                            className="h-full bg-gradient-to-r from-white to-white rounded-full"
                           />
                         </div>
                         <div className="text-xs text-white/40 mt-2">
@@ -967,9 +967,9 @@ export function UltimateControlPanel({
                       className="space-y-4"
                     >
                       {/* User Info */}
-                      <div className="p-6 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-white/10">
+                      <div className="p-6 rounded-xl bg-gradient-to-br from-white/10 to-white/10 border border-white/10">
                         <div className="flex items-center gap-4 mb-4">
-                          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+                          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-white to-white flex items-center justify-center">
                             <User size={32} className="text-white" />
                           </div>
                           <div className="flex-1">
@@ -985,7 +985,7 @@ export function UltimateControlPanel({
                         <div className="grid grid-cols-2 gap-3">
                           <div className="p-3 rounded-lg bg-white/5">
                             <div className="text-xs text-white/50">Status</div>
-                            <div className="text-sm font-semibold text-green-400">
+                            <div className="text-sm font-semibold text-white">
                               {userEmail ? 'Active' : 'Guest'}
                             </div>
                           </div>
@@ -1014,7 +1014,7 @@ export function UltimateControlPanel({
                       <div className="space-y-2">
                         <button
                           onClick={handleRefresh}
-                          className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-white/10 text-white font-semibold hover:from-blue-500/30 hover:to-purple-500/30 transition-all flex items-center justify-center gap-2"
+                          className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-white/20 to-white/20 border border-white/10 text-white font-semibold hover:from-white/30 hover:to-white/30 transition-all flex items-center justify-center gap-2"
                         >
                           <RefreshCw size={18} />
                           Refresh Website
@@ -1042,7 +1042,7 @@ export function UltimateControlPanel({
                               alert('Clipboard unavailable; details logged to console');
                             }
                           }}
-                          className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-500/20 to-blue-500/20 border border-white/10 text-white font-semibold hover:from-emerald-500/30 hover:to-blue-500/30 transition-all flex items-center justify-center gap-2"
+                          className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-white/20 to-white/20 border border-white/10 text-white font-semibold hover:from-white/30 hover:to-white/30 transition-all flex items-center justify-center gap-2"
                         >
                           <Globe size={18} />
                           Copy Device Snapshot

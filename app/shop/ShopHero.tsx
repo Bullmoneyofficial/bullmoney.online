@@ -379,7 +379,7 @@ const HeroParallax = () => {
           110deg, 
           #64748b 20%,   /* Darker Grey Start */
           #ffffff 48%,   /* White Peak */
-          #a5b4fc 52%,   /* Subtle Indigo Hint */
+          #ffffff 52%,   /* Subtle Indigo Hint */
           #64748b 80%    /* Darker Grey End */
         );
         background-size: 200% auto;
@@ -396,7 +396,7 @@ const HeroParallax = () => {
           background: linear-gradient(
           110deg, 
           #ffffff 40%, 
-          #4f46e5 50%, 
+          #ffffff 50%, 
           #ffffff 60%
         );
         background-size: 200% auto;
@@ -446,7 +446,7 @@ const HeroParallax = () => {
         <div className="fixed bottom-8 right-8 z-[9990] flex flex-col gap-2">
             <button 
                 onClick={handleCreateNewVideo}
-                className="bg-green-600 hover:bg-green-500 text-white p-3 md:p-4 rounded-full shadow-lg shadow-green-900/50 transition-all hover:scale-110 flex items-center justify-center"
+                className="bg-white hover:bg-white/90 text-black p-3 md:p-4 rounded-full shadow-lg shadow-white/50 transition-all hover:scale-110 flex items-center justify-center"
                 title="Add New Video Card"
             >
                 {isSaving ? <Loader2 className="animate-spin" /> : <Plus size={20} />}
@@ -488,7 +488,7 @@ const HeroParallax = () => {
                     {isAdmin && !isEditing && (
                       <button
                         onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
-                        className="absolute top-24 md:top-4 right-16 z-50 p-2 bg-sky-600 rounded-full text-white hover:bg-sky-500 transition-colors shadow-[0_0_15px_rgba(14,165,233,0.5)] flex gap-2 items-center px-4 font-bold text-xs uppercase"
+                        className="absolute top-24 md:top-4 right-16 z-50 p-2 bg-sky-600 rounded-full text-white hover:bg-sky-500 transition-colors shadow-[0_0_15px_rgba(255, 255, 255,0.5)] flex gap-2 items-center px-4 font-bold text-xs uppercase"
                       >
                           <Edit2 size={14} /> Edit
                       </button>
@@ -709,7 +709,7 @@ const HeroParallax = () => {
                                         transition={{ delay: 0.6 }}
                                         className="w-full py-2 bg-neutral-800 text-neutral-400 text-xs rounded-xl font-mono uppercase tracking-widest hover:bg-neutral-700 transition-all flex items-center justify-center gap-2"
                                     >
-                                        {copied ? <Check size={12} className="text-green-500"/> : <Copy size={12}/>} 
+                                        {copied ? <Check size={12} className="text-white"/> : <Copy size={12}/>} 
                                         {copied ? "Link Copied" : "Copy Link"}
                                     </motion.button>
                                 </div>
@@ -758,7 +758,7 @@ const HeroParallax = () => {
                 {(hero?.title || "Welcome VIP").split(" ").map((word: string, i: number) => (
                     <span 
                         key={i} 
-                        className="inline-block mr-3 text-transparent bg-clip-text bg-[linear-gradient(110deg,#FFFFFF,45%,#38BDF8,55%,#FFFFFF)] bg-[length:250%_100%] animate-shimmer"
+                        className="inline-block mr-3 text-transparent bg-clip-text bg-[linear-gradient(110deg,#FFFFFF,45%,#ffffff,55%,#FFFFFF)] bg-[length:250%_100%] animate-shimmer"
                     >
                       {word}
                     </span>

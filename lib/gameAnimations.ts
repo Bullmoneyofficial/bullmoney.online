@@ -38,7 +38,7 @@ export const GAME_ANIMATIONS = {
   button: {
     press: 'active:scale-95 transition-transform duration-100',
     ripple: 'relative overflow-hidden before:absolute before:inset-0 before:bg-white/20 before:scale-0 active:before:scale-100 before:transition-transform before:duration-500 before:rounded-full',
-    glow: 'shadow-[0_0_20px_rgba(59,130,246,0.5)] hover:shadow-[0_0_30px_rgba(59,130,246,0.8)] transition-shadow duration-300',
+    glow: 'shadow-[0_0_20px_rgba(255, 255, 255,0.5)] hover:shadow-[0_0_30px_rgba(255, 255, 255,0.8)] transition-shadow duration-300',
   },
 
   // Card animations
@@ -107,7 +107,7 @@ export class ParticleSystem {
     const colors = {
       coin: ['#FFD700', '#FFA500', '#FF8C00'],
       star: ['#FFFF00', '#FFD700', '#FFF8DC'],
-      sparkle: ['#3b82f6', '#a855f7', '#22c55e', '#ef4444', '#f59e0b'],
+      sparkle: ['#ffffff', '#ffffff', '#ffffff', '#ef4444', '#f59e0b'],
       confetti: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8'],
       smoke: ['rgba(255,255,255,0.5)', 'rgba(200,200,200,0.3)', 'rgba(150,150,150,0.2)'],
     };

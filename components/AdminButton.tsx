@@ -62,7 +62,7 @@ export function AdminButton() {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.8 }}
       onClick={openAdminPanel}
-      className={`fixed bottom-4 right-4 z-[99999] p-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-full transition-all group ${shouldSkipHeavyEffects ? '' : 'shadow-lg shadow-blue-500/30'}`}
+      className={`fixed bottom-4 right-4 z-[99999] p-3 bg-gradient-to-r from-white to-white hover:from-white hover:to-white rounded-full transition-all group ${shouldSkipHeavyEffects ? '' : 'shadow-lg shadow-white/30'}`}
       title="Open Admin Panel"
     >
       <Shield className="w-5 h-5 text-white" />
@@ -75,7 +75,7 @@ export function AdminButton() {
       {/* Pulse effect */}
       {!shouldSkipHeavyEffects && (
         <motion.div
-          className="absolute inset-0 rounded-full bg-blue-500/50"
+          className="absolute inset-0 rounded-full bg-white/50"
           animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0, 0.5] }}
           transition={{ duration: 2, repeat: Infinity }}
         />

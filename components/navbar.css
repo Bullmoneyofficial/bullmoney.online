@@ -13,8 +13,8 @@
 
 :root {
   /* Default accent (blue) - overridden by GlobalThemeProvider */
-  --navbar-accent: var(--accent-color, #3b82f6);
-  --navbar-accent-rgb: var(--accent-rgb, 59, 130, 246);
+  --navbar-accent: var(--accent-color, #ffffff);
+  --navbar-accent-rgb: var(--accent-rgb, 255, 255, 255);
   
   /* Derived navbar colors */
   --navbar-border: rgba(var(--navbar-accent-rgb), 0.3);
@@ -50,6 +50,18 @@
   /* TOUCH FIX: Don't block scrolling on iPhone/Android */
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Responsive preview with mouse: allow desktop-like interaction at mobile widths */
+@media (max-width: 1024px) and (hover: hover) and (pointer: fine) {
+  .navbar-themed,
+  [data-navbar-container] {
+    pointer-events: auto !important;
+  }
+
+  .navbar-themed * {
+    pointer-events: auto !important;
+  }
 }
 
 /* Navbar elements use theme accent color */
@@ -171,13 +183,13 @@ body {
 
 @keyframes tipPulseGlow {
   0% {
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.2), inset 0 0 20px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.2), inset 0 0 20px rgba(255, 255, 255, 0.1);
   }
   50% {
-    box-shadow: 0 0 25px rgba(59, 130, 246, 0.4), inset 0 0 30px rgba(59, 130, 246, 0.15);
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.4), inset 0 0 30px rgba(255, 255, 255, 0.15);
   }
   100% {
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.2), inset 0 0 20px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.2), inset 0 0 20px rgba(255, 255, 255, 0.1);
   }
 }
 
@@ -236,7 +248,7 @@ body {
   content: '';
   position: absolute;
   inset: -8px;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
   border-radius: 2rem;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -324,7 +336,7 @@ body {
   width: 0;
   height: 0;
   border-radius: 50%;
-  background: rgba(59, 130, 246, 0.1);
+  background: rgba(255, 255, 255, 0.1);
   transform: translate(-50%, -50%);
   transition: width 0.6s, height 0.6s;
   pointer-events: none;
@@ -349,13 +361,13 @@ body {
 .glass-effect-heavy {
   background: rgba(0, 0, 0, 0.92);
   /* NO BLUR - removed for performance */
-  border: 2px solid rgba(59, 130, 246, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.4);
 }
 
 .glass-effect-light {
   background: rgba(0, 0, 0, 0.7);
   /* NO BLUR - removed for performance */
-  border: 1.5px solid rgba(59, 130, 246, 0.35);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
 }
 
 
@@ -367,18 +379,18 @@ body {
 .mobile-controls-glass {
   background: rgba(0, 0, 0, 0.9);
   /* NO BLUR - removed for performance */
-  border: 2px solid rgba(59, 130, 246, 0.55);
+  border: 2px solid rgba(255, 255, 255, 0.55);
   box-shadow: 
     0 8px 32px 0 rgba(31, 38, 135, 0.25),
-    inset 0 0 25px rgba(59, 130, 246, 0.15),
+    inset 0 0 25px rgba(255, 255, 255, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .mobile-controls-glass:hover {
-  border-color: rgba(59, 130, 246, 0.6);
+  border-color: rgba(255, 255, 255, 0.6);
   box-shadow: 
     0 8px 40px 0 rgba(31, 38, 135, 0.25),
-    inset 0 0 30px rgba(59, 130, 246, 0.15),
+    inset 0 0 30px rgba(255, 255, 255, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
@@ -390,19 +402,19 @@ body {
 .dock-glass {
   background: rgba(0, 0, 0, 0.9);
   /* NO BLUR - removed for performance */
-  border: 2px solid rgba(59, 130, 246, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.5);
   box-shadow:
     0 8px 32px 0 rgba(31, 38, 135, 0.25),
     inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    inset 0 0 25px rgba(59, 130, 246, 0.12);
+    inset 0 0 25px rgba(255, 255, 255, 0.12);
 }
 
 .dock-glass:hover {
-  border-color: rgba(59, 130, 246, 0.6);
+  border-color: rgba(255, 255, 255, 0.6);
   box-shadow:
     0 8px 40px 0 rgba(31, 38, 135, 0.25),
     inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    inset 0 0 30px rgba(59, 130, 246, 0.12);
+    inset 0 0 30px rgba(255, 255, 255, 0.12);
 }
 
 /* ============================================================================
@@ -413,14 +425,14 @@ body {
 .icon-glass {
   background: rgba(0, 0, 0, 0.6);
   /* NO BLUR - removed for performance */
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .icon-glass:hover {
   background: rgba(0, 0, 0, 0.7);
-  border-color: rgba(59, 130, 246, 0.5);
-  box-shadow: 0 0 25px rgba(59, 130, 246, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.3);
 }
 
 /* ============================================================================
@@ -431,11 +443,11 @@ body {
 .tooltip-glass {
   background: rgba(0, 0, 0, 0.9);
   /* NO BLUR - removed for performance */
-  border: 1px solid rgba(59, 130, 246, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.45);
   box-shadow:
     0 8px 32px rgba(31, 38, 135, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 0 30px rgba(59, 130, 246, 0.3);
+    0 0 30px rgba(255, 255, 255, 0.3);
 }
 
 /* ============================================================================
@@ -446,17 +458,17 @@ body {
 .menu-glass {
   background: rgba(0, 0, 0, 0.95);
   /* NO BLUR - removed for performance */
-  border: 2px solid rgba(59, 130, 246, 0.55);
+  border: 2px solid rgba(255, 255, 255, 0.55);
   box-shadow:
     0 12px 48px 0 rgba(31, 38, 135, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    inset 0 0 35px rgba(59, 130, 246, 0.12);
+    inset 0 0 35px rgba(255, 255, 255, 0.12);
 }
 
 .glass-active {
   background: rgba(0, 0, 0, 0.6);
-  border-color: rgba(59, 130, 246, 0.7);
-  box-shadow: 0 0 40px rgba(59, 130, 246, 0.5);
+  border-color: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 0 40px rgba(255, 255, 255, 0.5);
 }
 
 /* ============================================================================
@@ -578,7 +590,7 @@ body {
 
 /* Lightweight shimmer line */
 .mobile-shimmer-line {
-  background: linear-gradient(to right, transparent, rgba(var(--accent-rgb, 59, 130, 246), 0.25), transparent);
+  background: linear-gradient(to right, transparent, rgba(var(--accent-rgb, 255, 255, 255), 0.25), transparent);
   animation: mobileShimmerSlide 4s ease-in-out infinite;
   transform: translateZ(0);
 }
@@ -752,10 +764,10 @@ body {
     background-size: 200% 100% !important;
     animation: navbarBgGradientLTR 4s ease-in-out infinite !important;
     box-shadow: 
-      0 0 30px rgba(59, 130, 246, 0.5),
-      0 0 60px rgba(59, 130, 246, 0.2),
+      0 0 30px rgba(255, 255, 255, 0.5),
+      0 0 60px rgba(255, 255, 255, 0.2),
       inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
-    border-color: rgba(59, 130, 246, 0.7) !important;
+    border-color: rgba(255, 255, 255, 0.7) !important;
   }
   
   /* Inner container also gets animated bg */
@@ -793,11 +805,11 @@ body {
     background: linear-gradient(
       90deg,
       transparent 0%,
-      rgba(59, 130, 246, 0.08) 20%,
-      rgba(59, 130, 246, 0.2) 35%,
-      rgba(147, 197, 253, 0.35) 50%,
-      rgba(59, 130, 246, 0.2) 65%,
-      rgba(59, 130, 246, 0.08) 80%,
+      rgba(255, 255, 255, 0.08) 20%,
+      rgba(255, 255, 255, 0.2) 35%,
+      rgba(255, 255, 255, 0.35) 50%,
+      rgba(255, 255, 255, 0.2) 65%,
+      rgba(255, 255, 255, 0.08) 80%,
       transparent 100%
     );
     animation: navbarBgShimmerLTR 5s ease-in-out infinite;
@@ -843,8 +855,8 @@ body {
   html.chrome-premium .navbar-shimmer svg,
   html.mobile-premium .navbar-shimmer svg {
     z-index: 10 !important;
-    color: rgba(147, 197, 253, 1) !important;
-    filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.5));
+    color: rgba(255, 255, 255, 1) !important;
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.5));
     transition: color 0.3s ease, filter 0.3s ease;
   }
   
@@ -860,7 +872,7 @@ body {
   html.mobile-premium .navbar-shimmer button:active svg,
   html.mobile-premium .navbar-shimmer a:active svg {
     color: rgba(255, 255, 255, 1) !important;
-    filter: drop-shadow(0 0 8px rgba(147, 197, 253, 0.9)) drop-shadow(0 0 15px rgba(59, 130, 246, 0.6));
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 15px rgba(255, 255, 255, 0.6));
   }
   
   /* Pulse glow animation on icons when shimmer passes */
@@ -876,18 +888,18 @@ body {
 /* Icon pulse glow synced with shimmer */
 @keyframes iconPulseGlow {
   0%, 100% {
-    filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.4));
-    color: rgba(147, 197, 253, 0.9);
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.4));
+    color: rgba(255, 255, 255, 0.9);
   }
   40% {
-    filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.6));
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.6));
   }
   50% {
-    filter: drop-shadow(0 0 10px rgba(147, 197, 253, 0.9)) drop-shadow(0 0 20px rgba(59, 130, 246, 0.5));
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 20px rgba(255, 255, 255, 0.5));
     color: rgba(255, 255, 255, 1);
   }
   60% {
-    filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.6));
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.6));
   }
 }
 
@@ -907,14 +919,14 @@ body {
     background: linear-gradient(
       90deg,
       transparent 0%,
-      rgba(59, 130, 246, 0.5) 15%,
-      rgba(147, 197, 253, 1) 50%,
-      rgba(59, 130, 246, 0.5) 85%,
+      rgba(255, 255, 255, 0.5) 15%,
+      rgba(255, 255, 255, 1) 50%,
+      rgba(255, 255, 255, 0.5) 85%,
       transparent 100%
     );
     animation: navbarBorderShimmerLTR 5s ease-in-out infinite;
     z-index: 10;
-    filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.8));
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8));
     pointer-events: none;
   }
   
@@ -924,7 +936,7 @@ body {
   html.safari-premium .nav-button,
   html.chrome-premium .nav-button,
   html.mobile-premium .nav-button {
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.3) !important;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.3) !important;
     position: relative;
     z-index: 2;
   }
@@ -934,7 +946,7 @@ body {
   html.safari-premium .nav-button:active,
   html.chrome-premium .nav-button:active,
   html.mobile-premium .nav-button:active {
-    box-shadow: 0 0 25px rgba(59, 130, 246, 0.5) !important;
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.5) !important;
   }
 }
 
@@ -996,7 +1008,7 @@ body {
   }
   50% {
     opacity: 1;
-    filter: drop-shadow(0 0 10px rgba(147, 197, 253, 1));
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 1));
   }
   90% {
     opacity: 0.7;
@@ -1018,7 +1030,7 @@ body {
   }
   50% {
     opacity: 1;
-    filter: drop-shadow(0 0 12px rgba(147, 197, 253, 0.8));
+    filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.8));
   }
   90% {
     opacity: 0.5;
@@ -1026,5 +1038,51 @@ body {
   100% {
     left: 200%;
     opacity: 0;
+  }
+}
+
+/* ============================================================================
+   TOUCH DEVICE HOVER FIX - Disable hover states on mobile
+   ============================================================================ */
+@media (hover: none) and (pointer: coarse) {
+  /* Disable ALL navbar hover effects on touch devices */
+  .navbar-themed a:hover,
+  .navbar-themed button:hover,
+  .dock-item-base:hover,
+  .dock-icon-container:hover::before,
+  .nav-button:hover::after,
+  .mobile-controls-glass:hover,
+  .dock-glass:hover,
+  .icon-glass:hover,
+  .mobile-tip-slide:hover,
+  .mobile-menu-btn:hover {
+    transform: none !important;
+    box-shadow: inherit !important;
+    filter: inherit !important;
+    background-color: inherit !important;
+    opacity: inherit !important;
+    scale: inherit !important;
+  }
+  
+  /* Use active state for touch feedback */
+  .navbar-themed button:active,
+  .dock-item-base:active,
+  .nav-button:active,
+  .mobile-menu-btn:active {
+    opacity: 0.8;
+    transform: scale(0.98) !important;
+    transition: transform 0.1s ease-out, opacity 0.1s ease-out !important;
+  }
+  
+  /* Ensure touch-friendly click targets */
+  .navbar-themed button,
+  .navbar-themed a,
+  .dock-item-base,
+  .nav-button {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
+    cursor: pointer;
   }
 }

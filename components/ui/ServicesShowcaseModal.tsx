@@ -169,7 +169,7 @@ function FreezeZone({ children, className = "" }: { children: React.ReactNode; c
 function LoadingSpinner({ text = "Loading..." }: { text?: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 gap-4">
-      <Loader2 className="w-10 h-10 text-blue-400 animate-spin freeze-exempt" />
+      <Loader2 className="w-10 h-10 text-white animate-spin freeze-exempt" />
       <p className="text-white/60 text-sm">{text}</p>
     </div>
   );
@@ -188,13 +188,13 @@ function InteractiveOrbSection({ onPlayGame }: { onPlayGame: () => void }) {
   }, []);
 
   return (
-    <FreezeZone className="relative rounded-3xl overflow-hidden border-2 border-blue-500/30 bg-gradient-to-br from-black via-blue-950/30 to-black p-4 sm:p-8">
+    <FreezeZone className="relative rounded-3xl overflow-hidden border-2 border-white/30 bg-gradient-to-br from-black via-blue-950/30 to-black p-4 sm:p-8">
       {/* Static top text - no animation */}
       <div className="absolute top-6 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
-        <div className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-blue-500/30 to-cyan-500/30 border border-blue-400/40 backdrop-blur-sm">
-          <Gamepad2 className="w-5 h-5 text-blue-400" />
-          <span className="text-base font-semibold text-blue-300">🕹️ Hidden Game Inside!</span>
-          <Sparkles className="w-5 h-5 text-cyan-400" />
+        <div className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-white/30 to-white/30 border border-white/40 backdrop-blur-sm">
+          <Gamepad2 className="w-5 h-5 text-white" />
+          <span className="text-base font-semibold text-white">🕹️ Hidden Game Inside!</span>
+          <Sparkles className="w-5 h-5 text-white" />
         </div>
       </div>
 
@@ -212,7 +212,7 @@ function InteractiveOrbSection({ onPlayGame }: { onPlayGame: () => void }) {
             </Suspense>
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20 animate-pulse freeze-exempt" />
+              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-white/20 to-white/20 animate-pulse freeze-exempt" />
             </div>
           )}
         </div>
@@ -221,8 +221,8 @@ function InteractiveOrbSection({ onPlayGame }: { onPlayGame: () => void }) {
           type="button"
           onClick={onPlayGame}
           className="absolute z-[200] px-10 py-5 text-xl rounded-full font-bold text-white 
-            bg-gradient-to-r from-blue-500 via-cyan-500 to-blue-500
-            shadow-[0_0_40px_rgba(56,189,248,0.6)] hover:shadow-[0_0_80px_rgba(56,189,248,0.9)]
+            bg-gradient-to-r from-white via-white to-white
+            shadow-[0_0_40px_rgba(255, 255, 255,0.6)] hover:shadow-[0_0_80px_rgba(255, 255, 255,0.9)]
             hover:scale-110 active:scale-95
             transition-all duration-300 cursor-pointer
             border-2 border-white/40 hover:border-white/80
@@ -234,18 +234,18 @@ function InteractiveOrbSection({ onPlayGame }: { onPlayGame: () => void }) {
 
       {/* Static tip text at bottom */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
-        <div className="px-8 py-4 rounded-2xl bg-black/70 border border-blue-400/40 backdrop-blur-md">
-          <p className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400">
+        <div className="px-8 py-4 rounded-2xl bg-black/70 border border-white/40 backdrop-blur-md">
+          <p className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-white">
             🎮 Click the button to play!
           </p>
         </div>
       </div>
 
       {/* Corner decorations - static */}
-      <div className="absolute top-4 left-4 w-10 h-10 border-l-2 border-t-2 border-blue-400/50 rounded-tl-xl pointer-events-none" />
-      <div className="absolute top-4 right-4 w-10 h-10 border-r-2 border-t-2 border-blue-400/50 rounded-tr-xl pointer-events-none" />
-      <div className="absolute bottom-4 left-4 w-10 h-10 border-l-2 border-b-2 border-cyan-400/50 rounded-bl-xl pointer-events-none" />
-      <div className="absolute bottom-4 right-4 w-10 h-10 border-r-2 border-b-2 border-cyan-400/50 rounded-br-xl pointer-events-none" />
+      <div className="absolute top-4 left-4 w-10 h-10 border-l-2 border-t-2 border-white/50 rounded-tl-xl pointer-events-none" />
+      <div className="absolute top-4 right-4 w-10 h-10 border-r-2 border-t-2 border-white/50 rounded-tr-xl pointer-events-none" />
+      <div className="absolute bottom-4 left-4 w-10 h-10 border-l-2 border-b-2 border-white/50 rounded-bl-xl pointer-events-none" />
+      <div className="absolute bottom-4 right-4 w-10 h-10 border-r-2 border-b-2 border-white/50 rounded-br-xl pointer-events-none" />
     </FreezeZone>
   );
 }

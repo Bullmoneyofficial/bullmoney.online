@@ -568,7 +568,7 @@ const PerspectiveGrid = () => (
     <div
       className="absolute w-[200%] h-[200%] left-[-50%]"
       style={{
-        backgroundImage: `linear-gradient(to right, rgba(59, 130, 246, 0.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(59, 130, 246, 0.1) 1px, transparent 1px)`,
+        backgroundImage: `linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 1px, transparent 1px)`,
         backgroundSize: '60px 60px',
         transform: 'rotateX(60deg)',
         transformOrigin: 'center top',
@@ -589,7 +589,7 @@ const NoiseTexture = () => (
 const SpotlightTracking = ({ mouseX, mouseY, skipHeavyEffects = false }: { mouseX: number; mouseY: number; skipHeavyEffects?: boolean }) => (
   <motion.div
     className="absolute pointer-events-none z-5"
-    style={{ width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%)', x: mouseX - 300, y: mouseY - 300, filter: skipHeavyEffects ? 'none' : 'blur(40px)' }}
+    style={{ width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%)', x: mouseX - 300, y: mouseY - 300, filter: skipHeavyEffects ? 'none' : 'blur(40px)' }}
   />
 );
 
@@ -600,7 +600,7 @@ const OrbitalParticles = () => {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       {particles.map((p) => (
-        <div key={p.id} className="absolute rounded-full bg-blue-500/30" style={{ width: p.size, height: p.size, left: `${p.x}%`, top: `${p.y}%`, opacity: 0.5 }} />
+        <div key={p.id} className="absolute rounded-full bg-white/30" style={{ width: p.size, height: p.size, left: `${p.x}%`, top: `${p.y}%`, opacity: 0.5 }} />
       ))}
     </div>
   );
@@ -608,7 +608,7 @@ const OrbitalParticles = () => {
 
 const AuroraBorealis = ({ skipHeavyEffects = false }: { skipHeavyEffects?: boolean }) => (
   <div className="absolute bottom-0 left-0 w-[60%] h-[60%] pointer-events-none opacity-30"
-    style={{ background: 'radial-gradient(ellipse at bottom left, rgba(59, 130, 246, 0.4) 0%, rgba(147, 51, 234, 0.2) 40%, transparent 70%)', filter: skipHeavyEffects ? 'none' : 'blur(80px)' }} />
+    style={{ background: 'radial-gradient(ellipse at bottom left, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.2) 40%, transparent 70%)', filter: skipHeavyEffects ? 'none' : 'blur(80px)' }} />
 );
 
 const Scanlines = () => (
@@ -617,14 +617,14 @@ const Scanlines = () => (
 
 const ReflectiveBorder = ({ children, className, skipHeavyEffects = false }: { children: React.ReactNode; className?: string; skipHeavyEffects?: boolean }) => (
   <div className={cn("relative p-[1px] rounded-2xl overflow-hidden", className)}>
-    <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.5), rgba(255,255,255,0.3), rgba(59, 130, 246, 0.5), transparent)' }} />
+    <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), rgba(255,255,255,0.3), rgba(255, 255, 255, 0.5), transparent)' }} />
     <div className={cn("relative bg-black/80 rounded-2xl", !skipHeavyEffects && "backdrop-blur-xl")}>{children}</div>
   </div>
 );
 
 const DepthLayers = () => (
   <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-[0.05]">
-    <pre className="text-xs text-blue-500/50 font-mono whitespace-pre-wrap blur-[2px] p-8">
+    <pre className="text-xs text-white/50 font-mono whitespace-pre-wrap blur-[2px] p-8">
 {`const analyzeMarket = async (data) => {
   const signals = await processSignals(data);
   const momentum = calculateMomentum(signals);
@@ -637,10 +637,10 @@ const DepthLayers = () => (
 
 const CornerAccents = () => (
   <>
-    <div className="absolute top-4 left-4 text-blue-500/30 text-2xl font-light">[</div>
-    <div className="absolute top-4 right-4 text-blue-500/30 text-2xl font-light">]</div>
-    <div className="absolute bottom-4 left-4 text-blue-500/30 text-2xl font-light">[</div>
-    <div className="absolute bottom-4 right-4 text-blue-500/30 text-2xl font-light">]</div>
+    <div className="absolute top-4 left-4 text-white/30 text-2xl font-light">[</div>
+    <div className="absolute top-4 right-4 text-white/30 text-2xl font-light">]</div>
+    <div className="absolute bottom-4 left-4 text-white/30 text-2xl font-light">[</div>
+    <div className="absolute bottom-4 right-4 text-white/30 text-2xl font-light">]</div>
   </>
 );
 
@@ -651,14 +651,14 @@ const VerticalText = ({ skipHeavyEffects = false }: { skipHeavyEffects?: boolean
       style={{ 
         writingMode: 'vertical-rl', 
         textOrientation: 'mixed', 
-        color: '#60a5fa',
+        color: '#ffffff',
         textShadow: skipHeavyEffects ? 'none' : `
-          0 0 5px #60a5fa,
-          0 0 10px #60a5fa,
-          0 0 20px #3b82f6,
-          0 0 40px #3b82f6,
-          0 0 60px #2563eb,
-          0 0 80px #2563eb
+          0 0 5px #ffffff,
+          0 0 10px #ffffff,
+          0 0 20px #ffffff,
+          0 0 40px #ffffff,
+          0 0 60px #ffffff,
+          0 0 80px #ffffff
         `,
       }}
     >
@@ -668,7 +668,7 @@ const VerticalText = ({ skipHeavyEffects = false }: { skipHeavyEffects?: boolean
 );
 
 const MorphingShape = ({ skipHeavyEffects = false }: { skipHeavyEffects?: boolean }) => (
-  <div className={cn("absolute right-[10%] top-[20%] w-64 h-64 bg-blue-500/10 pointer-events-none", !skipHeavyEffects && "blur-3xl")}
+  <div className={cn("absolute right-[10%] top-[20%] w-64 h-64 bg-white/10 pointer-events-none", !skipHeavyEffects && "blur-3xl")}
     style={{ borderRadius: '30% 70% 70% 30% / 30% 30% 70% 70%' }} />
 );
 
@@ -677,7 +677,7 @@ const CursorTrail = ({ trail }: { trail: { x: number; y: number; id: number }[] 
     {trail.map((point, i) => (
       <motion.div
         key={point.id}
-        className="absolute w-2 h-2 bg-blue-500/40 rounded-full"
+        className="absolute w-2 h-2 bg-white/40 rounded-full"
         style={{ left: point.x, top: point.y, translateX: '-50%', translateY: '-50%' }}
         initial={{ scale: 1, opacity: 0.6 }}
         animate={{ scale: 0, opacity: 0 }}
@@ -708,14 +708,14 @@ const CurtainReveal = ({ children, delay = 0 }: { children: React.ReactNode; del
 const WelcomeLocation = ({ location }: { location: { city: string; country: string } | null }) => (
   location ? (
     <motion.div
-      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-xs"
+      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs"
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 2 }}
     >
-      <span className="text-purple-400">📍</span>
+      <span className="text-white">📍</span>
       <span className="text-white/60">Welcome, Trader from</span>
-      <span className="text-purple-400 font-medium">{location.city}</span>
+      <span className="text-white font-medium">{location.city}</span>
     </motion.div>
   ) : null
 );
@@ -765,7 +765,7 @@ const ProfitCalculator = () => {
             step="100"
             value={investment}
             onChange={(e) => setInvestment(Number(e.target.value))}
-            className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-thumb]:shadow-[0_0_10px_rgba(59,130,246,0.5)]"
+            className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-[0_0_10px_rgba(255, 255, 255,0.5)]"
           />
           <div className="flex justify-between text-xs text-white/40 mt-1">
             <span>$100</span>
@@ -777,13 +777,13 @@ const ProfitCalculator = () => {
           <p className="text-xs text-white/40">Monthly Return</p>
           <motion.p
             key={projectedReturn}
-            className="text-xl sm:text-2xl font-bold text-green-400 font-mono"
+            className="text-xl sm:text-2xl font-bold text-white font-mono"
             initial={{ scale: 1.2, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
           >
             ${projectedReturn.toLocaleString()}
           </motion.p>
-          <p className="text-xs text-green-400/60">+47% avg.</p>
+          <p className="text-xs text-white/60">+47% avg.</p>
         </div>
       </div>
     </GlassCard>
@@ -799,12 +799,12 @@ const CardStack = ({ children }: { children: React.ReactNode }) => {
       onHoverEnd={() => setIsHovered(false)}
     >
       <motion.div
-        className="absolute inset-0 bg-blue-500/5 rounded-2xl border border-blue-500/10"
+        className="absolute inset-0 bg-white/5 rounded-2xl border border-white/10"
         animate={{ x: isHovered ? -16 : -8, y: isHovered ? -16 : -8, scale: isHovered ? 0.95 : 0.97 }}
         transition={{ type: 'spring', stiffness: 300, damping: 20 }}
       />
       <motion.div
-        className="absolute inset-0 bg-blue-500/10 rounded-2xl border border-blue-500/20"
+        className="absolute inset-0 bg-white/10 rounded-2xl border border-white/20"
         animate={{ x: isHovered ? -8 : -4, y: isHovered ? -8 : -4, scale: isHovered ? 0.97 : 0.98 }}
         transition={{ type: 'spring', stiffness: 300, damping: 20 }}
       />
@@ -832,7 +832,7 @@ const FloatingCoins = () => {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       {coins.map((coin, i) => (
-        <div key={i} className="absolute text-4xl text-blue-500/10 font-bold" style={{ left: `${20 + i * 15}%`, top: `${20 + i * 10}%`, opacity: 0.15 }}>{coin}</div>
+        <div key={i} className="absolute text-4xl text-white/10 font-bold" style={{ left: `${20 + i * 15}%`, top: `${20 + i * 10}%`, opacity: 0.15 }}>{coin}</div>
       ))}
     </div>
   );
@@ -841,7 +841,7 @@ const FloatingCoins = () => {
 const CandlestickDecorations = () => (
   <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
     {Array.from({ length: 10 }).map((_, i) => (
-      <div key={i} className={cn("absolute w-2 rounded-sm", i % 2 === 0 ? 'bg-green-500/30' : 'bg-red-500/30')}
+      <div key={i} className={cn("absolute w-2 rounded-sm", i % 2 === 0 ? 'bg-white/30' : 'bg-red-500/30')}
         style={{ left: `${10 + i * 10}%`, height: `${20 + (i % 5) * 10}%`, bottom: `${(i % 4) * 15}%`, opacity: 0.3 }} />
     ))}
   </div>
@@ -849,7 +849,7 @@ const CandlestickDecorations = () => (
 
 const GraphOverlay = () => (
   <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-10" preserveAspectRatio="none">
-    <motion.path d="M0,400 Q200,300 400,350 T800,250 T1200,300 T1600,200 T2000,250" fill="none" stroke="rgba(59, 130, 246, 0.5)" strokeWidth="2"
+    <motion.path d="M0,400 Q200,300 400,350 T800,250 T1200,300 T1600,200 T2000,250" fill="none" stroke="rgba(255, 255, 255, 0.5)" strokeWidth="2"
       initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 3, ease: 'easeInOut' }} />
   </svg>
 );
@@ -990,9 +990,9 @@ const MaskedText = ({ children, delay = 0 }: { children: React.ReactNode; delay?
 );
 
 const DataAnnotation = ({ text, position }: { text: string; position: 'top' | 'bottom' }) => (
-  <motion.div className={cn("absolute left-0 flex items-center gap-2 text-[10px] font-mono text-blue-400/60 tracking-widest", position === 'top' ? '-top-6' : '-bottom-6')}
+  <motion.div className={cn("absolute left-0 flex items-center gap-2 text-[10px] font-mono text-white/60 tracking-widest", position === 'top' ? '-top-6' : '-bottom-6')}
     initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1.5 }}>
-    <span className="w-8 h-px bg-blue-500/30" />{text}
+    <span className="w-8 h-px bg-white/30" />{text}
   </motion.div>
 );
 
@@ -1010,14 +1010,14 @@ const LevitatingButton = ({ children, onClick, className, sound, skipHeavyEffect
     setTimeout(() => setRipples(prev => prev.slice(1)), 1000);
   };
   return (
-    <motion.button className={cn("relative overflow-hidden px-8 py-4 rounded-full font-semibold text-lg bg-gradient-to-r from-blue-600 to-blue-500 text-white border border-blue-400/30", className)}
+    <motion.button className={cn("relative overflow-hidden px-8 py-4 rounded-full font-semibold text-lg bg-gradient-to-r from-white to-white text-white border border-white/30", className)}
       animate={skipHeavyEffects ? {} : { y: [0, -8, 0] }} transition={skipHeavyEffects ? {} : { duration: 2, repeat: Infinity, ease: 'easeInOut' }}
       whileHover={skipHeavyEffects ? {} : { scale: 1.05 }} whileTap={{ scale: 0.95 }}
       onHoverStart={() => setIsHovered(true)} onHoverEnd={() => setIsHovered(false)} onClick={handleClick}>
       <motion.div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent" style={{ transform: 'skewX(-20deg)' }}
         animate={skipHeavyEffects ? {} : { x: ['-200%', '200%'] }} transition={skipHeavyEffects ? {} : { duration: 3, repeat: Infinity, repeatDelay: 2 }} />
-      <motion.div className="absolute inset-0 bg-blue-400" initial={{ y: '100%' }} animate={{ y: isHovered ? '0%' : '100%' }} transition={{ duration: 0.3 }} />
-      {ripples.map(r => <motion.span key={r.id} className="absolute rounded-full bg-blue-300/50" style={{ left: r.x, top: r.y }}
+      <motion.div className="absolute inset-0 bg-white" initial={{ y: '100%' }} animate={{ y: isHovered ? '0%' : '100%' }} transition={{ duration: 0.3 }} />
+      {ripples.map(r => <motion.span key={r.id} className="absolute rounded-full bg-white/50" style={{ left: r.x, top: r.y }}
         initial={{ width: 0, height: 0, x: 0, y: 0 }} animate={{ width: 300, height: 300, x: -150, y: -150, opacity: 0 }} transition={{ duration: 0.6 }} />)}
       <motion.span className="relative z-10 flex items-center gap-2" animate={skipHeavyEffects ? {} : { scale: [1, 1.03, 1] }} transition={skipHeavyEffects ? {} : { duration: 2, repeat: Infinity }}>
         {children}<motion.span animate={{ x: isHovered ? [0, 5, -20, 0] : 0 }} transition={{ duration: 0.4 }}><ArrowRight className="w-5 h-5" /></motion.span>
@@ -1027,7 +1027,7 @@ const LevitatingButton = ({ children, onClick, className, sound, skipHeavyEffect
 };
 
 const NeonBorderButton = ({ children, onClick, className, skipHeavyEffects = false }: { children: React.ReactNode; onClick?: () => void; className?: string; skipHeavyEffects?: boolean }) => (
-  <motion.button className={cn("relative px-6 py-3 rounded-full font-semibold bg-transparent text-white border border-blue-500/50 hover:border-blue-400 transition-all duration-300", !skipHeavyEffects && "hover:shadow-[0_0_20px_rgba(59,130,246,0.5)]", className)}
+  <motion.button className={cn("relative px-6 py-3 rounded-full font-semibold bg-transparent text-white border border-white/50 hover:border-white transition-all duration-300", !skipHeavyEffects && "hover:shadow-[0_0_20px_rgba(255, 255, 255,0.5)]", className)}
     whileHover={skipHeavyEffects ? {} : { scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={onClick}>{children}</motion.button>
 );
 
@@ -1065,7 +1065,7 @@ const TiltButton = ({ children, onClick, className }: { children: React.ReactNod
   return (
     <motion.button
       ref={ref}
-      className={cn("relative px-6 py-3 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 text-white font-semibold transform-gpu", className)}
+      className={cn("relative px-6 py-3 rounded-xl bg-gradient-to-br from-white to-white text-white font-semibold transform-gpu", className)}
       style={{ transformStyle: 'preserve-3d', perspective: '1000px' }}
       animate={{ rotateX: tilt.rotateX, rotateY: tilt.rotateY }}
       onMouseMove={handleMouseMove}
@@ -1133,8 +1133,8 @@ const LiveTickerTape = ({ tickerData, skipHeavyEffects = false }: { tickerData: 
     <div 
       className="w-full overflow-hidden bg-black rounded-lg sm:rounded-xl"
       style={{ 
-        border: '2px solid rgba(59, 130, 246, 0.6)',
-        boxShadow: skipHeavyEffects ? 'none' : '0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3), 0 0 30px rgba(59, 130, 246, 0.2), inset 0 0 15px rgba(59, 130, 246, 0.1)',
+        border: '2px solid rgba(255, 255, 255, 0.6)',
+        boxShadow: skipHeavyEffects ? 'none' : '0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(255, 255, 255, 0.3), 0 0 30px rgba(255, 255, 255, 0.2), inset 0 0 15px rgba(255, 255, 255, 0.1)',
       }}
     >
       <div 
@@ -1144,11 +1144,11 @@ const LiveTickerTape = ({ tickerData, skipHeavyEffects = false }: { tickerData: 
       >
         {[...tickerData, ...tickerData].map((item, i) => (
           <span key={i} className="mx-8 flex items-center gap-2 text-sm font-mono">
-            <span style={{ color: '#60a5fa', textShadow: skipHeavyEffects ? 'none' : '0 0 5px #60a5fa, 0 0 10px #3b82f6' }}>{item.symbol}</span>
-            <span style={{ color: '#fff', textShadow: skipHeavyEffects ? 'none' : '0 0 5px #fff, 0 0 10px #93c5fd' }}>${item.price}</span>
+            <span style={{ color: '#ffffff', textShadow: skipHeavyEffects ? 'none' : '0 0 5px #ffffff, 0 0 10px #ffffff' }}>{item.symbol}</span>
+            <span style={{ color: '#fff', textShadow: skipHeavyEffects ? 'none' : '0 0 5px #fff, 0 0 10px #ffffff' }}>${item.price}</span>
             <span style={{ 
-              color: item.positive ? '#4ade80' : '#f87171', 
-              textShadow: skipHeavyEffects ? 'none' : (item.positive ? '0 0 5px #4ade80, 0 0 10px #22c55e' : '0 0 5px #f87171, 0 0 10px #ef4444')
+              color: item.positive ? '#ffffff' : '#f87171', 
+              textShadow: skipHeavyEffects ? 'none' : (item.positive ? '0 0 5px #ffffff, 0 0 10px #ffffff' : '0 0 5px #f87171, 0 0 10px #ef4444')
             }}>{item.change}</span>
           </span>
         ))}
@@ -1162,7 +1162,7 @@ const BullPulse = () => {
   return (
     <svg className="absolute left-0 right-0 h-8 top-1/2 -translate-y-1/2 opacity-20" preserveAspectRatio="none">
       <motion.path d="M0,20 L50,20 L60,5 L70,35 L80,15 L90,25 L100,20 L150,20 L160,5 L170,35 L180,15 L190,25 L200,20 L250,20"
-        fill="none" stroke="rgba(59, 130, 246, 0.5)" strokeWidth="2" initial={{ pathLength: 0 }} animate={{ pathLength: [0, 1] }} transition={shouldSkipHeavyEffects ? {} : { duration: 2, repeat: Infinity }} />
+        fill="none" stroke="rgba(255, 255, 255, 0.5)" strokeWidth="2" initial={{ pathLength: 0 }} animate={{ pathLength: [0, 1] }} transition={shouldSkipHeavyEffects ? {} : { duration: 2, repeat: Infinity }} />
     </svg>
   );
 };
@@ -1183,19 +1183,19 @@ const LiveUserCount = () => {
   return (
     <span className="inline-flex items-center gap-2">
       <span className="relative flex h-2 w-2">
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+        <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
       </span>
-      <span className="text-green-400 font-mono">{count}</span>
+      <span className="text-white font-mono">{count}</span>
       <span className="text-white/60">online</span>
     </span>
   );
 };
 
 const ExecutionSpeed = () => (
-  <motion.div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-mono"
+  <motion.div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-mono"
     initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }}>
-    <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" /><span className="text-blue-400">12ms</span><span className="text-white/40">Execution</span>
+    <span className="w-2 h-2 rounded-full bg-white animate-pulse" /><span className="text-white">12ms</span><span className="text-white/40">Execution</span>
   </motion.div>
 );
 
@@ -1204,8 +1204,8 @@ const ExecutionSpeed = () => (
 // ============================================================================
 
 const GlassCard = ({ children, className, skipHeavyEffects = false }: { children: React.ReactNode; className?: string; skipHeavyEffects?: boolean }) => (
-  <div className={cn("relative rounded-2xl overflow-hidden bg-white/5 border border-white/10", !skipHeavyEffects && "backdrop-blur-[20px] backdrop-saturate-[180%] shadow-[inset_0_0_20px_rgba(59,130,246,0.2)]", className)}>
-    <div className="absolute inset-0 rounded-2xl p-[1px] pointer-events-none"><div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/20 via-transparent to-purple-500/20" /></div>
+  <div className={cn("relative rounded-2xl overflow-hidden bg-white/5 border border-white/10", !skipHeavyEffects && "backdrop-blur-[20px] backdrop-saturate-[180%] shadow-[inset_0_0_20px_rgba(255, 255, 255,0.2)]", className)}>
+    <div className="absolute inset-0 rounded-2xl p-[1px] pointer-events-none"><div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/20 via-transparent to-white/20" /></div>
     {children}
   </div>
 );
@@ -1224,7 +1224,7 @@ const StatCard = ({ label, value, icon }: { label: string; value: string | numbe
 const ScrollProgressBar = () => {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
-  return <motion.div className="fixed top-0 left-0 right-0 h-1 bg-blue-500 origin-left z-[100]" style={{ scaleX }} />;
+  return <motion.div className="fixed top-0 left-0 right-0 h-1 bg-white origin-left z-[100]" style={{ scaleX }} />;
 };
 
 const RubberBandEntry = ({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) => (
@@ -1387,7 +1387,7 @@ const SplineLoadingPlaceholder = () => {
   const { shouldSkipHeavyEffects } = useUnifiedPerformance();
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-black">
-      <motion.div className="w-24 h-24 border-2 border-blue-500/50" animate={{ rotateY: 360, rotateX: 360 }} transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: 'linear' }} style={{ transformStyle: 'preserve-3d' }} />
+      <motion.div className="w-24 h-24 border-2 border-white/50" animate={{ rotateY: 360, rotateX: 360 }} transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: 'linear' }} style={{ transformStyle: 'preserve-3d' }} />
     </div>
   );
 };
@@ -1396,7 +1396,7 @@ const SceneGlitchOverlay = ({ active }: { active: boolean }) => (
   <AnimatePresence>
     {active && (
       <motion.div className="absolute inset-0 z-50 pointer-events-none" initial={{ opacity: 0 }} animate={{ opacity: [0, 1, 0, 1, 0] }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
-        <div className="absolute inset-0 bg-blue-500/20" /><div className="absolute inset-0 bg-red-500/10 translate-x-1" /><div className="absolute inset-0 bg-green-500/10 -translate-x-1" />
+        <div className="absolute inset-0 bg-white/20" /><div className="absolute inset-0 bg-red-500/10 translate-x-1" /><div className="absolute inset-0 bg-white/10 -translate-x-1" />
       </motion.div>
     )}
   </AnimatePresence>
@@ -1423,9 +1423,9 @@ const CustomCursor = () => {
   }, [cursorX, cursorY]);
   return (
     <>
-      <motion.div className="fixed top-0 left-0 w-4 h-4 border-2 border-blue-500 rounded-full pointer-events-none z-[9999] mix-blend-difference"
+      <motion.div className="fixed top-0 left-0 w-4 h-4 border-2 border-white rounded-full pointer-events-none z-[9999] mix-blend-difference"
         style={{ x: cursorX, y: cursorY, translateX: '-50%', translateY: '-50%' }} animate={{ scale: isHovering ? 1.5 : 1 }} />
-      <motion.div className="fixed top-0 left-0 w-8 h-8 bg-blue-500/20 rounded-full pointer-events-none z-[9998] blur-sm"
+      <motion.div className="fixed top-0 left-0 w-8 h-8 bg-white/20 rounded-full pointer-events-none z-[9998] blur-sm"
         style={{ x: useSpring(cursorX, { stiffness: 100, damping: 20 }), y: useSpring(cursorY, { stiffness: 100, damping: 20 }), translateX: '-50%', translateY: '-50%' }} />
     </>
   );
@@ -1450,21 +1450,21 @@ const LocalClock = ({ timezone }: { timezone?: string }) => {
     return () => clearInterval(interval);
   }, [timezone]);
   
-  return <div className="font-mono text-xs text-white/40"><span className="text-blue-400">{tz}</span> {time}</div>;
+  return <div className="font-mono text-xs text-white/40"><span className="text-white">{tz}</span> {time}</div>;
 };
 
 const SystemStatus = ({ deviceInfo }: { deviceInfo?: { browser: string; os: string; device: string } | null }) => (
   <div className="flex items-center gap-2 text-xs">
-    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+    <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
     <span className="text-white/40 font-mono">{deviceInfo?.os || 'System'}:</span>
-    <span className="text-green-400 font-mono">{deviceInfo?.browser || 'Online'}</span>
+    <span className="text-white font-mono">{deviceInfo?.browser || 'Online'}</span>
   </div>
 );
 
 const CopyToClipboard = ({ text }: { text: string }) => {
   const [copied, setCopied] = useState(false);
   const handleCopy = async () => { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); };
-  return <button onClick={handleCopy} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">{copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-white/40" />}</button>;
+  return <button onClick={handleCopy} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">{copied ? <Check className="w-4 h-4 text-white" /> : <Copy className="w-4 h-4 text-white/40" />}</button>;
 };
 
 // ============================================================================
@@ -1575,9 +1575,9 @@ const MuteToggle = ({ muted, onToggle }: { muted: boolean; onToggle: () => void 
   return (
     <button onClick={onToggle} className="relative p-3 rounded-full bg-white/5 hover:bg-white/10 transition-colors">
       {muted ? <VolumeX className="w-5 h-5 text-white/40" /> : (
-        <><Volume2 className="w-5 h-5 text-blue-400" />
+        <><Volume2 className="w-5 h-5 text-white" />
           <div className="absolute -top-1 -right-1 flex gap-[2px]">
-            {[...Array(3)].map((_, i) => <motion.div key={i} className="w-[2px] bg-blue-400 rounded-full" animate={{ height: [4, 8, 4] }} transition={shouldSkipHeavyEffects ? {} : { duration: 0.5, repeat: Infinity, delay: i * 0.1 }} />)}
+            {[...Array(3)].map((_, i) => <motion.div key={i} className="w-[2px] bg-white rounded-full" animate={{ height: [4, 8, 4] }} transition={shouldSkipHeavyEffects ? {} : { duration: 0.5, repeat: Infinity, delay: i * 0.1 }} />)}
           </div>
         </>
       )}
@@ -1592,7 +1592,7 @@ const MuteToggle = ({ muted, onToggle }: { muted: boolean; onToggle: () => void 
 // ============================================================================
 
 const Confetti = ({ active }: { active: boolean }) => {
-  const particles = useMemo(() => Array.from({ length: 100 }, (_, i) => ({ id: i, x: Math.random() * 100, color: i % 2 === 0 ? '#3b82f6' : '#1e3a8a', delay: Math.random() * 0.5, rotation: Math.random() * 360 })), []);
+  const particles = useMemo(() => Array.from({ length: 100 }, (_, i) => ({ id: i, x: Math.random() * 100, color: i % 2 === 0 ? '#ffffff' : '#ffffff', delay: Math.random() * 0.5, rotation: Math.random() * 360 })), []);
   return (
     <AnimatePresence>
       {active && (
@@ -1845,11 +1845,11 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
       <style jsx global>{`
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .animate-shimmer { animation: shimmer 3s linear infinite; }
-        ::selection { background: #22d3ee; color: #000; }
+        ::selection { background: #ffffff; color: #000; }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #1a1a1a; }
-        ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #60a5fa; }
+        ::-webkit-scrollbar-thumb { background: #ffffff; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #ffffff; }
         .hero-section { cursor: none; }
         .hero-section button, .hero-section a { cursor: none; }
         .metallic-text {
@@ -1892,8 +1892,8 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
                       <p 
                         className="font-mono text-[10px] sm:text-sm tracking-[0.15em] sm:tracking-[0.2em] uppercase mb-1 sm:mb-4"
                         style={{
-                          color: '#60a5fa',
-                          textShadow: shouldSkipHeavyEffects ? 'none' : `0 0 5px #60a5fa, 0 0 10px #60a5fa, 0 0 20px #3b82f6, 0 0 40px #3b82f6`,
+                          color: '#ffffff',
+                          textShadow: shouldSkipHeavyEffects ? 'none' : `0 0 5px #ffffff, 0 0 10px #ffffff, 0 0 20px #ffffff, 0 0 40px #ffffff`,
                         }}
                       >
                         EST. 2024 • TRADING EXCELLENCE
@@ -1905,7 +1905,7 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
                           className="block text-[clamp(2rem,5vw,4.5rem)] font-sans font-normal tracking-tight leading-tight"
                           style={{
                             color: '#fff',
-                            textShadow: shouldSkipHeavyEffects ? 'none' : `0 0 5px #fff, 0 0 10px #fff, 0 0 20px #93c5fd, 0 0 40px #60a5fa, 0 0 60px #3b82f6`,
+                            textShadow: shouldSkipHeavyEffects ? 'none' : `0 0 5px #fff, 0 0 10px #fff, 0 0 20px #ffffff, 0 0 40px #ffffff, 0 0 60px #ffffff`,
                           }}
                         >
                           The path to
@@ -1913,8 +1913,8 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
                         <span 
                           className="block text-[clamp(2.25rem,6vw,5.5rem)] font-serif italic mt-1 sm:mt-2 leading-tight"
                           style={{ 
-                            color: '#3b82f6',
-                            textShadow: shouldSkipHeavyEffects ? 'none' : `0 0 5px #3b82f6, 0 0 15px #3b82f6, 0 0 30px #2563eb, 0 0 50px #1d4ed8, 0 0 70px #1e40af`,
+                            color: '#ffffff',
+                            textShadow: shouldSkipHeavyEffects ? 'none' : `0 0 5px #ffffff, 0 0 15px #ffffff, 0 0 30px #ffffff, 0 0 50px #ffffff, 0 0 70px #ffffff`,
                           }}
                         >
                           consistent profit
@@ -1925,16 +1925,16 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
                   <p 
                     className="mt-2 sm:mt-6 text-xs sm:text-base md:text-lg max-w-md leading-relaxed hidden sm:block mx-auto lg:mx-0"
                     style={{
-                      color: 'rgba(147, 197, 253, 0.8)',
-                      textShadow: shouldSkipHeavyEffects ? 'none' : `0 0 5px rgba(147, 197, 253, 0.5), 0 0 10px rgba(96, 165, 250, 0.3)`,
+                      color: 'rgba(255, 255, 255, 0.8)',
+                      textShadow: shouldSkipHeavyEffects ? 'none' : `0 0 5px rgba(255, 255, 255, 0.5), 0 0 10px rgba(255, 255, 255, 0.3)`,
                     }}
                   >
-                    Join <span className="font-semibold" style={{ color: '#fff', textShadow: shouldSkipHeavyEffects ? 'none' : '0 0 5px #fff, 0 0 10px #93c5fd' }}>500+</span> profitable traders. Real-time Trades, expert analysis, and a community built for success.
+                    Join <span className="font-semibold" style={{ color: '#fff', textShadow: shouldSkipHeavyEffects ? 'none' : '0 0 5px #fff, 0 0 10px #ffffff' }}>500+</span> profitable traders. Real-time Trades, expert analysis, and a community built for success.
                   </p>
                 </div>
 
                 <div className="lg:col-span-6 order-2 lg:order-2 mt-12 lg:mt-0">
-                  <div className="relative w-full aspect-square sm:aspect-[4/3] lg:aspect-[4/3] max-h-[40vh] sm:max-h-[40vh] lg:max-h-[60vh] rounded-xl sm:rounded-2xl overflow-hidden bg-black border-2 border-blue-500/60" style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 10px rgba(59, 130, 246, 0.6), 0 0 20px rgba(59, 130, 246, 0.4), 0 0 40px rgba(59, 130, 246, 0.2), inset 0 0 20px rgba(59, 130, 246, 0.1)' }}>
+                  <div className="relative w-full aspect-square sm:aspect-[4/3] lg:aspect-[4/3] max-h-[40vh] sm:max-h-[40vh] lg:max-h-[60vh] rounded-xl sm:rounded-2xl overflow-hidden bg-black border-2 border-white/60" style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 10px rgba(255, 255, 255, 0.6), 0 0 20px rgba(255, 255, 255, 0.4), 0 0 40px rgba(255, 255, 255, 0.2), inset 0 0 20px rgba(255, 255, 255, 0.1)' }}>
                     {isVideoMode && activeVideoId ? (
                       <HeroVideoEmbed videoId={activeVideoId} muted={isMuted} volume={heroVideoPlaybackVolume} />
                     ) : (
@@ -1951,32 +1951,32 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
                       <div className="flex items-center justify-between">
                         <motion.button 
                           onClick={goToPreviousScene} 
-                          className="p-1.5 sm:p-2 rounded-lg bg-black/50 border border-blue-500/50 transition-colors"
-                          style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3), inset 0 0 10px rgba(59, 130, 246, 0.2)' }}
-                          whileHover={shouldSkipHeavyEffects ? {} : { boxShadow: '0 0 15px rgba(59, 130, 246, 0.8), 0 0 30px rgba(59, 130, 246, 0.5), inset 0 0 15px rgba(59, 130, 246, 0.3)' }}
+                          className="p-1.5 sm:p-2 rounded-lg bg-black/50 border border-white/50 transition-colors"
+                          style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(255, 255, 255, 0.3), inset 0 0 10px rgba(255, 255, 255, 0.2)' }}
+                          whileHover={shouldSkipHeavyEffects ? {} : { boxShadow: '0 0 15px rgba(255, 255, 255, 0.8), 0 0 30px rgba(255, 255, 255, 0.5), inset 0 0 15px rgba(255, 255, 255, 0.3)' }}
                           whileTap={{ scale: 0.95 }}
                         >
-                          <span className="text-xs sm:text-sm" style={{ color: '#60a5fa', textShadow: shouldSkipHeavyEffects ? 'none' : '0 0 5px #60a5fa, 0 0 10px #3b82f6' }}>←</span>
+                          <span className="text-xs sm:text-sm" style={{ color: '#ffffff', textShadow: shouldSkipHeavyEffects ? 'none' : '0 0 5px #ffffff, 0 0 10px #ffffff' }}>←</span>
                         </motion.button>
                         <motion.button 
                           onClick={() => { setIsSplineFullscreen(true); playClick(); }} 
-                          className="px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-black/50 border border-blue-500/50 transition-colors flex items-center gap-1.5 sm:gap-2"
-                          style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3), inset 0 0 10px rgba(59, 130, 246, 0.2)' }}
-                          whileHover={shouldSkipHeavyEffects ? {} : { boxShadow: '0 0 15px rgba(59, 130, 246, 0.8), 0 0 30px rgba(59, 130, 246, 0.5), inset 0 0 15px rgba(59, 130, 246, 0.3)' }}
+                          className="px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-black/50 border border-white/50 transition-colors flex items-center gap-1.5 sm:gap-2"
+                          style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(255, 255, 255, 0.3), inset 0 0 10px rgba(255, 255, 255, 0.2)' }}
+                          whileHover={shouldSkipHeavyEffects ? {} : { boxShadow: '0 0 15px rgba(255, 255, 255, 0.8), 0 0 30px rgba(255, 255, 255, 0.5), inset 0 0 15px rgba(255, 255, 255, 0.3)' }}
                           whileTap={{ scale: 0.95 }}
                         >
-                          <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-blue-500 animate-pulse" style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 5px #3b82f6, 0 0 10px #3b82f6' }} />
-                          <span className="text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] text-blue-300/80">{mediaBadge}</span>
-                          <span className="text-xs sm:text-sm font-mono truncate max-w-[120px] sm:max-w-none" style={{ color: '#60a5fa', textShadow: shouldSkipHeavyEffects ? 'none' : '0 0 5px #60a5fa, 0 0 10px #3b82f6' }}>{mediaLabel}</span>
+                          <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-white animate-pulse" style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 5px #ffffff, 0 0 10px #ffffff' }} />
+                          <span className="text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] text-white/80">{mediaBadge}</span>
+                          <span className="text-xs sm:text-sm font-mono truncate max-w-[120px] sm:max-w-none" style={{ color: '#ffffff', textShadow: shouldSkipHeavyEffects ? 'none' : '0 0 5px #ffffff, 0 0 10px #ffffff' }}>{mediaLabel}</span>
                         </motion.button>
                         <motion.button 
                           onClick={goToNextScene} 
-                          className="p-1.5 sm:p-2 rounded-lg bg-black/50 border border-blue-500/50 transition-colors"
-                          style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3), inset 0 0 10px rgba(59, 130, 246, 0.2)' }}
-                          whileHover={shouldSkipHeavyEffects ? {} : { boxShadow: '0 0 15px rgba(59, 130, 246, 0.8), 0 0 30px rgba(59, 130, 246, 0.5), inset 0 0 15px rgba(59, 130, 246, 0.3)' }}
+                          className="p-1.5 sm:p-2 rounded-lg bg-black/50 border border-white/50 transition-colors"
+                          style={{ boxShadow: shouldSkipHeavyEffects ? 'none' : '0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(255, 255, 255, 0.3), inset 0 0 10px rgba(255, 255, 255, 0.2)' }}
+                          whileHover={shouldSkipHeavyEffects ? {} : { boxShadow: '0 0 15px rgba(255, 255, 255, 0.8), 0 0 30px rgba(255, 255, 255, 0.5), inset 0 0 15px rgba(255, 255, 255, 0.3)' }}
                           whileTap={{ scale: 0.95 }}
                         >
-                          <span className="text-xs sm:text-sm" style={{ color: '#60a5fa', textShadow: shouldSkipHeavyEffects ? 'none' : '0 0 5px #60a5fa, 0 0 10px #3b82f6' }}>→</span>
+                          <span className="text-xs sm:text-sm" style={{ color: '#ffffff', textShadow: shouldSkipHeavyEffects ? 'none' : '0 0 5px #ffffff, 0 0 10px #ffffff' }}>→</span>
                         </motion.button>
                       </div>
                     </div>
@@ -2007,11 +2007,11 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
                         {HERO_SPLINE_SCENES.map((scene) => (
                           <motion.button key={scene.id} onClick={() => setScenePreviewId(scene.id)} onHoverStart={playHover}
                             className={cn('w-full flex items-center justify-between px-4 py-3 rounded-xl border text-left transition-all',
-                              scenePreviewId === scene.id ? 'bg-blue-500/20 text-white border-blue-500/50' : 'bg-white/5 text-white/80 border-white/10 hover:border-blue-500/30',
-                              scenePreviewId === scene.id && !shouldSkipHeavyEffects && 'shadow-[0_0_20px_rgba(59,130,246,0.3)]')}
+                              scenePreviewId === scene.id ? 'bg-white/20 text-white border-white/50' : 'bg-white/5 text-white/80 border-white/10 hover:border-white/30',
+                              scenePreviewId === scene.id && !shouldSkipHeavyEffects && 'shadow-[0_0_20px_rgba(255, 255, 255,0.3)]')}
                             whileHover={shouldSkipHeavyEffects ? {} : { x: 4 }}>
                             <div><p className="font-semibold text-sm">{scene.label}</p><p className="text-xs text-white/40 font-mono">{scene.id}</p></div>
-                            {scenePreviewId === scene.id && <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />}
+                            {scenePreviewId === scene.id && <span className="w-2 h-2 rounded-full bg-white animate-pulse" />}
                           </motion.button>
                         ))}
                       </div>
@@ -2020,8 +2020,22 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
                       <div className="flex items-center justify-between mb-4">
                         <div><p className="text-xs uppercase text-white/40 tracking-[0.3em]">Previewing</p><p className="text-lg font-semibold">{previewScene?.label}</p></div>
                         <div className="flex gap-2">
-                          <motion.button onClick={() => handleSceneSelect(scenePreviewId)} className="px-4 py-2 rounded-full bg-blue-500 text-white font-semibold text-sm hover:bg-blue-400 transition-colors" whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }} whileTap={{ scale: 0.95 }}>Set Scene</motion.button>
-                          <motion.button onClick={() => { setHeroSceneModalOpen(false); playWhoosh(); }} className="px-4 py-2 rounded-full border border-white/20 text-sm hover:bg-white/10 transition-colors" whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }} whileTap={{ scale: 0.95 }}>Close</motion.button>
+                          <motion.button
+                            onClick={() => handleSceneSelect(scenePreviewId)}
+                            className="px-4 py-2 rounded-full bg-black text-white font-semibold text-sm border border-white/30 hover:border-white/50 hover:bg-neutral-900 transition-colors"
+                            whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            Set Scene
+                          </motion.button>
+                          <motion.button
+                            onClick={() => { setHeroSceneModalOpen(false); playWhoosh(); }}
+                            className="px-4 py-2 rounded-full bg-black text-white text-sm border border-white/30 hover:border-white/50 hover:bg-neutral-900 transition-colors"
+                            whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            Close
+                          </motion.button>
                         </div>
                       </div>
                       <div className="relative flex-1 min-h-[300px] rounded-2xl bg-black border border-white/10 overflow-hidden">
@@ -2068,12 +2082,12 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
             >
               <div className="flex items-center justify-between max-w-7xl mx-auto">
                 <div className="flex items-center gap-2 sm:gap-3">
-                  <span className="h-2 w-2 sm:h-3 sm:w-3 rounded-full bg-blue-500 animate-pulse" />
+                  <span className="h-2 w-2 sm:h-3 sm:w-3 rounded-full bg-white animate-pulse" />
                   <span className="text-white font-mono text-sm sm:text-lg truncate max-w-[150px] sm:max-w-none">{mediaLabel}</span>
                 </div>
                 <motion.button 
                   onClick={() => { setIsSplineFullscreen(false); playWhoosh(); }}
-                  className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 sm:gap-2"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-black text-white border border-white/30 hover:border-white/50 hover:bg-neutral-900 text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 sm:gap-2"
                   whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -2101,7 +2115,7 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
                 </motion.button>
                 <motion.button 
                   onClick={() => { setHeroMediaMode('spline'); handleOpenScenePicker(); setIsSplineFullscreen(false); }}
-                  className="px-4 sm:px-6 py-2 sm:py-3 rounded-full bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 text-blue-300 text-sm sm:text-base font-medium transition-colors"
+                  className="px-4 sm:px-6 py-2 sm:py-3 rounded-full bg-white/20 hover:bg-white/30 border border-white/50 text-white text-sm sm:text-base font-medium transition-colors"
                   whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >

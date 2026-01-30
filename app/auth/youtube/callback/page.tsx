@@ -156,7 +156,7 @@ export default function YouTubeCallbackPage() {
       <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 max-w-md w-full text-center">
         {status === 'loading' && (
           <>
-            <Loader2 className="w-12 h-12 text-purple-500 animate-spin mx-auto mb-4" />
+            <Loader2 className="w-12 h-12 text-white animate-spin mx-auto mb-4" />
             <h2 className="text-white text-xl font-semibold mb-2">Connecting to YouTube</h2>
             <p className="text-neutral-400 text-sm">Please wait while we complete the authentication...</p>
           </>
@@ -164,8 +164,8 @@ export default function YouTubeCallbackPage() {
         
         {status === 'success' && (
           <>
-            <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Check className="w-6 h-6 text-green-500" />
+            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Check className="w-6 h-6 text-white" />
             </div>
             <h2 className="text-white text-xl font-semibold mb-2">Connected Successfully!</h2>
             <p className="text-neutral-400 text-sm">You can now close this window and watch your YouTube videos.</p>

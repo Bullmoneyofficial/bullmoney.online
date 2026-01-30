@@ -125,7 +125,7 @@ export const TradingViewWidget = memo(({
           height: typeof height === 'number' ? height : parseInt(height) || 400,
           width: '100%',
           backgroundColor: theme === 'dark' ? 'rgba(0, 0, 0, 0)' : 'rgba(255, 255, 255, 0)',
-          gridColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+          gridColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
         });
 
         setIsLoading(false);

@@ -63,7 +63,7 @@ const getYoutubeId = (url: string | undefined): string | null => {
 // ==========================================
 
 // Blue/Sky gradient
-const shimmerGradient = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #38bdf8 50%, #00000000 100%)";
+const shimmerGradient = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #ffffff 50%, #00000000 100%)";
 
 interface ShimmerBorderProps {
     children: ReactNode;
@@ -425,10 +425,10 @@ const HeroParallax = () => {
       .animate-text-shimmer {
         background: linear-gradient(
           110deg, 
-          #38bdf8 20%,   /* Sky 400 */
+          #ffffff 20%,   /* Sky 400 */
           #ffffff 48%,   /* White Peak */
-          #818cf8 52%,   /* Indigo 400 */
-          #38bdf8 80%    /* Sky 400 */
+          #ffffff 52%,   /* Indigo 400 */
+          #ffffff 80%    /* Sky 400 */
         );
         background-size: 200% auto;
         background-clip: text;
@@ -475,10 +475,10 @@ const HeroParallax = () => {
     {/* --- ADMIN CONTROLS (Floating) --- */}
     {isAdmin && (
         <div className="fixed bottom-8 right-8 z-[9990] flex flex-col gap-2">
-            <ShimmerBorder borderRadius="rounded-full" borderWidth="inset-[1.5px]" speed={4} colorOverride="conic-gradient(from 90deg at 50% 50%, #00000000 0%, #22c55e 50%, #00000000 100%)">
+            <ShimmerBorder borderRadius="rounded-full" borderWidth="inset-[1.5px]" speed={4} colorOverride="conic-gradient(from 90deg at 50% 50%, #00000000 0%, #ffffff 50%, #00000000 100%)">
                 <button 
                     onClick={handleCreateNewVideo}
-                    className="bg-neutral-900/90 text-green-500 p-3 md:p-4 rounded-full transition-all hover:bg-neutral-800 flex items-center justify-center w-full h-full"
+                    className="bg-neutral-900/90 text-white p-3 md:p-4 rounded-full transition-all hover:bg-neutral-800 flex items-center justify-center w-full h-full"
                     title="Add New Video Card"
                 >
                     {isSaving ? <Loader2 className="animate-spin" /> : <Plus size={24} />}
@@ -522,7 +522,7 @@ const HeroParallax = () => {
                         {isAdmin && !isEditing && (
                         <button
                             onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
-                            className="absolute top-24 md:top-4 right-16 z-50 p-2 bg-sky-600 rounded-full text-white hover:bg-sky-500 transition-colors shadow-[0_0_15px_rgba(14,165,233,0.5)] flex gap-2 items-center px-4 font-bold text-xs uppercase"
+                            className="absolute top-24 md:top-4 right-16 z-50 p-2 bg-sky-600 rounded-full text-white hover:bg-sky-500 transition-colors shadow-[0_0_15px_rgba(255, 255, 255,0.5)] flex gap-2 items-center px-4 font-bold text-xs uppercase"
                         >
                             <Edit2 size={14} /> Edit
                         </button>
@@ -663,7 +663,7 @@ const HeroParallax = () => {
                                 {isEditing ? (
                                     <div className="flex gap-2">
                                         {/* SAVE BUTTON */}
-                                        <ShimmerBorder borderRadius="rounded-lg" borderWidth="inset-px" speed={2} className="flex-1" colorOverride="conic-gradient(from 90deg at 50% 50%, #00000000 0%, #38bdf8 50%, #00000000 100%)">
+                                        <ShimmerBorder borderRadius="rounded-lg" borderWidth="inset-px" speed={2} className="flex-1" colorOverride="conic-gradient(from 90deg at 50% 50%, #00000000 0%, #ffffff 50%, #00000000 100%)">
                                             <button 
                                             onClick={handleSaveEdit} 
                                             disabled={isSaving}
@@ -721,7 +721,7 @@ const HeroParallax = () => {
                                             transition={{ delay: 0.6 }}
                                             className="w-full py-2 bg-neutral-800 text-neutral-400 text-xs rounded-xl font-mono uppercase tracking-widest hover:bg-neutral-700 transition-all flex items-center justify-center gap-2"
                                         >
-                                            {copied ? <Check size={12} className="text-green-500"/> : <Copy size={12}/>} 
+                                            {copied ? <Check size={12} className="text-white"/> : <Copy size={12}/>} 
                                             {copied ? "Link Copied" : "Copy Link"}
                                         </motion.button>
                                     </div>

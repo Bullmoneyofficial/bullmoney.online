@@ -137,13 +137,13 @@ footer,
 
 @keyframes tipPulseGlow {
   0% {
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.2), inset 0 0 20px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.2), inset 0 0 20px rgba(255, 255, 255, 0.1);
   }
   50% {
-    box-shadow: 0 0 25px rgba(59, 130, 246, 0.4), inset 0 0 30px rgba(59, 130, 246, 0.15);
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.4), inset 0 0 30px rgba(255, 255, 255, 0.15);
   }
   100% {
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.2), inset 0 0 20px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.2), inset 0 0 20px rgba(255, 255, 255, 0.1);
   }
 }
 
@@ -187,19 +187,19 @@ footer,
 @keyframes themeTransitionGlow {
   0%, 100% {
     box-shadow: 
-      0 -20px 60px rgba(var(--accent-rgb, 59, 130, 246), 0.4),
-      0 -10px 30px rgba(var(--accent-rgb, 59, 130, 246), 0.3);
+      0 -20px 60px rgba(var(--accent-rgb, 255, 255, 255), 0.4),
+      0 -10px 30px rgba(var(--accent-rgb, 255, 255, 255), 0.3);
   }
   50% {
     box-shadow: 
-      0 -30px 80px rgba(var(--accent-rgb, 59, 130, 246), 0.6),
-      0 -15px 45px rgba(var(--accent-rgb, 59, 130, 246), 0.5);
+      0 -30px 80px rgba(var(--accent-rgb, 255, 255, 255), 0.6),
+      0 -15px 45px rgba(var(--accent-rgb, 255, 255, 255), 0.5);
   }
 }
 
 #theme-transition-reveal {
   pointer-events: none !important;
-  touch-action: none !important;
+  touch-action: auto !important; /* FIXED: Allow touch/scroll passthrough */
   user-select: none !important;
   overflow: visible !important;
   filter: blur(0px);

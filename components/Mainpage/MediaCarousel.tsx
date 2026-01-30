@@ -143,7 +143,7 @@ export const MediaCarousel: React.FC<MediaCarouselProps> = ({
             key={index}
             onClick={() => setCurrent(index)}
             className={`h-2 w-2 rounded-full transition-all ${
-              index === current ? "bg-blue-400 w-4" : "bg-gray-400"
+              index === current ? "bg-white w-4" : "bg-gray-400"
             }`}
           />
         ))}

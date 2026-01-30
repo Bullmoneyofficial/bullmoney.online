@@ -16,7 +16,7 @@ export const VerticalPageScroll: React.FC<VerticalPageScrollProps> = ({
   currentPage,
   totalPages,
   onPageChange,
-  accentColor = '#3b82f6',
+  accentColor = '#ffffff',
   disabled = false
 }) => {
   const [isHolding, setIsHolding] = useState(false);

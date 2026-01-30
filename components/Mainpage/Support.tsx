@@ -39,13 +39,13 @@ const SupportWidget = () => {
       >
         {/* Tooltip Label (Dark Tech Style) */}
         <div 
-          className={`absolute bottom-full right-0 mb-4 whitespace-nowrap px-4 py-2 bg-slate-900 border border-blue-500/30 text-blue-50 text-sm font-medium rounded-lg shadow-[0_0_15px_rgba(59,130,246,0.3)] backdrop-blur-md transition-all duration-300 origin-bottom-right ${
+          className={`absolute bottom-full right-0 mb-4 whitespace-nowrap px-4 py-2 bg-slate-900 border border-white/30 text-white text-sm font-medium rounded-lg shadow-[0_0_15px_rgba(255, 255, 255,0.3)] backdrop-blur-md transition-all duration-300 origin-bottom-right ${
             isHovered ? 'scale-100 opacity-100 translate-y-0' : 'scale-90 opacity-0 translate-y-2 pointer-events-none'
           }`}
         >
           Chat on Telegram
           {/* Tiny triangle pointer */}
-          <div className="absolute top-full right-6 -mt-1.5 w-3 h-3 bg-slate-900 border-r border-b border-blue-500/30 rotate-45"></div>
+          <div className="absolute top-full right-6 -mt-1.5 w-3 h-3 bg-slate-900 border-r border-b border-white/30 rotate-45"></div>
         </div>
 
         {/* The Button Container */}
@@ -57,10 +57,10 @@ const SupportWidget = () => {
           className="group relative flex items-center justify-center w-16 h-16 rounded-full transition-all duration-300 hover:-translate-y-1 hover:scale-105"
         >
           {/* 1. OUTER GLOW (Static + Hover intensity) */}
-          <div className="absolute inset-0 rounded-full bg-blue-500 blur-md opacity-40 group-hover:opacity-75 group-hover:blur-lg transition-all duration-500"></div>
+          <div className="absolute inset-0 rounded-full bg-white blur-md opacity-40 group-hover:opacity-75 group-hover:blur-lg transition-all duration-500"></div>
 
           {/* 2. MAIN BUTTON BACKGROUND (Gradient) */}
-          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-cyan-500 via-blue-600 to-indigo-700 shadow-[0_0_0_1px_rgba(255,255,255,0.1)] overflow-hidden">
+          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white via-white to-indigo-700 shadow-[0_0_0_1px_rgba(255,255,255,0.1)] overflow-hidden">
             
             {/* 3. SHIMMER EFFECT (The light beam) */}
             <div className="absolute top-0 left-0 w-full h-full animate-shimmer">
@@ -72,7 +72,7 @@ const SupportWidget = () => {
           </div>
 
           {/* 5. PULSE RING (Subtle Ripple) */}
-          <span className="absolute inline-flex h-full w-full rounded-full border border-blue-400 opacity-0 group-hover:animate-ping duration-[1.5s]"></span>
+          <span className="absolute inline-flex h-full w-full rounded-full border border-white opacity-0 group-hover:animate-ping duration-[1.5s]"></span>
           
           {/* Icon Layer */}
           <div className="relative z-10 drop-shadow-md">
@@ -100,7 +100,7 @@ const SupportWidget = () => {
 // --- DEMO PAGE CONTENT ---
 export default function App() {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-blue-200">
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-white">
       
       {/* The Aesthetic Widget */}
       <SupportWidget />
@@ -110,14 +110,14 @@ export default function App() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <span className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-600 to-blue-700 tracking-tight">
+              <span className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-white to-white tracking-tight">
                 BULLMONEY
               </span>
             </div>
             <div className="hidden md:flex items-center space-x-8">
-              <a href="#" className="text-slate-500 hover:text-blue-600 font-medium transition-colors">Markets</a>
-              <a href="#" className="text-slate-500 hover:text-blue-600 font-medium transition-colors">Exchange</a>
-              <a href="#" className="text-slate-500 hover:text-blue-600 font-medium transition-colors">Learn</a>
+              <a href="#" className="text-slate-500 hover:text-white font-medium transition-colors">Markets</a>
+              <a href="#" className="text-slate-500 hover:text-white font-medium transition-colors">Exchange</a>
+              <a href="#" className="text-slate-500 hover:text-white font-medium transition-colors">Learn</a>
               <button className="bg-slate-900 text-white px-5 py-2 rounded-full text-sm font-bold hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20">
                 Connect Wallet
               </button>
@@ -133,7 +133,7 @@ export default function App() {
             <div className="relative z-10 pb-8 bg-white sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32 pt-20 px-4 sm:px-6">
               <h1 className="text-4xl tracking-tighter font-extrabold text-slate-900 sm:text-5xl md:text-6xl mb-6">
                 <span className="block">Next Gen</span>
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-white to-white">
                   Crypto Support
                 </span>
               </h1>
@@ -141,8 +141,8 @@ export default function App() {
                 Experience the new aesthetic support button in the bottom right. It features a continuous &quot;shimmer&quot; animation, a neon glow effect, and a premium glassmorphic tooltip.
               </p>
               <div className="mt-8 sm:flex sm:justify-start">
-                <div className="rounded-full shadow-lg shadow-blue-500/30">
-                  <a href="#" className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-bold rounded-full text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 md:py-4 md:text-lg md:px-10 transition-all">
+                <div className="rounded-full shadow-lg shadow-white/30">
+                  <a href="#" className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-bold rounded-full text-white bg-gradient-to-r from-white to-indigo-600 hover:from-white hover:to-indigo-700 md:py-4 md:text-lg md:px-10 transition-all">
                     Start Trading
                   </a>
                 </div>
@@ -156,8 +156,8 @@ export default function App() {
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[1, 2, 3].map((item) => (
-                <div key={item} className="bg-white p-8 rounded-2xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100 hover:border-blue-100 transition-colors">
-                  <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-6 text-blue-600">
+                <div key={item} className="bg-white p-8 rounded-2xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100 hover:border-white transition-colors">
+                  <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center mb-6 text-black">
                     {item === 1 ? <HelpCircle /> : item === 2 ? <Phone /> : <Mail />}
                   </div>
                   <h3 className="text-xl font-bold text-slate-900 mb-2">24/7 Support</h3>

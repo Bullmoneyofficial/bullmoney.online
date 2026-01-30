@@ -210,11 +210,11 @@ const AuthContent = memo(({ onClose }: AuthContentProps) => {
         )}
 
         {/* Inner Container */}
-        <div className="relative z-10 bg-gradient-to-b from-neutral-900 to-black rounded-2xl border border-blue-500/30 overflow-hidden">
+        <div className="relative z-10 bg-gradient-to-b from-neutral-900 to-black rounded-2xl border border-white/30 overflow-hidden">
           {!shouldSkipHeavyEffects && <ShimmerLine color="blue" />}
 
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-blue-500/20">
+          <div className="flex items-center justify-between p-6 border-b border-white/20">
             <div className="flex items-center gap-3">
               {view !== 'login' && (
                 <motion.button
@@ -232,7 +232,7 @@ const AuthContent = memo(({ onClose }: AuthContentProps) => {
                   {view === 'signup' && 'Create Account'}
                   {view === 'forgot-password' && 'Reset Password'}
                 </h2>
-                <p className="text-sm text-blue-400/70">
+                <p className="text-sm text-white/70">
                   {view === 'login' && 'Sign in to your account'}
                   {view === 'signup' && 'Join the Bull community'}
                   {view === 'forgot-password' && 'Enter your email to reset'}
@@ -273,9 +273,9 @@ const AuthContent = memo(({ onClose }: AuthContentProps) => {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="mb-4 p-3 rounded-lg bg-green-500/10 border border-green-500/30"
+                  className="mb-4 p-3 rounded-lg bg-white/10 border border-white/30"
                 >
-                  <p className="text-sm text-green-400">{success}</p>
+                  <p className="text-sm text-white">{success}</p>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -291,7 +291,7 @@ const AuthContent = memo(({ onClose }: AuthContentProps) => {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 bg-black/50 border border-blue-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full pl-10 pr-4 py-3 bg-black/50 border border-white/30 rounded-lg text-white text-sm focus:outline-none focus:border-white transition-colors"
                       placeholder="your@email.com"
                       disabled={isLoading}
                     />
@@ -306,7 +306,7 @@ const AuthContent = memo(({ onClose }: AuthContentProps) => {
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-10 pr-12 py-3 bg-black/50 border border-blue-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full pl-10 pr-12 py-3 bg-black/50 border border-white/30 rounded-lg text-white text-sm focus:outline-none focus:border-white transition-colors"
                       placeholder="Enter your password"
                       disabled={isLoading}
                     />
@@ -324,7 +324,7 @@ const AuthContent = memo(({ onClose }: AuthContentProps) => {
                   <button
                     type="button"
                     onClick={() => handleViewChange('forgot-password')}
-                    className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                    className="text-sm text-white hover:text-white transition-colors"
                   >
                     Forgot password?
                   </button>
@@ -335,7 +335,7 @@ const AuthContent = memo(({ onClose }: AuthContentProps) => {
                   whileTap={{ scale: 0.98 }}
                   type="submit"
                   disabled={isLoading}
-                  className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-white hover:bg-white/90 text-black font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isLoading ? (
                     <>
@@ -352,7 +352,7 @@ const AuthContent = memo(({ onClose }: AuthContentProps) => {
                   <button
                     type="button"
                     onClick={() => handleViewChange('signup')}
-                    className="text-blue-400 hover:text-blue-300 transition-colors font-medium"
+                    className="text-white hover:text-white transition-colors font-medium"
                   >
                     Sign up
                   </button>
@@ -371,7 +371,7 @@ const AuthContent = memo(({ onClose }: AuthContentProps) => {
                       type="text"
                       value={username}
                       onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                      className="w-full pl-10 pr-4 py-3 bg-black/50 border border-blue-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full pl-10 pr-4 py-3 bg-black/50 border border-white/30 rounded-lg text-white text-sm focus:outline-none focus:border-white transition-colors"
                       placeholder="trader_name"
                       maxLength={20}
                       disabled={isLoading}
@@ -388,7 +388,7 @@ const AuthContent = memo(({ onClose }: AuthContentProps) => {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 bg-black/50 border border-blue-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full pl-10 pr-4 py-3 bg-black/50 border border-white/30 rounded-lg text-white text-sm focus:outline-none focus:border-white transition-colors"
                       placeholder="your@email.com"
                       disabled={isLoading}
                     />
@@ -403,7 +403,7 @@ const AuthContent = memo(({ onClose }: AuthContentProps) => {
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-10 pr-12 py-3 bg-black/50 border border-blue-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full pl-10 pr-12 py-3 bg-black/50 border border-white/30 rounded-lg text-white text-sm focus:outline-none focus:border-white transition-colors"
                       placeholder="Create a password"
                       disabled={isLoading}
                     />
@@ -426,7 +426,7 @@ const AuthContent = memo(({ onClose }: AuthContentProps) => {
                       type={showPassword ? 'text' : 'password'}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 bg-black/50 border border-blue-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full pl-10 pr-4 py-3 bg-black/50 border border-white/30 rounded-lg text-white text-sm focus:outline-none focus:border-white transition-colors"
                       placeholder="Confirm your password"
                       disabled={isLoading}
                     />
@@ -438,7 +438,7 @@ const AuthContent = memo(({ onClose }: AuthContentProps) => {
                   whileTap={{ scale: 0.98 }}
                   type="submit"
                   disabled={isLoading}
-                  className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-white hover:bg-white/90 text-black font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isLoading ? (
                     <>
@@ -455,7 +455,7 @@ const AuthContent = memo(({ onClose }: AuthContentProps) => {
                   <button
                     type="button"
                     onClick={() => handleViewChange('login')}
-                    className="text-blue-400 hover:text-blue-300 transition-colors font-medium"
+                    className="text-white hover:text-white transition-colors font-medium"
                   >
                     Sign in
                   </button>
@@ -474,7 +474,7 @@ const AuthContent = memo(({ onClose }: AuthContentProps) => {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 bg-black/50 border border-blue-500/30 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full pl-10 pr-4 py-3 bg-black/50 border border-white/30 rounded-lg text-white text-sm focus:outline-none focus:border-white transition-colors"
                       placeholder="your@email.com"
                       disabled={isLoading}
                     />
@@ -486,7 +486,7 @@ const AuthContent = memo(({ onClose }: AuthContentProps) => {
                   whileTap={{ scale: 0.98 }}
                   type="submit"
                   disabled={isLoading}
-                  className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-white hover:bg-white/90 text-black font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isLoading ? (
                     <>

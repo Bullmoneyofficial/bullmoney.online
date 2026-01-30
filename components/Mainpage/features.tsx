@@ -137,7 +137,7 @@ export function Features() {
                     BM15
                     <span
                       className={`ml-1 inline-block h-2 w-2 rounded-full ${
-                        copied ? "bg-emerald-400" : "bg-[#B8983A]"
+                        copied ? "bg-white" : "bg-[#B8983A]"
                       }`}
                     />
                   </button>

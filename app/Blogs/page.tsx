@@ -99,10 +99,10 @@ const OnboardingHelper = ({ onDismiss }: { onDismiss: () => void }) => {
         >
             <div className="relative w-full h-full">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
-                    <h2 className="text-4xl md:text-6xl font-bold text-white mb-4 tracking-tighter drop-shadow-[0_0_25px_rgba(59,130,246,0.6)] animate-pulse">
+                    <h2 className="text-4xl md:text-6xl font-bold text-white mb-4 tracking-tighter drop-shadow-[0_0_25px_rgba(255, 255, 255,0.6)] animate-pulse">
                         Customize Your Vibe
                     </h2>
-                    <p className="text-blue-200 text-lg md:text-xl font-mono opacity-90">
+                    <p className="text-white text-lg md:text-xl font-mono opacity-90">
                         Choose a Theme & Soundtrack
                     </p>
                     <div className="mt-4 text-xs text-white/40 uppercase tracking-widest">Click anywhere to start</div>
@@ -204,10 +204,10 @@ const BottomControls = ({
             onMouseLeave={() => setIsHovered(false)}
         >
             {showHelper && (
-                <div className="absolute -top-12 left-0 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-[11px] px-3 py-1.5 rounded-lg shadow-xl animate-pulse flex items-center gap-2 whitespace-nowrap border border-white/20">
+                <div className="absolute -top-12 left-0 bg-gradient-to-r from-white to-white text-white text-[11px] px-3 py-1.5 rounded-lg shadow-xl animate-pulse flex items-center gap-2 whitespace-nowrap border border-white/20">
                     <Sparkles size={12} />
                     Customize your vibe here!
-                    <div className="absolute -bottom-1 left-4 w-2 h-2 bg-blue-600 rotate-45" />
+                    <div className="absolute -bottom-1 left-4 w-2 h-2 bg-white rotate-45" />
                 </div>
             )}
 
@@ -218,7 +218,7 @@ const BottomControls = ({
             >
                 <button
                     onClick={(e) => { e.stopPropagation(); onOpenTheme(); }}
-                    className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 text-gray-400 hover:bg-purple-500/20 hover:text-purple-400 transition-all duration-300 border border-transparent hover:border-purple-500/50 group relative"
+                    className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 text-gray-400 hover:bg-white/20 hover:text-white transition-all duration-300 border border-transparent hover:border-white/50 group relative"
                 >
                     <Palette size={18} />
                 </button>
@@ -228,17 +228,17 @@ const BottomControls = ({
                 <button
                     onClick={(e) => { e.stopPropagation(); onToggleMusic(); }} 
                     className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-500 relative
-                    ${isPlaying ? 'bg-blue-600/20 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'bg-gray-800 text-gray-500'}`}
+                    ${isPlaying ? 'bg-white/20 text-white shadow-[0_0_15px_rgba(255, 255, 255,0.3)]' : 'bg-gray-800 text-gray-500'}`}
                 >
                     {isPlaying ? (volume > 50 ? <Volume2 size={18}/> : <Volume1 size={18}/>) : <VolumeX size={18}/>}
-                    {isPlaying && <span className="absolute inset-0 rounded-full border border-blue-400 animate-ping opacity-20" />}
+                    {isPlaying && <span className="absolute inset-0 rounded-full border border-white animate-ping opacity-20" />}
                 </button>
 
                 <div className={`flex items-center transition-all duration-500 overflow-hidden ${isHovered ? 'w-24 px-2 opacity-100' : 'w-0 opacity-0'}`}>
                     <input 
                         type="range" min="0" max="100" value={volume}
                         onChange={(e) => onVolumeChange(parseInt(e.target.value))}
-                        className="w-full h-1 bg-blue-900 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                        className="w-full h-1 bg-white rounded-lg appearance-none cursor-pointer accent-white"
                     />
                 </div>
             </div>
@@ -252,9 +252,9 @@ const BottomControls = ({
                 <div className="flex items-center gap-1">
                     <span className="text-xs text-white truncate font-mono">{themeName} Radio</span>
                     <div className="flex gap-0.5 items-end h-3">
-                        <span className="w-0.5 h-full bg-blue-500 animate-music-bar-1"/>
-                        <span className="w-0.5 h-full bg-blue-500 animate-music-bar-2"/>
-                        <span className="w-0.5 h-full bg-blue-500 animate-music-bar-3"/>
+                        <span className="w-0.5 h-full bg-white animate-music-bar-1"/>
+                        <span className="w-0.5 h-full bg-white animate-music-bar-2"/>
+                        <span className="w-0.5 h-full bg-white animate-music-bar-3"/>
                     </div>
                 </div>
             </div>

@@ -153,7 +153,7 @@ export const ThemeConfigModal = ({
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: isMobile ? 1 : 0.95, opacity: 0 }}
                         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                        className="w-full h-full lg:max-w-7xl lg:max-h-[90vh] bg-[#050505] lg:rounded-xl overflow-hidden border border-blue-500/50 shadow-[0_0_50px_rgba(37,99,235,0.5)] flex flex-col min-h-0"
+                        className="w-full h-full lg:max-w-7xl lg:max-h-[90vh] bg-[#050505] lg:rounded-xl overflow-hidden border border-white/50 shadow-[0_0_50px_rgba(255, 255, 255,0.5)] flex flex-col min-h-0"
                         onClick={(e) => e.stopPropagation()}
                         style={{
                             filter: isMobile ? currentTheme?.mobileFilter : currentTheme?.filter,
@@ -163,7 +163,7 @@ export const ThemeConfigModal = ({
                         {/* Modal Header */}
                         <div className="shrink-0 p-4 md:p-6 border-b border-white/10 flex justify-between items-center bg-black/70 z-20">
                             <h2 className="text-lg md:text-xl font-bold tracking-widest text-shimmer-effect uppercase flex items-center gap-3">
-                                <Settings className="w-5 h-5 text-blue-500" /> 
+                                <Settings className="w-5 h-5 text-white" /> 
                                 SYNTHESIS_OS CONFIGURATION
                             </h2>
                             <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 transition-colors text-white">

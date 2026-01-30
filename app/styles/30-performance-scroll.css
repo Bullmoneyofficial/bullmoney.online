@@ -303,12 +303,12 @@ html.is-interacting .shimmer-border {
   }
   
   html.big-display::-webkit-scrollbar-thumb {
-    background: rgba(59, 130, 246, 0.5);
+    background: rgba(255, 255, 255, 0.5);
     border-radius: 5px;
   }
   
   html.big-display::-webkit-scrollbar-thumb:hover {
-    background: rgba(59, 130, 246, 0.7);
+    background: rgba(255, 255, 255, 0.7);
   }
 }
 
@@ -510,27 +510,38 @@ body::after {
   user-select: none !important;
 }
 
-/* Spline container - ensure scroll passthrough */
+/* Spline container - ensure scroll passthrough while allowing interaction */
 .spline-container {
   height: 100%;
   width: 100%;
   position: relative;
-  touch-action: pan-y !important;
+  touch-action: manipulation !important; /* FIXED: Allow touch interactions */
   -webkit-overflow-scrolling: touch;
-  pointer-events: none;
+  pointer-events: auto !important; /* FIXED: Enable pointer events on all devices */
 }
 
+/* Allow interactions on both desktop and mobile/touch */
 @media (min-width: 769px) and (hover: hover) {
   .spline-container {
     pointer-events: auto;
+    cursor: grab;
+  }
+}
+
+/* FIXED: Mobile/touch devices should also have pointer events */
+@media (hover: none) and (pointer: coarse) {
+  .spline-container {
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+    cursor: pointer;
   }
 }
 
 /* Fixed elements should not block scrolling */
-/* FIXED: Only apply touch-action: none on mobile - desktop needs to pass through scroll events */
+/* FIXED: Allow touch interactions while preventing scroll hijack */
 @media (max-width: 768px) {
   .fixed, [style*="position: fixed"] {
-    touch-action: none;
+    touch-action: manipulation; /* CHANGED: manipulation allows clicks/taps, none blocks everything */
   }
 }
 
@@ -538,6 +549,7 @@ body::after {
   .fixed, [style*="position: fixed"] {
     /* Allow scroll pass-through on desktop */
     pointer-events: auto;
+    touch-action: manipulation; /* ADDED: Allow touch on desktop-size touch devices (tablets) */
   }
 }
 

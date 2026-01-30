@@ -248,11 +248,11 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
             className="absolute inset-0 opacity-50"
             style={{
               backgroundImage:
-                'radial-gradient(circle at 30% 20%, rgba(59,130,246,0.25), transparent 45%), radial-gradient(circle at 70% 80%, rgba(59,130,246,0.18), transparent 50%)',
+                'radial-gradient(circle at 30% 20%, rgba(255, 255, 255,0.25), transparent 45%), radial-gradient(circle at 70% 80%, rgba(255, 255, 255,0.18), transparent 50%)',
             }}
           />
           <div className="relative z-10 text-center px-6 py-5 rounded-2xl border border-white/10 bg-black/50 backdrop-blur">
-            <div className="text-blue-400/70 font-mono text-[10px] tracking-[0.3em] mb-2">SAFE MODE PREVIEW</div>
+            <div className="text-white/70 font-mono text-[10px] tracking-[0.3em] mb-2">SAFE MODE PREVIEW</div>
             <div className="text-white/90 font-bold text-xl md:text-2xl">
               {skeletonLabel || 'SPLINE SCENE'}
             </div>
@@ -272,7 +272,7 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
             className="absolute inset-0 opacity-30"
             style={{
               backgroundImage:
-                'radial-gradient(circle at 30% 30%, rgba(59,130,246,0.12), transparent 45%), radial-gradient(circle at 70% 70%, rgba(236,72,153,0.1), transparent 45%)',
+                'radial-gradient(circle at 30% 30%, rgba(255, 255, 255,0.12), transparent 45%), radial-gradient(circle at 70% 70%, rgba(236,72,153,0.1), transparent 45%)',
             }}
           />
           <div className="relative z-10 text-center px-6 py-5 rounded-2xl border border-white/10 bg-black/50 backdrop-blur">
@@ -337,7 +337,7 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
       )}
       {isVisible && !isLoaded && (
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900/40 to-black/60 flex items-center justify-center z-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
         </div>
       )}
     </div>
@@ -734,11 +734,11 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
       {/* Arcade HUD */}
       <div className="absolute top-4 left-4 z-[70] flex flex-col gap-2 pointer-events-auto max-w-[calc(100vw-2rem)]">
         <div className="px-3 sm:px-4 py-2 rounded-2xl bg-black/70 border border-white/10 backdrop-blur-md text-white shadow-[0_0_20px_rgba(0,0,0,0.35)]">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-blue-300 font-bold flex items-center gap-2">
-            <Zap size={12} className="text-blue-500" /> Split Arcade
+          <div className="text-[10px] uppercase tracking-[0.2em] text-white font-bold flex items-center gap-2">
+            <Zap size={12} className="text-white" /> Split Arcade
           </div>
           <div className="mt-1 flex items-center gap-2 sm:gap-3 text-xs flex-wrap">
-            <span className="font-mono text-blue-400">Score {score}</span>
+            <span className="font-mono text-white">Score {score}</span>
             {!isMobile && (
               <>
                 <span className="text-white/50">•</span>
@@ -754,7 +754,7 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
                   setActiveScene(prev => prev === 'left' ? 'right' : 'left');
                   if (navigator.vibrate) navigator.vibrate(15);
                 }}
-                className="flex-1 min-w-[44px] min-h-[44px] px-3 rounded-lg bg-blue-500/20 border border-blue-500/40 text-xs font-bold text-blue-100 hover:bg-blue-500/30 transition-colors touch-manipulation"
+                className="flex-1 min-w-[44px] min-h-[44px] px-3 rounded-lg bg-white/20 border border-white/40 text-xs font-bold text-white hover:bg-white/30 transition-colors touch-manipulation"
                 aria-label="Switch scene"
                 style={{ WebkitTapHighlightColor: 'transparent' }}
               >
@@ -767,7 +767,7 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
               aria-label="Move split up"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
-              <ChevronUp size={18} className="text-blue-400" />
+              <ChevronUp size={18} className="text-white" />
             </button>
             <button
               onClick={() => { playClick(); nudgeSplit(isMobile ? 4 : 3); }}
@@ -775,11 +775,11 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
               aria-label="Move split down"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
-              <ChevronDown size={18} className="text-blue-400" />
+              <ChevronDown size={18} className="text-white" />
             </button>
             <button
               onClick={() => { playClick(); handleTargetHit(); }}
-              className="flex-1 min-h-[44px] px-3 sm:px-4 rounded-lg bg-blue-500/20 border border-blue-500/40 text-xs sm:text-sm font-bold text-blue-100 hover:bg-blue-500/30 transition-colors touch-manipulation"
+              className="flex-1 min-h-[44px] px-3 sm:px-4 rounded-lg bg-white/20 border border-white/40 text-xs sm:text-sm font-bold text-white hover:bg-white/30 transition-colors touch-manipulation"
               aria-label="Fire at target"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
@@ -797,12 +797,12 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
         >
           <button
             onClick={(e) => { e.stopPropagation(); handleTargetHit(); }}
-            className="relative w-16 h-16 rounded-full bg-blue-500/10 border border-blue-500/40 shadow-[0_0_20px_rgba(0,100,255,0.3)] hover:scale-105 transition-transform"
+            className="relative w-16 h-16 rounded-full bg-white/10 border border-white/40 shadow-[0_0_20px_rgba(0,100,255,0.3)] hover:scale-105 transition-transform"
             aria-label="Hit target"
           >
             <div className="absolute inset-1 rounded-full border border-white/10" />
-            <div className="absolute inset-3 rounded-full border border-blue-400/60" />
-            <div className="absolute inset-6 rounded-full bg-blue-500/70 blur-[10px] opacity-60" />
+            <div className="absolute inset-3 rounded-full border border-white/60" />
+            <div className="absolute inset-6 rounded-full bg-white/70 blur-[10px] opacity-60" />
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-0.5 h-full bg-white/60" />
               <div className="h-0.5 w-full bg-white/60" />
@@ -814,7 +814,7 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
       {/* PANEL A */}
       <div
         style={{ [sizeProp]: `${splitPos}%`, [otherSizeProp]: '100%' }}
-        className={`relative overflow-hidden bg-[#050505] border-blue-500/50 ${isMobile ? 'border-b' : 'border-r'} ${isDragging ? 'transition-none' : 'transition-all duration-300 ease-out'}`}
+        className={`relative overflow-hidden bg-[#050505] border-white/50 ${isMobile ? 'border-b' : 'border-r'} ${isDragging ? 'transition-none' : 'transition-all duration-300 ease-out'}`}
       >
         <div className="absolute inset-0 w-full h-full">
           <SceneWrapper
@@ -846,7 +846,7 @@ export const DraggableSplitSection = memo(({ config, activePage, onVisible, para
         className={`absolute z-50 flex items-center justify-center group outline-none touch-none cursor-pointer ${isMobile ? 'w-full h-12 left-0 -mt-6 cursor-row-resize' : 'w-12 h-full top-0 -ml-6 cursor-col-resize'}`}
         style={isMobile ? { top: `${splitPos}%` } : { left: `${splitPos}%` }}
       >
-        <div className={`${isMobile ? 'w-full h-[1px]' : 'w-[1px] h-full'} bg-blue-500/50 shadow-[0_0_15px_rgba(0,100,255,0.5)]`} />
+        <div className={`${isMobile ? 'w-full h-[1px]' : 'w-[1px] h-full'} bg-white/50 shadow-[0_0_15px_rgba(0,100,255,0.5)]`} />
         <div className="absolute w-12 h-12 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform hover-lift">
            {isMobile ? <GripHorizontal size={16} className="text-white"/> : <GripVertical size={16} className="text-white"/> }
         </div>

@@ -144,7 +144,7 @@ export const FeedInline = memo(({ inModal = true }: FeedInlineProps) => {
   return (
     <div className="flex flex-col h-full">
       {/* Filters Bar */}
-      <div className="flex-shrink-0 p-3 border-b border-blue-500/20 bg-neutral-900/50">
+      <div className="flex-shrink-0 p-3 border-b border-white/20 bg-neutral-900/50">
         <div className="flex items-center gap-2 flex-wrap">
           {/* Tab Filters */}
           <div className="flex items-center gap-1">
@@ -156,7 +156,7 @@ export const FeedInline = memo(({ inModal = true }: FeedInlineProps) => {
                 onClick={() => { SoundEffects.click(); setActiveTab(tab.id); }}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                   activeTab === tab.id 
-                    ? 'bg-blue-500 text-white' 
+                    ? 'bg-white text-black' 
                     : 'bg-neutral-800/50 text-neutral-400 hover:bg-neutral-800'
                 }`}
               >
@@ -178,7 +178,7 @@ export const FeedInline = memo(({ inModal = true }: FeedInlineProps) => {
                 onClick={() => { SoundEffects.click(); setMarketFilter(market.id); }}
                 className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
                   marketFilter === market.id 
-                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50' 
+                    ? 'bg-white/20 text-white border border-white/50' 
                     : 'bg-neutral-800/50 text-neutral-500 hover:bg-neutral-800'
                 }`}
               >
@@ -196,7 +196,7 @@ export const FeedInline = memo(({ inModal = true }: FeedInlineProps) => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search..."
-                className="w-[120px] sm:w-[180px] pl-8 pr-3 py-1.5 bg-black/50 border border-blue-500/30 rounded-lg text-white text-xs placeholder:text-neutral-500 focus:outline-none focus:border-blue-500"
+                className="w-[120px] sm:w-[180px] pl-8 pr-3 py-1.5 bg-black/50 border border-white/30 rounded-lg text-white text-xs placeholder:text-neutral-500 focus:outline-none focus:border-white"
               />
             </div>
             

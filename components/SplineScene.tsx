@@ -213,22 +213,22 @@ function SplineSceneComponent({
           <div 
             className="w-16 h-16 rounded-full flex items-center justify-center"
             style={{ 
-              backgroundColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.1)', 
-              borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
+              backgroundColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.1)', 
+              borderColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.3)',
               borderWidth: '1px',
               borderStyle: 'solid'
             }}
           >
             <span className="text-2xl">🚀</span>
           </div>
-          <p className="text-xs text-center px-4 theme-accent" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.6)' }}>3D View</p>
-          <p className="text-[10px]" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.4)' }}>Optimized for your device</p>
+          <p className="text-xs text-center px-4 theme-accent" style={{ color: 'rgba(var(--accent-rgb, 255, 255, 255), 0.6)' }}>3D View</p>
+          <p className="text-[10px]" style={{ color: 'rgba(var(--accent-rgb, 255, 255, 255), 0.4)' }}>Optimized for your device</p>
         </div>
 
         {/* Border glow - theme aware */}
         <div 
           className="absolute inset-0 rounded-xl" 
-          style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.2)', borderWidth: '1px', borderStyle: 'solid' }} 
+          style={{ borderColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.2)', borderWidth: '1px', borderStyle: 'solid' }} 
         />
       </div>
     );
@@ -274,8 +274,8 @@ function SplineSceneComponent({
             transition={{ duration: 0.2 }}
             className="absolute inset-0 z-[2] pointer-events-none rounded-xl"
             style={{
-              background: 'radial-gradient(circle at center, rgba(var(--accent-rgb, 59, 130, 246), 0.1) 0%, transparent 70%)',
-              boxShadow: 'inset 0 0 30px rgba(var(--accent-rgb, 59, 130, 246), 0.15)',
+              background: 'radial-gradient(circle at center, rgba(var(--accent-rgb, 255, 255, 255), 0.1) 0%, transparent 70%)',
+              boxShadow: 'inset 0 0 30px rgba(var(--accent-rgb, 255, 255, 255), 0.15)',
             }}
           />
         )}
@@ -291,8 +291,8 @@ function SplineSceneComponent({
             transition={{ duration: 0.15 }}
             className="absolute inset-0 z-[2] pointer-events-none rounded-xl"
             style={{
-              background: 'radial-gradient(circle at center, rgba(var(--accent-rgb, 59, 130, 246), 0.2) 0%, transparent 60%)',
-              boxShadow: 'inset 0 0 50px rgba(var(--accent-rgb, 59, 130, 246), 0.25), 0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
+              background: 'radial-gradient(circle at center, rgba(var(--accent-rgb, 255, 255, 255), 0.2) 0%, transparent 60%)',
+              boxShadow: 'inset 0 0 50px rgba(var(--accent-rgb, 255, 255, 255), 0.25), 0 0 20px rgba(var(--accent-rgb, 255, 255, 255), 0.3)',
             }}
           />
         )}
@@ -313,7 +313,7 @@ function SplineSceneComponent({
               top: clickRipple.y - 25,
               width: 50,
               height: 50,
-              background: 'radial-gradient(circle, rgba(var(--accent-rgb, 59, 130, 246), 0.6) 0%, transparent 70%)',
+              background: 'radial-gradient(circle, rgba(var(--accent-rgb, 255, 255, 255), 0.6) 0%, transparent 70%)',
             }}
           />
         )}
@@ -333,8 +333,8 @@ function SplineSceneComponent({
               className="px-4 py-2 rounded-full backdrop-blur-md text-sm font-medium shadow-xl"
               style={{
                 background: 'rgba(0, 0, 0, 0.7)',
-                border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.4)',
-                color: 'rgba(var(--accent-rgb, 59, 130, 246), 1)',
+                border: '1px solid rgba(var(--accent-rgb, 255, 255, 255), 0.4)',
+                color: 'rgba(var(--accent-rgb, 255, 255, 255), 1)',
               }}
             >
               {interactionHint}
@@ -354,7 +354,7 @@ function SplineSceneComponent({
               className="flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-md"
               style={{
                 background: 'rgba(0, 0, 0, 0.5)',
-                border: '1px solid rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
+                border: '1px solid rgba(var(--accent-rgb, 255, 255, 255), 0.3)',
               }}
             >
               <motion.div
@@ -369,7 +369,7 @@ function SplineSceneComponent({
               </motion.div>
               <span 
                 className="text-xs font-medium"
-                style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.9)' }}
+                style={{ color: 'rgba(var(--accent-rgb, 255, 255, 255), 0.9)' }}
               >
                 {isDragging ? 'Rotating' : isHovering ? 'Interactive' : '3D Scene'}
               </span>
@@ -468,16 +468,16 @@ function SplineSceneComponent({
               animate={{ 
                 scale: [1, 1.05, 1],
                 boxShadow: [
-                  '0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
-                  '0 0 40px rgba(var(--accent-rgb, 59, 130, 246), 0.5)',
-                  '0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.3)'
+                  '0 0 20px rgba(var(--accent-rgb, 255, 255, 255), 0.3)',
+                  '0 0 40px rgba(var(--accent-rgb, 255, 255, 255), 0.5)',
+                  '0 0 20px rgba(var(--accent-rgb, 255, 255, 255), 0.3)'
                 ]
               }}
               transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
               className="px-6 py-3 rounded-2xl backdrop-blur-xl flex items-center gap-3 shadow-2xl"
               style={{
                 background: 'rgba(0, 0, 0, 0.7)',
-                border: '2px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)',
+                border: '2px solid rgba(var(--accent-rgb, 255, 255, 255), 0.5)',
               }}
             >
               <motion.span 
@@ -490,7 +490,7 @@ function SplineSceneComponent({
               <div className="flex flex-col">
                 <span 
                   className="font-bold text-base"
-                  style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 1)' }}
+                  style={{ color: 'rgba(var(--accent-rgb, 255, 255, 255), 1)' }}
                 >
                   Interact with 3D
                 </span>
@@ -519,11 +519,11 @@ function SplineSceneComponent({
             style={{ 
               touchAction: 'manipulation',
               background: 'rgba(0, 0, 0, 0.7)',
-              border: '2px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)',
+              border: '2px solid rgba(var(--accent-rgb, 255, 255, 255), 0.5)',
             }}
             aria-label="Exit interaction"
           >
-            <span className="text-sm font-medium" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 1)' }}>Exit</span>
+            <span className="text-sm font-medium" style={{ color: 'rgba(var(--accent-rgb, 255, 255, 255), 1)' }}>Exit</span>
             <span>✕</span>
           </motion.button>
         )}

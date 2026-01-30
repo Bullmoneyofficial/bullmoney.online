@@ -132,7 +132,7 @@ const MobileMenuControls = memo(({
       maxWidth: isScrollMinimized ? '7rem' : 'none',
       transition: 'border-color 0.4s ease-out, box-shadow 0.4s ease-out, filter 0.4s ease-out, height 0.4s ease-out, max-width 0.4s ease-out',
       transitionDelay: '0.35s',
-      filter: skipHeavyEffects ? 'none' : 'drop-shadow(0 0 12px rgba(59,130,246,1)) drop-shadow(0 0 24px rgba(59,130,246,0.8)) drop-shadow(0 0 36px rgba(59,130,246,0.6))',
+      filter: skipHeavyEffects ? 'none' : 'drop-shadow(0 0 12px rgba(255, 255, 255,1)) drop-shadow(0 0 24px rgba(255, 255, 255,0.8)) drop-shadow(0 0 36px rgba(255, 255, 255,0.6))',
     }}
   >
     {/* UNIFIED SHIMMER - Border glow effect, theme-aware via CSS variables */}
@@ -150,8 +150,8 @@ const MobileMenuControls = memo(({
         isScrollMinimized ? "p-[1px] px-1" : "p-[2px] px-1 xs:px-1.5 sm:px-2"
       )}
       style={{
-        border: '2px solid rgba(59, 130, 246, 0.9)',
-        boxShadow: skipHeavyEffects ? 'none' : '0 0 10px rgba(59, 130, 246, 0.8), inset 0 0 10px rgba(59, 130, 246, 0.3)',
+        border: '2px solid rgba(255, 255, 255, 0.9)',
+        boxShadow: skipHeavyEffects ? 'none' : '0 0 10px rgba(255, 255, 255, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.3)',
       }}
     >
       {/* Theme Selector Button - With text label */}
@@ -167,7 +167,7 @@ const MobileMenuControls = memo(({
             ? "p-1 min-w-[32px] min-h-[32px]" 
             : "p-1 xs:p-1.5 sm:p-2 min-w-[40px] xs:min-w-[44px] sm:min-w-[48px] min-h-[40px] xs:min-h-[44px] sm:min-h-[48px]"
         )}
-        style={{ color: 'var(--accent-color, #93c5fd)' }}
+        style={{ color: 'var(--accent-color, #ffffff)' }}
         title="Theme Selector"
       >
         <IconPalette className={isScrollMinimized ? "h-4 w-4" : "h-5 w-5 xs:h-6 xs:w-6 sm:h-6 sm:w-6"} />
@@ -177,7 +177,7 @@ const MobileMenuControls = memo(({
       {/* Divider - Theme-aware */}
       <div 
         className={cn(isScrollMinimized ? "h-4 w-[1px]" : "h-6 xs:h-7 w-[1px]")}
-        style={{ background: 'linear-gradient(to bottom, rgba(var(--accent-rgb, 59, 130, 246), 0.2), rgba(var(--accent-rgb, 59, 130, 246), 0.5), rgba(var(--accent-rgb, 59, 130, 246), 0.2))' }}
+        style={{ background: 'linear-gradient(to bottom, rgba(var(--accent-rgb, 255, 255, 255), 0.2), rgba(var(--accent-rgb, 255, 255, 255), 0.5), rgba(var(--accent-rgb, 255, 255, 255), 0.2))' }}
       />
 
       {/* Menu Toggle Button - With text label */}
@@ -193,7 +193,7 @@ const MobileMenuControls = memo(({
             ? "p-1 min-w-[32px] min-h-[32px]" 
             : "p-1 xs:p-1.5 sm:p-2 min-w-[40px] xs:min-w-[44px] sm:min-w-[48px] min-h-[40px] xs:min-h-[44px] sm:min-h-[48px]"
         )}
-        style={{ color: 'var(--accent-color, #93c5fd)' }}
+        style={{ color: 'var(--accent-color, #ffffff)' }}
         title={open ? 'Close menu' : 'Open menu'}
       >
         <div className="relative flex items-center justify-center">
@@ -204,8 +204,8 @@ const MobileMenuControls = memo(({
           )}
           {hasReward && !open && (
             <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
-              <span className={cn("absolute inline-flex h-full w-full rounded-full opacity-75", skipHeavyEffects ? "" : "shimmer-ping")} style={{ backgroundColor: 'var(--accent-color, #3b82f6)' }}></span>
-              <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: 'var(--accent-color, #3b82f6)' }}></span>
+              <span className={cn("absolute inline-flex h-full w-full rounded-full opacity-75", skipHeavyEffects ? "" : "shimmer-ping")} style={{ backgroundColor: 'var(--accent-color, #ffffff)' }}></span>
+              <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: 'var(--accent-color, #ffffff)' }}></span>
             </span>
           )}
         </div>
@@ -666,10 +666,10 @@ export const Navbar = memo(() => {
                 opacity: [0.8, 1, 0.8]
               }}
               transition={shouldSkipHeavyEffects ? {} : { duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-              className="text-3xl font-black tracking-wider bg-gradient-to-r from-blue-400 via-blue-300 to-blue-400 bg-clip-text text-transparent pointer-events-none"
+              className="text-3xl font-black tracking-wider bg-gradient-to-r from-white via-white to-white bg-clip-text text-transparent pointer-events-none"
               style={{
-                textShadow: shouldSkipHeavyEffects ? 'none' : '0 0 20px rgba(59, 130, 246, 1), 0 0 40px rgba(59, 130, 246, 0.8), 0 0 60px rgba(59, 130, 246, 0.6)',
-                filter: shouldSkipHeavyEffects ? 'none' : 'drop-shadow(0 0 10px rgba(59,130,246,0.9)) drop-shadow(0 0 20px rgba(59,130,246,0.6))',
+                textShadow: shouldSkipHeavyEffects ? 'none' : '0 0 20px rgba(255, 255, 255, 1), 0 0 40px rgba(255, 255, 255, 0.8), 0 0 60px rgba(255, 255, 255, 0.6)',
+                filter: shouldSkipHeavyEffects ? 'none' : 'drop-shadow(0 0 10px rgba(255, 255, 255,0.9)) drop-shadow(0 0 20px rgba(255, 255, 255,0.6))',
               }}
             >
               BULLMONEY
@@ -716,9 +716,9 @@ export const Navbar = memo(() => {
                 >
                   <Link href="/" className="relative block">
                     <span 
-                      className="text-lg font-black tracking-tight bg-gradient-to-r from-blue-400 via-blue-300 to-blue-400 bg-clip-text text-transparent"
+                      className="text-lg font-black tracking-tight bg-gradient-to-r from-white via-white to-white bg-clip-text text-transparent"
                       style={{
-                        textShadow: shouldSkipHeavyEffects ? 'none' : '0 0 20px rgba(59, 130, 246, 0.5)',
+                        textShadow: shouldSkipHeavyEffects ? 'none' : '0 0 20px rgba(255, 255, 255, 0.5)',
                       }}
                     >
                       BULLMONEY

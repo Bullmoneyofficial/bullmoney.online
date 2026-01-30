@@ -57,18 +57,18 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
     ref
   ) => {
     const safeThemeIcon = (
-      <IconPalette className="h-6 w-6 text-blue-400" stroke={1.5} />
+      <IconPalette className="h-6 w-6 text-white" stroke={1.5} />
     );
 
     const safeAdminIcon = isAdmin ? (
-      <IconSettings className="h-5 w-5 text-blue-400" stroke={1.5} />
+      <IconSettings className="h-5 w-5 text-white" stroke={1.5} />
     ) : (
       <IconLock className="h-5 w-5 text-neutral-400 dark:text-neutral-500" stroke={1.5} />
     );
 
     const desktopNavItems = [
       {
-        icon: <IconBuildingStore className="h-6 w-6 text-blue-400" stroke={1.5} />,
+        icon: <IconBuildingStore className="h-6 w-6 text-white" stroke={1.5} />,
         label: "Home",
         tips: ["Welcome to BullMoney!", "Explore our platform", "Check what's new"],
         href: "/",
@@ -76,20 +76,20 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
       {
         icon: isXMUser 
           ? <IconUsersGroup className="h-6 w-6 text-red-400" stroke={1.5} />
-          : <IconUsersGroup className="h-6 w-6 text-blue-400" stroke={1.5} />,
+          : <IconUsersGroup className="h-6 w-6 text-white" stroke={1.5} />,
         label: "Affiliates",
         tips: ["Join our affiliate program", "Earn commissions", "Grow with us"],
         onClick: onAffiliateClick,
         isXMHighlight: isXMUser,
       },
       {
-        icon: <IconHelp className="h-6 w-6 text-blue-400" stroke={1.5} />,
+        icon: <IconHelp className="h-6 w-6 text-white" stroke={1.5} />,
         label: "FAQ",
         tips: ["Got questions?", "Find your answers here", "Support center"],
         onClick: onFaqClick,
       },
       {
-        icon: <IconCalendarTime className="h-6 w-6 text-blue-400" stroke={1.5} />,
+        icon: <IconCalendarTime className="h-6 w-6 text-white" stroke={1.5} />,
         label: "Products",
         tips: ["Browse our products", "Find the best tools for you", "Check out our latest offers"],
         triggerComponent: <div className="w-full h-full flex items-center justify-center pointer-events-auto"><ProductsModal /></div>,
@@ -104,7 +104,7 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
 
     if (showAccountManager) {
       desktopNavItems.splice(5, 0, {
-        icon: <IconUser className="h-6 w-6 text-blue-400" stroke={1.5} />,
+        icon: <IconUser className="h-6 w-6 text-white" stroke={1.5} />,
         label: "Account Manager",
         tips: ["Manage your profile", "Update MT5 accounts", "Access VIP perks"],
         onClick: onAccountManagerClick,
@@ -146,8 +146,8 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
             />
           </Link>
           <Link href="/" className="flex-shrink-0 text-3xl font-bold tracking-wider" style={{
-            color: '#3b82f6',
-            textShadow: '0 0 10px #3b82f6, 0 0 20px #3b82f6, 0 0 30px #3b82f6',
+            color: '#ffffff',
+            textShadow: '0 0 10px #ffffff, 0 0 20px #ffffff, 0 0 30px #ffffff',
             letterSpacing: '0.1em'
           }}>
             bullmoney

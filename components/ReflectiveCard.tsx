@@ -450,7 +450,7 @@ const ReflectiveCard = forwardRef<ReflectiveCardHandle, ReflectiveCardProps>(({
                 {/* 1. Header */}
                 <div className="flex items-center justify-between p-4 border-b border-white/10 bg-[#020617] z-10">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#2997FF] to-purple-600 p-[2px]">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#2997FF] to-white p-[2px]">
                            <div className="w-full h-full rounded-full bg-black flex items-center justify-center text-[10px] font-bold">
                              {userData.name.slice(0,2)}
                            </div>
@@ -473,7 +473,7 @@ const ReflectiveCard = forwardRef<ReflectiveCardHandle, ReflectiveCardProps>(({
                         ) : (
                             <div className="w-full h-full flex items-center justify-center text-white/30 text-xs">NO IMAGE</div>
                         )}
-                        <div className={`absolute top-3 right-3 px-2 py-1 rounded text-[9px] font-bold uppercase tracking-wider backdrop-blur-md ${userData.status === 'Active' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'}`}>
+                        <div className={`absolute top-3 right-3 px-2 py-1 rounded text-[9px] font-bold uppercase tracking-wider backdrop-blur-md ${userData.status === 'Active' ? 'bg-white/20 text-white border border-white/30' : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'}`}>
                             {userData.status}
                         </div>
                     </div>
@@ -488,7 +488,7 @@ const ReflectiveCard = forwardRef<ReflectiveCardHandle, ReflectiveCardProps>(({
                         </div>
                         <div className="info-row">
                             <span className="info-label"><Wallet size={12} /> Commission</span>
-                            <span className="info-val text-green-400">${userData.balance}</span>
+                            <span className="info-val text-white">${userData.balance}</span>
                         </div>
                         <div className="info-row">
                             <span className="info-label"><LinkIcon size={12} /> Affiliate Code</span>
@@ -538,7 +538,7 @@ const ReflectiveCard = forwardRef<ReflectiveCardHandle, ReflectiveCardProps>(({
                                         onClick={handleUpdateProfile}
                                         disabled={saveStatus === 'SAVING' || (!editPassword && editEmail === userData.email)}
                                         className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${
-                                            saveStatus === 'SUCCESS' ? 'bg-green-500 text-black' : 
+                                            saveStatus === 'SUCCESS' ? 'bg-white text-black' : 
                                             saveStatus === 'ERROR' ? 'bg-red-500 text-white' :
                                             'bg-[#2997FF] text-white hover:bg-white hover:text-black'
                                         } disabled:opacity-50 disabled:cursor-not-allowed`}

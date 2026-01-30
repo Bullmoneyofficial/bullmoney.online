@@ -332,7 +332,7 @@ const BullFeedContent = memo(() => {
         )}
         
         {/* Inner Container */}
-        <div className="relative z-10 h-full bg-gradient-to-b from-neutral-900 to-black rounded-2xl border border-blue-500/30 overflow-hidden flex flex-col">
+        <div className="relative z-10 h-full bg-gradient-to-b from-neutral-900 to-black rounded-2xl border border-white/30 overflow-hidden flex flex-col">
           {!shouldSkipHeavyEffects && <ShimmerLine color="blue" />}
           
           {/* Header */}
@@ -342,7 +342,7 @@ const BullFeedContent = memo(() => {
                 <div className="text-3xl">🐂</div>
                 <div>
                   <h2 className="text-xl font-bold text-white">Bull Feed</h2>
-                  <p className="text-xs text-blue-400/70">Community trading insights</p>
+                  <p className="text-xs text-white/70">Community trading insights</p>
                 </div>
               </div>
               
@@ -352,7 +352,7 @@ const BullFeedContent = memo(() => {
                   whileHover={isMobileDevice ? {} : { scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handleCreatePost}
-                  className="hidden sm:flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-xl font-medium text-sm"
+                  className="hidden sm:flex items-center gap-2 px-4 py-2 bg-white text-black rounded-xl font-medium text-sm"
                 >
                   <Plus className="w-4 h-4" />
                   Post
@@ -375,11 +375,11 @@ const BullFeedContent = memo(() => {
                       <img 
                         src={recruit.image_url} 
                         alt="Profile" 
-                        className="w-8 h-8 rounded-full object-cover border-2 border-blue-500/50"
+                        className="w-8 h-8 rounded-full object-cover border-2 border-white/50"
                       />
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center border-2 border-blue-500/50">
-                        <User className="w-4 h-4 text-blue-400" />
+                      <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center border-2 border-white/50">
+                        <User className="w-4 h-4 text-white" />
                       </div>
                     )}
                     <span className="hidden sm:block text-sm text-neutral-300 truncate max-w-[120px]">
@@ -395,7 +395,7 @@ const BullFeedContent = memo(() => {
                       onClick={() => { SoundEffects.click(); setViewMode('grid'); }}
                       className={`p-2 rounded-lg transition-colors ${
                         viewMode === 'grid' 
-                          ? 'bg-blue-500 text-white' 
+                          ? 'bg-white text-black' 
                           : 'text-neutral-400 hover:text-white'
                       }`}
                     >
@@ -405,7 +405,7 @@ const BullFeedContent = memo(() => {
                       onClick={() => { SoundEffects.click(); setViewMode('swiper'); }}
                       className={`p-2 rounded-lg transition-colors ${
                         viewMode === 'swiper' 
-                          ? 'bg-blue-500 text-white' 
+                          ? 'bg-white text-black' 
                           : 'text-neutral-400 hover:text-white'
                       }`}
                     >
@@ -446,7 +446,7 @@ const BullFeedContent = memo(() => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search analyses, pairs, $tickers..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-neutral-800/50 border border-neutral-700 rounded-xl text-white text-sm placeholder:text-neutral-500 focus:outline-none focus:border-blue-500"
+                  className="w-full pl-10 pr-4 py-2.5 bg-neutral-800/50 border border-neutral-700 rounded-xl text-white text-sm placeholder:text-neutral-500 focus:outline-none focus:border-white"
                 />
               </div>
               
@@ -456,7 +456,7 @@ const BullFeedContent = memo(() => {
                 onClick={() => { SoundEffects.click(); setShowFilters(!showFilters); }}
                 className={`p-2.5 rounded-xl transition-colors ${
                   showFilters 
-                    ? 'bg-blue-500 text-white' 
+                    ? 'bg-white text-black' 
                     : 'bg-neutral-800 text-neutral-400 hover:text-white'
                 }`}
               >
@@ -525,7 +525,7 @@ const BullFeedContent = memo(() => {
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={handleCreatePost}
-              className="absolute bottom-6 right-6 w-14 h-14 bg-blue-500 text-white rounded-full shadow-lg shadow-blue-500/30 flex items-center justify-center"
+              className="absolute bottom-6 right-6 w-14 h-14 bg-white text-black rounded-full shadow-lg shadow-white/30 flex items-center justify-center"
             >
               <Plus className="w-6 h-6" />
             </motion.button>

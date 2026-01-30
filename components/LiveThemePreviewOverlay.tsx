@@ -141,7 +141,7 @@ export const LiveThemePreviewOverlay = memo(function LiveThemePreviewOverlay({
     ? (isMobile ? previewTheme.mobileFilter : previewTheme.filter)
     : 'none';
 
-  const accentColor = previewTheme?.accentColor || '#3b82f6';
+  const accentColor = previewTheme?.accentColor || '#ffffff';
 
   return (
     <>
@@ -210,13 +210,13 @@ export const LiveThemePreviewOverlay = memo(function LiveThemePreviewOverlay({
               className="absolute top-8 right-8 px-4 py-2 rounded-lg backdrop-blur-md bg-black/60 border-2"
               style={{
                 pointerEvents: 'none',
-                borderColor: `rgba(var(--accent-rgb, 59, 130, 246), 0.6)`,
-                boxShadow: `0 0 25px rgba(var(--accent-rgb, 59, 130, 246), 0.4), 0 0 50px ${accentColor}20`,
+                borderColor: `rgba(var(--accent-rgb, 255, 255, 255), 0.6)`,
+                boxShadow: `0 0 25px rgba(var(--accent-rgb, 255, 255, 255), 0.4), 0 0 50px ${accentColor}20`,
               }}
             >
               <p
                 className="text-xs font-bold tracking-wider uppercase"
-                style={{ color: "rgba(var(--accent-rgb, 59, 130, 246), 0.8)", textShadow: "0 0 8px rgba(var(--accent-rgb, 59, 130, 246), 0.5)" }}
+                style={{ color: "rgba(var(--accent-rgb, 255, 255, 255), 0.8)", textShadow: "0 0 8px rgba(var(--accent-rgb, 255, 255, 255), 0.5)" }}
               >
                 Previewing:
               </p>

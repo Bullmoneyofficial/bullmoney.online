@@ -15,7 +15,7 @@ interface ThreeDHintIconProps {
 
 export const ThreeDHintIcon: React.FC<ThreeDHintIconProps> = ({
   onTogglePanel,
-  accentColor = '#3b82f6',
+  accentColor = '#ffffff',
   disableSpline = false,
   showHint = true,
   isPanelOpen = false,

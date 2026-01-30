@@ -50,7 +50,7 @@ const Row: React.FC<RowProps> = ({ title, subtitle, meta, onEdit, onDelete }) =>
     <div className="flex items-center gap-2 flex-shrink-0">
       <button
         onClick={onEdit}
-        className="p-1.5 rounded-md bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 text-blue-300 transition-colors"
+        className="p-1.5 rounded-md bg-white/20 hover:bg-white/30 border border-white/40 text-white transition-colors"
         title="Edit"
       >
         <Edit className="w-4 h-4" />
@@ -78,7 +78,7 @@ const TabButton: React.FC<TabButtonProps> = ({ label, icon, active, onClick }) =
     onClick={onClick}
     className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm border transition-colors flex-shrink-0 whitespace-nowrap scroll-snap-align-start ${
       active
-        ? "border-blue-500/70 bg-blue-500/10 text-white"
+        ? "border-white/70 bg-white/10 text-white"
         : "border-slate-800 bg-slate-900/60 text-slate-300 hover:border-slate-700"
     }`}
     style={{ scrollSnapAlign: 'start' }}
@@ -114,7 +114,7 @@ const VideoPreview: React.FC<{ youtubeId?: string; title?: string; skipEmbed?: b
           href={`https://youtu.be/${youtubeId}`}
           target="_blank"
           rel="noreferrer"
-          className="text-blue-300 hover:text-blue-200"
+          className="text-white hover:text-white"
         >
           Open
         </a>
@@ -125,7 +125,7 @@ const VideoPreview: React.FC<{ youtubeId?: string; title?: string; skipEmbed?: b
             href={`https://youtu.be/${youtubeId}`}
             target="_blank"
             rel="noreferrer"
-            className="text-blue-300 hover:text-blue-200 text-sm"
+            className="text-white hover:text-white text-sm"
           >
             Click to view video →
           </a>
@@ -171,7 +171,7 @@ const MediaAttachmentList: React.FC<{ attachments?: any[]; skipEmbed?: boolean }
                     href={`https://youtu.be/${yt}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-blue-300 hover:text-blue-200 text-sm"
+                    className="text-white hover:text-white text-sm"
                   >
                     Click to view video →
                   </a>
@@ -200,7 +200,7 @@ const MediaAttachmentList: React.FC<{ attachments?: any[]; skipEmbed?: boolean }
                 href={url}
                 target="_blank"
                 rel="noreferrer"
-                className="text-blue-300 text-sm hover:text-blue-200 break-words"
+                className="text-white text-sm hover:text-white break-words"
               >
                 {url}
               </a>
@@ -933,7 +933,7 @@ export function AdminHubModal({
       </div>
       <button
         onClick={upsertProduct}
-        className="w-full flex items-center justify-center gap-2 rounded-md bg-blue-600 text-white py-2 text-sm"
+        className="w-full flex items-center justify-center gap-2 rounded-md bg-white text-black py-2 text-sm"
       >
         <Save className="w-4 h-4" /> Save product
       </button>
@@ -1092,7 +1092,7 @@ export function AdminHubModal({
       </div>
       <button
         onClick={upsertService}
-        className="w-full flex items-center justify-center gap-2 rounded-md bg-blue-600 text-white py-2 text-sm"
+        className="w-full flex items-center justify-center gap-2 rounded-md bg-white text-black py-2 text-sm"
       >
         <Save className="w-4 h-4" /> Save service
       </button>
@@ -1223,7 +1223,7 @@ export function AdminHubModal({
       </div>
       <button
         onClick={upsertVideo}
-        className="w-full flex items-center justify-center gap-2 rounded-md bg-blue-600 text-white py-2 text-sm"
+        className="w-full flex items-center justify-center gap-2 rounded-md bg-white text-black py-2 text-sm"
       >
         <Save className="w-4 h-4" /> Save video
       </button>
@@ -1355,7 +1355,7 @@ export function AdminHubModal({
       </label>
       <button
         onClick={upsertAnalysis}
-        className="w-full flex items-center justify-center gap-2 rounded-md bg-blue-600 text-white py-2 text-sm"
+        className="w-full flex items-center justify-center gap-2 rounded-md bg-white text-black py-2 text-sm"
       >
         <Save className="w-4 h-4" /> Save analysis
       </button>
@@ -1458,7 +1458,7 @@ export function AdminHubModal({
       />
       <button
         onClick={upsertRecruit}
-        className="w-full flex items-center justify-center gap-2 rounded-md bg-blue-600 text-white py-2 text-sm"
+        className="w-full flex items-center justify-center gap-2 rounded-md bg-white text-black py-2 text-sm"
       >
         <Save className="w-4 h-4" /> Save recruit/VIP
       </button>
@@ -1478,14 +1478,14 @@ export function AdminHubModal({
           </button>
           <button
             onClick={saveFaqToDb}
-            className="px-2 py-1 text-xs rounded-md bg-blue-600 text-white border border-blue-500/60"
+            className="px-2 py-1 text-xs rounded-md bg-white text-black border border-white/60"
           >
             Save FAQ
           </button>
         </div>
       </div>
 
-      <div className="p-3 rounded-lg border border-blue-500/30 bg-slate-900/50">
+      <div className="p-3 rounded-lg border border-white/30 bg-slate-900/50">
         <p className="text-xs text-slate-300">
           Edit FAQ categories and items below. Changes save directly to the live FAQ content.
         </p>
@@ -1569,7 +1569,7 @@ export function AdminHubModal({
                     updated[catIdx].items.push({ name: '', answer: '' });
                     setFaqCategories(updated);
                   }}
-                  className="w-full px-3 py-2 text-xs rounded-md bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 text-blue-300"
+                  className="w-full px-3 py-2 text-xs rounded-md bg-white/20 hover:bg-white/30 border border-white/40 text-white"
                 >
                   + Add Question
                 </button>
@@ -1581,7 +1581,7 @@ export function AdminHubModal({
             onClick={() => {
               setFaqCategories([...faqCategories, { category: 'New Category', items: [] }]);
             }}
-            className="w-full px-4 py-2 text-sm rounded-md bg-blue-600 text-white border border-blue-500/60"
+            className="w-full px-4 py-2 text-sm rounded-md bg-white text-black border border-white/60"
           >
             + Add Category
           </button>
@@ -1592,7 +1592,7 @@ export function AdminHubModal({
               navigator.clipboard.writeText(json);
               showToast('FAQ JSON copied to clipboard!');
             }}
-            className="w-full px-4 py-2 text-sm rounded-md bg-green-600 text-white border border-green-500/60"
+            className="w-full px-4 py-2 text-sm rounded-md bg-white text-black border border-white/60"
           >
             Copy JSON to Clipboard
           </button>
@@ -1623,14 +1623,14 @@ export function AdminHubModal({
             exit={animations.modalContent.exit}
             transition={animations.modalContent.transition}
             onClick={(e) => e.stopPropagation()}
-              className={`w-full max-w-6xl sm:max-w-5xl md:max-w-6xl max-h-[92vh] overflow-y-auto overflow-x-hidden rounded-2xl border border-blue-500/40 bg-gradient-to-b from-slate-950 via-slate-900 to-black [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain] ${
-                shouldSkipHeavyEffects ? '' : 'shadow-2xl shadow-blue-900/40'
+              className={`w-full max-w-6xl sm:max-w-5xl md:max-w-6xl max-h-[92vh] overflow-y-auto overflow-x-hidden rounded-2xl border border-white/40 bg-gradient-to-b from-slate-950 via-slate-900 to-black [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain] ${
+                shouldSkipHeavyEffects ? '' : 'shadow-2xl shadow-white/40'
               }`}
               style={{ touchAction: 'auto' }}
           >
-            <div className="flex items-center justify-between px-4 py-3 border-b border-blue-500/30 bg-blue-500/10">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/30 bg-white/10">
               <div className="flex items-center gap-2 text-white font-bold">
-                <Shield className="w-5 h-5 text-cyan-300" /> Admin Control Panel
+                <Shield className="w-5 h-5 text-white" /> Admin Control Panel
                 {(!supabaseUrl || !supabaseAnon) && (
                   <span className="text-[11px] text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-400/40">
                     Supabase env missing
@@ -1731,7 +1731,7 @@ export function AdminHubModal({
                             onClick={() => setAffiliateView("calculator")}
                             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                               affiliateView === "calculator"
-                                ? "bg-blue-500 text-white"
+                                ? "bg-white text-black"
                                 : "text-slate-400 hover:text-slate-300"
                             }`}
                           >
@@ -1741,7 +1741,7 @@ export function AdminHubModal({
                             onClick={() => setAffiliateView("admin")}
                             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                               affiliateView === "admin"
-                                ? "bg-blue-500 text-white"
+                                ? "bg-white text-black"
                                 : "text-slate-400 hover:text-slate-300"
                             }`}
                           >
@@ -1770,7 +1770,7 @@ export function AdminHubModal({
                     <div className="flex items-center gap-2">
                       <a
                         href="/login"
-                        className="px-3 py-1.5 rounded-md bg-blue-600 text-white text-sm border border-blue-500/60"
+                        className="px-3 py-1.5 rounded-md bg-white text-black text-sm border border-white/60"
                       >
                         Go to login
                       </a>
@@ -1786,7 +1786,7 @@ export function AdminHubModal({
               </div>
 
             {toast ? (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-lg bg-slate-800/90 text-white px-3 py-2 text-sm border border-blue-500/40 shadow-lg">
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-lg bg-slate-800/90 text-white px-3 py-2 text-sm border border-white/40 shadow-lg">
                 {toast}
               </div>
             ) : null}

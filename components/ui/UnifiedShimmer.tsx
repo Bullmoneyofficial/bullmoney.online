@@ -33,7 +33,7 @@ import React, { memo, useEffect, useState, createContext, useContext, useRef } f
  * ║  14. HOLOGRAM - Iridescent surface effect                                ║
  * ║  15. SPARK   - Particle burst effects                                    ║
  * ║                                                                           ║
- * ║  BullMoney Blue: #3b82f6 | Light: #93c5fd | Cyan: #06b6d4               ║
+ * ║  BullMoney Blue: #ffffff | Light: #ffffff | Cyan: #ffffff               ║
  * ╚═══════════════════════════════════════════════════════════════════════════╝
  */
 
@@ -183,14 +183,14 @@ export const ShimmerStylesProvider = memo(() => (
      */
     
     :root {
-      --shimmer-blue: #3b82f6;
-      --shimmer-blue-light: #93c5fd;
-      --shimmer-cyan: #06b6d4;
-      --shimmer-purple: #8b5cf6;
+      --shimmer-blue: #ffffff;
+      --shimmer-blue-light: #ffffff;
+      --shimmer-cyan: #ffffff;
+      --shimmer-purple: #ffffff;
       --shimmer-pink: #ec4899;
       --shimmer-gold: #f59e0b;
-      --shimmer-green: #10b981;
-      --accent-rgb: 59, 130, 246;
+      --shimmer-green: #ffffff;
+      --accent-rgb: 255, 255, 255;
     }
     
     /* ═══════════════════════════════════════════════════════════════════════
@@ -363,13 +363,13 @@ export const ShimmerStylesProvider = memo(() => (
       33% {
         background-position: 50% 50%;
         box-shadow: 
-          0 0 20px rgba(16, 185, 129, 0.3),
+          0 0 20px rgba(255, 255, 255, 0.3),
           0 0 40px rgba(var(--accent-rgb), 0.2);
       }
       66% {
         background-position: 100% 50%;
         box-shadow: 
-          0 0 20px rgba(139, 92, 246, 0.3),
+          0 0 20px rgba(255, 255, 255, 0.3),
           0 0 40px rgba(var(--accent-rgb), 0.2);
       }
       100% {
@@ -651,7 +651,7 @@ export const ShimmerStylesProvider = memo(() => (
     
     .shimmer-text { 
       animation: shimmer-text-glow 4s ease-in-out infinite; 
-      color: var(--accent-color, rgba(147,197,253,1)); 
+      color: var(--accent-color, rgba(255, 255, 255,1)); 
     }
     
     .shimmer-text-white { 
@@ -708,7 +708,7 @@ export const ShimmerStylesProvider = memo(() => (
     
     .shimmer-ping {
       animation: shimmer-ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
-      background-color: var(--accent-color, #3b82f6);
+      background-color: var(--accent-color, #ffffff);
     }
     
     .shimmer-conic-border {
@@ -803,8 +803,8 @@ export const ShimmerStylesProvider = memo(() => (
       background: linear-gradient(
         135deg,
         rgba(var(--accent-rgb), 0.2) 0%,
-        rgba(6, 182, 212, 0.2) 25%,
-        rgba(139, 92, 246, 0.2) 50%,
+        rgba(255, 255, 255, 0.2) 25%,
+        rgba(255, 255, 255, 0.2) 50%,
         rgba(236, 72, 153, 0.2) 75%,
         rgba(var(--accent-rgb), 0.2) 100%
       );
@@ -1461,7 +1461,7 @@ ShimmerConic.displayName = 'ShimmerConic';
 export const ShimmerDot = memo(({ className = '', delay = 0 }: ShimmerProps) => (
   <span 
     className={`shimmer-glow w-2 h-2 rounded-full ${className}`} 
-    style={{ animationDelay: `${delay}s`, backgroundColor: 'var(--accent-color, #3b82f6)' }}
+    style={{ animationDelay: `${delay}s`, backgroundColor: 'var(--accent-color, #ffffff)' }}
   />
 ));
 ShimmerDot.displayName = 'ShimmerDot';
@@ -1477,7 +1477,7 @@ export const ShimmerSpinner = memo(({ className = '', size = 32 }: ShimmerProps)
       style={{ 
         width: size * 0.75, 
         height: size * 0.75,
-        borderTopColor: 'var(--accent-color, #60a5fa)'
+        borderTopColor: 'var(--accent-color, #ffffff)'
       }} 
     />
   </div>
@@ -1492,7 +1492,7 @@ export const ShimmerPulse = memo(({ className = '', size = 8 }: ShimmerProps) =>
       style={{ width: size, height: size }}
     />
     <span 
-      className={`relative inline-flex rounded-full bg-blue-500 ${className}`}
+      className={`relative inline-flex rounded-full bg-white ${className}`}
       style={{ width: size, height: size }}
     />
   </span>

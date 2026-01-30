@@ -144,29 +144,29 @@ export const ThemeSelectorModal = ({ isOpen, onClose }: ThemeSelectorModalProps)
           onClick={(e) => e.stopPropagation()}
           className="relative w-full max-w-4xl max-h-[85vh] rounded-2xl overflow-hidden"
           style={shouldSkipHeavyEffects ? {
-            border: '2px solid rgba(var(--accent-rgb, 59, 130, 246), 0.6)',
-            boxShadow: '0 0 20px rgba(var(--accent-rgb, 59, 130, 246), 0.4)',
+            border: '2px solid rgba(var(--accent-rgb, 255, 255, 255), 0.6)',
+            boxShadow: '0 0 20px rgba(var(--accent-rgb, 255, 255, 255), 0.4)',
           } : {
-            border: '2px solid rgba(var(--accent-rgb, 59, 130, 246), 0.6)',
-            boxShadow: '0 0 40px rgba(var(--accent-rgb, 59, 130, 246), 0.5), 0 0 80px rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
+            border: '2px solid rgba(var(--accent-rgb, 255, 255, 255), 0.6)',
+            boxShadow: '0 0 40px rgba(var(--accent-rgb, 255, 255, 255), 0.5), 0 0 80px rgba(var(--accent-rgb, 255, 255, 255), 0.3)',
           }}
         >
           {/* Header - Theme-aware */}
           <div 
             className="flex items-center justify-between px-6 py-4 bg-black/90"
             style={{
-              borderBottom: '2px solid rgba(var(--accent-rgb, 59, 130, 246), 0.5)',
-              boxShadow: '0 4px 20px rgba(var(--accent-rgb, 59, 130, 246), 0.2)',
+              borderBottom: '2px solid rgba(var(--accent-rgb, 255, 255, 255), 0.5)',
+              boxShadow: '0 4px 20px rgba(var(--accent-rgb, 255, 255, 255), 0.2)',
             }}
           >
             <div className="flex items-center gap-3">
               <IconPalette 
                 className="w-5 h-5" 
-                style={{ color: 'var(--accent-color, #3b82f6)', filter: 'drop-shadow(0 0 6px var(--accent-color, #3b82f6))' }}
+                style={{ color: 'var(--accent-color, #ffffff)', filter: 'drop-shadow(0 0 6px var(--accent-color, #ffffff))' }}
               />
               <span 
                 className="text-sm font-bold uppercase tracking-widest"
-                style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)', textShadow: '0 0 10px rgba(var(--accent-rgb, 59, 130, 246), 0.6)' }}
+                style={{ color: 'rgba(var(--accent-rgb, 255, 255, 255), 0.8)', textShadow: '0 0 10px rgba(var(--accent-rgb, 255, 255, 255), 0.6)' }}
               >
                 Theme Selector
               </span>
@@ -175,14 +175,14 @@ export const ThemeSelectorModal = ({ isOpen, onClose }: ThemeSelectorModalProps)
               onClick={onClose}
               className="p-2 rounded-lg border transition-all group relative"
               style={{
-                background: 'rgba(var(--accent-rgb, 59, 130, 246), 0.1)',
-                borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.4)',
-                boxShadow: '0 0 10px rgba(var(--accent-rgb, 59, 130, 246), 0.3)',
+                background: 'rgba(var(--accent-rgb, 255, 255, 255), 0.1)',
+                borderColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.4)',
+                boxShadow: '0 0 10px rgba(var(--accent-rgb, 255, 255, 255), 0.3)',
               }}
               title="Close (ESC)"
               data-modal-close="true"
             >
-              <IconX className="w-5 h-5" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)' }} />
+              <IconX className="w-5 h-5" style={{ color: 'rgba(var(--accent-rgb, 255, 255, 255), 0.8)' }} />
               <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-white/50 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">ESC</span>
             </button>
           </div>

@@ -50,14 +50,14 @@ const getThemeColor = (theme: Partial<Theme> | any) => {
     
     // Fallback mapping based on common theme IDs
     const colorMap: Record<string, string> = {
-        't01': '#3b82f6', // Blue (Default)
-        't02': '#22c55e', // Green (Matrix)
+        't01': '#ffffff', // Blue (Default)
+        't02': '#ffffff', // Green (Matrix)
         't03': '#ef4444', // Red (Sith)
-        't04': '#a855f7', // Purple (Neon)
+        't04': '#ffffff', // Purple (Neon)
         't05': '#eab308', // Gold
         't06': '#ec4899', // Pink
     };
-    return colorMap[theme?.id] || '#3b82f6';
+    return colorMap[theme?.id] || '#ffffff';
 };
 
 // =========================================

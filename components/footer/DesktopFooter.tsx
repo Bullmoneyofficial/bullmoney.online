@@ -54,8 +54,8 @@ const FooterItem = ({
       onMouseEnter={() => SoundEffects.hover()}
       className="relative group px-4 py-2 text-sm font-medium transition-colors duration-300 cursor-pointer"
       style={{
-        color: '#3b82f6',
-        textShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6'
+        color: '#ffffff',
+        textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff'
       }}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
@@ -65,8 +65,8 @@ const FooterItem = ({
       <motion.div 
         className="absolute bottom-0 left-0 w-full h-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" 
         style={{
-          background: '#3b82f6',
-          boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6'
+          background: '#ffffff',
+          boxShadow: '0 0 4px #ffffff, 0 0 8px #ffffff'
         }}
       />
     </motion.div>

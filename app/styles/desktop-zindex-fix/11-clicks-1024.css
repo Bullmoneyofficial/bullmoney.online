@@ -1,8 +1,64 @@
 /* ============================================
-   ENSURE CLICKS WORK ON DESKTOP MODALS
+   ENSURE CLICKS/TAPS WORK ON ALL DEVICES
    Pointer events must be properly set
+   UPDATED: Full mobile + desktop support
    ============================================ */
 
+/* ============================================
+   CRITICAL: OVERLAY PASSTHROUGH FIX
+   Any element with pointer-events:none MUST allow
+   all touch and mouse interactions through it
+   ============================================ */
+.pointer-events-none,
+[style*="pointer-events: none"],
+[style*="pointer-events:none"] {
+  /* Allow ALL touch/mouse events to pass through */
+  touch-action: auto !important;
+}
+
+/* Base rules for ALL screen sizes - fix mobile click issues */
+/* Backdrop should capture clicks/taps to close modal */
+.fixed.inset-0[class*="bg-black"],
+.fixed.inset-0[class*="backdrop"] {
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+}
+
+/* Modal content should also have pointer events */
+[role="dialog"],
+[aria-modal="true"],
+.modal-content {
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+}
+
+/* Wrapper containers that hold both may need pointer-events: none to allow backdrop clicks */
+.fixed.inset-0.flex.items-center.justify-center.pointer-events-none {
+  pointer-events: none !important;
+  touch-action: auto !important; /* Allow passthrough */
+}
+
+/* But their direct children (the actual modal panel) need pointer-events: auto */
+.fixed.inset-0.flex.items-center.justify-center.pointer-events-none > * {
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+}
+
+/* Interactive elements must be tappable on mobile */
+button,
+a,
+[role="button"],
+input,
+select,
+textarea,
+.cursor-pointer,
+[data-interactive] {
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Desktop-specific enhancements */
 @media (min-width: 1024px) {
   /* Backdrop should capture clicks to close modal */
   .fixed.inset-0[class*="bg-black"],
@@ -23,7 +79,45 @@
   }
   
   /* But their direct children (the actual modal panel) need pointer-events: auto */
-  .fixed.inset-0.flex.items-center.justify-center.pointer-events-none > * {
+  .fixed.inset-0.flex.items.justify-center.pointer-events-none > * {
     pointer-events: auto !important;
+  }
+}
+
+/* MOBILE TOUCH FIX: Ensure touch works on mobile viewing desktop page */
+@media (hover: none) and (pointer: coarse) {
+  /* All interactive elements must respond to touch */
+  button,
+  a,
+  [role="button"],
+  input,
+  select,
+  textarea,
+  .cursor-pointer,
+  [data-interactive],
+  .spline-container,
+  [data-spline-scene] {
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+    cursor: pointer;
+    -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Ensure modal interactions work */
+  [role="dialog"],
+  [aria-modal="true"],
+  .modal-content,
+  .fixed.inset-0 {
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+  }
+  
+  /* Ensure scrollable areas are touchable */
+  .overflow-y-auto,
+  .overflow-y-scroll,
+  [data-scrollable] {
+    touch-action: pan-y !important;
+    pointer-events: auto !important;
+    -webkit-overflow-scrolling: touch;
   }
 }

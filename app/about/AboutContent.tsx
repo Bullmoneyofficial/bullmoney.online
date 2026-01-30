@@ -38,7 +38,7 @@ export function AboutContent() {
         </div>
 
         {/* chrome-blue accent stripe */}
-        <div className="pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-gradient-to-l from-sky-500/20 via-blue-500/15 to-indigo-500/0 blur-2xl z-0" />
+        <div className="pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-gradient-to-l from-sky-500/20 via-white/15 to-indigo-500/0 blur-2xl z-0" />
 
         {/* decorative SVG */}
         <svg
@@ -67,7 +67,7 @@ export function AboutContent() {
                   priority
                 />
               </div>
-              <h1 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-400 bg-clip-text text-transparent">
+              <h1 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-sky-400 via-white to-indigo-400 bg-clip-text text-transparent">
                 About Us
               </h1>
             </div>
@@ -111,7 +111,7 @@ export function AboutContent() {
           </motion.section>
 
           {/* Divider */}
-          <div className="my-8 h-px w-full bg-gradient-to-r from-sky-500/20 via-blue-500/20 to-indigo-500/20" />
+          <div className="my-8 h-px w-full bg-gradient-to-r from-sky-500/20 via-white/20 to-indigo-500/20" />
 
           {/* Our Brokers */}
           <motion.section {...fade}>
@@ -169,7 +169,7 @@ export function AboutContent() {
           </motion.section>
 
           {/* Divider */}
-          <div className="my-8 h-px w-full bg-gradient-to-r from-sky-500/20 via-blue-500/20 to-indigo-500/20" />
+          <div className="my-8 h-px w-full bg-gradient-to-r from-sky-500/20 via-white/20 to-indigo-500/20" />
 
           {/* Funded Firms */}
           <motion.section {...fade}>
@@ -228,7 +228,7 @@ export function AboutContent() {
           <TestimonialsCarousel />
 
           {/* CTA / Footer */}
-          <div className="mt-8 h-px w-full bg-gradient-to-r from-sky-500/20 via-blue-500/20 to-indigo-500/20" />
+          <div className="mt-8 h-px w-full bg-gradient-to-r from-sky-500/20 via-white/20 to-indigo-500/20" />
           <footer className="mt-6 flex items-center justify-between">
             <Link
               href="/"
@@ -236,7 +236,7 @@ export function AboutContent() {
             >
               Back
             </Link>
-            <span className="text-sm bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-400 bg-clip-text text-transparent font-semibold">
+            <span className="text-sm bg-gradient-to-r from-sky-400 via-white to-indigo-400 bg-clip-text text-transparent font-semibold">
               • • •
             </span>
           </footer>

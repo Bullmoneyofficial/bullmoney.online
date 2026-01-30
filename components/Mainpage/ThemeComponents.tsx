@@ -73,7 +73,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ initialThemeId, on
       <button
         onClick={() => handleThemeChange("dark")}
         className={`px-4 py-2 rounded ${
-          selectedTheme === "dark" ? "bg-blue-500" : "bg-gray-700"
+          selectedTheme === "dark" ? "bg-white" : "bg-gray-700"
         }`}
       >
         Dark
@@ -81,7 +81,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ initialThemeId, on
       <button
         onClick={() => handleThemeChange("light")}
         className={`px-4 py-2 rounded ${
-          selectedTheme === "light" ? "bg-blue-500" : "bg-gray-700"
+          selectedTheme === "light" ? "bg-white" : "bg-gray-700"
         }`}
       >
         Light

@@ -130,7 +130,7 @@ function DesktopSplineSceneComponent({
         ref={containerRef}
         className={`desktop-spline-error relative w-full h-full ${className}`}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-purple-900/15 to-black/50 flex items-center justify-center">
+        <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-white/15 to-black/50 flex items-center justify-center">
           <div className="text-center text-white/60">
             <div className="text-4xl mb-4">🎮</div>
             <div className="text-sm">3D Scene Loading...</div>

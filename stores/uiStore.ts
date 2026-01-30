@@ -78,7 +78,7 @@ export const useUIStore = create<UIStore>((set) => ({
   
   // Initial theme state
   currentTheme: 'dark',
-  accentColor: '#3b82f6',
+  accentColor: '#ffffff',
   
   // Initial loading states
   isPageLoading: false,

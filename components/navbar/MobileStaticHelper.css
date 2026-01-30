@@ -33,11 +33,11 @@
   padding: 4px 12px;
   border-radius: 20px;
   background: rgba(0, 0, 0, 0.9);
-  border: 1px solid #3b82f6;
+  border: 1px solid #ffffff;
   box-shadow: 
-    0 0 4px #3b82f6,
-    0 0 8px rgba(59, 130, 246, 0.5),
-    inset 0 0 4px rgba(59, 130, 246, 0.2);
+    0 0 4px #ffffff,
+    0 0 8px rgba(255, 255, 255, 0.5),
+    inset 0 0 4px rgba(255, 255, 255, 0.2);
   overflow: hidden;
   cursor: pointer;
   pointer-events: auto;
@@ -88,7 +88,7 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(59, 130, 246, 0.15) 50%,
+    rgba(255, 255, 255, 0.15) 50%,
     transparent 100%
   );
   transform: translateX(-100%);
@@ -128,7 +128,7 @@
   height: 100%;
   width: 100%;
   border-radius: 50%;
-  background-color: #3b82f6;
+  background-color: #ffffff;
   opacity: 0.75;
   animation: mobileStaticTipPulse 2s ease-in-out infinite;
 }
@@ -139,8 +139,8 @@
   border-radius: 50%;
   height: 6px;
   width: 6px;
-  background-color: #3b82f6;
-  box-shadow: 0 0 4px #3b82f6, 0 0 6px #3b82f6;
+  background-color: #ffffff;
+  box-shadow: 0 0 4px #ffffff, 0 0 6px #ffffff;
 }
 
 @keyframes mobileStaticTipPulse {
@@ -160,10 +160,10 @@
   letter-spacing: 0.05em;
   font-weight: 500;
   white-space: nowrap;
-  color: #93c5fd;
+  color: #ffffff;
   text-shadow: 
-    0 0 2px rgba(59, 130, 246, 0.8),
-    0 0 4px rgba(59, 130, 246, 0.4);
+    0 0 2px rgba(255, 255, 255, 0.8),
+    0 0 4px rgba(255, 255, 255, 0.4);
   transition: opacity 0.2s ease-out;
 }
 

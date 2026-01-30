@@ -346,12 +346,12 @@
    SUCCESS BUTTON
    ============================================ */
 .btn-success {
-  background: #22c55e;
+  background: #ffffff;
   color: white;
 }
 
 .btn-success:hover {
-  background: #16a34a;
+  background: #ffffff;
 }
 
 /* ============================================

@@ -32,7 +32,7 @@ export const SwipeablePanel: React.FC<SwipeablePanelProps> = ({
   maxHeight = '80vh',
   minHeight = '28px',
   className = '',
-  accentColor = '#3b82f6',
+  accentColor = '#ffffff',
   onOpenChange,
   zIndex
 }) => {

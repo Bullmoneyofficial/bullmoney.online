@@ -115,7 +115,7 @@ export function BatteryAwareSpline({
 
   // Default placeholder
   const defaultPlaceholder = (
-    <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 via-purple-900/5 to-black/30 flex items-center justify-center">
+    <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-white/5 to-black/30 flex items-center justify-center">
       <div className="text-center text-white/40">
         <div className="text-2xl mb-2">🔋</div>
         <div className="text-xs">Battery Saver Active</div>
@@ -141,7 +141,7 @@ export function BatteryAwareSpline({
       
       {/* Battery saving indicator */}
       {showIndicator && isBatterySaving && (
-        <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs flex items-center gap-1">
+        <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-white/20 text-white text-xs flex items-center gap-1">
           <span>🔋</span>
           <span>Saving</span>
         </div>

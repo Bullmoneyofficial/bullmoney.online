@@ -22,8 +22,8 @@ export const VipSuccessModal = ({ onClose }: { onClose: () => void }) => {
             animate={animations.modalContent.animate as TargetAndTransition}
             exit={animations.modalContent.exit}
             transition={animations.modalContent.transition}
-            className={`w-full max-w-md p-8 border border-cyan-500/50 bg-black rounded-3xl text-center relative overflow-hidden ${
-                isMobile ? '' : 'shadow-[0_0_80px_rgba(6,182,212,0.2)]'
+            className={`w-full max-w-md p-8 border border-white/50 bg-black rounded-3xl text-center relative overflow-hidden ${
+                isMobile ? '' : 'shadow-[0_0_80px_rgba(255, 255, 255,0.2)]'
             }`}
         >
             {!shouldSkipHeavyEffects && (
@@ -32,20 +32,20 @@ export const VipSuccessModal = ({ onClose }: { onClose: () => void }) => {
             <div className="relative z-10">
                 {shouldSkipHeavyEffects ? (
                     <div className="inline-block mb-6">
-                        <Unlock className="w-16 h-16 text-cyan-400" />
+                        <Unlock className="w-16 h-16 text-white" />
                     </div>
                 ) : (
                     <motion.div animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} className="inline-block mb-6">
-                        <Unlock className="w-16 h-16 text-cyan-400" />
+                        <Unlock className="w-16 h-16 text-white" />
                     </motion.div>
                 )}
                 
                 <h2 className="text-4xl font-black text-white uppercase tracking-tighter mb-2">SECRET FOUND</h2>
-                <p className="text-cyan-400 font-mono text-xs tracking-[0.3em] uppercase mb-8">INITIATING SECURE CONTACT</p>
+                <p className="text-white font-mono text-xs tracking-[0.3em] uppercase mb-8">INITIATING SECURE CONTACT</p>
                 
-                <div className="bg-neutral-900/50 border border-cyan-500/30 p-6 rounded-2xl mb-8 flex items-center gap-4 text-left">
-                    <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center flex-none">
-                        <CheckCircle className="w-6 h-6 text-green-500" />
+                <div className="bg-neutral-900/50 border border-white/30 p-6 rounded-2xl mb-8 flex items-center gap-4 text-left">
+                    <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center flex-none">
+                        <CheckCircle className="w-6 h-6 text-white" />
                     </div>
                     <div>
                         <div className="text-white font-bold text-lg uppercase tracking-tight">DM FOR VIP ACCESS</div>
@@ -57,8 +57,8 @@ export const VipSuccessModal = ({ onClose }: { onClose: () => void }) => {
                     href="https://ig.me/m/bullmoney.shop" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className={`w-full py-4 bg-cyan-500 hover:bg-cyan-400 text-black font-bold uppercase tracking-[0.2em] rounded-xl transition-all active:scale-95 block text-center ${
-                        isMobile ? '' : 'shadow-[0_0_30px_rgba(6,182,212,0.4)]'
+                    className={`w-full py-4 bg-white hover:bg-white text-black font-bold uppercase tracking-[0.2em] rounded-xl transition-all active:scale-95 block text-center ${
+                        isMobile ? '' : 'shadow-[0_0_30px_rgba(255, 255, 255,0.4)]'
                     }`}
                 >
                     AUTO DM @BULLMONEY.SHOP
@@ -66,7 +66,7 @@ export const VipSuccessModal = ({ onClose }: { onClose: () => void }) => {
                 
                 <button 
                     onClick={onClose}
-                    className="mt-4 w-full py-2 text-cyan-400 border border-transparent hover:border-cyan-500/50 text-sm font-semibold uppercase tracking-wider rounded-xl transition-colors"
+                    className="mt-4 w-full py-2 text-white border border-transparent hover:border-white/50 text-sm font-semibold uppercase tracking-wider rounded-xl transition-colors"
                 >
                     Close
                 </button>

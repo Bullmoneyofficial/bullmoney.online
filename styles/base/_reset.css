@@ -191,23 +191,24 @@ canvas {
 
 /* ============================================
    SCROLL PASSTHROUGH FOR OVERLAYS
+   FIXED: Use touch-action: auto for proper passthrough
    ============================================ */
 [style*="pointer-events: none"],
 [style*="pointer-events:none"],
 .pointer-events-none {
-  touch-action: none !important;
+  touch-action: auto !important; /* FIXED: Allow touch/scroll passthrough */
   user-select: none !important;
   -webkit-user-select: none !important;
 }
 
-/* Theme overlay elements - CRITICAL for scroll */
+/* Theme overlay elements - CRITICAL for scroll passthrough */
 #theme-global-overlay,
 #theme-edge-glow,
 #theme-filter-overlay,
 html[data-active-theme]::before,
 html[data-active-theme]::after {
   pointer-events: none !important;
-  touch-action: none !important;
+  touch-action: auto !important; /* FIXED: Allow touch/scroll passthrough */
   -webkit-touch-callout: none !important;
   overflow: visible !important;
 }

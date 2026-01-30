@@ -141,7 +141,7 @@ function FuturisticHero({ onShow }: { onShow: () => void }) {
         className="absolute inset-0 opacity-30 blur-3xl"
         style={{
           background:
-            "radial-gradient(circle at 50% 60%, rgba(56,189,248,.2), transparent 60%)",
+            "radial-gradient(circle at 50% 60%, rgba(255, 255, 255,.2), transparent 60%)",
         }}
         animate={{
           scale: [1, 1.05, 1],
@@ -183,8 +183,8 @@ function FuturisticHero({ onShow }: { onShow: () => void }) {
   whileHover={{ scale: 1.05 }}
   whileTap={{ scale: 0.96 }}
   className="relative z-10 flex items-center gap-2 rounded-full px-12 py-4 text-lg font-semibold text-white 
-             shadow-[0_0_35px_rgba(56,189,248,0.4)] 
-             bg-[linear-gradient(100deg,#0284c7_0%,#2563eb_50%,#312e81_100%)]
+             shadow-[0_0_35px_rgba(255, 255, 255,0.4)] 
+             bg-[linear-gradient(100deg,#0284c7_0%,#ffffff_50%,#ffffff_100%)]
              ring-2 ring-sky-400/40 hover:ring-sky-300/70 transition-all duration-300"
 >
   Show Live Market Charts
@@ -247,7 +247,7 @@ export const TradingViewDropdown = ({
             <div className="mb-4 flex items-center justify-between">
               <button
                 onClick={() => setOpen((p) => !p)}
-                className="group relative flex items-center gap-3 rounded-full bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-lg transition"
+                className="group relative flex items-center gap-3 rounded-full bg-gradient-to-r from-sky-500 via-white to-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-lg transition"
               >
                 <span className="absolute inset-0 rounded-full border border-sky-400 opacity-0 blur-sm transition group-hover:opacity-100"></span>
                 <ChartBar className="relative z-10 h-4 w-4 transition-transform group-hover:rotate-12" />
@@ -277,7 +277,7 @@ export const TradingViewDropdown = ({
                       key={idx}
                       onClick={() => handleSelect(chart)}
                       className={cn(
-                        "block w-full px-4 py-2 text-left text-sm text-white transition-all duration-200 hover:bg-gradient-to-r hover:from-sky-600 hover:to-blue-700",
+                        "block w-full px-4 py-2 text-left text-sm text-white transition-all duration-200 hover:bg-gradient-to-r hover:from-sky-600 hover:to-white",
                         selected?.label === chart.label && "bg-sky-600/60 font-bold"
                       )}
                     >
@@ -453,7 +453,7 @@ function NewsFeed({ activeMarket }: { activeMarket: string }) {
     >
       <div className="flex flex-col gap-3 border-b border-white/10 p-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-2">
-          <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_14px_rgba(16,185,129,.8)]" />
+          <span className="inline-flex h-2 w-2 rounded-full bg-white shadow-[0_0_14px_rgba(255,255,255,.8)]" />
           <span className="text-sm text-neutral-300">
             {loading ? "Fetching latest…" : `Top 5 + ${rest.length} more`}
           </span>
@@ -490,7 +490,7 @@ function NewsFeed({ activeMarket }: { activeMarket: string }) {
       <div className="p-4">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-extrabold text-white/90">MAJOR HEADLINES</h3>
-          <div className="h-px w-1/2 bg-gradient-to-r from-sky-500/50 via-blue-500/30 to-transparent" />
+          <div className="h-px w-1/2 bg-gradient-to-r from-sky-500/50 via-white/30 to-transparent" />
         </div>
 
         <div className="mt-3 grid gap-3 md:grid-cols-5">
@@ -512,7 +512,7 @@ function NewsFeed({ activeMarket }: { activeMarket: string }) {
                   </div>
                   <div className="mt-1 line-clamp-3 text-sm font-semibold text-white/90">{item.title}</div>
                   <div className="mt-1 text-xs text-neutral-400">{timeAgo(item.published_at)}</div>
-                  <span className="pointer-events-none absolute -inset-px rounded-lg bg-gradient-to-r from-sky-500/0 via-blue-600/0 to-indigo-500/0 opacity-0 transition group-hover:opacity-30" />
+                  <span className="pointer-events-none absolute -inset-px rounded-lg bg-gradient-to-r from-sky-500/0 via-white/0 to-indigo-500/0 opacity-0 transition group-hover:opacity-30" />
                 </motion.a>
               ))}
         </div>
@@ -553,7 +553,7 @@ function NewsFeed({ activeMarket }: { activeMarket: string }) {
                     className="group px-4 py-3 transition hover:bg-white/[0.035]"
                   >
                     <div className="flex items-start gap-3">
-                      <span className="mt-1 h-2 w-2 rounded-full bg-sky-400/80 shadow-[0_0_12px_rgba(56,189,248,.6)]" />
+                      <span className="mt-1 h-2 w-2 rounded-full bg-sky-400/80 shadow-[0_0_12px_rgba(255, 255, 255,.6)]" />
                       <div className="min-w-0 flex-1">
                         <a
                           href={n.link}

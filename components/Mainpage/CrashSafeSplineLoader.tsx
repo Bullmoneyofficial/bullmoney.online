@@ -295,8 +295,8 @@ const FallbackView = memo<{
         <div
           className="w-full h-full"
           style={{
-            backgroundImage: `linear-gradient(rgba(59, 130, 246, 0.3) 1px, transparent 1px),
-                             linear-gradient(90deg, rgba(59, 130, 246, 0.3) 1px, transparent 1px)`,
+            backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.3) 1px, transparent 1px),
+                             linear-gradient(90deg, rgba(255, 255, 255, 0.3) 1px, transparent 1px)`,
             backgroundSize: '40px 40px',
           }}
         />
@@ -351,16 +351,16 @@ const FallbackView = memo<{
 
           {/* Performance benefits */}
           <div className="space-y-2 mb-6">
-            <div className="flex items-center justify-center gap-2 text-xs text-green-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+            <div className="flex items-center justify-center gap-2 text-xs text-white">
+              <span className="w-1.5 h-1.5 rounded-full bg-white" />
               <span className="font-mono">3x Faster Load Times</span>
             </div>
-            <div className="flex items-center justify-center gap-2 text-xs text-blue-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+            <div className="flex items-center justify-center gap-2 text-xs text-white">
+              <span className="w-1.5 h-1.5 rounded-full bg-white" />
               <span className="font-mono">50% Less Data Usage</span>
             </div>
-            <div className="flex items-center justify-center gap-2 text-xs text-purple-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+            <div className="flex items-center justify-center gap-2 text-xs text-white">
+              <span className="w-1.5 h-1.5 rounded-full bg-white" />
               <span className="font-mono">Battery Saver Active</span>
             </div>
           </div>
@@ -372,7 +372,7 @@ const FallbackView = memo<{
               <div className="text-center">
                 <div className="text-[10px] text-white/50 font-mono">BTC</div>
                 <motion.div
-                  className="text-xs font-bold text-green-400 font-mono"
+                  className="text-xs font-bold text-white font-mono"
                   animate={{ opacity: [1, 0.6, 1] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
                 >
@@ -382,7 +382,7 @@ const FallbackView = memo<{
               <div className="text-center">
                 <div className="text-[10px] text-white/50 font-mono">ETH</div>
                 <motion.div
-                  className="text-xs font-bold text-green-400 font-mono"
+                  className="text-xs font-bold text-white font-mono"
                   animate={{ opacity: [1, 0.6, 1] }}
                   transition={{ duration: 1.5, repeat: Infinity, delay: 0.3 }}
                 >
@@ -392,7 +392,7 @@ const FallbackView = memo<{
               <div className="text-center">
                 <div className="text-[10px] text-white/50 font-mono">SOL</div>
                 <motion.div
-                  className="text-xs font-bold text-green-400 font-mono"
+                  className="text-xs font-bold text-white font-mono"
                   animate={{ opacity: [1, 0.6, 1] }}
                   transition={{ duration: 1.5, repeat: Infinity, delay: 0.6 }}
                 >
@@ -405,17 +405,17 @@ const FallbackView = memo<{
           {/* Status indicators */}
           <div className="mt-6 flex items-center justify-center gap-2">
             <motion.div
-              className="w-2 h-2 rounded-full bg-green-500"
+              className="w-2 h-2 rounded-full bg-white"
               animate={{ opacity: [1, 0.3, 1] }}
               transition={{ duration: 1, repeat: Infinity }}
             />
             <motion.div
-              className="w-2 h-2 rounded-full bg-blue-500"
+              className="w-2 h-2 rounded-full bg-white"
               animate={{ opacity: [1, 0.3, 1] }}
               transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
             />
             <motion.div
-              className="w-2 h-2 rounded-full bg-purple-500"
+              className="w-2 h-2 rounded-full bg-white"
               animate={{ opacity: [1, 0.3, 1] }}
               transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
             />
@@ -448,20 +448,20 @@ const CheckingAnimation = memo(() => {
       <div className="relative w-32 h-32">
         {/* Outer rings */}
         <motion.div
-          className="absolute inset-0 border-2 border-green-500/20 rounded-full"
+          className="absolute inset-0 border-2 border-white/20 rounded-full"
           animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0, 0.5] }}
           transition={{ duration: 2, repeat: Infinity }}
         />
         <motion.div
-          className="absolute inset-0 border-2 border-green-500/30 rounded-full"
+          className="absolute inset-0 border-2 border-white/30 rounded-full"
           animate={{ scale: [1, 1.15, 1], opacity: [0.7, 0, 0.7] }}
           transition={{ duration: 2, repeat: Infinity, delay: 0.3 }}
         />
 
         {/* Central scanner */}
-        <div className="absolute inset-4 border-2 border-green-500/50 rounded-full flex items-center justify-center">
+        <div className="absolute inset-4 border-2 border-white/50 rounded-full flex items-center justify-center">
           <motion.div
-            className="absolute inset-0 border-t-4 border-green-500 rounded-full"
+            className="absolute inset-0 border-t-4 border-white rounded-full"
             animate={{ rotate: 360 }}
             transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
           />
@@ -472,7 +472,7 @@ const CheckingAnimation = memo(() => {
         {[0, 90, 180, 270].map((rotation, i) => (
           <motion.div
             key={i}
-            className="absolute w-2 h-2 bg-green-500 rounded-full"
+            className="absolute w-2 h-2 bg-white rounded-full"
             style={{
               top: '50%',
               left: '50%',
@@ -486,7 +486,7 @@ const CheckingAnimation = memo(() => {
 
       {/* Status text with typing effect */}
       <div className="flex flex-col items-center gap-2">
-        <div className="text-sm text-green-400 font-mono font-semibold">
+        <div className="text-sm text-white font-mono font-semibold">
           ● MARKET ANALYSIS INITIATED
         </div>
         <div className="text-xs text-white/50 font-mono">
@@ -496,7 +496,7 @@ const CheckingAnimation = memo(() => {
         {/* Progress bar */}
         <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden">
           <motion.div
-            className="h-full bg-gradient-to-r from-green-500 to-blue-500"
+            className="h-full bg-gradient-to-r from-white to-white"
             style={{ width: `${scanProgress}%` }}
             transition={{ duration: 0.1 }}
           />
@@ -504,8 +504,8 @@ const CheckingAnimation = memo(() => {
 
         {/* Live ticker simulation */}
         <div className="flex gap-3 mt-2">
-          <div className="text-[10px] font-mono text-green-400">BTC: +2.4%</div>
-          <div className="text-[10px] font-mono text-green-400">ETH: +1.8%</div>
+          <div className="text-[10px] font-mono text-white">BTC: +2.4%</div>
+          <div className="text-[10px] font-mono text-white">ETH: +1.8%</div>
           <div className="text-[10px] font-mono text-red-400">SOL: -0.3%</div>
         </div>
       </div>
@@ -547,8 +547,8 @@ const LoadingAnimation = memo(() => {
           />
           <defs>
             <linearGradient id="loadGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#22c55e" />
-              <stop offset="100%" stopColor="#3b82f6" />
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="100%" stopColor="#ffffff" />
             </linearGradient>
           </defs>
         </svg>
@@ -558,20 +558,20 @@ const LoadingAnimation = memo(() => {
       <div className="relative w-28 h-28">
         {/* Outer pulse ring */}
         <motion.div
-          className="absolute inset-0 border-4 border-blue-500/20 rounded-full"
+          className="absolute inset-0 border-4 border-white/20 rounded-full"
           animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0, 0.4] }}
           transition={{ duration: 2, repeat: Infinity }}
         />
 
         {/* Middle spinning ring */}
         <motion.div
-          className="absolute inset-2 border-4 border-green-500/30 rounded-full"
+          className="absolute inset-2 border-4 border-white/30 rounded-full"
           animate={{ rotate: 360, scale: [1, 1.1, 1] }}
           transition={{ rotate: { duration: 3, repeat: Infinity, ease: 'linear' }, scale: { duration: 1.5, repeat: Infinity } }}
         />
 
         {/* Inner core with icon */}
-        <div className="absolute inset-6 border-4 border-blue-500/50 rounded-full flex items-center justify-center bg-black/30">
+        <div className="absolute inset-6 border-4 border-white/50 rounded-full flex items-center justify-center bg-black/30">
           <motion.div
             animate={{ rotate: [0, 360] }}
             transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
@@ -584,7 +584,7 @@ const LoadingAnimation = memo(() => {
         {[0, 120, 240].map((angle, i) => (
           <motion.div
             key={i}
-            className="absolute w-3 h-3 bg-gradient-to-br from-green-400 to-blue-500 rounded-full shadow-lg shadow-green-500/50"
+            className="absolute w-3 h-3 bg-gradient-to-br from-white to-white rounded-full shadow-lg shadow-white/50"
             style={{
               top: '50%',
               left: '50%',
@@ -604,7 +604,7 @@ const LoadingAnimation = memo(() => {
 
       {/* Status display */}
       <div className="text-center space-y-3">
-        <div className="text-green-400 font-mono font-bold text-sm">
+        <div className="text-white font-mono font-bold text-sm">
           🔥 LOADING TRADING TERMINAL
         </div>
         <div className="text-xs text-white/60 font-mono">
@@ -619,7 +619,7 @@ const LoadingAnimation = memo(() => {
           </div>
           <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden border border-white/20">
             <motion.div
-              className="h-full bg-gradient-to-r from-green-500 via-blue-500 to-green-500 bg-[length:200%_100%]"
+              className="h-full bg-gradient-to-r from-white via-white to-white bg-[length:200%_100%]"
               style={{ width: `${loadPercent}%` }}
               animate={{ backgroundPosition: ['0% 0%', '100% 0%'] }}
               transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
@@ -630,8 +630,8 @@ const LoadingAnimation = memo(() => {
         {/* Live market preview */}
         <div className="grid grid-cols-3 gap-2 mt-4">
           {[
-            { sym: 'BTC', change: '+3.2%', color: 'text-green-400' },
-            { sym: 'ETH', change: '+1.9%', color: 'text-green-400' },
+            { sym: 'BTC', change: '+3.2%', color: 'text-white' },
+            { sym: 'ETH', change: '+1.9%', color: 'text-white' },
             { sym: 'SOL', change: '-0.5%', color: 'text-red-400' },
           ].map((coin, i) => (
             <motion.div

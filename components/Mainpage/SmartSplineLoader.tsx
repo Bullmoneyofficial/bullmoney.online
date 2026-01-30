@@ -528,7 +528,7 @@ export const SmartSplineLoader = memo(({
                   hasLoadedRef.current = false;
                   loadSpline();
                 }}
-                className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold hover:from-blue-600 hover:to-purple-600 transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)] active:scale-95"
+                className="px-6 py-3 rounded-xl bg-gradient-to-r from-white to-white text-white font-semibold hover:from-white hover:to-white transition-all shadow-[0_0_20px_rgba(255, 255, 255,0.3)] active:scale-95"
               >
                 🔄 Retry Loading ({MAX_RETRIES - retryCount} attempts left)
               </button>
@@ -594,13 +594,13 @@ export const SmartSplineLoader = memo(({
               />
               <defs>
                 <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#1d4ed8" />
-                  <stop offset="50%" stopColor="#38bdf8" />
-                  <stop offset="100%" stopColor="#3b82f6" />
+                  <stop offset="0%" stopColor="#ffffff" />
+                  <stop offset="50%" stopColor="#ffffff" />
+                  <stop offset="100%" stopColor="#ffffff" />
                 </linearGradient>
                 <linearGradient id="gradient2" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#1e40af" />
-                  <stop offset="100%" stopColor="#0ea5e9" />
+                  <stop offset="0%" stopColor="#ffffff" />
+                  <stop offset="100%" stopColor="#ffffff" />
                 </linearGradient>
               </defs>
             </svg>
@@ -611,7 +611,7 @@ export const SmartSplineLoader = memo(({
             {[...Array(8)].map((_, i) => (
               <div
                 key={i}
-                className="absolute text-[10px] font-mono text-blue-200/20 animate-float"
+                className="absolute text-[10px] font-mono text-white/20 animate-float"
                 style={{
                   left: `${(i * 12.5) + 5}%`,
                   top: `${20 + Math.sin(i) * 30}%`,
@@ -628,12 +628,12 @@ export const SmartSplineLoader = memo(({
             {/* Minimal, blue-toned loader */}
             <div className="relative w-20 h-20 mx-auto">
               <div
-                className="absolute inset-0 rounded-full border border-blue-500/30 bg-blue-500/10 animate-pulse"
+                className="absolute inset-0 rounded-full border border-white/30 bg-white/10 animate-pulse"
                 style={{ animationDuration: '2.4s' }}
               />
-              <div className="absolute inset-2 rounded-full border border-blue-400/30" />
+              <div className="absolute inset-2 rounded-full border border-white/30" />
               <Loader2
-                className="absolute inset-0 m-auto h-8 w-8 text-blue-300 animate-spin"
+                className="absolute inset-0 m-auto h-8 w-8 text-white animate-spin"
                 style={{ animationDuration: '1.6s' }}
               />
             </div>
@@ -642,37 +642,37 @@ export const SmartSplineLoader = memo(({
             {priority === 'critical' ? (
               <>
                 <div className="space-y-2">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-400/30">
-                    <span className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-pulse" />
-                    <span className="text-[10px] font-semibold text-blue-200 uppercase tracking-wider">Live market access</span>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/30">
+                    <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+                    <span className="text-[10px] font-semibold text-white uppercase tracking-wider">Live market access</span>
                   </div>
-                  <h3 className="text-lg font-semibold text-blue-100">
+                  <h3 className="text-lg font-semibold text-white">
                     Connecting to Trading Terminal
                   </h3>
-                  <p className="text-xs text-blue-100/70 leading-relaxed">
+                  <p className="text-xs text-white/70 leading-relaxed">
                     Syncing real-time market data and analytics for a smooth launch...
                   </p>
                 </div>
 
                 {/* Live stats simulation */}
                 <div className="grid grid-cols-3 gap-2 mt-3">
-                  <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-400/20">
-                    <div className="text-blue-100 text-xs font-mono">+24.3%</div>
-                    <div className="text-[10px] text-blue-200/60">BTC</div>
+                  <div className="p-2 rounded-lg bg-white/10 border border-white/20">
+                    <div className="text-white text-xs font-mono">+24.3%</div>
+                    <div className="text-[10px] text-white/60">BTC</div>
                   </div>
-                  <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-400/20">
-                    <div className="text-blue-100 text-xs font-mono">+18.7%</div>
-                    <div className="text-[10px] text-blue-200/60">ETH</div>
+                  <div className="p-2 rounded-lg bg-white/10 border border-white/20">
+                    <div className="text-white text-xs font-mono">+18.7%</div>
+                    <div className="text-[10px] text-white/60">ETH</div>
                   </div>
-                  <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-400/20">
-                    <div className="text-blue-100 text-xs font-mono">+31.2%</div>
-                    <div className="text-[10px] text-blue-200/60">SOL</div>
+                  <div className="p-2 rounded-lg bg-white/10 border border-white/20">
+                    <div className="text-white text-xs font-mono">+31.2%</div>
+                    <div className="text-[10px] text-white/60">SOL</div>
                   </div>
                 </div>
 
                 {retryCount > 0 && (
-                  <div className="mt-2 px-4 py-2 rounded-xl bg-blue-500/10 border border-blue-400/30 animate-pulse">
-                    <p className="text-xs text-blue-200 font-semibold">
+                  <div className="mt-2 px-4 py-2 rounded-xl bg-white/10 border border-white/30 animate-pulse">
+                    <p className="text-xs text-white font-semibold">
                       Reconnecting to market feed... ({MAX_RETRIES - retryCount} attempts left)
                     </p>
                   </div>
@@ -681,13 +681,13 @@ export const SmartSplineLoader = memo(({
             ) : (
               <>
                 <div className="space-y-2">
-                  <div className="inline-block px-3 py-1 rounded-full bg-blue-500/10 border border-blue-400/30">
-                    <span className="text-[10px] font-semibold text-blue-200 uppercase tracking-wider">Premium content</span>
+                  <div className="inline-block px-3 py-1 rounded-full bg-white/10 border border-white/30">
+                    <span className="text-[10px] font-semibold text-white uppercase tracking-wider">Premium content</span>
                   </div>
-                  <h3 className="text-base font-semibold text-blue-100">
+                  <h3 className="text-base font-semibold text-white">
                     {isMobile ? 'Mobile Trading Terminal' : 'Advanced Market View'}
                   </h3>
-                  <p className="text-xs text-blue-100/70 leading-relaxed">
+                  <p className="text-xs text-white/70 leading-relaxed">
                     {isWebView
                       ? 'Optimizing for in-app browser — Your competitive edge is loading...'
                       : isMobile && !isHighEnd
@@ -697,7 +697,7 @@ export const SmartSplineLoader = memo(({
                 </div>
 
                 {retryCount > 0 && (
-                  <p className="text-xs text-blue-200 mt-2 font-semibold">
+                  <p className="text-xs text-white mt-2 font-semibold">
                     Reconnecting... ({retryCount}/{MAX_RETRIES})
                   </p>
                 )}
@@ -709,7 +709,7 @@ export const SmartSplineLoader = memo(({
               {[0, 1, 2, 3, 4].map((i) => (
                 <div key={i} className="flex flex-col items-center gap-1">
                   <div
-                    className={`w-1 rounded-sm ${i % 2 === 0 ? 'bg-blue-400' : 'bg-blue-200/70'} animate-pulse`}
+                    className={`w-1 rounded-sm ${i % 2 === 0 ? 'bg-white' : 'bg-white/70'} animate-pulse`}
                     style={{
                       height: `${12 + i * 4}px`,
                       animationDelay: `${i * 0.15}s`
@@ -721,12 +721,12 @@ export const SmartSplineLoader = memo(({
 
             {/* Loading percentage simulation */}
             <div className="mt-4 space-y-2">
-              <div className="flex justify-between text-[10px] font-mono text-blue-100/60">
+              <div className="flex justify-between text-[10px] font-mono text-white/60">
                 <span>Market Data</span>
-                <span className="text-blue-200">SYNCING</span>
+                <span className="text-white">SYNCING</span>
               </div>
-              <div className="w-full h-1 bg-blue-100/10 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-blue-500 via-sky-400 to-blue-500 animate-pulse rounded-full" style={{ width: '75%' }} />
+              <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-white via-sky-400 to-white animate-pulse rounded-full" style={{ width: '75%' }} />
               </div>
             </div>
           </div>
@@ -736,7 +736,7 @@ export const SmartSplineLoader = memo(({
         <Suspense
           fallback={
             <div className="flex items-center justify-center w-full h-full">
-              <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
+              <Loader2 className="w-12 h-12 text-white animate-spin" />
             </div>
           }
         >

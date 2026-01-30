@@ -11,27 +11,27 @@ import { trackEvent, BullMoneyAnalytics } from "@/lib/analytics";
 const NEON_STYLES = `
   @keyframes neon-pulse {
     0%, 100% { 
-      text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+      text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
       filter: brightness(1);
     }
     50% { 
-      text-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6;
+      text-shadow: 0 0 6px #ffffff, 0 0 12px #ffffff;
       filter: brightness(1.1);
     }
   }
 
   @keyframes neon-glow {
     0%, 100% { 
-      box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+      box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff;
     }
     50% { 
-      box-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6, inset 0 0 6px #3b82f6;
+      box-shadow: 0 0 6px #ffffff, 0 0 12px #ffffff, inset 0 0 6px #ffffff;
     }
   }
 
   .neon-blue-text {
-    color: #3b82f6;
-    text-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6;
+    color: #ffffff;
+    text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
     animation: neon-pulse 2s ease-in-out infinite;
   }
 
@@ -41,8 +41,8 @@ const NEON_STYLES = `
   }
 
   .neon-blue-border {
-    border: 2px solid #3b82f6;
-    box-shadow: 0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff;
   }
 `;
 
@@ -126,6 +126,12 @@ const HiddenYoutubePlayer = dynamic(
   { ssr: false }
 );
 
+// ✅ FOOTER - Only rendered on home page (removed from layout)
+const FooterComponent = dynamic(
+  () => import("@/components/Mainpage/footer").then((mod) => ({ default: mod.Footer })),
+  { ssr: false }
+);
+
 import { ALL_THEMES } from "@/constants/theme-data";
 import { useAudioEngine } from "@/app/hooks/useAudioEngine";
 import Image from "next/image";
@@ -144,9 +150,9 @@ const PageMode = dynamic(
   { ssr: false, loading: () => <MinimalFallback /> }
 );
 
-// ✅ NEW INTERACTIVE LOADER - Neon blue trading unlock experience
+// ✅ NEW INTERACTIVE LOADER - Neon blue trading unlock experience (v3 Simple)
 const TradingUnlockLoader = dynamic(
-  () => import("@/components/MultiStepLoaderv3"),
+  () => import("@/components/MultiStepLoaderv3Simple"),
   { 
     ssr: false, 
     loading: () => <MinimalFallback />,
@@ -197,16 +203,16 @@ function MobileDiscordHero({ sources, onOpenModal, variant = 'mobile' }: { sourc
 
   return (
     <div className={containerClass} data-theme-aware>
-      <div className={`relative isolate overflow-hidden rounded-2xl xs:rounded-3xl border border-blue-500/40 bg-gradient-to-b from-[#050915]/90 via-[#050915]/95 to-black shadow-[0_0_30px_rgba(59,130,246,0.25)] backdrop-blur-xl p-3 xs:p-4 sm:p-5 md:p-8 flex flex-col gap-2 xs:gap-3 sm:gap-4 ${cardMarginTop} w-full h-full`}>
-        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(circle at 20% 20%, rgba(59,130,246,0.14), transparent 40%), radial-gradient(circle at 80% 10%, rgba(147,197,253,0.12), transparent 35%)' }} />
-        <div className="absolute -inset-px rounded-2xl xs:rounded-3xl border border-blue-500/20 blur-[1px] pointer-events-none" />
+      <div className={`relative isolate overflow-hidden rounded-2xl xs:rounded-3xl border border-white/40 bg-gradient-to-b from-[#050915]/90 via-[#050915]/95 to-black shadow-[0_0_30px_rgba(255, 255, 255,0.25)] backdrop-blur-xl p-3 xs:p-4 sm:p-5 md:p-8 flex flex-col gap-2 xs:gap-3 sm:gap-4 ${cardMarginTop} w-full h-full`}>
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(circle at 20% 20%, rgba(255, 255, 255,0.14), transparent 40%), radial-gradient(circle at 80% 10%, rgba(255, 255, 255,0.12), transparent 35%)' }} />
+        <div className="absolute -inset-px rounded-2xl xs:rounded-3xl border border-white/20 blur-[1px] pointer-events-none" />
 
       <div className="flex flex-col gap-1 xs:gap-2 text-center flex-shrink-0">
         <p
           className="font-mono text-[8px] xs:text-[9px] sm:text-[10px] tracking-[0.12em] xs:tracking-[0.15em] sm:tracking-[0.18em] uppercase"
           style={{
-            color: '#60a5fa',
-            textShadow: '0 0 5px #60a5fa, 0 0 10px #60a5fa, 0 0 20px #3b82f6, 0 0 40px #3b82f6',
+            color: '#ffffff',
+            textShadow: '0 0 5px #ffffff, 0 0 10px #ffffff, 0 0 20px #ffffff, 0 0 40px #ffffff',
           }}
         >
           EST. 2024 • TRADING EXCELLENCE
@@ -216,7 +222,7 @@ function MobileDiscordHero({ sources, onOpenModal, variant = 'mobile' }: { sourc
             className="block text-[clamp(1.4rem,6vw,3rem)] font-sans font-semibold tracking-tight leading-tight"
             style={{
               color: '#fff',
-              textShadow: '0 0 5px #fff, 0 0 10px #fff, 0 0 20px #93c5fd, 0 0 40px #60a5fa, 0 0 60px #3b82f6',
+              textShadow: '0 0 5px #fff, 0 0 10px #fff, 0 0 20px #ffffff, 0 0 40px #ffffff, 0 0 60px #ffffff',
             }}
           >
             The path to
@@ -224,8 +230,8 @@ function MobileDiscordHero({ sources, onOpenModal, variant = 'mobile' }: { sourc
           <span
             className="block text-[clamp(1.6rem,7vw,3.6rem)] font-serif italic leading-tight"
             style={{
-              color: '#3b82f6',
-              textShadow: '0 0 5px #3b82f6, 0 0 15px #3b82f6, 0 0 30px #2563eb, 0 0 50px #1d4ed8, 0 0 70px #1e40af',
+              color: '#ffffff',
+              textShadow: '0 0 5px #ffffff, 0 0 15px #ffffff, 0 0 30px #ffffff, 0 0 50px #ffffff, 0 0 70px #ffffff',
             }}
           >
             consistent profit
@@ -234,15 +240,15 @@ function MobileDiscordHero({ sources, onOpenModal, variant = 'mobile' }: { sourc
         <p
           className="text-xs xs:text-sm sm:text-base leading-relaxed max-w-2xl mx-auto px-1"
           style={{
-            color: 'rgba(147, 197, 253, 0.82)',
-            textShadow: '0 0 5px rgba(147, 197, 253, 0.5), 0 0 10px rgba(96, 165, 250, 0.3)',
+            color: 'rgba(255, 255, 255, 0.82)',
+            textShadow: '0 0 5px rgba(255, 255, 255, 0.5), 0 0 10px rgba(255, 255, 255, 0.3)',
           }}
         >
           Tap into live trade ideas, callouts, and coaching with 10,000+ traders. Join the community that shares real-time setups, risk plans, and recap videos so you can trade with confidence.
         </p>
       </div>
 
-      <div className="relative rounded-xl xs:rounded-2xl overflow-hidden border border-blue-500/40 bg-black shadow-[0_0_18px_rgba(59,130,246,0.3)] flex-1 min-h-[120px]">
+      <div className="relative rounded-xl xs:rounded-2xl overflow-hidden border border-white/40 bg-black shadow-[0_0_18px_rgba(255, 255, 255,0.3)] flex-1 min-h-[120px]">
         <div className="relative w-full h-full">
           <YouTubeVideoEmbed
             videoId={videoId}
@@ -288,18 +294,18 @@ function DesktopHeroFallback() {
       <div className="w-full max-w-6xl mx-auto px-6 py-16 flex flex-col items-center text-center gap-4">
         <p
           className="font-mono text-[10px] tracking-[0.2em] uppercase"
-          style={{ color: '#60a5fa', textShadow: '0 0 10px rgba(96, 165, 250, 0.5)' }}
+          style={{ color: '#ffffff', textShadow: '0 0 10px rgba(255, 255, 255, 0.5)' }}
         >
           EST. 2024 • TRADING EXCELLENCE
         </p>
         <h1 className="text-4xl md:text-6xl font-black tracking-tight neon-white-text">
           The path to <span className="neon-blue-text">consistent profit</span>
         </h1>
-        <p className="text-sm md:text-base max-w-3xl" style={{ color: 'rgba(147, 197, 253, 0.85)' }}>
+        <p className="text-sm md:text-base max-w-3xl" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
           Live trade ideas, coaching, and real-time market insights—delivered in a community of 10,000+ focused traders.
         </p>
         <div className="mt-4 inline-flex items-center gap-3">
-          <span className="px-6 py-3 rounded-full text-sm font-bold neon-white-text" style={{ background: '#3b82f6', boxShadow: '0 0 10px rgba(59, 130, 246, 0.6)' }}>
+          <span className="px-6 py-3 rounded-full text-sm font-bold neon-white-text" style={{ background: '#ffffff', boxShadow: '0 0 10px rgba(255, 255, 255, 0.6)' }}>
             Loading your experience…
           </span>
         </div>
@@ -326,7 +332,7 @@ const DRAGGABLE_SPLIT_SCENES: Record<'glassCurtain' | 'orbScroll', RemoteSplineM
     viewer: "https://my.spline.design/glasscurtain-a6oJvU7009VpSevqPvEeVyI7/",
     title: "Market Depth Analyzer",
     subtitle: "Dual-chart order book monitoring",
-    accent: '#38bdf8',
+    accent: '#ffffff',
     aspectRatio: '4 / 3'
   },
   orbScroll: {
@@ -335,7 +341,7 @@ const DRAGGABLE_SPLIT_SCENES: Record<'glassCurtain' | 'orbScroll', RemoteSplineM
     viewer: "https://my.spline.design/orbscrolltriggerforhero-cukhAyxazfE0BSBUcFrD8NBf/",
     title: "Price Action Indicator",
     subtitle: "Real-time volatility tracking",
-    accent: '#a855f7',
+    accent: '#ffffff',
     aspectRatio: '4 / 3'
   }
 };
@@ -347,7 +353,7 @@ const ADDITIONAL_SPLINE_PAGES: RemoteSplineMeta[] = [
     subtitle: 'Live trading signal detection network',
     viewer: 'https://my.spline.design/100followersfocus-55tpQJYDbng5lAQ3P1tq5abx/',
     runtime: 'https://prod.spline.design/IomoYEa50DmuiTXE/scene.splinecode',
-    accent: '#22d3ee',
+    accent: '#ffffff',
     badge: 'Live Trading',
     aspectRatio: '16 / 9'
   },
@@ -377,7 +383,7 @@ const ADDITIONAL_SPLINE_PAGES: RemoteSplineMeta[] = [
     subtitle: 'Multi-asset performance battle station',
     viewer: 'https://my.spline.design/xgamer-RZ9X6L57SHESs7L04p6IDisA/',
     runtime: 'https://prod.spline.design/1HGlyIYtYszh-B-r/scene.splinecode',
-    accent: '#4ade80',
+    accent: '#ffffff',
     badge: 'Competitive',
     aspectRatio: '16 / 9'
   }
@@ -389,7 +395,7 @@ const R4X_BOT_SCENE: RemoteSplineMeta = {
   subtitle: 'Autonomous trading opportunity analyzer',
   viewer: 'https://my.spline.design/r4xbot-2RZeOpfgJ0Vr36G9Jd9EHlFB/',
   runtime: 'https://prod.spline.design/G3yn-KsfkIAbK2Mz/scene.splinecode',
-  accent: '#60a5fa',
+  accent: '#ffffff',
   badge: 'AI Trading',
   aspectRatio: '16 / 9'
 };
@@ -530,7 +536,7 @@ function LazySplineContainer({ scene }: { scene: string }) {
           <div className="absolute inset-0 flex items-center justify-center">
             <ShimmerSpinner size={32} color="blue" speed="slow" />
           </div>
-          <div className="absolute inset-0 rounded-xl pointer-events-none" style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.2)', borderWidth: '1px', borderStyle: 'solid' }} />
+          <div className="absolute inset-0 rounded-xl pointer-events-none" style={{ borderColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.2)', borderWidth: '1px', borderStyle: 'solid' }} />
         </div>
       )}
 
@@ -562,7 +568,7 @@ function LazySplineContainer({ scene }: { scene: string }) {
           <div className="absolute inset-0 flex items-center justify-center">
             <ShimmerSpinner size={32} color="blue" speed="slow" />
           </div>
-          <div className="absolute inset-0 rounded-xl pointer-events-none" style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.2)', borderWidth: '1px', borderStyle: 'solid' }} />
+          <div className="absolute inset-0 rounded-xl pointer-events-none" style={{ borderColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.2)', borderWidth: '1px', borderStyle: 'solid' }} />
         </div>
       )}
     </div>
@@ -593,7 +599,7 @@ function RemoteSplineFrame({ viewerSrc, sceneSrc, title }: { viewerSrc: string; 
 }
 
 function RemoteSplineShowcase({ scene, onOpen }: { scene: RemoteSplineMeta; onOpen: (scene: RemoteSplineMeta) => void }) {
-  const blueAccent = '#3b82f6';
+  const blueAccent = '#ffffff';
 
   return (
     <div
@@ -624,10 +630,10 @@ function RemoteSplineShowcase({ scene, onOpen }: { scene: RemoteSplineMeta; onOp
       <div className="flex-1" />
       <button
         onClick={() => onOpen(scene)}
-        className="relative inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-bold neon-white-text bg-blue-600 neon-blue-border transition-all duration-300 hover:brightness-110"
+        className="relative inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-bold neon-white-text bg-white neon-blue-border transition-all duration-300 hover:brightness-110"
         style={{
-          background: '#3b82f6',
-          boxShadow: '0 0 8px #3b82f6, 0 0 16px #3b82f6',
+          background: '#ffffff',
+          boxShadow: '0 0 8px #ffffff, 0 0 16px #ffffff',
         }}
       >
         <span>Launch Scene</span>
@@ -649,7 +655,7 @@ function DraggableSplitExperience({ style }: { style?: CSSProperties } = {}) {
       }}
     >
       <ShimmerBorder color="blue" intensity="low" speed="normal" />
-      <div className="relative z-10 w-full h-full bg-black rounded-2xl overflow-hidden" style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.2)', borderWidth: '1px', borderStyle: 'solid' }}>
+      <div className="relative z-10 w-full h-full bg-black rounded-2xl overflow-hidden" style={{ borderColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.2)', borderWidth: '1px', borderStyle: 'solid' }}>
         <ShimmerLine color="blue" className="z-20" />
         <Suspense fallback={<SplineSkeleton className="w-full h-full" aspectRatio="auto" style={{ height: '100%' }} />}>
           <DraggableSplit>
@@ -671,7 +677,7 @@ function DraggableSplitExperience({ style }: { style?: CSSProperties } = {}) {
 }
 
 function SplitExperienceCard({ onOpen }: { onOpen: () => void }) {
-  const blueAccent = '#3b82f6';
+  const blueAccent = '#ffffff';
   return (
     <div
       className="relative rounded-3xl p-6 md:p-8 flex flex-col gap-4 overflow-hidden group cursor-pointer bg-black neon-blue-border transition-all duration-300 hover:brightness-110"
@@ -687,8 +693,8 @@ function SplitExperienceCard({ onOpen }: { onOpen: () => void }) {
         onClick={onOpen}
         className="relative inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-bold neon-white-text transition-all duration-300 hover:brightness-110"
         style={{
-          background: '#3b82f6',
-          boxShadow: '0 0 8px #3b82f6, 0 0 16px #3b82f6',
+          background: '#ffffff',
+          boxShadow: '0 0 8px #ffffff, 0 0 16px #ffffff',
         }}
       >
         <span>Launch Trading View</span>
@@ -702,7 +708,7 @@ function ModalShell({
   open,
   onClose,
   title,
-  accent = 'var(--accent-color, #3b82f6)',
+  accent = 'var(--accent-color, #ffffff)',
   subtitle,
   children,
   contentAspectRatio = '16 / 9',
@@ -734,7 +740,7 @@ function ModalShell({
 
   if (!open || !portalNode) return null;
 
-  const blueAccent = '#3b82f6';
+  const blueAccent = '#ffffff';
 
   return createPortal(
     <div className="fixed inset-0 z-[9999999] flex items-center justify-center p-3 md:p-6">
@@ -742,7 +748,7 @@ function ModalShell({
       <div
         className={`relative z-10 w-full ${isCompact ? 'max-w-sm' : 'max-w-6xl'} h-[90vh] md:h-[85vh] min-h-0 overflow-hidden rounded-3xl neon-blue-border bg-black`}
         style={{
-          boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6',
+          boxShadow: '0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff',
           animation: 'neon-glow 2s ease-in-out infinite',
         }}
       >
@@ -772,7 +778,7 @@ function ModalShell({
           <div
             className="w-full h-full rounded-xl overflow-hidden neon-blue-border bg-black"
             style={{
-              boxShadow: '0 0 4px #3b82f6, 0 0 8px #3b82f6, inset 0 0 4px #3b82f6',
+              boxShadow: '0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff',
               ...(contentAspectRatio
                 ? {
                     aspectRatio: contentAspectRatio,
@@ -823,7 +829,7 @@ function SplitSceneModal({ open, onClose }: { open: boolean; onClose: () => void
       onClose={onClose}
       title="Interactive Split Lab"
       subtitle="Dual-scene comparison"
-      accent="#38bdf8"
+      accent="#ffffff"
       contentAspectRatio="4 / 3"
     >
       <DraggableSplitExperience style={{ height: '100%', minHeight: '0px' }} />
@@ -1145,7 +1151,7 @@ function HomeContent() {
     console.log('[Page] Session check:', { hasSession: !!hasSession, hasCompletedPagemode, hasCompletedLoader, shouldForceLoader, shouldResetPagemode, forceReasons });
 
     // CRITICAL: Pagemode/welcome screen MUST always show first
-    // MultiStepLoaderv3 should ONLY show after pagemode has been completed at least once
+    // MultiStepLoaderv3Simple should ONLY show after pagemode has been completed at least once
     // Additionally: if the user refreshes the page more than 10 times
     // in a single session, re-show the pagemode welcome experience.
     if (shouldResetPagemode) {
@@ -1392,8 +1398,8 @@ function HomeContent() {
                     onClick={() => setActiveRemoteScene(R4X_BOT_SCENE)}
                     className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-bold neon-white-text transition-all hover:brightness-110"
                     style={{ 
-                      background: '#3b82f6',
-                      boxShadow: '0 0 8px #3b82f6, 0 0 16px #3b82f6'
+                      background: '#ffffff',
+                      boxShadow: '0 0 8px #ffffff, 0 0 16px #ffffff'
                     }}
                   >
                     <span>Launch AI Bot View</span>
@@ -1415,7 +1421,7 @@ function HomeContent() {
             {canRenderMobileSections && (
               <section id="testimonials" className="w-full max-w-5xl mx-auto px-4 py-12 md:hidden" data-allow-scroll data-content data-theme-aware style={{ touchAction: 'pan-y' }}>
                 <div className="relative text-center mb-6">
-                  <h2 className="text-lg font-bold text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(to right, white, var(--accent-color, #3b82f6), white)', filter: 'drop-shadow(0 0 15px rgba(var(--accent-rgb, 59, 130, 246), 0.5))' }}>
+                  <h2 className="text-lg font-bold text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(to right, white, var(--accent-color, #ffffff), white)', filter: 'drop-shadow(0 0 15px rgba(var(--accent-rgb, 255, 255, 255), 0.5))' }}>
                     What Traders Say
                   </h2>
                   <div className="flex justify-center gap-1 mt-3">
@@ -1428,7 +1434,7 @@ function HomeContent() {
                 <div className="relative rounded-2xl overflow-hidden">
                   <ShimmerBorder color="blue" intensity="low" speed="slow" />
                   
-                  <div className="relative z-10 bg-black rounded-2xl overflow-hidden" style={{ borderColor: 'rgba(var(--accent-rgb, 59, 130, 246), 0.2)', borderWidth: '1px', borderStyle: 'solid' }}>
+                  <div className="relative z-10 bg-black rounded-2xl overflow-hidden" style={{ borderColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.2)', borderWidth: '1px', borderStyle: 'solid' }}>
                     <Suspense fallback={<LoadingSkeleton variant="card" height={320} />}>
                       <TestimonialsCarousel />
                     </Suspense>
@@ -1442,6 +1448,9 @@ function HomeContent() {
                 <LiveMarketTicker />
               </section>
             )}
+
+            {/* ✅ FOOTER - Only on home page */}
+            <FooterComponent />
           </main>
 
           {canRenderHeavyDesktop && theme.youtubeId && (

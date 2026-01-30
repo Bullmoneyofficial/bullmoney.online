@@ -9,9 +9,9 @@ import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 
 // Game color palette - BLUE ONLY (per design requirement)
 const GAME_COLORS = {
-  primary: "from-blue-500 via-cyan-400 to-blue-600",
-  secondary: "from-blue-600 via-sky-400 to-blue-700",
-  accent: "from-cyan-400 via-blue-500 to-sky-400",
+  primary: "from-white via-white to-white",
+  secondary: "from-white via-sky-400 to-white",
+  accent: "from-white via-white to-sky-400",
   shimmer: "from-transparent via-sky-400/30 to-transparent",
 };
 
@@ -82,7 +82,7 @@ export const BoredPopup = React.memo(function BoredPopup({
     >
       <div className="relative">
         {/* Main bubble */}
-        <div className="relative px-4 py-2.5 rounded-2xl bg-gradient-to-r from-blue-700/95 via-sky-500/95 to-blue-700/95 border border-sky-400/50 shadow-xl shadow-sky-500/30 backdrop-blur-sm">
+        <div className="relative px-4 py-2.5 rounded-2xl bg-gradient-to-r from-white/95 via-sky-500/95 to-white/95 border border-sky-400/50 shadow-xl shadow-sky-500/30 backdrop-blur-sm">
           {/* Shimmer */}
           <GameShimmer colors="rainbow" speed="fast" />
           
@@ -110,7 +110,7 @@ export const BoredPopup = React.memo(function BoredPopup({
         </div>
         
         {/* Speech bubble tail */}
-        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-gradient-to-br from-blue-700/95 to-sky-600/95 rotate-45 border-r border-b border-sky-400/50" />
+        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-gradient-to-br from-white/95 to-sky-600/95 rotate-45 border-r border-b border-sky-400/50" />
       </div>
     </motion.div>
   );
@@ -346,7 +346,7 @@ export const QuickGameTutorialDemo = React.memo(function QuickGameTutorialDemo({
               <div className="relative h-28 rounded-2xl bg-black/40 border border-white/10 overflow-hidden">
                 {/* Target */}
                 <motion.div
-                  className="absolute top-6 left-6 w-4 h-4 rounded-full bg-sky-300 shadow-[0_0_18px_rgba(56,189,248,0.45)]"
+                  className="absolute top-6 left-6 w-4 h-4 rounded-full bg-sky-300 shadow-[0_0_18px_rgba(255, 255, 255,0.45)]"
                   animate={{ x: [0, 220, 80, 240], y: [0, 10, 40, 20] }}
                   transition={{ duration: 4, repeat: 3, ease: "easeInOut" }}
                   aria-hidden
@@ -435,9 +435,9 @@ export const CompactGameHUD = React.memo(function CompactGameHUD({
 }) {
   const getEnergyGradient = useCallback(() => {
     // Blue-only gradient: energy just shifts brightness
-    if (energy > 70) return "from-sky-300 to-blue-500";
-    if (energy > 40) return "from-sky-400 to-blue-600";
-    return "from-blue-500 to-blue-700";
+    if (energy > 70) return "from-sky-300 to-white";
+    if (energy > 40) return "from-sky-400 to-white";
+    return "from-white to-white";
   }, [energy]);
 
   if (!isVisible) return null;
@@ -449,10 +449,10 @@ export const CompactGameHUD = React.memo(function CompactGameHUD({
       exit={{ opacity: 0, y: 5, scale: 0.95 }}
       className={cn(
         "relative overflow-hidden rounded-xl border backdrop-blur-md shadow-lg",
-        "bg-black/95 border-blue-400/30",
-        variant === "attached" && "bg-black/95 border-blue-300/35 shadow-2xl",
-        isFleeing && "border-sky-300/70 shadow-[0_0_32px_rgba(56,189,248,0.45)]",
-        isReturning && "border-blue-300/60 shadow-[0_0_22px_rgba(59,130,246,0.28)]"
+        "bg-black/95 border-white/30",
+        variant === "attached" && "bg-black/95 border-white/35 shadow-2xl",
+        isFleeing && "border-sky-300/70 shadow-[0_0_32px_rgba(255, 255, 255,0.45)]",
+        isReturning && "border-white/60 shadow-[0_0_22px_rgba(255, 255, 255,0.28)]"
       )}
     >
       {/* Shimmer overlay */}
@@ -469,7 +469,7 @@ export const CompactGameHUD = React.memo(function CompactGameHUD({
               <span className="text-[9px] text-sky-200/75">Score</span>
               <motion.span 
                 key={score}
-                initial={{ scale: 1.15, color: "#38bdf8" }}
+                initial={{ scale: 1.15, color: "#ffffff" }}
                 animate={{ scale: 1, color: "#e0f2fe" }}
                 className="text-sm font-bold tabular-nums"
               >
@@ -482,7 +482,7 @@ export const CompactGameHUD = React.memo(function CompactGameHUD({
               <motion.div
                 initial={{ scale: 0, rotate: -10 }}
                 animate={{ scale: 1, rotate: 0 }}
-                className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-blue-500/25 border border-sky-300/40"
+                className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-white/25 border border-sky-300/40"
               >
                 <IconFlame className="w-3 h-3 text-sky-300" />
                 <span className="text-[10px] font-bold text-sky-200">x{combo}</span>
@@ -503,7 +503,7 @@ export const CompactGameHUD = React.memo(function CompactGameHUD({
             {onStop && (
               <button
                 onClick={onStop}
-                className="p-1 rounded hover:bg-blue-500/25 transition-colors group"
+                className="p-1 rounded hover:bg-white/25 transition-colors group"
                 title="Stop game"
               >
                 <IconPlayerStop className="w-3 h-3 text-sky-200/70 group-hover:text-sky-200" />
@@ -533,9 +533,9 @@ export const CompactGameHUD = React.memo(function CompactGameHUD({
           <motion.span
             className={cn(
               "font-semibold tracking-wide",
-              isFleeing ? "text-sky-200 drop-shadow-[0_0_10px_rgba(56,189,248,0.6)]" :
-              isReturning ? "text-blue-200" :
-              tirednessLevel === "exhausted" ? "text-blue-200/75" :
+              isFleeing ? "text-sky-200 drop-shadow-[0_0_10px_rgba(255, 255, 255,0.6)]" :
+              isReturning ? "text-white" :
+              tirednessLevel === "exhausted" ? "text-white/75" :
               tirednessLevel === "tired" ? "text-sky-200/75" : "text-sky-200/70"
             )}
             animate={(isFleeing && !skipHeavyEffects) ? { scale: [1, 1.06, 1] } : {}}
@@ -578,8 +578,8 @@ export const GameControls = React.memo(function GameControls({
           disabled={disabled}
           className={cn(
             "relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg overflow-hidden",
-            "bg-gradient-to-r from-blue-500/40 via-sky-500/35 to-blue-600/40",
-            "border border-blue-400/50 hover:border-sky-300/70",
+            "bg-gradient-to-r from-white/40 via-sky-500/35 to-white/40",
+            "border border-white/50 hover:border-sky-300/70",
             "text-[10px] font-medium text-sky-200 hover:text-sky-100",
             "transition-all duration-200",
             disabled && "opacity-50 cursor-not-allowed"
@@ -599,8 +599,8 @@ export const GameControls = React.memo(function GameControls({
           disabled={disabled}
           className={cn(
             "relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg overflow-hidden",
-            "bg-gradient-to-r from-blue-500/40 via-sky-500/35 to-blue-500/40",
-            "border border-blue-400/50 hover:border-sky-300/70",
+            "bg-gradient-to-r from-white/40 via-sky-500/35 to-white/40",
+            "border border-white/50 hover:border-sky-300/70",
             "text-[10px] font-medium text-sky-200 hover:text-sky-100",
             "transition-all duration-200",
             disabled && "opacity-50 cursor-not-allowed"
@@ -620,7 +620,7 @@ export const GameControls = React.memo(function GameControls({
 // Sparkle burst animation - lightweight version
 export const SparkleBurst = React.memo(function SparkleBurst({
   trigger,
-  colors = ["#8b5cf6", "#3b82f6", "#ef4444"],
+  colors = ["#ffffff", "#ffffff", "#ef4444"],
 }: {
   trigger: boolean;
   colors?: string[];
@@ -873,7 +873,7 @@ export const GlitchEffect = React.memo(function GlitchEffect({
         transition={{ duration: 0.15 }}
       />
       <motion.div
-        className="absolute inset-0 bg-blue-500/20"
+        className="absolute inset-0 bg-white/20"
         animate={{ x: [2, -2, 2, 0], scaleY: [0.98, 1.02, 1, 1] }}
         transition={{ duration: 0.15, delay: 0.05 }}
       />
@@ -919,7 +919,7 @@ export const ConfettiBurst = React.memo(function ConfettiBurst({
 }) {
   if (!trigger) return null;
 
-  const colors = ["#38bdf8", "#60a5fa", "#0ea5e9", "#3b82f6", "#93c5fd"];
+  const colors = ["#ffffff", "#ffffff", "#ffffff", "#ffffff", "#ffffff"];
   
   return (
     <div className="absolute inset-0 pointer-events-none overflow-visible">
@@ -985,11 +985,11 @@ export const StatusBadge = React.memo(function StatusBadge({
   skipHeavyEffects?: boolean;
 }) {
   const statusConfig = {
-    playing: { color: "bg-blue-600", text: "Playing" },
-    paused: { color: "bg-blue-700", text: "Paused" },
-    idle: { color: "bg-blue-950/60", text: "Idle" },
+    playing: { color: "bg-white", text: "Playing" },
+    paused: { color: "bg-white", text: "Paused" },
+    idle: { color: "bg-white/10/60", text: "Idle" },
     caught: { color: "bg-sky-600", text: "Caught" },
-    escaped: { color: "bg-blue-600", text: "Escaped" },
+    escaped: { color: "bg-white", text: "Escaped" },
   };
 
   const config = statusConfig[status];
@@ -1030,7 +1030,7 @@ export const OrbitParticles = React.memo(function OrbitParticles({
 }) {
   if (!active || skipHeavyEffects) return null;
 
-  const colors = ["bg-sky-300", "bg-blue-300", "bg-cyan-300"];
+  const colors = ["bg-sky-300", "bg-white", "bg-white"];
 
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -1096,10 +1096,10 @@ export const AnimatedTip = React.memo(function AnimatedTip({
   );
 
   const variants = {
-    default: "bg-blue-500/15 border-blue-400/30 text-blue-200",
-    success: "bg-blue-500/15 border-blue-400/30 text-blue-200",
-    warning: "bg-blue-500/15 border-blue-400/30 text-blue-200",
-    numbered: "bg-blue-500/15 border-blue-400/30 text-blue-200",
+    default: "bg-white/15 border-white/30 text-white",
+    success: "bg-white/15 border-white/30 text-white",
+    warning: "bg-white/15 border-white/30 text-white",
+    numbered: "bg-white/15 border-white/30 text-white",
   } as const;
 
   if (!show) return null;
@@ -1131,7 +1131,7 @@ export const AnimatedTip = React.memo(function AnimatedTip({
         </motion.span>
         <span>{text}</span>
         <div
-          className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-300/10 to-transparent"
+          className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-white/10 to-transparent"
           style={{ animationDuration: "5s", animationDelay: `${delay}s` }}
         />
       </motion.div>
@@ -1162,23 +1162,23 @@ export const StepGuide = React.memo(function StepGuide({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className="relative p-3 rounded-xl bg-gradient-to-br from-blue-500/40 to-cyan-500/25 border border-blue-400/50 overflow-hidden"
+      className="relative p-3 rounded-xl bg-gradient-to-br from-white/40 to-white/25 border border-white/50 overflow-hidden"
     >
       <div
-        className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-blue-400/10 to-transparent"
+        className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-white/10 to-transparent"
         style={{ animationDuration: "5s" }}
       />
 
       <div className="relative flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <motion.div
-            className="w-6 h-6 rounded-full bg-blue-500/30 border border-blue-400/50 flex items-center justify-center text-[11px] font-bold text-blue-200"
+            className="w-6 h-6 rounded-full bg-white/30 border border-white/50 flex items-center justify-center text-[11px] font-bold text-white"
             animate={skipHeavyEffects ? {} : { scale: [1, 1.1, 1] }}
             transition={skipHeavyEffects ? {} : { duration: 1.5, repeat: Infinity }}
           >
             {step}
           </motion.div>
-          <span className="text-[10px] text-blue-300/70">of {totalSteps}</span>
+          <span className="text-[10px] text-white/70">of {totalSteps}</span>
         </div>
         <button
           onClick={onSkip}
@@ -1200,7 +1200,7 @@ export const StepGuide = React.memo(function StepGuide({
               key={i}
               className={cn(
                 "w-2 h-2 rounded-full transition-colors",
-                i + 1 === step ? "bg-blue-400" : i + 1 < step ? "bg-blue-400/50" : "bg-white/20"
+                i + 1 === step ? "bg-white" : i + 1 < step ? "bg-white/50" : "bg-white/20"
               )}
               animate={(i + 1 === step && !skipHeavyEffects) ? { scale: [1, 1.3, 1] } : {}}
               transition={skipHeavyEffects ? {} : { duration: 1, repeat: Infinity }}
@@ -1209,7 +1209,7 @@ export const StepGuide = React.memo(function StepGuide({
         </div>
         <motion.button
           onClick={onNext}
-          className="px-3 py-1.5 rounded-lg bg-blue-500/30 border border-blue-400/40 text-[10px] font-medium text-blue-200 hover:bg-blue-500/40 transition-colors"
+          className="px-3 py-1.5 rounded-lg bg-white/30 border border-white/40 text-[10px] font-medium text-white hover:bg-white/40 transition-colors"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
@@ -1260,7 +1260,7 @@ export const ActionHint = React.memo(function ActionHint({
         transition={skipHeavyEffects ? {} : { duration: 1.5, repeat: Infinity }}
         className="relative"
       >
-        <div className="px-2.5 py-1.5 rounded-lg bg-blue-500/20 border border-blue-400/30 backdrop-blur-sm text-[9px] text-blue-200 font-medium whitespace-nowrap">
+        <div className="px-2.5 py-1.5 rounded-lg bg-white/20 border border-white/30 backdrop-blur-sm text-[9px] text-white font-medium whitespace-nowrap">
           {text}
         </div>
         <div className={cn("absolute w-0 h-0 border-4", arrowClasses[position])} />
@@ -1291,12 +1291,12 @@ export const Slider = React.memo(function Slider({
         <div className="flex items-center gap-2">
           <span className="text-white/80 font-medium">{label}</span>
           {hint && (
-            <span className="text-[9px] opacity-0 group-hover:opacity-100 transition-opacity\" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.6)' }}>
+            <span className="text-[9px] opacity-0 group-hover:opacity-100 transition-opacity\" style={{ color: 'rgba(var(--accent-rgb, 255, 255, 255), 0.6)' }}>
               {hint}
             </span>
           )}
         </div>
-        <span className="tabular-nums font-medium" style={{ color: 'rgba(var(--accent-rgb, 59, 130, 246), 0.8)' }}>{pct}%</span>
+        <span className="tabular-nums font-medium" style={{ color: 'rgba(var(--accent-rgb, 255, 255, 255), 0.8)' }}>{pct}%</span>
       </div>
       <div className="relative">
         <input
@@ -1315,7 +1315,7 @@ export const Slider = React.memo(function Slider({
                      [&::-webkit-slider-thumb]:border-2
                      [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-110"
           style={{
-            background: `linear-gradient(to right, rgba(var(--accent-rgb, 59, 130, 246), 0.5) 0%, rgba(var(--accent-rgb, 59, 130, 246), 0.5) ${pct}%, rgba(255,255,255,0.1) ${pct}%, rgba(255,255,255,0.1) 100%)`,
+            background: `linear-gradient(to right, rgba(var(--accent-rgb, 255, 255, 255), 0.5) 0%, rgba(var(--accent-rgb, 255, 255, 255), 0.5) ${pct}%, rgba(255,255,255,0.1) ${pct}%, rgba(255,255,255,0.1) 100%)`,
             // Note: slider thumb colors need to be set via CSS custom properties in globals.css
           }}
         />
@@ -1341,10 +1341,10 @@ export const EnergyBar = React.memo(function EnergyBar({
   const percentage = Math.max(0, Math.min(100, (energy / maxEnergy) * 100));
   
   const getEnergyColor = () => {
-    if (percentage > 70) return "from-sky-400 to-cyan-500";
-    if (percentage > 40) return "from-blue-400 to-sky-500";
-    if (percentage > 20) return "from-blue-500 to-blue-600";
-    return "from-blue-600 to-blue-800";
+    if (percentage > 70) return "from-sky-400 to-white";
+    if (percentage > 40) return "from-white to-sky-500";
+    if (percentage > 20) return "from-white to-white";
+    return "from-white to-white";
   };
 
   const getEnergyIcon = () => {
@@ -1369,9 +1369,9 @@ export const EnergyBar = React.memo(function EnergyBar({
           </div>
           <span className={cn(
             "tabular-nums font-bold",
-            percentage > 70 ? "text-cyan-300" :
+            percentage > 70 ? "text-white" :
             percentage > 40 ? "text-sky-300" :
-            percentage > 20 ? "text-blue-300" : "text-blue-200"
+            percentage > 20 ? "text-white" : "text-white"
           )}>
             {Math.round(percentage)}%
           </span>
@@ -1435,8 +1435,8 @@ export const GameStats = React.memo(function GameStats({
             animate={{ scale: 1, opacity: 1 }}
             className="flex items-center gap-1"
           >
-            <IconFlame className="w-3 h-3 text-cyan-300" />
-            <span className="font-bold text-cyan-300">x{combo}</span>
+            <IconFlame className="w-3 h-3 text-white" />
+            <span className="font-bold text-white">x{combo}</span>
           </motion.div>
         )}
       </div>
@@ -1447,14 +1447,14 @@ export const GameStats = React.memo(function GameStats({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="p-3 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-400/20 backdrop-blur-sm"
+      className="p-3 rounded-xl bg-gradient-to-br from-white/10 to-white/10 border border-white/20 backdrop-blur-sm"
     >
       {/* Current Score with animation */}
       <div className="flex items-center justify-between mb-3">
         <div className="text-[10px] text-white/60">Current Score</div>
         <motion.div
           key={currentScore}
-          initial={{ scale: 1.2, color: "#60a5fa" }}
+          initial={{ scale: 1.2, color: "#ffffff" }}
           animate={{ scale: 1, color: isNewHighScore ? "#7dd3fc" : "#ffffff" }}
           className="text-xl font-bold tabular-nums"
         >
@@ -1469,7 +1469,7 @@ export const GameStats = React.memo(function GameStats({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="mb-3 py-2 px-3 rounded-lg bg-gradient-to-r from-sky-500/20 to-cyan-500/20 border border-sky-400/30 text-center"
+            className="mb-3 py-2 px-3 rounded-lg bg-gradient-to-r from-sky-500/20 to-white/20 border border-sky-400/30 text-center"
           >
             <motion.span
               animate={skipHeavyEffects ? {} : { scale: [1, 1.1, 1] }}
@@ -1490,14 +1490,14 @@ export const GameStats = React.memo(function GameStats({
           <div className="text-sm font-bold text-sky-300 tabular-nums">{highScore}</div>
         </div>
         <div className="p-2 rounded-lg bg-white/5 text-center">
-          <IconHandFinger className="w-4 h-4 mx-auto mb-1 text-blue-300" />
+          <IconHandFinger className="w-4 h-4 mx-auto mb-1 text-white" />
           <div className="text-[9px] text-white/50">Catches</div>
-          <div className="text-sm font-bold text-blue-300 tabular-nums">{totalCatches}</div>
+          <div className="text-sm font-bold text-white tabular-nums">{totalCatches}</div>
         </div>
         <div className="p-2 rounded-lg bg-white/5 text-center">
-          <IconFlame className="w-4 h-4 mx-auto mb-1 text-cyan-300" />
+          <IconFlame className="w-4 h-4 mx-auto mb-1 text-white" />
           <div className="text-[9px] text-white/50">Combo</div>
-          <div className="text-sm font-bold text-cyan-300 tabular-nums">x{combo}</div>
+          <div className="text-sm font-bold text-white tabular-nums">x{combo}</div>
         </div>
       </div>
 
@@ -1548,7 +1548,7 @@ export const GameHUD = React.memo(function GameHUD({
     >
       <div className={cn(
         "backdrop-blur-xl rounded-2xl border shadow-2xl overflow-hidden",
-        isFleeing ? "bg-blue-500/20 border-blue-400/40" :
+        isFleeing ? "bg-white/20 border-white/40" :
         isReturning ? "bg-sky-500/20 border-sky-400/40" :
         "bg-black/95 border-white/20"
       )}>
@@ -1558,7 +1558,7 @@ export const GameHUD = React.memo(function GameHUD({
             <motion.span
               className={cn(
                 "inline-block w-2 h-2 rounded-full",
-                isFleeing ? "bg-sky-300" : isReturning ? "bg-cyan-300" : "bg-white/40"
+                isFleeing ? "bg-sky-300" : isReturning ? "bg-white" : "bg-white/40"
               )}
               animate={((isFleeing || isReturning) && !skipHeavyEffects) ? { opacity: [0.5, 1, 0.5] } : {}}
               transition={skipHeavyEffects ? {} : { duration: 1, repeat: (isFleeing || isReturning) ? Infinity : 0 }}
@@ -1567,7 +1567,7 @@ export const GameHUD = React.memo(function GameHUD({
             <span className={cn(
               "text-[11px] font-medium",
               isFleeing ? "text-sky-200" :
-              isReturning ? "text-cyan-200" : "text-white/70"
+              isReturning ? "text-white" : "text-white/70"
             )}>
               {statusText}
             </span>
@@ -1596,7 +1596,7 @@ export const GameHUD = React.memo(function GameHUD({
               <motion.div
                 initial={{ scale: 0, rotate: -10 }}
                 animate={{ scale: 1, rotate: 0 }}
-                className="px-2 py-1 rounded-lg bg-blue-500/30 border border-blue-400/40"
+                className="px-2 py-1 rounded-lg bg-white/30 border border-white/40"
               >
                 <span className="text-[10px] font-bold text-sky-200">x{combo}</span>
               </motion.div>
@@ -1618,9 +1618,9 @@ export const GameHUD = React.memo(function GameHUD({
           <motion.div
             className={cn(
               "h-full",
-              energy > 70 ? "bg-cyan-400" :
+              energy > 70 ? "bg-white" :
               energy > 40 ? "bg-sky-400" :
-              energy > 20 ? "bg-blue-400" : "bg-blue-600"
+              energy > 20 ? "bg-white" : "bg-white"
             )}
             animate={{ width: `${energy}%` }}
             transition={{ type: "spring", stiffness: 100 }}
@@ -1652,7 +1652,7 @@ export const TouchIndicator = React.memo(function TouchIndicator({
       exit={{ scale: 0, opacity: 0 }}
     >
       <motion.div
-        className="w-[60px] h-[60px] rounded-full border-2 border-blue-400/50"
+        className="w-[60px] h-[60px] rounded-full border-2 border-white/50"
         animate={{ 
           scale: [1, 1.5, 1],
           opacity: [0.5, 0.2, 0.5],
@@ -1660,7 +1660,7 @@ export const TouchIndicator = React.memo(function TouchIndicator({
         transition={{ duration: 1, repeat: Infinity }}
       />
       <motion.div
-        className="absolute inset-0 m-auto w-3 h-3 rounded-full bg-blue-400/60"
+        className="absolute inset-0 m-auto w-3 h-3 rounded-full bg-white/60"
         animate={{ scale: [1, 1.2, 1] }}
         transition={{ duration: 0.5, repeat: Infinity }}
       />
@@ -1715,8 +1715,8 @@ export const GameOverScreen = React.memo(function GameOverScreen({
                 className={cn(
                   "absolute w-2 h-2 rounded-full",
                   i % 4 === 0 ? "bg-sky-300" :
-                  i % 4 === 1 ? "bg-blue-300" :
-                  i % 4 === 2 ? "bg-cyan-300" : "bg-sky-400"
+                  i % 4 === 1 ? "bg-white" :
+                  i % 4 === 2 ? "bg-white" : "bg-sky-400"
                 )}
                 initial={{ 
                   x: 140,
@@ -1787,7 +1787,7 @@ export const GameOverScreen = React.memo(function GameOverScreen({
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-4 py-2 px-4 rounded-xl bg-gradient-to-r from-sky-500/20 to-cyan-500/20 border border-sky-400/30 text-center"
+              className="mb-4 py-2 px-4 rounded-xl bg-gradient-to-r from-sky-500/20 to-white/20 border border-sky-400/30 text-center"
             >
               <motion.div
                 animate={skipHeavyEffects ? {} : { scale: [1, 1.05, 1] }}
@@ -1813,7 +1813,7 @@ export const GameOverScreen = React.memo(function GameOverScreen({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={onPlayAgain}
-            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold text-sm hover:from-blue-400 hover:to-cyan-400 transition-all"
+            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-white to-white text-white font-bold text-sm hover:from-white hover:to-white transition-all"
           >
             Play Again
           </motion.button>

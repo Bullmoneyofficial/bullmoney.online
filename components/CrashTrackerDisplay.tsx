@@ -66,9 +66,9 @@ const StatusBadge = memo(function StatusBadge({
 }) {
   const configs = {
     idle: { 
-      color: 'text-blue-400', 
-      bg: 'bg-blue-500/20', 
-      border: 'border-blue-500/40',
+      color: 'text-white', 
+      bg: 'bg-white/20', 
+      border: 'border-white/40',
       icon: Database,
       label: 'Ready'
     },
@@ -80,9 +80,9 @@ const StatusBadge = memo(function StatusBadge({
       label: 'Syncing...'
     },
     success: { 
-      color: 'text-green-400', 
-      bg: 'bg-green-500/20', 
-      border: 'border-green-500/40',
+      color: 'text-white', 
+      bg: 'bg-white/20', 
+      border: 'border-white/40',
       icon: CheckCircle2,
       label: 'Synced'
     },
@@ -129,7 +129,7 @@ const StatMini = memo(function StatMini({
   icon: Icon,
   label,
   value,
-  color = '#3b82f6',
+  color = '#ffffff',
   pulse = false
 }: {
   icon: any;
@@ -139,7 +139,7 @@ const StatMini = memo(function StatMini({
   pulse?: boolean;
 }) {
   return (
-    <div className="p-2.5 rounded-lg bg-black/30 border border-blue-500/20 flex items-center gap-2">
+    <div className="p-2.5 rounded-lg bg-black/30 border border-white/20 flex items-center gap-2">
       <div 
         className={`p-1.5 rounded-md ${pulse ? 'animate-pulse' : ''}`}
         style={{ backgroundColor: `${color}20` }}
@@ -147,7 +147,7 @@ const StatMini = memo(function StatMini({
         <Icon size={14} style={{ color }} />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-[10px] text-blue-200/60 uppercase tracking-wider">{label}</div>
+        <div className="text-[10px] text-white/60 uppercase tracking-wider">{label}</div>
         <div className="text-sm font-bold text-white truncate">{value}</div>
       </div>
     </div>
@@ -178,8 +178,8 @@ const RecentEvent = memo(function RecentEvent({
     switch (type) {
       case 'error': case 'crash': return '#ef4444';
       case 'performance_warning': return '#f59e0b';
-      case 'click': return '#3b82f6';
-      default: return '#8b5cf6';
+      case 'click': return '#ffffff';
+      default: return '#ffffff';
     }
   };
 
@@ -192,7 +192,7 @@ const RecentEvent = memo(function RecentEvent({
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="flex items-center gap-2 p-2 rounded-lg bg-slate-900/50 border border-blue-500/10"
+      className="flex items-center gap-2 p-2 rounded-lg bg-slate-900/50 border border-white/10"
     >
       <div 
         className="p-1 rounded"
@@ -204,7 +204,7 @@ const RecentEvent = memo(function RecentEvent({
         <div className="text-xs text-white/80 truncate">
           {event.component}: {event.action || event.type}
         </div>
-        <div className="text-[10px] text-blue-200/50">
+        <div className="text-[10px] text-white/50">
           {event.target ? `→ ${event.target}` : ''} • {timeAgo}s ago
         </div>
       </div>
@@ -360,12 +360,12 @@ export const CrashTrackerDisplay = memo(function CrashTrackerDisplay({
               <div className="text-sm font-bold text-white flex items-center gap-2">
                 Crash Tracker
                 {tracker.isEnabled ? (
-                  <ShieldCheck size={14} className="text-green-400" />
+                  <ShieldCheck size={14} className="text-white" />
                 ) : (
                   <ShieldAlert size={14} className="text-red-400" />
                 )}
               </div>
-              <div className="text-[10px] text-blue-200/60">
+              <div className="text-[10px] text-white/60">
                 Real-time error monitoring
               </div>
             </div>
@@ -380,7 +380,7 @@ export const CrashTrackerDisplay = memo(function CrashTrackerDisplay({
             icon={Activity}
             label="Events"
             value={stats.totalEvents}
-            color="#3b82f6"
+            color="#ffffff"
           />
           <StatMini
             icon={Bug}
@@ -393,13 +393,13 @@ export const CrashTrackerDisplay = memo(function CrashTrackerDisplay({
             icon={Database}
             label="Queue"
             value={stats.queueSize}
-            color="#8b5cf6"
+            color="#ffffff"
           />
         </div>
 
         {/* Sync Info Bar */}
-        <div className="flex items-center justify-between p-2 rounded-lg bg-black/30 border border-blue-500/20 mb-3">
-          <div className="flex items-center gap-2 text-xs text-blue-200/70">
+        <div className="flex items-center justify-between p-2 rounded-lg bg-black/30 border border-white/20 mb-3">
+          <div className="flex items-center gap-2 text-xs text-white/70">
             <Clock size={12} />
             <span>
               {lastSyncTime 
@@ -429,8 +429,8 @@ export const CrashTrackerDisplay = memo(function CrashTrackerDisplay({
             onMouseEnter={() => SoundEffects.hover()}
             className={`flex-1 px-3 py-2.5 rounded-lg font-semibold text-xs flex items-center justify-center gap-2 transition-all ${
               syncStatus === 'sending' || stats.queueSize === 0
-                ? 'bg-blue-500/10 text-blue-200/40 cursor-not-allowed border border-blue-500/20'
-                : 'bg-blue-500/20 text-blue-100 hover:bg-blue-500/30 border border-blue-500/40 hover:border-blue-400/60'
+                ? 'bg-white/10 text-white/40 cursor-not-allowed border border-white/20'
+                : 'bg-white/20 text-white hover:bg-white/30 border border-white/40 hover:border-white/60'
             }`}
           >
             {syncStatus === 'sending' ? (
@@ -453,7 +453,7 @@ export const CrashTrackerDisplay = memo(function CrashTrackerDisplay({
             onMouseEnter={() => SoundEffects.hover()}
             className={`px-3 py-2.5 rounded-lg font-semibold text-xs flex items-center justify-center gap-2 transition-all border ${
               tracker.isEnabled
-                ? 'bg-green-500/20 text-green-300 border-green-500/40 hover:bg-green-500/30'
+                ? 'bg-white/20 text-white border-white/40 hover:bg-white/30'
                 : 'bg-red-500/20 text-red-300 border-red-500/40 hover:bg-red-500/30'
             }`}
           >
@@ -475,7 +475,7 @@ export const CrashTrackerDisplay = memo(function CrashTrackerDisplay({
                 setIsExpanded(!isExpanded);
               }}
               onMouseEnter={() => SoundEffects.hover()}
-              className="w-full px-3 py-2 rounded-lg bg-black/20 border border-blue-500/20 flex items-center justify-center gap-2 text-xs text-blue-200/70 hover:text-blue-100 hover:border-blue-400/40 transition-all"
+              className="w-full px-3 py-2 rounded-lg bg-black/20 border border-white/20 flex items-center justify-center gap-2 text-xs text-white/70 hover:text-white hover:border-white/40 transition-all"
             >
               {isExpanded ? (
                 <>
@@ -501,7 +501,7 @@ export const CrashTrackerDisplay = memo(function CrashTrackerDisplay({
                 >
                   <div className="pt-3 space-y-2">
                     {/* Session Info */}
-                    <div className="text-[10px] text-blue-200/50 px-1">
+                    <div className="text-[10px] text-white/50 px-1">
                       Session: {tracker.sessionId?.slice(0, 20)}...
                     </div>
 
@@ -513,7 +513,7 @@ export const CrashTrackerDisplay = memo(function CrashTrackerDisplay({
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center py-4 text-blue-200/50 text-xs">
+                      <div className="text-center py-4 text-white/50 text-xs">
                         No events in queue
                       </div>
                     )}
@@ -533,10 +533,10 @@ export const CrashTrackerDisplay = memo(function CrashTrackerDisplay({
                     )}
 
                     {/* Sync Stats */}
-                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-blue-500/10">
-                      <div className="text-center p-2 rounded bg-green-500/10 border border-green-500/20">
-                        <div className="text-lg font-bold text-green-400">{stats.successfulSyncs}</div>
-                        <div className="text-[10px] text-green-300/70">Successful Syncs</div>
+                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10">
+                      <div className="text-center p-2 rounded bg-white/10 border border-white/20">
+                        <div className="text-lg font-bold text-white">{stats.successfulSyncs}</div>
+                        <div className="text-[10px] text-white/70">Successful Syncs</div>
                       </div>
                       <div className="text-center p-2 rounded bg-red-500/10 border border-red-500/20">
                         <div className="text-lg font-bold text-red-400">{stats.failedSyncs}</div>

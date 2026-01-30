@@ -272,26 +272,26 @@ const NotificationSetupGuide = memo(({ deviceInfo, onClose }: { deviceInfo: Devi
       className="rounded-xl overflow-hidden"
       style={{
         background: 'linear-gradient(180deg, rgba(0, 0, 0, 0.95) 0%, rgba(7, 11, 20, 0.98) 100%)',
-        border: '1px solid rgba(59, 130, 246, 0.4)',
-        boxShadow: '0 0 20px rgba(59, 130, 246, 0.2), inset 0 0 30px rgba(0, 0, 0, 0.5)',
+        border: '1px solid rgba(255, 255, 255, 0.4)',
+        boxShadow: '0 0 20px rgba(255, 255, 255, 0.2), inset 0 0 30px rgba(0, 0, 0, 0.5)',
       }}
     >
       {/* Header - Neon Blue */}
       <div 
         className="px-3 py-2 flex items-center justify-between"
         style={{
-          background: 'linear-gradient(90deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.1) 100%)',
-          borderBottom: '1px solid rgba(59, 130, 246, 0.3)',
+          background: 'linear-gradient(90deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.1) 100%)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.3)',
         }}
       >
         <div className="flex items-center gap-2">
           <Bell 
-            className="w-4 h-4 text-blue-400" 
-            style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }}
+            className="w-4 h-4 text-white" 
+            style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }}
           />
           <span 
             className="text-[10px] font-black uppercase tracking-wider"
-            style={{ color: '#60a5fa', textShadow: '0 0 8px rgba(59, 130, 246, 0.5)' }}
+            style={{ color: '#ffffff', textShadow: '0 0 8px rgba(255, 255, 255, 0.5)' }}
           >
             {getDeviceTitle()}
           </span>
@@ -299,7 +299,7 @@ const NotificationSetupGuide = memo(({ deviceInfo, onClose }: { deviceInfo: Devi
         {steps.length > 1 && (
           <span 
             className="text-[9px] font-bold"
-            style={{ color: 'rgba(96, 165, 250, 0.7)' }}
+            style={{ color: 'rgba(255, 255, 255, 0.7)' }}
           >
             {currentStep + 1} / {steps.length}
           </span>
@@ -314,19 +314,19 @@ const NotificationSetupGuide = memo(({ deviceInfo, onClose }: { deviceInfo: Devi
             <div 
               className="w-16 h-16 rounded-2xl flex items-center justify-center"
               style={{
-                background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.1) 100%)',
-                border: '2px solid rgba(59, 130, 246, 0.4)',
-                boxShadow: '0 0 20px rgba(59, 130, 246, 0.2), inset 0 0 15px rgba(59, 130, 246, 0.1)',
+                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%)',
+                border: '2px solid rgba(255, 255, 255, 0.4)',
+                boxShadow: '0 0 20px rgba(255, 255, 255, 0.2), inset 0 0 15px rgba(255, 255, 255, 0.1)',
               }}
             >
               {step.visual === 'share' && (
-                <Share className="w-8 h-8 text-blue-400" style={{ filter: 'drop-shadow(0 0 6px #3b82f6)' }} />
+                <Share className="w-8 h-8 text-white" style={{ filter: 'drop-shadow(0 0 6px #ffffff)' }} />
               )}
               {step.visual === 'plus' && (
-                <Plus className="w-8 h-8 text-blue-400" style={{ filter: 'drop-shadow(0 0 6px #3b82f6)' }} />
+                <Plus className="w-8 h-8 text-white" style={{ filter: 'drop-shadow(0 0 6px #ffffff)' }} />
               )}
               {step.visual === 'check' && (
-                <Check className="w-8 h-8 text-blue-400" style={{ filter: 'drop-shadow(0 0 6px #3b82f6)' }} />
+                <Check className="w-8 h-8 text-white" style={{ filter: 'drop-shadow(0 0 6px #ffffff)' }} />
               )}
             </div>
           </div>
@@ -336,12 +336,12 @@ const NotificationSetupGuide = memo(({ deviceInfo, onClose }: { deviceInfo: Devi
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 mb-1">
             <StepIcon 
-              className="w-4 h-4 text-blue-400" 
-              style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }}
+              className="w-4 h-4 text-white" 
+              style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }}
             />
             <h3 
               className="text-sm font-bold"
-              style={{ color: '#93c5fd', textShadow: '0 0 8px rgba(59, 130, 246, 0.4)' }}
+              style={{ color: '#ffffff', textShadow: '0 0 8px rgba(255, 255, 255, 0.4)' }}
             >
               {step.title}
             </h3>
@@ -359,20 +359,20 @@ const NotificationSetupGuide = memo(({ deviceInfo, onClose }: { deviceInfo: Devi
           <div 
             className="rounded-lg p-2 space-y-1.5"
             style={{
-              background: 'rgba(59, 130, 246, 0.08)',
-              border: '1px solid rgba(59, 130, 246, 0.2)',
-              boxShadow: 'inset 0 0 10px rgba(59, 130, 246, 0.05)',
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              boxShadow: 'inset 0 0 10px rgba(255, 255, 255, 0.05)',
             }}
           >
             {step.tips.map((tip, i) => (
               <div key={i} className="flex items-start gap-1.5">
                 <ArrowRight 
-                  className="w-3 h-3 text-blue-400/70 mt-0.5 flex-shrink-0" 
-                  style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }}
+                  className="w-3 h-3 text-white/70 mt-0.5 flex-shrink-0" 
+                  style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }}
                 />
                 <span 
                   className="text-[9px]"
-                  style={{ color: 'rgba(147, 197, 253, 0.85)' }}
+                  style={{ color: 'rgba(255, 255, 255, 0.85)' }}
                 >
                   {tip}
                 </span>
@@ -387,10 +387,10 @@ const NotificationSetupGuide = memo(({ deviceInfo, onClose }: { deviceInfo: Devi
             onClick={step.action.onClick}
             className="w-full py-2.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all active:scale-95"
             style={{
-              background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+              background: 'linear-gradient(135deg, #ffffff 0%, #ffffff 100%)',
               color: '#fff',
-              boxShadow: '0 0 15px rgba(59, 130, 246, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
-              border: '1px solid rgba(96, 165, 250, 0.5)',
+              boxShadow: '0 0 15px rgba(255, 255, 255, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+              border: '1px solid rgba(255, 255, 255, 0.5)',
               textShadow: '0 0 4px rgba(255, 255, 255, 0.5)',
             }}
           >
@@ -403,7 +403,7 @@ const NotificationSetupGuide = memo(({ deviceInfo, onClose }: { deviceInfo: Devi
           <button
             onClick={() => setCurrentStep(currentStep - 1)}
             className="w-full py-1.5 text-[10px] transition-colors"
-            style={{ color: 'rgba(96, 165, 250, 0.7)' }}
+            style={{ color: 'rgba(255, 255, 255, 0.7)' }}
           >
             ← Go Back
           </button>
@@ -527,34 +527,34 @@ On mobile Safari: Go to Settings > Notifications > Safari`;
         className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition-all active:scale-[0.98]"
         onClick={() => setShowSetupGuide(true)}
         style={{
-          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.1) 100%)',
-          border: '1px solid rgba(59, 130, 246, 0.4)',
-          boxShadow: '0 0 12px rgba(59, 130, 246, 0.2)',
+          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.1) 100%)',
+          border: '1px solid rgba(255, 255, 255, 0.4)',
+          boxShadow: '0 0 12px rgba(255, 255, 255, 0.2)',
         }}
       >
         <div 
           className="p-1.5 rounded-lg"
           style={{
-            background: 'rgba(59, 130, 246, 0.2)',
-            border: '1px solid rgba(59, 130, 246, 0.4)',
-            boxShadow: '0 0 8px rgba(59, 130, 246, 0.2)',
+            background: 'rgba(255, 255, 255, 0.2)',
+            border: '1px solid rgba(255, 255, 255, 0.4)',
+            boxShadow: '0 0 8px rgba(255, 255, 255, 0.2)',
           }}
         >
           <Bell 
-            className="w-4 h-4 text-blue-400" 
-            style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }}
+            className="w-4 h-4 text-white" 
+            style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }}
           />
         </div>
         <div className="flex-1 min-w-0">
           <div 
             className="text-[10px] font-bold uppercase tracking-wide"
-            style={{ color: '#60a5fa', textShadow: '0 0 4px rgba(59, 130, 246, 0.5)' }}
+            style={{ color: '#ffffff', textShadow: '0 0 4px rgba(255, 255, 255, 0.5)' }}
           >
             {deviceInfo.isInAppBrowser ? 'Open in Browser' : deviceInfo.isIOS ? 'Setup Required' : 'Enable Notifications'}
           </div>
           <div 
             className="text-[8px]"
-            style={{ color: 'rgba(96, 165, 250, 0.7)' }}
+            style={{ color: 'rgba(255, 255, 255, 0.7)' }}
           >
             {deviceInfo.isInAppBrowser 
               ? `Tap to open in a real browser`
@@ -565,8 +565,8 @@ On mobile Safari: Go to Settings > Notifications > Safari`;
           </div>
         </div>
         <ArrowRight 
-          className="w-4 h-4 text-blue-400/70" 
-          style={{ filter: 'drop-shadow(0 0 2px #3b82f6)' }}
+          className="w-4 h-4 text-white/70" 
+          style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }}
         />
       </div>
     );
@@ -611,20 +611,20 @@ Protocol: ${typeof window !== 'undefined' ? window.location.protocol : 'N/A'}`;
         disabled={showLoading}
         className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-wide transition-all cursor-pointer ${
           isSubscribed
-            ? 'bg-blue-500/20 text-blue-300 border border-blue-400/60'
+            ? 'bg-white/20 text-white border border-white/60'
             : isPermissionDenied
             ? 'bg-red-500/20 text-red-400 border border-red-500/30 cursor-not-allowed'
-            : 'bg-black/40 text-blue-400 border border-blue-500/30 hover:bg-blue-500/15 hover:border-blue-400/50'
+            : 'bg-black/40 text-white border border-white/30 hover:bg-white/15 hover:border-white/50'
         }`}
         style={{
-          boxShadow: isSubscribed ? '0 0 8px rgba(59, 130, 246, 0.4), inset 0 0 8px rgba(59, 130, 246, 0.1)' : 'none',
-          textShadow: isSubscribed ? '0 0 4px #3b82f6' : 'none'
+          boxShadow: isSubscribed ? '0 0 8px rgba(255, 255, 255, 0.4), inset 0 0 8px rgba(255, 255, 255, 0.1)' : 'none',
+          textShadow: isSubscribed ? '0 0 4px #ffffff' : 'none'
         }}
       >
         {showLoading ? (
           <Loader2 className="w-3.5 h-3.5 animate-spin" />
         ) : isSubscribed ? (
-          <BellRing className="w-3.5 h-3.5" style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }} />
+          <BellRing className="w-3.5 h-3.5" style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }} />
         ) : isPermissionDenied ? (
           <AlertCircle className="w-3.5 h-3.5" />
         ) : (
@@ -641,10 +641,10 @@ Protocol: ${typeof window !== 'undefined' ? window.location.protocol : 'N/A'}`;
       <div 
         className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-black/60 border transition-all"
         style={{
-          borderColor: isSubscribed ? 'rgba(59, 130, 246, 0.5)' : 'rgba(59, 130, 246, 0.2)',
+          borderColor: isSubscribed ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.2)',
           boxShadow: isSubscribed 
-            ? '0 0 12px rgba(59, 130, 246, 0.3), inset 0 0 12px rgba(59, 130, 246, 0.05)' 
-            : '0 0 4px rgba(59, 130, 246, 0.1)'
+            ? '0 0 12px rgba(255, 255, 255, 0.3), inset 0 0 12px rgba(255, 255, 255, 0.05)' 
+            : '0 0 4px rgba(255, 255, 255, 0.1)'
         }}
       >
         <div className="flex items-center gap-2.5">
@@ -652,20 +652,20 @@ Protocol: ${typeof window !== 'undefined' ? window.location.protocol : 'N/A'}`;
           <div 
             className={`p-2 rounded-lg transition-all ${
               isSubscribed 
-                ? 'bg-blue-500/20 border border-blue-400/40' 
-                : 'bg-black/40 border border-blue-500/20'
+                ? 'bg-white/20 border border-white/40' 
+                : 'bg-black/40 border border-white/20'
             }`}
             style={{
-              boxShadow: isSubscribed ? '0 0 8px rgba(59, 130, 246, 0.4), inset 0 0 8px rgba(59, 130, 246, 0.1)' : 'none'
+              boxShadow: isSubscribed ? '0 0 8px rgba(255, 255, 255, 0.4), inset 0 0 8px rgba(255, 255, 255, 0.1)' : 'none'
             }}
           >
             {isSubscribed ? (
               <BellRing 
-                className="w-4 h-4 text-blue-400" 
-                style={{ filter: 'drop-shadow(0 0 4px #3b82f6) drop-shadow(0 0 8px #3b82f6)' }}
+                className="w-4 h-4 text-white" 
+                style={{ filter: 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff)' }}
               />
             ) : (
-              <Bell className="w-4 h-4 text-blue-400/60" />
+              <Bell className="w-4 h-4 text-white/60" />
             )}
           </div>
           
@@ -675,25 +675,25 @@ Protocol: ${typeof window !== 'undefined' ? window.location.protocol : 'N/A'}`;
               <span 
                 className="text-[11px] font-bold uppercase tracking-wide"
                 style={{ 
-                  color: isSubscribed ? '#93c5fd' : '#60a5fa',
-                  textShadow: isSubscribed ? '0 0 4px #3b82f6, 0 0 8px #3b82f6' : 'none'
+                  color: isSubscribed ? '#ffffff' : '#ffffff',
+                  textShadow: isSubscribed ? '0 0 4px #ffffff, 0 0 8px #ffffff' : 'none'
                 }}
               >
                 Push Notifications
               </span>
               {isSubscribed && (
                 <span 
-                  className="px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-wider bg-blue-500/30 text-blue-300 border border-blue-400/50"
+                  className="px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-wider bg-white/30 text-white border border-white/50"
                   style={{ 
-                    boxShadow: '0 0 6px rgba(59, 130, 246, 0.5)',
-                    textShadow: '0 0 4px #3b82f6'
+                    boxShadow: '0 0 6px rgba(255, 255, 255, 0.5)',
+                    textShadow: '0 0 4px #ffffff'
                   }}
                 >
                   ACTIVE
                 </span>
               )}
             </div>
-            <div className="text-[9px] text-blue-300/50 font-medium mt-0.5">
+            <div className="text-[9px] text-white/50 font-medium mt-0.5">
               {isPermissionDenied 
                 ? 'Blocked in browser settings' 
                 : isSubscribed 
@@ -709,8 +709,8 @@ Protocol: ${typeof window !== 'undefined' ? window.location.protocol : 'N/A'}`;
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}
-              className="p-1.5 rounded-lg bg-black/40 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-400/50 text-blue-400 transition-all"
-              style={{ boxShadow: '0 0 4px rgba(59, 130, 246, 0.2)' }}
+              className="p-1.5 rounded-lg bg-black/40 hover:bg-white/20 border border-white/30 hover:border-white/50 text-white transition-all"
+              style={{ boxShadow: '0 0 4px rgba(255, 255, 255, 0.2)' }}
             >
               {isExpanded ? (
                 <ChevronUp className="w-3.5 h-3.5" />
@@ -730,16 +730,16 @@ Protocol: ${typeof window !== 'undefined' ? window.location.protocol : 'N/A'}`;
             }`}
             style={{
               background: isSubscribed 
-                ? 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' 
+                ? 'linear-gradient(135deg, #ffffff 0%, #ffffff 100%)' 
                 : isPermissionDenied 
                 ? 'rgba(239, 68, 68, 0.3)' 
                 : 'rgba(39, 39, 42, 0.8)',
               border: isSubscribed 
-                ? '2px solid #60a5fa' 
-                : '2px solid rgba(59, 130, 246, 0.3)',
+                ? '2px solid #ffffff' 
+                : '2px solid rgba(255, 255, 255, 0.3)',
               boxShadow: isSubscribed 
-                ? '0 0 12px rgba(59, 130, 246, 0.6), 0 0 24px rgba(59, 130, 246, 0.3), inset 0 0 8px rgba(59, 130, 246, 0.3)' 
-                : '0 0 4px rgba(59, 130, 246, 0.1)',
+                ? '0 0 12px rgba(255, 255, 255, 0.6), 0 0 24px rgba(255, 255, 255, 0.3), inset 0 0 8px rgba(255, 255, 255, 0.3)' 
+                : '0 0 4px rgba(255, 255, 255, 0.1)',
               WebkitTapHighlightColor: 'transparent'
             }}
           >
@@ -757,7 +757,7 @@ Protocol: ${typeof window !== 'undefined' ? window.location.protocol : 'N/A'}`;
               }}
             >
               {showLoading && (
-                <Loader2 className="w-3 h-3 animate-spin text-blue-600" />
+                <Loader2 className="w-3 h-3 animate-spin text-white" />
               )}
             </div>
           </button>
@@ -775,13 +775,13 @@ Protocol: ${typeof window !== 'undefined' ? window.location.protocol : 'N/A'}`;
             className="overflow-hidden"
           >
             <div 
-              className="p-2.5 rounded-xl bg-black/40 border border-blue-500/20 space-y-2.5"
-              style={{ boxShadow: 'inset 0 0 12px rgba(59, 130, 246, 0.05)' }}
+              className="p-2.5 rounded-xl bg-black/40 border border-white/20 space-y-2.5"
+              style={{ boxShadow: 'inset 0 0 12px rgba(255, 255, 255, 0.05)' }}
             >
               {/* Channel Toggles Header */}
               <div 
                 className="text-[9px] font-black uppercase tracking-widest px-1"
-                style={{ color: '#60a5fa', textShadow: '0 0 4px rgba(59, 130, 246, 0.5)' }}
+                style={{ color: '#ffffff', textShadow: '0 0 4px rgba(255, 255, 255, 0.5)' }}
               >
                 Notification Channels
               </div>
@@ -794,9 +794,9 @@ Protocol: ${typeof window !== 'undefined' ? window.location.protocol : 'N/A'}`;
                   const isEnabled = settings.channels[channelKey];
                   
                   const colorStyles = {
-                    cyan: { bg: 'rgba(6, 182, 212, 0.2)', border: 'rgba(6, 182, 212, 0.4)', text: '#22d3ee', shadow: '0 0 8px rgba(6, 182, 212, 0.4)' },
-                    blue: { bg: 'rgba(59, 130, 246, 0.2)', border: 'rgba(59, 130, 246, 0.4)', text: '#60a5fa', shadow: '0 0 8px rgba(59, 130, 246, 0.4)' },
-                    emerald: { bg: 'rgba(16, 185, 129, 0.2)', border: 'rgba(16, 185, 129, 0.4)', text: '#34d399', shadow: '0 0 8px rgba(16, 185, 129, 0.4)' },
+                    cyan: { bg: 'rgba(255, 255, 255, 0.2)', border: 'rgba(255, 255, 255, 0.4)', text: '#ffffff', shadow: '0 0 8px rgba(255, 255, 255, 0.4)' },
+                    blue: { bg: 'rgba(255, 255, 255, 0.2)', border: 'rgba(255, 255, 255, 0.4)', text: '#ffffff', shadow: '0 0 8px rgba(255, 255, 255, 0.4)' },
+                    emerald: { bg: 'rgba(255, 255, 255, 0.2)', border: 'rgba(255, 255, 255, 0.4)', text: '#ffffff', shadow: '0 0 8px rgba(255, 255, 255, 0.4)' },
                     amber: { bg: 'rgba(245, 158, 11, 0.2)', border: 'rgba(245, 158, 11, 0.4)', text: '#fbbf24', shadow: '0 0 8px rgba(245, 158, 11, 0.4)' },
                   };
                   
@@ -810,7 +810,7 @@ Protocol: ${typeof window !== 'undefined' ? window.location.protocol : 'N/A'}`;
                       className="flex items-center gap-1.5 p-2 rounded-lg text-left transition-all"
                       style={{
                         background: isEnabled ? colors.bg : 'rgba(0, 0, 0, 0.4)',
-                        border: `1px solid ${isEnabled ? colors.border : 'rgba(59, 130, 246, 0.15)'}`,
+                        border: `1px solid ${isEnabled ? colors.border : 'rgba(255, 255, 255, 0.15)'}`,
                         boxShadow: isEnabled ? colors.shadow : 'none'
                       }}
                     >
@@ -855,14 +855,14 @@ Protocol: ${typeof window !== 'undefined' ? window.location.protocol : 'N/A'}`;
                 className="flex items-center justify-between p-2 rounded-lg"
                 style={{
                   background: 'rgba(0, 0, 0, 0.4)',
-                  border: '1px solid rgba(59, 130, 246, 0.15)'
+                  border: '1px solid rgba(255, 255, 255, 0.15)'
                 }}
               >
                 <div className="flex items-center gap-2">
                   {settings.sound ? (
                     <Volume2 
-                      className="w-3.5 h-3.5 text-blue-400" 
-                      style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }}
+                      className="w-3.5 h-3.5 text-white" 
+                      style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }}
                     />
                   ) : (
                     <VolumeX className="w-3.5 h-3.5 text-zinc-500" />
@@ -870,8 +870,8 @@ Protocol: ${typeof window !== 'undefined' ? window.location.protocol : 'N/A'}`;
                   <span 
                     className="text-[10px] font-bold uppercase tracking-wide"
                     style={{ 
-                      color: settings.sound ? '#93c5fd' : '#a1a1aa',
-                      textShadow: settings.sound ? '0 0 4px rgba(59, 130, 246, 0.5)' : 'none'
+                      color: settings.sound ? '#ffffff' : '#a1a1aa',
+                      textShadow: settings.sound ? '0 0 4px rgba(255, 255, 255, 0.5)' : 'none'
                     }}
                   >
                     Sound
@@ -883,10 +883,10 @@ Protocol: ${typeof window !== 'undefined' ? window.location.protocol : 'N/A'}`;
                   className="relative w-9 h-5 rounded-full transition-all"
                   style={{
                     background: settings.sound 
-                      ? 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' 
+                      ? 'linear-gradient(135deg, #ffffff 0%, #ffffff 100%)' 
                       : 'rgba(63, 63, 70, 0.8)',
-                    border: settings.sound ? '1px solid #60a5fa' : '1px solid rgba(59, 130, 246, 0.2)',
-                    boxShadow: settings.sound ? '0 0 8px rgba(59, 130, 246, 0.5)' : 'none'
+                    border: settings.sound ? '1px solid #ffffff' : '1px solid rgba(255, 255, 255, 0.2)',
+                    boxShadow: settings.sound ? '0 0 8px rgba(255, 255, 255, 0.5)' : 'none'
                   }}
                 >
                   <div
@@ -903,18 +903,18 @@ Protocol: ${typeof window !== 'undefined' ? window.location.protocol : 'N/A'}`;
               <div 
                 className="flex items-start gap-2 p-2 rounded-lg"
                 style={{
-                  background: 'rgba(59, 130, 246, 0.1)',
-                  border: '1px solid rgba(59, 130, 246, 0.25)',
-                  boxShadow: 'inset 0 0 12px rgba(59, 130, 246, 0.05)'
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
+                  boxShadow: 'inset 0 0 12px rgba(255, 255, 255, 0.05)'
                 }}
               >
                 <Zap 
-                  className="w-3.5 h-3.5 text-blue-400 mt-0.5 flex-shrink-0" 
-                  style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }}
+                  className="w-3.5 h-3.5 text-white mt-0.5 flex-shrink-0" 
+                  style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }}
                 />
                 <p 
                   className="text-[8px] leading-relaxed font-medium"
-                  style={{ color: 'rgba(147, 197, 253, 0.9)' }}
+                  style={{ color: 'rgba(255, 255, 255, 0.9)' }}
                 >
                   {deviceInfo.isIOS && deviceInfo.isPWA
                     ? "🎉 You're all set! Notifications will appear even when the app is closed."
@@ -952,20 +952,20 @@ export const NotificationBadge = memo(({ onClick }: { onClick?: () => void }) =>
       disabled={isLoading}
       className="relative p-1.5 rounded-lg transition-all"
       style={{
-        background: isSubscribed ? 'rgba(59, 130, 246, 0.2)' : 'rgba(39, 39, 42, 0.6)',
-        border: isSubscribed ? '1px solid rgba(96, 165, 250, 0.5)' : '1px solid rgba(59, 130, 246, 0.2)',
-        boxShadow: isSubscribed ? '0 0 8px rgba(59, 130, 246, 0.4)' : 'none'
+        background: isSubscribed ? 'rgba(255, 255, 255, 0.2)' : 'rgba(39, 39, 42, 0.6)',
+        border: isSubscribed ? '1px solid rgba(255, 255, 255, 0.5)' : '1px solid rgba(255, 255, 255, 0.2)',
+        boxShadow: isSubscribed ? '0 0 8px rgba(255, 255, 255, 0.4)' : 'none'
       }}
     >
       {isLoading ? (
-        <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-400" />
+        <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
       ) : isSubscribed ? (
         <BellRing 
-          className="w-3.5 h-3.5 text-blue-400" 
-          style={{ filter: 'drop-shadow(0 0 4px #3b82f6)' }}
+          className="w-3.5 h-3.5 text-white" 
+          style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }}
         />
       ) : (
-        <Bell className="w-3.5 h-3.5 text-blue-400/60" />
+        <Bell className="w-3.5 h-3.5 text-white/60" />
       )}
       
       {/* Active indicator with pulse */}
@@ -973,13 +973,13 @@ export const NotificationBadge = memo(({ onClick }: { onClick?: () => void }) =>
         <div 
           className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
           style={{
-            background: '#3b82f6',
-            boxShadow: '0 0 6px #3b82f6, 0 0 12px #3b82f6'
+            background: '#ffffff',
+            boxShadow: '0 0 6px #ffffff, 0 0 12px #ffffff'
           }}
         >
           <div 
             className="absolute inset-0 rounded-full animate-ping"
-            style={{ background: '#3b82f6', opacity: 0.75 }}
+            style={{ background: '#ffffff', opacity: 0.75 }}
           />
         </div>
       )}
