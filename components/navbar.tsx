@@ -159,9 +159,9 @@ const MobileMenuControls = memo(({
         whileTap={{ scale: 0.95 }}
         className={cn(
           "rounded-full transition-colors flex items-center justify-center gap-1",
-          isScrollMinimized 
-            ? "p-1 min-w-[32px] min-h-[32px]" 
-            : "p-1 xs:p-1.5 sm:p-2 min-w-[40px] xs:min-w-[44px] sm:min-w-[48px] min-h-[40px] xs:min-h-[44px] sm:min-h-[48px]"
+          isScrollMinimized
+            ? "p-1 min-w-[44px] min-h-[44px]"
+            : "p-1 xs:p-1.5 sm:p-2 min-w-[44px] xs:min-w-[44px] sm:min-w-[48px] min-h-[44px] xs:min-h-[44px] sm:min-h-[48px]"
         )}
         style={{ color: 'var(--accent-color, #ffffff)' }}
         title="Theme Selector"
@@ -185,9 +185,9 @@ const MobileMenuControls = memo(({
         whileTap={{ scale: 0.95 }}
         className={cn(
           "rounded-full transition-colors flex items-center justify-center gap-1",
-          isScrollMinimized 
-            ? "p-1 min-w-[32px] min-h-[32px]" 
-            : "p-1 xs:p-1.5 sm:p-2 min-w-[40px] xs:min-w-[44px] sm:min-w-[48px] min-h-[40px] xs:min-h-[44px] sm:min-h-[48px]"
+          isScrollMinimized
+            ? "p-1 min-w-[44px] min-h-[44px]"
+            : "p-1 xs:p-1.5 sm:p-2 min-w-[44px] xs:min-w-[44px] sm:min-w-[48px] min-h-[44px] xs:min-h-[44px] sm:min-h-[48px]"
         )}
         style={{ color: 'var(--accent-color, #ffffff)' }}
         title={open ? 'Close menu' : 'Open menu'}

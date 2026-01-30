@@ -46,7 +46,7 @@ const MinimizedIcon = memo(({
   const content = (
     <div
       className={cn(
-        "minimized-icon relative flex items-center justify-center cursor-pointer w-10 h-10 rounded-xl",
+        "minimized-icon relative flex items-center justify-center cursor-pointer w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl",
         item.isXMHighlight && "minimized-icon--xm"
       )}
       onMouseEnter={() => { setLocalHover(true); SoundEffects.hover(); }}
@@ -127,7 +127,7 @@ export const MinimizedDock = memo(({
         ))}
         
         {items.length > 6 && (
-          <div className="minimized-icon flex items-center justify-center w-10 h-10 rounded-xl">
+          <div className="minimized-icon flex items-center justify-center w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl">
             <IconDots className="w-4 h-4 text-white" style={{ filter: 'drop-shadow(0 0 3px rgba(255, 255, 255, 0.6))' }} />
           </div>
         )}
@@ -140,7 +140,7 @@ export const MinimizedDock = memo(({
       <button
         onClick={() => { SoundEffects.click(); onExpandClick?.(); }}
         onMouseEnter={() => SoundEffects.hover()}
-        className="minimized-expand relative flex items-center justify-center w-10 h-10 rounded-xl"
+        className="minimized-expand relative flex items-center justify-center w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl"
       >
         <IconChevronDown 
           className="w-5 h-5 text-white" 

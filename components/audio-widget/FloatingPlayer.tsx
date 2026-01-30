@@ -119,7 +119,7 @@ function CameraModal({
           <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-black to-slate-900" />
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/10"
+            className="absolute top-4 right-4 w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/10"
           >
             <IconX className="w-5 h-5 text-white" />
           </button>
@@ -540,7 +540,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                 }}
                 onTap={handlePulltabInteraction}
                 onMouseLeave={() => setHoveredButton(null)}
-                className="relative flex items-center justify-center h-10 w-10 rounded-full transition-all pointer-events-auto"
+                className="relative flex items-center justify-center h-11 w-11 min-w-[44px] min-h-[44px] rounded-full transition-all pointer-events-auto"
                 data-theme-aware
                 style={{
                   background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(255, 255, 255,0.1) 100%)',
@@ -558,9 +558,9 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                   transition={shouldSkipHeavyEffects ? {} : { duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
                   className="relative"
                 >
-                  <IconMusic 
+                  <IconMusic
                     className="w-4 h-4"
-                    style={{ 
+                    style={{
                       color: isPlaying ? 'var(--accent-color, #ffffff)' : 'rgba(var(--accent-rgb, 255, 255, 255), 0.7)',
                       filter: shouldSkipHeavyEffects ? undefined : (isPlaying ? 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff)' : 'drop-shadow(0 0 4px #ffffff)')
                     }}
@@ -628,7 +628,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                 }}
                 onTap={handlePulltabInteraction}
                 onMouseLeave={() => setHoveredButton(null)}
-                className="relative flex items-center justify-center h-10 w-10 rounded-full transition-all pointer-events-auto"
+                className="relative flex items-center justify-center h-11 w-11 min-w-[44px] min-h-[44px] rounded-full transition-all pointer-events-auto"
                 data-theme-aware
                 style={{
                   background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(255, 255, 255,0.1) 100%)',
@@ -646,9 +646,9 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                   transition={shouldSkipHeavyEffects ? {} : { duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
                   className="relative"
                 >
-                  <IconMusic 
+                  <IconMusic
                     className="w-4 h-4"
-                    style={{ 
+                    style={{
                       color: isPlaying ? 'var(--accent-color, #ffffff)' : 'rgba(var(--accent-rgb, 255, 255, 255), 0.7)',
                       filter: shouldSkipHeavyEffects ? undefined : (isPlaying ? 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff)' : 'drop-shadow(0 0 4px #ffffff)')
                     }}
@@ -1197,9 +1197,9 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                 <motion.button
                   whileTap={{ scale: 0.85 }}
                   onClick={(e) => { e.stopPropagation(); SoundEffects.click(); handlePlayerInteraction(); setStreamingActive(false); setMusicEnabled(false); }}
-                  className="w-7 h-7 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                  className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
                 >
-                  <IconX className="w-3.5 h-3.5" />
+                  <IconX className="w-4 h-4" />
                 </motion.button>
               </div>
 
@@ -1219,18 +1219,18 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
 
               {/* Media Controls */}
               <div className="mt-3 px-1">
-                <div className="flex items-center justify-center gap-3">
+                <div className="flex items-center justify-center gap-2">
                   <motion.button
                     whileTap={{ scale: 0.85 }}
-                    className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                    className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
                   >
                     <IconChevronUp className="w-4 h-4 text-white/70 rotate-[-90deg]" />
                   </motion.button>
-                  
+
                   <motion.button
                     whileTap={{ scale: 0.85 }}
                     onClick={(e) => { e.stopPropagation(); setIsPlaying(!isPlaying); SoundEffects.click(); }}
-                    className="w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-lg shadow-white/20"
+                    className="w-14 h-14 min-w-[56px] min-h-[56px] rounded-full bg-white flex items-center justify-center shadow-lg shadow-white/20"
                   >
                     {isPlaying ? (
                       <IconPlayerPause className="w-6 h-6 text-black" />
@@ -1238,10 +1238,10 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                       <IconPlayerPlay className="w-6 h-6 text-black ml-0.5" />
                     )}
                   </motion.button>
-                  
+
                   <motion.button
                     whileTap={{ scale: 0.85 }}
-                    className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                    className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
                   >
                     <IconChevronUp className="w-4 h-4 text-white/70 rotate-90" />
                   </motion.button>

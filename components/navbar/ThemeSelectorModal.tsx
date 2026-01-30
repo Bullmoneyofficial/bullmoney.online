@@ -86,7 +86,7 @@ export const ThemeSelectorModal = ({ isOpen, onClose }: ThemeSelectorModalProps)
           animate={animations.modalBackdrop.animate as TargetAndTransition}
           exit={animations.modalBackdrop.exit}
           transition={animations.modalBackdrop.transition}
-          className={`theme-selector-modal-supreme flex items-center justify-center p-3 sm:p-6 bg-black/95 ${
+          className={`theme-selector-modal-supreme flex items-center justify-center p-5 sm:p-6 bg-black/95 ${
             shouldDisableBackdropBlur ? '' : 'backdrop-blur-sm theme-modal-backdrop'
           }`}
           onClick={onClose}

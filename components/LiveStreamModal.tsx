@@ -1153,7 +1153,7 @@ const LiveStreamContent = memo(() => {
       animate={animations.modalBackdrop.animate as TargetAndTransition}
       exit={animations.modalBackdrop.exit as TargetAndTransition}
       transition={animations.modalBackdrop.transition}
-      className={`fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6 ${shouldDisableBackdropBlur ? 'bg-black/95' : 'bg-black/90'} mobile-no-blur`}
+      className={`fixed inset-0 z-[2147483647] flex items-center justify-center p-5 sm:p-6 ${shouldDisableBackdropBlur ? 'bg-black/95' : 'bg-black/90'} mobile-no-blur`}
       onClick={handleClose}
       data-performance-tier={performanceTier}
     >

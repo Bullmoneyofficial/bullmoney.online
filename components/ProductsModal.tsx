@@ -239,7 +239,7 @@ const ProductsContent = memo(() => {
       animate={animations.modalBackdrop.animate as TargetAndTransition}
       exit={animations.modalBackdrop.exit}
       transition={animations.modalBackdrop.transition}
-      className={`fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6 bg-black/95 ${
+      className={`fixed inset-0 z-[2147483647] flex items-center justify-center p-5 sm:p-6 bg-black/95 ${
         shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'
       }`}
       onClick={handleClose}
@@ -322,7 +322,7 @@ const ProductsContent = memo(() => {
               whileHover={isMobile ? {} : { scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleClose}
-              className="p-2 rounded-full bg-neutral-800 text-white hover:bg-neutral-700 transition-colors group relative"
+              className="p-2.5 min-w-[44px] min-h-[44px] rounded-full bg-neutral-800 text-white hover:bg-neutral-700 transition-colors group relative flex items-center justify-center"
               title="Close (ESC)"
             >
               <X className="w-5 h-5" />

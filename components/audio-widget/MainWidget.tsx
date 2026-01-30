@@ -472,7 +472,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
               }}
               onHoverStart={handlePulltabInteraction}
               onTap={handlePulltabInteraction}
-              className="relative flex items-center justify-center h-6 w-6 sm:h-7 sm:w-7 rounded-l-full transition-all pointer-events-auto"
+              className="relative flex items-center justify-center h-11 w-11 min-w-[44px] min-h-[44px] rounded-l-full transition-all pointer-events-auto"
               data-theme-aware
               style={{
                 background: SURFACE_BG,
@@ -533,7 +533,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
               }}
               onHoverStart={handlePulltabInteraction}
               onTap={handlePulltabInteraction}
-              className="relative flex items-center justify-center h-7 w-7 rounded-l-full transition-all pointer-events-auto"
+              className="relative flex items-center justify-center h-11 w-11 min-w-[44px] min-h-[44px] rounded-l-full transition-all pointer-events-auto"
               data-theme-aware
               style={{
                 background: SURFACE_BG,
@@ -620,7 +620,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                   }}
                   onHoverStart={handlePulltabInteraction}
                   onTap={handlePulltabInteraction}
-                  className="relative flex items-center justify-center h-6 w-6 sm:h-7 sm:w-7 rounded-full transition-all pointer-events-auto"
+                  className="relative flex items-center justify-center h-11 w-11 min-w-[44px] min-h-[44px] rounded-full transition-all pointer-events-auto"
                   data-theme-aware
                   style={{
                     background: SURFACE_BG,

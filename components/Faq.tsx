@@ -727,7 +727,7 @@ export default function BullMoneyModal({ isOpen, onClose }: { isOpen: boolean, o
           initial={animations.modalBackdrop.initial as TargetAndTransition}
           animate={animations.modalBackdrop.animate as TargetAndTransition}
           exit={animations.modalBackdrop.exit as TargetAndTransition}
-          className={`fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6 bg-black/95 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'}`}
+          className={`fixed inset-0 z-[2147483647] flex items-center justify-center p-5 sm:p-6 bg-black/95 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'}`}
           onClick={onClose}
         >
           {/* Animated tap to close hints - Skip on mobile for performance */}
