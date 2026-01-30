@@ -171,21 +171,20 @@ canvas {
   transform: translateZ(0);
   /* Optimize for retina + high refresh rate */
   image-rendering: -webkit-optimize-contrast;
-  /* Allow touch scrolling to pass through */
-  touch-action: pan-y !important;
   /* Force new stacking context */
   isolation: isolate;
   /* Canvas should not change size after initial render */
   contain: strict;
-  /* Mobile: don't block scrolling */
-  pointer-events: none;
+  /* DEFAULT: Allow clicks on all devices */
+  pointer-events: auto;
+  touch-action: manipulation;
 }
 
-/* Allow pointer events on desktop only */
-@media (min-width: 769px) and (hover: hover) {
+/* Mobile touch devices: allow scroll passthrough */
+@media (hover: none) and (pointer: coarse) {
   canvas {
-    pointer-events: auto;
-    touch-action: none;
+    pointer-events: none;
+    touch-action: pan-y !important;
   }
 }
 

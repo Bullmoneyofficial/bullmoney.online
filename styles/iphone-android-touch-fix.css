@@ -310,16 +310,26 @@ select,
    When desktop browser is resized to mobile viewport width
    ============================================================================ */
 
-@media (max-width: 768px) and (hover: hover) and (pointer: fine) {
-  /* Desktop with mouse in mobile viewport - ensure scroll works */
-  html, body {
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    height: auto !important;
-    cursor: auto;
+/* ============================================================================
+   DESKTOP POINTER EVENTS FIX
+   Ensure clicks work on all desktop devices regardless of input detection
+   ============================================================================ */
+
+/* Desktop: ensure all pointer events work */
+@media (min-width: 769px) {
+  /* All interactive elements must be clickable */
+  button,
+  a,
+  [role="button"],
+  input,
+  select,
+  textarea,
+  [tabindex]:not([tabindex="-1"]),
+  .cursor-pointer {
+    pointer-events: auto !important;
   }
-  
-  /* All scrollable containers work with mouse wheel */
+
+  /* Scrollable containers */
   .overflow-y-auto,
   .overflow-y-scroll,
   [data-scrollable],
@@ -329,9 +339,18 @@ select,
   main {
     overflow-y: auto !important;
     pointer-events: auto !important;
+  }
+}
+
+/* Small viewport with mouse (desktop resized) */
+@media (max-width: 768px) and (hover: hover) {
+  html, body {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    height: auto !important;
     cursor: auto;
   }
-  
+
   /* Ensure mouse wheel events propagate */
   * {
     pointer-events: auto;
