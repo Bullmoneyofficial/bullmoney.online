@@ -639,7 +639,7 @@ export const Navbar = memo(() => {
           {/* Mobile Nav Logo and Pill - Centered, 40% smaller pill, logo left of pill */}
           <div className="flex items-center justify-center w-full">
             {/* Logo on left */}
-            <Link href="/" className="relative flex-shrink-0 w-8 h-8 block mr-2">
+            <Link href="/" className="relative flex-shrink-0 w-10 h-10 block mr-2">
               <Image
                 src="/ONcc2l601.svg"
                 alt="BullMoney"
@@ -650,7 +650,7 @@ export const Navbar = memo(() => {
             </Link>
             {/* Pill 40% smaller */}
             <div className="flex-1 flex justify-center">
-              <div style={{ transform: 'scale(0.6)', transformOrigin: 'left center' }}>
+              <div style={{ transform: 'scale(0.75)', transformOrigin: 'left center' }}>
                 <MobileMenuControls 
                   open={open} 
                   onToggle={() => { 
