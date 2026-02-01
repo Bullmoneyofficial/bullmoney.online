@@ -245,7 +245,7 @@ export function Features() {
             <div className="flex items-center gap-3 mb-4 md:mb-6">
               <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl overflow-hidden bg-white/5 p-2" style={{ filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.4))' }}>
                 <img
-                  src="https://www.vantagemarkets.com/wp-content/themes/vantage/images/logos/vantage_logo_white.svg"
+                  src="/Vantage-logo.jpg"
                   alt="Vantage"
                   className="w-full h-full object-contain"
                   style={{ filter: 'brightness(1.2)' }}
@@ -294,7 +294,7 @@ export function Features() {
             <div className="flex items-center gap-3 mb-4 md:mb-6">
               <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl overflow-hidden bg-white/5 p-2" style={{ filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.4))' }}>
                 <img
-                  src="https://www.xm.com/images/logo/xm-logo-white.svg"
+                  src="/xm-logo.png"
                   alt="XM"
                   className="w-full h-full object-contain"
                   style={{ filter: 'brightness(1.2)' }}

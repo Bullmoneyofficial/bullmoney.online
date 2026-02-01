@@ -97,7 +97,7 @@ const getStoredAccountManagerAccess = (): boolean => {
   }
 };
 
-// --- MOBILE MENU CONTROLS COMPONENT (Optimized with Unified Shimmer + Theme-Aware) ---
+// --- MOBILE MENU CONTROLS COMPONENT (Apple Minimalistic Style) ---
 const MobileMenuControls = memo(({ 
   open, 
   onToggle, 
@@ -110,80 +110,68 @@ const MobileMenuControls = memo(({
   disableAnimations = false,
 }: any) => (
   <motion.div 
-    animate={skipHeavyEffects || disableAnimations ? {} : {
-      y: [0, -8, 0],
-      scale: [1, 1.02, 1],
-    }}
-    transition={skipHeavyEffects || disableAnimations ? {} : { duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-    className="relative group rounded-full overflow-visible z-50 flex items-center flex-grow"
+    className="relative group rounded-2xl overflow-hidden"
     data-navbar
     style={{ 
-      height: isScrollMinimized ? 32 : 'auto',
-      maxWidth: isScrollMinimized ? '7rem' : 'none',
-      transition: 'border-color 0.4s ease-out, box-shadow 0.4s ease-out, filter 0.4s ease-out, height 0.4s ease-out, max-width 0.4s ease-out',
-      transitionDelay: '0.35s',
-      filter: skipHeavyEffects ? 'none' : 'drop-shadow(0 0 12px rgba(255, 255, 255,1)) drop-shadow(0 0 24px rgba(255, 255, 255,0.8)) drop-shadow(0 0 36px rgba(255, 255, 255,0.6))',
+      height: isScrollMinimized ? 36 : 44,
+      width: isScrollMinimized ? 80 : 'auto',
+      minWidth: isScrollMinimized ? 80 : 90,
+      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+      zIndex: 50,
+      willChange: 'transform',
     }}
   >
-    {/* UNIFIED SHIMMER - Border glow effect, theme-aware via CSS variables */}
-    {shimmerEnabled && !isScrollMinimized && !skipHeavyEffects && !disableAnimations && <ShimmerBorder />}
-    
-    {/* UNIFIED SHIMMER - Background glow effect */}
-    {shimmerEnabled && !isScrollMinimized && !skipHeavyEffects && !disableAnimations && (
-      <div className="shimmer-glow shimmer-gpu absolute inset-0 rounded-full pointer-events-none" />
+    {/* Apple-style glass background */}
+    <div 
+      className="absolute inset-0"
+      style={{
+        background: 'rgba(0, 0, 0, 0.7)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255, 255, 255, 0.15)',
+        boxShadow: skipHeavyEffects ? 'none' : '0 0 20px rgba(255, 255, 255, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.1)',
+      }}
+    />
+
+    {/* Subtle shimmer border */}
+    {shimmerEnabled && !skipHeavyEffects && !disableAnimations && (
+      <div 
+        className="absolute inset-0 rounded-2xl"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent 50%, rgba(255, 255, 255, 0.05))',
+          opacity: 0.5,
+        }}
+      />
     )}
 
-    {/* Neon Inner Content Container - Theme-aware borders and shadows */}
-    <motion.div 
-      className={cn(
-        "relative h-full w-full bg-black/95 rounded-full flex items-center justify-center gap-0.5 sm:gap-1 transition-all duration-200 z-10 mobile-liquid-pill",
-        !skipHeavyEffects && !disableAnimations && "liquid-enabled",
-        isScrollMinimized ? "p-[1px] px-1" : "p-[2px] px-1 xs:px-1.5 sm:px-2"
-      )}
-      style={{
-        border: '2px solid rgba(255, 255, 255, 0.9)',
-        boxShadow: skipHeavyEffects ? 'none' : '0 0 10px rgba(255, 255, 255, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.3)',
-      }}
+    {/* Menu Toggle Button */}
+    <motion.button
+      onClick={() => { SoundEffects.click(); onToggle(); }}
+      onMouseEnter={() => SoundEffects.hover()}
+      onTouchStart={() => SoundEffects.click()}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      className="relative w-full h-full flex items-center justify-center gap-2 px-4"
+      style={{ color: '#ffffff' }}
+      title={open ? 'Close menu' : 'Open menu'}
     >
-      {/* Liquid animated background (lightweight) */}
-      {!skipHeavyEffects && !disableAnimations && (
-        <>
-          <span className="liquid-sheen" />
-        </>
-      )}
-
-      {/* Menu Toggle Button - With text label */}
-      <motion.button
-        onClick={() => { SoundEffects.click(); onToggle(); }}
-        onMouseEnter={() => SoundEffects.hover()}
-        onTouchStart={() => SoundEffects.click()}
-        whileHover={skipHeavyEffects || disableAnimations ? {} : { scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-        className={cn(
-          "rounded-full transition-colors flex items-center justify-center gap-1",
-          isScrollMinimized
-            ? "p-1 min-w-[44px] min-h-[44px]"
-            : "p-1 xs:p-1.5 sm:p-2 min-w-[44px] xs:min-w-[44px] sm:min-w-[48px] min-h-[44px] xs:min-h-[44px] sm:min-h-[48px]"
+      <div className="relative flex items-center justify-center">
+        {open ? (
+          <IconX className="h-5 w-5" strokeWidth={2} />
+        ) : (
+          <IconMenu2 className="h-5 w-5" strokeWidth={2} />
         )}
-        style={{ color: '#ffffff' }}
-        title={open ? 'Close menu' : 'Open menu'}
-      >
-        <div className="relative flex items-center justify-center">
-          {open ? (
-            <IconX className={isScrollMinimized ? "h-4 w-4" : "h-5 w-5 xs:h-6 xs:w-6 sm:h-6 sm:w-6"} />
-          ) : (
-            <IconMenu2 className={isScrollMinimized ? "h-4 w-4" : "h-5 w-5 xs:h-6 xs:w-6 sm:h-6 sm:w-6"} />
-          )}
-          {hasReward && !open && (
-            <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
-              <span className={cn("absolute inline-flex h-full w-full rounded-full opacity-75", skipHeavyEffects || disableAnimations ? "" : "shimmer-ping")} style={{ backgroundColor: '#ffffff' }}></span>
-              <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: '#ffffff' }}></span>
-            </span>
-          )}
-        </div>
-        <span className="text-[11px] xs:text-xs sm:text-base font-bold whitespace-nowrap">{open ? 'Close' : 'Menu'}</span>
-      </motion.button>
-    </motion.div>
+        {hasReward && !open && (
+          <span className="absolute -top-1 -right-1 flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full rounded-full bg-white opacity-75 animate-ping" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+          </span>
+        )}
+      </div>
+      {!isScrollMinimized && (
+        <span className="text-sm font-semibold tracking-tight">{open ? 'Close' : 'Menu'}</span>
+      )}
+    </motion.button>
   </motion.div>
 ));
 MobileMenuControls.displayName = 'MobileMenuControls';

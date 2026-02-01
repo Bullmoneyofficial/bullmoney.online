@@ -113,17 +113,17 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
       <div ref={ref} className="hidden lg:flex w-full max-w-7xl mx-auto items-center justify-center h-16 relative">
         {/* Logo - fades out when minimized */}
         <div 
-          className="desktop-navbar-logo absolute left-0 pointer-events-auto z-50 flex items-center gap-2 h-16 overflow-visible pl-0 pr-4"
+          className="desktop-navbar-logo absolute left-0 pointer-events-auto z-50 flex items-center gap-3 h-16 overflow-visible pl-0 pr-4"
           style={{
             opacity: isScrollMinimized ? 0 : 1,
-            transform: isScrollMinimized ? 'scale(0.8) translateZ(0)' : 'scale(1) translateZ(0)',
-            transition: 'opacity 0.2s ease-out, transform 0.2s ease-out',
+            transform: isScrollMinimized ? 'scale(0.9) translateZ(0)' : 'scale(1) translateZ(0)',
+            transition: 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             pointerEvents: isScrollMinimized ? 'none' : 'auto',
             marginLeft: '0',
             width: 'auto',
           }}
         >
-          <Link href="/" className="relative flex-shrink-0 w-20 h-20 block">
+          <Link href="/" className="relative flex-shrink-0 w-16 h-16 block">
             <Image
               src="/ONcc2l601.svg"
               alt="BullMoney"
@@ -132,10 +132,10 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
               priority
             />
           </Link>
-          <Link href="/" className="flex-shrink-0 text-3xl font-bold tracking-wider" style={{
+          <Link href="/" className="flex-shrink-0 text-2xl font-semibold tracking-wide" style={{
             color: '#ffffff',
-            textShadow: '0 0 10px #ffffff, 0 0 20px #ffffff, 0 0 30px #ffffff',
-            letterSpacing: '0.1em'
+            textShadow: '0 0 8px rgba(255, 255, 255, 0.3)',
+            letterSpacing: '0.05em'
           }}>
             bullmoney
           </Link>
@@ -147,9 +147,9 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
           style={{
             opacity: isScrollMinimized ? 0 : 1,
             transform: isScrollMinimized 
-              ? 'translateY(-20px) scale(0.9) translateZ(0)' 
+              ? 'translateY(-15px) scale(0.95) translateZ(0)' 
               : 'translateY(0) scale(1) translateZ(0)',
-            transition: 'opacity 0.2s ease-out, transform 0.2s ease-out',
+            transition: 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             pointerEvents: isScrollMinimized ? 'none' : 'auto',
           }}
         >
@@ -169,8 +169,8 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
             opacity: isScrollMinimized ? 1 : 0,
             transform: isScrollMinimized 
               ? 'translateY(0) scale(1) translateZ(0)' 
-              : 'translateY(20px) scale(0.9) translateZ(0)',
-            transition: 'opacity 0.2s ease-out, transform 0.2s ease-out',
+              : 'translateY(15px) scale(0.95) translateZ(0)',
+            transition: 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             pointerEvents: isScrollMinimized ? 'auto' : 'none',
           }}
         >

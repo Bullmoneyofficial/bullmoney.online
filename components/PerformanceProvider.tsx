@@ -844,12 +844,10 @@ export function FPSCounter({
   position = 'bottom-right'
 }: FPSCounterProps) {
   const [fps, setFps] = React.useState(60);
-  const [isLow, setIsLow] = React.useState(false);
   const [downloadSpeed, setDownloadSpeed] = React.useState<number>(0);
   const [uploadSpeed, setUploadSpeed] = React.useState<number>(0);
   const [latency, setLatency] = React.useState<number>(0);
-  const [isTesting, setIsTesting] = React.useState(false);
-  const [testPhase, setTestPhase] = React.useState<'idle' | 'ping' | 'download' | 'upload'>('idle');
+  const [showSpeed, setShowSpeed] = React.useState(false);
   const speedtestDisabledRef = React.useRef(false);
 
   // FPS measurement
@@ -867,7 +865,6 @@ export function FPSCounter({
       if (elapsed >= 1000) {
         const currentFps = Math.round((frameCount / elapsed) * 1000);
         setFps(currentFps);
-        setIsLow(currentFps < 15);
         frameCount = 0;
         lastTime = time;
       }
@@ -879,7 +876,7 @@ export function FPSCounter({
     return () => cancelAnimationFrame(rafId);
   }, [show]);
 
-  // Network speed measurement - OOKLA CLI ONLY (matches speedtest.net exactly)
+  // Network speed measurement
   useEffect(() => {
     if (!show) return;
 
@@ -887,71 +884,29 @@ export function FPSCounter({
 
     const runSpeedTest = async () => {
       if (speedtestDisabledRef.current) return;
-      setIsTesting(true);
-      setTestPhase('ping');
-      setDownloadSpeed(0);
-      setUploadSpeed(0);
 
       try {
-        // Use server-side Ookla CLI ONLY (EXACT speedtest.net match)
-        console.log('[PerformanceProvider] Running server-side Ookla speedtest (no fallback)...');
         const response = await fetch('/api/speedtest?quick=false');
         
         if (response.ok) {
           const result = await response.json();
           if (result?.available === false) {
             speedtestDisabledRef.current = true;
-            if (!cancelled) {
-              setTestPhase('idle');
-              setIsTesting(false);
-            }
             return;
           }
           if (!cancelled && result && !result.error) {
             setLatency(Math.round(result.latency ?? 0));
             setDownloadSpeed(result.downMbps ?? 0);
             setUploadSpeed(result.upMbps ?? 0);
-            setTestPhase('idle');
-            setIsTesting(false);
-            console.log('[PerformanceProvider] ✅ Ookla speedtest complete:', {
-              down: result.downMbps,
-              up: result.upMbps,
-              ping: result.latency,
-              server: result.server?.name,
-              isp: result.client?.isp,
-            });
-            return;
-          } else if (result.error) {
-            console.error('[PerformanceProvider] Ookla CLI error:', result.message);
-            if (!cancelled) {
-              setTestPhase('idle');
-              setIsTesting(false);
-            }
             return;
           }
-        } else {
-          console.error(`[PerformanceProvider] API returned status ${response.status}`);
-          const errorData = await response.json().catch(() => ({}));
-          console.error('[PerformanceProvider] Error details:', errorData);
-          if (!cancelled) {
-            setTestPhase('idle');
-            setIsTesting(false);
-          }
-          return;
         }
       } catch (error) {
-        console.error('[PerformanceProvider] Speed test failed:', error);
-        if (!cancelled) {
-          setTestPhase('idle');
-          setIsTesting(false);
-        }
+        // Ignore
       }
     };
 
-    // Initial measurement after a short delay
     const initialTimeout = setTimeout(runSpeedTest, 2000);
-
-    // Re-measure every 30 seconds (longer interval since tests take ~12 seconds)
     const interval = setInterval(runSpeedTest, 30000);
 
     return () => {
@@ -961,54 +916,29 @@ export function FPSCounter({
     };
   }, [show]);
 
-  // Detect mobile for smaller sizing (20-30% smaller)
-  // Use state to prevent SSR mismatch and fix scroll enlargement issue
-  const [isMobile, setIsMobile] = React.useState(false);
-  React.useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+  // Toggle between FPS and Speed display every 3 seconds
+  useEffect(() => {
+    const toggleInterval = setInterval(() => {
+      setShowSpeed(prev => !prev);
+    }, 3000);
+
+    return () => clearInterval(toggleInterval);
   }, []);
 
   if (!show) return null;
-  const scaleFactor = isMobile ? 0.65 : 1; // 35% smaller on mobile (fixed, not affected by scroll)
 
   const positionStyles = {
-    'top-left': { top: 10, left: 10 },
-    'top-right': { top: 10, right: 10 },
-    'bottom-left': { bottom: 10, left: 10 },
-    'bottom-right': { bottom: 10, right: 10 },
+    'top-left': { top: 12, left: 12 },
+    'top-right': { top: 12, right: 12 },
+    'bottom-left': { bottom: 12, left: 12 },
+    'bottom-right': { bottom: 12, right: 12 },
   };
 
-  // Neon color schemes
-  const neonBlue = {
-    color: '#ffffff',
-    textShadow: '0 0 5px #ffffff, 0 0 10px #ffffff, 0 0 20px #ffffff, 0 0 40px #ffffff',
-    boxShadow: '0 0 5px #ffffff, 0 0 10px #ffffff, 0 0 20px #ffffff, inset 0 0 10px rgba(255, 255, 255, 0.3)',
-    borderColor: '#ffffff',
+  const getFpsColor = () => {
+    if (fps >= 50) return 'rgba(255, 255, 255, 0.9)';
+    if (fps >= 30) return 'rgba(255, 255, 255, 0.7)';
+    return 'rgba(255, 255, 255, 0.5)';
   };
-
-  const neonRed = {
-    color: '#ff073a',
-    textShadow: '0 0 5px #ff073a, 0 0 10px #ff073a, 0 0 20px #ff073a, 0 0 40px #ff0000',
-    boxShadow: '0 0 5px #ff073a, 0 0 10px #ff073a, 0 0 20px #ff073a, inset 0 0 10px rgba(255, 7, 58, 0.3)',
-    borderColor: '#ff073a',
-  };
-
-  const neonGreen = {
-    color: '#00ff88',
-    textShadow: '0 0 5px #00ff88, 0 0 10px #00ff88',
-    borderColor: '#00ff88',
-  };
-
-  const neonCyan = {
-    color: '#ffffff',
-    textShadow: '0 0 5px #ffffff, 0 0 10px #ffffff',
-    borderColor: '#ffffff',
-  };
-
-  const fpsStyle = isLow ? neonRed : neonBlue;
 
   const formatSpeed = (speed: number) => {
     if (speed === 0) return '--';
@@ -1018,15 +948,16 @@ export function FPSCounter({
 
   return (
     <>
-      {/* Keyframe animations for arrows */}
       <style>{`
-        @keyframes bounceDown {
-          0%, 100% { transform: translateY(-1px); }
-          50% { transform: translateY(1px); }
+        @keyframes appleGlow {
+          0%, 100% { opacity: 0.8; }
+          50% { opacity: 1; }
         }
-        @keyframes bounceUp {
-          0%, 100% { transform: translateY(1px); }
-          50% { transform: translateY(-1px); }
+        @keyframes fadeSwitch {
+          0% { opacity: 0; }
+          20% { opacity: 1; }
+          80% { opacity: 1; }
+          100% { opacity: 0; }
         }
       `}</style>
       <div
@@ -1034,109 +965,40 @@ export function FPSCounter({
         style={{
           position: 'fixed',
           ...positionStyles[position],
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '4px',
           zIndex: 99999,
           pointerEvents: 'none',
           transform: 'translateZ(0)',
         }}
       >
-      {/* FPS Pill */}
-      <div
-        style={{
-          padding: isMobile ? '2px 5px' : '3px 8px',
-          borderRadius: 20,
-          fontSize: isMobile ? 7 : 10,
-          fontFamily: 'monospace',
-          fontWeight: 'bold',
-          backgroundColor: 'rgba(0, 0, 0, 0.85)',
-          border: `1px solid ${fpsStyle.borderColor}`,
-          color: fpsStyle.color,
-          textShadow: fpsStyle.textShadow,
-          boxShadow: fpsStyle.boxShadow,
-          letterSpacing: '0.5px',
-          textAlign: 'center',
-          transform: `scale(${scaleFactor})`,
-          transformOrigin: position.includes('right') ? 'top right' : 'top left',
-        }}
-      >
-        {fps} FPS
+        {/* Apple-style Counter - Switches between FPS and Speed */}
+        <div
+          style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            backdropFilter: 'blur(12px)',
+            borderRadius: 8,
+            padding: '6px 10px',
+            fontSize: '11px',
+            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+            fontWeight: '500',
+            color: showSpeed ? 'rgba(255, 255, 255, 0.8)' : getFpsColor(),
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            letterSpacing: '0.3px',
+            whiteSpace: 'nowrap',
+            animation: showSpeed ? 'fadeSwitch 3s ease-in-out infinite' : fps < 30 ? 'appleGlow 1.5s ease-in-out infinite' : 'none',
+            transitionDuration: '300ms',
+            minWidth: '90px',
+            textAlign: 'center',
+          }}
+        >
+          {showSpeed ? (
+            <span>
+              ↓{formatSpeed(downloadSpeed)} | ↑{formatSpeed(uploadSpeed)} | {latency > 0 ? `${latency}ms` : '-- ms'}
+            </span>
+          ) : (
+            <span>{fps} FPS</span>
+          )}
+        </div>
       </div>
-      
-      {/* Network Speed Pill - Download | Upload | Ping */}
-      <div
-        style={{
-          padding: isMobile ? '2px 5px' : '3px 8px',
-          borderRadius: 20,
-          fontSize: isMobile ? 6 : 9,
-          fontFamily: 'monospace',
-          fontWeight: 'bold',
-          backgroundColor: 'rgba(0, 0, 0, 0.85)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          display: 'flex',
-          gap: isMobile ? '2px' : '5px',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transform: `scale(${scaleFactor})`,
-          transformOrigin: position.includes('right') ? 'top right' : 'top left',
-        }}
-      >
-        {/* Unit label on left */}
-        <span style={{ 
-          color: 'rgba(255,255,255,0.8)', 
-          fontSize: 7,
-          textShadow: '0 0 4px rgba(255,255,255,0.6), 0 0 8px rgba(255,255,255,0.3)',
-          letterSpacing: '0.5px',
-        }}>Mb/s</span>
-        
-        {/* Download */}
-        <span style={{ 
-          color: neonGreen.color, 
-          textShadow: neonGreen.textShadow,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '1px',
-        }}>
-          <span style={{ 
-            fontSize: 11, 
-            animation: 'bounceDown 3s ease-in-out infinite',
-          }}>↓</span>
-          {formatSpeed(downloadSpeed)}
-        </span>
-        
-        {/* Divider */}
-        <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 7 }}>|</span>
-        
-        {/* Upload */}
-        <span style={{ 
-          color: neonCyan.color, 
-          textShadow: neonCyan.textShadow,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '1px',
-        }}>
-          <span style={{ 
-            fontSize: 11, 
-            animation: 'bounceUp 3s ease-in-out infinite',
-          }}>↑</span>
-          {formatSpeed(uploadSpeed)}
-        </span>
-        
-        {/* Divider */}
-        <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 7 }}>|</span>
-        
-        {/* Ping */}
-        <span style={{ 
-          color: 'rgba(255,255,255,0.7)', 
-          display: 'flex',
-          alignItems: 'center',
-          gap: '1px',
-        }}>
-          {latency > 0 ? `${latency}ms` : '--'}
-        </span>
-      </div>
-    </div>
     </>
   );
 }

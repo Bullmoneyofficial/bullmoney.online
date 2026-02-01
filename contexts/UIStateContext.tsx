@@ -254,19 +254,21 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   // Derived state: modals that DO NOT require audio widget to minimize
   // Discord Stage modal should keep audio widget visible so users can control Discord volume
   // Welcome screen should also keep audio widget visible so users can control music while viewing welcome
-  const shouldNotMinimizeForThisModal = isDiscordStageModalOpen || isWelcomeScreenActive;
+  // Mobile menu and Ultimate Hub/Panel should NOT minimize audio widget - they can coexist
+  const shouldNotMinimizeForThisModal = isDiscordStageModalOpen || isWelcomeScreenActive ||
+    isMobileMenuOpen || isUltimateHubOpen || isUltimatePanelOpen;
 
   // Derived state: should audio widget minimize (not unmount)?
   // True when any other UI component is open that would overlay the player
   // EXCEPTION: Audio widget stays visible during Discord Stage modal so users can control Discord volume
-  // EXCEPTION: UltimateHub should NOT close/minimize audio widget - they can coexist
+  // EXCEPTION: Audio widget stays visible during Mobile Menu/Navbar - they coexist
+  // EXCEPTION: Audio widget stays visible during Ultimate Hub/Panel - they coexist on different sides
   // NOTE: ChartNews is explicitly included in isAnyModalOpen, so audio widget will minimize when ChartNews opens
-  const shouldMinimizeAudioWidget = isMobileMenuOpen || isUltimatePanelOpen ||
-    (isAnyModalOpen && !shouldNotMinimizeForThisModal);
+  const shouldMinimizeAudioWidget = isAnyModalOpen && !shouldNotMinimizeForThisModal;
 
   // Derived state: is there UI overlaying the floating player area?
-  // UltimateHub doesn't overlay audio widget - they coexist on different sides of the screen
-  const hasOverlayingUI = isMobileMenuOpen || (isAnyModalOpen && !shouldNotMinimizeForThisModal);
+  // Mobile menu, Ultimate Hub, and Ultimate Panel don't overlay audio widget - they coexist
+  const hasOverlayingUI = isAnyModalOpen && !shouldNotMinimizeForThisModal;
 
   // Derived state: which component is active?
   const activeComponent: UIComponentType | null =

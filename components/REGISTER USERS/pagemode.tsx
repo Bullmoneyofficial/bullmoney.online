@@ -1238,236 +1238,150 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
               hideBackground
             />
           ) : (
-            // Mobile Welcome Screen - Glassy transparent design
+            // Mobile Welcome Screen - Minimalistic Apple-style design
             <>
               <motion.div
                 key="welcome-screen"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.4, ease: 'easeOut' }}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                 className="fixed inset-0 flex flex-col"
                 style={{ 
                   minHeight: '100dvh', 
                   width: '100vw', 
                   height: '100vh',
-                  // Allow touch events to pass through to Spline but capture on UI elements
                   pointerEvents: 'none',
                   zIndex: UI_Z_INDEX.PAGEMODE,
                 }}
               >
-                {/* Branding Header - Neon Sign Style */}
+                {/* Minimalistic Branding Header - Clean Apple-style */}
                 <motion.div
-                  initial={{ opacity: 0, y: -20 }}
+                  initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.1 }}
-                  className="relative z-10 pt-8 pb-4 text-center pointer-events-none"
+                  transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                  className="relative z-10 pt-16 pb-8 text-center pointer-events-none"
                 >
-                  {/* Neon glow backdrop effect */}
-                  {!shouldReduceEffects && (
-                    <div
-                      className="absolute inset-0 pointer-events-none"
-                      style={{
-                        background: 'radial-gradient(ellipse at 50% 50%, rgba(255, 255, 255, 0.15) 0%, transparent 60%)',
-                        filter: 'blur(20px)',
-                      }}
-                    />
-                  )}
                   <motion.h1
-                    className="relative text-4xl font-black tracking-wider uppercase"
+                    className="relative text-[2.5rem] font-semibold tracking-tight"
                     style={{
                       color: '#ffffff',
-                      textShadow: `
-                        0 0 5px #ffffff,
-                        0 0 10px #ffffff,
-                        0 0 20px #ffffff,
-                        0 0 40px #ffffff,
-                        0 0 80px #ffffff
-                      `,
-                      letterSpacing: '0.15em',
+                      textShadow: '0 0 20px rgba(255, 255, 255, 0.3)',
+                      letterSpacing: '-0.03em',
                     }}
-                    animate={
-                      shouldReduceEffects
-                        ? undefined
-                        : {
-                            textShadow: [
-                              '0 0 5px #ffffff, 0 0 10px #ffffff, 0 0 20px #ffffff, 0 0 40px #ffffff, 0 0 80px #ffffff',
-                              '0 0 8px #ffffff, 0 0 15px #ffffff, 0 0 30px #ffffff, 0 0 60px #ffffff, 0 0 100px #ffffff',
-                              '0 0 5px #ffffff, 0 0 10px #ffffff, 0 0 20px #ffffff, 0 0 40px #ffffff, 0 0 80px #ffffff',
-                            ],
-                          }
-                    }
-                    transition={
-                      shouldReduceEffects
-                        ? { duration: 0 }
-                        : {
-                            duration: 2,
-                            repeat: Infinity,
-                            ease: 'easeInOut',
-                          }
-                    }
                   >
-                    BULLMONEY
+                    BullMoney
                   </motion.h1>
                   <motion.p
-                    className="relative text-sm text-white/80 mt-2 font-semibold tracking-[0.2em] uppercase"
-                    style={{
-                      textShadow: '0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(255, 255, 255, 0.3)',
-                    }}
-                    animate={
-                      shouldReduceEffects
-                        ? undefined
-                        : {
-                            opacity: [0.7, 1, 0.7],
-                          }
-                    }
-                    transition={
-                      shouldReduceEffects
-                        ? { duration: 0 }
-                        : {
-                            duration: 3,
-                            repeat: Infinity,
-                            ease: 'easeInOut',
-                          }
-                    }
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.8, delay: 0.4 }}
+                    className="relative text-base text-white/40 mt-2 font-normal"
                   >
-                    The Ultimate Trading Hub
+                    Trading Excellence
                   </motion.p>
                 </motion.div>
 
-                {/* Main Content Area - Centered (40% smaller for mobile) */}
+                {/* Main Content Area - Apple-style centered card */}
                 <div
-                  className="relative flex-1 flex flex-col items-center justify-center gap-2 px-3 w-full max-w-[220px] mx-auto pb-4"
+                  className="relative flex-1 flex flex-col items-center justify-center px-6 w-full pb-12"
                   style={{ zIndex: 10, pointerEvents: 'auto' }}
                 >
-                  {/* Ultra-transparent Card Container - Gentle pulse animation until interaction */}
+                  {/* Clean Card Container - Apple-style minimal */}
                   <motion.div
-                    initial={{ opacity: 0.7, scale: 0.98 }}
-                    animate={
-                      shouldReduceEffects
-                        ? { opacity: 1, scale: 1 }
-                        : userInteracted
-                          ? { opacity: 1, scale: 1 }
-                          : {
-                              // Smoother animation - never fully invisible to prevent black flash
-                              opacity: [0.5, 0.9, 0.5],
-                              scale: [0.97, 1, 0.97],
-                            }
-                    }
-                    transition={
-                      shouldReduceEffects
-                        ? { duration: 0 }
-                        : userInteracted
-                          ? { duration: 0.25, ease: 'easeOut' }
-                          : {
-                              duration: 4,
-                              repeat: Infinity,
-                              ease: 'easeInOut',
-                            }
-                    }
-                    className="w-full rounded-xl p-3 border border-white/10"
-                    onMouseEnter={handleUserInteraction}
-                    onTouchStart={handleUserInteraction}
-                    onClick={handleUserInteraction}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                    className="w-full max-w-sm rounded-2xl p-8 border border-white/[0.08]"
                     style={{
-                      background: 'rgba(0, 0, 0, 0.25)',
-                      // Use simpler blur for better mobile performance
-                      backdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(12px)',
-                      WebkitBackdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(12px)',
-                      boxShadow: shouldReduceEffects ? 'none' : '0 4px 24px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.05)',
+                      background: 'rgba(0, 0, 0, 0.4)',
+                      backdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(40px)',
+                      WebkitBackdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(40px)',
+                      boxShadow: '0 0 1px rgba(255, 255, 255, 0.1)',
                     }}
                   >
-                    {/* Action Header */}
-                    <div className="text-center mb-3">
-                      <h2 className="text-sm font-bold text-white/80 mb-0.5">
-                        Get Started
-                      </h2>
-                      <p className="text-white/30 text-[10px]">
-                        Choose how you want to continue
-                      </p>
-                    </div>
+                    {/* Clean title */}
+                    <h2 className="text-xl font-semibold text-white mb-2 text-center">
+                      Get Started
+                    </h2>
+                    <p className="text-white/40 text-sm mb-8 text-center font-normal">
+                      Choose how to continue
+                    </p>
 
-                    {/* Buttons Stack */}
-                    <div className="flex flex-col gap-1.5">
-                      {/* Sign Up Button - Primary with transparent glass */}
+                    {/* Clean Button Stack */}
+                    <div className="flex flex-col gap-3">
+                      {/* Primary Button - Subtle glow (white or red based on broker) */}
                       <motion.button
                         onClick={() => {
                           setViewMode('register');
                           setStep(0);
                         }}
-                        whileTap={{ scale: 0.98 }}
-                        className="w-full py-2 rounded-lg font-bold text-xs tracking-wide transition-all flex items-center justify-center gap-1.5 text-white"
+                        whileTap={{ scale: 0.97 }}
+                        className="w-full py-4 rounded-xl font-semibold text-base transition-all"
                         style={{
-                          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.6) 100%)',
-                          backdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(8px)',
-                          boxShadow: shouldReduceEffects ? 'none' : '0 4px 20px rgba(255, 255, 255, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                          border: '1px solid rgba(255, 255, 255, 0.3)',
+                          background: isXM ? '#ef4444' : '#ffffff',
+                          color: isXM ? '#ffffff' : '#000000',
+                          boxShadow: isXM ? '0 0 20px rgba(239, 68, 68, 0.3)' : '0 0 20px rgba(255, 255, 255, 0.15)',
                         }}
                       >
-                        <span>Create Account</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
+                        Create Account
                       </motion.button>
 
-                      {/* Login Button - Very transparent glass */}
+                      {/* Secondary Button - Minimal border (white or red) */}
                       <motion.button
                         onClick={() => {
                           setViewMode('login');
                           setStep(0);
                         }}
-                        whileTap={{ scale: 0.98 }}
-                        className="w-full py-2 rounded-lg font-bold text-xs tracking-wide transition-all flex items-center justify-center gap-1.5 text-white"
+                        whileTap={{ scale: 0.97 }}
+                        className="w-full py-4 rounded-xl font-semibold text-base transition-all text-white"
                         style={{
-                          background: 'rgba(255, 255, 255, 0.08)',
-                          backdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(6px)',
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                          background: isXM ? 'rgba(239, 68, 68, 0.05)' : 'rgba(255, 255, 255, 0.03)',
+                          border: isXM ? '1px solid rgba(239, 68, 68, 0.2)' : '1px solid rgba(255, 255, 255, 0.1)',
                         }}
                       >
-                        <span>Login</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
+                        Sign In
                       </motion.button>
 
-                      {/* Divider */}
-                      <div className="flex items-center gap-2 my-0.5">
-                        <div className="flex-1 h-px bg-white/5" />
-                        <span className="text-white/20 text-[8px]">or</span>
-                        <div className="flex-1 h-px bg-white/5" />
+                      {/* Minimal Divider */}
+                      <div className="flex items-center gap-3 my-2">
+                        <div className="flex-1 h-[0.5px] bg-white/[0.08]" />
+                        <span className="text-white/30 text-xs font-normal">or</span>
+                        <div className="flex-1 h-[0.5px] bg-white/[0.08]" />
                       </div>
 
-                      {/* Guest Button - Near invisible glass */}
+                      {/* Guest Button - Neon border (white or red) */}
                       <motion.button
-                        onClick={() => {
-                          setStep(-2);
-                        }}
-                        whileTap={{ scale: 0.98 }}
-                        className="w-full py-1.5 rounded-lg font-medium text-[11px] tracking-wide transition-all flex items-center justify-center gap-1.5 text-white/40"
+                        onClick={() => setStep(-2)}
+                        whileTap={{ scale: 0.97 }}
+                        className="w-full py-3 rounded-xl font-normal text-sm transition-all text-white/70 hover:text-white"
                         style={{
-                          background: 'rgba(255, 255, 255, 0.02)',
-                          backdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(4px)',
-                          border: '1px solid rgba(255, 255, 255, 0.05)',
+                          background: 'transparent',
+                          border: isXM ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(255, 255, 255, 0.2)',
+                          boxShadow: isXM ? '0 0 10px rgba(239, 68, 68, 0.2), inset 0 0 10px rgba(239, 68, 68, 0.08)' : '0 0 10px rgba(255, 255, 255, 0.1), inset 0 0 10px rgba(255, 255, 255, 0.05)',
                         }}
                       >
-                        <User className="w-3 h-3" />
-                        <span>Continue as Guest</span>
+                        Continue as Guest
                       </motion.button>
                     </div>
 
-                    {/* Footer Note */}
-                    <p className="text-center text-white/15 text-[7px] mt-2">
+                    {/* Clean Footer */}
+                    <p className="text-center text-white/20 text-xs mt-8 font-normal leading-relaxed">
                       By continuing, you agree to our{' '}
                       <button 
                         type="button"
                         onClick={() => { setLegalModalTab('terms'); setIsLegalModalOpen(true); }}
-                        className="text-white/60 hover:text-white underline underline-offset-1 transition-colors"
+                        className="text-white/40 hover:text-white/60 transition-colors"
                       >
                         Terms
                       </button>
-                      {' & '}
+                      {' and '}
                       <button 
                         type="button"
                         onClick={() => { setLegalModalTab('privacy'); setIsLegalModalOpen(true); }}
-                        className="text-white/60 hover:text-white underline underline-offset-1 transition-colors"
+                        className="text-white/40 hover:text-white/60 transition-colors"
                       >
-                        Privacy
+                        Privacy Policy
                       </button>
                     </p>
                   </motion.div>
@@ -1536,79 +1450,79 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 <ChevronLeft className="w-4 h-4" /> Back
               </button>
 
-              {/* Branding Header - Top Center */}
+              {/* Minimal Branding Header */}
               <motion.div
-                initial={{ opacity: 0, y: -20 }}
+                initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className="relative z-10 pt-6 pb-2 text-center"
+                transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+                className="relative z-10 pt-16 pb-8 text-center"
                 style={{ pointerEvents: 'none' }}
               >
                 <h1
-                  className="text-2xl font-black tracking-tight"
+                  className="text-[2.5rem] font-semibold tracking-tight"
                   style={{
                     color: '#ffffff',
-                    textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff, 0 0 16px #ffffff',
+                    textShadow: '0 0 20px rgba(255, 255, 255, 0.3)',
+                    letterSpacing: '-0.03em',
                   }}
                 >
-                  BULLMONEY
+                  BullMoney
                 </h1>
-                <p className="text-xs text-white/30 mt-1 font-medium tracking-wide">
-                  The Ultimate Trading Hub
+                <p className="text-base text-white/40 mt-2 font-normal">
+                  Trading Excellence
                 </p>
               </motion.div>
 
-              {/* Centered Content - Ultra-transparent Card */}
+              {/* Clean Centered Card */}
               <div 
-                className="flex-1 flex flex-col items-center justify-center gap-6 px-5 w-full max-w-sm mx-auto pb-20 relative z-10"
+                className="flex-1 flex flex-col items-center justify-center px-6 w-full pb-12 relative z-10"
                 style={{ pointerEvents: 'auto' }}
               >
                 <motion.div
-                  initial={{ opacity: 0.7, scale: 0.97 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.35, delay: 0.05, ease: 'easeOut' }}
-                  className="rounded-2xl p-6 text-center w-full border border-white/10"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                  className="rounded-2xl p-8 text-center w-full max-w-sm border border-white/[0.08]"
                   style={{
-                    background: 'rgba(0, 0, 0, 0.25)',
-                    backdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(14px)',
-                    WebkitBackdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(14px)',
-                    boxShadow: shouldReduceEffects ? 'none' : '0 4px 24px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.05)',
+                    background: 'rgba(0, 0, 0, 0.4)',
+                    backdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(40px)',
+                    WebkitBackdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(40px)',
+                    boxShadow: '0 0 1px rgba(255, 255, 255, 0.1)',
                   }}
                 >
-                  <div className="mb-4 flex justify-center">
+                  <div className="mb-6 flex justify-center">
                     <div
-                      className="h-12 w-12 rounded-full flex items-center justify-center"
+                      className="h-16 w-16 rounded-full flex items-center justify-center"
                       style={{
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
                       }}
                     >
-                      <User className="w-6 h-6 text-white/60" />
+                      <User className="w-7 h-7 text-white/40" />
                     </div>
                   </div>
 
-                  <h2 className="text-lg font-bold text-white/85 mb-2">Continue as Guest</h2>
-                  <p className="text-xs text-white/40 mb-5 leading-relaxed">
-                    Browse the site without an account.<br />
-                    <span className="text-white/25">Some features may be limited.</span>
+                  <h2 className="text-xl font-semibold text-white mb-2">Guest Access</h2>
+                  <p className="text-sm text-white/40 mb-8 leading-relaxed font-normal">
+                    Browse without an account.<br />
+                    Some features may be limited.
                   </p>
 
-                  {/* Continue Button - Ultra-transparent */}
+                  {/* Clean Continue Button */}
                   <motion.button
                     onClick={() => {
                       setStep(99);
                       onUnlock();
                     }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full py-3 rounded-xl font-bold text-base tracking-wide transition-all flex items-center justify-center gap-2 text-white/75"
+                    whileTap={{ scale: 0.97 }}
+                    className="w-full py-4 rounded-xl font-semibold text-base transition-all"
                     style={{
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      backdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(6px)',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      background: isXM ? '#ef4444' : '#ffffff',
+                      color: isXM ? '#ffffff' : '#000000',
+                      boxShadow: isXM ? '0 0 20px rgba(239, 68, 68, 0.3)' : '0 0 20px rgba(255, 255, 255, 0.15)',
                     }}
                   >
-                    <span>Continue to Site</span>
-                    <ArrowRight className="w-5 h-5" />
+                    Continue to Site
                   </motion.button>
                 </motion.div>
               </div>
@@ -1666,22 +1580,13 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                <ChevronLeft className="w-5 h-5" /> Back
              </button>
              
-             <div className={cn("register-card bg-black/80 backdrop-blur-xl p-5 md:p-8 rounded-2xl relative overflow-hidden w-full max-w-md mx-4", neonBorderClass)}>
-                {/* Shimmer overlay effect */}
-                {!shouldReduceEffects && (
-                  <div className="absolute inset-0 shimmer-ltr opacity-20 pointer-events-none" />
-                )}
+             <div className="bg-black/40 p-8 md:p-10 rounded-2xl relative overflow-hidden w-full max-w-md mx-4 border border-white/[0.08]" style={{ backdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(40px)', WebkitBackdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(40px)', boxShadow: '0 0 1px rgba(255, 255, 255, 0.1)' }}>
                 
-                <div className="absolute top-0 right-0 p-3 md:p-4 opacity-10 z-0">
-                  <Lock className={cn("w-24 h-24 md:w-32 md:h-32", isXM ? "text-red-400" : "text-white", neonIconClass)} />
-                </div>
-                
-                <h2 className={cn("text-xl md:text-2xl font-bold shimmer-text mb-2 relative z-10", neonTextClass)}>Member Login</h2>
-                    <p className={cn("mb-5 md:mb-6 relative z-10 text-sm md:text-base neon-white-text", isXM ? "text-red-200/60" : "text-white/70")}>Sign in to access the platform.</p>
+                <h2 className="text-2xl md:text-3xl font-semibold mb-2 relative z-10 text-white" style={{ letterSpacing: '-0.02em' }}>Sign In</h2>
+                    <p className="mb-8 relative z-10 text-sm md:text-base text-white/40 font-normal">Access your account</p>
 
                 <form onSubmit={handleLoginSubmit} className="space-y-4 relative z-10" autoComplete="on">
                    <div className="relative group">
-                      <Mail className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors", isXM ? "text-red-400/50 group-focus-within:text-red-400" : "text-white/60 group-focus-within:text-white", neonIconClass)} />
                       <input
                         autoFocus
                         type="email"
@@ -1690,19 +1595,13 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         autoComplete="username"
                         value={loginEmail}
                         onChange={(e) => setLoginEmail(e.target.value)}
-                        placeholder="Email Address"
-                        className={cn("w-full bg-black/60 border-2 rounded-xl pl-10 pr-4 py-3 md:py-4 !text-white transition-all cursor-target text-base", 
-                          isXM 
-                            ? "border-red-500/30 placeholder-red-300/30 focus:border-red-500/60 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]" 
-                            : "border-white/25 placeholder-white/40 focus:border-white/60 focus:shadow-[0_0_15px_rgba(255,255,255,0.3)]",
-                          "focus:outline-none"
-                        )}
+                        placeholder="Email"
+                        className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-4 !text-white transition-all focus:outline-none focus:border-white/20 text-base placeholder-white/30"
                         style={{ color: '#ffffff' }}
                       />
                     </div>
 
                    <div className="relative group">
-                      <Lock className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors", isXM ? "text-red-400/50 group-focus-within:text-red-400" : "text-white/60 group-focus-within:text-white", neonIconClass)} />
                       <input
                         type={showPassword ? "text" : "password"}
                         name="password"
@@ -1711,28 +1610,20 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
                         placeholder="Password"
-                        className={cn("w-full bg-black/60 border-2 rounded-xl pl-10 pr-12 py-3 md:py-4 !text-white transition-all cursor-target text-base",
-                          isXM 
-                            ? "border-red-500/30 placeholder-red-300/30 focus:border-red-500/60 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]" 
-                            : "border-white/25 placeholder-white/40 focus:border-white/60 focus:shadow-[0_0_15px_rgba(255,255,255,0.3)]",
-                          "focus:outline-none"
-                        )}
+                        className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-4 pr-12 !text-white transition-all focus:outline-none focus:border-white/20 text-base placeholder-white/30"
                         style={{ color: '#ffffff' }}
                       />
                       <button 
                         type="button" 
                         onClick={() => setShowPassword(!showPassword)}
-                        className={cn("absolute right-3 top-1/2 -translate-y-1/2 transition-colors cursor-target", 
-                          isXM ? "text-red-400/50 hover:text-red-400" : "text-white/60 hover:text-white",
-                          neonIconClass
-                        )}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors cursor-target text-white/30 hover:text-white/60"
                       >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                       </button>
                     </div>
                     
                     {submitError && (
-                      <div className="text-red-400 text-sm bg-red-950/30 p-3 rounded-lg flex items-center gap-2 border border-red-500/20">
+                      <div className="text-red-400 text-sm bg-red-950/20 p-3 rounded-xl flex items-center gap-2 border border-red-500/10">
                         <AlertCircle className="w-4 h-4 shrink-0" /> {submitError}
                       </div>
                     )}
@@ -1740,18 +1631,20 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     <button
                       type="submit"
                       disabled={!loginEmail || !loginPassword}
-                      className={cn("relative z-10 w-full py-3 md:py-4 bg-black rounded-xl font-bold tracking-wide transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-target text-base overflow-hidden", neonBorderClass, neonTextClass)}
+                      className="relative z-10 w-full py-4 rounded-xl font-semibold transition-all flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed cursor-target text-base"
+                      style={{ 
+                        background: isXM ? '#ef4444' : '#ffffff', 
+                        color: isXM ? '#ffffff' : '#000000',
+                        boxShadow: isXM ? '0 0 20px rgba(239, 68, 68, 0.3)' : '0 0 20px rgba(255, 255, 255, 0.15)' 
+                      }}
                     >
-                      <span className={cn("relative z-20 flex items-center gap-2 shimmer-text", neonTextClass)}>
-                        LOGIN
-                        <ArrowRight className={cn("w-4 h-4", neonIconClass)} />
-                      </span>
+                      Sign In
                     </button>
                 </form>
 
-                <div className={cn("mt-5 md:mt-6 text-center border-t pt-4", isXM ? "border-red-500/40" : "border-white/20")}> 
-                  <button onClick={toggleViewMode} className={cn("text-sm transition-colors cursor-target", isXM ? "text-red-300/60 hover:text-red-300 neon-red-text" : "text-white/70 hover:text-white neon-white-text")}>
-                    Don&apos;t have a password? <span className={cn("underline", isXM ? "text-red-400 neon-red-text" : "text-white neon-white-text")}>Register Now</span>
+                <div className="mt-6 text-center border-t border-white/[0.08] pt-6"> 
+                  <button onClick={toggleViewMode} className="text-sm transition-colors cursor-target text-white/50 hover:text-white/70 font-normal">
+                    Don't have an account? <span className="text-white">Create one</span>
                   </button>
                 </div>
              </div>
@@ -1824,51 +1717,47 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                      <ChevronLeft className="w-5 h-5" /> {returnToAccountManager ? 'Back to Account Manager' : 'Back'}
                    </button>
                    
-                   <div className={cn("register-card bg-black/80 backdrop-blur-xl p-5 md:p-8 rounded-2xl relative overflow-hidden text-center w-full max-w-md mx-4", neonBorderClass)} style={{ zIndex: 1 }}>
-                      {/* Shimmer overlay effect */}
-                      {!shouldReduceEffects && (
-                        <div className="absolute inset-0 shimmer-ltr opacity-20 pointer-events-none" />
-                      )}
+                   <div className="bg-black/40 p-8 md:p-10 rounded-2xl relative overflow-hidden text-center w-full max-w-md mx-4 border border-white/[0.08]" style={{ zIndex: 1, backdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(40px)', WebkitBackdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(40px)', boxShadow: '0 0 1px rgba(255, 255, 255, 0.1)' }}>
                       
-                      <div className="absolute top-0 right-0 p-3 md:p-4 opacity-5 z-0">
-                        <Lock className={cn("w-24 h-24 md:w-32 md:h-32", isXM ? "text-red-400" : "text-white", neonIconClass)} />
-                      </div>
-
-                      <div className="mb-5 md:mb-6 flex justify-center">
-                         <div className={cn("h-14 w-14 md:h-16 md:w-16 rounded-full bg-black flex items-center justify-center", neonBorderClass)}>
-                           <ShieldCheck className={cn("w-7 h-7 md:w-8 md:h-8", isXM ? "text-red-400" : "text-white", neonIconClass)} />
+                      {/* Minimal Icon */}
+                      <div className="mb-6 flex justify-center">
+                         <div className="h-16 w-16 md:h-20 md:w-20 rounded-full flex items-center justify-center" style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                           <ShieldCheck className="w-8 h-8 md:w-10 md:h-10 text-white/40" />
                          </div>
                       </div>
 
-                      <h2 className={cn("text-xl md:text-3xl font-extrabold shimmer-text mb-3 relative z-10", neonTextClass)}>Unlock Free BullMoney Access</h2>
-                       <p className={cn("text-sm md:text-base mb-6 md:mb-8 max-w-sm mx-auto leading-relaxed relative z-10 neon-white-text", isXM ? "text-red-200/70" : "text-white/70")}> 
-                        Get free trading setups and community access. <br/>
-                        <span className={cn(isXM ? "text-red-300/70" : "text-white/70", neonTextClass)}>No payment. Takes about 2 minutes.</span>
+                      <h2 className="text-2xl md:text-3xl font-semibold mb-3 relative z-10 text-white" style={{ letterSpacing: '-0.02em' }}>Free Access</h2>
+                       <p className="text-sm md:text-base mb-8 max-w-sm mx-auto leading-relaxed relative z-10 text-white/40 font-normal"> 
+                        Trading setups and community access.<br/>
+                        <span className="text-white/30">No payment required.</span>
                       </p>
 
                       <motion.button 
                         onClick={handleNext}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className={cn("relative z-10 w-full py-3 md:py-4 bg-black rounded-xl font-bold text-base md:text-lg tracking-wide transition-all flex items-center justify-center cursor-target overflow-hidden", neonBorderClass, neonTextClass)}
+                        whileTap={{ scale: 0.97 }}
+                        className="relative z-10 w-full py-4 md:py-4 rounded-xl font-semibold text-base transition-all flex items-center justify-center cursor-target"
+                        style={{ 
+                          background: isXM ? '#ef4444' : '#ffffff', 
+                          color: isXM ? '#ffffff' : '#000000',
+                          boxShadow: isXM ? '0 0 20px rgba(239, 68, 68, 0.3)' : '0 0 20px rgba(255, 255, 255, 0.15)' 
+                        }}
                       >
-                        <span className={cn("relative z-10 flex items-center shimmer-text", neonTextClass)}>
-                          Start Free Access <ArrowRight className={cn("w-5 h-5 ml-2", neonIconClass)} />
-                        </span>
+                        Get Started
                       </motion.button>
                       
-                      <div className="mt-4 space-y-3 relative z-10">
-                         <div className={cn("flex items-center justify-center gap-2 text-xs", isXM ? "text-red-400/60" : "text-white/60", neonTextClass)}>
-                             <Lock className={cn("w-3 h-3", neonIconClass)} /> No credit card required
+                      <div className="mt-6 space-y-3 relative z-10">
+                         <div className="flex items-center justify-center gap-2 text-xs text-white/30">
+                             <Lock className="w-3 h-3" /> No credit card required
                          </div>
 
-                         {/* DYNAMIC BUTTON FOR EXISTING USERS */}
+                         {/* Clean login button */}
                          <motion.button 
                            onClick={toggleViewMode}
-                           whileHover={{ scale: 1.01 }}
-                          className={cn("w-full py-3 rounded-lg text-sm font-semibold transition-all mt-2 bg-black/60 text-white", neonBorderClass)}
+                           whileTap={{ scale: 0.98 }}
+                          className="w-full py-3 rounded-xl text-sm font-normal transition-all text-white/50 hover:text-white/70"
+                          style={{ background: 'transparent' }}
                          >
-                            Already a member? Login here
+                            Already have an account? Sign in
                          </motion.button>
                       </div>
                    </div>
@@ -1889,42 +1778,49 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   <StepCard
                     {...getStepProps(1)}
                     title="Open Free Account"
-                    className="bg-black/80 register-card w-full max-w-md mx-auto"
+                    className="bg-black/40 register-card w-full max-w-md mx-auto border border-white/[0.08]"
                     isXM={isXM}
-                    disableEffects={shouldReduceEffects}
+                    disableEffects={true}
                     disableBackdropBlur={shouldDisableBackdropBlur}
                     actions={
-                      <div className="flex flex-col gap-2 md:gap-4">
-                        <p className={cn("text-xs text-center flex items-center justify-center gap-1", neonTextClass)}>
-                          <Clock className={cn("w-3 h-3", neonIconClass)} /> Takes about 1 minute • No deposit required
+                      <div className="flex flex-col gap-3 md:gap-4">
+                        <p className="text-xs text-center flex items-center justify-center gap-1.5 text-white/30">
+                          <Clock className="w-3.5 h-3.5" /> Takes 1 minute · No deposit required
                         </p>
                         
-                        <div className="flex flex-col items-center justify-center gap-2 md:gap-3">
-                           {/* COPY CODE BUTTON */}
+                        <div className="flex flex-col items-center justify-center gap-2.5 md:gap-3">
+                           {/* Clean copy button */}
                           <button
                             onClick={() => copyCode(brokerCode)}
-                            className={cn("inline-flex items-center gap-2 rounded-lg px-3 py-2.5 md:py-3 text-sm font-semibold transition cursor-target w-full justify-center mb-1", neonBorderClass, neonTextClass)}
+                            className="inline-flex items-center gap-2 rounded-xl px-4 py-3.5 md:py-4 text-sm font-semibold transition cursor-target w-full justify-center text-white"
+                            style={{
+                              background: isXM ? 'rgba(239, 68, 68, 0.08)' : 'rgba(255, 255, 255, 0.05)',
+                              border: isXM ? '1px solid rgba(239, 68, 68, 0.15)' : '1px solid rgba(255, 255, 255, 0.08)',
+                            }}
                           >
-                            {copied ? <Check className={cn("h-4 w-4", neonIconClass)} /> : <Copy className={cn("h-4 w-4", neonIconClass)} />}
-                            <span className={cn("shimmer-text", neonTextClass)}>{copied ? "Copied" : `Copy Code: ${brokerCode}`}</span>
+                            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                            <span>{copied ? "Copied" : `Copy Code: ${brokerCode}`}</span>
                           </button>
 
-                           {/* EXTERNAL LINK BUTTON */}
+                           {/* Primary action button */}
                           <button
                             onClick={handleBrokerClick}
-                            className={cn("w-full py-3 md:py-3.5 rounded-xl font-bold transition flex items-center justify-center gap-2 cursor-target text-base bg-black relative overflow-hidden", neonBorderClass, neonTextClass)}
+                            className="w-full py-4 md:py-4 rounded-xl font-semibold transition flex items-center justify-center gap-2 cursor-target text-base"
+                            style={{ 
+                              background: isXM ? '#ef4444' : '#ffffff', 
+                              color: isXM ? '#ffffff' : '#000000',
+                              boxShadow: isXM ? '0 0 20px rgba(239, 68, 68, 0.3)' : '0 0 20px rgba(255, 255, 255, 0.15)' 
+                            }}
                           >
-                            <span className={cn("relative z-10 flex items-center gap-2 shimmer-text", neonTextClass)}>
-                              Open Free Account
-                              <ExternalLink className={cn("h-4 w-4", neonIconClass)} />
-                            </span>
+                            <span>Open Free Account</span>
+                            <ExternalLink className="h-4 w-4" />
                           </button>
                         </div>
                         
-                        {/* DYNAMIC SECONDARY BUTTON FOR "ALREADY HAVE ACCOUNT" */}
+                        {/* Clean secondary button */}
                         <button 
                             onClick={handleNext}
-                            className={cn("w-full py-2.5 md:py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 mt-1 bg-black/60", neonBorderClass, neonTextClass)}
+                            className="w-full py-3.5 md:py-4 rounded-xl font-normal transition-all flex items-center justify-center gap-2 bg-transparent text-white/50 hover:text-white/70 text-sm"
                         >
                             I already have an account
                         </button>
@@ -2026,127 +1922,97 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 >
                   <StepCard
                     {...getStepProps(3)}
-                    title="Create BullMoney Login"
-                    className="register-card w-full max-w-md mx-auto"
+                    title="Create Account"
+                    className="register-card w-full max-w-md mx-auto bg-black/40 border border-white/[0.08]"
                     isXM={isXM}
-                    disableEffects={shouldReduceEffects}
+                    disableEffects={true}
                     disableBackdropBlur={shouldDisableBackdropBlur}
                     actions={
                       <button
                         onClick={handleNext}
                         disabled={!formData.email || !formData.password || !acceptedTerms}
-                        className={cn(
-                          "w-full py-3 md:py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-target text-base relative overflow-hidden",
-                          (!formData.email || !formData.password || !acceptedTerms) 
-                            ? cn("opacity-50 cursor-not-allowed bg-black/60 border-2", isXM ? "border-red-500/20 text-red-300/50" : "border-white/25 text-white/50")
-                            : cn("bg-black", isXM ? "neon-red-border text-red-400 neon-red-text" : "border-2 border-white/60 text-white")
-                        )}
+                        className="w-full py-4 md:py-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 cursor-target text-base text-black disabled:opacity-40 disabled:cursor-not-allowed"
+                        style={{ background: '#ffffff', boxShadow: '0 0 20px rgba(255, 255, 255, 0.15)' }}
                       >
-                        <span className={cn("relative z-10 flex items-center gap-2", (formData.email && formData.password && acceptedTerms) && cn("shimmer-text", isXM ? "neon-red-text" : "neon-white-text"))}>
-                          Unlock My Access <ArrowRight className="w-4 h-4" />
-                        </span>
+                        Complete Registration
                       </button>
                     }
                   >
-                     <p className={cn("text-xs md:text-sm mb-3 md:mb-4 neon-white-text", isXM ? "text-red-200/60" : "text-white/70")}>This lets you access <span className={cn("shimmer-text font-medium", isXM ? "neon-red-text" : "neon-white-text")}>setups</span>, tools, and the community.</p>
-                    <div className="space-y-3 md:space-y-4 pt-1">
+                     <p className="text-xs md:text-sm mb-6 text-white/40 font-normal">Access setups, tools, and the community.</p>
+                    <div className="space-y-4 md:space-y-4 pt-1">
                       <div>
                         <div className="relative group">
-                          <Mail className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors", isXM ? "text-red-400/50 group-focus-within:text-red-400" : "text-white/60 group-focus-within:text-white", neonIconClass)} />
                           <input
                             autoFocus
                             type="email"
                             name="email"
-                            autoComplete="username" // Enables browser autofill
+                            autoComplete="username"
                             value={formData.email}
                             onChange={handleChange}
                             placeholder="Email address"
-                            className={cn("w-full bg-black/60 border-2 rounded-lg pl-10 pr-4 py-3.5 !text-white transition-all cursor-target text-base",
-                              isXM 
-                                ? "border-red-500/30 placeholder-red-300/30 focus:border-red-500/60 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]" 
-                                : "border-white/25 placeholder-white/40 focus:border-white/60 focus:shadow-[0_0_15px_rgba(255,255,255,0.3)]",
-                              "focus:outline-none"
-                            )}
+                            className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-4 !text-white transition-all cursor-target text-base placeholder-white/30 focus:outline-none focus:border-white/20"
                             style={{ color: '#ffffff' }}
                           />
                         </div>
-                        <p className={cn("text-[10px] mt-1 ml-1", isXM ? "text-red-300/40 neon-red-text" : "text-white/60")}>We&apos;ll send your login details here.</p>
+                        <p className="text-[10px] mt-1.5 ml-1 text-white/30">We'll send your login details here.</p>
                       </div>
 
                       <div>
                         <div className="relative group">
-                          <Lock className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors", isXM ? "text-red-400/50 group-focus-within:text-red-400" : "text-white/60 group-focus-within:text-white", neonIconClass)} />
                           <input
                             type={showPassword ? "text" : "password"}
                             name="password"
-                            autoComplete="new-password" // Enables browser to save this password
+                            autoComplete="new-password"
                             value={formData.password}
                             onChange={handleChange}
                             placeholder="Create password (min 6 chars)"
-                            className={cn("w-full bg-black/60 border-2 rounded-lg pl-10 pr-12 py-3.5 !text-white transition-all cursor-target text-base",
-                              isXM 
-                                ? "border-red-500/30 placeholder-red-300/30 focus:border-red-500/60 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]" 
-                                : "border-white/25 placeholder-white/40 focus:border-white/60 focus:shadow-[0_0_15px_rgba(255,255,255,0.3)]",
-                              "focus:outline-none"
-                            )}
+                            className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 pr-12 py-4 !text-white transition-all cursor-target text-base placeholder-white/30 focus:outline-none focus:border-white/20"
                             style={{ color: '#ffffff' }}
                           />
                           <button 
                             type="button" 
                             onClick={() => setShowPassword(!showPassword)}
-                            className={cn("absolute right-3 top-1/2 -translate-y-1/2 transition-colors cursor-target",
-                              isXM ? "text-red-400/50 hover:text-red-400" : "text-white/60 hover:text-white",
-                              neonIconClass
-                            )}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors cursor-target text-white/30 hover:text-white/60"
                           >
                             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                           </button>
                         </div>
-                        <p className={cn("text-[10px] mt-1 ml-1", isXM ? "text-red-300/40 neon-red-text" : "text-white/60")}>Must be at least 6 characters.</p>
+                        <p className="text-[10px] mt-1.5 ml-1 text-white/30">Must be at least 6 characters.</p>
                       </div>
 
                       <div>
                         <div className="relative group">
-                          <User className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors", isXM ? "text-red-400/50 group-focus-within:text-red-400" : "text-white/60 group-focus-within:text-white", neonIconClass)} />
                           <input
                             type="text"
                             name="referralCode"
                             value={formData.referralCode}
                             onChange={handleChange}
                             placeholder="Referral Code (Optional)"
-                            className={cn("w-full bg-black/60 border-2 rounded-lg pl-10 pr-4 py-3.5 !text-white transition-all cursor-target text-base",
-                              isXM 
-                                ? "border-red-500/30 placeholder-red-300/30 focus:border-red-500/60 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]" 
-                                : "border-white/25 placeholder-white/40 focus:border-white/60 focus:shadow-[0_0_15px_rgba(255,255,255,0.3)]",
-                              "focus:outline-none"
-                            )}
+                            className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-4 !text-white transition-all cursor-target text-base placeholder-white/30 focus:outline-none focus:border-white/20"
                             style={{ color: '#ffffff' }}
                           />
                         </div>
-                        <p className={cn("text-[10px] mt-1 ml-1", isXM ? "text-red-300/40 neon-red-text" : "text-white/60")}>Leave blank if you don&apos;t have one.</p>
+                        <p className="text-[10px] mt-1.5 ml-1 text-white/30">Leave blank if you don't have one.</p>
                       </div>
 
                         <div
                         onClick={() => setAcceptedTerms(!acceptedTerms)}
-                        className={cn("flex items-start gap-3 p-3 rounded-lg bg-black/60 cursor-pointer transition-colors cursor-target", isXM ? "neon-red-border" : "border-2 border-white/30")}
+                        className="flex items-start gap-3 p-4 rounded-xl bg-white/[0.02] cursor-pointer transition-colors cursor-target border border-white/[0.05]"
                       >
                         <div 
                           onClick={() => setAcceptedTerms(!acceptedTerms)}
-                          className={cn(
-                          "w-5 h-5 rounded border-2 flex items-center justify-center mt-0.5 transition-colors shrink-0 cursor-pointer",
-                          acceptedTerms 
-                            ? cn("border-blue-600", isXM ? "neon-red-bg" : "neon-blue-bg")
-                            : isXM ? "border-red-500/60" : "border-blue-500/60"
-                        )}>
-                          {acceptedTerms && <Check className="w-3.5 h-3.5 text-white" />}
+                          className="w-5 h-5 rounded border border-white/20 flex items-center justify-center mt-0.5 transition-colors shrink-0 cursor-pointer"
+                          style={{ background: acceptedTerms ? '#ffffff' : 'transparent' }}
+                        >
+                          {acceptedTerms && <Check className="w-3.5 h-3.5 text-black" />}
                         </div>
                         <div className="flex-1">
-                          <p className="text-xs text-white/70 leading-tight neon-white-text">
+                          <p className="text-xs text-white/40 leading-relaxed font-normal">
                             I agree to the{' '}
                             <button 
                               type="button"
                               onClick={(e) => { e.stopPropagation(); setLegalModalTab('terms'); setIsLegalModalOpen(true); }}
-                              className="text-white hover:text-white/80 underline underline-offset-2 transition-colors"
+                              className="text-white hover:text-white/80 transition-colors"
                             >
                               Terms of Service
                             </button>
@@ -2154,7 +2020,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             <button 
                               type="button"
                               onClick={(e) => { e.stopPropagation(); setLegalModalTab('privacy'); setIsLegalModalOpen(true); }}
-                              className="text-white hover:text-white/80 underline underline-offset-2 transition-colors"
+                              className="text-white hover:text-white/80 transition-colors"
                             >
                               Privacy Policy
                             </button>
@@ -2162,25 +2028,25 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             <button 
                               type="button"
                               onClick={(e) => { e.stopPropagation(); setLegalModalTab('disclaimer'); setIsLegalModalOpen(true); }}
-                              className="text-white hover:text-white/80 underline underline-offset-2 transition-colors"
+                              className="text-white hover:text-white/80 transition-colors"
                             >
                               Disclaimer
                             </button>
-                            . I understand this is educational content only and NOT financial advice.
+                            . I understand this is educational content only.
                           </p>
                         </div>
                       </div>
                     </div>
 
                     {submitError && (
-                      <div className="flex items-center gap-2 text-red-400 bg-red-950/20 p-3 rounded-lg border border-red-900/50 mt-4 animate-in slide-in-from-top-2">
+                      <div className="flex items-center gap-2 text-red-400 bg-red-950/20 p-3 rounded-xl border border-red-900/30 mt-4">
                         <AlertCircle className="w-4 h-4 shrink-0" />
-                        <span className="text-xs font-medium">{submitError}</span>
+                        <span className="text-xs font-normal">{submitError}</span>
                       </div>
                     )}
                   </StepCard>
 
-                  <button onClick={handleBack} className={cn("mt-3 md:mt-4 flex items-center text-sm mx-auto transition-colors cursor-target", isXM ? "text-red-300/60 hover:text-red-300 neon-red-text" : "text-white/70 hover:text-white neon-white-text")}> 
+                  <button onClick={handleBack} className="mt-4 md:mt-5 flex items-center text-sm mx-auto transition-colors cursor-target text-white/50 hover:text-white/70 font-normal"> 
                     <ChevronLeft className="w-4 h-4 mr-1" /> Back
                   </button>
                 </motion.div>
@@ -2207,27 +2073,18 @@ const StepCard = memo(({ number, number2, title, children, actions, className, i
   const n = useRed ? number2 : number;
   return (
     <div className={cn(
-      "group relative overflow-hidden rounded-2xl p-5 md:p-8",
-      cn("bg-black/80", disableBackdropBlur ? '' : "backdrop-blur-xl", isXM ? "neon-red-border" : "neon-blue-border"),
+      "group relative overflow-hidden rounded-2xl p-6 md:p-10",
       className
-    )}>
-      {/* Shimmer overlay effect */}
-      {!disableEffects && (
-        <div className="absolute inset-0 shimmer-ltr opacity-20 pointer-events-none rounded-2xl" />
-      )}
+    )} style={{ backdropFilter: disableBackdropBlur ? 'none' : 'blur(40px)', WebkitBackdropFilter: disableBackdropBlur ? 'none' : 'blur(40px)', boxShadow: '0 0 1px rgba(255, 255, 255, 0.1)' }}>
       
-      {!disableEffects && (
-        <div className="pointer-events-none absolute -top-12 right-0 h-24 w-2/3 blur-2xl z-0" style={{background: isXM ? 'linear-gradient(to left, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1), transparent)' : 'linear-gradient(to left, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1), transparent)'}} />
-      )}
-      <div className={cn("pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset z-0", isXM ? "ring-red-500/10" : "ring-blue-500/10")} />
-      <div className="flex items-center justify-between mb-3 md:mb-6 relative z-10">
-        <span className={cn("inline-flex items-center gap-2 text-[10px] md:text-[11px] uppercase tracking-[0.18em] px-2 py-1 rounded-md bg-black/60", isXM ? "neon-red-border text-red-300/90 neon-red-text" : "neon-blue-border text-blue-300/90 neon-blue-text")}>
-          <span className="shimmer-text">Step {n} of 3</span>
+      <div className="flex items-center justify-between mb-6 md:mb-8 relative z-10">
+        <span className="inline-flex items-center gap-2 text-[10px] md:text-[11px] uppercase tracking-wider px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.08] text-white/40 font-normal">
+          Step {n} of 3
         </span>
       </div>
-      <h3 className={cn("text-lg md:text-2xl font-extrabold shimmer-text mb-3 md:mb-4 relative z-10", isXM ? "neon-red-text" : "neon-blue-text")}>{title}</h3>
+      <h3 className="text-xl md:text-2xl font-semibold mb-4 md:mb-6 relative z-10 text-white" style={{ letterSpacing: '-0.02em' }}>{title}</h3>
       <div className="flex-1 relative z-10">{children}</div>
-      {actions && <div className={cn("mt-5 md:mt-8 pt-5 md:pt-6 border-t relative z-10", isXM ? "border-red-500/40" : "border-blue-500/40")}>{actions}</div>}
+      {actions && <div className="mt-6 md:mt-8 pt-6 md:pt-8 border-t border-white/[0.08] relative z-10">{actions}</div>}
     </div>
   );
 });

@@ -356,36 +356,44 @@ export const FPSMonitor = memo(({ enabled = false, position = 'bottom-right' }: 
   if (!enabled) return null;
 
   const positionClasses = {
-    'top-left': 'top-2 left-2',
-    'top-right': 'top-2 right-2',
-    'bottom-left': 'bottom-2 left-2',
-    'bottom-right': 'bottom-2 right-2',
+    'top-left': 'top-2 left-2 sm:top-4 sm:left-4',
+    'top-right': 'top-2 right-2 sm:top-4 sm:right-4',
+    'bottom-left': 'bottom-2 left-2 sm:bottom-4 sm:left-4',
+    'bottom-right': 'bottom-3 right-3 sm:bottom-4 sm:right-4',
   };
 
-  // White-focused scheme with warning fallbacks
-  const fpsColor = fps >= 55 ? 'text-white' : fps >= 30 ? 'text-yellow-400' : 'text-red-500';
-  const glowColor = fps >= 55 ? 'rgba(255, 255, 255, 0.5)' : fps >= 30 ? 'rgba(250, 204, 21, 0.3)' : 'rgba(239, 68, 68, 0.6)';
-  const pulsAnimation = fps >= 55 ? `
-    @keyframes fps-pulse-white {
-      0%, 100% { text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff; }
-      50% { text-shadow: 0 0 8px #ffffff, 0 0 16px #ffffff; }
+  // Apple style: All white, minimal, clean
+  const isPoorPerformance = fps < 30;
+  const pulseStyle = isPoorPerformance ? `
+    @keyframes fps-pulse-warning {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
     }
-    .fps-monitor { animation: fps-pulse-white 1.5s ease-in-out infinite; }
-  ` : fps >= 30 ? '' : `
-    @keyframes fps-pulse-red {
-      0%, 100% { text-shadow: 0 0 4px #ef4444, 0 0 8px #ef4444; }
-      50% { text-shadow: 0 0 8px #ef4444, 0 0 16px #ef4444; }
-    }
-    .fps-monitor { animation: fps-pulse-red 0.8s ease-in-out infinite; }
-  `;
+    .fps-monitor { animation: fps-pulse-warning 1.5s ease-in-out infinite; }
+  ` : '';
 
   return (
     <>
-      <style>{pulsAnimation}</style>
-      <div className={`fixed ${positionClasses[position]} z-[99999] px-3 py-1.5 bg-black/90 border border-white/40 rounded-lg text-xs font-mono font-bold ${fpsColor} fps-monitor`} style={{
-        boxShadow: `0 0 8px ${glowColor}`
-      }}>
-        ● {fps} FPS
+      <style>{pulseStyle}</style>
+      <div 
+        className={`fixed ${positionClasses[position]} z-[99999] ${isPoorPerformance ? 'fps-monitor' : ''}`}
+        style={{
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          border: '0.5px solid rgba(255, 255, 255, 0.5)',
+          borderRadius: '6px',
+          padding: '6px 10px',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.6)',
+          fontSize: '11px',
+          fontWeight: '600',
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+          color: '#000000',
+          letterSpacing: '-0.3px',
+          opacity: isPoorPerformance ? 0.8 : 1,
+        }}
+      >
+        <span style={{ fontSize: '9px', letterSpacing: '0.5px' }}>● {fps}</span>
       </div>
     </>
   );
