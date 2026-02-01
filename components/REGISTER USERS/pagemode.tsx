@@ -704,6 +704,47 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       document.head.appendChild(style);
     }
   }, []);
+
+  // --- WELCOME AUDIO: Play once on page load (no loop) ---
+  useEffect(() => {
+    const audioKey = 'bullmoney_welcome_audio_played';
+    const hasPlayed = sessionStorage.getItem(audioKey);
+    if (hasPlayed) return; // Already played this session
+
+    const audio = new Audio('/luvvoice.com-20260201-ByklU8.mp3');
+    audio.loop = false;
+    audio.volume = 0.7;
+
+    const playAudio = () => {
+      audio.play()
+        .then(() => {
+          sessionStorage.setItem(audioKey, 'true');
+        })
+        .catch(() => {
+          // Autoplay blocked - wait for user interaction
+          const playOnInteraction = () => {
+            audio.play()
+              .then(() => {
+                sessionStorage.setItem(audioKey, 'true');
+              })
+              .catch(() => {});
+            document.removeEventListener('click', playOnInteraction);
+            document.removeEventListener('touchstart', playOnInteraction);
+            document.removeEventListener('keydown', playOnInteraction);
+          };
+          document.addEventListener('click', playOnInteraction, { once: true });
+          document.addEventListener('touchstart', playOnInteraction, { once: true });
+          document.addEventListener('keydown', playOnInteraction, { once: true });
+        });
+    };
+
+    playAudio();
+
+    return () => {
+      audio.pause();
+      audio.src = '';
+    };
+  }, []);
   
   // --- UI STATE CONTEXT: Signal to minimize audio widget when pagemode is active ---
   const { setPagemodeOpen, setWelcomeScreenActive } = useUIState();

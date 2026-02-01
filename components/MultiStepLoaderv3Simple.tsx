@@ -294,16 +294,18 @@ const useHaptics = () => {
 };
 
 // ============================================================================
-// VIRTUAL KEYBOARD COMPONENT
+// VIRTUAL KEYBOARD COMPONENT - Mobile responsive
 // ============================================================================
-const VirtualKeyboard = ({ 
-  targetKeys, 
-  pressedKeys, 
-  onKeyPress 
-}: { 
-  targetKeys: string[]; 
+const VirtualKeyboard = ({
+  targetKeys,
+  pressedKeys,
+  onKeyPress,
+  compact = false
+}: {
+  targetKeys: string[];
   pressedKeys: Set<string>;
   onKeyPress: (key: string) => void;
+  compact?: boolean;
 }) => {
   const rows = [
     ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
@@ -313,40 +315,46 @@ const VirtualKeyboard = ({
   ];
 
   return (
-    <div className="flex flex-col items-center gap-1.5">
+    <div className={`flex flex-col items-center ${compact ? 'gap-1' : 'gap-1.5'}`}>
       {rows.map((row, i) => (
-        <div key={i} className="flex gap-1">
+        <div key={i} className={`flex ${compact ? 'gap-0.5' : 'gap-1'}`}>
           {row.map((key) => {
             const isTarget = targetKeys.includes(key);
             const isPressed = pressedKeys.has(key);
             const isSpace = key === 'SPACE';
-            
+
             return (
               <motion.button
                 key={key}
                 onClick={() => onKeyPress(key)}
                 className={`
-                  ${isSpace ? 'w-40' : 'w-9'} h-9 rounded-lg font-bold text-sm
+                  ${isSpace
+                    ? compact ? 'w-28 xs:w-32' : 'w-32 sm:w-40'
+                    : compact ? 'w-7 xs:w-8' : 'w-8 sm:w-9'
+                  }
+                  ${compact ? 'h-8' : 'h-8 sm:h-9'}
+                  rounded-md sm:rounded-lg font-bold
+                  ${compact ? 'text-xs' : 'text-xs sm:text-sm'}
                   flex items-center justify-center
                   transition-all duration-150
-                  ${isPressed 
-                    ? 'bg-white text-black border-white' 
-                    : isTarget 
-                      ? 'bg-white/30 text-white border-white animate-pulse' 
+                  ${isPressed
+                    ? 'bg-white text-black border-white'
+                    : isTarget
+                      ? 'bg-white/30 text-white border-white animate-pulse'
                       : 'bg-black/50 text-white/50 border-white/20'
                   }
-                  border-2
+                  border sm:border-2
                 `}
                 style={{
-                  boxShadow: isTarget && !isPressed 
-                    ? '0 0 15px #ffffff, 0 0 30px #ffffff' 
-                    : isPressed 
-                      ? '0 0 15px #ffffff' 
+                  boxShadow: isTarget && !isPressed
+                    ? '0 0 10px #ffffff, 0 0 20px #ffffff'
+                    : isPressed
+                      ? '0 0 10px #ffffff'
                       : 'none',
                 }}
                 whileTap={{ scale: 0.95 }}
               >
-                {isSpace ? '⎵ SPACE' : key}
+                {isSpace ? (compact ? 'SPACE' : '⎵ SPACE') : key}
               </motion.button>
             );
           })}
@@ -357,87 +365,141 @@ const VirtualKeyboard = ({
 };
 
 // ============================================================================
-// DRAGGABLE KEY COMPONENT
+// DRAGGABLE KEY COMPONENT - Fixed for mobile touch, responsive sizing
 // ============================================================================
-const DraggableKey = ({ 
-  onDrop, 
-  vaultPosition 
-}: { 
+const DraggableKey = ({
+  onDrop,
+  vaultPosition,
+  compact = false
+}: {
   onDrop: () => void;
   vaultPosition: { x: number; y: number };
+  compact?: boolean;
 }) => {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isNearVault, setIsNearVault] = useState(false);
   const keyRef = useRef<HTMLDivElement>(null);
+  const hasDroppedRef = useRef(false);
+  const keySize = compact ? 30 : 40;
 
-  const handleDrag = useCallback((e: React.TouchEvent | React.MouseEvent) => {
-    if (!isDragging) return;
-    
+  // Handle drag start - set initial position
+  const handleDragStart = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    hasDroppedRef.current = false;
+    setIsDragging(true);
+
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    
-    setPosition({ x: clientX - 40, y: clientY - 40 });
+    setPosition({ x: clientX - keySize, y: clientY - keySize });
+  }, [keySize]);
 
-    // Check if near vault
-    const distance = Math.sqrt(
-      Math.pow(clientX - vaultPosition.x, 2) + 
+  // Check distance to vault
+  const checkDistance = useCallback((clientX: number, clientY: number) => {
+    if (vaultPosition.x === 0 && vaultPosition.y === 0) return Infinity;
+    return Math.sqrt(
+      Math.pow(clientX - vaultPosition.x, 2) +
       Math.pow(clientY - vaultPosition.y, 2)
     );
-    
-    if (distance < 80) {
-      onDrop();
-    }
-  }, [isDragging, vaultPosition, onDrop]);
+  }, [vaultPosition]);
 
   useEffect(() => {
+    if (!isDragging) return;
+
     const handleMove = (e: MouseEvent | TouchEvent) => {
-      if (!isDragging) return;
-      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-      setPosition({ x: clientX - 40, y: clientY - 40 });
-      
-      const distance = Math.sqrt(
-        Math.pow(clientX - vaultPosition.x, 2) + 
-        Math.pow(clientY - vaultPosition.y, 2)
-      );
-      if (distance < 80) onDrop();
+      e.preventDefault();
+      e.stopPropagation();
+      if (hasDroppedRef.current) return;
+
+      let clientX: number;
+      let clientY: number;
+
+      if ('touches' in e && e.touches.length > 0) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else if ('clientX' in e) {
+        clientX = e.clientX;
+        clientY = e.clientY;
+      } else {
+        return;
+      }
+
+      setPosition({ x: clientX - keySize, y: clientY - keySize });
+
+      // Check if near vault - use larger detection radius for mobile (150px)
+      const distance = checkDistance(clientX, clientY);
+      setIsNearVault(distance < 150);
+
+      // Drop when very close (120px for easier mobile targeting)
+      if (distance < 120 && !hasDroppedRef.current) {
+        hasDroppedRef.current = true;
+        setIsDragging(false);
+        setIsNearVault(false);
+        onDrop();
+      }
     };
 
-    const handleEnd = () => setIsDragging(false);
+    const handleEnd = (e: MouseEvent | TouchEvent) => {
+      e.preventDefault();
 
-    if (isDragging) {
-      window.addEventListener('mousemove', handleMove);
-      window.addEventListener('touchmove', handleMove);
-      window.addEventListener('mouseup', handleEnd);
-      window.addEventListener('touchend', handleEnd);
-    }
+      // On touch end, check final position for drop
+      if (!hasDroppedRef.current && 'changedTouches' in e && e.changedTouches.length > 0) {
+        const touch = e.changedTouches[0];
+        const distance = checkDistance(touch.clientX, touch.clientY);
+        if (distance < 150) {
+          hasDroppedRef.current = true;
+          onDrop();
+        }
+      }
+
+      setIsDragging(false);
+      setIsNearVault(false);
+    };
+
+    // Use passive: false to allow preventDefault on touch events
+    window.addEventListener('mousemove', handleMove, { passive: false });
+    window.addEventListener('touchmove', handleMove, { passive: false });
+    window.addEventListener('mouseup', handleEnd, { passive: false });
+    window.addEventListener('touchend', handleEnd, { passive: false });
+    window.addEventListener('touchcancel', handleEnd, { passive: false });
 
     return () => {
       window.removeEventListener('mousemove', handleMove);
       window.removeEventListener('touchmove', handleMove);
       window.removeEventListener('mouseup', handleEnd);
       window.removeEventListener('touchend', handleEnd);
+      window.removeEventListener('touchcancel', handleEnd);
     };
-  }, [isDragging, vaultPosition, onDrop]);
+  }, [isDragging, vaultPosition, onDrop, checkDistance, keySize]);
 
   return (
     <motion.div
       ref={keyRef}
-      className="fixed w-20 h-20 rounded-2xl flex items-center justify-center cursor-grab active:cursor-grabbing z-50"
+      className={`fixed ${compact ? 'w-14 h-14' : 'w-16 h-16 sm:w-20 sm:h-20'} rounded-2xl flex items-center justify-center cursor-grab active:cursor-grabbing z-[100] touch-none select-none`}
       style={{
-        left: position.x || '50%',
-        top: position.y || 200,
-        transform: position.x === 0 ? 'translateX(-50%) translateZ(0)' : 'translateZ(0)',
-        background: 'linear-gradient(135deg, #ffffff, #ffffff)',
+        left: position?.x ?? '50%',
+        top: position?.y ?? (compact ? 150 : 200),
+        transform: position === null ? 'translateX(-50%) translateZ(0)' : 'translateZ(0)',
+        background: isNearVault
+          ? 'linear-gradient(135deg, #22c55e, #16a34a)'
+          : 'linear-gradient(135deg, #ffffff, #e5e5e5)',
         animation: !isDragging ? 'key-float 2s ease-in-out infinite' : undefined,
         willChange: 'transform',
+        WebkitTapHighlightColor: 'transparent',
+        touchAction: 'none',
+        WebkitUserSelect: 'none',
+        userSelect: 'none',
+        boxShadow: isNearVault
+          ? '0 0 30px rgba(34, 197, 94, 0.8)'
+          : '0 0 20px rgba(255, 255, 255, 0.5)',
       }}
-      onMouseDown={() => setIsDragging(true)}
-      onTouchStart={() => setIsDragging(true)}
+      onMouseDown={handleDragStart}
+      onTouchStart={handleDragStart}
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.95 }}
     >
-      <Key size={40} className="text-black" />
+      <Key size={compact ? 28 : 32} className={isNearVault ? "text-white" : "text-black"} />
     </motion.div>
   );
 };
@@ -515,7 +577,7 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
   // Initialize
   useEffect(() => {
     setIsMobile(isMobileDevice());
-    
+
     const styleId = 'neon-loader-v3-simple-styles';
     if (!document.getElementById(styleId)) {
       const style = document.createElement('style');
@@ -529,12 +591,72 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
     return () => { document.body.style.overflow = ''; };
   }, []);
 
-  // Update vault position
+  // --- V3 LOADER AUDIO: Play once on page load (no loop) ---
   useEffect(() => {
-    if (vaultRef.current) {
-      const rect = vaultRef.current.getBoundingClientRect();
-      setVaultPosition({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
-    }
+    const audioKey = 'bullmoney_v3loader_audio_played';
+    const hasPlayed = sessionStorage.getItem(audioKey);
+    if (hasPlayed) return; // Already played this session
+
+    const audio = new Audio('/luvvoice.com-20260201-TWfAQU.mp3');
+    audio.loop = false;
+    audio.volume = 0.7;
+
+    const playAudio = () => {
+      audio.play()
+        .then(() => {
+          sessionStorage.setItem(audioKey, 'true');
+        })
+        .catch(() => {
+          // Autoplay blocked - wait for user interaction
+          const playOnInteraction = () => {
+            audio.play()
+              .then(() => {
+                sessionStorage.setItem(audioKey, 'true');
+              })
+              .catch(() => {});
+            document.removeEventListener('click', playOnInteraction);
+            document.removeEventListener('touchstart', playOnInteraction);
+            document.removeEventListener('keydown', playOnInteraction);
+          };
+          document.addEventListener('click', playOnInteraction, { once: true });
+          document.addEventListener('touchstart', playOnInteraction, { once: true });
+          document.addEventListener('keydown', playOnInteraction, { once: true });
+        });
+    };
+
+    playAudio();
+
+    return () => {
+      audio.pause();
+      audio.src = '';
+    };
+  }, []);
+
+  // Update vault position - with delay and continuous updates for mobile
+  useEffect(() => {
+    if (!hasKey) return;
+
+    const updateVaultPosition = () => {
+      if (vaultRef.current) {
+        const rect = vaultRef.current.getBoundingClientRect();
+        setVaultPosition({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+      }
+    };
+
+    // Initial delay to ensure vault is rendered
+    const initialTimer = setTimeout(updateVaultPosition, 100);
+
+    // Keep updating position in case of layout changes
+    const interval = setInterval(updateVaultPosition, 200);
+
+    // Also update on resize
+    window.addEventListener('resize', updateVaultPosition);
+
+    return () => {
+      clearTimeout(initialTimer);
+      clearInterval(interval);
+      window.removeEventListener('resize', updateVaultPosition);
+    };
   }, [hasKey]);
 
   // Update progress spring
@@ -778,8 +900,8 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
       >
         {/* Prank effects - Clean dark theme */}
         {prankActive && (
-          <motion.div 
-            className="absolute inset-0 z-30 flex items-center justify-center"
+          <motion.div
+            className="absolute inset-0 z-30 flex items-center justify-center px-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             style={{ backgroundColor: '#000' }}
@@ -788,27 +910,27 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
             {prankActive.type === 'scan' && (
               <div className="absolute inset-0 prank-scanline overflow-hidden" />
             )}
-            
+
             {/* Glitch effect overlay */}
             {prankActive.type === 'glitch' && (
-              <div 
+              <div
                 className="absolute inset-0"
-                style={{ 
+                style={{
                   animation: 'prank-glitch 0.3s infinite',
                   background: 'linear-gradient(0deg, transparent 0%, rgba(255,255,255,0.03) 50%, transparent 100%)',
                 }}
               />
             )}
-            
+
             {/* Shake wrapper */}
             <motion.div
-              className="flex flex-col items-center gap-6"
+              className="flex flex-col items-center gap-4 sm:gap-6"
               animate={prankActive.type === 'shake' ? { x: [-8, 8, -6, 6, -4, 4, -2, 2, 0] } : {}}
               transition={{ duration: 0.5, repeat: prankActive.type === 'shake' ? Infinity : 0 }}
             >
               {/* Prank icon */}
               <motion.div
-                className="w-24 h-24 rounded-full flex items-center justify-center"
+                className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-full flex items-center justify-center"
                 style={{
                   background: 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))',
                   border: '2px solid rgba(255, 255, 255, 0.5)',
@@ -817,47 +939,47 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
                 animate={prankActive.type === 'pulse' ? { scale: [1, 1.05, 1], opacity: [1, 0.7, 1] } : {}}
                 transition={{ duration: 1, repeat: Infinity }}
               >
-                <prankActive.icon size={40} className="text-white" />
+                <prankActive.icon size={isMobile ? 28 : 40} className="text-white" />
               </motion.div>
-              
+
               {/* Message */}
               <div className="text-center">
-                <motion.p 
-                  className="text-2xl font-bold text-white mb-2"
+                <motion.p
+                  className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-2"
                   animate={prankActive.type === 'fade' ? { opacity: [1, 0.5, 1] } : {}}
                   transition={{ duration: 1.5, repeat: Infinity }}
                 >
                   {prankActive.message}
                 </motion.p>
-                
+
                 {/* Progress dots */}
-                <div className="flex items-center justify-center gap-2 mt-4">
+                <div className="flex items-center justify-center gap-1.5 sm:gap-2 mt-3 sm:mt-4">
                   {[0, 1, 2].map((i) => (
                     <motion.div
                       key={i}
-                      className="w-2 h-2 rounded-full bg-white"
+                      className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-white"
                       animate={{ opacity: [0.3, 1, 0.3] }}
                       transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
                     />
                   ))}
                 </div>
-                
-                <p className="text-sm text-white/50 mt-4">Please wait...</p>
+
+                <p className="text-xs sm:text-sm text-white/50 mt-3 sm:mt-4">Please wait...</p>
               </div>
             </motion.div>
           </motion.div>
         )}
 
         {/* Game indicator */}
-        <div className="absolute top-8 left-1/2 -translate-x-1/2 flex items-center gap-2">
+        <div className="absolute top-4 sm:top-8 left-1/2 -translate-x-1/2 flex items-center gap-1.5 sm:gap-2">
           {games.map((_, i) => (
             <div
               key={i}
-              className={`w-3 h-3 rounded-full transition-all ${
-                i < currentGameIndex 
-                  ? 'bg-white' 
-                  : i === currentGameIndex 
-                    ? 'bg-white scale-125' 
+              className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all ${
+                i < currentGameIndex
+                  ? 'bg-white'
+                  : i === currentGameIndex
+                    ? 'bg-white scale-125'
                     : 'bg-white/30'
               }`}
             />
@@ -865,11 +987,11 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
         </div>
 
         {/* Main content area */}
-        <div className="flex flex-col items-center gap-8 z-10">
+        <div className="flex flex-col items-center gap-4 sm:gap-6 lg:gap-8 z-10 px-4 w-full max-w-md mx-auto">
           {/* Transition loading state */}
           {isTransitioning && (
             <motion.div
-              className="flex flex-col items-center gap-4"
+              className="flex flex-col items-center gap-3 sm:gap-4"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
@@ -878,46 +1000,46 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
                 {[0, 1, 2].map((i) => (
                   <motion.div
                     key={i}
-                    className="w-3 h-3 rounded-full bg-white"
+                    className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-white"
                     animate={{ opacity: [0.3, 1, 0.3], scale: [1, 1.2, 1] }}
                     transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.15 }}
                   />
                 ))}
               </div>
-              <p className="text-white text-sm">Loading next challenge...</p>
+              <p className="text-white text-xs sm:text-sm">Loading next challenge...</p>
             </motion.div>
           )}
-          
+
           {/* Game icon */}
           {!isTransitioning && currentGame && (
             <motion.div
-              className="w-24 h-24 rounded-full flex items-center justify-center"
+              className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-full flex items-center justify-center"
               style={{
                 background: 'linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.3))',
-                border: '3px solid #ffffff',
+                border: isMobile ? '2px solid #ffffff' : '3px solid #ffffff',
                 transform: 'translateZ(0)',
                 willChange: 'transform',
               }}
               animate={isHolding ? { scale: 0.95 } : { scale: 1 }}
             >
-              <currentGame.icon size={48} className="text-white" />
+              <currentGame.icon size={isMobile ? 32 : 48} className="text-white" />
             </motion.div>
           )}
 
           {/* Game label */}
           {!isTransitioning && currentGame && (
-            <div className="text-center">
-              <h2 className="text-2xl font-bold neon-text mb-2">{currentGame.label}</h2>
-              <p className="text-white/70 text-sm">{currentGame.instruction}</p>
+            <div className="text-center px-2">
+              <h2 className="text-lg sm:text-xl lg:text-2xl font-bold neon-text mb-1 sm:mb-2">{currentGame.label}</h2>
+              <p className="text-white/70 text-xs sm:text-sm">{currentGame.instruction}</p>
             </div>
           )}
 
           {/* Progress bar */}
           {!isTransitioning && (
-            <div className="w-64 h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.2)' }}>
+            <div className="w-48 sm:w-56 lg:w-64 h-1.5 sm:h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.2)' }}>
               <motion.div
                 className="h-full rounded-full"
-                style={{ 
+                style={{
                   background: 'linear-gradient(90deg, #ffffff, #ffffff)',
                   width: `${progress}%`,
                 }}
@@ -928,15 +1050,17 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
 
           {/* Game-specific UI */}
           {!isTransitioning && currentGame?.mode === 'passwordVault' && !hasKey && (
-            <div className="text-center flex flex-col items-center gap-4">
-              <div className="flex items-center justify-center gap-1 mb-2">
+            <div className="text-center flex flex-col items-center gap-2 sm:gap-3 w-full">
+              <div className="flex items-center justify-center gap-0.5 sm:gap-1 mb-1 sm:mb-2">
                 {"bull money".split('').map((char, i) => (
                   <span
                     key={i}
-                    className={`text-2xl font-mono ${
+                    className={`text-lg sm:text-xl lg:text-2xl font-mono ${
                       i < typedPassword.length
                         ? 'text-white'
-                        : 'text-white/30'
+                        : i === typedPassword.length
+                          ? 'text-white animate-pulse'
+                          : 'text-white/30'
                     }`}
                   >
                     {char === ' ' ? '␣' : char.toUpperCase()}
@@ -953,7 +1077,7 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
                 autoCapitalize="off"
                 spellCheck={false}
                 enterKeyHint="done"
-                className="w-64 px-4 py-3 rounded-xl text-white text-center text-lg font-mono focus:outline-none focus:ring-2 focus:ring-white"
+                className="w-full max-w-[240px] sm:max-w-[280px] px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-white text-center text-base sm:text-lg font-mono focus:outline-none focus:ring-2 focus:ring-white"
                 style={{
                   background: 'rgba(255, 255, 255, 0.1)',
                   border: '2px solid rgba(255, 255, 255, 0.3)',
@@ -962,6 +1086,7 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
                 placeholder="Tap here to type..."
                 value={typedPassword}
                 onClick={() => passwordInputRef.current?.focus()}
+                onKeyDown={(e) => e.stopPropagation()}
                 onChange={(e) => {
                   const input = e.target.value.toLowerCase();
                   const targetPassword = "bull money";
@@ -979,39 +1104,83 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
                   }
                 }}
               />
-              <p className="text-xs text-white/50">Type: bull money</p>
+              <p className="text-[10px] sm:text-xs text-white/50 mb-1 sm:mb-2">Type: bull money</p>
+              {/* Virtual Keyboard for touch and visual support */}
+              <VirtualKeyboard
+                targetKeys={(() => {
+                  const targetPassword = "bull money";
+                  const nextChar = targetPassword[typedPassword.length];
+                  if (!nextChar) return [];
+                  return nextChar === ' ' ? ['SPACE'] : [nextChar.toUpperCase()];
+                })()}
+                pressedKeys={new Set(
+                  typedPassword.split('').map((char, i) =>
+                    char === ' ' ? `SPACE-${i}` : `${char.toUpperCase()}-${i}`
+                  )
+                )}
+                onKeyPress={(key) => {
+                  const targetPassword = "bull money";
+                  const nextChar = targetPassword[typedPassword.length];
+                  if (!nextChar) return;
+
+                  const expectedKey = nextChar === ' ' ? 'SPACE' : nextChar.toUpperCase();
+                  if (key === expectedKey) {
+                    const newTyped = typedPassword + (key === 'SPACE' ? ' ' : key.toLowerCase());
+                    audio.playKey();
+                    haptics.lightTap();
+                    setTypedPassword(newTyped);
+
+                    if (newTyped === targetPassword) {
+                      setHasKey(true);
+                      setProgress(50);
+                    }
+                  }
+                }}
+                compact={isMobile}
+              />
             </div>
           )}
 
           {!isTransitioning && currentGame?.mode === 'passwordVault' && hasKey && (
             <>
-              <DraggableKey onDrop={handleKeyDrop} vaultPosition={vaultPosition} />
+              <DraggableKey onDrop={handleKeyDrop} vaultPosition={vaultPosition} compact={isMobile} />
+              {/* Vault - larger target area for mobile */}
               <motion.div
                 ref={vaultRef}
-                className="w-24 h-20 rounded-lg flex items-center justify-center"
+                className="w-24 h-20 sm:w-28 sm:h-24 lg:w-32 lg:h-28 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center"
                 style={{
-                  background: 'rgba(0,0,0,0.5)',
-                  border: '3px dashed #ffffff',
+                  background: 'rgba(0,0,0,0.7)',
+                  border: isMobile ? '3px dashed #ffffff' : '4px dashed #ffffff',
+                  boxShadow: '0 0 40px rgba(255, 255, 255, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.1)',
                 }}
-                animate={{ y: [0, -5, 0] }}
-                transition={shouldSkipHeavyEffects ? {} : { duration: 1.5, repeat: Infinity }}
+                animate={{
+                  y: [0, -6, 0],
+                  scale: [1, 1.02, 1],
+                  boxShadow: [
+                    '0 0 40px rgba(255, 255, 255, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.1)',
+                    '0 0 60px rgba(255, 255, 255, 0.5), inset 0 0 30px rgba(255, 255, 255, 0.2)',
+                    '0 0 40px rgba(255, 255, 255, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.1)',
+                  ],
+                }}
+                transition={shouldSkipHeavyEffects ? {} : { duration: 2, repeat: Infinity, ease: 'easeInOut' }}
               >
-                <Lock size={32} className="text-white" />
+                <Lock size={isMobile ? 28 : 40} className="text-white mb-1" />
+                <span className="text-white/70 text-[10px] sm:text-xs">DROP HERE</span>
               </motion.div>
-              <p className="text-xs text-white/50">Drag the key to the vault!</p>
+              <p className="text-xs sm:text-sm text-white/60 mt-2 sm:mt-4">Drag the key to the vault!</p>
             </>
           )}
 
           {!isTransitioning && currentGame?.mode === 'keyboardChallenge' && (
-            <div className="flex flex-col items-center gap-4">
+            <div className="flex flex-col items-center gap-2 sm:gap-3 lg:gap-4 w-full">
               {keyboardPhase === 'typing' && (
                 <>
                   {/* Progress display */}
-                  <div className="flex items-center justify-center gap-1 mb-2">
+                  <div className="flex items-center justify-center gap-0.5 sm:gap-1 mb-1 sm:mb-2">
                     {BULLMONEY_KEYS.map((char, i) => (
                       <span
                         key={i}
-                        className={`text-2xl font-mono ${
+                        className={`text-lg sm:text-xl lg:text-2xl font-mono ${
                           i < keyboardTargetIndex
                             ? 'text-white'
                             : i === keyboardTargetIndex
@@ -1023,7 +1192,7 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
                       </span>
                     ))}
                   </div>
-                  <p className="text-sm text-white mb-2">
+                  <p className="text-xs sm:text-sm text-white mb-1 sm:mb-2">
                     Type: <span className="font-bold">{BULLMONEY_KEYS[keyboardTargetIndex]}</span>
                   </p>
                   {/* Mobile input field - triggers keyboard popup */}
@@ -1036,7 +1205,7 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
                     autoCapitalize="characters"
                     spellCheck={false}
                     enterKeyHint="done"
-                    className="w-64 px-4 py-3 rounded-xl text-white text-center text-lg font-mono focus:outline-none focus:ring-2 focus:ring-white uppercase"
+                    className="w-full max-w-[240px] sm:max-w-[280px] px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-white text-center text-base sm:text-lg font-mono focus:outline-none focus:ring-2 focus:ring-white uppercase"
                     style={{
                       background: 'rgba(255, 255, 255, 0.1)',
                       border: '2px solid rgba(255, 255, 255, 0.3)',
@@ -1046,6 +1215,7 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
                     value={BULLMONEY_KEYS.slice(0, keyboardTargetIndex).join('')}
                     onClick={() => keyboardInputRef.current?.focus()}
                     onKeyDown={(e) => {
+                      e.stopPropagation();
                       const key = e.key.toUpperCase();
                       if (key === BULLMONEY_KEYS[keyboardTargetIndex]) {
                         e.preventDefault();
@@ -1066,19 +1236,21 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
                     targetKeys={[BULLMONEY_KEYS[keyboardTargetIndex]]}
                     pressedKeys={pressedKeys}
                     onKeyPress={handleKeyboardPress}
+                    compact={isMobile}
                   />
                 </>
               )}
               {keyboardPhase === 'tapping' && (
                 <>
-                  <p className="text-lg text-white mb-2">
+                  <p className="text-base sm:text-lg text-white mb-1 sm:mb-2">
                     TAP SPACE! {spaceTapCount}/10
                   </p>
-                  <p className="text-xs text-white/50">10 taps in 2 seconds</p>
+                  <p className="text-[10px] sm:text-xs text-white/50">10 taps in 2 seconds</p>
                   <VirtualKeyboard
                     targetKeys={['SPACE']}
                     pressedKeys={new Set()}
                     onKeyPress={handleKeyboardPress}
+                    compact={isMobile}
                   />
                 </>
               )}
@@ -1087,12 +1259,12 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
 
           {!isTransitioning && currentGame?.mode === 'holdPrank' && (
             <motion.button
-              className="w-40 h-40 rounded-full flex flex-col items-center justify-center cursor-pointer touch-manipulation"
+              className="w-28 h-28 sm:w-32 sm:h-32 lg:w-40 lg:h-40 rounded-full flex flex-col items-center justify-center cursor-pointer touch-manipulation"
               style={{
                 background: prankComplete
                   ? 'linear-gradient(135deg, #ffffff, #ffffff)'
                   : `linear-gradient(135deg, rgba(255,255,255,${0.3 + holdProgress * 0.007}), rgba(255,255,255,${0.3 + holdProgress * 0.007}))`,
-                border: '4px solid #ffffff',
+                border: isMobile ? '3px solid #ffffff' : '4px solid #ffffff',
                 transform: 'translateZ(0)',
                 willChange: 'transform',
                 WebkitTapHighlightColor: 'transparent',
@@ -1104,9 +1276,9 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
               onTouchEnd={(e) => { e.preventDefault(); handleHoldEnd(); }}
               animate={isHolding ? { scale: 0.95 } : { scale: 1 }}
             >
-              <FingerprintPattern size={48} className="text-white mb-2" />
-              <span className="text-white font-bold">{Math.floor(holdProgress)}%</span>
-              <span className="text-xs text-white/50 mt-1">Click & Hold</span>
+              <FingerprintPattern size={isMobile ? 32 : 48} className="text-white mb-1 sm:mb-2" />
+              <span className="text-white font-bold text-sm sm:text-base">{Math.floor(holdProgress)}%</span>
+              <span className="text-[10px] sm:text-xs text-white/50 mt-0.5 sm:mt-1">{isMobile ? 'Hold' : 'Click & Hold'}</span>
             </motion.button>
           )}
 
@@ -1117,29 +1289,29 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
         <AnimatePresence>
           {isUnlocked && (
             <motion.div
-              className="absolute inset-0 flex items-center justify-center z-50"
+              className="absolute inset-0 flex items-center justify-center z-50 px-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               style={{ backgroundColor: "rgba(0, 0, 0, 0.9)" }}
             >
               <motion.div
-                className="flex flex-col items-center gap-6"
+                className="flex flex-col items-center gap-4 sm:gap-6"
                 initial={{ scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: "spring", stiffness: 200, damping: 20 }}
               >
-                <div 
-                  className="w-24 h-24 rounded-full flex items-center justify-center"
+                <div
+                  className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-full flex items-center justify-center"
                   style={{
-                    border: '3px solid #ffffff',
+                    border: isMobile ? '2px solid #ffffff' : '3px solid #ffffff',
                     transform: 'translateZ(0)',
                   }}
                 >
-                  <Unlock size={48} className="text-white" />
+                  <Unlock size={isMobile ? 32 : 48} className="text-white" />
                 </div>
-                <h2 className="text-3xl font-bold neon-text">UNLOCKED</h2>
-                <p className="text-white/70">Welcome to Bull Money</p>
+                <h2 className="text-2xl sm:text-3xl font-bold neon-text">UNLOCKED</h2>
+                <p className="text-white/70 text-sm sm:text-base">Welcome to Bull Money</p>
               </motion.div>
             </motion.div>
           )}
