@@ -2220,6 +2220,17 @@ function useVipCheck(userId?: string, userEmail?: string) {
     const interval = setInterval(checkStatus, 60000); // Check every 60s
     return () => clearInterval(interval);
   }, [checkStatus]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === 'bullmoney_session' || event.key === 'bullmoney_pagemode_completed') {
+        checkStatus();
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, [checkStatus]);
   
   return { isVip, loading };
 }
@@ -3355,7 +3366,7 @@ DeviceCenterPanel.displayName = 'DeviceCenterPanel';
 // SUB-COMPONENTS: Telegram Feed
 // ============================================================================
 
-const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false, onNewMessage }: { channel?: ChannelKey; isVip?: boolean; onNewMessage?: (channel: string, postId: string) => void }) => {
+const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false, onNewMessage }: { channel?: ChannelKey; isVip?: boolean; onNewMessage?: (channel: string, postId: string, post?: TelegramPost) => void }) => {
   const [posts, setPosts] = useState<TelegramPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -3412,7 +3423,7 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false, onNewMessa
           if (lastPostIdRef.current && latestPostId && latestPostId !== lastPostIdRef.current) {
             // New message detected!
             console.log('[TelegramChannelEmbed] 🔔 NEW MESSAGE DETECTED in channel:', channel);
-            onNewMessage?.(channel, latestPostId);
+            onNewMessage?.(channel, latestPostId, data.posts[0]);
           }
           lastPostIdRef.current = latestPostId;
           
@@ -4452,7 +4463,7 @@ export const UnifiedHubPanel = memo(({
   userId?: string;
   userEmail?: string;
   prices: { xauusd: string; btcusd: string };
-  onNewMessage?: (channel: string, postId: string) => void;
+  onNewMessage?: (channel: string, postId: string, post?: TelegramPost) => void;
 }) => {
   // Mobile detection for smoother, more subtle animations
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
@@ -6871,6 +6882,8 @@ export const UnifiedFpsPill = memo(({
   liteMode = false,
   hasNewMessages = false,
   newMessageCount = 0,
+  vipPreview = null,
+  isVipUser = false,
   topOffsetMobile,
   topOffsetDesktop
 }: {
@@ -6883,6 +6896,8 @@ export const UnifiedFpsPill = memo(({
   liteMode?: boolean;
   hasNewMessages?: boolean;
   newMessageCount?: number;
+  vipPreview?: Pick<TelegramPost, 'id' | 'text' | 'date'> | null;
+  isVipUser?: boolean;
   topOffsetMobile?: string;
   topOffsetDesktop?: string;
 }) => {
@@ -6897,6 +6912,7 @@ export const UnifiedFpsPill = memo(({
   const [randomDelay] = useState(() => Math.random() * 5 + 5); // Random 5-10 seconds
   const [tipIndex, setTipIndex] = useState(0); // Rotating helper tips
   const [tipVisible, setTipVisible] = useState(true); // For fade animation
+  const [tickerIndex, setTickerIndex] = useState(0);
   const unpinTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const expandTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -7397,6 +7413,49 @@ export const UnifiedFpsPill = memo(({
     
     return { boxShadow, textShadow, iconFilter, borderGlow, shadowSpread, innerGlow };
   }, [scrollProgress, deepScrollProgress, glowIntensity, neonIntensity]);
+
+  const tickerItems = useMemo(() => {
+    const items = [
+      { key: 'gold', type: 'price' as const, label: 'Gold', text: `Gold $${prices.xauusd}` },
+      { key: 'btc', type: 'price' as const, label: 'BTC', text: `BTC $${prices.btcusd}` },
+    ];
+
+    if (vipPreview?.text) {
+      items.unshift({
+        key: `vip-${vipPreview.id || 'latest'}`,
+        type: 'vip' as const,
+        label: 'VIP Drop',
+        text: vipPreview.text,
+      });
+    }
+
+    return items;
+  }, [prices.xauusd, prices.btcusd, vipPreview?.id, vipPreview?.text]);
+
+  useEffect(() => {
+    setTickerIndex(0);
+  }, [tickerItems.length]);
+
+  useEffect(() => {
+    if (tickerItems.length <= 1) return;
+    const intervalId = setInterval(() => {
+      setTickerIndex((prev) => (prev + 1) % tickerItems.length);
+    }, 5000);
+    return () => clearInterval(intervalId);
+  }, [tickerItems.length]);
+
+  const activeTicker = tickerItems[tickerIndex] || tickerItems[0];
+
+  const hasVipAccent = isVipUser || Boolean(vipPreview);
+  const pillBackground = hasVipAccent
+    ? 'linear-gradient(135deg, rgba(14, 58, 120, 0.95) 0%, rgba(59, 130, 246, 0.82) 55%, rgba(147, 197, 253, 0.55) 100%)'
+    : 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(255, 255, 255,0.18) 55%, rgba(255, 255, 255, 0.12) 100%)';
+  const pillBorder = hasVipAccent
+    ? '1.5px solid rgba(147, 197, 253, 0.9)'
+    : '1.5px solid rgba(255, 255, 255, 0.85)';
+  const pillShadow = hasVipAccent
+    ? `0 0 ${dynamicStyles.borderGlow}px rgba(59,130,246,0.75), 0 0 ${dynamicStyles.shadowSpread}px rgba(59,130,246,0.45), inset 0 0 ${dynamicStyles.innerGlow}px rgba(147, 197, 253, 0.55)`
+    : dynamicStyles.boxShadow;
   
   return (
     <motion.div
@@ -7478,12 +7537,12 @@ export const UnifiedFpsPill = memo(({
           }
           className="relative rounded-3xl ultimate-hub-scroll-effect"
           style={{
-            background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(255, 255, 255,0.18) 55%, rgba(255, 255, 255, 0.12) 100%)',
+            background: pillBackground,
             // Reduce blur on mobile for better performance
             backdropFilter: isMobile ? 'blur(8px)' : 'blur(12px)',
             WebkitBackdropFilter: isMobile ? 'blur(8px)' : 'blur(12px)',
-            border: '1.5px solid rgba(255, 255, 255, 0.85)',
-            boxShadow: dynamicStyles.boxShadow,
+            border: pillBorder,
+            boxShadow: pillShadow,
             // Disable 3D transforms on mobile to prevent FPS drops
             transform: isMobile ? undefined : 'perspective(1000px)',
             transformStyle: isMobile ? undefined : 'preserve-3d',
@@ -7574,6 +7633,20 @@ export const UnifiedFpsPill = memo(({
                     LITE
                   </div>
                 )}
+
+                {isVipUser && (
+                  <div 
+                    className="absolute -top-1 -left-1 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wide z-20"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(59,130,246,0.9) 0%, rgba(59,130,246,0.75) 100%)',
+                      color: '#e0f2ff',
+                      boxShadow: '0 0 8px rgba(59,130,246,0.5)',
+                      border: '1px solid rgba(191, 219, 254, 0.7)',
+                    }}
+                  >
+                    VIP Trader
+                  </div>
+                )}
                 
                 {/* New Message Notification Badge - Full View (shows count) */}
                 {hasNewMessages && !liteMode && (
@@ -7614,14 +7687,54 @@ export const UnifiedFpsPill = memo(({
                     />
                   </motion.div>
                 )}
+
+                {activeTicker && (
+                  <div className="w-full max-w-[360px] mb-2">
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={activeTicker.key}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.22, ease: 'easeOut' }}
+                        className={`rounded-xl border px-2.5 py-2 shadow-sm ${
+                          activeTicker.type === 'vip'
+                            ? 'bg-blue-600/50 border-blue-300/60 shadow-[0_0_20px_rgba(59,130,246,0.35)]'
+                            : 'bg-white/10 border-white/20'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <div className="flex items-center gap-1.5">
+                            {activeTicker.type === 'vip' ? (
+                              <Crown className="w-3.5 h-3.5 text-white" />
+                            ) : (
+                              <LineChart className="w-3.5 h-3.5 text-white" />
+                            )}
+                            <span className="text-[9px] font-bold uppercase tracking-wide text-white/90">
+                              {activeTicker.label}
+                            </span>
+                            {activeTicker.type === 'vip' && (
+                              <Bell className="w-3 h-3 text-white/90" />
+                            )}
+                          </div>
+                          {activeTicker.type === 'vip' && (
+                            <span className="text-[9px] font-semibold text-blue-100">VIP</span>
+                          )}
+                        </div>
+                        <p className="text-[9px] leading-snug text-white/90 line-clamp-2">
+                          {activeTicker.text}
+                        </p>
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
+                )}
                 
-                {/* Mobile: Always compact view with prices - with scroll-intensified neons */}
+                {/* Mobile: Compact view without duplicate price rows (prices rotate in ticker) */}
                 <div className="flex md:hidden flex-col items-center justify-center gap-0.5 min-w-[36px] relative">
                   <TrendingUp 
                     className="w-2.5 h-2.5 text-white neon-white-icon" 
                     style={{ filter: dynamicStyles.iconFilter }} 
                   />
-                  {/* Mobile notification bell inline */}
                   {hasNewMessages && (
                     <motion.div
                       initial={{ scale: 0 }}
@@ -7637,39 +7750,6 @@ export const UnifiedFpsPill = memo(({
                       />
                     </motion.div>
                   )}
-                  <div className="flex items-center gap-1">
-                    <div className="flex items-center gap-0.5">
-                      <Coins 
-                        className="w-2 h-2 text-white neon-blue-icon" 
-                        style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }}
-                      />
-                      <span 
-                        className="text-[7px] font-bold neon-blue-text"
-                        style={{ textShadow: '0 0 4px #ffffff' }}
-                      >
-                        ${prices.xauusd}
-                      </span>
-                    </div>
-                    <div 
-                      className="w-px h-2.5" 
-                      style={{ 
-                        background: 'rgba(255, 255, 255, 0.7)',
-                        boxShadow: '0 0 4px #ffffff'
-                      }}
-                    />
-                    <div className="flex items-center gap-0.5">
-                      <Bitcoin 
-                        className="w-2 h-2 text-white neon-blue-icon" 
-                        style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }}
-                      />
-                      <span 
-                        className="text-[7px] font-bold neon-blue-text"
-                        style={{ textShadow: '0 0 4px #ffffff' }}
-                      >
-                        ${prices.btcusd}
-                      </span>
-                    </div>
-                  </div>
                 </div>
                 
                 {/* Desktop: Animated between compact (scrolling) and full */}
@@ -7775,23 +7855,6 @@ export const UnifiedFpsPill = memo(({
                         style={{ willChange: 'transform, opacity' }}
                       >
                         <TrendingUp className="w-6 h-6 text-white neon-white-icon" style={{ filter: dynamicStyles.iconFilter }} />
-                        <div className="flex flex-col items-center gap-2">
-                          <div className="flex items-center gap-1">
-                            <Coins className="w-4 h-4 text-white neon-blue-icon" style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }} />
-                            <span className="text-sm font-bold neon-blue-text" style={{ textShadow: '0 0 4px #ffffff' }}>${prices.xauusd}</span>
-                          </div>
-                          <div 
-                            className="w-12 h-px" 
-                            style={{ 
-                              background: 'rgba(255, 255, 255, 0.7)',
-                              boxShadow: '0 0 4px #ffffff'
-                            }}
-                          />
-                          <div className="flex items-center gap-1">
-                            <Bitcoin className="w-4 h-4 text-white neon-blue-icon" style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }} />
-                            <span className="text-sm font-bold neon-blue-text" style={{ textShadow: '0 0 4px #ffffff' }}>${prices.btcusd}</span>
-                          </div>
-                        </div>
                         <span 
                           className="text-[10px] font-bold uppercase tracking-wider mt-1 neon-blue-text"
                           style={{ 
@@ -8251,6 +8314,7 @@ BullMoneyTVPill.displayName = 'BullMoneyTVPill';
 
 // LocalStorage key for persisting last seen message
 const LAST_SEEN_MESSAGE_KEY = 'bullmoney_last_seen_message_id';
+const LAST_SEEN_VIP_MESSAGE_KEY = 'bullmoney_last_seen_vip_message_id';
 const NEW_MESSAGE_COUNT_KEY = 'bullmoney_new_message_count';
 
 export function UltimateHub() {
@@ -8260,7 +8324,13 @@ export function UltimateHub() {
   // New message notification state - persisted to localStorage
   const [hasNewMessages, setHasNewMessages] = useState(false);
   const [newMessageCount, setNewMessageCount] = useState(0);
-  const lastSeenMessageIdRef = useRef<string | null>(null);
+  const [vipPreview, setVipPreview] = useState<Pick<TelegramPost, 'id' | 'text' | 'date'> | null>(null);
+  const lastSeenMessageIdRef = useRef<Record<ChannelKey, string | null>>({
+    trades: null,
+    main: null,
+    shop: null,
+    vip: null,
+  });
   const isCheckingRef = useRef(false);
   
   // Load persisted notification state on mount
@@ -8270,7 +8340,12 @@ export function UltimateHub() {
     // Load last seen message ID from localStorage
     const savedLastSeen = localStorage.getItem(LAST_SEEN_MESSAGE_KEY);
     if (savedLastSeen) {
-      lastSeenMessageIdRef.current = savedLastSeen;
+      lastSeenMessageIdRef.current.trades = savedLastSeen;
+    }
+
+    const savedVipLastSeen = localStorage.getItem(LAST_SEEN_VIP_MESSAGE_KEY);
+    if (savedVipLastSeen) {
+      lastSeenMessageIdRef.current.vip = savedVipLastSeen;
     }
     
     // Load any pending notification count (from when app was closed)
@@ -8311,16 +8386,20 @@ export function UltimateHub() {
   const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects, isDesktopLiteMode } = useUnifiedPerformance();
 
   // Handle new message detection from Telegram embeds
-  const handleNewMessage = useCallback((channel: string, postId: string) => {
-    console.log('[UltimateHub] NEW MESSAGE DETECTED', { channel, postId });
+  const handleNewMessage = useCallback((channel: ChannelKey | string, postId: string, post?: TelegramPost) => {
+    const channelKey = (channel as ChannelKey) || 'trades';
+    console.log('[UltimateHub] NEW MESSAGE DETECTED', { channel: channelKey, postId });
     
-    // Only increment if this is a truly new message
-    if (postId !== lastSeenMessageIdRef.current) {
-      lastSeenMessageIdRef.current = postId;
+    const storageKey = channelKey === 'vip' ? LAST_SEEN_VIP_MESSAGE_KEY : LAST_SEEN_MESSAGE_KEY;
+    const lastSeenForChannel = lastSeenMessageIdRef.current[channelKey];
+    
+    // Only increment if this is a truly new message for this channel
+    if (postId !== lastSeenForChannel) {
+      lastSeenMessageIdRef.current[channelKey] = postId;
       
       // Persist to localStorage so we remember across browser sessions
       if (typeof window !== 'undefined') {
-        localStorage.setItem(LAST_SEEN_MESSAGE_KEY, postId);
+        localStorage.setItem(storageKey, postId);
       }
       
       setHasNewMessages(true);
@@ -8332,16 +8411,21 @@ export function UltimateHub() {
         }
         return newCount;
       });
-      
-      // Play notification sound (if tab is visible)
-      try {
-        if (typeof window !== 'undefined' && 'Audio' in window && document.visibilityState === 'visible') {
-          const audio = new Audio('/sounds/notification.mp3');
-          audio.volume = 0.3;
-          audio.play().catch(() => {}); // Ignore autoplay errors
-        }
-      } catch {}
     }
+
+    // Cache VIP preview content so we can tease non-VIP users
+    if (channelKey === 'vip' && post) {
+      setVipPreview({ id: post.id, text: post.text, date: post.date });
+    }
+    
+    // Play notification sound (if tab is visible)
+    try {
+      if (typeof window !== 'undefined' && 'Audio' in window && document.visibilityState === 'visible') {
+        const audio = new Audio('/sounds/notification.mp3');
+        audio.volume = 0.3;
+        audio.play().catch(() => {}); // Ignore autoplay errors
+      }
+    } catch {}
   }, []);
   
   // BACKGROUND POLLING: Check for new messages even when panel is closed
@@ -8350,6 +8434,41 @@ export function UltimateHub() {
   useEffect(() => {
     if (!mounted) return;
     
+    const pollChannel = async (channel: ChannelKey) => {
+      try {
+        const response = await fetch(`/api/telegram/channel?channel=${channel}&t=${Date.now()}`, { 
+          cache: 'no-store' 
+        });
+        const data = await response.json();
+
+        if (data.success && data.posts && data.posts.length > 0) {
+          const latestPost = data.posts[0];
+          const latestPostId = latestPost?.id;
+          const storageKey = channel === 'vip' ? LAST_SEEN_VIP_MESSAGE_KEY : LAST_SEEN_MESSAGE_KEY;
+          const storedLastSeen = localStorage.getItem(storageKey);
+          const currentLastSeen = lastSeenMessageIdRef.current[channel] || storedLastSeen;
+
+          // Always cache VIP preview so free users can see the teaser
+          if (channel === 'vip' && latestPost) {
+            setVipPreview({ id: latestPost.id, text: latestPost.text, date: latestPost.date });
+          }
+          
+          if (currentLastSeen && latestPostId && latestPostId !== currentLastSeen) {
+            console.log('[UltimateHub] BACKGROUND: New message detected!', { channel, latestPostId, currentLastSeen });
+            handleNewMessage(channel, latestPostId, latestPost);
+          }
+          
+          // Update ref if this is first load (no stored value)
+          if (!currentLastSeen && latestPostId) {
+            lastSeenMessageIdRef.current[channel] = latestPostId;
+            localStorage.setItem(storageKey, latestPostId);
+          }
+        }
+      } catch (err) {
+        // Silent fail for background polling
+      }
+    };
+
     const checkForNewMessages = async (isVisibilityCheck = false) => {
       // Prevent overlapping checks
       if (isCheckingRef.current) return;
@@ -8361,32 +8480,7 @@ export function UltimateHub() {
       isCheckingRef.current = true;
       
       try {
-        // Check the FREE TRADES channel (most important for notifications)
-        const response = await fetch(`/api/telegram/channel?channel=trades&t=${Date.now()}`, { 
-          cache: 'no-store' 
-        });
-        const data = await response.json();
-        
-        if (data.success && data.posts && data.posts.length > 0) {
-          const latestPostId = data.posts[0]?.id;
-          
-          // Get stored last seen from localStorage (in case it was updated elsewhere)
-          const storedLastSeen = localStorage.getItem(LAST_SEEN_MESSAGE_KEY);
-          const currentLastSeen = lastSeenMessageIdRef.current || storedLastSeen;
-          
-          if (currentLastSeen && latestPostId && latestPostId !== currentLastSeen) {
-            console.log('[UltimateHub] BACKGROUND: New message detected!', { latestPostId, currentLastSeen });
-            handleNewMessage('trades', latestPostId);
-          }
-          
-          // Update ref if this is first load (no stored value)
-          if (!currentLastSeen && latestPostId) {
-            lastSeenMessageIdRef.current = latestPostId;
-            localStorage.setItem(LAST_SEEN_MESSAGE_KEY, latestPostId);
-          }
-        }
-      } catch (err) {
-        // Silent fail for background polling
+        await Promise.all((['trades', 'vip'] as ChannelKey[]).map((channel) => pollChannel(channel)));
       } finally {
         isCheckingRef.current = false;
       }
@@ -8527,6 +8621,8 @@ export function UltimateHub() {
           liteMode={isDesktopLiteMode}
           hasNewMessages={hasNewMessages}
           newMessageCount={newMessageCount}
+          vipPreview={vipPreview}
+          isVipUser={isVip}
         />
       )}
 

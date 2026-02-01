@@ -1306,10 +1306,10 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                  className="relative z-10 pt-16 pb-8 text-center pointer-events-none"
+                  className="relative z-10 pt-10 pb-5 text-center pointer-events-none"
                 >
                   <motion.h1
-                    className="relative text-[2.5rem] font-semibold tracking-tight"
+                    className="relative text-[clamp(1.8rem,6vw,2.4rem)] font-semibold tracking-tight"
                     style={{
                       color: '#ffffff',
                       textShadow: '0 0 20px rgba(255, 255, 255, 0.3)',
@@ -1322,7 +1322,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.8, delay: 0.4 }}
-                    className="relative text-base text-white/40 mt-2 font-normal"
+                    className="relative text-sm text-white/40 mt-2 font-normal"
                   >
                     Trading Excellence
                   </motion.p>
@@ -1330,7 +1330,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
                 {/* Main Content Area - Apple-style centered card */}
                 <div
-                  className="relative flex-1 flex flex-col items-center justify-center px-6 w-full pb-12"
+                  className="relative flex-1 flex flex-col items-center justify-center px-5 w-full pb-8"
                   style={{ zIndex: 10, pointerEvents: 'auto' }}
                 >
                   {/* Clean Card Container - Apple-style minimal */}
@@ -1338,7 +1338,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                    className="w-full max-w-sm rounded-2xl p-8 border border-white/[0.08]"
+                    className="w-full max-w-[20rem] rounded-2xl p-6 sm:p-7 border border-white/[0.08]"
                     style={{
                       background: 'rgba(0, 0, 0, 0.4)',
                       backdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(40px)',
@@ -1363,7 +1363,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                           setStep(0);
                         }}
                         whileTap={{ scale: 0.97 }}
-                        className="w-full py-4 rounded-xl font-semibold text-base transition-all"
+                        className="w-full py-3 rounded-xl font-semibold text-sm transition-all"
                         style={{
                           background: isXM ? '#ef4444' : '#ffffff',
                           color: isXM ? '#ffffff' : '#000000',
@@ -1380,7 +1380,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                           setStep(0);
                         }}
                         whileTap={{ scale: 0.97 }}
-                        className="w-full py-4 rounded-xl font-semibold text-base transition-all text-white"
+                        className="w-full py-3 rounded-xl font-semibold text-sm transition-all text-white"
                         style={{
                           background: isXM ? 'rgba(239, 68, 68, 0.05)' : 'rgba(255, 255, 255, 0.03)',
                           border: isXM ? '1px solid rgba(239, 68, 68, 0.2)' : '1px solid rgba(255, 255, 255, 0.1)',
@@ -1400,7 +1400,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                       <motion.button
                         onClick={() => setStep(-2)}
                         whileTap={{ scale: 0.97 }}
-                        className="w-full py-3 rounded-xl font-normal text-sm transition-all text-white/70 hover:text-white"
+                        className="w-full py-2.5 rounded-xl font-normal text-[13px] transition-all text-white/70 hover:text-white"
                         style={{
                           background: 'transparent',
                           border: isXM ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(255, 255, 255, 0.2)',
@@ -1412,7 +1412,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     </div>
 
                     {/* Clean Footer */}
-                    <p className="text-center text-white/20 text-xs mt-8 font-normal leading-relaxed">
+                    <p className="text-center text-white/20 text-xs mt-6 font-normal leading-relaxed">
                       By continuing, you agree to our{' '}
                       <button 
                         type="button"
@@ -1690,7 +1690,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
                 <div className="mt-6 text-center border-t border-white/[0.08] pt-6"> 
                   <button onClick={toggleViewMode} className="text-sm transition-colors cursor-target text-white/50 hover:text-white/70 font-normal">
-                    Don't have an account? <span className="text-white">Create one</span>
+                    Don&apos;t have an account? <span className="text-white">Create one</span>
                   </button>
                 </div>
              </div>
@@ -1930,7 +1930,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   >
                     <div className="space-y-3 md:space-y-4 pt-2">
                       <div className="flex items-center justify-between">
-                          <p className="text-slate-300 text-sm">After opening your account, you’ll receive an email with your trading ID (MT5 ID).</p>
+                          <p className="text-slate-300 text-sm">After opening your account, you&apos;ll receive an email with your trading ID (MT5 ID).</p>
                       </div>
                       
                       <div className="relative group">
@@ -2000,7 +2000,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             style={{ color: '#ffffff' }}
                           />
                         </div>
-                        <p className="text-[10px] mt-1.5 ml-1 text-white/30">We'll send your login details here.</p>
+                        <p className="text-[10px] mt-1.5 ml-1 text-white/30">We&apos;ll send your login details here.</p>
                       </div>
 
                       <div>
@@ -2038,7 +2038,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             style={{ color: '#ffffff' }}
                           />
                         </div>
-                        <p className="text-[10px] mt-1.5 ml-1 text-white/30">Leave blank if you don't have one.</p>
+                        <p className="text-[10px] mt-1.5 ml-1 text-white/30">Leave blank if you don&apos;t have one.</p>
                       </div>
 
                         <div

@@ -2,213 +2,199 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+export const runtime = 'nodejs';
 
-// Multiple price data sources with fallbacks - all using free, no-limit APIs
-const PRICE_SOURCES = {
-  // Binance for BTC - fast and reliable, no API key needed
-  binance: async () => {
-    const res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', {
-      cache: 'no-store',
-      next: { revalidate: 0 }
-    });
-    if (!res.ok) throw new Error('Binance fetch failed');
-    const data = await res.json();
-    return {
-      btc: parseFloat(data.price)
-    };
-  },
-  
-  // Coinbase for BTC - reliable backup
-  coinbase: async () => {
-    const res = await fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot', {
-      headers: { 'Accept': 'application/json' },
-      cache: 'no-store',
-      next: { revalidate: 0 }
-    });
-    if (!res.ok) throw new Error('Coinbase fetch failed');
-    const data = await res.json();
-    return {
-      btc: parseFloat(data.data.amount)
-    };
-  },
-  
-  // CoinCap for BTC - another fast alternative
-  coincap: async () => {
-    const res = await fetch('https://api.coincap.io/v2/assets/bitcoin', {
-      cache: 'no-store',
-      next: { revalidate: 0 }
-    });
-    if (!res.ok) throw new Error('CoinCap fetch failed');
-    const data = await res.json();
-    return {
-      btc: parseFloat(data.data.priceUsd)
-    };
-  },
-  
-  // GoldAPI - using public endpoint (PRIMARY SOURCE - MOST RELIABLE)
-  goldapi_public: async () => {
-    // Using public metals API from GoldPrice.org
-    const res = await fetch('https://data-asg.goldprice.org/dbXRates/USD', {
-      cache: 'no-store',
-      next: { revalidate: 0 },
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'Mozilla/5.0'
-      }
-    });
-    if (!res.ok) throw new Error('GoldPrice.org fetch failed');
-    const data = await res.json();
-    // Returns array with [timestamp, gold_price, ...]
-    const goldPrice = data.items?.[0]?.xauPrice || data.xauPrice;
-    return {
-      gold: goldPrice ? parseFloat(goldPrice) : null
-    };
-  },
-
-  // Alternative: Use CoinGecko's PAX Gold as proxy for gold price
-  coingecko_gold: async () => {
-    const res = await fetch(
-      'https://api.coingecko.com/api/v3/simple/price?ids=pax-gold&vs_currencies=usd',
-      { 
-        cache: 'no-store',
-        next: { revalidate: 0 },
-        headers: {
-          'Accept': 'application/json'
-        }
-      }
-    );
-    if (!res.ok) throw new Error('CoinGecko fetch failed');
-    const data = await res.json();
-    return {
-      gold: data['pax-gold']?.usd || null
-    };
-  },
-
-  // Metals-API.com - Free tier with real XAUUSD
-  metalsapi: async () => {
-    const res = await fetch('https://metals-api.com/api/latest?access_key=YOUR_KEY&base=USD&symbols=XAU', {
-      cache: 'no-store',
-      next: { revalidate: 0 }
-    });
-    if (!res.ok) throw new Error('Metals-API fetch failed');
-    const data = await res.json();
-    const xauRate = data.rates?.XAU;
-    return {
-      gold: xauRate ? (1 / xauRate) : null
-    };
-  },
-
-  // Forex API with XAUUSD direct
-  forexapi: async () => {
-    const res = await fetch('https://api.fxratesapi.com/latest?base=XAU&symbols=USD&format=json', {
-      cache: 'no-store',
-      next: { revalidate: 0 }
-    });
-    if (!res.ok) throw new Error('ForexAPI fetch failed');
-    const data = await res.json();
-    const usdRate = data.rates?.USD;
-    return {
-      gold: usdRate ? parseFloat(usdRate) : null
-    };
-  },
-
-  // Financial Modeling Prep - Free tier
-  fmp_gold: async () => {
-    const res = await fetch('https://financialmodelingprep.com/api/v3/quote/XAUUSD?apikey=demo', {
-      cache: 'no-store',
-      next: { revalidate: 0 }
-    });
-    if (!res.ok) throw new Error('FMP fetch failed');
-    const data = await res.json();
-    return {
-      gold: data[0]?.price ? parseFloat(data[0].price) : null
-    };
-  },
+const REQUEST_HEADERS = {
+  Accept: 'application/json',
+  'User-Agent': 'BullMoneyHub/1.0 (+https://newbullmoney.com)'
 };
+
+type Provider = {
+  name: string;
+  fetch: () => Promise<number | null>;
+  timeoutMs?: number;
+};
+
+const withTimeout = async <T>(fn: () => Promise<T>, timeoutMs: number = 4000) => {
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error('timeout')), timeoutMs)
+  );
+  return Promise.race([fn(), timeout]);
+};
+
+const isValidBtc = (price: number | null) => typeof price === 'number' && price > 10000 && price < 500000;
+const isValidGold = (price: number | null) => typeof price === 'number' && price > 1200 && price < 10000;
+
+const toNumber = (value: any) => {
+  const num = typeof value === 'string' ? Number(value) : value;
+  return Number.isFinite(num) ? num : null;
+};
+
+const parseMetalsLive = (data: any) => {
+  if (!data) return null;
+  // metals.live returns an array; each element can be [timestamp, price] or an object
+  const first = Array.isArray(data) ? data[0] : data;
+  if (Array.isArray(first) && first.length > 1) return toNumber(first[1]);
+  if (typeof first === 'number' || typeof first === 'string') return toNumber(first);
+  if (first && typeof first === 'object') {
+    return toNumber(first.ask ?? first.bid ?? first.price ?? first.gold);
+  }
+  return null;
+};
+
+const btcProviders: Provider[] = [
+  {
+    name: 'binance',
+    fetch: async () => {
+      const res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', {
+        cache: 'no-store',
+        headers: REQUEST_HEADERS,
+        next: { revalidate: 0 }
+      });
+      if (!res.ok) throw new Error('Binance fetch failed');
+      const data = await res.json();
+      return Number(data.price) || null;
+    }
+  },
+  {
+    name: 'coinbase',
+    fetch: async () => {
+      const res = await fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot', {
+        cache: 'no-store',
+        headers: REQUEST_HEADERS,
+        next: { revalidate: 0 }
+      });
+      if (!res.ok) throw new Error('Coinbase fetch failed');
+      const data = await res.json();
+      return Number(data?.data?.amount) || null;
+    }
+  },
+  {
+    name: 'coincap',
+    fetch: async () => {
+      const res = await fetch('https://api.coincap.io/v2/assets/bitcoin', {
+        cache: 'no-store',
+        headers: REQUEST_HEADERS,
+        next: { revalidate: 0 }
+      });
+      if (!res.ok) throw new Error('CoinCap fetch failed');
+      const data = await res.json();
+      return Number(data?.data?.priceUsd) || null;
+    }
+  }
+];
+
+const goldProviders: Provider[] = [
+  {
+    name: 'metals.live',
+    fetch: async () => {
+      const res = await fetch('https://api.metals.live/v1/spot/gold', {
+        cache: 'no-store',
+        headers: {
+          ...REQUEST_HEADERS,
+          Referer: 'https://newbullmoney.com'
+        },
+        next: { revalidate: 0 }
+      });
+      if (!res.ok) throw new Error('Metals.live fetch failed');
+      const data = await res.json();
+      return parseMetalsLive(data);
+    }
+  },
+  {
+    name: 'goldprice.org',
+    fetch: async () => {
+      const res = await fetch('https://data-asg.goldprice.org/dbXRates/USD', {
+        cache: 'no-store',
+        headers: REQUEST_HEADERS,
+        next: { revalidate: 0 }
+      });
+      if (!res.ok) throw new Error('GoldPrice.org fetch failed');
+      const data = await res.json();
+      const goldPrice = data.items?.[0]?.xauPrice || data.xauPrice;
+      return toNumber(goldPrice);
+    }
+  },
+  {
+    name: 'exchangerate.host',
+    fetch: async () => {
+      const res = await fetch('https://api.exchangerate.host/latest?base=XAU&symbols=USD', {
+        cache: 'no-store',
+        headers: REQUEST_HEADERS,
+        next: { revalidate: 0 }
+      });
+      if (!res.ok) throw new Error('ExchangeRate.host fetch failed');
+      const data = await res.json();
+      const usd = data?.rates?.USD;
+      return usd ? Number(usd) : null;
+    }
+  },
+  {
+    name: 'coingecko_paxg',
+    fetch: async () => {
+      const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=pax-gold&vs_currencies=usd', {
+        cache: 'no-store',
+        headers: REQUEST_HEADERS,
+        next: { revalidate: 0 }
+      });
+      if (!res.ok) throw new Error('CoinGecko fetch failed');
+      const data = await res.json();
+      const price = data?.['pax-gold']?.usd;
+      return toNumber(price);
+    }
+  },
+  {
+    name: 'financialmodelingprep',
+    fetch: async () => {
+      const res = await fetch('https://financialmodelingprep.com/api/v3/quote/XAUUSD?apikey=demo', {
+        cache: 'no-store',
+        headers: REQUEST_HEADERS,
+        next: { revalidate: 0 }
+      });
+      if (!res.ok) throw new Error('FMP fetch failed');
+      const data = await res.json();
+      const price = data?.[0]?.price ?? data?.[0]?.priceUsd;
+      return toNumber(price);
+    }
+  }
+];
+
+async function resolvePrice(providers: Provider[], validator: (price: number | null) => boolean) {
+  for (const provider of providers) {
+    try {
+      const price = await withTimeout(provider.fetch, provider.timeoutMs ?? 3500);
+      if (validator(price)) return { price: price as number, source: provider.name };
+    } catch (error) {
+      console.warn(`[prices] ${provider.name} failed`, error);
+    }
+  }
+  return { price: null, source: 'fallback' as const };
+}
 
 export async function GET() {
   try {
-    let btcPrice: number | null = null;
-    let goldPrice: number | null = null;
-    
-    // Fetch with increased timeout for reliability
-    const fetchWithTimeout = async (promise: Promise<any>, timeoutMs: number = 3000) => {
-      const timeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('timeout')), timeoutMs)
-      );
-      return Promise.race([promise, timeout]);
-    };
-    
-    // Fetch BTC and Gold in parallel for maximum speed
-    const results = await Promise.allSettled([
-      // BTC: Try Binance first (fastest), then CoinCap, then Coinbase
-      fetchWithTimeout(
-        PRICE_SOURCES.binance()
-          .catch(() => PRICE_SOURCES.coincap())
-          .catch(() => PRICE_SOURCES.coinbase()),
-        2500
-      ),
-      // Gold: Try multiple sources with fallback chain
-      fetchWithTimeout(
-        PRICE_SOURCES.goldapi_public()
-          .catch(() => PRICE_SOURCES.coingecko_gold())
-          .catch(() => PRICE_SOURCES.fmp_gold())
-          .catch(() => PRICE_SOURCES.forexapi()),
-        3000
-      )
+    const [btc, gold] = await Promise.all([
+      resolvePrice(btcProviders, isValidBtc),
+      resolvePrice(goldProviders, isValidGold)
     ]);
-    
-    // Extract BTC price
-    if (results[0].status === 'fulfilled' && results[0].value?.btc) {
-      const price = results[0].value.btc;
-      // Validate reasonable BTC price ($10k - $500k)
-      if (price > 10000 && price < 500000) {
-        btcPrice = price;
-      }
-    }
-    
-    // Extract Gold XAU/USD spot price
-    if (results[1].status === 'fulfilled' && results[1].value?.gold) {
-      const price = results[1].value.gold;
-      // Validate reasonable gold price ($1500-$10000 per oz) - updated for 2026 gold prices
-      if (price > 1500 && price < 10000) {
-        goldPrice = price;
-        console.log(`[GOLD PRICE] Successfully fetched: $${price.toFixed(2)}`);
-      } else {
-        console.warn(`[GOLD PRICE] Invalid price range: $${price}`);
-      }
-    } else {
-      console.error('[GOLD PRICE] Failed to fetch from all sources:', results[1].status === 'rejected' ? results[1].reason : 'No value');
-    }
-    
-    // Get current timestamp
+
     const timestamp = Date.now();
-    
-    // Format prices for display
+
     const response = {
-      xauusd: goldPrice ? goldPrice.toFixed(2) : '5085.20', // Updated fallback to current 2026 market price
-      btcusd: btcPrice ? Math.round(btcPrice).toString() : '102500',
+      xauusd: gold.price ? gold.price.toFixed(2) : '--',
+      btcusd: btc.price ? Math.round(btc.price).toString() : '--',
       timestamp: new Date(timestamp).toISOString(),
-      updateFrequency: '1s',
+      updateFrequency: '3s',
       sources: {
-        btc: btcPrice ? 'live-api' : 'fallback',
-        gold: goldPrice ? 'live-api' : 'fallback'
-      },
-      // Debug info (can be removed in production)
-      debug: {
-        btcFetched: !!btcPrice,
-        goldFetched: !!goldPrice,
-        btcValue: btcPrice,
-        goldValue: goldPrice
+        btc: btc.source,
+        gold: gold.source
       }
     };
-    
+
     return NextResponse.json(response, {
       headers: {
-        // Allow caching for 1 second max, with stale-while-revalidate
         'Cache-Control': 'public, max-age=0, s-maxage=1, stale-while-revalidate=2',
         'Content-Type': 'application/json',
-        // Prevent any proxy caching
         'CDN-Cache-Control': 'no-store',
         'Vercel-CDN-Cache-Control': 'no-store'
       }
@@ -216,13 +202,11 @@ export async function GET() {
     
   } catch (error) {
     console.error('Price fetch error:', error);
-    
-    // Return fallback prices with error indicator
     return NextResponse.json({
-      xauusd: '5085.20', // Updated fallback to current 2026 market price
-      btcusd: '102500',
+      xauusd: '--',
+      btcusd: '--',
       timestamp: new Date().toISOString(),
-      updateFrequency: '1s',
+      updateFrequency: '3s',
       sources: {
         btc: 'error-fallback',
         gold: 'error-fallback'

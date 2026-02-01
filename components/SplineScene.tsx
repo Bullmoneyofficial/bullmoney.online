@@ -244,11 +244,26 @@ function SplineSceneComponent({
         minHeight: '300px',
         height: '100%',
         contain: 'layout',
-        touchAction: 'manipulation',
+        touchAction: 'pan-y pinch-zoom',
+        overscrollBehavior: 'auto',
         pointerEvents: 'auto',
         cursor: isDragging ? 'grabbing' : 'grab',
       }}
       // Enhanced event handlers with visual feedback
+      onWheelCapture={(e) => {
+        // Let vertical wheel/trackpad gestures continue to scroll the page
+        if (Math.abs(e.deltaY) > 0) {
+          window.scrollBy({ top: e.deltaY, behavior: 'auto' });
+        }
+      }}
+      onTouchMoveCapture={(e) => {
+        // If user is not actively dragging the scene, favor page scroll on vertical swipes
+        if (!isDragging) return;
+        if (e.touches.length === 1) {
+          const dy = e.changedTouches[0]?.clientY ?? 0;
+          // No preventDefault here—allow browser to decide, but keep handler passive-friendly
+        }
+      }}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onMouseEnter={handleMouseEnter}

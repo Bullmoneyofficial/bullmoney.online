@@ -376,76 +376,74 @@ export function Features() {
           </>
         )}
 
-        {/* Desktop only - Globe and feature cards */}
-        {!isMobile && (
-          <>
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.4 }}
-              className="apple-card rounded-3xl p-8 md:p-10"
-            >
-              <div className="space-y-4">
-                <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl md:text-2xl font-semibold text-white">
-                  Fast Funding
-                </h3>
-                <p className="text-white/60 text-base leading-relaxed">
-                  Get funded in days, not months. Start trading with real capital quickly and efficiently.
-                </p>
+        {/* Shared feature cards with globe - visible on all devices */}
+        <>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4 }}
+            className="apple-card rounded-3xl p-8 md:p-10"
+          >
+            <div className="space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center">
+                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
               </div>
-            </motion.div>
+              <h3 className="text-xl md:text-2xl font-semibold text-white">
+                Fast Funding
+              </h3>
+              <p className="text-white/60 text-base leading-relaxed">
+                Get funded in days, not months. Start trading with real capital quickly and efficiently.
+              </p>
+            </div>
+          </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.5 }}
-              className="apple-card rounded-3xl p-8 md:p-10"
-            >
-              <div className="space-y-4">
-                <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl md:text-2xl font-semibold text-white">
-                  High Profit Split
-                </h3>
-                <p className="text-white/60 text-base leading-relaxed">
-                  Keep up to 90% of your profits. Industry-leading splits for successful traders.
-                </p>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.5 }}
+            className="apple-card rounded-3xl p-8 md:p-10"
+          >
+            <div className="space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center">
+                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
               </div>
-            </motion.div>
+              <h3 className="text-xl md:text-2xl font-semibold text-white">
+                High Profit Split
+              </h3>
+              <p className="text-white/60 text-base leading-relaxed">
+                Keep up to 90% of your profits. Industry-leading splits for successful traders.
+              </p>
+            </div>
+          </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.6 }}
-              className="apple-card rounded-3xl p-8 md:p-10 md:col-span-2 flex items-center justify-center min-h-[400px] overflow-hidden"
-            >
-              <div className="relative w-full h-full flex items-center justify-center">
-                <Globe />
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="text-center space-y-4">
-                    <h3 className="text-3xl md:text-4xl font-semibold text-white">
-                      Global Trading Network
-                    </h3>
-                    <p className="text-white/60 text-lg max-w-lg mx-auto">
-                      Join thousands of traders worldwide. Trade from anywhere, anytime.
-                    </p>
-                  </div>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.6 }}
+            className="apple-card rounded-3xl p-8 md:p-10 md:col-span-2 flex items-center justify-center min-h-[400px] overflow-hidden"
+          >
+            <div className="relative w-full h-full flex items-center justify-center">
+              <Globe reducedMotion={shouldSkipHeavyEffects} />
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="text-center space-y-4">
+                  <h3 className="text-3xl md:text-4xl font-semibold text-white">
+                    Global Trading Network
+                  </h3>
+                  <p className="text-white/60 text-lg max-w-lg mx-auto">
+                    Join thousands of traders worldwide. Trade from anywhere, anytime.
+                  </p>
                 </div>
               </div>
-            </motion.div>
-          </>
-        )}
+            </div>
+          </motion.div>
+        </>
       </div>
 
       {/* Bottom CTA Section - More compact */}
@@ -457,7 +455,7 @@ export function Features() {
       >
         <div className="apple-card rounded-3xl p-6 md:p-12 text-center">
           <h3 className="text-xl md:text-4xl font-semibold text-white mb-3 md:mb-4">
-            Ready to get funded?
+            Sign up a broker account
           </h3>
           <p className="text-white/60 text-sm md:text-lg mb-6 md:mb-8 max-w-2xl mx-auto">
             Start your journey today with exclusive benefits.
@@ -481,9 +479,12 @@ export function Features() {
 }
 
 // Globe Component
-const Globe = () => {
+const Globe = ({ reducedMotion = false }: { reducedMotion?: boolean }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [showFallback, setShowFallback] = useState(false);
+  const size = reducedMotion ? 480 : 600;
+  const mapSamples = reducedMotion ? 8000 : 16000;
+  const rotationSpeed = reducedMotion ? 0.003 : 0.005;
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -491,16 +492,18 @@ const Globe = () => {
     let phi = 0;
     let globe: ReturnType<typeof createGlobe> | null = null;
 
+    setShowFallback(false);
+
     try {
       globe = createGlobe(canvasRef.current, {
         devicePixelRatio: Math.min(window.devicePixelRatio, 2),
-        width: 600 * 2,
-        height: 600 * 2,
+        width: size * 2,
+        height: size * 2,
         phi: 0,
         theta: 0,
         dark: 1,
         diffuse: 1.2,
-        mapSamples: 16000,
+        mapSamples,
         mapBrightness: 6,
         baseColor: [1, 1, 1],
         markerColor: [1, 1, 1],
@@ -511,7 +514,7 @@ const Globe = () => {
         ],
         onRender: (state) => {
           state.phi = phi;
-          phi += 0.005;
+          phi += rotationSpeed;
         },
       });
     } catch (e) {
@@ -529,7 +532,7 @@ const Globe = () => {
         }
       }
     };
-  }, []);
+  }, [mapSamples, reducedMotion, rotationSpeed, size]);
 
   if (showFallback) {
     return (
@@ -543,8 +546,8 @@ const Globe = () => {
     <canvas
       ref={canvasRef}
       style={{
-        width: 600,
-        height: 600,
+        width: size,
+        height: size,
         maxWidth: "100%",
         aspectRatio: 1,
       }}
@@ -556,8 +559,13 @@ const Globe = () => {
 // Signup Modal Component
 const SignupModal = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
   const [email, setEmail] = useState("");
+  const [mt5Number, setMt5Number] = useState("");
+  const [password, setPassword] = useState("");
+  const [referralCode, setReferralCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -567,12 +575,39 @@ const SignupModal = ({ open, onClose }: { open: boolean; onClose: () => void }) 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
+
+    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    const isValidMT5 = mt5Number.length >= 5;
+    const isValidPassword = password.length >= 6;
+
+    if (!isValidEmail) {
+      setLoading(false);
+      setError("Please enter a valid email address.");
+      return;
+    }
+
+    if (!isValidMT5) {
+      setLoading(false);
+      setError("Please enter a valid MT5 ID (min 5 digits).");
+      return;
+    }
+
+    if (!isValidPassword) {
+      setLoading(false);
+      setError("Password must be at least 6 characters.");
+      return;
+    }
     
     // Simulate signup - you can integrate with your actual signup system
     await new Promise(resolve => setTimeout(resolve, 1500));
     
     setSuccess(true);
     setLoading(false);
+    setEmail("");
+    setMt5Number("");
+    setPassword("");
+    setReferralCode("");
     
     setTimeout(() => {
       onClose();
@@ -640,6 +675,87 @@ const SignupModal = ({ open, onClose }: { open: boolean; onClose: () => void }) 
                       placeholder="you@example.com"
                     />
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-white/80 mb-2">
+                      MT5 ID
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={mt5Number}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (!/^\d*$/.test(value)) return;
+                        setMt5Number(value);
+                      }}
+                      required
+                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:border-white/30 transition-colors"
+                      placeholder="Enter your MT5 ID"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-white/80 mb-2">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:border-white/30 transition-colors pr-12"
+                        placeholder="Create a password"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/80"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                      >
+                        {showPassword ? (
+                          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                            <path d="M1 1l22 22" />
+                            <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+                            <path d="M9.88 9.88a2 2 0 0 1 2.84 0L12 12" />
+                          </svg>
+                        ) : (
+                          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z" />
+                            <circle cx="12" cy="12" r="3" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                    <p className="text-white/40 text-xs mt-1">Minimum 6 characters.</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-white/80 mb-2">
+                      Referral Code (optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={referralCode}
+                      onChange={(e) => setReferralCode(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:border-white/30 transition-colors"
+                      placeholder="Enter referral or partner code"
+                    />
+                  </div>
+
+                  {error && (
+                    <div className="text-red-400 text-sm bg-red-950/30 border border-red-500/20 rounded-xl px-3 py-2 flex items-center gap-2">
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                      </svg>
+                      <span>{error}</span>
+                    </div>
+                  )}
 
                   <div className="flex gap-3 pt-2">
                     <button

@@ -324,7 +324,7 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
           {/* Centered Action Buttons */}
           {/* Full area touch/click handler to detect interaction */}
           <div
-            className="w-full h-full flex flex-col justify-center items-center px-8 lg:px-12 xl:px-16"
+            className="w-full h-full flex flex-col justify-center items-center px-6 lg:px-10 xl:px-12"
             style={{ pointerEvents: 'none' }}
           >
             {/* Card Container - Gentle pulse animation until interaction (ultra-transparent glass) */}
@@ -348,7 +348,7 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
                       ease: 'easeInOut',
                     }
               }
-                className="w-full max-w-md rounded-2xl p-8 xl:p-10 border border-white/10"
+                className="w-full max-w-[22rem] rounded-2xl p-6 xl:p-7 border border-white/10"
                 onMouseEnter={handleUserInteraction}
                 onTouchStart={handleUserInteraction}
                 onClick={handleUserInteraction}
@@ -361,21 +361,21 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
               }}
             >
               {/* Card Header - Only show on smaller desktop */}
-              <div className="lg:hidden text-center mb-8">
-                <h1 className="text-3xl font-black tracking-tight neon-title-desktop">
+              <div className="lg:hidden text-center mb-6">
+                <h1 className="text-2xl font-black tracking-tight neon-title-desktop">
                   BULLMONEY
                 </h1>
-                <p className="text-sm text-white/50 mt-2">
+                <p className="text-xs text-white/50 mt-1.5">
                   The Ultimate Trading Hub
                 </p>
               </div>
 
               {/* Action Header */}
-              <div className="text-center mb-8 lg:mb-10">
-                <h2 className="text-2xl xl:text-3xl font-bold text-white mb-2">
+              <div className="text-center mb-6 lg:mb-8">
+                <h2 className="text-xl xl:text-2xl font-bold text-white mb-1.5">
                   Get Started
                 </h2>
-                <p className="text-white/50 text-sm xl:text-base">
+                <p className="text-white/50 text-xs xl:text-sm">
                   Choose how you want to continue
                 </p>
               </div>
@@ -387,7 +387,7 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
                   onClick={onSignUp}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full py-4 xl:py-5 rounded-xl font-bold text-lg xl:text-xl tracking-wide transition-all flex items-center justify-center gap-3 text-white"
+                  className="w-full py-3.5 xl:py-4 rounded-xl font-bold text-base xl:text-lg tracking-wide transition-all flex items-center justify-center gap-3 text-white"
                   style={{
                     background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.6) 100%)',
                     backdropFilter: 'blur(8px)',
@@ -404,7 +404,7 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
                   onClick={onLogin}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full py-4 xl:py-5 rounded-xl font-bold text-lg xl:text-xl tracking-wide transition-all flex items-center justify-center gap-3 text-white"
+                  className="w-full py-3.5 xl:py-4 rounded-xl font-bold text-base xl:text-lg tracking-wide transition-all flex items-center justify-center gap-3 text-white"
                   style={{
                     background: 'rgba(255, 255, 255, 0.1)',
                     backdropFilter: 'blur(6px)',
@@ -418,7 +418,7 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
                 {/* Divider */}
                 <div className="flex items-center gap-4 my-1">
                   <div className="flex-1 h-px bg-white/5" />
-                  <span className="text-white/20 text-sm">or</span>
+                  <span className="text-white/20 text-xs">or</span>
                   <div className="flex-1 h-px bg-white/5" />
                 </div>
 
@@ -426,7 +426,7 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
                 <motion.button
                   onClick={handleGuestClick}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full py-3 xl:py-4 rounded-xl font-medium text-base xl:text-lg tracking-wide transition-all flex items-center justify-center gap-2 text-white/50"
+                  className="w-full py-3 rounded-xl font-medium text-sm xl:text-base tracking-wide transition-all flex items-center justify-center gap-2 text-white/50"
                   style={{
                     background: 'rgba(255, 255, 255, 0.03)',
                     backdropFilter: 'blur(4px)',
@@ -439,7 +439,7 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
               </div>
 
               {/* Footer Note */}
-              <p className="text-center text-white/30 text-xs mt-6 xl:mt-8">
+              <p className="text-center text-white/30 text-[11px] mt-5 xl:mt-6">
                 By continuing, you agree to our{' '}
                 <button 
                   type="button"

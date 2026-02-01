@@ -498,7 +498,7 @@ function LazySplineContainer({ scene }: { scene: string }) {
         minHeight: '300px',
         height: '100%',
         WebkitOverflowScrolling: 'touch',
-        overscrollBehavior: 'none',
+        overscrollBehavior: 'auto',
       }}
     >
       {!hasLoadedOnce && !isInView && (
@@ -520,12 +520,13 @@ function LazySplineContainer({ scene }: { scene: string }) {
           </div>
         }>
           <div
-            className="absolute inset-0 pointer-events-none md:pointer-events-auto transition-opacity duration-300"
+            className="absolute inset-0 pointer-events-auto transition-opacity duration-300"
             style={{
-              touchAction: 'pan-y',
+              touchAction: 'manipulation',
               opacity: isPaused ? 0 : 1,
               visibility: isPaused ? 'hidden' : 'visible',
               willChange: isPaused ? 'auto' : 'transform',
+              transform: 'translateZ(0)',
             }}
           >
             <SplineScene scene={scene} />
