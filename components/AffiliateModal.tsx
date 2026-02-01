@@ -44,28 +44,28 @@ const AFFILIATE_ADMIN_EMAILS = (process.env.NEXT_PUBLIC_AFFILIATE_ADMIN_EMAILS |
   .map((email) => email.trim().toLowerCase())
   .filter(Boolean);
 
-// --- NEON BLUE THEME COLORS (Matching Navbar) ---
+// --- APPLE MINIMALIST THEME COLORS ---
 const NEON_BLUE = {
-  // Primary neon blue (theme-driven)
-  primary: 'var(--accent-color, #ffffff)',
-  primaryLight: 'rgba(var(--accent-rgb, 255, 255, 255), 0.8)',
-  primaryDark: 'rgba(var(--accent-rgb, 255, 255, 255), 1)',
-  // Cyan accent (kept for contrast)
+  // Primary - Pure white for key elements
+  primary: '#ffffff',
+  primaryLight: 'rgba(255, 255, 255, 0.9)',
+  primaryDark: '#ffffff',
+  // Accent - Clean white
   cyan: '#ffffff',
   cyanLight: '#ffffff',
-  // Static neon glow values
-  border: 'rgba(var(--accent-rgb, 255, 255, 255), 0.6)',
-  borderHover: 'rgba(var(--accent-rgb, 255, 255, 255), 0.9)',
-  glow: '0 0 20px rgba(var(--accent-rgb, 255, 255, 255), 0.4)',
-  glowStrong: '0 0 30px rgba(var(--accent-rgb, 255, 255, 255), 0.6)',
-  glowIntense: '0 0 40px rgba(var(--accent-rgb, 255, 255, 255), 0.8)',
-  // Background
-  bgDark: 'rgba(0, 0, 0, 0.95)',
-  bgCard: 'rgba(0, 0, 0, 0.8)',
-  // Text
-  textPrimary: 'rgba(var(--accent-rgb, 255, 255, 255), 0.8)',
-  textSecondary: 'rgba(var(--accent-rgb, 255, 255, 255), 0.7)',
-  textMuted: 'rgba(var(--accent-rgb, 255, 255, 255), 0.5)',
+  // Borders - Subtle grays
+  border: 'rgba(255, 255, 255, 0.15)',
+  borderHover: 'rgba(255, 255, 255, 0.3)',
+  glow: 'none',
+  glowStrong: 'none',
+  glowIntense: 'none',
+  // Background - Deep black
+  bgDark: '#000000',
+  bgCard: 'rgba(28, 28, 30, 0.95)',
+  // Text - Apple-style hierarchy
+  textPrimary: '#ffffff',
+  textSecondary: 'rgba(255, 255, 255, 0.7)',
+  textMuted: 'rgba(255, 255, 255, 0.45)',
   textWhite: '#ffffff',
 };
 
@@ -173,11 +173,11 @@ const calculateEarnings = (
   };
 };
 
-// --- NEON CARD COMPONENT ---
+// --- APPLE CARD COMPONENT ---
 const NeonCard = memo(({ 
   children, 
   className,
-  glow = true,
+  glow = false,
   padding = 'default'
 }: { 
   children: React.ReactNode; 
@@ -195,14 +195,14 @@ const NeonCard = memo(({
   return (
     <div 
       className={cn(
-        "relative rounded-2xl overflow-hidden",
-        "bg-black/80 border-2",
+        "relative rounded-3xl overflow-hidden",
+        "backdrop-blur-xl border",
         paddingClasses[padding],
         className
       )}
       style={{
-        borderColor: NEON_BLUE.border,
-        boxShadow: glow ? NEON_BLUE.glow : 'none',
+        background: 'rgba(28, 28, 30, 0.85)',
+        borderColor: 'rgba(255, 255, 255, 0.08)',
       }}
     >
       {children}
@@ -211,7 +211,7 @@ const NeonCard = memo(({
 });
 NeonCard.displayName = "NeonCard";
 
-// --- NEON BUTTON COMPONENT ---
+// --- APPLE BUTTON COMPONENT ---
 const NeonButton = memo(({ 
   children, 
   onClick, 
@@ -230,29 +230,26 @@ const NeonButton = memo(({
   icon?: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
 }) => {
   const sizeClasses = {
-    small: 'py-2 px-4 text-sm',
-    default: 'py-3 px-6 text-base',
-    large: 'py-4 px-8 text-lg'
+    small: 'py-2.5 px-5 text-sm',
+    default: 'py-3.5 px-7 text-[15px]',
+    large: 'py-4 px-8 text-base'
   };
   
   const variantStyles = {
     primary: {
-      background: 'transparent',
-      border: `2px solid ${disabled ? 'rgba(255, 255, 255, 0.3)' : NEON_BLUE.border}`,
-      color: disabled ? 'rgba(255, 255, 255, 0.4)' : NEON_BLUE.textPrimary,
-      boxShadow: disabled ? 'none' : NEON_BLUE.glow,
+      background: disabled ? 'rgba(255, 255, 255, 0.1)' : '#ffffff',
+      border: 'none',
+      color: disabled ? 'rgba(255, 255, 255, 0.4)' : '#000000',
     },
     secondary: {
-      background: 'rgba(255, 255, 255, 0.1)',
-      border: `2px solid ${disabled ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.4)'}`,
-      color: disabled ? 'rgba(255, 255, 255, 0.4)' : NEON_BLUE.textPrimary,
-      boxShadow: 'none',
+      background: 'rgba(255, 255, 255, 0.08)',
+      border: '1px solid rgba(255, 255, 255, 0.15)',
+      color: disabled ? 'rgba(255, 255, 255, 0.4)' : '#ffffff',
     },
     ghost: {
       background: 'transparent',
-      border: '2px solid transparent',
-      color: disabled ? 'rgba(255, 255, 255, 0.4)' : NEON_BLUE.textSecondary,
-      boxShadow: 'none',
+      border: 'none',
+      color: disabled ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.7)',
     }
   };
   
@@ -261,9 +258,9 @@ const NeonButton = memo(({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "relative rounded-xl font-bold tracking-wide transition-all duration-300",
+        "relative rounded-2xl font-semibold tracking-tight transition-all duration-200",
         "flex items-center justify-center gap-2",
-        disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:scale-[1.02] active:scale-[0.98]",
+        disabled ? "cursor-not-allowed" : "cursor-pointer hover:opacity-90 active:scale-[0.98]",
         sizeClasses[size],
         className
       )}
@@ -277,7 +274,7 @@ const NeonButton = memo(({
 
 NeonButton.displayName = "NeonButton";
 
-// --- NEON INPUT COMPONENT ---
+// --- APPLE INPUT COMPONENT ---
 const NeonInput = memo(({ 
   type = 'text',
   name,
@@ -305,8 +302,8 @@ const NeonInput = memo(({
     <div className={cn("relative group", className)}>
       {Icon && (
         <Icon 
-          className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors"
-          style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+          className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors"
+          style={{ color: 'rgba(255, 255, 255, 0.35)' }}
         />
       )}
       <input
@@ -319,14 +316,15 @@ const NeonInput = memo(({
         disabled={disabled}
         autoFocus={autoFocus}
         className={cn(
-          "w-full rounded-lg py-3.5 text-white placeholder-blue-300/30",
-          "focus:outline-none transition-all duration-300",
-          "bg-black/60 border-2",
-          Icon ? "pl-10 pr-4" : "px-4",
+          "w-full rounded-xl py-4 text-white text-[15px] placeholder-white/25",
+          "focus:outline-none focus:ring-2 focus:ring-white/20 transition-all duration-200",
+          "border",
+          Icon ? "pl-12 pr-4" : "px-4",
           disabled && "opacity-50 cursor-not-allowed"
         )}
         style={{
-          borderColor: 'rgba(255, 255, 255, 0.3)',
+          background: 'rgba(255, 255, 255, 0.06)',
+          borderColor: 'rgba(255, 255, 255, 0.08)',
         }}
       />
     </div>
@@ -386,11 +384,11 @@ const StatCard = memo(({
 ));
 StatCard.displayName = "StatCard";
 
-// --- TIER BADGE COMPONENT ---
+// --- TIER BADGE COMPONENT - Apple Style ---
 const TierBadge = memo(({ tier, size = 'default' }: { tier: typeof AFFILIATE_TIERS[0]; size?: 'small' | 'default' | 'large' }) => {
   const Icon = tier.icon;
   const sizeClasses = {
-    small: 'text-xs px-2 py-1',
+    small: 'text-xs px-2.5 py-1',
     default: 'text-sm px-3 py-1.5',
     large: 'text-base px-4 py-2'
   };
@@ -398,24 +396,22 @@ const TierBadge = memo(({ tier, size = 'default' }: { tier: typeof AFFILIATE_TIE
   return (
     <span 
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full font-semibold border-2",
+        "inline-flex items-center gap-1.5 rounded-lg font-medium",
         sizeClasses[size]
       )}
       style={{
-        borderColor: tier.color,
-        color: tier.color,
-        background: `${tier.color}15`,
-        boxShadow: `0 0 15px ${tier.color}40`,
+        color: '#ffffff',
+        background: 'rgba(255, 255, 255, 0.1)',
       }}
     >
-      <Icon className="w-4 h-4" />
+      <Icon className="w-3.5 h-3.5" style={{ color: 'rgba(255, 255, 255, 0.6)' }} />
       {tier.name}
     </span>
   );
 });
 TierBadge.displayName = "TierBadge";
 
-// --- COLLAPSIBLE SECTION ---
+// --- COLLAPSIBLE SECTION - Apple Style ---
 const CollapsibleSection = memo(({ title, subtitle, icon: Icon, children, defaultOpen = false }: {
   title: string;
   subtitle?: string;
@@ -424,24 +420,24 @@ const CollapsibleSection = memo(({ title, subtitle, icon: Icon, children, defaul
   defaultOpen?: boolean;
 }) => (
   <details
-    className="group rounded-2xl border-2 bg-black/70"
-    style={{ borderColor: 'rgba(255, 255, 255, 0.35)' }}
+    className="group rounded-2xl"
+    style={{ background: 'rgba(255, 255, 255, 0.04)' }}
     open={defaultOpen}
   >
     <summary className="flex items-center justify-between gap-3 cursor-pointer list-none p-4">
       <div className="flex items-center gap-3">
         <div
-          className="w-9 h-9 rounded-full border-2 flex items-center justify-center"
-          style={{ borderColor: NEON_BLUE.primary, background: 'rgba(255, 255, 255, 0.12)' }}
+          className="w-9 h-9 rounded-xl flex items-center justify-center"
+          style={{ background: 'rgba(255, 255, 255, 0.08)' }}
         >
-          <Icon className="w-4 h-4" style={{ color: NEON_BLUE.cyan }} />
+          <Icon className="w-4 h-4" style={{ color: 'rgba(255, 255, 255, 0.6)' }} />
         </div>
         <div>
-          <p className="text-sm font-bold" style={{ color: NEON_BLUE.textWhite }}>{title}</p>
-          {subtitle && <p className="text-[11px]" style={{ color: NEON_BLUE.textMuted }}>{subtitle}</p>}
+          <p className="text-sm font-medium" style={{ color: '#ffffff' }}>{title}</p>
+          {subtitle && <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>{subtitle}</p>}
         </div>
       </div>
-      <ChevronDown className="w-4 h-4 transition-transform duration-200 group-open:rotate-180" style={{ color: NEON_BLUE.textMuted }} />
+      <ChevronDown className="w-4 h-4 transition-transform duration-200 group-open:rotate-180" style={{ color: 'rgba(255, 255, 255, 0.4)' }} />
     </summary>
     <div className="px-4 pb-4 pt-1">
       {children}
@@ -450,7 +446,7 @@ const CollapsibleSection = memo(({ title, subtitle, icon: Icon, children, defaul
 ));
 CollapsibleSection.displayName = "CollapsibleSection";
 
-// --- CODE VAULT CARD (Static Evervault Style) ---
+// --- CODE VAULT CARD - Apple Minimalist Style ---
 const CodeVaultCard = memo(({ label, code, onCopy, copied }: {
   label: string;
   code: string;
@@ -458,33 +454,26 @@ const CodeVaultCard = memo(({ label, code, onCopy, copied }: {
   copied: boolean;
 }) => (
   <div
-    className="relative overflow-hidden rounded-2xl border-2 p-4"
-    style={{ borderColor: NEON_BLUE.border, boxShadow: NEON_BLUE.glow }}
+    className="relative overflow-hidden rounded-2xl p-5"
+    style={{ background: 'rgba(255, 255, 255, 0.06)' }}
   >
-    <div
-      className="absolute inset-0 opacity-30"
-      style={{
-        background: 'conic-gradient(from 180deg at 50% 50%, rgba(255, 255, 255,0.0), rgba(255, 255, 255,0.35), rgba(255, 255, 255,0.0))'
-      }}
-    />
     <div className="relative z-10">
-      <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: NEON_BLUE.textMuted }}>{label}</p>
+      <p className="text-xs mb-3" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>{label}</p>
       <div className="flex items-center justify-between gap-3">
-        <span className="text-xl sm:text-2xl font-black" style={{ color: NEON_BLUE.textWhite }}>{code}</span>
+        <span className="text-2xl sm:text-3xl font-semibold tracking-tight" style={{ color: '#ffffff' }}>{code}</span>
         <button
           onClick={onCopy}
-          className="px-3 py-1.5 rounded-lg border-2 text-xs font-bold"
+          className="px-4 py-2 rounded-xl text-sm font-medium transition-all"
           style={{
-            borderColor: NEON_BLUE.border,
-            color: NEON_BLUE.textPrimary,
-            background: 'rgba(255, 255, 255, 0.12)'
+            background: copied ? 'rgba(255, 255, 255, 0.15)' : '#ffffff',
+            color: copied ? '#ffffff' : '#000000',
           }}
         >
-          {copied ? 'COPIED' : 'COPY'}
+          {copied ? 'Copied!' : 'Copy'}
         </button>
       </div>
-      <p className="text-[11px] mt-2" style={{ color: NEON_BLUE.textMuted }}>
-        Paste this code during broker signup to connect your traders to you.
+      <p className="text-xs mt-3" style={{ color: 'rgba(255, 255, 255, 0.35)' }}>
+        Clients must use this code when signing up with the broker
       </p>
     </div>
   </div>
@@ -500,7 +489,7 @@ interface AffiliateModalProps {
   onClose: () => void;
 }
 
-type ModalStep = 'intro' | 'how-it-works' | 'signup-broker' | 'signup-mt5' | 'signup-account' | 'loading' | 'success' | 'dashboard';
+type ModalStep = 'intro' | 'how-it-works' | 'signup-broker' | 'verify-broker' | 'signup-skrill' | 'signup-mt5' | 'signup-account' | 'loading' | 'success' | 'dashboard';
 
 export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps) {
   const router = useRouter();
@@ -634,6 +623,12 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
         setStep('signup-broker');
         break;
       case 'signup-broker':
+        setStep('verify-broker');
+        break;
+      case 'verify-broker':
+        setStep('signup-skrill');
+        break;
+      case 'signup-skrill':
         setStep('signup-mt5');
         break;
       case 'signup-mt5':
@@ -665,7 +660,9 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
     const backMap: Partial<Record<ModalStep, ModalStep>> = {
       'how-it-works': 'intro',
       'signup-broker': 'how-it-works',
-      'signup-mt5': 'signup-broker',
+      'verify-broker': 'signup-broker',
+      'signup-skrill': 'verify-broker',
+      'signup-mt5': 'signup-skrill',
       'signup-account': 'signup-mt5',
     };
     const prevStep = backMap[step];
@@ -833,56 +830,66 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
       className="w-full max-w-lg mx-auto"
     >
       <NeonCard padding="large" className="text-center">
-        {/* Header Icon */}
+        {/* Header Icon - Apple minimalist */}
         <div 
-          className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center border-2"
+          className="w-20 h-20 mx-auto mb-8 rounded-full flex items-center justify-center"
           style={{ 
-            borderColor: NEON_BLUE.primary,
-            boxShadow: NEON_BLUE.glowStrong,
-            background: 'rgba(255, 255, 255, 0.1)'
+            background: 'rgba(255, 255, 255, 0.08)',
           }}
         >
-          <DollarSign className="w-10 h-10" style={{ color: NEON_BLUE.cyan }} />
+          <DollarSign className="w-10 h-10" style={{ color: '#ffffff' }} />
         </div>
         
         <h1 
-          className="text-2xl sm:text-3xl font-black mb-3"
-          style={{ color: NEON_BLUE.textWhite }}
+          className="text-2xl sm:text-3xl font-semibold mb-4 tracking-tight"
+          style={{ color: '#ffffff' }}
         >
-          BullMoney Affiliate Program
+          Affiliate Program
         </h1>
         
         <p 
-          className="text-sm sm:text-base mb-5 leading-relaxed"
-          style={{ color: NEON_BLUE.textSecondary }}
+          className="text-[15px] sm:text-base mb-6 leading-relaxed"
+          style={{ color: 'rgba(255, 255, 255, 0.6)' }}
         >
-          Earn <span style={{ color: NEON_BLUE.cyan }}>5-25% commission</span> every time your traders place real trades.
-          Bring more traders → unlock higher tiers → stack bigger monthly payouts.
+          Earn <span style={{ color: '#ffffff', fontWeight: 600 }}>5-25% commission</span> every time your traders place real trades.
+          More traders means higher tiers and bigger payouts.
         </p>
 
-        <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
-          <span className="text-[11px] px-2 py-1 rounded-full border-2" style={{ borderColor: NEON_BLUE.border, color: NEON_BLUE.textPrimary }}>Fast payout</span>
-          <span className="text-[11px] px-2 py-1 rounded-full border-2" style={{ borderColor: NEON_BLUE.border, color: NEON_BLUE.textPrimary }}>No cap earnings</span>
-          <span className="text-[11px] px-2 py-1 rounded-full border-2" style={{ borderColor: NEON_BLUE.border, color: NEON_BLUE.textPrimary }}>Bonus boosts</span>
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
+          <span className="text-xs px-3 py-1.5 rounded-full" style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'rgba(255, 255, 255, 0.7)' }}>Fast payouts</span>
+          <span className="text-xs px-3 py-1.5 rounded-full" style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'rgba(255, 255, 255, 0.7)' }}>Unlimited earnings</span>
+          <span className="text-xs px-3 py-1.5 rounded-full" style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'rgba(255, 255, 255, 0.7)' }}>Bonus rewards</span>
         </div>
         
-        {/* Quick Stats */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          <StatCard icon={Percent} label="Commission" value="5-25%" highlight />
-          <StatCard icon={Users} label="No Limit" value="∞ Traders" />
-          <StatCard icon={Gift} label="Bonuses" value="2x" subtext="with social" />
+        {/* Quick Stats - Apple clean grid */}
+        <div className="grid grid-cols-3 gap-3 mb-8">
+          <div className="p-4 rounded-2xl" style={{ background: 'rgba(255, 255, 255, 0.06)' }}>
+            <Percent className="w-5 h-5 mx-auto mb-2" style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
+            <p className="text-lg font-semibold text-white">5-25%</p>
+            <p className="text-[11px]" style={{ color: 'rgba(255, 255, 255, 0.45)' }}>Commission</p>
+          </div>
+          <div className="p-4 rounded-2xl" style={{ background: 'rgba(255, 255, 255, 0.06)' }}>
+            <Users className="w-5 h-5 mx-auto mb-2" style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
+            <p className="text-lg font-semibold text-white">∞</p>
+            <p className="text-[11px]" style={{ color: 'rgba(255, 255, 255, 0.45)' }}>No Limit</p>
+          </div>
+          <div className="p-4 rounded-2xl" style={{ background: 'rgba(255, 255, 255, 0.06)' }}>
+            <Gift className="w-5 h-5 mx-auto mb-2" style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
+            <p className="text-lg font-semibold text-white">2x</p>
+            <p className="text-[11px]" style={{ color: 'rgba(255, 255, 255, 0.45)' }}>Social Bonus</p>
+          </div>
         </div>
         
-        {/* CTA Buttons */}
+        {/* CTA Buttons - Apple style */}
         <div className="space-y-3">
           <NeonButton 
             onClick={handleNext} 
             variant="primary" 
             size="large" 
             className="w-full"
-            icon={ArrowRight}
           >
-            See How You Earn
+            Get Started
+            <ArrowRight className="w-4 h-4 ml-2" />
           </NeonButton>
           
           {savedSession && (
@@ -890,7 +897,6 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
               onClick={() => setStep('dashboard')} 
               variant="secondary" 
               className="w-full"
-              icon={User}
             >
               Continue as {savedSession.email.split('@')[0]}
             </NeonButton>
@@ -898,8 +904,8 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
         </div>
         
         <p 
-          className="text-[10px] sm:text-xs mt-4 flex items-center justify-center gap-1"
-          style={{ color: NEON_BLUE.textMuted }}
+          className="text-xs mt-5 flex items-center justify-center gap-1.5"
+          style={{ color: 'rgba(255, 255, 255, 0.35)' }}
         >
           <Lock className="w-3 h-3" /> Free to join • No hidden fees
         </p>
@@ -921,35 +927,35 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
       <div className="space-y-3">
         <CollapsibleSection
           title="How You Earn Money"
-          subtitle="Tap to expand the 3-step flow"
+          subtitle="The 3-step process"
           icon={Info}
           defaultOpen
         >
           <div className="space-y-3">
-            <div className="flex gap-3 p-3 rounded-xl border-2" style={{ borderColor: 'rgba(255, 255, 255, 0.3)', background: 'rgba(0, 0, 0, 0.4)' }}>
-              <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 font-bold text-xs" style={{ background: NEON_BLUE.primary, color: NEON_BLUE.textWhite }}>1</div>
+            <div className="flex gap-3 p-4 rounded-xl" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 font-medium text-xs" style={{ background: 'rgba(255, 255, 255, 0.1)', color: '#ffffff' }}>1</div>
               <div>
-                <h3 className="font-semibold mb-1" style={{ color: NEON_BLUE.textWhite }}>Recruit Traders</h3>
-                <p className="text-sm" style={{ color: NEON_BLUE.textSecondary }}>
-                  Share your affiliate code. Traders sign up, open accounts, and get verified under you.
+                <h3 className="font-medium mb-1" style={{ color: '#ffffff' }}>Recruit Traders</h3>
+                <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                  Share your affiliate code. Traders sign up and get verified under you.
                 </p>
               </div>
             </div>
-            <div className="flex gap-3 p-3 rounded-xl border-2" style={{ borderColor: 'rgba(255, 255, 255, 0.3)', background: 'rgba(0, 0, 0, 0.4)' }}>
-              <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 font-bold text-xs" style={{ background: NEON_BLUE.primary, color: NEON_BLUE.textWhite }}>2</div>
+            <div className="flex gap-3 p-4 rounded-xl" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 font-medium text-xs" style={{ background: 'rgba(255, 255, 255, 0.1)', color: '#ffffff' }}>2</div>
               <div>
-                <h3 className="font-semibold mb-1" style={{ color: NEON_BLUE.textWhite }}>They Trade, You Earn</h3>
-                <p className="text-sm" style={{ color: NEON_BLUE.textSecondary }}>
+                <h3 className="font-medium mb-1" style={{ color: '#ffffff' }}>They Trade, You Earn</h3>
+                <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
                   XM: $11/lot × your tier %. Vantage: $5.50/lot × your tier %.
                 </p>
               </div>
             </div>
-            <div className="flex gap-3 p-3 rounded-xl border-2" style={{ borderColor: 'rgba(255, 255, 255, 0.3)', background: 'rgba(0, 0, 0, 0.4)' }}>
-              <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 font-bold text-xs" style={{ background: NEON_BLUE.primary, color: NEON_BLUE.textWhite }}>3</div>
+            <div className="flex gap-3 p-4 rounded-xl" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 font-medium text-xs" style={{ background: 'rgba(255, 255, 255, 0.1)', color: '#ffffff' }}>3</div>
               <div>
-                <h3 className="font-semibold mb-1" style={{ color: NEON_BLUE.textWhite }}>Boost With Bonuses</h3>
-                <p className="text-sm" style={{ color: NEON_BLUE.textSecondary }}>
-                  Hit 20+ lots/month and post 2× per week to unlock higher multipliers.
+                <h3 className="font-medium mb-1" style={{ color: '#ffffff' }}>Get Paid via Skrill</h3>
+                <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                  Monthly payouts sent directly to your Skrill account.
                 </p>
               </div>
             </div>
@@ -965,16 +971,13 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
             {AFFILIATE_TIERS.map((tier) => (
               <div 
                 key={tier.name}
-                className="flex flex-col items-center p-3 rounded-xl border-2 text-center"
-                style={{ 
-                  borderColor: `${tier.color}40`,
-                  background: `${tier.color}10`
-                }}
+                className="flex flex-col items-center p-3 rounded-xl text-center"
+                style={{ background: 'rgba(255, 255, 255, 0.04)' }}
               >
-                <tier.icon className="w-5 h-5 mb-1" style={{ color: tier.color }} />
-                <span className="text-xs font-bold" style={{ color: tier.color }}>{tier.name}</span>
-                <span className="text-lg font-black" style={{ color: NEON_BLUE.textWhite }}>{tier.commissionPercent}%</span>
-                <span className="text-[10px]" style={{ color: NEON_BLUE.textMuted }}>
+                <tier.icon className="w-5 h-5 mb-1" style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
+                <span className="text-xs font-medium" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>{tier.name}</span>
+                <span className="text-lg font-semibold" style={{ color: '#ffffff' }}>{tier.commissionPercent}%</span>
+                <span className="text-[10px]" style={{ color: 'rgba(255, 255, 255, 0.35)' }}>
                   {tier.minTraders}-{tier.maxTraders === Infinity ? '∞' : tier.maxTraders} traders
                 </span>
               </div>
@@ -984,21 +987,19 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
 
         <CollapsibleSection
           title="Earnings Calculator"
-          subtitle="Tap to estimate your monthly payout"
+          subtitle="Estimate your monthly payout"
           icon={BarChart3}
         >
           <div>
-            <div className="flex justify-center gap-2 mb-4">
+            <div className="flex justify-center gap-2 mb-4 p-1 rounded-xl" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
               {(['Vantage', 'XM'] as const).map((broker) => (
                 <button
                   key={broker}
                   onClick={() => setActiveBroker(broker)}
-                  className="px-4 py-2 rounded-full text-sm font-semibold transition-all border-2"
+                  className="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all"
                   style={{
-                    borderColor: activeBroker === broker ? NEON_BLUE.primary : 'rgba(255, 255, 255, 0.3)',
-                    background: activeBroker === broker ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
-                    color: activeBroker === broker ? NEON_BLUE.textWhite : NEON_BLUE.textMuted,
-                    boxShadow: activeBroker === broker ? NEON_BLUE.glow : 'none',
+                    background: activeBroker === broker ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                    color: activeBroker === broker ? '#ffffff' : 'rgba(255, 255, 255, 0.5)',
                   }}
                 >
                   {broker}
@@ -1009,8 +1010,8 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
             <div className="space-y-4 mb-6">
               <div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span style={{ color: NEON_BLUE.textSecondary }}>Traders Referred</span>
-                  <span className="font-bold" style={{ color: NEON_BLUE.cyan }}>{calcTraders}</span>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Traders Referred</span>
+                  <span className="font-medium" style={{ color: '#ffffff' }}>{calcTraders}</span>
                 </div>
                 <input
                   type="range"
@@ -1018,17 +1019,17 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
                   max="100"
                   value={calcTraders}
                   onChange={(e) => setCalcTraders(Number(e.target.value))}
-                  className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                  className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
                   style={{ 
-                    background: `linear-gradient(to right, ${NEON_BLUE.primary} ${calcTraders}%, rgba(255, 255, 255, 0.2) ${calcTraders}%)` 
+                    background: `linear-gradient(to right, #ffffff ${calcTraders}%, rgba(255, 255, 255, 0.15) ${calcTraders}%)` 
                   }}
                 />
               </div>
 
               <div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span style={{ color: NEON_BLUE.textSecondary }}>Avg Lots/Trader/Month</span>
-                  <span className="font-bold" style={{ color: NEON_BLUE.cyan }}>{calcLots}</span>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Avg Lots/Trader/Month</span>
+                  <span className="font-medium" style={{ color: '#ffffff' }}>{calcLots}</span>
                 </div>
                 <input
                   type="range"
@@ -1036,17 +1037,17 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
                   max="50"
                   value={calcLots}
                   onChange={(e) => setCalcLots(Number(e.target.value))}
-                  className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                  className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
                   style={{ 
-                    background: `linear-gradient(to right, ${NEON_BLUE.primary} ${calcLots * 2}%, rgba(255, 255, 255, 0.2) ${calcLots * 2}%)` 
+                    background: `linear-gradient(to right, #ffffff ${calcLots * 2}%, rgba(255, 255, 255, 0.15) ${calcLots * 2}%)` 
                   }}
                 />
               </div>
 
               <div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span style={{ color: NEON_BLUE.textSecondary }}>Social Posts/Week</span>
-                  <span className="font-bold" style={{ color: NEON_BLUE.cyan }}>{calcPosts}</span>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Social Posts/Week</span>
+                  <span className="font-medium" style={{ color: '#ffffff' }}>{calcPosts}</span>
                 </div>
                 <input
                   type="range"
@@ -1054,34 +1055,34 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
                   max="7"
                   value={calcPosts}
                   onChange={(e) => setCalcPosts(Number(e.target.value))}
-                  className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                  className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
                   style={{ 
-                    background: `linear-gradient(to right, ${NEON_BLUE.primary} ${(calcPosts / 7) * 100}%, rgba(255, 255, 255, 0.2) ${(calcPosts / 7) * 100}%)` 
+                    background: `linear-gradient(to right, #ffffff ${(calcPosts / 7) * 100}%, rgba(255, 255, 255, 0.15) ${(calcPosts / 7) * 100}%)` 
                   }}
                 />
               </div>
             </div>
 
             <div 
-              className="p-4 rounded-xl border-2"
-              style={{ borderColor: NEON_BLUE.primary, background: 'rgba(255, 255, 255, 0.1)' }}
+              className="p-4 rounded-xl"
+              style={{ background: 'rgba(255, 255, 255, 0.06)' }}
             >
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm" style={{ color: NEON_BLUE.textSecondary }}>Your Tier</span>
+                <span className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Your Tier</span>
                 <TierBadge tier={earnings.tier} size="small" />
               </div>
               <div className="grid grid-cols-3 gap-3 text-center">
                 <div>
-                  <p className="text-xs" style={{ color: NEON_BLUE.textMuted }}>Base Commission</p>
-                  <p className="text-lg font-bold" style={{ color: NEON_BLUE.textWhite }}>${earnings.commission}</p>
+                  <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>Base Commission</p>
+                  <p className="text-lg font-semibold" style={{ color: '#ffffff' }}>${earnings.commission}</p>
                 </div>
                 <div>
-                  <p className="text-xs" style={{ color: NEON_BLUE.textMuted }}>Social Bonus</p>
-                  <p className="text-lg font-bold" style={{ color: NEON_BLUE.cyan }}>+${earnings.bonus}</p>
+                  <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>Social Bonus</p>
+                  <p className="text-lg font-semibold" style={{ color: '#ffffff' }}>+${earnings.bonus}</p>
                 </div>
                 <div>
-                  <p className="text-xs" style={{ color: NEON_BLUE.textMuted }}>Total/Month</p>
-                  <p className="text-xl font-black" style={{ color: NEON_BLUE.cyan, textShadow: `0 0 20px ${NEON_BLUE.cyan}` }}>
+                  <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>Total/Month</p>
+                  <p className="text-xl font-semibold" style={{ color: '#ffffff' }}>
                     ${earnings.total}
                   </p>
                 </div>
@@ -1092,29 +1093,30 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
 
         <CollapsibleSection
           title="Payment Schedule"
-          subtitle="When payouts hit your account"
+          subtitle="When you get paid"
           icon={Calendar}
         >
-          <p className="text-sm" style={{ color: NEON_BLUE.textSecondary }}>
-            Paid monthly in the first week (latest Friday). Most payments clear in 1–15 minutes. Some take 1–7 days. New accounts can take up to 30 days for international processing.
+          <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+            Paid monthly via Skrill in the first week (latest Friday). Most payments arrive in 1–15 minutes. Some take 1–7 days. New accounts may take up to 30 days for international processing.
           </p>
         </CollapsibleSection>
       </div>
       
-      {/* Action Buttons */}
+      {/* Action Buttons - Apple Style */}
       <div className="flex flex-col sm:flex-row gap-3">
         <NeonButton onClick={handleBack} variant="ghost" className="sm:w-auto">
           <ChevronLeft className="w-4 h-4 mr-1" /> Back
         </NeonButton>
-        <NeonButton onClick={handleNext} variant="primary" size="large" className="flex-1" icon={ArrowRight}>
-          Start Earning Now
+        <NeonButton onClick={handleNext} variant="primary" size="large" className="flex-1">
+          Continue
+          <ArrowRight className="w-4 h-4 ml-2" />
         </NeonButton>
       </div>
     </motion.div>
   );
 
   // =========================================
-  // RENDER SIGNUP BROKER SCREEN
+  // RENDER SIGNUP BROKER SCREEN - Apple Style
   // =========================================
   const renderSignupBroker = () => (
     <motion.div
@@ -1128,32 +1130,48 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
         {/* Step Indicator */}
         <div className="flex items-center justify-between mb-6">
           <span 
-            className="text-[10px] sm:text-xs uppercase tracking-widest px-3 py-1 rounded-full border-2"
-            style={{ borderColor: NEON_BLUE.border, color: NEON_BLUE.textPrimary }}
+            className="text-xs px-3 py-1.5 rounded-full"
+            style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'rgba(255, 255, 255, 0.6)' }}
           >
-            Step 1 of 3
+            Step 1 of 5
           </span>
         </div>
         
-        <h2 className="text-xl sm:text-2xl font-bold mb-2" style={{ color: NEON_BLUE.textWhite }}>
-          Open Trading Account
+        <h2 className="text-xl sm:text-2xl font-semibold mb-3 tracking-tight" style={{ color: '#ffffff' }}>
+          Open a Broker Account
         </h2>
-        <p className="text-sm mb-6" style={{ color: NEON_BLUE.textSecondary }}>
-          Choose your preferred broker and open a free trading account. This only takes about 1 minute.
+        <p className="text-[15px] mb-6" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+          Choose your preferred broker and create a free trading account.
         </p>
         
-        {/* Broker Toggle */}
-        <div className="flex justify-center gap-3 mb-6">
+        {/* Important Notice - Apple Alert Style */}
+        <div 
+          className="mb-6 p-4 rounded-2xl border"
+          style={{ background: 'rgba(255, 255, 255, 0.04)', borderColor: 'rgba(255, 255, 255, 0.1)' }}
+        >
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: '#ffffff' }} />
+            <div>
+              <p className="text-sm font-medium mb-1" style={{ color: '#ffffff' }}>
+                Broker codes are #1 priority
+              </p>
+              <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                Without clients using your broker code, you cannot earn commissions. Make sure every client signs up with your code.
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        {/* Broker Toggle - Apple Segmented Control */}
+        <div className="flex justify-center gap-2 mb-6 p-1 rounded-xl" style={{ background: 'rgba(255, 255, 255, 0.06)' }}>
           {(['Vantage', 'XM'] as const).map((broker) => (
             <button
               key={broker}
               onClick={() => setActiveBroker(broker)}
-              className="px-6 py-3 rounded-xl text-base font-bold transition-all border-2"
+              className="flex-1 px-6 py-3 rounded-lg text-[15px] font-medium transition-all"
               style={{
-                borderColor: activeBroker === broker ? NEON_BLUE.primary : 'rgba(255, 255, 255, 0.3)',
-                background: activeBroker === broker ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
-                color: activeBroker === broker ? NEON_BLUE.textWhite : NEON_BLUE.textMuted,
-                boxShadow: activeBroker === broker ? NEON_BLUE.glowStrong : 'none',
+                background: activeBroker === broker ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
+                color: activeBroker === broker ? '#ffffff' : 'rgba(255, 255, 255, 0.5)',
               }}
             >
               {broker}
@@ -1161,28 +1179,29 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
           ))}
         </div>
         
-        {/* Referral Code - Evervault Style */}
-        <div className="mb-4">
+        {/* Referral Code - Clean Apple style */}
+        <div className="mb-6">
           <CodeVaultCard label="Your Affiliate Code" code={brokerCode} onCopy={() => copyCode(brokerCode)} copied={copied} />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
-          <div className="rounded-xl border-2 p-3 text-center" style={{ borderColor: NEON_BLUE.border, background: 'rgba(255, 255, 255,0.08)' }}>
-            <p className="text-[11px]" style={{ color: NEON_BLUE.textMuted }}>Step A</p>
-            <p className="text-xs font-semibold" style={{ color: NEON_BLUE.textWhite }}>Open account</p>
+        {/* Steps - Apple minimalist */}
+        <div className="grid grid-cols-3 gap-2 mb-6">
+          <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
+            <p className="text-[10px] mb-1" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>Step A</p>
+            <p className="text-xs font-medium" style={{ color: '#ffffff' }}>Open account</p>
           </div>
-          <div className="rounded-xl border-2 p-3 text-center" style={{ borderColor: NEON_BLUE.border, background: 'rgba(255, 255, 255,0.08)' }}>
-            <p className="text-[11px]" style={{ color: NEON_BLUE.textMuted }}>Step B</p>
-            <p className="text-xs font-semibold" style={{ color: NEON_BLUE.textWhite }}>Paste code</p>
+          <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
+            <p className="text-[10px] mb-1" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>Step B</p>
+            <p className="text-xs font-medium" style={{ color: '#ffffff' }}>Paste code</p>
           </div>
-          <div className="rounded-xl border-2 p-3 text-center" style={{ borderColor: NEON_BLUE.border, background: 'rgba(255, 255, 255,0.08)' }}>
-            <p className="text-[11px]" style={{ color: NEON_BLUE.textMuted }}>Step C</p>
-            <p className="text-xs font-semibold" style={{ color: NEON_BLUE.textWhite }}>Start earning</p>
+          <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
+            <p className="text-[10px] mb-1" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>Step C</p>
+            <p className="text-xs font-medium" style={{ color: '#ffffff' }}>Get MT5 ID</p>
           </div>
         </div>
         
         {/* Open Account Button */}
-        <NeonButton onClick={handleBrokerClick} variant="primary" size="large" className="w-full mb-4">
+        <NeonButton onClick={handleBrokerClick} variant="primary" size="large" className="w-full mb-3">
           Open Free {activeBroker} Account
           <ExternalLink className="w-4 h-4 ml-2" />
         </NeonButton>
@@ -1193,8 +1212,8 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
         </NeonButton>
         
         <p 
-          className="text-[10px] sm:text-xs mt-4 flex items-center justify-center gap-1"
-          style={{ color: NEON_BLUE.textMuted }}
+          className="text-xs mt-4 flex items-center justify-center gap-1.5"
+          style={{ color: 'rgba(255, 255, 255, 0.35)' }}
         >
           <Clock className="w-3 h-3" /> Takes about 1 minute • No deposit required
         </p>
@@ -1203,7 +1222,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
       <button 
         onClick={handleBack} 
         className="mt-4 flex items-center text-sm mx-auto transition-colors"
-        style={{ color: NEON_BLUE.textMuted }}
+        style={{ color: 'rgba(255, 255, 255, 0.4)' }}
       >
         <ChevronLeft className="w-4 h-4 mr-1" /> Back
       </button>
@@ -1211,7 +1230,217 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
   );
 
   // =========================================
-  // RENDER SIGNUP MT5 SCREEN
+  // RENDER VERIFY BROKER SCREEN - NEW Apple Style
+  // =========================================
+  const renderVerifyBroker = () => (
+    <motion.div
+      key="verify-broker"
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="w-full max-w-lg mx-auto"
+    >
+      <NeonCard padding="large">
+        {/* Step Indicator */}
+        <div className="flex items-center justify-between mb-6">
+          <span 
+            className="text-xs px-3 py-1.5 rounded-full"
+            style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'rgba(255, 255, 255, 0.6)' }}
+          >
+            Step 2 of 5
+          </span>
+        </div>
+        
+        <h2 className="text-xl sm:text-2xl font-semibold mb-3 tracking-tight" style={{ color: '#ffffff' }}>
+          Verify Your Setup
+        </h2>
+        <p className="text-[15px] mb-6" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+          Please confirm you&apos;ve completed the broker registration properly.
+        </p>
+        
+        {/* Critical Reminder */}
+        <div 
+          className="mb-6 p-5 rounded-2xl"
+          style={{ background: 'rgba(255, 255, 255, 0.04)' }}
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(255, 255, 255, 0.08)' }}>
+              <AlertCircle className="w-5 h-5" style={{ color: '#ffffff' }} />
+            </div>
+            <div>
+              <p className="text-sm font-semibold" style={{ color: '#ffffff' }}>
+                Important Checklist
+              </p>
+              <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                Your earnings depend on this
+              </p>
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
+              <Check className="w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.6)' }} />
+              <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+                I opened a {activeBroker} trading account
+              </p>
+            </div>
+            <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
+              <Check className="w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.6)' }} />
+              <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+                I used the affiliate code: <span className="font-mono font-bold">{brokerCode}</span>
+              </p>
+            </div>
+            <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
+              <Check className="w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.6)' }} />
+              <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+                I received my MT5 trading ID via email
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        {/* Warning Box */}
+        <div 
+          className="mb-6 p-4 rounded-xl border"
+          style={{ background: 'rgba(255, 200, 100, 0.05)', borderColor: 'rgba(255, 200, 100, 0.2)' }}
+        >
+          <p className="text-sm font-medium mb-1" style={{ color: 'rgba(255, 220, 150, 0.9)' }}>
+            ⚠️ No code = No earnings
+          </p>
+          <p className="text-xs" style={{ color: 'rgba(255, 220, 150, 0.6)' }}>
+            If your clients don&apos;t use your broker code when signing up, you will not receive any commission from their trades.
+          </p>
+        </div>
+        
+        {/* Confirm Button */}
+        <NeonButton onClick={handleNext} variant="primary" size="large" className="w-full">
+          Yes, I&apos;ve Completed All Steps
+          <ArrowRight className="w-4 h-4 ml-2" />
+        </NeonButton>
+      </NeonCard>
+      
+      <button 
+        onClick={handleBack} 
+        className="mt-4 flex items-center text-sm mx-auto transition-colors"
+        style={{ color: 'rgba(255, 255, 255, 0.4)' }}
+      >
+        <ChevronLeft className="w-4 h-4 mr-1" /> Back
+      </button>
+    </motion.div>
+  );
+
+  // =========================================
+  // RENDER SIGNUP SKRILL SCREEN - NEW Apple Style
+  // =========================================
+  const renderSignupSkrill = () => (
+    <motion.div
+      key="signup-skrill"
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="w-full max-w-lg mx-auto"
+    >
+      <NeonCard padding="large">
+        {/* Step Indicator */}
+        <div className="flex items-center justify-between mb-6">
+          <span 
+            className="text-xs px-3 py-1.5 rounded-full"
+            style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'rgba(255, 255, 255, 0.6)' }}
+          >
+            Step 3 of 5
+          </span>
+        </div>
+        
+        <h2 className="text-xl sm:text-2xl font-semibold mb-3 tracking-tight" style={{ color: '#ffffff' }}>
+          Set Up Skrill for Payouts
+        </h2>
+        <p className="text-[15px] mb-6" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+          We use Skrill to send your affiliate commissions. Create a free account to receive payments.
+        </p>
+        
+        {/* Skrill Info Card */}
+        <div 
+          className="mb-6 p-5 rounded-2xl text-center"
+          style={{ background: 'rgba(255, 255, 255, 0.04)' }}
+        >
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(255, 255, 255, 0.08)' }}>
+            <Coins className="w-8 h-8" style={{ color: '#ffffff' }} />
+          </div>
+          <h3 className="text-lg font-semibold mb-2" style={{ color: '#ffffff' }}>
+            Why Skrill?
+          </h3>
+          <div className="space-y-2 text-left max-w-xs mx-auto">
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4" style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
+              <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Fast international transfers</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4" style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
+              <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Low fees compared to banks</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4" style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
+              <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Secure and trusted worldwide</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4" style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
+              <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Most payments arrive in minutes</p>
+            </div>
+          </div>
+        </div>
+        
+        {/* Payment Schedule */}
+        <div 
+          className="mb-6 p-4 rounded-xl"
+          style={{ background: 'rgba(255, 255, 255, 0.04)' }}
+        >
+          <div className="flex items-center gap-3">
+            <Calendar className="w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
+            <div>
+              <p className="text-sm font-medium" style={{ color: '#ffffff' }}>Paid Monthly</p>
+              <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                First week of each month (latest Friday)
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        {/* Create Skrill Button */}
+        <NeonButton 
+          onClick={() => window.open('https://www.skrill.com/en/', '_blank')} 
+          variant="primary" 
+          size="large" 
+          className="w-full mb-3"
+        >
+          Create Free Skrill Account
+          <ExternalLink className="w-4 h-4 ml-2" />
+        </NeonButton>
+        
+        {/* Already have account */}
+        <NeonButton onClick={handleNext} variant="secondary" className="w-full">
+          I already have Skrill
+        </NeonButton>
+        
+        <p 
+          className="text-xs mt-4 text-center"
+          style={{ color: 'rgba(255, 255, 255, 0.35)' }}
+        >
+          You&apos;ll enter your Skrill email in your dashboard later
+        </p>
+      </NeonCard>
+      
+      <button 
+        onClick={handleBack} 
+        className="mt-4 flex items-center text-sm mx-auto transition-colors"
+        style={{ color: 'rgba(255, 255, 255, 0.4)' }}
+      >
+        <ChevronLeft className="w-4 h-4 mr-1" /> Back
+      </button>
+    </motion.div>
+  );
+
+  // =========================================
+  // RENDER SIGNUP MT5 SCREEN - Apple Style
   // =========================================
   const renderSignupMT5 = () => (
     <motion.div
@@ -1225,17 +1454,17 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
         {/* Step Indicator */}
         <div className="flex items-center justify-between mb-6">
           <span 
-            className="text-[10px] sm:text-xs uppercase tracking-widest px-3 py-1 rounded-full border-2"
-            style={{ borderColor: NEON_BLUE.border, color: NEON_BLUE.textPrimary }}
+            className="text-xs px-3 py-1.5 rounded-full"
+            style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'rgba(255, 255, 255, 0.6)' }}
           >
-            Step 2 of 3
+            Step 4 of 5
           </span>
         </div>
         
-        <h2 className="text-xl sm:text-2xl font-bold mb-2" style={{ color: NEON_BLUE.textWhite }}>
+        <h2 className="text-xl sm:text-2xl font-semibold mb-3 tracking-tight" style={{ color: '#ffffff' }}>
           {isReturningUser ? "Verify Your MT5 ID" : "Enter Your Trading ID"}
         </h2>
-        <p className="text-sm mb-6" style={{ color: NEON_BLUE.textSecondary }}>
+        <p className="text-[15px] mb-6" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
           {isReturningUser 
             ? "Enter your MetaTrader 5 ID to verify your account." 
             : "After opening your account, you'll receive an email with your MT5 trading ID."}
@@ -1244,11 +1473,11 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
         {/* Returning User Info */}
         {isReturningUser && savedSession && (
           <div 
-            className="p-3 rounded-xl mb-4 border-2"
-            style={{ borderColor: 'rgba(255, 255, 255, 0.3)', background: 'rgba(255, 255, 255, 0.1)' }}
+            className="p-4 rounded-xl mb-5"
+            style={{ background: 'rgba(255, 255, 255, 0.04)' }}
           >
-            <p className="text-xs" style={{ color: NEON_BLUE.textSecondary }}>
-              Welcome back, <span style={{ color: NEON_BLUE.cyan }}>{savedSession.email}</span>
+            <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+              Welcome back, <span style={{ color: '#ffffff', fontWeight: 500 }}>{savedSession.email}</span>
             </p>
           </div>
         )}
@@ -1267,17 +1496,17 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
             autoFocus
           />
           
-          <p className="text-xs flex items-center gap-1" style={{ color: NEON_BLUE.textMuted }}>
+          <p className="text-xs flex items-center gap-1.5" style={{ color: 'rgba(255, 255, 255, 0.35)' }}>
             <Lock className="w-3 h-3" /> Used only to verify your access
           </p>
           
           {submitError && (
             <div 
-              className="flex items-center gap-2 p-3 rounded-lg border"
-              style={{ borderColor: 'rgba(239, 68, 68, 0.5)', background: 'rgba(239, 68, 68, 0.1)', color: '#fca5a5' }}
+              className="flex items-center gap-3 p-4 rounded-xl"
+              style={{ background: 'rgba(255, 100, 100, 0.08)', color: 'rgba(255, 150, 150, 0.9)' }}
             >
               <AlertCircle className="w-4 h-4 shrink-0" />
-              <span className="text-xs font-medium">{submitError}</span>
+              <span className="text-sm">{submitError}</span>
             </div>
           )}
         </div>
@@ -1314,7 +1543,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
   );
 
   // =========================================
-  // RENDER SIGNUP ACCOUNT SCREEN
+  // RENDER SIGNUP ACCOUNT SCREEN - Apple Style
   // =========================================
   const renderSignupAccount = () => (
     <motion.div
@@ -1328,17 +1557,17 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
         {/* Step Indicator */}
         <div className="flex items-center justify-between mb-6">
           <span 
-            className="text-[10px] sm:text-xs uppercase tracking-widest px-3 py-1 rounded-full border-2"
-            style={{ borderColor: NEON_BLUE.border, color: NEON_BLUE.textPrimary }}
+            className="text-xs px-3 py-1.5 rounded-full"
+            style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'rgba(255, 255, 255, 0.6)' }}
           >
-            Step 3 of 3
+            Step 5 of 5
           </span>
         </div>
         
-        <h2 className="text-xl sm:text-2xl font-bold mb-2" style={{ color: NEON_BLUE.textWhite }}>
-          Create Your Affiliate Account
+        <h2 className="text-xl sm:text-2xl font-semibold mb-3 tracking-tight" style={{ color: '#ffffff' }}>
+          Create Your Account
         </h2>
-        <p className="text-sm mb-6" style={{ color: NEON_BLUE.textSecondary }}>
+        <p className="text-[15px] mb-6" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
           Set up your login to access your affiliate dashboard and track earnings.
         </p>
         
@@ -1357,7 +1586,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
               disabled={isReturningUser}
               autoFocus={!isReturningUser}
             />
-            <p className="text-[10px] mt-1 ml-1" style={{ color: NEON_BLUE.textMuted }}>
+            <p className="text-xs mt-2 ml-1" style={{ color: 'rgba(255, 255, 255, 0.35)' }}>
               {isReturningUser ? "Using your saved email." : "We'll send your login details here."}
             </p>
           </div>
@@ -1377,12 +1606,12 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
             <button 
               type="button" 
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
-              style={{ color: NEON_BLUE.textMuted }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors"
+              style={{ color: 'rgba(255, 255, 255, 0.4)' }}
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
-            <p className="text-[10px] mt-1 ml-1" style={{ color: NEON_BLUE.textMuted }}>
+            <p className="text-xs mt-2 ml-1" style={{ color: 'rgba(255, 255, 255, 0.35)' }}>
               Must be at least 6 characters.
             </p>
           </div>
@@ -1398,42 +1627,41 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
                 placeholder="Referral Code (Optional)"
                 icon={User}
               />
-              <p className="text-[10px] mt-1 ml-1" style={{ color: NEON_BLUE.textMuted }}>
+              <p className="text-xs mt-2 ml-1" style={{ color: 'rgba(255, 255, 255, 0.35)' }}>
                 Leave blank if you don&apos;t have one.
               </p>
             </div>
           )}
           
-          {/* Terms Checkbox */}
+          {/* Terms Checkbox - Apple Toggle Style */}
           <div 
             onClick={() => setAcceptedTerms(!acceptedTerms)}
-            className="flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-colors"
+            className="flex items-start gap-3 p-4 rounded-xl cursor-pointer transition-all"
             style={{ 
-              borderColor: 'rgba(255, 255, 255, 0.3)', 
-              background: acceptedTerms ? 'rgba(255, 255, 255, 0.1)' : 'transparent' 
+              background: acceptedTerms ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.04)',
             }}
           >
             <div 
-              className="w-5 h-5 rounded border-2 flex items-center justify-center mt-0.5 shrink-0 transition-colors"
+              className="w-5 h-5 rounded-md flex items-center justify-center mt-0.5 shrink-0 transition-all"
               style={{ 
-                borderColor: acceptedTerms ? NEON_BLUE.primary : 'rgba(255, 255, 255, 0.4)',
-                background: acceptedTerms ? NEON_BLUE.primary : 'transparent'
+                background: acceptedTerms ? '#ffffff' : 'transparent',
+                border: acceptedTerms ? 'none' : '1.5px solid rgba(255, 255, 255, 0.25)'
               }}
             >
-              {acceptedTerms && <Check className="w-3.5 h-3.5 text-white" />}
+              {acceptedTerms && <Check className="w-3.5 h-3.5 text-black" />}
             </div>
-            <p className="text-xs leading-tight" style={{ color: NEON_BLUE.textSecondary }}>
+            <p className="text-sm leading-relaxed" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
               I agree to the Terms of Service and understand this is educational content.
             </p>
           </div>
           
           {submitError && (
             <div 
-              className="flex items-center gap-2 p-3 rounded-lg border"
-              style={{ borderColor: 'rgba(239, 68, 68, 0.5)', background: 'rgba(239, 68, 68, 0.1)', color: '#fca5a5' }}
+              className="flex items-center gap-3 p-4 rounded-xl"
+              style={{ background: 'rgba(255, 100, 100, 0.08)', color: 'rgba(255, 150, 150, 0.9)' }}
             >
               <AlertCircle className="w-4 h-4 shrink-0" />
-              <span className="text-xs font-medium">{submitError}</span>
+              <span className="text-sm">{submitError}</span>
             </div>
           )}
         </div>
@@ -1462,7 +1690,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
   );
 
   // =========================================
-  // RENDER LOADING SCREEN
+  // RENDER LOADING SCREEN - Apple Style
   // =========================================
   const renderLoading = () => (
     <motion.div
@@ -1473,44 +1701,40 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
       className="flex flex-col items-center justify-center min-h-[300px]"
     >
       <Loader2 
-        className="w-16 h-16 animate-spin mb-4" 
-        style={{ color: NEON_BLUE.primary }} 
+        className="w-12 h-12 animate-spin mb-5" 
+        style={{ color: '#ffffff' }} 
       />
-      <h2 className="text-xl font-bold" style={{ color: NEON_BLUE.textPrimary }}>
+      <h2 className="text-lg font-medium" style={{ color: '#ffffff' }}>
         Creating Your Account...
       </h2>
     </motion.div>
   );
 
   // =========================================
-  // RENDER SUCCESS SCREEN
+  // RENDER SUCCESS SCREEN - Apple Style
   // =========================================
   const renderSuccess = () => (
     <motion.div
       key="success"
-      initial={{ opacity: 0, scale: 0.9 }}
+      initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0 }}
       className="w-full max-w-lg mx-auto"
     >
       <NeonCard padding="large" className="text-center">
-        {/* Success Icon */}
+        {/* Success Icon - Apple minimal */}
         <div 
-          className="w-24 h-24 mx-auto mb-6 rounded-full flex items-center justify-center border-2"
-          style={{ 
-            borderColor: NEON_BLUE.cyan,
-            boxShadow: `0 0 40px ${NEON_BLUE.cyan}60`,
-            background: `${NEON_BLUE.cyan}20`
-          }}
+          className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center"
+          style={{ background: 'rgba(255, 255, 255, 0.08)' }}
         >
-          <Check className="w-12 h-12" style={{ color: NEON_BLUE.cyan }} />
+          <Check className="w-10 h-10" style={{ color: '#ffffff' }} />
         </div>
         
-        <h2 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: NEON_BLUE.textWhite }}>
-          You&apos;re In! 🚀
+        <h2 className="text-2xl sm:text-3xl font-semibold mb-3 tracking-tight" style={{ color: '#ffffff' }}>
+          You&apos;re In!
         </h2>
-        <p className="text-sm sm:text-base mb-8" style={{ color: NEON_BLUE.textSecondary }}>
-          Your affiliate account is now active. Start recruiting traders and earning commissions!
+        <p className="text-[15px] mb-8" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+          Your affiliate account is now active. Start recruiting traders and earning commissions.
         </p>
         
         <NeonButton 
@@ -1520,13 +1744,13 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
           className="w-full mb-4"
         >
           Go to Dashboard
-          <ArrowRight className="w-5 h-5 ml-2" />
+          <ArrowRight className="w-4 h-4 ml-2" />
         </NeonButton>
         
         <button 
           onClick={() => window.open(TELEGRAM_GROUP_LINK, '_blank')}
           className="flex items-center justify-center gap-2 text-sm mx-auto transition-colors"
-          style={{ color: NEON_BLUE.textMuted }}
+          style={{ color: 'rgba(255, 255, 255, 0.4)' }}
         >
           <MessageCircle className="w-4 h-4" /> Join Free Telegram
         </button>
@@ -1679,20 +1903,19 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
     return renderDashboard();
   }
 
-  // Modal wrapper for other steps
+  // Modal wrapper for other steps - Apple Style
   return (
     <div 
       className="affiliate-modal fixed inset-0 z-[999999] flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
-      style={{ background: 'rgba(0, 0, 0, 0.85)' }}
+      style={{ background: 'rgba(0, 0, 0, 0.92)' }}
     >
-      {/* Close Button */}
+      {/* Close Button - Apple style */}
       <button 
         onClick={handleClose}
-        className="absolute top-4 right-4 z-50 p-2 rounded-full transition-all border-2"
+        className="absolute top-4 right-4 z-50 p-2.5 rounded-full transition-all"
         style={{ 
-          borderColor: 'rgba(255, 255, 255, 0.3)',
-          background: 'rgba(0, 0, 0, 0.8)',
-          color: NEON_BLUE.textMuted
+          background: 'rgba(255, 255, 255, 0.08)',
+          color: 'rgba(255, 255, 255, 0.6)'
         }}
       >
         <X className="w-5 h-5" />
@@ -1707,6 +1930,8 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
           {step === 'intro' && renderIntro()}
           {step === 'how-it-works' && renderHowItWorks()}
           {step === 'signup-broker' && renderSignupBroker()}
+          {step === 'verify-broker' && renderVerifyBroker()}
+          {step === 'signup-skrill' && renderSignupSkrill()}
           {step === 'signup-mt5' && renderSignupMT5()}
           {step === 'signup-account' && renderSignupAccount()}
           {step === 'loading' && renderLoading()}

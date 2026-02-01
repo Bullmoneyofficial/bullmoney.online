@@ -179,8 +179,44 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
   const [copiedLink, setCopiedLink] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'recruits' | 'earnings' | 'analytics' | 'admin'>('overview');
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
-  
+
+  // Default to card view on mobile for better UX
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setViewMode('cards');
+    }
+  }, []);
+
   const [myTrackingCode, setMyTrackingCode] = useState<string>('Loading...');
+  
+  // --- VIP STATUS FROM PAGEMODE SESSION ---
+  const [isVipUser, setIsVipUser] = useState<boolean>(false);
+  
+  // Check VIP status from pageMode session on mount
+  useEffect(() => {
+    const checkVipStatus = () => {
+      try {
+        const pagemodeSession = localStorage.getItem('bullmoney_session');
+        if (pagemodeSession) {
+          const sessionData = JSON.parse(pagemodeSession);
+          setIsVipUser(sessionData.is_vip === true);
+        }
+      } catch (error) {
+        console.error('Failed to parse pageMode session:', error);
+        setIsVipUser(false);
+      }
+    };
+
+    checkVipStatus();
+
+    // Listen for session changes to update VIP status dynamically
+    const handleSessionChange = () => checkVipStatus();
+    window.addEventListener('bullmoney_session_changed', handleSessionChange);
+    
+    return () => {
+      window.removeEventListener('bullmoney_session_changed', handleSessionChange);
+    };
+  }, []);
   
   // --- DYNAMIC THEME ---
   const { isXMUser } = useGlobalTheme();
@@ -438,55 +474,93 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
 
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 relative z-10">
         
-        {/* TOP NAVIGATION BAR */}
-        <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={onBack} 
-              className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/5 transition-all"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">
+        {/* TOP NAVIGATION BAR - Improved mobile/desktop layout */}
+        <header className="relative z-30 flex-shrink-0 mb-6 md:mb-8">
+          {/* Mobile: Stack vertically, Desktop: Horizontal */}
+          <div className="flex items-start sm:items-center justify-between gap-3 mb-3 md:mb-0">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <button
+                onClick={onBack}
+                className="p-2 sm:p-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/5 transition-all flex-shrink-0"
+              >
+                <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+              <div className="min-w-0">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white truncate">
                   Affiliate Dashboard
                 </h1>
-                <div className={cn(
-                  "hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border",
-                  currentTier.name === 'Elite' ? "bg-white/10 text-white border-white/20" :
-                  currentTier.name === 'Gold' ? "bg-yellow-500/10 text-yellow-300 border-yellow-500/20" :
-                  currentTier.name === 'Silver' ? "bg-slate-400/10 text-slate-300 border-slate-400/20" :
-                  currentTier.name === 'Bronze' ? "bg-orange-500/10 text-orange-300 border-orange-500/20" :
-                  isXMUser ? "bg-red-500/10 text-red-300 border-red-500/20" : "bg-white/10 text-white border-white/20"
-                )}>
-                  {React.createElement(getTierIcon(currentTier.icon), { className: "w-3.5 h-3.5" })}
-                  {currentTier.name} Partner
-                </div>
+                <p className="text-xs sm:text-sm text-slate-500 mt-0.5 hidden sm:block">Track, manage & grow your affiliate network</p>
               </div>
-              <p className="text-sm text-slate-500 mt-0.5">Track, manage & grow your affiliate network</p>
+            </div>
+
+            {/* Desktop action buttons */}
+            <div className="hidden md:flex items-center gap-2">
+              <button
+                onClick={() => checkAuthAndLoad(false)}
+                className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/5 transition-all"
+                title="Refresh Data"
+              >
+                <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
+              </button>
+              <button className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/5 transition-all" title="Notifications">
+                <Bell className="w-4 h-4" />
+              </button>
+              <button className={cn(
+                "flex items-center gap-2 px-4 py-2.5 rounded-lg text-white font-semibold text-sm transition-all",
+                isXMUser
+                  ? "bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 shadow-lg shadow-red-900/20"
+                  : "bg-gradient-to-r from-white to-white hover:from-white hover:to-white shadow-lg shadow-white/20"
+              )}>
+                <Download className="w-4 h-4" /> Export
+              </button>
             </div>
           </div>
-          
-          <div className="flex items-center gap-2 flex-wrap">
-            <button 
-              onClick={() => checkAuthAndLoad(false)} 
-              className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/5 transition-all"
-              title="Refresh Data"
-            >
-              <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
-            </button>
-            <button className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/5 transition-all" title="Notifications">
-              <Bell className="w-4 h-4" />
-            </button>
-            <button className={cn(
-              "flex items-center gap-2 px-4 py-2.5 rounded-lg text-white font-semibold text-sm transition-all",
-              isXMUser 
-                ? "bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 shadow-lg shadow-red-900/20" 
-                : "bg-gradient-to-r from-white to-white hover:from-white hover:to-white shadow-lg shadow-white/20"
+
+          {/* Mobile: Tier badge + action buttons row */}
+          <div className="flex items-center justify-between gap-2 md:hidden">
+            <div className={cn(
+              "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wide border",
+              currentTier.name === 'Elite' ? "bg-white/10 text-white border-white/20" :
+              currentTier.name === 'Gold' ? "bg-yellow-500/10 text-yellow-300 border-yellow-500/20" :
+              currentTier.name === 'Silver' ? "bg-slate-400/10 text-slate-300 border-slate-400/20" :
+              currentTier.name === 'Bronze' ? "bg-orange-500/10 text-orange-300 border-orange-500/20" :
+              isXMUser ? "bg-red-500/10 text-red-300 border-red-500/20" : "bg-white/10 text-white border-white/20"
             )}>
-              <Download className="w-4 h-4" /> Export Report
-            </button>
+              {React.createElement(getTierIcon(currentTier.icon), { className: "w-3 h-3" })}
+              {currentTier.name}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => checkAuthAndLoad(false)}
+                className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/5 transition-all"
+              >
+                <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
+              </button>
+              <button className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/5 transition-all">
+                <Bell className="w-4 h-4" />
+              </button>
+              <button className={cn(
+                "p-2 rounded-lg transition-all",
+                isXMUser
+                  ? "bg-gradient-to-r from-red-600 to-orange-600 text-white"
+                  : "bg-white text-black"
+              )}>
+                <Download className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Desktop tier badge - inline with title */}
+          <div className={cn(
+            "hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border mt-2",
+            currentTier.name === 'Elite' ? "bg-white/10 text-white border-white/20" :
+            currentTier.name === 'Gold' ? "bg-yellow-500/10 text-yellow-300 border-yellow-500/20" :
+            currentTier.name === 'Silver' ? "bg-slate-400/10 text-slate-300 border-slate-400/20" :
+            currentTier.name === 'Bronze' ? "bg-orange-500/10 text-orange-300 border-orange-500/20" :
+            isXMUser ? "bg-red-500/10 text-red-300 border-red-500/20" : "bg-white/10 text-white border-white/20"
+          )}>
+            {React.createElement(getTierIcon(currentTier.icon), { className: "w-3.5 h-3.5" })}
+            {currentTier.name} Partner
           </div>
         </header>
 
@@ -502,65 +576,122 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
           </motion.div>
         )}
 
-        {/* REFERRAL LINK BANNER */}
+        {/* REFERRAL LINK BANNER - Improved mobile layout */}
         <div className={cn(
-          "mb-8 p-4 md:p-6 rounded-2xl border backdrop-blur-xl",
-          isXMUser 
-            ? "bg-gradient-to-r from-red-950/40 to-orange-950/40 border-red-500/20" 
-            : "bg-gradient-to-r from-cyan-950/40 to-cyan-950/40 border-white/20"
+          "relative z-10 shrink-0 mb-6 md:mb-8 p-4 md:p-6 rounded-2xl border",
+          isXMUser
+            ? "bg-gradient-to-br from-red-950/80 to-orange-950/80 border-red-500/20"
+            : "bg-gradient-to-br from-neutral-900 to-neutral-800/50 border-white/20"
         )}>
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div className="flex items-start gap-4">
+          {/* Mobile Layout */}
+          <div className="lg:hidden space-y-4">
+            <div className="flex items-center gap-3">
               <div className={cn(
-                "p-3 rounded-xl",
+                "p-2.5 rounded-xl shrink-0",
                 isXMUser ? "bg-red-500/10 text-red-400" : "bg-white/10 text-white"
               )}>
-                <Link2 className="w-6 h-6" />
+                <Link2 className="w-5 h-5" />
               </div>
               <div>
+                <h3 className="font-bold text-white text-base">Your Referral Link</h3>
+                <p className="text-xs text-slate-400">Share to earn commissions</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className={cn("p-3 rounded-xl text-center", isXMUser ? "bg-red-500/10" : "bg-white/5")}>
+                <p className="text-xl font-black text-white">{currentTier.commissionPercent}%</p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wide">Commission</p>
+              </div>
+              <div className={cn("p-3 rounded-xl text-center", isXMUser ? "bg-red-500/10" : "bg-white/5")}>
+                <p className="text-xl font-black text-white">${isXMUser ? currentTier.xmRatePerLot : currentTier.vantageRatePerLot}</p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wide">Per Lot</p>
+              </div>
+            </div>
+
+            <div className={cn(
+              "p-3 rounded-xl border text-xs font-mono break-all leading-relaxed",
+              isXMUser ? "bg-red-500/5 border-red-500/20 text-red-200" : "bg-white/5 border-white/20 text-white/80"
+            )}>
+              {referralLink}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={handleCopyLink}
+                className={cn(
+                  "flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold border transition-all",
+                  copiedLink
+                    ? "bg-green-500/20 border-green-500/30 text-green-300"
+                    : isXMUser
+                      ? "bg-red-500/10 border-red-500/20 text-red-300 active:bg-red-500/20"
+                      : "bg-white/10 border-white/20 text-white active:bg-white/20"
+                )}
+              >
+                {copiedLink ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {copiedLink ? 'Copied!' : 'Copy Link'}
+              </button>
+              <button
+                onClick={handleCopyCode}
+                className={cn(
+                  "flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold border transition-all",
+                  copiedCode
+                    ? "bg-green-500/20 border-green-500/30 text-green-300"
+                    : "bg-white/5 border-white/10 text-slate-300 active:bg-white/10"
+                )}
+              >
+                <Tag className="w-4 h-4" />
+                {copiedCode ? 'Copied!' : myTrackingCode}
+              </button>
+            </div>
+          </div>
+
+          {/* Desktop Layout */}
+          <div className="hidden lg:flex lg:items-center justify-between gap-6">
+            <div className="flex items-start gap-4 flex-1 min-w-0">
+              <div className={cn("p-3 rounded-xl shrink-0", isXMUser ? "bg-red-500/10 text-red-400" : "bg-white/10 text-white")}>
+                <Link2 className="w-6 h-6" />
+              </div>
+              <div className="min-w-0 flex-1">
                 <h3 className="font-bold text-white text-lg">Your Referral Link</h3>
                 <p className="text-sm text-slate-400 mb-3">Share this link to earn commissions on every trade your referrals make</p>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <div className="flex items-center gap-3">
                   <code className={cn(
-                    "px-3 py-2 rounded-lg text-sm font-mono border truncate max-w-[300px] md:max-w-[400px]",
-                    isXMUser 
-                      ? "bg-red-500/5 border-red-500/20 text-red-200" 
-                      : "bg-white/5 border-white/20 text-white"
+                    "px-3 py-2 rounded-lg text-sm font-mono border truncate max-w-[450px]",
+                    isXMUser ? "bg-red-500/5 border-red-500/20 text-red-200" : "bg-white/5 border-white/20 text-white"
                   )}>
                     {referralLink}
                   </code>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleCopyLink}
-                      className={cn(
-                        "flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold border transition-all",
-                        copiedLink 
-                          ? "bg-white/20 border-white/30 text-white"
-                          : isXMUser
-                            ? "bg-red-500/10 border-red-500/20 text-red-300 hover:bg-red-500/20"
-                            : "bg-white/10 border-white/20 text-white hover:bg-white/20"
-                      )}
-                    >
-                      {copiedLink ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                      {copiedLink ? 'Copied!' : 'Copy Link'}
-                    </button>
-                    <button
-                      onClick={handleCopyCode}
-                      className={cn(
-                        "flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold border transition-all",
-                        copiedCode
-                          ? "bg-white/20 border-white/30 text-white"
-                          : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10"
-                      )}
-                    >
-                      <Tag className="w-3.5 h-3.5" />
-                      {copiedCode ? 'Copied!' : myTrackingCode}
-                    </button>
-                  </div>
+                  <button
+                    onClick={handleCopyLink}
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold border transition-all shrink-0",
+                      copiedLink
+                        ? "bg-green-500/20 border-green-500/30 text-green-300"
+                        : isXMUser
+                          ? "bg-red-500/10 border-red-500/20 text-red-300 hover:bg-red-500/20"
+                          : "bg-white/10 border-white/20 text-white hover:bg-white/20"
+                    )}
+                  >
+                    {copiedLink ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copiedLink ? 'Copied!' : 'Copy Link'}
+                  </button>
+                  <button
+                    onClick={handleCopyCode}
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold border transition-all shrink-0",
+                      copiedCode
+                        ? "bg-green-500/20 border-green-500/30 text-green-300"
+                        : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10"
+                    )}
+                  >
+                    <Tag className="w-3.5 h-3.5" />
+                    {copiedCode ? 'Copied!' : myTrackingCode}
+                  </button>
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-3 lg:border-l lg:border-white/10 lg:pl-6">
+            <div className="flex items-center gap-4 border-l border-white/10 pl-6 shrink-0">
               <div className="text-center">
                 <p className="text-2xl font-black text-white">{currentTier.commissionPercent}%</p>
                 <p className="text-[10px] text-slate-500 uppercase tracking-wide">Commission</p>
@@ -573,23 +704,23 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
           </div>
         </div>
 
-        {/* TAB NAVIGATION */}
-        <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
+        {/* TAB NAVIGATION - Improved mobile sizing */}
+        <div className="relative z-20 shrink-0 flex items-center gap-1.5 sm:gap-2 mb-4 md:mb-6 overflow-x-auto pb-2 scrollbar-hide bg-black/50 -mx-4 px-4 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8 py-2 rounded-xl">
           {dashboardTabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               className={cn(
-                "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap",
+                "shrink-0 flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap",
                 activeTab === tab.id
-                  ? isXMUser 
+                  ? isXMUser
                     ? "bg-red-500/10 text-red-300 border border-red-500/20"
                     : "bg-white/10 text-white border border-white/20"
                   : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent"
               )}
             >
-              <tab.icon className="w-4 h-4" />
-              {tab.label}
+              <tab.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline">{tab.label}</span>
             </button>
           ))}
         </div>
@@ -641,93 +772,93 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                 />
               </div>
 
-              {/* TIER PROGRESSION */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <div className="lg:col-span-2 bg-neutral-900/60 backdrop-blur-xl border border-white/5 rounded-2xl p-6">
-                  <div className="flex items-center justify-between mb-6">
+              {/* TIER PROGRESSION - Improved mobile layout */}
+              <div className="relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="lg:col-span-2 bg-neutral-900 border border-white/10 rounded-2xl p-4 md:p-6">
+                  {/* Header - Stack on mobile */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5 md:mb-6">
                     <div>
-                      <h3 className="text-lg font-bold text-white">Tier Progression</h3>
-                      <p className="text-sm text-slate-500">Level up for higher commissions</p>
+                      <h3 className="text-base md:text-lg font-bold text-white">Tier Progression</h3>
+                      <p className="text-xs md:text-sm text-slate-500">Level up for higher commissions</p>
                     </div>
                     <div className={cn(
-                      "flex items-center gap-2 px-4 py-2 rounded-xl border",
+                      "flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-lg md:rounded-xl border self-start sm:self-auto",
                       currentTier.name === 'Elite' ? "bg-white/10 border-white/20" :
                       currentTier.name === 'Gold' ? "bg-yellow-500/10 border-yellow-500/20" :
                       currentTier.name === 'Silver' ? "bg-slate-400/10 border-slate-400/20" :
                       currentTier.name === 'Bronze' ? "bg-orange-500/10 border-orange-500/20" :
                       "bg-white/10 border-white/20"
                     )}>
-                      {React.createElement(getTierIcon(currentTier.icon), { 
-                        className: "w-5 h-5",
+                      {React.createElement(getTierIcon(currentTier.icon), {
+                        className: "w-4 h-4 md:w-5 md:h-5",
                         style: { color: currentTier.color }
                       })}
-                      <span className="font-bold text-white">{currentTier.name}</span>
-                      <span className="text-sm text-slate-400">({currentTier.commissionPercent}% commission)</span>
+                      <span className="font-bold text-white text-sm">{currentTier.name}</span>
+                      <span className="text-xs md:text-sm text-slate-400 hidden xs:inline">({currentTier.commissionPercent}%)</span>
                     </div>
                   </div>
 
                   {/* Progress Bar */}
-                  <div className="mb-6">
-                    <div className="flex justify-between text-sm mb-2">
+                  <div className="mb-5 md:mb-6">
+                    <div className="flex flex-col xs:flex-row xs:justify-between gap-1 text-xs md:text-sm mb-2">
                       <span className="text-slate-400">Progress to {nextTier?.name || 'Max Tier'}</span>
                       <span className="text-white font-medium">
                         {stats.active} / {nextTier?.minTraders || stats.active} active traders
                       </span>
                     </div>
-                    <div className="h-3 bg-neutral-800 rounded-full overflow-hidden">
+                    <div className="h-2.5 md:h-3 bg-neutral-800 rounded-full overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${tierProgress}%` }}
                         transition={{ duration: 1, ease: "easeOut" }}
                         className={cn(
                           "h-full rounded-full",
-                          isXMUser 
-                            ? "bg-gradient-to-r from-red-600 to-orange-500" 
+                          isXMUser
+                            ? "bg-gradient-to-r from-red-600 to-orange-500"
                             : "bg-gradient-to-r from-white to-white"
                         )}
                       />
                     </div>
                     {nextTier && (
-                      <p className="text-xs text-slate-500 mt-2">
-                        {nextTier.minTraders - stats.active} more active traders to reach {nextTier.name} tier 
-                        ({nextTier.commissionPercent}% commission)
+                      <p className="text-[10px] md:text-xs text-slate-500 mt-2">
+                        {nextTier.minTraders - stats.active} more active traders to reach {nextTier.name} ({nextTier.commissionPercent}%)
                       </p>
                     )}
                   </div>
 
                   {/* All Tiers */}
-                  <div className="grid grid-cols-5 gap-2">
+                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2">
                     {AFFILIATE_TIERS.map((tier, index) => {
                       const TierIcon = getTierIcon(tier.icon) as React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
                       const isActive = currentTier.name === tier.name;
                       const isUnlocked = stats.active >= tier.minTraders;
-                      
+
                       return (
                         <div
                           key={tier.name}
                           className={cn(
-                            "relative p-3 rounded-xl text-center transition-all border",
-                            isActive 
-                              ? "bg-white/10 border-white/20 shadow-lg" 
+                            "relative p-2 sm:p-3 rounded-lg sm:rounded-xl text-center transition-all border",
+                            isActive
+                              ? "bg-white/10 border-white/20 shadow-lg"
                               : isUnlocked
                                 ? "bg-white/5 border-white/5"
                                 : "bg-neutral-900/50 border-white/5 opacity-50"
                           )}
                         >
                           {isActive && (
-                            <div className="absolute -top-2 -right-2">
-                              <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center">
-                                <CheckCircle2 className="w-3 h-3 text-white" />
+                            <div className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2">
+                              <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 bg-white rounded-full flex items-center justify-center">
+                                <CheckCircle2 className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
                               </div>
                             </div>
                           )}
-                          <TierIcon 
-                            className="w-6 h-6 mx-auto mb-1" 
+                          <TierIcon
+                            className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-0.5 sm:mb-1"
                             style={{ color: tier.color }}
                           />
-                          <p className="text-xs font-bold text-white">{tier.name}</p>
-                          <p className="text-[10px] text-slate-500">{tier.minTraders}+ traders</p>
-                          <p className="text-xs font-bold mt-1" style={{ color: tier.color }}>
+                          <p className="text-[10px] sm:text-xs font-bold text-white truncate">{tier.name}</p>
+                          <p className="text-[8px] sm:text-[10px] text-slate-500">{tier.minTraders}+</p>
+                          <p className="text-[10px] sm:text-xs font-bold mt-0.5 sm:mt-1" style={{ color: tier.color }}>
                             {tier.commissionPercent}%
                           </p>
                         </div>
@@ -737,7 +868,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                 </div>
 
                 {/* Current Tier Perks */}
-                <div className="bg-neutral-900/60 backdrop-blur-xl border border-white/5 rounded-2xl p-6">
+                <div className="bg-neutral-900 border border-white/10 rounded-2xl p-6">
                   <h3 className="text-lg font-bold text-white mb-4">Your Perks</h3>
                   <div className="space-y-3">
                     {currentTier.perks.map((perk, i) => (
@@ -801,7 +932,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
               </div>
 
               {/* HOW IT WORKS */}
-              <div className="bg-neutral-900/60 backdrop-blur-xl border border-white/5 rounded-2xl p-6">
+              <div className="relative z-10 bg-neutral-900 border border-white/10 rounded-2xl p-6">
                 <h3 className="text-lg font-bold text-white mb-6">How BullMoney Affiliate Works</h3>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                   {[
@@ -836,7 +967,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
               </div>
 
               {/* RECENT RECRUITS PREVIEW */}
-              <div className="bg-neutral-900/60 backdrop-blur-xl border border-white/5 rounded-2xl overflow-hidden">
+              <div className="relative z-10 bg-neutral-900 border border-white/10 rounded-2xl overflow-hidden">
                 <div className="p-4 border-b border-white/5 flex items-center justify-between">
                   <h3 className="font-bold text-white">Recent Recruits</h3>
                   <button
@@ -902,38 +1033,41 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
             >
-              {/* RECRUITS LIST SECTION */}
-              <div className="bg-neutral-900/60 backdrop-blur-xl border border-white/5 rounded-2xl overflow-hidden">
-                
-                {/* Controls */}
-                <div className="p-4 border-b border-white/5 flex flex-col md:flex-row gap-4 justify-between items-center">
-                  <div className="relative w-full md:w-96 group">
+              {/* RECRUITS LIST SECTION - Improved mobile layout */}
+              <div className="relative z-10 bg-neutral-900 border border-white/10 rounded-xl md:rounded-2xl overflow-hidden">
+
+                {/* Controls - Stack on mobile */}
+                <div className="relative z-10 shrink-0 p-3 md:p-4 border-b border-white/5 flex flex-col gap-3 bg-neutral-900/80">
+                  {/* Search bar */}
+                  <div className="relative w-full group">
                     <Search className={cn(
                       "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 transition-colors",
                       isXMUser ? "group-focus-within:text-red-400" : "group-focus-within:text-white"
                     )} />
-                    <input 
-                      type="text" 
-                      placeholder="Search by email, MT5 ID, or code..." 
+                    <input
+                      type="text"
+                      placeholder="Search email, MT5 ID..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className={cn(
-                        "w-full bg-black/40 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none transition-all placeholder:text-slate-600",
+                        "w-full bg-black/40 border border-white/10 rounded-lg pl-10 pr-4 py-2 md:py-2.5 text-sm text-white focus:outline-none transition-all placeholder:text-slate-600",
                         isXMUser ? "focus:border-red-500/50" : "focus:border-white/50"
                       )}
                     />
                   </div>
-                  <div className="flex items-center gap-3 w-full md:w-auto">
-                    <div className="flex gap-1.5 bg-neutral-800/50 p-1 rounded-lg">
+
+                  {/* Filter and view controls - side by side */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex gap-1 bg-neutral-800/50 p-1 rounded-lg flex-1 sm:flex-none">
                       {(['All', 'Active', 'Pending'] as const).map((f) => (
                         <button
                           key={f}
                           onClick={() => setFilter(f)}
                           className={cn(
-                            "px-4 py-1.5 rounded-md text-xs font-bold transition-all whitespace-nowrap",
-                            filter === f 
-                              ? isXMUser 
-                                ? "bg-red-500 text-white" 
+                            "flex-1 sm:flex-none px-2.5 sm:px-4 py-1.5 rounded-md text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap",
+                            filter === f
+                              ? isXMUser
+                                ? "bg-red-500 text-white"
                                 : "bg-white text-black"
                               : "text-slate-400 hover:text-white"
                           )}
@@ -942,22 +1076,24 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                         </button>
                       ))}
                     </div>
-                    <div className="flex gap-1 bg-neutral-800/50 p-1 rounded-lg">
+                    <div className="flex gap-1 bg-neutral-800/50 p-1 rounded-lg shrink-0">
                       <button
                         onClick={() => setViewMode('table')}
                         className={cn(
-                          "p-2 rounded-md transition-all",
+                          "p-1.5 sm:p-2 rounded-md transition-all",
                           viewMode === 'table' ? "bg-white/10 text-white" : "text-slate-500 hover:text-white"
                         )}
+                        title="Table view"
                       >
                         <List className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => setViewMode('cards')}
                         className={cn(
-                          "p-2 rounded-md transition-all",
+                          "p-1.5 sm:p-2 rounded-md transition-all",
                           viewMode === 'cards' ? "bg-white/10 text-white" : "text-slate-500 hover:text-white"
                         )}
+                        title="Card view"
                       >
                         <LayoutGrid className="w-4 h-4" />
                       </button>
@@ -1499,9 +1635,9 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
       {/* --- EXPANDED OVERLAY --- */}
       <AnimatePresence>
         {selectedRecruit && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
              {/* Backdrop */}
-             <motion.div 
+             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -1509,51 +1645,56 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                 className="absolute inset-0 bg-black/80 backdrop-blur-sm"
              />
 
-            {/* Card */}
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-2xl bg-[#0a0a0a] rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+            {/* Card - Bottom sheet on mobile, centered modal on desktop */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className="relative w-full sm:max-w-2xl bg-[#0a0a0a] rounded-t-2xl sm:rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh]"
             >
+                {/* Mobile drag handle */}
+                <div className="sm:hidden flex justify-center pt-2 pb-1">
+                  <div className="w-10 h-1 rounded-full bg-white/20" />
+                </div>
+
                 {/* Close Button */}
-                <button 
+                <button
                   onClick={() => setSelectedRecruit(null)}
-                  className="absolute top-4 right-4 z-20 p-2 bg-black/40 hover:bg-black/80 rounded-full text-white border border-white/10 transition-colors"
+                  className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 p-1.5 sm:p-2 bg-black/40 hover:bg-black/80 rounded-full text-white border border-white/10 transition-colors"
                 >
-                   <X className="w-5 h-5" />
+                   <X className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
 
                 {/* Header */}
                 <div className={cn(
-                  "p-6 border-b border-white/5",
-                  isXMUser 
-                    ? "bg-gradient-to-br from-red-950/50 to-transparent" 
+                  "p-4 sm:p-6 border-b border-white/5 shrink-0",
+                  isXMUser
+                    ? "bg-gradient-to-br from-red-950/50 to-transparent"
                     : "bg-gradient-to-br from-cyan-950/50 to-transparent"
                 )}>
-                    <div className="flex items-start gap-4">
+                    <div className="flex items-start gap-3 sm:gap-4">
                          <div className={cn(
-                            "w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold text-white shadow-lg",
-                            isXMUser 
-                              ? "bg-gradient-to-br from-red-600 to-orange-600" 
+                            "w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center text-xl sm:text-2xl font-bold text-white shadow-lg shrink-0",
+                            isXMUser
+                              ? "bg-gradient-to-br from-red-600 to-orange-600"
                               : "bg-gradient-to-br from-white to-white"
                           )}>
                             {selectedRecruit.email.charAt(0).toUpperCase()}
                          </div>
-                         <div className="flex-1">
-                             <div className="flex items-center gap-3 mb-2">
-                                <h2 className="text-xl font-bold text-white">{maskEmail(selectedRecruit.email)}</h2>
+                         <div className="flex-1 min-w-0 pr-8 sm:pr-10">
+                             <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+                                <h2 className="text-base sm:text-xl font-bold text-white truncate">{maskEmail(selectedRecruit.email)}</h2>
                                 <StatusBadge status={selectedRecruit.status || 'Pending'} />
                              </div>
-                             <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
+                             <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-[10px] sm:text-xs text-slate-400">
                                  <span className="flex items-center gap-1">
-                                   <Tag className="w-3 h-3"/> 
-                                   Recruit ID: <span className="font-mono text-slate-300">{formatId(selectedRecruit.id)}</span>
+                                   <Tag className="w-2.5 h-2.5 sm:w-3 sm:h-3"/>
+                                   ID: <span className="font-mono text-slate-300">{formatId(selectedRecruit.id)}</span>
                                  </span>
-                                 <span className="hidden sm:block">•</span>
+                                 <span className="hidden xs:block">•</span>
                                  <span className="flex items-center gap-1">
-                                   <Calendar className="w-3 h-3"/> 
-                                   Joined {formatDate(selectedRecruit.created_at)}
+                                   <Calendar className="w-2.5 h-2.5 sm:w-3 sm:h-3"/>
+                                   {formatDate(selectedRecruit.created_at)}
                                  </span>
                              </div>
                          </div>
@@ -1561,39 +1702,39 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                 </div>
 
                 {/* Body - Scrollable */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                    
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
+
                     {/* Performance Stats */}
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="p-4 rounded-xl bg-neutral-900/80 border border-white/5">
-                            <div className="flex items-center gap-2 mb-2">
-                                <div className="p-1.5 rounded-lg bg-white/10 text-white">
-                                    <BarChart3 className="w-4 h-4" />
+                    <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                        <div className="p-3 sm:p-4 rounded-lg sm:rounded-xl bg-neutral-900/80 border border-white/5">
+                            <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                                <div className="p-1 sm:p-1.5 rounded-md sm:rounded-lg bg-white/10 text-white">
+                                    <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" />
                                 </div>
-                                <span className="text-xs text-slate-400 font-medium">Total Lots Traded</span>
+                                <span className="text-[10px] sm:text-xs text-slate-400 font-medium">Lots Traded</span>
                             </div>
-                            <p className="text-2xl font-bold text-white">
-                                {selectedRecruit.status === 'Active' 
+                            <p className="text-lg sm:text-2xl font-bold text-white">
+                                {selectedRecruit.status === 'Active'
                                   ? formatNumber(selectedRecruit.total_lots_traded || 0, 2)
                                   : "0.00"
                                 }
                             </p>
                         </div>
-                        <div className="p-4 rounded-xl bg-neutral-900/80 border border-white/5">
-                             <div className="flex items-center gap-2 mb-2">
+                        <div className="p-3 sm:p-4 rounded-lg sm:rounded-xl bg-neutral-900/80 border border-white/5">
+                             <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
                                 <div className={cn(
-                                  "p-1.5 rounded-lg",
+                                  "p-1 sm:p-1.5 rounded-md sm:rounded-lg",
                                   isXMUser ? "bg-red-500/10 text-red-400" : "bg-white/10 text-white"
                                 )}>
-                                    <DollarSign className="w-4 h-4" />
+                                    <DollarSign className="w-3 h-3 sm:w-4 sm:h-4" />
                                 </div>
-                                <span className="text-xs text-slate-400 font-medium">Your Earnings</span>
+                                <span className="text-[10px] sm:text-xs text-slate-400 font-medium">Earnings</span>
                             </div>
                             <p className={cn(
-                              "text-2xl font-bold",
+                              "text-lg sm:text-2xl font-bold",
                               selectedRecruit.status === 'Active' ? "text-white" : "text-slate-600"
                             )}>
-                                {selectedRecruit.status === 'Active' 
+                                {selectedRecruit.status === 'Active'
                                   ? formatCurrency(selectedRecruit.estimated_earnings || 0)
                                   : "$0.00"
                                 }
@@ -1699,22 +1840,23 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                 </div>
 
                 {/* Footer Actions */}
-                <div className="p-4 border-t border-white/5 flex gap-3">
-                  <button 
+                <div className="p-3 sm:p-4 border-t border-white/5 flex gap-2 sm:gap-3 shrink-0">
+                  <button
                     onClick={() => {
                       navigator.clipboard.writeText(String(selectedRecruit.id));
                     }}
-                    className="flex-1 py-2.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-sm text-white font-medium flex items-center justify-center gap-2 transition-colors"
+                    className="flex-1 py-2 sm:py-2.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 active:bg-white/15 text-xs sm:text-sm text-white font-medium flex items-center justify-center gap-1.5 sm:gap-2 transition-colors"
                   >
-                    <Copy className="w-4 h-4" /> Copy Recruit ID
+                    <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span className="hidden xs:inline">Copy</span> ID
                   </button>
-                  <button 
+                  <button
                     onClick={() => setSelectedRecruit(null)}
                     className={cn(
-                      "flex-1 py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-colors",
-                      isXMUser 
-                        ? "bg-red-600 hover:bg-red-500 text-white" 
-                        : "bg-white hover:bg-white/90 text-black"
+                      "flex-1 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium flex items-center justify-center gap-1.5 sm:gap-2 transition-colors",
+                      isXMUser
+                        ? "bg-red-600 hover:bg-red-500 active:bg-red-700 text-white"
+                        : "bg-white hover:bg-white/90 active:bg-white/80 text-black"
                     )}
                   >
                     Close
@@ -1731,86 +1873,86 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
 }
 
 // --- SUB COMPONENTS ---
-const EarningsCard = ({ 
-  title, 
-  value, 
-  subtitle, 
-  icon: Icon, 
-  trend, 
-  trendUp, 
-  isXMUser, 
-  primary 
-}: { 
-  title: string; 
-  value: string; 
-  subtitle: string; 
-  icon: React.ComponentType<{ className?: string }>; 
-  trend?: string; 
-  trendUp?: boolean; 
+const EarningsCard = ({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  trend,
+  trendUp,
+  isXMUser,
+  primary
+}: {
+  title: string;
+  value: string;
+  subtitle: string;
+  icon: React.ComponentType<{ className?: string }>;
+  trend?: string;
+  trendUp?: boolean;
   isXMUser: boolean;
   primary?: boolean;
 }) => (
   <div className={cn(
-    "p-5 rounded-2xl border transition-all",
-    primary 
-      ? isXMUser 
-        ? "bg-gradient-to-br from-red-950/60 to-orange-950/60 border-red-500/20" 
+    "p-3 sm:p-4 md:p-5 rounded-xl sm:rounded-2xl border transition-all",
+    primary
+      ? isXMUser
+        ? "bg-gradient-to-br from-red-950/60 to-orange-950/60 border-red-500/20"
         : "bg-gradient-to-br from-cyan-950/60 to-cyan-950/60 border-white/20"
       : "bg-neutral-900/60 border-white/5"
   )}>
-    <div className="flex items-center justify-between mb-3">
+    <div className="flex items-center justify-between mb-2 sm:mb-3">
       <div className={cn(
-        "p-2.5 rounded-xl",
+        "p-2 sm:p-2.5 rounded-lg sm:rounded-xl",
         primary
           ? isXMUser ? "bg-red-500/20 text-red-400" : "bg-white/20 text-white"
           : "bg-white/5 text-slate-400"
       )}>
-        <Icon className="w-5 h-5" />
+        <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
       </div>
       {trend && (
         <div className={cn(
-          "flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full",
-          trendUp ? "bg-white/10 text-white" : "bg-red-500/10 text-red-400"
+          "flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs font-medium px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full",
+          trendUp ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"
         )}>
-          {trendUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+          {trendUp ? <ArrowUpRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> : <ArrowDownRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
           {trend}
         </div>
       )}
     </div>
-    <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">{title}</p>
-    <p className="text-2xl font-black text-white">{value}</p>
-    <p className="text-xs text-slate-500 mt-1">{subtitle}</p>
+    <p className="text-[10px] sm:text-xs text-slate-500 uppercase tracking-wide mb-0.5 sm:mb-1">{title}</p>
+    <p className="text-lg sm:text-xl md:text-2xl font-black text-white truncate">{value}</p>
+    <p className="text-[10px] sm:text-xs text-slate-500 mt-0.5 sm:mt-1">{subtitle}</p>
   </div>
 );
 
-const QuickStatCard = ({ 
-  label, 
-  value, 
-  icon: Icon, 
+const QuickStatCard = ({
+  label,
+  value,
+  icon: Icon,
   color = 'accent',
-  isXMUser 
-}: { 
-  label: string; 
-  value: string | number; 
+  isXMUser
+}: {
+  label: string;
+  value: string | number;
   icon: React.ComponentType<{ className?: string }>;
   color?: 'accent' | 'green' | 'purple' | 'orange';
   isXMUser: boolean;
 }) => {
   const colorClasses = {
     accent: isXMUser ? "bg-red-500/10 text-red-400" : "bg-white/10 text-white",
-    green: "bg-white/10 text-white",
-    purple: "bg-white/10 text-white",
+    green: "bg-green-500/10 text-green-400",
+    purple: "bg-purple-500/10 text-purple-400",
     orange: "bg-orange-500/10 text-orange-400",
   };
-  
+
   return (
-    <div className="bg-neutral-900/60 border border-white/5 rounded-xl p-4 flex items-center gap-3">
-      <div className={cn("p-2.5 rounded-xl", colorClasses[color])}>
-        <Icon className="w-5 h-5" />
+    <div className="bg-neutral-900/60 border border-white/5 rounded-lg sm:rounded-xl p-3 sm:p-4 flex items-center gap-2 sm:gap-3">
+      <div className={cn("p-2 sm:p-2.5 rounded-lg sm:rounded-xl shrink-0", colorClasses[color])}>
+        <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
       </div>
-      <div>
-        <p className="text-xs text-slate-500 uppercase tracking-wide">{label}</p>
-        <p className="text-xl font-bold text-white">{value}</p>
+      <div className="min-w-0">
+        <p className="text-[10px] sm:text-xs text-slate-500 uppercase tracking-wide truncate">{label}</p>
+        <p className="text-base sm:text-lg md:text-xl font-bold text-white truncate">{value}</p>
       </div>
     </div>
   );

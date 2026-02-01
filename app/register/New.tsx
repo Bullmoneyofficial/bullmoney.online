@@ -332,6 +332,18 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     referralCode: ''
   });
 
+  // Extract referral code from URL on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const refCode = urlParams.get('ref');
+      if (refCode) {
+        console.log('[RegisterPage] 🎯 Referral code detected from URL:', refCode);
+        setFormData(prev => ({ ...prev, referralCode: refCode }));
+      }
+    }
+  }, []);
+
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   

@@ -169,6 +169,20 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
         backgroundColor: '#000',
       }}
     >
+      {/* SVG Filter for maximum in-app browser compatibility (Facebook, Instagram, TikTok, etc.) */}
+      <svg style={{ position: 'absolute', width: 0, height: 0 }}>
+        <defs>
+          <filter id="grayscale-filter-mobile">
+            <feColorMatrix type="saturate" values="0" />
+            <feComponentTransfer>
+              <feFuncR type="linear" slope="1.1" />
+              <feFuncG type="linear" slope="1.1" />
+              <feFuncB type="linear" slope="1.1" />
+            </feComponentTransfer>
+          </filter>
+        </defs>
+      </svg>
+
       {/* Animated gradient fallback - always visible as base layer */}
       <div
         className="absolute inset-0"
@@ -190,20 +204,52 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
         )}
       </div>
 
-      {/* Spline scene - always render, fallback stays visible until loaded */}
-      <Spline
-        key={`welcome-spline-${retryKey}`}
-        scene={scene}
-        onLoad={handleLoad}
-        onError={handleError}
+      {/* Spline container with forced black & white - works in all browsers including in-app */}
+      <div
+        className="absolute inset-0"
         style={{
-          width: '100%',
-          height: '100%',
-          display: 'block',
-          opacity: isLoaded ? 1 : 0.6,
-          transition: 'opacity 400ms ease-out',
-          willChange: 'opacity',
-        }}
+          filter: 'url(#grayscale-filter-mobile) grayscale(100%) saturate(0) contrast(1.1)',
+          WebkitFilter: 'grayscale(100%) saturate(0) contrast(1.1)',
+        } as React.CSSProperties}
+      >
+        <Spline
+          key={`welcome-spline-${retryKey}`}
+          scene={scene}
+          onLoad={handleLoad}
+          onError={handleError}
+          style={{
+            width: '100%',
+            height: '100%',
+            display: 'block',
+            opacity: isLoaded ? 1 : 0.6,
+            transition: 'opacity 400ms ease-out',
+            willChange: 'opacity',
+            filter: 'grayscale(100%) saturate(0)',
+            WebkitFilter: 'grayscale(100%) saturate(0)',
+          } as React.CSSProperties}
+        />
+      </div>
+
+      {/* Color-kill overlay - mix-blend-mode: color with gray removes ALL remaining color */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          zIndex: 1,
+          backgroundColor: '#808080',
+          mixBlendMode: 'color',
+          WebkitMixBlendMode: 'color',
+        } as React.CSSProperties}
+      />
+
+      {/* Extra fallback: semi-transparent grayscale overlay for stubborn in-app browsers */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          zIndex: 1,
+          backgroundColor: 'rgba(128, 128, 128, 0.3)',
+          mixBlendMode: 'saturation',
+          WebkitMixBlendMode: 'saturation',
+        } as React.CSSProperties}
       />
     </div>
   );
