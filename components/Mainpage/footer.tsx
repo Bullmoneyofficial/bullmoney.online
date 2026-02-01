@@ -36,7 +36,6 @@ const NEON_STYLES = `
 `;
 
 export function Footer() {
-  // Use centralized UI state for mutual exclusion with other modals
   const { isAppsOpen, isDisclaimerOpen, setAppsOpen, setDisclaimerOpen } = useFooterModalsUI();
   const [isMounted, setIsMounted] = useState(false);
 
@@ -48,73 +47,68 @@ export function Footer() {
   return (
     <>
       <FooterStyles />
-      <style dangerouslySetInnerHTML={{ __html: NEON_STYLES }} />
 
-      <footer id="footer" className="relative w-full overflow-hidden" data-allow-scroll style={{ touchAction: "pan-y" }}>
-        <div className="relative group">
-          {/* Static neon border glow */}
-          <span className="absolute inset-[-2px] rounded-t-2xl sm:rounded-t-3xl neon-blue-border" style={{ background: 'transparent' }} />
+      <footer id="footer" className="relative w-full overflow-hidden bg-black" data-allow-scroll style={{ touchAction: "pan-y" }}>
+        <div className="relative">
+          {/* Minimal top border */}
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
-          <div className="relative bg-black neon-blue-border rounded-t-2xl sm:rounded-t-3xl">
+          <div className="max-w-7xl mx-auto relative z-10 px-4 sm:px-6 md:px-8 pt-12 md:pt-16 pb-8 md:pb-12"
+            style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}>
+            
+            {/* Community Section - Clean and minimal */}
+            <div className="mb-12 md:mb-16">
+              <p className="text-center text-xs font-medium tracking-widest text-white/40 uppercase mb-6">
+                Join the Community
+              </p>
+              <SocialsRow />
+            </div>
 
-            <div
-              className="max-w-7xl mx-auto relative z-10 flex flex-col gap-6 sm:gap-8 pt-8 sm:pt-12 pb-6 sm:pb-8 px-3 sm:px-4 md:px-6"
-              style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
-            >
-              {/* Join the Community Section - Neon styled */}
-              <div className="relative w-full pb-6 sm:pb-8" style={{ borderBottom: '1px solid #ffffff', boxShadow: '0 1px 0 0 rgba(255, 255, 255, 0.5)' }}>
-                <div className="relative overflow-hidden rounded-xl sm:rounded-2xl p-4 sm:p-6 bg-black neon-blue-border-light neon-glow-bg">
-                  <p className="relative text-center text-[9px] sm:text-[10px] uppercase tracking-[0.2em] sm:tracking-[0.25em] font-bold neon-blue-text mb-4 sm:mb-6">
-                    Join the Community
-                  </p>
-                  <SocialsRow />
-                </div>
+            {/* Main content grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 mb-12 md:mb-16">
+              {/* Logo & Copyright */}
+              <div className="flex flex-col items-center lg:items-start gap-4">
+                <Logo />
+                <p className="text-xs text-white/50 text-center lg:text-left">
+                  &copy; {new Date().getFullYear()} BullMoney. All rights reserved.
+                </p>
               </div>
 
-              <div className="flex flex-col lg:flex-row justify-between items-center gap-4 sm:gap-6 lg:gap-8">
-                {/* Logo & Copyright Section - Neon styled */}
-                <div className="relative w-full lg:w-auto flex flex-col items-center lg:items-start gap-3 sm:gap-4 p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-black neon-blue-border-light neon-glow-bg overflow-hidden">
-                  <div className="relative">
-                    <Logo />
-                  </div>
-                  <div className="relative neon-white-text text-[10px] sm:text-xs text-center lg:text-left font-medium">
-                    &copy; {new Date().getFullYear()} BullMoney. All rights reserved.
-                  </div>
-                </div>
+              {/* Buttons - centered */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                <FooterButton 
+                  onClick={() => { trackClick('apps_tools_button', { source: 'footer' }); setAppsOpen(true); }} 
+                  variant="primary" 
+                  icon={<ExternalLink className="w-4 h-4" />}
+                >
+                  Apps & Tools
+                </FooterButton>
 
-                {/* Buttons Section - Neon styled */}
-                <div className="relative w-full lg:w-auto flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-black neon-blue-border-light neon-glow-bg overflow-hidden">
-                  <FooterButton onClick={() => { trackClick('apps_tools_button', { source: 'footer' }); setAppsOpen(true); }} variant="primary" icon={<ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}>
-                    Apps & Tools
-                  </FooterButton>
-
-                  <FooterButton onClick={() => { trackClick('legal_disclaimer_button', { source: 'footer' }); setDisclaimerOpen(true); }} icon={<ShieldAlert className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}>
-                    Legal Disclaimer
-                  </FooterButton>
-                </div>
+                <FooterButton 
+                  onClick={() => { trackClick('legal_disclaimer_button', { source: 'footer' }); setDisclaimerOpen(true); }} 
+                  icon={<ShieldAlert className="w-4 h-4" />}
+                >
+                  Legal
+                </FooterButton>
               </div>
 
-              {/* Elite Trading Community Section - Neon styled */}
-              <div className="relative text-center pt-4 sm:pt-6" style={{ borderTop: '1px solid #ffffff', boxShadow: '0 -1px 0 0 rgba(255, 255, 255, 0.5)' }}>
-                <div className="relative inline-block p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-black neon-blue-border-light neon-glow-bg overflow-hidden">
-                  <p className="text-xl sm:text-2xl md:text-3xl font-serif font-black tracking-tight">
-                    <span className="relative inline-block">
-                      <span className="neon-white-text">
-                        Bull Money
-                      </span>
-                    </span>
-                  </p>
-                  <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.25em] sm:tracking-[0.3em] neon-blue-text mt-2 sm:mt-3 font-bold">
-                    Elite Trading Community
-                  </p>
+              {/* Tagline */}
+              <div className="flex flex-col items-center lg:items-end gap-2">
+                <p className="text-lg md:text-xl font-semibold text-white">
+                  Bull Money
+                </p>
+                <p className="text-xs tracking-wider text-white/50 uppercase">
+                  Elite Trading
+                </p>
+              </div>
+            </div>
 
-                  {/* Static neon dots */}
-                  <div className="flex justify-center gap-1 sm:gap-1.5 mt-3 sm:mt-4">
-                    <span className="w-1 h-1 rounded-full bg-white" style={{ boxShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }} />
-                    <span className="w-1 h-1 rounded-full bg-white" style={{ boxShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }} />
-                    <span className="w-1 h-1 rounded-full bg-white" style={{ boxShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }} />
-                  </div>
-                </div>
+            {/* Bottom minimal divider */}
+            <div className="pt-8 border-t border-white/10">
+              <div className="flex justify-center gap-1">
+                <span className="w-1 h-1 rounded-full bg-white/30" />
+                <span className="w-1 h-1 rounded-full bg-white/30" />
+                <span className="w-1 h-1 rounded-full bg-white/30" />
               </div>
             </div>
           </div>

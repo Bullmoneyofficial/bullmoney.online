@@ -147,8 +147,9 @@ const HighAestheticCard = memo(({
     onShow, 
     isChart = false,
     showTip = false,
-    tipLabel = "Click Here",
-    shouldSkipHeavyEffects = false
+        tipLabel = "Click Here",
+        shouldSkipHeavyEffects = false,
+        quiet = false
 }: { 
     title: string, 
     subtitle: string, 
@@ -156,14 +157,24 @@ const HighAestheticCard = memo(({
     onShow: () => void,
     isChart?: boolean,
     showTip?: boolean,
-    tipLabel?: string,
-    shouldSkipHeavyEffects?: boolean
+        tipLabel?: string,
+        shouldSkipHeavyEffects?: boolean,
+        quiet?: boolean
 }) => {
     const isMobile = useIsMobile();
+        const cardSurface = quiet
+            ? "bg-gradient-to-b from-[#0b0f17] via-[#090d15] to-[#070a11] border border-white/10 shadow-[0_20px_50px_-35px_rgba(0,0,0,1)]"
+            : "bg-black";
+        const iconFrame = quiet
+            ? "border border-white/12 bg-white/5"
+            : "neon-blue-border";
+        const titleClass = quiet ? "text-white" : "neon-blue-text";
+        const subtitleClass = quiet ? "text-white/70" : "neon-blue-text";
+        const buttonClass = quiet ? "relative z-10 flex items-center gap-2 rounded-full px-8 py-3 text-lg font-bold bg-white text-black transition-all duration-300 group hover:brightness-110" : "relative z-10 flex items-center gap-2 rounded-full px-8 py-3 text-lg font-bold neon-blue-bg transition-all duration-300 group hover:brightness-110";
 
     return (
         <motion.div
-            className="relative flex flex-col items-center justify-center overflow-hidden rounded-3xl py-12 md:py-16 cursor-pointer gpu-layer bg-black"
+                        className={`relative flex flex-col items-center justify-center overflow-hidden rounded-3xl py-12 md:py-16 cursor-pointer gpu-layer ${cardSurface}`}
             initial={{ opacity: 0, y: shouldSkipHeavyEffects ? 0 : 10 }}
             animate={{ opacity: 1, y: 0 }}
             whileHover={shouldSkipHeavyEffects ? {} : { scale: isMobile ? 1.0 : 1.01 }}
@@ -172,7 +183,7 @@ const HighAestheticCard = memo(({
         >
             <div className="relative z-10 flex flex-col items-center justify-center text-center">
                 {/* TIP FOR CARD ICON/TITLE - skip on mobile */}
-                {!shouldSkipHeavyEffects && (
+                 {!shouldSkipHeavyEffects && !quiet && (
                   <AnimatePresence>
                       {showTip && isChart && (
                            <HelperTip label={tipLabel} className="-top-8" />
@@ -180,21 +191,21 @@ const HighAestheticCard = memo(({
                   </AnimatePresence>
                 )}
 
-                <div className={cn("flex h-16 w-16 items-center justify-center rounded-xl bg-black mb-4", shouldSkipHeavyEffects ? "border border-white/50" : "neon-blue-border")}>
-                    <Icon className={cn("h-8 w-8 text-white", shouldSkipHeavyEffects ? "" : "neon-white-icon")} />
+                <div className={cn("flex h-16 w-16 items-center justify-center rounded-xl bg-black mb-4", shouldSkipHeavyEffects ? "border border-white/50" : iconFrame)}>
+                    <Icon className={cn("h-8 w-8 text-white", shouldSkipHeavyEffects || quiet ? "" : "neon-white-icon")} />
                 </div>
 
-                <h2 className={cn("mt-2 text-3xl font-black tracking-tight md:text-4xl", shouldSkipHeavyEffects ? "text-white" : "neon-blue-text")}>
+                <h2 className={cn("mt-2 text-3xl font-black tracking-tight md:text-4xl", shouldSkipHeavyEffects ? "text-white" : titleClass)}>
                     {title}
                 </h2>
                 
-                <p className={cn("mt-2 text-sm max-w-sm px-4", shouldSkipHeavyEffects ? "text-white" : "neon-blue-text")}>
+                <p className={cn("mt-2 text-sm max-w-sm px-4", shouldSkipHeavyEffects ? "text-white" : subtitleClass)}>
                     {subtitle}
                 </p>
 
                 <div className="mt-8 relative">
                     {/* TIP FOR LAUNCH BUTTON - skip on mobile */}
-                    {!shouldSkipHeavyEffects && (
+                                        {!shouldSkipHeavyEffects && !quiet && (
                       <AnimatePresence>
                           {showTip && !isChart && (
                                <HelperTip label={tipLabel} className="-top-12 left-1/2 -translate-x-1/2" />
@@ -202,19 +213,19 @@ const HighAestheticCard = memo(({
                       </AnimatePresence>
                     )}
 
-                    {shouldSkipHeavyEffects ? (
-                      <div className="relative z-10 flex items-center gap-2 rounded-full px-8 py-3 text-lg font-bold bg-white transition-all duration-300 group hover:brightness-110">
-                          <span className="text-black">Launch Terminal</span>
-                          <ArrowRight className="h-4 w-4 text-black transition-transform group-hover:translate-x-1" />
-                      </div>
-                    ) : (
-                      <NeonBorder borderRadius="rounded-full">
-                          <div className="relative z-10 flex items-center gap-2 rounded-full px-8 py-3 text-lg font-bold neon-blue-bg transition-all duration-300 group hover:brightness-110">
-                              <span className="neon-white-text">Launch Terminal</span>
-                              <ArrowRight className="h-4 w-4 neon-white-text transition-transform group-hover:translate-x-1" />
-                          </div>
-                      </NeonBorder>
-                    )}
+                                        {shouldSkipHeavyEffects || quiet ? (
+                                            <div className={buttonClass}>
+                                                    <span className={quiet ? "text-black" : "text-black"}>Launch Terminal</span>
+                                                    <ArrowRight className="h-4 w-4 text-black transition-transform group-hover:translate-x-1" />
+                                            </div>
+                                        ) : (
+                                            <NeonBorder borderRadius="rounded-full">
+                                                    <div className={buttonClass}>
+                                                            <span className="neon-white-text">Launch Terminal</span>
+                                                            <ArrowRight className="h-4 w-4 neon-white-text transition-transform group-hover:translate-x-1" />
+                                                    </div>
+                                            </NeonBorder>
+                                        )}
                 </div>
             </div>
         </motion.div>
@@ -272,13 +283,18 @@ const TradingViewMarketOverview = memo(({ height = 560, tabs }: { height?: numbe
 TradingViewMarketOverview.displayName = "TradingViewMarketOverview";
 
 /* --------------------------- CHART SECTION --------------------------- */
-export const TradingViewDropdown = memo(({ onMarketChange, showTip }: { onMarketChange?: (v: string) => void, showTip?: boolean }) => {
+export const TradingViewDropdown = memo(({ onMarketChange, showTip, quiet = false }: { onMarketChange?: (v: string) => void, showTip?: boolean, quiet?: boolean }) => {
   const [selected, setSelected] = useState(CHARTS[0]!);
   const [open, setOpen] = useState(false);
   const [showChart, setShowChart] = useState(false);
   const isMobile = useIsMobile();
   const { shouldSkipHeavyEffects, shouldDisableBackdropBlur } = useMobilePerformance();
   const chartHeight = isMobile ? 300 : 680;
+    const containerClass = quiet
+        ? "relative mx-auto w-full max-w-screen-xl rounded-3xl bg-gradient-to-b from-[#0a0f17] via-[#0a0f17] to-[#060910] p-4 md:p-6 border border-white/10 shadow-[0_20px_50px_-35px_rgba(0,0,0,1)]"
+        : "relative mx-auto w-full max-w-screen-xl rounded-3xl bg-black p-4 md:p-6";
+    const frameBorder = quiet || shouldSkipHeavyEffects ? "border border-white/50" : "neon-blue-border";
+    const closeText = quiet || shouldSkipHeavyEffects ? "text-white hover:text-white" : "neon-blue-text hover:neon-white-text";
 
   const handleSelect = useCallback((chart: any) => {
     setSelected(chart);
@@ -288,8 +304,8 @@ export const TradingViewDropdown = memo(({ onMarketChange, showTip }: { onMarket
 
   if (!selected) return null;
 
-  return (
-    <div className={cn("relative mx-auto w-full max-w-screen-xl rounded-3xl bg-black p-4 md:p-6", shouldSkipHeavyEffects ? "border border-white/50" : "neon-blue-border")}>
+    return (
+        <div className={cn(containerClass, frameBorder)}>
       {!showChart && (
         <HighAestheticCard
             title="Show Live Market Charts"
@@ -297,9 +313,10 @@ export const TradingViewDropdown = memo(({ onMarketChange, showTip }: { onMarket
             icon={ChartBar}
             onShow={() => setShowChart(true)}
             isChart={true}
-            showTip={showTip && !shouldSkipHeavyEffects}
+                        showTip={showTip && !shouldSkipHeavyEffects && !quiet}
             tipLabel="Open Charts"
             shouldSkipHeavyEffects={shouldSkipHeavyEffects}
+                        quiet={quiet}
         />
       )}
 
@@ -313,11 +330,11 @@ export const TradingViewDropdown = memo(({ onMarketChange, showTip }: { onMarket
             transition={{ duration: shouldSkipHeavyEffects ? 0.15 : 0.4 }}
             className={shouldSkipHeavyEffects ? "" : "will-change-transform"}
           >
-            <div className="mb-4 flex items-center justify-between">
-                {shouldSkipHeavyEffects ? (
+                        <div className="mb-4 flex items-center justify-between">
+                                {shouldSkipHeavyEffects || quiet ? (
                   <button
                     onClick={() => setOpen((p) => !p)}
-                    className="group relative flex items-center gap-3 rounded-full bg-black px-6 py-2 text-sm font-semibold text-white border border-white/50"
+                                        className="group relative flex items-center gap-3 rounded-full bg-black/70 px-6 py-2 text-sm font-semibold text-white border border-white/50"
                   >
                     <span className="relative z-10">{selected.label}</span>
                     <ChevronDown className={`h-4 w-4 relative z-10 text-white transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
@@ -326,7 +343,7 @@ export const TradingViewDropdown = memo(({ onMarketChange, showTip }: { onMarket
                   <NeonBorder borderRadius="rounded-full">
                       <button
                         onClick={() => setOpen((p) => !p)}
-                        className="group relative flex items-center gap-3 rounded-full bg-black px-6 py-2 text-sm font-semibold neon-white-text"
+                                                className="group relative flex items-center gap-3 rounded-full bg-black px-6 py-2 text-sm font-semibold neon-white-text"
                       >
                         <span className="relative z-10">{selected.label}</span>
                         <ChevronDown className={`h-4 w-4 relative z-10 neon-blue-text transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
@@ -342,7 +359,7 @@ export const TradingViewDropdown = memo(({ onMarketChange, showTip }: { onMarket
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: shouldSkipHeavyEffects ? 0 : -10 }}
                   transition={{ duration: shouldSkipHeavyEffects ? 0.1 : 0.2 }}
-                  className={cn("absolute z-20 mt-2 w-64 overflow-hidden rounded-xl bg-black", shouldSkipHeavyEffects ? "border border-white/50" : "neon-blue-border")}
+                                    className={cn("absolute z-20 mt-2 w-64 overflow-hidden rounded-xl bg-black/85 backdrop-blur", frameBorder)}
                 >
                   {CHARTS.map((chart, idx) => (
                     <button
@@ -362,14 +379,14 @@ export const TradingViewDropdown = memo(({ onMarketChange, showTip }: { onMarket
               )}
             </AnimatePresence>
 
-            <div className={cn("relative mt-4 w-full rounded-2xl bg-black p-1 md:p-2", shouldSkipHeavyEffects ? "border border-white/50" : "neon-blue-border")} style={{ minHeight: chartHeight }}>
+            <div className={cn("relative mt-4 w-full rounded-2xl bg-black/75 p-1 md:p-2", frameBorder)} style={{ minHeight: chartHeight }}>
               <TradingViewMarketOverview height={chartHeight} tabs={selected.tabConfig} />
             </div>
 
             <div className="mt-6 flex justify-center">
                 <button
                     onClick={() => { setOpen(false); setShowChart(false); }}
-                    className={cn("text-xs uppercase tracking-widest transition-colors py-2", shouldSkipHeavyEffects ? "text-white hover:text-white" : "neon-blue-text hover:neon-white-text")}
+                    className={cn("text-xs uppercase tracking-widest transition-colors py-2", closeText)}
                 >
                     Close Chart Viewer
                 </button>
@@ -1162,6 +1179,8 @@ NewsFeedContent.displayName = "NewsFeedContent";
 export function CTA() {
   const [activeMarket, setActiveMarket] = useState<any>("all");
   const [activeTipIndex, setActiveTipIndex] = useState(0);
+    const isMobile = useIsMobile();
+    const showTips = !isMobile;
 
   // Cycle through the tips: 0 = News, 1 = Charts, 2 = None (pause)
   useEffect(() => {
@@ -1172,38 +1191,50 @@ export function CTA() {
   }, []);
 
     return (
-        <div id="market-dashboard" className="w-full full-bleed viewport-full overflow-x-hidden bg-black px-0 md:px-8 py-10">
-      <style>{GLOBAL_STYLES}</style>
-            <div className="mx-auto w-full xl:max-w-none px-4 md:px-0">
-        <header className="text-center mb-12">
-           
-            
-            <h1 className="text-4xl md:text-6xl font-black tracking-tighter neon-blue-text">
-                MARKET DASHBOARD
-            </h1>
-            <p className="mt-4 text-sm neon-blue-text md:text-base max-w-2xl mx-auto">
-                Real-time institutional grade data covering <span className="neon-white-text">Crypto</span>, <span className="neon-white-text">Stocks</span>, <span className="neon-white-text">Forex</span>, and <span className="neon-white-text">Metals</span>.
-            </p>
-             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full neon-blue-border bg-black neon-blue-text text-[10px] font-mono tracking-widest uppercase mb-4">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full neon-blue-bg opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-full w-full neon-blue-bg"></span>
-                </span>
-                System Online
-            </div>
-        </header>
-        
-        <div className="mt-10 flex justify-center">
-          {/* Tip Index 0: News - Using new V2 Modal */}
-          <NewsFeedButton className="w-full max-w-xl" />
-        </div>
+        <div id="market-dashboard" className="w-full full-bleed viewport-full overflow-x-hidden bg-gradient-to-b from-[#05070c] via-[#060910] to-[#04060b] px-0 md:px-8 py-12">
+            <style>{GLOBAL_STYLES}</style>
+            <div className="mx-auto w-full max-w-6xl px-4 md:px-0">
+                <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] shadow-[0_25px_60px_-40px_rgba(0,0,0,1)] backdrop-blur-xl p-5 sm:p-7">
+                    <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(circle at 15% 10%, rgba(255,255,255,0.05), transparent 32%), radial-gradient(circle at 85% 0%, rgba(255,255,255,0.04), transparent 30%)' }} />
+                    <div className="absolute inset-x-6 top-0 h-px bg-white/12" />
 
-                <div className="mt-10 flex justify-center">
-          {/* Tip Index 1: Charts */}
-          <TradingViewDropdown onMarketChange={setActiveMarket} showTip={activeTipIndex === 1} />
+                    <header className="relative text-center mb-8 sm:mb-10">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/70">
+                            <span className="h-2 w-2 rounded-full bg-white" />
+                            Live signals
+                        </div>
+                        <h1 className="mt-4 text-3xl sm:text-4xl font-semibold tracking-tight text-white">Market dashboard</h1>
+                        <p className="mt-3 text-sm sm:text-base text-white/70 max-w-2xl mx-auto">
+                            A calmer view for news and live charts. Jump in, scan the tape, and act without the noise.
+                        </p>
+                    </header>
+
+                    <div className="relative grid gap-4 sm:gap-6">
+                        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5 shadow-[0_16px_40px_-38px_rgba(0,0,0,1)]">
+                            <div className="flex items-center justify-between mb-3">
+                                <div>
+                                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">News pulse</p>
+                                    <p className="text-sm text-white/80">Quick open to see headlines</p>
+                                </div>
+                                <span className="hidden sm:inline-flex h-8 px-3 items-center rounded-full bg-white text-black text-xs font-semibold">Open feed</span>
+                            </div>
+                            <NewsFeedButton className="w-full" />
+                        </div>
+
+                        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5 shadow-[0_16px_40px_-38px_rgba(0,0,0,1)]">
+                            <div className="flex items-center justify-between mb-3">
+                                <div>
+                                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">Live charts</p>
+                                    <p className="text-sm text-white/80">Pick a market and view</p>
+                                </div>
+                                <span className="hidden sm:inline-flex h-8 px-3 items-center rounded-full bg-white text-black text-xs font-semibold">Open charts</span>
+                            </div>
+                            <TradingViewDropdown onMarketChange={setActiveMarket} showTip={showTips && activeTipIndex === 1} quiet={isMobile} />
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 }
 export default CTA;

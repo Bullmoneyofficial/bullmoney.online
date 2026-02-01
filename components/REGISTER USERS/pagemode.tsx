@@ -1481,6 +1481,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   isMinimized={isHubMinimized}
                   onToggleMinimized={() => setIsHubMinimized(!isHubMinimized)}
                   onOpenPanel={() => setIsHubOpen(true)}
+                  topOffsetMobile="calc(env(safe-area-inset-top, 0px) + 180px)"
+                  topOffsetDesktop="calc(env(safe-area-inset-top, 0px) + 200px)"
                 />
               </motion.div>
 
@@ -1619,6 +1621,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 isMinimized={isHubMinimized}
                 onToggleMinimized={() => setIsHubMinimized(!isHubMinimized)}
                 onOpenPanel={() => setIsHubOpen(true)}
+                topOffsetMobile="calc(env(safe-area-inset-top, 0px) + 180px)"
+                topOffsetDesktop="calc(env(safe-area-inset-top, 0px) + 200px)"
               />
             </motion.div>
 

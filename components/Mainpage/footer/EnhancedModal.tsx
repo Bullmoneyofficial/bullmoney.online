@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion, type TargetAndTransition } from "framer-motion";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -57,6 +58,11 @@ export const EnhancedModal = ({
   maxWidth = "max-w-3xl",
 }: EnhancedModalProps) => {
   const { isMobile, animations, shouldSkipHeavyEffects } = useUnifiedPerformance();
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   useEffect(() => {
     if (isOpen) {
@@ -79,9 +85,9 @@ export const EnhancedModal = ({
     return () => window.removeEventListener("keydown", handleEscape);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!mounted || !isOpen) return null;
 
-  return (
+  const modalContent = (
     <AnimatePresence mode="wait">
       {isOpen && (
         <>
@@ -174,6 +180,8 @@ export const EnhancedModal = ({
       )}
     </AnimatePresence>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default EnhancedModal;

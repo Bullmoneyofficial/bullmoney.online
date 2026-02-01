@@ -52,6 +52,44 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* ============================================================================
+   MOBILE NAV PILL - LIQUID ANIMATION (LIGHTWEIGHT)
+   Smooth transforms only, no heavy filters
+   ============================================================================ */
+
+.mobile-liquid-pill {
+  position: relative;
+  overflow: hidden;
+}
+
+.mobile-liquid-pill.liquid-enabled {
+  animation: liquidMorph 40s ease-in-out infinite;
+}
+
+.mobile-liquid-pill .liquid-sheen {
+  position: absolute;
+  inset: -20% -10%;
+  background: radial-gradient(60% 60% at 30% 40%, rgba(255, 255, 255, 0.12) 0%, transparent 60%),
+              radial-gradient(50% 50% at 70% 60%, rgba(255, 255, 255, 0.08) 0%, transparent 55%);
+  opacity: 0.8;
+  animation: liquidSheen 36s ease-in-out infinite;
+  pointer-events: none;
+}
+
+
+@keyframes liquidSheen {
+  0% { transform: translateX(-2%) scale(1); opacity: 0.4; }
+  50% { transform: translateX(2%) scale(1.005); opacity: 0.55; }
+  100% { transform: translateX(-2%) scale(1); opacity: 0.4; }
+}
+
+
+@keyframes liquidMorph {
+  0% { border-radius: 9999px; }
+  50% { border-radius: 9999px 9999px 940px 940px; }
+  100% { border-radius: 9999px; }
+}
+
 /* Responsive preview with mouse: allow desktop-like interaction at mobile widths */
 @media (max-width: 1024px) and (hover: hover) and (pointer: fine) {
   .navbar-themed,

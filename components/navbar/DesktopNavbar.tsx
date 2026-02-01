@@ -8,7 +8,6 @@ import {
   IconCalendarTime,
   IconSettings,
   IconLock,
-  IconPalette,
   IconUser,
 } from '@tabler/icons-react';
 import { Dock } from './Dock';
@@ -26,7 +25,6 @@ interface DesktopNavbarProps {
   onHoverChange: (isHovered: boolean) => void;
   onAffiliateClick: () => void;
   onFaqClick: () => void;
-  onThemeClick: () => void;
   onAdminClick: () => void;
   onAccountManagerClick: () => void;
   mounted: boolean;
@@ -46,7 +44,6 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
       onHoverChange,
       onAffiliateClick,
       onFaqClick,
-      onThemeClick,
       onAdminClick,
       onAccountManagerClick,
       mounted,
@@ -56,10 +53,6 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
     },
     ref
   ) => {
-    const safeThemeIcon = (
-      <IconPalette className="h-6 w-6 text-white" stroke={1.5} />
-    );
-
     const safeAdminIcon = isAdmin ? (
       <IconSettings className="h-5 w-5 text-white" stroke={1.5} />
     ) : (
@@ -94,16 +87,10 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
         tips: ["Browse our products", "Find the best tools for you", "Check out our latest offers"],
         triggerComponent: <div className="w-full h-full flex items-center justify-center pointer-events-auto"><ProductsModal /></div>,
       },
-      {
-        icon: safeThemeIcon,
-        label: "Theme",
-        tips: ["Customize your interface", "Multiple themes available", "Save your preferences"],
-        onClick: onThemeClick,
-      },
     ];
 
     if (showAccountManager) {
-      desktopNavItems.splice(5, 0, {
+      desktopNavItems.splice(4, 0, {
         icon: <IconUser className="h-6 w-6 text-white" stroke={1.5} />,
         label: "Account Manager",
         tips: ["Manage your profile", "Update MT5 accounts", "Access VIP perks"],

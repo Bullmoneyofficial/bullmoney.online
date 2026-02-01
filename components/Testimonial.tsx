@@ -163,22 +163,25 @@ export function TestimonialsCarousel() {
   return (
     <motion.section
       {...fade}
-      className="relative mt-16 w-full max-w-4xl mx-auto"
+      className="relative mt-8 md:mt-12 w-full max-w-4xl mx-auto px-4"
     >
-      <style dangerouslySetInnerHTML={{ __html: NEON_STYLES }} />
-      <h2 className="text-xl font-extrabold neon-blue-text text-center mb-8">
-        Testimonials
-      </h2>
+      {/* Minimalist header */}
+      <div className="text-center mb-6 md:mb-8">
+        <h2 className="text-sm font-semibold tracking-wider text-white/50 uppercase mb-2">
+          What traders say
+        </h2>
+      </div>
 
-      <div className="relative h-[320px] overflow-hidden rounded-3xl neon-blue-border bg-black backdrop-blur-md shadow-lg">
+      {/* Clean card design */}
+      <div className="relative h-[280px] md:h-[320px] overflow-hidden rounded-2xl md:rounded-3xl bg-white/[0.02] backdrop-blur-xl border border-white/10">
         <AnimatePresence mode="wait">
           <motion.div
             key={index}
-            className="absolute inset-0 flex items-center justify-center"
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -50 }}
-            transition={{ duration: 0.6, ease: "easeInOut" }}
+            className="absolute inset-0 flex items-end justify-center p-6 md:p-8"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             onDragEnd={(_e, { offset, velocity }) => {
@@ -186,58 +189,67 @@ export function TestimonialsCarousel() {
               if (offset.x > 50 || velocity.x > 200) prevSlide();
             }}
           >
+            {/* Subtle background image */}
             <Image
               src={currentTestimonial.image}
               alt={currentTestimonial.name}
               fill
-              className="object-cover opacity-60"
+              className="object-cover opacity-20"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent" />
-            <div className="absolute bottom-10 left-8 text-white max-w-sm space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="relative w-10 h-10 rounded-full overflow-hidden neon-blue-border bg-black">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent" />
+            
+            {/* Content - clean and spacious */}
+            <div className="relative text-white max-w-xl space-y-4">
+              <p className="text-base md:text-lg leading-relaxed text-white/90">
+                &ldquo;{currentTestimonial.text}&rdquo;
+              </p>
+              <div className="flex items-center gap-3 pt-2">
+                <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden bg-white/5 border border-white/10">
                   <Image
                     src={currentTestimonial.icon}
                     alt={`${currentTestimonial.name} icon`}
                     fill
-                    className="object-contain p-1.5"
+                    className="object-contain p-2"
                   />
                 </div>
-                <p className="text-lg font-semibold neon-blue-text">{currentTestimonial.name}</p>
+                <div>
+                  <p className="text-sm md:text-base font-medium text-white">{currentTestimonial.name}</p>
+                  <p className="text-xs text-white/50">Trader</p>
+                </div>
               </div>
-              <p className="text-sm neon-white-text italic leading-relaxed">
-                &ldquo;{currentTestimonial.text}&rdquo;
-              </p>
             </div>
           </motion.div>
         </AnimatePresence>
 
-        {/* Navigation Arrows */}
+        {/* Minimal navigation */}
         <button
           onClick={prevSlide}
-          className="absolute left-3 top-1/2 -translate-y-1/2 bg-black neon-blue-border hover:neon-blue-bg p-2 rounded-full neon-white-text transition-all"
+          className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 backdrop-blur-md hover:bg-white/20 transition-all flex items-center justify-center border border-white/10"
+          aria-label="Previous"
         >
-          <ChevronLeft size={20} />
+          <ChevronLeft size={18} className="text-white" />
         </button>
         <button
           onClick={nextSlide}
-          className="absolute right-3 top-1/2 -translate-y-1/2 bg-black neon-blue-border hover:neon-blue-bg p-2 rounded-full neon-white-text transition-all"
+          className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 backdrop-blur-md hover:bg-white/20 transition-all flex items-center justify-center border border-white/10"
+          aria-label="Next"
         >
-          <ChevronRight size={20} />
+          <ChevronRight size={18} className="text-white" />
         </button>
       </div>
 
-      {/* Dots */}
-      <div className="flex justify-center mt-4 space-x-2">
+      {/* Minimal pagination dots */}
+      <div className="flex justify-center mt-4 md:mt-6 gap-2">
         {testimonials.map((_, i) => (
           <button
             key={i}
             onClick={() => setIndex(i)}
-            className={`h-2 w-2 rounded-full transition-all ${
+            className={`h-1.5 rounded-full transition-all ${
               i === index
-                ? "neon-blue-bg w-4"
-                : "bg-white/30 hover:bg-white/50"
+                ? "w-6 bg-white"
+                : "w-1.5 bg-white/30 hover:bg-white/50"
             }`}
+            aria-label={`Go to testimonial ${i + 1}`}
           />
         ))}
       </div>

@@ -196,93 +196,64 @@ function MobileDiscordHero({ sources, onOpenModal, variant = 'mobile' }: { sourc
   // Responsive container: auto-adjusts from smallest (320px) to largest mobile views
   // On mobile, content fills entire available space from top to bottom
   const containerClass = variant === 'mobile'
-    ? "w-full max-w-5xl mx-auto px-2 xs:px-3 sm:px-4 h-full flex flex-col"
+    ? "w-full max-w-5xl mx-auto px-4 xs:px-5 sm:px-6 py-6 flex flex-col gap-6"
     : "w-full max-w-6xl mx-auto px-6 py-12 sm:py-16 min-h-[70vh] flex items-center";
 
   const cardMarginTop = variant === 'mobile' ? '' : 'mt-0';
 
   return (
     <div className={containerClass} data-theme-aware>
-      <div className={`relative isolate overflow-hidden rounded-2xl xs:rounded-3xl border border-white/40 bg-gradient-to-b from-[#050915]/90 via-[#050915]/95 to-black shadow-[0_0_30px_rgba(255, 255, 255,0.25)] backdrop-blur-xl p-3 xs:p-4 sm:p-5 md:p-8 flex flex-col gap-2 xs:gap-3 sm:gap-4 ${cardMarginTop} w-full h-full`}>
-        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(circle at 20% 20%, rgba(255, 255, 255,0.14), transparent 40%), radial-gradient(circle at 80% 10%, rgba(255, 255, 255,0.12), transparent 35%)' }} />
-        <div className="absolute -inset-px rounded-2xl xs:rounded-3xl border border-white/20 blur-[1px] pointer-events-none" />
+      <div className={`relative isolate overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-[#0a0f17] via-[#0a0f17] to-[#06090f] shadow-[0_25px_60px_-40px_rgba(0,0,0,0.9)] backdrop-blur-xl p-5 xs:p-6 sm:p-7 flex flex-col gap-5 ${cardMarginTop} w-full h-full`}>
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(circle at 20% 10%, rgba(255,255,255,0.06), transparent 32%), radial-gradient(circle at 80% 15%, rgba(255,255,255,0.05), transparent 30%)' }} />
+        <div className="absolute inset-x-6 top-0 h-px bg-white/15" />
 
-      <div className="flex flex-col gap-1 xs:gap-2 text-center flex-shrink-0">
-        <p
-          className="font-mono text-[8px] xs:text-[9px] sm:text-[10px] tracking-[0.12em] xs:tracking-[0.15em] sm:tracking-[0.18em] uppercase"
-          style={{
-            color: '#ffffff',
-            textShadow: '0 0 5px #ffffff, 0 0 10px #ffffff, 0 0 20px #ffffff, 0 0 40px #ffffff',
-          }}
-        >
-          EST. 2024 • TRADING EXCELLENCE
-        </p>
-        <div className="space-y-0.5 xs:space-y-1">
-          <span
-            className="block text-[clamp(1.4rem,6vw,3rem)] font-sans font-semibold tracking-tight leading-tight"
-            style={{
-              color: '#fff',
-              textShadow: '0 0 5px #fff, 0 0 10px #fff, 0 0 20px #ffffff, 0 0 40px #ffffff, 0 0 60px #ffffff',
-            }}
-          >
-            The path to
-          </span>
-          <span
-            className="block text-[clamp(1.6rem,7vw,3.6rem)] font-serif italic leading-tight"
-            style={{
-              color: '#ffffff',
-              textShadow: '0 0 5px #ffffff, 0 0 15px #ffffff, 0 0 30px #ffffff, 0 0 50px #ffffff, 0 0 70px #ffffff',
-            }}
-          >
-            consistent profit
-          </span>
+        <div className="flex flex-col gap-3 text-center flex-shrink-0">
+          <p className="text-xs font-semibold tracking-[0.18em] uppercase text-white/60">Live trading room</p>
+          <div className="space-y-1">
+            <span className="block text-[clamp(1.7rem,7vw,2.9rem)] font-semibold tracking-tight text-white">Quiet confidence, daily</span>
+            <span className="block text-[clamp(1.2rem,6vw,2.2rem)] font-normal text-white/70">Watch the play, manage the risk</span>
+          </div>
+          <p className="text-sm leading-relaxed text-white/65 max-w-xl mx-auto">
+            A calmer viewport for live calls and replays. Join, observe, and execute without the noise.
+          </p>
         </div>
-        <p
-          className="text-xs xs:text-sm sm:text-base leading-relaxed max-w-2xl mx-auto px-1"
-          style={{
-            color: 'rgba(255, 255, 255, 0.82)',
-            textShadow: '0 0 5px rgba(255, 255, 255, 0.5), 0 0 10px rgba(255, 255, 255, 0.3)',
-          }}
-        >
-          Tap into live trade ideas, callouts, and coaching with 10,000+ traders. Join the community that shares real-time setups, risk plans, and recap videos so you can trade with confidence.
-        </p>
-      </div>
 
-      <div className="relative rounded-xl xs:rounded-2xl overflow-hidden border border-white/40 bg-black shadow-[0_0_18px_rgba(255, 255, 255,0.3)] flex-1 min-h-[120px]">
-        <div className="relative w-full h-full">
-          <YouTubeVideoEmbed
-            videoId={videoId}
-            className="absolute inset-0 w-full h-full"
-            title="BullMoney Discord Video"
-          />
+        <div className="relative rounded-2xl overflow-hidden border border-white/12 bg-white/3 flex-1 min-h-[200px] shadow-[0_16px_50px_-40px_rgba(0,0,0,1)]">
+          <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-black/35 pointer-events-none" />
+          <div className="relative w-full h-full">
+            <YouTubeVideoEmbed
+              videoId={videoId}
+              className="absolute inset-0 w-full h-full"
+              title="BullMoney Discord Video"
+            />
+          </div>
+          <div className="absolute inset-x-0 bottom-0 flex items-center justify-between px-3 py-2.5 bg-black/55 backdrop-blur-md text-white/85">
+            <button
+              onClick={() => setIndex((prev) => (prev - 1 + sources.length) % sources.length)}
+              className="px-3.5 py-1.5 text-[11px] font-semibold rounded-full bg-white text-black hover:opacity-90 transition"
+            >
+              Prev
+            </button>
+            <span className="text-[11px] font-semibold">
+              {index + 1} / {Math.max(1, sources.length)}
+            </span>
+            <button
+              onClick={() => setIndex((prev) => (prev + 1) % sources.length)}
+              className="px-3.5 py-1.5 text-[11px] font-semibold rounded-full bg-white text-black hover:opacity-90 transition"
+            >
+              Next
+            </button>
+          </div>
         </div>
-        <div className="absolute inset-x-0 bottom-0 flex items-center justify-between p-2 xs:p-3 bg-black/60 backdrop-blur">
-          <button
-            onClick={() => setIndex((prev) => (prev - 1 + sources.length) % sources.length)}
-            className="px-2 xs:px-3 py-1 text-[10px] xs:text-xs font-semibold rounded-full bg-white/10 text-white hover:bg-white/20"
-          >
-            Prev
-          </button>
-          <span className="text-white/80 text-[10px] xs:text-xs font-bold">
-            {index + 1} / {Math.max(1, sources.length)}
-          </span>
-          <button
-            onClick={() => setIndex((prev) => (prev + 1) % sources.length)}
-            className="px-2 xs:px-3 py-1 text-[10px] xs:text-xs font-semibold rounded-full bg-white/10 text-white hover:bg-white/20"
-          >
-            Next
-          </button>
-        </div>
-      </div>
 
-      <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 flex-shrink-0">
-        <Link
-          href="https://t.me/addlist/gg09afc4lp45YjQ0"
-          className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-3 xs:px-4 py-1.5 xs:py-2 rounded-full border border-white/25 text-white font-semibold text-[10px] xs:text-xs sm:text-sm hover:bg-white/5"
-        >
-          Join Free Community
-        </Link>
-      </div>
+        <div className="flex flex-col sm:flex-row items-center gap-3 flex-shrink-0">
+          <Link
+            href="https://t.me/addlist/gg09afc4lp45YjQ0"
+            className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 rounded-full bg-white text-black font-semibold text-sm shadow-[0_10px_30px_-18px_rgba(0,0,0,1)] hover:translate-y-[-1px] transition"
+          >
+            Join Free Community
+          </Link>
+        </div>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo, useState, useEffect, useRef } from 'react';
+import React, { memo, useCallback, useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -6,14 +6,12 @@ import {
   IconBuildingStore,
   IconUsersGroup,
   IconHelp,
-  IconPalette,
   IconSettings,
   IconLock,
   IconUser,
 } from '@tabler/icons-react';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 // SMART MOUNT: Only import lightweight trigger components - heavy modals mount via UIState
-import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
 import { 
   useMobileMenu, 
   UI_Z_INDEX,
@@ -32,7 +30,6 @@ interface MobileDropdownMenuProps {
   onAffiliateClick: () => void;
   onFaqClick: () => void;
   onAdminClick: () => void;
-  onThemeClick: () => void;
   onAccountManagerClick: () => void;
 }
 
@@ -48,12 +45,10 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
       onAffiliateClick,
       onFaqClick,
       onAdminClick,
-      onThemeClick,
       onAccountManagerClick,
     },
     ref
   ) => {
-    const { activeTheme } = useGlobalTheme();
     const { setIsMobileMenuOpen } = useMobileMenu();
     
     // SMART MOUNT: Use centralized UI state for modals - they mount ONLY when opened
@@ -87,10 +82,6 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
       };
     }, [open, setIsMobileMenuOpen]);
     
-    // Get theme filter for consistency with navbar
-    // Use mobileFilter for both mobile and desktop to ensure consistent theming
-    const themeFilter = useMemo(() => activeTheme?.mobileFilter || 'none', [activeTheme?.mobileFilter]);
-    
     const handleClose = useCallback(() => {
       SoundEffects.click();
       onClose();
@@ -113,12 +104,6 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
       onAdminClick();
       onClose();
     }, [onAdminClick, onClose]);
-    
-    const handleThemeClick = useCallback(() => {
-      SoundEffects.click();
-      onClose();
-      onThemeClick();
-    }, [onClose, onThemeClick]);
     
     // SMART MOUNT: Trigger Products modal via UI state (not embedded component)
     const handleProductsClick = useCallback(() => {
@@ -148,15 +133,13 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
           className="lg:hidden fixed top-28 sm:top-32 left-3 right-3 rounded-2xl bg-black/98 p-5 sm:p-6 menu-glass overflow-hidden mobile-menu-optimized\"
-          data-theme-aware
           data-navbar
           style={{
             touchAction: 'auto',
             pointerEvents: 'auto',
-            filter: themeFilter,
-            transition: 'filter 0.3s ease-out, border-color 0.3s ease-out, box-shadow 0.3s ease-out',
-            border: `2px solid rgba(var(--accent-rgb, ${isXMUser ? '239, 68, 68' : '255, 255, 255'}), 0.5)`,
-            boxShadow: `0 0 50px rgba(var(--accent-rgb, ${isXMUser ? '239, 68, 68' : '255, 255, 255'}), 0.4), inset 0 0 30px rgba(var(--accent-rgb, ${isXMUser ? '239, 68, 68' : '255, 255, 255'}), 0.08)`,
+            transition: 'border-color 0.3s ease-out, box-shadow 0.3s ease-out',
+            border: `2px solid rgba(${isXMUser ? '239, 68, 68' : '255, 255, 255'}, 0.5)`,
+            boxShadow: `0 0 50px rgba(${isXMUser ? '239, 68, 68' : '255, 255, 255'}, 0.4), inset 0 0 30px rgba(${isXMUser ? '239, 68, 68' : '255, 255, 255'}, 0.08)`,
             position: 'fixed',
             isolation: 'isolate',
             // HIGHEST z-index - mobile menu appears on top of ALL other components
@@ -295,31 +278,6 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
               >
                 <IconBuildingStore className="h-5 w-5" stroke={1.5} style={{ color: 'var(--accent-color, #ffffff)' }} />
                 <span>Products</span>
-              </motion.button>
-            </motion.div>
-
-            {/* Theme */}
-            <motion.div
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.24 }}
-              className="w-full"
-            >
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.98 }}
-                onHoverStart={() => SoundEffects.hover()}
-                onTouchStart={() => SoundEffects.click()}
-                onClick={handleThemeClick}
-                className="w-full flex items-center justify-center gap-3 text-sm sm:text-base font-semibold hover:text-white transition-all duration-200 px-4 sm:px-6 py-3 sm:py-4 min-h-[48px] rounded-xl"
-                style={{
-                  color: 'rgba(var(--accent-rgb, 255, 255, 255), 0.8)',
-                  backgroundColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.08)',
-                  border: '1px solid rgba(var(--accent-rgb, 255, 255, 255), 0.3)'
-                }}
-              >
-                <IconPalette className="h-5 w-5" stroke={1.5} style={{ color: 'var(--accent-color, #ffffff)' }} />
-                Theme
               </motion.button>
             </motion.div>
 

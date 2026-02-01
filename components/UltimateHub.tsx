@@ -84,6 +84,7 @@ import {
   Activity,
   TrendingUp,
   TrendingDown,
+  ChevronLeft,
   ChevronRight,
   ChevronDown,
   BarChart3,
@@ -4458,6 +4459,8 @@ export const UnifiedHubPanel = memo(({
   
   const [activeTab, setActiveTab] = useState<UnifiedHubTab>('community');
   const [isDragging, setIsDragging] = useState(false);
+  const touchStartXRef = useRef<number | null>(null);
+  const touchStartYRef = useRef<number | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const prevBodyOverflowRef = useRef<string>('');
   const prevBodyPaddingRef = useRef<string>('');
@@ -4784,6 +4787,42 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
 
   const colors = getFpsColor(fps);
   const enableDrag = !isMobile;
+  const tabIds = useMemo(() => UNIFIED_HUB_TABS.map(tab => tab.id), []);
+
+  const goToNextTab = useCallback(() => {
+    const currentIndex = tabIds.indexOf(activeTab);
+    const nextIndex = (currentIndex + 1) % tabIds.length;
+    SoundEffects.click();
+    setActiveTab(tabIds[nextIndex]);
+  }, [activeTab, tabIds]);
+
+  const goToPrevTab = useCallback(() => {
+    const currentIndex = tabIds.indexOf(activeTab);
+    const prevIndex = (currentIndex - 1 + tabIds.length) % tabIds.length;
+    SoundEffects.click();
+    setActiveTab(tabIds[prevIndex]);
+  }, [activeTab, tabIds]);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartXRef.current = touch.clientX;
+    touchStartYRef.current = touch.clientY;
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (touchStartXRef.current === null || touchStartYRef.current === null) return;
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartXRef.current;
+    const deltaY = touch.clientY - touchStartYRef.current;
+    touchStartXRef.current = null;
+    touchStartYRef.current = null;
+
+    // Horizontal swipe to change tabs (avoid vertical scroll gestures)
+    if (Math.abs(deltaX) > 60 && Math.abs(deltaX) > Math.abs(deltaY) * 1.2) {
+      if (deltaX < 0) goToNextTab();
+      else goToPrevTab();
+    }
+  }, [goToNextTab, goToPrevTab]);
 
   // Prevent background scroll while the hub is open (especially on mobile)
   useEffect(() => {
@@ -4829,6 +4868,28 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
             className="fixed inset-0 z-[2147483640] bg-transparent"
             onClick={onClose}
           />
+
+          {/* Floating Tab Controls (Outside Modal) */}
+          <div className="fixed inset-0 z-[2147483644] pointer-events-none">
+            <motion.button
+              onClick={goToPrevTab}
+              whileHover={{ scale: 1.06 }}
+              whileTap={{ scale: 0.96 }}
+              aria-label="Previous tab"
+              className="pointer-events-auto absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-2xl bg-black/70 backdrop-blur-xl border border-white/50 text-white shadow-[0_10px_25px_rgba(255,255,255,0.22)]"
+            >
+              <ChevronLeft className="w-5 h-5 mx-auto" />
+            </motion.button>
+            <motion.button
+              onClick={goToNextTab}
+              whileHover={{ scale: 1.06 }}
+              whileTap={{ scale: 0.96 }}
+              aria-label="Next tab"
+              className="pointer-events-auto absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-2xl bg-black/70 backdrop-blur-xl border border-white/50 text-white shadow-[0_10px_25px_rgba(255,255,255,0.22)]"
+            >
+              <ChevronRight className="w-5 h-5 mx-auto" />
+            </motion.button>
+          </div>
           
           {/* Panel - Centered Modal */}
           <motion.div
@@ -4851,8 +4912,8 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
             style={{ touchAction: 'pan-y pan-x', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' }}
           >
             {/* Header with FPS Display */}
-            <div className="p-3 border-b border-white/30 bg-black" style={{ boxShadow: '0 0 12px rgba(255, 255, 255, 0.3), inset 0 0 12px rgba(255, 255, 255, 0.1)' }}>
-              <div className="flex items-center justify-between gap-2">
+            <div className="p-3 sm:p-4 border-b border-white/30 bg-black/95 backdrop-blur-2xl" style={{ boxShadow: '0 0 12px rgba(255, 255, 255, 0.3), inset 0 0 12px rgba(255, 255, 255, 0.1)' }}>
+              <div className="flex items-center justify-between gap-3">
                 {/* FPS Badge */}
                 <div className="flex items-center gap-2">
                   <div className="relative">
@@ -4886,7 +4947,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                   whileHover={{ scale: 1.1, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={onClose}
-                  className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/40 border border-white/60 flex items-center justify-center"
+                  className="w-9 h-9 rounded-2xl bg-white/20 hover:bg-white/35 border border-white/60 flex items-center justify-center shadow-[0_8px_18px_rgba(255,255,255,0.18)]"
                   style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}
                 >
                   <X className="w-4 h-4 text-white" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
@@ -4917,7 +4978,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
             </div>
             
             {/* Tab Navigation */}
-            <div className="flex items-stretch border-b border-white/30 bg-black overflow-x-auto overflow-y-hidden scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ boxShadow: '0 0 12px rgba(255, 255, 255, 0.3), inset 0 0 12px rgba(255, 255, 255, 0.1)', touchAction: 'pan-x pinch-zoom' }}>
+            <div className="flex items-stretch gap-2 p-2 border-b border-white/30 bg-black/95 backdrop-blur-2xl overflow-x-auto overflow-y-hidden scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ boxShadow: '0 0 12px rgba(255, 255, 255, 0.3), inset 0 0 12px rgba(255, 255, 255, 0.1)', touchAction: 'pan-x pinch-zoom' }}>
               {UNIFIED_HUB_TABS.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -4931,14 +4992,18 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     }}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className={`flex-1 min-w-[80px] sm:min-w-[100px] flex flex-col items-center justify-center gap-1.5 py-5 sm:py-3 px-3 sm:px-4 border-b-2 transition-all whitespace-nowrap min-h-[60px] sm:min-h-0 ${
+                    className={`flex-1 min-w-[88px] sm:min-w-[108px] flex flex-col items-center justify-center gap-2 py-3 sm:py-3.5 px-3 sm:px-4 transition-all whitespace-nowrap rounded-2xl border backdrop-blur-xl min-h-[72px] sm:min-h-[70px] ${
                       isActive 
-                        ? 'bg-white/20 text-white border-white neon-blue-text' 
-                        : 'text-white/50 border-transparent hover:text-white/70 hover:bg-white/10'
+                        ? 'bg-white/25 text-white border-white/70 neon-blue-text shadow-[0_10px_25px_rgba(255,255,255,0.22)]' 
+                        : 'bg-white/10 text-white/70 border-white/20 hover:text-white hover:bg-white/15 hover:border-white/40'
                     }`}
                     style={isActive ? { textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' } : {}}
                   >
-                    <Icon className="w-4 h-4 sm:w-5 sm:h-5" style={isActive ? { filter: 'drop-shadow(0 0 4px #ffffff)' } : {}} />
+                    <span className={`flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl border ${
+                      isActive ? 'border-white/60 bg-white/25' : 'border-white/20 bg-white/10'
+                    }`}>
+                      <Icon className="w-4 h-4 sm:w-5 sm:h-5" style={isActive ? { filter: 'drop-shadow(0 0 4px #ffffff)' } : {}} />
+                    </span>
                     <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">{tab.label}</span>
                   </motion.button>
                 );
@@ -4950,6 +5015,8 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
               style={{ touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
               data-ultimate-hub-content
               data-scrollable
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
             >
               <AnimatePresence mode="wait">
                 {/* TRADING TAB */}
@@ -4972,10 +5039,10 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                             onClick={() => setSelectedSymbol(symbol)}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className={`flex items-center gap-1.5 min-w-[65px] px-3 py-2 rounded-lg text-[10px] sm:text-[11px] font-semibold whitespace-nowrap transition-all ${
+                            className={`flex items-center gap-1.5 min-w-[70px] px-3 py-2 rounded-xl text-[10px] sm:text-[11px] font-semibold whitespace-nowrap transition-all border backdrop-blur-xl ${
                               isActive
-                                ? 'bg-white/30 text-white border border-white/60 neon-blue-text'
-                                : 'bg-black/40 text-white/60 border border-white/20 hover:bg-white/10 hover:text-white'
+                                ? 'bg-white/30 text-white border-white/70 neon-blue-text shadow-[0_8px_18px_rgba(255,255,255,0.25)]'
+                                : 'bg-white/10 text-white/70 border-white/25 hover:bg-white/15 hover:text-white'
                             }`}
                             style={isActive ? { boxShadow: '0 0 8px rgba(255, 255, 255, 0.4)' } : {}}
                           >
@@ -5007,14 +5074,14 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     </div>
                     
                     {/* Toggle & Filters */}
-                    <div className="p-2 space-y-2 border-t border-white/30 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)' }}>
+                    <div className="p-3 space-y-2 border-t border-white/30 bg-black/95 backdrop-blur-2xl rounded-t-2xl" style={{ boxShadow: '0 0 10px rgba(255, 255, 255, 0.22), inset 0 0 10px rgba(255, 255, 255, 0.06)' }}>
                       <div className="flex gap-2">
                         <motion.button
                           onClick={() => setShowCalendar(!showCalendar)}
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
-                            showCalendar ? 'bg-white/30 border border-white/60 text-white neon-blue-text' : 'bg-black/40 hover:bg-white/15 border border-white/30 text-white hover:text-white'
+                          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all border backdrop-blur-xl ${
+                            showCalendar ? 'bg-white/30 border-white/70 text-white neon-blue-text shadow-[0_8px_18px_rgba(255,255,255,0.25)]' : 'bg-white/10 hover:bg-white/15 border-white/25 text-white/80 hover:text-white'
                           }`}
                           style={showCalendar ? { boxShadow: '0 0 8px rgba(255, 255, 255, 0.4)' } : {}}
                         >
@@ -5029,8 +5096,8 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                             whileTap={{ scale: 0.98 }}
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
-                              showFilters ? 'bg-white/30 border border-white/60 text-white neon-blue-text' : 'bg-black/40 hover:bg-white/15 border border-white/30 text-white hover:text-white'
+                            className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all border backdrop-blur-xl ${
+                              showFilters ? 'bg-white/30 border-white/70 text-white neon-blue-text shadow-[0_8px_18px_rgba(255,255,255,0.25)]' : 'bg-white/10 hover:bg-white/15 border-white/25 text-white/80 hover:text-white'
                             }`}
                             style={showFilters ? { boxShadow: '0 0 8px rgba(255, 255, 255, 0.4)' } : {}}
                           >
@@ -5057,10 +5124,10 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                                   <button
                                     key={impact}
                                     onClick={() => setCalendarImpact(impact)}
-                                    className={`flex-1 min-w-[52px] py-1.5 px-2 rounded text-[10px] font-semibold transition-all whitespace-nowrap ${
+                                    className={`flex-1 min-w-[56px] py-1.5 px-2 rounded-lg text-[10px] font-semibold transition-all whitespace-nowrap border backdrop-blur-xl ${
                                       calendarImpact === impact
-                                        ? 'bg-white/30 text-white border border-white/60 neon-blue-text'
-                                        : 'bg-black/40 text-white/60 border border-white/20 hover:bg-white/10 hover:text-white'
+                                        ? 'bg-white/30 text-white border-white/70 neon-blue-text shadow-[0_6px_14px_rgba(255,255,255,0.22)]'
+                                        : 'bg-white/10 text-white/70 border-white/25 hover:bg-white/15 hover:text-white'
                                     }`}
                             style={calendarImpact === impact ? { boxShadow: '0 0 6px rgba(255, 255, 255, 0.3)' } : {}}
                                   >
@@ -5078,10 +5145,10 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                                   <button
                                     key={country.id}
                                     onClick={() => setCalendarCountry(country.id)}
-                                    className={`flex items-center gap-1 py-1.5 px-2.5 rounded text-[10px] font-semibold transition-all whitespace-nowrap flex-shrink-0 ${
+                                    className={`flex items-center gap-1 py-1.5 px-2.5 rounded-lg text-[10px] font-semibold transition-all whitespace-nowrap flex-shrink-0 border backdrop-blur-xl ${
                                       calendarCountry === country.id
-                                        ? 'bg-white/30 text-white border border-white/60 neon-blue-text'
-                                        : 'bg-black/40 text-white/60 border border-white/20 hover:bg-white/10 hover:text-white'
+                                        ? 'bg-white/30 text-white border-white/70 neon-blue-text shadow-[0_6px_14px_rgba(255,255,255,0.22)]'
+                                        : 'bg-white/10 text-white/70 border-white/25 hover:bg-white/15 hover:text-white'
                                     }`}
                             style={calendarCountry === country.id ? { boxShadow: '0 0 6px rgba(255, 255, 255, 0.3)' } : {}}
                                   >
@@ -5130,10 +5197,10 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                           <button
                             key={key}
                             onClick={() => setActiveChannel(key)}
-                            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] sm:text-[11px] font-medium transition-all whitespace-nowrap flex-shrink-0 min-h-[44px] ${
+                            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] sm:text-[11px] font-medium transition-all whitespace-nowrap flex-shrink-0 min-h-[44px] border backdrop-blur-xl ${
                               isActive
-                                ? 'bg-white/30 text-white border border-white/60 neon-blue-text'
-                                : 'bg-black/40 text-white/60 border border-white/20 hover:bg-white/10 hover:text-white'
+                                ? 'bg-white/30 text-white border-white/70 neon-blue-text shadow-[0_8px_18px_rgba(255,255,255,0.25)]'
+                                : 'bg-white/10 text-white/70 border-white/25 hover:bg-white/15 hover:text-white'
                             }`}
                             style={isActive ? { boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' } : {}}
                           >
@@ -5153,10 +5220,10 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                           window.dispatchEvent(new CustomEvent('openAdminVIPPanel'));
                           onClose();
                         }}
-                        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] sm:text-[11px] font-semibold transition-all whitespace-nowrap ml-auto flex-shrink-0 ${
+                        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] sm:text-[11px] font-semibold transition-all whitespace-nowrap ml-auto flex-shrink-0 border backdrop-blur-xl ${
                           isAdmin 
-                            ? 'bg-white/30 text-white border border-white/60 neon-blue-text'
-                            : 'bg-black/40 text-white/60 border border-white/20 hover:bg-white/10 hover:text-white'
+                            ? 'bg-white/30 text-white border-white/70 neon-blue-text shadow-[0_8px_18px_rgba(255,255,255,0.25)]'
+                            : 'bg-white/10 text-white/70 border-white/25 hover:bg-white/15 hover:text-white'
                         }`}
                         style={isAdmin ? { boxShadow: '0 0 8px rgba(255, 255, 255, 0.4)' } : {}}
                       >
@@ -5175,10 +5242,10 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     
                     {/* View All Link */}
                     {activeChannel !== 'vip' && (
-                      <div className="px-3 py-1.5 border-t border-white/30 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)' }}>
+                      <div className="px-3 py-2 border-t border-white/30 bg-black/95 backdrop-blur-2xl rounded-t-2xl" style={{ boxShadow: '0 0 10px rgba(255, 255, 255, 0.22), inset 0 0 10px rgba(255, 255, 255, 0.06)' }}>
                         <a href={`https://t.me/${TELEGRAM_CHANNELS[activeChannel].handle}`}
                           target="_blank" rel="noopener noreferrer"
-                          className="flex items-center justify-center gap-1 text-[9px] text-white hover:text-white neon-blue-text transition-all"
+                          className="flex items-center justify-center gap-1 text-[10px] text-white hover:text-white neon-blue-text transition-all"
                           style={{ textShadow: '0 0 4px rgba(255, 255, 255, 0.5)' }}>
                           <ExternalLink className="w-2.5 h-2.5" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} /> View all on Telegram
                         </a>
@@ -5186,7 +5253,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     )}
                     
                     {/* Social Links */}
-                    <div className="p-3 space-y-2 border-t border-white/30 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)' }}>
+                    <div className="p-3 space-y-2 border-t border-white/30 bg-black/95 backdrop-blur-2xl rounded-t-2xl" style={{ boxShadow: '0 0 10px rgba(255, 255, 255, 0.22), inset 0 0 10px rgba(255, 255, 255, 0.06)' }}>
                       <div className="flex gap-2">
                         <motion.button
                           onClick={handleCopyLink}
@@ -5243,10 +5310,10 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                           onClick={() => setIndicatorCategory(category)}
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          className={`flex-1 min-w-[90px] flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
+                          className={`flex-1 min-w-[90px] flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap border backdrop-blur-xl ${
                             indicatorCategory === category
-                              ? 'bg-white/30 text-white border border-white/60 neon-blue-text'
-                              : 'bg-black/40 text-white/60 border border-white/20 hover:bg-white/10 hover:text-white'
+                              ? 'bg-white/30 text-white border-white/70 neon-blue-text shadow-[0_8px_18px_rgba(255,255,255,0.25)]'
+                              : 'bg-white/10 text-white/70 border-white/25 hover:bg-white/15 hover:text-white'
                           }`}
                           style={indicatorCategory === category ? { boxShadow: '0 0 8px rgba(255, 255, 255, 0.4)', textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' } : {}}
                         >
@@ -6803,7 +6870,9 @@ export const UnifiedFpsPill = memo(({
   onOpenPanel,
   liteMode = false,
   hasNewMessages = false,
-  newMessageCount = 0
+  newMessageCount = 0,
+  topOffsetMobile,
+  topOffsetDesktop
 }: {
   fps: number;
   deviceTier: string;
@@ -6814,6 +6883,8 @@ export const UnifiedFpsPill = memo(({
   liteMode?: boolean;
   hasNewMessages?: boolean;
   newMessageCount?: number;
+  topOffsetMobile?: string;
+  topOffsetDesktop?: string;
 }) => {
   const [isPinned, setIsPinned] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false); // Track if showing full content
@@ -7342,11 +7413,13 @@ export const UnifiedFpsPill = memo(({
         ? { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }
         : { y: { duration: 0.2, ease: "easeOut" } }
       }
-      className="fixed left-0 z-[999999999] pointer-events-none"
+      className={`fixed z-[999999999] pointer-events-none ${isMobile ? 'left-1/2 -translate-x-1/2' : 'left-0'}`}
       style={{
-        // Mobile: 18% from top, Desktop: near top (15%)
-        top: isMobile ? '18%' : '15%',
-        paddingLeft: 'calc(env(safe-area-inset-left, 0px))',
+        // Mobile: sit below the mobile nav bar, Desktop: near top (15%)
+        top: isMobile
+          ? (topOffsetMobile ?? 'calc(env(safe-area-inset-top, 0px) + 96px)')
+          : (topOffsetDesktop ?? '15%'),
+        paddingLeft: isMobile ? undefined : 'calc(env(safe-area-inset-left, 0px))',
         // Disable screen bloom effect on mobile
         filter: (!isMobile && extremeScrollProgress > 0.7) ? `brightness(${1 + (extremeScrollProgress - 0.7) * 0.3})` : undefined,
       }}
@@ -7403,13 +7476,13 @@ export const UnifiedFpsPill = memo(({
                     times: [0, 0.2, 0.8, 1]
                   }
           }
-          className="relative rounded-r-3xl ultimate-hub-scroll-effect"
+          className="relative rounded-3xl ultimate-hub-scroll-effect"
           style={{
-            background: 'linear-gradient(135deg, rgba(0,0,0,0.85) 0%, rgba(255, 255, 255,0.15) 50%, rgba(255, 255, 255, 0.1) 100%)',
+            background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(255, 255, 255,0.18) 55%, rgba(255, 255, 255, 0.12) 100%)',
             // Reduce blur on mobile for better performance
             backdropFilter: isMobile ? 'blur(8px)' : 'blur(12px)',
             WebkitBackdropFilter: isMobile ? 'blur(8px)' : 'blur(12px)',
-            border: '2px solid rgba(255, 255, 255, 0.8)',
+            border: '1.5px solid rgba(255, 255, 255, 0.85)',
             boxShadow: dynamicStyles.boxShadow,
             // Disable 3D transforms on mobile to prevent FPS drops
             transform: isMobile ? undefined : 'perspective(1000px)',
@@ -7485,7 +7558,7 @@ export const UnifiedFpsPill = memo(({
                   ? { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }
                   : { duration: 0.4, ease: "easeInOut" }
                 }
-                className="px-1 py-1.5 md:px-4 md:py-4 relative z-10"
+                className="px-1.5 py-1 md:px-4 md:py-4 relative z-10"
               >
                 {/* Lite Mode Indicator Badge */}
                 {liteMode && (
@@ -7738,58 +7811,6 @@ export const UnifiedFpsPill = memo(({
         </motion.div>
         
         {/* Tap hint on mobile - larger touch target pill with rotating tips */}
-        {!isMinimized && (
-          <motion.div
-            initial={{ x: -50, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.3, ease: "easeOut" }}
-            className="absolute -bottom-8 left-0 sm:hidden flex items-center gap-1 cursor-pointer pointer-events-auto px-3 py-2 rounded-r-full neon-subtle-border"
-            style={{
-              background: 'rgba(0, 0, 0, 0.85)',
-              borderTop: '1px solid rgba(255, 255, 255, 0.5)',
-              borderRight: '1px solid rgba(255, 255, 255, 0.5)',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.5)',
-              minWidth: '120px',
-              minHeight: '32px',
-              boxShadow: '0 0 8px rgba(255, 255, 255, 0.3), inset 0 0 4px rgba(255, 255, 255, 0.1)',
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onOpenPanel();
-            }}
-            onTouchStart={(e) => {
-              e.stopPropagation();
-            }}
-            onTouchEnd={(e) => {
-              e.stopPropagation();
-              onOpenPanel();
-            }}
-          >
-            {/* Pulse indicator */}
-            <div className="relative flex h-2 w-2 flex-shrink-0">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-white opacity-75 animate-ping" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-white" style={{ boxShadow: '0 0 4px #ffffff, 0 0 6px #ffffff' }} />
-            </div>
-
-            {/* Rotating tip text */}
-            <span
-              className="text-[9px] neon-blue-text font-medium max-w-[140px] truncate transition-opacity duration-200"
-              style={{ opacity: tipVisible ? 1 : 0 }}
-            >
-              {MOBILE_HELPER_TIPS[tipIndex]}
-            </span>
-
-            {/* Arrow icon */}
-            <svg
-              className="w-2.5 h-2.5 text-white/90 flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-            </svg>
-          </motion.div>
-        )}
       </motion.div>
       
       {/* BULLMONEY Fullscreen Fast Scroll Overlay */}

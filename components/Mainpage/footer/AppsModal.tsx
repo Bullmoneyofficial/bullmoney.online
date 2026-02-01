@@ -58,77 +58,51 @@ const defaultApps: AppsModalProps["apps"] = [
 ];
 
 export const AppsModal = ({ isOpen, onClose, apps = defaultApps }: AppsModalProps) => (
-  <>
-    <style dangerouslySetInnerHTML={{ __html: APPS_NEON_STYLES }} />
-    <EnhancedModal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={
-        <div className="flex items-center gap-2">
-          <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5 apps-neon-blue-icon" style={{ color: '#ffffff' }} />
-          <span className="apps-neon-white-text">Apps & Tools</span>
-        </div>
-      }
-    >
-      <div className="space-y-4 xs:space-y-5 sm:space-y-6 md:space-y-7 lg:space-y-8">
-        {apps?.map((app, idx) => (
-          <motion.section
-            key={app.title}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.1 }}
-            className="space-y-2 xs:space-y-2.5 sm:space-y-3 md:space-y-4"
-          >
-            <h3 className="text-center text-[11px] xs:text-xs sm:text-sm md:text-sm font-bold uppercase tracking-widest apps-neon-blue-text">
-              {app.title}
-            </h3>
-            <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-1.5 xs:gap-2 sm:gap-2.5 md:gap-3">
+  <EnhancedModal
+    isOpen={isOpen}
+    onClose={onClose}
+    maxWidth="max-w-4xl"
+    title={
+      <div className="flex items-center gap-2">
+        <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5 text-white/80" />
+        <span className="text-white font-medium">Apps & Tools</span>
+      </div>
+    }
+  >
+    <div className="space-y-3">
+      {apps?.map((app, idx) => (
+        <motion.section
+          key={app.title}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: idx * 0.05 }}
+          className="space-y-1.5"
+        >
+          <h3 className="text-center text-[10px] md:text-xs font-medium uppercase tracking-wider text-white/50">
+            {app.title}
+          </h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5">
               {app.links.map((link) => (
                 <Link
                   key={link.label}
                   href={link.href}
                   target="_blank"
                   title={link.label}
-                  className="group relative flex items-center justify-between rounded-lg xs:rounded-lg sm:rounded-xl md:rounded-xl overflow-hidden p-2 xs:p-2.5 sm:p-3 md:p-4 text-[10px] xs:text-xs sm:text-sm md:text-sm transition-all duration-300 hover:scale-105"
+                  className="group relative flex items-center justify-between rounded-lg overflow-hidden px-2.5 py-2 text-[11px] md:text-xs bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-200"
                 >
-                  {/* Static neon border */}
-                  <div 
-                    className="absolute inset-0 bg-black rounded-lg xs:rounded-lg sm:rounded-xl md:rounded-xl transition-all duration-300"
-                    style={{
-                      border: '1px solid #ffffff',
-                      boxShadow: '0 0 4px rgba(255, 255, 255, 0.5)'
-                    }}
-                  />
-                  {/* Hover state - brighter neon */}
-                  <div 
-                    className="absolute inset-0 rounded-lg xs:rounded-lg sm:rounded-xl md:rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                    style={{
-                      border: '1px solid #ffffff',
-                      boxShadow: '0 0 8px #ffffff, 0 0 16px rgba(255, 255, 255, 0.5), inset 0 0 4px rgba(255, 255, 255, 0.2)'
-                    }}
-                  />
-                  <span className="relative z-10 apps-neon-white-text truncate">{link.label}</span>
-                  <ExternalLink className="relative z-10 h-2.5 w-2.5 xs:h-3 xs:w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 opacity-0 transition-all group-hover:opacity-100 apps-neon-blue-icon flex-shrink-0 ml-1.5" style={{ color: '#ffffff' }} />
+                  <span className="relative text-white/90 truncate">{link.label}</span>
+                  <ExternalLink className="relative h-3 w-3 opacity-50 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-1.5 text-white" />
                 </Link>
               ))}
               {app.title === "Bullmoney Indicators" && (
                 <Link
                   href="https://drive.google.com/drive/folders/1aVKPzJAkUqiZqVQnYIZ7M4E0lNOQ2kIi"
                   target="_blank"
-                  className="group relative col-span-1 xs:col-span-2 sm:col-span-2 lg:col-span-1 flex items-center justify-center gap-1.5 xs:gap-2 sm:gap-2 md:gap-2 rounded-lg xs:rounded-lg sm:rounded-xl md:rounded-xl overflow-hidden p-2 xs:p-2.5 sm:p-3 md:p-4 text-[10px] xs:text-xs sm:text-sm md:text-sm font-semibold transition-all duration-300 hover:scale-105"
+                  className="group relative col-span-2 sm:col-span-3 lg:col-span-2 flex items-center justify-center gap-2 rounded-lg overflow-hidden px-3 py-2 text-xs md:text-sm font-semibold bg-white text-black hover:bg-white/90 transition-all duration-200"
                 >
-                  {/* Static neon border for premium button */}
-                  <span 
-                    className="absolute inset-0 rounded-lg xs:rounded-lg sm:rounded-xl md:rounded-xl"
-                    style={{
-                      border: '2px solid #ffffff',
-                      boxShadow: '0 0 8px #ffffff, 0 0 16px #ffffff, inset 0 0 8px rgba(255, 255, 255, 0.3)'
-                    }}
-                  />
-                  <span className="absolute inset-[2px] bg-black rounded-lg xs:rounded-lg sm:rounded-xl md:rounded-xl" />
-                  <span className="relative z-10 flex items-center gap-1.5 xs:gap-2 sm:gap-2 md:gap-2 apps-neon-white-text">
+                  <span className="relative flex items-center gap-2">
                     Premium PDFs
-                    <ChevronRight className="h-2.5 w-2.5 xs:h-3 xs:w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 group-hover:translate-x-1 transition-transform apps-neon-blue-icon" style={{ color: '#ffffff' }} />
+                    <ChevronRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
                   </span>
                 </Link>
               )}
@@ -137,7 +111,6 @@ export const AppsModal = ({ isOpen, onClose, apps = defaultApps }: AppsModalProp
         ))}
       </div>
     </EnhancedModal>
-  </>
 );
 
 export default AppsModal;

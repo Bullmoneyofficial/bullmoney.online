@@ -4,7 +4,6 @@ import { trackEvent, trackClick } from "@/lib/analytics";
 import {
   IconMenu2,
   IconX,
-  IconPalette,
 } from "@tabler/icons-react";
 import {
   motion,
@@ -71,10 +70,6 @@ const MovingTradingTip = dynamic(
   { ssr: false }
 );
 
-const ThemeSelectorModal = dynamic(
-  () => import("./navbar/ThemeSelectorModal").then((mod) => ({ default: mod.ThemeSelectorModal })),
-  { ssr: false, loading: () => <MinimalFallback /> }
-);
 
 import { NAVBAR_TRADING_TIPS } from "./navbar/navbar.utils";
 import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
@@ -106,22 +101,21 @@ const getStoredAccountManagerAccess = (): boolean => {
 const MobileMenuControls = memo(({ 
   open, 
   onToggle, 
-  onThemeClick, 
   hasReward,
   isXMUser,
   shimmerEnabled = true,
   shimmerSettings = { intensity: 'medium' as const, speed: 'normal' as const },
   isScrollMinimized = false,
   skipHeavyEffects = false,
+  disableAnimations = false,
 }: any) => (
   <motion.div 
-    animate={skipHeavyEffects ? {} : {
+    animate={skipHeavyEffects || disableAnimations ? {} : {
       y: [0, -8, 0],
       scale: [1, 1.02, 1],
     }}
-    transition={skipHeavyEffects ? {} : { duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+    transition={skipHeavyEffects || disableAnimations ? {} : { duration: 3, repeat: Infinity, ease: 'easeInOut' }}
     className="relative group rounded-full overflow-visible z-50 flex items-center flex-grow"
-    data-theme-aware
     data-navbar
     style={{ 
       height: isScrollMinimized ? 32 : 'auto',
@@ -132,17 +126,18 @@ const MobileMenuControls = memo(({
     }}
   >
     {/* UNIFIED SHIMMER - Border glow effect, theme-aware via CSS variables */}
-    {shimmerEnabled && !isScrollMinimized && !skipHeavyEffects && <ShimmerBorder />}
+    {shimmerEnabled && !isScrollMinimized && !skipHeavyEffects && !disableAnimations && <ShimmerBorder />}
     
     {/* UNIFIED SHIMMER - Background glow effect */}
-    {shimmerEnabled && !isScrollMinimized && !skipHeavyEffects && (
+    {shimmerEnabled && !isScrollMinimized && !skipHeavyEffects && !disableAnimations && (
       <div className="shimmer-glow shimmer-gpu absolute inset-0 rounded-full pointer-events-none" />
     )}
 
     {/* Neon Inner Content Container - Theme-aware borders and shadows */}
     <motion.div 
       className={cn(
-        "relative h-full w-full bg-black/95 rounded-full flex items-center justify-center gap-0.5 sm:gap-1 transition-all duration-200 z-10",
+        "relative h-full w-full bg-black/95 rounded-full flex items-center justify-center gap-0.5 sm:gap-1 transition-all duration-200 z-10 mobile-liquid-pill",
+        !skipHeavyEffects && !disableAnimations && "liquid-enabled",
         isScrollMinimized ? "p-[1px] px-1" : "p-[2px] px-1 xs:px-1.5 sm:px-2"
       )}
       style={{
@@ -150,38 +145,19 @@ const MobileMenuControls = memo(({
         boxShadow: skipHeavyEffects ? 'none' : '0 0 10px rgba(255, 255, 255, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.3)',
       }}
     >
-      {/* Theme Selector Button - With text label */}
-      <motion.button
-        onClick={() => { SoundEffects.click(); onThemeClick(); }}
-        onMouseEnter={() => SoundEffects.hover()}
-        onTouchStart={() => SoundEffects.click()}
-        whileHover={skipHeavyEffects ? {} : { scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-        className={cn(
-          "rounded-full transition-colors flex items-center justify-center gap-1",
-          isScrollMinimized
-            ? "p-1 min-w-[44px] min-h-[44px]"
-            : "p-1 xs:p-1.5 sm:p-2 min-w-[44px] xs:min-w-[44px] sm:min-w-[48px] min-h-[44px] xs:min-h-[44px] sm:min-h-[48px]"
-        )}
-        style={{ color: 'var(--accent-color, #ffffff)' }}
-        title="Theme Selector"
-      >
-        <IconPalette className={isScrollMinimized ? "h-4 w-4" : "h-5 w-5 xs:h-6 xs:w-6 sm:h-6 sm:w-6"} />
-        <span className="text-[11px] xs:text-xs sm:text-base font-bold whitespace-nowrap">Theme</span>
-      </motion.button>
-
-      {/* Divider - Theme-aware */}
-      <div 
-        className={cn(isScrollMinimized ? "h-4 w-[1px]" : "h-6 xs:h-7 w-[1px]")}
-        style={{ background: 'linear-gradient(to bottom, rgba(var(--accent-rgb, 255, 255, 255), 0.2), rgba(var(--accent-rgb, 255, 255, 255), 0.5), rgba(var(--accent-rgb, 255, 255, 255), 0.2))' }}
-      />
+      {/* Liquid animated background (lightweight) */}
+      {!skipHeavyEffects && !disableAnimations && (
+        <>
+          <span className="liquid-sheen" />
+        </>
+      )}
 
       {/* Menu Toggle Button - With text label */}
       <motion.button
         onClick={() => { SoundEffects.click(); onToggle(); }}
         onMouseEnter={() => SoundEffects.hover()}
         onTouchStart={() => SoundEffects.click()}
-        whileHover={skipHeavyEffects ? {} : { scale: 1.1 }}
+        whileHover={skipHeavyEffects || disableAnimations ? {} : { scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         className={cn(
           "rounded-full transition-colors flex items-center justify-center gap-1",
@@ -189,7 +165,7 @@ const MobileMenuControls = memo(({
             ? "p-1 min-w-[44px] min-h-[44px]"
             : "p-1 xs:p-1.5 sm:p-2 min-w-[44px] xs:min-w-[44px] sm:min-w-[48px] min-h-[44px] xs:min-h-[44px] sm:min-h-[48px]"
         )}
-        style={{ color: 'var(--accent-color, #ffffff)' }}
+        style={{ color: '#ffffff' }}
         title={open ? 'Close menu' : 'Open menu'}
       >
         <div className="relative flex items-center justify-center">
@@ -200,8 +176,8 @@ const MobileMenuControls = memo(({
           )}
           {hasReward && !open && (
             <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
-              <span className={cn("absolute inline-flex h-full w-full rounded-full opacity-75", skipHeavyEffects ? "" : "shimmer-ping")} style={{ backgroundColor: 'var(--accent-color, #ffffff)' }}></span>
-              <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: 'var(--accent-color, #ffffff)' }}></span>
+              <span className={cn("absolute inline-flex h-full w-full rounded-full opacity-75", skipHeavyEffects || disableAnimations ? "" : "shimmer-ping")} style={{ backgroundColor: '#ffffff' }}></span>
+              <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: '#ffffff' }}></span>
             </span>
           )}
         </div>
@@ -215,7 +191,7 @@ MobileMenuControls.displayName = 'MobileMenuControls';
 // --- MAIN NAVBAR COMPONENT ---
 export const Navbar = memo(() => {
   // --- ALL HOOKS AT TOP LEVEL (REQUIRED BY REACT) ---
-  const { isXMUser, activeTheme, isAppLoading, isMobile } = useGlobalTheme();
+  const { isXMUser, isAppLoading, isMobile } = useGlobalTheme();
   const { tipsMuted } = useAudioSettings();
   const { deviceTier, isSafari } = useCacheContext();
   const { shouldRender: allowMobileLazy } = useMobileLazyRender(200);
@@ -227,12 +203,10 @@ export const Navbar = memo(() => {
     isAdminOpen, 
     isFaqOpen, 
     isAffiliateOpen, 
-    isThemeSelectorOpen,
     isAccountManagerOpen,
     openAdminModal,
     openFaqModal,
     openAffiliateModal,
-    openThemeSelectorModal,
     openAccountManagerModal,
     closeNavbarModal,
   } = useNavbarModals();
@@ -551,7 +525,6 @@ export const Navbar = memo(() => {
   // Get CSS filter for current theme - use actual theme filter from GlobalThemeProvider
   // This ensures navbar theme matches the rest of the app
   // Use mobileFilter for both mobile and desktop to ensure consistent theming
-  const themeFilter = activeTheme?.mobileFilter || 'none';
 
   // Check for reward
   const hasReward = (userProfile?.stamps || 0) >= 5;
@@ -571,9 +544,6 @@ export const Navbar = memo(() => {
       <LazyFaqModal isOpen={isFaqOpen} onClose={closeNavbarModal} />
       <LazyAffiliateModal isOpen={isAffiliateOpen} onClose={closeNavbarModal} />
       <LazyAccountManagerModal isOpen={isAccountManagerOpen} onClose={closeNavbarModal} />
-      {(!isMobile || allowMobileLazy) && (
-        <ThemeSelectorModal isOpen={isThemeSelectorOpen} onClose={closeNavbarModal} />
-      )}
       
       {/* Desktop Moving Trading Tips */}
       {mounted && showTip && !isDockHovered && (
@@ -592,15 +562,13 @@ export const Navbar = memo(() => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: mounted ? 1 : 0, y: mounted ? 0 : -20 }}
         transition={{ duration: 0.5 }}
-        className="fixed top-8 inset-x-0 z-40 w-full px-4 pointer-events-none navbar-themed navbar"
+        className="fixed top-8 inset-x-0 z-40 w-full px-4 pointer-events-none navbar"
         style={{
-          filter: themeFilter,
-          transition: 'filter 0.5s ease-in-out, opacity 0.3s ease-in-out, border-color 0.4s ease-out, box-shadow 0.4s ease-out',
+          transition: 'opacity 0.3s ease-in-out, border-color 0.4s ease-out, box-shadow 0.4s ease-out',
           transitionDelay: '0.35s', // Navbar transitions last (top element in bottom-to-top)
         }}
         data-navbar-container
         data-navbar
-        data-theme-aware
       >
         {/* Cal.com Hidden Trigger */}
         <button
@@ -622,7 +590,6 @@ export const Navbar = memo(() => {
           onHoverChange={handleDockHoverChange}
           onAffiliateClick={openAffiliateModal}
           onFaqClick={openFaqModal}
-          onThemeClick={openThemeSelectorModal}
           onAdminClick={handleAdminClick}
           onAccountManagerClick={() => {
             trackClick('account_manager_nav', { source: 'desktop_dock' });
@@ -636,8 +603,8 @@ export const Navbar = memo(() => {
 
         {/* MOBILE NAVBAR */}
         <div className="lg:hidden flex flex-col items-center w-full gap-2 pointer-events-auto">
-          {/* Mobile Nav Logo and Pill - Centered, 40% smaller pill, logo left of pill */}
-          <div className="flex items-center justify-center w-full">
+          {/* Mobile Nav Logo and Pill - Full width */}
+          <div className="flex items-center justify-between w-full">
             {/* Logo on left */}
             <Link href="/" className="relative flex-shrink-0 w-10 h-10 block mr-2">
               <Image
@@ -648,22 +615,22 @@ export const Navbar = memo(() => {
                 priority
               />
             </Link>
-            {/* Pill 40% smaller */}
-            <div className="flex-1 flex justify-center">
-              <div style={{ transform: 'scale(0.75)', transformOrigin: 'left center' }}>
+            {/* Pill - full width for mobile */}
+            <div className="flex-1 flex justify-end">
+              <div className="w-full" style={{ transform: 'scale(1)', transformOrigin: 'center' }}>
                 <MobileMenuControls 
                   open={open} 
                   onToggle={() => { 
                     if (!open) trackEvent('menu_toggle', { type: 'mobile_menu', action: 'open' });
                     setOpen(!open);
                   }}
-                  onThemeClick={openThemeSelectorModal}
                   hasReward={hasReward}
                   isXMUser={isXMUser}
                   shimmerEnabled={shimmerEnabled}
                   shimmerSettings={shimmerSettings}
                   isScrollMinimized={isScrollMinimized}
                   skipHeavyEffects={shouldSkipHeavyEffects}
+                  disableAnimations={isMobile}
                 />
               </div>
             </div>
@@ -689,7 +656,6 @@ export const Navbar = memo(() => {
             trackClick('admin_nav', { source: 'mobile_menu' }); 
             handleAdminClick(); 
           }}
-          onThemeClick={() => { trackClick('theme_nav', { source: 'mobile_menu' }); openThemeSelectorModal(); }}
           onAccountManagerClick={() => { trackClick('account_manager_nav', { source: 'mobile_menu' }); openAccountManagerModal(); }}
         />
       )}
