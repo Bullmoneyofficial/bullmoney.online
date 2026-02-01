@@ -11,22 +11,13 @@ import {
   Unlock,
   Keyboard,
   Key,
-  Target,
   Timer,
   FingerprintPattern,
-  Hand,
-  Zap,
-  Star,
-  Circle,
-  Sparkles,
   Settings,
   Shield,
   Eye,
   Search,
   Loader2,
-  Laugh,
-  DollarSign,
-  Type,
 } from "lucide-react";
 
 // ============================================================================
@@ -127,15 +118,11 @@ const NEON_STYLES = `
 // ============================================================================
 // TYPES & CONFIG
 // ============================================================================
-type GameMode = 
-  // Desktop Games
-  | "passwordVault"   // Type "bull money" → draggable key → vault → white heaven
-  | "keyboardChallenge" // Virtual keyboard BULLMONEY → tap space 10x in 2s → blue heaven
-  | "holdPrank"       // Hold 2s → prank → unlock
-  // Mobile Games
-  | "mobileHold"      // Hold 3s → neon blue unlock
-  | "typingPrank"     // Impossible typing challenge → laugh → unlock
-  | "mobileTapFast";  // Tap 20x in 10s
+type GameMode =
+  // Unified Games (same for mobile and desktop)
+  | "passwordVault"     // Type "bull money" → draggable key → vault → unlock
+  | "keyboardChallenge" // Virtual keyboard BULLMONEY → tap space 10x in 2s → unlock
+  | "holdPrank";        // Hold 2s → prank → unlock
 
 interface LoaderProps {
   onFinished?: () => void;
@@ -170,27 +157,7 @@ const DESKTOP_GAMES: GameConfig[] = [
   },
 ];
 
-// MOBILE GAMES - 3 Only  
-const MOBILE_GAMES: GameConfig[] = [
-  {
-    mode: "mobileHold",
-    label: "HOLD TO UNLOCK",
-    instruction: "Hold for 3 seconds",
-    icon: FingerprintPattern,
-  },
-  {
-    mode: "typingPrank",
-    label: "WIN $1,000",
-    instruction: "Type the text in 10 seconds to win!",
-    icon: DollarSign,
-  },
-  {
-    mode: "mobileTapFast",
-    label: "TAP FAST",
-    instruction: "Tap 20 times in 10 seconds",
-    icon: Zap,
-  },
-];
+// UNIFIED: Mobile now uses DESKTOP_GAMES for consistency
 
 // PRANKS for desktop hold game - Clean dark theme with Lucide icons
 const PRANKS: { type: string; message: string; icon: React.ComponentType<{ className?: string; size?: number }> }[] = [
@@ -509,22 +476,7 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
   const [prankActive, setPrankActive] = useState<typeof PRANKS[0] | null>(null);
   const [prankComplete, setPrankComplete] = useState(false);
 
-  // Mobile game states
-  const [mobileHoldProgress, setMobileHoldProgress] = useState(0);
-  const [mobileTapCount, setMobileTapCount] = useState(0);
-  const [mobileTapStartTime, setMobileTapStartTime] = useState(0);
-  const [mobileTapTimeLeft, setMobileTapTimeLeft] = useState(10);
-  
-  // Typing prank states
-  const [typingPrankText, setTypingPrankText] = useState("");
-  const [typingPrankTimer, setTypingPrankTimer] = useState(10);
-  const [typingPrankStarted, setTypingPrankStarted] = useState(false);
-  const [typingPrankFailed, setTypingPrankFailed] = useState(false);
-  const [showLaughScreen, setShowLaughScreen] = useState(false);
-  const typingPrankTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  
-  // The impossible paragraph to type
-  const IMPOSSIBLE_TEXT = "The quick brown fox jumps over the lazy dog while simultaneously calculating quantum physics equations and reciting the complete works of Shakespeare backwards in ancient Greek.";
+  // Mobile game states removed - now using unified desktop games
 
   // Refs
   const containerRef = useRef<HTMLDivElement>(null);
@@ -536,8 +488,8 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
   // Keyboard target sequence
   const BULLMONEY_KEYS = ['B', 'U', 'L', 'L', 'M', 'O', 'N', 'E', 'Y'];
 
-  // Determine games based on device
-  const games = useMemo(() => isMobile ? MOBILE_GAMES : DESKTOP_GAMES, [isMobile]);
+  // UNIFIED: Use same games for both mobile and desktop
+  const games = useMemo(() => DESKTOP_GAMES, []);
   const currentGame = games[currentGameIndex];
 
   // Initialize
@@ -582,7 +534,7 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
     setTimeout(() => {
       // Move to next game or finish
       if (currentGameIndex < games.length - 1) {
-        // Reset all game states
+        // Reset all game states (unified desktop games only)
         setTypedPassword("");
         setHasKey(false);
         setKeyboardPhase('typing');
@@ -594,15 +546,6 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
         setIsHolding(false);
         setPrankActive(null);
         setPrankComplete(false);
-        setMobileHoldProgress(0);
-        setMobileTapCount(0);
-        setMobileTapStartTime(0);
-        setMobileTapTimeLeft(10);
-        setTypingPrankText("");
-        setTypingPrankTimer(10);
-        setTypingPrankStarted(false);
-        setTypingPrankFailed(false);
-        setShowLaughScreen(false);
         
         // Move to next game after reset
         setTimeout(() => {
@@ -791,153 +734,7 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
     }
   }, [prankActive, prankComplete]);
 
-  // ============================================================================
-  // MOBILE GAME HANDLERS
-  // ============================================================================
-
-  // Mobile Hold (3 seconds)
-  const handleMobileHoldStart = useCallback((e: React.TouchEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!currentGame || currentGame.mode !== 'mobileHold') return;
-    
-    setIsHolding(true);
-    haptics.heavyTap();
-    
-    holdIntervalRef.current = setInterval(() => {
-      setMobileHoldProgress(p => {
-        const next = Math.min(p + (100 / 30), 100); // 3 seconds
-        if (Math.floor(next / 20) > Math.floor(p / 20)) audio.playTick();
-        setProgress(next);
-        return next;
-      });
-    }, 100);
-  }, [currentGame, audio, haptics]);
-
-  const handleMobileHoldEnd = useCallback((e: React.TouchEvent) => {
-    e.preventDefault();
-    setIsHolding(false);
-    if (holdIntervalRef.current) {
-      clearInterval(holdIntervalRef.current);
-      holdIntervalRef.current = null;
-    }
-    if (mobileHoldProgress < 100) {
-      setMobileHoldProgress(0);
-      setProgress(0);
-    }
-  }, [mobileHoldProgress]);
-
-  // Mobile Tap Fast
-  const handleMobileTap = useCallback((e: React.TouchEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!currentGame || currentGame.mode !== 'mobileTapFast') return;
-    
-    const now = Date.now();
-    
-    if (mobileTapCount === 0 || now - mobileTapStartTime > 10000) {
-      setMobileTapStartTime(now);
-      setMobileTapCount(1);
-      setMobileTapTimeLeft(10);
-      audio.playTick();
-      haptics.lightTap();
-      setProgress(5);
-    } else {
-      const newCount = mobileTapCount + 1;
-      setMobileTapCount(newCount);
-      audio.playTick();
-      haptics.lightTap();
-      
-      setProgress((newCount / 20) * 100);
-    }
-  }, [currentGame, mobileTapCount, mobileTapStartTime, audio, haptics]);
-
-  // Mobile tap timer countdown
-  useEffect(() => {
-    if (!currentGame || currentGame.mode !== 'mobileTapFast' || mobileTapStartTime === 0) return;
-    
-    const interval = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - mobileTapStartTime) / 1000);
-      const remaining = Math.max(0, 10 - elapsed);
-      setMobileTapTimeLeft(remaining);
-      
-      if (remaining === 0 && mobileTapCount < 20) {
-        // Time's up, reset
-        setMobileTapCount(0);
-        setMobileTapStartTime(0);
-        setProgress(0);
-      }
-    }, 100);
-    
-    return () => clearInterval(interval);
-  }, [currentGame, mobileTapStartTime, mobileTapCount]);
-
-  // Typing Prank - Start typing to begin timer
-  const handleTypingPrankStart = useCallback(() => {
-    if (!currentGame || currentGame.mode !== 'typingPrank' || typingPrankStarted) return;
-    
-    setTypingPrankStarted(true);
-    audio.playTick();
-    
-    // Start the countdown
-    typingPrankTimerRef.current = setInterval(() => {
-      setTypingPrankTimer(prev => {
-        if (prev <= 1) {
-          // Time's up! Show laugh screen
-          if (typingPrankTimerRef.current) {
-            clearInterval(typingPrankTimerRef.current);
-            typingPrankTimerRef.current = null;
-          }
-          setTypingPrankFailed(true);
-          setShowLaughScreen(true);
-          haptics.heavyTap();
-          
-          // After laughing, let them through
-          setTimeout(() => {
-            setShowLaughScreen(false);
-            setProgress(100);
-          }, 4000);
-          
-          return 0;
-        }
-        if (prev <= 3) audio.playTick();
-        return prev - 1;
-      });
-    }, 1000);
-  }, [currentGame, typingPrankStarted, audio, haptics]);
-
-  const handleTypingPrankChange = useCallback((text: string) => {
-    if (!currentGame || currentGame.mode !== 'typingPrank') return;
-    
-    // Start timer on first keystroke
-    if (!typingPrankStarted) {
-      handleTypingPrankStart();
-    }
-    
-    setTypingPrankText(text);
-    
-    // Calculate progress (they'll never finish in time!)
-    const progressPercent = Math.min((text.length / IMPOSSIBLE_TEXT.length) * 100, 99);
-    setProgress(progressPercent);
-    
-    // Check if they somehow typed it all (impossible but just in case)
-    if (text.toLowerCase() === IMPOSSIBLE_TEXT.toLowerCase()) {
-      if (typingPrankTimerRef.current) {
-        clearInterval(typingPrankTimerRef.current);
-        typingPrankTimerRef.current = null;
-      }
-      setProgress(100);
-    }
-  }, [currentGame, typingPrankStarted, handleTypingPrankStart, IMPOSSIBLE_TEXT]);
-
-  // Cleanup typing prank timer
-  useEffect(() => {
-    return () => {
-      if (typingPrankTimerRef.current) {
-        clearInterval(typingPrankTimerRef.current);
-      }
-    };
-  }, []);
+  // Mobile game handlers removed - now using unified desktop games for both platforms
 
   // ============================================================================
   // RENDER
@@ -1181,18 +978,21 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
 
           {!isTransitioning && currentGame?.mode === 'holdPrank' && (
             <motion.button
-              className="w-40 h-40 rounded-full flex flex-col items-center justify-center cursor-pointer"
+              className="w-40 h-40 rounded-full flex flex-col items-center justify-center cursor-pointer touch-manipulation"
               style={{
-                background: prankComplete 
-                  ? 'linear-gradient(135deg, #ffffff, #ffffff)' 
+                background: prankComplete
+                  ? 'linear-gradient(135deg, #ffffff, #ffffff)'
                   : `linear-gradient(135deg, rgba(255,255,255,${0.3 + holdProgress * 0.007}), rgba(255,255,255,${0.3 + holdProgress * 0.007}))`,
                 border: '4px solid #ffffff',
                 transform: 'translateZ(0)',
                 willChange: 'transform',
+                WebkitTapHighlightColor: 'transparent',
               }}
               onMouseDown={handleHoldStart}
               onMouseUp={handleHoldEnd}
               onMouseLeave={handleHoldEnd}
+              onTouchStart={(e) => { e.preventDefault(); handleHoldStart(); }}
+              onTouchEnd={(e) => { e.preventDefault(); handleHoldEnd(); }}
               animate={isHolding ? { scale: 0.95 } : { scale: 1 }}
             >
               <FingerprintPattern size={48} className="text-white mb-2" />
@@ -1201,198 +1001,7 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
             </motion.button>
           )}
 
-          {/* MOBILE GAMES */}
-          {!isTransitioning && currentGame?.mode === 'mobileHold' && (
-            <motion.button
-              className="w-48 h-48 rounded-full flex flex-col items-center justify-center touch-manipulation"
-              style={{
-                background: `linear-gradient(135deg, rgba(255,255,255,${0.3 + mobileHoldProgress * 0.007}), rgba(255,255,255,${0.3 + mobileHoldProgress * 0.007}))`,
-                border: '4px solid #ffffff',
-                transform: 'translateZ(0)',
-                willChange: 'transform',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-              onTouchStart={handleMobileHoldStart}
-              onTouchEnd={handleMobileHoldEnd}
-              animate={isHolding ? { scale: 0.95 } : { scale: 1 }}
-            >
-              <FingerprintPattern size={56} className="text-white mb-2" />
-              <span className="text-white font-bold text-2xl">{Math.floor(mobileHoldProgress)}%</span>
-              <span className="text-sm text-white/50 mt-1">Touch & Hold</span>
-            </motion.button>
-          )}
-
-          {!isTransitioning && currentGame?.mode === 'mobileTapFast' && (
-            <motion.button
-              className="w-48 h-48 rounded-full flex flex-col items-center justify-center touch-manipulation"
-              style={{
-                background: 'linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.3))',
-                border: '4px solid #ffffff',
-                transform: 'translateZ(0)',
-                willChange: 'transform',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-              onTouchStart={handleMobileTap}
-              whileTap={{ scale: 0.9 }}
-            >
-              <Zap size={56} className="text-white mb-2" />
-              <span className="text-white font-bold text-2xl">{mobileTapCount}/20</span>
-              {mobileTapStartTime > 0 && (
-                <span className="text-white text-sm">
-                  {mobileTapTimeLeft}s left
-                </span>
-              )}
-              <span className="text-sm text-white/50 mt-1">Tap Fast!</span>
-            </motion.button>
-          )}
-
-          {/* TYPING PRANK GAME */}
-          {!isTransitioning && currentGame?.mode === 'typingPrank' && !showLaughScreen && (
-            <div className="flex flex-col items-center gap-4 w-full max-w-md px-4">
-              {/* Prize announcement */}
-              <motion.div
-                className="flex items-center gap-2 px-4 py-2 rounded-full"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1))',
-                  border: '2px solid #ffffff',
-                  transform: 'translateZ(0)',
-                  willChange: 'transform',
-                }}
-                animate={{ scale: [1, 1.02, 1] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              >
-                <DollarSign size={24} className="text-white" />
-                <span className="text-white font-bold text-lg">WIN $1,000!</span>
-              </motion.div>
-
-              {/* Timer */}
-              <motion.div
-                className="text-5xl font-bold"
-                style={{ color: typingPrankTimer <= 3 ? '#ef4444' : '#ffffff' }}
-                animate={typingPrankTimer <= 3 ? { scale: [1, 1.1, 1] } : {}}
-                transition={{ duration: 0.5, repeat: typingPrankTimer <= 3 ? Infinity : 0 }}
-              >
-                {typingPrankTimer}s
-              </motion.div>
-
-              {/* Text to type */}
-              <div 
-                className="p-4 rounded-xl w-full"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                }}
-              >
-                <p className="text-sm text-white/70 mb-2">Type this exactly:</p>
-                <p className="text-white text-sm leading-relaxed">
-                  {IMPOSSIBLE_TEXT.split('').map((char, i) => (
-                    <span
-                      key={i}
-                      className={
-                        i < typingPrankText.length
-                          ? typingPrankText[i]?.toLowerCase() === char.toLowerCase()
-                            ? 'text-white'
-                            : 'text-red-400'
-                          : 'text-white/50'
-                      }
-                    >
-                      {char}
-                    </span>
-                  ))}
-                </p>
-              </div>
-
-              {/* Input field */}
-              <textarea
-                className="w-full p-3 rounded-xl text-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-white"
-                style={{
-                  background: 'rgba(0, 0, 0, 0.5)',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                }}
-                placeholder="Start typing to begin..."
-                value={typingPrankText}
-                onChange={(e) => handleTypingPrankChange(e.target.value)}
-                rows={3}
-                autoFocus
-              />
-
-              <p className="text-xs text-white/50">
-                {typingPrankText.length}/{IMPOSSIBLE_TEXT.length} characters
-              </p>
-            </div>
-          )}
-
-          {/* LAUGH SCREEN - You failed! */}
-          {!isTransitioning && showLaughScreen && (
-            <motion.div
-              className="flex flex-col items-center gap-6"
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 200, damping: 15 }}
-            >
-              {/* Laughing icons */}
-              <div className="flex items-center gap-4">
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <motion.div
-                    key={i}
-                    animate={{ 
-                      rotate: [0, -10, 10, -10, 10, 0],
-                      y: [0, -10, 0],
-                    }}
-                    transition={{ 
-                      duration: 0.5, 
-                      repeat: Infinity, 
-                      delay: i * 0.1,
-                    }}
-                    style={{
-                      transform: 'translateZ(0)',
-                      willChange: 'transform',
-                    }}
-                  >
-                    <Laugh 
-                      size={i === 2 ? 64 : 40} 
-                      className="text-white" 
-                    />
-                  </motion.div>
-                ))}
-              </div>
-
-              {/* Message */}
-              <motion.div
-                className="text-center"
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3 }}
-              >
-                <h2 className="text-3xl font-bold text-white mb-2">Nice try!</h2>
-                <p className="text-white text-lg mb-1">Nobody can type that fast</p>
-                <p className="text-white/50 text-sm">You got {typingPrankText.length} characters</p>
-              </motion.div>
-
-              {/* Fake prize crossed out */}
-              <motion.div
-                className="relative"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.5, type: "spring" }}
-              >
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full opacity-50">
-                  <DollarSign size={20} className="text-red-400" />
-                  <span className="text-red-400 font-bold line-through">$1,000</span>
-                </div>
-              </motion.div>
-
-              {/* Continue message */}
-              <motion.p
-                className="text-white/70 text-sm"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: [0.5, 1, 0.5] }}
-                transition={{ delay: 1, duration: 1.5, repeat: Infinity }}
-              >
-                Unlocking anyway...
-              </motion.p>
-            </motion.div>
-          )}
+          {/* Mobile games removed - now using unified desktop games for both platforms */}
         </div>
 
         {/* Success overlay */}
