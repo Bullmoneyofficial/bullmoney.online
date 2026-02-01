@@ -485,12 +485,32 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
   const vaultRef = useRef<HTMLDivElement>(null);
   const progressSpring = useSpring(0, { stiffness: 100, damping: 20 });
 
+  // Input refs for mobile keyboard focus
+  const passwordInputRef = useRef<HTMLInputElement>(null);
+  const keyboardInputRef = useRef<HTMLInputElement>(null);
+
   // Keyboard target sequence
   const BULLMONEY_KEYS = ['B', 'U', 'L', 'L', 'M', 'O', 'N', 'E', 'Y'];
 
   // UNIFIED: Use same games for both mobile and desktop
   const games = useMemo(() => DESKTOP_GAMES, []);
   const currentGame = games[currentGameIndex];
+
+  // Auto-focus inputs for mobile keyboard popup
+  useEffect(() => {
+    if (isTransitioning) return;
+
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      if (currentGame?.mode === 'passwordVault' && !hasKey && passwordInputRef.current) {
+        passwordInputRef.current.focus();
+      } else if (currentGame?.mode === 'keyboardChallenge' && keyboardPhase === 'typing' && keyboardInputRef.current) {
+        keyboardInputRef.current.focus();
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [currentGame?.mode, hasKey, keyboardPhase, isTransitioning]);
 
   // Initialize
   useEffect(() => {
@@ -908,14 +928,14 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
 
           {/* Game-specific UI */}
           {!isTransitioning && currentGame?.mode === 'passwordVault' && !hasKey && (
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-1 mb-4">
+            <div className="text-center flex flex-col items-center gap-4">
+              <div className="flex items-center justify-center gap-1 mb-2">
                 {"bull money".split('').map((char, i) => (
-                  <span 
-                    key={i} 
+                  <span
+                    key={i}
                     className={`text-2xl font-mono ${
-                      i < typedPassword.length 
-                        ? 'text-white' 
+                      i < typedPassword.length
+                        ? 'text-white'
                         : 'text-white/30'
                     }`}
                   >
@@ -923,7 +943,43 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
                   </span>
                 ))}
               </div>
-              <p className="text-xs text-white/50">Type the password on your keyboard</p>
+              {/* Mobile input field - triggers keyboard popup */}
+              <input
+                ref={passwordInputRef}
+                type="text"
+                autoFocus
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                enterKeyHint="done"
+                className="w-64 px-4 py-3 rounded-xl text-white text-center text-lg font-mono focus:outline-none focus:ring-2 focus:ring-white"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  caretColor: '#ffffff',
+                }}
+                placeholder="Tap here to type..."
+                value={typedPassword}
+                onClick={() => passwordInputRef.current?.focus()}
+                onChange={(e) => {
+                  const input = e.target.value.toLowerCase();
+                  const targetPassword = "bull money";
+                  // Only accept if the input matches the target so far
+                  if (targetPassword.startsWith(input)) {
+                    if (input.length > typedPassword.length) {
+                      audio.playKey();
+                      haptics.lightTap();
+                    }
+                    setTypedPassword(input);
+                    if (input === targetPassword) {
+                      setHasKey(true);
+                      setProgress(50);
+                    }
+                  }
+                }}
+              />
+              <p className="text-xs text-white/50">Type: bull money</p>
             </div>
           )}
 
@@ -950,9 +1006,62 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
             <div className="flex flex-col items-center gap-4">
               {keyboardPhase === 'typing' && (
                 <>
+                  {/* Progress display */}
+                  <div className="flex items-center justify-center gap-1 mb-2">
+                    {BULLMONEY_KEYS.map((char, i) => (
+                      <span
+                        key={i}
+                        className={`text-2xl font-mono ${
+                          i < keyboardTargetIndex
+                            ? 'text-white'
+                            : i === keyboardTargetIndex
+                              ? 'text-white animate-pulse'
+                              : 'text-white/30'
+                        }`}
+                      >
+                        {char}
+                      </span>
+                    ))}
+                  </div>
                   <p className="text-sm text-white mb-2">
-                    Press: <span className="font-bold">{BULLMONEY_KEYS[keyboardTargetIndex]}</span>
+                    Type: <span className="font-bold">{BULLMONEY_KEYS[keyboardTargetIndex]}</span>
                   </p>
+                  {/* Mobile input field - triggers keyboard popup */}
+                  <input
+                    ref={keyboardInputRef}
+                    type="text"
+                    autoFocus
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="characters"
+                    spellCheck={false}
+                    enterKeyHint="done"
+                    className="w-64 px-4 py-3 rounded-xl text-white text-center text-lg font-mono focus:outline-none focus:ring-2 focus:ring-white uppercase"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      border: '2px solid rgba(255, 255, 255, 0.3)',
+                      caretColor: '#ffffff',
+                    }}
+                    placeholder="Tap here to type..."
+                    value={BULLMONEY_KEYS.slice(0, keyboardTargetIndex).join('')}
+                    onClick={() => keyboardInputRef.current?.focus()}
+                    onKeyDown={(e) => {
+                      const key = e.key.toUpperCase();
+                      if (key === BULLMONEY_KEYS[keyboardTargetIndex]) {
+                        e.preventDefault();
+                        handleKeyboardPress(key);
+                      }
+                    }}
+                    onChange={(e) => {
+                      // Handle mobile keyboard input
+                      const input = e.target.value.toUpperCase();
+                      const lastChar = input[input.length - 1];
+                      if (lastChar === BULLMONEY_KEYS[keyboardTargetIndex]) {
+                        handleKeyboardPress(lastChar);
+                      }
+                    }}
+                  />
+                  {/* Also keep virtual keyboard for tap support */}
                   <VirtualKeyboard
                     targetKeys={[BULLMONEY_KEYS[keyboardTargetIndex]]}
                     pressedKeys={pressedKeys}
