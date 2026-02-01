@@ -307,7 +307,7 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
           </div>
         )}
 
-        {/* ========== ULTIMATE HUB PILL - Using actual component from UltimateHub ========== */}
+        {/* ========== ULTIMATE HUB PILL - Positioned below header from top ========== */}
         <UnifiedFpsPill
           fps={60}
           deviceTier="high"
@@ -315,8 +315,8 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
           isMinimized={isMinimized}
           onToggleMinimized={() => setIsMinimized(!isMinimized)}
           onOpenPanel={() => setIsHubOpen(true)}
-          topOffsetMobile="calc(env(safe-area-inset-top, 0px) + 180px)"
-          topOffsetDesktop="calc(env(safe-area-inset-top, 0px) + 200px)"
+          topOffsetMobile="calc(env(safe-area-inset-top, 0px) + 100px)"
+          topOffsetDesktop="calc(env(safe-area-inset-top, 0px) + 110px)"
         />
 
         {/* Desktop Layout: Centered */}

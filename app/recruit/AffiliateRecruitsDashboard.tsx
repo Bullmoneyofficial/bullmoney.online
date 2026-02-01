@@ -243,15 +243,20 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
   const tierProgress = useMemo(() => getProgressToNextTier(stats.active), [stats.active]);
   
   const referralLink = useMemo(() => {
-    if (!myTrackingCode || myTrackingCode === 'Loading...' || myTrackingCode === 'No Code Found') {
+    // Return base URL if no valid tracking code
+    if (!myTrackingCode || myTrackingCode === 'Loading...' || myTrackingCode === 'No Code Found' || myTrackingCode.trim() === '') {
       return 'https://bullmoney.online/register';
     }
-    const url = new URL('https://bullmoney.online/register');
-    url.searchParams.set('ref', myTrackingCode);
-    url.searchParams.set('utm_source', 'affiliate');
-    url.searchParams.set('utm_medium', 'dashboard');
-    url.searchParams.set('utm_campaign', 'partner_link');
-    return url.toString();
+    
+    // Build URL safely without using URL constructor (which can fail in some SSR contexts)
+    const baseUrl = 'https://bullmoney.online/register';
+    const params = new URLSearchParams();
+    params.set('ref', myTrackingCode.trim());
+    params.set('utm_source', 'affiliate');
+    params.set('utm_medium', 'dashboard');
+    params.set('utm_campaign', 'partner_link');
+    
+    return `${baseUrl}?${params.toString()}`;
   }, [myTrackingCode]);
 
   const dashboardTabs = useMemo(() => {
@@ -295,8 +300,23 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
           .eq('id', userId)
           .single();
 
-        if (userError || !userData?.affiliate_code) {
+        if (userError) {
+          console.error('Supabase user data error:', userError);
+          if (userError.code === 'PGRST116') {
+            // No rows found - user doesn't exist in recruits table
+            setMyTrackingCode('No Code Found');
+            setErrorMsg('No affiliate account found. Please complete your registration first.');
+          } else {
+            setErrorMsg(`Database error: ${userError.message || 'Failed to load user data'}`);
+          }
+          setRecruits([]);
+          if (!isPolling) setLoading(false);
+          return;
+        }
+        
+        if (!userData?.affiliate_code) {
           setMyTrackingCode('No Code Found');
+          setErrorMsg('Your affiliate code is not set up yet. Please contact support.');
           setRecruits([]);
           if (!isPolling) setLoading(false);
           return;
@@ -304,6 +324,9 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
 
         codeToSearch = userData.affiliate_code;
         setMyTrackingCode(codeToSearch);
+        
+        // Clear any previous error messages on successful load
+        if (!isPolling) setErrorMsg(null);
         
         // Set earnings data
         setEarnings(prev => ({
@@ -320,7 +343,10 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
         .eq('referred_by_code', codeToSearch) 
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase recruits query error:', error);
+        throw new Error(`Failed to load recruits: ${error.message || 'Unknown database error'}`);
+      }
 
       if (data) {
         const processed: Recruit[] = data.map((item: any) => {
@@ -389,36 +415,88 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
     }
   }, []);
 
-  const handleCopyCode = async () => {
-    if (!myTrackingCode || myTrackingCode === 'Loading...') return;
+  // Helper function for secure clipboard copy with fallback
+  const copyToClipboard = async (text: string): Promise<boolean> => {
+    // Method 1: Try modern Clipboard API (works in HTTPS)
+    if (typeof navigator !== 'undefined' && navigator?.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (clipboardErr) {
+        console.warn('Clipboard API failed, trying fallback:', clipboardErr);
+      }
+    }
+
+    // Method 2: Fallback using textarea (works in most environments)
     try {
-      await navigator.clipboard.writeText(myTrackingCode);
-      setCopiedCode(true);
-      setTimeout(() => setCopiedCode(false), 1500);
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.setAttribute('readonly', '');
+      textarea.style.cssText = 'position:fixed;top:0;left:0;width:2em;height:2em;padding:0;border:none;outline:none;box-shadow:none;background:transparent;z-index:-1;';
+      document.body.appendChild(textarea);
+      
+      // iOS Safari specific handling
+      const range = document.createRange();
+      range.selectNodeContents(textarea);
+      const selection = window.getSelection();
+      if (selection) {
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+      textarea.setSelectionRange(0, textarea.value.length);
+      
+      const success = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      
+      if (!success) {
+        throw new Error('execCommand copy failed');
+      }
+      return true;
+    } catch (fallbackErr) {
+      console.error('Fallback copy failed:', fallbackErr);
+      return false;
+    }
+  };
+
+  const handleCopyCode = async () => {
+    if (!myTrackingCode || myTrackingCode === 'Loading...' || myTrackingCode === 'No Code Found') return;
+    try {
+      const success = await copyToClipboard(myTrackingCode);
+      if (success) {
+        setCopiedCode(true);
+        setTimeout(() => setCopiedCode(false), 1500);
+      } else {
+        // Show error to user
+        setErrorMsg('Failed to copy code. Please copy manually: ' + myTrackingCode);
+        setTimeout(() => setErrorMsg(null), 3000);
+      }
     } catch (err) {
       console.error('Copy failed', err);
+      setErrorMsg('Failed to copy code. Please copy manually: ' + myTrackingCode);
+      setTimeout(() => setErrorMsg(null), 3000);
     }
   };
 
   const handleCopyLink = async () => {
+    if (!referralLink || referralLink === 'https://bullmoney.online/register') {
+      setErrorMsg('No referral link available. Please ensure you have an affiliate code.');
+      setTimeout(() => setErrorMsg(null), 3000);
+      return;
+    }
     try {
-      if (navigator?.clipboard?.writeText) {
-        await navigator.clipboard.writeText(referralLink);
+      const success = await copyToClipboard(referralLink);
+      if (success) {
+        setCopiedLink(true);
+        setTimeout(() => setCopiedLink(false), 1500);
       } else {
-        const textarea = document.createElement('textarea');
-        textarea.value = referralLink;
-        textarea.setAttribute('readonly', '');
-        textarea.style.position = 'absolute';
-        textarea.style.left = '-9999px';
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
+        // Show error to user
+        setErrorMsg('Failed to copy link. Please copy manually.');
+        setTimeout(() => setErrorMsg(null), 3000);
       }
-      setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 1500);
     } catch (err) {
       console.error('Copy failed', err);
+      setErrorMsg('Failed to copy link. Please copy manually.');
+      setTimeout(() => setErrorMsg(null), 3000);
     }
   };
 

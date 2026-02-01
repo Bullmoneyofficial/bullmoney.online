@@ -12,12 +12,15 @@ import {
   Keyboard,
   Key,
   Timer,
-  FingerprintPattern,
+  TrendingUp,
   Settings,
   Shield,
   Eye,
   Search,
   Loader2,
+  DollarSign,
+  BarChart2,
+  Target,
 } from "lucide-react";
 
 // ============================================================================
@@ -120,8 +123,8 @@ const NEON_STYLES = `
 // ============================================================================
 type GameMode =
   // Unified Games (same for mobile and desktop)
-  | "passwordVault"     // Type "bull money" → draggable key → vault → unlock
-  | "keyboardChallenge" // Virtual keyboard BULLMONEY → tap space 10x in 2s → unlock
+  | "passwordVault"     // Type "buy gold" → draggable key → vault → unlock
+  | "keyboardChallenge" // Virtual keyboard BUYGOLD → tap space 10x in 2s → unlock
   | "holdPrank";        // Hold 2s → prank → unlock
 
 interface LoaderProps {
@@ -135,37 +138,37 @@ interface GameConfig {
   icon: React.ComponentType<{ className?: string; size?: number }>;
 }
 
-// DESKTOP GAMES - 3 Only
+// DESKTOP GAMES - 3 Only (Trading Themed)
 const DESKTOP_GAMES: GameConfig[] = [
   {
     mode: "passwordVault",
-    label: "PASSWORD VAULT",
-    instruction: "Type 'bull money' to get the key",
-    icon: Key,
+    label: "TRADING KEY",
+    instruction: "Type 'buy gold' to unlock your trade",
+    icon: DollarSign,
   },
   {
     mode: "keyboardChallenge",
-    label: "KEYBOARD MASTER",
-    instruction: "Press the highlighted keys",
-    icon: Keyboard,
+    label: "EXECUTE TRADE",
+    instruction: "Enter your position",
+    icon: BarChart2,
   },
   {
     mode: "holdPrank",
-    label: "HOLD TO UNLOCK",
-    instruction: "Hold for 2 seconds",
-    icon: Timer,
+    label: "HOLD POSITION",
+    instruction: "Hold for profit target",
+    icon: Target,
   },
 ];
 
 // UNIFIED: Mobile now uses DESKTOP_GAMES for consistency
 
-// PRANKS for desktop hold game - Clean dark theme with Lucide icons
+// PRANKS for desktop hold game - Trading themed messages
 const PRANKS: { type: string; message: string; icon: React.ComponentType<{ className?: string; size?: number }> }[] = [
-  { type: "shake", message: "SYSTEM CALIBRATING...", icon: Settings },
-  { type: "glitch", message: "DECRYPTING ACCESS...", icon: Shield },
-  { type: "scan", message: "SCANNING BIOMETRICS...", icon: Eye },
-  { type: "pulse", message: "VERIFYING IDENTITY...", icon: Search },
-  { type: "fade", message: "ALMOST THERE...", icon: Loader2 },
+  { type: "shake", message: "ANALYZING MARKET...", icon: BarChart2 },
+  { type: "glitch", message: "CHECKING LIQUIDITY...", icon: Shield },
+  { type: "scan", message: "SCANNING CHARTS...", icon: Eye },
+  { type: "pulse", message: "CONFIRMING TRADE...", icon: Search },
+  { type: "fade", message: "PROFIT TARGET HIT...", icon: TrendingUp },
 ];
 
 // Detect device type
@@ -294,18 +297,20 @@ const useHaptics = () => {
 };
 
 // ============================================================================
-// VIRTUAL KEYBOARD COMPONENT - Mobile responsive
+// VIRTUAL KEYBOARD COMPONENT - Mobile responsive with theme support
 // ============================================================================
 const VirtualKeyboard = ({
   targetKeys,
   pressedKeys,
   onKeyPress,
-  compact = false
+  compact = false,
+  themeColor = '#ffffff'
 }: {
   targetKeys: string[];
   pressedKeys: Set<string>;
   onKeyPress: (key: string) => void;
   compact?: boolean;
+  themeColor?: string;
 }) => {
   const rows = [
     ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
@@ -337,20 +342,28 @@ const VirtualKeyboard = ({
                   ${compact ? 'text-xs' : 'text-xs sm:text-sm'}
                   flex items-center justify-center
                   transition-all duration-150
-                  ${isPressed
-                    ? 'bg-white text-black border-white'
-                    : isTarget
-                      ? 'bg-white/30 text-white border-white animate-pulse'
-                      : 'bg-black/50 text-white/50 border-white/20'
-                  }
                   border sm:border-2
                 `}
                 style={{
+                  backgroundColor: isPressed
+                    ? themeColor
+                    : isTarget
+                      ? `${themeColor}50`
+                      : 'rgba(0,0,0,0.5)',
+                  color: isPressed
+                    ? '#000'
+                    : isTarget
+                      ? themeColor
+                      : `${themeColor}80`,
+                  borderColor: isPressed || isTarget
+                    ? themeColor
+                    : `${themeColor}33`,
                   boxShadow: isTarget && !isPressed
-                    ? '0 0 10px #ffffff, 0 0 20px #ffffff'
+                    ? `0 0 10px ${themeColor}, 0 0 20px ${themeColor}`
                     : isPressed
-                      ? '0 0 10px #ffffff'
+                      ? `0 0 10px ${themeColor}`
                       : 'none',
+                  animation: isTarget && !isPressed ? 'pulse 1s infinite' : undefined,
                 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -365,16 +378,18 @@ const VirtualKeyboard = ({
 };
 
 // ============================================================================
-// DRAGGABLE KEY COMPONENT - Fixed for mobile touch, responsive sizing
+// DRAGGABLE KEY COMPONENT - Fixed for mobile touch, responsive sizing with theme
 // ============================================================================
 const DraggableKey = ({
   onDrop,
   vaultPosition,
-  compact = false
+  compact = false,
+  themeColor = '#ffffff'
 }: {
   onDrop: () => void;
   vaultPosition: { x: number; y: number };
   compact?: boolean;
+  themeColor?: string;
 }) => {
   const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -483,7 +498,7 @@ const DraggableKey = ({
         transform: position === null ? 'translateX(-50%) translateZ(0)' : 'translateZ(0)',
         background: isNearVault
           ? 'linear-gradient(135deg, #22c55e, #16a34a)'
-          : 'linear-gradient(135deg, #ffffff, #e5e5e5)',
+          : `linear-gradient(135deg, ${themeColor}, ${themeColor}cc)`,
         animation: !isDragging ? 'key-float 2s ease-in-out infinite' : undefined,
         willChange: 'transform',
         WebkitTapHighlightColor: 'transparent',
@@ -492,7 +507,7 @@ const DraggableKey = ({
         userSelect: 'none',
         boxShadow: isNearVault
           ? '0 0 30px rgba(34, 197, 94, 0.8)'
-          : '0 0 20px rgba(255, 255, 255, 0.5)',
+          : `0 0 20px ${themeColor}80`,
       }}
       onMouseDown={handleDragStart}
       onTouchStart={handleDragStart}
@@ -525,6 +540,21 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
   const [hasKey, setHasKey] = useState(false);
   const [vaultPosition, setVaultPosition] = useState({ x: 0, y: 0 });
   
+  // Random password selection - ALL CAPS trading themed options
+  // X3R7P = XM Broker Code (RED theme)
+  // BULLMONEY = Vantage Broker Code (BLUE theme)
+  const PASSWORD_OPTIONS = useMemo(() => ['X3R7P', 'BULLMONEY', 'BUY GOLD', 'BUY BTC', 'SELL GOLD', 'SELL BTC'], []);
+  const [targetPassword] = useState(() => PASSWORD_OPTIONS[Math.floor(Math.random() * PASSWORD_OPTIONS.length)]);
+  
+  // Broker code detection for theming
+  const isXMBrokerCode = targetPassword === 'X3R7P';
+  const isVantageBrokerCode = targetPassword === 'BULLMONEY';
+  const isBrokerCode = isXMBrokerCode || isVantageBrokerCode;
+  
+  // Theme colors based on broker code
+  const themeColor = isXMBrokerCode ? '#ef4444' : isVantageBrokerCode ? '#3b82f6' : '#ffffff';
+  const themeName = isXMBrokerCode ? 'XM' : isVantageBrokerCode ? 'Vantage' : null;
+  
   // Keyboard challenge states
   const [keyboardPhase, setKeyboardPhase] = useState<'typing' | 'tapping'>('typing');
   const [keyboardTargetIndex, setKeyboardTargetIndex] = useState(0);
@@ -551,8 +581,8 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
   const passwordInputRef = useRef<HTMLInputElement>(null);
   const keyboardInputRef = useRef<HTMLInputElement>(null);
 
-  // Keyboard target sequence
-  const BULLMONEY_KEYS = ['B', 'U', 'L', 'L', 'M', 'O', 'N', 'E', 'Y'];
+  // Keyboard target sequence - Trading themed
+  const TRADE_KEYS = ['B', 'U', 'Y', 'G', 'O', 'L', 'D'];
 
   // UNIFIED: Use same games for both mobile and desktop
   const games = useMemo(() => DESKTOP_GAMES, []);
@@ -718,12 +748,11 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
   // DESKTOP GAME HANDLERS
   // ============================================================================
 
-  // Password Vault - Type "bull money"
+  // Password Vault - Type random trading phrase (ALL CAPS)
   const handlePasswordType = useCallback((e: React.KeyboardEvent) => {
     if (!currentGame || currentGame.mode !== 'passwordVault' || hasKey) return;
     
-    const key = e.key.toLowerCase();
-    const targetPassword = "bull money";
+    const key = e.key.toUpperCase();
     const nextChar = targetPassword[typedPassword.length];
     
     if (key === nextChar) {
@@ -737,7 +766,7 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
         setProgress(50);
       }
     }
-  }, [currentGame, typedPassword, hasKey, audio, haptics]);
+  }, [currentGame, typedPassword, hasKey, audio, haptics, targetPassword]);
 
   // Key dropped in vault
   const handleKeyDrop = useCallback(() => {
@@ -750,18 +779,18 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
     if (!currentGame || currentGame.mode !== 'keyboardChallenge') return;
     
     if (keyboardPhase === 'typing') {
-      const targetKey = BULLMONEY_KEYS[keyboardTargetIndex];
+      const targetKey = TRADE_KEYS[keyboardTargetIndex];
       if (key === targetKey) {
         audio.playKey();
         haptics.lightTap();
         setPressedKeys(prev => new Set([...prev, `${key}-${keyboardTargetIndex}`]));
         
-        if (keyboardTargetIndex >= BULLMONEY_KEYS.length - 1) {
+        if (keyboardTargetIndex >= TRADE_KEYS.length - 1) {
           setKeyboardPhase('tapping');
           setProgress(50);
         } else {
           setKeyboardTargetIndex(prev => prev + 1);
-          setProgress((keyboardTargetIndex + 1) / BULLMONEY_KEYS.length * 50);
+          setProgress((keyboardTargetIndex + 1) / TRADE_KEYS.length * 50);
         }
       }
     } else if (keyboardPhase === 'tapping' && key === 'SPACE') {
@@ -805,17 +834,15 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentGame, handleKeyboardPress, isTransitioning]);
 
-  // Physical keyboard listener for password vault - IMMEDIATE typing support
+  // Physical keyboard listener for password vault - IMMEDIATE typing support (ALL CAPS)
   useEffect(() => {
     if (!currentGame || currentGame.mode !== 'passwordVault' || hasKey || isTransitioning) return;
-    
-    const targetPassword = "bull money";
     
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't interfere with dragging
       if (hasKey) return;
       
-      const key = e.key.toLowerCase();
+      const key = e.key.toUpperCase();
       const nextChar = targetPassword[typedPassword.length];
       
       if (key === nextChar) {
@@ -834,7 +861,7 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentGame, typedPassword, hasKey, audio, haptics, isTransitioning]);
+  }, [currentGame, typedPassword, hasKey, audio, haptics, isTransitioning, targetPassword]);
 
   // Hold Prank
   const handleHoldStart = useCallback(() => {
@@ -1015,32 +1042,58 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
             <motion.div
               className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-full flex items-center justify-center"
               style={{
-                background: 'linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.3))',
-                border: isMobile ? '2px solid #ffffff' : '3px solid #ffffff',
+                background: `linear-gradient(135deg, ${themeColor}30, ${themeColor}30)`,
+                border: isMobile ? `2px solid ${themeColor}` : `3px solid ${themeColor}`,
                 transform: 'translateZ(0)',
                 willChange: 'transform',
+                color: themeColor,
               }}
               animate={isHolding ? { scale: 0.95 } : { scale: 1 }}
             >
-              <currentGame.icon size={isMobile ? 32 : 48} className="text-white" />
+              <currentGame.icon size={isMobile ? 32 : 48} />
             </motion.div>
           )}
 
           {/* Game label */}
           {!isTransitioning && currentGame && (
             <div className="text-center px-2">
-              <h2 className="text-lg sm:text-xl lg:text-2xl font-bold neon-text mb-1 sm:mb-2">{currentGame.label}</h2>
-              <p className="text-white/70 text-xs sm:text-sm">{currentGame.instruction}</p>
+              {/* Broker badge for broker codes */}
+              {isBrokerCode && (
+                <div 
+                  className="inline-block px-3 py-1 rounded-full text-xs font-bold mb-2"
+                  style={{ 
+                    backgroundColor: `${themeColor}20`, 
+                    color: themeColor,
+                    border: `1px solid ${themeColor}50`
+                  }}
+                >
+                  {themeName} BROKER CODE
+                </div>
+              )}
+              <h2 
+                className="text-lg sm:text-xl lg:text-2xl font-bold mb-1 sm:mb-2"
+                style={{ 
+                  color: themeColor,
+                  textShadow: `0 0 4px ${themeColor}, 0 0 8px ${themeColor}, 0 0 12px ${themeColor}40`
+                }}
+              >
+                {currentGame.label}
+              </h2>
+              <p style={{ color: `${themeColor}99` }} className="text-xs sm:text-sm">
+                {currentGame.mode === 'passwordVault' 
+                  ? `Type '${targetPassword}' to unlock` 
+                  : currentGame.instruction}
+              </p>
             </div>
           )}
 
           {/* Progress bar */}
           {!isTransitioning && (
-            <div className="w-48 sm:w-56 lg:w-64 h-1.5 sm:h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.2)' }}>
+            <div className="w-48 sm:w-56 lg:w-64 h-1.5 sm:h-2 rounded-full overflow-hidden" style={{ background: `${themeColor}33` }}>
               <motion.div
                 className="h-full rounded-full"
                 style={{
-                  background: 'linear-gradient(90deg, #ffffff, #ffffff)',
+                  background: `linear-gradient(90deg, ${themeColor}, ${themeColor})`,
                   width: `${progress}%`,
                 }}
                 transition={{ duration: 0.1 }}
@@ -1052,16 +1105,18 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
           {!isTransitioning && currentGame?.mode === 'passwordVault' && !hasKey && (
             <div className="text-center flex flex-col items-center gap-2 sm:gap-3 w-full">
               <div className="flex items-center justify-center gap-0.5 sm:gap-1 mb-1 sm:mb-2">
-                {"bull money".split('').map((char, i) => (
+                {targetPassword.split('').map((char, i) => (
                   <span
                     key={i}
-                    className={`text-lg sm:text-xl lg:text-2xl font-mono ${
-                      i < typedPassword.length
-                        ? 'text-white'
+                    className={`text-lg sm:text-xl lg:text-2xl font-mono`}
+                    style={{
+                      color: i < typedPassword.length
+                        ? themeColor
                         : i === typedPassword.length
-                          ? 'text-white animate-pulse'
-                          : 'text-white/30'
-                    }`}
+                          ? themeColor
+                          : `${themeColor}50`,
+                      animation: i === typedPassword.length ? 'pulse 1s infinite' : undefined,
+                    }}
                   >
                     {char === ' ' ? '␣' : char.toUpperCase()}
                   </span>
@@ -1074,22 +1129,22 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
                 autoFocus
                 autoComplete="off"
                 autoCorrect="off"
-                autoCapitalize="off"
+                autoCapitalize="characters"
                 spellCheck={false}
                 enterKeyHint="done"
-                className="w-full max-w-[240px] sm:max-w-[280px] px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-white text-center text-base sm:text-lg font-mono focus:outline-none focus:ring-2 focus:ring-white"
+                className="w-full max-w-[240px] sm:max-w-[280px] px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-center text-base sm:text-lg font-mono focus:outline-none focus:ring-2 uppercase"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: '2px solid rgba(255, 255, 255, 0.3)',
-                  caretColor: '#ffffff',
+                  background: `${themeColor}15`,
+                  border: `2px solid ${themeColor}50`,
+                  caretColor: themeColor,
+                  color: themeColor,
                 }}
                 placeholder="Tap here to type..."
                 value={typedPassword}
                 onClick={() => passwordInputRef.current?.focus()}
                 onKeyDown={(e) => e.stopPropagation()}
                 onChange={(e) => {
-                  const input = e.target.value.toLowerCase();
-                  const targetPassword = "bull money";
+                  const input = e.target.value.toUpperCase();
                   // Only accept if the input matches the target so far
                   if (targetPassword.startsWith(input)) {
                     if (input.length > typedPassword.length) {
@@ -1104,11 +1159,12 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
                   }
                 }}
               />
-              <p className="text-[10px] sm:text-xs text-white/50 mb-1 sm:mb-2">Type: bull money</p>
+              <p style={{ color: `${themeColor}80` }} className="text-[10px] sm:text-xs mb-1 sm:mb-2">
+                Type: {targetPassword} {isBrokerCode && `(${themeName} Broker Code)`}
+              </p>
               {/* Virtual Keyboard for touch and visual support */}
               <VirtualKeyboard
                 targetKeys={(() => {
-                  const targetPassword = "bull money";
                   const nextChar = targetPassword[typedPassword.length];
                   if (!nextChar) return [];
                   return nextChar === ' ' ? ['SPACE'] : [nextChar.toUpperCase()];
@@ -1119,13 +1175,12 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
                   )
                 )}
                 onKeyPress={(key) => {
-                  const targetPassword = "bull money";
                   const nextChar = targetPassword[typedPassword.length];
                   if (!nextChar) return;
 
                   const expectedKey = nextChar === ' ' ? 'SPACE' : nextChar.toUpperCase();
                   if (key === expectedKey) {
-                    const newTyped = typedPassword + (key === 'SPACE' ? ' ' : key.toLowerCase());
+                    const newTyped = typedPassword + (key === 'SPACE' ? ' ' : key.toUpperCase());
                     audio.playKey();
                     haptics.lightTap();
                     setTypedPassword(newTyped);
@@ -1137,37 +1192,33 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
                   }
                 }}
                 compact={isMobile}
+                themeColor={themeColor}
               />
             </div>
           )}
 
           {!isTransitioning && currentGame?.mode === 'passwordVault' && hasKey && (
             <>
-              <DraggableKey onDrop={handleKeyDrop} vaultPosition={vaultPosition} compact={isMobile} />
-              {/* Vault - larger target area for mobile */}
+              <DraggableKey onDrop={handleKeyDrop} vaultPosition={vaultPosition} compact={isMobile} themeColor={themeColor} />
+              {/* Trade Terminal - larger target area for mobile */}
               <motion.div
                 ref={vaultRef}
                 className="w-24 h-20 sm:w-28 sm:h-24 lg:w-32 lg:h-28 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center"
                 style={{
                   background: 'rgba(0,0,0,0.7)',
-                  border: isMobile ? '3px dashed #ffffff' : '4px dashed #ffffff',
-                  boxShadow: '0 0 40px rgba(255, 255, 255, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.1)',
+                  border: isMobile ? `3px dashed ${themeColor}` : `4px dashed ${themeColor}`,
+                  boxShadow: `0 0 40px ${themeColor}50, inset 0 0 20px ${themeColor}20`,
                 }}
                 animate={{
                   y: [0, -6, 0],
                   scale: [1, 1.02, 1],
-                  boxShadow: [
-                    '0 0 40px rgba(255, 255, 255, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.1)',
-                    '0 0 60px rgba(255, 255, 255, 0.5), inset 0 0 30px rgba(255, 255, 255, 0.2)',
-                    '0 0 40px rgba(255, 255, 255, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.1)',
-                  ],
                 }}
                 transition={shouldSkipHeavyEffects ? {} : { duration: 2, repeat: Infinity, ease: 'easeInOut' }}
               >
-                <Lock size={isMobile ? 28 : 40} className="text-white mb-1" />
-                <span className="text-white/70 text-[10px] sm:text-xs">DROP HERE</span>
+                <BarChart2 size={isMobile ? 28 : 40} style={{ color: themeColor }} className="mb-1" />
+                <span style={{ color: `${themeColor}99` }} className="text-[10px] sm:text-xs">EXECUTE</span>
               </motion.div>
-              <p className="text-xs sm:text-sm text-white/60 mt-2 sm:mt-4">Drag the key to the vault!</p>
+              <p style={{ color: `${themeColor}99` }} className="text-xs sm:text-sm mt-2 sm:mt-4">Drag the key to execute trade!</p>
             </>
           )}
 
@@ -1177,23 +1228,25 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
                 <>
                   {/* Progress display */}
                   <div className="flex items-center justify-center gap-0.5 sm:gap-1 mb-1 sm:mb-2">
-                    {BULLMONEY_KEYS.map((char, i) => (
+                    {TRADE_KEYS.map((char, i) => (
                       <span
                         key={i}
-                        className={`text-lg sm:text-xl lg:text-2xl font-mono ${
-                          i < keyboardTargetIndex
-                            ? 'text-white'
+                        className={`text-lg sm:text-xl lg:text-2xl font-mono`}
+                        style={{
+                          color: i < keyboardTargetIndex
+                            ? themeColor
                             : i === keyboardTargetIndex
-                              ? 'text-white animate-pulse'
-                              : 'text-white/30'
-                        }`}
+                              ? themeColor
+                              : `${themeColor}50`,
+                          animation: i === keyboardTargetIndex ? 'pulse 1s infinite' : undefined,
+                        }}
                       >
                         {char}
                       </span>
                     ))}
                   </div>
-                  <p className="text-xs sm:text-sm text-white mb-1 sm:mb-2">
-                    Type: <span className="font-bold">{BULLMONEY_KEYS[keyboardTargetIndex]}</span>
+                  <p style={{ color: themeColor }} className="text-xs sm:text-sm mb-1 sm:mb-2">
+                    Type: <span className="font-bold">{TRADE_KEYS[keyboardTargetIndex]}</span>
                   </p>
                   {/* Mobile input field - triggers keyboard popup */}
                   <input
@@ -1205,19 +1258,20 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
                     autoCapitalize="characters"
                     spellCheck={false}
                     enterKeyHint="done"
-                    className="w-full max-w-[240px] sm:max-w-[280px] px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-white text-center text-base sm:text-lg font-mono focus:outline-none focus:ring-2 focus:ring-white uppercase"
+                    className="w-full max-w-[240px] sm:max-w-[280px] px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-center text-base sm:text-lg font-mono focus:outline-none focus:ring-2 uppercase"
                     style={{
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      border: '2px solid rgba(255, 255, 255, 0.3)',
-                      caretColor: '#ffffff',
+                      background: `${themeColor}15`,
+                      border: `2px solid ${themeColor}50`,
+                      caretColor: themeColor,
+                      color: themeColor,
                     }}
                     placeholder="Tap here to type..."
-                    value={BULLMONEY_KEYS.slice(0, keyboardTargetIndex).join('')}
+                    value={TRADE_KEYS.slice(0, keyboardTargetIndex).join('')}
                     onClick={() => keyboardInputRef.current?.focus()}
                     onKeyDown={(e) => {
                       e.stopPropagation();
                       const key = e.key.toUpperCase();
-                      if (key === BULLMONEY_KEYS[keyboardTargetIndex]) {
+                      if (key === TRADE_KEYS[keyboardTargetIndex]) {
                         e.preventDefault();
                         handleKeyboardPress(key);
                       }
@@ -1226,31 +1280,33 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
                       // Handle mobile keyboard input
                       const input = e.target.value.toUpperCase();
                       const lastChar = input[input.length - 1];
-                      if (lastChar === BULLMONEY_KEYS[keyboardTargetIndex]) {
+                      if (lastChar === TRADE_KEYS[keyboardTargetIndex]) {
                         handleKeyboardPress(lastChar);
                       }
                     }}
                   />
                   {/* Also keep virtual keyboard for tap support */}
                   <VirtualKeyboard
-                    targetKeys={[BULLMONEY_KEYS[keyboardTargetIndex]]}
+                    targetKeys={[TRADE_KEYS[keyboardTargetIndex]]}
                     pressedKeys={pressedKeys}
                     onKeyPress={handleKeyboardPress}
                     compact={isMobile}
+                    themeColor={themeColor}
                   />
                 </>
               )}
               {keyboardPhase === 'tapping' && (
                 <>
-                  <p className="text-base sm:text-lg text-white mb-1 sm:mb-2">
-                    TAP SPACE! {spaceTapCount}/10
+                  <p style={{ color: themeColor }} className="text-base sm:text-lg mb-1 sm:mb-2">
+                    CONFIRM ORDER! {spaceTapCount}/10
                   </p>
-                  <p className="text-[10px] sm:text-xs text-white/50">10 taps in 2 seconds</p>
+                  <p style={{ color: `${themeColor}80` }} className="text-[10px] sm:text-xs">10 taps to confirm trade</p>
                   <VirtualKeyboard
                     targetKeys={['SPACE']}
                     pressedKeys={new Set()}
                     onKeyPress={handleKeyboardPress}
                     compact={isMobile}
+                    themeColor={themeColor}
                   />
                 </>
               )}
@@ -1262,9 +1318,9 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
               className="w-28 h-28 sm:w-32 sm:h-32 lg:w-40 lg:h-40 rounded-full flex flex-col items-center justify-center cursor-pointer touch-manipulation"
               style={{
                 background: prankComplete
-                  ? 'linear-gradient(135deg, #ffffff, #ffffff)'
-                  : `linear-gradient(135deg, rgba(255,255,255,${0.3 + holdProgress * 0.007}), rgba(255,255,255,${0.3 + holdProgress * 0.007}))`,
-                border: isMobile ? '3px solid #ffffff' : '4px solid #ffffff',
+                  ? `linear-gradient(135deg, ${themeColor}, ${themeColor})`
+                  : `linear-gradient(135deg, ${themeColor}${Math.round((0.3 + holdProgress * 0.007) * 255).toString(16).padStart(2, '0')}, ${themeColor}${Math.round((0.3 + holdProgress * 0.007) * 255).toString(16).padStart(2, '0')})`,
+                border: isMobile ? `3px solid ${themeColor}` : `4px solid ${themeColor}`,
                 transform: 'translateZ(0)',
                 willChange: 'transform',
                 WebkitTapHighlightColor: 'transparent',
@@ -1276,9 +1332,9 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
               onTouchEnd={(e) => { e.preventDefault(); handleHoldEnd(); }}
               animate={isHolding ? { scale: 0.95 } : { scale: 1 }}
             >
-              <FingerprintPattern size={isMobile ? 32 : 48} className="text-white mb-1 sm:mb-2" />
-              <span className="text-white font-bold text-sm sm:text-base">{Math.floor(holdProgress)}%</span>
-              <span className="text-[10px] sm:text-xs text-white/50 mt-0.5 sm:mt-1">{isMobile ? 'Hold' : 'Click & Hold'}</span>
+              <Target size={isMobile ? 32 : 48} style={{ color: prankComplete ? '#000' : themeColor }} className="mb-1 sm:mb-2" />
+              <span style={{ color: prankComplete ? '#000' : themeColor }} className="font-bold text-sm sm:text-base">{Math.floor(holdProgress)}%</span>
+              <span style={{ color: prankComplete ? '#000000aa' : `${themeColor}80` }} className="text-[10px] sm:text-xs mt-0.5 sm:mt-1">{isMobile ? 'Hold for TP' : 'Hold for Profit'}</span>
             </motion.button>
           )}
 
@@ -1301,17 +1357,38 @@ export default function MultiStepLoaderV3Simple({ onFinished }: LoaderProps) {
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: "spring", stiffness: 200, damping: 20 }}
               >
+                {/* Broker badge on success */}
+                {isBrokerCode && (
+                  <div 
+                    className="px-4 py-2 rounded-full text-sm font-bold"
+                    style={{ 
+                      backgroundColor: `${themeColor}30`, 
+                      color: themeColor,
+                      border: `2px solid ${themeColor}`
+                    }}
+                  >
+                    {themeName} BROKER ACTIVATED
+                  </div>
+                )}
                 <div
                   className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-full flex items-center justify-center"
                   style={{
-                    border: isMobile ? '2px solid #ffffff' : '3px solid #ffffff',
+                    border: isMobile ? `2px solid ${themeColor}` : `3px solid ${themeColor}`,
                     transform: 'translateZ(0)',
                   }}
                 >
-                  <Unlock size={isMobile ? 32 : 48} className="text-white" />
+                  <TrendingUp size={isMobile ? 32 : 48} style={{ color: themeColor }} />
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-bold neon-text">UNLOCKED</h2>
-                <p className="text-white/70 text-sm sm:text-base">Welcome to Bull Money</p>
+                <h2 
+                  className="text-2xl sm:text-3xl font-bold"
+                  style={{ 
+                    color: themeColor,
+                    textShadow: `0 0 4px ${themeColor}, 0 0 8px ${themeColor}, 0 0 12px ${themeColor}40`
+                  }}
+                >
+                  TRADE EXECUTED
+                </h2>
+                <p style={{ color: `${themeColor}99` }} className="text-sm sm:text-base">Welcome to Bull Money Trading</p>
               </motion.div>
             </motion.div>
           )}

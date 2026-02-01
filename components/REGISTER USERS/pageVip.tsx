@@ -520,12 +520,55 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     setAcceptedTerms(false);
   };
 
+  // Robust clipboard copy with fallback for production environments
   const copyCode = async (code: string) => {
+    if (!code) return;
+    
     try {
-      await navigator.clipboard.writeText(code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1100);
-    } catch {}
+      // Method 1: Try modern Clipboard API (works in HTTPS)
+      if (typeof navigator !== 'undefined' && navigator?.clipboard?.writeText) {
+        try {
+          await navigator.clipboard.writeText(code);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1100);
+          return;
+        } catch (clipboardErr) {
+          console.warn('Clipboard API failed, trying fallback:', clipboardErr);
+        }
+      }
+
+      // Method 2: Fallback using textarea (works in most environments)
+      const textarea = document.createElement('textarea');
+      textarea.value = code;
+      textarea.setAttribute('readonly', '');
+      textarea.style.cssText = 'position:fixed;top:0;left:0;width:2em;height:2em;padding:0;border:none;outline:none;box-shadow:none;background:transparent;z-index:-1;';
+      document.body.appendChild(textarea);
+      
+      // iOS Safari specific handling
+      const range = document.createRange();
+      range.selectNodeContents(textarea);
+      const selection = window.getSelection();
+      if (selection) {
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+      textarea.setSelectionRange(0, textarea.value.length);
+      
+      const success = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      
+      if (success) {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1100);
+      } else {
+        setSubmitError('Failed to copy code. Please copy manually: ' + code);
+        setTimeout(() => setSubmitError(null), 3000);
+      }
+    } catch (err) {
+      console.error('Copy failed:', err);
+      setSubmitError('Failed to copy code. Please copy manually: ' + code);
+      setTimeout(() => setSubmitError(null), 3000);
+    }
   };
 
   const handleBrokerClick = () => {
@@ -921,53 +964,12 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         onClick={handleNext}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="w-full py-3.5 md:py-4 bg-black border-2 border-white/60 hover:border-white text-white rounded-xl font-bold text-base md:text-lg tracking-wide transition-all shadow-[0_0_25px_rgba(255, 255, 255,0.4)] hover:shadow-[0_0_35px_rgba(255, 255, 255,0.6)] flex items-center justify-center cursor-target relative overflow-hidden"
+                        className="w-full py-3.5 md:py-4 bg-black border-2 border-white/60 hover:border-white text-white rounded-xl font-bold text-base md:text-lg tracking-wide transition-all shadow-[0_0_25px_rgba(255, 255, 255,0.4)] hover:shadow-[0_0_35px_rgba(255, 255, 255,0.6)] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-target text-base relative overflow-hidden"
                       >
-                        {/* Blue shimmer on button */}
-                        <span className="absolute inset-[-100%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ffffff_50%,#00000000_100%)] opacity-40 z-0" />
-                        <span className="relative z-10 flex items-center">
-                          Start Free Access <ArrowRight className="w-5 h-5 ml-2" />
-                        </span>
+                        Get Started
                       </motion.button>
-                      
-                      <div className="mt-4 space-y-3">
-                         <div className="flex items-center justify-center gap-2 text-xs text-white/40">
-                             <Lock className="w-3 h-3" /> No credit card required
-                         </div>
 
-                         {/* DYNAMIC BUTTON FOR EXISTING USERS */}
-                         <motion.button 
-                           onClick={toggleViewMode}
-                           whileHover={{ scale: 1.01 }}
-                           className="w-full py-3 rounded-lg text-sm font-semibold transition-all border-2 border-white/20 mt-2 bg-black/60 text-white/80 hover:bg-white/10/30 hover:border-white/40"
-                         >
-                            Already a member? Login here
-                         </motion.button>
-                      </div>
-                   </div>
-                 </motion.div>
-              )}
-
-              {/* --- SCREEN 2: OPEN ACCOUNT (Step 1) --- */}
-              {step === 1 && (
-                <motion.div
-                  key="step1"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <StepCard
-                    {...getStepProps(1)}
-                    title="Open Free Account"
-                    className="bg-black/80"
-                    actions={
-                      <div className="flex flex-col gap-3 md:gap-4">
-                        <p className="text-xs text-center text-white/50 flex items-center justify-center gap-1">
-                          <Clock className="w-3 h-3" /> Takes about 1 minute • No deposit required
-                        </p>
-                        
-                        <div className="flex flex-col items-center justify-center gap-3">
+                      <div className="flex flex-col items-center justify-center gap-3">
                            {/* COPY CODE BUTTON */}
                           <button
                             onClick={() => copyCode(brokerCode)}

@@ -997,12 +997,55 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     setAcceptedTerms(false);
   };
 
+  // Robust clipboard copy with fallback for production environments
   const copyCode = async (code: string) => {
+    if (!code) return;
+    
     try {
-      await navigator.clipboard.writeText(code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1100);
-    } catch {}
+      // Method 1: Try modern Clipboard API (works in HTTPS)
+      if (typeof navigator !== 'undefined' && navigator?.clipboard?.writeText) {
+        try {
+          await navigator.clipboard.writeText(code);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1100);
+          return;
+        } catch (clipboardErr) {
+          console.warn('Clipboard API failed, trying fallback:', clipboardErr);
+        }
+      }
+
+      // Method 2: Fallback using textarea (works in most environments)
+      const textarea = document.createElement('textarea');
+      textarea.value = code;
+      textarea.setAttribute('readonly', '');
+      textarea.style.cssText = 'position:fixed;top:0;left:0;width:2em;height:2em;padding:0;border:none;outline:none;box-shadow:none;background:transparent;z-index:-1;';
+      document.body.appendChild(textarea);
+      
+      // iOS Safari specific handling
+      const range = document.createRange();
+      range.selectNodeContents(textarea);
+      const selection = window.getSelection();
+      if (selection) {
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+      textarea.setSelectionRange(0, textarea.value.length);
+      
+      const success = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      
+      if (success) {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1100);
+      } else {
+        setSubmitError('Failed to copy code. Please copy manually: ' + code);
+        setTimeout(() => setSubmitError(null), 3000);
+      }
+    } catch (err) {
+      console.error('Copy failed:', err);
+      setSubmitError('Failed to copy code. Please copy manually: ' + code);
+      setTimeout(() => setSubmitError(null), 3000);
+    }
   };
 
   const handleBrokerClick = () => {
@@ -1318,27 +1361,19 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   >
                     BullMoney
                   </motion.h1>
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.8, delay: 0.4 }}
-                    className="relative text-sm text-white/40 mt-2 font-normal"
-                  >
-                    Trading Excellence
-                  </motion.p>
                 </motion.div>
 
                 {/* Main Content Area - Apple-style centered card */}
                 <div
-                  className="relative flex-1 flex flex-col items-center justify-center px-5 w-full pb-8"
+                  className="relative flex-1 flex flex-col items-center justify-center px-4 w-full pb-6"
                   style={{ zIndex: 10, pointerEvents: 'auto' }}
                 >
-                  {/* Clean Card Container - Apple-style minimal */}
+                  {/* Clean Card Container - Apple-style minimal (35% smaller on mobile) */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                    className="w-full max-w-[20rem] rounded-2xl p-6 sm:p-7 border border-white/[0.08]"
+                    className="w-full max-w-[13rem] rounded-xl p-4 sm:max-w-[20rem] sm:rounded-2xl sm:p-7 border border-white/[0.08]"
                     style={{
                       background: 'rgba(0, 0, 0, 0.4)',
                       backdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(40px)',
@@ -1347,15 +1382,15 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     }}
                   >
                     {/* Clean title */}
-                    <h2 className="text-xl font-semibold text-white mb-2 text-center">
+                    <h2 className="text-base sm:text-xl font-semibold text-white mb-1.5 sm:mb-2 text-center">
                       Get Started
                     </h2>
-                    <p className="text-white/40 text-sm mb-8 text-center font-normal">
+                    <p className="text-white/40 text-xs sm:text-sm mb-5 sm:mb-8 text-center font-normal">
                       Choose how to continue
                     </p>
 
-                    {/* Clean Button Stack */}
-                    <div className="flex flex-col gap-3">
+                    {/* Clean Button Stack - 35% smaller on mobile */}
+                    <div className="flex flex-col gap-2 sm:gap-3">
                       {/* Primary Button - Subtle glow (white or red based on broker) */}
                       <motion.button
                         onClick={() => {
@@ -1363,7 +1398,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                           setStep(0);
                         }}
                         whileTap={{ scale: 0.97 }}
-                        className="w-full py-3 rounded-xl font-semibold text-sm transition-all"
+                        className="w-full py-2 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all"
                         style={{
                           background: isXM ? '#ef4444' : '#ffffff',
                           color: isXM ? '#ffffff' : '#000000',
@@ -1380,7 +1415,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                           setStep(0);
                         }}
                         whileTap={{ scale: 0.97 }}
-                        className="w-full py-3 rounded-xl font-semibold text-sm transition-all text-white"
+                        className="w-full py-2 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all text-white"
                         style={{
                           background: isXM ? 'rgba(239, 68, 68, 0.05)' : 'rgba(255, 255, 255, 0.03)',
                           border: isXM ? '1px solid rgba(239, 68, 68, 0.2)' : '1px solid rgba(255, 255, 255, 0.1)',
@@ -1390,9 +1425,9 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                       </motion.button>
 
                       {/* Minimal Divider */}
-                      <div className="flex items-center gap-3 my-2">
+                      <div className="flex items-center gap-2 sm:gap-3 my-1 sm:my-2">
                         <div className="flex-1 h-[0.5px] bg-white/[0.08]" />
-                        <span className="text-white/30 text-xs font-normal">or</span>
+                        <span className="text-white/30 text-[10px] sm:text-xs font-normal">or</span>
                         <div className="flex-1 h-[0.5px] bg-white/[0.08]" />
                       </div>
 
@@ -1400,7 +1435,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                       <motion.button
                         onClick={() => setStep(-2)}
                         whileTap={{ scale: 0.97 }}
-                        className="w-full py-2.5 rounded-xl font-normal text-[13px] transition-all text-white/70 hover:text-white"
+                        className="w-full py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl font-normal text-[11px] sm:text-[13px] transition-all text-white/70 hover:text-white"
                         style={{
                           background: 'transparent',
                           border: isXM ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(255, 255, 255, 0.2)',
@@ -1412,7 +1447,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     </div>
 
                     {/* Clean Footer */}
-                    <p className="text-center text-white/20 text-xs mt-6 font-normal leading-relaxed">
+                    <p className="text-center text-white/20 text-[10px] sm:text-xs mt-4 sm:mt-6 font-normal leading-relaxed">
                       By continuing, you agree to our{' '}
                       <button 
                         type="button"
@@ -1433,7 +1468,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   </motion.div>
                 </div>
 
-                {/* Ultimate Hub Pill - Uses its own fixed positioning (matching desktop) */}
+                {/* Ultimate Hub Pill - Positioned below header+subheading from top */}
                 <UnifiedFpsPill
                   fps={60}
                   deviceTier="high"
@@ -1441,8 +1476,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   isMinimized={isHubMinimized}
                   onToggleMinimized={() => setIsHubMinimized(!isHubMinimized)}
                   onOpenPanel={() => setIsHubOpen(true)}
-                  topOffsetMobile="calc(env(safe-area-inset-top, 0px) + 180px)"
-                  topOffsetDesktop="calc(env(safe-area-inset-top, 0px) + 200px)"
+                  topOffsetMobile="calc(env(safe-area-inset-top, 0px) + 100px)"
+                  topOffsetDesktop="calc(env(safe-area-inset-top, 0px) + 110px)"
                 />
               </motion.div>
 
@@ -1573,7 +1608,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 </motion.div>
               </div>
 
-              {/* Ultimate Hub Pill - Uses its own fixed positioning (matching welcome screen) */}
+              {/* Ultimate Hub Pill - Positioned below header from top */}
               <UnifiedFpsPill
                 fps={60}
                 deviceTier="high"
@@ -1581,8 +1616,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 isMinimized={isHubMinimized}
                 onToggleMinimized={() => setIsHubMinimized(!isHubMinimized)}
                 onOpenPanel={() => setIsHubOpen(true)}
-                topOffsetMobile="calc(env(safe-area-inset-top, 0px) + 180px)"
-                topOffsetDesktop="calc(env(safe-area-inset-top, 0px) + 200px)"
+                topOffsetMobile="calc(env(safe-area-inset-top, 0px) + 100px)"
+                topOffsetDesktop="calc(env(safe-area-inset-top, 0px) + 110px)"
               />
             </motion.div>
 

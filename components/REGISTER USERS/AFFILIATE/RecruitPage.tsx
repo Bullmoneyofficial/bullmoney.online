@@ -99,12 +99,55 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     }
   };
 
+  // Robust clipboard copy with fallback for production environments
   const copyCode = async (code: string) => {
+    if (!code) return;
+    
     try {
-      await navigator.clipboard.writeText(code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1100);
-    } catch {}
+      // Method 1: Try modern Clipboard API (works in HTTPS)
+      if (typeof navigator !== 'undefined' && navigator?.clipboard?.writeText) {
+        try {
+          await navigator.clipboard.writeText(code);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1100);
+          return;
+        } catch (clipboardErr) {
+          console.warn('Clipboard API failed, trying fallback:', clipboardErr);
+        }
+      }
+
+      // Method 2: Fallback using textarea (works in most environments)
+      const textarea = document.createElement('textarea');
+      textarea.value = code;
+      textarea.setAttribute('readonly', '');
+      textarea.style.cssText = 'position:fixed;top:0;left:0;width:2em;height:2em;padding:0;border:none;outline:none;box-shadow:none;background:transparent;z-index:-1;';
+      document.body.appendChild(textarea);
+      
+      // iOS Safari specific handling
+      const range = document.createRange();
+      range.selectNodeContents(textarea);
+      const selection = window.getSelection();
+      if (selection) {
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+      textarea.setSelectionRange(0, textarea.value.length);
+      
+      const success = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      
+      if (success) {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1100);
+      } else {
+        setSubmitError('Failed to copy code. Please copy manually: ' + code);
+        setTimeout(() => setSubmitError(null), 3000);
+      }
+    } catch (err) {
+      console.error('Copy failed:', err);
+      setSubmitError('Failed to copy code. Please copy manually: ' + code);
+      setTimeout(() => setSubmitError(null), 3000);
+    }
   };
 
   const handleBrokerClick = () => {
