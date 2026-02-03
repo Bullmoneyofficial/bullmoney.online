@@ -4078,13 +4078,13 @@ const CommunityModal = memo(({ isOpen, onClose, isVip, isAdmin }: {
       </div>
 
       {/* Feed */}
-      <div className="flex-1 overflow-y-auto min-h-0 [-webkit-overflow-scrolling:touch]" style={{ touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
+      <div className="flex-1 overflow-y-auto min-h-0 [-webkit-overflow-scrolling:touch]" style={{ touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }} data-scrollable>
         <TelegramChannelEmbed channel={activeChannel} isVip={isVip} />
       </div>
 
       {/* View All Link */}
       {activeChannel !== 'vip' && (
-        <div className="px-3 py-1.5 border-t border-white/10">
+        <div className="flex-shrink-0 px-3 py-1.5 border-t border-white/10">
           <a href={`https://t.me/${TELEGRAM_CHANNELS[activeChannel].handle}`}
             target="_blank" rel="noopener noreferrer"
             className="flex items-center justify-center gap-1 text-[9px] text-white hover:text-white">
@@ -4094,7 +4094,7 @@ const CommunityModal = memo(({ isOpen, onClose, isVip, isAdmin }: {
       )}
 
       {/* Social Links */}
-      <div className="p-3 space-y-1.5 border-t border-white/20">
+      <div className="flex-shrink-0 p-3 space-y-1.5 border-t border-white/20">
         <div className="flex gap-2">
           <motion.button
             onClick={handleCopyLink}
@@ -4107,7 +4107,7 @@ const CommunityModal = memo(({ isOpen, onClose, isVip, isAdmin }: {
           </motion.button>
         </div>
         
-        <div className="grid grid-cols-2 gap-1.5">
+        <div className="grid grid-cols-2 sm:grid-cols-2 gap-1.5">
           {socialLinks.map(link => {
             const Icon = link.icon;
             return (
@@ -4814,14 +4814,45 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
     setActiveTab(tabIds[prevIndex]);
   }, [activeTab, tabIds]);
 
+  // Track if touch started inside a scrollable element (to prevent tab swipe)
+  const touchStartedInScrollableRef = useRef(false);
+
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     const touch = e.touches[0];
     touchStartXRef.current = touch.clientX;
     touchStartYRef.current = touch.clientY;
+    
+    // Check if touch started inside a scrollable element (e.g., Telegram feed)
+    // Look for elements with data-scrollable or overflow-y-auto that can scroll
+    const target = e.target as HTMLElement;
+    let el: HTMLElement | null = target;
+    touchStartedInScrollableRef.current = false;
+    
+    while (el && el !== e.currentTarget) {
+      // Check for scrollable containers (Telegram feed, charts, etc.)
+      if (
+        el.hasAttribute('data-scrollable') ||
+        el.scrollHeight > el.clientHeight ||
+        el.classList.contains('overflow-y-auto')
+      ) {
+        touchStartedInScrollableRef.current = true;
+        break;
+      }
+      el = el.parentElement;
+    }
   }, []);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     if (touchStartXRef.current === null || touchStartYRef.current === null) return;
+    
+    // Don't change tabs if touch started inside a scrollable area
+    if (touchStartedInScrollableRef.current) {
+      touchStartXRef.current = null;
+      touchStartYRef.current = null;
+      touchStartedInScrollableRef.current = false;
+      return;
+    }
+    
     const touch = e.changedTouches[0];
     const deltaX = touch.clientX - touchStartXRef.current;
     const deltaY = touch.clientY - touchStartYRef.current;
@@ -4923,7 +4954,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
             style={{ touchAction: 'pan-y pan-x', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' }}
           >
             {/* Header with FPS Display */}
-            <div className="p-3 sm:p-4 border-b border-white/30 bg-black/95 backdrop-blur-2xl" style={{ boxShadow: '0 0 12px rgba(255, 255, 255, 0.3), inset 0 0 12px rgba(255, 255, 255, 0.1)' }}>
+            <div className="flex-shrink-0 p-3 sm:p-4 border-b border-white/30 bg-black/95 backdrop-blur-2xl" style={{ boxShadow: '0 0 12px rgba(255, 255, 255, 0.3), inset 0 0 12px rgba(255, 255, 255, 0.1)' }}>
               <div className="flex items-center justify-between gap-3">
                 {/* FPS Badge */}
                 <div className="flex items-center gap-2">
@@ -4988,47 +5019,93 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
               </motion.div>
             </div>
             
-            {/* Tab Navigation */}
-            <div className="flex items-stretch gap-2 p-2 border-b border-white/30 bg-black/95 backdrop-blur-2xl overflow-x-auto overflow-y-hidden scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ boxShadow: '0 0 12px rgba(255, 255, 255, 0.3), inset 0 0 12px rgba(255, 255, 255, 0.1)', touchAction: 'pan-x pinch-zoom' }}>
-              {UNIFIED_HUB_TABS.map((tab) => {
-                const Icon = tab.icon;
-                const isActive = activeTab === tab.id;
-                
-                return (
-                  <motion.button
-                    key={tab.id}
-                    onClick={() => {
-                      SoundEffects.click();
-                      setActiveTab(tab.id);
-                    }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className={`flex-1 min-w-[88px] sm:min-w-[108px] flex flex-col items-center justify-center gap-2 py-3 sm:py-3.5 px-3 sm:px-4 transition-all whitespace-nowrap rounded-2xl border backdrop-blur-xl min-h-[72px] sm:min-h-[70px] ${
-                      isActive 
-                        ? 'bg-white/25 text-white border-white/70 neon-blue-text shadow-[0_10px_25px_rgba(255,255,255,0.22)]' 
-                        : 'bg-white/10 text-white/70 border-white/20 hover:text-white hover:bg-white/15 hover:border-white/40'
-                    }`}
-                    style={isActive ? { textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' } : {}}
-                  >
-                    <span className={`flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl border ${
-                      isActive ? 'border-white/60 bg-white/25' : 'border-white/20 bg-white/10'
-                    }`}>
-                      <Icon className="w-4 h-4 sm:w-5 sm:h-5" style={isActive ? { filter: 'drop-shadow(0 0 4px #ffffff)' } : {}} />
-                    </span>
-                    <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">{tab.label}</span>
-                  </motion.button>
-                );
-              })}
-            </div>
-            
-            {/* Tab Content */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]" 
-              style={{ touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
-              data-ultimate-hub-content
-              data-scrollable
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}
-            >
+            {/* Body: Desktop = sidebar tabs + content. Mobile = top tabs + content.
+                IMPORTANT: the outer content wrapper is NOT scrollable to prevent nested scroll/overlap;
+                each tab is responsible for its own scroll areas via flex + overflow-y-auto. */}
+            <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
+              {/* Mobile/Tablet Tab Navigation */}
+              <div className="lg:hidden flex-shrink-0 flex items-stretch gap-2 p-2 border-b border-white/30 bg-black/95 backdrop-blur-2xl overflow-x-auto overflow-y-hidden scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ boxShadow: '0 0 12px rgba(255, 255, 255, 0.3), inset 0 0 12px rgba(255, 255, 255, 0.1)', touchAction: 'pan-x pinch-zoom' }}>
+                {UNIFIED_HUB_TABS.map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = activeTab === tab.id;
+                  
+                  return (
+                    <motion.button
+                      key={tab.id}
+                      onClick={() => {
+                        SoundEffects.click();
+                        setActiveTab(tab.id);
+                      }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className={`flex-1 min-w-[88px] sm:min-w-[108px] flex flex-col items-center justify-center gap-2 py-3 sm:py-3.5 px-3 sm:px-4 transition-all whitespace-nowrap rounded-2xl border backdrop-blur-xl min-h-[72px] sm:min-h-[70px] ${
+                        isActive 
+                          ? 'bg-white/25 text-white border-white/70 neon-blue-text shadow-[0_10px_25px_rgba(255,255,255,0.22)]' 
+                          : 'bg-white/10 text-white/70 border-white/20 hover:text-white hover:bg-white/15 hover:border-white/40'
+                      }`}
+                      style={isActive ? { textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' } : {}}
+                    >
+                      <span className={`flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl border ${
+                        isActive ? 'border-white/60 bg-white/25' : 'border-white/20 bg-white/10'
+                      }`}>
+                        <Icon className="w-4 h-4 sm:w-5 sm:h-5" style={isActive ? { filter: 'drop-shadow(0 0 4px #ffffff)' } : {}} />
+                      </span>
+                      <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">{tab.label}</span>
+                    </motion.button>
+                  );
+                })}
+              </div>
+
+              {/* Desktop Sidebar Tabs */}
+              <div className="hidden lg:flex w-[240px] xl:w-[260px] flex-shrink-0 flex-col border-r border-white/20 bg-black/95 backdrop-blur-2xl overflow-y-auto overflow-x-hidden min-h-0 [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]" style={{ boxShadow: 'inset 0 0 12px rgba(255, 255, 255, 0.08)' }}>
+                <div className="p-3 border-b border-white/10">
+                  <div className="text-[10px] font-black uppercase tracking-[0.22em] text-white/80 neon-blue-text" style={{ textShadow: '0 0 3px rgba(255,255,255,0.5)' }}>
+                    Tabs
+                  </div>
+                </div>
+                <div className="p-2 space-y-2">
+                  {UNIFIED_HUB_TABS.map((tab) => {
+                    const Icon = tab.icon;
+                    const isActive = activeTab === tab.id;
+
+                    return (
+                      <motion.button
+                        key={tab.id}
+                        onClick={() => {
+                          SoundEffects.click();
+                          setActiveTab(tab.id);
+                        }}
+                        whileHover={{ scale: 1.01, x: 2 }}
+                        whileTap={{ scale: 0.99 }}
+                        className={`w-full flex items-center gap-3 px-3 py-3 rounded-2xl border transition-all ${
+                          isActive
+                            ? 'bg-white/25 text-white border-white/70 neon-blue-text shadow-[0_10px_25px_rgba(255,255,255,0.18)]'
+                            : 'bg-white/10 text-white/75 border-white/20 hover:bg-white/15 hover:text-white hover:border-white/35'
+                        }`}
+                        style={isActive ? { textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' } : {}}
+                      >
+                        <span className={`flex items-center justify-center w-10 h-10 rounded-xl border ${
+                          isActive ? 'border-white/60 bg-white/25' : 'border-white/20 bg-white/10'
+                        }`}>
+                          <Icon className="w-5 h-5" style={isActive ? { filter: 'drop-shadow(0 0 4px #ffffff)' } : {}} />
+                        </span>
+                        <div className="flex flex-col items-start leading-tight">
+                          <span className="text-xs font-black uppercase tracking-widest">{tab.label}</span>
+                          <span className="text-[10px] text-white/50">{tab.id}</span>
+                        </div>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Tab Content (not scrollable; tab internals handle scrolling) */}
+              <div
+                className="flex-1 min-h-0 overflow-hidden"
+                data-ultimate-hub-content
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+              >
               <AnimatePresence mode="wait">
                 {/* TRADING TAB */}
                 {activeTab === 'trading' && (
@@ -5037,10 +5114,10 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="h-full flex flex-col"
+                    className="h-full min-h-0 flex flex-col"
                   >
                     {/* Symbol Selector */}
-                    <div className="flex gap-1.5 sm:gap-2 p-2 sm:p-3 overflow-x-auto overflow-y-hidden border-b border-white/30 bg-black scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)', touchAction: 'pan-x pinch-zoom' }}>
+                    <div className="flex-shrink-0 flex gap-1.5 sm:gap-2 p-2 sm:p-3 overflow-x-auto overflow-y-hidden border-b border-white/30 bg-black scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)', touchAction: 'pan-x pinch-zoom' }}>
                       {TRADING_SYMBOLS.map(symbol => {
                         const Icon = symbol.icon;
                         const isActive = selectedSymbol.id === symbol.id;
@@ -5065,7 +5142,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     </div>
                     
                     {/* Chart/Calendar */}
-                    <div className="flex-1 min-h-[280px]">
+                    <div className="flex-1 min-h-0">
                       {showCalendar ? (
                         <iframe
                           key={calendarUrl}
@@ -5085,7 +5162,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     </div>
                     
                     {/* Toggle & Filters */}
-                    <div className="p-3 space-y-2 border-t border-white/30 bg-black/95 backdrop-blur-2xl rounded-t-2xl" style={{ boxShadow: '0 0 10px rgba(255, 255, 255, 0.22), inset 0 0 10px rgba(255, 255, 255, 0.06)' }}>
+                    <div className="flex-shrink-0 p-3 space-y-2 border-t border-white/30 bg-black/95 backdrop-blur-2xl" style={{ boxShadow: '0 0 10px rgba(255, 255, 255, 0.22), inset 0 0 10px rgba(255, 255, 255, 0.06)' }}>
                       <div className="flex gap-2">
                         <motion.button
                           onClick={() => setShowCalendar(!showCalendar)}
@@ -5186,11 +5263,11 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="h-full flex flex-col"
+                    className="h-full min-h-0 flex flex-col"
                   >
                     {/* 🔔 NOTIFICATION SETTINGS */}
                     <div 
-                      className="px-2 py-1.5 border-b border-white/20 bg-black/50 relative z-10"
+                      className="flex-shrink-0 px-2 py-1.5 border-b border-white/20 bg-black/50 relative z-10"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <NotificationToggle showChannelSettings={true} />
@@ -5244,7 +5321,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     </div>
                     
                     {/* Feed */}
-                    <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 min-h-[200px] bg-black [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]" 
+                    <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 bg-black [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]" 
                       style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)', touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
                       data-scrollable
                     >
@@ -5253,7 +5330,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     
                     {/* View All Link */}
                     {activeChannel !== 'vip' && (
-                      <div className="px-3 py-2 border-t border-white/30 bg-black/95 backdrop-blur-2xl rounded-t-2xl" style={{ boxShadow: '0 0 10px rgba(255, 255, 255, 0.22), inset 0 0 10px rgba(255, 255, 255, 0.06)' }}>
+                      <div className="flex-shrink-0 px-3 py-2 border-t border-white/30 bg-black/95 backdrop-blur-2xl" style={{ boxShadow: '0 0 10px rgba(255, 255, 255, 0.22), inset 0 0 10px rgba(255, 255, 255, 0.06)' }}>
                         <a href={`https://t.me/${TELEGRAM_CHANNELS[activeChannel].handle}`}
                           target="_blank" rel="noopener noreferrer"
                           className="flex items-center justify-center gap-1 text-[10px] text-white hover:text-white neon-blue-text transition-all"
@@ -5264,7 +5341,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     )}
                     
                     {/* Social Links */}
-                    <div className="p-3 space-y-2 border-t border-white/30 bg-black/95 backdrop-blur-2xl rounded-t-2xl" style={{ boxShadow: '0 0 10px rgba(255, 255, 255, 0.22), inset 0 0 10px rgba(255, 255, 255, 0.06)' }}>
+                    <div className="flex-shrink-0 p-3 space-y-2 border-t border-white/30 bg-black/95 backdrop-blur-2xl" style={{ boxShadow: '0 0 10px rgba(255, 255, 255, 0.22), inset 0 0 10px rgba(255, 255, 255, 0.06)' }}>
                       <div className="flex gap-2">
                         <motion.button
                           onClick={handleCopyLink}
@@ -5280,7 +5357,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         <div className="flex-1" />
                       </div>
                       
-                      <div className="grid grid-cols-4 gap-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         {socialLinks.map(link => {
                           const Icon = link.icon;
                           return (
@@ -5311,10 +5388,10 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="h-full flex flex-col bg-black"
+                    className="h-full min-h-0 flex flex-col bg-black"
                   >
                     {/* Category Tabs */}
-                    <div className="flex gap-2 p-2 sm:p-3 border-b border-white/30 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)' }}>
+                    <div className="flex-shrink-0 flex gap-2 p-2 sm:p-3 border-b border-white/30 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)' }}>
                       {(['crypto', 'stocks', 'sentiment'] as const).map(category => (
                         <motion.button
                           key={category}
@@ -5338,7 +5415,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     
                     {/* Crypto Indicators */}
                     {indicatorCategory === 'crypto' && (
-                      <div className="flex-1 overflow-y-auto p-3 space-y-3" style={{ touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}>
+                      <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3" style={{ touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }} data-scrollable>
                         {/* Bitcoin Live Chart */}
                         <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
                           <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
@@ -5439,7 +5516,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     
                     {/* Stocks & Gold Indicators */}
                     {indicatorCategory === 'stocks' && (
-                      <div className="flex-1 overflow-y-auto p-3 space-y-3" style={{ touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}>
+                      <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3" style={{ touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }} data-scrollable>
                         {/* Gold & Commodities */}
                         <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
                           <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
@@ -5508,7 +5585,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     
                     {/* Sentiment Indicators */}
                     {indicatorCategory === 'sentiment' && (
-                      <div className="flex-1 overflow-y-auto p-3 space-y-3" style={{ touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}>
+                      <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3" style={{ touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }} data-scrollable>
                         {/* Economic Calendar */}
                         <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
                           <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
@@ -5684,7 +5761,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="p-3 space-y-3 bg-black flex flex-col h-full overflow-y-auto [-webkit-overflow-scrolling:touch]"
+                    className="p-3 space-y-3 bg-black flex flex-col h-full min-h-0 overflow-y-auto [-webkit-overflow-scrolling:touch]"
                     style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)', touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
                   >
                     {/* Connection Status */}
@@ -6060,7 +6137,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="p-3 space-y-3 bg-black flex flex-col h-full"
+                    className="p-3 space-y-3 bg-black flex flex-col h-full min-h-0"
                     style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)' }}
                   >
                     {/* Copy Button */}
@@ -6332,7 +6409,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="p-3 space-y-3 bg-black flex flex-col h-full"
+                    className="p-3 space-y-3 bg-black flex flex-col h-full min-h-0"
                     style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)' }}
                   >
                     {/* Controls */}
@@ -6403,7 +6480,8 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     </div>
                   </motion.div>
                 )}
-              </AnimatePresence>
+                </AnimatePresence>
+              </div>
             </div>
           </motion.div>
         </>
@@ -7415,15 +7493,15 @@ export const UnifiedFpsPill = memo(({
   }, [scrollProgress, deepScrollProgress, glowIntensity, neonIntensity]);
 
   const tickerItems = useMemo(() => {
-    const items = [
-      { key: 'gold', type: 'price' as const, label: 'Gold', text: `Gold $${prices.xauusd}` },
-      { key: 'btc', type: 'price' as const, label: 'BTC', text: `BTC $${prices.btcusd}` },
+    const items: Array<{ key: string; type: 'price' | 'vip'; label: string; text: string }> = [
+      { key: 'gold', type: 'price', label: 'Gold', text: `Gold $${prices.xauusd}` },
+      { key: 'btc', type: 'price', label: 'BTC', text: `BTC $${prices.btcusd}` },
     ];
 
     if (vipPreview?.text) {
       items.unshift({
         key: `vip-${vipPreview.id || 'latest'}`,
-        type: 'vip' as const,
+        type: 'vip',
         label: 'VIP Drop',
         text: vipPreview.text,
       });
@@ -7457,30 +7535,61 @@ export const UnifiedFpsPill = memo(({
     ? `0 0 ${dynamicStyles.borderGlow}px rgba(59,130,246,0.75), 0 0 ${dynamicStyles.shadowSpread}px rgba(59,130,246,0.45), inset 0 0 ${dynamicStyles.innerGlow}px rgba(147, 197, 253, 0.55)`
     : dynamicStyles.boxShadow;
   
+  // === SCROLL-TO-NAVBAR MORPH ANIMATION ===
+  // When user scrolls, pill morphs into navbar logo position (center on mobile, left-center on desktop)
+  // Calculate morph progress based on scroll (0 = normal, 1 = fully morphed into logo position)
+  const morphProgress = useMemo(() => {
+    if (!isScrolling) return 0;
+    // Faster morph response - full morph by 150px of scroll
+    return Math.min(scrollY / 150, 1);
+  }, [isScrolling, scrollY]);
+  
+  // Morph state: shows logo-like compact view when scrolling
+  const isInLogoMode = morphProgress > 0.5 && isScrolling;
+  
+  // Calculate morph animation values for mobile (moves to center-top, scales down)
+  const mobileNavbarTop = 'calc(env(safe-area-inset-top, 0px) + 12px)'; // Navbar position
+  const normalTop = topOffsetMobile ?? 'calc(env(safe-area-inset-top, 0px) + 96px)';
+  
+  // For desktop, move pill toward a fixed position near navbar
+  const desktopNavbarPosition = { top: '8px', left: '50%' };
+  
   return (
     <motion.div
       ref={containerRef}
       initial={{ x: -100, opacity: 0 }}
-      animate={{ 
+      animate={isMobile ? {
+        // Mobile: Morph toward navbar center when scrolling
+        x: 0, 
+        opacity: 1, 
+        scale: isMinimized ? 0.9 : (isInLogoMode ? 0.6 : 1),
+        y: 0,
+      } : { 
+        // Desktop: Original behavior
         x: 0, 
         opacity: 1, 
         scale: isMinimized ? 0.9 : 1,
-        // Disable scroll-based y movement on mobile to reduce FPS drops
-        y: isMobile ? 0 : (isScrolling ? (scrollDirection === 'down' ? -5 : 5) : 0),
+        y: isScrolling ? (scrollDirection === 'down' ? -5 : 5) : 0,
       }}
       transition={isMobile 
-        ? { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }
+        ? { 
+            duration: isScrolling ? 0.3 : 0.5, 
+            ease: [0.25, 0.1, 0.25, 1],
+            scale: { duration: 0.25, ease: 'easeOut' }
+          }
         : { y: { duration: 0.2, ease: "easeOut" } }
       }
       className={`fixed z-[999999999] pointer-events-none ${isMobile ? 'left-1/2 -translate-x-1/2' : 'left-0'}`}
       style={{
-        // Mobile: sit below the mobile nav bar, Desktop: near top (15%)
+        // Mobile: Smoothly transition between normal position and navbar position when scrolling
         top: isMobile
-          ? (topOffsetMobile ?? 'calc(env(safe-area-inset-top, 0px) + 96px)')
+          ? (isInLogoMode ? mobileNavbarTop : normalTop)
           : (topOffsetDesktop ?? '15%'),
         paddingLeft: isMobile ? undefined : 'calc(env(safe-area-inset-left, 0px))',
         // Disable screen bloom effect on mobile
         filter: (!isMobile && extremeScrollProgress > 0.7) ? `brightness(${1 + (extremeScrollProgress - 0.7) * 0.3})` : undefined,
+        // Smooth top transition
+        transition: isMobile ? 'top 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)' : undefined,
       }}
     >
       <motion.div
@@ -7565,7 +7674,43 @@ export const UnifiedFpsPill = memo(({
 
           
           <AnimatePresence mode="popLayout">
-            {isMinimized ? (
+            {/* Logo Mode: Compact icon when scrolling on mobile */}
+            {isMobile && isInLogoMode ? (
+              <motion.div
+                key="logo-mode"
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.5 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+                className="px-2 py-2 relative z-10"
+              >
+                {/* Logo Mode: Just the trading icon with notification badge */}
+                <div className="flex items-center justify-center relative">
+                  <TrendingUp 
+                    className="w-5 h-5 text-white neon-white-icon" 
+                    style={{ 
+                      filter: 'drop-shadow(0 0 6px #ffffff) drop-shadow(0 0 12px #ffffff)'
+                    }} 
+                  />
+                  {/* Notification Badge in Logo Mode */}
+                  {hasNewMessages && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-1 -right-1"
+                    >
+                      <div 
+                        className="w-2.5 h-2.5 rounded-full"
+                        style={{
+                          background: '#ffffff',
+                          boxShadow: '0 0 6px #ffffff, 0 0 12px #ffffff',
+                        }}
+                      />
+                    </motion.div>
+                  )}
+                </div>
+              </motion.div>
+            ) : isMinimized ? (
               <motion.div
                 key="minimized"
                 initial={{ opacity: 0, scale: isMobile ? 0.9 : 0.7 }}
