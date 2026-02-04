@@ -91,7 +91,7 @@ const Hero = dynamic(
 // Desktop-optimized Hero with new layout
 const HeroDesktop = dynamic(
   () => import("@/components/HeroDesktop"),
-  { ssr: false, loading: () => <HeroSkeleton /> }
+  { ssr: false }
 );
 
 const BullMoneyPromoScroll = dynamic(
@@ -161,7 +161,7 @@ import { useAudioEngine } from "@/app/hooks/useAudioEngine";
 import Image from "next/image";
 import Link from "next/link";
 import YouTubeVideoEmbed from "@/components/YouTubeVideoEmbed";
-import { MobileDiscordHero } from "@/components/MobileDiscordHero";
+import MobileDiscordHero from "@/components/MobileDiscordHero";
 
 import { useDevSkipShortcut } from "@/hooks/useDevSkipShortcut";
 
@@ -177,6 +177,8 @@ import {
   RemoteSplineShowcase,
   SplitExperienceCard,
   DraggableSplitExperience,
+  OrbSplineLauncher,
+  AllScenesModal,
 } from "@/components/SplineModals";
 
 // Legacy flag placeholder to satisfy stale client bundles that may reference it during Fast Refresh.
@@ -435,6 +437,7 @@ function HomeContent() {
   const [isMuted, setIsMuted] = useState(false);
   const [activeRemoteScene, setActiveRemoteScene] = useState<RemoteSplineMeta | null>(null);
   const [isSplitModalOpen, setIsSplitModalOpen] = useState(false);
+  const [isAllScenesModalOpen, setIsAllScenesModalOpen] = useState(false);
   const splinePreloadRanRef = useRef(false);
   const { setLoaderv2Open, setV2Unlocked, devSkipPageModeAndLoader, setDevSkipPageModeAndLoader, openDiscordStageModal, openAccountManagerModal } = useUIState();
 
@@ -586,11 +589,11 @@ function HomeContent() {
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
-    document.body.style.overflow = activeRemoteScene || isSplitModalOpen ? 'hidden' : 'auto';
+    document.body.style.overflow = activeRemoteScene || isSplitModalOpen || isAllScenesModalOpen ? 'hidden' : 'auto';
     return () => {
       document.body.style.overflow = 'auto';
     };
-  }, [activeRemoteScene, isSplitModalOpen]);
+  }, [activeRemoteScene, isSplitModalOpen, isAllScenesModalOpen]);
 
   // Load muted preference
   useEffect(() => {
@@ -883,15 +886,6 @@ function HomeContent() {
               data-content
               data-theme-aware
             >
-              {!isMobile && (
-                <div
-                  className={`absolute inset-0 z-10 transition-opacity duration-500 ${desktopHeroReady ? 'opacity-0' : 'opacity-100'}`}
-                  aria-hidden={desktopHeroReady}
-                  style={{ pointerEvents: 'none' }}
-                >
-                  <DesktopHeroFallback />
-                </div>
-              )}
               {isMobile ? (
                 canRenderMobileSections ? (
                   <MobileDiscordHero
@@ -903,24 +897,9 @@ function HomeContent() {
                   <HeroSkeleton />
                 )
               ) : (
-                <HeroDesktop onReady={() => setDesktopHeroReady(true)} />
+                <HeroDesktop />
               )}
             </section>
-
-            {/* 🌌 3D SOLAR SYSTEM - Mobile Only */}
-            {isMobile && (
-              <section
-                id="solar-system"
-                className="w-full full-bleed"
-                data-allow-scroll
-                data-content
-                data-theme-aware
-              >
-                <Suspense fallback={<ContentSkeleton lines={6} />}>
-                  <SolarSystemGame />
-                </Suspense>
-              </section>
-            )}
 
             {/* BullMoney Promo Scroll Section - Mobile Only */}
             {isMobile && (
@@ -949,30 +928,29 @@ function HomeContent() {
             {canRenderHeavyDesktop && (
               <section 
                 id="experience" 
-                className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 bg-black" 
+                className="w-full full-bleed bg-black" 
                 data-allow-scroll 
                 data-content 
                 data-theme-aware 
                 style={{ backgroundColor: '#000000' }}
               >
-                <div className="bg-black rounded-3xl p-6 md:p-10" style={{ backgroundColor: '#000000' }}>
-                  <div className="relative text-center mb-8" style={{ minHeight: '80px' }}>
-                    <h2 className="text-3xl md:text-4xl font-black tracking-tight glass-text">
-                      TRADING TOOLS & ANALYTICS
-                    </h2>
-                    <p className="text-sm mt-4 glass-text-gray max-w-2xl mx-auto">Advanced market intelligence platforms covering real-time data and interactive visualizations.</p>
-                    <div className="flex justify-center mt-4">
-                      <div className="w-24 h-[2px] glass-border" />
-                    </div>
-                  </div>
+                {/* Orb with Launch Button - Full Screen */}
+                <OrbSplineLauncher onOpenScenes={() => setIsAllScenesModalOpen(true)} />
+              </section>
+            )}
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <SplitExperienceCard onOpen={() => setIsSplitModalOpen(true)} />
-                    {ADDITIONAL_SPLINE_PAGES.map(scene => (
-                      <RemoteSplineShowcase key={scene.id} scene={scene} onOpen={setActiveRemoteScene} />
-                    ))}
-                  </div>
-                </div>
+            {/* 🌌 3D SOLAR SYSTEM - Mobile Only */}
+            {isMobile && (
+              <section
+                id="solar-system"
+                className="w-full full-bleed"
+                data-allow-scroll
+                data-content
+                data-theme-aware
+              >
+                <Suspense fallback={<ContentSkeleton lines={6} />}>
+                  <SolarSystemGame />
+                </Suspense>
               </section>
             )}
 
@@ -1025,6 +1003,13 @@ function HomeContent() {
           )}
           {canRenderHeavyDesktop && (
             <RemoteSceneModal scene={activeRemoteScene} onClose={() => setActiveRemoteScene(null)} />
+          )}
+          {canRenderHeavyDesktop && (
+            <AllScenesModal 
+              open={isAllScenesModalOpen} 
+              onClose={() => setIsAllScenesModalOpen(false)}
+              onSelectScene={setActiveRemoteScene}
+            />
           )}
         </>
       )}

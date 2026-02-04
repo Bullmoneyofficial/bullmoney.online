@@ -1,6 +1,6 @@
 "use client";
 
-/* eslint-disable react/no-unknown-property */
+ 
 import { useRef, useMemo, Suspense } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, Stars, Html, Preload } from "@react-three/drei";

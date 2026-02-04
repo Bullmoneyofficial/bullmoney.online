@@ -1,7 +1,7 @@
 /* Dock - Static CSS Optimized Styles */
 
 .dock-container {
-  background: black;
+  background: transparent;
   border: 2px solid #ffffff;
   box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff;
   transform: translateZ(0);

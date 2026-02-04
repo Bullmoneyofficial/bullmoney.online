@@ -29,6 +29,7 @@ import { MobileMenuProvider } from "@/contexts/MobileMenuContext";
 import { RecruitAuthProvider } from "@/contexts/RecruitAuthContext";
 import { ViewportStateProvider } from "@/contexts/ViewportStateContext";
 import { ShopProvider } from "@/components/ShopContext";
+import { ThemesProvider, ThemesPanel } from "@/contexts/ThemesContext";
 
 // ✅ SMART SCREENSAVER - Idle detection, cleanup, and battery saver
 import { SmartScreensaverProvider } from "@/components/SmartScreensaver";
@@ -657,41 +658,92 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
 (function() {
-  // LCP OPTIMIZATION: Start loading hero scene ASAP
-  // This runs before any other JS to get the scene loading early
-  if (typeof window !== 'undefined' && window.innerWidth >= 768) {
-    // Desktop only - preload hero scene immediately
-    var heroScene = '/scene1.splinecode';
+  // ULTRA-FAST SPLINE CACHING: Target <10ms on cached loads
+  var SPLINE_CACHE_NAME = 'spline-scenes-v1';
+  var SPLINE_SCENES = ['/scene1.splinecode', '/scene.splinecode', '/scene2.splinecode', '/scene3.splinecode', '/scene4.splinecode', '/scene5.splinecode', '/scene6.splinecode'];
+  var SPLINE_MEMORY_CACHE = window.__SPLINE_MEMORY_CACHE__ = window.__SPLINE_MEMORY_CACHE__ || {};
+  
+  // Function to cache scene to memory for instant access
+  function cacheToMemory(scene, buffer) {
+    SPLINE_MEMORY_CACHE[scene] = buffer;
+    console.log('[SplinePreload] ⚡ ' + scene + ' cached to memory');
+  }
+  
+  // Function to load and cache a single scene
+  function loadAndCache(scene, isPrimary) {
+    var startTime = performance.now();
     
-    // Use fetch to start download immediately (faster than link preload)
-    fetch(heroScene, { 
-      method: 'GET',
-      mode: 'cors',
-      credentials: 'omit',
-      cache: 'force-cache'
-    }).then(function(response) {
-      if (response.ok) {
-        console.log('[LCP] Hero scene preload started');
-        // Cache the response for the Spline loader
-        if ('caches' in window) {
-          caches.open('bullmoney-spline-hero-v3').then(function(cache) {
-            cache.put(heroScene, response.clone());
+    // Check memory cache first
+    if (SPLINE_MEMORY_CACHE[scene]) {
+      console.log('[SplinePreload] ⚡ ' + scene + ' already in memory (' + (performance.now() - startTime).toFixed(1) + 'ms)');
+      return Promise.resolve();
+    }
+    
+    // Check Cache API
+    return caches.open(SPLINE_CACHE_NAME).then(function(cache) {
+      return cache.match(scene).then(function(cachedResponse) {
+        if (cachedResponse) {
+          return cachedResponse.arrayBuffer().then(function(buffer) {
+            cacheToMemory(scene, buffer);
+            console.log('[SplinePreload] Cache hit for ' + scene + ' (' + (performance.now() - startTime).toFixed(1) + 'ms)');
           });
         }
+        
+        // Fetch from network
+        return fetch(scene, { 
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'omit',
+          cache: 'force-cache',
+          priority: isPrimary ? 'high' : 'low'
+        }).then(function(response) {
+          if (response.ok) {
+            var responseClone = response.clone();
+            cache.put(scene, responseClone);
+            return response.arrayBuffer().then(function(buffer) {
+              cacheToMemory(scene, buffer);
+              console.log('[SplinePreload] Fetched + cached ' + scene + ' (' + (performance.now() - startTime).toFixed(1) + 'ms)');
+            });
+          }
+        });
+      });
+    }).catch(function(err) {
+      console.warn('[SplinePreload] Failed for ' + scene + ':', err);
+    });
+  }
+
+  // Start loading immediately
+  if (typeof window !== 'undefined') {
+    // Load primary scene first (highest priority)
+    loadAndCache('/scene1.splinecode', true).then(function() {
+      // Then load other scenes in background
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(function() {
+          SPLINE_SCENES.slice(1).forEach(function(scene) {
+            loadAndCache(scene, false);
+          });
+        }, { timeout: 2000 });
+      } else {
+        setTimeout(function() {
+          SPLINE_SCENES.slice(1).forEach(function(scene) {
+            loadAndCache(scene, false);
+          });
+        }, 100);
       }
-    }).catch(function() {});
+    });
     
-    // Preload the Spline runtime module with specific version for stability
-    var splineRuntime = 'https://unpkg.com/@splinetool/runtime@1.12.35/build/runtime.js';
-    var link = document.createElement('link');
-    link.rel = 'modulepreload';
-    link.href = splineRuntime;
-    link.crossOrigin = 'anonymous';
-    link.onerror = function() {
-      // Fallback: try to load from a CDN backup or local if available
-      console.warn('[CacheBuster] Spline runtime failed from primary CDN, app will load via npm import');
-    };
-    document.head.appendChild(link);
+    // Preload the Spline runtime module
+    if (window.innerWidth >= 768) {
+      var splineRuntime = 'https://unpkg.com/@splinetool/runtime@1.12.35/build/runtime.js';
+      var link = document.createElement('link');
+      link.rel = 'modulepreload';
+      link.href = splineRuntime;
+      link.crossOrigin = 'anonymous';
+      link.onerror = function() {
+        console.warn('[SplinePreload] Spline runtime failed from primary CDN');
+      };
+      document.head.appendChild(link);
+    }
   }
 })();
             `,
@@ -1023,26 +1075,30 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <GlobalThemeProvider>
-            <ViewportStateProvider>
-              <MobileMenuProvider>
-                <RecruitAuthProvider>
-                  <AudioSettingsProvider>
-                    <StudioProvider>
-                      {/* ✅ ShopProvider with LayoutProviders wrapper */}
-                      <ShopProvider>
-                        <SmartScreensaverProvider>
-                          <LayoutProviders modal={modal}>
-                            {children}
-                          </LayoutProviders>
-                        </SmartScreensaverProvider>
-                      </ShopProvider>
-                    </StudioProvider>
-                  </AudioSettingsProvider>
-                </RecruitAuthProvider>
-              </MobileMenuProvider>
-            </ViewportStateProvider>
-          </GlobalThemeProvider>
+          <ThemesProvider>
+            <GlobalThemeProvider>
+              <ViewportStateProvider>
+                <MobileMenuProvider>
+                  <RecruitAuthProvider>
+                    <AudioSettingsProvider>
+                      <StudioProvider>
+                        {/* ✅ ShopProvider with LayoutProviders wrapper */}
+                        <ShopProvider>
+                          <SmartScreensaverProvider>
+                            <LayoutProviders modal={modal}>
+                              {children}
+                            </LayoutProviders>
+                            {/* Unified Themes Panel (Colors + Effects) */}
+                            <ThemesPanel />
+                          </SmartScreensaverProvider>
+                        </ShopProvider>
+                      </StudioProvider>
+                    </AudioSettingsProvider>
+                  </RecruitAuthProvider>
+                </MobileMenuProvider>
+              </ViewportStateProvider>
+            </GlobalThemeProvider>
+          </ThemesProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -190,8 +190,8 @@ async function fetchVIPMessagesFromTelegram(): Promise<TelegramPost[]> {
 }
 
 export async function GET(request: NextRequest) {
+  const channelParam = request.nextUrl.searchParams.get('channel') || 'main';
   try {
-    const channelParam = request.nextUrl.searchParams.get('channel') || 'main';
     const channel = CHANNELS[channelParam as keyof typeof CHANNELS] || CHANNELS.main;
     
     console.log('[Telegram API] Fetching channel:', channelParam, 'isPrivate:', channel.isPrivate);

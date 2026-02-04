@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { MotionValue, motion, useScroll, useSpring, useTransform } from "motion/react";
+import { MotionValue, motion, useScroll, useTransform } from "motion/react";
+import { cn } from "@/lib/utils";
 import {
   IconBrightnessDown,
   IconBrightnessUp,
@@ -22,47 +23,24 @@ import { IconWorld } from "@tabler/icons-react";
 import { IconCommand } from "@tabler/icons-react";
 import { IconCaretLeftFilled } from "@tabler/icons-react";
 import { IconCaretDownFilled } from "@tabler/icons-react";
-import { ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
+
 
 export const MacbookScroll = ({
   src,
   showGradient,
   title,
   badge,
-  children,
-  smooth = true,
-  scaleStart = 1,
-  scaleEnd = 1,
-  rotateStart = -6,
-  rotateEnd = 0,
-  translateEnd = 360,
-  minHeightClass = "min-h-[140vh]",
 }: {
   src?: string;
   showGradient?: boolean;
   title?: string | React.ReactNode;
   badge?: React.ReactNode;
-  children?: React.ReactNode;
-  smooth?: boolean;
-  scaleStart?: number;
-  scaleEnd?: number;
-  rotateStart?: number;
-  rotateEnd?: number;
-  translateEnd?: number;
-  minHeightClass?: string;
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end start"],
   });
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 90,
-    damping: 30,
-    mass: 0.8,
-  });
-  const progress = smooth ? smoothProgress : scrollYProgress;
 
   const [isMobile, setIsMobile] = useState(false);
 
@@ -72,17 +50,25 @@ export const MacbookScroll = ({
     }
   }, []);
 
-  const scaleX = useTransform(progress, [0, 0.35], [scaleStart, scaleEnd]);
-  const scaleY = useTransform(progress, [0, 0.35], [scaleStart, scaleEnd]);
-  const translate = useTransform(progress, [0, 1], [0, translateEnd]);
-  const rotate = useTransform(progress, [0, 0.35], [rotateStart, rotateEnd]);
-  const textTransform = useTransform(progress, [0, 0.35], [0, 90]);
-  const textOpacity = useTransform(progress, [0, 0.25], [1, 0]);
+  const scaleX = useTransform(
+    scrollYProgress,
+    [0, 0.3],
+    [1.2, isMobile ? 1 : 1.5],
+  );
+  const scaleY = useTransform(
+    scrollYProgress,
+    [0, 0.3],
+    [0.6, isMobile ? 1 : 1.5],
+  );
+  const translate = useTransform(scrollYProgress, [0, 1], [0, 1500]);
+  const rotate = useTransform(scrollYProgress, [0.1, 0.12, 0.3], [-28, -28, 0]);
+  const textTransform = useTransform(scrollYProgress, [0, 0.3], [0, 100]);
+  const textOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
 
   return (
     <div
       ref={ref}
-      className={`flex ${minHeightClass} shrink-0 scale-[0.4] transform flex-col items-center justify-start py-0 [perspective:800px] sm:scale-60 md:scale-100 md:py-60 will-change-transform`}
+      className="flex min-h-[200vh] shrink-0 scale-[0.35] transform flex-col items-center justify-start py-0 [perspective:800px] sm:scale-50 md:scale-100 md:py-80"
     >
       <motion.h2
         style={{
@@ -104,8 +90,6 @@ export const MacbookScroll = ({
         scaleY={scaleY}
         rotate={rotate}
         translate={translate}
-        children={children}
-        smooth={smooth}
       />
       {/* Base area */}
       <div className="relative -z-10 h-[22rem] w-[32rem] overflow-hidden rounded-2xl bg-gray-200 dark:bg-[#272729]">
@@ -141,16 +125,12 @@ export const Lid = ({
   rotate,
   translate,
   src,
-  children,
-  smooth = true,
 }: {
   scaleX: MotionValue<number>;
   scaleY: MotionValue<number>;
   rotate: MotionValue<number>;
   translate: MotionValue<number>;
   src?: string;
-  children?: React.ReactNode;
-  smooth?: boolean;
 }) => {
   return (
     <div className="relative [perspective:800px]">
@@ -181,31 +161,15 @@ export const Lid = ({
           translateY: translate,
           transformStyle: "preserve-3d",
           transformOrigin: "top",
-          backfaceVisibility: "hidden",
         }}
-        className={`absolute inset-0 h-96 w-[32rem] rounded-2xl bg-[#010101] p-2 overflow-hidden ${smooth ? "will-change-transform" : ""}`}
+        className="absolute inset-0 h-96 w-[32rem] rounded-2xl bg-[#010101] p-2"
       >
         <div className="absolute inset-0 rounded-lg bg-[#272729]" />
-        {children ? (
-          <div
-            className="absolute inset-2 rounded-[10px] overflow-hidden bg-black"
-            style={{
-              transform: "translateZ(0)",
-              willChange: "transform",
-              isolation: "isolate",
-              backfaceVisibility: "hidden",
-              clipPath: "inset(0 round 10px)",
-            }}
-          >
-            {children}
-          </div>
-        ) : (
-          <img
-            src={src as string}
-            alt="aceternity logo"
-            className="absolute inset-0 h-full w-full rounded-lg object-cover object-left-top"
-          />
-        )}
+        <img
+          src={src as string}
+          alt="aceternity logo"
+          className="absolute inset-0 h-full w-full rounded-lg object-cover object-left-top"
+        />
       </motion.div>
     </div>
   );
@@ -689,7 +653,3 @@ const AceternityLogo = () => {
     </svg>
   );
 };
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}

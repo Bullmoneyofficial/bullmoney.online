@@ -1,7 +1,7 @@
 /* MinimizedDock - Static CSS Optimized Styles - Matching Dock neon styling */
 
 .minimized-dock-container {
-  background: black;
+  background: transparent;
   border: 2px solid #ffffff;
   box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff;
   transform: translateZ(0);
@@ -10,7 +10,7 @@
 }
 
 .minimized-icon {
-  background: black;
+  background: transparent;
   border: 2px solid #ffffff;
   box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff;
   transform: translateZ(0);
@@ -42,7 +42,7 @@
 }
 
 .minimized-expand {
-  background: black;
+  background: transparent;
   border: 2px solid #ffffff;
   box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff;
   transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;

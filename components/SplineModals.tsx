@@ -19,6 +19,11 @@ const DraggableSplit = dynamic(
   { ssr: true }
 );
 
+const Orb = dynamic(
+  () => import('@/components/Orb'),
+  { ssr: false }
+);
+
 // Type definitions
 export type RemoteSplineMeta = {
   id: string;
@@ -112,6 +117,144 @@ export const ALL_REMOTE_SPLINES: RemoteSplineMeta[] = [
   ...ADDITIONAL_SPLINE_PAGES,
   R4X_BOT_SCENE,
 ];
+
+// Orb with button to launch all 5 spline scenes
+export function OrbSplineLauncher({ 
+  onOpenScenes 
+}: { 
+  onOpenScenes: () => void;
+}) {
+  return (
+    <div className="relative w-full min-h-screen bg-black" style={{ height: '100vh', backgroundColor: '#000000' }}>
+      {/* Interactive Orb Background */}
+      <div className="absolute inset-0">
+        <Orb
+          hoverIntensity={2}
+          rotateOnHover
+          hue={0}
+          forceHoverState={false}
+          backgroundColor="#000000"
+        />
+      </div>
+      
+      {/* Centered Title and Button */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none">
+        {/* Title */}
+        <div className="text-center px-4 mb-8">
+          <h2 className="text-3xl md:text-4xl font-black tracking-tight glass-text">
+            3D TRADING EXPERIENCES
+          </h2>
+          <p className="text-sm mt-4 glass-text-gray max-w-2xl mx-auto">Interactive 3D scenes with trading-inspired visuals. Built with Spline for fun exploration.</p>
+          <div className="flex justify-center mt-4">
+            <div className="w-24 h-[2px] glass-border" />
+          </div>
+        </div>
+        
+        {/* Button */}
+        <button
+          onClick={onOpenScenes}
+          className="pointer-events-auto group relative px-8 py-4 rounded-full font-bold text-black bg-white
+            shadow-[0_0_40px_rgba(255,255,255,0.4)] hover:shadow-[0_0_60px_rgba(255,255,255,0.6)]
+            hover:scale-105 active:scale-95
+            transition-all duration-300 cursor-pointer
+            border border-white/50 hover:border-white"
+        >
+          <span className="flex items-center gap-3 text-lg">
+            <span>Explore 3D Scenes</span>
+            <span className="text-sm opacity-70">(5)</span>
+          </span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Multi-scene modal for viewing all 5 spline scenes
+export function AllScenesModal({ 
+  open, 
+  onClose,
+  onSelectScene 
+}: { 
+  open: boolean; 
+  onClose: () => void;
+  onSelectScene: (scene: RemoteSplineMeta) => void;
+}) {
+  const [portalNode, setPortalNode] = useState<Element | null>(null);
+
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      setPortalNode(document.body);
+    }
+  }, []);
+
+  if (!open || !portalNode) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999999] flex items-center justify-center p-4 md:p-6">
+      <div className="absolute inset-0 bg-black/90 backdrop-blur-sm" onClick={onClose} />
+      <div
+        className="relative z-10 w-full max-w-5xl max-h-[90vh] overflow-auto rounded-3xl"
+        style={{
+          background: 'rgba(10, 10, 12, 0.98)',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          boxShadow: '0 25px 80px rgba(0, 0, 0, 0.8)',
+        }}
+      >
+        {/* Header */}
+        <div className="sticky top-0 z-20 flex items-center justify-between p-6 border-b border-white/10 bg-black/80 backdrop-blur-md">
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] font-bold text-white/50">3D Experiences</p>
+            <h3 className="text-2xl font-bold mt-1 text-white">Interactive Spline Scenes</h3>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-full p-3 bg-white/5 hover:bg-white/10 transition-all hover:scale-110"
+            aria-label="Close"
+          >
+            <span className="text-white text-lg">✕</span>
+          </button>
+        </div>
+
+        {/* Grid of scenes */}
+        <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {ADDITIONAL_SPLINE_PAGES.map((scene) => (
+            <button
+              key={scene.id}
+              onClick={() => {
+                onSelectScene(scene);
+                onClose();
+              }}
+              className="group relative rounded-2xl p-5 text-left overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02]"
+              style={{
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+              }}
+            >
+              <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] font-bold text-white/40 mb-2">
+                <span>▪</span>
+                <span>{scene.id}</span>
+                {scene.badge && (
+                  <span className="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-white/10 text-white/70">
+                    {scene.badge}
+                  </span>
+                )}
+              </div>
+              <h4 className="text-lg font-bold text-white mb-1">{scene.title}</h4>
+              {scene.subtitle && (
+                <p className="text-sm text-white/50">{scene.subtitle}</p>
+              )}
+              <div className="mt-4 flex items-center gap-2 text-sm font-semibold text-white/70 group-hover:text-white transition-colors">
+                <span>Open</span>
+                <span>→</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>,
+    portalNode
+  );
+}
 
 // Components
 function RemoteSplineFrame({ viewerSrc, sceneSrc, title }: { viewerSrc: string; sceneSrc: string; title: string }) {

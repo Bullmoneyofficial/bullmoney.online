@@ -10,7 +10,8 @@ import {
   ArrowUpNarrowWide, 
   ArrowDownWideNarrow,
   ShoppingCart,
-  Package
+  Package,
+  ExternalLink
 } from 'lucide-react';
 import { ShimmerLine, ShimmerBorder } from '@/components/ui/UnifiedShimmer';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
@@ -122,46 +123,76 @@ const ProductsTrigger = memo(() => {
 });
 ProductsTrigger.displayName = 'ProductsTrigger';
 
-// Product Card Component
+// Product Card Component - First tap opens whop link directly
 const ProductCard = memo(({ 
   product, 
-  onClick 
+  onClick,
+  isMobile
 }: { 
   product: Product & { id: string }; 
   onClick: () => void;
+  isMobile: boolean;
 }) => {
-  const handleBuyNow = (e: React.MouseEvent) => {
+  const cardRef = useRef<HTMLDivElement>(null);
+  
+  // Direct link open on first tap (mobile) or click
+  const handleOpenLink = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
+    e.preventDefault();
+    SoundEffects.click();
     const url = product.buyUrl?.trim();
-    if (!url) {
-      alert("This product does not have a Buy now link set yet.");
-      return;
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
+    } else {
+      // If no buy URL, show expanded view
+      onClick();
     }
-    window.open(url, "_blank", "noopener,noreferrer");
-  };
+  }, [product.buyUrl, onClick]);
+
+  // For mobile: single tap opens link
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleOpenLink(e);
+  }, [handleOpenLink]);
 
   return (
     <motion.div
-      whileHover={{ scale: 1.02, y: -2 }}
+      ref={cardRef}
+      whileHover={isMobile ? {} : { scale: 1.02, y: -4 }}
       whileTap={{ scale: 0.98 }}
-      onClick={onClick}
-      className="relative rounded-xl overflow-hidden cursor-pointer group"
+      onClick={handleOpenLink}
+      onTouchEnd={handleTouchEnd}
+      className="relative rounded-2xl overflow-hidden cursor-pointer group select-none"
       style={{
-        background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.8))',
-        border: '1px solid rgba(255, 255, 255, 0.3)'
+        background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05))',
+        border: '1px solid rgba(255, 255, 255, 0.3)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+        touchAction: 'manipulation',
+        WebkitTapHighlightColor: 'transparent'
       }}
     >
+      {/* Tap indicator for mobile */}
+      {isMobile && (
+        <div className="absolute top-2 right-2 z-20 px-2 py-1 rounded-full bg-white/20 backdrop-blur-sm">
+          <ExternalLink className="w-3 h-3 text-white" />
+        </div>
+      )}
+      
       {/* Image */}
       <div className="relative aspect-[4/3] overflow-hidden">
         <img
           src={product.imageUrl}
           alt={product.name}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          draggable={false}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
         
         {/* Category Badge */}
-        <span className="absolute top-3 left-3 px-2 py-1 rounded-full bg-indigo-950/70 text-indigo-300 text-[10px] font-bold uppercase tracking-widest border border-indigo-500/30 backdrop-blur-sm">
+        <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-white/10 text-white text-[10px] font-bold uppercase tracking-widest border border-white/20 backdrop-blur-md">
           {product.category}
         </span>
       </div>
@@ -169,21 +200,28 @@ const ProductCard = memo(({
       {/* Content */}
       <div className="p-4">
         <h3 className="text-white font-bold text-sm mb-1 line-clamp-1">{product.name}</h3>
-        <p className="text-slate-400 text-xs line-clamp-2 mb-3">{product.description}</p>
+        <p className="text-white/60 text-xs line-clamp-2 mb-3">{product.description}</p>
         
         <div className="flex items-center justify-between">
-          <span className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-white">
+          <span className="text-lg font-bold text-white">
             ${formatPriceDisplay(product.price)}
           </span>
           
-          <button
-            onClick={handleBuyNow}
-            className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold uppercase tracking-wider transition-all hover:scale-105"
+          <div 
+            className="px-4 py-2 rounded-xl bg-white text-black text-[10px] font-bold uppercase tracking-wider transition-all hover:bg-white/90 active:scale-95 flex items-center gap-1.5"
           >
+            <ExternalLink className="w-3 h-3" />
             Get Access
-          </button>
+          </div>
         </div>
       </div>
+      
+      {/* Hover glow effect */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-2xl"
+        style={{
+          background: 'radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 70%)'
+        }}
+      />
     </motion.div>
   );
 });
@@ -233,143 +271,136 @@ const ProductsContent = memo(() => {
     setIsOpen(false);
   }, [setIsOpen]);
 
+  // Handle backdrop touch for mobile
+  const handleBackdropTouch = useCallback((e: React.TouchEvent) => {
+    if (e.target === e.currentTarget) {
+      e.preventDefault();
+      handleClose();
+    }
+  }, [handleClose]);
+
   return (
     <motion.div
       initial={animations.modalBackdrop.initial}
       animate={animations.modalBackdrop.animate as TargetAndTransition}
       exit={animations.modalBackdrop.exit}
       transition={animations.modalBackdrop.transition}
-      className={`fixed inset-0 z-[2147483647] flex items-center justify-center p-5 sm:p-6 bg-black/95 ${
-        shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'
-      }`}
+      className="fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6"
+      style={{
+        background: 'rgba(0, 0, 0, 0.85)',
+        backdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(20px)',
+        WebkitBackdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(20px)'
+      }}
       onClick={handleClose}
+      onTouchEnd={handleBackdropTouch}
     >
-      {/* Animated tap to close hints - skip on mobile */}
-      {!shouldSkipHeavyEffects && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0.4, 0.8, 0.4] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
-        >
-          <span>↑</span> Tap anywhere to close <span>↑</span>
-        </motion.div>
-      )}
-      {!shouldSkipHeavyEffects && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0.4, 0.8, 0.4] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
-        >
-          <span>↓</span> Tap anywhere to close <span>↓</span>
-        </motion.div>
-      )}
-      {!shouldSkipHeavyEffects && (
-        <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0.4, 0.8, 0.4] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.25 }}
-        className="absolute left-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
-        style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
-      >
-        ← Tap to close
-      </motion.div>
-      )}
-      {!shouldSkipHeavyEffects && (
+      {/* Tap to close hint - simplified for mobile */}
       <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0.4, 0.8, 0.4] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.75 }}
-        className="absolute right-2 top-1/2 -translate-y-1/2 text-white/60 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
-        style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0 }}
+        transition={{ delay: 0.3 }}
+        className="absolute top-3 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-sm text-white/70 text-xs font-medium pointer-events-none border border-white/10"
       >
-        Tap to close →
+        Tap outside to close
       </motion.div>
-      )}
       
-      {/* Modal */}
+      {/* Modal - Apple Glass Style */}
       <motion.div
         initial={animations.modalContent.initial}
         animate={animations.modalContent.animate as TargetAndTransition}
         exit={animations.modalContent.exit}
         transition={animations.modalContent.transition}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-5xl max-h-[90vh] overflow-hidden rounded-2xl"
+        onTouchEnd={(e) => e.stopPropagation()}
+        className="relative w-full max-w-5xl max-h-[85vh] sm:max-h-[90vh] overflow-hidden rounded-3xl"
+        style={{
+          background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.05))',
+          backdropFilter: 'blur(40px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15)'
+        }}
       >
         {/* Shimmer Border - skip on mobile */}
         {!shouldSkipHeavyEffects && (
-          <div className="absolute inset-[-2px] overflow-hidden rounded-2xl pointer-events-none z-0">
-            <ShimmerBorder color="blue" intensity="low" />
+          <div className="absolute inset-[-2px] overflow-hidden rounded-3xl pointer-events-none z-0">
+            <ShimmerBorder color="white" intensity="low" />
           </div>
         )}
         
         {/* Inner Container */}
-        <div className="relative z-10 bg-gradient-to-b from-neutral-900 to-black rounded-2xl border border-indigo-500/30 overflow-hidden max-h-[90vh] flex flex-col">
-          {!shouldSkipHeavyEffects && <ShimmerLine color="blue" />}
+        <div className="relative z-10 rounded-3xl overflow-hidden max-h-[85vh] sm:max-h-[90vh] flex flex-col">
+          {!shouldSkipHeavyEffects && <ShimmerLine color="white" />}
           
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-indigo-500/20 flex-shrink-0">
+          <div className="flex items-center justify-between p-4 border-b border-white/10 flex-shrink-0 bg-black/20">
             <div className="flex items-center gap-3">
-              <Package className="w-6 h-6 text-indigo-400" />
+              <div className="p-2 rounded-xl bg-white/10 backdrop-blur-sm">
+                <Package className="w-5 h-5 text-white" />
+              </div>
               <div>
                 <h2 className="text-lg sm:text-xl font-bold text-white">BullMoney VIP</h2>
-                <p className="text-xs text-indigo-400/70">Premium trading products</p>
+                <p className="text-xs text-white/50">Premium trading products</p>
               </div>
             </div>
             
             <motion.button
-              whileHover={isMobile ? {} : { scale: 1.1 }}
+              whileHover={isMobile ? {} : { scale: 1.1, backgroundColor: 'rgba(255,255,255,0.2)' }}
               whileTap={{ scale: 0.95 }}
               onClick={handleClose}
-              className="p-2.5 min-w-[44px] min-h-[44px] rounded-full bg-neutral-800 text-white hover:bg-neutral-700 transition-colors group relative flex items-center justify-center"
-              title="Close (ESC)"
+              onTouchEnd={(e) => { e.stopPropagation(); handleClose(); }}
+              className="p-3 min-w-[48px] min-h-[48px] rounded-full bg-white/10 text-white hover:bg-white/20 transition-all flex items-center justify-center border border-white/10"
+              style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
             >
               <X className="w-5 h-5" />
-              <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-white/50 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">ESC</span>
             </motion.button>
           </div>
           
           {/* Filters Bar */}
-          <div className="p-3 border-b border-indigo-500/20 flex flex-col sm:flex-row gap-3 flex-shrink-0">
+          <div className="p-3 border-b border-white/10 flex flex-col sm:flex-row gap-3 flex-shrink-0 bg-black/10">
             {/* Search */}
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 w-4 h-4" />
               <input
                 value={filters.search}
                 onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
                 placeholder="Search products..."
-                className="w-full bg-black/50 border border-indigo-500/30 rounded-lg pl-9 pr-4 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500 transition-colors"
+                className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all"
+                style={{ WebkitTapHighlightColor: 'transparent' }}
               />
             </div>
 
             {/* Category Dropdown */}
-            <div className="relative w-full sm:w-40">
+            <div className="relative w-full sm:w-44">
               <select
                 value={filters.category}
                 onChange={(e) => { SoundEffects.click(); setFilters((f) => ({ ...f, category: e.target.value })); }}
-                className="w-full appearance-none bg-black/50 border border-indigo-500/30 rounded-lg pl-3 pr-8 py-2 text-sm text-slate-300 focus:outline-none focus:border-indigo-500 cursor-pointer transition-colors"
+                className="w-full appearance-none bg-white/5 border border-white/10 rounded-xl pl-4 pr-10 py-3 text-sm text-white focus:outline-none focus:border-white/30 cursor-pointer transition-all"
+                style={{ WebkitTapHighlightColor: 'transparent' }}
               >
-                <option value="all">All Categories</option>
+                <option value="all" className="bg-black text-white">All Categories</option>
                 {categories.map((c: Category) => (
-                  <option key={c._id || c.id} value={c.name}>{c.name}</option>
+                  <option key={c._id || c.id} value={c.name} className="bg-black text-white">{c.name}</option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4 pointer-events-none" />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 w-4 h-4 pointer-events-none" />
             </div>
 
             {/* Sort Toggle */}
             <button
               onClick={toggleSortDirection}
-              className="px-3 py-2 rounded-lg bg-black/50 border border-indigo-500/30 hover:border-indigo-500 text-slate-300 text-xs font-medium flex items-center gap-2 transition-colors whitespace-nowrap"
+              onTouchEnd={(e) => { e.stopPropagation(); toggleSortDirection(); }}
+              className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-white text-xs font-medium flex items-center justify-center gap-2 transition-all whitespace-nowrap active:scale-95"
+              style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
             >
-              {sortDirection === 'asc' ? <ArrowUpNarrowWide size={14} /> : <ArrowDownWideNarrow size={14} />}
+              {sortDirection === 'asc' ? <ArrowUpNarrowWide size={16} /> : <ArrowDownWideNarrow size={16} />}
               {sortDirection === 'asc' ? "Low → High" : "High → Low"}
             </button>
           </div>
           
           {/* Products Grid */}
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto p-4 overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
             {filteredAndSortedProducts.length > 0 ? (
               <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredAndSortedProducts.map((p) => {
@@ -379,96 +410,118 @@ const ProductsContent = memo(() => {
                       key={pid}
                       product={{ ...p, id: pid }}
                       onClick={() => setExpandedProduct({ ...p, id: pid })}
+                      isMobile={isMobile}
                     />
                   );
                 })}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                <Package className="w-12 h-12 text-slate-600 mb-4" />
-                <p className="text-slate-500">No products found matching your filters.</p>
+                <div className="p-4 rounded-2xl bg-white/5 mb-4">
+                  <Package className="w-10 h-10 text-white/30" />
+                </div>
+                <p className="text-white/50">No products found matching your filters.</p>
               </div>
             )}
           </div>
         </div>
       </motion.div>
 
-      {/* Expanded Product View */}
+      {/* Expanded Product View - Apple Glass Style */}
       <AnimatePresence>
         {expandedProduct && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100000] flex items-center justify-center p-4 pointer-events-auto"
+            className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-4 pointer-events-auto"
+            style={{
+              background: 'rgba(0, 0, 0, 0.9)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)'
+            }}
             onClick={() => setExpandedProduct(null)}
+            onTouchEnd={(e) => { if (e.target === e.currentTarget) setExpandedProduct(null); }}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-3xl max-h-[85vh] overflow-hidden rounded-2xl"
+              onTouchEnd={(e) => e.stopPropagation()}
+              className="relative w-full max-w-3xl max-h-[90vh] overflow-hidden rounded-3xl"
               style={{
-                background: 'linear-gradient(145deg, #0a0015, #000)',
-                border: '2px solid rgba(255, 255, 255, 0.4)',
-                boxShadow: '0 0 60px rgba(255, 255, 255, 0.3)'
+                background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.8))',
+                backdropFilter: 'blur(40px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                boxShadow: '0 25px 80px -12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
               }}
             >
               {/* Close Button */}
               <button
                 onClick={() => setExpandedProduct(null)}
-                className="absolute top-4 right-4 z-50 p-2 bg-black/50 hover:bg-black/80 text-white rounded-full backdrop-blur-md transition-colors border border-white/10"
+                onTouchEnd={(e) => { e.stopPropagation(); setExpandedProduct(null); }}
+                className="absolute top-4 right-4 z-50 p-3 min-w-[48px] min-h-[48px] bg-black/50 hover:bg-black/70 text-white rounded-full backdrop-blur-md transition-all border border-white/10 flex items-center justify-center active:scale-95"
+                style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
               >
                 <X size={20} />
               </button>
 
-              <div className="flex flex-col md:flex-row h-full max-h-[85vh]">
+              <div className="flex flex-col md:flex-row h-full max-h-[90vh]">
                 {/* Image Side */}
-                <div className="relative w-full md:w-1/2 h-56 md:h-auto shrink-0">
+                <div className="relative w-full md:w-1/2 h-48 sm:h-56 md:h-auto shrink-0">
                   <img
                     src={expandedProduct.imageUrl}
                     alt={expandedProduct.name}
                     className="w-full h-full object-cover"
+                    draggable={false}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80 md:hidden" />
-                  <div className="absolute inset-0 bg-gradient-to-l from-black via-transparent to-transparent opacity-80 hidden md:block" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent md:hidden" />
+                  <div className="absolute inset-0 bg-gradient-to-l from-black via-black/30 to-transparent hidden md:block" />
                   
-                  <span className="absolute top-4 left-4 px-3 py-1.5 rounded-lg bg-black/60 backdrop-blur-md border border-indigo-500/30 text-xs font-bold uppercase tracking-wider text-indigo-300">
+                  <span className="absolute top-4 left-4 px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-xs font-bold uppercase tracking-wider text-white">
                     {expandedProduct.category}
                   </span>
                 </div>
 
                 {/* Content Side */}
-                <div className="flex-1 overflow-y-auto p-6 md:p-8 flex flex-col">
-                  <h2 className="text-2xl md:text-3xl font-black text-white mb-2">
+                <div className="flex-1 overflow-y-auto p-5 sm:p-6 md:p-8 flex flex-col" style={{ WebkitOverflowScrolling: 'touch' }}>
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white mb-2">
                     {expandedProduct.name}
                   </h2>
                   
-                  <div className="flex items-center gap-4 mb-6">
-                    <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-white">
+                  <div className="flex items-center gap-4 mb-4 sm:mb-6">
+                    <span className="text-2xl sm:text-3xl font-bold text-white">
                       ${formatPriceDisplay(expandedProduct.price)}
                     </span>
                   </div>
 
-                  <div className="text-slate-300 text-sm leading-relaxed mb-6 flex-grow">
+                  <div className="text-white/70 text-sm leading-relaxed mb-4 sm:mb-6 flex-grow">
                     <p className="whitespace-pre-line">{expandedProduct.description}</p>
                   </div>
 
                   {/* Action Footer */}
-                  <div className="mt-auto pt-6 border-t border-indigo-900/30">
+                  <div className="mt-auto pt-4 sm:pt-6 border-t border-white/10">
                     <button
                       onClick={() => {
                         const url = expandedProduct.buyUrl?.trim();
-                        if (url) window.open(url, "_blank");
+                        if (url) window.open(url, "_blank", "noopener,noreferrer");
                         else alert("No buy link available");
                       }}
-                      className="w-full py-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-all"
+                      onTouchEnd={(e) => {
+                        e.stopPropagation();
+                        const url = expandedProduct.buyUrl?.trim();
+                        if (url) window.open(url, "_blank", "noopener,noreferrer");
+                        else alert("No buy link available");
+                      }}
+                      className="w-full py-4 rounded-2xl bg-white text-black font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-all hover:bg-white/90 active:scale-[0.98]"
+                      style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
                     >
                       <ShoppingCart size={18} /> Buy Now
                     </button>
-                    <p className="text-center text-slate-500 text-xs mt-3">
+                    <p className="text-center text-white/40 text-xs mt-3">
                       Instant digital delivery via email.
                     </p>
                   </div>

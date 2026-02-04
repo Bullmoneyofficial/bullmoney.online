@@ -1,17 +1,28 @@
-// Service Worker for Offline Support + Push Notifications
-// Version 4.0.0 - Network-first approach + Push notification support
-// Caching DISABLED for most assets to ensure users always get latest content
+// Service Worker for Offline Support + Push Notifications + Spline Caching
+// Version 5.0.0 - Network-first approach + Push notification support + Spline scene caching
+// Spline scenes are aggressively cached for instant loading
 
-const CACHE_NAME = 'bullmoney-v4-push';
-const OFFLINE_CACHE = 'bullmoney-offline-v4';
+const CACHE_NAME = 'bullmoney-v5-spline';
+const OFFLINE_CACHE = 'bullmoney-offline-v5';
+const SPLINE_CACHE = 'spline-scenes-v1';
 
 // MINIMAL cache - only offline fallback essentials
-// No longer caching Spline scenes or runtime assets
 const PRECACHE_ASSETS = [
   '/offline.html',
   '/bullmoney-logo.png',
   '/ONcc2l601.svg',
   '/B.png',
+];
+
+// Spline scenes to aggressively cache
+const SPLINE_SCENES = [
+  '/scene1.splinecode',
+  '/scene.splinecode', 
+  '/scene2.splinecode',
+  '/scene3.splinecode',
+  '/scene4.splinecode',
+  '/scene5.splinecode',
+  '/scene6.splinecode',
 ];
 
 // Detect browser type for logging only
@@ -23,28 +34,47 @@ function getBrowserType(request) {
   return { isWebView, isSafari, isMobile };
 }
 
-// Install event - cache ONLY minimal offline fallback
+// Install event - cache offline fallback + preload Spline scenes
 self.addEventListener('install', (event) => {
-  console.log('[SW v3] Installing minimal offline support (caching disabled)...');
+  console.log('[SW v5] Installing with Spline scene caching...');
   event.waitUntil(
-    caches.open(OFFLINE_CACHE).then((cache) => {
-      return cache.addAll(PRECACHE_ASSETS).catch(err => {
-        console.warn('[SW v3] Offline assets failed to cache:', err);
-      });
-    }).then(() => self.skipWaiting())
+    Promise.all([
+      // Cache offline essentials
+      caches.open(OFFLINE_CACHE).then((cache) => {
+        return cache.addAll(PRECACHE_ASSETS).catch(err => {
+          console.warn('[SW v5] Offline assets failed to cache:', err);
+        });
+      }),
+      // Aggressively cache Spline scenes for instant loading
+      caches.open(SPLINE_CACHE).then((cache) => {
+        console.log('[SW v5] Pre-caching Spline scenes...');
+        return Promise.all(
+          SPLINE_SCENES.map(scene => 
+            fetch(scene, { cache: 'force-cache' })
+              .then(response => {
+                if (response.ok) {
+                  cache.put(scene, response);
+                  console.log(`[SW v5] Cached: ${scene}`);
+                }
+              })
+              .catch(err => console.warn(`[SW v5] Failed to cache ${scene}:`, err))
+          )
+        );
+      })
+    ]).then(() => self.skipWaiting())
   );
 });
 
-// Activate event - CLEAR ALL old caches for fresh start
+// Activate event - CLEAR old caches, keep Spline cache
 self.addEventListener('activate', (event) => {
-  console.log('[SW v3] Activating - clearing ALL old caches...');
+  console.log('[SW v5] Activating - clearing old caches, keeping Spline cache...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((name) => name !== OFFLINE_CACHE) // Keep only offline cache
+          .filter((name) => name !== OFFLINE_CACHE && name !== SPLINE_CACHE) // Keep offline + spline
           .map((name) => {
-            console.log('[SW v3] Deleting cache:', name);
+            console.log('[SW v5] Deleting cache:', name);
             return caches.delete(name);
           })
       );
@@ -52,19 +82,48 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - NETWORK FIRST for all requests (no caching)
-// Only fall back to offline page if network fails for navigation
+// Check if URL is a Spline scene
+function isSplineScene(url) {
+  return url.endsWith('.splinecode');
+}
+
+// Fetch event - CACHE-FIRST for Spline scenes, NETWORK-FIRST for everything else
 self.addEventListener('fetch', (event) => {
-  // Skip cross-origin requests
+  // Skip cross-origin requests (except for essential CDNs)
   if (!event.request.url.startsWith(self.location.origin)) {
     return;
   }
 
-  // ALWAYS fetch from network first - no caching
+  const url = new URL(event.request.url);
+
+  // SPLINE SCENES: Cache-first for instant loading (~10ms target)
+  if (isSplineScene(url.pathname)) {
+    event.respondWith(
+      caches.open(SPLINE_CACHE).then((cache) => {
+        return cache.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) {
+            console.log(`[SW v5] ⚡ Spline cache hit: ${url.pathname}`);
+            return cachedResponse;
+          }
+          
+          // Not cached - fetch and cache for next time
+          console.log(`[SW v5] Spline cache miss, fetching: ${url.pathname}`);
+          return fetch(event.request).then((networkResponse) => {
+            if (networkResponse.ok) {
+              cache.put(event.request, networkResponse.clone());
+            }
+            return networkResponse;
+          });
+        });
+      })
+    );
+    return;
+  }
+
+  // EVERYTHING ELSE: Network-first (no caching)
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Return fresh network response - don't cache it
         return response;
       })
       .catch(() => {
@@ -72,7 +131,6 @@ self.addEventListener('fetch', (event) => {
         if (event.request.mode === 'navigate') {
           return caches.match('/offline.html');
         }
-        // For other requests, return network error
         return new Response('Network unavailable', { status: 503 });
       })
   );
@@ -88,13 +146,42 @@ self.addEventListener('message', (event) => {
       break;
 
     case 'CLEAR_CACHE':
-      // Clear ALL caches
+      // Clear ALL caches except Spline (optional: add flag to clear spline too)
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames
+            .filter(name => name !== SPLINE_CACHE) // Keep Spline cache by default
+            .map((name) => caches.delete(name))
+        );
+      }).then(() => {
+        console.log('[SW v5] Caches cleared (Spline cache preserved)');
+        event.ports[0]?.postMessage({ success: true });
+      });
+      break;
+
+    case 'CLEAR_ALL_CACHE':
+      // Clear ALL caches including Spline
       caches.keys().then((cacheNames) => {
         return Promise.all(
           cacheNames.map((name) => caches.delete(name))
         );
       }).then(() => {
-        console.log('[SW v4] All caches cleared');
+        console.log('[SW v5] ALL caches cleared including Spline');
+        event.ports[0]?.postMessage({ success: true });
+      });
+      break;
+    
+    case 'PRECACHE_SPLINE':
+      // Force refresh Spline cache
+      caches.open(SPLINE_CACHE).then((cache) => {
+        return Promise.all(
+          SPLINE_SCENES.map(scene => 
+            fetch(scene, { cache: 'reload' })
+              .then(response => response.ok && cache.put(scene, response))
+          )
+        );
+      }).then(() => {
+        console.log('[SW v5] Spline scenes re-cached');
         event.ports[0]?.postMessage({ success: true });
       });
       break;
