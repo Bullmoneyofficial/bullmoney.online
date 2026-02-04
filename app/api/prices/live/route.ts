@@ -6,21 +6,38 @@ export const runtime = 'nodejs';
 
 const REQUEST_HEADERS = {
   Accept: 'application/json',
-  'User-Agent': 'BullMoneyHub/1.0 (+https://newbullmoney.com)'
+  'User-Agent': 'BullMoneyHub/1.0 (+https://newbullmoney.com)',
+  'Accept-Encoding': 'gzip, deflate'
 };
 
 type Provider = {
   name: string;
-  fetch: () => Promise<number | null>;
+  fetch: (signal: AbortSignal) => Promise<number | null>;
   timeoutMs?: number;
 };
 
-const withTimeout = async <T>(fn: () => Promise<T>, timeoutMs: number = 4000) => {
-  const timeout = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error('timeout')), timeoutMs)
-  );
-  return Promise.race([fn(), timeout]);
+// Create fetch options with proper Node.js configuration
+const createFetchOptions = (extraHeaders: Record<string, string> = {}) => ({
+  cache: 'no-store' as const,
+  headers: {
+    ...REQUEST_HEADERS,
+    ...extraHeaders
+  },
+  next: { revalidate: 0 }
+});
+
+type PriceResult = { price: number | null; source: string };
+
+type PricesCache = {
+  btc: number | null;
+  gold: number | null;
+  sources: { btc: string; gold: string };
+  fetchedAt: number;
 };
+
+let lastGoodPrices: PricesCache | null = null;
+let pricesInFlight: Promise<PricesCache> | null = null;
+const PRICE_CACHE_TTL = 2500; // 2.5s, matches 3s UI polling without hammering providers
 
 const isValidBtc = (price: number | null) => typeof price === 'number' && price > 10000 && price < 500000;
 const isValidGold = (price: number | null) => typeof price === 'number' && price > 1200 && price < 10000;
@@ -45,11 +62,10 @@ const parseMetalsLive = (data: any) => {
 const btcProviders: Provider[] = [
   {
     name: 'binance',
-    fetch: async () => {
+    fetch: async (signal) => {
       const res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', {
-        cache: 'no-store',
-        headers: REQUEST_HEADERS,
-        next: { revalidate: 0 }
+        ...createFetchOptions(),
+        signal
       });
       if (!res.ok) throw new Error('Binance fetch failed');
       const data = await res.json();
@@ -58,11 +74,10 @@ const btcProviders: Provider[] = [
   },
   {
     name: 'coinbase',
-    fetch: async () => {
+    fetch: async (signal) => {
       const res = await fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot', {
-        cache: 'no-store',
-        headers: REQUEST_HEADERS,
-        next: { revalidate: 0 }
+        ...createFetchOptions(),
+        signal
       });
       if (!res.ok) throw new Error('Coinbase fetch failed');
       const data = await res.json();
@@ -71,11 +86,10 @@ const btcProviders: Provider[] = [
   },
   {
     name: 'coincap',
-    fetch: async () => {
+    fetch: async (signal) => {
       const res = await fetch('https://api.coincap.io/v2/assets/bitcoin', {
-        cache: 'no-store',
-        headers: REQUEST_HEADERS,
-        next: { revalidate: 0 }
+        ...createFetchOptions(),
+        signal
       });
       if (!res.ok) throw new Error('CoinCap fetch failed');
       const data = await res.json();
@@ -86,28 +100,11 @@ const btcProviders: Provider[] = [
 
 const goldProviders: Provider[] = [
   {
-    name: 'metals.live',
-    fetch: async () => {
-      const res = await fetch('https://api.metals.live/v1/spot/gold', {
-        cache: 'no-store',
-        headers: {
-          ...REQUEST_HEADERS,
-          Referer: 'https://newbullmoney.com'
-        },
-        next: { revalidate: 0 }
-      });
-      if (!res.ok) throw new Error('Metals.live fetch failed');
-      const data = await res.json();
-      return parseMetalsLive(data);
-    }
-  },
-  {
     name: 'goldprice.org',
-    fetch: async () => {
+    fetch: async (signal) => {
       const res = await fetch('https://data-asg.goldprice.org/dbXRates/USD', {
-        cache: 'no-store',
-        headers: REQUEST_HEADERS,
-        next: { revalidate: 0 }
+        ...createFetchOptions(),
+        signal
       });
       if (!res.ok) throw new Error('GoldPrice.org fetch failed');
       const data = await res.json();
@@ -116,26 +113,11 @@ const goldProviders: Provider[] = [
     }
   },
   {
-    name: 'exchangerate.host',
-    fetch: async () => {
-      const res = await fetch('https://api.exchangerate.host/latest?base=XAU&symbols=USD', {
-        cache: 'no-store',
-        headers: REQUEST_HEADERS,
-        next: { revalidate: 0 }
-      });
-      if (!res.ok) throw new Error('ExchangeRate.host fetch failed');
-      const data = await res.json();
-      const usd = data?.rates?.USD;
-      return usd ? Number(usd) : null;
-    }
-  },
-  {
     name: 'coingecko_paxg',
-    fetch: async () => {
+    fetch: async (signal) => {
       const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=pax-gold&vs_currencies=usd', {
-        cache: 'no-store',
-        headers: REQUEST_HEADERS,
-        next: { revalidate: 0 }
+        ...createFetchOptions(),
+        signal
       });
       if (!res.ok) throw new Error('CoinGecko fetch failed');
       const data = await res.json();
@@ -144,12 +126,24 @@ const goldProviders: Provider[] = [
     }
   },
   {
+    name: 'exchangerate.host',
+    fetch: async (signal) => {
+      const res = await fetch('https://api.exchangerate.host/latest?base=XAU&symbols=USD', {
+        ...createFetchOptions(),
+        signal
+      });
+      if (!res.ok) throw new Error('ExchangeRate.host fetch failed');
+      const data = await res.json();
+      const usd = data?.rates?.USD;
+      return usd ? Number(usd) : null;
+    }
+  },
+  {
     name: 'financialmodelingprep',
-    fetch: async () => {
+    fetch: async (signal) => {
       const res = await fetch('https://financialmodelingprep.com/api/v3/quote/XAUUSD?apikey=demo', {
-        cache: 'no-store',
-        headers: REQUEST_HEADERS,
-        next: { revalidate: 0 }
+        ...createFetchOptions(),
+        signal
       });
       if (!res.ok) throw new Error('FMP fetch failed');
       const data = await res.json();
@@ -159,36 +153,115 @@ const goldProviders: Provider[] = [
   }
 ];
 
-async function resolvePrice(providers: Provider[], validator: (price: number | null) => boolean) {
-  for (const provider of providers) {
-    try {
-      const price = await withTimeout(provider.fetch, provider.timeoutMs ?? 3500);
-      if (validator(price)) return { price: price as number, source: provider.name };
-    } catch (error) {
-      console.warn(`[prices] ${provider.name} failed`, error);
-    }
+async function resolvePrice(providers: Provider[], validator: (price: number | null) => boolean): Promise<PriceResult> {
+  const controllers: AbortController[] = [];
+  const timeouts: NodeJS.Timeout[] = [];
+
+  const attempts = providers.map((provider) => {
+    return new Promise<PriceResult>((resolve, reject) => {
+      const controller = new AbortController();
+      controllers.push(controller);
+      const timeoutMs = provider.timeoutMs ?? 2800;
+      const timeout = setTimeout(() => controller.abort(), timeoutMs);
+      timeouts.push(timeout);
+
+      provider.fetch(controller.signal)
+        .then((price) => {
+          if (validator(price)) {
+            resolve({ price: price as number, source: provider.name });
+          } else {
+            reject(new Error('Invalid price'));
+          }
+        })
+        .catch((error) => {
+          const message = error?.message ?? '';
+          const name = error?.name ?? '';
+          const cause = error?.cause as { code?: string } | undefined;
+          const isAbort = name === 'AbortError' || message === 'Invalid price';
+          const isDns = cause?.code === 'ENOTFOUND';
+          if (!isAbort && !isDns && process.env.PRICES_DEBUG === 'true') {
+            console.warn(`[prices] ${provider.name} failed`, error);
+          }
+          reject(error);
+        });
+    });
+  });
+
+  try {
+    return await Promise.any(attempts);
+  } catch {
+    return { price: null, source: 'fallback' };
+  } finally {
+    controllers.forEach((controller) => controller.abort());
+    timeouts.forEach((timeout) => clearTimeout(timeout));
   }
-  return { price: null, source: 'fallback' as const };
+}
+
+async function fetchPricesFresh(): Promise<PricesCache> {
+  const [btc, gold] = await Promise.all([
+    resolvePrice(btcProviders, isValidBtc),
+    resolvePrice(goldProviders, isValidGold)
+  ]);
+
+  const now = Date.now();
+  const next: PricesCache = {
+    btc: lastGoodPrices?.btc ?? null,
+    gold: lastGoodPrices?.gold ?? null,
+    sources: {
+      btc: lastGoodPrices?.sources.btc ?? 'fallback',
+      gold: lastGoodPrices?.sources.gold ?? 'fallback'
+    },
+    fetchedAt: now
+  };
+
+  if (btc.price) {
+    next.btc = btc.price;
+    next.sources.btc = btc.source;
+  }
+  if (gold.price) {
+    next.gold = gold.price;
+    next.sources.gold = gold.source;
+  }
+
+  lastGoodPrices = next;
+  return next;
 }
 
 export async function GET() {
   try {
-    const [btc, gold] = await Promise.all([
-      resolvePrice(btcProviders, isValidBtc),
-      resolvePrice(goldProviders, isValidGold)
-    ]);
+    const now = Date.now();
+    if (lastGoodPrices && now - lastGoodPrices.fetchedAt < PRICE_CACHE_TTL) {
+      return NextResponse.json({
+        xauusd: lastGoodPrices.gold ? lastGoodPrices.gold.toFixed(2) : '--',
+        btcusd: lastGoodPrices.btc ? Math.round(lastGoodPrices.btc).toString() : '--',
+        timestamp: new Date(lastGoodPrices.fetchedAt).toISOString(),
+        updateFrequency: '3s',
+        sources: lastGoodPrices.sources,
+        cached: true
+      }, {
+        headers: {
+          'Cache-Control': 'public, max-age=0, s-maxage=1, stale-while-revalidate=2',
+          'Content-Type': 'application/json',
+          'CDN-Cache-Control': 'no-store',
+          'Vercel-CDN-Cache-Control': 'no-store'
+        }
+      });
+    }
 
-    const timestamp = Date.now();
+    if (!pricesInFlight) {
+      pricesInFlight = fetchPricesFresh().finally(() => {
+        pricesInFlight = null;
+      });
+    }
+
+    const latest = await pricesInFlight;
 
     const response = {
-      xauusd: gold.price ? gold.price.toFixed(2) : '--',
-      btcusd: btc.price ? Math.round(btc.price).toString() : '--',
-      timestamp: new Date(timestamp).toISOString(),
+      xauusd: latest.gold ? latest.gold.toFixed(2) : '--',
+      btcusd: latest.btc ? Math.round(latest.btc).toString() : '--',
+      timestamp: new Date(latest.fetchedAt).toISOString(),
       updateFrequency: '3s',
-      sources: {
-        btc: btc.source,
-        gold: gold.source
-      }
+      sources: latest.sources
     };
 
     return NextResponse.json(response, {
@@ -202,6 +275,22 @@ export async function GET() {
     
   } catch (error) {
     console.error('Price fetch error:', error);
+    if (lastGoodPrices) {
+      return NextResponse.json({
+        xauusd: lastGoodPrices.gold ? lastGoodPrices.gold.toFixed(2) : '--',
+        btcusd: lastGoodPrices.btc ? Math.round(lastGoodPrices.btc).toString() : '--',
+        timestamp: new Date(lastGoodPrices.fetchedAt).toISOString(),
+        updateFrequency: '3s',
+        sources: lastGoodPrices.sources,
+        cached: true,
+        error: true
+      }, {
+        headers: {
+          'Cache-Control': 'public, max-age=0, s-maxage=1, stale-while-revalidate=2',
+          'Content-Type': 'application/json'
+        }
+      });
+    }
     return NextResponse.json({
       xauusd: '--',
       btcusd: '--',

@@ -9,6 +9,7 @@ import {
   IconSettings,
   IconLock,
   IconUser,
+  IconChartBar,
 } from '@tabler/icons-react';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 // SMART MOUNT: Only import lightweight trigger components - heavy modals mount via UIState
@@ -16,6 +17,7 @@ import {
   useMobileMenu, 
   UI_Z_INDEX,
   useProductsModalUI,
+  useChartNewsUI,
 } from '@/contexts/UIStateContext';
 // UNIFIED SHIMMER SYSTEM - Import from single source
 import { ShimmerBorder, ShimmerLine, ShimmerRadialGlow, ShimmerDot } from '@/components/ui/UnifiedShimmer';
@@ -53,6 +55,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
     
     // SMART MOUNT: Use centralized UI state for modals - they mount ONLY when opened
     const { setIsOpen: setProductsOpen } = useProductsModalUI();
+    const { setChartNewsOpen } = useChartNewsUI();
     
     // Track if component should render (delayed unmount for exit animation)
     const [shouldRender, setShouldRender] = useState(open);
@@ -114,6 +117,16 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
         setProductsOpen(true);
       }, 50);
     }, [setProductsOpen, onClose]);
+    
+    // SMART MOUNT: Trigger Chart News modal via UI state
+    const handleChartNewsClick = useCallback(() => {
+      SoundEffects.click();
+      // Close menu first, then open modal to avoid race conditions
+      onClose();
+      setTimeout(() => {
+        setChartNewsOpen(true);
+      }, 50);
+    }, [setChartNewsOpen, onClose]);
     
     const handleAccountManagerClick = useCallback(() => {
       SoundEffects.click();
@@ -287,6 +300,30 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
               >
                 <IconBuildingStore className="h-5 w-5" strokeWidth={2} style={{ color: '#ffffff' }} />
                 <span className="flex-1 text-left">Products</span>
+              </motion.button>
+            </motion.div>
+
+            {/* Chart News - SMART MOUNT: Button triggers modal via UI state */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.24, duration: 0.3 }}
+              className="w-full"
+            >
+              <motion.button 
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
+                onHoverStart={() => SoundEffects.hover()}
+                onClick={handleChartNewsClick}
+                className="w-full flex items-center gap-3 text-base font-medium px-4 py-3.5 min-h-[52px] rounded-2xl transition-all duration-200 cursor-pointer"
+                style={{
+                  color: '#ffffff',
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                }}
+              >
+                <IconChartBar className="h-5 w-5" strokeWidth={2} style={{ color: '#ffffff' }} />
+                <span className="flex-1 text-left">Charts & News</span>
               </motion.button>
             </motion.div>
 

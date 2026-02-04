@@ -1,12 +1,13 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { ReactNode, Suspense, memo } from "react";
+import { ReactNode, Suspense, memo, useEffect } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useUIState } from "@/contexts/UIStateContext";
 import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
 import { MobilePerformanceProvider } from "@/contexts/MobilePerformanceProvider";
+import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
 
 // ✅ LOADING FALLBACKS - Mobile optimized
 import { MinimalFallback } from "@/components/MobileLazyLoadingFallback";
@@ -89,6 +90,7 @@ import {
   LazyBullFeedModal,
   LazyPostComposerModal,
   LazyAnalysisModal,
+  LazyChartNewsModal,
   LazyLiveStreamModal,
   LazyProductsModal,
   LazyServicesModal,
@@ -122,6 +124,8 @@ const LazyGlobalModals = memo(function LazyGlobalModals() {
     setPostComposerModalOpen,
     isAnalysisModalOpen,
     setAnalysisModalOpen,
+    isChartNewsOpen,
+    setChartNewsOpen,
     isLiveStreamModalOpen,
     setLiveStreamModalOpen,
     isProductsModalOpen,
@@ -156,6 +160,12 @@ const LazyGlobalModals = memo(function LazyGlobalModals() {
         onClose={() => setAnalysisModalOpen(false)} 
       />
       
+      {/* Chart News Modal - mounts only when opened, unmounts when closed */}
+      <LazyChartNewsModal 
+        isOpen={isChartNewsOpen} 
+        onClose={() => setChartNewsOpen(false)} 
+      />
+      
       {/* Live Stream Modal - mounts only when opened, unmounts when closed */}
       <LazyLiveStreamModal 
         isOpen={isLiveStreamModalOpen} 
@@ -180,6 +190,25 @@ const LazyGlobalModals = memo(function LazyGlobalModals() {
 export function ClientProviders({ children, modal }: ClientProvidersProps) {
   const { isMobile: isMobileViewport, shouldRender: allowMobileLazy } = useMobileLazyRender(240);
   const allowMobileComponents = allowMobileLazy || !isMobileViewport;
+  const { masterMuted } = useAudioSettings();
+
+  // Global media mute handler (applies to any stray audio/video tags on page/layout)
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const media = Array.from(document.querySelectorAll<HTMLMediaElement>("audio, video"));
+    media.forEach(el => {
+      if (masterMuted) {
+        if (!el.dataset.prevVolume) el.dataset.prevVolume = String(el.volume ?? 1);
+        el.muted = true;
+      } else {
+        el.muted = false;
+        if (el.dataset.prevVolume) {
+          const v = Number(el.dataset.prevVolume);
+          if (!Number.isNaN(v)) el.volume = v;
+        }
+      }
+    });
+  }, [masterMuted]);
 
   return (
     <ErrorBoundary>

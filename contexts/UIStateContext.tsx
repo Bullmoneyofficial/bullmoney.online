@@ -119,6 +119,7 @@ interface UIStateContextType {
   devSkipPageModeAndLoader: boolean; // Dev flag to skip pagemode and loader
   isWelcomeScreenActive: boolean;  // Welcome screen active - allows AudioWidget to show
   hasStartedPagemodeAudio: boolean; // Track if user entered pagemode flow - audio persists until content loads
+  isMobileNavbarHidden: boolean;  // Mobile navbar hidden on scroll - for UltimateHub expansion
 
   // Legacy: activeNavbarModal (maps to specific modal states)
   activeNavbarModal: NavbarModalType;
@@ -157,6 +158,7 @@ interface UIStateContextType {
   setV2Unlocked: (unlocked: boolean) => void;
   setDevSkipPageModeAndLoader: (skip: boolean) => void;
   setWelcomeScreenActive: (active: boolean) => void;
+  setMobileNavbarHidden: (hidden: boolean) => void;
 
   // Legacy: setNavbarModal (for backwards compatibility)
   setNavbarModal: (modal: NavbarModalType) => void;
@@ -228,6 +230,8 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   );
   const [devSkipPageModeAndLoader, setDevSkipPageModeAndLoaderState] = useState(false);
   const [isWelcomeScreenActive, setIsWelcomeScreenActiveState] = useState(false);
+  // Mobile navbar hidden on scroll - UltimateHub pill expands to full width
+  const [isMobileNavbarHidden, setIsMobileNavbarHiddenState] = useState(false);
   // Track if user has started audio in pagemode flow - persists through loader transition
   // Only resets when content loads (V2 unlocked)
   const [hasStartedPagemodeAudio, setHasStartedPagemodeAudioState] = useState(false);
@@ -254,21 +258,26 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   // Derived state: modals that DO NOT require audio widget to minimize
   // Discord Stage modal should keep audio widget visible so users can control Discord volume
   // Welcome screen should also keep audio widget visible so users can control music while viewing welcome
-  // Mobile menu and Ultimate Hub/Panel should NOT minimize audio widget - they can coexist
-  const shouldNotMinimizeForThisModal = isDiscordStageModalOpen || isWelcomeScreenActive ||
-    isMobileMenuOpen || isUltimateHubOpen || isUltimatePanelOpen;
+  // Mobile menu should NOT minimize audio widget - it can coexist
+  const shouldNotMinimizeForThisModal = isDiscordStageModalOpen || isWelcomeScreenActive || isMobileMenuOpen;
+
+  // Viewport detection is required inside the provider because Next may hydrate on
+  // the server first. Default to desktop to avoid SSR mismatches.
+  const isDesktopViewport = typeof window === 'undefined'
+    ? true
+    : window.matchMedia('(min-width: 768px)').matches;
 
   // Derived state: should audio widget minimize (not unmount)?
   // True when any other UI component is open that would overlay the player
   // EXCEPTION: Audio widget stays visible during Discord Stage modal so users can control Discord volume
   // EXCEPTION: Audio widget stays visible during Mobile Menu/Navbar - they coexist
-  // EXCEPTION: Audio widget stays visible during Ultimate Hub/Panel - they coexist on different sides
   // NOTE: ChartNews is explicitly included in isAnyModalOpen, so audio widget will minimize when ChartNews opens
-  const shouldMinimizeAudioWidget = isAnyModalOpen && !shouldNotMinimizeForThisModal;
+  // Ultimate Hub overlays a large portion of the screen on mobile, so only minimize there
+  const shouldMinimizeAudioWidget = (isAnyModalOpen && !shouldNotMinimizeForThisModal) || (!isDesktopViewport && isUltimateHubOpen);
 
   // Derived state: is there UI overlaying the floating player area?
   // Mobile menu, Ultimate Hub, and Ultimate Panel don't overlay audio widget - they coexist
-  const hasOverlayingUI = isAnyModalOpen && !shouldNotMinimizeForThisModal;
+  const hasOverlayingUI = (isAnyModalOpen && !shouldNotMinimizeForThisModal) || isUltimateHubOpen;
 
   // Derived state: which component is active?
   const activeComponent: UIComponentType | null =
@@ -767,6 +776,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     devSkipPageModeAndLoader,
     isWelcomeScreenActive,
     hasStartedPagemodeAudio,
+    isMobileNavbarHidden,
     activeNavbarModal,
     isAnyOpen,
     isAnyModalOpen,
@@ -802,6 +812,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setV2Unlocked,
     setDevSkipPageModeAndLoader,
     setWelcomeScreenActive: setIsWelcomeScreenActiveState,
+    setMobileNavbarHidden: setIsMobileNavbarHiddenState,
     setNavbarModal,
 
     // Convenience methods
@@ -861,7 +872,13 @@ export function useAudioWidgetUI() {
     isV2Unlocked,
     isWelcomeScreenActive,
     hasStartedPagemodeAudio,
+    isUltimateHubOpen,
   } = useUIState();
+
+  // Viewport detection local to this hook (provider has its own instance)
+  const isDesktopViewport = typeof window === 'undefined'
+    ? true
+    : window.matchMedia('(min-width: 768px)').matches;
 
   // IMPORTANT: We no longer return shouldHideFloatingPlayer that causes unmount.
   // Instead, we return shouldMinimizeAudioWidget which signals the floating player
@@ -888,15 +905,12 @@ export function useAudioWidgetUI() {
   // - Hide completely ONLY if: (loader is open AND user never entered pagemode) OR (not unlocked AND not in pagemode/welcome AND never started pagemode audio)
   // - In other words: Keep showing (mounted) if user has started the pagemode flow at any point
   const isInPagemodeFlow = isPagemodeOpen || isWelcomeScreenActive || hasStartedPagemodeAudio;
-  // Desktop should always be able to see the AudioWidget (even before V2 unlock),
-  // otherwise the UI appears "missing" on larger screens.
-  const isDesktopViewport = typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches;
   const shouldHideAudioWidgetCompletely = !isDesktopViewport && !isInPagemodeFlow && !isV2Unlocked;
 
   // NEW: shouldHideMainWidget - hides MainWidget (settings panel) but keeps FloatingPlayer for audio
   // During pagemode registration (not welcome screen), hide the settings but keep audio playing
   // Also hide during loader (but keep FloatingPlayer for audio persistence)
-  const shouldHideMainWidget = (isPagemodeOpen && !isWelcomeScreenActive) || isLoaderv2Open;
+  const shouldHideMainWidget = (isPagemodeOpen && !isWelcomeScreenActive) || isLoaderv2Open || isUltimateHubOpen;
 
   return {
     isAudioWidgetOpen,
@@ -1099,4 +1113,3 @@ export function useDiscordStageModalUI() {
   const { isDiscordStageModalOpen, setDiscordStageModalOpen, openDiscordStageModal } = useUIState();
   return { isOpen: isDiscordStageModalOpen, setIsOpen: setDiscordStageModalOpen, open: openDiscordStageModal };
 }
-

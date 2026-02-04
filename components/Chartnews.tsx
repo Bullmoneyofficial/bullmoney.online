@@ -215,13 +215,13 @@ const HighAestheticCard = memo(({
 
                                         {shouldSkipHeavyEffects || quiet ? (
                                             <div className={buttonClass}>
-                                                    <span className={quiet ? "text-black" : "text-black"}>Launch Terminal</span>
+                                                    <span className={quiet ? "text-black" : "text-black"}>View Charts</span>
                                                     <ArrowRight className="h-4 w-4 text-black transition-transform group-hover:translate-x-1" />
                                             </div>
                                         ) : (
                                             <NeonBorder borderRadius="rounded-full">
                                                     <div className={buttonClass}>
-                                                            <span className="neon-white-text">Launch Terminal</span>
+                                                            <span className="neon-white-text">View Charts</span>
                                                             <ArrowRight className="h-4 w-4 neon-white-text transition-transform group-hover:translate-x-1" />
                                                     </div>
                                             </NeonBorder>
@@ -308,8 +308,8 @@ export const TradingViewDropdown = memo(({ onMarketChange, showTip, quiet = fals
         <div className={cn(containerClass, frameBorder)}>
       {!showChart && (
         <HighAestheticCard
-            title="Show Live Market Charts"
-            subtitle="Real-time institutional grade data visualization."
+            title="Live Market Charts"
+            subtitle="Real-time forex, crypto, stocks & gold. Institutional data."
             icon={ChartBar}
             onShow={() => setShowChart(true)}
             isChart={true}
@@ -1201,11 +1201,11 @@ export function CTA() {
                     <header className="relative text-center mb-8 sm:mb-10">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/70">
                             <span className="h-2 w-2 rounded-full bg-white" />
-                            Live signals
+                            BullMoney Trading Tools
                         </div>
-                        <h1 className="mt-4 text-3xl sm:text-4xl font-semibold tracking-tight text-white">Market dashboard</h1>
+                        <h1 className="mt-4 text-3xl sm:text-4xl font-semibold tracking-tight text-white">Market Analysis Hub</h1>
                         <p className="mt-3 text-sm sm:text-base text-white/70 max-w-2xl mx-auto">
-                            A calmer view for news and live charts. Jump in, scan the tape, and act without the noise.
+                            Real-time charts and market news. BullMoney traders use these tools to analyze markets and make informed trading decisions.
                         </p>
                     </header>
 
@@ -1213,10 +1213,10 @@ export function CTA() {
                         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5 shadow-[0_16px_40px_-38px_rgba(0,0,0,1)]">
                             <div className="flex items-center justify-between mb-3">
                                 <div>
-                                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">News pulse</p>
-                                    <p className="text-sm text-white/80">Quick open to see headlines</p>
+                                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">Market News</p>
+                                    <p className="text-sm text-white/80">Stay updated with global market events</p>
                                 </div>
-                                <span className="hidden sm:inline-flex h-8 px-3 items-center rounded-full bg-white text-black text-xs font-semibold">Open feed</span>
+                                <span className="hidden sm:inline-flex h-8 px-3 items-center rounded-full bg-white text-black text-xs font-semibold">View Feed</span>
                             </div>
                             <NewsFeedButton className="w-full" />
                         </div>
@@ -1224,10 +1224,10 @@ export function CTA() {
                         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5 shadow-[0_16px_40px_-38px_rgba(0,0,0,1)]">
                             <div className="flex items-center justify-between mb-3">
                                 <div>
-                                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">Live charts</p>
-                                    <p className="text-sm text-white/80">Pick a market and view</p>
+                                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">Trading Charts</p>
+                                    <p className="text-sm text-white/80">Professional TradingView charts for all markets</p>
                                 </div>
-                                <span className="hidden sm:inline-flex h-8 px-3 items-center rounded-full bg-white text-black text-xs font-semibold">Open charts</span>
+                                <span className="hidden sm:inline-flex h-8 px-3 items-center rounded-full bg-white text-black text-xs font-semibold">View Charts</span>
                             </div>
                             <TradingViewDropdown onMarketChange={setActiveMarket} showTip={showTips && activeTipIndex === 1} quiet={isMobile} />
                         </div>

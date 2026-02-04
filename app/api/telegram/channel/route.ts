@@ -27,6 +27,19 @@ const VIP_CHANNEL_ID = process.env.VIP_CHANNEL_ID;
 let vipMessagesCache: TelegramPost[] = [];
 let lastFetchTime = 0;
 const CACHE_DURATION = 10000; // 10 seconds
+let vipFetchInFlight: Promise<TelegramPost[]> | null = null;
+
+// Cache webhook status to avoid repeated network calls
+let webhookStatusCache: { active: boolean; url: string | null; fetchedAt: number } | null = null;
+const WEBHOOK_CACHE_DURATION = 30000; // 30 seconds
+
+// Cache for public channels
+type PublicCacheEntry = { posts: TelegramPost[]; fetchedAt: number };
+const publicChannelCache: Record<string, PublicCacheEntry> = {};
+const PUBLIC_CACHE_DURATION = 15000; // 15 seconds
+const publicFetchInFlight = new Map<string, Promise<TelegramPost[]>>();
+
+const TELEGRAM_FETCH_TIMEOUT_MS = 4000;
 
 // Track last update ID for getUpdates
 // (currently unused but reserved for future incremental polling)
@@ -36,13 +49,22 @@ async function getWebhookStatus() {
     if (!TELEGRAM_BOT_TOKEN) {
       return { active: false, url: null };
     }
+    const now = Date.now();
+    if (webhookStatusCache && now - webhookStatusCache.fetchedAt < WEBHOOK_CACHE_DURATION) {
+      return { active: webhookStatusCache.active, url: webhookStatusCache.url };
+    }
     const webhookInfo = await fetch(
       `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getWebhookInfo`,
-      { cache: 'no-store' }
+      { 
+        cache: 'no-store',
+        signal: AbortSignal.timeout(TELEGRAM_FETCH_TIMEOUT_MS)
+      }
     );
     const webhookData = await webhookInfo.json();
     const url = webhookData?.result?.url;
-    return { active: !!url, url };
+    const status = { active: !!url, url: url ?? null };
+    webhookStatusCache = { ...status, fetchedAt: now };
+    return status;
   } catch (error) {
     console.error('[TG VIP] Webhook info error:', error);
     return { active: false, url: null };
@@ -51,98 +73,119 @@ async function getWebhookStatus() {
 
 // Fetch VIP messages directly from Telegram Bot API
 async function fetchVIPMessagesFromTelegram(): Promise<TelegramPost[]> {
-  try {
-    console.log('[TG VIP] Fetching messages from Telegram Bot API...');
-
-    if (!TELEGRAM_BOT_TOKEN) {
-      console.error('[TG VIP] TELEGRAM_BOT_TOKEN not configured');
-      return [];
-    }
-    
-    // First check if webhook is active
-    const webhookStatus = await getWebhookStatus();
-    
-    if (webhookStatus.active) {
-      console.warn('[TG VIP] Webhook is active:', webhookStatus.url);
-      // When webhook is active, getUpdates will not return messages.
-      return vipMessagesCache;
-    }
-    
-    // Use getUpdates to fetch channel posts
-    const updatesUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates?allowed_updates=["channel_post","edited_channel_post"]&limit=100`;
-    
-    const response = await fetch(updatesUrl, { cache: 'no-store' });
-    const data = await response.json();
-    
-    console.log('[TG VIP] getUpdates response:', data.ok, 'total updates:', data.result?.length || 0);
-    
-    if (!data.ok) {
-      console.error('[TG VIP] API Error:', data.description);
-      return vipMessagesCache;
-    }
-    
-    const updates = data.result || [];
-    const channelPosts = updates
-      .map((u: any) => u.channel_post || u.edited_channel_post)
-      .filter(Boolean)
-      .filter((post: any) => {
-        if (!VIP_CHANNEL_ID) return true;
-        const expected = VIP_CHANNEL_ID.replace('-100', '').replace('-', '');
-        const actual = String(post.chat?.id || '').replace('-100', '').replace('-', '');
-        return expected && actual ? expected === actual : true;
-      });
-    
-    console.log('[TG VIP] Found', channelPosts.length, 'channel posts');
-    
-    if (channelPosts.length === 0) {
-      // Return cached messages if no new updates
-      return vipMessagesCache;
-    }
-    
-    // Process channel posts into our format
-    const newPosts: TelegramPost[] = [];
-    
-    for (const post of channelPosts) {
-      
-      const messageText = post.text || post.caption || '';
-      const hasMedia = !!(post.photo || post.video || post.document || post.animation);
-      const messageId = post.message_id;
-      const messageDate = post.date ? new Date(post.date * 1000).toISOString() : new Date().toISOString();
-      
-      // Skip empty messages
-      if (!messageText && !hasMedia) continue;
-      
-      newPosts.push({
-        id: messageId.toString(),
-        text: messageText || (hasMedia ? '📷 Media post' : ''),
-        date: formatDate(messageDate),
-        views: undefined,
-        hasMedia,
-        channel: '+yW5jIfxJpv9hNmY0',
-        channelName: 'VIP Trades',
-      });
-    }
-    
-    // Merge new posts with cache, avoiding duplicates
-    const existingIds = new Set(vipMessagesCache.map(p => p.id));
-    for (const post of newPosts) {
-      if (!existingIds.has(post.id)) {
-        vipMessagesCache.unshift(post); // Add to beginning (newest first)
-      }
-    }
-    
-    // Keep only last 50 messages in cache
-    vipMessagesCache = vipMessagesCache.slice(0, 50);
-    
-    // DON'T confirm updates - keep them available for next fetch
-    // This way messages persist in Telegram's queue
-    
-    console.log('[TG VIP] Total cached messages:', vipMessagesCache.length);
-    
+  const now = Date.now();
+  if (vipMessagesCache.length > 0 && now - lastFetchTime < CACHE_DURATION) {
     return vipMessagesCache;
-  } catch (error) {
-    console.error('[TG VIP] Error fetching from Telegram:', error);
-    return vipMessagesCache; // Return cached on error
+  }
+
+  if (vipFetchInFlight) {
+    return vipFetchInFlight;
+  }
+
+  vipFetchInFlight = (async () => {
+    try {
+      console.log('[TG VIP] Fetching messages from Telegram Bot API...');
+
+      if (!TELEGRAM_BOT_TOKEN) {
+        console.error('[TG VIP] TELEGRAM_BOT_TOKEN not configured');
+        return vipMessagesCache;
+      }
+
+      // First check if webhook is active
+      const webhookStatus = await getWebhookStatus();
+
+      if (webhookStatus.active) {
+        console.warn('[TG VIP] Webhook is active:', webhookStatus.url);
+        // When webhook is active, getUpdates will not return messages.
+        return vipMessagesCache;
+      }
+
+      // Use getUpdates to fetch channel posts
+      const updatesUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates?allowed_updates=["channel_post","edited_channel_post"]&limit=100`;
+
+      const response = await fetch(updatesUrl, { 
+        cache: 'no-store',
+        signal: AbortSignal.timeout(TELEGRAM_FETCH_TIMEOUT_MS)
+      });
+      const data = await response.json();
+
+      console.log('[TG VIP] getUpdates response:', data.ok, 'total updates:', data.result?.length || 0);
+
+      if (!data.ok) {
+        console.error('[TG VIP] API Error:', data.description);
+        return vipMessagesCache;
+      }
+
+      const updates = data.result || [];
+      const channelPosts = updates
+        .map((u: any) => u.channel_post || u.edited_channel_post)
+        .filter(Boolean)
+        .filter((post: any) => {
+          if (!VIP_CHANNEL_ID) return true;
+          const expected = VIP_CHANNEL_ID.replace('-100', '').replace('-', '');
+          const actual = String(post.chat?.id || '').replace('-100', '').replace('-', '');
+          return expected && actual ? expected === actual : true;
+        });
+
+      console.log('[TG VIP] Found', channelPosts.length, 'channel posts');
+
+      if (channelPosts.length === 0) {
+        // Return cached messages if no new updates
+        return vipMessagesCache;
+      }
+
+      // Process channel posts into our format
+      const newPosts: TelegramPost[] = [];
+
+      for (const post of channelPosts) {
+        const messageText = post.text || post.caption || '';
+        const hasMedia = !!(post.photo || post.video || post.document || post.animation);
+        const messageId = post.message_id;
+        const messageDate = post.date ? new Date(post.date * 1000).toISOString() : new Date().toISOString();
+
+        // Skip empty messages
+        if (!messageText && !hasMedia) continue;
+
+        newPosts.push({
+          id: messageId.toString(),
+          text: messageText || (hasMedia ? '📷 Media post' : ''),
+          date: formatDate(messageDate),
+          views: undefined,
+          hasMedia,
+          channel: '+yW5jIfxJpv9hNmY0',
+          channelName: 'VIP Trades',
+        });
+      }
+
+      // Merge new posts with cache, avoiding duplicates
+      const existingIds = new Set(vipMessagesCache.map(p => p.id));
+      for (const post of newPosts) {
+        if (!existingIds.has(post.id)) {
+          vipMessagesCache.unshift(post); // Add to beginning (newest first)
+        }
+      }
+
+      // Keep only last 50 messages in cache
+      vipMessagesCache = vipMessagesCache.slice(0, 50);
+
+      // DON'T confirm updates - keep them available for next fetch
+      // This way messages persist in Telegram's queue
+
+      console.log('[TG VIP] Total cached messages:', vipMessagesCache.length);
+
+      return vipMessagesCache;
+    } catch (error) {
+      console.error('[TG VIP] Error fetching from Telegram:', error);
+      return vipMessagesCache; // Return cached on error
+    } finally {
+      lastFetchTime = Date.now();
+    }
+  })();
+
+  try {
+    return await vipFetchInFlight;
+  } finally {
+    vipFetchInFlight = null;
   }
 }
 
@@ -160,22 +203,78 @@ export async function GET(request: NextRequest) {
     }
     
     // For public channels, scrape from Telegram - minimal cache for fast updates
-    const response = await fetch(`https://t.me/s/${channel.username}`, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Cache-Control': 'no-cache',
-      },
-      next: { revalidate: 10 }, // Revalidate every 10 seconds for near real-time
-    });
+    const cacheKey = channelParam;
+    const cachedPublic = publicChannelCache[cacheKey];
+    const now = Date.now();
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch channel: ${response.status}`);
+    if (cachedPublic && now - cachedPublic.fetchedAt < PUBLIC_CACHE_DURATION) {
+      return NextResponse.json({
+        success: true,
+        posts: cachedPublic.posts.slice(0, 10),
+        channel: channel.username,
+        channelName: channel.name,
+        lastUpdated: new Date(cachedPublic.fetchedAt).toISOString(),
+        source: 'cache'
+      }, {
+        headers: {
+          'Cache-Control': 'public, s-maxage=10, stale-while-revalidate=30',
+        },
+      });
     }
 
-    const html = await response.text();
-    const posts = parseChannelHTML(html, channel.username, channel.name);
+    const existingInFlight = publicFetchInFlight.get(cacheKey);
+    if (existingInFlight) {
+      const posts = await existingInFlight.catch(() => null);
+      if (posts && posts.length > 0) {
+        return NextResponse.json({
+          success: true,
+          posts: posts.slice(0, 10),
+          channel: channel.username,
+          channelName: channel.name,
+          lastUpdated: new Date().toISOString(),
+          source: 'inflight'
+        }, {
+          headers: {
+            'Cache-Control': 'public, s-maxage=10, stale-while-revalidate=30',
+          },
+        });
+      }
+    }
+
+    const fetchPromise = (async () => {
+      try {
+        const response = await fetch(`https://t.me/s/${channel.username}`, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Cache-Control': 'no-cache',
+          },
+          next: { revalidate: 10 }, // Revalidate every 10 seconds for near real-time
+          signal: AbortSignal.timeout(TELEGRAM_FETCH_TIMEOUT_MS)
+        });
+
+        if (!response.ok) {
+          return [];
+        }
+
+        const html = await response.text();
+        const posts = parseChannelHTML(html, channel.username, channel.name);
+
+        publicChannelCache[cacheKey] = { posts, fetchedAt: Date.now() };
+        return posts;
+      } catch {
+        return [];
+      }
+    })();
+
+    publicFetchInFlight.set(cacheKey, fetchPromise);
+    let posts: TelegramPost[] = [];
+    try {
+      posts = await fetchPromise;
+    } finally {
+      publicFetchInFlight.delete(cacheKey);
+    }
 
     return NextResponse.json({
       success: true,
@@ -190,11 +289,22 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error fetching Telegram channel:', error);
+    const cachedPublic = publicChannelCache[channelParam];
+    if (cachedPublic && cachedPublic.posts.length > 0) {
+      return NextResponse.json({
+        success: true,
+        posts: cachedPublic.posts.slice(0, 10),
+        channel: channelParam,
+        channelName: CHANNELS[channelParam as keyof typeof CHANNELS]?.name ?? 'Unknown',
+        lastUpdated: new Date(cachedPublic.fetchedAt).toISOString(),
+        source: 'cache-fallback'
+      }, { status: 200 });
+    }
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch channel posts',
       posts: [],
-    }, { status: 500 });
+    }, { status: 200 });
   }
 }
 

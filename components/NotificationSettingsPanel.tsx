@@ -431,7 +431,7 @@ const CHANNEL_CONFIG = {
   trades: { name: 'FREE TRADES', icon: TrendingUp, color: 'cyan', description: 'Free trade signals & setups' },
   main: { name: 'LIVESTREAMS', icon: MessageCircle, color: 'blue', description: 'Live stream notifications' },
   shop: { name: 'NEWS', icon: ShoppingBag, color: 'emerald', description: 'Market news & updates' },
-  vip: { name: 'VIP TRADES', icon: Crown, color: 'amber', description: 'Premium VIP trade alerts' },
+  vip: { name: 'VIP TRADES', icon: Crown, color: 'blue', description: 'Premium VIP trade alerts' },
 } as const;
 
 type ChannelKey = keyof typeof CHANNEL_CONFIG;
@@ -521,7 +521,8 @@ On mobile Safari: Go to Settings > Notifications > Safari`;
   }
 
   // Show setup needed indicator for iOS/in-app users who haven't completed setup - NEON BLUE
-  if (deviceInfo.needsSetupGuide && !isSubscribed && !isCheckingSupport) {
+  // Only render the full explanatory button when not in `compact` mode.
+  if (!compact && deviceInfo.needsSetupGuide && !isSubscribed && !isCheckingSupport) {
     return (
       <div 
         className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition-all active:scale-[0.98]"
@@ -575,7 +576,7 @@ On mobile Safari: Go to Settings > Notifications > Safari`;
   if (!isSupported && !isCheckingSupport) {
     return (
       <div 
-        className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[9px] cursor-pointer"
+        className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-300 text-[9px] cursor-pointer"
         onClick={() => {
           const info = `Push notifications are not available.
 
@@ -732,7 +733,7 @@ Protocol: ${typeof window !== 'undefined' ? window.location.protocol : 'N/A'}`;
               background: isSubscribed 
                 ? 'linear-gradient(135deg, #ffffff 0%, #ffffff 100%)' 
                 : isPermissionDenied 
-                ? 'rgba(239, 68, 68, 0.3)' 
+                ? 'rgba(59, 130, 246, 0.12)' 
                 : 'rgba(39, 39, 42, 0.8)',
               border: isSubscribed 
                 ? '2px solid #ffffff' 
@@ -750,10 +751,14 @@ Protocol: ${typeof window !== 'undefined' ? window.location.protocol : 'N/A'}`;
               style={{
                 background: isSubscribed 
                   ? 'linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%)' 
-                  : 'linear-gradient(135deg, #a1a1aa 0%, #71717a 100%)',
+                  : isPermissionDenied 
+                    ? 'linear-gradient(135deg, #bfdbfe 0%, #60a5fa 100%)'
+                    : 'linear-gradient(135deg, #a1a1aa 0%, #71717a 100%)',
                 boxShadow: isSubscribed 
                   ? '0 0 8px rgba(255, 255, 255, 0.8), 0 2px 4px rgba(0,0,0,0.2)' 
-                  : '0 2px 4px rgba(0,0,0,0.3)'
+                  : isPermissionDenied 
+                    ? '0 0 8px rgba(59,130,246,0.28)'
+                    : '0 2px 4px rgba(0,0,0,0.3)'
               }}
             >
               {showLoading && (

@@ -317,6 +317,7 @@ export function WelcomeScreenDesktop({ onSignUp, onGuest, onLogin, hideBackgroun
           onOpenPanel={() => setIsHubOpen(true)}
           topOffsetMobile="calc(env(safe-area-inset-top, 0px) + 100px)"
           topOffsetDesktop="calc(env(safe-area-inset-top, 0px) + 110px)"
+          mobileAlignment="center"
         />
 
         {/* Desktop Layout: Centered */}

@@ -999,23 +999,20 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         >
                             I already have an account
                         </button>
-                      </div>
-                    }
-                  >
-                    <p className="text-sm md:text-[15px] leading-relaxed text-white/70 mb-4 text-center">
-                      BullMoney works with regulated brokers. <br className="hidden md:block" />
-                      This free account lets us verify your access.
-                    </p>
-                    
-                    {/* VISUAL ELEMENT (CARD) */}
-                    <div className="relative mx-auto w-full max-w-[280px] h-32 md:h-40 rounded-3xl border border-white/10 overflow-hidden shadow-2xl mb-2 opacity-80 hover:opacity-100 transition-opacity">
-                      <IconPlusCorners />
-                      <div className="absolute inset-0 p-2">
-                        {isVantage ? <EvervaultCardRed text="VANTAGE" /> : <EvervaultCard text="X3R7P" />}
-                      </div>
-                    </div>
-
-                  </StepCard>
+                        
+                        <p className="text-sm md:text-[15px] leading-relaxed text-white/70 mb-4 text-center mt-4">
+                          BullMoney works with regulated brokers. <br className="hidden md:block" />
+                          This free account lets us verify your access.
+                        </p>
+                        
+                        {/* VISUAL ELEMENT (CARD) */}
+                        <div className="relative mx-auto w-full max-w-[280px] h-32 md:h-40 rounded-3xl border border-white/10 overflow-hidden shadow-2xl mb-2 opacity-80 hover:opacity-100 transition-opacity">
+                          <IconPlusCorners />
+                          <div className="absolute inset-0 p-2">
+                            {isVantage ? <EvervaultCardRed text="VANTAGE" /> : <EvervaultCard text="X3R7P" />}
+                          </div>
+                        </div>
+                   </div>
                 </motion.div>
               )}
 

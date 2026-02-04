@@ -1330,6 +1330,7 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
         zIndex: 0,
         transform: 'translate3d(0,0,0)',
         willChange: 'transform',
+        pointerEvents: 'none',
       }}
     >
       {shouldUseViewer ? (
@@ -1337,13 +1338,14 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
         <spline-viewer 
           url={runtimeUrl} 
           loading="lazy" 
-          events-target="global" 
+          events-target="local" 
           style={{ 
             width: '100%', 
             height: '100%', 
             border: "none", 
             background: "transparent",
             display: 'block',
+            pointerEvents: 'none',
           }} 
         />
       ) : (
@@ -1363,6 +1365,7 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
               border: "none",
               display: 'block',
               marginBottom: '-60px',
+              pointerEvents: 'none',
             }} 
           />
         </div>
@@ -1637,6 +1640,7 @@ const GodModeOverlay = ({ active }: { active: boolean }) => (
 
 import { useHeroSceneModalUI, useUIState as useGlobalUIState } from "@/contexts/UIStateContext";
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
+import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
 import HiddenYoutubePlayer from "@/components/Mainpage/HiddenYoutubePlayer";
 import { ALL_THEMES } from "@/constants/theme-data";
 import type { SoundProfile } from "@/constants/theme-data";
@@ -1671,7 +1675,7 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
   const geoLocation = useGeoLocation();
   const deviceInfo = useDeviceInfo();
   const tickerData = useRealTimePrices();
-  const { isAnyModalOpen, activeComponent } = useGlobalUIState();
+  const { isAnyModalOpen, activeComponent, isUltimateHubOpen, isMobileMenuOpen, isLoaderv2Open, isPagemodeOpen } = useGlobalUIState();
   const { scene: heroSplineScene, label: heroSplineSceneLabel, source: heroSplineSource, advanceScene: advanceHeroSplineScene, setSceneById: setHeroSplineSceneManually } = useHeroSplineSource();
   const { isOpen: isHeroSceneModalOpen, setIsOpen: setHeroSceneModalOpen } = useHeroSceneModalUI();
   
@@ -1789,11 +1793,13 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
   useEffect(() => { if (!uiStateModalChangeInitRef.current) { uiStateModalChangeInitRef.current = true; return; } cycleHeroMedia("ui-state-change"); }, [isAnyModalOpen, activeComponent, cycleHeroMedia]);
 
   const { activeThemeId, accentColor } = useGlobalTheme();
+  const { allowedChannel, masterMuted, setAllowedChannel } = useAudioSettings();
   const { resolveVolume: resolveHeroVideoVolume } = useHeroVideoVolume();
   const [isMuted, setIsMuted] = useState(false);
   const [currentSound, setCurrentSound] = useState<SoundProfile>('MECHANICAL');
   const audioProfile = currentSound === 'MECHANICAL' || currentSound === 'SOROS' || currentSound === 'SCI-FI' || currentSound === 'SILENT' ? currentSound : 'MECHANICAL';
   useAudioEngine(!isMuted, audioProfile);
+  const isVideoMode = heroMediaMode === 'video' && !!activeVideoId;
 
   useEffect(() => {
     const savedSound = localStorage.getItem('bullmoney_sound_profile') as SoundProfile | null;
@@ -1802,9 +1808,16 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
     if (savedMuted === 'true') setIsMuted(true);
   }, []);
 
+  // When switching to video mode and unmuted, make hero the active audio channel
+  useEffect(() => {
+    if (isVideoMode && !isMuted) {
+      setAllowedChannel("music");
+    }
+  }, [isVideoMode, isMuted, setAllowedChannel]);
+
   const currentTheme = ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
-  const heroVideoPlaybackVolume = resolveHeroVideoVolume(isMuted);
-  const isVideoMode = heroMediaMode === 'video' && !!activeVideoId;
+  const allowHeroAudio = (allowedChannel === "all" || allowedChannel === "music") && !masterMuted;
+  const heroVideoPlaybackVolume = allowHeroAudio && !isMuted ? resolveHeroVideoVolume(false) : 0;
   const mediaLabel = isVideoMode
     ? `Featured Video ${activeVideoIndex + 1}/${heroVideoIds.length || 1}`
     : heroSplineSceneLabel;
@@ -1823,6 +1836,28 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
     const unsubscribe = splineScrollProgress.on('change', (v) => setScrollProgressValue(v));
     return () => unsubscribe();
   }, [splineScrollProgress]);
+
+  // Ensure hero/Spline never blocks initial wheel scrolling
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const heroEl = ref.current as HTMLElement | null;
+    if (!heroEl) return;
+
+    const shouldBypass = () => isAnyModalOpen || isUltimateHubOpen || isMobileMenuOpen || isLoaderv2Open || isPagemodeOpen;
+
+    const handleWheelCapture = (event: WheelEvent) => {
+      if (shouldBypass()) return;
+      if (!heroEl.contains(event.target as Node)) return;
+      // Stop Spline/global wheel handlers without preventing native scroll
+      event.stopImmediatePropagation();
+    };
+
+    const opts: AddEventListenerOptions = { capture: true, passive: true };
+    window.addEventListener('wheel', handleWheelCapture, opts);
+    return () => {
+      window.removeEventListener('wheel', handleWheelCapture, opts);
+    };
+  }, [isAnyModalOpen, isUltimateHubOpen, isMobileMenuOpen, isLoaderv2Open, isPagemodeOpen]);
 
   const handleOpenScenePicker = useCallback(() => {
     setHeroMediaMode('spline');
@@ -1876,7 +1911,7 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
         />
       )}
 
-      <div ref={ref} className="relative min-h-[100dvh] h-[100dvh] bg-black overflow-hidden hero-section" data-allow-scroll data-content data-theme-aware data-hero>
+      <div ref={ref} className="relative min-h-[100dvh] h-[100dvh] bg-black overflow-visible hero-section" data-allow-scroll data-content data-theme-aware data-hero>
         {/* Removed all background animations for cleaner look */}
         <VignetteOverlay />
         
@@ -1896,7 +1931,7 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
                           textShadow: shouldSkipHeavyEffects ? 'none' : `0 0 5px #ffffff, 0 0 10px #ffffff, 0 0 20px #ffffff, 0 0 40px #ffffff`,
                         }}
                       >
-                        EST. 2024 • TRADING EXCELLENCE
+                        EST. 2024 • TRADING MENTORSHIP
                       </p>
                     </MaskedText>
                     <MaskedText delay={0.4}>
@@ -1908,7 +1943,7 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
                             textShadow: shouldSkipHeavyEffects ? 'none' : `0 0 5px #fff, 0 0 10px #fff, 0 0 20px #ffffff, 0 0 40px #ffffff, 0 0 60px #ffffff`,
                           }}
                         >
-                          The path to
+                          Master Trading With
                         </span>
                         <span 
                           className="block text-[clamp(2.25rem,6vw,5.5rem)] font-serif italic mt-1 sm:mt-2 leading-tight"
@@ -1917,7 +1952,7 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
                             textShadow: shouldSkipHeavyEffects ? 'none' : `0 0 5px #ffffff, 0 0 15px #ffffff, 0 0 30px #ffffff, 0 0 50px #ffffff, 0 0 70px #ffffff`,
                           }}
                         >
-                          consistent profit
+                          BullMoney
                         </span>
                       </h1>
                     </MaskedText>
@@ -1929,7 +1964,7 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
                       textShadow: shouldSkipHeavyEffects ? 'none' : `0 0 5px rgba(255, 255, 255, 0.5), 0 0 10px rgba(255, 255, 255, 0.3)`,
                     }}
                   >
-                    Join <span className="font-semibold" style={{ color: '#fff', textShadow: shouldSkipHeavyEffects ? 'none' : '0 0 5px #fff, 0 0 10px #ffffff' }}>500+</span> profitable traders. Real-time Trades, expert analysis, and a community built for success.
+                    Live trade calls, daily forex &amp; gold analysis, funded trader mentorship. The only trading community with a custom platform.
                   </p>
                 </div>
 
@@ -1994,21 +2029,20 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
 
       <AnimatePresence>
         {isHeroSceneModalOpen && (
-          <motion.div className={cn("fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 px-4 py-6", !shouldSkipHeavyEffects && "backdrop-blur-sm")}
+          <motion.div className={cn("fixed inset-0 z-[10000] flex items-center justify-center bg-black/70 px-4 py-6", !shouldSkipHeavyEffects && "backdrop-blur-md")}
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => { setHeroSceneModalOpen(false); playWhoosh(); }}>
             <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              className={cn("relative w-full max-w-4xl bg-neutral-950/90 text-white border border-white/10 rounded-3xl shadow-2xl overflow-hidden", !shouldSkipHeavyEffects && "backdrop-blur-xl")} onClick={(e) => e.stopPropagation()}>
+              className={cn("relative w-full max-w-4xl bg-black/70 text-white border border-white/20 rounded-3xl shadow-[0_30px_80px_rgba(0,0,0,0.65)] overflow-hidden", !shouldSkipHeavyEffects && "backdrop-blur-2xl")} onClick={(e) => e.stopPropagation()}>
               <ReflectiveBorder className="rounded-3xl" skipHeavyEffects={shouldSkipHeavyEffects}>
                 <div className="p-1">
                   <div className="flex flex-col lg:flex-row">
-                    <div className="w-full lg:w-1/2 p-6 border-b lg:border-b-0 lg:border-r border-white/10 max-h-[50vh] lg:max-h-[70vh] overflow-y-auto">
+                    <div className="w-full lg:w-1/2 p-6 border-b lg:border-b-0 lg:border-r border-white/15 max-h-[50vh] lg:max-h-[70vh] overflow-y-auto">
                       <h3 className="text-lg font-semibold tracking-wide uppercase text-white/70 mb-4">Select Scene</h3>
                       <div className="space-y-2">
                         {HERO_SPLINE_SCENES.map((scene) => (
                           <motion.button key={scene.id} onClick={() => setScenePreviewId(scene.id)} onHoverStart={playHover}
                             className={cn('w-full flex items-center justify-between px-4 py-3 rounded-xl border text-left transition-all',
-                              scenePreviewId === scene.id ? 'bg-white/20 text-white border-white/50' : 'bg-white/5 text-white/80 border-white/10 hover:border-white/30',
-                              scenePreviewId === scene.id && !shouldSkipHeavyEffects && 'shadow-[0_0_20px_rgba(255, 255, 255,0.3)]')}
+                              scenePreviewId === scene.id ? 'bg-white/20 text-white border-white/40' : 'bg-white/10 text-white/80 border-white/15 hover:border-white/30')}
                             whileHover={shouldSkipHeavyEffects ? {} : { x: 4 }}>
                             <div><p className="font-semibold text-sm">{scene.label}</p><p className="text-xs text-white/40 font-mono">{scene.id}</p></div>
                             {scenePreviewId === scene.id && <span className="w-2 h-2 rounded-full bg-white animate-pulse" />}
@@ -2022,7 +2056,7 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
                         <div className="flex gap-2">
                           <motion.button
                             onClick={() => handleSceneSelect(scenePreviewId)}
-                            className="px-4 py-2 rounded-full bg-black text-white font-semibold text-sm border border-white/30 hover:border-white/50 hover:bg-neutral-900 transition-colors"
+                            className="px-4 py-2 rounded-full bg-white/10 text-white font-semibold text-sm border border-white/25 hover:border-white/40 hover:bg-white/15 transition-colors"
                             whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                           >
@@ -2030,7 +2064,7 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
                           </motion.button>
                           <motion.button
                             onClick={() => { setHeroSceneModalOpen(false); playWhoosh(); }}
-                            className="px-4 py-2 rounded-full bg-black text-white text-sm border border-white/30 hover:border-white/50 hover:bg-neutral-900 transition-colors"
+                            className="px-4 py-2 rounded-full bg-white/10 text-white text-sm border border-white/25 hover:border-white/40 hover:bg-white/15 transition-colors"
                             whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                           >
@@ -2038,7 +2072,7 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
                           </motion.button>
                         </div>
                       </div>
-                      <div className="relative flex-1 min-h-[300px] rounded-2xl bg-black border border-white/10 overflow-hidden">
+                      <div className="relative flex-1 min-h-[300px] rounded-2xl bg-black/80 border border-white/15 overflow-hidden">
                         <SplineSceneEmbed key={scenePreviewId} preferViewer={previewScene?.preferViewer !== false} runtimeUrl={previewScene?.runtimeUrl || heroSplineSource.runtimeUrl} viewerUrl={previewScene?.viewerUrl || heroSplineSource.viewerUrl} />
                       </div>
                     </div>
@@ -2054,7 +2088,7 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
       <AnimatePresence>
         {isSplineFullscreen && (
           <motion.div 
-            className="fixed inset-2 sm:inset-4 top-16 sm:top-20 z-[9999] bg-black rounded-xl sm:rounded-2xl overflow-hidden border border-white/10"
+            className="fixed inset-2 sm:inset-4 top-16 sm:top-20 z-[9999] bg-black/80 backdrop-blur-2xl rounded-xl sm:rounded-2xl overflow-hidden border border-white/15 shadow-[0_30px_80px_rgba(0,0,0,0.65)]"
             initial={{ opacity: 0, y: 20, scale: 0.98 }} 
             animate={{ opacity: 1, y: 0, scale: 1 }} 
             exit={{ opacity: 0, y: 20, scale: 0.98 }}
@@ -2075,7 +2109,7 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
             
             {/* Top bar with scene name and controls */}
             <motion.div 
-              className="absolute top-0 left-0 right-0 p-2 sm:p-4 bg-gradient-to-b from-black/80 to-transparent z-10"
+              className="absolute top-0 left-0 right-0 p-2 sm:p-4 bg-black/60 backdrop-blur-xl z-10"
               initial={{ y: -50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
@@ -2087,7 +2121,7 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
                 </div>
                 <motion.button 
                   onClick={() => { setIsSplineFullscreen(false); playWhoosh(); }}
-                  className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-black text-white border border-white/30 hover:border-white/50 hover:bg-neutral-900 text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 sm:gap-2"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/10 text-white border border-white/25 hover:border-white/40 hover:bg-white/15 text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 sm:gap-2"
                   whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -2099,7 +2133,7 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
 
             {/* Bottom navigation */}
             <motion.div 
-              className="absolute bottom-0 left-0 right-0 p-2 sm:p-4 bg-gradient-to-t from-black/80 to-transparent z-10"
+              className="absolute bottom-0 left-0 right-0 p-2 sm:p-4 bg-black/60 backdrop-blur-xl z-10"
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
@@ -2107,7 +2141,7 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
               <div className="flex items-center justify-center gap-2 sm:gap-4 max-w-md mx-auto">
                 <motion.button 
                   onClick={() => { goToPreviousScene(); playClick(); }}
-                  className="p-2 sm:p-3 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white transition-colors"
+                  className="p-2 sm:p-3 rounded-full bg-white/10 hover:bg-white/15 border border-white/20 text-white transition-colors"
                   whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                 >
@@ -2115,7 +2149,7 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
                 </motion.button>
                 <motion.button 
                   onClick={() => { setHeroMediaMode('spline'); handleOpenScenePicker(); setIsSplineFullscreen(false); }}
-                  className="px-4 sm:px-6 py-2 sm:py-3 rounded-full bg-white/20 hover:bg-white/30 border border-white/50 text-white text-sm sm:text-base font-medium transition-colors"
+                  className="px-4 sm:px-6 py-2 sm:py-3 rounded-full bg-white/15 hover:bg-white/20 border border-white/30 text-white text-sm sm:text-base font-medium transition-colors"
                   whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -2124,7 +2158,7 @@ const HeroDesktop = ({ onReady }: { onReady?: () => void }) => {
                 </motion.button>
                 <motion.button 
                   onClick={() => { goToNextScene(); playClick(); }}
-                  className="p-3 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white transition-colors"
+                  className="p-3 rounded-full bg-white/10 hover:bg-white/15 border border-white/20 text-white transition-colors"
                   whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                 >

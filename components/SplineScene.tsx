@@ -19,6 +19,7 @@ interface SplineWrapperProps {
   targetFPS?: number;
   maxDpr?: number;
   minDpr?: number;
+  critical?: boolean;
 }
 
 // Dynamic import for the heavy Spline runtime - ultra lightweight
@@ -42,6 +43,7 @@ function SplineSceneComponent({
   withSparkles = true,
   optimizeForMobile: _optimizeForMobile = true,
   targetFPS,
+  critical = false,
 }: SplineWrapperProps) {
   
   // UPDATED 2026.1.22: Start interactive by default on all devices
@@ -240,6 +242,7 @@ function SplineSceneComponent({
       className={`w-full h-full relative group spline-container ${className}`}
       data-spline-scene
       data-interactive="true"
+      data-spline-critical={critical ? 'true' : 'false'}
       style={{ 
         minHeight: '300px',
         height: '100%',

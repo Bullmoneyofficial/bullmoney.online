@@ -1,48 +1,70 @@
 "use client";
 
 import { Suspense, useState, useEffect, useRef, useCallback } from "react";
-import type { CSSProperties } from "react";
-import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import { detectBrowser } from "@/lib/browserDetection";
 import { trackEvent, BullMoneyAnalytics } from "@/lib/analytics";
 
-// Neon Blue Styles
-const NEON_STYLES = `
-  @keyframes neon-pulse {
+// iPhone Glass Styles - Black and White Theme
+const GLASS_STYLES = `
+  html, body, #__next {
+    background: #000000;
+  }
+
+  .page-surface {
+    background: #000000;
+  }
+
+  @keyframes glass-shimmer {
     0%, 100% { 
-      text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
-      filter: brightness(1);
+      opacity: 0.95;
     }
     50% { 
-      text-shadow: 0 0 6px #ffffff, 0 0 12px #ffffff;
-      filter: brightness(1.1);
+      opacity: 1;
     }
   }
 
-  @keyframes neon-glow {
-    0%, 100% { 
-      box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff;
-    }
-    50% { 
-      box-shadow: 0 0 6px #ffffff, 0 0 12px #ffffff, inset 0 0 6px #ffffff;
-    }
-  }
-
-  .neon-blue-text {
+  .glass-text {
     color: #ffffff;
-    text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
-    animation: neon-pulse 2s ease-in-out infinite;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   }
 
-  .neon-white-text {
-    color: #ffffff;
-    text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
+  .glass-text-dark {
+    color: #1a1a1a;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.1);
   }
 
-  .neon-blue-border {
-    border: 2px solid #ffffff;
-    box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff;
+  .glass-text-gray {
+    color: rgba(255, 255, 255, 0.7);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .glass-border {
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  }
+
+  .glass-button {
+    background: rgba(255, 255, 255, 0.9);
+    color: #000000;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+
+  .glass-button:hover {
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
   }
 `;
 
@@ -72,8 +94,8 @@ const HeroDesktop = dynamic(
   { ssr: false, loading: () => <HeroSkeleton /> }
 );
 
-const CTA = dynamic(
-  () => import("@/components/Chartnews"),
+const BullMoneyPromoScroll = dynamic(
+  () => import("@/components/BullMoneyPromoScroll"),
   { ssr: false, loading: () => <MinimalFallback /> }
 );
 
@@ -89,6 +111,7 @@ import {
   ShimmerRadialGlow,
   ShimmerContainer
 } from "@/components/ui/UnifiedShimmer";
+import { HeroScrollDemo } from "@/components/HeroScrollDemo";
 
 const SplineSkeleton = dynamic(
   () => import("@/components/ui/LoadingSkeleton").then(mod => ({ default: mod.SplineSkeleton })),
@@ -118,6 +141,7 @@ const LiveMarketTicker = dynamic(
 );
 
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
+import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
 import { useUIState } from "@/contexts/UIStateContext";
 import { DISCORD_STAGE_FEATURED_VIDEOS } from "@/components/TradingQuickAccess";
 
@@ -137,9 +161,23 @@ import { useAudioEngine } from "@/app/hooks/useAudioEngine";
 import Image from "next/image";
 import Link from "next/link";
 import YouTubeVideoEmbed from "@/components/YouTubeVideoEmbed";
+import { MobileDiscordHero } from "@/components/MobileDiscordHero";
 
-// Import dev utilities
 import { useDevSkipShortcut } from "@/hooks/useDevSkipShortcut";
+
+// Import Spline modals from separate file
+import {
+  type RemoteSplineMeta,
+  DRAGGABLE_SPLIT_SCENES,
+  ADDITIONAL_SPLINE_PAGES,
+  R4X_BOT_SCENE,
+  ALL_REMOTE_SPLINES,
+  RemoteSceneModal,
+  SplitSceneModal,
+  RemoteSplineShowcase,
+  SplitExperienceCard,
+  DraggableSplitExperience,
+} from "@/components/SplineModals";
 
 // Legacy flag placeholder to satisfy stale client bundles that may reference it during Fast Refresh.
 const desktopHeroVariant = "spline";
@@ -159,6 +197,15 @@ const TradingUnlockLoader = dynamic(
   }
 );
 
+// ✅ 3D SOLAR SYSTEM - Interactive space experience
+const SolarSystemGame = dynamic(
+  () => import("@/components/SolarSystemGame"),
+  { 
+    ssr: false, 
+    loading: () => <ContentSkeleton lines={6} />,
+  }
+);
+
 // Lazy imports for heavy 3D components - LOADED IMMEDIATELY for better scene performance
 const DraggableSplit = dynamic(
   () => import('@/components/DraggableSplit'),
@@ -175,108 +222,23 @@ const TestimonialsCarousel = dynamic(
   { ssr: true, loading: () => <CardSkeleton /> }
 );
 
-// Simple mobile-friendly YouTube embed wrapper for Discord modal videos
-const normalizeYouTubeId = (input: string) => {
-  if (!input) return 'Q3dSjSP3t8I';
-  if (!input.includes('http')) return input;
-  try {
-    const u = new URL(input);
-    if (u.searchParams.get('v')) return u.searchParams.get('v') as string;
-    const parts = u.pathname.split('/').filter(Boolean);
-    return parts.pop() || 'Q3dSjSP3t8I';
-  } catch {
-    return input;
-  }
-};
-
-function MobileDiscordHero({ sources, onOpenModal, variant = 'mobile' }: { sources: string[]; onOpenModal: () => void; variant?: 'mobile' | 'desktop' }) {
-  const [index, setIndex] = useState(0);
-  const videoId = normalizeYouTubeId(sources[index] || sources[0] || 'Q3dSjSP3t8I');
-
-  // Responsive container: auto-adjusts from smallest (320px) to largest mobile views
-  // On mobile, content fills entire available space from top to bottom
-  const containerClass = variant === 'mobile'
-    ? "w-full max-w-5xl mx-auto px-4 xs:px-5 sm:px-6 py-6 flex flex-col gap-6"
-    : "w-full max-w-6xl mx-auto px-6 py-12 sm:py-16 min-h-[70vh] flex items-center";
-
-  const cardMarginTop = variant === 'mobile' ? '' : 'mt-0';
-
-  return (
-    <div className={containerClass} data-theme-aware>
-      <div className={`relative isolate overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-[#0a0f17] via-[#0a0f17] to-[#06090f] shadow-[0_25px_60px_-40px_rgba(0,0,0,0.9)] backdrop-blur-xl p-5 xs:p-6 sm:p-7 flex flex-col gap-5 ${cardMarginTop} w-full h-full`}>
-        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(circle at 20% 10%, rgba(255,255,255,0.06), transparent 32%), radial-gradient(circle at 80% 15%, rgba(255,255,255,0.05), transparent 30%)' }} />
-        <div className="absolute inset-x-6 top-0 h-px bg-white/15" />
-
-        <div className="flex flex-col gap-3 text-center flex-shrink-0">
-          <p className="text-xs font-semibold tracking-[0.18em] uppercase text-white/60">Live trading room</p>
-          <div className="space-y-1">
-            <span className="block text-[clamp(1.7rem,7vw,2.9rem)] font-semibold tracking-tight text-white">Quiet confidence, daily</span>
-            <span className="block text-[clamp(1.2rem,6vw,2.2rem)] font-normal text-white/70">Watch the play, manage the risk</span>
-          </div>
-          <p className="text-sm leading-relaxed text-white/65 max-w-xl mx-auto">
-            A calmer viewport for live calls and replays. Join, observe, and execute without the noise.
-          </p>
-        </div>
-
-        <div className="relative rounded-2xl overflow-hidden border border-white/12 bg-white/3 flex-1 min-h-[200px] shadow-[0_16px_50px_-40px_rgba(0,0,0,1)]">
-          <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-black/35 pointer-events-none" />
-          <div className="relative w-full h-full">
-            <YouTubeVideoEmbed
-              videoId={videoId}
-              className="absolute inset-0 w-full h-full"
-              title="BullMoney Discord Video"
-            />
-          </div>
-          <div className="absolute inset-x-0 bottom-0 flex items-center justify-between px-3 py-2.5 bg-black/55 backdrop-blur-md text-white/85">
-            <button
-              onClick={() => setIndex((prev) => (prev - 1 + sources.length) % sources.length)}
-              className="px-3.5 py-1.5 text-[11px] font-semibold rounded-full bg-white text-black hover:opacity-90 transition"
-            >
-              Prev
-            </button>
-            <span className="text-[11px] font-semibold">
-              {index + 1} / {Math.max(1, sources.length)}
-            </span>
-            <button
-              onClick={() => setIndex((prev) => (prev + 1) % sources.length)}
-              className="px-3.5 py-1.5 text-[11px] font-semibold rounded-full bg-white text-black hover:opacity-90 transition"
-            >
-              Next
-            </button>
-          </div>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center gap-3 flex-shrink-0">
-          <Link
-            href="https://t.me/addlist/gg09afc4lp45YjQ0"
-            className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 rounded-full bg-white text-black font-semibold text-sm shadow-[0_10px_30px_-18px_rgba(0,0,0,1)] hover:translate-y-[-1px] transition"
-          >
-            Join Free Community
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function DesktopHeroFallback() {
   return (
-    <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-black via-[#050915] to-black">
+    <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-black via-[#0a0a0a] to-black">
       <div className="w-full max-w-6xl mx-auto px-6 py-16 flex flex-col items-center text-center gap-4">
         <p
-          className="font-mono text-[10px] tracking-[0.2em] uppercase"
-          style={{ color: '#ffffff', textShadow: '0 0 10px rgba(255, 255, 255, 0.5)' }}
+          className="font-mono text-[10px] tracking-[0.2em] uppercase glass-text-gray"
         >
-          EST. 2024 • TRADING EXCELLENCE
+          EST. 2024 • TRADING MENTORSHIP
         </p>
-        <h1 className="text-4xl md:text-6xl font-black tracking-tight neon-white-text">
-          The path to <span className="neon-blue-text">consistent profit</span>
+        <h1 className="text-4xl md:text-6xl font-black tracking-tight glass-text">
+          Master <span className="glass-text">trading</span> with us
         </h1>
-        <p className="text-sm md:text-base max-w-3xl" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
-          Live trade ideas, coaching, and real-time market insights—delivered in a community of 10,000+ focused traders.
+        <p className="text-sm md:text-base max-w-3xl glass-text-gray">
+          Live trade calls, daily analysis, funded trader mentorship. Join 10,000+ traders learning forex, gold & crypto.
         </p>
         <div className="mt-4 inline-flex items-center gap-3">
-          <span className="px-6 py-3 rounded-full text-sm font-bold neon-white-text" style={{ background: '#ffffff', boxShadow: '0 0 10px rgba(255, 255, 255, 0.6)' }}>
+          <span className="px-6 py-3 rounded-full text-sm font-bold glass-button">
             Loading your experience…
           </span>
         </div>
@@ -284,98 +246,6 @@ function DesktopHeroFallback() {
     </div>
   );
 }
-
-type RemoteSplineMeta = {
-  id: string;
-  title: string;
-  subtitle?: string;
-  viewer: string;
-  runtime: string;
-  accent?: string;
-  badge?: string;
-  aspectRatio?: string;
-};
-
-const DRAGGABLE_SPLIT_SCENES: Record<'glassCurtain' | 'orbScroll', RemoteSplineMeta> = {
-  glassCurtain: {
-    id: 'glassCurtain',
-    runtime: "https://prod.spline.design/pERFMZP1PEeizk2N/scene.splinecode",
-    viewer: "https://my.spline.design/glasscurtain-a6oJvU7009VpSevqPvEeVyI7/",
-    title: "Market Depth Analyzer",
-    subtitle: "Dual-chart order book monitoring",
-    accent: '#ffffff',
-    aspectRatio: '4 / 3'
-  },
-  orbScroll: {
-    id: 'orbScroll',
-    runtime: "https://prod.spline.design/QfpAnXg8I-cL9KnC/scene.splinecode",
-    viewer: "https://my.spline.design/orbscrolltriggerforhero-cukhAyxazfE0BSBUcFrD8NBf/",
-    title: "Price Action Indicator",
-    subtitle: "Real-time volatility tracking",
-    accent: '#ffffff',
-    aspectRatio: '4 / 3'
-  }
-};
-
-const ADDITIONAL_SPLINE_PAGES: RemoteSplineMeta[] = [
-  {
-    id: 'followers-focus',
-    title: 'Liquidity Scanner',
-    subtitle: 'Live trading signal detection network',
-    viewer: 'https://my.spline.design/100followersfocus-55tpQJYDbng5lAQ3P1tq5abx/',
-    runtime: 'https://prod.spline.design/IomoYEa50DmuiTXE/scene.splinecode',
-    accent: '#ffffff',
-    badge: 'Live Trading',
-    aspectRatio: '16 / 9'
-  },
-  {
-    id: 'loading-bar-vertical',
-    title: 'Portfolio Progress Tracker',
-    subtitle: 'Vertical growth momentum visualization',
-    viewer: 'https://my.spline.design/theloadingbarvertical-J0jRfhBsRDUAUKzNRxMvZXak/',
-    runtime: 'https://prod.spline.design/TOPNo0pcBjY8u6Ls/scene.splinecode',
-    accent: '#fbbf24',
-    badge: 'Portfolio',
-    aspectRatio: '9 / 16'
-  },
-  {
-    id: 'cannon-lab',
-    title: 'Launch Momentum Engine',
-    subtitle: 'Breakout detection and entry signals',
-    viewer: 'https://my.spline.design/cannon-vOk1Cc5VyFBvcSq1ozXuhK1n/',
-    runtime: 'https://prod.spline.design/C0mBZel0m7zXQaoD/scene.splinecode',
-    accent: '#f472b6',
-    badge: 'Advanced',
-    aspectRatio: '16 / 9'
-  },
-  {
-    id: 'x-gamer',
-    title: 'Trading Arena Dashboard',
-    subtitle: 'Multi-asset performance battle station',
-    viewer: 'https://my.spline.design/xgamer-RZ9X6L57SHESs7L04p6IDisA/',
-    runtime: 'https://prod.spline.design/1HGlyIYtYszh-B-r/scene.splinecode',
-    accent: '#ffffff',
-    badge: 'Competitive',
-    aspectRatio: '16 / 9'
-  }
-];
-
-const R4X_BOT_SCENE: RemoteSplineMeta = {
-  id: 'r4x-bot',
-  title: 'Market Scout AI Bot',
-  subtitle: 'Autonomous trading opportunity analyzer',
-  viewer: 'https://my.spline.design/r4xbot-2RZeOpfgJ0Vr36G9Jd9EHlFB/',
-  runtime: 'https://prod.spline.design/G3yn-KsfkIAbK2Mz/scene.splinecode',
-  accent: '#ffffff',
-  badge: 'AI Trading',
-  aspectRatio: '16 / 9'
-};
-
-const ALL_REMOTE_SPLINES: RemoteSplineMeta[] = [
-  ...(Object.values(DRAGGABLE_SPLIT_SCENES) as RemoteSplineMeta[]),
-  ...ADDITIONAL_SPLINE_PAGES,
-  R4X_BOT_SCENE,
-];
 
 // --- SMART CONTAINER: Handles Preloading & FPS Saving ---
 function LazySplineContainer({ scene }: { scene: string }) {
@@ -503,9 +373,9 @@ function LazySplineContainer({ scene }: { scene: string }) {
     >
       {!hasLoadedOnce && !isInView && (
         <div className="absolute inset-0 bg-transparent rounded-xl overflow-hidden backdrop-blur-sm" style={{ minHeight: '300px', backgroundColor: 'rgba(0, 0, 0, 0.3)' }}>
-          <ShimmerRadialGlow color="blue" intensity="low" />
+          <ShimmerRadialGlow color="white" intensity="low" />
           <div className="absolute inset-0 flex items-center justify-center">
-            <ShimmerSpinner size={32} color="blue" speed="slow" />
+            <ShimmerSpinner size={32} color="white" speed="slow" />
           </div>
           <div className="absolute inset-0 rounded-xl pointer-events-none" style={{ borderColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.2)', borderWidth: '1px', borderStyle: 'solid' }} />
         </div>
@@ -514,9 +384,9 @@ function LazySplineContainer({ scene }: { scene: string }) {
       {shouldShowSpline && (
         <Suspense fallback={
           <div className="absolute inset-0 flex items-center justify-center rounded-xl overflow-hidden backdrop-blur-sm" style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}>
-            <ShimmerRadialGlow color="blue" intensity="medium" />
-            <ShimmerLine color="blue" />
-            <ShimmerSpinner size={40} color="blue" />
+            <ShimmerRadialGlow color="white" intensity="medium" />
+            <ShimmerLine color="white" />
+            <ShimmerSpinner size={40} color="white" />
           </div>
         }>
           <div
@@ -536,276 +406,14 @@ function LazySplineContainer({ scene }: { scene: string }) {
 
       {isPaused && (
         <div className="absolute inset-0 bg-black rounded-xl overflow-hidden">
-          <ShimmerLine color="blue" speed="slow" intensity="low" />
+          <ShimmerLine color="white" speed="slow" intensity="low" />
           <div className="absolute inset-0 flex items-center justify-center">
-            <ShimmerSpinner size={32} color="blue" speed="slow" />
+            <ShimmerSpinner size={32} color="white" speed="slow" />
           </div>
           <div className="absolute inset-0 rounded-xl pointer-events-none" style={{ borderColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.2)', borderWidth: '1px', borderStyle: 'solid' }} />
         </div>
       )}
     </div>
-  );
-}
-
-function RemoteSplineFrame({ viewerSrc, sceneSrc, title }: { viewerSrc: string; sceneSrc: string; title: string }) {
-  const [useFallback, setUseFallback] = useState(false);
-
-  if (useFallback) {
-    return <LazySplineContainer scene={sceneSrc} />;
-  }
-
-  return (
-    <div className="w-full h-full relative bg-black">
-      <iframe
-        src={viewerSrc}
-        title={title}
-        loading="lazy"
-        allow="fullscreen; autoplay; xr-spatial-tracking"
-        allowFullScreen
-        className="w-full h-full border-0 bg-transparent"
-        referrerPolicy="no-referrer-when-downgrade"
-        onError={() => setUseFallback(true)}
-      />
-    </div>
-  );
-}
-
-function RemoteSplineShowcase({ scene, onOpen }: { scene: RemoteSplineMeta; onOpen: (scene: RemoteSplineMeta) => void }) {
-  const blueAccent = '#ffffff';
-
-  return (
-    <div
-      className="group relative rounded-3xl p-6 md:p-8 flex flex-col gap-4 overflow-hidden cursor-pointer bg-black neon-blue-border transition-all duration-300 hover:brightness-110"
-      onClick={() => onOpen(scene)}
-    >
-      <div className="relative flex items-center gap-2 text-xs uppercase tracking-[0.3em] font-bold">
-        <span className="neon-blue-text">▪</span>
-        <span className="neon-blue-text">{scene.id}</span>
-        {scene.badge && (
-          <span
-            className="ml-auto px-2.5 py-1 rounded-full text-xs font-bold bg-black neon-blue-border neon-blue-text"
-          >
-            {scene.badge}
-          </span>
-        )}
-      </div>
-      <div>
-        <h3 className="text-xl md:text-2xl font-bold neon-white-text">
-          {scene.title}
-        </h3>
-        {scene.subtitle && (
-          <p className="text-sm mt-2 neon-blue-text">
-            {scene.subtitle}
-          </p>
-        )}
-      </div>
-      <div className="flex-1" />
-      <button
-        onClick={() => onOpen(scene)}
-        className="relative inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-bold neon-white-text bg-white neon-blue-border transition-all duration-300 hover:brightness-110"
-        style={{
-          background: '#ffffff',
-          boxShadow: '0 0 8px #ffffff, 0 0 16px #ffffff',
-        }}
-      >
-        <span>Launch Scene</span>
-        <span>→</span>
-      </button>
-    </div>
-  );
-}
-
-function DraggableSplitExperience({ style }: { style?: CSSProperties } = {}) {
-  return (
-    <div
-      className="relative w-full rounded-2xl overflow-hidden spline-container"
-      style={{
-        height: '800px',
-        minHeight: '500px',
-        contain: 'strict',
-        ...style,
-      }}
-    >
-      <ShimmerBorder color="blue" intensity="low" speed="normal" />
-      <div className="relative z-10 w-full h-full bg-black rounded-2xl overflow-hidden" style={{ borderColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.2)', borderWidth: '1px', borderStyle: 'solid' }}>
-        <ShimmerLine color="blue" className="z-20" />
-        <Suspense fallback={<SplineSkeleton className="w-full h-full" aspectRatio="auto" style={{ height: '100%' }} />}>
-          <DraggableSplit>
-            <RemoteSplineFrame
-              viewerSrc={DRAGGABLE_SPLIT_SCENES.glassCurtain.viewer}
-              sceneSrc={DRAGGABLE_SPLIT_SCENES.glassCurtain.runtime}
-              title={DRAGGABLE_SPLIT_SCENES.glassCurtain.title}
-            />
-            <RemoteSplineFrame
-              viewerSrc={DRAGGABLE_SPLIT_SCENES.orbScroll.viewer}
-              sceneSrc={DRAGGABLE_SPLIT_SCENES.orbScroll.runtime}
-              title={DRAGGABLE_SPLIT_SCENES.orbScroll.title}
-            />
-          </DraggableSplit>
-        </Suspense>
-      </div>
-    </div>
-  );
-}
-
-function SplitExperienceCard({ onOpen }: { onOpen: () => void }) {
-  const blueAccent = '#ffffff';
-  return (
-    <div
-      className="relative rounded-3xl p-6 md:p-8 flex flex-col gap-4 overflow-hidden group cursor-pointer bg-black neon-blue-border transition-all duration-300 hover:brightness-110"
-      onClick={onOpen}
-    >
-      <span className="relative text-xs uppercase tracking-[0.3em] font-bold neon-blue-text">▪ Dual Chart Monitor</span>
-      <h3 className="relative text-xl md:text-2xl font-bold neon-white-text">Trading Split View</h3>
-      <p className="relative text-sm neon-blue-text">
-        Compare real-time charts side-by-side with advanced trading controls and instant execution.
-      </p>
-      <div className="flex-1" />
-      <button
-        onClick={onOpen}
-        className="relative inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-bold neon-white-text transition-all duration-300 hover:brightness-110"
-        style={{
-          background: '#ffffff',
-          boxShadow: '0 0 8px #ffffff, 0 0 16px #ffffff',
-        }}
-      >
-        <span>Launch Trading View</span>
-        <span>→</span>
-      </button>
-    </div>
-  );
-}
-
-function ModalShell({
-  open,
-  onClose,
-  title,
-  accent = 'var(--accent-color, #ffffff)',
-  subtitle,
-  children,
-  contentAspectRatio = '16 / 9',
-}: {
-  open: boolean;
-  onClose: () => void;
-  title: string;
-  accent?: string;
-  subtitle?: string;
-  children: React.ReactNode;
-  contentAspectRatio?: string | null;
-}) {
-  const [portalNode, setPortalNode] = useState<Element | null>(null);
-  const [isCompact, setIsCompact] = useState(false);
-
-  useEffect(() => {
-    if (typeof document !== 'undefined') {
-      setPortalNode(document.body);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const evaluate = () => setIsCompact(window.innerWidth < 640);
-    evaluate();
-    window.addEventListener('resize', evaluate);
-    return () => window.removeEventListener('resize', evaluate);
-  }, []);
-
-  if (!open || !portalNode) return null;
-
-  const blueAccent = '#ffffff';
-
-  return createPortal(
-    <div className="fixed inset-0 z-[9999999] flex items-center justify-center p-3 md:p-6">
-      <div className="absolute inset-0 bg-black/95" onClick={onClose} />
-      <div
-        className={`relative z-10 w-full ${isCompact ? 'max-w-sm' : 'max-w-6xl'} h-[90vh] md:h-[85vh] min-h-0 overflow-hidden rounded-3xl neon-blue-border bg-black`}
-        style={{
-          boxShadow: '0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff',
-          animation: 'neon-glow 2s ease-in-out infinite',
-        }}
-      >
-        <div
-          className="relative z-10 flex items-start justify-between gap-4 p-4 sm:p-6 border-b shrink-0"
-          style={{ borderColor: blueAccent }}
-        >
-          <div>
-            <p className="text-xs uppercase tracking-[0.3em] font-bold neon-blue-text">
-              ▪ Interactive Terminal
-            </p>
-            <h3 className="text-2xl font-bold mt-2 neon-white-text" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
-              {title}
-            </h3>
-            {subtitle && <p className="text-sm mt-1 neon-blue-text">{subtitle}</p>}
-          </div>
-          <button
-            onClick={onClose}
-            className="rounded-full p-2.5 neon-white-text neon-blue-border bg-black transition-all hover:brightness-110 inline-flex h-10 w-10 items-center justify-center"
-            aria-label="Close modal"
-          >
-            <span className="text-white">✕</span>
-          </button>
-        </div>
-
-        <div className="flex-1 min-h-0 p-3 sm:p-6 overflow-hidden flex items-center justify-center relative z-10">
-          <div
-            className="w-full h-full rounded-xl overflow-hidden neon-blue-border bg-black"
-            style={{
-              boxShadow: '0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff',
-              ...(contentAspectRatio
-                ? {
-                    aspectRatio: contentAspectRatio,
-                    width: '100%',
-                    maxWidth: isCompact ? 'min(80vw, 420px)' : '90vw',
-                  }
-                : {
-                    minHeight: '100%',
-                    height: '100%',
-                    width: '100%',
-                  }),
-            }}
-          >
-            {children}
-          </div>
-        </div>
-      </div>
-    </div>,
-    portalNode
-  );
-}
-
-function RemoteSceneModal({ scene, onClose }: { scene: RemoteSplineMeta | null; onClose: () => void }) {
-  if (!scene) return null;
-
-  return (
-    <ModalShell
-      open={!!scene}
-      onClose={onClose}
-      title={scene.title}
-      subtitle={scene.subtitle}
-      accent={scene.accent}
-      contentAspectRatio={scene.aspectRatio ?? '16 / 9'}
-    >
-      <div className="w-full h-full">
-        <Suspense fallback={<SplineSkeleton className="w-full h-full" aspectRatio="auto" style={{ height: '100%' }} />}>
-          <RemoteSplineFrame viewerSrc={scene.viewer} sceneSrc={scene.runtime} title={scene.title} />
-        </Suspense>
-      </div>
-    </ModalShell>
-  );
-}
-
-function SplitSceneModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  return (
-    <ModalShell
-      open={open}
-      onClose={onClose}
-      title="Interactive Split Lab"
-      subtitle="Dual-scene comparison"
-      accent="#ffffff"
-      contentAspectRatio="4 / 3"
-    >
-      <DraggableSplitExperience style={{ height: '100%', minHeight: '0px' }} />
-    </ModalShell>
   );
 }
 
@@ -823,6 +431,7 @@ function HomeContent() {
   const desktopHeroVariant = 'spline';
   const useDesktopVideoVariant = desktopHeroVariant === 'spline';
   const { shouldRender: allowMobileLazyRender } = useMobileLazyRender(240);
+  const { masterMuted } = useAudioSettings();
   const [isMuted, setIsMuted] = useState(false);
   const [activeRemoteScene, setActiveRemoteScene] = useState<RemoteSplineMeta | null>(null);
   const [isSplitModalOpen, setIsSplitModalOpen] = useState(false);
@@ -914,7 +523,6 @@ function HomeContent() {
       componentsRegisteredRef.current = true;
       registerComponentRef.current('hero', 9);
       registerComponentRef.current('features', 5);
-      registerComponentRef.current('chartnews', 6);
       registerComponentRef.current('ticker', 7);
       trackCustomRef.current('content_loaded', { deviceTier, shimmerQuality });
       
@@ -922,7 +530,6 @@ function HomeContent() {
         setTimeout(() => {
           optimizeSectionRef.current('hero');
           optimizeSectionRef.current('experience');
-          optimizeSectionRef.current('cta');
           optimizeSectionRef.current('features');
         }, 100);
       }
@@ -932,7 +539,6 @@ function HomeContent() {
         componentsRegisteredRef.current = false;
         unregisterComponentRef.current('hero');
         unregisterComponentRef.current('features');
-        unregisterComponentRef.current('chartnews');
         unregisterComponentRef.current('ticker');
       }
     };
@@ -1227,8 +833,8 @@ function HomeContent() {
           }
         `}</style>
         <div className="fixed inset-0 z-[99999] bg-black flex items-center justify-center">
-          <ShimmerRadialGlow color="blue" intensity="low" />
-          <ShimmerSpinner size={48} color="blue" />
+          <ShimmerRadialGlow color="white" intensity="low" />
+          <ShimmerSpinner size={48} color="white" />
         </div>
       </>
     );
@@ -1236,7 +842,7 @@ function HomeContent() {
 
   return (
     <>
-      <style>{NEON_STYLES}</style>
+      <style>{GLASS_STYLES}</style>
       
       {currentView === 'pagemode' && (
         <div className="fixed inset-0 z-[99999] bg-black">
@@ -1254,14 +860,14 @@ function HomeContent() {
 
       {currentView === 'content' && (
         <>
-          <main className="min-h-screen flex flex-col w-full" data-allow-scroll data-scrollable data-content data-theme-aware style={{ overflow: 'visible', height: 'auto' }}>
+          <main className="min-h-screen flex flex-col w-full page-surface px-4 sm:px-6 lg:px-10" data-allow-scroll data-scrollable data-content data-theme-aware style={{ overflow: 'visible', height: 'auto' }}>
             <div id="top" />
 
             <section
               id="hero"
               className={isMobile
-                ? "w-full full-bleed flex items-end justify-center overflow-hidden relative"
-                : "w-full full-bleed viewport-full relative"}
+                ? "w-full full-bleed flex items-end justify-center overflow-hidden relative px-2 sm:px-4"
+                : "w-full full-bleed viewport-full relative px-2 sm:px-4"}
               style={isMobile ? {
                 // Fill from under navbar+static helper to bottom of viewport
                 // This ensures content stretches to fill on taller screens
@@ -1301,20 +907,37 @@ function HomeContent() {
               )}
             </section>
 
-            <section
-              id="cta"
-              className="w-full full-bleed viewport-full"
-              style={isMobile ? { minHeight: '70dvh' } : undefined}
-              data-allow-scroll
-              data-content
-              data-theme-aware
-            >
-              {canRenderMobileSections ? <CTA /> : <MinimalFallback />}
-            </section>
+            {/* 🌌 3D SOLAR SYSTEM - Mobile Only */}
+            {isMobile && (
+              <section
+                id="solar-system"
+                className="w-full full-bleed"
+                data-allow-scroll
+                data-content
+                data-theme-aware
+              >
+                <Suspense fallback={<ContentSkeleton lines={6} />}>
+                  <SolarSystemGame />
+                </Suspense>
+              </section>
+            )}
+
+            {/* BullMoney Promo Scroll Section - Mobile Only */}
+            {isMobile && (
+              <section
+                id="bullmoney-promo"
+                className="w-full full-bleed"
+                data-allow-scroll
+                data-content
+                data-theme-aware
+              >
+                {canRenderMobileSections ? <BullMoneyPromoScroll /> : <MinimalFallback />}
+              </section>
+            )}
 
             <section
               id="features"
-              className="w-full full-bleed viewport-full"
+              className="w-full full-bleed viewport-full px-2 sm:px-4"
               style={isMobile ? { minHeight: '80dvh' } : undefined}
               data-allow-scroll
               data-content
@@ -1326,64 +949,28 @@ function HomeContent() {
             {canRenderHeavyDesktop && (
               <section 
                 id="experience" 
-                className="w-full max-w-7xl mx-auto px-4 py-12 md:py-16" 
+                className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 bg-black" 
                 data-allow-scroll 
                 data-content 
                 data-theme-aware 
+                style={{ backgroundColor: '#000000' }}
               >
-                <div className="relative text-center mb-8" style={{ minHeight: '80px' }}>
-                  <h2 className="text-3xl md:text-4xl font-black tracking-tight neon-blue-text">
-                    TRADING TOOLS & ANALYTICS
-                  </h2>
-                  <p className="text-sm mt-4 neon-blue-text max-w-2xl mx-auto">Advanced market intelligence platforms covering real-time data and interactive visualizations.</p>
-                  <div className="flex justify-center mt-4">
-                    <div className="w-24 h-[2px] neon-blue-border" />
+                <div className="bg-black rounded-3xl p-6 md:p-10" style={{ backgroundColor: '#000000' }}>
+                  <div className="relative text-center mb-8" style={{ minHeight: '80px' }}>
+                    <h2 className="text-3xl md:text-4xl font-black tracking-tight glass-text">
+                      TRADING TOOLS & ANALYTICS
+                    </h2>
+                    <p className="text-sm mt-4 glass-text-gray max-w-2xl mx-auto">Advanced market intelligence platforms covering real-time data and interactive visualizations.</p>
+                    <div className="flex justify-center mt-4">
+                      <div className="w-24 h-[2px] glass-border" />
+                    </div>
                   </div>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <SplitExperienceCard onOpen={() => setIsSplitModalOpen(true)} />
-                  {ADDITIONAL_SPLINE_PAGES.map(scene => (
-                    <RemoteSplineShowcase key={scene.id} scene={scene} onOpen={setActiveRemoteScene} />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {canRenderHeavyDesktop && (
-              <section
-                id="r4x-bot"
-                className="w-full full-bleed viewport-full mx-auto px-4 pb-16"
-                data-allow-scroll
-                data-content
-                data-theme-aware
-              >
-                <div className="relative text-center mb-8 flex flex-col items-center gap-3" style={{ minHeight: '70px' }}>
-                  <p className="text-xs uppercase tracking-[0.3em] font-bold neon-blue-text">
-                    ▪ AI-Powered Trading
-                  </p>
-                  <h2 className="text-2xl md:text-3xl font-black neon-white-text">{R4X_BOT_SCENE.title}</h2>
-                  {R4X_BOT_SCENE.subtitle && (
-                    <p className="text-sm neon-blue-text">{R4X_BOT_SCENE.subtitle}</p>
-                  )}
-                  <button
-                    onClick={() => setActiveRemoteScene(R4X_BOT_SCENE)}
-                    className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-bold neon-white-text transition-all hover:brightness-110"
-                    style={{ 
-                      background: '#ffffff',
-                      boxShadow: '0 0 8px #ffffff, 0 0 16px #ffffff'
-                    }}
-                  >
-                    <span>Launch AI Bot View</span>
-                    <span>→</span>
-                  </button>
-                </div>
-
-                <div className="relative rounded-3xl overflow-hidden neon-blue-border bg-black">
-                  <div className="w-full" style={{ aspectRatio: R4X_BOT_SCENE.aspectRatio ?? '16 / 9' }}>
-                    <Suspense fallback={<SplineSkeleton className="w-full h-full" aspectRatio="auto" style={{ height: '100%' }} />}>
-                      <RemoteSplineFrame viewerSrc={R4X_BOT_SCENE.viewer} sceneSrc={R4X_BOT_SCENE.runtime} title={R4X_BOT_SCENE.title} />
-                    </Suspense>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <SplitExperienceCard onOpen={() => setIsSplitModalOpen(true)} />
+                    {ADDITIONAL_SPLINE_PAGES.map(scene => (
+                      <RemoteSplineShowcase key={scene.id} scene={scene} onOpen={setActiveRemoteScene} />
+                    ))}
                   </div>
                 </div>
               </section>
@@ -1397,14 +984,14 @@ function HomeContent() {
                     What Traders Say
                   </h2>
                   <div className="flex justify-center gap-1 mt-3">
-                    <ShimmerDot color="blue" delay={0} />
-                    <ShimmerDot color="blue" delay={0.2} />
-                    <ShimmerDot color="blue" delay={0.4} />
+                    <ShimmerDot color="white" delay={0} />
+                    <ShimmerDot color="white" delay={0.2} />
+                    <ShimmerDot color="white" delay={0.4} />
                   </div>
                 </div>
                 
                 <div className="relative rounded-2xl overflow-hidden">
-                  <ShimmerBorder color="blue" intensity="low" speed="slow" />
+                  <ShimmerBorder color="white" intensity="low" speed="slow" />
                   
                   <div className="relative z-10 bg-black rounded-2xl overflow-hidden" style={{ borderColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.2)', borderWidth: '1px', borderStyle: 'solid' }}>
                     <Suspense fallback={<LoadingSkeleton variant="card" height={320} />}>
@@ -1416,7 +1003,7 @@ function HomeContent() {
             )}
 
             {canRenderMobileSections && (
-              <section id="ticker" className="w-full" data-allow-scroll data-footer data-theme-aware>
+              <section id="ticker" className="w-full px-2 sm:px-4" data-allow-scroll data-footer data-theme-aware>
                 <LiveMarketTicker />
               </section>
             )}
@@ -1428,8 +1015,8 @@ function HomeContent() {
           {canRenderHeavyDesktop && theme.youtubeId && (
             <HiddenYoutubePlayer
               videoId={theme.youtubeId}
-              isPlaying={!isMuted}
-              volume={!isMuted ? 15 : 0}
+              isPlaying={!isMuted && !masterMuted}
+              volume={!isMuted && !masterMuted ? 15 : 0}
             />
           )}
 

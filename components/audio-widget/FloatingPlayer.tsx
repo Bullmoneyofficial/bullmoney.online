@@ -34,6 +34,8 @@ interface FloatingPlayerProps {
   // Separate iframe volume control
   iframeVolume: number;
   setIframeVolume: (v: number) => void;
+  setMasterMuted: (v: boolean) => void;
+  masterMuted: boolean;
   iframeRef: React.RefObject<HTMLIFrameElement | null>;
   iframeKey: number;
   
@@ -79,6 +81,8 @@ interface FloatingPlayerProps {
   onPlayerSideChange?: (side: 'left' | 'right') => void;
   onMinimizedChange?: (minimized: boolean) => void;
   onPlayerPositionUpdate?: (position: { x: number; y: number; width: number; height: number }) => void;
+  allowedChannel?: "all" | "music" | "iframe" | "live";
+  setAllowedChannel?: (channel: "all" | "music" | "iframe" | "live") => void;
 
   // Force minimize from parent (UIStateContext) - used when other UI components open
   // This minimizes the player (hides iframe behind pull tab) but keeps it mounted for audio persistence
@@ -138,7 +142,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
     miniPlayerRef, open, playerHidden, setPlayerHidden,
     isStreamingSource, streamingEmbedUrl, streamingActive, setStreamingActive,
     musicSource, setMusicEnabled, musicEnabled, musicVolume, setMusicVolume, 
-    iframeVolume, setIframeVolume, iframeRef, iframeKey,
+    iframeVolume, setIframeVolume, setMasterMuted, masterMuted, iframeRef, iframeKey,
     isWandering, wanderPosition, morphPhase, isHovering, setIsHovering,
     isNearPlayer, isFleeing, isReturning, movementStyle, speedMultiplier, fleeDirection,
     handlePlayerInteraction, energy, combo, getTirednessLevel, gameStats,
@@ -240,42 +244,44 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
     };
   }, []);
 
-  // Scroll detection for iframe auto-minimizing on mobile
+  // Scroll detection for audio widget auto-minimizing
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       const scrollDelta = Math.abs(currentScrollY - lastScrollY.current);
       
-      // Only trigger minimization on significant scroll when player is not hidden or open
-      if (scrollDelta > 15 && !open && !playerHidden && !isMinimized) {
-        setIsScrollMinimized(true);
-        lastScrollY.current = currentScrollY;
+      // Update lastScrollY for next comparison
+      lastScrollY.current = currentScrollY;
+      
+      // Only trigger minimization on significant scroll when player is visible
+      // Works for both expanded player AND minimized pull tab states
+      if (scrollDelta > 10 && !open && !playerHidden) {
+        // If player is expanded (not minimized), show scroll-minimized circular icon
+        if (!isMinimized && !playerMinimized) {
+          setIsScrollMinimized(true);
+        }
         
-        // Clear existing timeout
+        // If player is already minimized, compact the pull tab
+        if ((isMinimized || playerMinimized) && !forceMinimize) {
+          setIsPullTabCompact(true);
+        }
+        
+        // Clear existing timeouts
         if (scrollTimeoutRef.current) {
           clearTimeout(scrollTimeoutRef.current);
+        }
+        if (pullTabScrollTimeoutRef.current) {
+          clearTimeout(pullTabScrollTimeoutRef.current);
         }
         
         // Auto-expand after scroll stops
         scrollTimeoutRef.current = setTimeout(() => {
           setIsScrollMinimized(false);
-        }, 1200); // Expand back 1.2s after scroll stops
-      }
-      
-      // Also compact the pull tab when minimized (internal or parent state) and scrolling
-      if (scrollDelta > 15 && !open && !playerHidden && (isMinimized || playerMinimized) && !forceMinimize) {
-        setIsPullTabCompact(true);
-        lastScrollY.current = currentScrollY;
-
-        // Clear existing timeout
-        if (pullTabScrollTimeoutRef.current) {
-          clearTimeout(pullTabScrollTimeoutRef.current);
-        }
-
-        // Auto-expand pull tab after scroll stops
+        }, 1500); // Expand back 1.5s after scroll stops
+        
         pullTabScrollTimeoutRef.current = setTimeout(() => {
           setIsPullTabCompact(false);
-        }, 1200); // Expand back 1.2s after scroll stops
+        }, 1500);
       }
     };
 
@@ -369,22 +375,24 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
     const next = Math.min(1, iframeVolume + 0.1);
     setMusicEnabled(true);
     setIframeVolume(next);
+    props.setAllowedChannel?.("iframe");
     setShowVolumeSlider(true);
     setTimeout(() => setShowVolumeSlider(false), 2000);
-  }, [iframeVolume, setMusicEnabled, setIframeVolume]);
+  }, [iframeVolume, setMusicEnabled, setIframeVolume, props]);
 
   const handleVolumeDown = useCallback(() => {
     SoundEffects.click();
     const next = Math.max(0, iframeVolume - 0.1);
     setIframeVolume(next);
     setMusicEnabled(next > 0);
+    props.setAllowedChannel?.("iframe");
     setShowVolumeSlider(true);
     setTimeout(() => setShowVolumeSlider(false), 2000);
   }, [iframeVolume, setMusicEnabled, setIframeVolume]);
 
   // Use iframeVolume for iframe control display
   const iframeVolumePercent = Math.round(iframeVolume * 100);
-  const isIframeMuted = !musicEnabled || iframeVolumePercent === 0;
+  const isIframeMuted = masterMuted || !musicEnabled || iframeVolumePercent === 0;
 
   useEffect(() => {
     if (iframeVolume > 0) {
@@ -396,11 +404,13 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
   useEffect(() => {
     if (!iframeRef.current?.contentWindow) return;
     const win = iframeRef.current.contentWindow;
-    const vol0to100 = Math.floor(iframeVolume * 100);
+    const allowIframe = props.allowedChannel === "all" || props.allowedChannel === "iframe" || !props.allowedChannel;
+    const effectiveVolume = masterMuted || !allowIframe ? 0 : iframeVolume;
+    const vol0to100 = Math.floor(effectiveVolume * 100);
     
     // YouTube API
     if (musicSource === 'YOUTUBE') {
-      if (musicEnabled && iframeVolume > 0) {
+      if (musicEnabled && effectiveVolume > 0) {
         win.postMessage(JSON.stringify({ event: 'command', func: 'unMute' }), '*');
       } else {
         win.postMessage(JSON.stringify({ event: 'command', func: 'mute' }), '*');
@@ -409,23 +419,25 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
     }
     
     // Generic protocols for Spotify/Apple Music
-    win.postMessage({ method: 'setVolume', value: iframeVolume }, '*');
+    win.postMessage({ method: 'setVolume', value: effectiveVolume }, '*');
     win.postMessage({ method: 'setVolume', value: vol0to100 }, '*');
     win.postMessage(JSON.stringify({ method: 'setVolume', value: vol0to100 }), '*');
-  }, [iframeVolume, musicEnabled, musicSource, iframeRef]);
+  }, [iframeVolume, masterMuted, musicEnabled, musicSource, iframeRef]);
 
   const handleToggleMute = useCallback(() => {
     SoundEffects.click();
     if (isIframeMuted) {
       const restored = Math.max(0.1, lastNonZeroVolumeRef.current);
+      setMasterMuted(false);
       setMusicEnabled(true);
       setIframeVolume(restored);
     } else {
       lastNonZeroVolumeRef.current = Math.max(iframeVolume, 0.1);
       setIframeVolume(0);
       setMusicEnabled(false);
+      setMasterMuted(true);
     }
-  }, [isIframeMuted, iframeVolume, setMusicEnabled, setIframeVolume]);
+  }, [isIframeMuted, iframeVolume, setMusicEnabled, setIframeVolume, setMasterMuted]);
 
   // Power button
   const handlePower = useCallback(() => {
@@ -494,13 +506,12 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
       <AnimatePresence mode="wait">
         {(isMinimized || playerMinimized) && !open && (
           forceMinimize ? (
-            /* Compact pill button when modals/UI is open - matches scroll-minimized design */
+            /* Compact circular wave button when modals/UI is open */
             <motion.div
               key="compact-pill-div"
               className="fixed bottom-[70px] pointer-events-none"
               style={{ 
                 zIndex: 100201,
-                // Follow playerSide for swipe-to-side behavior
                 ...(playerSide === 'right'
                   ? { right: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
                   : { left: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
@@ -508,14 +519,13 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               }}
             >
               <motion.button
-                initial={{ x: 100, opacity: 0 }}
+                initial={{ scale: 0.5, opacity: 0 }}
                 animate={
                   isPulltabPinned 
-                    ? { x: 0, scale: 1, opacity: 1 }
+                    ? { scale: 1, opacity: 1 }
                     : {
-                        x: [100, 0, 0, 100],
-                        opacity: [0, 1, 1, 0],
-                        scale: [0.95, 1, 1, 0.95],
+                        scale: [0.9, 1, 1, 0.9],
+                        opacity: [0.7, 1, 1, 0.7],
                       }
                 }
                 transition={
@@ -540,51 +550,54 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                 }}
                 onTap={handlePulltabInteraction}
                 onMouseLeave={() => setHoveredButton(null)}
-                className="relative flex items-center justify-center h-11 w-11 min-w-[44px] min-h-[44px] rounded-full transition-all pointer-events-auto"
+                className="relative flex items-center justify-center h-11 w-11 min-w-[44px] min-h-[44px] rounded-full transition-all pointer-events-auto bg-black/80 backdrop-blur-xl border-2 border-white"
                 data-theme-aware
                 style={{
-                  background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(255, 255, 255,0.1) 100%)',
-                  backdropFilter: 'blur(12px)',
-                  WebkitBackdropFilter: 'blur(12px)',
-                  border: '2px solid #ffffff',
-                  boxShadow: '0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff',
+                  boxShadow: '0 0 8px #ffffff, 0 0 16px #ffffff, 0 0 24px rgba(255, 255, 255, 0.5), inset 0 0 8px rgba(255, 255, 255, 0.3)',
                 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
               >
-                {/* Music Icon with pulse - Theme-aware */}
-                <motion.div
-                  animate={isPlaying && !shouldSkipHeavyEffects ? { scale: [1, 1.1, 1] } : {}}
-                  transition={shouldSkipHeavyEffects ? {} : { duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                  className="relative"
-                >
-                  <IconMusic
-                    className="w-4 h-4"
-                    style={{
-                      color: isPlaying ? 'var(--accent-color, #ffffff)' : 'rgba(var(--accent-rgb, 255, 255, 255), 0.7)',
-                      filter: shouldSkipHeavyEffects ? undefined : (isPlaying ? 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff)' : 'drop-shadow(0 0 4px #ffffff)')
-                    }}
-                  />
-                  {/* Playing indicator dot */}
-                  {isPlaying && (
+                {/* Animated Wave Bars inside circle */}
+                <div className="flex items-end justify-center gap-[3px] h-[18px]">
+                  {[0, 1, 2, 3].map((i) => (
                     <motion.div
-                      animate={shouldSkipHeavyEffects ? {} : { scale: [1, 1.4, 1], opacity: [0.7, 1, 0.7] }}
-                      transition={shouldSkipHeavyEffects ? {} : { duration: 1, repeat: Infinity }}
-                      className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-white"
-                      style={{ boxShadow: shouldSkipHeavyEffects ? undefined : "0 0 4px rgba(255, 255, 255, 0.8)" }}
+                      key={i}
+                      className="w-[3px] rounded-full origin-bottom"
+                      style={{ 
+                        backgroundColor: "#ffffff",
+                        boxShadow: shouldSkipHeavyEffects ? undefined : "0 0 4px #ffffff, 0 0 8px #ffffff",
+                      }}
+                      animate={isPlaying && !shouldSkipHeavyEffects ? {
+                        height: [4 + i * 2, 12 + (3 - i) * 2, 6 + i, 14 - i, 4 + i * 2],
+                      } : { height: 6 }}
+                      transition={isPlaying && !shouldSkipHeavyEffects ? {
+                        duration: 0.5 + i * 0.08,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: i * 0.1,
+                      } : { duration: 0.2 }}
                     />
-                  )}
-                </motion.div>
+                  ))}
+                </div>
+                {/* Outer pulse ring glow effect */}
+                {isPlaying && !shouldSkipHeavyEffects && (
+                  <motion.div
+                    className="absolute inset-0 rounded-full border-2 border-white/50"
+                    animate={{ scale: [1, 1.3, 1], opacity: [0.6, 0, 0.6] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
+                    style={{ boxShadow: '0 0 8px #ffffff' }}
+                  />
+                )}
               </motion.button>
             </motion.div>
           ) : isPullTabCompact ? (
-            /* Compact pill version when scrolling - same as forceMinimize pill */
+            /* Compact circular wave version when scrolling while minimized */
             <motion.div
               key="scroll-compact-pill-div"
               className="fixed bottom-[70px] pointer-events-none"
               style={{ 
                 zIndex: 100201,
-                // Follow playerSide for swipe-to-side behavior
                 ...(playerSide === 'right'
                   ? { right: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
                   : { left: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
@@ -592,14 +605,13 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               }}
             >
               <motion.button
-                initial={{ x: 100, opacity: 0 }}
+                initial={{ scale: 0.5, opacity: 0 }}
                 animate={
                   isPulltabPinned 
-                    ? { x: 0, scale: 1, opacity: 1 }
+                    ? { scale: 1, opacity: 1 }
                     : {
-                        x: [100, 0, 0, 100],
-                        opacity: [0, 1, 1, 0],
-                        scale: [0.95, 1, 1, 0.95],
+                        scale: [0.9, 1, 1, 0.9],
+                        opacity: [0.7, 1, 1, 0.7],
                       }
                 }
                 transition={
@@ -621,63 +633,66 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                 onHoverStart={() => {
                   setHoveredButton('expand');
                   handlePulltabInteraction();
-                  // Expand on hover for desktop
                   if (window.matchMedia('(hover: hover)').matches) {
                     setIsPullTabCompact(false);
                   }
                 }}
                 onTap={handlePulltabInteraction}
                 onMouseLeave={() => setHoveredButton(null)}
-                className="relative flex items-center justify-center h-11 w-11 min-w-[44px] min-h-[44px] rounded-full transition-all pointer-events-auto"
+                className="relative flex items-center justify-center h-11 w-11 min-w-[44px] min-h-[44px] rounded-full transition-all pointer-events-auto bg-black/80 backdrop-blur-xl border-2 border-white"
                 data-theme-aware
                 style={{
-                  background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(255, 255, 255,0.1) 100%)',
-                  backdropFilter: 'blur(12px)',
-                  WebkitBackdropFilter: 'blur(12px)',
-                  border: '2px solid #ffffff',
-                  boxShadow: '0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff',
+                  boxShadow: '0 0 8px #ffffff, 0 0 16px #ffffff, 0 0 24px rgba(255, 255, 255, 0.5), inset 0 0 8px rgba(255, 255, 255, 0.3)',
                 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
               >
-                {/* Music Icon with pulse - Theme-aware */}
-                <motion.div
-                  animate={isPlaying && !shouldSkipHeavyEffects ? { scale: [1, 1.1, 1] } : {}}
-                  transition={shouldSkipHeavyEffects ? {} : { duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                  className="relative"
-                >
-                  <IconMusic
-                    className="w-4 h-4"
-                    style={{
-                      color: isPlaying ? 'var(--accent-color, #ffffff)' : 'rgba(var(--accent-rgb, 255, 255, 255), 0.7)',
-                      filter: shouldSkipHeavyEffects ? undefined : (isPlaying ? 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff)' : 'drop-shadow(0 0 4px #ffffff)')
-                    }}
-                  />
-                  {/* Playing indicator dot */}
-                  {isPlaying && (
+                {/* Animated Wave Bars inside circle */}
+                <div className="flex items-end justify-center gap-[3px] h-[18px]">
+                  {[0, 1, 2, 3].map((i) => (
                     <motion.div
-                      animate={shouldSkipHeavyEffects ? {} : { scale: [1, 1.4, 1], opacity: [0.7, 1, 0.7] }}
-                      transition={shouldSkipHeavyEffects ? {} : { duration: 1, repeat: Infinity }}
-                      className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-white"
-                      style={{ boxShadow: shouldSkipHeavyEffects ? undefined : "0 0 4px rgba(255, 255, 255, 0.8)" }}
+                      key={i}
+                      className="w-[3px] rounded-full origin-bottom"
+                      style={{ 
+                        backgroundColor: "#ffffff",
+                        boxShadow: shouldSkipHeavyEffects ? undefined : "0 0 4px #ffffff, 0 0 8px #ffffff",
+                      }}
+                      animate={isPlaying && !shouldSkipHeavyEffects ? {
+                        height: [4 + i * 2, 12 + (3 - i) * 2, 6 + i, 14 - i, 4 + i * 2],
+                      } : { height: 6 }}
+                      transition={isPlaying && !shouldSkipHeavyEffects ? {
+                        duration: 0.5 + i * 0.08,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: i * 0.1,
+                      } : { duration: 0.2 }}
                     />
-                  )}
-                </motion.div>
+                  ))}
+                </div>
+                {/* Outer pulse ring glow effect */}
+                {isPlaying && !shouldSkipHeavyEffects && (
+                  <motion.div
+                    className="absolute inset-0 rounded-full border-2 border-white/50"
+                    animate={{ scale: [1, 1.3, 1], opacity: [0.6, 0, 0.6] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
+                    style={{ boxShadow: '0 0 8px #ffffff' }}
+                  />
+                )}
               </motion.button>
             </motion.div>
           ) : null
         )}
       </AnimatePresence>
 
-      {/* SCROLL-MINIMIZED PULL TAB - Cool pill design for scroll-based minimization */}
+      {/* SCROLL-MINIMIZED CIRCULAR ICON - White glow circle with animated waves */}
       <AnimatePresence>
-        {isScrollMinimized && !open && !playerHidden && !isMinimized && (
+        {isScrollMinimized && !open && !playerHidden && !isMinimized && !playerMinimized && (
           <motion.button
             key="scroll-minimized-tab"
-            initial={{ opacity: 0, scale: 0.7, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.7, y: 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 500, mass: 0.6 }}
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            transition={{ type: 'spring', damping: 20, stiffness: 400, mass: 0.5 }}
             onClick={() => {
               SoundEffects.click();
               setIsScrollMinimized(false);
@@ -689,79 +704,71 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               }
             }}
             className={cn(
-              "fixed bottom-[70px] flex items-center gap-1.5 px-2.5 py-2 rounded-xl",
-              "bg-gradient-to-br from-white/40 via-white/25 to-slate-900/50",
-              "backdrop-blur-2xl border border-white/50",
-              "shadow-lg shadow-white/20 hover:shadow-white/30",
-              "hover:border-white/70 transition-all duration-200",
+              "fixed bottom-[70px] flex items-center justify-center",
+              "w-11 h-11 min-w-[44px] min-h-[44px] rounded-full",
+              "border border-white/40",
+              "transition-all duration-200",
               "pointer-events-auto"
             )}
             style={{
-              zIndex: 100201, // Just above MainWidget z-[100200]
-              // Follow playerSide for swipe-to-side behavior
+              zIndex: 100201,
+              background: 'radial-gradient(circle, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.5) 100%)',
+              boxShadow: '0 0 15px rgba(255, 255, 255, 0.4), 0 0 30px rgba(255, 255, 255, 0.2), 0 0 45px rgba(255, 255, 255, 0.1)',
               ...(playerSide === 'right'
                 ? { right: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
                 : { left: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
               ),
             }}
-            whileHover={{ scale: 1.05, x: 2 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.1, boxShadow: '0 0 20px rgba(255, 255, 255, 0.5), 0 0 40px rgba(255, 255, 255, 0.3), 0 0 60px rgba(255, 255, 255, 0.15)' }}
+            whileTap={{ scale: 0.9 }}
           >
-            {/* Music Icon with pulse */}
-            <motion.div
-              animate={isPlaying && !shouldSkipHeavyEffects ? { scale: [1, 1.1, 1] } : {}}
-              transition={shouldSkipHeavyEffects ? {} : { duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-              className="relative"
-            >
-              <IconMusic 
-                className={cn(
-                  "w-4 h-4",
-                  isPlaying ? "text-white" : "text-white/70"
-                )} 
-                style={isPlaying && !shouldSkipHeavyEffects ? {
-                  filter: "drop-shadow(0 0 6px rgba(255, 255, 255, 0.8))"
-                } : {}}
-              />
-              {/* Playing indicator dot */}
-              {isPlaying && (
-                <motion.div
-                  animate={shouldSkipHeavyEffects ? {} : { scale: [1, 1.4, 1], opacity: [0.7, 1, 0.7] }}
-                  transition={shouldSkipHeavyEffects ? {} : { duration: 1, repeat: Infinity }}
-                  className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-white"
-                  style={{ boxShadow: shouldSkipHeavyEffects ? undefined : "0 0 4px rgba(255, 255, 255, 0.6)" }}
-                />
-              )}
-            </motion.div>
-            
-            {/* Animated Music Wave Bars */}
-            <div className="flex items-end gap-[2px] h-[14px]">
+            {/* Animated Wave Bars inside circle */}
+            <div className="flex items-end justify-center gap-[3px] h-[18px]">
               {[0, 1, 2, 3].map((i) => (
                 <motion.div
                   key={i}
                   className="w-[3px] rounded-full origin-bottom"
                   style={{ 
                     backgroundColor: "#ffffff",
-                    boxShadow: shouldSkipHeavyEffects ? undefined : "0 0 4px rgba(255, 255, 255, 0.6)",
+                    boxShadow: shouldSkipHeavyEffects ? undefined : "0 0 4px #ffffff, 0 0 8px #ffffff",
                   }}
                   animate={isPlaying && !shouldSkipHeavyEffects ? {
                     height: [
-                      4 + Math.random() * 4,
-                      8 + Math.random() * 6,
-                      3 + Math.random() * 5,
-                      10 + Math.random() * 4,
-                      5 + Math.random() * 3,
+                      4 + i * 2,
+                      12 + (3 - i) * 2,
+                      6 + i,
+                      14 - i,
+                      4 + i * 2,
                     ],
-                  } : { height: 4 }}
+                  } : { height: 6 }}
                   transition={isPlaying && !shouldSkipHeavyEffects ? {
-                    duration: 0.4 + i * 0.05,
+                    duration: 0.5 + i * 0.08,
                     repeat: Infinity,
-                    repeatType: "reverse",
                     ease: "easeInOut",
-                    delay: i * 0.08,
+                    delay: i * 0.1,
                   } : { duration: 0.2 }}
                 />
               ))}
             </div>
+            
+            {/* Outer pulse ring glow effect */}
+            {isPlaying && !shouldSkipHeavyEffects && (
+              <motion.div
+                className="absolute inset-0 rounded-full border border-white/30"
+                animate={{
+                  scale: [1, 1.4, 1],
+                  opacity: [0.5, 0, 0.5],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeOut",
+                }}
+                style={{
+                  boxShadow: '0 0 12px rgba(255, 255, 255, 0.3)',
+                }}
+              />
+            )}
           </motion.button>
         )}
       </AnimatePresence>
@@ -866,9 +873,9 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
         </motion.button>
       )}
       
-      {/* Main iPhone 17 Floating Player - hidden when minimized (either internal state or parent prop) */}
+      {/* Main iPhone 17 Floating Player - hidden when minimized or scroll-minimized */}
       <AnimatePresence>
-        {!isMinimized && !playerMinimized && (
+        {!isMinimized && !playerMinimized && !isScrollMinimized && (
           <motion.div
             ref={miniPlayerRef}
             initial={{ x: playerSide === 'left' ? -300 : 300, opacity: 0 }}

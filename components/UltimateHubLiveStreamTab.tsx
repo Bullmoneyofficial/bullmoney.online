@@ -10,7 +10,7 @@
  * - Auto-refreshes every 30 seconds
  */
 
-import React, { useState, useEffect, useCallback, memo } from 'react';
+import React, { useState, useEffect, useCallback, memo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
   Tv,
@@ -29,6 +29,7 @@ import { ShimmerSpinner } from '@/components/ui/UnifiedShimmer';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { createSupabaseClient } from '@/lib/supabase';
 import { useMobilePerformance } from '@/hooks/useMobilePerformance';
+import { useAudioSettings } from '@/contexts/AudioSettingsProvider';
 
 // YouTube thumbnail helper
 const getYouTubeThumbnail = (videoId: string, quality: 'default' | 'mq' | 'hq' | 'sd' | 'maxres' = 'mq') => {
@@ -56,6 +57,8 @@ const FEATURED_VIDEOS = ['Q3dSjSP3t8I', 'xvP1FJt-Qto'];
 
 export const UltimateHubLiveStreamTab = memo(() => {
   const { shouldSkipHeavyEffects, isMobile } = useMobilePerformance();
+  const { liveStreamVolume, masterMuted, allowedChannel, setAllowedChannel } = useAudioSettings();
+  const playerRef = useRef<HTMLIFrameElement | null>(null);
   
   const [activeTab, setActiveTab] = useState<'featured' | 'live'>('featured');
   const [videos, setVideos] = useState<LiveStreamVideo[]>([]);
@@ -150,6 +153,23 @@ export const UltimateHubLiveStreamTab = memo(() => {
     setIsPlaying(p => !p);
   }, []);
 
+  // Apply volume to embedded player (requires enablejsapi=1)
+  useEffect(() => {
+    const win = playerRef.current?.contentWindow;
+    if (!win) return;
+    const allowLive = allowedChannel === "all" || allowedChannel === "live";
+    const effective = masterMuted || !allowLive ? 0 : liveStreamVolume;
+    const vol0to100 = Math.floor(effective * 100);
+    win.postMessage(JSON.stringify({ event: 'command', func: effective > 0 ? 'unMute' : 'mute' }), '*');
+    win.postMessage(JSON.stringify({ event: 'command', func: 'setVolume', args: [vol0to100] }), '*');
+  }, [liveStreamVolume, masterMuted, playerKey, currentVideoId, allowedChannel]);
+
+  useEffect(() => {
+    if (activeTab === 'live' && isPlaying) {
+      setAllowedChannel('live');
+    }
+  }, [activeTab, isPlaying, setAllowedChannel]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full bg-black">
@@ -242,8 +262,9 @@ export const UltimateHubLiveStreamTab = memo(() => {
           <div className="w-full h-full">
             <iframe
               key={playerKey}
+              ref={playerRef}
               className="w-full h-full"
-              src={`https://www.youtube.com/embed/${currentVideoId}?autoplay=${isPlaying ? 1 : 0}&rel=0&modestbranding=1&playsinline=1`}
+              src={`https://www.youtube.com/embed/${currentVideoId}?autoplay=${isPlaying ? 1 : 0}&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
               loading="lazy"

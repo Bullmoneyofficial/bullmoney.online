@@ -163,17 +163,20 @@ export function TestimonialsCarousel() {
   return (
     <motion.section
       {...fade}
-      className="relative mt-8 md:mt-12 w-full max-w-4xl mx-auto px-4"
+      className="relative mt-8 md:mt-12 w-full max-w-6xl mx-auto px-4 md:px-0"
     >
       {/* Minimalist header */}
       <div className="text-center mb-6 md:mb-8">
         <h2 className="text-sm font-semibold tracking-wider text-white/50 uppercase mb-2">
-          What traders say
+          Real Results
         </h2>
+        <p className="text-xl md:text-2xl font-semibold text-white">
+          What Our Traders Say About BullMoney
+        </p>
       </div>
 
       {/* Clean card design */}
-      <div className="relative h-[280px] md:h-[320px] overflow-hidden rounded-2xl md:rounded-3xl bg-white/[0.02] backdrop-blur-xl border border-white/10">
+      <div className="relative h-[320px] md:h-[420px] overflow-hidden rounded-2xl md:rounded-3xl bg-white/[0.02] backdrop-blur-xl border border-white/10">
         <AnimatePresence mode="wait">
           <motion.div
             key={index}
@@ -194,7 +197,9 @@ export function TestimonialsCarousel() {
               src={currentTestimonial.image}
               alt={currentTestimonial.name}
               fill
-              className="object-cover opacity-20"
+              sizes="(min-width: 1024px) 900px, 100vw"
+              className="object-cover opacity-40"
+              priority
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent" />
             
@@ -214,7 +219,7 @@ export function TestimonialsCarousel() {
                 </div>
                 <div>
                   <p className="text-sm md:text-base font-medium text-white">{currentTestimonial.name}</p>
-                  <p className="text-xs text-white/50">Trader</p>
+                  <p className="text-xs text-white/50">BullMoney Member</p>
                 </div>
               </div>
             </div>

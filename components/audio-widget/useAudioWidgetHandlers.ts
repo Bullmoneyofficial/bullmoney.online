@@ -12,6 +12,8 @@ export interface UseAudioWidgetHandlersOptions {
     setMusicEnabled: (enabled: boolean) => void;
     musicVolume: number;
     iframeVolume: number;
+    masterMuted: boolean;
+    allowedChannel: "all" | "music" | "iframe" | "live";
   };
   gameHook: {
     isWandering: boolean;
@@ -30,7 +32,7 @@ export function useAudioWidgetHandlers({ state, audioSettings, gameHook }: UseAu
     isTutorialHovered, setPlayerMinimized, setOpen, setShowBoredPopup,
   } = state;
   
-  const { musicSource, setMusicSource, setMusicEnabled, musicVolume, iframeVolume } = audioSettings;
+  const { musicSource, setMusicSource, setMusicEnabled, musicVolume, iframeVolume, masterMuted } = audioSettings;
   const { setHasInteracted, startGame, gameStats, isWandering, handlePlayerInteraction } = gameHook;
 
   const handleStartCatchGame = useCallback(() => {
@@ -126,8 +128,10 @@ export function useAudioWidgetHandlers({ state, audioSettings, gameHook }: UseAu
     if (!iframeRef.current || !iframeRef.current.contentWindow) return;
     
     const win = iframeRef.current.contentWindow;
-    const vol0to100 = Math.floor(iframeVolume * 100);
-    const vol0to1 = iframeVolume;
+    const allowIframe = audioSettings.allowedChannel === "all" || audioSettings.allowedChannel === "iframe";
+    const effectiveVolume = masterMuted || !allowIframe ? 0 : iframeVolume;
+    const vol0to100 = Math.floor(effectiveVolume * 100);
+    const vol0to1 = effectiveVolume;
 
     if (musicSource === 'YOUTUBE') {
       win.postMessage(JSON.stringify({

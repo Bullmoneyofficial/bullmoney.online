@@ -147,6 +147,11 @@ export const UltimateHubAnalysisTab = memo(() => {
   const [editForm, setEditForm] = useState<Partial<Analysis> | null>(null);
   const [headerCollapsed, setHeaderCollapsed] = useState(isMobile); // Collapse details on mobile
 
+  useEffect(() => {
+    setShowChart(!isMobile);
+    setHeaderCollapsed(isMobile);
+  }, [isMobile]);
+
   // Check admin status
   useEffect(() => {
     const checkAdmin = async () => {

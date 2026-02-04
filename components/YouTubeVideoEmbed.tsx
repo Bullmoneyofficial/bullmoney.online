@@ -61,14 +61,15 @@ const YouTubeVideoEmbed = ({
   const iframeId = useMemo(() => `yt-embed-${videoId}-${Math.random().toString(36).slice(2, 7)}`, [videoId]);
   const [playerReady, setPlayerReady] = useState(false);
   // Use iframeVolume for separate iframe volume control
+  const allowIframe = audioSettings.allowedChannel === "all" || audioSettings.allowedChannel === "iframe";
   const resolvedVolume = useMemo(() => {
     const raw = typeof volume === 'number' ? volume : Math.round(audioSettings.iframeVolume * 100);
     return clampVolume(raw);
   }, [audioSettings.iframeVolume, volume]);
   const resolvedMuted = useMemo(() => {
-    if (typeof muted === 'boolean') return muted;
-    return !audioSettings.musicEnabled || resolvedVolume === 0;
-  }, [audioSettings.musicEnabled, muted, resolvedVolume]);
+    if (typeof muted === 'boolean') return muted || !allowIframe || audioSettings.masterMuted;
+    return !audioSettings.musicEnabled || resolvedVolume === 0 || !allowIframe || audioSettings.masterMuted;
+  }, [audioSettings.musicEnabled, audioSettings.masterMuted, muted, resolvedVolume, allowIframe]);
   const targetVolume = useMemo(() => clampVolume(resolvedMuted ? 0 : resolvedVolume), [resolvedMuted, resolvedVolume]);
   const embedUrl = useMemo(() => buildEmbedUrl(videoId, resolvedMuted), [videoId, resolvedMuted]);
 

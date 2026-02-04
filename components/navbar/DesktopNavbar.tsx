@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -9,11 +9,13 @@ import {
   IconSettings,
   IconLock,
   IconUser,
+  IconChartBar,
 } from '@tabler/icons-react';
 import { Dock } from './Dock';
 import { MinimizedDock } from './MinimizedDock';
 import { ProductsModal } from '@/components/ProductsModal';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
+import { useChartNewsUI } from '@/contexts/UIStateContext';
 import './DesktopNavbar.css';
 
 interface DesktopNavbarProps {
@@ -53,6 +55,13 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
     },
     ref
   ) => {
+    const { setChartNewsOpen } = useChartNewsUI();
+    
+    const handleChartNewsClick = useCallback(() => {
+      SoundEffects.click();
+      setChartNewsOpen(true);
+    }, [setChartNewsOpen]);
+    
     const safeAdminIcon = isAdmin ? (
       <IconSettings className="h-5 w-5 text-white" stroke={1.5} />
     ) : (
@@ -86,6 +95,12 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
         label: "Products",
         tips: ["Browse our products", "Find the best tools for you", "Check out our latest offers"],
         triggerComponent: <div className="w-full h-full flex items-center justify-center pointer-events-auto"><ProductsModal /></div>,
+      },
+      {
+        icon: <IconChartBar className="h-6 w-6 text-white" stroke={1.5} />,
+        label: "Charts & News",
+        tips: ["Live market charts", "Real-time market news", "Professional trading tools"],
+        onClick: handleChartNewsClick,
       },
     ];
 

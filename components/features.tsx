@@ -8,6 +8,11 @@ import Image from "next/image";
 import createGlobe from "cobe";
 import { detectBrowser } from "@/lib/browserDetection";
 import { useUnifiedPerformance } from "@/hooks/useDesktopPerformance";
+import { StickyScroll } from "@/components/ui/sticky-scroll-reveal";
+import ShinyText from "@/components/ShinyText";
+import ScrollReveal from "@/components/ScrollReveal";
+import TrueFocus from "@/components/TrueFocus";
+import TextType from "@/components/TextType";
 
 // Minimalist Apple-inspired design system
 const APPLE_STYLES = `
@@ -51,13 +56,203 @@ const APPLE_STYLES = `
   .apple-button:active {
     transform: scale(0.98);
   }
+  
+  .broker-poster-font {
+    font-family: 'Impact', 'Haettenschweiler', 'Arial Narrow Bold', sans-serif;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+  }
 `;
 
+// Sticky Scroll Content for Features - Enhanced Broker Showcase
+const getStickyScrollContent = (
+  copyCode: (code: string, broker: "goatfunded" | "vantage" | "xm") => void,
+  copiedCodes: CopiedCodesState,
+  justCopied: string | null
+) => [
+  {
+    title: "GOAT FUNDED TRADER",
+    logo: "/GTFLOGO.png",
+    description:
+      "15% OFF with BM15 • Instant funding up to $200K • 90% profit split • Fast payouts in 24-48hrs • No time limits on challenges • BullMoney's #1 recommended prop firm for beginners and pros alike.",
+    content: (
+      <div className="flex h-full w-full flex-col items-center justify-center bg-black p-8 rounded-2xl relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent" />
+        <div className="relative z-10 flex flex-col items-center">
+          <div className="text-center mb-4">
+            <span className="broker-poster-font text-3xl text-white block mb-2">GOAT FUNDED</span>
+            <span className="text-white/60 text-sm">Prop Firm Partner</span>
+          </div>
+          <button
+            onClick={() => copyCode("BM15", "goatfunded")}
+            className="px-6 py-3 rounded-full bg-white text-black font-bold text-sm hover:bg-white/90 transition-all hover:scale-105 flex items-center gap-3 mb-4"
+          >
+            <span
+              className={`w-2.5 h-2.5 rounded-full transition-colors duration-300 ${
+                copiedCodes.goatfunded ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]'
+              }`}
+            />
+            <span className="font-mono tracking-wider">BM15</span>
+            <span>{justCopied === "goatfunded" ? "✓ COPIED" : "COPY"}</span>
+          </button>
+          <a
+            href="https://checkout.goatfundedtrader.com/aff/Bullmoney/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white/70 text-sm hover:text-white transition-colors font-semibold"
+          >
+            GET FUNDED →
+          </a>
+        </div>
+      </div>
+    ),
+  },
+  {
+    title: "FTMO",
+    logo: "/FTMO_LOGOB.png",
+    description:
+      "The World's #1 Prop Firm • Paid out $100M+ to traders • Scale up to $400K accounts • 80% profit split • Professional trading conditions • The ultimate test for serious traders.",
+    content: (
+      <div className="flex h-full w-full flex-col items-center justify-center bg-black p-8 rounded-2xl relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent" />
+        <div className="relative z-10 flex flex-col items-center">
+          <div className="text-center mb-4">
+            <span className="broker-poster-font text-3xl text-white block mb-2">FTMO</span>
+            <span className="text-white/60 text-sm">Elite Prop Firm</span>
+          </div>
+          <a
+            href="https://trader.ftmo.com/?affiliates=fGDPMCcFOXviWzowTyxV"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-6 py-3 rounded-full bg-white font-bold text-sm hover:bg-white/90 transition-all hover:scale-105"
+            style={{ color: '#000000' }}
+          >
+            START CHALLENGE →
+          </a>
+        </div>
+      </div>
+    ),
+  },
+  {
+    title: "VANTAGE BROKER",
+    logo: "/Vantage-logo.jpg",
+    description:
+      "Use code BULLMONEY • RAW spreads from 0.0 pips • Lightning-fast execution • MT4/MT5 supported • Regulated & trusted • The broker BullMoney traders use for live funded accounts.",
+    content: (
+      <div className="flex h-full w-full flex-col items-center justify-center bg-black p-8 rounded-2xl relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent" />
+        <div className="relative z-10 flex flex-col items-center">
+          <div className="text-center mb-4">
+            <span className="broker-poster-font text-3xl text-white block mb-2">VANTAGE</span>
+            <span className="text-white/60 text-sm">Premium Broker</span>
+          </div>
+          <button
+            onClick={() => copyCode("BULLMONEY", "vantage")}
+            className="px-6 py-3 rounded-full bg-white text-black font-bold text-sm hover:bg-white/90 transition-all hover:scale-105 flex items-center gap-3 mb-4"
+          >
+            <span
+              className={`w-2.5 h-2.5 rounded-full transition-colors duration-300 ${
+                copiedCodes.vantage ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]'
+              }`}
+            />
+            <span className="font-mono tracking-wider">BULLMONEY</span>
+            <span>{justCopied === "vantage" ? "✓" : "COPY"}</span>
+          </button>
+          <a
+            href="https://vigco.co/iQbe2u"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white/70 text-sm hover:text-white transition-colors font-semibold"
+          >
+            OPEN ACCOUNT →
+          </a>
+        </div>
+      </div>
+    ),
+  },
+  {
+    title: "XM GLOBAL",
+    logo: "/xm-logo.png",
+    description:
+      "Use code X3R7P • Trusted by 10M+ traders • Ultra-competitive spreads • 24/7 support • Multi-asset trading • Perfect for forex, indices, commodities and crypto CFDs.",
+    content: (
+      <div className="flex h-full w-full flex-col items-center justify-center bg-black p-8 rounded-2xl relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent" />
+        <div className="relative z-10 flex flex-col items-center">
+          <div className="text-center mb-4">
+            <span className="broker-poster-font text-3xl text-white block mb-2">XM GLOBAL</span>
+            <span className="text-white/60 text-sm">Global Broker</span>
+          </div>
+          <button
+            onClick={() => copyCode("X3R7P", "xm")}
+            className="px-6 py-3 rounded-full bg-white text-black font-bold text-sm hover:bg-white/90 transition-all hover:scale-105 flex items-center gap-3 mb-4"
+          >
+            <span
+              className={`w-2.5 h-2.5 rounded-full transition-colors duration-300 ${
+                copiedCodes.xm ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]'
+              }`}
+            />
+            <span className="font-mono tracking-wider">X3R7P</span>
+            <span>{justCopied === "xm" ? "✓" : "COPY"}</span>
+          </button>
+          <a
+            href="https://affs.click/t5wni"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white/70 text-sm hover:text-white transition-colors font-semibold"
+          >
+            OPEN ACCOUNT →
+          </a>
+        </div>
+      </div>
+    ),
+  },
+  {
+    title: "JOIN 10,000+ TRADERS",
+    logo: "/ONcc2l601.svg",
+    description:
+      "The only trading community with a custom platform • Live trade calls daily • Expert analysis • Mentorship from funded traders • Active Discord • Traders worldwide • Your path to funded trading starts here.",
+    content: "signup",
+  },
+];
+
+// Type for copied codes state
+type CopiedCodesState = {
+  goatfunded: boolean;
+  ftmo: boolean;
+  vantage: boolean;
+  xm: boolean;
+};
+
 export function Features() {
-  const [copied, setCopied] = useState(false);
-  const [copiedBroker, setCopiedBroker] = useState<string | null>(null);
+  const [copiedCodes, setCopiedCodes] = useState<CopiedCodesState>({
+    goatfunded: false,
+    ftmo: false,
+    vantage: false,
+    xm: false,
+  });
+  const [justCopied, setJustCopied] = useState<string | null>(null);
   const [showSignupModal, setShowSignupModal] = useState(false);
   const { isMobile, shouldSkipHeavyEffects } = useUnifiedPerformance();
+
+  // Load copied states from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('bullmoney-copied-codes');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setCopiedCodes(prev => ({ ...prev, ...parsed }));
+      } catch (e) {
+        // Ignore parse errors
+      }
+    }
+  }, []);
+
+  // Save to localStorage whenever copiedCodes changes
+  useEffect(() => {
+    localStorage.setItem('bullmoney-copied-codes', JSON.stringify(copiedCodes));
+  }, [copiedCodes]);
 
   useEffect(() => {
     const styleId = 'apple-features-styles';
@@ -69,28 +264,9 @@ export function Features() {
     }
   }, []);
 
-  const copyPartnerCode = async () => {
-    try {
-      await navigator.clipboard.writeText("BM15");
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      const el = document.createElement("textarea");
-      el.value = "BM15";
-      document.body.appendChild(el);
-      el.select();
-      document.execCommand("copy");
-      document.body.removeChild(el);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
-  const copyBrokerCode = async (code: string, broker: string) => {
+  const copyCode = async (code: string, broker: keyof CopiedCodesState) => {
     try {
       await navigator.clipboard.writeText(code);
-      setCopiedBroker(broker);
-      setTimeout(() => setCopiedBroker(null), 2000);
     } catch {
       const el = document.createElement("textarea");
       el.value = code;
@@ -98,36 +274,314 @@ export function Features() {
       el.select();
       document.execCommand("copy");
       document.body.removeChild(el);
-      setCopiedBroker(broker);
-      setTimeout(() => setCopiedBroker(null), 2000);
     }
+    
+    // Update state and localStorage
+    setCopiedCodes(prev => ({ ...prev, [broker]: true }));
+    setJustCopied(broker);
+    setTimeout(() => setJustCopied(null), 2000);
   };
+
+  // Generate sticky scroll content with current state
+  const stickyScrollContent = getStickyScrollContent(
+    copyCode,
+    copiedCodes,
+    justCopied
+  );
 
   return (
     <div className="w-full min-h-screen bg-black py-12 md:py-20 px-4 md:px-8">
-      {/* Header - Apple minimalist style */}
-      <div className="max-w-7xl mx-auto text-center mb-8 md:mb-16">
-        <motion.h2
+      {/* Header with TrueFocus Effect */}
+      <header className="max-w-7xl mx-auto text-center mb-8 md:mb-16">
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-3xl md:text-6xl font-semibold mb-3 md:mb-4 apple-text-gradient"
+          className="mb-6"
         >
-          Get Funded
-        </motion.h2>
-        <motion.p
+          <TrueFocus 
+            sentence="TRUSTED TRADING PARTNERS"
+            manualMode={false}
+            blurAmount={4}
+            borderColor="#ffffff"
+            glowColor="rgba(255, 255, 255, 0.4)"
+            animationDuration={0.5}
+            pauseBetweenAnimations={1.5}
+          />
+        </motion.div>
+        <motion.div 
           initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.2 }}
+          className="max-w-2xl mx-auto"
+        >
+          <TextType
+            text={[
+              "Get funded faster with exclusive codes",
+              "BullMoney verified brokers & prop firms",
+              "Join 10,000+ successful traders"
+            ]}
+            typingSpeed={60}
+            pauseDuration={2000}
+            deletingSpeed={40}
+            showCursor
+            cursorCharacter="_"
+            cursorBlinkDuration={0.5}
+            loop
+            className="text-lg md:text-2xl text-white/70"
+          />
+        </motion.div>
+      </header>
+
+      {/* Sticky Scroll Section - Desktop only */}
+      <div className="hidden md:block max-w-7xl mx-auto mb-12">
+        <StickyScroll 
+          content={stickyScrollContent} 
+          contentClassName="rounded-2xl"
+          onSignupClick={() => setShowSignupModal(true)}
+        />
+      </div>
+
+      {/* Mobile Cards - Shown only on mobile */}
+      <div className="md:hidden max-w-7xl mx-auto grid grid-cols-1 gap-3">
+        
+        {/* Goat Funded Card - Compact on mobile */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="apple-card apple-card-hover rounded-3xl p-6 flex flex-col justify-between min-h-[300px]"
+        >
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-2xl overflow-hidden bg-white/5 p-2">
+                <Image
+                  src="/GTFLOGO.png"
+                  alt="Goat Funded"
+                  width={48}
+                  height={48}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <ShinyText
+                text="Goat Funded"
+                speed={2}
+                color="#b5b5b5"
+                shineColor="#ffffff"
+                spread={90}
+                className="text-xl font-semibold"
+              />
+            </div>
+            <p className="text-white/70 text-sm leading-relaxed mb-4">
+              BullMoney traders get 15% off. Start your funded journey today.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <button
+              onClick={() => copyCode("BM15", "goatfunded")}
+              className="apple-button px-3 py-1.5 rounded-full text-xs font-medium inline-flex items-center gap-2"
+            >
+              <span
+                className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                  copiedCodes.goatfunded ? 'bg-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.8)]' : 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]'
+                }`}
+              />
+              <span className="font-mono font-semibold">BM15</span>
+              {justCopied === "goatfunded" ? "✓" : "Copy"}
+            </button>
+            <a
+              href="https://checkout.goatfundedtrader.com/aff/Bullmoney/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="apple-button px-4 py-2 rounded-full text-sm font-medium inline-flex items-center gap-2 w-full justify-center"
+            >
+              Get Started →
+            </a>
+          </div>
+        </motion.div>
+
+        {/* FTMO Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.1 }}
-          className="text-base md:text-xl text-white/60 max-w-2xl mx-auto"
+          className="apple-card apple-card-hover rounded-3xl p-6 flex flex-col justify-between min-h-[280px]"
         >
-          Trade with the best. Funded by the best.
-        </motion.p>
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-2xl overflow-hidden bg-white/5 p-2">
+                <Image
+                  src="/FTMO_LOGOB.png"
+                  alt="FTMO"
+                  width={48}
+                  height={48}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <ShinyText
+                text="FTMO"
+                speed={2}
+                color="#b5b5b5"
+                shineColor="#ffffff"
+                spread={90}
+                className="text-xl font-semibold"
+              />
+            </div>
+            <p className="text-white/70 text-sm leading-relaxed">
+              Prove your skills. Get funded by the world&apos;s top prop firm.
+            </p>
+          </div>
+          <a
+            href="https://trader.ftmo.com/?affiliates=fGDPMCcFOXviWzowTyxV"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="apple-button px-4 py-2 rounded-full text-sm font-medium inline-flex items-center gap-2 w-full justify-center"
+          >
+            Start Challenge →
+          </a>
+        </motion.div>
+
+        {/* Vantage Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.2 }}
+          className="apple-card apple-card-hover rounded-3xl p-6 flex flex-col justify-between min-h-[280px]"
+        >
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-2xl overflow-hidden bg-white/5 p-2">
+                <img src="/Vantage-logo.jpg" alt="Vantage" className="w-full h-full object-contain" />
+              </div>
+              <ShinyText
+                text="Vantage"
+                speed={2}
+                color="#b5b5b5"
+                shineColor="#ffffff"
+                spread={90}
+                className="text-xl font-semibold"
+              />
+            </div>
+            <p className="text-white/70 text-sm leading-relaxed mb-4">
+              Ultra-low spreads. Code: <span className="font-mono font-semibold text-white">BULLMONEY</span>
+            </p>
+          </div>
+          <div className="space-y-2">
+            <button
+              onClick={() => copyCode("BULLMONEY", "vantage")}
+              className="apple-button px-4 py-2 rounded-full text-sm font-medium inline-flex items-center gap-2 w-full justify-center"
+            >
+              <span
+                className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                  copiedCodes.vantage ? 'bg-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.8)]' : 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]'
+                }`}
+              />
+              {justCopied === "vantage" ? "Copied! ✓" : "Copy Code"}
+            </button>
+            <a
+              href="https://vigco.co/iQbe2u"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-2 rounded-full text-sm font-medium text-white border border-white/20 hover:border-white/40 transition-colors inline-flex items-center gap-2 w-full justify-center"
+            >
+              Open Account
+            </a>
+          </div>
+        </motion.div>
+
+        {/* XM Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.3 }}
+          className="apple-card apple-card-hover rounded-3xl p-6 flex flex-col justify-between min-h-[280px]"
+        >
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-2xl overflow-hidden bg-white/5 p-2">
+                <img src="/xm-logo.png" alt="XM" className="w-full h-full object-contain" />
+              </div>
+              <ShinyText
+                text="XM"
+                speed={2}
+                color="#b5b5b5"
+                shineColor="#ffffff"
+                spread={90}
+                className="text-xl font-semibold"
+              />
+            </div>
+            <p className="text-white/70 text-sm leading-relaxed mb-4">
+              Global broker. Code: <span className="font-mono font-semibold text-white">X3R7P</span>
+            </p>
+          </div>
+          <div className="space-y-2">
+            <button
+              onClick={() => copyCode("X3R7P", "xm")}
+              className="apple-button px-4 py-2 rounded-full text-sm font-medium inline-flex items-center gap-2 w-full justify-center"
+            >
+              <span
+                className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                  copiedCodes.xm ? 'bg-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.8)]' : 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]'
+                }`}
+              />
+              {justCopied === "xm" ? "Copied! ✓" : "Copy Code"}
+            </button>
+            <a
+              href="https://affs.click/t5wni"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-2 rounded-full text-sm font-medium text-white border border-white/20 hover:border-white/40 transition-colors inline-flex items-center gap-2 w-full justify-center"
+            >
+              Open Account
+            </a>
+          </div>
+        </motion.div>
       </div>
 
-      {/* Grid Layout - Mobile optimized and compact */}
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
+      {/* Globe Section - Visible on all devices */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="max-w-7xl mx-auto mt-8 md:mt-12"
+      >
+        <div className="apple-card rounded-3xl p-8 md:p-10 flex items-center justify-center min-h-[400px] md:min-h-[500px] overflow-hidden">
+          <div className="relative w-full h-full flex items-center justify-center min-h-[350px] md:min-h-[450px]">
+            <Globe reducedMotion={shouldSkipHeavyEffects} />
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="text-center space-y-4 px-4">
+                <ShinyText
+                  text="10,000+ Traders Worldwide"
+                  speed={4}
+                  color="#b5b5b5"
+                  shineColor="#ffffff"
+                  spread={90}
+                  yoyo={true}
+                  className="text-2xl md:text-4xl font-semibold"
+                />
+                <div className="max-w-lg mx-auto">
+                  <ScrollReveal
+                    baseOpacity={0.2}
+                    enableBlur
+                    baseRotation={1}
+                    blurStrength={2}
+                    textClassName="text-base md:text-lg text-white/60"
+                  >
+                    The only trading community with a custom platform. Trade smarter.
+                  </ScrollReveal>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Desktop Grid for additional features - hide broker cards since sticky scroll shows them */}
+      <div className="hidden max-w-7xl mx-auto grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 mt-8">
         
         {/* Goat Funded Card - Compact on mobile */}
         <motion.div
@@ -153,7 +607,7 @@ export function Features() {
             </div>
 
             <p className="text-white/70 text-sm md:text-lg leading-relaxed mb-4 md:mb-6">
-              Join our community with exclusive partner code.
+              BullMoney traders get 15% off. Start your funded journey today.
             </p>
           </div>
 
@@ -161,11 +615,16 @@ export function Features() {
             <div className="flex items-center gap-2">
               <span className="text-white/60 text-xs md:text-sm">Code:</span>
               <button
-                onClick={copyPartnerCode}
+                onClick={() => copyCode("BM15", "goatfunded")}
                 className="apple-button px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-medium inline-flex items-center gap-2"
               >
+                <span
+                  className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                    copiedCodes.goatfunded ? 'bg-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.8)]' : 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]'
+                  }`}
+                />
                 <span className="font-mono font-semibold">BM15</span>
-                {copied ? (
+                {justCopied === "goatfunded" ? (
                   <svg className="w-3 h-3 md:w-4 md:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
@@ -216,7 +675,7 @@ export function Features() {
             </div>
 
             <p className="text-white/70 text-sm md:text-lg leading-relaxed">
-              Take the FTMO Challenge. Validate your strategy, access capital.
+              Prove your skills. Get funded by the world&apos;s top prop firm.
             </p>
           </div>
 
@@ -257,16 +716,21 @@ export function Features() {
             </div>
 
             <p className="text-white/70 text-sm md:text-lg leading-relaxed mb-4 md:mb-6">
-              Trade with ultra-low spreads. Partner code: <span className="font-mono font-semibold text-white">BULLMONEY</span>
+              Ultra-low spreads. Our traders&apos; go-to broker. Code: <span className="font-mono font-semibold text-white">BULLMONEY</span>
             </p>
           </div>
 
           <div className="space-y-2 md:space-y-3">
             <button
-              onClick={() => copyBrokerCode("BULLMONEY", "vantage")}
+              onClick={() => copyCode("BULLMONEY", "vantage")}
               className="apple-button px-4 py-2 md:px-6 md:py-3 rounded-full text-sm md:text-base font-medium inline-flex items-center gap-2 w-full justify-center"
             >
-              {copiedBroker === "vantage" ? "Copied!" : "Copy Code"}
+              <span
+                className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                  copiedCodes.vantage ? 'bg-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.8)]' : 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]'
+                }`}
+              />
+              {justCopied === "vantage" ? "Copied!" : "Copy Code"}
               <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
@@ -306,16 +770,21 @@ export function Features() {
             </div>
 
             <p className="text-white/70 text-sm md:text-lg leading-relaxed mb-4 md:mb-6">
-              Trade with global broker. Partner code: <span className="font-mono font-semibold text-white">X3R7P</span>
+              Global broker, trusted worldwide. Code: <span className="font-mono font-semibold text-white">X3R7P</span>
             </p>
           </div>
 
           <div className="space-y-2 md:space-y-3">
             <button
-              onClick={() => copyBrokerCode("X3R7P", "xm")}
+              onClick={() => copyCode("X3R7P", "xm")}
               className="apple-button px-4 py-2 md:px-6 md:py-3 rounded-full text-sm md:text-base font-medium inline-flex items-center gap-2 w-full justify-center"
             >
-              {copiedBroker === "xm" ? "Copied!" : "Copy Code"}
+              <span
+                className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                  copiedCodes.xm ? 'bg-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.8)]' : 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]'
+                }`}
+              />
+              {justCopied === "xm" ? "Copied!" : "Copy Code"}
               <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
@@ -394,9 +863,15 @@ export function Features() {
               <h3 className="text-xl md:text-2xl font-semibold text-white">
                 Fast Funding
               </h3>
-              <p className="text-white/60 text-base leading-relaxed">
+              <ScrollReveal
+                baseOpacity={0.2}
+                enableBlur
+                baseRotation={1}
+                blurStrength={2}
+                textClassName="text-base text-white/60 leading-relaxed"
+              >
                 Get funded in days, not months. Start trading with real capital quickly and efficiently.
-              </p>
+              </ScrollReveal>
             </div>
           </motion.div>
 
@@ -416,37 +891,21 @@ export function Features() {
               <h3 className="text-xl md:text-2xl font-semibold text-white">
                 High Profit Split
               </h3>
-              <p className="text-white/60 text-base leading-relaxed">
+              <ScrollReveal
+                baseOpacity={0.2}
+                enableBlur
+                baseRotation={1}
+                blurStrength={2}
+                textClassName="text-base text-white/60 leading-relaxed"
+              >
                 Keep up to 90% of your profits. Industry-leading splits for successful traders.
-              </p>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.6 }}
-            className="apple-card rounded-3xl p-8 md:p-10 md:col-span-2 flex items-center justify-center min-h-[400px] overflow-hidden"
-          >
-            <div className="relative w-full h-full flex items-center justify-center">
-              <Globe reducedMotion={shouldSkipHeavyEffects} />
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="text-center space-y-4">
-                  <h3 className="text-3xl md:text-4xl font-semibold text-white">
-                    Global Trading Network
-                  </h3>
-                  <p className="text-white/60 text-lg max-w-lg mx-auto">
-                    Join thousands of traders worldwide. Trade from anywhere, anytime.
-                  </p>
-                </div>
-              </div>
+              </ScrollReveal>
             </div>
           </motion.div>
         </>
       </div>
 
-      {/* Bottom CTA Section - More compact */}
+      {/* Bottom CTA Section - Visible on all devices */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -454,17 +913,33 @@ export function Features() {
         className="max-w-7xl mx-auto mt-6 md:mt-8"
       >
         <div className="apple-card rounded-3xl p-6 md:p-12 text-center">
-          <h3 className="text-xl md:text-4xl font-semibold text-white mb-3 md:mb-4">
-            Sign up a broker account
-          </h3>
-          <p className="text-white/60 text-sm md:text-lg mb-6 md:mb-8 max-w-2xl mx-auto">
-            Start your journey today with exclusive benefits.
-          </p>
+          <ShinyText
+            text="✨ Start Your Trading Journey"
+            speed={3}
+            delay={1}
+            color="#b5b5b5"
+            shineColor="#ffffff"
+            spread={120}
+            direction="left"
+            yoyo={true}
+            className="text-xl md:text-4xl font-semibold mb-3 md:mb-4"
+          />
+          <div className="max-w-2xl mx-auto mb-6 md:mb-8">
+            <ScrollReveal
+              baseOpacity={0.2}
+              enableBlur
+              baseRotation={2}
+              blurStrength={3}
+              textClassName="text-sm md:text-lg text-white/60"
+            >
+              Live trade calls, daily analysis, mentorship from funded traders. Since 2024.
+            </ScrollReveal>
+          </div>
           <button
             onClick={() => setShowSignupModal(true)}
             className="apple-button px-6 py-3 md:px-8 md:py-4 rounded-full text-sm md:text-base font-medium inline-flex items-center gap-2 mx-auto"
           >
-            Sign Up Now
+            Join Free
             <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
@@ -551,7 +1026,7 @@ const Globe = ({ reducedMotion = false }: { reducedMotion?: boolean }) => {
         maxWidth: "100%",
         aspectRatio: 1,
       }}
-      className="pointer-events-none opacity-30"
+      className="pointer-events-none opacity-50"
     />
   );
 };

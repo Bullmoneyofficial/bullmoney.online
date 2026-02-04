@@ -288,6 +288,10 @@ export const UltimateHubNewsTab = memo(() => {
   const [previews, setPreviews] = useState<Record<string, { image?: string }>>({});
   const fetchingRef = useRef<Set<string>>(new Set());
 
+  useEffect(() => {
+    setShowFilters(!isMobile);
+  }, [isMobile]);
+
   // Fetch link preview for images
   const fetchPreview = useCallback(async (url: string) => {
     if (fetchingRef.current.has(url) || previews[url]) return;

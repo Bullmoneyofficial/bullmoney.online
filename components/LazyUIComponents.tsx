@@ -36,6 +36,9 @@ const BullFeedModalLazy = lazy(() => import("@/components/bull-feed/BullFeedModa
 // Analysis & Charts - Import the actual modal content, not the trigger
 const EnhancedAnalysisModalLazy = lazy(() => import("@/components/analysis-enhanced/EnhancedAnalysisModal").then(m => ({ default: m.EnhancedAnalysisModal })));
 
+// Chart News - Market analysis hub with charts and news
+const ChartNewsModalLazy = lazy(() => import("@/components/ChartNewsModal").then(m => ({ default: m.ChartNewsModal })));
+
 // Live & Products - These modals use UIStateContext internally
 const LiveStreamModalLazy = lazy(() => import("@/components/LiveStreamModal").then(m => ({ default: m.LiveStreamModal })));
 const ProductsModalLazy = lazy(() => import("@/components/ProductsModal").then(m => ({ default: m.ProductsModal })));
@@ -173,6 +176,29 @@ export const LazyAnalysisModal = memo(function LazyAnalysisModal({
   return (
     <Suspense fallback={<ModalLoadingFallback text="Loading Analysis..." />}>
       <EnhancedAnalysisModalLazy />
+    </Suspense>
+  );
+});
+
+// ============================================================================
+// LAZY CHART NEWS MODAL
+// Note: ChartNewsModal manages its own state via UIStateContext
+// This wrapper just handles the lazy loading aspect
+// ============================================================================
+
+export const LazyChartNewsModal = memo(function LazyChartNewsModal({ 
+  isOpen, 
+  onClose 
+}: { isOpen: boolean; onClose: () => void }) {
+  const { shouldRender } = useSmartMount(isOpen);
+
+  if (!shouldRender) return null;
+
+  // The ChartNewsModal internally uses useChartNewsUI() hook
+  // which reads from the same UIStateContext, so it will be in sync
+  return (
+    <Suspense fallback={<ModalLoadingFallback text="Loading Charts..." />}>
+      <ChartNewsModalLazy />
     </Suspense>
   );
 });

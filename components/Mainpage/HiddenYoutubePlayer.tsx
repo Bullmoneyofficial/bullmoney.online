@@ -47,7 +47,15 @@ const HiddenYouTubePlayer = ({
   const [shouldMuteAfterFirstPlay, setShouldMuteAfterFirstPlay] = useState(false);
   // Use iframeVolume for separate iframe volume control
   const resolvedVolume = typeof volume === 'number' ? volume : Math.round(audioSettings.iframeVolume * 100);
-  const effectiveVolume = audioSettings.musicEnabled ? resolvedVolume : 0;
+  const allowMusic = audioSettings.allowedChannel === "all" || audioSettings.allowedChannel === "music";
+  const effectiveVolume = audioSettings.musicEnabled && !audioSettings.masterMuted && allowMusic ? resolvedVolume : 0;
+
+  // If this player is asked to play, make it the active audio channel
+  useEffect(() => {
+    if (isPlaying) {
+      audioSettings.setAllowedChannel("music");
+    }
+  }, [isPlaying, audioSettings]);
 
   // 1. INITIALIZE PLAYER (Only runs when videoId changes, forcing a rebuild)
   useEffect(() => {

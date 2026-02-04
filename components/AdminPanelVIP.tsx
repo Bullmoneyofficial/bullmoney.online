@@ -127,6 +127,8 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
           is_vip: true, // Admin users have VIP access
           timestamp: Date.now(),
         }));
+        window.dispatchEvent(new Event('bullmoney_session_changed'));
+        window.dispatchEvent(new Event('admin_token_changed'));
         
         console.log('✓ Admin authenticated:', email);
         fetchAllData();

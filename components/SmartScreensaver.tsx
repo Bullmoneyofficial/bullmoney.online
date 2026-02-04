@@ -640,20 +640,20 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
       window.addEventListener(event, updateActivity, { passive: true });
     });
     
-    // Check idle status every 5 seconds (1 second in dev for faster testing)
-    const checkInterval = process.env.NODE_ENV === 'development' ? 1000 : 5000;
+    // Check idle status every 5 seconds
+    const checkInterval = 5000;
     idleCheckIntervalRef.current = setInterval(() => {
       const now = Date.now();
       const idleTime = now - lastActivityRef.current;
-      // 10 seconds in dev, 5 minutes in production
-      const IDLE_THRESHOLD = process.env.NODE_ENV === 'development' ? 10000 : 300000;
+      // 5 minutes in both dev and production
+      const IDLE_THRESHOLD = 300000;
       
       if (idleTime >= IDLE_THRESHOLD && !isScreensaverActive) {
         console.log('[BULLMONEY] User idle detected - triggering cleanup and screensaver');
         performIdleCleanup();
         
         // Only show screensaver after the actual idle threshold is met
-        console.log(`[BULLMONEY] 🖥️ Showing screensaver - user idle for ${process.env.NODE_ENV === 'development' ? '10 seconds (dev)' : '5+ minutes'}`);
+        console.log('[BULLMONEY] 🖥️ Showing screensaver - user idle for 5+ minutes');
         setIsScreensaverActive(true);
         setIsScreensaverPermanent(false);
         setScreensaverFadingOut(false);

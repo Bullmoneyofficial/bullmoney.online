@@ -1478,6 +1478,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   onOpenPanel={() => setIsHubOpen(true)}
                   topOffsetMobile="calc(env(safe-area-inset-top, 0px) + 100px)"
                   topOffsetDesktop="calc(env(safe-area-inset-top, 0px) + 110px)"
+                  mobileAlignment="center"
                 />
               </motion.div>
 
@@ -1618,6 +1619,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 onOpenPanel={() => setIsHubOpen(true)}
                 topOffsetMobile="calc(env(safe-area-inset-top, 0px) + 100px)"
                 topOffsetDesktop="calc(env(safe-area-inset-top, 0px) + 110px)"
+                mobileAlignment="left"
               />
             </motion.div>
 

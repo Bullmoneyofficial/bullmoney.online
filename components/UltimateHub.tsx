@@ -29,39 +29,61 @@ import { useDesktopPerformance, useUnifiedPerformance } from '@/hooks/useDesktop
 import { initializeFpsMeasurement } from '@/lib/FpsMeasurement';
 import { detectBrowserCapabilities, selectOptimalMeasurementConfig } from '@/lib/FpsCompatibility';
 
-// --- GLOBAL NEON BLUE STYLES (Neon Blue Sign Style) ---
+// --- GLOBAL GLASS STYLES (iPhone-style black/white) ---
 const GLOBAL_NEON_STYLES = `
-  .neon-blue-text {
-    color: #ffffff;
-    text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
-  }
-
+  .neon-blue-text,
   .neon-white-text {
-    color: #ffffff;
-    text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
+    color: rgba(255, 255, 255, 0.92);
+    text-shadow: none !important;
   }
 
-  .neon-white-icon {
-    filter: drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff);
-  }
-
+  .neon-white-icon,
   .neon-blue-icon {
-    filter: drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff);
+    filter: none !important;
+    color: rgba(255, 255, 255, 0.9);
   }
 
-  .neon-blue-border {
-    border: 2px solid #ffffff;
-    box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, inset 0 0 4px #ffffff;
+  .neon-blue-border,
+  .neon-subtle-border {
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 18px 40px rgba(0, 0, 0, 0.45);
   }
 
   .neon-blue-bg {
-    background: #ffffff;
-    box-shadow: 0 0 8px #ffffff, 0 0 16px #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
   }
 
-  .neon-subtle-border {
-    border: 1px solid rgba(255, 255, 255, 0.8);
-    box-shadow: 0 0 4px #ffffff, inset 0 0 4px #ffffff;
+  .glass-panel {
+    background: linear-gradient(135deg, rgba(8, 8, 10, 0.92), rgba(20, 20, 24, 0.82));
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(20px) saturate(140%);
+  }
+
+  .glass-surface {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(16px) saturate(130%);
+  }
+
+  .glass-chip {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-button {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  .animate-neon-pulse-optimized,
+  .animate-neon-pulse-red {
+    animation: none !important;
+    text-shadow: none !important;
   }
 
   .gpu-layer {
@@ -310,7 +332,7 @@ type ModalType =
   | 'browser'
   | 'devicePanel';
 
-type ChannelKey = 'trades' | 'main' | 'shop' | 'vip';
+type ChannelKey = 'trades' | 'main' | 'shop' | 'vip' | 'vip2';
 type DevicePanelTab = 'overview' | 'network' | 'performance' | 'account';
 
 // Calendar filter types
@@ -334,8 +356,326 @@ const TELEGRAM_CHANNELS = {
   trades: { name: 'FREE TRADES', handle: 'bullmoneywebsite', icon: TrendingUp, color: 'cyan', requiresVip: false },
   main: { name: 'LIVESTREAMS', handle: 'bullmoneyfx', icon: MessageCircle, color: 'blue', requiresVip: false },
   shop: { name: 'NEWS', handle: 'Bullmoneyshop', icon: ShoppingBag, color: 'emerald', requiresVip: false },
-  vip: { name: 'VIP TRADES', handle: '+yW5jIfxJpv9hNmY0', icon: Crown, color: 'amber', requiresVip: true, isPrivate: true },
+  vip: { name: 'VIP TRADES', handle: '+yW5jIfxJpv9hNmY0', icon: Crown, color: 'blue', requiresVip: true, isPrivate: true },
+  vip2: { name: 'VIP SIGNALS', handle: '+uvegzpHfYdU2ZTZk', icon: Crown, color: 'blue', requiresVip: true, isPrivate: true },
 } as const;
+
+// Extended channel type that includes admin
+type ExtendedChannelKey = ChannelKey | 'admin' | 'vip2';
+
+// Channel keys array for carousel navigation (includes admin)
+const EXTENDED_CHANNEL_KEYS: ExtendedChannelKey[] = ['trades', 'shop', 'vip2', 'vip', 'admin'];
+
+// Extended channel info (only the ones we show in carousel)
+const EXTENDED_CHANNELS: { [key in ExtendedChannelKey]?: { name: string; icon: typeof TrendingUp; color: string; requiresVip?: boolean; isAdmin?: boolean } } = {
+  trades: { name: 'FREE GROUPS', icon: TrendingUp, color: 'blue' },
+  shop: { name: 'NEWS', icon: Newspaper, color: 'blue' },
+  vip2: { name: 'VIP SIGNALS', icon: Crown, color: 'blue', requiresVip: true },
+  vip: { name: 'VIP GROUP', icon: Crown, color: 'blue', requiresVip: true },
+  admin: { name: 'ADMIN', icon: Shield, color: 'blue', isAdmin: true },
+};
+
+// ============================================================================
+// CHANNEL CAROUSEL COMPONENT - Swipeable single-channel selector with favorites
+// ============================================================================
+interface ChannelCarouselProps {
+  activeChannel: ChannelKey;
+  setActiveChannel: (channel: ChannelKey) => void;
+  isVip: boolean;
+  isAdmin: boolean;
+  onClose?: () => void;
+  onAdminClick?: () => void;
+}
+
+const ChannelCarousel = memo(({ 
+  activeChannel, 
+  setActiveChannel, 
+  isVip, 
+  isAdmin, 
+  onClose,
+  onAdminClick 
+}: ChannelCarouselProps) => {
+  // Extended active channel to include admin
+  const [extendedActiveChannel, setExtendedActiveChannel] = useState<ExtendedChannelKey>(activeChannel);
+  const [favoriteChannel, setFavoriteChannel] = useState<ExtendedChannelKey | null>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('favorite_channel') as ExtendedChannelKey) || null;
+    }
+    return null;
+  });
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  
+  // Sync external activeChannel with extendedActiveChannel
+  useEffect(() => {
+    if (extendedActiveChannel !== 'admin' && extendedActiveChannel !== activeChannel) {
+      setExtendedActiveChannel(activeChannel);
+    }
+  }, [activeChannel, extendedActiveChannel]);
+  
+  const currentIndex = EXTENDED_CHANNEL_KEYS.indexOf(extendedActiveChannel);
+  const ch = EXTENDED_CHANNELS[extendedActiveChannel] || { name: 'Unknown', icon: TrendingUp, color: 'blue' };
+  const Icon = ch.icon;
+  const isLocked = ch.requiresVip && !isVip;
+  const isAdminTab = extendedActiveChannel === 'admin';
+  
+  // Navigate to previous channel
+  const goToPrev = useCallback(() => {
+    const prevIndex = currentIndex > 0 ? currentIndex - 1 : EXTENDED_CHANNEL_KEYS.length - 1;
+    const newChannel = EXTENDED_CHANNEL_KEYS[prevIndex];
+    setExtendedActiveChannel(newChannel);
+    if (newChannel !== 'admin') {
+      setActiveChannel(newChannel as ChannelKey);
+    }
+  }, [currentIndex, setActiveChannel]);
+  
+  // Navigate to next channel
+  const goToNext = useCallback(() => {
+    const nextIndex = currentIndex < EXTENDED_CHANNEL_KEYS.length - 1 ? currentIndex + 1 : 0;
+    const newChannel = EXTENDED_CHANNEL_KEYS[nextIndex];
+    setExtendedActiveChannel(newChannel);
+    if (newChannel !== 'admin') {
+      setActiveChannel(newChannel as ChannelKey);
+    }
+  }, [currentIndex, setActiveChannel]);
+  
+  // Toggle favorite channel
+  const toggleFavorite = useCallback(() => {
+    const newFav = favoriteChannel === extendedActiveChannel ? null : extendedActiveChannel;
+    setFavoriteChannel(newFav);
+    if (typeof window !== 'undefined') {
+      if (newFav) {
+        localStorage.setItem('favorite_channel', newFav);
+      } else {
+        localStorage.removeItem('favorite_channel');
+      }
+    }
+  }, [extendedActiveChannel, favoriteChannel]);
+  
+  // Go to favorite channel
+  const goToFavorite = useCallback(() => {
+    if (favoriteChannel) {
+      setExtendedActiveChannel(favoriteChannel);
+      if (favoriteChannel !== 'admin') {
+        setActiveChannel(favoriteChannel as ChannelKey);
+      }
+    }
+  }, [favoriteChannel, setActiveChannel]);
+  
+  // Load favorite on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('favorite_channel') as ExtendedChannelKey | null;
+      if (saved && EXTENDED_CHANNEL_KEYS.includes(saved)) {
+        setFavoriteChannel(saved);
+      }
+    }
+  }, []);
+  
+  // Touch/swipe handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+    setIsDragging(true);
+  };
+  
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartX) return;
+    e.stopPropagation();
+  };
+  
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartX || !isDragging) return;
+    
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX - touchEndX;
+    const threshold = 50;
+    
+    if (Math.abs(diff) > threshold) {
+      if (diff > 0) {
+        goToNext();
+      } else {
+        goToPrev();
+      }
+    }
+    
+    setTouchStartX(null);
+    setIsDragging(false);
+  };
+  
+  // Mouse drag handlers for desktop
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setTouchStartX(e.clientX);
+    setIsDragging(true);
+  };
+  
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    e.preventDefault();
+  };
+  
+  const handleMouseUp = (e: React.MouseEvent) => {
+    if (!touchStartX || !isDragging) return;
+    
+    const diff = touchStartX - e.clientX;
+    const threshold = 50;
+    
+    if (Math.abs(diff) > threshold) {
+      if (diff > 0) {
+        goToNext();
+      } else {
+        goToPrev();
+      }
+    }
+    
+    setTouchStartX(null);
+    setIsDragging(false);
+  };
+  
+  const handleMouseLeave = () => {
+    if (isDragging) {
+      setTouchStartX(null);
+      setIsDragging(false);
+    }
+  };
+  
+  // Handle click on admin tab
+  const handleAdminClick = () => {
+    if (isAdminTab) {
+      if (onAdminClick) {
+        onAdminClick();
+      } else {
+        window.dispatchEvent(new CustomEvent('openAdminVIPPanel'));
+        if (onClose) onClose();
+      }
+    }
+  };
+
+  const isFavorite = favoriteChannel === extendedActiveChannel;
+  const hasFavorite = favoriteChannel !== null;
+
+  return (
+    <div className="w-full max-w-[1100px] mx-auto flex flex-col gap-1 p-1 sm:p-2 border-b border-blue-500/30 flex-shrink-0 bg-black/95 backdrop-blur-2xl relative"
+      style={{ boxShadow: '0 0 12px rgba(59, 130, 246, 0.3), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
+      {/* Main Carousel Row */}
+      <div className="flex items-center gap-1 sm:gap-1.5 justify-center">
+        {/* Favorite Button - Blue, goes to saved favorite */}
+        <motion.button
+          onClick={hasFavorite ? goToFavorite : undefined}
+          whileHover={{ scale: hasFavorite ? 1.1 : 1 }}
+          whileTap={{ scale: hasFavorite ? 0.95 : 1 }}
+          className={`flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl border transition-all flex-shrink-0 ${
+            hasFavorite
+              ? 'bg-blue-500/30 border-blue-400/70 text-blue-400 cursor-pointer'
+              : 'bg-blue-500/10 border-blue-400/30 text-blue-400/40 cursor-default'
+          }`}
+          style={hasFavorite ? { boxShadow: '0 0 14px rgba(59, 130, 246, 0.6)' } : {}}
+          title={hasFavorite ? `Go to favorite: ${EXTENDED_CHANNELS[favoriteChannel!]?.name || 'Unknown'}` : 'No favorite set'}
+        >
+          <Star className={`w-3.5 h-3.5 sm:w-6 sm:h-6 ${hasFavorite ? 'fill-blue-400' : ''}`} />
+        </motion.button>
+        
+        {/* Left Arrow */}
+        <motion.button
+          onClick={goToPrev}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          className="flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-blue-500/20 border border-blue-400/50 text-blue-400 hover:bg-blue-500/30 transition-all flex-shrink-0"
+          style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)' }}
+        >
+          <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+        </motion.button>
+        
+        {/* Channel Display - Swipeable */}
+        <motion.div
+          key={extendedActiveChannel}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.2 }}
+          className="flex-1 min-w-0 flex items-center justify-center cursor-grab active:cursor-grabbing select-none relative"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseLeave}
+          onClick={handleAdminClick}
+          style={{ touchAction: 'pan-y' }}
+        >
+          <div 
+            className={`flex items-center gap-2 sm:gap-3 px-2 sm:px-4 py-1 sm:py-2 rounded-lg sm:rounded-xl border backdrop-blur-xl transition-all ${
+              isAdminTab 
+                ? 'bg-blue-500/30 border-blue-400/70' 
+                : 'bg-blue-500/20 border-blue-400/50'
+            }`}
+            style={{ boxShadow: '0 0 16px rgba(59, 130, 246, 0.5)' }}
+          >
+            <Icon className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-blue-400" style={{ filter: 'drop-shadow(0 0 6px rgba(59, 130, 246, 0.8))' }} />
+            <span className="text-[11px] sm:text-base font-bold text-blue-400 whitespace-nowrap" style={{ textShadow: '0 0 8px rgba(59, 130, 246, 0.8)' }}>{ch.name}</span>
+            {isLocked && <Lock className="w-3 h-3 sm:w-4 sm:h-4 text-blue-400/60" />}
+            {isAdminTab && <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 text-blue-400/80" />}
+            
+            {/* Set as Favorite Button */}
+            <motion.button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleFavorite();
+              }}
+              whileHover={{ scale: 1.2 }}
+              whileTap={{ scale: 0.9 }}
+              className={`ml-0.5 sm:ml-1 p-1 sm:p-1.5 rounded-full transition-all ${
+                isFavorite 
+                  ? 'text-blue-400 bg-blue-500/30' 
+                  : 'text-blue-400/40 hover:text-blue-400 hover:bg-blue-500/20'
+              }`}
+              title={isFavorite ? 'Remove from favorites' : 'Set as favorite'}
+            >
+              <Star className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isFavorite ? 'fill-blue-400' : ''}`} />
+            </motion.button>
+          </div>
+        </motion.div>
+        
+        {/* Right Arrow */}
+        <motion.button
+          onClick={goToNext}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          className="flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-blue-500/20 border border-blue-400/50 text-blue-400 hover:bg-blue-500/30 transition-all flex-shrink-0"
+          style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)' }}
+        >
+          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+        </motion.button>
+      </div>
+      
+      {/* Channel indicator dots */}
+      <div className="flex justify-center gap-1 sm:gap-1.5">
+        {EXTENDED_CHANNEL_KEYS.map((key, idx) => (
+          <motion.button
+            key={key}
+            onClick={() => {
+              setExtendedActiveChannel(key);
+              if (key !== 'admin') {
+                setActiveChannel(key as ChannelKey);
+              }
+            }}
+            whileHover={{ scale: 1.2 }}
+            whileTap={{ scale: 0.9 }}
+            className={`rounded-full transition-all ${
+              idx === currentIndex 
+                ? 'w-3.5 sm:w-5 h-1.5 sm:h-2 bg-blue-400' 
+                : key === favoriteChannel 
+                  ? 'w-2 h-2 sm:w-2.5 sm:h-2.5 bg-blue-400/60' 
+                  : 'w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-400/30 hover:bg-blue-400/50'
+            }`}
+            style={idx === currentIndex ? { boxShadow: '0 0 8px rgba(59, 130, 246, 0.8)' } : {}}
+          />
+        ))}
+      </div>
+    </div>
+  );
+});
+ChannelCarousel.displayName = 'ChannelCarousel';
 
 const BROWSERS = [
   {
@@ -2726,14 +3066,20 @@ const DeviceCenterPanel = memo(({
                   <p className="text-[9px] text-zinc-400">Real-time system info</p>
                 </div>
               </div>
-              <motion.button
-                whileHover={{ scale: 1.1, rotate: 90 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={onClose}
-                className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/40 border border-white/30 flex items-center justify-center neon-blue-border"
-              >
-                <X className="w-4 h-4 neon-blue-icon" />
-              </motion.button>
+              <div className="flex items-center gap-2">
+                {/* 🔔 Notification Bell - Compact Icon */}
+                <div onClick={(e) => e.stopPropagation()} className="flex items-center">
+                  <NotificationBadge />
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={onClose}
+                  className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/40 border border-white/30 flex items-center justify-center neon-blue-border"
+                >
+                  <X className="w-4 h-4 neon-blue-icon" />
+                </motion.button>
+              </div>
             </div>
 
             {/* FPS Display */}
@@ -3454,8 +3800,8 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false, onNewMessa
   if (requiresVip) {
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-        <div className="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center mb-4">
-          <Lock className="w-8 h-8 text-amber-400" />
+        <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center mb-4">
+          <Lock className="w-8 h-8 text-blue-400" />
         </div>
         <h4 className="text-sm font-bold text-white mb-2">VIP Content</h4>
         <p className="text-[10px] text-zinc-400 mb-4 max-w-[200px]">
@@ -3485,7 +3831,7 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false, onNewMessa
     return (
       <div className="flex flex-col items-center justify-center py-8 px-4">
         <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${
-          isVipChannel ? 'bg-gradient-to-r from-amber-500 to-orange-500' : 'bg-white/20'
+          isVipChannel ? 'bg-gradient-to-r from-blue-500 to-cyan-500' : 'bg-white/20'
         }`}>
           {isVipChannel ? (
             <Crown className="w-6 h-6 text-white" />
@@ -3555,12 +3901,12 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false, onNewMessa
         >
           <div className="flex items-start gap-2">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 bg-gradient-to-br ${
-              channel === 'vip' ? 'from-amber-500 to-orange-500' :
+              channel === 'vip' ? 'from-blue-500 to-cyan-500' :
               channel === 'shop' ? 'from-white to-teal-500' :
               channel === 'trades' ? 'from-white to-white' :
               'from-white to-white'
             }`}>
-              {channel === 'vip' ? <Star className="w-4 h-4" /> : 
+              {channel === 'vip' ? <Star className="w-4 h-4 text-blue-400" /> : 
                channel === 'shop' ? <ShoppingBag className="w-4 h-4" /> : 
                channel === 'trades' ? <TrendingUp className="w-4 h-4" /> : 'B'}
             </div>
@@ -4005,6 +4351,10 @@ const CommunityModal = memo(({ isOpen, onClose, isVip, isAdmin }: {
             <h3 className="text-sm font-bold text-white">Live Community</h3>
           </div>
           <div className="flex items-center gap-1.5">
+            {/* 🔔 Notification Bell - Compact Icon */}
+            <div onClick={(e) => e.stopPropagation()} className="flex items-center">
+              <NotificationBadge />
+            </div>
             <motion.div className="w-1.5 h-1.5 bg-white rounded-full"
               animate={{ opacity: [1, 0.4, 1] }}
               transition={{ duration: 1.5, repeat: Infinity }} />
@@ -4021,61 +4371,14 @@ const CommunityModal = memo(({ isOpen, onClose, isVip, isAdmin }: {
         </div>
       </div>
 
-      {/* 🔔 NOTIFICATION SETTINGS - Full control over push notifications */}
-      <div 
-        className="px-2 py-1.5 border-b border-white/5 relative z-10"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <NotificationToggle showChannelSettings={true} />
-      </div>
-
-      {/* Channel Tabs */}
-      <div className="flex items-center gap-1 p-2 border-b border-white/10 overflow-x-auto overflow-y-hidden min-h-[44px] flex-shrink-0 scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ touchAction: 'pan-x pinch-zoom' }}>
-        {(Object.keys(TELEGRAM_CHANNELS) as ChannelKey[]).map(key => {
-          const ch = TELEGRAM_CHANNELS[key];
-          const Icon = ch.icon;
-          const isActive = activeChannel === key;
-          const isLocked = ch.requiresVip && !isVip;
-          
-          return (
-            <button
-              key={key}
-              onClick={() => setActiveChannel(key)}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all whitespace-nowrap flex-shrink-0 min-h-[44px] ${
-                isActive
-                  ? ch.color === 'amber' ? 'bg-amber-500/30 text-amber-300 border border-amber-500/40'
-                  : ch.color === 'emerald' ? 'bg-white/30 text-white border border-white/40'
-                  : ch.color === 'cyan' ? 'bg-white/30 text-white border border-white/40'
-                  : 'bg-white/30 text-white border border-white/40'
-                  : 'bg-white/5 text-zinc-400 border border-transparent hover:bg-white/10'
-              }`}
-            >
-              <Icon className="w-3.5 h-3.5" />
-              <span>{ch.name}</span>
-              {isLocked && <Lock className="w-2.5 h-2.5 opacity-60" />}
-            </button>
-          );
-        })}
-        
-        {/* Notification Badge - Quick toggle */}
-        <NotificationBadge />
-        
-        {/* Admin Button */}
-        <motion.button
-          onClick={() => {
-            window.dispatchEvent(new CustomEvent('openAdminVIPPanel'));
-            onClose();
-          }}
-          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ml-auto flex-shrink-0 ${
-            isAdmin 
-              ? 'bg-gradient-to-r from-white to-white text-white border border-white/60'
-              : 'bg-zinc-800/80 text-zinc-300 border border-zinc-600/40'
-          }`}
-        >
-          <Shield className="w-3.5 h-3.5" />
-          <span>Admin</span>
-        </motion.button>
-      </div>
+      {/* Channel Carousel - Swipeable single button with left/right nav and favorites */}
+      <ChannelCarousel
+        activeChannel={activeChannel}
+        setActiveChannel={setActiveChannel}
+        isVip={isVip}
+        isAdmin={isAdmin}
+        onClose={onClose}
+      />
 
       {/* Feed */}
       <div className="flex-1 overflow-y-auto min-h-0 [-webkit-overflow-scrolling:touch]" style={{ touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }} data-scrollable>
@@ -4084,30 +4387,35 @@ const CommunityModal = memo(({ isOpen, onClose, isVip, isAdmin }: {
 
       {/* View All Link */}
       {activeChannel !== 'vip' && (
-        <div className="flex-shrink-0 px-3 py-1.5 border-t border-white/10">
-          <a href={`https://t.me/${TELEGRAM_CHANNELS[activeChannel].handle}`}
-            target="_blank" rel="noopener noreferrer"
-            className="flex items-center justify-center gap-1 text-[9px] text-white hover:text-white">
-            <ExternalLink className="w-2.5 h-2.5" /> View all on Telegram
-          </a>
+        <div className="flex-shrink-0 px-2 sm:px-3 py-1 sm:py-1.5 border-t border-white/10 relative z-50">
+          <motion.a 
+            href={`https://t.me/${TELEGRAM_CHANNELS[activeChannel].handle}`}
+            target="_blank" 
+            rel="noopener noreferrer"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="inline-flex items-center justify-center gap-1 text-[8px] sm:text-[9px] text-white hover:text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-md bg-white/10 hover:bg-white/20 border border-white/20 relative z-50"
+          >
+            <ExternalLink className="w-2 h-2 sm:w-2.5 sm:h-2.5" /> Open in Browser
+          </motion.a>
         </div>
       )}
 
       {/* Social Links */}
-      <div className="flex-shrink-0 p-3 space-y-1.5 border-t border-white/20">
-        <div className="flex gap-2">
+      <div className="flex-shrink-0 p-2 sm:p-3 space-y-1 sm:space-y-1.5 border-t border-white/20">
+        <div className="flex gap-1.5 sm:gap-2">
           <motion.button
             onClick={handleCopyLink}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-gradient-to-r from-white to-white text-white font-semibold text-xs"
+            className="flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 sm:py-2 px-2 sm:px-3 rounded-md sm:rounded-lg bg-gradient-to-r from-white to-white text-white font-semibold text-[10px] sm:text-xs"
           >
-            {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+            {copied ? <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> : <Copy className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
             {copied ? 'Copied!' : 'Copy Link'}
           </motion.button>
         </div>
         
-        <div className="grid grid-cols-2 sm:grid-cols-2 gap-1.5">
+        <div className="grid grid-cols-2 sm:grid-cols-2 gap-1 sm:gap-1.5">
           {socialLinks.map(link => {
             const Icon = link.icon;
             return (
@@ -4116,11 +4424,13 @@ const CommunityModal = memo(({ isOpen, onClose, isVip, isAdmin }: {
                 href={link.url}
                 target="_blank"
                 rel="noopener noreferrer"
+                onPointerDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-gradient-to-r ${link.color} text-white font-semibold text-xs`}
+                className={`flex items-center justify-center gap-0.5 sm:gap-1 py-1 sm:py-1 px-1.5 sm:px-2 rounded-md bg-gradient-to-r ${link.color} text-white font-semibold text-[10px] sm:text-xs`}
               >
-                <Icon className="w-3.5 h-3.5" />
+                <Icon className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" />
                 {link.name}
               </motion.a>
             );
@@ -4438,6 +4748,550 @@ const UNIFIED_HUB_TABS: { id: UnifiedHubTab; label: string; icon: typeof Trendin
 ];
 
 // ============================================================================
+// HUB TAB CAROUSEL - Smart swipeable tab selector with quick-jump & hold features
+// ============================================================================
+interface HubTabCarouselProps {
+  activeTab: UnifiedHubTab;
+  setActiveTab: (tab: UnifiedHubTab) => void;
+  isDesktopFloating?: boolean;
+}
+
+const HubTabCarousel = memo(({ activeTab, setActiveTab, isDesktopFloating = false }: HubTabCarouselProps) => {
+  const [favoriteTab, setFavoriteTab] = useState<UnifiedHubTab | null>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('favorite_hub_tab') as UnifiedHubTab) || null;
+    }
+    return null;
+  });
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [showQuickJump, setShowQuickJump] = useState(false);
+  const [hoveredDot, setHoveredDot] = useState<number | null>(null);
+  const [isHoldingLeft, setIsHoldingLeft] = useState(false);
+  const [isHoldingRight, setIsHoldingRight] = useState(false);
+  const holdIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const holdTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastClickRef = useRef<number>(0);
+  const quickJumpRef = useRef<HTMLDivElement>(null);
+  
+  const currentIndex = UNIFIED_HUB_TABS.findIndex(t => t.id === activeTab);
+  const currentTab = UNIFIED_HUB_TABS[currentIndex];
+  const Icon = currentTab?.icon || MessageSquare;
+  const prevTab = UNIFIED_HUB_TABS[currentIndex > 0 ? currentIndex - 1 : UNIFIED_HUB_TABS.length - 1];
+  const nextTab = UNIFIED_HUB_TABS[currentIndex < UNIFIED_HUB_TABS.length - 1 ? currentIndex + 1 : 0];
+  
+  // Navigate to previous tab
+  const goToPrev = useCallback(() => {
+    const prevIndex = currentIndex > 0 ? currentIndex - 1 : UNIFIED_HUB_TABS.length - 1;
+    setActiveTab(UNIFIED_HUB_TABS[prevIndex].id);
+    SoundEffects.click();
+  }, [currentIndex, setActiveTab]);
+  
+  // Navigate to next tab
+  const goToNext = useCallback(() => {
+    const nextIndex = currentIndex < UNIFIED_HUB_TABS.length - 1 ? currentIndex + 1 : 0;
+    setActiveTab(UNIFIED_HUB_TABS[nextIndex].id);
+    SoundEffects.click();
+  }, [currentIndex, setActiveTab]);
+  
+  // Jump to specific index
+  const jumpToIndex = useCallback((idx: number) => {
+    setActiveTab(UNIFIED_HUB_TABS[idx].id);
+    setShowQuickJump(false);
+    SoundEffects.success();
+  }, [setActiveTab]);
+  
+  // Toggle favorite
+  const toggleFavorite = useCallback(() => {
+    const newFav = favoriteTab === activeTab ? null : activeTab;
+    setFavoriteTab(newFav);
+    if (typeof window !== 'undefined') {
+      if (newFav) {
+        localStorage.setItem('favorite_hub_tab', newFav);
+      } else {
+        localStorage.removeItem('favorite_hub_tab');
+      }
+    }
+    SoundEffects.success();
+  }, [activeTab, favoriteTab]);
+  
+  // Go to favorite
+  const goToFavorite = useCallback(() => {
+    if (favoriteTab) {
+      setActiveTab(favoriteTab);
+      SoundEffects.click();
+    }
+  }, [favoriteTab, setActiveTab]);
+  
+  // Double-click handler for center area
+  const handleCenterClick = useCallback(() => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 300) {
+      // Double click - go to favorite
+      if (favoriteTab) {
+        setActiveTab(favoriteTab);
+        SoundEffects.success();
+      }
+    }
+    lastClickRef.current = now;
+  }, [favoriteTab, setActiveTab]);
+  
+  // Hold navigation - start
+  const startHold = useCallback((direction: 'left' | 'right') => {
+    if (direction === 'left') {
+      setIsHoldingLeft(true);
+      goToPrev();
+    } else {
+      setIsHoldingRight(true);
+      goToNext();
+    }
+    
+    // Start rapid navigation after 400ms hold
+    holdTimeoutRef.current = setTimeout(() => {
+      holdIntervalRef.current = setInterval(() => {
+        if (direction === 'left') goToPrev();
+        else goToNext();
+      }, 150);
+    }, 400);
+  }, [goToPrev, goToNext]);
+  
+  // Hold navigation - stop
+  const stopHold = useCallback(() => {
+    setIsHoldingLeft(false);
+    setIsHoldingRight(false);
+    if (holdTimeoutRef.current) clearTimeout(holdTimeoutRef.current);
+    if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
+    holdTimeoutRef.current = null;
+    holdIntervalRef.current = null;
+  }, []);
+  
+  // Cleanup intervals on unmount
+  useEffect(() => {
+    return () => {
+      if (holdTimeoutRef.current) clearTimeout(holdTimeoutRef.current);
+      if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
+    };
+  }, []);
+  
+  // Close quick jump when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (quickJumpRef.current && !quickJumpRef.current.contains(e.target as Node)) {
+        setShowQuickJump(false);
+      }
+    };
+    if (showQuickJump) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showQuickJump]);
+  
+  // Load favorite on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('favorite_hub_tab') as UnifiedHubTab | null;
+      if (saved && UNIFIED_HUB_TABS.some(t => t.id === saved)) {
+        setFavoriteTab(saved);
+      }
+    }
+  }, []);
+  
+  // Touch handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+    setIsDragging(true);
+  };
+  
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartX) return;
+    e.stopPropagation();
+  };
+  
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartX || !isDragging) return;
+    const diff = touchStartX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) goToNext();
+      else goToPrev();
+    }
+    setTouchStartX(null);
+    setIsDragging(false);
+  };
+  
+  // Mouse handlers for desktop swipe
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setTouchStartX(e.clientX);
+    setIsDragging(true);
+  };
+  
+  const handleMouseUp = (e: React.MouseEvent) => {
+    if (!touchStartX || !isDragging) return;
+    const diff = touchStartX - e.clientX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) goToNext();
+      else goToPrev();
+    }
+    setTouchStartX(null);
+    setIsDragging(false);
+    handleCenterClick();
+  };
+  
+  const handleMouseLeave = () => {
+    if (isDragging) {
+      setTouchStartX(null);
+      setIsDragging(false);
+    }
+  };
+
+  const isFavorite = favoriteTab === activeTab;
+  const hasFavorite = favoriteTab !== null;
+  const favoriteTabData = hasFavorite ? UNIFIED_HUB_TABS.find(t => t.id === favoriteTab) : null;
+  const PrevIcon = prevTab?.icon || MessageSquare;
+  const NextIcon = nextTab?.icon || MessageSquare;
+
+  // Desktop floating mode: Show all tabs in a horizontal row (excluding broker)
+  if (isDesktopFloating) {
+    const filteredTabs = UNIFIED_HUB_TABS.filter(tab => tab.id !== 'broker');
+    
+    const handleKeyDown = (e: React.KeyboardEvent, tabIndex: number) => {
+      const currentIdx = tabIndex;
+      let newIdx = currentIdx;
+      
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        newIdx = (currentIdx + 1) % filteredTabs.length;
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        newIdx = (currentIdx - 1 + filteredTabs.length) % filteredTabs.length;
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        newIdx = 0;
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        newIdx = filteredTabs.length - 1;
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        setActiveTab(filteredTabs[currentIdx].id);
+        return;
+      }
+      
+      if (newIdx !== currentIdx) {
+        // Focus the new tab
+        const buttons = document.querySelectorAll('[data-floating-tab]');
+        (buttons[newIdx] as HTMLElement)?.focus();
+      }
+    };
+
+    return (
+      <div className="flex items-center justify-between gap-1 p-2" role="tablist" aria-label="Hub navigation">
+        {filteredTabs.map((tab, index) => {
+          const TabIcon = tab.icon;
+          const isActive = tab.id === activeTab;
+          const isFav = tab.id === favoriteTab;
+          return (
+            <motion.button
+              key={tab.id}
+              data-floating-tab
+              role="tab"
+              aria-selected={isActive}
+              aria-label={`${tab.label}${isFav ? ' (favorite)' : ''}`}
+              tabIndex={isActive ? 0 : -1}
+              onClick={() => setActiveTab(tab.id)}
+              onKeyDown={(e) => handleKeyDown(e, index)}
+              onDoubleClick={() => {
+                if (favoriteTab === tab.id) {
+                  setFavoriteTab(null);
+                  localStorage.removeItem('favorite_hub_tab');
+                } else {
+                  setFavoriteTab(tab.id);
+                  localStorage.setItem('favorite_hub_tab', tab.id);
+                }
+              }}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              className={`group relative flex-1 flex items-center justify-center gap-2 px-2 py-2.5 rounded-xl border transition-all outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
+                isActive
+                  ? 'bg-blue-500/30 border-blue-400/70 text-blue-400'
+                  : 'bg-blue-500/10 border-blue-400/30 text-blue-400/60 hover:bg-blue-500/20 hover:border-blue-400/50 hover:text-blue-400'
+              }`}
+              style={isActive ? { boxShadow: '0 0 12px rgba(59, 130, 246, 0.5)' } : {}}
+            >
+              <span className={`flex items-center justify-center w-7 h-7 rounded-lg shrink-0 ${
+                isActive ? 'bg-blue-500/40 border border-blue-400/50' : 'bg-blue-500/20'
+              }`}>
+                <TabIcon className="w-4 h-4" style={isActive ? { filter: 'drop-shadow(0 0 3px rgba(59, 130, 246, 0.7))' } : {}} />
+              </span>
+              <span className={`text-xs font-semibold uppercase tracking-wide whitespace-nowrap hidden xl:block`} style={isActive ? { textShadow: '0 0 6px rgba(59, 130, 246, 0.7)' } : {}}>
+                {tab.label}
+              </span>
+              {isFav && (
+                <Star className="w-3 h-3 text-blue-400 fill-blue-400 shrink-0" />
+              )}
+              {/* Hover tooltip */}
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-blue-900/95 border border-blue-400/50 rounded-lg text-[10px] text-blue-300 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-[2147483649]">
+                {tab.label} {isFav && '⭐'}
+                <div className="text-[9px] text-blue-400/60">Double-click to {isFav ? 'unset' : 'set'} favorite</div>
+              </div>
+            </motion.button>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // Mobile/tablet: Keep the carousel navigation
+  return (
+    <div className="flex flex-col gap-1 p-1 sm:p-2 border-b border-blue-500/30 shrink-0 bg-black/95 backdrop-blur-2xl relative" style={{ boxShadow: '0 0 12px rgba(59, 130, 246, 0.3), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
+      {/* Main Carousel Row */}
+      <div className="flex items-center gap-1 sm:gap-1.5">
+        {/* Favorite Button */}
+        <motion.button
+          onClick={hasFavorite ? goToFavorite : undefined}
+          whileTap={{ scale: hasFavorite ? 0.9 : 1 }}
+          className={`group relative flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl border transition-all shrink-0 ${
+            hasFavorite
+              ? 'bg-blue-500/30 border-blue-400/70 text-blue-400 cursor-pointer'
+              : 'bg-blue-500/10 border-blue-400/30 text-blue-400/40 cursor-default'
+          }`}
+          style={hasFavorite ? { boxShadow: '0 0 8px rgba(59, 130, 246, 0.5)' } : {}}
+        >
+          <Star className={`w-3.5 h-3.5 sm:w-5 sm:h-5 ${hasFavorite ? 'fill-blue-400' : ''}`} />
+          {/* Hover tooltip - desktop only */}
+          {hasFavorite && (
+            <div className="hidden sm:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-blue-900/95 border border-blue-400/50 rounded-lg text-[10px] text-blue-300 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
+              ⭐ {favoriteTabData?.label}
+            </div>
+          )}
+        </motion.button>
+        
+        {/* Left Arrow */}
+        <motion.button
+          onMouseDown={() => startHold('left')}
+          onMouseUp={stopHold}
+          onMouseLeave={stopHold}
+          onTouchStart={() => startHold('left')}
+          onTouchEnd={stopHold}
+          animate={{ scale: isHoldingLeft ? 0.85 : 1 }}
+          className="group relative flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-blue-500/20 border border-blue-400/50 text-blue-400 active:bg-blue-500/40 transition-all shrink-0"
+          style={{ boxShadow: isHoldingLeft ? '0 0 12px rgba(59, 130, 246, 0.7)' : '0 0 6px rgba(59, 130, 246, 0.3)' }}
+        >
+          <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+          {/* Hover tooltip - desktop only */}
+          <div className="hidden sm:flex absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-blue-900/95 border border-blue-400/50 rounded-lg text-[10px] text-blue-300 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 items-center gap-1">
+            <PrevIcon className="w-3 h-3" />
+            {prevTab?.label}
+          </div>
+          {isHoldingLeft && (
+            <motion.div 
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="absolute inset-0 rounded-lg sm:rounded-xl border-2 border-blue-400 pointer-events-none"
+            />
+          )}
+        </motion.button>
+        
+        {/* Tab Display - Swipeable */}
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, x: 15 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -15 }}
+          transition={{ duration: 0.12 }}
+          className="flex-1 min-w-0 flex items-center justify-center cursor-grab active:cursor-grabbing select-none"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseLeave}
+          style={{ touchAction: 'pan-y' }}
+        >
+          <div 
+            className="group relative flex items-center gap-2 sm:gap-3 px-2 sm:px-4 py-1 sm:py-2 rounded-lg sm:rounded-xl bg-blue-500/25 border border-blue-400/60 backdrop-blur-xl active:bg-blue-500/35 transition-all max-w-full"
+            style={{ boxShadow: '0 0 10px rgba(59, 130, 246, 0.4)' }}
+          >
+            <span className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-blue-500/30 border border-blue-400/50 shrink-0">
+              <Icon className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-blue-400" style={{ filter: 'drop-shadow(0 0 3px rgba(59, 130, 246, 0.7))' }} />
+            </span>
+            <span className="text-[11px] sm:text-sm font-bold text-blue-400 whitespace-nowrap uppercase tracking-wide sm:tracking-wider truncate" style={{ textShadow: '0 0 6px rgba(59, 130, 246, 0.7)' }}>
+              {currentTab?.label}
+            </span>
+            
+            {/* Set as Favorite */}
+            <motion.button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleFavorite();
+              }}
+              whileTap={{ scale: 0.85 }}
+              className={`p-1 sm:p-1.5 rounded-full transition-all shrink-0 ${
+                isFavorite 
+                  ? 'text-blue-400 bg-blue-500/30' 
+                  : 'text-blue-400/40 active:text-blue-400 active:bg-blue-500/20'
+              }`}
+            >
+              <Star className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isFavorite ? 'fill-blue-400' : ''}`} />
+            </motion.button>
+          </div>
+        </motion.div>
+        
+        {/* Right Arrow */}
+        <motion.button
+          onMouseDown={() => startHold('right')}
+          onMouseUp={stopHold}
+          onMouseLeave={stopHold}
+          onTouchStart={() => startHold('right')}
+          onTouchEnd={stopHold}
+          animate={{ scale: isHoldingRight ? 0.85 : 1 }}
+          className="group relative flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-blue-500/20 border border-blue-400/50 text-blue-400 active:bg-blue-500/40 transition-all shrink-0"
+          style={{ boxShadow: isHoldingRight ? '0 0 12px rgba(59, 130, 246, 0.7)' : '0 0 6px rgba(59, 130, 246, 0.3)' }}
+        >
+          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+          {/* Hover tooltip - desktop only */}
+          <div className="hidden sm:flex absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-blue-900/95 border border-blue-400/50 rounded-lg text-[10px] text-blue-300 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 items-center gap-1">
+            {nextTab?.label}
+            <NextIcon className="w-3 h-3" />
+          </div>
+          {isHoldingRight && (
+            <motion.div 
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="absolute inset-0 rounded-lg sm:rounded-xl border-2 border-blue-400 pointer-events-none"
+            />
+          )}
+        </motion.button>
+        
+        {/* Tab Counter - Click to open quick jump */}
+        <div className="relative" ref={quickJumpRef}>
+          <motion.button
+            onClick={() => setShowQuickJump(!showQuickJump)}
+            whileTap={{ scale: 0.95 }}
+            className={`flex items-center justify-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-1 rounded-md sm:rounded-lg border text-[9px] sm:text-[10px] font-bold shrink-0 transition-all ${
+              showQuickJump 
+                ? 'bg-blue-500/40 border-blue-400/70 text-blue-300' 
+                : 'bg-blue-500/20 border-blue-400/40 text-blue-400 active:bg-blue-500/30'
+            }`}
+          >
+            <span>{currentIndex + 1}/{UNIFIED_HUB_TABS.length}</span>
+            <ChevronDown className={`w-2.5 h-2.5 sm:w-3 sm:h-3 transition-transform ${showQuickJump ? 'rotate-180' : ''}`} />
+          </motion.button>
+          
+          {/* Quick Jump Dropdown - Full width on mobile */}
+          <AnimatePresence>
+            {showQuickJump && (
+              <motion.div
+                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                transition={{ duration: 0.15 }}
+                className="fixed sm:absolute inset-x-2 sm:inset-x-auto top-auto sm:top-full right-auto sm:right-0 bottom-auto mt-2 w-auto sm:w-44 max-h-[60vh] sm:max-h-72 overflow-y-auto bg-zinc-900/98 border border-blue-400/50 rounded-xl shadow-2xl z-[100] backdrop-blur-2xl"
+                style={{ boxShadow: '0 0 20px rgba(59, 130, 246, 0.4)' }}
+              >
+                <div className="p-1.5 grid grid-cols-2 sm:grid-cols-1 gap-1">
+                  <div className="col-span-2 sm:col-span-1 text-[9px] text-blue-400/60 uppercase tracking-wider px-2 py-1">Quick Jump</div>
+                  {UNIFIED_HUB_TABS.map((tab, idx) => {
+                    const TabIcon = tab.icon;
+                    const isActive = idx === currentIndex;
+                    const isFav = tab.id === favoriteTab;
+                    return (
+                      <motion.button
+                        key={tab.id}
+                        onClick={() => jumpToIndex(idx)}
+                        whileTap={{ scale: 0.97 }}
+                        className={`w-full flex items-center gap-1.5 sm:gap-2 px-2 py-2 sm:py-1.5 rounded-lg text-left transition-all ${
+                          isActive 
+                            ? 'bg-blue-500/30 text-blue-300' 
+                            : 'text-zinc-400 active:bg-blue-500/20'
+                        }`}
+                      >
+                        <span className={`flex items-center justify-center w-6 h-6 sm:w-5 sm:h-5 rounded-md ${
+                          isActive ? 'bg-blue-500/40' : 'bg-zinc-800/50'
+                        }`}>
+                          <TabIcon className="w-3.5 h-3.5 sm:w-3 sm:h-3" />
+                        </span>
+                        <span className="text-[11px] sm:text-xs font-medium flex-1 truncate">{tab.label}</span>
+                        {isFav && <Star className="w-2.5 h-2.5 text-blue-400 fill-blue-400 shrink-0" />}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+      
+      {/* Dot Indicators - Smaller gaps on mobile */}
+      <div className="flex justify-center items-center gap-1 sm:gap-1.5 py-0.5 sm:py-1 relative">
+        {UNIFIED_HUB_TABS.map((tab, idx) => {
+          const DotIcon = tab.icon;
+          return (
+            <div key={tab.id} className="relative">
+              <motion.button
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  SoundEffects.click();
+                }}
+                onMouseEnter={() => setHoveredDot(idx)}
+                onMouseLeave={() => setHoveredDot(null)}
+                whileTap={{ scale: 0.85 }}
+                className={`rounded-full transition-all ${
+                  idx === currentIndex 
+                    ? 'w-3.5 sm:w-5 h-1.5 sm:h-2 bg-blue-400' 
+                    : tab.id === favoriteTab 
+                      ? 'w-2 h-2 sm:w-2.5 sm:h-2.5 bg-blue-400/60 ring-1 ring-blue-400/40' 
+                      : 'w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-400/25 active:bg-blue-400/50'
+                }`}
+                style={idx === currentIndex ? { boxShadow: '0 0 6px rgba(59, 130, 246, 0.7)' } : {}}
+              />
+              {/* Hover label popup - desktop only */}
+              <AnimatePresence>
+                {hoveredDot === idx && idx !== currentIndex && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 5, scale: 0.9 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 5, scale: 0.9 }}
+                    className="hidden sm:flex absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-blue-900/95 border border-blue-400/50 rounded-lg whitespace-nowrap z-50 items-center gap-1.5"
+                    style={{ boxShadow: '0 0 12px rgba(59, 130, 246, 0.5)' }}
+                  >
+                    <DotIcon className="w-3 h-3 text-blue-400" />
+                    <span className="text-[10px] text-blue-300 font-medium">{tab.label}</span>
+                    {tab.id === favoriteTab && <Star className="w-2.5 h-2.5 text-blue-400 fill-blue-400" />}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+});
+HubTabCarousel.displayName = 'HubTabCarousel';
+
+// Responsive isMobile helper (reacts to resize)
+const useResponsiveIsMobile = (breakpoint = 768) => {
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < breakpoint;
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const update = () => setIsMobile(window.innerWidth < breakpoint);
+    update();
+    window.addEventListener('resize', update);
+    window.addEventListener('orientationchange', update);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('orientationchange', update);
+    };
+  }, [breakpoint]);
+
+  return isMobile;
+};
+
+// ============================================================================
 // UNIFIED HUB PANEL - All features in one panel
 // ============================================================================
 
@@ -4466,10 +5320,11 @@ export const UnifiedHubPanel = memo(({
   onNewMessage?: (channel: string, postId: string, post?: TelegramPost) => void;
 }) => {
   // Mobile detection for smoother, more subtle animations
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const isMobile = useResponsiveIsMobile();
   
   const [activeTab, setActiveTab] = useState<UnifiedHubTab>('community');
   const [isDragging, setIsDragging] = useState(false);
+  const [showSwipeHint, setShowSwipeHint] = useState(false);
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -4814,6 +5669,26 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
     setActiveTab(tabIds[prevIndex]);
   }, [activeTab, tabIds]);
 
+  const tabSwitchStartXRef = useRef<number | null>(null);
+
+  const handleTabSwitchPointerDown = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
+    tabSwitchStartXRef.current = e.clientX;
+  }, []);
+
+  const handleTabSwitchPointerUp = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
+    if (tabSwitchStartXRef.current === null) return;
+    const deltaX = e.clientX - tabSwitchStartXRef.current;
+    tabSwitchStartXRef.current = null;
+
+    if (Math.abs(deltaX) > 30) {
+      if (deltaX > 0) {
+        goToPrevTab();
+      } else {
+        goToNextTab();
+      }
+    }
+  }, [goToNextTab, goToPrevTab]);
+
   // Track if touch started inside a scrollable element (to prevent tab swipe)
   const touchStartedInScrollableRef = useRef(false);
 
@@ -4866,6 +5741,13 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
     }
   }, [goToNextTab, goToPrevTab]);
 
+  // Mobile swipe hint animation (continuous)
+  useEffect(() => {
+    if (!isOpen || !isMobile) return;
+    setShowSwipeHint(true);
+    return () => setShowSwipeHint(false);
+  }, [isOpen, isMobile]);
+
   // Prevent background scroll while the hub is open (especially on mobile)
   useEffect(() => {
     if (!isOpen) return;
@@ -4911,26 +5793,34 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
             onClick={onClose}
           />
 
-          {/* Floating Tab Controls (Outside Modal) */}
+          {/* Floating Tab Control (Outside Modal) */}
           <div className="fixed inset-0 z-[2147483644] pointer-events-none">
-            <motion.button
-              onClick={goToPrevTab}
-              whileHover={{ scale: 1.06 }}
-              whileTap={{ scale: 0.96 }}
-              aria-label="Previous tab"
-              className="pointer-events-auto absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-2xl bg-black/70 backdrop-blur-xl border border-white/50 text-white shadow-[0_10px_25px_rgba(255,255,255,0.22)]"
-            >
-              <ChevronLeft className="w-5 h-5 mx-auto" />
-            </motion.button>
+            {/* Mobile: Floating tab switch button */}
             <motion.button
               onClick={goToNextTab}
+              onPointerDown={handleTabSwitchPointerDown}
+              onPointerUp={handleTabSwitchPointerUp}
               whileHover={{ scale: 1.06 }}
               whileTap={{ scale: 0.96 }}
-              aria-label="Next tab"
-              className="pointer-events-auto absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-2xl bg-black/70 backdrop-blur-xl border border-white/50 text-white shadow-[0_10px_25px_rgba(255,255,255,0.22)]"
+              aria-label="Switch tab"
+              className="lg:hidden pointer-events-auto absolute right-3 top-1/2 -translate-y-1/2 w-[88px] h-10 rounded-full glass-button backdrop-blur-xl text-white flex items-center justify-between px-3"
             >
-              <ChevronRight className="w-5 h-5 mx-auto" />
+              <ChevronLeft className="w-4 h-4 opacity-80" />
+              <span className="text-[9px] font-bold uppercase tracking-[0.2em]">Tabs</span>
+              <ChevronRight className="w-4 h-4 opacity-80" />
             </motion.button>
+            
+            {/* Desktop: Floating tab carousel above modal - Match modal width */}
+            <div className="hidden lg:block pointer-events-auto absolute left-1/2 -translate-x-1/2 w-[1160px] max-w-[calc(100vw-80px)] z-[2147483648]" style={{ top: 'calc(50% - 350px - 70px)' }}>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                transition={{ delay: 0.1 }}
+              >
+                <HubTabCarousel activeTab={activeTab} setActiveTab={setActiveTab} isDesktopFloating />
+              </motion.div>
+            </div>
           </div>
           
           {/* Panel - Centered Modal */}
@@ -4950,11 +5840,11 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
             dragElastic={enableDrag ? { top: 0.2, bottom: 0.2 } : undefined}
             onDragStart={enableDrag ? () => setIsDragging(true) : undefined}
             onDragEnd={enableDrag ? handleDragEnd : undefined}
-            className="fixed left-1/2 top-1/2 z-[2147483647] -translate-x-1/2 -translate-y-1/2 w-[90vw] h-[75vh] max-h-[650px] sm:w-[80vw] sm:h-[80vh] sm:max-h-[700px] md:w-[75vw] md:h-[75vh] md:max-h-[750px] lg:w-[1200px] lg:h-[700px] lg:max-h-[800px] max-w-sm sm:max-w-md md:max-w-2xl lg:max-w-6xl flex flex-col bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 border border-white/30 shadow-2xl overflow-hidden rounded-2xl [overscroll-behavior:contain] [-webkit-overflow-scrolling:touch]"
+            className="fixed left-1/2 top-1/2 z-[2147483647] -translate-x-1/2 -translate-y-1/2 w-[94vw] h-[90vh] max-h-[90vh] sm:w-[88vw] sm:h-[86vh] sm:max-h-[86vh] md:w-[82vw] md:h-[82vh] md:max-h-[82vh] lg:w-[1200px] lg:h-[720px] lg:max-h-[90vh] max-w-[1200px] flex flex-col glass-panel overflow-hidden rounded-2xl md:rounded-3xl [overscroll-behavior:contain] [-webkit-overflow-scrolling:touch]"
             style={{ touchAction: 'pan-y pan-x', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' }}
           >
             {/* Header with FPS Display */}
-            <div className="flex-shrink-0 p-3 sm:p-4 border-b border-white/30 bg-black/95 backdrop-blur-2xl" style={{ boxShadow: '0 0 12px rgba(255, 255, 255, 0.3), inset 0 0 12px rgba(255, 255, 255, 0.1)' }}>
+            <div className="relative flex-shrink-0 p-3 sm:p-4 pr-24 sm:pr-24 lg:pr-28 border-b border-white/15 glass-surface">
               <div className="flex items-center justify-between gap-3">
                 {/* FPS Badge */}
                 <div className="flex items-center gap-2">
@@ -4963,37 +5853,42 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                   </div>
                   <div className="flex flex-col">
                     <div className="flex items-center gap-1">
-                      <Activity size={12} className="text-white" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
-                      <span className="text-lg font-black tabular-nums text-white neon-blue-text" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>{fps}</span>
-                      <span className="text-[8px] text-white font-bold neon-blue-text" style={{ textShadow: '0 0 4px #ffffff' }}>FPS</span>
+                      <Activity size={12} className="text-white" />
+                      <span className="text-lg font-black tabular-nums text-white neon-blue-text">{fps}</span>
+                      <span className="text-[8px] text-white font-bold neon-blue-text">FPS</span>
                     </div>
-                    <div className="text-[9px] font-mono font-bold uppercase text-white neon-blue-text tracking-wide" style={{ textShadow: '0 0 4px #ffffff' }}>{deviceTier}</div>
+                    <div className="text-[9px] font-mono font-bold uppercase text-white neon-blue-text tracking-wide">{deviceTier}</div>
                   </div>
                 </div>
                 
                 {/* Live Prices */}
-                <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-black border border-white/30" style={{ boxShadow: '0 0 6px rgba(255, 255, 255, 0.2)' }}>
+                <div className="flex items-center gap-2 px-2 py-1 rounded-lg glass-chip">
                   <div className="flex items-center gap-1">
-                    <Coins className="w-3 h-3 text-white" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
-                    <span className="text-[10px] font-bold text-white neon-blue-text" style={{ textShadow: '0 0 4px #ffffff' }}>${prices.xauusd}</span>
+                    <Coins className="w-3 h-3 text-white" />
+                    <span className="text-[10px] font-bold text-white neon-blue-text">${prices.xauusd}</span>
                   </div>
                   <div className="w-px h-3 bg-white/30" />
                   <div className="flex items-center gap-1">
-                    <Bitcoin className="w-3 h-3 text-white" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
-                    <span className="text-[10px] font-bold text-white neon-blue-text" style={{ textShadow: '0 0 4px #ffffff' }}>${prices.btcusd}</span>
+                    <Bitcoin className="w-3 h-3 text-white" />
+                    <span className="text-[10px] font-bold text-white neon-blue-text">${prices.btcusd}</span>
                   </div>
                 </div>
                 
-                {/* Close Button */}
+                {/* Close Button (absolute to header to avoid overflow on small screens) */}
                 <motion.button
-                  whileHover={{ scale: 1.1, rotate: 90 }}
-                  whileTap={{ scale: 0.9 }}
+                  whileHover={{ scale: 1.06, rotate: 90 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={onClose}
-                  className="w-9 h-9 rounded-2xl bg-white/20 hover:bg-white/35 border border-white/60 flex items-center justify-center shadow-[0_8px_18px_rgba(255,255,255,0.18)]"
-                  style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}
+                  aria-label="Close ultimate hub"
+                  className="absolute right-3 sm:right-4 top-2 sm:top-3 w-10 h-10 sm:w-12 sm:h-12 aspect-square rounded-full glass-button flex items-center justify-center pointer-events-auto"
                 >
-                  <X className="w-4 h-4 text-white" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
+                  <X className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                 </motion.button>
+                
+                {/* Notification Toggle Bell - Below Close Button */}
+                <div className="absolute right-3 sm:right-4 top-[58px] sm:top-[64px] z-50">
+                  <NotificationToggle compact />
+                </div>
                 
                 {/* Hidden Admin Button - Triple tap on header to open (Mobile friendly) */}
                 {isAdmin && (
@@ -5008,95 +5903,27 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                 )}
               </div>
               
-              {/* Swipe hint for mobile - subtle, slower animation */}
-              <motion.div 
-                className="flex items-center justify-center gap-1 mt-2 text-[9px] text-white/60 sm:hidden"
-                animate={{ y: [0, -2, 0] }}
-                transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-              >
-                <ChevronRight className="w-3 h-3 -rotate-90" />
-                <span>Drag to close</span>
-              </motion.div>
+              {/* Mobile Swipe Hint - Above Tab Buttons */}
+              {isMobile && showSwipeHint && (
+                <motion.div
+                  className="flex-shrink-0 px-3 sm:px-4 py-2 border-b border-white/15 glass-surface flex items-center justify-center gap-1.5"
+                  animate={{ x: [-14, 0, 14, 0] }}
+                  transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  <ChevronLeft className="w-3 h-3 text-white/70" />
+                  <span className="text-[9px] font-semibold uppercase tracking-wider text-white/70">Swipe to change tabs</span>
+                  <ChevronRight className="w-3 h-3 text-white/70" />
+                </motion.div>
+              )}
             </div>
             
-            {/* Body: Desktop = sidebar tabs + content. Mobile = top tabs + content.
+            {/* Body: Content area
                 IMPORTANT: the outer content wrapper is NOT scrollable to prevent nested scroll/overlap;
                 each tab is responsible for its own scroll areas via flex + overflow-y-auto. */}
-            <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
-              {/* Mobile/Tablet Tab Navigation */}
-              <div className="lg:hidden flex-shrink-0 flex items-stretch gap-2 p-2 border-b border-white/30 bg-black/95 backdrop-blur-2xl overflow-x-auto overflow-y-hidden scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ boxShadow: '0 0 12px rgba(255, 255, 255, 0.3), inset 0 0 12px rgba(255, 255, 255, 0.1)', touchAction: 'pan-x pinch-zoom' }}>
-                {UNIFIED_HUB_TABS.map((tab) => {
-                  const Icon = tab.icon;
-                  const isActive = activeTab === tab.id;
-                  
-                  return (
-                    <motion.button
-                      key={tab.id}
-                      onClick={() => {
-                        SoundEffects.click();
-                        setActiveTab(tab.id);
-                      }}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className={`flex-1 min-w-[88px] sm:min-w-[108px] flex flex-col items-center justify-center gap-2 py-3 sm:py-3.5 px-3 sm:px-4 transition-all whitespace-nowrap rounded-2xl border backdrop-blur-xl min-h-[72px] sm:min-h-[70px] ${
-                        isActive 
-                          ? 'bg-white/25 text-white border-white/70 neon-blue-text shadow-[0_10px_25px_rgba(255,255,255,0.22)]' 
-                          : 'bg-white/10 text-white/70 border-white/20 hover:text-white hover:bg-white/15 hover:border-white/40'
-                      }`}
-                      style={isActive ? { textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' } : {}}
-                    >
-                      <span className={`flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl border ${
-                        isActive ? 'border-white/60 bg-white/25' : 'border-white/20 bg-white/10'
-                      }`}>
-                        <Icon className="w-4 h-4 sm:w-5 sm:h-5" style={isActive ? { filter: 'drop-shadow(0 0 4px #ffffff)' } : {}} />
-                      </span>
-                      <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">{tab.label}</span>
-                    </motion.button>
-                  );
-                })}
-              </div>
-
-              {/* Desktop Sidebar Tabs */}
-              <div className="hidden lg:flex w-[240px] xl:w-[260px] flex-shrink-0 flex-col border-r border-white/20 bg-black/95 backdrop-blur-2xl overflow-y-auto overflow-x-hidden min-h-0 [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]" style={{ boxShadow: 'inset 0 0 12px rgba(255, 255, 255, 0.08)' }}>
-                <div className="p-3 border-b border-white/10">
-                  <div className="text-[10px] font-black uppercase tracking-[0.22em] text-white/80 neon-blue-text" style={{ textShadow: '0 0 3px rgba(255,255,255,0.5)' }}>
-                    Tabs
-                  </div>
-                </div>
-                <div className="p-2 space-y-2">
-                  {UNIFIED_HUB_TABS.map((tab) => {
-                    const Icon = tab.icon;
-                    const isActive = activeTab === tab.id;
-
-                    return (
-                      <motion.button
-                        key={tab.id}
-                        onClick={() => {
-                          SoundEffects.click();
-                          setActiveTab(tab.id);
-                        }}
-                        whileHover={{ scale: 1.01, x: 2 }}
-                        whileTap={{ scale: 0.99 }}
-                        className={`w-full flex items-center gap-3 px-3 py-3 rounded-2xl border transition-all ${
-                          isActive
-                            ? 'bg-white/25 text-white border-white/70 neon-blue-text shadow-[0_10px_25px_rgba(255,255,255,0.18)]'
-                            : 'bg-white/10 text-white/75 border-white/20 hover:bg-white/15 hover:text-white hover:border-white/35'
-                        }`}
-                        style={isActive ? { textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' } : {}}
-                      >
-                        <span className={`flex items-center justify-center w-10 h-10 rounded-xl border ${
-                          isActive ? 'border-white/60 bg-white/25' : 'border-white/20 bg-white/10'
-                        }`}>
-                          <Icon className="w-5 h-5" style={isActive ? { filter: 'drop-shadow(0 0 4px #ffffff)' } : {}} />
-                        </span>
-                        <div className="flex flex-col items-start leading-tight">
-                          <span className="text-xs font-black uppercase tracking-widest">{tab.label}</span>
-                          <span className="text-[10px] text-white/50">{tab.id}</span>
-                        </div>
-                      </motion.button>
-                    );
-                  })}
-                </div>
+            <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+              {/* Tab Carousel - Mobile/Tablet only (desktop has floating version above modal) */}
+              <div className="lg:hidden">
+                <HubTabCarousel activeTab={activeTab} setActiveTab={setActiveTab} />
               </div>
 
               {/* Tab Content (not scrollable; tab internals handle scrolling) */}
@@ -5117,7 +5944,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     className="h-full min-h-0 flex flex-col"
                   >
                     {/* Symbol Selector */}
-                    <div className="flex-shrink-0 flex gap-1.5 sm:gap-2 p-2 sm:p-3 overflow-x-auto overflow-y-hidden border-b border-white/30 bg-black scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)', touchAction: 'pan-x pinch-zoom' }}>
+                    <div className="flex-shrink-0 flex gap-1.5 sm:gap-2 p-2 sm:p-3 overflow-x-auto overflow-y-hidden border-b border-white/15 glass-surface scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ touchAction: 'pan-x pinch-zoom' }}>
                       {TRADING_SYMBOLS.map(symbol => {
                         const Icon = symbol.icon;
                         const isActive = selectedSymbol.id === symbol.id;
@@ -5129,12 +5956,11 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                             whileTap={{ scale: 0.95 }}
                             className={`flex items-center gap-1.5 min-w-[70px] px-3 py-2 rounded-xl text-[10px] sm:text-[11px] font-semibold whitespace-nowrap transition-all border backdrop-blur-xl ${
                               isActive
-                                ? 'bg-white/30 text-white border-white/70 neon-blue-text shadow-[0_8px_18px_rgba(255,255,255,0.25)]'
-                                : 'bg-white/10 text-white/70 border-white/25 hover:bg-white/15 hover:text-white'
+                                ? 'bg-white/20 text-white border-white/40 neon-blue-text'
+                                : 'bg-white/10 text-white/70 border-white/20 hover:bg-white/15 hover:text-white'
                             }`}
-                            style={isActive ? { boxShadow: '0 0 8px rgba(255, 255, 255, 0.4)' } : {}}
                           >
-                            <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={isActive ? { filter: 'drop-shadow(0 0 2px #ffffff)' } : {}} />
+                            <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             <span>{symbol.abbr}</span>
                           </motion.button>
                         );
@@ -5162,18 +5988,17 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     </div>
                     
                     {/* Toggle & Filters */}
-                    <div className="flex-shrink-0 p-3 space-y-2 border-t border-white/30 bg-black/95 backdrop-blur-2xl" style={{ boxShadow: '0 0 10px rgba(255, 255, 255, 0.22), inset 0 0 10px rgba(255, 255, 255, 0.06)' }}>
+                    <div className="flex-shrink-0 p-3 space-y-2 border-t border-white/15 glass-surface">
                       <div className="flex gap-2">
                         <motion.button
                           onClick={() => setShowCalendar(!showCalendar)}
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
                           className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all border backdrop-blur-xl ${
-                            showCalendar ? 'bg-white/30 border-white/70 text-white neon-blue-text shadow-[0_8px_18px_rgba(255,255,255,0.25)]' : 'bg-white/10 hover:bg-white/15 border-white/25 text-white/80 hover:text-white'
+                            showCalendar ? 'bg-white/20 border-white/40 text-white neon-blue-text' : 'bg-white/10 hover:bg-white/15 border-white/20 text-white/80 hover:text-white'
                           }`}
-                          style={showCalendar ? { boxShadow: '0 0 8px rgba(255, 255, 255, 0.4)' } : {}}
                         >
-                          <Calendar className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
+                          <Calendar className="w-4 h-4" />
                           <span>{showCalendar ? 'Show Charts' : 'Calendar'}</span>
                         </motion.button>
                         
@@ -5185,11 +6010,10 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
                             className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all border backdrop-blur-xl ${
-                              showFilters ? 'bg-white/30 border-white/70 text-white neon-blue-text shadow-[0_8px_18px_rgba(255,255,255,0.25)]' : 'bg-white/10 hover:bg-white/15 border-white/25 text-white/80 hover:text-white'
+                              showFilters ? 'bg-white/20 border-white/40 text-white neon-blue-text' : 'bg-white/10 hover:bg-white/15 border-white/20 text-white/80 hover:text-white'
                             }`}
-                            style={showFilters ? { boxShadow: '0 0 8px rgba(255, 255, 255, 0.4)' } : {}}
                           >
-                            <Filter className="w-3.5 h-3.5" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
+                            <Filter className="w-3.5 h-3.5" />
                             <span>Filters</span>
                           </motion.button>
                         )}
@@ -5214,10 +6038,9 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                                     onClick={() => setCalendarImpact(impact)}
                                     className={`flex-1 min-w-[56px] py-1.5 px-2 rounded-lg text-[10px] font-semibold transition-all whitespace-nowrap border backdrop-blur-xl ${
                                       calendarImpact === impact
-                                        ? 'bg-white/30 text-white border-white/70 neon-blue-text shadow-[0_6px_14px_rgba(255,255,255,0.22)]'
-                                        : 'bg-white/10 text-white/70 border-white/25 hover:bg-white/15 hover:text-white'
+                                        ? 'bg-white/20 text-white border-white/40 neon-blue-text'
+                                        : 'bg-white/10 text-white/70 border-white/20 hover:bg-white/15 hover:text-white'
                                     }`}
-                            style={calendarImpact === impact ? { boxShadow: '0 0 6px rgba(255, 255, 255, 0.3)' } : {}}
                                   >
                                     {impact === 'all' ? 'All' : impact.charAt(0).toUpperCase() + impact.slice(1)}
                                   </button>
@@ -5235,10 +6058,9 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                                     onClick={() => setCalendarCountry(country.id)}
                                     className={`flex items-center gap-1 py-1.5 px-2.5 rounded-lg text-[10px] font-semibold transition-all whitespace-nowrap flex-shrink-0 border backdrop-blur-xl ${
                                       calendarCountry === country.id
-                                        ? 'bg-white/30 text-white border-white/70 neon-blue-text shadow-[0_6px_14px_rgba(255,255,255,0.22)]'
-                                        : 'bg-white/10 text-white/70 border-white/25 hover:bg-white/15 hover:text-white'
+                                        ? 'bg-white/20 text-white border-white/40 neon-blue-text'
+                                        : 'bg-white/10 text-white/70 border-white/20 hover:bg-white/15 hover:text-white'
                                     }`}
-                            style={calendarCountry === country.id ? { boxShadow: '0 0 6px rgba(255, 255, 255, 0.3)' } : {}}
                                   >
                                     <span>{country.flag}</span>
                                     <span>{country.name}</span>
@@ -5265,119 +6087,33 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     exit={{ opacity: 0, x: -20 }}
                     className="h-full min-h-0 flex flex-col"
                   >
-                    {/* 🔔 NOTIFICATION SETTINGS */}
-                    <div 
-                      className="flex-shrink-0 px-2 py-1.5 border-b border-white/20 bg-black/50 relative z-10"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <NotificationToggle showChannelSettings={true} />
-                    </div>
-                    
-                    {/* Channel Tabs */}
-                    <div className="flex items-center gap-1.5 sm:gap-2 p-2 sm:p-3 border-b border-white/30 overflow-x-auto overflow-y-hidden min-h-[48px] sm:min-h-[52px] flex-shrink-0 bg-black scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)', touchAction: 'pan-x pinch-zoom' }}>
-                      {(Object.keys(TELEGRAM_CHANNELS) as ChannelKey[]).map(key => {
-                        const ch = TELEGRAM_CHANNELS[key];
-                        const Icon = ch.icon;
-                        const isActive = activeChannel === key;
-                        const isLocked = ch.requiresVip && !isVip;
-                        
-                        return (
-                          <button
-                            key={key}
-                            onClick={() => setActiveChannel(key)}
-                            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] sm:text-[11px] font-medium transition-all whitespace-nowrap flex-shrink-0 min-h-[44px] border backdrop-blur-xl ${
-                              isActive
-                                ? 'bg-white/30 text-white border-white/70 neon-blue-text shadow-[0_8px_18px_rgba(255,255,255,0.25)]'
-                                : 'bg-white/10 text-white/70 border-white/25 hover:bg-white/15 hover:text-white'
-                            }`}
-                            style={isActive ? { boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' } : {}}
-                          >
-                            <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={isActive ? { filter: 'drop-shadow(0 0 2px #ffffff)' } : {}} />
-                            <span>{ch.name}</span>
-                            {isLocked && <Lock className="w-3 h-3 opacity-60" />}
-                          </button>
-                        );
-                      })}
-                      
-                      {/* Notification Badge - Quick toggle */}
-                      <NotificationBadge />
-                      
-                      {/* Admin Button */}
-                      <motion.button
-                        onClick={() => {
-                          window.dispatchEvent(new CustomEvent('openAdminVIPPanel'));
-                          onClose();
-                        }}
-                        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] sm:text-[11px] font-semibold transition-all whitespace-nowrap ml-auto flex-shrink-0 border backdrop-blur-xl ${
-                          isAdmin 
-                            ? 'bg-white/30 text-white border-white/70 neon-blue-text shadow-[0_8px_18px_rgba(255,255,255,0.25)]'
-                            : 'bg-white/10 text-white/70 border-white/25 hover:bg-white/15 hover:text-white'
-                        }`}
-                        style={isAdmin ? { boxShadow: '0 0 8px rgba(255, 255, 255, 0.4)' } : {}}
-                      >
-                        <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={isAdmin ? { filter: 'drop-shadow(0 0 2px #ffffff)' } : {}} />
-                        <span>Admin</span>
-                      </motion.button>
-                    </div>
+                    {/* Channel Carousel - Swipeable single button with left/right nav and favorites */}
+                    <ChannelCarousel
+                      activeChannel={activeChannel}
+                      setActiveChannel={setActiveChannel}
+                      isVip={isVip}
+                      isAdmin={isAdmin}
+                      onClose={onClose}
+                    />
                     
                     {/* Feed */}
-                    <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 bg-black [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]" 
-                      style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)', touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
+                    <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 bg-black/70 [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]" 
+                      style={{ touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
                       data-scrollable
                     >
                       <TelegramChannelEmbed channel={activeChannel} isVip={isVip} onNewMessage={onNewMessage} />
                     </div>
                     
-                    {/* View All Link */}
+                    {/* View All Link (mobile footer only) */}
                     {activeChannel !== 'vip' && (
-                      <div className="flex-shrink-0 px-3 py-2 border-t border-white/30 bg-black/95 backdrop-blur-2xl" style={{ boxShadow: '0 0 10px rgba(255, 255, 255, 0.22), inset 0 0 10px rgba(255, 255, 255, 0.06)' }}>
+                      <div className="flex-shrink-0 px-3 py-2 border-t border-white/15 glass-surface sm:hidden relative z-50">
                         <a href={`https://t.me/${TELEGRAM_CHANNELS[activeChannel].handle}`}
                           target="_blank" rel="noopener noreferrer"
-                          className="flex items-center justify-center gap-1 text-[10px] text-white hover:text-white neon-blue-text transition-all"
-                          style={{ textShadow: '0 0 4px rgba(255, 255, 255, 0.5)' }}>
-                          <ExternalLink className="w-2.5 h-2.5" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} /> View all on Telegram
+                          className="flex items-center justify-center gap-1 text-[10px] text-white/90 hover:text-white transition-all relative z-50">
+                          <ExternalLink className="w-2.5 h-2.5" /> View all on Telegram
                         </a>
                       </div>
                     )}
-                    
-                    {/* Social Links */}
-                    <div className="flex-shrink-0 p-3 space-y-2 border-t border-white/30 bg-black/95 backdrop-blur-2xl" style={{ boxShadow: '0 0 10px rgba(255, 255, 255, 0.22), inset 0 0 10px rgba(255, 255, 255, 0.06)' }}>
-                      <div className="flex gap-2">
-                        <motion.button
-                          onClick={handleCopyLink}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-white/30 text-white font-semibold text-xs sm:text-sm border border-white/60 neon-blue-text"
-                          style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}
-                        >
-                          {copied ? <Check className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} /> : <Copy className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />}
-                          {copied ? 'Copied!' : 'Copy Link'}
-                        </motion.button>
-                        
-                        <div className="flex-1" />
-                      </div>
-                      
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        {socialLinks.map(link => {
-                          const Icon = link.icon;
-                          return (
-                            <motion.a
-                              key={link.name}
-                              href={link.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              className="flex flex-col items-center justify-center gap-1.5 py-3 px-2 rounded-lg bg-white/30 text-white font-semibold text-[10px] border border-white/60 neon-blue-text transition-all"
-                              style={{ boxShadow: '0 0 6px rgba(255, 255, 255, 0.3)' }}
-                            >
-                              <Icon className="w-5 h-5" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
-                              <span className="hidden sm:block">{link.name}</span>
-                            </motion.a>
-                          );
-                        })}
-                      </div>
-                    </div>
                   </motion.div>
                 )}
                 
@@ -6963,7 +7699,9 @@ export const UnifiedFpsPill = memo(({
   vipPreview = null,
   isVipUser = false,
   topOffsetMobile,
-  topOffsetDesktop
+  topOffsetDesktop,
+  isMobileNavbarHidden = false,
+  mobileAlignment = 'center'
 }: {
   fps: number;
   deviceTier: string;
@@ -6978,6 +7716,8 @@ export const UnifiedFpsPill = memo(({
   isVipUser?: boolean;
   topOffsetMobile?: string;
   topOffsetDesktop?: string;
+  isMobileNavbarHidden?: boolean;
+  mobileAlignment?: 'left' | 'center';
 }) => {
   const [isPinned, setIsPinned] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false); // Track if showing full content
@@ -7006,7 +7746,7 @@ export const UnifiedFpsPill = memo(({
   const lastOverlayTime = useRef(0); // Cooldown tracking to prevent spam
   const accumulatedDelta = useRef(0); // For trackpad gesture accumulation
   const gestureStartTime = useRef(0); // Track gesture start for trackpad detection
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const isMobile = useResponsiveIsMobile();
   
   // Performance boost function - runs when overlay shows
   // This is a REAL performance boost that:
@@ -7323,17 +8063,17 @@ export const UnifiedFpsPill = memo(({
       // Desktop trackpad: responsive to fast swipe gestures
       // Desktop mouse: responsive for fast wheel flicks
       const FAST_SCROLL_THRESHOLD = isLikelyTrackpad 
-          ? 0.8  // Lower threshold for trackpads (they report lower velocities)
-          : 1.2; // Mouse wheel threshold
-      const FAST_SCROLL_CONFIRM = 2; // Desktop: only 2 consecutive fast scrolls needed
-      const COOLDOWN_MS = 5000; // 5 second cooldown on desktop
+          ? 4.0  // Much higher threshold for trackpads - only extreme scrolling
+          : 5.0; // Mouse wheel threshold - only extreme scrolling
+      const FAST_SCROLL_CONFIRM = 8; // Desktop: 8 consecutive fast scrolls needed (rarely triggers)
+      const COOLDOWN_MS = 12000; // 12 second cooldown on desktop
       
       // Check if we're in cooldown period
       const timeSinceLastOverlay = now - lastOverlayTime.current;
       const isInCooldown = timeSinceLastOverlay < COOLDOWN_MS;
       
-      // Also check for large accumulated gesture (trackpad fast swipe)
-      const isTrackpadFastGesture = isLikelyTrackpad && accumulatedDelta.current > 300 && gestureDuration < 200;
+      // Also check for large accumulated gesture (trackpad fast swipe) - much higher threshold
+      const isTrackpadFastGesture = isLikelyTrackpad && accumulatedDelta.current > 1000 && gestureDuration < 100;
       
       if ((effectiveVelocity > FAST_SCROLL_THRESHOLD || isTrackpadFastGesture) && !isInCooldown) {
         fastScrollCount.current++;
@@ -7543,9 +8283,14 @@ export const UnifiedFpsPill = memo(({
     // Faster morph response - full morph by 150px of scroll
     return Math.min(scrollY / 150, 1);
   }, [isScrolling, scrollY]);
-  
+
   // Morph state: shows logo-like compact view when scrolling
-  const isInLogoMode = morphProgress > 0.5 && isScrolling;
+  // Lower threshold so it kicks in sooner on short mobile scrolls
+  const isInLogoMode = morphProgress > 0.3 && isScrolling;
+
+  // Ultra-thin mobile pill when morphed into navbar space (~1–2cm tall on phones)
+  const logoModeHeightPx = 34;
+  const logoModePadding = '6px 10px';
   
   // Calculate morph animation values for mobile (moves to center-top, scales down)
   const mobileNavbarTop = 'calc(env(safe-area-inset-top, 0px) + 12px)'; // Navbar position
@@ -7553,6 +8298,9 @@ export const UnifiedFpsPill = memo(({
   
   // For desktop, move pill toward a fixed position near navbar
   const desktopNavbarPosition = { top: '8px', left: '50%' };
+  
+  // Mobile full-width mode when navbar is hidden (CSS-based for 60fps)
+  const mobileFullWidthMode = isMobile && isMobileNavbarHidden;
   
   return (
     <motion.div
@@ -7579,21 +8327,32 @@ export const UnifiedFpsPill = memo(({
           }
         : { y: { duration: 0.2, ease: "easeOut" } }
       }
-      className={`fixed z-[999999999] pointer-events-none ${isMobile ? 'left-1/2 -translate-x-1/2' : 'left-0'}`}
+      className={`fixed z-[999999999] pointer-events-none ${
+        isMobile 
+          ? mobileFullWidthMode 
+            ? 'left-4 right-4 translate-x-0' // Full width with padding
+            : mobileAlignment === 'left'
+              ? 'left-4 translate-x-0'        // Left aligned
+              : 'left-1/2 -translate-x-1/2'   // Centered
+          : 'left-0'
+      }`}
       style={{
-        // Mobile: Smoothly transition between normal position and navbar position when scrolling
+        // Mobile: Smoothly transition between normal position and top when navbar hidden
         top: isMobile
-          ? (isInLogoMode ? mobileNavbarTop : normalTop)
+          ? (mobileFullWidthMode ? 'calc(env(safe-area-inset-top, 0px) + 12px)' : (isInLogoMode ? mobileNavbarTop : normalTop))
           : (topOffsetDesktop ?? '15%'),
         paddingLeft: isMobile ? undefined : 'calc(env(safe-area-inset-left, 0px))',
         // Disable screen bloom effect on mobile
         filter: (!isMobile && extremeScrollProgress > 0.7) ? `brightness(${1 + (extremeScrollProgress - 0.7) * 0.3})` : undefined,
-        // Smooth top transition
-        transition: isMobile ? 'top 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)' : undefined,
+        // Smooth CSS transitions for mobile (60fps, no jank)
+        transition: isMobile 
+          ? 'top 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), left 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), right 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)' 
+          : undefined,
+        willChange: isMobile ? 'top, left, right, transform' : undefined,
       }}
     >
       <motion.div
-        className="relative pointer-events-auto cursor-pointer"
+        className={`relative pointer-events-auto cursor-pointer ${mobileFullWidthMode ? 'w-full' : ''}`}
         onHoverStart={handleInteraction}
         onHoverEnd={handleHoverEnd}
         onTap={handleInteraction}
@@ -7644,7 +8403,7 @@ export const UnifiedFpsPill = memo(({
                     times: [0, 0.2, 0.8, 1]
                   }
           }
-          className="relative rounded-3xl ultimate-hub-scroll-effect"
+          className={`relative rounded-3xl ultimate-hub-scroll-effect ${mobileFullWidthMode ? 'w-full' : ''}`}
           style={{
             background: pillBackground,
             // Reduce blur on mobile for better performance
@@ -7657,6 +8416,15 @@ export const UnifiedFpsPill = memo(({
             transformStyle: isMobile ? undefined : 'preserve-3d',
             // Only use will-change on desktop
             willChange: isMobile ? 'auto' : 'transform',
+            // Smooth width transition
+            transition: mobileFullWidthMode ? 'width 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)' : undefined,
+            // Ultra-thin pill when morphed into navbar space
+            height: isMobile && isInLogoMode ? `${logoModeHeightPx}px` : undefined,
+            minHeight: isMobile && isInLogoMode ? `${logoModeHeightPx}px` : undefined,
+            maxHeight: isMobile && isInLogoMode ? `${logoModeHeightPx}px` : undefined,
+            padding: isMobile && isInLogoMode ? '0px' : undefined,
+            borderRadius: isMobile && isInLogoMode ? '9999px' : undefined,
+            overflow: isMobile && isInLogoMode ? 'hidden' : undefined,
           }}
           onClick={(e) => {
             e.preventDefault();
@@ -7682,7 +8450,8 @@ export const UnifiedFpsPill = memo(({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.5 }}
                 transition={{ duration: 0.2, ease: 'easeOut' }}
-                className="px-2 py-2 relative z-10"
+                className="relative z-10 flex h-full items-center justify-center"
+                style={{ padding: logoModePadding, height: '100%', lineHeight: 1 }}
               >
                 {/* Logo Mode: Just the trading icon with notification badge */}
                 <div className="flex items-center justify-center relative">
@@ -7727,29 +8496,7 @@ export const UnifiedFpsPill = memo(({
                       filter: 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff)'
                     }} 
                   />
-                  {/* New Message Notification Badge - Minimized View */}
-                  {hasNewMessages && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute -top-1.5 -right-1.5"
-                    >
-                      <div 
-                        className="w-3 h-3 rounded-full flex items-center justify-center"
-                        style={{
-                          background: '#ffffff',
-                          boxShadow: '0 0 8px #ffffff, 0 0 16px #ffffff',
-                        }}
-                      >
-                        <Bell className="w-2 h-2 text-white" />
-                      </div>
-                      {/* Pulse animation */}
-                      <div 
-                        className="absolute inset-0 rounded-full animate-ping"
-                        style={{ background: '#ffffff', opacity: 0.6 }}
-                      />
-                    </motion.div>
-                  )}
+                  {/* New Message Notification Badge - Removed, using main badge only */}
                 </div>
               </motion.div>
             ) : (
@@ -7810,13 +8557,13 @@ export const UnifiedFpsPill = memo(({
                       }}
                     >
                       <Bell 
-                        className="w-2.5 h-2.5 text-white" 
-                        style={{ filter: 'drop-shadow(0 0 4px #fff)' }}
+                        className="w-2.5 h-2.5 text-black" 
+                        style={{ filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.3))' }}
                       />
                       {newMessageCount > 0 && (
                         <span 
-                          className="text-[8px] font-black text-white"
-                          style={{ textShadow: '0 0 4px #fff' }}
+                          className="text-[8px] font-black text-black"
+                          style={{ textShadow: '0 0 2px rgba(0,0,0,0.2)' }}
                         >
                           {newMessageCount > 9 ? '9+' : newMessageCount}
                         </span>
@@ -7834,7 +8581,7 @@ export const UnifiedFpsPill = memo(({
                 )}
 
                 {activeTicker && (
-                  <div className="w-full max-w-[360px] mb-2">
+                  <div className="w-full max-w-[360px] mb-1">
                     <AnimatePresence mode="wait">
                       <motion.div
                         key={activeTicker.key}
@@ -7842,31 +8589,28 @@ export const UnifiedFpsPill = memo(({
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -8 }}
                         transition={{ duration: 0.22, ease: 'easeOut' }}
-                        className={`rounded-xl border px-2.5 py-2 shadow-sm ${
+                        className={`rounded-xl border px-3 py-2.5 shadow-sm ${
                           activeTicker.type === 'vip'
                             ? 'bg-blue-600/50 border-blue-300/60 shadow-[0_0_20px_rgba(59,130,246,0.35)]'
                             : 'bg-white/10 border-white/20'
                         }`}
                       >
-                        <div className="flex items-center justify-between gap-2 mb-1">
-                          <div className="flex items-center gap-1.5">
+                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                          <div className="flex items-center gap-2">
                             {activeTicker.type === 'vip' ? (
-                              <Crown className="w-3.5 h-3.5 text-white" />
+                              <Crown className="w-5 h-5 text-white" />
                             ) : (
-                              <LineChart className="w-3.5 h-3.5 text-white" />
+                              <LineChart className="w-5 h-5 text-white" />
                             )}
-                            <span className="text-[9px] font-bold uppercase tracking-wide text-white/90">
+                            <span className="text-sm font-bold uppercase tracking-wide text-white/90">
                               {activeTicker.label}
                             </span>
-                            {activeTicker.type === 'vip' && (
-                              <Bell className="w-3 h-3 text-white/90" />
-                            )}
                           </div>
                           {activeTicker.type === 'vip' && (
-                            <span className="text-[9px] font-semibold text-blue-100">VIP</span>
+                            <span className="text-xs font-semibold text-blue-100">VIP</span>
                           )}
                         </div>
-                        <p className="text-[9px] leading-snug text-white/90 line-clamp-2">
+                        <p className="text-sm leading-snug text-white/90 line-clamp-2">
                           {activeTicker.text}
                         </p>
                       </motion.div>
@@ -7874,28 +8618,43 @@ export const UnifiedFpsPill = memo(({
                   </div>
                 )}
                 
-                {/* Mobile: Compact view without duplicate price rows (prices rotate in ticker) */}
-                <div className="flex md:hidden flex-col items-center justify-center gap-0.5 min-w-[36px] relative">
-                  <TrendingUp 
-                    className="w-2.5 h-2.5 text-white neon-white-icon" 
-                    style={{ filter: dynamicStyles.iconFilter }} 
-                  />
-                  {hasNewMessages && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: [1, 1.2, 1] }}
-                      transition={{ repeat: Infinity, duration: 1.5 }}
-                      className="absolute -top-1 -right-0.5"
-                    >
-                      <Bell 
-                        className="w-2.5 h-2.5 text-white" 
-                        style={{ 
-                          filter: 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff)'
-                        }}
+                {/* Mobile: Compact full-width view when navbar hidden - fits in navbar area */}
+                {mobileFullWidthMode ? (
+                  <div className="flex items-center justify-between w-full gap-2 px-3 py-2">
+                    {/* Left: Icon + Title + Live indicator */}
+                    <div className="flex items-center gap-2">
+                      <TrendingUp 
+                        className="w-5 h-5 text-white" 
+                        style={{ filter: 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff)' }} 
                       />
-                    </motion.div>
-                  )}
-                </div>
+                      <span 
+                        className="text-sm font-black tracking-wider uppercase"
+                        style={{ 
+                          color: '#ffffff',
+                          textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff',
+                          letterSpacing: '0.08em'
+                        }}
+                      >
+                        TRADING HUB
+                      </span>
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                    </div>
+                    
+                    {/* Right: Tap indicator */}
+                    <div className="flex items-center gap-2 text-white/60">
+                      <span className="text-[10px] font-medium">Tap to open</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </div>
+                  </div>
+                ) : (
+                  /* Mobile: Compact view without duplicate price rows (prices rotate in ticker) */
+                  <div className="flex md:hidden flex-col items-center justify-center gap-0.5 min-w-[36px] relative">
+                    <TrendingUp 
+                      className="w-2.5 h-2.5 text-white neon-white-icon" 
+                      style={{ filter: dynamicStyles.iconFilter }} 
+                    />
+                  </div>
+                )}
                 
                 {/* Desktop: Animated between compact (scrolling) and full */}
                 <motion.div 
@@ -7964,7 +8723,7 @@ export const UnifiedFpsPill = memo(({
                           }}
                         >
                           <div className="flex flex-col items-center gap-1">
-                            <Coins className="w-6 h-6 text-amber-400 neon-blue-icon" style={{ filter: 'drop-shadow(0 0 6px #fbbf24)' }} />
+                            <Coins className="w-6 h-6 text-white neon-blue-icon" style={{ filter: 'drop-shadow(0 0 6px #ffffff)' }} />
                             <div className="flex flex-col items-center">
                               <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Gold</span>
                               <span className="text-lg font-black tabular-nums neon-blue-text" style={{ color: '#ffffff', textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
@@ -7974,7 +8733,7 @@ export const UnifiedFpsPill = memo(({
                           </div>
                           <div className="h-12 w-px bg-gradient-to-b from-transparent via-white to-transparent" style={{ boxShadow: '0 0 6px #ffffff' }} />
                           <div className="flex flex-col items-center gap-1">
-                            <Bitcoin className="w-6 h-6 text-orange-400 neon-blue-icon" style={{ filter: 'drop-shadow(0 0 6px #fb923c)' }} />
+                            <Bitcoin className="w-6 h-6 text-white neon-blue-icon" style={{ filter: 'drop-shadow(0 0 6px #ffffff)' }} />
                             <div className="flex flex-col items-center">
                               <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Bitcoin</span>
                               <span className="text-lg font-black tabular-nums neon-blue-text" style={{ color: '#ffffff', textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
@@ -8475,6 +9234,7 @@ export function UltimateHub() {
     main: null,
     shop: null,
     vip: null,
+    vip2: null,
   });
   const isCheckingRef = useRef(false);
   
@@ -8526,6 +9286,7 @@ export function UltimateHub() {
     isPagemodeOpen,
     isLoaderv2Open,
     isV2Unlocked,
+    isMobileNavbarHidden,
     setUltimateHubOpen
   } = useUIState();
   const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects, isDesktopLiteMode } = useUnifiedPerformance();
@@ -8768,6 +9529,8 @@ export function UltimateHub() {
           newMessageCount={newMessageCount}
           vipPreview={vipPreview}
           isVipUser={isVip}
+          isMobileNavbarHidden={isMobileNavbarHidden}
+          mobileAlignment="left"
         />
       )}
 

@@ -10,16 +10,24 @@ interface FaqItem {
 
 const defaultFaqs: FaqItem[] = [
   {
-    question: "What payment methods do you accept?",
-    answer: "We accept all major credit cards, PayPal, and cryptocurrency.",
+    question: "What is BullMoney?",
+    answer: "BullMoney is a trading community since 2024 offering live trade calls, daily analysis, mentorship, and the only custom platform built for traders. We help beginners and experienced traders succeed.",
   },
   {
-    question: "How long does shipping take?",
-    answer: "Standard shipping takes 5-7 business days. Express shipping is 2-3 business days.",
+    question: "How do I join the trading community?",
+    answer: "Join our free Telegram group or subscribe to VIP for full access to live streams, trade setups, charts, and 1-on-1 mentorship from funded traders.",
   },
   {
-    question: "What is your return policy?",
-    answer: "We offer a 30-day money-back guarantee on all products.",
+    question: "Do you offer trading education?",
+    answer: "Yes. We provide structured courses, daily market breakdowns, live stream sessions, and personal mentorship covering forex, gold, crypto, and stocks.",
+  },
+  {
+    question: "What markets do you cover?",
+    answer: "We analyze forex pairs, gold (XAUUSD), major cryptocurrencies, and US stocks. Our analysis includes technicals, fundamentals, and live trade ideas.",
+  },
+  {
+    question: "How is BullMoney different from other groups?",
+    answer: "We're the only trading community with a custom web platform. Real transparency, real results, real mentorship - not just signals.",
   },
 ];
 
@@ -27,8 +35,8 @@ export const Faq = ({ faqs = defaultFaqs }: { faqs?: FaqItem[] }) => {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <div className="max-w-3xl mx-auto py-12">
-      <h2 className="text-3xl font-bold text-white mb-8">
+    <section className="max-w-3xl mx-auto py-12" aria-labelledby="faq-heading">
+      <h2 id="faq-heading" className="text-3xl font-bold text-white mb-8">
         Frequently Asked Questions
       </h2>
       <div className="space-y-4">
@@ -64,7 +72,7 @@ export const Faq = ({ faqs = defaultFaqs }: { faqs?: FaqItem[] }) => {
           </div>
         ))}
       </div>
-    </div>
+    </section>
   );
 };
 

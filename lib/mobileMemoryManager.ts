@@ -305,8 +305,11 @@ class MobileMemoryManager {
       const splineContainers = document.querySelectorAll('.spline-container canvas');
       const nonCriticalCanvases = Array.from(splineContainers).filter(canvas => {
         const container = (canvas as HTMLCanvasElement).closest('.spline-container');
+        if (!container) return false;
+        const isCritical = container.getAttribute('data-spline-critical') === 'true';
         // Check if this canvas is NOT from scene1 (hero)
-        return container && !container.innerHTML.includes('scene1');
+        const isHero = container.innerHTML.includes('scene1');
+        return !isCritical && !isHero;
       });
 
       nonCriticalCanvases.forEach(canvas => {

@@ -29,7 +29,7 @@ import { useUnifiedPerformance } from "@/hooks/useDesktopPerformance";
 import { useStudio } from "@/context/StudioContext";
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 import { useCacheContext } from "@/components/CacheManagerProvider";
-import { useMobileMenu, useNavbarModals } from "@/contexts/UIStateContext";
+import { useMobileMenu, useNavbarModals, useUIState } from "@/contexts/UIStateContext";
 import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
 import { createSupabaseClient } from "@/lib/supabase";
 
@@ -110,12 +110,12 @@ const MobileMenuControls = memo(({
   disableAnimations = false,
 }: any) => (
   <motion.div 
-    className="relative group rounded-2xl overflow-hidden"
+    className="relative group rounded-xl overflow-hidden"
     data-navbar
     style={{ 
       height: isScrollMinimized ? 36 : 44,
       width: isScrollMinimized ? 80 : 'auto',
-      minWidth: isScrollMinimized ? 80 : 90,
+      minWidth: isScrollMinimized ? 80 : 96,
       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
       zIndex: 50,
       willChange: 'transform',
@@ -125,21 +125,22 @@ const MobileMenuControls = memo(({
     <div 
       className="absolute inset-0"
       style={{
-        background: 'rgba(0, 0, 0, 0.7)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255, 255, 255, 0.15)',
-        boxShadow: skipHeavyEffects ? 'none' : '0 0 20px rgba(255, 255, 255, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.1)',
+        background: 'rgba(0, 0, 0, 0.78)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        boxShadow: skipHeavyEffects ? 'none' : 'inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+        borderRadius: 10,
       }}
     />
 
     {/* Subtle shimmer border */}
     {shimmerEnabled && !skipHeavyEffects && !disableAnimations && (
       <div 
-        className="absolute inset-0 rounded-2xl"
+        className="absolute inset-0 rounded-xl"
         style={{
-          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent 50%, rgba(255, 255, 255, 0.05))',
-          opacity: 0.5,
+          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.06), transparent 50%, rgba(255, 255, 255, 0.04))',
+          opacity: 0.45,
         }}
       />
     )}
@@ -152,14 +153,14 @@ const MobileMenuControls = memo(({
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       className="relative w-full h-full flex items-center justify-center gap-2 px-4"
-      style={{ color: '#ffffff' }}
+      style={{ color: '#ffffff', letterSpacing: '0.08em', fontSize: isScrollMinimized ? 12 : 13 }}
       title={open ? 'Close menu' : 'Open menu'}
     >
       <div className="relative flex items-center justify-center">
         {open ? (
-          <IconX className="h-5 w-5" strokeWidth={2} />
+          <IconX className="h-5 w-5" strokeWidth={1.5} />
         ) : (
-          <IconMenu2 className="h-5 w-5" strokeWidth={2} />
+          <IconMenu2 className="h-5 w-5" strokeWidth={1.5} />
         )}
         {hasReward && !open && (
           <span className="absolute -top-1 -right-1 flex h-2 w-2">
@@ -169,7 +170,7 @@ const MobileMenuControls = memo(({
         )}
       </div>
       {!isScrollMinimized && (
-        <span className="text-sm font-semibold tracking-tight">{open ? 'Close' : 'Menu'}</span>
+        <span className="font-semibold tracking-[0.08em]">{open ? 'Close' : 'Menu'}</span>
       )}
     </motion.button>
   </motion.div>
@@ -186,7 +187,7 @@ export const Navbar = memo(() => {
   const { shouldSkipHeavyEffects } = useUnifiedPerformance();
   
   // Unified UI State - handles mutual exclusion between mobile menu, modals, audio widget, etc.
-  const { isMobileMenuOpen, setIsMobileMenuOpen } = useMobileMenu();
+  const { isMobileMenuOpen, setMobileMenuOpen: setIsMobileMenuOpen, setMobileNavbarHidden } = useUIState();
   const { 
     isAdminOpen, 
     isFaqOpen, 
@@ -262,20 +263,24 @@ export const Navbar = memo(() => {
   const supabase = useMemo(() => createSupabaseClient(), []);
   const [adminAuthorized, setAdminAuthorized] = useState(false);
   const [adminChecked, setAdminChecked] = useState(false);
-  const [pagemodeAdminAuthorized, setPagemodeAdminAuthorized] = useState(() => {
+  const readLocalAdminAuthorization = () => {
     if (typeof window === "undefined") return false;
     try {
+      const adminToken = localStorage.getItem("adminToken");
+      if (adminToken) return true;
       const raw = localStorage.getItem("bullmoney_session");
       if (!raw) return false;
       const parsed = JSON.parse(raw);
       const email = (parsed?.email || "").toLowerCase();
       const isAdminFlag = Boolean(parsed?.isAdmin);
-      return Boolean(adminEmailEnv) && (isAdminFlag || email === adminEmailEnv);
+      if (isAdminFlag) return true;
+      return Boolean(adminEmailEnv) && email === adminEmailEnv;
     } catch (err) {
       console.error("Navbar pagemode session parse error (init)", err);
       return false;
     }
-  });
+  };
+  const [pagemodeAdminAuthorized, setPagemodeAdminAuthorized] = useState(() => readLocalAdminAuthorization());
   const [hasAccountManagerAccess, setHasAccountManagerAccess] = useState<boolean>(() => getStoredAccountManagerAccess());
  
   useEffect(() => {
@@ -308,28 +313,22 @@ export const Navbar = memo(() => {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const evaluate = () => {
-      try {
-        const raw = localStorage.getItem("bullmoney_session");
-        if (!raw) {
-          setPagemodeAdminAuthorized(false);
-          return;
-        }
-        const parsed = JSON.parse(raw);
-        const email = (parsed?.email || "").toLowerCase();
-        const isAdminFlag = Boolean(parsed?.isAdmin);
-        setPagemodeAdminAuthorized(Boolean(adminEmailEnv) && (isAdminFlag || email === adminEmailEnv));
-      } catch (err) {
-        console.error("Navbar pagemode session parse error", err);
-        setPagemodeAdminAuthorized(false);
-      }
+      setPagemodeAdminAuthorized(readLocalAdminAuthorization());
     };
 
     evaluate();
     const onStorage = (e: StorageEvent) => {
-      if (e.key === "bullmoney_session") evaluate();
+      if (e.key === "bullmoney_session" || e.key === "adminToken") evaluate();
     };
+    const onSessionChange = () => evaluate();
     window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    window.addEventListener("bullmoney_session_changed", onSessionChange);
+    window.addEventListener("admin_token_changed", onSessionChange);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("bullmoney_session_changed", onSessionChange);
+      window.removeEventListener("admin_token_changed", onSessionChange);
+    };
   }, [adminEmailEnv]);
 
   useEffect(() => {
@@ -382,7 +381,7 @@ export const Navbar = memo(() => {
   }, [supabase]);
 
   const profileMatchesAdmin = (userProfile?.email || "").toLowerCase() === adminEmailEnv;
-  const isAdmin = profileMatchesAdmin || pagemodeAdminAuthorized || (adminChecked && adminAuthorized);
+  const isAdmin = state.isAdmin || profileMatchesAdmin || pagemodeAdminAuthorized || (adminChecked && adminAuthorized);
 
   const handleAdminClick = useCallback(() => {
     if (!isAdmin) return;
@@ -413,11 +412,57 @@ export const Navbar = memo(() => {
     enableMemoryOptimizations: false,
   });
 
-  // Mobile scroll minimization
+  // Mobile scroll minimization - hide navbar and notify context for UltimateHub expansion
   useEffect(() => {
-    // Disable scroll-based minimization on mobile completely
-    return;
-  }, [isMobile, open, scrollDirection]);
+    if (!isMobile) return;
+    
+    // Direct scroll listener for immediate response
+    const handleScroll = () => {
+      if (open) return; // Don't hide navbar if menu is open
+      
+      const currentScrollY = window.scrollY;
+      const scrollDelta = currentScrollY - lastScrollY.current;
+      
+      // Hide navbar when scrolling down past 60px
+      if (currentScrollY > 60 && scrollDelta > 8) {
+        if (!isScrollMinimized) {
+          setIsScrollMinimized(true);
+          setMobileNavbarHidden(true);
+        }
+        
+        // Reset timeout on continued scrolling
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current);
+        }
+        
+        scrollTimeoutRef.current = setTimeout(() => {
+          setIsScrollMinimized(false);
+          setMobileNavbarHidden(false);
+        }, 2000);
+      }
+      
+      // Show navbar when scrolled back to top or scrolling up significantly
+      if (currentScrollY < 40 || scrollDelta < -25) {
+        setIsScrollMinimized(false);
+        setMobileNavbarHidden(false);
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current);
+        }
+      }
+      
+      lastScrollY.current = currentScrollY;
+    };
+    
+    // Use passive listener for better scroll performance
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, [isMobile, open, isScrollMinimized, setMobileNavbarHidden]);
 
   // Desktop scroll minimization - more responsive
   useEffect(() => {
@@ -589,8 +634,13 @@ export const Navbar = memo(() => {
           onExpandClick={() => setIsDesktopScrollMinimized(false)}
         />
 
-        {/* MOBILE NAVBAR */}
-        <div className="lg:hidden flex flex-col items-center w-full gap-2 pointer-events-auto">
+        {/* MOBILE NAVBAR - CSS-based hide on scroll for smooth 60fps animation */}
+        <div 
+          className={`lg:hidden flex flex-col items-center w-full gap-2 pointer-events-auto transition-all duration-300 ease-out ${
+            isScrollMinimized ? 'opacity-0 -translate-y-full pointer-events-none' : 'opacity-100 translate-y-0'
+          }`}
+          style={{ willChange: 'transform, opacity' }}
+        >
           {/* Mobile Nav Logo and Pill - Full width */}
           <div className="flex items-center justify-between w-full">
             {/* Logo on left */}

@@ -1,0 +1,43 @@
+.scroll-reveal {
+  margin: 20px 0;
+}
+
+.scroll-reveal-text {
+  font-size: clamp(1.6rem, 4vw, 3rem);
+  line-height: 1.5;
+  font-weight: 600;
+}
+
+.scroll-reveal-text.text-sm {
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  font-weight: 400;
+}
+
+.scroll-reveal-text.text-base {
+  font-size: clamp(1rem, 2.5vw, 1.125rem);
+  font-weight: 400;
+}
+
+.scroll-reveal-text.text-lg {
+  font-size: clamp(1.125rem, 3vw, 1.25rem);
+  font-weight: 500;
+}
+
+.scroll-reveal-text.text-xl {
+  font-size: clamp(1.25rem, 3vw, 1.5rem);
+  font-weight: 600;
+}
+
+.scroll-reveal-text.text-2xl {
+  font-size: clamp(1.5rem, 3.5vw, 2rem);
+  font-weight: 600;
+}
+
+.scroll-reveal-text.text-header {
+  font-size: clamp(1.875rem, 5vw, 3.75rem);
+  font-weight: 600;
+}
+
+.word {
+  display: inline-block;
+}
