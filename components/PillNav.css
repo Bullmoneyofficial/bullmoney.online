@@ -1,7 +1,7 @@
 .pill-nav-container {
   position: absolute;
   top: 1em;
-  z-index: 99;
+  z-index: 9999;
 }
 
 @media (max-width: 768px) {
@@ -12,14 +12,15 @@
 }
 
 .pill-nav {
-  --nav-h: 42px;
-  --logo: 36px;
-  --pill-pad-x: 18px;
-  --pill-gap: 3px;
+  --nav-h: 52px;
+  --logo: 46px;
+  --pill-pad-x: 28px;
+  --pill-gap: 4px;
   width: max-content;
   display: flex;
   align-items: center;
   box-sizing: border-box;
+  z-index: 10000;
 }
 
 @media (max-width: 768px) {
@@ -50,6 +51,7 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  z-index: 10001;
 }
 
 .pill-logo img {
@@ -86,7 +88,7 @@
   border-radius: 9999px;
   box-sizing: border-box;
   font-weight: 600;
-  font-size: 16px;
+  font-size: 17px;
   line-height: 0;
   text-transform: uppercase;
   letter-spacing: 0.2px;
@@ -94,6 +96,8 @@
   cursor: pointer;
   position: relative;
   overflow: hidden;
+  z-index: 10002;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .pill .hover-circle {
@@ -101,8 +105,8 @@
   left: 50%;
   bottom: 0;
   border-radius: 50%;
-  background: var(--base, #000);
-  z-index: 1;
+  background: #ffffff;
+  z-index: 10003;
   display: block;
   pointer-events: none;
   will-change: transform;
@@ -112,12 +116,12 @@
   position: relative;
   display: inline-block;
   line-height: 1;
-  z-index: 2;
+  z-index: 10004;
 }
 
 .pill .pill-label {
   position: relative;
-  z-index: 2;
+  z-index: 10005;
   display: inline-block;
   line-height: 1;
   will-change: transform;
@@ -127,8 +131,8 @@
   position: absolute;
   left: 0;
   top: 0;
-  color: var(--hover-text, #fff);
-  z-index: 3;
+  color: #000000;
+  z-index: 10006;
   display: inline-block;
   will-change: transform, opacity;
 }
@@ -143,7 +147,7 @@
   height: 12px;
   background: var(--base, #000);
   border-radius: 50px;
-  z-index: 4;
+  z-index: 10007;
 }
 
 .desktop-only {
