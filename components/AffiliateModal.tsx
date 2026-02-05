@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect, useCallback, useMemo, memo } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from "next/navigation";
 import dynamic from 'next/dynamic';
 import { 
@@ -21,7 +22,7 @@ import { BullMoneyAnalytics, trackEvent } from '@/lib/analytics';
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 
 // --- PERFORMANCE HOOKS ---
-// import { useMobilePerformance } from '@/hooks/useMobilePerformance';
+import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 
 // --- SUPABASE SETUP ---
 const TELEGRAM_GROUP_LINK = "https://t.me/addlist/uswKuwT2JUQ4YWI8";
@@ -491,10 +492,40 @@ interface AffiliateModalProps {
 
 type ModalStep = 'intro' | 'how-it-works' | 'signup-broker' | 'verify-broker' | 'signup-skrill' | 'signup-mt5' | 'signup-account' | 'loading' | 'success' | 'dashboard';
 
+// Main Affiliate Modal Component - Matches ChartNewsModal pattern
 export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <AnimatePresence>
+      {isOpen && <AffiliateModalContent isOpen={isOpen} onClose={onClose} />}
+    </AnimatePresence>,
+    document.body
+  );
+}
+
+// Affiliate Modal Content Component
+function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
   const router = useRouter();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  // const { isMobile: isMobileDevice } = useMobilePerformance();
+  const { isMobile } = useMobilePerformance();
   
   // Global theme context
   const { setIsXMUser } = useGlobalTheme();
@@ -549,6 +580,18 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
     
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
+
+  // ESC key support
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
 
   // Initialize and check for saved session
   useEffect(() => {
@@ -859,8 +902,6 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
     onClose();
   }, [onClose]);
 
-  if (!isOpen) return null;
-
   // =========================================
   // RENDER INTRO SCREEN
   // =========================================
@@ -870,7 +911,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="w-full max-w-lg mx-auto"
+      className="w-full max-w-4xl mx-auto"
     >
       <NeonCard padding="large" className="text-center">
         {/* Header Icon - Apple minimalist */}
@@ -965,7 +1006,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="w-full max-w-2xl mx-auto space-y-4"
+      className="w-full max-w-4xl mx-auto space-y-4"
     >
       <div className="space-y-3">
         <CollapsibleSection
@@ -1167,7 +1208,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="w-full max-w-lg mx-auto"
+      className="w-full max-w-4xl mx-auto"
     >
       <NeonCard padding="large">
         {/* Step Indicator */}
@@ -1281,7 +1322,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="w-full max-w-lg mx-auto"
+      className="w-full max-w-4xl mx-auto"
     >
       <NeonCard padding="large">
         {/* Step Indicator */}
@@ -1381,7 +1422,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="w-full max-w-lg mx-auto"
+      className="w-full max-w-4xl mx-auto"
     >
       <NeonCard padding="large">
         {/* Step Indicator */}
@@ -1491,7 +1532,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="w-full max-w-lg mx-auto"
+      className="w-full max-w-4xl mx-auto"
     >
       <NeonCard padding="large">
         {/* Step Indicator */}
@@ -1594,7 +1635,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="w-full max-w-lg mx-auto"
+      className="w-full max-w-4xl mx-auto"
     >
       <NeonCard padding="large">
         {/* Step Indicator */}
@@ -1762,7 +1803,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0 }}
-      className="w-full max-w-lg mx-auto"
+      className="w-full max-w-4xl mx-auto"
     >
       <NeonCard padding="large" className="text-center">
         {/* Success Icon - Apple minimal */}
@@ -1808,14 +1849,13 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
     // Mobile view - Keep existing compact modal layout
     if (isMobileView) {
       return (
-        <div className="fixed inset-0 z-[999999] flex flex-col" style={{ background: NEON_BLUE.bgDark }}>
+        <div className="fixed inset-0 z-[2147483647] flex flex-col bg-black/95">
           {/* Header */}
           <div 
-            className="flex items-center justify-between p-4 border-b"
-            style={{ borderColor: 'rgba(255, 255, 255, 0.3)', background: 'rgba(0, 0, 0, 0.8)' }}
+            className="flex items-center justify-between p-4 border-b border-white/30 bg-black/80"
           >
             <div className="flex items-center gap-2">
-              <h1 className="text-lg font-bold" style={{ color: NEON_BLUE.textPrimary }}>
+              <h1 className="text-lg font-bold text-white">
                 Affiliate Dashboard
               </h1>
             </div>
@@ -1830,11 +1870,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
               </NeonButton>
               <button 
                 onClick={handleClose}
-                className="p-2 rounded-full transition-all border-2"
-                style={{ 
-                  borderColor: 'rgba(255, 255, 255, 0.3)',
-                  color: NEON_BLUE.textMuted
-                }}
+                className="p-2 rounded-full transition-all border-2 border-white/30 text-white/45"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1856,24 +1892,22 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
 
     // Desktop view - Full layout from AffiliateRecruitsDashboard
     return (
-      <div className="fixed inset-0 z-[999999] flex flex-col" style={{ background: NEON_BLUE.bgDark }}>
+      <div className="fixed inset-0 z-[2147483647] flex flex-col bg-black/95">
         {/* Header */}
         <div 
-          className="flex items-center justify-between p-4 border-b"
-          style={{ borderColor: 'rgba(255, 255, 255, 0.3)', background: 'rgba(0, 0, 0, 0.8)' }}
+          className="flex items-center justify-between p-4 border-b border-white/30 bg-black/80"
         >
           <div className="flex items-center gap-4">
-            <h1 className="text-lg font-bold" style={{ color: NEON_BLUE.textPrimary }}>
+            <h1 className="text-lg font-bold text-white">
               Affiliate Dashboard
             </h1>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setDashboardTab('dashboard')}
                 className={cn(
-                  "px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all",
+                  "px-3 py-1.5 rounded-full text-xs font-bold border-2 border-white/30 text-white transition-all",
                   dashboardTab === 'dashboard' ? "bg-white/10" : "bg-transparent"
                 )}
-                style={{ borderColor: 'rgba(255, 255, 255, 0.3)', color: NEON_BLUE.textPrimary }}
               >
                 Dashboard
               </button>
@@ -1881,17 +1915,16 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
                 <button
                   onClick={() => setDashboardTab('admin')}
                   className={cn(
-                    "px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all flex items-center gap-1",
+                    "px-3 py-1.5 rounded-full text-xs font-bold border-2 border-white/30 text-white transition-all flex items-center gap-1",
                     dashboardTab === 'admin' ? "bg-white/10" : "bg-transparent"
                   )}
-                  style={{ borderColor: 'rgba(255, 255, 255, 0.3)', color: NEON_BLUE.textPrimary }}
                 >
                   <Shield className="w-3 h-3" /> Admin Panel
                 </button>
               )}
             </div>
             {savedSession && (
-              <span className="text-xs" style={{ color: NEON_BLUE.textMuted }}>
+              <span className="text-xs text-white/45">
                 {savedSession.email}
               </span>
             )}
@@ -1906,11 +1939,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
             </NeonButton>
             <button 
               onClick={handleClose}
-              className="p-2 rounded-full transition-all border-2"
-              style={{ 
-                borderColor: 'rgba(255, 255, 255, 0.3)',
-                color: NEON_BLUE.textMuted
-              }}
+              className="p-2 rounded-full transition-all border-2 border-white/30 text-white/45"
             >
               <X className="w-5 h-5" />
             </button>
@@ -1932,7 +1961,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
 
   // OLD renderDashboard for reference - replaced above
   const renderDashboard_OLD = () => (
-    <div className="fixed inset-0 z-[999999] flex flex-col" style={{ background: NEON_BLUE.bgDark }}>
+    <div className="fixed inset-0 z-[2147483647] flex flex-col bg-black/95">
       {/* This old implementation is kept for reference but not used */}
     </div>
   );
@@ -1946,41 +1975,90 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
     return renderDashboard();
   }
 
-  // Modal wrapper for other steps - Apple Style
+  // Modal wrapper for other steps - EXACT ChartNewsModal pattern
   return (
-    <div 
-      className="affiliate-modal fixed inset-0 z-[999999] flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
-      style={{ background: 'rgba(0, 0, 0, 0.92)' }}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      className="fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-5 bg-black/95"
+      onClick={handleClose}
     >
-      {/* Close Button - Apple style */}
-      <button 
-        onClick={handleClose}
-        className="absolute top-4 right-4 z-50 p-2.5 rounded-full transition-all"
-        style={{ 
-          background: 'rgba(255, 255, 255, 0.08)',
-          color: 'rgba(255, 255, 255, 0.6)'
-        }}
+      {/* Tap to close hints - skip on mobile */}
+      {!isMobile && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0.4, 0.8, 0.4] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
+        >
+          <span>↑</span> Tap anywhere to close <span>↑</span>
+        </motion.div>
+      )}
+      {!isMobile && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0.4, 0.8, 0.4] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
+        >
+          <span>↓</span> Tap anywhere to close <span>↓</span>
+        </motion.div>
+      )}
+      
+      {/* Modal */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.2 }}
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-6xl h-[92vh] overflow-hidden rounded-2xl"
       >
-        <X className="w-5 h-5" />
-      </button>
-
-      {/* Content Container */}
-      <div 
-        ref={scrollContainerRef}
-        className="w-full max-h-[90vh] overflow-y-auto py-8"
-      >
-        <AnimatePresence mode="wait">
-          {step === 'intro' && renderIntro()}
-          {step === 'how-it-works' && renderHowItWorks()}
-          {step === 'signup-broker' && renderSignupBroker()}
-          {step === 'verify-broker' && renderVerifyBroker()}
-          {step === 'signup-skrill' && renderSignupSkrill()}
-          {step === 'signup-mt5' && renderSignupMT5()}
-          {step === 'signup-account' && renderSignupAccount()}
-          {step === 'loading' && renderLoading()}
-          {step === 'success' && renderSuccess()}
-        </AnimatePresence>
-      </div>
-    </div>
+        {/* Inner Container */}
+        <div className="relative z-10 bg-gradient-to-b from-neutral-900 to-black rounded-2xl border border-white/20 overflow-hidden h-full flex flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b border-white/10 flex-shrink-0">
+            <div className="flex items-center gap-3">
+              <DollarSign className="w-6 h-6 text-white" />
+              <div>
+                <h2 className="text-lg sm:text-xl font-bold text-white">Affiliate Program</h2>
+                <p className="text-xs text-white/60">Earn commissions with BullMoney</p>
+              </div>
+            </div>
+            
+            <motion.button
+              whileHover={isMobile ? {} : { scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleClose}
+              className="p-2.5 min-w-[44px] min-h-[44px] rounded-full bg-neutral-800 text-white hover:bg-neutral-700 transition-colors group relative flex items-center justify-center"
+              title="Close (ESC)"
+            >
+              <X className="w-5 h-5" />
+              <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-white/50 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">ESC</span>
+            </motion.button>
+          </div>
+          
+          {/* Content */}
+          <div 
+            ref={scrollContainerRef}
+            className="flex-1 overflow-y-auto p-4 sm:p-6"
+          >
+            <AnimatePresence mode="wait">
+              {step === 'intro' && renderIntro()}
+              {step === 'how-it-works' && renderHowItWorks()}
+              {step === 'signup-broker' && renderSignupBroker()}
+              {step === 'verify-broker' && renderVerifyBroker()}
+              {step === 'signup-skrill' && renderSignupSkrill()}
+              {step === 'signup-mt5' && renderSignupMT5()}
+              {step === 'signup-account' && renderSignupAccount()}
+              {step === 'loading' && renderLoading()}
+              {step === 'success' && renderSuccess()}
+            </AnimatePresence>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }

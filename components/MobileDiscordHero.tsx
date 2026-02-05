@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useEffect, useRef, useMemo, useCallback, useState, memo } from 'react';
 import { Renderer, Program, Mesh, Color as OglColor, Triangle } from 'ogl';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
@@ -6,7 +8,7 @@ import * as THREE from 'three';
 import { createSupabaseClient } from '@/lib/supabase';
 import UltimateHub from './UltimateHub';
 import ProductsSection from './ProductsSection';
-import { useUltimateHubUI, useProductsModalUI } from '@/contexts/UIStateContext';
+import { useUltimateHubUI, useProductsModalUI, useBgPickerModalUI } from '@/contexts/UIStateContext';
 import dynamic from 'next/dynamic';
 
 // Dynamic import for Spline (heavy 3D component)
@@ -695,6 +697,8 @@ const Styles = () => (
         0 1px 3px rgba(0, 0, 0, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
       font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+      white-space: nowrap;
+      min-width: fit-content;
     }
 
     .bg-selector-toggle:hover {
@@ -710,6 +714,7 @@ const Styles = () => (
       width: 16px;
       height: 16px;
       opacity: 0.9;
+      flex-shrink: 0;
     }
 
     .bg-selector-panel {
@@ -729,6 +734,8 @@ const Styles = () => (
       overflow: hidden;
       transform-origin: top center;
       animation: slideDown 0.3s ease;
+      box-sizing: border-box;
+      max-width: calc(100vw - 32px);
     }
 
     @keyframes slideDown {
@@ -748,6 +755,8 @@ const Styles = () => (
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 12px;
+      flex-shrink: 0;
     }
 
     .bg-selector-title {
@@ -770,6 +779,7 @@ const Styles = () => (
       display: flex;
       flex-direction: column;
       gap: 6px;
+      -webkit-overflow-scrolling: touch;
     }
 
     .bg-selector-item {
@@ -884,6 +894,7 @@ const Styles = () => (
       border-top: 1px solid rgba(255, 255, 255, 0.1);
       display: flex;
       gap: 8px;
+      flex-shrink: 0;
     }
 
     .bg-footer-btn {
@@ -944,13 +955,77 @@ const Styles = () => (
     @media (max-width: 480px) {
       .bg-selector-toggle {
         top: 70px;
-        width: 44px;
-        height: 44px;
+        height: 40px;
+        padding: 0 12px;
+        font-size: 12px;
+        gap: 6px;
+        min-width: 44px;
+      }
+      .bg-selector-toggle span {
+        display: none;
       }
       .bg-selector-panel {
         top: 120px;
         width: calc(100vw - 32px);
-        max-width: 360px;
+        max-width: none;
+        left: 16px;
+        transform: translateX(0);
+        transform-origin: top left;
+        max-height: calc(100vh - 160px);
+      }
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateY(-20px) scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+    }
+
+    /* Extra small mobile (< 360px) */
+    @media (max-width: 359px) {
+      .bg-selector-toggle {
+        top: 65px;
+        height: 36px;
+        padding: 0 10px;
+      }
+      .bg-selector-panel {
+        top: 110px;
+        width: calc(100vw - 20px);
+        left: 10px;
+        max-height: calc(100vh - 130px);
+        border-radius: 12px;
+      }
+      .bg-selector-header {
+        padding: 12px 16px;
+      }
+      .bg-selector-title {
+        font-size: 0.85rem;
+      }
+      .bg-selector-subtitle {
+        font-size: 0.65rem;
+      }
+      .bg-selector-list {
+        max-height: 40vh;
+        padding: 8px;
+        gap: 4px;
+      }
+      .bg-selector-item {
+        padding: 8px 10px;
+        gap: 10px;
+      }
+      .bg-item-name {
+        font-size: 0.8rem;
+      }
+      .bg-item-shortcut {
+        font-size: 0.6rem;
+      }
+      .bg-item-select {
+        padding: 4px 10px;
+        font-size: 0.7rem;
       }
     }
 
@@ -1638,10 +1713,12 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
   onOpenShop,
   onOpenNewShop
 }) => {
+  // Use context for BG picker panel state with mutual exclusion
+  const { isOpen: showPanel, setIsOpen: setShowPanel } = useBgPickerModalUI();
+  
   // Use lazy initialization to get index synchronously on first render - prevents flicker
   const [currentIndex, setCurrentIndex] = useState(() => getInitialEffectIndex(effects.length, reloadsPerCycle));
   const [isReady, setIsReady] = useState(false);
-  const [showPanel, setShowPanel] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [favorites, setFavorites] = useState<BackgroundEffect[]>([]);
   const [enabledEffects, setEnabledEffects] = useState<BackgroundEffect[]>(effects as BackgroundEffect[]);
@@ -1750,7 +1827,7 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
       // B key to toggle panel
       else if (e.key === 'b' || e.key === 'B') {
         e.preventDefault();
-        setShowPanel(prev => !prev);
+        setShowPanel(!showPanel);
         return;
       }
       
@@ -1973,7 +2050,7 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
       {/* Background Selector Toggle Button */}
       <button 
         className="bg-selector-toggle"
-        onClick={() => setShowPanel(prev => !prev)}
+        onClick={() => setShowPanel(!showPanel)}
         title="Background Settings (Ctrl+B)"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

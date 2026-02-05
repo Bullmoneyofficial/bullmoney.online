@@ -19,7 +19,7 @@ const HeroMain = dynamic(() => import("@/app/VIP/heromain"), {
   loading: () => <div className="h-screen bg-black/50 animate-pulse" />
 });
 
-const ShopFunnel = dynamic(() => import("@/app/shop/ShopFunnel"), {
+const ShopFunnel = dynamic(() => import("@/app/oldstore/ShopFunnel"), {
   ssr: false,
   loading: () => <div className="h-screen bg-black/50 animate-pulse" />
 });
@@ -29,7 +29,7 @@ const ProductsSection = dynamic(() => import("@/app/VIP/ProductsSection"), {
   loading: () => <div className="h-screen bg-black/50 animate-pulse" />
 });
 
-const ShopScrollFunnel = dynamic(() => import("@/app/shop/ShopScrollFunnel"), {
+const ShopScrollFunnel = dynamic(() => import("@/app/oldstore/ShopScrollFunnel"), {
   ssr: false,
   loading: () => <div className="h-screen bg-black/50 animate-pulse" />
 });

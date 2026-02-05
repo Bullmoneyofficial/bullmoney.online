@@ -205,12 +205,9 @@ function ProductBentoCard({
   
   const handleBuyNow = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const url = product.buyUrl?.trim();
-    if (!url) {
-      alert("This product does not have a Buy now link set yet.");
-      return;
-    }
-    window.open(url, "_blank", "noopener,noreferrer");
+    // Coming soon - checkout disabled temporarily
+    alert("Coming Soon!");
+    return;
   };
 
   return (
@@ -267,11 +264,13 @@ function ProductBentoCard({
                 ${formatPriceDisplay(product.price)} 
               </span>
               
+              {/* COMING_SOON_BUTTON: To re-enable, add onClick={handleBuyNow}, change bg to bg-indigo-600 hover:bg-indigo-500, remove disabled, and text to "Get Access" */}
               <button
-                onClick={handleBuyNow}
-                className="px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-indigo-900/20 transition-all hover:scale-105"
+                // onClick={handleBuyNow} // COMING_SOON: Uncomment to re-enable
+                disabled={true}
+                className="px-4 py-1.5 rounded-lg bg-gray-600 text-white/60 text-xs font-bold uppercase tracking-wider shadow-lg shadow-gray-900/20 cursor-not-allowed opacity-60"
               >
-                Get Access
+                Coming Soon
               </button>
             </div>
           </div>

@@ -53,7 +53,7 @@ const AboutContent = dynamic(
 );
 
 const Pricing = dynamic(
-  () => import("@/app/shop/pricing").then((mod) => ({ default: mod.Pricing })),
+  () => import("@/app/oldstore/pricing").then((mod) => ({ default: mod.Pricing })),
   { ssr: false, loading: () => <CardSkeleton /> }
 );
 

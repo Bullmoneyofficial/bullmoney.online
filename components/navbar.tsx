@@ -24,6 +24,7 @@ import dynamic from "next/dynamic";
 import { useCalEmbed } from "@/app/hooks/useCalEmbed";
 import { CONSTANTS } from "@/constants/links";
 import { useUnifiedPerformance } from "@/hooks/useDesktopPerformance";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 // --- IMPORT CONTEXT ---
 import { useStudio } from "@/context/StudioContext";
@@ -257,80 +258,14 @@ export const Navbar = memo(() => {
   // --- USE STUDIO FOR ADMIN CHECK ---
   const { state } = useStudio();
   const { userProfile } = state;
- 
-  // Admin visibility based on Supabase session email matching env
-  const adminEmailEnv = process.env.NEXT_PUBLIC_ADMIN_EMAIL?.toLowerCase() || "";
+  
+  // Use admin auth hook for centralized admin checking
+  const { isAdmin } = useAdminAuth();
+  
   const supabase = useMemo(() => createSupabaseClient(), []);
-  const [adminAuthorized, setAdminAuthorized] = useState(false);
-  const [adminChecked, setAdminChecked] = useState(false);
-  const readLocalAdminAuthorization = () => {
-    if (typeof window === "undefined") return false;
-    try {
-      const adminToken = localStorage.getItem("adminToken");
-      if (adminToken) return true;
-      const raw = localStorage.getItem("bullmoney_session");
-      if (!raw) return false;
-      const parsed = JSON.parse(raw);
-      const email = (parsed?.email || "").toLowerCase();
-      const isAdminFlag = Boolean(parsed?.isAdmin);
-      if (isAdminFlag) return true;
-      return Boolean(adminEmailEnv) && email === adminEmailEnv;
-    } catch (err) {
-      console.error("Navbar pagemode session parse error (init)", err);
-      return false;
-    }
-  };
-  const [pagemodeAdminAuthorized, setPagemodeAdminAuthorized] = useState(() => readLocalAdminAuthorization());
   const [hasAccountManagerAccess, setHasAccountManagerAccess] = useState<boolean>(() => getStoredAccountManagerAccess());
- 
-  useEffect(() => {
-    let mounted = true;
-    const evaluate = (email?: string | null) => {
-      if (!mounted) return;
-      setAdminAuthorized(Boolean(adminEmailEnv) && email?.toLowerCase() === adminEmailEnv);
-    };
-    const run = async () => {
-      if (!adminEmailEnv) {
-        setAdminAuthorized(false);
-        setAdminChecked(true);
-        return;
-      }
-      const { data, error } = await supabase.auth.getSession();
-      if (error) console.error("Navbar auth session error", error.message);
-      evaluate(data?.session?.user?.email || null);
-      setAdminChecked(true);
-    };
-    run();
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      evaluate(session?.user?.email || null);
-    });
-    return () => {
-      mounted = false;
-      sub?.subscription?.unsubscribe();
-    };
-  }, [adminEmailEnv, supabase]);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const evaluate = () => {
-      setPagemodeAdminAuthorized(readLocalAdminAuthorization());
-    };
-
-    evaluate();
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === "bullmoney_session" || e.key === "adminToken") evaluate();
-    };
-    const onSessionChange = () => evaluate();
-    window.addEventListener("storage", onStorage);
-    window.addEventListener("bullmoney_session_changed", onSessionChange);
-    window.addEventListener("admin_token_changed", onSessionChange);
-    return () => {
-      window.removeEventListener("storage", onStorage);
-      window.removeEventListener("bullmoney_session_changed", onSessionChange);
-      window.removeEventListener("admin_token_changed", onSessionChange);
-    };
-  }, [adminEmailEnv]);
-
+  // Account Manager check based on Supabase auth OR localStorage
   useEffect(() => {
     let isMounted = true;
 
@@ -379,9 +314,6 @@ export const Navbar = memo(() => {
       }
     };
   }, [supabase]);
-
-  const profileMatchesAdmin = (userProfile?.email || "").toLowerCase() === adminEmailEnv;
-  const isAdmin = state.isAdmin || profileMatchesAdmin || pagemodeAdminAuthorized || (adminChecked && adminAuthorized);
 
   const handleAdminClick = useCallback(() => {
     if (!isAdmin) return;

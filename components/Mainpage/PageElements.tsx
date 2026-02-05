@@ -418,7 +418,7 @@ const dynamicTSXComponents: Record<string, React.ComponentType<any>> = {
     ssr: false,
     loading: () => <TSXLoadingFallback label="Chart news" />,
   }),
-  ShopScrollFunnel: dynamic(() => import('@/app/shop/ShopScrollFunnel').then((mod) => mod.default || mod), {
+  ShopScrollFunnel: dynamic(() => import('@/app/oldstore/ShopScrollFunnel').then((mod) => mod.default || mod), {
     ssr: false,
     loading: () => <TSXLoadingFallback label="Shop funnel" />,
   }),

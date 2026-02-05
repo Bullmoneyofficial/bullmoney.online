@@ -1,7 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Suspense, ReactNode, useEffect } from "react";
+import { Suspense, ReactNode, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
 
 // ✅ IMPORT CRITICAL SEO/ANALYTICS DIRECTLY - These are lightweight and critical
@@ -75,6 +76,36 @@ interface LayoutProvidersProps {
 export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
   // Only defer navbar/UltimateHub on mobile to avoid blocking first paint
   const { isMobile: isMobileViewport, shouldRender: allowMobileLazy } = useMobileLazyRender(220);
+  
+  // Check if we're on store pages - hide navbar and UltimateHub
+  const pathname = usePathname();
+  const isStorePage = pathname.startsWith('/store');
+  
+  // Check if user wants to show Ultimate Hub on store - default to FALSE (hide unless explicitly enabled)
+  const [showUltimateHubOnStore, setShowUltimateHubOnStore] = useState(false);
+  
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('store_show_ultimate_hub');
+      // Default to false (hiding Ultimate Hub) unless explicitly set to 'true'
+      setShowUltimateHubOnStore(stored === 'true');
+      
+      // Listen for changes
+      const handleStorageChange = (event: Event) => {
+        // Use event detail when available for immediate sync
+        const detailValue = (event as CustomEvent<boolean>).detail;
+        if (typeof detailValue === 'boolean') {
+          setShowUltimateHubOnStore(detailValue);
+          return;
+        }
+        const stored = localStorage.getItem('store_show_ultimate_hub');
+        // Default to false (hiding Ultimate Hub) unless explicitly set to 'true'
+        setShowUltimateHubOnStore(stored === 'true');
+      };
+      window.addEventListener('store_ultimate_hub_toggle', handleStorageChange);
+      return () => window.removeEventListener('store_ultimate_hub_toggle', handleStorageChange);
+    }
+  }, []);
 
   // Dev-only guard to avoid crash when React tries to remove nodes that were already moved/removed by imperative code
   useEffect(() => {
@@ -109,14 +140,14 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
       
       {/* Cache Manager - Handles version-based cache invalidation */}
       <CacheManagerProvider>
-        {/* Navbar rendered outside ClientProviders for fixed positioning */}
-        {(allowMobileLazy || !isMobileViewport) && <Navbar />}
+        {/* Navbar rendered outside ClientProviders for fixed positioning - HIDDEN on store pages */}
+        {!isStorePage && (allowMobileLazy || !isMobileViewport) && <Navbar />}
         
-        {/* ✅ ULTIMATE HUB - All-in-one unified component
+        {/* ✅ ULTIMATE HUB - All-in-one unified component - HIDDEN on store pages unless toggled
             - Left side: Trading pill (prices), Community pill (Telegram), TV pill
             - Right side: FPS pill with Device Center Panel (4 tabs: Overview, Network, Performance, Account)
             - All real device data from browser APIs */}
-        {(allowMobileLazy || !isMobileViewport) && <UltimateHub />}
+        {(!isStorePage || showUltimateHubOnStore) && (allowMobileLazy || !isMobileViewport) && <UltimateHub />}
         
         {/* ✅ LAZY LOADED: All performance providers bundled */}
         <ClientProviders modal={modal}>

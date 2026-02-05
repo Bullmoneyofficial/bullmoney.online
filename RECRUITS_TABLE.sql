@@ -80,6 +80,28 @@ CREATE TABLE IF NOT EXISTS public.recruits (
   notification_sound BOOLEAN DEFAULT true
 );
 
+-- Ensure id column and primary key exist (if table was created without id)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public'
+            AND table_name = 'recruits'
+            AND column_name = 'id'
+    ) THEN
+        ALTER TABLE public.recruits ADD COLUMN id BIGSERIAL;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints
+        WHERE table_schema = 'public'
+            AND table_name = 'recruits'
+            AND constraint_type = 'PRIMARY KEY'
+    ) THEN
+        ALTER TABLE public.recruits ADD CONSTRAINT recruits_pkey PRIMARY KEY (id);
+    END IF;
+END $$;
+
 -- Add VIP columns if table already exists
 ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS is_vip BOOLEAN DEFAULT false;
 ALTER TABLE public.recruits ADD COLUMN IF NOT EXISTS vip_updated_at TIMESTAMP WITH TIME ZONE;

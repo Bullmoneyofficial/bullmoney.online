@@ -276,6 +276,20 @@ export function AdminHubModal({
     displayOrder: 0,
   });
 
+  // VIP (bullmoney_vip)
+  const [vipProducts, setVipProducts] = useState<any[]>([]);
+  const [vipForm, setVipForm] = useState({
+    id: "",
+    name: "",
+    description: "",
+    price: "0",
+    imageUrl: "",
+    buyUrl: "",
+    comingSoon: false,
+    sortOrder: 0,
+    planOptions: "[]",
+  });
+
   // Services
   const [services, setServices] = useState<any[]>([]);
   const [serviceForm, setServiceForm] = useState({
@@ -465,6 +479,25 @@ export function AdminHubModal({
     }
   }, [supabase, showError]);
 
+  const refreshVipProducts = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("bullmoney_vip")
+      .select("*")
+      .order("sort_order", { ascending: true })
+      .order("price", { ascending: true });
+
+    if (!error) {
+      setVipProducts(
+        (data || []).map((p: any) => ({
+          ...p,
+          planOptions: JSON.stringify(p.plan_options || [], null, 2),
+        }))
+      );
+    } else {
+      showError(`VIP load failed: ${error.message}`);
+    }
+  }, [supabase, showError]);
+
   const refreshServices = useCallback(async () => {
     const { data, error } = await supabase
       .from("services")
@@ -523,6 +556,7 @@ export function AdminHubModal({
     try {
       await Promise.all([
         refreshProducts(),
+        refreshVipProducts(),
         refreshServices(),
         refreshLivestream(),
         refreshAnalyses(),
@@ -531,7 +565,7 @@ export function AdminHubModal({
     } finally {
       isSyncing.current = false;
     }
-  }, [refreshProducts, refreshServices, refreshLivestream, refreshAnalyses, refreshRecruits]);
+  }, [refreshProducts, refreshVipProducts, refreshServices, refreshLivestream, refreshAnalyses, refreshRecruits]);
 
   const loadAll = useCallback(async () => {
     if (!isAdmin) {
@@ -599,6 +633,51 @@ export function AdminHubModal({
     }
   }, [productForm, supabase, refreshProducts, showToast, showError]);
 
+  const upsertVipProduct = useCallback(async () => {
+    let parsedPlanOptions: any[] = [];
+    try {
+      parsedPlanOptions = vipForm.planOptions ? JSON.parse(vipForm.planOptions) : [];
+      if (!Array.isArray(parsedPlanOptions)) throw new Error("Plan options must be a JSON array");
+    } catch (err: any) {
+      showError(`Plan options invalid: ${err?.message || err}`);
+      return;
+    }
+
+    const payload: any = {
+      name: vipForm.name,
+      description: vipForm.description,
+      price: Number(vipForm.price || 0),
+      image_url: vipForm.imageUrl,
+      buy_url: vipForm.buyUrl,
+      coming_soon: !!vipForm.comingSoon,
+      sort_order: Number(vipForm.sortOrder || 0),
+      plan_options: parsedPlanOptions,
+    };
+
+    const query = vipForm.id
+      ? supabase.from("bullmoney_vip").update(payload).eq("id", vipForm.id)
+      : supabase.from("bullmoney_vip").insert(payload);
+
+    const { error } = await query;
+    if (!error) {
+      showToast("Saved VIP item");
+      setVipForm({
+        id: "",
+        name: "",
+        description: "",
+        price: "0",
+        imageUrl: "",
+        buyUrl: "",
+        comingSoon: false,
+        sortOrder: 0,
+        planOptions: "[]",
+      });
+      refreshVipProducts();
+    } else {
+      showError(`Save VIP failed: ${error.message}`);
+    }
+  }, [vipForm, supabase, refreshVipProducts, showToast, showError]);
+
   const removeProduct = useCallback(
     async (id: string) => {
       const { error } = await supabase.from("products").delete().eq("_id", id);
@@ -606,6 +685,15 @@ export function AdminHubModal({
       else refreshProducts();
     },
     [supabase, refreshProducts, showError]
+  );
+
+  const removeVipProduct = useCallback(
+    async (id: string) => {
+      const { error } = await supabase.from("bullmoney_vip").delete().eq("id", id);
+      if (error) showError(`Delete VIP failed: ${error.message}`);
+      else refreshVipProducts();
+    },
+    [supabase, refreshVipProducts, showError]
   );
 
   const upsertService = useCallback(async () => {
@@ -801,75 +889,152 @@ export function AdminHubModal({
   // RENDER HELPERS
   // -----------------------------------------------------------------------
   const renderProducts = () => (
-    <div className="space-y-2 overflow-y-auto max-h-[70vh] pr-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900/60">
-      <div className="flex items-center justify-between px-2">
-        <h3 className="text-white font-semibold text-sm">Products</h3>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setProductForm({
-              id: "",
-              name: "",
-              description: "",
-              price: "0",
-              category: "",
-              imageUrl: "",
-              buyUrl: "",
-              visible: true,
-              displayOrder: 0,
-            })}
-            className="px-2 py-1 text-xs rounded-md bg-slate-800 text-slate-200 border border-slate-700"
-          >
-            New product
-          </button>
-          <button onClick={refreshProducts} className="p-1 text-slate-300" title="Refresh products">
-            <RefreshCw className="w-4 h-4" />
-          </button>
+    <div className="space-y-6 overflow-y-auto max-h-[70vh] pr-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900/60">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between px-2">
+          <h3 className="text-white font-semibold text-sm">Store products (products table)</h3>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setProductForm({
+                id: "",
+                name: "",
+                description: "",
+                price: "0",
+                category: "",
+                imageUrl: "",
+                buyUrl: "",
+                visible: true,
+                displayOrder: 0,
+              })}
+              className="px-2 py-1 text-xs rounded-md bg-slate-800 text-slate-200 border border-slate-700"
+            >
+              New product
+            </button>
+            <button onClick={refreshProducts} className="p-1 text-slate-300" title="Refresh products">
+              <RefreshCw className="w-4 h-4" />
+            </button>
+          </div>
         </div>
+
+        {/* New product form inline at top when no id set */}
+        {productForm.id === "" && productForm.name === "" && (
+          <div className="space-y-2 p-3 rounded-lg border border-slate-700 bg-slate-900/70">
+            <h4 className="text-white text-sm font-semibold">Create product</h4>
+            {renderProductFormFields()}
+          </div>
+        )}
+
+        {products.map((p) => {
+          const pid = p._id || p.id;
+          const isEditing = productForm.id === pid;
+          const media = <ImagePreview src={p.image_url || p.imageUrl} alt={`Product image: ${p.name || pid}`} />;
+          return (
+            <div key={pid} className="space-y-2">
+              <Row
+                title={`${p.name} (${p.category || "N/A"})`}
+                subtitle={`$${p.price ?? 0} • Visible: ${p.visible ? "yes" : "no"}`}
+                meta={p.buy_url || p.buyUrl ? "Buy URL" : undefined}
+                onEdit={() =>
+                  setProductForm({
+                    id: pid,
+                    name: p.name || "",
+                    description: p.description || "",
+                    price: String(p.price ?? "0"),
+                    category: p.category || "",
+                    imageUrl: p.image_url || p.imageUrl || "",
+                    buyUrl: p.buy_url || p.buyUrl || "",
+                    visible: Boolean(p.visible),
+                    displayOrder: Number(p.display_order || 0),
+                  })
+                }
+                onDelete={() => removeProduct(pid)}
+              />
+              {media ? <CollapsiblePreview label="Preview">{media}</CollapsiblePreview> : null}
+              {isEditing && (
+                <div className="space-y-2 p-3 rounded-lg border border-slate-700 bg-slate-900/70">
+                  <h4 className="text-white text-sm font-semibold">Edit product</h4>
+                  {renderProductFormFields()}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
-      {/* New product form inline at top when no id set */}
-      {productForm.id === "" && productForm.name === "" && (
-        <div className="space-y-2 p-3 rounded-lg border border-slate-700 bg-slate-900/70">
-          <h4 className="text-white text-sm font-semibold">Create product</h4>
-          {renderProductFormFields()}
-        </div>
-      )}
-
-      {products.map((p) => {
-        const pid = p._id || p.id;
-        const isEditing = productForm.id === pid;
-        const media = <ImagePreview src={p.image_url || p.imageUrl} alt={`Product image: ${p.name || pid}`} />;
-        return (
-          <div key={pid} className="space-y-2">
-            <Row
-              title={`${p.name} (${p.category || "N/A"})`}
-              subtitle={`$${p.price ?? 0} • Visible: ${p.visible ? "yes" : "no"}`}
-              meta={p.buy_url || p.buyUrl ? "Buy URL" : undefined}
-              onEdit={() =>
-                setProductForm({
-                  id: pid,
-                  name: p.name || "",
-                  description: p.description || "",
-                  price: String(p.price ?? "0"),
-                  category: p.category || "",
-                  imageUrl: p.image_url || p.imageUrl || "",
-                  buyUrl: p.buy_url || p.buyUrl || "",
-                  visible: Boolean(p.visible),
-                  displayOrder: Number(p.display_order || 0),
-                })
-              }
-              onDelete={() => removeProduct(pid)}
-            />
-            {media ? <CollapsiblePreview label="Preview">{media}</CollapsiblePreview> : null}
-            {isEditing && (
-              <div className="space-y-2 p-3 rounded-lg border border-slate-700 bg-slate-900/70">
-                <h4 className="text-white text-sm font-semibold">Edit product</h4>
-                {renderProductFormFields()}
-              </div>
-            )}
+      <div className="space-y-2 border-t border-slate-800 pt-4">
+        <div className="flex items-center justify-between px-2">
+          <h3 className="text-white font-semibold text-sm">VIP Store (bullmoney_vip)</h3>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setVipForm({
+                id: "",
+                name: "",
+                description: "",
+                price: "0",
+                imageUrl: "",
+                buyUrl: "",
+                comingSoon: false,
+                sortOrder: 0,
+                planOptions: "[]",
+              })}
+              className="px-2 py-1 text-xs rounded-md bg-slate-800 text-slate-200 border border-slate-700"
+            >
+              New VIP item
+            </button>
+            <button onClick={refreshVipProducts} className="p-1 text-slate-300" title="Refresh VIP">
+              <RefreshCw className="w-4 h-4" />
+            </button>
           </div>
-        );
-      })}
+        </div>
+
+        {vipForm.id === "" && vipForm.name === "" && (
+          <div className="space-y-2 p-3 rounded-lg border border-slate-700 bg-slate-900/70">
+            <h4 className="text-white text-sm font-semibold">Create VIP item</h4>
+            {renderVipFormFields()}
+          </div>
+        )}
+
+        {vipProducts.map((p) => {
+          const vid = p.id;
+          const isEditing = vipForm.id === vid;
+          const media = <ImagePreview src={p.image_url || p.imageUrl} alt={`VIP image: ${p.name || vid}`} />;
+          const planPreview = p.planOptions ? (
+            <pre className="text-xs text-slate-200 bg-slate-900/60 rounded-md border border-slate-700 p-2 whitespace-pre-wrap break-words">{p.planOptions}</pre>
+          ) : null;
+
+          return (
+            <div key={vid} className="space-y-2">
+              <Row
+                title={`${p.name}`}
+                subtitle={`$${p.price ?? 0} • Coming soon: ${p.coming_soon ? "yes" : "no"}`}
+                meta={`Plans: ${Array.isArray(p.plan_options) ? p.plan_options.length : 0}`}
+                onEdit={() =>
+                  setVipForm({
+                    id: vid,
+                    name: p.name || "",
+                    description: p.description || "",
+                    price: String(p.price ?? "0"),
+                    imageUrl: p.image_url || p.imageUrl || "",
+                    buyUrl: p.buy_url || p.buyUrl || "",
+                    comingSoon: !!p.coming_soon,
+                    sortOrder: Number(p.sort_order || 0),
+                    planOptions: p.planOptions || "[]",
+                  })
+                }
+                onDelete={() => removeVipProduct(vid)}
+              />
+              {media ? <CollapsiblePreview label="Preview">{media}</CollapsiblePreview> : null}
+              {planPreview ? <CollapsiblePreview label="Plan options JSON">{planPreview}</CollapsiblePreview> : null}
+              {isEditing && (
+                <div className="space-y-2 p-3 rounded-lg border border-slate-700 bg-slate-900/70">
+                  <h4 className="text-white text-sm font-semibold">Edit VIP item</h4>
+                  {renderVipFormFields()}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 
@@ -939,6 +1104,74 @@ export function AdminHubModal({
       </button>
     </>
   );
+
+    const renderVipFormFields = () => (
+      <>
+        <input
+          value={vipForm.name}
+          onChange={(e) => setVipForm((f) => ({ ...f, name: e.target.value }))}
+          placeholder="Name"
+          className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1 text-sm text-white"
+        />
+        <textarea
+          value={vipForm.description}
+          onChange={(e) => setVipForm((f) => ({ ...f, description: e.target.value }))}
+          placeholder="Description"
+          className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1 text-sm text-white"
+          rows={3}
+        />
+        <div className="grid grid-cols-2 gap-2">
+          <input
+            value={vipForm.price}
+            onChange={(e) => setVipForm((f) => ({ ...f, price: e.target.value }))}
+            placeholder="Display price"
+            className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1 text-sm text-white"
+          />
+          <input
+            value={vipForm.sortOrder}
+            onChange={(e) => setVipForm((f) => ({ ...f, sortOrder: Number(e.target.value) }))}
+            placeholder="Sort order"
+            className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1 text-sm text-white"
+            type="number"
+          />
+        </div>
+        <input
+          value={vipForm.imageUrl}
+          onChange={(e) => setVipForm((f) => ({ ...f, imageUrl: e.target.value }))}
+          placeholder="Image URL (Whop)"
+          className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1 text-sm text-white"
+        />
+        <input
+          value={vipForm.buyUrl}
+          onChange={(e) => setVipForm((f) => ({ ...f, buyUrl: e.target.value }))}
+          placeholder="Default buy URL"
+          className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1 text-sm text-white"
+        />
+        <textarea
+          value={vipForm.planOptions}
+          onChange={(e) => setVipForm((f) => ({ ...f, planOptions: e.target.value }))}
+          placeholder='Plan options JSON (array of objects with label, price, interval, buy_url, trial_days)'
+          className="w-full rounded-md bg-slate-800 border border-slate-700 px-2 py-1 text-sm text-white font-mono"
+          rows={5}
+        />
+        <div className="flex items-center gap-2 text-xs text-slate-300">
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={vipForm.comingSoon}
+              onChange={(e) => setVipForm((f) => ({ ...f, comingSoon: e.target.checked }))}
+            />
+            Coming soon
+          </label>
+        </div>
+        <button
+          onClick={upsertVipProduct}
+          className="w-full flex items-center justify-center gap-2 rounded-md bg-white text-black py-2 text-sm"
+        >
+          <Save className="w-4 h-4" /> Save VIP item
+        </button>
+      </>
+    );
 
   const renderServices = () => (
     <div className="space-y-2 overflow-y-auto overflow-x-hidden max-h-[70vh] pr-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900/60 [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]" style={{ touchAction: 'pan-y' }}>
@@ -1612,9 +1845,7 @@ export function AdminHubModal({
             animate={animations.modalBackdrop.animate as TargetAndTransition}
             exit={animations.modalBackdrop.exit}
             transition={animations.modalBackdrop.transition}
-            className={`fixed inset-0 z-[2147483647] flex items-center justify-center p-2 sm:p-4 bg-black/80 ${
-              shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'
-            }`}
+            className="fixed inset-0 z-[2147483647] flex items-center justify-center p-2 sm:p-4 bg-black/95 backdrop-blur-md"
             onClick={onClose}
           >
           <motion.div

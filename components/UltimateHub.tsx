@@ -24,6 +24,7 @@ import React, {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, PanInfo, type TargetAndTransition } from 'framer-motion';
+import { usePathname } from 'next/navigation';
 import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 import { useDesktopPerformance, useUnifiedPerformance } from '@/hooks/useDesktopPerformance';
 import { initializeFpsMeasurement } from '@/lib/FpsMeasurement';
@@ -9225,6 +9226,36 @@ export function UltimateHub() {
   const [mounted, setMounted] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   
+  // Check if we're on a store page
+  const pathname = usePathname();
+  const isStorePage = pathname.startsWith('/store');
+  
+  // Check if Ultimate Hub should be shown on store pages - default to TRUE (show unless explicitly disabled)
+  const [showOnStore, setShowOnStore] = useState(true);
+  
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    // Load stored preference
+    const stored = localStorage.getItem('store_show_ultimate_hub');
+    setShowOnStore(stored !== 'false'); // Default to true for backward compatibility
+    
+    // Listen for toggle changes from StoreHeader
+    const handleToggleEvent = (event: Event) => {
+      // Prefer event detail when available to avoid extra storage reads
+      const detailValue = (event as CustomEvent<boolean>).detail;
+      if (typeof detailValue === 'boolean') {
+        setShowOnStore(detailValue);
+        return;
+      }
+      const stored = localStorage.getItem('store_show_ultimate_hub');
+      setShowOnStore(stored !== 'false');
+    };
+    
+    window.addEventListener('store_ultimate_hub_toggle', handleToggleEvent);
+    return () => window.removeEventListener('store_ultimate_hub_toggle', handleToggleEvent);
+  }, []);
+  
   // New message notification state - persisted to localStorage
   const [hasNewMessages, setHasNewMessages] = useState(false);
   const [newMessageCount, setNewMessageCount] = useState(0);
@@ -9503,11 +9534,17 @@ export function UltimateHub() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isUltimateHubOpen, setUltimateHubOpen]);
 
-  // Don't render until mounted and V2 unlocked
-  if (!mounted || !isV2Unlocked) return null;
+  // Treat store pages as always unlocked so the toggle can control visibility there
+  const isUnlockedForPage = isV2Unlocked || isStorePage;
+
+  // Don't render until mounted and unlocked for this page
+  if (!mounted || !isUnlockedForPage) return null;
 
   // Don't render during pagemode or loader (full-screen overlays)
   if (isPagemodeOpen || isLoaderv2Open) return null;
+
+  // Don't render on store pages unless toggle is ON
+  if (isStorePage && !showOnStore) return null;
 
   // Hide pill when mobile menu, panel open, or other modals (NOT audio widget - they can coexist)
   // Audio widget is on left side, UltimateHub pill is on right side - no overlap

@@ -24,7 +24,7 @@ import {
 import { useShop, type Product } from "@/app/VIP/ShopContext";
 import AdminLoginModal from "@/app/VIP/AdminLoginModal";
 import AdminPanel from "./AdminPanel";
-import Faq from "@/app/shop/Faq";
+import Faq from "@/app/oldstore/Faq";
 import LogoImage from "@/public/bullmoney-logo.png"; 
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";

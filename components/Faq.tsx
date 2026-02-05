@@ -702,18 +702,15 @@ export default function BullMoneyModal({ isOpen, onClose }: { isOpen: boolean, o
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
     };
-    // Only disable scroll on mobile when FAQ is open
-    const isMobileViewport = window.innerWidth < 768;
+    // Lock body scroll when modal is open (both mobile and desktop)
     if (isOpen) {
-        if (isMobileViewport) {
-            document.body.style.overflow = 'hidden';
-        }
+        document.body.style.overflow = 'hidden';
         window.addEventListener('keydown', handleKeyDown);
     } else {
-        document.body.style.overflow = 'auto';
+        document.body.style.overflow = '';
     }
     return () => {
-        document.body.style.overflow = 'auto';
+        document.body.style.overflow = '';
         window.removeEventListener('keydown', handleKeyDown);
     }
   }, [isOpen, onClose]);
@@ -727,7 +724,7 @@ export default function BullMoneyModal({ isOpen, onClose }: { isOpen: boolean, o
           initial={animations.modalBackdrop.initial as TargetAndTransition}
           animate={animations.modalBackdrop.animate as TargetAndTransition}
           exit={animations.modalBackdrop.exit as TargetAndTransition}
-          className={`fixed inset-0 z-[2147483647] flex items-center justify-center p-5 sm:p-6 bg-black/95 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'}`}
+          className="fixed inset-0 z-[2147483647] flex items-center justify-center p-5 sm:p-6 bg-black/95"
           onClick={onClose}
         >
           {/* Animated tap to close hints - Skip on mobile for performance */}

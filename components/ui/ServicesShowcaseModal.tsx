@@ -34,7 +34,7 @@ const VipHeroMain = lazy(() => import("@/app/VIP/heromain"));
 const Orb = lazy(() => import("@/components/Mainpage/Orb"));
 import { Features } from "@/components/Mainpage/features";
 const ProductsSection = lazy(() => import("@/app/VIP/ProductsSection"));
-const GameBoyPacman = lazy(() => import("@/app/shop/ShopScrollFunnel"));
+const GameBoyPacman = lazy(() => import("@/app/oldstore/ShopScrollFunnel"));
 const Testimonial = lazy(() => import("@/app/Testimonial").then(m => ({ default: m.AboutContent })));
 const Footer = lazy(() => import("@/components/Mainpage/footer").then(m => ({ default: m.Footer })));
 

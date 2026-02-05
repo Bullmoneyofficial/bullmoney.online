@@ -38,7 +38,7 @@ const MultiStepLoaderV2 = dynamic(
 
 // --- LAZY LOADED SHOP COMPONENTS - Mobile optimized ---
 const HeroShop = dynamic(
-  () => import("@/app/shop/ShopHero"),
+  () => import("@/app/oldstore/ShopHero"),
   { ssr: false, loading: () => <ContentSkeleton lines={5} /> }
 );
 
@@ -48,7 +48,7 @@ const ProductsSection = dynamic(
 );
 
 const ShopFunnel = dynamic(
-  () => import("@/app/shop/ShopFunnel"),
+  () => import("@/app/oldstore/ShopFunnel"),
   { ssr: false, loading: () => <ContentSkeleton lines={6} /> }
 );
 

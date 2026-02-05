@@ -23,7 +23,7 @@ import {
 import { useShop, type Product } from "@/app/VIP/ShopContext";
 import AdminLoginModal from "@/app/VIP/AdminLoginModal";
 import AdminPanel from "@/app/VIP/AdminPanel";
-import Faq from "@/app/shop/Faq";
+import Faq from "@/app/oldstore/Faq";
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 import type { Engine } from "@tsparticles/engine";

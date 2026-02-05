@@ -221,6 +221,40 @@ function SplinePageComponent({
       setHasError(false);
       onLoad?.();
       console.log('[SplinePage] ✅ Scene loaded successfully');
+      
+      // Attach event listeners to canvas for proper interaction detection
+      if (containerRef.current) {
+        const canvas = containerRef.current.querySelector('canvas');
+        if (canvas) {
+          console.log('[SplinePage] ✅ Canvas found, attaching event listeners');
+          
+          const handleCanvasPointerDown = () => {
+            setIsDragging(true);
+            console.log('[SplinePage] Canvas interaction detected');
+          };
+          
+          const handleCanvasPointerUp = () => {
+            setIsDragging(false);
+          };
+          
+          const handleCanvasPointerMove = () => {
+            setIsHovering(true);
+          };
+          
+          // Ensure canvas receives pointer events
+          canvas.style.pointerEvents = 'auto';
+          canvas.style.touchAction = 'manipulation';
+          
+          canvas.addEventListener('pointerdown', handleCanvasPointerDown);
+          canvas.addEventListener('pointerup', handleCanvasPointerUp);
+          canvas.addEventListener('pointermove', handleCanvasPointerMove);
+          canvas.addEventListener('mousedown', handleCanvasPointerDown);
+          canvas.addEventListener('mouseup', handleCanvasPointerUp);
+          canvas.addEventListener('mousemove', handleCanvasPointerMove);
+          canvas.addEventListener('touchstart', handleCanvasPointerDown, { passive: true });
+          canvas.addEventListener('touchend', handleCanvasPointerUp, { passive: true });
+        }
+      }
     }
   }, [onLoad]);
 

@@ -309,7 +309,8 @@ html.component-inactive-audioWidget .audio-widget-shimmer { animation: none !imp
 html.component-inactive-ultimatePanel .ultimate-panel-shimmer { animation: none !important; }
 html.component-inactive-movingTip .moving-tip-shimmer { animation: none !important; }
 html.component-inactive-staticTip .static-tip-shimmer { animation: none !important; }
-html.component-inactive-spline .spline-container { opacity: 0; pointer-events: none; }
+/* CRITICAL: Spline must always have pointer events enabled for interactivity */
+html.component-inactive-spline .spline-container { opacity: 0; pointer-events: auto !important; }
 
 /* Blur reduction for low-end devices */
 html.reduce-blur {

@@ -642,7 +642,7 @@ export const Globe = ({ className }: { className?: string }) => {
       ],
       onRender: (state) => {
         state.phi = phi;
-        phi += 0.01;
+        phi += 0.015;
       },
     });
     globeRef.current = globe;

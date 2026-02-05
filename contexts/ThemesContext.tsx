@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
+import { useThemeSelectorModalUI, useUIState } from './UIStateContext';
 
 // ============================================================================
 // UNIFIED THEMES SYSTEM
@@ -1831,7 +1832,42 @@ export function ThemesPanel() {
     resetAll,
   } = useThemes();
 
-  const [isOpen, setIsOpen] = useState(false);
+  // Use UIStateContext for mutual exclusion with other modals
+  const { isOpen, setIsOpen } = useThemeSelectorModalUI();
+  const {
+    isMobileMenuOpen,
+    isAnyModalOpen,
+    isUltimateHubOpen,
+    isUltimatePanelOpen,
+    isWelcomeScreenActive,
+  } = useUIState();
+  
+  // Check if we're on store page and theme picker is disabled
+  const [storeThemePickerEnabled, setStoreThemePickerEnabled] = useState(true);
+  
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const checkStoreThemePicker = () => {
+        // Check if on store page
+        const isStorePage = window.location.pathname.startsWith('/store');
+        if (isStorePage) {
+          const stored = localStorage.getItem('store_show_theme_picker');
+          setStoreThemePickerEnabled(stored === 'true');
+        } else {
+          setStoreThemePickerEnabled(true); // Always show on non-store pages
+        }
+      };
+      
+      checkStoreThemePicker();
+      window.addEventListener('store_theme_picker_toggle', checkStoreThemePicker);
+      
+      return () => {
+        window.removeEventListener('store_theme_picker_toggle', checkStoreThemePicker);
+      };
+    }
+  }, []);
+  
+  const shouldHideToggleButton = !storeThemePickerEnabled || !isWelcomeScreenActive && (isMobileMenuOpen || isAnyModalOpen || isUltimateHubOpen || isUltimatePanelOpen);
   const [activeTab, setActiveTab] = useState<'effects' | 'colors'>('effects');
   const [previewColor, setPreviewColor] = useState<string | null>(null);
   const [originalColorEnabled, setOriginalColorEnabled] = useState(false);
@@ -1903,41 +1939,43 @@ export function ThemesPanel() {
   return (
     <>
       {/* Toggle Button */}
-      <button
-        className="themes-panel-isolated"
-        onClick={() => setIsOpen(prev => !prev)}
-        style={{
-          position: 'fixed',
-          top: 80,
-          right: 12,
-          zIndex: 100000,
-          height: 36,
-          padding: '0 12px',
-          borderRadius: 18,
-          background: isAnyActive 
-            ? 'rgba(255, 255, 255, 0.95)' 
-            : 'rgba(0, 0, 0, 0.85)',
-          border: isAnyActive ? '1px solid rgba(0, 0, 0, 0.2)' : '1px solid rgba(255, 255, 255, 0.2)',
-          color: isAnyActive ? '#000' : '#fff',
-          fontSize: 12,
-          fontWeight: 500,
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
-          isolation: 'isolate',
-          filter: 'none',
-          transform: 'translateZ(0)',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif',
-        }}
-        title="Themes & Effects"
-      >
-        <span style={{ display: 'flex', alignItems: 'center' }}>
-          {effectSettings.enabled && currentEffect ? renderIcon(currentEffect.icon) : <Icons.palette />}
-        </span>
-        <span className="themes-btn-text">Themes</span>
-      </button>
+      {!shouldHideToggleButton && (
+        <button
+          className="themes-panel-isolated"
+          onClick={() => setIsOpen(!isOpen)}
+          style={{
+            position: 'fixed',
+            top: 'calc(env(safe-area-inset-top, 0px) + 148px)',
+            right: 12,
+            zIndex: 100000,
+            height: 36,
+            padding: '0 12px',
+            borderRadius: 18,
+            background: isAnyActive 
+              ? 'rgba(255, 255, 255, 0.95)' 
+              : 'rgba(0, 0, 0, 0.85)',
+            border: isAnyActive ? '1px solid rgba(0, 0, 0, 0.2)' : '1px solid rgba(255, 255, 255, 0.2)',
+            color: isAnyActive ? '#000' : '#fff',
+            fontSize: 12,
+            fontWeight: 500,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+            isolation: 'isolate',
+            filter: 'none',
+            transform: 'translateZ(0)',
+            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif',
+          }}
+          title="Themes & Effects"
+        >
+          <span style={{ display: 'flex', alignItems: 'center' }}>
+            {effectSettings.enabled && currentEffect ? renderIcon(currentEffect.icon) : <Icons.palette />}
+          </span>
+          <span className="themes-btn-text">Themes</span>
+        </button>
+      )}
 
       {/* Panel */}
       {isOpen && (
@@ -1945,7 +1983,7 @@ export function ThemesPanel() {
           className="themes-panel themes-panel-isolated"
           style={{
             position: 'fixed',
-            top: 126,
+            top: 'calc(env(safe-area-inset-top, 0px) + 194px)',
             right: 12,
             zIndex: 100000,
             width: 'min(90vw, 340px)',
@@ -2058,7 +2096,6 @@ export function ThemesPanel() {
                 width: 340px !important;
                 max-height: 80vh !important;
                 right: 20px !important;
-                top: 130px !important;
               }
               .themes-btn-text {
                 display: inline !important;

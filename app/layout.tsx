@@ -3,6 +3,7 @@ import Script from "next/script";
 import localFont from "next/font/local";
 import "./globals.css";
 import "../styles/performance-optimizations.css";
+import "../styles/spline-interactivity-fix.css";
 import "../styles/gpu-animations.css";
 import "../styles/120hz-performance.css";
 import "../styles/iphone-android-touch-fix.css";

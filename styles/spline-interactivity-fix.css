@@ -1,0 +1,85 @@
+/* 
+ * SPLINE INTERACTIVITY FIX
+ * Ensures Spline 3D scenes always have full pointer event support
+ * This file MUST be imported after performance-optimizations.css
+ */
+
+/* Override any pointer-events restrictions on Spline containers */
+.spline-page-container,
+.spline-container,
+.spline-wrapper,
+[class*="spline"],
+canvas[data-spline],
+iframe[src*="spline"] {
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+  cursor: grab !important;
+}
+
+/* Ensure Spline remains interactive even when component is marked inactive */
+html.component-inactive-spline .spline-container {
+  pointer-events: auto !important;
+}
+
+html.component-inactive-spline .spline-page-container {
+  pointer-events: auto !important;
+}
+
+/* Force touch action support */
+.spline-page-container,
+.spline-container {
+  touch-action: manipulation !important;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Ensure internal Spline canvases are interactive */
+.spline-container canvas,
+.spline-page-container canvas {
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+}
+
+/* Safari-specific fixes for pointer events */
+@supports (-webkit-appearance: none) {
+  .spline-page-container,
+  .spline-container {
+    -webkit-touch-callout: none;
+    pointer-events: auto !important;
+  }
+  
+  .spline-container canvas,
+  .spline-page-container canvas {
+    pointer-events: auto !important;
+  }
+}
+
+/* Mobile touch interaction support */
+@media (hover: none) and (pointer: coarse) {
+  .spline-page-container,
+  .spline-container {
+    touch-action: manipulation !important;
+    pointer-events: auto !important;
+  }
+  
+  .spline-container canvas,
+  .spline-page-container canvas {
+    touch-action: manipulation !important;
+    pointer-events: auto !important;
+  }
+}
+
+/* Desktop mouse interaction support */
+@media (hover: hover) and (pointer: fine) {
+  .spline-page-container,
+  .spline-container {
+    cursor: grab !important;
+    pointer-events: auto !important;
+  }
+  
+  .spline-page-container:active,
+  .spline-container:active {
+    cursor: grabbing !important;
+  }
+}

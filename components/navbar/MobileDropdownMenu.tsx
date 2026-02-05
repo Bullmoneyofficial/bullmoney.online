@@ -10,6 +10,7 @@ import {
   IconLock,
   IconUser,
   IconChartBar,
+  IconShoppingBag,
 } from '@tabler/icons-react';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 // SMART MOUNT: Only import lightweight trigger components - heavy modals mount via UIState
@@ -153,7 +154,9 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
             position: 'fixed',
             isolation: 'isolate',
             zIndex: UI_Z_INDEX.MOBILE_MENU,
+            width: '40%',
             maxWidth: '420px',
+            minWidth: '180px',
             margin: '0 auto',
             left: '50%',
             transform: 'translateX(-50%)',
@@ -181,7 +184,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
           />
           
           <motion.div 
-            className="flex flex-col gap-2 w-full relative z-10 p-3"
+            className="flex flex-col gap-1 w-full relative z-10 p-2"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1, duration: 0.3 }}
@@ -201,7 +204,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
                 whileTap={{ scale: 0.98 }}
                 onHoverStart={() => SoundEffects.hover()}
                 onTouchStart={() => SoundEffects.click()}
-                className="w-full flex items-center gap-3 text-base font-medium cursor-pointer px-4 py-3.5 min-h-[52px] rounded-2xl transition-all duration-200"
+                className="w-full flex items-center gap-2 text-sm font-medium cursor-pointer px-3 py-2 min-h-[36px] rounded-xl transition-all duration-200"
                 style={{
                   color: isXMUser ? 'rgb(252, 165, 165)' : '#ffffff',
                   backgroundColor: isXMUser ? 'rgba(239, 68, 68, 0.12)' : 'rgba(255, 255, 255, 0.05)',
@@ -209,7 +212,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
                 }}
                 onClick={handleAffiliateClick}
               >
-                <IconUsersGroup className="h-5 w-5" strokeWidth={2} style={{ color: isXMUser ? '#f87171' : '#ffffff' }} />
+                <IconUsersGroup className="h-4 w-4" strokeWidth={2} style={{ color: isXMUser ? '#f87171' : '#ffffff' }} />
                 <span className="flex-1 text-left">Affiliates</span>
                 {isXMUser && (
                   <span className="inline-flex h-2 w-2 rounded-full bg-red-500 animate-pulse" />
@@ -229,7 +232,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
                 whileTap={{ scale: 0.98 }}
                 onHoverStart={() => SoundEffects.hover()}
                 onTouchStart={() => SoundEffects.click()}
-                className="w-full flex items-center gap-3 text-base font-medium cursor-pointer px-4 py-3.5 min-h-[52px] rounded-2xl transition-all duration-200"
+                className="w-full flex items-center gap-2 text-sm font-medium cursor-pointer px-3 py-2 min-h-[36px] rounded-xl transition-all duration-200"
                 style={{
                   color: '#ffffff',
                   backgroundColor: 'rgba(255, 255, 255, 0.05)',
@@ -237,7 +240,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
                 }}
                 onClick={handleFaqClick}
               >
-                <IconHelp className="h-5 w-5" strokeWidth={2} style={{ color: '#ffffff' }} />
+                <IconHelp className="h-4 w-4" strokeWidth={2} style={{ color: '#ffffff' }} />
                 <span className="flex-1 text-left">FAQ</span>
               </motion.button>
             </motion.div>
@@ -254,7 +257,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
                   whileTap={{ scale: 0.98 }}
                   onHoverStart={() => SoundEffects.hover()}
                   onTouchStart={() => SoundEffects.click()}
-                  className="w-full flex items-center gap-3 text-base font-medium cursor-pointer px-4 py-3.5 min-h-[52px] rounded-2xl transition-all duration-200"
+                  className="w-full flex items-center gap-2 text-sm font-medium cursor-pointer px-3 py-2 min-h-[36px] rounded-xl transition-all duration-200"
                   style={{
                     color: '#ffffff',
                     backgroundColor: 'rgba(255, 255, 255, 0.05)',
@@ -262,7 +265,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
                   }}
                   onClick={handleAccountManagerClick}
                 >
-                  <IconUser className="h-5 w-5" strokeWidth={2} style={{ color: '#ffffff' }} />
+                  <IconUser className="h-4 w-4" strokeWidth={2} style={{ color: '#ffffff' }} />
                   <span className="flex-1 text-left">Account Manager</span>
                 </motion.button>
               </motion.div>
@@ -273,7 +276,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.20 }}
-              className="h-px my-2"
+              className="h-px my-1"
               style={{
                 background: 'linear-gradient(to right, transparent, rgba(255, 255, 255, 0.15), transparent)'
               }}
@@ -291,14 +294,14 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
                 whileTap={{ scale: 0.98 }}
                 onHoverStart={() => SoundEffects.hover()}
                 onClick={handleProductsClick}
-                className="w-full flex items-center gap-3 text-base font-medium px-4 py-3.5 min-h-[52px] rounded-2xl transition-all duration-200 cursor-pointer"
+                className="w-full flex items-center gap-2 text-sm font-medium px-3 py-2 min-h-[36px] rounded-xl transition-all duration-200 cursor-pointer"
                 style={{
                   color: '#ffffff',
                   backgroundColor: 'rgba(255, 255, 255, 0.05)',
                   border: '1px solid rgba(255, 255, 255, 0.1)',
                 }}
               >
-                <IconBuildingStore className="h-5 w-5" strokeWidth={2} style={{ color: '#ffffff' }} />
+                <IconBuildingStore className="h-4 w-4" strokeWidth={2} style={{ color: '#ffffff' }} />
                 <span className="flex-1 text-left">Products</span>
               </motion.button>
             </motion.div>
@@ -315,17 +318,27 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
                 whileTap={{ scale: 0.98 }}
                 onHoverStart={() => SoundEffects.hover()}
                 onClick={handleChartNewsClick}
-                className="w-full flex items-center gap-3 text-base font-medium px-4 py-3.5 min-h-[52px] rounded-2xl transition-all duration-200 cursor-pointer"
+                className="w-full flex items-center gap-2 text-sm font-medium px-3 py-2 min-h-[36px] rounded-xl transition-all duration-200 cursor-pointer"
                 style={{
                   color: '#ffffff',
                   backgroundColor: 'rgba(255, 255, 255, 0.05)',
                   border: '1px solid rgba(255, 255, 255, 0.1)',
                 }}
               >
-                <IconChartBar className="h-5 w-5" strokeWidth={2} style={{ color: '#ffffff' }} />
+                <IconChartBar className="h-4 w-4" strokeWidth={2} style={{ color: '#ffffff' }} />
                 <span className="flex-1 text-left">Charts & News</span>
               </motion.button>
             </motion.div>
+
+            {/* Store */}
+            <ThemedMenuItem 
+              delay={0.26} 
+              href="/store" 
+              onClick={handleClose} 
+              icon={<IconShoppingBag className="h-5 w-5" strokeWidth={2} />} 
+              label="Store" 
+              highlighted={true}
+            />
 
             {/* Admin */}
             {isAdmin && (
@@ -341,7 +354,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
                   onHoverStart={() => SoundEffects.hover()}
                   onTouchStart={() => SoundEffects.click()}
                   onClick={handleAdminClick}
-                  className="w-full flex items-center gap-3 text-sm font-medium uppercase tracking-wide transition-all duration-200 px-4 py-3.5 min-h-[52px] rounded-2xl"
+                  className="w-full flex items-center gap-2 text-xs font-medium uppercase tracking-wide transition-all duration-200 px-3 py-2 min-h-[36px] rounded-xl"
                   style={{
                     color: '#ffffff',
                     backgroundColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.15)',
@@ -349,7 +362,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
                     fontWeight: 'bold'
                   }}
                 >
-                  <IconSettings className="h-5 w-5" stroke={1.5} style={{ color: 'var(--accent-color, #ffffff)' }} /> Admin Dashboard
+                  <IconSettings className="h-4 w-4" stroke={1.5} style={{ color: 'var(--accent-color, #ffffff)' }} /> Admin Dashboard
                 </motion.button>
               </motion.div>
             )}
@@ -379,7 +392,7 @@ const ThemedMenuItem = memo(({ delay, href, onClick, icon, label, highlighted = 
         href={href}
         onClick={() => { SoundEffects.click(); onClick(); }}
         onTouchStart={() => SoundEffects.click()}
-        className="flex items-center gap-3 text-base font-medium w-full px-4 py-3.5 min-h-[52px] rounded-2xl transition-all duration-200"
+        className="flex items-center gap-2 text-sm font-medium w-full px-3 py-2 min-h-[36px] rounded-xl transition-all duration-200"
         style={{
           color: highlighted ? '#000000' : '#ffffff',
           background: highlighted 

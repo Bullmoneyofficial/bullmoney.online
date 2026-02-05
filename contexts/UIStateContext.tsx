@@ -84,7 +84,8 @@ export type UIComponentType =
   | 'postComposerModal'   // Bull Feed: Create post modal
   | 'heroSceneModal'      // Hero scene selector modal
   | 'discordStageModal'   // Discord Stage live stream modal
-  | 'accountManagerModal'; // Account Manager modal
+  | 'accountManagerModal' // Account Manager modal
+  | 'bgPickerModal';      // Background picker modal (MobileDiscordHero)
 
 // Legacy type for backwards compatibility
 export type NavbarModalType = 'admin' | 'faq' | 'affiliate' | 'themeSelector' | null;
@@ -115,6 +116,7 @@ interface UIStateContextType {
   isHeroSceneModalOpen: boolean;   // Hero scene picker modal
   isDiscordStageModalOpen: boolean; // Discord Stage modal
   isAccountManagerModalOpen: boolean; // Account Manager modal
+  isBgPickerModalOpen: boolean; // BG Picker modal
   isV2Unlocked: boolean;
   devSkipPageModeAndLoader: boolean; // Dev flag to skip pagemode and loader
   isWelcomeScreenActive: boolean;  // Welcome screen active - allows AudioWidget to show
@@ -155,6 +157,7 @@ interface UIStateContextType {
   setHeroSceneModalOpen: (open: boolean) => void;
   setDiscordStageModalOpen: (open: boolean) => void;
   setAccountManagerModalOpen: (open: boolean) => void;
+  setBgPickerModalOpen: (open: boolean) => void;
   setV2Unlocked: (unlocked: boolean) => void;
   setDevSkipPageModeAndLoader: (skip: boolean) => void;
   setWelcomeScreenActive: (active: boolean) => void;
@@ -178,6 +181,7 @@ interface UIStateContextType {
   openHeroSceneModal: () => void;
   openDiscordStageModal: () => void;
   openAccountManagerModal: () => void;
+  openBgPickerModal: () => void;
   closeNavbarModal: () => void;
 
   // Close all UI components
@@ -225,6 +229,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const [isHeroSceneModalOpen, setIsHeroSceneModalOpenState] = useState(false);
   const [isDiscordStageModalOpen, setIsDiscordStageModalOpenState] = useState(false);
   const [isAccountManagerModalOpen, setIsAccountManagerModalOpenState] = useState(false);
+  const [isBgPickerModalOpen, setIsBgPickerModalOpenState] = useState(false);
   const [isV2Unlocked, setIsV2UnlockedState] = useState(
     () => typeof window !== 'undefined' && sessionStorage.getItem('affiliate_unlock_complete') === 'true'
   );
@@ -250,7 +255,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isThemeSelectorModalOpen || isAdminModalOpen || isFaqModalOpen ||
     isAppsModalOpen || isDisclaimerModalOpen || isPagemodeOpen || isLoaderv2Open ||
     isAuthModalOpen || isBullFeedModalOpen || isPostComposerModalOpen || isHeroSceneModalOpen || isDiscordStageModalOpen ||
-    isAccountManagerModalOpen;
+    isAccountManagerModalOpen || isBgPickerModalOpen;
 
   // Derived state: is any component currently open?
   const isAnyOpen = isMobileMenuOpen || isAudioWidgetOpen || isUltimatePanelOpen || isUltimateHubOpen || isAnyModalOpen;
@@ -305,6 +310,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isHeroSceneModalOpen ? 'heroSceneModal' :
     isDiscordStageModalOpen ? 'discordStageModal' :
     isAccountManagerModalOpen ? 'accountManagerModal' :
+    isBgPickerModalOpen ? 'bgPickerModal' :
     null;
 
   // Closes all other components except the one specified
@@ -333,6 +339,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (except !== 'heroSceneModal') setIsHeroSceneModalOpenState(false);
     if (except !== 'discordStageModal') setIsDiscordStageModalOpenState(false);
     if (except !== 'accountManagerModal') setIsAccountManagerModalOpenState(false);
+    if (except !== 'bgPickerModal') setIsBgPickerModalOpenState(false);
   }, []);
 
   // Closes all modals but preserves floating elements state
@@ -357,6 +364,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setIsHeroSceneModalOpenState(false);
     setIsDiscordStageModalOpenState(false);
     setIsAccountManagerModalOpenState(false);
+    setIsBgPickerModalOpenState(false);
   }, []);
 
   // Closes all components
@@ -610,6 +618,16 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setIsAccountManagerModalOpenState(open);
   }, [closeOthers]);
 
+  const setBgPickerModalOpen = useCallback((open: boolean) => {
+    if (open) {
+      closeOthers('bgPickerModal');
+      trackUIStateChange('bgPickerModal', 'open');
+    } else {
+      trackUIStateChange('bgPickerModal', 'close');
+    }
+    setIsBgPickerModalOpenState(open);
+  }, [closeOthers]);
+
   const setV2Unlocked = useCallback((unlocked: boolean) => {
     setIsV2UnlockedState(unlocked);
     if (typeof window !== 'undefined') {
@@ -676,6 +694,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const openHeroSceneModal = useCallback(() => setHeroSceneModalOpen(true), [setHeroSceneModalOpen]);
   const openDiscordStageModal = useCallback(() => setDiscordStageModalOpen(true), [setDiscordStageModalOpen]);
   const openAccountManagerModal = useCallback(() => setAccountManagerModalOpen(true), [setAccountManagerModalOpen]);
+  const openBgPickerModal = useCallback(() => setBgPickerModalOpen(true), [setBgPickerModalOpen]);
   const closeNavbarModal = useCallback(() => {
     setIsAdminModalOpenState(false);
     setIsFaqModalOpenState(false);
@@ -772,6 +791,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isHeroSceneModalOpen,
     isDiscordStageModalOpen,
     isAccountManagerModalOpen,
+    isBgPickerModalOpen,
     isV2Unlocked,
     devSkipPageModeAndLoader,
     isWelcomeScreenActive,
@@ -809,6 +829,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setHeroSceneModalOpen,
     setDiscordStageModalOpen,
     setAccountManagerModalOpen,
+    setBgPickerModalOpen,
     setV2Unlocked,
     setDevSkipPageModeAndLoader,
     setWelcomeScreenActive: setIsWelcomeScreenActiveState,
@@ -830,6 +851,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     openHeroSceneModal,
     openDiscordStageModal,
     openAccountManagerModal,
+    openBgPickerModal,
     closeNavbarModal,
     closeAll,
     closeAllModals,
@@ -880,6 +902,9 @@ export function useAudioWidgetUI() {
     ? true
     : window.matchMedia('(min-width: 768px)').matches;
 
+  // Store page detection
+  const isStorePage = typeof window !== 'undefined' && window.location.pathname.startsWith('/store');
+
   // IMPORTANT: We no longer return shouldHideFloatingPlayer that causes unmount.
   // Instead, we return shouldMinimizeAudioWidget which signals the floating player
   // to minimize (hide iframe behind pull tab) while keeping audio playing.
@@ -893,6 +918,7 @@ export function useAudioWidgetUI() {
   // 2. Registration/Login (step 0+): Show minimized FloatingPlayer only (audio continues)
   // 3. Loader during pagemode flow: Keep FloatingPlayer mounted but hidden (audio continues!)
   // 4. Main content: Show full AudioWidget
+  // 5. Store pages: Hide completely for clean shopping experience
   //
   // shouldHideAudioWidgetCompletely = true means the ENTIRE widget is hidden (iframe unmounts, audio stops)
   // shouldHideAudioWidgetCompletely = false means at least the FloatingPlayer shows (audio persists)
@@ -902,15 +928,16 @@ export function useAudioWidgetUI() {
   // This ensures the iframe stays mounted even during the loader transition
   //
   // Logic:
-  // - Hide completely ONLY if: (loader is open AND user never entered pagemode) OR (not unlocked AND not in pagemode/welcome AND never started pagemode audio)
-  // - In other words: Keep showing (mounted) if user has started the pagemode flow at any point
+  // - Hide completely ONLY if: store page OR ((loader is open AND user never entered pagemode) OR (not unlocked AND not in pagemode/welcome AND never started pagemode audio))
+  // - In other words: Keep showing (mounted) if user has started the pagemode flow at any point, UNLESS on store page
   const isInPagemodeFlow = isPagemodeOpen || isWelcomeScreenActive || hasStartedPagemodeAudio;
-  const shouldHideAudioWidgetCompletely = !isDesktopViewport && !isInPagemodeFlow && !isV2Unlocked;
+  const shouldHideAudioWidgetCompletely = isStorePage || (!isDesktopViewport && !isInPagemodeFlow && !isV2Unlocked);
 
   // NEW: shouldHideMainWidget - hides MainWidget (settings panel) but keeps FloatingPlayer for audio
   // During pagemode registration (not welcome screen), hide the settings but keep audio playing
   // Also hide during loader (but keep FloatingPlayer for audio persistence)
-  const shouldHideMainWidget = (isPagemodeOpen && !isWelcomeScreenActive) || isLoaderv2Open || isUltimateHubOpen;
+  // Also hide on store pages for clean shopping experience
+  const shouldHideMainWidget = (isPagemodeOpen && !isWelcomeScreenActive) || isLoaderv2Open || isUltimateHubOpen || isStorePage;
 
   return {
     isAudioWidgetOpen,
@@ -1112,4 +1139,9 @@ export function useHeroSceneModalUI() {
 export function useDiscordStageModalUI() {
   const { isDiscordStageModalOpen, setDiscordStageModalOpen, openDiscordStageModal } = useUIState();
   return { isOpen: isDiscordStageModalOpen, setIsOpen: setDiscordStageModalOpen, open: openDiscordStageModal };
+}
+
+export function useBgPickerModalUI() {
+  const { isBgPickerModalOpen, setBgPickerModalOpen, openBgPickerModal } = useUIState();
+  return { isOpen: isBgPickerModalOpen, setIsOpen: setBgPickerModalOpen, open: openBgPickerModal };
 }

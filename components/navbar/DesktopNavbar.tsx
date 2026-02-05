@@ -10,12 +10,12 @@ import {
   IconLock,
   IconUser,
   IconChartBar,
+  IconShoppingBag,
 } from '@tabler/icons-react';
-import { Dock } from './Dock';
+import { PillDock } from './PillDock';
 import { MinimizedDock } from './MinimizedDock';
-import { ProductsModal } from '@/components/ProductsModal';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
-import { useChartNewsUI } from '@/contexts/UIStateContext';
+import { useChartNewsUI, useProductsModalUI } from '@/contexts/UIStateContext';
 import './DesktopNavbar.css';
 
 interface DesktopNavbarProps {
@@ -56,11 +56,17 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
     ref
   ) => {
     const { setChartNewsOpen } = useChartNewsUI();
+    const { open: openProductsModal } = useProductsModalUI();
     
     const handleChartNewsClick = useCallback(() => {
       SoundEffects.click();
       setChartNewsOpen(true);
     }, [setChartNewsOpen]);
+    
+    const handleProductsClick = useCallback(() => {
+      SoundEffects.click();
+      openProductsModal();
+    }, [openProductsModal]);
     
     const safeAdminIcon = isAdmin ? (
       <IconSettings className="h-5 w-5 text-white" stroke={1.5} />
@@ -94,13 +100,19 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
         icon: <IconCalendarTime className="h-6 w-6 text-white" stroke={1.5} />,
         label: "Products",
         tips: ["Browse our products", "Find the best tools for you", "Check out our latest offers"],
-        triggerComponent: <div className="w-full h-full flex items-center justify-center pointer-events-auto"><ProductsModal /></div>,
+        onClick: handleProductsClick,
       },
       {
         icon: <IconChartBar className="h-6 w-6 text-white" stroke={1.5} />,
         label: "Charts & News",
         tips: ["Live market charts", "Real-time market news", "Professional trading tools"],
         onClick: handleChartNewsClick,
+      },
+      {
+        icon: <IconShoppingBag className="h-6 w-6 text-white" stroke={1.5} />,
+        label: "Store",
+        tips: ["Browse our merch", "Exclusive products", "Shop now"],
+        href: "/store",
       },
     ];
 
@@ -168,12 +180,12 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
             pointerEvents: isScrollMinimized ? 'none' : 'auto',
           }}
         >
-          <Dock 
+          <PillDock 
             items={desktopNavItems} 
             dockRef={dockRef}
             buttonRefs={buttonRefs}
             onHoverChange={onHoverChange}
-            isXMUser={isXMUser}
+            activeLabel={undefined}
           />
         </div>
 

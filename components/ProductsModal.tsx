@@ -11,7 +11,8 @@ import {
   ArrowDownWideNarrow,
   ShoppingCart,
   Package,
-  ExternalLink
+  ExternalLink,
+  CreditCard
 } from 'lucide-react';
 import { ShimmerLine, ShimmerBorder } from '@/components/ui/UnifiedShimmer';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
@@ -39,6 +40,20 @@ const formatPriceDisplay = (price: string | number | undefined): string => {
   const num = Number(price);
   if (isNaN(num)) return "0.00";
   return num.toFixed(2);
+};
+
+type PlanOption = {
+  label?: string;
+  price?: number;
+  interval?: string;
+  buy_url?: string;
+  trial_days?: number;
+};
+
+type VipProduct = Product & {
+  id: string;
+  comingSoon?: boolean;
+  planOptions?: PlanOption[];
 };
 
 // Sort Direction type
@@ -75,7 +90,7 @@ export const ProductsModal = memo(() => {
 
   return (
     <ModalContext.Provider value={{ isOpen, setIsOpen }}>
-      <ProductsTrigger />
+      {/* ProductsTrigger removed - modal is now opened via context (openProductsModal) */}
       {createPortal(
         <AnimatePresence>
           {isOpen && <ProductsContent />}
@@ -123,13 +138,13 @@ const ProductsTrigger = memo(() => {
 });
 ProductsTrigger.displayName = 'ProductsTrigger';
 
-// Product Card Component - First tap opens whop link directly
+// Product Card Component - Matches store ProductCard styling
 const ProductCard = memo(({ 
   product, 
   onClick,
   isMobile
 }: { 
-  product: Product & { id: string }; 
+  product: Product & { id: string; comingSoon?: boolean; planOptions?: PlanOption[] }; 
   onClick: () => void;
   isMobile: boolean;
 }) => {
@@ -140,89 +155,131 @@ const ProductCard = memo(({
     e.stopPropagation();
     e.preventDefault();
     SoundEffects.click();
-    const url = product.buyUrl?.trim();
-    if (url) {
-      window.open(url, "_blank", "noopener,noreferrer");
-    } else {
-      // If no buy URL, show expanded view
-      onClick();
-    }
-  }, [product.buyUrl, onClick]);
+    // Always open expanded view first for better UX
+    onClick();
+  }, [onClick]);
 
-  // For mobile: single tap opens link
+  // For mobile: single tap opens expanded view
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     e.preventDefault();
     e.stopPropagation();
     handleOpenLink(e);
   }, [handleOpenLink]);
 
+  const hasDiscount = false; // VIP products don't have discounts currently
+  const isInStock = !product.comingSoon;
+
   return (
-    <motion.div
+    <motion.article
       ref={cardRef}
-      whileHover={isMobile ? {} : { scale: 1.02, y: -4 }}
+      className="group relative h-full w-full flex flex-col cursor-pointer"
+      style={{ isolation: 'isolate' }}
+      whileHover={isMobile ? {} : { scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.2 }}
       onClick={handleOpenLink}
       onTouchEnd={handleTouchEnd}
-      className="relative rounded-2xl overflow-hidden cursor-pointer group select-none"
-      style={{
-        background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05))',
-        border: '1px solid rgba(255, 255, 255, 0.3)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
-        touchAction: 'manipulation',
-        WebkitTapHighlightColor: 'transparent'
-      }}
     >
-      {/* Tap indicator for mobile */}
-      {isMobile && (
-        <div className="absolute top-2 right-2 z-20 px-2 py-1 rounded-full bg-white/20 backdrop-blur-sm">
-          <ExternalLink className="w-3 h-3 text-white" />
+      {/* Image Container - Glassmorphism Border with Shimmer */}
+      <div className="relative overflow-hidden bg-white/5 aspect-[3/4] rounded-xl md:rounded-2xl">
+        {/* Animated Shimmer Border */}
+        <div className="absolute inset-0 rounded-xl md:rounded-2xl p-[1px] overflow-hidden z-[1]">
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20"
+            style={{ width: '100%', filter: 'blur(20px)' }}
+            animate={{
+              x: ['-50%', '50%'],
+            }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+          />
+          <div className="absolute inset-[1px] bg-transparent rounded-xl md:rounded-2xl" />
         </div>
-      )}
-      
-      {/* Image */}
-      <div className="relative aspect-[4/3] overflow-hidden">
+        
+        {/* Static White Border */}
+        <div className="absolute inset-0 border border-white/20 rounded-xl md:rounded-2xl pointer-events-none z-[2]" />
+        
+        {/* Gradient overlay for depth */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent z-10 pointer-events-none" />
+        
+        {/* Product Image */}
         <img
           src={product.imageUrl}
           alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
           draggable={false}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-        
-        {/* Category Badge */}
-        <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-white/10 text-white text-[10px] font-bold uppercase tracking-widest border border-white/20 backdrop-blur-md">
-          {product.category}
-        </span>
+
+        {/* Badges */}
+        <div className="absolute top-2 md:top-3 left-2 md:left-3 flex flex-col gap-1.5 z-[100]">
+          {product.comingSoon && (
+            <motion.span 
+              className="relative px-2 md:px-3 py-0.5 md:py-1 text-white text-[10px] md:text-xs font-semibold rounded-full shadow-lg overflow-hidden bg-white/20 backdrop-blur-md border border-white/30"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+            >
+              <span className="relative z-10">Coming Soon</span>
+            </motion.span>
+          )}
+          {product.category && (
+            <motion.span 
+              className="relative px-2 md:px-3 py-0.5 md:py-1 text-white text-[10px] md:text-xs font-medium rounded-full overflow-hidden bg-[rgb(25,86,180)] backdrop-blur-md"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              {/* Shimmer effect */}
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                style={{ width: '100%' }}
+                animate={{
+                  x: ['-200%', '200%'],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: 'linear',
+                  repeatDelay: 1,
+                }}
+              />
+              <span className="relative z-10">{product.category}</span>
+            </motion.span>
+          )}
+        </div>
+
+        {/* External Link indicator */}
+        {!product.comingSoon && (
+          <div className="absolute top-2 md:top-3 right-2 md:right-3 h-8 w-8 md:h-10 md:w-10 rounded-full bg-black/60 backdrop-blur-sm border border-white/20 flex items-center justify-center z-[100]">
+            <ExternalLink className="w-4 h-4 text-white" />
+          </div>
+        )}
       </div>
 
-      {/* Content */}
-      <div className="p-4">
-        <h3 className="text-white font-bold text-sm mb-1 line-clamp-1">{product.name}</h3>
-        <p className="text-white/60 text-xs line-clamp-2 mb-3">{product.description}</p>
+      {/* Product Info */}
+      <div className="mt-1.5 flex-1 flex flex-col relative z-[100] md:mt-4 space-y-1.5 md:space-y-2">
+        <h3 className="text-white font-medium group-hover:text-white/80 transition-colors text-sm md:text-base line-clamp-2">
+          {product.name}
+        </h3>
         
-        <div className="flex items-center justify-between">
-          <span className="text-lg font-bold text-white">
+        {product.description && (
+          <p className="text-white/50 text-xs line-clamp-2">
+            {product.description}
+          </p>
+        )}
+
+        <div className="flex items-center gap-1.5 md:gap-2 pt-1">
+          <span className="text-white font-semibold text-sm md:text-base">
             ${formatPriceDisplay(product.price)}
           </span>
-          
-          <div 
-            className="px-4 py-2 rounded-xl bg-white text-black text-[10px] font-bold uppercase tracking-wider transition-all hover:bg-white/90 active:scale-95 flex items-center gap-1.5"
-          >
-            <ExternalLink className="w-3 h-3" />
-            Get Access
-          </div>
+          {product.planOptions && product.planOptions.length > 1 && (
+            <span className="text-white/40 text-xs">+{product.planOptions.length - 1} plans</span>
+          )}
         </div>
       </div>
-      
-      {/* Hover glow effect */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-2xl"
-        style={{
-          background: 'radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 70%)'
-        }}
-      />
-    </motion.div>
+    </motion.article>
   );
 });
 ProductCard.displayName = 'ProductCard';
@@ -230,27 +287,67 @@ ProductCard.displayName = 'ProductCard';
 // Main Content
 const ProductsContent = memo(() => {
   const { setIsOpen } = useModalState();
-  const { state: { products, categories } } = useShop();
+  const { state: { /*products, categories*/ } } = useShop();
   const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects } = useMobilePerformance();
+  const [vipProducts, setVipProducts] = useState<VipProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   const [filters, setFilters] = useState<Filters>({
     search: "",
     category: "all",
   });
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  const [expandedProduct, setExpandedProduct] = useState<(Product & { id: string }) | null>(null);
+  const [expandedProduct, setExpandedProduct] = useState<VipProduct | null>(null);
+
+  useEffect(() => {
+    const fetchVip = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch('/api/store/vip');
+        if (!res.ok) throw new Error('Failed to load VIP tiers');
+        const json = await res.json();
+
+        const normalized: VipProduct[] = (json.data || []).map((item: any, idx: number) => {
+          const planOptions: PlanOption[] = Array.isArray(item.plan_options) ? item.plan_options : [];
+          const primaryPrice = item.price ?? planOptions[0]?.price ?? 0;
+          const primaryBuyUrl = item.buy_url || planOptions[0]?.buy_url || undefined;
+
+          return {
+            id: item.id || `vip-${idx}`,
+            name: item.name,
+            description: item.description || '',
+            price: Number(primaryPrice) || 0,
+            category: 'VIP',
+            imageUrl: item.image_url || item.imageUrl || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80',
+            visible: item.visible !== false, // default to visible if column absent
+            comingSoon: Boolean(item.coming_soon),
+            buyUrl: primaryBuyUrl,
+            planOptions,
+          };
+        });
+
+        setVipProducts(normalized);
+        setError(null);
+      } catch (err: any) {
+        console.error('VIP fetch failed', err);
+        setError(err?.message || 'Failed to load VIP tiers');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchVip();
+  }, []);
 
   const toggleSortDirection = () => {
     SoundEffects.click();
     setSortDirection(prev => (prev === 'asc' ? 'desc' : 'asc'));
   };
 
+  const vipCategories = useMemo<Category[]>(() => [{ id: 'vip', name: 'VIP' }], []);
+
   const filteredAndSortedProducts = useMemo(() => {
-    if (!products || !Array.isArray(products)) return [];
-    
-    const filtered = products.filter((p) => {
-      // Exclude specific categories
-      if (['VIDEO', 'BLOGVIDEO', 'LIVESTREAMS', 'BLOGS'].includes(p.category)) return false;
+    const filtered = vipProducts.filter((p) => {
       if (!p.visible) return false;
 
       const searchMatch = p.name.toLowerCase().includes(filters.search.toLowerCase());
@@ -264,7 +361,7 @@ const ProductsContent = memo(() => {
       const priceB = parseFloat(String(b.price).replace(/[^0-9.]/g, '')) || 0;
       return sortDirection === 'asc' ? priceA - priceB : priceB - priceA;
     });
-  }, [products, filters, sortDirection]);
+  }, [vipProducts, filters, sortDirection]);
 
   const handleClose = useCallback(() => {
     SoundEffects.click();
@@ -287,9 +384,9 @@ const ProductsContent = memo(() => {
       transition={animations.modalBackdrop.transition}
       className="fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6"
       style={{
-        background: 'rgba(0, 0, 0, 0.85)',
-        backdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(20px)',
-        WebkitBackdropFilter: shouldDisableBackdropBlur ? 'none' : 'blur(20px)'
+        background: 'rgba(0, 0, 0, 0.95)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)'
       }}
       onClick={handleClose}
       onTouchEnd={handleBackdropTouch}
@@ -380,7 +477,7 @@ const ProductsContent = memo(() => {
                 style={{ WebkitTapHighlightColor: 'transparent' }}
               >
                 <option value="all" className="bg-black text-white">All Categories</option>
-                {categories.map((c: Category) => (
+                {vipCategories.map((c: Category) => (
                   <option key={c._id || c.id} value={c.name} className="bg-black text-white">{c.name}</option>
                 ))}
               </select>
@@ -400,18 +497,26 @@ const ProductsContent = memo(() => {
           </div>
           
           {/* Products Grid */}
-          <div className="flex-1 overflow-y-auto p-4 overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
-            {filteredAndSortedProducts.length > 0 ? (
-              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="flex-1 overflow-y-auto p-4 md:p-6 overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center text-white/60">Loading VIP tiers…</div>
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center text-red-300">
+                <p className="mb-2">Failed to load VIP tiers.</p>
+                <p className="text-sm text-red-200/80">{error}</p>
+              </div>
+            ) : filteredAndSortedProducts.length > 0 ? (
+              <div className="grid gap-6 md:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 pb-8">
                 {filteredAndSortedProducts.map((p) => {
                   const pid = p._id || p.id!;
                   return (
-                    <ProductCard
-                      key={pid}
-                      product={{ ...p, id: pid }}
-                      onClick={() => setExpandedProduct({ ...p, id: pid })}
-                      isMobile={isMobile}
-                    />
+                    <div key={pid} className="relative pb-6">
+                      <ProductCard
+                        product={{ ...p, id: pid }}
+                        onClick={() => setExpandedProduct({ ...p, id: pid })}
+                        isMobile={isMobile}
+                      />
+                    </div>
                   );
                 })}
               </div>
@@ -434,96 +539,244 @@ const ProductsContent = memo(() => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-4 pointer-events-auto"
-            style={{
-              background: 'rgba(0, 0, 0, 0.9)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)'
-            }}
+            className="fixed inset-0 z-[100000] flex items-center justify-center bg-black backdrop-blur-sm overflow-hidden"
             onClick={() => setExpandedProduct(null)}
             onTouchEnd={(e) => { if (e.target === e.currentTarget) setExpandedProduct(null); }}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: "spring", duration: 0.5 }}
               onClick={(e) => e.stopPropagation()}
               onTouchEnd={(e) => e.stopPropagation()}
-              className="relative w-full max-w-3xl max-h-[90vh] overflow-hidden rounded-3xl"
-              style={{
-                background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.8))',
-                backdropFilter: 'blur(40px) saturate(180%)',
-                WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                boxShadow: '0 25px 80px -12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-              }}
+              className="relative w-full h-full max-w-7xl max-h-full overflow-y-auto"
             >
-              {/* Close Button */}
-              <button
-                onClick={() => setExpandedProduct(null)}
-                onTouchEnd={(e) => { e.stopPropagation(); setExpandedProduct(null); }}
-                className="absolute top-4 right-4 z-50 p-3 min-w-[48px] min-h-[48px] bg-black/50 hover:bg-black/70 text-white rounded-full backdrop-blur-md transition-all border border-white/10 flex items-center justify-center active:scale-95"
-                style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
-              >
-                <X size={20} />
-              </button>
-
-              <div className="flex flex-col md:flex-row h-full max-h-[90vh]">
-                {/* Image Side */}
-                <div className="relative w-full md:w-1/2 h-48 sm:h-56 md:h-auto shrink-0">
-                  <img
-                    src={expandedProduct.imageUrl}
-                    alt={expandedProduct.name}
-                    className="w-full h-full object-cover"
-                    draggable={false}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent md:hidden" />
-                  <div className="absolute inset-0 bg-gradient-to-l from-black via-black/30 to-transparent hidden md:block" />
+              {/* Close Button with Shimmer Border */}
+              <div className="fixed top-6 right-6 z-50">
+                <div className="relative w-12 h-12 rounded-full overflow-hidden">
+                  {/* Animated Shimmer Border */}
+                  <div className="absolute inset-0 rounded-full p-[1px] overflow-hidden z-[1]">
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20"
+                      style={{ width: '100%', filter: 'blur(20px)' }}
+                      animate={{
+                        x: ['-50%', '50%'],
+                      }}
+                      transition={{
+                        duration: 4,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                      }}
+                    />
+                    <div className="absolute inset-[1px] bg-transparent rounded-full" />
+                  </div>
                   
-                  <span className="absolute top-4 left-4 px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-xs font-bold uppercase tracking-wider text-white">
-                    {expandedProduct.category}
-                  </span>
+                  {/* Static White Border */}
+                  <div className="absolute inset-0 border border-white/20 rounded-full pointer-events-none z-[2]" />
+                  
+                  {/* Button Content */}
+                  <motion.button
+                    onClick={() => setExpandedProduct(null)}
+                    onTouchEnd={(e) => { e.stopPropagation(); setExpandedProduct(null); }}
+                    className="relative w-full h-full rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center transition-colors"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0 }}
+                  >
+                    <X className="w-6 h-6 text-white" />
+                  </motion.button>
                 </div>
+              </div>
 
-                {/* Content Side */}
-                <div className="flex-1 overflow-y-auto p-5 sm:p-6 md:p-8 flex flex-col" style={{ WebkitOverflowScrolling: 'touch' }}>
-                  <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white mb-2">
-                    {expandedProduct.name}
-                  </h2>
-                  
-                  <div className="flex items-center gap-4 mb-4 sm:mb-6">
-                    <span className="text-2xl sm:text-3xl font-bold text-white">
-                      ${formatPriceDisplay(expandedProduct.price)}
-                    </span>
-                  </div>
+              {/* Scrollable Content */}
+              <div className="min-h-full p-6 md:p-12 flex items-center justify-center bg-black">
+                <div className="w-full max-w-6xl bg-black">
+                  <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 bg-black">
+                    {/* Product Image - Larger */}
+                    <div className="relative w-full aspect-square lg:aspect-[4/5] rounded-2xl overflow-hidden bg-black border border-white/20">
+                      <img
+                        src={expandedProduct.imageUrl}
+                        alt={expandedProduct.name}
+                        className="w-full h-full object-cover"
+                        draggable={false}
+                      />
+                      
+                      {/* Category Badge */}
+                      <div className="absolute top-4 left-4 px-4 py-2 text-white text-sm font-bold rounded-full bg-[rgb(25,86,180)]">
+                        {expandedProduct.category}
+                      </div>
+                      
+                      {/* Coming Soon Badge */}
+                      {expandedProduct.comingSoon && (
+                        <div className="absolute top-4 right-4 px-4 py-2 text-white text-sm font-bold rounded-full bg-white/20 backdrop-blur-md border border-white/30">
+                          Coming Soon
+                        </div>
+                      )}
+                    </div>
 
-                  <div className="text-white/70 text-sm leading-relaxed mb-4 sm:mb-6 flex-grow">
-                    <p className="whitespace-pre-line">{expandedProduct.description}</p>
-                  </div>
+                    {/* Product Details */}
+                    <div className="flex flex-col space-y-6">
+                      <div className="space-y-3">
+                        <p className="text-sm uppercase tracking-wider font-semibold text-[rgb(25,86,180)]">
+                          {expandedProduct.category}
+                        </p>
+                        <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+                          {expandedProduct.name}
+                        </h1>
+                        
+                        {/* Description */}
+                        {expandedProduct.description && (
+                          <p className="text-lg text-white/70 leading-relaxed">
+                            {expandedProduct.description}
+                          </p>
+                        )}
+                      </div>
 
-                  {/* Action Footer */}
-                  <div className="mt-auto pt-4 sm:pt-6 border-t border-white/10">
-                    <button
-                      onClick={() => {
-                        const url = expandedProduct.buyUrl?.trim();
-                        if (url) window.open(url, "_blank", "noopener,noreferrer");
-                        else alert("No buy link available");
-                      }}
-                      onTouchEnd={(e) => {
-                        e.stopPropagation();
-                        const url = expandedProduct.buyUrl?.trim();
-                        if (url) window.open(url, "_blank", "noopener,noreferrer");
-                        else alert("No buy link available");
-                      }}
-                      className="w-full py-4 rounded-2xl bg-white text-black font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-all hover:bg-white/90 active:scale-[0.98]"
-                      style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
-                    >
-                      <ShoppingCart size={18} /> Buy Now
-                    </button>
-                    <p className="text-center text-white/40 text-xs mt-3">
-                      Instant digital delivery via email.
-                    </p>
+                      {/* Price */}
+                      <div className="flex items-center gap-4 py-4 border-y border-white/10">
+                        <span className="text-5xl font-bold text-white">
+                          ${formatPriceDisplay(expandedProduct.price)}
+                        </span>
+                      </div>
+
+                      {/* Plan Options */}
+                      {expandedProduct.planOptions && expandedProduct.planOptions.length > 0 && (
+                        <div>
+                          <p className="text-white text-base font-semibold mb-3">Select Your Plan:</p>
+                          <div className="flex flex-wrap gap-3">
+                            {expandedProduct.planOptions.map((opt, idx) => {
+                              const url = opt.buy_url || expandedProduct.buyUrl;
+                              return (
+                                <div key={`${expandedProduct.id}-plan-${idx}`} className="relative">
+                                  {/* Animated Shimmer Border */}
+                                  <div className="absolute inset-0 rounded-xl p-[1px] overflow-hidden z-[1]">
+                                    <motion.div
+                                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20"
+                                      style={{ width: '100%', filter: 'blur(20px)' }}
+                                      animate={{
+                                        x: ['-50%', '50%'],
+                                      }}
+                                      transition={{
+                                        duration: 4,
+                                        repeat: Infinity,
+                                        ease: 'easeInOut',
+                                      }}
+                                    />
+                                    <div className="absolute inset-[1px] bg-transparent rounded-xl" />
+                                  </div>
+                                  
+                                  {/* Static White Border */}
+                                  <div className="absolute inset-0 border border-white/20 rounded-xl pointer-events-none z-[2]" />
+                                  
+                                  {/* Button */}
+                                  <motion.button
+                                    onClick={() => {
+                                      SoundEffects.click();
+                                      if (!url) return;
+                                      window.open(url, "_blank", "noopener,noreferrer");
+                                    }}
+                                    className="relative px-6 py-4 rounded-xl transition-all font-medium text-white bg-[rgb(25,86,180)] hover:bg-[rgb(35,96,190)]"
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.05, duration: 0.3 }}
+                                  >
+                                    <div className="flex flex-col items-start">
+                                      <span className="font-semibold">{opt.label || 'Plan'}</span>
+                                      <span className="text-white/80 text-sm">${formatPriceDisplay(opt.price ?? expandedProduct.price)}{opt.interval ? `/${opt.interval}` : ''}</span>
+                                      {opt.trial_days && <span className="text-emerald-300 text-xs mt-1">{opt.trial_days}-day free trial</span>}
+                                    </div>
+                                  </motion.button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Stock Status */}
+                      <div className="flex items-center gap-3 p-4 bg-black rounded-xl border border-white/20">
+                        <div className={`w-3 h-3 rounded-full ${!expandedProduct.comingSoon ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'}`} />
+                        <span className={`text-base font-semibold ${!expandedProduct.comingSoon ? 'text-green-400' : 'text-yellow-400'}`}>
+                          {!expandedProduct.comingSoon ? '✓ Available Now' : '⏳ Coming Soon'}
+                        </span>
+                      </div>
+
+                      {/* Payment Options */}
+                      <div className="space-y-4 pt-6 bg-black">
+                        <p className="text-white text-base font-semibold">Secure Checkout:</p>
+                        
+                        {/* Buy Now Button */}
+                        <div className="relative w-full overflow-hidden rounded-xl">
+                          {/* Animated Shimmer Border */}
+                          <div className="absolute inset-0 rounded-xl p-[1px] overflow-hidden z-[1]">
+                            <motion.div
+                              className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20"
+                              style={{ width: '100%', filter: 'blur(20px)' }}
+                              animate={{
+                                x: ['-50%', '50%'],
+                              }}
+                              transition={{
+                                duration: 4,
+                                repeat: Infinity,
+                                ease: 'easeInOut',
+                              }}
+                            />
+                            <div className="absolute inset-[1px] bg-transparent rounded-xl" />
+                          </div>
+                          
+                          {/* Static White Border */}
+                          <div className="absolute inset-0 border border-white/20 rounded-xl pointer-events-none z-[2]" />
+                          
+                          {/* Button */}
+                          <motion.button
+                            onClick={() => {
+                              SoundEffects.click();
+                              const url = expandedProduct.buyUrl?.trim() || expandedProduct.planOptions?.[0]?.buy_url?.trim();
+                              if (url) {
+                                window.open(url, "_blank", "noopener,noreferrer");
+                              }
+                            }}
+                            disabled={expandedProduct.comingSoon || !expandedProduct.buyUrl}
+                            style={{
+                              backgroundColor: expandedProduct.comingSoon ? 'rgb(75, 75, 75)' : 'rgb(25, 86, 180)',
+                            }}
+                            className={`relative w-full py-5 text-white text-lg font-bold rounded-xl transition-all flex items-center justify-center gap-3 shadow-lg ${
+                              expandedProduct.comingSoon ? 'opacity-60 cursor-not-allowed' : 'hover:opacity-90 active:scale-98'
+                            }`}
+                            whileHover={expandedProduct.comingSoon ? {} : { scale: 1.02 }}
+                            whileTap={expandedProduct.comingSoon ? {} : { scale: 0.98 }}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: expandedProduct.comingSoon ? 0.6 : 1, y: 0 }}
+                            transition={{ duration: 0.4 }}
+                          >
+                            {expandedProduct.comingSoon ? (
+                              <>
+                                <CreditCard className="w-5 h-5" />
+                                <span>Coming Soon</span>
+                              </>
+                            ) : (
+                              <>
+                                <ExternalLink className="w-5 h-5" />
+                                <span>Get Access Now</span>
+                              </>
+                            )}
+                          </motion.button>
+                        </div>
+
+                        <div className="flex items-center justify-center gap-3 text-white/40 text-xs pt-2">
+                          <span>🔒 Secure Payment</span>
+                          <span>•</span>
+                          <span>💳 All Cards Accepted</span>
+                          <span>•</span>
+                          <span>📱 Instant Access</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

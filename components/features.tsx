@@ -959,7 +959,7 @@ const Globe = ({ reducedMotion = false }: { reducedMotion?: boolean }) => {
   const [showFallback, setShowFallback] = useState(false);
   const size = reducedMotion ? 480 : 600;
   const mapSamples = reducedMotion ? 8000 : 16000;
-  const rotationSpeed = reducedMotion ? 0.003 : 0.005;
+  const rotationSpeed = reducedMotion ? 0.008 : 0.015;
 
   useEffect(() => {
     if (!canvasRef.current) return;

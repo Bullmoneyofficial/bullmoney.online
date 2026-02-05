@@ -55,16 +55,16 @@ interface ExplosionParticle {
   size: number;
 }
 
-// Crypto coin data with interactive properties
+// Crypto coin data with interactive properties - Much smaller on mobile for better fit
 const CRYPTO_COINS = [
-  { name: "BTC", color: "#0066FF", size: 0.5, orbitRadius: 3.5, orbitSpeed: 2.5, rotationSpeed: 0.02, orbitInclination: 0.04, orbitEccentricity: 0.04, axialTilt: 0.15, value: 100 },
-  { name: "ETH", color: "#00AAFF", size: 0.45, orbitRadius: 5, orbitSpeed: 1.8, rotationSpeed: 0.025, orbitInclination: 0.08, orbitEccentricity: 0.06, axialTilt: 0.35, value: 80 },
-  { name: "SOL", color: "#00D4FF", size: 0.35, orbitRadius: 6.5, orbitSpeed: 1.5, rotationSpeed: 0.03, orbitInclination: 0.12, orbitEccentricity: 0.05, axialTilt: 0.25, value: 60 },
-  { name: "XRP", color: "#3399FF", size: 0.3, orbitRadius: 8, orbitSpeed: 1.2, rotationSpeed: 0.022, orbitInclination: 0.06, orbitEccentricity: 0.07, axialTilt: 0.18, value: 40 },
-  { name: "BNB", color: "#0055DD", size: 0.4, orbitRadius: 10, orbitSpeed: 0.9, rotationSpeed: 0.028, orbitInclination: 0.1, orbitEccentricity: 0.03, axialTilt: 0.28, value: 70 },
-  { name: "ADA", color: "#0077EE", size: 0.35, orbitRadius: 12, orbitSpeed: 0.7, rotationSpeed: 0.02, orbitInclination: 0.14, orbitEccentricity: 0.06, axialTilt: 0.42, hasRings: true, value: 50 },
-  { name: "DOGE", color: "#66B2FF", size: 0.32, orbitRadius: 14.5, orbitSpeed: 0.5, rotationSpeed: 0.035, orbitInclination: 0.18, orbitEccentricity: 0.05, axialTilt: 0.3, value: 30 },
-  { name: "USDT", color: "#0099CC", size: 0.28, orbitRadius: 17, orbitSpeed: 0.35, rotationSpeed: 0.018, orbitInclination: 0.2, orbitEccentricity: 0.04, axialTilt: 0.2, value: 25 },
+  { name: "BTC", color: "#0066FF", size: 1.0, mobileSize: 0.35, orbitRadius: 3.5, mobileOrbitRadius: 1.8, orbitSpeed: 2.5, rotationSpeed: 0.02, orbitInclination: 0.04, orbitEccentricity: 0.04, axialTilt: 0.15, value: 100 },
+  { name: "ETH", color: "#00AAFF", size: 0.9, mobileSize: 0.32, orbitRadius: 5, mobileOrbitRadius: 2.5, orbitSpeed: 1.8, rotationSpeed: 0.025, orbitInclination: 0.08, orbitEccentricity: 0.06, axialTilt: 0.35, value: 80 },
+  { name: "SOL", color: "#00D4FF", size: 0.7, mobileSize: 0.28, orbitRadius: 6.5, mobileOrbitRadius: 3.2, orbitSpeed: 1.5, rotationSpeed: 0.03, orbitInclination: 0.12, orbitEccentricity: 0.05, axialTilt: 0.25, value: 60 },
+  { name: "XRP", color: "#3399FF", size: 0.6, mobileSize: 0.25, orbitRadius: 8, mobileOrbitRadius: 4.0, orbitSpeed: 1.2, rotationSpeed: 0.022, orbitInclination: 0.06, orbitEccentricity: 0.07, axialTilt: 0.18, value: 40 },
+  { name: "BNB", color: "#0055DD", size: 0.8, mobileSize: 0.3, orbitRadius: 10, mobileOrbitRadius: 4.8, orbitSpeed: 0.9, rotationSpeed: 0.028, orbitInclination: 0.1, orbitEccentricity: 0.03, axialTilt: 0.28, value: 70 },
+  { name: "ADA", color: "#0077EE", size: 0.7, mobileSize: 0.28, orbitRadius: 12, mobileOrbitRadius: 5.8, orbitSpeed: 0.7, rotationSpeed: 0.02, orbitInclination: 0.14, orbitEccentricity: 0.06, axialTilt: 0.42, hasRings: true, value: 50 },
+  { name: "DOGE", color: "#66B2FF", size: 0.64, mobileSize: 0.26, orbitRadius: 14.5, mobileOrbitRadius: 7.0, orbitSpeed: 0.5, rotationSpeed: 0.035, orbitInclination: 0.18, orbitEccentricity: 0.05, axialTilt: 0.3, value: 30 },
+  { name: "USDT", color: "#0099CC", size: 0.56, mobileSize: 0.24, orbitRadius: 17, mobileOrbitRadius: 8.2, orbitSpeed: 0.35, rotationSpeed: 0.018, orbitInclination: 0.2, orbitEccentricity: 0.04, axialTilt: 0.2, value: 25 },
 ];
 
 const ACHIEVEMENTS = [
@@ -122,9 +122,11 @@ interface SpaceGemState {
 function InteractiveSun({ 
   onBurnPlanet,
   interactionNotice,
+  isMobile = false,
 }: { 
   onBurnPlanet: (planetName: string) => void;
   interactionNotice: { id: number; type: InteractionType } | null;
+  isMobile?: boolean;
 }) {
   const sunRef = useRef<THREE.Mesh>(null);
   const glowRef = useRef<THREE.Mesh>(null);
@@ -132,6 +134,7 @@ function InteractiveSun({
   const [isActive, setIsActive] = useState(false);
   const [pulseIntensity, setPulseIntensity] = useState(1);
   const [isNoticeActive, setIsNoticeActive] = useState(false);
+  const sunSize = isMobile ? 0.8 : 1.8;
 
   useEffect(() => {
     if (!interactionNotice) return;
@@ -170,7 +173,7 @@ function InteractiveSun({
         onPointerEnter={() => { setIsActive(true); setPulseIntensity(2); }}
         onPointerLeave={() => { setIsActive(false); setPulseIntensity(1); }}
       >
-        <sphereGeometry args={[1.8, 64, 64]} />
+        <sphereGeometry args={[sunSize, 64, 64]} />
         <MeshDistortMaterial 
           color={isActive ? BLUE_COLORS.fire : BLUE_COLORS.primary} 
           distort={isActive ? 0.4 : 0.2}
@@ -180,7 +183,7 @@ function InteractiveSun({
       
       {/* Inner glow */}
       <mesh scale={1.15}>
-        <sphereGeometry args={[1.8, 32, 32]} />
+        <sphereGeometry args={[sunSize, 32, 32]} />
         <meshBasicMaterial 
           color={isActive ? BLUE_COLORS.burning : BLUE_COLORS.secondary} 
           transparent 
@@ -190,7 +193,7 @@ function InteractiveSun({
       
       {/* Corona effect when active */}
       <mesh ref={coronaRef} scale={1.5}>
-        <sphereGeometry args={[1.8, 32, 32]} />
+        <sphereGeometry args={[sunSize, 32, 32]} />
         <meshBasicMaterial 
           color={isActive ? "#FF4400" : BLUE_COLORS.accent} 
           transparent 
@@ -200,23 +203,23 @@ function InteractiveSun({
       
       {/* Outer glow */}
       <mesh ref={glowRef} scale={1.35}>
-        <sphereGeometry args={[1.8, 32, 32]} />
+        <sphereGeometry args={[sunSize, 32, 32]} />
         <meshBasicMaterial color={BLUE_COLORS.accent} transparent opacity={0.2} />
       </mesh>
       
       {/* Decorative ring */}
       <mesh rotation-x={Math.PI / 2}>
-        <torusGeometry args={[2.5, 0.05, 16, 64]} />
+        <torusGeometry args={[sunSize * 1.4, 0.05, 16, 64]} />
         <meshBasicMaterial color={BLUE_COLORS.light} transparent opacity={0.6} />
       </mesh>
       
       {/* Solar flares - sparkles */}
-      <Sparkles count={50} scale={4} size={3} speed={0.5} color={isActive ? "#FF6600" : BLUE_COLORS.accent} />
+      <Sparkles count={50} scale={sunSize * 2.2} size={3} speed={0.5} color={isActive ? "#FF6600" : BLUE_COLORS.accent} />
       
       {/* BULLMONEY label */}
       <Html center position={[0, 0, 0]} style={{ pointerEvents: "none" }}>
         <div style={{ 
-          fontSize: "18px", 
+          fontSize: isMobile ? "14px" : "18px", 
           fontWeight: "bold",
           color: "#ffffff",
           textShadow: `0 0 20px ${isActive ? '#FF6600' : '#0066FF'}, 0 0 40px ${isActive ? '#FF4400' : '#00AAFF'}`,
@@ -230,7 +233,7 @@ function InteractiveSun({
 
       {/* Interaction code + CTA */}
       {isNoticeActive && (
-        <Html center position={[0, 2.6, 0]} style={{ pointerEvents: "none" }}>
+        <Html center position={[0, sunSize * 1.45, 0]} style={{ pointerEvents: "none" }}>
           <div style={{
             textAlign: "center",
             color: "#ffffff",
@@ -1185,6 +1188,7 @@ function CameraController() {
 // GAME SCENE COMPONENT
 // ============================================
 function GameScene({ 
+  planetData,
   onScoreUpdate, 
   onExplosion,
   onBurn,
@@ -1196,6 +1200,7 @@ function GameScene({
   interactionNotice,
   isTouchDevice,
 }: { 
+  planetData: any[];
   onScoreUpdate: (points: number) => void;
   onExplosion: (name: string, position: THREE.Vector3) => void;
   onBurn: (name: string) => void;
@@ -1208,7 +1213,7 @@ function GameScene({
   isTouchDevice: boolean;
 }) {
   const [explosions, setExplosions] = useState<{ id: number; position: THREE.Vector3; color: string }[]>([]);
-  const [activePlanets, setActivePlanets] = useState<string[]>(CRYPTO_COINS.map(c => c.name));
+  const [activePlanets, setActivePlanets] = useState<string[]>(planetData.map(c => c.name));
   const [activeBonuses, setActiveBonuses] = useState<string[]>([]);
   const [targetCoin, setTargetCoin] = useState<string | null>(null);
   const [spaceGems, setSpaceGems] = useState<SpaceGemState[]>(() => (
@@ -1260,7 +1265,7 @@ function GameScene({
   }, [activePlanets, pickTargetFrom]);
 
   const handleExplode = useCallback((name: string, position: THREE.Vector3) => {
-    const coin = CRYPTO_COINS.find(c => c.name === name);
+    const coin = planetData.find(c => c.name === name);
     const id = explosionId.current++;
 
     setExplosions(prev => [...prev, { id, position, color: coin?.color || BLUE_COLORS.explosion }]);
@@ -1273,7 +1278,7 @@ function GameScene({
       return next;
     });
     onExplosion(name, position);
-  }, [onExplosion, onTargetComplete, pickTargetFrom, targetCoin]);
+  }, [onExplosion, onTargetComplete, pickTargetFrom, targetCoin, planetData]);
 
   const handleExplosionComplete = useCallback((id: number) => {
     setExplosions(prev => prev.filter(e => e.id !== id));
@@ -1292,7 +1297,7 @@ function GameScene({
   }, [onBurn, onTargetComplete, pickTargetFrom, targetCoin]);
 
   const handleShipCollectCoin = useCallback((name: string) => {
-    const coin = CRYPTO_COINS.find(c => c.name === name);
+    const coin = planetData.find(c => c.name === name);
     if (!coin) return;
     setActivePlanets(prev => {
       const next = prev.filter(p => p !== name);
@@ -1303,7 +1308,7 @@ function GameScene({
       return next;
     });
     onShipCollect(name, Math.round(coin.value * 0.6));
-  }, [onShipCollect, onTargetComplete, pickTargetFrom, targetCoin]);
+  }, [onShipCollect, onTargetComplete, pickTargetFrom, targetCoin, planetData]);
 
   const handleBonusCollect = useCallback((id: string) => {
     const item = bonusItems.find(b => b.id === id);
@@ -1362,8 +1367,8 @@ function GameScene({
   return (
     <>
       {/* Strong lighting for visibility */}
-      <hemisphereLight intensity={0.35} color="#9cc7ff" groundColor="#02040b" />
-      <ambientLight intensity={0.35} />
+      <hemisphereLight intensity={0.5} color="#9cc7ff" groundColor="#02040b" />
+      <ambientLight intensity={0.5} />
       <directionalLight
         position={[12, 12, 6]}
         intensity={1.1}
@@ -1390,9 +1395,9 @@ function GameScene({
         <shadowMaterial transparent opacity={0.15} />
       </mesh>
       
-      <InteractiveSun onBurnPlanet={handleBurn} interactionNotice={interactionNotice} />
+      <InteractiveSun onBurnPlanet={handleBurn} interactionNotice={interactionNotice} isMobile={isTouchDevice} />
       
-      {CRYPTO_COINS.map((coin) => (
+      {planetData.map((coin) => (
         <OrbitPath 
           key={`orbit-${coin.name}`} 
           radius={coin.orbitRadius} 
@@ -1401,7 +1406,7 @@ function GameScene({
         />
       ))}
       
-      {CRYPTO_COINS.filter(coin => activePlanets.includes(coin.name)).map((coin) => (
+      {planetData.filter(coin => activePlanets.includes(coin.name)).map((coin) => (
         <InteractiveCoin 
           key={coin.name} 
           {...coin} 
@@ -1462,12 +1467,13 @@ function GameScene({
       <ParticleBelt />
       
       <OrbitControls
-        enablePan={!isTouchDevice}
+        enablePan={true}
         enableZoom={true}
-        enableRotate={!isTouchDevice}
+        enableRotate={true}
         minDistance={5}
         maxDistance={40}
-        autoRotate={false}
+        autoRotate={isTouchDevice}
+        autoRotateSpeed={0.5}
         maxPolarAngle={Math.PI / 1.5}
         minPolarAngle={Math.PI / 6}
       />
@@ -1532,121 +1538,51 @@ function GameUI({
     <div 
       className="absolute inset-0 pointer-events-none"
       style={{
-        padding: "60px 16px 96px",
         zIndex: 99999999999,
         overflow: "hidden",
       }}
     >
-      {/* Score display - top left */}
+      {/* Compact stats panel - top center */}
       <div 
-        className="absolute top-0 left-0 pointer-events-auto"
-        style={{ maxWidth: "45%", zIndex: 99999999999 }}
+        className="absolute top-2 left-1/2 -translate-x-1/2 pointer-events-auto"
+        style={{ zIndex: 99999999999 }}
       >
-        <div className="backdrop-blur-xl bg-black/80 border border-blue-500/50 rounded-lg p-1.5">
-          <div className="text-[7px] text-blue-300 mb-0.5 uppercase tracking-wider">Score</div>
-          <div className="text-base font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">
-            {score}
-          </div>
-          <div className="flex gap-1.5 mt-0.5 text-[7px]">
-            <div>
-              <span className="text-orange-400">💥</span> {explosions}
-            </div>
-            <div>
-              <span className="text-red-400">🔥</span> {burnedCoins.length}
-            </div>
-            <div>
-              <span className="text-cyan-300">⚡</span> x{combo}
-            </div>
-            <div>
-              <span className="text-emerald-300">🚀</span> {shipCollected}
-            </div>
-          </div>
-          <div className="text-[7px] text-blue-200/80 mt-0.5">Best Combo: x{bestCombo}</div>
-          <div className="text-[7px] text-yellow-200/80 mt-0.5">Level {level} / {MAX_LEVEL}</div>
+        <div className="backdrop-blur-xl bg-black/90 border border-blue-500/40 rounded-md px-2 py-1 flex items-center gap-2 text-[8px]">
+          <span className="text-blue-400 font-bold">{score}</span>
+          <span className="text-white/30">|</span>
+          <span className="text-cyan-300">x{combo}</span>
+          <span className="text-white/30">|</span>
+          <span className="text-yellow-300">L{level}</span>
+          {targetCoin && (
+            <>
+              <span className="text-white/30">|</span>
+              <span className="text-orange-300">{targetCoin}</span>
+            </>
+          )}
+          <button
+            onClick={onReset}
+            className="ml-1 text-white/60 hover:text-white text-[7px]"
+          >
+            RST
+          </button>
         </div>
       </div>
 
-      {/* Instructions - top right */}
-      <div 
-        className="absolute top-0 right-0 pointer-events-auto"
-        style={{ maxWidth: "45%", zIndex: 99999999999 }}
-      >
-        <div className="backdrop-blur-xl bg-black/80 border border-blue-500/30 rounded-lg p-1.5 text-[7px]">
-          <div className="text-blue-400 font-bold mb-0.5 text-[8px]">How to Play</div>
-          <ul className="text-blue-200/80 space-y-0 leading-tight">
-            <li>✋ Hold - Explode</li>
-            <li>👆 2x Tap - Pop</li>
-            <li>☀️ To Sun - Burn</li>
-            <li>💎 Tap Shards - Bonus</li>
-            <li>🎯 Bounty Target - Big Bonus</li>
-            <li>🚀 Drag Ship - Collect</li>
-          </ul>
-        </div>
-      </div>
-
-      {/* Bounty target - top center */}
-      <div
-        className="absolute left-1/2 -translate-x-1/2 pointer-events-auto"
-        style={{ zIndex: 99999999999, top: "58px" }}
-      >
-        <div className="backdrop-blur-xl bg-black/80 border border-yellow-400/40 rounded-lg px-2 py-1 text-[7px] text-yellow-200">
-          <div className="text-[7px] uppercase tracking-wider text-yellow-300">Bounty</div>
-          <div className="text-[9px] font-bold">{targetCoin ? `${targetCoin} Target` : "Awaiting"}</div>
-          <div className="text-[7px] text-yellow-200/80">Hits: {bountiesHit}</div>
-        </div>
-      </div>
-
-      {/* Missions - right center */}
-      <div
-        className="absolute right-0 pointer-events-auto"
-        style={{ maxWidth: "45%", zIndex: 99999999999, top: "70px" }}
-      >
-        <div className="backdrop-blur-xl bg-black/80 border border-blue-500/30 rounded-lg p-1.5 text-[7px]">
-          <div className="text-cyan-300 font-bold mb-0.5 text-[8px]">Missions</div>
-          <div className="space-y-0.5 text-blue-200/80">
-            {missions.map((mission) => (
-              <div key={mission.id} className="flex items-center justify-between gap-1">
-                <span className="truncate">{mission.label}</span>
-                <span className="text-cyan-200">{mission.progress}/{mission.target}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Reset button - bottom right */}
-      <div className="absolute right-0 pointer-events-auto" style={{ zIndex: 99999999999, bottom: "12px" }}>
-        <button
-          onClick={onReset}
-          className="backdrop-blur-xl bg-blue-600/80 hover:bg-blue-500/90 border border-blue-400/50 rounded-lg px-2 py-1 text-white font-bold text-[9px] transition-all duration-300 hover:scale-105 active:scale-95"
-        >
-          🔄 Reset
-        </button>
-      </div>
-
-      {/* Achievement toast area - bottom center */}
-      {(burnedCoins.length > 0 || lastAchievement) && (
+      {lastAchievement && (
         <div 
-          className="absolute left-1/2 -translate-x-1/2 pointer-events-auto"
-          style={{ maxWidth: "90%", zIndex: 99999999999, bottom: "32px" }}
+          className="absolute top-10 left-1/2 -translate-x-1/2 pointer-events-auto"
+          style={{ zIndex: 99999999999 }}
         >
-          <div className="backdrop-blur-xl bg-gradient-to-r from-orange-600/80 to-red-600/80 border border-orange-400/50 rounded-lg px-2 py-1 text-white font-bold text-[9px] animate-pulse whitespace-nowrap">
-            {lastAchievement ? `🏆 ${lastAchievement}` : `🔥 ${burnedCoins[burnedCoins.length - 1]} burned!`}
+          <div className="backdrop-blur-xl bg-gradient-to-r from-orange-600/80 to-red-600/80 border border-orange-400/50 rounded-md px-2 py-0.5 text-white font-bold text-[8px] animate-pulse">
+            {lastAchievement}
           </div>
         </div>
       )}
 
-      {/* Achievements summary - bottom left */}
-      <div className="absolute left-0 pointer-events-auto" style={{ zIndex: 99999999999, bottom: "12px" }}>
-        <div className="backdrop-blur-xl bg-black/80 border border-blue-500/30 rounded-lg px-2 py-1 text-[7px] text-blue-200/80">
-          🏆 {achievements.length} Achievements • 💎 {gemsCollected} Shards
-        </div>
-      </div>
-
       {vipUnlocked && (
-        <div className="absolute left-1/2 -translate-x-1/2 pointer-events-auto" style={{ zIndex: 99999999999, bottom: "58px" }}>
-          <div className="backdrop-blur-xl bg-gradient-to-r from-yellow-500/80 to-amber-500/80 border border-yellow-300/60 rounded-lg px-3 py-1 text-white font-black text-[9px] animate-pulse whitespace-nowrap">
-            👑 VIP FREE FOR LIFEE UNLOCKED
+        <div className="absolute top-10 left-1/2 -translate-x-1/2 pointer-events-auto" style={{ zIndex: 99999999999 }}>
+          <div className="backdrop-blur-xl bg-gradient-to-r from-yellow-500/80 to-amber-500/80 border border-yellow-300/60 rounded-md px-2 py-0.5 text-white font-black text-[8px] animate-pulse">
+            VIP UNLOCKED
           </div>
         </div>
       )}
@@ -1657,509 +1593,7 @@ function GameUI({
 // ============================================
 // MAIN EXPORT - SOLAR SYSTEM GAME
 // ============================================
-export default function SolarSystemGame() {
-  const [gameState, setGameState] = useState<GameState>({
-    score: 0,
-    explosions: 0,
-    burnedCoins: [],
-    draggedCoins: [],
-    achievements: [],
-    lastAchievement: null,
-    combo: 1,
-    bestCombo: 1,
-    lastInteractionAt: null,
-    targetCoin: null,
-    gemsCollected: 0,
-    bountiesHit: 0,
-    shipCollected: 0,
-    level: 1,
-    vipUnlocked: false,
-  });
-
-  const [interactionNotice, setInteractionNotice] = useState<{ id: number; type: InteractionType } | null>(null);
-  const [isTouchDevice, setIsTouchDevice] = useState(false);
-  const [deviceDpr, setDeviceDpr] = useState(1);
-  const interactionId = useRef(0);
-  const lastInteractionRef = useRef(0);
-  const comboRef = useRef(1);
-
-  useEffect(() => {
-    const updateDevice = () => {
-      const dpr = typeof window !== "undefined" ? Math.min(1.5, window.devicePixelRatio || 1) : 1;
-      const pointerFine = typeof window !== "undefined" && window.matchMedia?.("(pointer: fine)").matches;
-      const touch = typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0) && !pointerFine;
-      setDeviceDpr(dpr);
-      setIsTouchDevice(touch);
-    };
-    updateDevice();
-    window.addEventListener("resize", updateDevice);
-    return () => window.removeEventListener("resize", updateDevice);
-  }, []);
-
-  useEffect(() => {
-    if (!interactionNotice) return;
-    const t = window.setTimeout(() => setInteractionNotice(null), 2400);
-    return () => window.clearTimeout(t);
-  }, [interactionNotice?.id]);
-
-  useEffect(() => {
-    if (!gameState.lastAchievement) return;
-    const t = window.setTimeout(() => {
-      setGameState(prev => ({ ...prev, lastAchievement: null }));
-    }, 2200);
-    return () => window.clearTimeout(t);
-  }, [gameState.lastAchievement]);
-
-  useEffect(() => {
-    const newlyUnlocked = ACHIEVEMENTS.filter(a => !gameState.achievements.includes(a.id) && a.check(gameState));
-    if (newlyUnlocked.length === 0) return;
-    setGameState(prev => ({
-      ...prev,
-      achievements: [...prev.achievements, ...newlyUnlocked.map(a => a.id)],
-      lastAchievement: newlyUnlocked[0].label,
-    }));
-  }, [
-    gameState.achievements,
-    gameState.explosions,
-    gameState.burnedCoins.length,
-    gameState.draggedCoins.length,
-    gameState.bestCombo,
-    gameState.score,
-    gameState.gemsCollected,
-    gameState.bountiesHit,
-    gameState.shipCollected,
-  ]);
-
-  useEffect(() => {
-    const nextLevel = getLevelFromScore(gameState.score);
-    if (nextLevel !== gameState.level || (nextLevel >= MAX_LEVEL && !gameState.vipUnlocked)) {
-      setGameState(prev => ({
-        ...prev,
-        level: nextLevel,
-        vipUnlocked: prev.vipUnlocked || nextLevel >= MAX_LEVEL,
-      }));
-    }
-  }, [gameState.score, gameState.level, gameState.vipUnlocked]);
-
-  const missions = useMemo(() => (
-    [
-      { id: "explode-3", label: "Explode 3", progress: Math.min(3, gameState.explosions), target: 3 },
-      { id: "burn-2", label: "Burn 2", progress: Math.min(2, gameState.burnedCoins.length), target: 2 },
-      { id: "drag-5", label: "Drag 5", progress: Math.min(5, gameState.draggedCoins.length), target: 5 },
-      { id: "collect-3", label: "Collect 3 Shards", progress: Math.min(3, gameState.gemsCollected), target: 3 },
-      { id: "bounty-2", label: "Bounty Hits 2", progress: Math.min(2, gameState.bountiesHit), target: 2 },
-      { id: "ship-3", label: "Ship Collect 3", progress: Math.min(3, gameState.shipCollected), target: 3 },
-    ]
-  ), [
-    gameState.explosions,
-    gameState.burnedCoins.length,
-    gameState.draggedCoins.length,
-    gameState.gemsCollected,
-    gameState.bountiesHit,
-    gameState.shipCollected,
-  ]);
-
-  const registerInteraction = useCallback((type: InteractionType) => {
-    const now = Date.now();
-    const delta = now - lastInteractionRef.current;
-    const nextCombo = delta < 1600 ? Math.min(comboRef.current + 1, 10) : 1;
-    comboRef.current = nextCombo;
-    lastInteractionRef.current = now;
-
-    setGameState(prev => ({
-      ...prev,
-      combo: nextCombo,
-      bestCombo: Math.max(prev.bestCombo, nextCombo),
-      lastInteractionAt: now,
-    }));
-
-    setInteractionNotice({ id: ++interactionId.current, type });
-  }, []);
-
-  const handleScoreUpdate = useCallback((points: number) => {
-    const multiplier = comboRef.current || 1;
-    const bonus = Math.round(points * multiplier);
-    setGameState(prev => ({ ...prev, score: prev.score + bonus }));
-  }, []);
-
-  const handleExplosion = useCallback((name: string, position: THREE.Vector3) => {
-    registerInteraction("explode");
-    setGameState(prev => ({ 
-      ...prev, 
-      explosions: prev.explosions + 1,
-    }));
-  }, [registerInteraction]);
-
-  const handleBurn = useCallback((name: string) => {
-    registerInteraction("burn");
-    setGameState(prev => ({ 
-      ...prev, 
-      burnedCoins: [...prev.burnedCoins, name],
-    }));
-  }, [registerInteraction]);
-
-  const handleDrag = useCallback((name: string) => {
-    registerInteraction("drag");
-    setGameState(prev => {
-      if (prev.draggedCoins.includes(name)) return prev;
-      return { ...prev, draggedCoins: [...prev.draggedCoins, name] };
-    });
-  }, [registerInteraction]);
-
-  const handleBonusCollect = useCallback((points: number) => {
-    registerInteraction("bonus");
-    handleScoreUpdate(points);
-    setGameState(prev => ({ ...prev, gemsCollected: prev.gemsCollected + 1 }));
-  }, [handleScoreUpdate, registerInteraction]);
-
-  const handleShipCollect = useCallback((name: string, points: number) => {
-    registerInteraction("collect");
-    handleScoreUpdate(points);
-    setGameState(prev => ({
-      ...prev,
-      shipCollected: prev.shipCollected + 1,
-    }));
-  }, [handleScoreUpdate, registerInteraction]);
-
-  const handleTargetComplete = useCallback((name: string, bonus: number) => {
-    registerInteraction("bonus");
-    handleScoreUpdate(bonus);
-    setGameState(prev => ({
-      ...prev,
-      bountiesHit: prev.bountiesHit + 1,
-    }));
-  }, [handleScoreUpdate, registerInteraction]);
-
-  const handleTargetChange = useCallback((name: string | null) => {
-    setGameState(prev => ({ ...prev, targetCoin: name }));
-  }, []);
-
-  const handleReset = useCallback(() => {
-    setGameState({
-      score: 0,
-      explosions: 0,
-      burnedCoins: [],
-      draggedCoins: [],
-      achievements: [],
-      lastAchievement: null,
-      combo: 1,
-      bestCombo: 1,
-      lastInteractionAt: null,
-      targetCoin: null,
-      gemsCollected: 0,
-      bountiesHit: 0,
-      shipCollected: 0,
-      level: 1,
-      vipUnlocked: false,
-    });
-    // Force remount of scene
-    window.location.reload();
-  }, []);
-
-  return (
-    <section 
-      className="relative w-full bg-black overflow-hidden flex items-start md:items-center justify-center py-8 md:py-16" 
-      style={{ 
-        minHeight: "100vh",
-        backgroundColor: "#000000",
-      }}
-    >
-      {/* iPhone-sized container for desktop, full width on mobile */}
-      <div 
-        className="relative mx-auto bg-black touch-none"
-        style={{
-          /* iPhone 15 Pro Max dimensions: 430 x 932 */
-          width: "min(90vw, 430px)",
-          aspectRatio: "430 / 932",
-          height: "auto",
-          maxHeight: "85vh",
-          maxWidth: "430px",
-          backgroundColor: "#000000",
-          borderRadius: "55px",
-          border: "12px solid #2a2a2a",
-          boxShadow: `
-            0 0 60px rgba(0, 102, 255, 0.3), 
-            0 25px 50px -12px rgba(0, 0, 0, 0.8), 
-            inset 0 0 0 3px #4a4a4a,
-            inset 0 0 0 4px #1a1a1a,
-            0 0 0 1px #555
-          `,
-          willChange: "transform",
-          transform: "translateZ(0)",
-          backfaceVisibility: "hidden",
-          overflow: "hidden",
-          isolation: "isolate",
-        }}
-      >
-        {/* Stainless Steel Frame Highlight */}
-        <div 
-          className="absolute inset-0 pointer-events-none hidden md:block"
-          style={{
-            borderRadius: "43px",
-            border: "1px solid rgba(255,255,255,0.1)",
-            background: "linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 50%, rgba(255,255,255,0.02) 100%)",
-          }}
-        />
-
-        {/* Left Side Buttons - Volume Up */}
-        <div 
-          className="absolute hidden md:block"
-          style={{
-            left: "-14px",
-            top: "180px",
-            width: "4px",
-            height: "35px",
-            backgroundColor: "#3a3a3a",
-            borderRadius: "2px 0 0 2px",
-            boxShadow: "inset 1px 0 0 rgba(255,255,255,0.1), -1px 0 2px rgba(0,0,0,0.5)",
-            background: "linear-gradient(to right, #2a2a2a, #4a4a4a, #3a3a3a)",
-            pointerEvents: "none",
-          }}
-        />
-        
-        {/* Left Side Buttons - Volume Down */}
-        <div 
-          className="absolute hidden md:block"
-          style={{
-            left: "-14px",
-            top: "230px",
-            width: "4px",
-            height: "35px",
-            backgroundColor: "#3a3a3a",
-            borderRadius: "2px 0 0 2px",
-            boxShadow: "inset 1px 0 0 rgba(255,255,255,0.1), -1px 0 2px rgba(0,0,0,0.5)",
-            background: "linear-gradient(to right, #2a2a2a, #4a4a4a, #3a3a3a)",
-            pointerEvents: "none",
-          }}
-        />
-
-        {/* Left Side - Mute/Action Button */}
-        <div 
-          className="absolute hidden md:block"
-          style={{
-            left: "-14px",
-            top: "130px",
-            width: "4px",
-            height: "22px",
-            backgroundColor: "#3a3a3a",
-            borderRadius: "2px 0 0 2px",
-            boxShadow: "inset 1px 0 0 rgba(255,255,255,0.1), -1px 0 2px rgba(0,0,0,0.5)",
-            background: "linear-gradient(to right, #2a2a2a, #4a4a4a, #3a3a3a)",
-            pointerEvents: "none",
-          }}
-        />
-
-        {/* Right Side - Power Button */}
-        <div 
-          className="absolute hidden md:block"
-          style={{
-            right: "-14px",
-            top: "200px",
-            width: "4px",
-            height: "65px",
-            backgroundColor: "#3a3a3a",
-            borderRadius: "0 2px 2px 0",
-            boxShadow: "inset -1px 0 0 rgba(255,255,255,0.1), 1px 0 2px rgba(0,0,0,0.5)",
-            background: "linear-gradient(to left, #2a2a2a, #4a4a4a, #3a3a3a)",
-            pointerEvents: "none",
-          }}
-        />
-
-        {/* Dynamic Island with Camera & Sensors */}
-        <div 
-          className="absolute top-3 left-1/2 -translate-x-1/2 z-30 hidden md:flex items-center justify-center gap-2"
-          style={{
-            width: "126px",
-            height: "37px",
-            backgroundColor: "#000",
-            borderRadius: "20px",
-            border: "1px solid #1a1a1a",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.05)",
-            pointerEvents: "none",
-          }}
-        >
-          {/* Front Camera */}
-          <div 
-            style={{
-              width: "12px",
-              height: "12px",
-              borderRadius: "50%",
-              backgroundColor: "#0a0a0a",
-              border: "2px solid #1a1a1a",
-              boxShadow: "inset 0 0 4px rgba(0,102,255,0.3), 0 0 2px rgba(0,0,0,0.8)",
-              position: "relative",
-            }}
-          >
-            {/* Camera lens reflection */}
-            <div style={{
-              position: "absolute",
-              top: "2px",
-              left: "2px",
-              width: "3px",
-              height: "3px",
-              borderRadius: "50%",
-              backgroundColor: "rgba(0,150,255,0.4)",
-            }} />
-          </div>
-          
-          {/* Face ID Sensors (IR camera, dot projector) */}
-          <div className="flex items-center gap-1.5">
-            {/* IR Camera */}
-            <div 
-              style={{
-                width: "6px",
-                height: "6px",
-                borderRadius: "50%",
-                backgroundColor: "#1a1a1a",
-                boxShadow: "inset 0 0 2px rgba(100,0,150,0.3)",
-              }}
-            />
-            {/* Proximity sensor */}
-            <div 
-              style={{
-                width: "4px",
-                height: "4px",
-                borderRadius: "50%",
-                backgroundColor: "#0f0f0f",
-              }}
-            />
-            {/* Flood illuminator */}
-            <div 
-              style={{
-                width: "6px",
-                height: "6px",
-                borderRadius: "50%",
-                backgroundColor: "#1a1a1a",
-                boxShadow: "inset 0 0 2px rgba(100,0,150,0.3)",
-              }}
-            />
-          </div>
-        </div>
-        
-      {/* Header - positioned below dynamic island */}
-      <div 
-        className="absolute text-center"
-        style={{
-          top: "8px",
-          left: "12px",
-          right: "12px",
-          paddingTop: "36px",
-          zIndex: 99999999999,
-        }}
-      >
-        <h2 className="text-lg font-black text-white mb-0.5 drop-shadow-2xl">
-          🎮{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">CRYPTO</span>
-          {" "}Chaos
-        </h2>
-      </div>
-
-      {/* Game UI */}
-      <GameUI 
-        score={gameState.score}
-        explosions={gameState.explosions}
-        burnedCoins={gameState.burnedCoins}
-        combo={gameState.combo}
-        bestCombo={gameState.bestCombo}
-        targetCoin={gameState.targetCoin}
-        gemsCollected={gameState.gemsCollected}
-        bountiesHit={gameState.bountiesHit}
-        shipCollected={gameState.shipCollected}
-        level={gameState.level}
-        vipUnlocked={gameState.vipUnlocked}
-        missions={missions}
-        achievements={gameState.achievements}
-        lastAchievement={gameState.lastAchievement}
-        onReset={handleReset}
-      />
-
-      {/* 3D Canvas */}
-      <Suspense fallback={<LoadingFallback />}>
-        <Canvas
-          camera={{ position: [0, 15, 25], fov: 45 }}
-          frameloop="always"
-          onCreated={({ gl }) => {
-            gl.toneMapping = THREE.ACESFilmicToneMapping;
-            gl.toneMappingExposure = 1.05;
-            gl.shadowMap.enabled = true;
-            gl.shadowMap.type = THREE.PCFSoftShadowMap;
-          }}
-          gl={{
-            antialias: true,
-            alpha: false,
-            powerPreference: "high-performance",
-            preserveDrawingBuffer: false,
-          }}
-          shadows
-          dpr={deviceDpr}
-          style={{ 
-            background: "#000000", 
-            position: "absolute", 
-            top: 0, 
-            left: 0, 
-            width: "100%", 
-            height: "100%",
-            touchAction: "none",
-            borderRadius: "43px",
-          }}
-        >
-          <color attach="background" args={["#000000"]} />
-          <GameScene 
-            onScoreUpdate={handleScoreUpdate}
-            onExplosion={handleExplosion}
-            onBurn={handleBurn}
-            onDrag={handleDrag}
-            onBonusCollect={handleBonusCollect}
-            onTargetComplete={handleTargetComplete}
-            onTargetChange={handleTargetChange}
-            onShipCollect={handleShipCollect}
-            interactionNotice={interactionNotice}
-            isTouchDevice={isTouchDevice}
-          />
-        </Canvas>
-      </Suspense>
-
-      {/* Bottom stats panel - fits iPhone home indicator area */}
-      <div 
-        className="absolute"
-        style={{
-          bottom: "12px",
-          left: "12px",
-          right: "12px",
-          zIndex: 99999999999,
-        }}
-      >
-        <div className="backdrop-blur-xl bg-black/80 border border-blue-500/30 rounded-xl p-1.5">
-          <div className="grid grid-cols-4 gap-1 text-center">
-            <div>
-              <div className="text-xs font-bold text-blue-400">{CRYPTO_COINS.length - gameState.explosions - gameState.burnedCoins.length}</div>
-              <div className="text-[6px] text-blue-300/70">Left</div>
-            </div>
-            <div>
-              <div className="text-xs font-bold text-orange-400">{gameState.explosions}</div>
-              <div className="text-[6px] text-blue-300/70">Exploded</div>
-            </div>
-            <div>
-              <div className="text-xs font-bold text-red-400">{gameState.burnedCoins.length}</div>
-              <div className="text-[6px] text-blue-300/70">Burned</div>
-            </div>
-            <div>
-              <div className="text-xs font-bold text-cyan-400">{gameState.gemsCollected}</div>
-              <div className="text-[6px] text-blue-300/70">Shards</div>
-            </div>
-          </div>
-        </div>
-        {/* iPhone home indicator */}
-        <div className="mt-2 mx-auto w-20 h-1 bg-white/30 rounded-full" />
-      </div>
-      </div>
-      
-      {/* Desktop instruction below phone */}
-      <div className="hidden md:block absolute bottom-4 left-1/2 -translate-x-1/2 z-10">
-        <div className="text-center text-blue-300/50 text-xs">
-          ↑ Interactive 3D Game • Scroll down to continue ↓
-        </div>
-      </div>
-    </section>
-  );
+export default function SolarSystemGame({ hideUI = false, products = [] }: { hideUI?: boolean; products?: any[] }) {
+  // Solar system disabled - return null
+  return null;
 }

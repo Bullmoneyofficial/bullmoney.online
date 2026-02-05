@@ -17,11 +17,25 @@ video {
 }
 
 /* CRITICAL: Content visibility for off-screen optimization */
-section,
-article,
-.content-section {
+section:not([data-store-page] section):not([data-store-page] *),
+article:not([data-store-page] article):not([data-store-page] *),
+.content-section:not([data-store-page] .content-section):not([data-store-page] *) {
   content-visibility: auto;
   contain-intrinsic-size: auto 400px;
+}
+
+/* CRITICAL: Disable content-visibility on store page */
+[data-store-page],
+[data-store-page] *,
+[data-store-page] section,
+[data-store-page] article,
+.store-layout,
+.store-layout *,
+.store-layout section,
+.store-layout article {
+  content-visibility: visible !important;
+  contain: none !important;
+  contain-intrinsic-size: none !important;
 }
 
 /* ============================================================================

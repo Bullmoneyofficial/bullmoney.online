@@ -124,6 +124,13 @@ const nextConfig = {
     ignoreBuildErrors: process.env.NODE_ENV === 'development',
   },
 
+  // Externalize packages that have issues with bundling
+  serverExternalPackages: [
+    'metaapi.cloud-sdk',
+    'metaapi.cloud-metastats-sdk',
+    'metaapi.cloud-copyfactory-sdk',
+  ],
+
   // Next.js 16 uses Turbopack by default - add empty config to acknowledge
   turbopack: {},
 };

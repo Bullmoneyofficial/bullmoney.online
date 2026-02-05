@@ -303,4 +303,132 @@ body[data-modal-open="true"] button[title*="Close" i]:hover {
   }
 }
 
+/* =============================================
+   STORE - SCROLLBAR HIDING & MOBILE UTILITIES
+   ============================================= */
+
+/* Hide scrollbar utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Safe area padding for iOS */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.safe-area-inset-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* Touch scroll momentum */
+.touch-pan-x {
+  touch-action: pan-x;
+}
+.touch-pan-y {
+  touch-action: pan-y;
+}
+
+/* Overscroll behavior */
+.overscroll-contain {
+  overscroll-behavior: contain;
+}
+
+/* Store-specific optimizations */
+.store-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .store-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .store-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+/* Luxury chrome gradient text */
+.chrome-text {
+  background: linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0.6) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glassmorphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Store button styles */
+.store-btn-primary {
+  @apply h-12 px-6 bg-white text-black rounded-xl font-medium 
+         flex items-center justify-center gap-2 
+         hover:bg-white/90 active:scale-[0.98] transition-all;
+}
+
+.store-btn-secondary {
+  @apply h-12 px-6 bg-white/10 text-white rounded-xl font-medium
+         flex items-center justify-center gap-2 border border-white/10
+         hover:bg-white/20 active:scale-[0.98] transition-all;
+}
+
+/* Input focus states */
+.store-input {
+  @apply w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl
+         focus:outline-none focus:border-white/20 focus:bg-white/[0.07]
+         transition-all placeholder:text-white/40;
+}
+
+/* =============================================
+   STORE PAGE ISOLATION
+   Prevents theme overlays from affecting store
+   ============================================= */
+
+/* When on store page, disable theme overlays */
+[data-store-page] ~ [data-theme-overlay],
+[data-store-page] ~ #theme-filter-overlay,
+.store-layout ~ [data-theme-overlay],
+.store-layout ~ #theme-filter-overlay {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* Store layout isolation */
+.store-layout {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  background: #000000 !important;
+}
+
+/* Prevent any filter bleeding into store */
+.store-layout,
+.store-layout *:not([class*="backdrop-blur"]) {
+  filter: none !important;
+  -webkit-filter: none !important;
+}
+
+/* Store-specific scroll behavior */
+.store-layout {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y pan-x;
+  overscroll-behavior: contain;
+}
+
 
