@@ -5,6 +5,8 @@ import dynamic from "next/dynamic";
 import { detectBrowser } from "@/lib/browserDetection";
 import { trackEvent, BullMoneyAnalytics } from "@/lib/analytics";
 
+const CookieConsent = dynamic(() => import('@/components/CookieConsent'), { ssr: false });
+
 // iPhone Glass Styles - Black and White Theme
 const GLASS_STYLES = `
   html, body, #__next {
@@ -1043,5 +1045,10 @@ function HomeContent() {
 }
 
 export default function Home() {
-  return <HomeContent />;
+  return (
+    <>
+      <HomeContent />
+      <CookieConsent />
+    </>
+  );
 }

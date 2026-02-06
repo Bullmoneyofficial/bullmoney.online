@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback, useRef, useMemo, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchParams, useRouter } from 'next/navigation';
+
+const CookieConsent = dynamic(() => import('@/components/CookieConsent'), { ssr: false });
 import { Search, SlidersHorizontal, X, ChevronDown, Grid3X3, Sparkles, TrendingUp, LayoutGrid, Rows3 } from 'lucide-react';
 import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
 import type { ProductWithDetails, PaginatedResponse, ProductFilters } from '@/types/store';
@@ -951,6 +953,9 @@ export default function StorePage() {
         onFilterChange={handleFilterChange}
         onClear={clearFilters}
       />
+
+      {/* Cookie Consent Banner */}
+      <CookieConsent />
     </div>
   );
 }
