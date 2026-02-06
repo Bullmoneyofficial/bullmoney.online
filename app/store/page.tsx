@@ -829,7 +829,7 @@ export default function StorePage() {
             ))}
           </div>
           ) : (
-          <div className={`grid ${getGridClasses()} gap-3 sm:gap-4 md:gap-5 pb-8`}>
+          <div className={`grid ${getGridClasses()} gap-3 gap-y-6 sm:gap-4 sm:gap-y-8 md:gap-5 md:gap-y-10 lg:gap-y-12 pb-8`}>
             {Array.from({ length: 12 }).map((_, i) => (
               <div
                 key={i}
@@ -899,7 +899,7 @@ export default function StorePage() {
             <HoverEffect
               items={products as ProductWithDetails[]}
               layout="custom"
-              className={`grid ${getGridClasses()} gap-3 sm:gap-4 md:gap-5`}
+              className={`grid ${getGridClasses()} gap-3 gap-y-6 sm:gap-4 sm:gap-y-8 md:gap-5 md:gap-y-10 lg:gap-y-12`}
               getKey={(product) => (product as ProductWithDetails).id}
               getLink={() => undefined}
               renderItem={(product, index) => (

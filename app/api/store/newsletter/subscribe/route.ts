@@ -145,6 +145,40 @@ async function enrollInDripCampaigns(subscriberId: string, email: string, recrui
   }
 }
 
+// Fetch configurable welcome messages from database
+ 
+async function getWelcomeMessages(supabase: any) {
+  try {
+    const { data, error } = await supabase
+      .from('newsletter_messages_config')
+      .select('existing_subscriber_message, existing_recruit_message, new_subscriber_message')
+      .eq('id', 'default')
+      .single();
+
+    if (error || !data) {
+      console.warn('[Newsletter Messages] Failed to fetch from DB, using fallback messages');
+      return {
+        existingSubscriber: "You're already part of the family! 🐂 Check your inbox — we just sent you some goodies.",
+        existingRecruit: "Welcome back, {firstName}! Your recruit + newsletter benefits are now active. Check your Gmail for exclusive insights.",
+        newSubscriber: "Welcome to Bullmoney Gmail Intel! Check your Gmail for exclusive trading insights and your bonus guide."
+      };
+    }
+
+    return {
+      existingSubscriber: data.existing_subscriber_message,
+      existingRecruit: data.existing_recruit_message,
+      newSubscriber: data.new_subscriber_message
+    };
+  } catch (err) {
+    console.error('[Newsletter Messages] Database error:', err);
+    return {
+      existingSubscriber: "You're already part of the family! 🐂 Check your inbox — we just sent you some goodies.",
+      existingRecruit: "Welcome back, {firstName}! Your recruit + newsletter benefits are now active. Check your Gmail for exclusive insights.",
+      newSubscriber: "Welcome to Bullmoney Gmail Intel! Check your Gmail for exclusive trading insights and your bonus guide."
+    };
+  }
+}
+
 // Enhanced email template selection with recruit personalization
  
 async function getPersonalizedEmailContent(email: string, recruitData: any, supabase: any): Promise<{ subject: string; html: string }> {
@@ -199,6 +233,109 @@ async function getPersonalizedEmailContent(email: string, recruitData: any, supa
     subject: `${firstName}, you're in! Daily market intel starts now 📈`,
     html: generateStandardWelcomeHTML(firstName)
   };
+}
+
+// Generate "Already Part of the Family" email for existing subscribers
+function generateAlreadySubscribedHTML(firstName: string, email: string): string {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://bullmoney.shop';
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>You're Already Part of the Family!</title>
+    </head>
+    <body style="margin: 0; padding: 0; background: #0a0a0a; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+      <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+        <!-- Header -->
+        <div style="text-align: center; margin-bottom: 40px;">
+          <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #FFD700, #FF8C00); border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+            <span style="color: #ffffff; font-weight: bold; font-size: 32px;">🐂</span>
+          </div>
+          <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: #ffffff;">Hey ${firstName}, You're Already Family! 🔥</h1>
+          <p style="margin: 16px 0 0 0; color: #FFD700; font-size: 16px; font-weight: 600;">You're already getting our best intel</p>
+        </div>
+
+        <!-- Main Message -->
+        <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); border-radius: 16px; padding: 32px; margin-bottom: 24px; border: 1px solid #333333;">
+          <p style="margin: 0; color: #cccccc; font-size: 15px; line-height: 1.7;">
+            Looks like you're already subscribed to Bullmoney intel — which means you're already part of the crew. But
+            are you taking full advantage of <strong style="color: #ffffff;">everything we offer?</strong>
+          </p>
+        </div>
+
+        <!-- Free Telegram Section -->
+        <div style="background: linear-gradient(135deg, #0088cc22 0%, #1a1a1a 100%); border-radius: 16px; padding: 28px; margin-bottom: 24px; border: 1px solid #0088cc44;">
+          <div style="display: flex; align-items: center; margin-bottom: 16px;">
+            <div style="width: 40px; height: 40px; background: #0088cc; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; margin-right: 14px;">
+              <span style="font-size: 20px;">✈️</span>
+            </div>
+            <div>
+              <h3 style="margin: 0; color: #ffffff; font-size: 18px;">Free Telegram Channel</h3>
+              <p style="margin: 4px 0 0 0; color: #0088cc; font-size: 13px;">Real-time alerts • Free forever</p>
+            </div>
+          </div>
+          <p style="margin: 0 0 16px 0; color: #999999; font-size: 14px; line-height: 1.6;">
+            Get live trade setups, market updates, and community chat. No paywalls — just join and start trading smarter.
+          </p>
+          <a href="https://t.me/Bullmoneyshop" style="display: inline-block; background: #0088cc; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 10px; font-weight: 600; font-size: 15px;">
+            Join Free Telegram →
+          </a>
+        </div>
+
+        <!-- Ultimate Hub Section -->
+        <div style="background: linear-gradient(135deg, #FFD70022 0%, #1a1a1a 100%); border-radius: 16px; padding: 28px; margin-bottom: 24px; border: 1px solid #FFD70044;">
+          <div style="display: flex; align-items: center; margin-bottom: 16px;">
+            <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #FFD700, #FF8C00); border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; margin-right: 14px;">
+              <span style="font-size: 20px;">⚡</span>
+            </div>
+            <div>
+              <h3 style="margin: 0; color: #ffffff; font-size: 18px;">Ultimate Hub</h3>
+              <p style="margin: 4px 0 0 0; color: #FFD700; font-size: 13px;">Your all-in-one trading command center</p>
+            </div>
+          </div>
+          <p style="margin: 0 0 20px 0; color: #999999; font-size: 14px; line-height: 1.6;">
+            Access everything from one powerful dashboard. The Ultimate Hub is where serious traders level up.
+          </p>
+          <div style="margin-bottom: 20px;">
+            <div style="display: inline-block; background: #ffffff10; border-radius: 8px; padding: 8px 16px; margin: 4px 4px 4px 0; color: #ffffff; font-size: 13px;">📰 Live News Feed</div>
+            <div style="display: inline-block; background: #ffffff10; border-radius: 8px; padding: 8px 16px; margin: 4px 4px 4px 0; color: #ffffff; font-size: 13px;">📊 Market Analysis</div>
+            <div style="display: inline-block; background: #ffffff10; border-radius: 8px; padding: 8px 16px; margin: 4px 4px 4px 0; color: #ffffff; font-size: 13px;">📹 Livestreams</div>
+            <div style="display: inline-block; background: #ffffff10; border-radius: 8px; padding: 8px 16px; margin: 4px 4px 4px 0; color: #ffffff; font-size: 13px;">💬 Community</div>
+            <div style="display: inline-block; background: #ffffff10; border-radius: 8px; padding: 8px 16px; margin: 4px 4px 4px 0; color: #ffffff; font-size: 13px;">🎓 Courses</div>
+            <div style="display: inline-block; background: #ffffff10; border-radius: 8px; padding: 8px 16px; margin: 4px 4px 4px 0; color: #ffffff; font-size: 13px;">📈 Trading Journal</div>
+          </div>
+          <a href="${baseUrl}" style="display: inline-block; background: linear-gradient(135deg, #FFD700, #FF8C00); color: #000000; text-decoration: none; padding: 14px 32px; border-radius: 10px; font-weight: 700; font-size: 15px;">
+            Open Ultimate Hub →
+          </a>
+        </div>
+
+        <!-- Store CTA -->
+        <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); border-radius: 16px; padding: 28px; margin-bottom: 32px; border: 1px solid #333333; text-align: center;">
+          <h3 style="margin: 0 0 8px 0; color: #ffffff; font-size: 18px;">Don't forget the merch 🛒</h3>
+          <p style="margin: 0 0 16px 0; color: #888888; font-size: 14px;">Wear the brand. Trade the lifestyle.</p>
+          <a href="${baseUrl}/store" style="display: inline-block; background: #ffffff; color: #000000; text-decoration: none; padding: 14px 32px; border-radius: 10px; font-weight: 600; font-size: 15px;">
+            Shop Bullmoney
+          </a>
+        </div>
+
+        <!-- Footer -->
+        <div style="text-align: center; padding-top: 24px; border-top: 1px solid #333333;">
+          <p style="margin: 0; color: #666666; font-size: 12px; line-height: 1.5;">
+            You're already subscribed to Bullmoney Gmail Intel — no action needed.
+            <br><br>
+            <a href="${baseUrl}/api/newsletter/unsubscribe?email=${encodeURIComponent(email)}" style="color: #888888; text-decoration: underline;">Unsubscribe</a> •
+            <a href="${baseUrl}/store" style="color: #888888; text-decoration: underline;">Visit Store</a>
+          </p>
+          <p style="margin: 16px 0 0 0; color: #444444; font-size: 10px;">
+            Bullmoney © ${new Date().getFullYear()} • You're already in the family 🐂
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
 }
 
 // Generate welcome HTML for existing recruits with enhanced benefits
@@ -521,6 +658,34 @@ export async function POST(request: NextRequest) {
       
       console.log(`[Gmail Newsletter] Updated existing subscriber: ${normalizedEmail} ${recruitData.isExistingRecruit ? '(Recruit linked)' : ''}`);
 
+      // Send "Already Part of the Family" email for existing subscribers
+      const alreadySubFirstName = recruitData.fullName?.split(' ')[0] || normalizedEmail.split('@')[0].charAt(0).toUpperCase() + normalizedEmail.split('@')[0].slice(1);
+      const alreadySubEmail = {
+        subject: `${alreadySubFirstName}, you're already part of the family! 🐂`,
+        html: generateAlreadySubscribedHTML(alreadySubFirstName, normalizedEmail)
+      };
+
+      try {
+        await sendEmail({
+          to: normalizedEmail,
+          subject: alreadySubEmail.subject,
+          html: alreadySubEmail.html,
+          from: `"Bullmoney" <${process.env.SMTP_USER}>`,
+        });
+        console.log(`[Gmail Newsletter] Sent "already subscribed" email to ${normalizedEmail}`);
+        
+        // Update email tracking
+        await supabase
+          .from('newsletter_subscribers')
+          .update({ 
+            last_email_sent_at: new Date().toISOString(),
+            total_emails_sent: (existingSubscriber.total_emails_sent || 0) + 1
+          })
+          .eq('id', existingSubscriber.id);
+      } catch (emailErr) {
+        console.error(`[Gmail Newsletter] Failed to send already-subscribed email:`, emailErr);
+      }
+
     } else {
       // New newsletter subscriber - create with recruit integration
       isNewSubscriber = true;
@@ -564,13 +729,14 @@ export async function POST(request: NextRequest) {
       console.log(`[Gmail Newsletter] New subscriber: ${normalizedEmail} ${recruitData.isExistingRecruit ? '(Recruit integrated)' : ''}`);
     }
 
-    // STEP 3: Enroll in email drip campaigns
-    if (subscriberId) {
+    // STEP 3: Enroll in email drip campaigns (only for new subscribers)
+    if (subscriberId && isNewSubscriber) {
       console.log(`[Drip Campaigns] Enrolling subscriber ${normalizedEmail} in automated sequences`);
       await enrollInDripCampaigns(subscriberId, normalizedEmail, recruitData.recruitId, supabase);
     }
 
-    // STEP 4: Send personalized welcome email using enhanced templates
+    // STEP 4: Send personalized welcome email (only for new subscribers - existing ones got the "already subscribed" email above)
+    if (isNewSubscriber) {
     const attachment = getRandomNewsletterAttachment();
     const publicDir = path.join(process.cwd(), 'public');
     const attachmentPath = path.join(publicDir, attachment.path);
@@ -614,13 +780,22 @@ export async function POST(request: NextRequest) {
         from: `"Bullmoney Gmail Hub" <${process.env.SMTP_USER}>`,
       });
     }
+    } // end if (isNewSubscriber)
 
     // STEP 5: Return response based on integration status
-    const welcomeMessage = recruitData.isExistingRecruit 
-      ? `Welcome back, ${recruitData.fullName?.split(' ')[0] || 'trader'}! Your recruit + newsletter benefits are now active. Check your Gmail for exclusive insights.`
-      : isNewSubscriber 
-        ? "Welcome to Bullmoney Gmail Intel! Check your Gmail for exclusive trading insights and your bonus guide."
-        : "You're already getting our Gmail intel! Check your inbox for a bonus guide.";
+    // Get configurable messages from database
+    const welcomeMessages = await getWelcomeMessages(supabase);
+    
+    // Determine which message to use
+    let welcomeMessage: string;
+    if (!isNewSubscriber) {
+      welcomeMessage = welcomeMessages.existingSubscriber;
+    } else if (recruitData.isExistingRecruit) {
+      const firstName = recruitData.fullName?.split(' ')[0] || 'trader';
+      welcomeMessage = welcomeMessages.existingRecruit.replace('{firstName}', firstName);
+    } else {
+      welcomeMessage = welcomeMessages.newSubscriber;
+    }
 
     return NextResponse.json({
       success: true,

@@ -34,6 +34,7 @@ import {
   Award,
   ShoppingBag,
 } from "lucide-react";
+import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 
 // ============================================================================
 // STORE ANALYTICS PANEL — Premium E-commerce Dashboard
@@ -118,9 +119,9 @@ interface AnalyticsData {
 
 // ─── Formatters ───
 const fmt = (n: number) =>
-  new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
+  useCurrencyLocaleStore.getState().formatPrice(n);
 const fmtFull = (n: number) =>
-  new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", minimumFractionDigits: 2 }).format(n);
+  useCurrencyLocaleStore.getState().formatPrice(n);
 
 // ─── Inline CSS keyframes (injected once) ───
 const ANALYTICS_STYLES = `

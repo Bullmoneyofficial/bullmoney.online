@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { makeAlternatesMetadata, ALL_OG_LOCALES } from "@/lib/seo-languages";
 
 // ============================================
 // BLOGS PAGE SEO METADATA - OPTIMIZED FOR GOOGLE #1
@@ -60,6 +61,8 @@ export const metadata: Metadata = {
       "Real-time HEAVY NEWS on Gold, Bitcoin, Crypto & Forex. Breaking market updates, Fed decisions, and daily trade setups. Free analysis from pro traders!",
     url: "https://www.bullmoney.shop/Blogs",
     type: "website",
+    locale: "en_US",
+    alternateLocale: ALL_OG_LOCALES.filter(l => l !== 'en_US'),
     images: [
       {
         url: "/ONcc2l601.svg",
@@ -77,9 +80,7 @@ export const metadata: Metadata = {
       "Real-time HEAVY NEWS on Gold, Bitcoin, Crypto & Forex. Breaking updates & free analysis!",
   },
   
-  alternates: {
-    canonical: "https://www.bullmoney.shop/Blogs",
-  },
+  alternates: makeAlternatesMetadata('/Blogs'),
 };
 
 // Layout wrapper for the blogs page

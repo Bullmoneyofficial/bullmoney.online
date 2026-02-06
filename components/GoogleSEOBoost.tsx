@@ -284,7 +284,7 @@ const LearningResourceSchema = () => {
       }
     },
     "isAccessibleForFree": true,
-    "inLanguage": "en"
+    "inLanguage": ["en", "es", "fr", "de", "pt", "it", "ja", "ko", "zh", "ar", "hi", "ru", "tr", "nl", "pl", "sv", "no", "da", "fi", "th", "vi", "id", "ms", "tl", "uk", "cs", "ro", "el", "he", "hu", "bg", "sw", "af", "zu", "bn", "ur"]
   };
 
   return (

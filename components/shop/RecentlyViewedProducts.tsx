@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Clock, X } from 'lucide-react';
 import { useRecentlyViewedStore, type RecentlyViewedItem } from '@/stores/recently-viewed-store';
+import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 
 // ============================================================================
 // RECENTLY VIEWED PRODUCTS - Section for PDP/Store
@@ -75,7 +76,7 @@ export function RecentlyViewedProducts({ currentProductId, limit = 8 }: Recently
               </div>
               <div className="mt-2 space-y-0.5">
                 <p className="text-white text-xs truncate group-hover:text-white/80 transition-colors">{item.name}</p>
-                <p className="text-white/50 text-xs">${item.price.toFixed(2)}</p>
+                <p className="text-white/50 text-xs">{useCurrencyLocaleStore.getState().formatPrice(item.price)}</p>
               </div>
             </Link>
           </motion.div>

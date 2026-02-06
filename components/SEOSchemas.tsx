@@ -46,7 +46,14 @@ export function OrganizationSchema() {
     "contactPoint": {
       "@type": "ContactPoint",
       "contactType": "customer service",
-      "availableLanguage": ["English"]
+      "availableLanguage": [
+        "English", "Spanish", "French", "German", "Portuguese", "Italian",
+        "Japanese", "Korean", "Chinese", "Arabic", "Hindi", "Russian",
+        "Turkish", "Dutch", "Polish", "Swedish", "Norwegian", "Danish",
+        "Finnish", "Thai", "Vietnamese", "Indonesian", "Malay", "Filipino",
+        "Ukrainian", "Czech", "Romanian", "Greek", "Hebrew", "Hungarian",
+        "Bulgarian", "Swahili", "Afrikaans", "Zulu", "Bengali", "Urdu"
+      ]
     },
     "offers": {
       "@type": "Offer",
@@ -77,7 +84,7 @@ export function WebsiteSchema() {
     "alternateName": "BullMoney",
     "url": "https://www.bullmoney.shop",
     "description": "Free trading community for crypto, gold, forex & stocks. Get free setups, market analysis, and trading education.",
-    "inLanguage": "en-US",
+    "inLanguage": ["en", "es", "fr", "de", "pt", "it", "ja", "ko", "zh", "ar", "hi", "ru", "tr", "nl", "pl", "sv", "no", "da", "fi", "th", "vi", "id", "ms", "tl", "uk", "cs", "ro", "el", "he", "hu", "bg", "sw", "af", "zu", "bn", "ur"],
     "potentialAction": {
       "@type": "SearchAction",
       "target": {

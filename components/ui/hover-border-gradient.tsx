@@ -6,6 +6,48 @@ import { cn } from "@/lib/utils";
 
 type Direction = "TOP" | "LEFT" | "BOTTOM" | "RIGHT";
 
+// Global registry for auto-highlight rotation (mobile + desktop)
+let highlightInstances: Set<(active: boolean) => void> = new Set();
+let highlightRotationStarted = false;
+
+function startHighlightRotation() {
+  if (highlightRotationStarted) return;
+  highlightRotationStarted = true;
+
+  const isDesktop = () => typeof window !== 'undefined' && window.innerWidth >= 768;
+
+  let timer: ReturnType<typeof setTimeout> | null = null;
+
+  const rotate = () => {
+    if (highlightInstances.size === 0) {
+      timer = setTimeout(rotate, 1000);
+      return;
+    }
+
+    const arr = Array.from(highlightInstances);
+    // Desktop: highlight 2-4 random cards; Mobile: 1-2
+    const maxCount = isDesktop() ? Math.min(arr.length, 2 + Math.floor(Math.random() * 3)) : Math.min(arr.length, Math.random() < 0.5 ? 1 : 2);
+    const picked = new Set<number>();
+    while (picked.size < maxCount) {
+      picked.add(Math.floor(Math.random() * arr.length));
+    }
+
+    // Deactivate all, then activate picked
+    arr.forEach((fn) => fn(false));
+    picked.forEach((idx) => arr[idx](true));
+
+    // Hold highlight for 1.5-3s then rotate
+    const holdTime = 1500 + Math.random() * 1500;
+    timer = setTimeout(() => {
+      picked.forEach((idx) => arr[idx]?.(false));
+      setTimeout(rotate, 300 + Math.random() * 500);
+    }, holdTime);
+  };
+
+  // Start after a short delay
+  setTimeout(rotate, 500);
+}
+
 export function HoverBorderGradient({
   children,
   containerClassName,
@@ -24,7 +66,18 @@ export function HoverBorderGradient({
   } & React.HTMLAttributes<HTMLElement>
 >) {
   const [hovered, setHovered] = useState<boolean>(false);
+  const [autoActive, setAutoActive] = useState<boolean>(false);
   const [direction, setDirection] = useState<Direction>("TOP");
+
+  // Register for auto-highlight rotation (mobile + desktop)
+  useEffect(() => {
+    const setter = (active: boolean) => setAutoActive(active);
+    highlightInstances.add(setter);
+    startHighlightRotation();
+    return () => { highlightInstances.delete(setter); };
+  }, []); 
+
+  const isHighlighted = hovered || autoActive;
 
   const rotateDirection = (currentDirection: Direction): Direction => {
     const directions: Direction[] = ["TOP", "LEFT", "BOTTOM", "RIGHT"];
@@ -48,13 +101,13 @@ export function HoverBorderGradient({
     "radial-gradient(75% 181.15942028985506% at 50% 50%, #3275F8 0%, rgba(255, 255, 255, 0) 100%)";
 
   useEffect(() => {
-    if (!hovered) {
+    if (!isHighlighted) {
       const interval = setInterval(() => {
         setDirection((prevState) => rotateDirection(prevState));
       }, duration * 1000);
       return () => clearInterval(interval);
     }
-  }, [hovered]);
+  }, [isHighlighted]);
   
   const Component = Tag as any;
   return (
@@ -71,9 +124,10 @@ export function HoverBorderGradient({
     >
       <div
         className={cn(
-          "w-auto text-white z-10 bg-black px-4 py-2 rounded-[inherit]",
+          "w-auto text-white px-4 py-2 rounded-[inherit]",
           className
         )}
+        style={{ position: 'relative', zIndex: 20 }}
       >
         {children}
       </div>
@@ -89,13 +143,13 @@ export function HoverBorderGradient({
         }}
         initial={{ background: movingMap[direction] }}
         animate={{
-          background: hovered
+          background: isHighlighted
             ? [movingMap[direction], highlight]
             : movingMap[direction],
         }}
         transition={{ ease: "linear", duration: duration ?? 1 }}
       />
-      <div className="bg-black absolute z-1 flex-none inset-[2px] rounded-[100px]" />
+      <div className="bg-black/80 absolute z-1 flex-none inset-[2px] rounded-[inherit]" />
     </Component>
   );
 }

@@ -177,6 +177,7 @@ import { UltimateHubLiveStreamTab } from '@/components/UltimateHubLiveStreamTab'
 import { UltimateHubAnalysisTab } from '@/components/UltimateHubAnalysisTab';
 import { UltimateHubCommunityPostsTab } from '@/components/UltimateHubCommunityPostsTab';
 import { MOBILE_HELPER_TIPS } from '@/components/navbar/navbar.utils';
+import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -5866,12 +5867,12 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                 <div className="flex items-center gap-2 px-2 py-1 rounded-lg glass-chip">
                   <div className="flex items-center gap-1">
                     <Coins className="w-3 h-3 text-white" />
-                    <span className="text-[10px] font-bold text-white neon-blue-text">${prices.xauusd}</span>
+                    <span className="text-[10px] font-bold text-white neon-blue-text">{useCurrencyLocaleStore.getState().formatPrice(parseFloat(prices.xauusd) || 0)}</span>
                   </div>
                   <div className="w-px h-3 bg-white/30" />
                   <div className="flex items-center gap-1">
                     <Bitcoin className="w-3 h-3 text-white" />
-                    <span className="text-[10px] font-bold text-white neon-blue-text">${prices.btcusd}</span>
+                    <span className="text-[10px] font-bold text-white neon-blue-text">{useCurrencyLocaleStore.getState().formatPrice(parseFloat(prices.btcusd) || 0)}</span>
                   </div>
                 </div>
                 
@@ -8235,8 +8236,8 @@ export const UnifiedFpsPill = memo(({
 
   const tickerItems = useMemo(() => {
     const items: Array<{ key: string; type: 'price' | 'vip'; label: string; text: string }> = [
-      { key: 'gold', type: 'price', label: 'Gold', text: `Gold $${prices.xauusd}` },
-      { key: 'btc', type: 'price', label: 'BTC', text: `BTC $${prices.btcusd}` },
+      { key: 'gold', type: 'price', label: 'Gold', text: `Gold ${useCurrencyLocaleStore.getState().formatPrice(parseFloat(prices.xauusd) || 0)}` },
+      { key: 'btc', type: 'price', label: 'BTC', text: `BTC ${useCurrencyLocaleStore.getState().formatPrice(parseFloat(prices.btcusd) || 0)}` },
     ];
 
     if (vipPreview?.text) {
@@ -8728,7 +8729,7 @@ export const UnifiedFpsPill = memo(({
                             <div className="flex flex-col items-center">
                               <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Gold</span>
                               <span className="text-lg font-black tabular-nums neon-blue-text" style={{ color: '#ffffff', textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
-                                ${prices.xauusd}
+                                {useCurrencyLocaleStore.getState().formatPrice(parseFloat(prices.xauusd) || 0)}
                               </span>
                             </div>
                           </div>
@@ -8738,7 +8739,7 @@ export const UnifiedFpsPill = memo(({
                             <div className="flex flex-col items-center">
                               <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Bitcoin</span>
                               <span className="text-lg font-black tabular-nums neon-blue-text" style={{ color: '#ffffff', textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
-                                ${prices.btcusd}
+                                {useCurrencyLocaleStore.getState().formatPrice(parseFloat(prices.btcusd) || 0)}
                               </span>
                             </div>
                           </div>
@@ -9087,12 +9088,12 @@ const TradingPill = memo(({ prices, isExpanded, onToggle }: {
             <div className="flex items-center gap-1.5">
               <div className="flex items-center gap-0.5">
                 <Coins className="w-3 h-3 text-white" />
-                <span className="text-[9px] font-bold text-white">${prices.xauusd}</span>
+                <span className="text-[9px] font-bold text-white">{useCurrencyLocaleStore.getState().formatPrice(parseFloat(prices.xauusd) || 0)}</span>
               </div>
               <div className="w-px h-2.5 bg-white/30" />
               <div className="flex items-center gap-0.5">
                 <Bitcoin className="w-3 h-3 text-white" />
-                <span className="text-[9px] font-bold text-white">${prices.btcusd}</span>
+                <span className="text-[9px] font-bold text-white">{useCurrencyLocaleStore.getState().formatPrice(parseFloat(prices.btcusd) || 0)}</span>
               </div>
             </div>
 

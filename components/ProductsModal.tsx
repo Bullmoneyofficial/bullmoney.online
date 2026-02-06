@@ -17,6 +17,7 @@ import {
 import { ShimmerLine, ShimmerBorder } from '@/components/ui/UnifiedShimmer';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useShop, Product, Category } from '@/components/ShopContext';
+import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 import { useProductsModalUI } from '@/contexts/UIStateContext';
 import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 
@@ -272,7 +273,7 @@ const ProductCard = memo(({
 
         <div className="flex items-center gap-1.5 md:gap-2 pt-1">
           <span className="text-white font-semibold text-sm md:text-base">
-            ${formatPriceDisplay(product.price)}
+            {formatPrice(Number(product.price))}
           </span>
           {product.planOptions && product.planOptions.length > 1 && (
             <span className="text-white/40 text-xs">+{product.planOptions.length - 1} plans</span>
@@ -288,6 +289,7 @@ ProductCard.displayName = 'ProductCard';
 const ProductsContent = memo(() => {
   const { setIsOpen } = useModalState();
   const { state: { /*products, categories*/ } } = useShop();
+  const { formatPrice } = useCurrencyLocaleStore();
   const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects } = useMobilePerformance();
   const [vipProducts, setVipProducts] = useState<VipProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -638,7 +640,7 @@ const ProductsContent = memo(() => {
                       {/* Price */}
                       <div className="flex items-center gap-4 py-4 border-y border-white/10">
                         <span className="text-5xl font-bold text-white">
-                          ${formatPriceDisplay(expandedProduct.price)}
+                          {formatPrice(Number(expandedProduct.price))}
                         </span>
                       </div>
 
@@ -687,7 +689,7 @@ const ProductsContent = memo(() => {
                                   >
                                     <div className="flex flex-col items-start">
                                       <span className="font-semibold">{opt.label || 'Plan'}</span>
-                                      <span className="text-white/80 text-sm">${formatPriceDisplay(opt.price ?? expandedProduct.price)}{opt.interval ? `/${opt.interval}` : ''}</span>
+                                      <span className="text-white/80 text-sm">{formatPrice(Number(opt.price ?? expandedProduct.price))}{opt.interval ? `/${opt.interval}` : ''}</span>
                                       {opt.trial_days && <span className="text-emerald-300 text-xs mt-1">{opt.trial_days}-day free trial</span>}
                                     </div>
                                   </motion.button>

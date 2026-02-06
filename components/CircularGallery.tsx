@@ -405,6 +405,10 @@ class App {
   screen!: { width: number; height: number };
   viewport!: { width: number; height: number };
   raf: number = 0;
+  isMobile: boolean = false;
+  isVisible: boolean = true;
+  intersectionObserver: IntersectionObserver | null = null;
+  lastFrameTime: number = 0;
 
   boundOnResize!: () => void;
   boundOnWheel!: (e: Event) => void;
@@ -431,6 +435,7 @@ class App {
     this.container = container;
     this.scrollSpeed = scrollSpeed;
     this.scroll = { ease: scrollEase, current: 0, target: 0, last: 0 };
+    this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
     this.onCheckDebounce = debounce(this.onCheck.bind(this), 200);
     this.createRenderer();
     this.createCamera();
@@ -438,15 +443,18 @@ class App {
     this.onResize();
     this.createGeometry();
     this.createMedias(items, bend, textColor, borderRadius, font);
+    this.setupVisibilityObserver();
     this.update();
     this.addEventListeners();
   }
 
   createRenderer() {
+    // Lower DPR on mobile for better GPU performance
+    const maxDpr = this.isMobile ? 1.5 : 2;
     this.renderer = new Renderer({
       alpha: true,
-      antialias: true,
-      dpr: Math.min(window.devicePixelRatio || 1, 2)
+      antialias: !this.isMobile, // Disable antialiasing on mobile for perf
+      dpr: Math.min(window.devicePixelRatio || 1, maxDpr)
     });
     this.gl = this.renderer.gl;
     this.gl.clearColor(0, 0, 0, 0);
@@ -464,10 +472,9 @@ class App {
   }
 
   createGeometry() {
-    this.planeGeometry = new Plane(this.gl, {
-      heightSegments: 50,
-      widthSegments: 100
-    });
+    // Reduce geometry complexity on mobile for faster vertex processing
+    const segments = this.isMobile ? { heightSegments: 20, widthSegments: 40 } : { heightSegments: 50, widthSegments: 100 };
+    this.planeGeometry = new Plane(this.gl, segments);
   }
 
   createMedias(
@@ -600,7 +607,31 @@ class App {
     }
   }
 
+  setupVisibilityObserver() {
+    this.intersectionObserver = new IntersectionObserver(
+      ([entry]) => { this.isVisible = entry.isIntersecting; },
+      { rootMargin: '200px 0px' }
+    );
+    this.intersectionObserver.observe(this.container);
+  }
+
   update() {
+    // Skip rendering when off-screen
+    if (!this.isVisible) {
+      this.raf = window.requestAnimationFrame(this.update.bind(this));
+      return;
+    }
+
+    // Throttle to ~30fps on mobile to reduce GPU load
+    if (this.isMobile) {
+      const now = performance.now();
+      if (now - this.lastFrameTime < 32) {
+        this.raf = window.requestAnimationFrame(this.update.bind(this));
+        return;
+      }
+      this.lastFrameTime = now;
+    }
+
     this.scroll.current = lerp(this.scroll.current, this.scroll.target, this.scroll.ease);
     const direction = this.scroll.current > this.scroll.last ? 'right' : 'left';
     if (this.medias) {
@@ -634,6 +665,10 @@ class App {
 
   destroy() {
     window.cancelAnimationFrame(this.raf);
+    if (this.intersectionObserver) {
+      this.intersectionObserver.disconnect();
+      this.intersectionObserver = null;
+    }
     window.removeEventListener('resize', this.boundOnResize);
     
     // Remove container-scoped events

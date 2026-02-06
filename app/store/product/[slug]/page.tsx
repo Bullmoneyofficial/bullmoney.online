@@ -6,6 +6,7 @@ import { ProductInfo } from '@/components/shop/ProductInfo';
 import { RelatedProducts } from '@/components/shop/RelatedProducts';
 import { ProductReviews } from '@/components/shop/ProductReviews';
 import { RecentlyViewedProducts } from '@/components/shop/RecentlyViewedProducts';
+import { makeAlternatesMetadata } from '@/lib/seo-languages';
 
 // ============================================================================
 // PRODUCT DETAIL PAGE (PDP)
@@ -47,6 +48,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: product.seo_description || product.short_description,
       images: product.primary_image ? [{ url: product.primary_image }] : [],
       type: 'website',
+      url: `https://www.bullmoney.shop/store/product/${slug}`,
     },
     twitter: {
       card: 'summary_large_image',
@@ -54,6 +56,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: product.short_description || product.description?.slice(0, 160),
       images: product.primary_image ? [product.primary_image] : [],
     },
+    alternates: makeAlternatesMetadata(`/store/product/${slug}`),
   };
 }
 

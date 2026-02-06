@@ -3,6 +3,7 @@
 import React, { useMemo } from 'react';
 import { TradeDB } from '@/types/tradingJournal';
 import { TradingStatistics } from '@/lib/tradingCalculations';
+import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 import { motion } from 'framer-motion';
 import {
   TrendingUp,
@@ -23,6 +24,7 @@ interface TradeStatisticsProps {
 }
 
 export default function TradeStatistics({ trades, stats }: TradeStatisticsProps) {
+  const { formatPrice } = useCurrencyLocaleStore();
   // Calculate additional insights
   const insights = useMemo(() => {
     const assetTypeBreakdown: { [key: string]: { trades: number; pnl: number } } = {};
@@ -126,8 +128,8 @@ export default function TradeStatistics({ trades, stats }: TradeStatisticsProps)
         />
         <StatCard
           title="Net P&L"
-          value={`$${stats.totalNetProfit.toFixed(2)}`}
-          subValue={`Fees: $${stats.totalFees.toFixed(2)}`}
+          value={formatPrice(stats.totalNetProfit)}
+          subValue={`Fees: ${formatPrice(stats.totalFees)}`}
           icon={DollarSign}
           color={stats.totalNetProfit >= 0 ? 'green' : 'red'}
           trend={stats.totalNetProfit >= 0 ? 'up' : 'down'}
@@ -147,7 +149,7 @@ export default function TradeStatistics({ trades, stats }: TradeStatisticsProps)
             <div className={`text-2xl font-bold ${
               stats.expectancy >= 0 ? 'text-white' : 'text-red-400'
             }`}>
-              ${stats.expectancy.toFixed(2)}
+              {formatPrice(stats.expectancy)}
             </div>
             <div className="text-xs text-gray-500 mt-1">Average per trade</div>
           </div>
@@ -175,7 +177,7 @@ export default function TradeStatistics({ trades, stats }: TradeStatisticsProps)
           <div>
             <div className="text-gray-400 text-sm mb-1">Average Win</div>
             <div className="text-2xl font-bold text-white">
-              ${stats.averageWin.toFixed(2)}
+              {formatPrice(stats.averageWin)}
             </div>
             <div className="text-xs text-gray-500 mt-1">Per winning trade</div>
           </div>
@@ -183,7 +185,7 @@ export default function TradeStatistics({ trades, stats }: TradeStatisticsProps)
           <div>
             <div className="text-gray-400 text-sm mb-1">Average Loss</div>
             <div className="text-2xl font-bold text-red-400">
-              ${Math.abs(stats.averageLoss).toFixed(2)}
+              {formatPrice(Math.abs(stats.averageLoss))}
             </div>
             <div className="text-xs text-gray-500 mt-1">Per losing trade</div>
           </div>
@@ -201,7 +203,7 @@ export default function TradeStatistics({ trades, stats }: TradeStatisticsProps)
           <div>
             <div className="text-gray-400 text-sm mb-1">Max Drawdown</div>
             <div className="text-2xl font-bold text-red-400">
-              ${stats.maxDrawdown.toFixed(2)}
+              {formatPrice(stats.maxDrawdown)}
             </div>
             <div className="text-xs text-gray-500 mt-1">
               {stats.maxDrawdownPercentage.toFixed(1)}% peak to trough
@@ -211,7 +213,7 @@ export default function TradeStatistics({ trades, stats }: TradeStatisticsProps)
           <div>
             <div className="text-gray-400 text-sm mb-1">Best Trade</div>
             <div className="text-2xl font-bold text-white">
-              ${stats.largestWin.toFixed(2)}
+              {formatPrice(stats.largestWin)}
             </div>
             <div className="text-xs text-gray-500 mt-1">Largest winning trade</div>
           </div>
@@ -219,7 +221,7 @@ export default function TradeStatistics({ trades, stats }: TradeStatisticsProps)
           <div>
             <div className="text-gray-400 text-sm mb-1">Worst Trade</div>
             <div className="text-2xl font-bold text-red-400">
-              ${Math.abs(stats.largestLoss).toFixed(2)}
+              {formatPrice(Math.abs(stats.largestLoss))}
             </div>
             <div className="text-xs text-gray-500 mt-1">Largest losing trade</div>
           </div>
@@ -272,7 +274,7 @@ export default function TradeStatistics({ trades, stats }: TradeStatisticsProps)
                   <div className="flex items-center gap-4">
                     <span className="text-gray-400">{data.trades} trades</span>
                     <span className={data.pnl >= 0 ? 'text-white' : 'text-red-400'}>
-                      ${data.pnl.toFixed(2)}
+                      {formatPrice(data.pnl)}
                     </span>
                   </div>
                 </div>
@@ -331,7 +333,7 @@ export default function TradeStatistics({ trades, stats }: TradeStatisticsProps)
                         <td className={`px-4 py-3 text-right font-medium ${
                           data.pnl >= 0 ? 'text-white' : 'text-red-400'
                         }`}>
-                          ${data.pnl.toFixed(2)}
+                          {formatPrice(data.pnl)}
                         </td>
                       </tr>
                     );
@@ -382,7 +384,7 @@ export default function TradeStatistics({ trades, stats }: TradeStatisticsProps)
                 <div className="flex items-center justify-between text-sm mb-1">
                   <span className="text-white">Gross Profit</span>
                   <span className="text-white font-medium">
-                    ${stats.totalGrossProfit.toFixed(2)}
+                    {formatPrice(stats.totalGrossProfit)}
                   </span>
                 </div>
                 <div className="w-full bg-white/5 rounded-full h-3">
@@ -398,7 +400,7 @@ export default function TradeStatistics({ trades, stats }: TradeStatisticsProps)
                 <div className="flex items-center justify-between text-sm mb-1">
                   <span className="text-red-400">Gross Loss</span>
                   <span className="text-white font-medium">
-                    ${Math.abs(stats.totalGrossLoss).toFixed(2)}
+                    {formatPrice(Math.abs(stats.totalGrossLoss))}
                   </span>
                 </div>
                 <div className="w-full bg-white/5 rounded-full h-3">

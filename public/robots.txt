@@ -39,8 +39,9 @@ Disallow: /auth
 # Allow Next.js data for faster page loads
 Allow: /_next/data/
 
-# Block query parameters that create duplicate content
+# Block query parameters that create duplicate content (except language)
 Disallow: /*?*
+Allow: /*?lang=*
 Allow: /*?utm_*
 Allow: /*?ref=*
 

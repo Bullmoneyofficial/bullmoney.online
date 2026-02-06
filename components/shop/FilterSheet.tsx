@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronDown } from 'lucide-react';
 import type { ProductFilters } from '@/types/store';
+import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 
 // ============================================================================
 // FILTER SHEET - MOBILE-FRIENDLY FILTER PANEL WITH PORTAL
@@ -19,13 +20,16 @@ interface FilterSheetProps {
   onClear: () => void;
 }
 
-const PRICE_RANGES = [
-  { min: 0, max: 50, label: 'Under $50' },
-  { min: 50, max: 100, label: '$50 - $100' },
-  { min: 100, max: 200, label: '$100 - $200' },
-  { min: 200, max: 500, label: '$200 - $500' },
-  { min: 500, max: undefined, label: '$500+' },
-];
+function getPriceRanges() {
+  const fp = useCurrencyLocaleStore.getState().formatPrice;
+  return [
+    { min: 0, max: 50, label: `Under ${fp(50)}` },
+    { min: 50, max: 100, label: `${fp(50)} - ${fp(100)}` },
+    { min: 100, max: 200, label: `${fp(100)} - ${fp(200)}` },
+    { min: 200, max: 500, label: `${fp(200)} - ${fp(500)}` },
+    { min: 500, max: undefined, label: `${fp(500)}+` },
+  ];
+}
 
 const CATEGORIES = [
   { value: 'apparel', label: 'Apparel' },
@@ -173,7 +177,7 @@ export function FilterSheet({ isOpen, onClose, filters, onFilterChange, onClear 
                       exit={{ height: 0, opacity: 0 }}
                       className="space-y-2 overflow-hidden"
                     >
-                      {PRICE_RANGES.map((range) => {
+                      {getPriceRanges().map((range) => {
                         const isSelected = filters.min_price === range.min && filters.max_price === range.max;
                         return (
                           <button

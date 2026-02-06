@@ -139,14 +139,33 @@ function reducer(state: BlogState, action: Action): BlogState {
 export function BlogProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, DEFAULT_STATE);
 
+  const safeFetchJson = async (url: string, fallback: any = []) => {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) {
+        console.warn(`⚠️ ${url} returned ${res.status}`);
+        return fallback;
+      }
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        console.warn(`⚠️ ${url} returned non-JSON content-type: ${contentType}`);
+        return fallback;
+      }
+      return await res.json();
+    } catch (e) {
+      console.warn(`⚠️ ${url} fetch failed:`, e);
+      return fallback;
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       dispatch({ type: "SET_LOADING", payload: true });
       try {
         const [postsData, categoriesData, heroData] = await Promise.all([
-          fetch("/api/blogs").then((res) => res.json()),
-          fetch("/api/categories").then((res) => res.json()),
-          fetch("/api/blogs/hero").then((res) => res.json()), // ✅ Fetch Hero
+          safeFetchJson("/api/blogs", []),
+          safeFetchJson("/api/categories", []),
+          safeFetchJson("/api/blogs/hero", {}), // ✅ Fetch Hero
         ]);
 
         dispatch({ type: "SET_POSTS", payload: postsData });
@@ -170,8 +189,9 @@ export function BlogProvider({ children }: { children: React.ReactNode }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(post),
     })
-      .then((res) => res.json())
-      .then((data) => dispatch({ type: "ADD_POST", payload: data }));
+      .then((res) => { if (!res.ok) throw new Error(`${res.status}`); return res.json(); })
+      .then((data) => dispatch({ type: "ADD_POST", payload: data }))
+      .catch((e) => console.error("Failed to add post:", e));
   };
 
   const updatePost = (id: string, post: Omit<BlogPost, "_id">) => {
@@ -180,8 +200,9 @@ export function BlogProvider({ children }: { children: React.ReactNode }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(post),
     })
-      .then((res) => res.json())
-      .then((data) => dispatch({ type: "UPDATE_POST", payload: data }));
+      .then((res) => { if (!res.ok) throw new Error(`${res.status}`); return res.json(); })
+      .then((data) => dispatch({ type: "UPDATE_POST", payload: data }))
+      .catch((e) => console.error("Failed to update post:", e));
   };
 
   const deletePost = (id: string) => {
@@ -202,8 +223,9 @@ export function BlogProvider({ children }: { children: React.ReactNode }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: category }),
     })
-      .then((res) => res.json())
-      .then((data) => dispatch({ type: "ADD_CATEGORY", payload: data }));
+      .then((res) => { if (!res.ok) throw new Error(`${res.status}`); return res.json(); })
+      .then((data) => dispatch({ type: "ADD_CATEGORY", payload: data }))
+      .catch((e) => console.error("Failed to add category:", e));
   };
 
   const deleteCategory = (id: string) => {
@@ -221,8 +243,9 @@ export function BlogProvider({ children }: { children: React.ReactNode }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(hero),
     })
-      .then((res) => res.json())
-      .then((data) => dispatch({ type: "SET_HERO", payload: data }));
+      .then((res) => { if (!res.ok) throw new Error(`${res.status}`); return res.json(); })
+      .then((data) => dispatch({ type: "SET_HERO", payload: data }))
+      .catch((e) => console.error("Failed to update hero:", e));
   };
 
   const login = (u: string, p: string) => {

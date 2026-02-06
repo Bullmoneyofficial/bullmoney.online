@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { TradeDB } from '@/types/tradingJournal';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown } from 'lucide-react';
+import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 
 interface TradingCalendarProps {
   trades: TradeDB[];
@@ -20,6 +21,7 @@ export default function TradingCalendar({
   selectedDate,
   onDateChange,
 }: TradingCalendarProps) {
+  const { formatPrice } = useCurrencyLocaleStore();
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   // Get calendar data
@@ -142,7 +144,7 @@ export default function TradingCalendar({
                 {monthStats.losses}L
               </span>
               <span className={monthStats.totalPnL >= 0 ? 'text-white' : 'text-red-400'}>
-                ${monthStats.totalPnL.toFixed(0)}
+                {formatPrice(monthStats.totalPnL)}
               </span>
             </div>
           </div>
@@ -301,13 +303,13 @@ export default function TradingCalendar({
                       <div>
                         <div className="text-white/70">Entry</div>
                         <div className="text-white font-medium">
-                          ${trade.entry_price.toFixed(2)}
+                          {formatPrice(trade.entry_price)}
                         </div>
                       </div>
                       <div>
                         <div className="text-white/70">Exit</div>
                         <div className="text-white font-medium">
-                          {trade.exit_price ? `$${trade.exit_price.toFixed(2)}` : 'Open'}
+                          {trade.exit_price ? formatPrice(trade.exit_price) : 'Open'}
                         </div>
                       </div>
                       <div className="md:hidden">
@@ -315,7 +317,7 @@ export default function TradingCalendar({
                         <div className={`font-bold ${
                           (trade.net_pnl || 0) >= 0 ? 'text-white' : 'text-red-400'
                         }`}>
-                          {trade.net_pnl ? `$${trade.net_pnl.toFixed(2)}` : '-'}
+                          {trade.net_pnl ? formatPrice(trade.net_pnl) : '-'}
                         </div>
                       </div>
                     </div>
@@ -332,7 +334,7 @@ export default function TradingCalendar({
                         <div className={`font-bold ${
                           (trade.net_pnl || 0) >= 0 ? 'text-white' : 'text-red-400'
                         }`}>
-                          {trade.net_pnl ? `$${trade.net_pnl.toFixed(2)}` : '-'}
+                          {trade.net_pnl ? formatPrice(trade.net_pnl) : '-'}
                         </div>
                       </div>
                     </div>
@@ -382,7 +384,7 @@ export default function TradingCalendar({
                 <div className={`text-base md:text-xl font-bold ${
                   getDayPnL(selectedDate) >= 0 ? 'text-white' : 'text-red-400'
                 }`}>
-                  ${getDayPnL(selectedDate).toFixed(2)}
+                  {formatPrice(getDayPnL(selectedDate))}
                 </div>
               </div>
             </div>

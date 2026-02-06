@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { makeAlternatesMetadata } from "@/lib/seo-languages";
 
 // ============================================
 // PROP FIRM PAGE SEO METADATA
@@ -56,9 +57,7 @@ export const metadata: Metadata = {
       "Pass prop firm challenges with BullMoney! Free setups for FTMO & funded accounts. Get funded faster!",
   },
   
-  alternates: {
-    canonical: "https://www.bullmoney.shop/Prop",
-  },
+  alternates: makeAlternatesMetadata('/Prop'),
 };
 
 // Layout wrapper for the prop page

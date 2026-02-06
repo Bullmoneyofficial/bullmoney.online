@@ -22,6 +22,7 @@ import {
 } from '@/contexts/UIStateContext';
 // UNIFIED SHIMMER SYSTEM - Import from single source
 import { ShimmerBorder, ShimmerLine, ShimmerRadialGlow, ShimmerDot } from '@/components/ui/UnifiedShimmer';
+import { LanguageToggle } from '@/components/LanguageToggle';
 
 interface MobileDropdownMenuProps {
   open: boolean;
@@ -339,6 +340,16 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
               label="Store" 
               highlighted={true}
             />
+
+            {/* 🌐 Language Selector */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.27, duration: 0.3 }}
+              className="w-full"
+            >
+              <LanguageToggle variant="row" dropDirection="down" />
+            </motion.div>
 
             {/* Admin */}
             {isAdmin && (

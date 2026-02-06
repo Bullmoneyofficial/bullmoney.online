@@ -320,7 +320,7 @@ const TopicalAuthoritySchema = () => {
     "assesses": "Trading Knowledge and Skills",
     "competencyRequired": "None - Suitable for complete beginners",
     "isAccessibleForFree": true,
-    "inLanguage": "en",
+    "inLanguage": ["en", "es", "fr", "de", "pt", "it", "ja", "ko", "zh", "ar", "hi", "ru", "tr", "nl", "pl", "sv", "no", "da", "fi", "th", "vi", "id", "ms", "tl", "uk", "cs", "ro", "el", "he", "hu", "bg", "sw", "af", "zu", "bn", "ur"],
     "provider": {
       "@type": "Organization",
       "name": "BullMoney"

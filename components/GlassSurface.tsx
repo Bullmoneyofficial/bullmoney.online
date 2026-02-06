@@ -143,25 +143,12 @@ const GlassSurface: React.FC<GlassSurfaceProps> = ({
     mixBlendMode
   ]);
 
+  // Single ResizeObserver for displacement map updates (deduplicated)
   useEffect(() => {
     if (!containerRef.current) return;
 
     const resizeObserver = new ResizeObserver(() => {
-      setTimeout(updateDisplacementMap, 0);
-    });
-
-    resizeObserver.observe(containerRef.current);
-
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!containerRef.current) return;
-
-    const resizeObserver = new ResizeObserver(() => {
-      setTimeout(updateDisplacementMap, 0);
+      requestAnimationFrame(updateDisplacementMap);
     });
 
     resizeObserver.observe(containerRef.current);

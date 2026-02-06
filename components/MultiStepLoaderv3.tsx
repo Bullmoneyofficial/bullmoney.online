@@ -743,6 +743,8 @@ const TRADING_QUOTES = [
   "Quick fingers lose money, patient minds make it",
 ];
 
+import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
+
 // Encouraging messages that appear at different progress levels
 const ENCOURAGEMENT_MESSAGES: Record<number, string[]> = {
   25: ["Nice start!", "You're getting it!", "Keep going!", "That's the spirit!"],
@@ -755,10 +757,7 @@ const ENCOURAGEMENT_MESSAGES: Record<number, string[]> = {
 // UTILS
 // ============================================================================
 const formatPrice = (value: number) =>
-  `$${value.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+  useCurrencyLocaleStore.getState().formatPrice(value);
 
 const cn = (...classes: (string | boolean | undefined)[]) => 
   classes.filter(Boolean).join(" ");

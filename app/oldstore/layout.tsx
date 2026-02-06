@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { makeAlternatesMetadata } from "@/lib/seo-languages";
 
 // ============================================
 // SHOP PAGE SEO METADATA
@@ -54,9 +55,7 @@ export const metadata: Metadata = {
       "Premium trading setups & VIP membership for crypto, gold & forex. Upgrade your trading today!",
   },
   
-  alternates: {
-    canonical: "https://www.bullmoney.shop/shop",
-  },
+  alternates: makeAlternatesMetadata('/shop'),
 };
 
 // Layout wrapper for the shop page

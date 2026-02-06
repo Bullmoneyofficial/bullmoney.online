@@ -38,6 +38,7 @@ import { SmartScreensaverProvider } from "@/components/SmartScreensaver";
 // ✅ LAYOUT PROVIDERS - Client component wrapper for dynamic imports
 import { LayoutProviders } from "@/components/LayoutProviders";
 import { HreflangMeta } from "@/components/HreflangMeta";
+import { ServerHreflangMeta } from "@/components/ServerHreflangMeta";
 
 // Use system font stack with Inter as preference - avoids network dependency during build
 const inter = {
@@ -268,6 +269,13 @@ export const metadata: Metadata = {
       },
     ],
     locale: "en_US",
+    alternateLocale: [
+      'es_ES', 'fr_FR', 'de_DE', 'pt_BR', 'it_IT', 'ja_JP', 'ko_KR',
+      'zh_CN', 'ar_SA', 'hi_IN', 'ru_RU', 'tr_TR', 'nl_NL', 'pl_PL',
+      'sv_SE', 'nb_NO', 'da_DK', 'fi_FI', 'th_TH', 'vi_VN', 'id_ID',
+      'ms_MY', 'tl_PH', 'uk_UA', 'cs_CZ', 'ro_RO', 'el_GR', 'he_IL',
+      'hu_HU', 'bg_BG', 'sw_KE', 'af_ZA', 'zu_ZA', 'bn_BD', 'ur_PK',
+    ],
     type: "website",
   },
   
@@ -310,12 +318,48 @@ export const metadata: Metadata = {
   },
   
   // ============================================
-  // ALTERNATES & CANONICAL
+  // ALTERNATES & CANONICAL - ALL 36 LANGUAGES FOR GLOBAL SEO
   // ============================================
   alternates: {
     canonical: "https://www.bullmoney.shop",
     languages: {
-      "en-US": "https://www.bullmoney.shop",
+      "x-default": "https://www.bullmoney.shop",
+      "en": "https://www.bullmoney.shop?lang=en",
+      "es": "https://www.bullmoney.shop?lang=es",
+      "fr": "https://www.bullmoney.shop?lang=fr",
+      "de": "https://www.bullmoney.shop?lang=de",
+      "pt": "https://www.bullmoney.shop?lang=pt",
+      "it": "https://www.bullmoney.shop?lang=it",
+      "ja": "https://www.bullmoney.shop?lang=ja",
+      "ko": "https://www.bullmoney.shop?lang=ko",
+      "zh": "https://www.bullmoney.shop?lang=zh",
+      "ar": "https://www.bullmoney.shop?lang=ar",
+      "hi": "https://www.bullmoney.shop?lang=hi",
+      "ru": "https://www.bullmoney.shop?lang=ru",
+      "tr": "https://www.bullmoney.shop?lang=tr",
+      "nl": "https://www.bullmoney.shop?lang=nl",
+      "pl": "https://www.bullmoney.shop?lang=pl",
+      "sv": "https://www.bullmoney.shop?lang=sv",
+      "no": "https://www.bullmoney.shop?lang=no",
+      "da": "https://www.bullmoney.shop?lang=da",
+      "fi": "https://www.bullmoney.shop?lang=fi",
+      "th": "https://www.bullmoney.shop?lang=th",
+      "vi": "https://www.bullmoney.shop?lang=vi",
+      "id": "https://www.bullmoney.shop?lang=id",
+      "ms": "https://www.bullmoney.shop?lang=ms",
+      "tl": "https://www.bullmoney.shop?lang=tl",
+      "uk": "https://www.bullmoney.shop?lang=uk",
+      "cs": "https://www.bullmoney.shop?lang=cs",
+      "ro": "https://www.bullmoney.shop?lang=ro",
+      "el": "https://www.bullmoney.shop?lang=el",
+      "he": "https://www.bullmoney.shop?lang=he",
+      "hu": "https://www.bullmoney.shop?lang=hu",
+      "bg": "https://www.bullmoney.shop?lang=bg",
+      "sw": "https://www.bullmoney.shop?lang=sw",
+      "af": "https://www.bullmoney.shop?lang=af",
+      "zu": "https://www.bullmoney.shop?lang=zu",
+      "bn": "https://www.bullmoney.shop?lang=bn",
+      "ur": "https://www.bullmoney.shop?lang=ur",
     },
   },
   
@@ -756,6 +800,13 @@ export default function RootLayout({
 
         {/* PWA Manifest */}
         <link rel="manifest" href="/manifest.json" crossOrigin="use-credentials" />
+
+        {/* 
+          HREFLANG: Handled by Next.js Metadata API `alternates` in each layout.
+          Each layout (root, store, about, products, etc.) exports its own alternates 
+          via makeAlternatesMetadata() — Next.js renders these as <link rel="alternate"> 
+          tags server-side. No need for a separate ServerHreflangMeta component.
+        */}
 
         {/* Apple Touch Icons for various sizes */}
         <link rel="apple-touch-icon" sizes="180x180" href="/icon-180x180.png" />

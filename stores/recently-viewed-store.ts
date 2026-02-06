@@ -2,6 +2,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { consentAwareStorage } from '@/lib/consentAwareStorage';
 
 // ============================================================================
 // RECENTLY VIEWED STORE - ZUSTAND WITH LOCAL STORAGE PERSISTENCE
@@ -48,7 +49,7 @@ export const useRecentlyViewedStore = create<RecentlyViewedStore>()(
     }),
     {
       name: 'bullmoney-recently-viewed',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => consentAwareStorage),
     }
   )
 );

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { makeAlternatesMetadata } from "@/lib/seo-languages";
 
 // ============================================
 // RECRUIT PAGE SEO METADATA
@@ -39,9 +40,7 @@ export const metadata: Metadata = {
     ],
   },
   
-  alternates: {
-    canonical: "https://www.bullmoney.shop/recruit",
-  },
+  alternates: makeAlternatesMetadata('/recruit'),
 };
 
 export default function RecruitLayout({

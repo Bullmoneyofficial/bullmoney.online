@@ -16,6 +16,7 @@ import { PillDock } from './PillDock';
 import { MinimizedDock } from './MinimizedDock';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useChartNewsUI, useProductsModalUI } from '@/contexts/UIStateContext';
+import { LanguageToggle } from '@/components/LanguageToggle';
 import './DesktopNavbar.css';
 
 interface DesktopNavbarProps {
@@ -164,6 +165,18 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
           }}>
             bullmoney
           </Link>
+        </div>
+
+        {/* 🌐 Language Toggle - Right of logo, fades with it */}
+        <div
+          className="absolute right-0 pointer-events-auto z-50 flex items-center h-16 pr-0"
+          style={{
+            opacity: isScrollMinimized ? 0 : 1,
+            transition: 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            pointerEvents: isScrollMinimized ? 'none' : 'auto',
+          }}
+        >
+          <LanguageToggle variant="pill" dropDirection="down" />
         </div>
         
         {/* Full Dock - centered, slides up and fades when minimizing */}

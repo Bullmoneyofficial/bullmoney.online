@@ -5,15 +5,14 @@ import Link from 'next/link';
 import { Instagram, Youtube, MessageCircle, Send, XSquareIcon, Check, Loader2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useFaqModalUI, useDisclaimerModalUI } from '@/contexts/UIStateContext';
-import { CurrencyLanguageSelector } from '@/components/shop/CurrencyLanguageSelector';
 
 // Custom icons for TikTok and X (Twitter)
 const TikTokIcon = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" className={className} xmlns="http://www.w3.org/2000/svg"><path d="M19.589 6.686a4.793 4.793 0 0 1-3.77-4.245V2h-3.445v13.672a2.896 2.896 0 0 1-5.201 1.743l-.002-.001.002.001a2.895 2.895 0 0 1 3.183-4.51v-3.5a6.373 6.373 0 0 0-5.394 10.637 6.354 6.354 0 0 0 5.212-1.936V23h3.445v-4.03a7.276 7.276 0 0 0 7.397-7.397v-4.887z" /></svg>
+  <svg viewBox="0 0 24 24" fill="white" style={{ color: 'white' }} className={className} xmlns="http://www.w3.org/2000/svg"><path d="M19.589 6.686a4.793 4.793 0 0 1-3.77-4.245V2h-3.445v13.672a2.896 2.896 0 0 1-5.201 1.743l-.002-.001.002.001a2.895 2.895 0 0 1 3.183-4.51v-3.5a6.373 6.373 0 0 0-5.394 10.637 6.354 6.354 0 0 0 5.212-1.936V23h3.445v-4.03a7.276 7.276 0 0 0 7.397-7.397v-4.887z" /></svg>
 );
 
 const XIcon = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" className={className} xmlns="http://www.w3.org/2000/svg"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z" /></svg>
+  <svg viewBox="0 0 24 24" fill="white" style={{ color: 'white' }} className={className} xmlns="http://www.w3.org/2000/svg"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z" /></svg>
 );
 
 // Lazy load modals
@@ -227,17 +226,15 @@ export function StoreFooter() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/10
-                         text-white/50 hover:text-white hover:bg-white/10 hover:border-white/20
+                         text-white! hover:bg-white/10 hover:border-white/20
                          transition-all duration-200"
+                style={{ color: 'white' }}
                 aria-label={social.label}
               >
-                <social.icon className="w-4 h-4" />
+                <social.icon className="w-4 h-4 text-white!" style={{ color: 'white' }} />
               </a>
             ))}
           </div>
-
-          {/* Currency & Language Selector */}
-          <CurrencyLanguageSelector />
 
           {/* Copyright & Payment Methods */}
           <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-8">

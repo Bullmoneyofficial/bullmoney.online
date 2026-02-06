@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import TextType from '@/components/TextType';
+import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 
 // ============================================================================
 // RELATED PRODUCTS SECTION
@@ -59,10 +60,10 @@ export function RelatedProducts({ products }: RelatedProductsProps) {
               </h3>
               
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-white/80">${product.base_price.toFixed(2)}</span>
+                <span className="text-white/80">{useCurrencyLocaleStore.getState().formatPrice(product.base_price)}</span>
                 {product.compare_at_price && product.compare_at_price > product.base_price && (
                   <span className="text-white/40 line-through text-sm">
-                    ${product.compare_at_price.toFixed(2)}
+                    {useCurrencyLocaleStore.getState().formatPrice(product.compare_at_price)}
                   </span>
                 )}
               </div>

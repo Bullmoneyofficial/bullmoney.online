@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { makeAlternatesMetadata } from "@/lib/seo-languages";
 
 // ============================================
 // ABOUT PAGE SEO METADATA - OPTIMIZED FOR GOOGLE #1
@@ -67,9 +68,7 @@ export const metadata: Metadata = {
       "Looking for a FREE trading mentor? 10,000+ traders already learning from our pros. Join free!",
   },
   
-  alternates: {
-    canonical: "https://www.bullmoney.shop/about",
-  },
+  alternates: makeAlternatesMetadata('/about'),
 };
 
 // Layout wrapper for the about page

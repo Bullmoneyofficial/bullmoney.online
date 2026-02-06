@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Truck, RotateCcw, Shield, Clock, MapPin, AlertCircle, CreditCard, Package } from 'lucide-react';
+import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 
 // ============================================================================
 // SHIPPING & RETURNS MODAL - Full Policy Disclaimer
@@ -78,7 +79,7 @@ export function ShippingReturnsModal({ isOpen, onClose }: ShippingReturnsModalPr
                         <span className="font-medium">Standard Shipping</span>
                       </div>
                       <p className="text-white/60 text-sm">5-10 business days</p>
-                      <p className="text-white/80 font-medium">$9.99 (Free over $150)</p>
+                      <p className="text-white/80 font-medium">{useCurrencyLocaleStore.getState().formatPrice(9.99)} (Free over {useCurrencyLocaleStore.getState().formatPrice(150)})</p>
                     </div>
                     <div className="p-4 bg-white/5 rounded-xl space-y-2">
                       <div className="flex items-center gap-2 text-white">
@@ -86,7 +87,7 @@ export function ShippingReturnsModal({ isOpen, onClose }: ShippingReturnsModalPr
                         <span className="font-medium">Express Shipping</span>
                       </div>
                       <p className="text-white/60 text-sm">2-4 business days</p>
-                      <p className="text-white/80 font-medium">$19.99</p>
+                      <p className="text-white/80 font-medium">{useCurrencyLocaleStore.getState().formatPrice(19.99)}</p>
                     </div>
                   </div>
 

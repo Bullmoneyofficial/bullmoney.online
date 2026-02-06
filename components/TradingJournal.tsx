@@ -11,6 +11,7 @@ import { TradeDB } from '@/types/tradingJournal';
 import { calculateComprehensiveStats } from '@/lib/tradingCalculations';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, TrendingUp, Calendar, BarChart3, Filter, Download, Upload, Lock, LogIn } from 'lucide-react';
+import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 
 type ViewMode = 'calendar' | 'list' | 'statistics';
 
@@ -38,6 +39,7 @@ interface TradingJournalProps {
 }
 
 export default function TradingJournal({ isEmbedded = false, onClose }: TradingJournalProps) {
+  const { formatPrice } = useCurrencyLocaleStore();
   const router = useRouter();
   const [viewMode, setViewMode] = useState<ViewMode>('calendar');
   const [trades, setTrades] = useState<TradeDB[]>([]);
@@ -486,7 +488,7 @@ export default function TradingJournal({ isEmbedded = false, onClose }: TradingJ
                   </div>
                 </div>
                 <div className={`font-bold text-sm ${trade.net_pnl >= 0 ? 'text-white' : 'text-red-400'}`}>
-                  {trade.net_pnl >= 0 ? '+' : ''}{trade.net_pnl < 0 ? '-' : ''}${Math.abs(trade.net_pnl)}
+                  {trade.net_pnl >= 0 ? '+' : ''}{formatPrice(trade.net_pnl)}
                 </div>
               </div>
             ))}
@@ -601,7 +603,7 @@ export default function TradingJournal({ isEmbedded = false, onClose }: TradingJ
               <div className={`text-xs md:text-base font-bold ${
                 stats.totalNetProfit >= 0 ? 'text-white' : 'text-white/70'
               }`}>
-                {stats.totalNetProfit >= 0 ? '+' : '-'}${Math.abs(stats.totalNetProfit) >= 1000 ? (Math.abs(stats.totalNetProfit)/1000).toFixed(1) + 'k' : Math.abs(stats.totalNetProfit).toFixed(0)}
+                {stats.totalNetProfit >= 0 ? '+' : ''}{formatPrice(stats.totalNetProfit)}
               </div>
             </div>
           </div>
@@ -751,15 +753,15 @@ export default function TradingJournal({ isEmbedded = false, onClose }: TradingJ
                           </span>
                         </td>
                         <td className="hidden md:table-cell px-4 py-2 text-sm text-right text-white">
-                          ${trade.entry_price.toFixed(2)}
+                          {formatPrice(trade.entry_price)}
                         </td>
                         <td className="hidden md:table-cell px-4 py-2 text-sm text-right text-white">
-                          {trade.exit_price ? `$${trade.exit_price.toFixed(2)}` : '-'}
+                          {trade.exit_price ? formatPrice(trade.exit_price) : '-'}
                         </td>
                         <td className={`px-2 md:px-4 py-2 text-[10px] md:text-sm text-right font-medium ${
                           (trade.net_pnl || 0) >= 0 ? 'text-white' : 'text-white/70'
                         }`}>
-                          {trade.net_pnl ? `${trade.net_pnl >= 0 ? '+' : '-'}$${Math.abs(trade.net_pnl).toFixed(2)}` : '-'}
+                          {trade.net_pnl ? `${trade.net_pnl >= 0 ? '+' : ''}${formatPrice(trade.net_pnl)}` : '-'}
                         </td>
                         <td className="px-2 md:px-4 py-2 text-center">
                           {trade.outcome && (

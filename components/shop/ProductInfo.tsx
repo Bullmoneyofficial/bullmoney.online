@@ -13,6 +13,7 @@ import TextType from '@/components/TextType';
 import { ShareProductButton } from '@/components/shop/ShareProductButton';
 import { BackInStockButton } from '@/components/shop/BackInStockButton';
 import { ShippingReturnsModal } from '@/components/shop/ShippingReturnsModal';
+import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 import { SizeGuideModal } from '@/components/shop/SizeGuideModal';
 import type { ProductWithDetails, Variant } from '@/types/store';
 
@@ -32,6 +33,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
   const { addItem, hasItem } = useCartStore();
   const { toggleItem, hasItem: isWishlisted } = useWishlistStore();
   const { addItem: addRecentlyViewed } = useRecentlyViewedStore();
+  const formatPrice = useCurrencyLocaleStore((s) => s.formatPrice);
 
   const wishlisted = isWishlisted(product.id);
 
@@ -134,7 +136,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
   const ratingStats = product.details?.rating_stats;
 
   return (
-    <div className="lg:sticky lg:top-24 space-y-8">
+    <div className="lg:sticky lg:top-24 space-y-8 relative" style={{ zIndex: 100 }}>
       {/* Breadcrumb */}
       <nav className="text-sm text-white/40 flex items-center gap-2 flex-wrap">
         <Link href="/store" className="hover:text-white/60 transition-colors">Store</Link>
@@ -155,7 +157,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
 
       {/* Title & Price */}
       <div className="space-y-4">
-        <h1 className="text-4xl md:text-5xl font-light tracking-tight"><TextType text={product.name} typingSpeed={Math.max(8, 30 - product.name.length / 2)} showCursor cursorCharacter="_" cursorBlinkDuration={0.5} loop={false} as="span" /></h1>
+        <h1 className="text-4xl md:text-5xl font-light tracking-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"><TextType text={product.name} typingSpeed={Math.max(8, 30 - product.name.length / 2)} showCursor cursorCharacter="_" cursorBlinkDuration={0.5} loop={false} as="span" /></h1>
         
         {ratingStats && ratingStats.count > 0 && (
           <div className="flex items-center gap-3">
@@ -178,10 +180,10 @@ export function ProductInfo({ product }: ProductInfoProps) {
         )}
 
         <div className="flex items-baseline gap-3">
-          <span className="text-3xl font-medium">${price.toFixed(2)}</span>
+          <span className="text-3xl font-medium drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{formatPrice(price)}</span>
           {hasDiscount && (
             <>
-              <span className="text-xl text-white/40 line-through">${comparePrice.toFixed(2)}</span>
+              <span className="text-xl text-white/40 line-through">{formatPrice(comparePrice)}</span>
               <span className="px-2 py-1 bg-white text-black text-xs font-medium rounded-md">
                 Save <CountUp to={Math.round((1 - price / comparePrice) * 100)} from={0} duration={1} className="" />%
               </span>
@@ -190,7 +192,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
         </div>
 
         {product.short_description && (
-          <p className="text-white/60 leading-relaxed">{product.short_description}</p>
+          <p className="text-white/60 leading-relaxed drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]">{product.short_description}</p>
         )}
       </div>
 
@@ -372,7 +374,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
         <button onClick={() => setShowShippingModal(true)} className="text-center p-4 hover:bg-white/5 rounded-xl transition-colors cursor-pointer">
           <Truck className="w-6 h-6 mx-auto mb-2 text-white/60" />
           <p className="text-xs text-white/60">Free Shipping</p>
-          <p className="text-xs text-white/40">Orders $150+</p>
+          <p className="text-xs text-white/40">Orders {formatPrice(150)}+</p>
         </button>
         <button onClick={() => setShowShippingModal(true)} className="text-center p-4 hover:bg-white/5 rounded-xl transition-colors cursor-pointer">
           <Shield className="w-6 h-6 mx-auto mb-2 text-white/60" />

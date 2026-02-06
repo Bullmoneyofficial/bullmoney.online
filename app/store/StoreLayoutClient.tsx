@@ -6,6 +6,7 @@ import { CartDrawer } from '@/components/shop/CartDrawer';
 import { Toaster } from 'sonner';
 import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
 import { syncSessionLayers } from '@/lib/sessionPersistence';
+// AutoTranslateProvider moved to root LayoutProviders for global coverage
 
 // ============================================================================
 // STORE LAYOUT CLIENT WRAPPER
@@ -400,6 +401,8 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
       
       {/* Store Header */}
       <StoreHeader />
+      
+      {/* Auto-translate provider is now in root LayoutProviders for global coverage */}
       
       {/* Main Content - Below store header */}
       <main 

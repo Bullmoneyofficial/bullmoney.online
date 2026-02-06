@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/stores/cart-store';
 import { toast } from 'sonner';
 import TextType from '@/components/TextType';
+import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 
 // ============================================================================
 // CART DRAWER - SLIDE-OUT PANEL WITH PORTAL
@@ -193,7 +194,7 @@ export function CartDrawer() {
                           {optionsText && (
                             <p className="text-white/40 text-xs md:text-sm mt-0.5">{optionsText}</p>
                           )}
-                          <p className="text-white/60 text-xs md:text-sm mt-1">${price.toFixed(2)}</p>
+                          <p className="text-white/60 text-xs md:text-sm mt-1">{useCurrencyLocaleStore.getState().formatPrice(price)}</p>
 
                           {/* Quantity Controls - Larger touch targets */}
                           <div className="flex items-center justify-between mt-2 md:mt-3">
@@ -215,7 +216,7 @@ export function CartDrawer() {
                             </div>
 
                             <div className="flex items-center gap-2 md:gap-3">
-                              <span className="font-medium text-sm md:text-base">${total.toFixed(2)}</span>
+                              <span className="font-medium text-sm md:text-base">{useCurrencyLocaleStore.getState().formatPrice(total)}</span>
                               <button
                                 onClick={() => removeItem(item.id)}
                                 className="p-1.5 text-white/40 hover:text-white active:scale-90 transition-all"
@@ -239,35 +240,35 @@ export function CartDrawer() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between text-white/60">
                     <span>Subtotal</span>
-                    <span>${summary.subtotal.toFixed(2)}</span>
+                    <span>{useCurrencyLocaleStore.getState().formatPrice(summary.subtotal)}</span>
                   </div>
                   {summary.discount > 0 && (
                     <div className="flex justify-between text-green-400">
                       <span>Discount</span>
-                      <span>-${summary.discount.toFixed(2)}</span>
+                      <span>-{useCurrencyLocaleStore.getState().formatPrice(summary.discount)}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-white/60">
                     <span>Shipping</span>
-                    <span>{summary.shipping === 0 ? 'Free' : `$${summary.shipping.toFixed(2)}`}</span>
+                    <span>{summary.shipping === 0 ? 'Free' : useCurrencyLocaleStore.getState().formatPrice(summary.shipping)}</span>
                   </div>
                   <div className="flex justify-between text-white/60">
                     <span>Tax</span>
-                    <span>${summary.tax.toFixed(2)}</span>
+                    <span>{useCurrencyLocaleStore.getState().formatPrice(summary.tax)}</span>
                   </div>
                 </div>
 
                 {/* Total */}
                 <div className="flex justify-between text-base md:text-lg font-medium pt-2 border-t border-white/10">
                   <span>Total</span>
-                  <span>${summary.total.toFixed(2)}</span>
+                  <span>{useCurrencyLocaleStore.getState().formatPrice(summary.total)}</span>
                 </div>
 
                 {/* Free Shipping Progress */}
                 {summary.shipping > 0 && (
                   <div className="space-y-2">
                     <p className="text-xs text-white/40 text-center">
-                      Add ${(150 - summary.subtotal).toFixed(2)} more for free shipping
+                      Add {useCurrencyLocaleStore.getState().formatPrice(150 - summary.subtotal)} more for free shipping
                     </p>
                     <div className="h-1.5 md:h-1 bg-white/10 rounded-full overflow-hidden">
                       <motion.div 

@@ -25,6 +25,7 @@ import {
   Hash,
 } from 'lucide-react';
 import { useUIState } from '@/contexts/UIStateContext';
+import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 
 interface User {
   id: string;
@@ -774,7 +775,7 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                               {selectedUser.affiliate_code && <InfoItem label="Affiliate Code" value={selectedUser.affiliate_code} />}
                               {selectedUser.referred_by_code && <InfoItem label="Referred By" value={selectedUser.referred_by_code} />}
                               {selectedUser.commission_balance && (
-                                <InfoItem icon={DollarSign} label="Commission Balance" value={`$${selectedUser.commission_balance}`} />
+                                <InfoItem icon={DollarSign} label="Commission Balance" value={useCurrencyLocaleStore.getState().formatPrice(Number(selectedUser.commission_balance))} />
                               )}
                             </div>
 

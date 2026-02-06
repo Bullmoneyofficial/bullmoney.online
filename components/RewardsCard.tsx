@@ -5,6 +5,7 @@ import {
   X, Award, Gift, Star, Crown, Zap, Check, RefreshCw, TrendingUp,
   CreditCard, Sparkles, ShoppingBag, DollarSign, Trophy
 } from "lucide-react";
+import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 
 // ============================================================================
 // REWARDS CARD — Real Credit Card Style with Bullmoney Branding
@@ -59,6 +60,7 @@ const TIER_CONFIG: Record<string, { color: string; cardBg: string; icon: React.R
 };
 
 export default function RewardsCard({ isOpen, onClose, userEmail }: RewardsCardProps) {
+  const { formatPrice } = useCurrencyLocaleStore();
   const [rewards, setRewards] = useState<RewardsData | null>(null);
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -289,7 +291,7 @@ export default function RewardsCard({ isOpen, onClose, userEmail }: RewardsCardP
                 <div className="grid grid-cols-4 gap-2 mb-4">
                   <div className="bg-white/5 rounded-xl p-3 text-center border border-white/5">
                     <ShoppingBag className="w-4 h-4 mx-auto mb-1" style={{ color: "rgba(96, 165, 250, 0.7)" }} />
-                    <p className="text-white font-bold text-sm">${(rewards?.total_spent || 0).toFixed(0)}</p>
+                    <p className="text-white font-bold text-sm">{formatPrice(rewards?.total_spent || 0)}</p>
                     <p className="text-white/40 text-[8px] uppercase">Spent</p>
                   </div>
                   <div className="bg-white/5 rounded-xl p-3 text-center border border-white/5">
@@ -317,7 +319,7 @@ export default function RewardsCard({ isOpen, onClose, userEmail }: RewardsCardP
                       <div>
                         <p className="text-white text-xs font-medium">Next Punch</p>
                         <p className="text-white/50 text-[10px]">
-                          Spend <span className="font-bold" style={{ color: "rgb(96, 165, 250)" }}>${amountToNextPunch.toFixed(0)}</span> more
+                          Spend <span className="font-bold" style={{ color: "rgb(96, 165, 250)" }}>{formatPrice(amountToNextPunch)}</span> more
                         </p>
                       </div>
                     </div>
@@ -333,7 +335,7 @@ export default function RewardsCard({ isOpen, onClose, userEmail }: RewardsCardP
                   <p className="text-white/40 text-[10px] uppercase tracking-wider mb-2 font-medium">How It Works</p>
                   <div className="grid grid-cols-2 gap-2 text-[10px]">
                     {[
-                      { icon: <ShoppingBag className="w-3 h-3" />, text: "$25 = 1 punch" },
+                      { icon: <ShoppingBag className="w-3 h-3" />, text: `${formatPrice(25)} = 1 punch` },
                       { icon: <Check className="w-3 h-3" />, text: "20 punches = reward" },
                       { icon: <Gift className="w-3 h-3" />, text: "Free item at checkout" },
                       { icon: <TrendingUp className="w-3 h-3" />, text: "Tier up for perks" },

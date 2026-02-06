@@ -84,7 +84,20 @@ function CircularProductRow({ products, rowHeight, itemsPerRow, bend, gap, rowIn
   const isPausedRef = useRef(false);
   const isVisibleRef = useRef(true);
   const isMobileRef = useRef(false);
-  const lastUpdateTimeRef = useRef(0);
+  const lastCurveUpdateRef = useRef(0);
+  const cachedRowRectRef = useRef<{ left: number; width: number; height: number } | null>(null);
+  const curveNeedsUpdateRef = useRef(true);
+
+  // --- Swipe / drag state ---
+  const isDraggingRef = useRef(false);
+  const dragStartXRef = useRef(0);
+  const dragScrollStartRef = useRef(0);
+  const dragDistanceRef = useRef(0);
+  const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const velocityRef = useRef(0);
+  const lastDragXRef = useRef(0);
+  const lastDragTimeRef = useRef(0);
+  const momentumRef = useRef<number | null>(null);
 
   // Detect mobile device
   useEffect(() => {
@@ -96,20 +109,27 @@ function CircularProductRow({ products, rowHeight, itemsPerRow, bend, gap, rowIn
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const updateCurve = useCallback(() => {
+  const updateCurve = useCallback((forceUpdate = false) => {
     const row = rowRef.current;
     if (!row) return;
 
-    // Throttle updates on mobile for better performance
+    // On mobile, throttle curve updates to ~20fps (every 50ms) to avoid jank
+    // On desktop, allow up to ~60fps
     const now = performance.now();
-    if (isMobileRef.current && now - lastUpdateTimeRef.current < 32) { // ~30fps on mobile
+    const throttleMs = isMobileRef.current ? 50 : 16;
+    if (!forceUpdate && now - lastCurveUpdateRef.current < throttleMs) {
       return;
     }
-    lastUpdateTimeRef.current = now;
+    lastCurveUpdateRef.current = now;
 
-    const rowRect = row.getBoundingClientRect();
+    // Cache row rect to avoid layout thrashing — only re-measure on resize/force
+    if (!cachedRowRectRef.current || forceUpdate) {
+      const rowRect = row.getBoundingClientRect();
+      cachedRowRectRef.current = { left: rowRect.left, width: rowRect.width, height: rowRect.height };
+    }
+    const rowRect = cachedRowRectRef.current;
+
     const centerX = rowRect.left + rowRect.width / 2;
-    const halfWidth = Math.max(rowRect.width / 2, 1);
     const direction = bend >= 0 ? -1 : 1;
     const absBend = Math.abs(bend);
 
@@ -130,20 +150,31 @@ function CircularProductRow({ products, rowHeight, itemsPerRow, bend, gap, rowIn
     const pxToWorld = viewportWidth / rowRect.width;
     const worldToPx = rowRect.width / viewportWidth;
 
+    // On mobile, use offsetLeft-based calculation to avoid per-item getBoundingClientRect
+    const scrollLeft = row.scrollLeft;
     itemRefs.current.forEach((item) => {
       if (!item) return;
-      const rect = item.getBoundingClientRect();
-      const itemCenterX = rect.left + rect.width / 2;
-      const xPx = itemCenterX - centerX;
+      let xPx: number;
+      if (isMobileRef.current) {
+        // Use offsetLeft to avoid costly getBoundingClientRect per item
+        const itemCenterX = item.offsetLeft + item.offsetWidth / 2 - scrollLeft + rowRect.left;
+        xPx = itemCenterX - centerX;
+      } else {
+        const rect = item.getBoundingClientRect();
+        const itemCenterX = rect.left + rect.width / 2;
+        xPx = itemCenterX - centerX;
+      }
       const xWorld = xPx * pxToWorld;
-      const effectiveX = Math.min(Math.abs(xWorld), H);
+      // Clamp to circle radius R (not half-viewport H) so edge items
+      // continue along the arc instead of snapping flat
+      const effectiveX = Math.min(Math.abs(xWorld), R * 0.99);
       const arcWorld = R - Math.sqrt(Math.max(R * R - effectiveX * effectiveX, 0));
       const arcPx = arcWorld * worldToPx;
       const rotationRad = Math.asin(Math.min(effectiveX / R, 1));
       const rotationDeg = (rotationRad * 180) / Math.PI;
       const y = direction * arcPx;
       const rotate = direction * Math.sign(xWorld) * rotationDeg;
-      item.style.transform = `translate3d(0, ${y.toFixed(2)}px, 0) rotate(${rotate.toFixed(2)}deg)`;
+      item.style.transform = `translate3d(0, ${y.toFixed(1)}px, 0) rotate(${rotate.toFixed(1)}deg)`;
     });
   }, [bend, rowHeight]);
 
@@ -153,15 +184,28 @@ function CircularProductRow({ products, rowHeight, itemsPerRow, bend, gap, rowIn
     if (!row) return;
     const observer = new IntersectionObserver(
       ([entry]) => { isVisibleRef.current = entry.isIntersecting; },
-      { rootMargin: '100px 0px' }
+      { rootMargin: '200px 0px' }
     );
     observer.observe(row);
     return () => observer.disconnect();
   }, []);
 
+  // Single unified rAF loop for curve updates — driven by scroll changes, not every frame
   useEffect(() => {
+    const row = rowRef.current;
+    if (!row) return;
+    let lastScrollLeft = -1;
+
     const loop = () => {
-      if (isVisibleRef.current) updateCurve();
+      if (isVisibleRef.current) {
+        // Only recalculate curve when scroll position actually changed
+        const currentScroll = row.scrollLeft;
+        if (currentScroll !== lastScrollLeft || curveNeedsUpdateRef.current) {
+          lastScrollLeft = currentScroll;
+          curveNeedsUpdateRef.current = false;
+          updateCurve();
+        }
+      }
       rafRef.current = window.requestAnimationFrame(loop);
     };
 
@@ -173,23 +217,24 @@ function CircularProductRow({ products, rowHeight, itemsPerRow, bend, gap, rowIn
     };
   }, [updateCurve]);
 
+  // Invalidate cached row rect on resize
   useEffect(() => {
     const row = rowRef.current;
     if (!row) return;
 
-    const handleUpdate = () => updateCurve();
-    const resizeObserver = new ResizeObserver(handleUpdate);
+    const handleResize = () => {
+      cachedRowRectRef.current = null;
+      curveNeedsUpdateRef.current = true;
+      updateCurve(true);
+    };
+    const resizeObserver = new ResizeObserver(handleResize);
 
     resizeObserver.observe(row);
-    row.addEventListener('scroll', handleUpdate, { passive: true });
-    window.addEventListener('resize', handleUpdate);
+    window.addEventListener('resize', handleResize);
 
     return () => {
       resizeObserver.disconnect();
-      row.removeEventListener('scroll', handleUpdate);
-    // Reduce speed on mobile for smoother performance
-    const baseSpeed = Math.max(20, Math.round(cardWidth * 0.25));
-    const pixelsPerSecond = isMobileRef.current ? baseSpeed * 0.6 : baseSpeed
+      window.removeEventListener('resize', handleResize);
     };
   }, [updateCurve]);
 
@@ -203,22 +248,125 @@ function CircularProductRow({ products, rowHeight, itemsPerRow, bend, gap, rowIn
   const repeatedProducts = Array.from({ length: repeatCount }, () => products).flat();
   const compact = itemsPerRow >= 6;
 
+  // --- Swipe / drag handling ---
+  const handleDragStart = useCallback((clientX: number) => {
+    const row = rowRef.current;
+    if (!row) return;
+    isDraggingRef.current = true;
+    dragStartXRef.current = clientX;
+    dragScrollStartRef.current = row.scrollLeft;
+    dragDistanceRef.current = 0;
+    velocityRef.current = 0;
+    lastDragXRef.current = clientX;
+    lastDragTimeRef.current = performance.now();
+    isPausedRef.current = true;
+    // Cancel any pending resume or momentum
+    if (resumeTimerRef.current) { clearTimeout(resumeTimerRef.current); resumeTimerRef.current = null; }
+    if (momentumRef.current !== null) { cancelAnimationFrame(momentumRef.current); momentumRef.current = null; }
+  }, []);
+
+  const handleDragMove = useCallback((clientX: number) => {
+    if (!isDraggingRef.current) return;
+    const row = rowRef.current;
+    if (!row) return;
+    const dx = dragStartXRef.current - clientX;
+    dragDistanceRef.current = Math.abs(dx);
+    row.scrollLeft = dragScrollStartRef.current + dx;
+    // Track velocity for momentum
+    const now = performance.now();
+    const dt = now - lastDragTimeRef.current;
+    if (dt > 0) {
+      velocityRef.current = (lastDragXRef.current - clientX) / dt; // px per ms
+    }
+    lastDragXRef.current = clientX;
+    lastDragTimeRef.current = now;
+  }, []);
+
+  const handleDragEnd = useCallback(() => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    const row = rowRef.current;
+    if (!row) return;
+
+    // Apply momentum scroll
+    let v = velocityRef.current * 16; // convert to px/frame (~16ms)
+    const friction = 0.95;
+    const applyMomentum = () => {
+      if (Math.abs(v) < 0.5) {
+        // Momentum done — sync auto-scroll position and resume
+        autoScrollPosRef.current = row.scrollLeft;
+        resumeTimerRef.current = setTimeout(() => { isPausedRef.current = false; }, 2000);
+        return;
+      }
+      row.scrollLeft += v;
+      v *= friction;
+      momentumRef.current = requestAnimationFrame(applyMomentum);
+    };
+    if (Math.abs(velocityRef.current) > 0.1) {
+      momentumRef.current = requestAnimationFrame(applyMomentum);
+    } else {
+      // No significant velocity — just sync and resume
+      autoScrollPosRef.current = row.scrollLeft;
+      resumeTimerRef.current = setTimeout(() => { isPausedRef.current = false; }, 2000);
+    }
+  }, []);
+
+  // Mouse drag handlers
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    // Only left button for mouse
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    handleDragStart(e.clientX);
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  }, [handleDragStart]);
+
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    handleDragMove(e.clientX);
+  }, [handleDragMove]);
+
+  const onPointerUp = useCallback(() => {
+    handleDragEnd();
+  }, [handleDragEnd]);
+
+  // Prevent clicks on products if the user just dragged
+  const onClickCapture = useCallback((e: React.MouseEvent) => {
+    if (dragDistanceRef.current > 5) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+  }, []);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+      if (momentumRef.current !== null) cancelAnimationFrame(momentumRef.current);
+    };
+  }, []);
+
+  // Auto-scroll loop — reduced speed on mobile for smoother experience
   useEffect(() => {
     const row = rowRef.current;
     if (!row) return;
 
     let lastTime = 0;
-    const pixelsPerSecond = Math.max(20, Math.round(cardWidth * 0.25));
+    const baseSpeed = Math.max(20, Math.round(cardWidth * 0.25));
+    const pixelsPerSecond = isMobileRef.current ? baseSpeed * 0.5 : baseSpeed;
 
     const loop = (time: number) => {
       if (!lastTime) lastTime = time;
-      const delta = time - lastTime;
+      const delta = Math.min(time - lastTime, 50); // Cap delta to avoid big jumps
       lastTime = time;
 
       const maxScroll = row.scrollWidth - row.clientWidth;
       if (maxScroll > 0 && !isPausedRef.current && isVisibleRef.current) {
-        autoScrollPosRef.current = (autoScrollPosRef.current + (pixelsPerSecond * delta) / 1000) % maxScroll;
-        row.scrollLeft = autoScrollPosRef.current;
+        autoScrollPosRef.current += (pixelsPerSecond * delta) / 1000;
+        // Seamless infinite loop: snap back by one product-set width
+        // so there's no visible jump (repeated content is identical)
+        const singleSetWidth = products.length * (cardWidth + cardGap);
+        if (singleSetWidth > 0 && autoScrollPosRef.current >= singleSetWidth) {
+          autoScrollPosRef.current -= singleSetWidth;
+        }
+        row.scrollLeft = Math.min(autoScrollPosRef.current, maxScroll);
       }
 
       autoScrollRef.current = window.requestAnimationFrame(loop);
@@ -230,17 +378,22 @@ function CircularProductRow({ products, rowHeight, itemsPerRow, bend, gap, rowIn
         window.cancelAnimationFrame(autoScrollRef.current);
       }
     };
-  }, [cardWidth, repeatedProducts.length]);
+  }, [cardWidth, cardGap, products.length, repeatedProducts.length]);
 
   return (
     <div
       ref={rowRef}
-      className="circular-product-row relative w-full overflow-x-hidden overflow-y-visible scrollbar-hide"
-      style={{ height: `${rowHeight}px` }}
-      onMouseEnter={() => { isPausedRef.current = true; }}
-      onMouseLeave={() => { isPausedRef.current = false; }}
+      className="circular-product-row relative w-full overflow-x-auto overflow-y-visible scrollbar-hide select-none"
+      style={{ height: `${rowHeight}px`, contain: 'layout style', willChange: 'auto', cursor: isDraggingRef.current ? 'grabbing' : 'grab' }}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
+      onClickCapture={onClickCapture}
+      onMouseEnter={() => { if (!isDraggingRef.current) isPausedRef.current = true; }}
+      onMouseLeave={() => { if (!isDraggingRef.current) { isPausedRef.current = false; } handleDragEnd(); }}
       onTouchStart={() => { isPausedRef.current = true; }}
-      onTouchEnd={() => { setTimeout(() => { isPausedRef.current = false; }, 300); }}
+      onTouchEnd={() => { setTimeout(() => { if (!isDraggingRef.current) isPausedRef.current = false; }, 300); }}
     >
       <HoverEffect
         items={repeatedProducts}

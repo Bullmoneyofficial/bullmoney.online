@@ -136,14 +136,33 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   // ------------------------------------------------------------------
   // ✅ MODIFIED: The logic here is made robust to handle array or object response
   // ------------------------------------------------------------------
+  const safeFetchJson = async (url: string, fallback: any = []) => {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) {
+        console.warn(`⚠️ ${url} returned ${res.status}`);
+        return fallback;
+      }
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        console.warn(`⚠️ ${url} returned non-JSON content-type: ${contentType}`);
+        return fallback;
+      }
+      return await res.json();
+    } catch (e) {
+      console.warn(`⚠️ ${url} fetch failed:`, e);
+      return fallback;
+    }
+  };
+
   const refreshAll = async () => {
     dispatch({ type: "SET_LOADING", payload: true });
 
     try {
         const [products, heroDataRaw, categories] = await Promise.all([
-            fetch("/api/products").then((r) => r.json()),
-            fetch("/api/hero").then((r) => r.json()), // heroDataRaw can be [] or {}
-            fetch("/api/categories").then((r) => r.json()),
+            safeFetchJson("/api/products", []),
+            safeFetchJson("/api/hero", {}), // heroDataRaw can be [] or {}
+            safeFetchJson("/api/categories", []),
         ]);
         
         // --- 🔎 Robustly determine the single hero object ---

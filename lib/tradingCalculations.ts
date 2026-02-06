@@ -446,15 +446,20 @@ export function calculateComprehensiveStats(
 }
 
 /**
- * Format currency
+ * Format currency - uses global currency store
  */
-export function formatCurrency(value: number, currency: string = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
+export function formatCurrency(value: number, _currency?: string): string {
+  try {
+    const { useCurrencyLocaleStore } = require('@/stores/currency-locale-store');
+    return useCurrencyLocaleStore.getState().formatPrice(value);
+  } catch {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  }
 }
 
 /**

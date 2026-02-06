@@ -71,7 +71,7 @@ export const HoverEffect = <T,>({
             {...wrapperProps}
             key={key}
             className={wrapperClass}
-            style={getItemStyle?.(item, idx)}
+            style={{ ...getItemStyle?.(item, idx), overflow: 'visible', zIndex: hoveredIndex === idx ? 50 : 1, position: 'relative' as const }}
             ref={(el: HTMLElement | null) => {
               onItemRef?.(idx, el as HTMLDivElement | null);
             }}
@@ -96,7 +96,7 @@ export const HoverEffect = <T,>({
                 />
               )}
             </AnimatePresence>
-            <div key={`content-${key}`} className="relative z-20 h-full w-full">{content}</div>
+            <div key={`content-${key}`} className="relative z-20 h-full w-full" style={{ zIndex: hoveredIndex === idx ? 9990 : 20 }}>{content}</div>
           </Wrapper>
         );
       })}

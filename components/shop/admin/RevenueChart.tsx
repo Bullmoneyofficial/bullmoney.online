@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import type { RevenueDataPoint } from '@/types/store';
+import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 
 // ============================================================================
 // REVENUE CHART - SIMPLE SVG LINE CHART
@@ -50,7 +51,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
   const yLabels = Array.from({ length: 5 }, (_, i) => {
     const value = minRevenue + (range * (4 - i)) / 4;
     return {
-      value: `$${value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value.toFixed(0)}`,
+      value: useCurrencyLocaleStore.getState().formatPrice(value),
       y: padding.top + (chartHeight * i) / 4,
     };
   });

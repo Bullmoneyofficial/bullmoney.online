@@ -3,6 +3,7 @@
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useShop, Product, Category } from "./ShopContext";
+import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 import AdminLoginModal from "./AdminLoginModal";
 import AdminPanel from "./AdminPanel";
 import CountUp from "@/components/CountUp";
@@ -317,6 +318,7 @@ export default function ProductsSection() {
     toggleVisibility,
     deleteProduct,
   } = useShop();
+  const { formatPrice } = useCurrencyLocaleStore();
 
   const [filters, setFilters] = useState<Filters>({
     search: "",
@@ -582,7 +584,7 @@ export default function ProductsSection() {
                                     
                                     <div className="flex items-center gap-4 mb-8">
                                         <span className="text-3xl font-bold text-transparent bg-clip-text bg-linear-to-r from-indigo-400 to-white">
-                                            ${formatPriceDisplay(p.price)}
+                                            {formatPrice(Number(p.price))}
                                         </span>
                                     </div>
 

@@ -30,6 +30,8 @@ import EmailAdminPanel from "@/components/EmailAdminPanel";
 import StoreAnalyticsPanel from "@/components/StoreAnalyticsPanel";
 import StorePromoManager from "@/components/StorePromoManager";
 import RewardsAdminPanel from "@/components/RewardsAdminPanel";
+import NewsletterMessagesPanel from "@/components/NewsletterMessagesPanel";
+import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 
 // Generate a reasonably unique id when inserting rows from the client
 const safeId = () =>
@@ -259,7 +261,7 @@ export function AdminHubModal({
     "products" | "services" | "livestream" | "analysis" | "recruits" | "course" | "affiliate" | "email" | "faq" | "store"
   >("products");
   const [affiliateView, setAffiliateView] = useState<"calculator" | "admin">("calculator");
-  const [storeView, setStoreView] = useState<"analytics" | "promos" | "rewards">("analytics");
+  const [storeView, setStoreView] = useState<"analytics" | "promos" | "rewards" | "messages">("analytics");
   const [busy, setBusy] = useState(false);
   const isSyncing = useRef(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -933,7 +935,7 @@ export function AdminHubModal({
             <div key={pid} className="space-y-2">
               <Row
                 title={`${p.name} (${p.category || "N/A"})`}
-                subtitle={`$${p.price ?? 0} • Visible: ${p.visible ? "yes" : "no"}`}
+                subtitle={`${useCurrencyLocaleStore.getState().formatPrice(p.price ?? 0)} • Visible: ${p.visible ? "yes" : "no"}`}
                 meta={p.buy_url || p.buyUrl ? "Buy URL" : undefined}
                 onEdit={() =>
                   setProductForm({
@@ -1007,7 +1009,7 @@ export function AdminHubModal({
             <div key={vid} className="space-y-2">
               <Row
                 title={`${p.name}`}
-                subtitle={`$${p.price ?? 0} • Coming soon: ${p.coming_soon ? "yes" : "no"}`}
+                subtitle={`${useCurrencyLocaleStore.getState().formatPrice(p.price ?? 0)} • Coming soon: ${p.coming_soon ? "yes" : "no"}`}
                 meta={`Plans: ${Array.isArray(p.plan_options) ? p.plan_options.length : 0}`}
                 onEdit={() =>
                   setVipForm({
@@ -1992,10 +1994,21 @@ export function AdminHubModal({
                           >
                             Rewards
                           </button>
+                          <button
+                            onClick={() => setStoreView?.("messages")}
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                              storeView === "messages"
+                                ? "bg-white text-black"
+                                : "text-slate-400 hover:text-slate-300"
+                            }`}
+                          >
+                            Messages
+                          </button>
                         </div>
                         {(storeView || "analytics") === "analytics" && <StoreAnalyticsPanel />}
                         {storeView === "promos" && <StorePromoManager />}
                         {storeView === "rewards" && <RewardsAdminPanel />}
+                        {storeView === "messages" && <NewsletterMessagesPanel />}
                       </div>
                     )}
                     {activeTab === "affiliate" && (

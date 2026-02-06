@@ -7,6 +7,7 @@ import { ShoppingBag, ArrowRight, Zap, Star, TrendingUp, TrendingDown, Copy, Che
 import { CardBody, CardContainer, CardItem } from '@/components/ui/3d-card';
 import { HoverBorderGradient } from '@/components/ui/hover-border-gradient';
 import { useProductsModalUI } from '@/contexts/UIStateContext';
+import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 
 import TextType from '@/components/TextType';
 import CountUp from '@/components/CountUp';
@@ -114,20 +115,9 @@ const CARD_POSITIONS = [
 
 const CRYPTO_SYMBOLS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'XRPUSDT'];
 
-// USD Formatter
+// USD Formatter - uses store currency
 const formatUSD = (value: number) => {
-  if (value >= 1000) {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0,
-    }).format(value);
-  }
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 2,
-  }).format(value);
+  return useCurrencyLocaleStore.getState().formatPrice(value);
 };
 
 // ============================================================================
@@ -227,7 +217,8 @@ const PromoCodePopup = ({
                 <CardItem translateZ="40" className="w-full">
                   <HoverBorderGradient
                     containerClassName="rounded-2xl w-full"
-                    className="p-0 bg-transparent w-full"
+                    className="p-0 w-full"
+                    style={{ backgroundColor: '#000000' }}
                     as="div"
                   >
                     <motion.div
@@ -239,8 +230,8 @@ const PromoCodePopup = ({
                       onClick={(e) => e.stopPropagation()}
                       onMouseMove={handleMouseMove}
                       onMouseLeave={handleMouseLeave}
-                      className="relative w-full overflow-hidden rounded-2xl bg-black"
-                      style={{ transition: 'transform 0.15s ease-out' }}
+                      className="relative w-full overflow-hidden rounded-2xl"
+                      style={{ transition: 'transform 0.15s ease-out', backgroundColor: '#000000' }}
                     >
                       {/* Subtle top highlight line */}
                       <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
@@ -364,7 +355,8 @@ const PromoCodePopup = ({
               exit={{ opacity: 0, scale: 0.96, y: 24 }}
               transition={{ type: 'spring', damping: 30, stiffness: 320, mass: 0.7 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-sm overflow-hidden rounded-2xl bg-black border border-white/[0.08] shadow-2xl"
+              className="relative w-full max-w-sm overflow-hidden rounded-2xl border border-white/[0.08] shadow-2xl"
+              style={{ backgroundColor: '#000000' }}
             >
               <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
 
@@ -688,7 +680,7 @@ const FloatingProductCard = ({
           {/* Price tag with real data */}
           <div className="absolute bottom-2 left-2 right-2 px-2 py-1.5 rounded-lg bg-black/80 border border-white/10 z-2">
             <div className="text-[7px] md:text-[9px] text-white/80 truncate font-medium"><TextType text={productName} typingSpeed={Math.max(5, 25 - productName.length)} showCursor={false} loop={false} as="span" /></div>
-            <div className="text-[10px] md:text-xs text-white font-bold">$<CountUp to={productPrice} from={0} duration={1.5} separator="," className="" /></div>
+            <div className="text-[10px] md:text-xs text-white font-bold">{useCurrencyLocaleStore.getState().formatPrice(productPrice)}</div>
           </div>
         </div>
       </motion.div>

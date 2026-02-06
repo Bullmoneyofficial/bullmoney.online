@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useEffect, useRef } from 'react';
+import { useMemo, useEffect, useRef, useCallback } from 'react';
 import type { ProductWithDetails } from '@/types/store';
 import GlassSurface, { type GlassSurfaceProps } from '@/components/GlassSurface';
 import { ProductCard } from '@/components/shop/ProductCard';
@@ -73,7 +73,17 @@ function GlassProductRow({ products, rowHeight, gap, scrollSpeed, direction, gla
   const isPausedRef = useRef(false);
   const isVisibleRef = useRef(true);
   const isMobileRef = useRef(false);
-  const lastUpdateTimeRef = useRef(0);
+
+  // --- Swipe / drag state ---
+  const isDraggingRef = useRef(false);
+  const dragStartXRef = useRef(0);
+  const dragScrollStartRef = useRef(0);
+  const dragDistanceRef = useRef(0);
+  const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const velocityRef = useRef(0);
+  const lastDragXRef = useRef(0);
+  const lastDragTimeRef = useRef(0);
+  const momentumRef = useRef<number | null>(null);
 
   const repeatCount = products.length < 6 ? 4 : 3;
   const repeatedProducts = Array.from({ length: repeatCount }, () => products).flat();
@@ -96,7 +106,7 @@ function GlassProductRow({ products, rowHeight, gap, scrollSpeed, direction, gla
     if (!row) return;
     const observer = new IntersectionObserver(
       ([entry]) => { isVisibleRef.current = entry.isIntersecting; },
-      { rootMargin: '100px 0px' }
+      { rootMargin: '200px 0px' }
     );
     observer.observe(row);
     return () => observer.disconnect();
@@ -107,22 +117,13 @@ function GlassProductRow({ products, rowHeight, gap, scrollSpeed, direction, gla
     if (!row) return;
 
     let lastTime = 0;
-    // Reduce speed on mobile for smoother performance
+    // Reduce speed on mobile for smoother scrolling
     const baseSpeed = Math.max(16, scrollSpeed);
-    const speedPx = isMobileRef.current ? baseSpeed * 0.5 : baseSpeed;
-    // Throttle mobile updates to ~30fps instead of 60fps
-    const mobileThrottle = isMobileRef.current ? 32 : 0;
+    const speedPx = isMobileRef.current ? baseSpeed * 0.4 : baseSpeed;
 
     const loop = (time: number) => {
       if (!lastTime) lastTime = time;
-      const delta = time - lastTime;
-
-      // Throttle updates on mobile
-      if (isMobileRef.current && time - lastUpdateTimeRef.current < mobileThrottle) {
-        autoScrollRef.current = window.requestAnimationFrame(loop);
-        return;
-      }
-      lastUpdateTimeRef.current = time;
+      const delta = Math.min(time - lastTime, 50); // Cap delta to avoid teleporting on tab switch
       lastTime = time;
 
       const maxScroll = row.scrollWidth - row.clientWidth;
@@ -143,23 +144,106 @@ function GlassProductRow({ products, rowHeight, gap, scrollSpeed, direction, gla
     };
   }, [direction, scrollSpeed, repeatedProducts.length]);
 
+  // --- Swipe / drag handling ---
+  const handleDragStart = useCallback((clientX: number) => {
+    const row = rowRef.current;
+    if (!row) return;
+    isDraggingRef.current = true;
+    dragStartXRef.current = clientX;
+    dragScrollStartRef.current = row.scrollLeft;
+    dragDistanceRef.current = 0;
+    velocityRef.current = 0;
+    lastDragXRef.current = clientX;
+    lastDragTimeRef.current = performance.now();
+    isPausedRef.current = true;
+    if (resumeTimerRef.current) { clearTimeout(resumeTimerRef.current); resumeTimerRef.current = null; }
+    if (momentumRef.current !== null) { cancelAnimationFrame(momentumRef.current); momentumRef.current = null; }
+  }, []);
+
+  const handleDragMove = useCallback((clientX: number) => {
+    if (!isDraggingRef.current) return;
+    const row = rowRef.current;
+    if (!row) return;
+    const dx = dragStartXRef.current - clientX;
+    dragDistanceRef.current = Math.abs(dx);
+    row.scrollLeft = dragScrollStartRef.current + dx;
+    const now = performance.now();
+    const dt = now - lastDragTimeRef.current;
+    if (dt > 0) {
+      velocityRef.current = (lastDragXRef.current - clientX) / dt;
+    }
+    lastDragXRef.current = clientX;
+    lastDragTimeRef.current = now;
+  }, []);
+
+  const handleDragEnd = useCallback(() => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    const row = rowRef.current;
+    if (!row) return;
+
+    let v = velocityRef.current * 16;
+    const friction = 0.95;
+    const applyMomentum = () => {
+      if (Math.abs(v) < 0.5) {
+        autoScrollPosRef.current = row.scrollLeft;
+        resumeTimerRef.current = setTimeout(() => { isPausedRef.current = false; }, 2000);
+        return;
+      }
+      row.scrollLeft += v;
+      v *= friction;
+      momentumRef.current = requestAnimationFrame(applyMomentum);
+    };
+    if (Math.abs(velocityRef.current) > 0.1) {
+      momentumRef.current = requestAnimationFrame(applyMomentum);
+    } else {
+      autoScrollPosRef.current = row.scrollLeft;
+      resumeTimerRef.current = setTimeout(() => { isPausedRef.current = false; }, 2000);
+    }
+  }, []);
+
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    handleDragStart(e.clientX);
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  }, [handleDragStart]);
+
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    handleDragMove(e.clientX);
+  }, [handleDragMove]);
+
+  const onPointerUp = useCallback(() => {
+    handleDragEnd();
+  }, [handleDragEnd]);
+
+  const onClickCapture = useCallback((e: React.MouseEvent) => {
+    if (dragDistanceRef.current > 5) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+      if (momentumRef.current !== null) cancelAnimationFrame(momentumRef.current);
+    };
+  }, []);
+
   return (
     <div
       ref={rowRef}
-      className="relative w-full overflow-x-hidden overflow-y-visible"
-      style={{ height: `${rowHeight}px` }}
-      onMouseEnter={() => {
-        isPausedRef.current = true;
-      }}
-      onMouseLeave={() => {
-        isPausedRef.current = false;
-      }}
-      onTouchStart={() => {
-        isPausedRef.current = true;
-      }}
-      onTouchEnd={() => {
-        isPausedRef.current = false;
-      }}
+      className="relative w-full overflow-x-auto overflow-y-visible scrollbar-hide select-none"
+      style={{ height: `${rowHeight}px`, contain: 'layout style', willChange: 'auto', cursor: isDraggingRef.current ? 'grabbing' : 'grab' }}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
+      onClickCapture={onClickCapture}
+      onMouseEnter={() => { if (!isDraggingRef.current) isPausedRef.current = true; }}
+      onMouseLeave={() => { if (!isDraggingRef.current) { isPausedRef.current = false; } handleDragEnd(); }}
+      onTouchStart={() => { isPausedRef.current = true; }}
+      onTouchEnd={() => { setTimeout(() => { if (!isDraggingRef.current) isPausedRef.current = false; }, 300); }}
     >
       <HoverEffect
         items={repeatedProducts}

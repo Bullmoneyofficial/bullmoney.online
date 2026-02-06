@@ -12,6 +12,7 @@ import { useProductsModalUI, useThemeSelectorModalUI, useAuthModalUI } from '@/c
 import dynamic from 'next/dynamic';
 import { StorePillNav } from './StorePillNav';
 import TextType from '@/components/TextType';
+import { LanguageToggle } from '@/components/LanguageToggle';
 
 // Lazy load modals - same as main navbar
 const AdminHubModal = dynamic(() => import('@/components/AdminHubModal'), { ssr: false });
@@ -193,18 +194,21 @@ export function StoreHeader() {
       />
       
       {/* Secondary Action Bar - Desktop only */}
-      <div className="fixed top-16 left-0 right-0 z-490 bg-black/80 backdrop-blur-sm border-b border-white/5 hidden lg:block">
+      <div className="fixed top-16 left-0 right-0 z-490 backdrop-blur-sm hidden lg:block" style={{ background: 'rgb(0,0,0)', borderBottom: '1px solid rgba(255,255,255,0.15)' }}>
         <div className="max-w-450 mx-auto px-6 h-12 flex items-center justify-between">
           {/* Left: Quick Actions */}
           <div className="flex items-center gap-2">
+            {/* 🌐 Language Toggle */}
+            <LanguageToggle variant="pill" dropDirection="down" dropAlign="left" />
+
             {/* Theme Picker Toggle */}
             <button
               onClick={toggleThemePicker}
-              className={`h-8 px-3 flex items-center gap-2 rounded-lg transition-colors text-xs ${
-                showThemePicker 
-                  ? 'bg-sky-500/20 text-sky-200 hover:bg-sky-500/30' 
-                  : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
-              }`}
+              className="h-8 px-3 flex items-center gap-2 rounded-lg transition-colors text-xs font-semibold"
+              style={showThemePicker 
+                ? { background: 'rgb(14,165,233)', color: 'rgb(255,255,255)', border: '1px solid rgb(14,165,233)' }
+                : { background: 'rgb(255,255,255)', color: 'rgb(0,0,0)', border: '1px solid rgb(255,255,255)' }
+              }
               title={showThemePicker ? 'Theme Picker: ON' : 'Theme Picker: OFF'}
             >
               <Palette className="w-3.5 h-3.5" />
@@ -215,11 +219,11 @@ export function StoreHeader() {
             {/* Ultimate Hub Toggle */}
             <button
               onClick={toggleUltimateHub}
-              className={`h-8 px-3 flex items-center gap-2 rounded-lg transition-colors text-xs ${
-                showUltimateHub 
-                  ? 'bg-sky-500/20 text-sky-200 hover:bg-sky-500/30' 
-                  : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
-              }`}
+              className="h-8 px-3 flex items-center gap-2 rounded-lg transition-colors text-xs font-semibold"
+              style={showUltimateHub 
+                ? { background: 'rgb(14,165,233)', color: 'rgb(255,255,255)', border: '1px solid rgb(14,165,233)' }
+                : { background: 'rgb(255,255,255)', color: 'rgb(0,0,0)', border: '1px solid rgb(255,255,255)' }
+              }
               title={showUltimateHub ? 'Ultimate Hub: ON' : 'Ultimate Hub: OFF'}
             >
               <Sparkles className="w-3.5 h-3.5" />
@@ -233,7 +237,8 @@ export function StoreHeader() {
             {/* Affiliates Button */}
             <button
               onClick={() => setAffiliateModalOpen(true)}
-              className="h-8 px-3 flex items-center gap-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-white/60 hover:text-white text-xs"
+              className="h-8 px-3 flex items-center gap-2 rounded-lg transition-colors text-xs font-semibold"
+              style={{ background: 'rgb(255,255,255)', color: 'rgb(0,0,0)', border: '1px solid rgb(255,255,255)' }}
             >
               <Users className="w-3.5 h-3.5" />
               <span><TextType text="Affiliates" typingSpeed={15} showCursor={false} loop={false} as="span" /></span>
@@ -242,7 +247,8 @@ export function StoreHeader() {
             {/* Products Button */}
             <button
               onClick={() => openProductsModal()}
-              className="h-8 px-3 flex items-center gap-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-white/60 hover:text-white text-xs"
+              className="h-8 px-3 flex items-center gap-2 rounded-lg transition-colors text-xs font-semibold"
+              style={{ background: 'rgb(255,255,255)', color: 'rgb(0,0,0)', border: '1px solid rgb(255,255,255)' }}
             >
               <Calendar className="w-3.5 h-3.5" />
               <span><TextType text="Products" typingSpeed={18} showCursor={false} loop={false} as="span" /></span>
@@ -251,7 +257,8 @@ export function StoreHeader() {
             {/* FAQ Button */}
             <button
               onClick={() => setFaqModalOpen(true)}
-              className="h-8 px-3 flex items-center gap-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-white/60 hover:text-white text-xs"
+              className="h-8 px-3 flex items-center gap-2 rounded-lg transition-colors text-xs font-semibold"
+              style={{ background: 'rgb(255,255,255)', color: 'rgb(0,0,0)', border: '1px solid rgb(255,255,255)' }}
             >
               <HelpCircle className="w-3.5 h-3.5" />
               <span><TextType text="FAQ" typingSpeed={25} showCursor={false} loop={false} as="span" /></span>
@@ -261,7 +268,8 @@ export function StoreHeader() {
             {isAuthenticated && recruit && (
               <button
                 onClick={() => setAccountManagerModalOpen(true)}
-                className="h-8 px-3 flex items-center gap-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-white/60 hover:text-white text-xs"
+                className="h-8 px-3 flex items-center gap-2 rounded-lg transition-colors text-xs font-semibold"
+                style={{ background: 'rgb(255,255,255)', color: 'rgb(0,0,0)', border: '1px solid rgb(255,255,255)' }}
                 title="Account Manager"
               >
                 <User className="w-3.5 h-3.5" />
@@ -273,7 +281,8 @@ export function StoreHeader() {
             {effectiveAdmin && (
               <button
                 onClick={() => setAdminModalOpen(true)}
-                className="h-8 px-3 flex items-center gap-2 rounded-lg bg-linear-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 hover:from-purple-500/30 hover:to-pink-500/30 transition-all text-purple-300 text-xs"
+                className="h-8 px-3 flex items-center gap-2 rounded-lg transition-all text-xs font-semibold"
+                style={{ background: 'rgb(168,85,247)', border: '1px solid rgb(168,85,247)', color: 'rgb(255,255,255)' }}
                 title="Admin Panel"
               >
                 <Settings className="w-3.5 h-3.5" />
@@ -293,20 +302,23 @@ export function StoreHeader() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setMobileMenuOpen(false)}
-              className="fixed inset-0 bg-black/70 z-600"
+              className="fixed inset-0 z-600"
+              style={{ background: 'rgba(0,0,0,0.7)' }}
             />
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed top-0 right-0 bottom-0 w-72 max-w-[80vw] bg-black border-l border-white/10 z-700 p-4 flex flex-col overflow-y-auto"
+              className="fixed top-0 right-0 bottom-0 w-72 max-w-[80vw] z-700 p-4 flex flex-col overflow-y-auto"
+              style={{ background: 'rgb(0,0,0)', borderLeft: '1px solid rgba(255,255,255,0.1)' }}
             >
               <div className="flex items-center justify-between mb-3">
-                <span className="text-lg font-light"><TextType text="Menu" typingSpeed={25} showCursor={false} loop={false} as="span" /></span>
+                <span className="text-lg font-light" style={{ color: 'rgb(255,255,255)' }}><TextType text="Menu" typingSpeed={25} showCursor={false} loop={false} as="span" /></span>
                 <button
                   onClick={() => setMobileMenuOpen(false)}
-                  className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/5 active:bg-white/10"
+                  className="h-8 w-8 flex items-center justify-center rounded-lg"
+                  style={{ background: 'rgba(255,255,255,0.05)', color: 'rgb(255,255,255)' }}
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -314,14 +326,15 @@ export function StoreHeader() {
 
               {/* Shop Categories */}
               <div className="mb-4">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-white/50 mb-2 px-1"><TextType text="Shop Categories" typingSpeed={15} showCursor={false} loop={false} as="span" /></h3>
+                <h3 className="text-xs font-semibold uppercase tracking-wider mb-2 px-1" style={{ color: 'rgba(255,255,255,0.7)' }}><TextType text="Shop Categories" typingSpeed={15} showCursor={false} loop={false} as="span" /></h3>
                 <div className="flex flex-wrap gap-1.5">
                   {STORE_CATEGORIES.map((cat) => (
                     <Link
                       key={cat.value}
                       href={cat.href}
                       onClick={() => setMobileMenuOpen(false)}
-                      className="px-3 py-1.5 rounded-full bg-white/10 text-xs font-medium hover:bg-white/20 transition-colors border border-white/5"
+                      className="px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
+                      style={{ background: 'rgb(255,255,255)', color: 'rgb(0,0,0)', border: '1px solid rgb(255,255,255)' }}
                     >
                       <TextType text={cat.label} typingSpeed={Math.max(8, 25 - cat.label.length)} showCursor={false} loop={false} as="span" />
                     </Link>
@@ -331,30 +344,32 @@ export function StoreHeader() {
 
               {/* Account Section */}
               {isAuthenticated && recruit ? (
-                <div className="mb-3 p-3 rounded-lg bg-white/5 border border-white/10">
+                <div className="mb-3 p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)' }}>
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                      <span className="text-sm font-medium uppercase">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.15)' }}>
+                      <span className="text-sm font-medium uppercase" style={{ color: 'rgb(255,255,255)' }}>
                         {recruit.email.charAt(0)}
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium truncate">{recruit.email}</p>
-                      <p className="text-[10px] text-white/40">Member</p>
+                      <p className="text-xs font-medium truncate" style={{ color: 'rgb(255,255,255)' }}>{recruit.email}</p>
+                      <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>Member</p>
                     </div>
                   </div>
                   <div className="flex gap-2">
                     <Link
                       href="/recruit"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex-1 h-7 flex items-center justify-center gap-1.5 rounded-md bg-white/10 text-xs hover:bg-white/20 transition-colors"
+                      className="flex-1 h-7 flex items-center justify-center gap-1.5 rounded-md text-xs transition-colors"
+                      style={{ background: 'rgba(255,255,255,0.15)', color: 'rgb(255,255,255)' }}
                     >
                       <User className="w-3 h-3" />
                       <TextType text="Profile" typingSpeed={20} showCursor={false} loop={false} as="span" />
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="flex-1 h-7 flex items-center justify-center gap-1.5 rounded-md bg-white/10 text-xs hover:bg-white/20 transition-colors"
+                      className="flex-1 h-7 flex items-center justify-center gap-1.5 rounded-md text-xs transition-colors"
+                      style={{ background: 'rgba(255,255,255,0.15)', color: 'rgb(255,255,255)' }}
                     >
                       <LogOut className="w-3 h-3" />
                       <TextType text="Logout" typingSpeed={20} showCursor={false} loop={false} as="span" />
@@ -365,7 +380,8 @@ export function StoreHeader() {
                 <Link
                   href="/login"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="mb-3 h-9 flex items-center justify-center gap-2 rounded-lg bg-white/10 border border-white/10 text-xs font-medium hover:bg-white/20 transition-colors"
+                  className="mb-3 h-9 flex items-center justify-center gap-2 rounded-lg text-xs font-medium transition-colors"
+                  style={{ background: 'rgb(255,255,255)', color: 'rgb(0,0,0)', border: 'none' }}
                 >
                   <User className="w-4 h-4" />
                   <TextType text="Sign In / Register" typingSpeed={12} showCursor={false} loop={false} as="span" />
@@ -379,9 +395,10 @@ export function StoreHeader() {
                     setMobileMenuOpen(false);
                     setAdminModalOpen(true);
                   }}
-                  className="mb-2 h-8 flex items-center justify-center gap-1.5 rounded-lg bg-linear-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-xs font-medium hover:from-purple-500/30 hover:to-pink-500/30 transition-all"
+                  className="mb-2 h-8 flex items-center justify-center gap-1.5 rounded-lg text-xs font-medium transition-all"
+                  style={{ background: 'linear-gradient(to bottom right, rgba(168,85,247,0.2), rgba(236,72,153,0.2))', border: '1px solid rgba(168,85,247,0.3)', color: 'rgb(216,180,254)' }}
                 >
-                  <Settings className="w-4 h-4 text-purple-300" />
+                  <Settings className="w-4 h-4" style={{ color: 'rgb(216,180,254)' }} />
                   <TextType text="Admin Panel" typingSpeed={15} showCursor={false} loop={false} as="span" />
                 </button>
               )}
@@ -393,25 +410,29 @@ export function StoreHeader() {
                     setMobileMenuOpen(false);
                     setAccountManagerModalOpen(true);
                   }}
-                  className="mb-2 h-8 flex items-center justify-center gap-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-medium hover:bg-white/10 transition-all"
+                  className="mb-2 h-8 flex items-center justify-center gap-1.5 rounded-lg text-xs font-medium transition-all"
+                  style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', color: 'rgb(255,255,255)' }}
                 >
-                  <User className="w-4 h-4" />
+                  <User className="w-4 h-4" style={{ color: 'rgb(255,255,255)' }} />
                   <TextType text="Account Manager" typingSpeed={12} showCursor={false} loop={false} as="span" />
                 </button>
               )}
               
               {/* Toggles Section - Mobile */}
-              <div className="space-y-1 mb-3 pb-3 border-b border-white/10">
-                <p className="text-[10px] text-white/40 px-3 mb-1 uppercase tracking-wider"><TextType text="Toggles" typingSpeed={20} showCursor={false} loop={false} as="span" /></p>
+              <div className="space-y-1 mb-3 pb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                <p className="text-[10px] px-3 mb-1 uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.6)' }}><TextType text="Toggles" typingSpeed={20} showCursor={false} loop={false} as="span" /></p>
                 
+                {/* 🌐 Language Selector */}
+                <LanguageToggle variant="row" dropDirection="down" />
+
                 {/* Theme Picker Toggle */}
                 <button
                   onClick={toggleThemePicker}
-                  className={`w-full flex items-center justify-between py-2 px-3 rounded-lg text-xs transition-colors ${
-                    showThemePicker 
-                      ? 'bg-sky-500/20 text-sky-200 hover:bg-sky-500/30' 
-                      : 'text-white/80 hover:bg-white/5 hover:text-white'
-                  }`}
+                  className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg text-xs font-semibold transition-colors"
+                  style={showThemePicker 
+                    ? { background: 'rgb(14,165,233)', color: 'rgb(255,255,255)' }
+                    : { background: 'rgb(255,255,255)', color: 'rgb(0,0,0)' }
+                  }
                 >
                   <div className="flex items-center gap-2">
                     <Palette className="w-4 h-4" />
@@ -423,11 +444,11 @@ export function StoreHeader() {
                 {/* Ultimate Hub Toggle */}
                 <button
                   onClick={toggleUltimateHub}
-                  className={`w-full flex items-center justify-between py-2 px-3 rounded-lg text-xs transition-colors ${
-                    showUltimateHub 
-                      ? 'bg-sky-500/20 text-sky-200 hover:bg-sky-500/30' 
-                      : 'text-white/80 hover:bg-white/5 hover:text-white'
-                  }`}
+                  className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg text-xs font-semibold transition-colors"
+                  style={showUltimateHub 
+                    ? { background: 'rgb(14,165,233)', color: 'rgb(255,255,255)' }
+                    : { background: 'rgb(255,255,255)', color: 'rgb(0,0,0)' }
+                  }
                 >
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4" />
@@ -438,8 +459,8 @@ export function StoreHeader() {
               </div>
               
               {/* Site Features - Mobile */}
-              <div className="space-y-0.5 mb-3 pb-3 border-b border-white/10">
-                <p className="text-[10px] text-white/40 px-3 mb-1 uppercase tracking-wider"><TextType text="Features" typingSpeed={18} showCursor={false} loop={false} as="span" /></p>
+              <div className="space-y-0.5 mb-3 pb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                <p className="text-[10px] px-3 mb-1 uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.6)' }}><TextType text="Features" typingSpeed={18} showCursor={false} loop={false} as="span" /></p>
                 
                 {/* Affiliates */}
                 <button
@@ -447,7 +468,8 @@ export function StoreHeader() {
                     setMobileMenuOpen(false);
                     setAffiliateModalOpen(true);
                   }}
-                  className="w-full flex items-center gap-2 py-2 px-3 rounded-lg text-xs text-white/80 hover:bg-white/5 hover:text-white active:bg-white/10 transition-colors"
+                  className="w-full flex items-center gap-2 py-2.5 px-3 rounded-lg text-xs font-semibold transition-colors"
+                  style={{ background: 'rgb(255,255,255)', color: 'rgb(0,0,0)' }}
                 >
                   <Users className="w-4 h-4" />
                   <TextType text="Affiliates" typingSpeed={15} showCursor={false} loop={false} as="span" />
@@ -459,7 +481,8 @@ export function StoreHeader() {
                     setMobileMenuOpen(false);
                     openProductsModal();
                   }}
-                  className="w-full flex items-center gap-2 py-2 px-3 rounded-lg text-xs text-white/80 hover:bg-white/5 hover:text-white active:bg-white/10 transition-colors"
+                  className="w-full flex items-center gap-2 py-2.5 px-3 rounded-lg text-xs font-semibold transition-colors"
+                  style={{ background: 'rgb(255,255,255)', color: 'rgb(0,0,0)' }}
                 >
                   <Calendar className="w-4 h-4" />
                   <TextType text="Products" typingSpeed={18} showCursor={false} loop={false} as="span" />
@@ -471,37 +494,20 @@ export function StoreHeader() {
                     setMobileMenuOpen(false);
                     setFaqModalOpen(true);
                   }}
-                  className="w-full flex items-center gap-2 py-2 px-3 rounded-lg text-xs text-white/80 hover:bg-white/5 hover:text-white active:bg-white/10 transition-colors"
+                  className="w-full flex items-center gap-2 py-2.5 px-3 rounded-lg text-xs font-semibold transition-colors"
+                  style={{ background: 'rgb(255,255,255)', color: 'rgb(0,0,0)' }}
                 >
                   <HelpCircle className="w-4 h-4" />
                   <TextType text="FAQ" typingSpeed={25} showCursor={false} loop={false} as="span" />
                 </button>
-              </div>
-              
-              {/* Main Site Navigation - Mobile */}
-              <div className="space-y-0.5 mb-3 pb-3 border-b border-white/10">
-                <p className="text-[10px] text-white/40 px-3 mb-1 uppercase tracking-wider"><TextType text="Site Navigation" typingSpeed={12} showCursor={false} loop={false} as="span" /></p>
-                {MAIN_NAV_BUTTONS.map((btn) => {
-                  const Icon = btn.icon;
-                  return (
-                    <Link
-                      key={btn.href}
-                      href={btn.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-2 py-2 px-3 rounded-lg text-xs text-white/80 hover:bg-white/5 hover:text-white active:bg-white/10 transition-colors"
-                    >
-                      <Icon className="w-4 h-4" />
-                      <TextType text={btn.label} typingSpeed={Math.max(10, 25 - btn.label.length)} showCursor={false} loop={false} as="span" />
-                    </Link>
-                  );
-                })}
               </div>
 
               {/* Back to Home */}
               <Link
                 href="/"
                 onClick={() => setMobileMenuOpen(false)}
-                className="mt-2 w-full h-9 flex items-center justify-center gap-1.5 rounded-lg border border-white/10 text-xs text-white/60 hover:text-white hover:bg-white/5 transition-colors"
+                className="mt-2 w-full h-9 flex items-center justify-center gap-1.5 rounded-lg text-xs transition-colors"
+                style={{ border: '1px solid rgba(255,255,255,0.3)', color: 'rgb(255,255,255)', background: 'rgb(0,0,0)' }}
               >
                 <Home className="w-3.5 h-3.5" />
                 <TextType text="Back to Home" typingSpeed={15} showCursor={false} loop={false} as="span" />
@@ -511,7 +517,8 @@ export function StoreHeader() {
               <Link
                 href="/store"
                 onClick={() => setMobileMenuOpen(false)}
-                className="mt-2 w-full h-9 flex items-center justify-center rounded-lg bg-white text-black text-sm font-medium hover:bg-white/90 active:scale-[0.98] transition-all"
+                className="mt-2 w-full h-9 flex items-center justify-center rounded-lg text-sm font-medium active:scale-[0.98] transition-all"
+                style={{ background: 'rgb(255,255,255)', color: 'rgb(0,0,0)' }}
               >
                 <TextType text="Shop Now" typingSpeed={18} showCursor={false} loop={false} as="span" />
               </Link>

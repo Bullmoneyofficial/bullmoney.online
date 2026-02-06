@@ -5,6 +5,7 @@
   cursor: grab;
   touch-action: pan-y;
   user-select: none;
+  contain: layout style paint;
 }
 
 .circular-gallery:active {
@@ -21,9 +22,26 @@
 .circular-product-row {
   position: relative;
   width: 100%;
+  contain: layout style;
 }
 
 .circular-product-row .circular-gallery {
   position: absolute;
   inset: 0;
+}
+
+/* Mobile optimizations for smooth scrolling */
+@media (max-width: 768px) {
+  .circular-gallery {
+    /* Promote to compositor layer for smoother scrolling */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+  }
+  
+  .circular-product-row {
+    /* Reduce paint complexity on mobile */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    -webkit-overflow-scrolling: touch;
+  }
 }

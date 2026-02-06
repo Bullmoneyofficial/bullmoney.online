@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Gift, Send, CreditCard, Check, Copy, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 
 // ============================================================================
 // GIFT CARDS PAGE
@@ -25,6 +26,7 @@ export default function GiftCardsPage() {
   const [giftCardCode, setGiftCardCode] = useState('');
 
   const amount = customAmount ? parseFloat(customAmount) : selectedAmount;
+  const { formatPrice } = useCurrencyLocaleStore();
 
   const handlePurchase = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,7 +77,7 @@ export default function GiftCardsPage() {
           </div>
           <h1 className="text-2xl font-light">Gift Card Sent!</h1>
           <p className="text-white/50 text-sm">
-            A ${amount.toFixed(2)} gift card has been sent to {recipientEmail}
+            A {formatPrice(amount)} gift card has been sent to {recipientEmail}
           </p>
           
           {/* Gift Card Code */}
@@ -150,7 +152,7 @@ export default function GiftCardsPage() {
               </div>
               <span className="text-sm font-light tracking-tight">Bullmoney Store</span>
             </div>
-            <p className="text-4xl md:text-5xl font-light tabular-nums">${amount.toFixed(2)}</p>
+            <p className="text-4xl md:text-5xl font-light tabular-nums">{formatPrice(amount)}</p>
             <p className="text-white/30 text-sm mt-2">Digital Gift Card</p>
             {recipientName && (
               <p className="text-white/50 text-sm mt-4">For: {recipientName}</p>
@@ -178,20 +180,19 @@ export default function GiftCardsPage() {
                       : 'bg-white/5 text-white/70 border-white/10 hover:border-white/20'
                     }`}
                 >
-                  ${amt}
+                  {formatPrice(amt)}
                 </button>
               ))}
             </div>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40">$</span>
               <input
                 type="number"
-                placeholder="Custom amount (min $10)"
+                placeholder="Custom amount (min 10)"
                 value={customAmount}
                 onChange={(e) => { setCustomAmount(e.target.value); }}
                 min={10}
                 max={1000}
-                className="w-full h-12 pl-8 pr-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                className="w-full h-12 px-4 pr-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
               />
             </div>
           </div>
@@ -254,7 +255,7 @@ export default function GiftCardsPage() {
             ) : (
               <>
                 <CreditCard className="w-4 h-4" />
-                Purchase Gift Card — ${amount.toFixed(2)}
+                Purchase Gift Card — {formatPrice(amount)}
               </>
             )}
           </button>

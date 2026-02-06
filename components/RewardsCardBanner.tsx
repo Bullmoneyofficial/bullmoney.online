@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { Award, Gift, Sparkles, ArrowRight, CreditCard, Star, Zap, Crown, Check } from "lucide-react";
+import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 import LogoLoop from "./LogoLoop";
 import type { LogoItem } from "./LogoLoop";
 
@@ -35,6 +36,7 @@ interface RewardsCardBannerProps {
 }
 
 export default function RewardsCardBanner({ userEmail, onOpenRewardsCard }: RewardsCardBannerProps) {
+  const { formatPrice } = useCurrencyLocaleStore();
   const [rewards, setRewards] = useState<RewardsData | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -106,7 +108,7 @@ export default function RewardsCardBanner({ userEmail, onOpenRewardsCard }: Rewa
                 <span className="shimmer-text">Bullmoney Rewards</span>
               </h3>
               <p className="text-white/60 text-[11px] sm:text-xs">
-                Earn <span className="font-semibold text-white">1 punch</span> per $25 spent
+                Earn <span className="font-semibold text-white">1 punch</span> per {formatPrice(25)} spent
                 <span className="hidden sm:inline"> · 20 punches = FREE reward</span>
               </p>
             </div>

@@ -16,6 +16,7 @@ import { EncryptedText } from '@/components/Mainpage/encrypted-text';
 import { HoverBorderGradient } from '@/components/ui/hover-border-gradient';
 import { PinContainer } from '@/components/ui/3d-pin';
 import { CardBody, CardContainer, CardItem } from '@/components/ui/3d-card';
+import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 
 // ============================================================================
 // PRODUCT CARD - LUXURY GLASS MORPHISM DESIGN
@@ -28,6 +29,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, compact = false }: ProductCardProps) {
+  const formatPrice = useCurrencyLocaleStore((s) => s.formatPrice);
   const [isHovered, setIsHovered] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [showQuickView, setShowQuickView] = useState(false);
@@ -250,7 +252,7 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
     <>
       <motion.article
         className="group relative h-full w-full flex flex-col cursor-pointer"
-        style={{ isolation: 'isolate', touchAction: 'manipulation' }}
+        style={{ isolation: 'isolate', touchAction: 'manipulation', zIndex: 1 }}
         onHoverStart={() => setIsHovered(true)}
         onHoverEnd={() => setIsHovered(false)}
         whileTap={{ scale: 0.98 }}
@@ -300,7 +302,7 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
           )}
 
           {/* Badges */}
-          <div className="absolute top-2 md:top-3 left-2 md:left-3 flex flex-col gap-1.5 z-100">
+          <div className="absolute top-2 md:top-3 left-2 md:left-3 flex flex-col gap-1.5" style={{ zIndex: 9990 }}>
             {hasDiscount && (
               <motion.span 
                 className="relative px-2 md:px-3 py-0.5 md:py-1 text-white text-[10px] md:text-xs font-semibold rounded-full shadow-lg overflow-hidden"
@@ -350,24 +352,24 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
         </div>
 
         {/* Product Info */}
-        <div className={`mt-1.5 flex-1 flex flex-col relative z-100 ${compact ? 'space-y-1' : 'md:mt-4 space-y-1.5 md:space-y-2'}`}>
+        <div className={`mt-1.5 flex-1 flex flex-col relative ${compact ? 'space-y-1' : 'md:mt-4 space-y-1.5 md:space-y-2'}`} style={{ zIndex: 9990 }}>
           {product.category && !compact && (
-            <p className="text-white/40 text-[10px] md:text-xs uppercase tracking-wider truncate">
+            <p className="text-white/40 text-[10px] md:text-xs uppercase tracking-wider truncate drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
               <TextType text={product.category.name} typingSpeed={Math.max(5, 25 - product.category.name.length)} showCursor={false} loop={false} as="span" />
             </p>
           )}
           
-          <h3 className={`text-white font-medium group-hover:text-white/80 transition-colors ${compact ? 'text-xs md:text-sm line-clamp-1' : 'text-sm md:text-base line-clamp-2'}`}>
+          <h3 className={`text-white font-medium group-hover:text-white/80 transition-colors drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] ${compact ? 'text-xs md:text-sm line-clamp-1' : 'text-sm md:text-base line-clamp-2'}`}>
             <TextType text={product.name} typingSpeed={Math.max(5, 25 - product.name.length / 2)} showCursor={false} loop={false} as="span" />
           </h3>
 
           <div className="flex items-center gap-1.5 md:gap-2">
-            <span className={`text-white font-semibold ${compact ? 'text-sm' : 'text-sm md:text-base'}`}>
-              $<CountUp to={price} from={0} duration={1.5} separator="," className="" />
+            <span className={`text-white font-semibold drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] ${compact ? 'text-sm' : 'text-sm md:text-base'}`}>
+              {formatPrice(price)}
             </span>
             {hasDiscount && (
-              <span className="text-white/40 line-through text-xs md:text-sm">
-                $<CountUp to={comparePrice} from={0} duration={1.5} separator="," className="" />
+              <span className="text-white/40 line-through text-xs md:text-sm drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
+                {formatPrice(comparePrice)}
               </span>
             )}
           </div>
@@ -398,7 +400,7 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
           
           {/* Mobile variant count */}
           {!compact && product.variants && product.variants.length > 1 && (
-            <p className="md:hidden text-white/40 text-[10px]">
+            <p className="md:hidden text-white/40 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
               {product.variants.length} options
             </p>
           )}
@@ -507,12 +509,12 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
                     {/* Price */}
                     <div className="flex items-center gap-4 py-4 border-y border-white/10">
                       <span className="text-5xl font-bold text-white">
-                        $<CountUp to={selectedVariant?.price || price} from={0} duration={1.5} separator="," className="" />
+                        {formatPrice(selectedVariant?.price || price)}
                       </span>
                       {hasDiscount && (
                         <>
                           <span className="text-2xl text-white/40 line-through">
-                            $<CountUp to={comparePrice} from={0} duration={1.5} separator="," className="" />
+                            {formatPrice(comparePrice)}
                           </span>
                           <span className="px-4 py-1.5 text-white text-base font-semibold rounded-full" style={{ backgroundColor: 'rgb(25, 86, 180)' }}>
                             Save <CountUp to={discount} from={0} duration={1} className="" />%
@@ -721,7 +723,7 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
       <>
         <div 
           className="h-full w-full flex items-center justify-center relative cursor-pointer" 
-          style={{ zIndex: 10 }}
+          style={{ zIndex: 50 }}
         >
           <PinContainer
             title={product.name}
@@ -755,7 +757,7 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
           
           <motion.button
             onClick={(e) => { e.stopPropagation(); handleQuickAdd(e); }}
-            className={`absolute -bottom-5 left-1/2 -translate-x-1/2 h-10 md:h-11 px-5 md:px-6 rounded-full 
+            className={`absolute -bottom-5 md:bottom-10 left-1/2 -translate-x-1/2 h-10 md:h-11 px-5 md:px-6 rounded-full 
                        bg-white text-black flex items-center justify-center gap-2 shadow-2xl
                        border-2 border-black/10
                        hover:scale-105 hover:bg-gray-50 hover:shadow-xl
@@ -786,7 +788,7 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
     <>
       <div 
         className="block h-full w-full relative cursor-pointer" 
-        style={{ zIndex: 10, touchAction: 'manipulation' }}
+        style={{ zIndex: 50, touchAction: 'manipulation' }}
         onClick={(e) => {
           e.stopPropagation();
           setShowQuickView(true);
@@ -822,7 +824,7 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
         
         <motion.button
           onClick={(e) => { e.stopPropagation(); handleQuickAdd(e); }}
-          className={`absolute -bottom-5 left-1/2 -translate-x-1/2 h-10 md:h-11 px-5 md:px-6 rounded-full 
+          className={`absolute -bottom-5 md:bottom-10 left-1/2 -translate-x-1/2 h-10 md:h-11 px-5 md:px-6 rounded-full 
                      bg-white text-black flex items-center justify-center gap-2 shadow-2xl
                      border-2 border-black/10
                      hover:scale-105 hover:bg-gray-50 hover:shadow-xl

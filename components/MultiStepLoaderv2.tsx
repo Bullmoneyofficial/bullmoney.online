@@ -21,6 +21,7 @@ const getIsMobileOrInAppBrowser = () => {
 import { ArrowUpRight, LockOpen, Zap, TrendingUp, Sparkles, Rocket, Star, Trophy, Flame, Diamond, Moon, Target, Dumbbell, CheckCircle2, CircleDollarSign, BarChart3, Activity } from "lucide-react";
 import Image from "next/image";
 import { trackEvent } from "@/lib/analytics";
+import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 
 // --- GLOBAL NEON STYLES (OLED BLACK + NEON BLUE) ---
 const NEON_STYLES = `
@@ -86,10 +87,7 @@ const PARTICLE_ICONS = ["rocket", "dollar", "chart", "zap", "flame", "diamond", 
 type ParticleIcon = typeof PARTICLE_ICONS[number];
 
 const formatPrice = (value: number) =>
-  `$${value.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+  useCurrencyLocaleStore.getState().formatPrice(value);
 
 // --- CONFIG ---
 const ASSETS: Record<AssetKey, { id: string; symbol: string; icon: string; color: string }> = {

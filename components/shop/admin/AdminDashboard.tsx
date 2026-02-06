@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { RevenueChart } from './RevenueChart';
+import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 import type { AdminStats, RevenueDataPoint, OrderWithItems } from '@/types/store';
 
 // ============================================================================
@@ -70,7 +71,7 @@ export function AdminDashboard() {
   const statCards = [
     {
       label: 'Total Revenue',
-      value: stats ? `$${stats.total_revenue.toLocaleString()}` : '$0',
+      value: stats ? useCurrencyLocaleStore.getState().formatPrice(stats.total_revenue) : useCurrencyLocaleStore.getState().formatPrice(0),
       change: stats?.revenue_change || 0,
       icon: DollarSign,
     },

@@ -271,9 +271,17 @@ function WebVitalsInner() {
       // Suppress noisy syntax errors from untranspiled third-party modules
       // (e.g. Unexpected token 'export') which can occur in some bundler/runtime combos.
       const msg = event?.message || '';
+      const errorName = event?.error?.name || '';
       if (/Unexpected token\s+\'export\'/i.test(msg)) {
         if (process.env.NODE_ENV === 'development') {
           console.warn('[WebVitals] Ignored syntax error (likely ESM module):', msg);
+        }
+        return;
+      }
+
+      if (errorName === 'SyntaxError' && /Invalid or unexpected token/i.test(msg)) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('[WebVitals] Ignored syntax error (invalid token):', msg);
         }
         return;
       }

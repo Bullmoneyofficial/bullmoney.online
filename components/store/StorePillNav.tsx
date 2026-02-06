@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 import TextType from '@/components/TextType';
 import CountUp from '@/components/CountUp';
+import { LanguageToggle } from '@/components/LanguageToggle';
 
 // ============================================================================
 // STORE PILL NAV - Simple, Reliable Store Navigation
@@ -90,13 +91,13 @@ export const StorePillNav: React.FC<StorePillNavProps> = ({
   // SSR fallback
   if (!mounted) {
     return (
-      <header className="fixed top-0 left-0 right-0 z-500 bg-black/95 backdrop-blur-xl border-b border-white/5 h-16" />
+      <header className="fixed top-0 left-0 right-0 z-500 h-16" style={{ background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }} />
     );
   }
 
   return (
     <>
-      <header className={`fixed top-0 left-0 right-0 z-500 bg-black/95 backdrop-blur-xl border-b border-white/5 ${className}`}>
+      <header className={`fixed top-0 left-0 right-0 z-500 ${className}`} style={{ background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
         <nav className="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between gap-4">
           {/* Left: Logo & Title */}
           <div className="flex items-center gap-3">
@@ -116,21 +117,17 @@ export const StorePillNav: React.FC<StorePillNavProps> = ({
           </div>
           
           {/* Center: Pill Navigation (Desktop) */}
-          <div className="hidden lg:flex items-center h-10 bg-black rounded-full border border-white/10">
+          <div className="hidden lg:flex items-center h-10 rounded-full" style={{ background: 'rgb(0,0,0)', border: '1px solid rgba(255,255,255,0.25)' }}>
             <ul className="flex items-stretch gap-0.5 h-full p-1">
               {items.map((item) => (
                 <li key={item.href} className="flex h-full">
                   <button
                     onClick={() => onCategoryClick?.(item.href)}
-                    className={`
-                      flex items-center justify-center h-full px-4 rounded-full
-                      text-xs font-semibold uppercase tracking-wide
-                      transition-all duration-200
-                      ${activeHref === item.href 
-                        ? 'bg-white text-black' 
-                        : 'text-white/70 hover:text-white hover:bg-white/10'
-                      }
-                    `}
+                    className="flex items-center justify-center h-full px-4 rounded-full text-xs font-semibold uppercase tracking-wide transition-all duration-200"
+                    style={activeHref === item.href 
+                      ? { background: 'rgb(255,255,255)', color: 'rgb(0,0,0)' }
+                      : { color: 'rgb(255,255,255)' }
+                    }
                     aria-label={item.ariaLabel || item.label}
                   >
                     <TextType text={item.label} typingSpeed={Math.max(8, 30 - item.label.length)} showCursor={false} loop={false} as="span" />
@@ -142,10 +139,14 @@ export const StorePillNav: React.FC<StorePillNavProps> = ({
           
           {/* Right: Actions */}
           <div className="flex items-center gap-2">
+            {/* 🌐 Language Toggle */}
+            <LanguageToggle variant="icon" dropDirection="down" />
+            
             {/* Search */}
             {showSearch && (
               <button 
-                className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-white/70 hover:text-white" 
+                className="h-10 w-10 flex items-center justify-center rounded-xl transition-colors" 
+                style={{ background: 'rgba(255,255,255,0.12)', color: 'rgb(255,255,255)' }}
                 onClick={onSearchClick}
                 aria-label="Search"
               >
@@ -156,16 +157,16 @@ export const StorePillNav: React.FC<StorePillNavProps> = ({
             {/* User */}
             {showUser && (
               <button 
-                className={`h-10 w-10 flex items-center justify-center rounded-xl transition-colors ${
-                  isAuthenticated 
-                    ? 'bg-white/10 hover:bg-white/20 text-white' 
-                    : 'bg-white/5 hover:bg-white/10 text-white/70 hover:text-white'
-                }`}
+                className="h-10 w-10 flex items-center justify-center rounded-xl transition-colors"
+                style={isAuthenticated 
+                  ? { background: 'rgba(255,255,255,0.15)', color: 'rgb(255,255,255)' }
+                  : { background: 'rgba(255,255,255,0.12)', color: 'rgb(255,255,255)' }
+                }
                 onClick={onUserClick}
                 aria-label="Account"
               >
                 {isAuthenticated ? (
-                  <span className="text-sm font-medium uppercase">{userInitial}</span>
+                  <span className="text-sm font-medium uppercase" style={{ color: 'rgb(255,255,255)' }}>{userInitial}</span>
                 ) : (
                   <User className="w-5 h-5" />
                 )}
@@ -175,7 +176,8 @@ export const StorePillNav: React.FC<StorePillNavProps> = ({
             {/* Cart */}
             {showCart && (
               <motion.button
-                className="h-10 px-4 flex items-center gap-2 rounded-xl bg-white text-black hover:bg-white/90 transition-colors"
+                className="h-10 px-4 flex items-center gap-2 rounded-xl transition-colors"
+                style={{ background: 'rgb(255,255,255)', color: 'rgb(0,0,0)' }}
                 onClick={onCartClick}
                 whileTap={{ scale: 0.95 }}
                 aria-label="Shopping Cart"
@@ -199,7 +201,8 @@ export const StorePillNav: React.FC<StorePillNavProps> = ({
             
             {/* Mobile Menu Toggle */}
             <button
-              className="lg:hidden h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
+              className="lg:hidden h-10 w-10 flex items-center justify-center rounded-xl transition-colors"
+              style={{ background: 'rgba(255,255,255,0.12)', color: 'rgb(255,255,255)' }}
               onClick={handleMobileMenuClick}
               aria-label="Toggle menu"
             >

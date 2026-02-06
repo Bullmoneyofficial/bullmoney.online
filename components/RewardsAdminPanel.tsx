@@ -5,6 +5,7 @@ import {
   Search, RefreshCw, Users, CreditCard, Star, Crown, Gift, Check, X,
   ChevronDown, TrendingUp, Award, Zap, Edit2, Save, Trash2, Plus, Minus
 } from "lucide-react";
+import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 
 // ============================================================================
 // REWARDS ADMIN PANEL — Manage Punch Cards & Reward Points
@@ -481,7 +482,7 @@ export default function RewardsAdminPanel() {
       <div className="text-xs text-slate-500 border-t border-slate-800 pt-4 mt-4">
         <p className="flex items-center gap-2">
           <Gift className="w-3.5 h-3.5" style={{ color: "rgb(96, 165, 250)" }} />
-          <span>20 punches = 1 free reward | $25 = 1 punch | Sync pulls from store_orders table</span>
+          <span>20 punches = 1 free reward | {useCurrencyLocaleStore.getState().formatPrice(25)} = 1 punch | Sync pulls from store_orders table</span>
         </p>
         <p className="flex items-center gap-2 mt-2 text-slate-600">
           <Plus className="w-3.5 h-3.5" />

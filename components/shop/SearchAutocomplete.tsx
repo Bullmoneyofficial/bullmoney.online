@@ -6,6 +6,7 @@ import { Search, TrendingUp, Clock, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { ProductWithDetails } from '@/types/store';
+import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 
 // ============================================================================
 // SEARCH AUTOCOMPLETE - Dropdown suggestions with product previews
@@ -190,7 +191,7 @@ export function SearchAutocomplete({ query, searchQuery, onSelect, onProductSele
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-white text-sm truncate">{product.name}</p>
-                      <p className="text-white/50 text-xs">{product.category?.name} • ${product.base_price.toFixed(2)}</p>
+                      <p className="text-white/50 text-xs">{product.category?.name} • {useCurrencyLocaleStore.getState().formatPrice(product.base_price)}</p>
                     </div>
                     <ArrowRight className="w-4 h-4 text-white/30 shrink-0" />
                   </Link>

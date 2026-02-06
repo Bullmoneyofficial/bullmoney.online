@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 import AffiliateAdminPanel from "@/app/recruit/AffiliateAdminPanel";
+import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 
 // --- SUPABASE SETUP ---
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!; 
@@ -110,12 +111,7 @@ const formatId = (id: string | number) => {
 };
 
 const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(amount);
+  return useCurrencyLocaleStore.getState().formatPrice(amount);
 };
 
 const formatNumber = (num: number, decimals = 2) => {

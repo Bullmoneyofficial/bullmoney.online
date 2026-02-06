@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { makeAlternatesMetadata } from "@/lib/seo-languages";
 
 // ============================================
 // SOCIALS PAGE SEO METADATA
@@ -39,9 +40,7 @@ export const metadata: Metadata = {
     ],
   },
   
-  alternates: {
-    canonical: "https://www.bullmoney.shop/socials",
-  },
+  alternates: makeAlternatesMetadata('/socials'),
 };
 
 export default function SocialsLayout({
