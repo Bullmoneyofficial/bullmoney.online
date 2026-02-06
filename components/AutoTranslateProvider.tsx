@@ -70,12 +70,6 @@ declare global {
 }
 
 function setGoogleTranslateCookie(lang: string) {
-  // Only set Google Translate cookies if functional consent is given
-  try {
-    const { isConsentGiven } = require('@/lib/cookieConsent');
-    if (!isConsentGiven('functional')) return;
-  } catch {}
-
   const googleLang = LANG_MAP[lang] || lang;
   if (lang === 'en') {
     // Remove translation cookie

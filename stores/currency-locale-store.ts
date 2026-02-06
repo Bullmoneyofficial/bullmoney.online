@@ -2,7 +2,6 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { consentAwareStorage } from '@/lib/consentAwareStorage';
 
 // ============================================================================
 // CURRENCY / LOCALE STORE - ZUSTAND WITH LOCAL STORAGE PERSISTENCE
@@ -227,7 +226,7 @@ export const useCurrencyLocaleStore = create<CurrencyLocaleStore>()(
     }),
     {
       name: 'bullmoney-locale',
-      storage: createJSONStorage(() => consentAwareStorage),
+      storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         currency: state.currency,
         language: state.language,
