@@ -5324,6 +5324,9 @@ export const UnifiedHubPanel = memo(({
   // Mobile detection for smoother, more subtle animations
   const isMobile = useResponsiveIsMobile();
   
+  // Currency formatting - subscribe to store for reactivity
+  const { formatPrice } = useCurrencyLocaleStore();
+  
   const [activeTab, setActiveTab] = useState<UnifiedHubTab>('community');
   const [isDragging, setIsDragging] = useState(false);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
@@ -5867,12 +5870,12 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                 <div className="flex items-center gap-2 px-2 py-1 rounded-lg glass-chip">
                   <div className="flex items-center gap-1">
                     <Coins className="w-3 h-3 text-white" />
-                    <span className="text-[10px] font-bold text-white neon-blue-text">{useCurrencyLocaleStore.getState().formatPrice(parseFloat(prices.xauusd) || 0)}</span>
+                    <span className="text-[10px] font-bold text-white neon-blue-text">{formatPrice(parseFloat(prices.xauusd) || 0)}</span>
                   </div>
                   <div className="w-px h-3 bg-white/30" />
                   <div className="flex items-center gap-1">
                     <Bitcoin className="w-3 h-3 text-white" />
-                    <span className="text-[10px] font-bold text-white neon-blue-text">{useCurrencyLocaleStore.getState().formatPrice(parseFloat(prices.btcusd) || 0)}</span>
+                    <span className="text-[10px] font-bold text-white neon-blue-text">{formatPrice(parseFloat(prices.btcusd) || 0)}</span>
                   </div>
                 </div>
                 
@@ -7750,6 +7753,9 @@ export const UnifiedFpsPill = memo(({
   const gestureStartTime = useRef(0); // Track gesture start for trackpad detection
   const isMobile = useResponsiveIsMobile();
   
+  // Currency formatting - subscribe to store for reactivity
+  const { formatPrice } = useCurrencyLocaleStore();
+  
   // Performance boost function - runs when overlay shows
   // This is a REAL performance boost that:
   // 1. Temporarily pauses expensive CSS animations
@@ -8236,8 +8242,8 @@ export const UnifiedFpsPill = memo(({
 
   const tickerItems = useMemo(() => {
     const items: Array<{ key: string; type: 'price' | 'vip'; label: string; text: string }> = [
-      { key: 'gold', type: 'price', label: 'Gold', text: `Gold ${useCurrencyLocaleStore.getState().formatPrice(parseFloat(prices.xauusd) || 0)}` },
-      { key: 'btc', type: 'price', label: 'BTC', text: `BTC ${useCurrencyLocaleStore.getState().formatPrice(parseFloat(prices.btcusd) || 0)}` },
+      { key: 'gold', type: 'price', label: 'Gold', text: `Gold ${formatPrice(parseFloat(prices.xauusd) || 0)}` },
+      { key: 'btc', type: 'price', label: 'BTC', text: `BTC ${formatPrice(parseFloat(prices.btcusd) || 0)}` },
     ];
 
     if (vipPreview?.text) {
@@ -8729,7 +8735,7 @@ export const UnifiedFpsPill = memo(({
                             <div className="flex flex-col items-center">
                               <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Gold</span>
                               <span className="text-lg font-black tabular-nums neon-blue-text" style={{ color: '#ffffff', textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
-                                {useCurrencyLocaleStore.getState().formatPrice(parseFloat(prices.xauusd) || 0)}
+                                {formatPrice(parseFloat(prices.xauusd) || 0)}
                               </span>
                             </div>
                           </div>
@@ -8739,7 +8745,7 @@ export const UnifiedFpsPill = memo(({
                             <div className="flex flex-col items-center">
                               <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Bitcoin</span>
                               <span className="text-lg font-black tabular-nums neon-blue-text" style={{ color: '#ffffff', textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
-                                {useCurrencyLocaleStore.getState().formatPrice(parseFloat(prices.btcusd) || 0)}
+                                {formatPrice(parseFloat(prices.btcusd) || 0)}
                               </span>
                             </div>
                           </div>
@@ -9056,6 +9062,9 @@ const TradingPill = memo(({ prices, isExpanded, onToggle }: {
   isExpanded: boolean;
   onToggle: () => void;
 }) => {
+  // Currency formatting - subscribe to store for reactivity
+  const { formatPrice } = useCurrencyLocaleStore();
+  
   return (
     <motion.div
       initial={{ x: -300, opacity: 0 }}
@@ -9088,12 +9097,12 @@ const TradingPill = memo(({ prices, isExpanded, onToggle }: {
             <div className="flex items-center gap-1.5">
               <div className="flex items-center gap-0.5">
                 <Coins className="w-3 h-3 text-white" />
-                <span className="text-[9px] font-bold text-white">{useCurrencyLocaleStore.getState().formatPrice(parseFloat(prices.xauusd) || 0)}</span>
+                <span className="text-[9px] font-bold text-white">{formatPrice(parseFloat(prices.xauusd) || 0)}</span>
               </div>
               <div className="w-px h-2.5 bg-white/30" />
               <div className="flex items-center gap-0.5">
                 <Bitcoin className="w-3 h-3 text-white" />
-                <span className="text-[9px] font-bold text-white">{useCurrencyLocaleStore.getState().formatPrice(parseFloat(prices.btcusd) || 0)}</span>
+                <span className="text-[9px] font-bold text-white">{formatPrice(parseFloat(prices.btcusd) || 0)}</span>
               </div>
             </div>
 

@@ -150,6 +150,7 @@ const ProductCard = memo(({
   isMobile: boolean;
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
+  const { formatPrice } = useCurrencyLocaleStore();
   
   // Direct link open on first tap (mobile) or click
   const handleOpenLink = useCallback((e: React.MouseEvent | React.TouchEvent) => {

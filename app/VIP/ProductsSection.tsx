@@ -203,6 +203,7 @@ function ProductBentoCard({
   disableAnimations,
   onClick,
 }: ProductBentoCardProps) {
+  const { formatPrice } = useCurrencyLocaleStore();
   
   const handleBuyNow = (e: React.MouseEvent) => {
     e.stopPropagation();
