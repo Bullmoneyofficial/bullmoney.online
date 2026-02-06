@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, memo } from 'react';
+import { createPortal } from 'react-dom';
 import { Globe, Check, ChevronDown, Search } from 'lucide-react';
 import { useCurrencyLocaleStore, LANGUAGES, CURRENCIES, FOREX_CURRENCIES, CRYPTO_CURRENCIES, type LocaleInfo, type CurrencyInfo } from '@/stores/currency-locale-store';
 
@@ -35,6 +36,7 @@ export const LanguageToggle = memo(({
   const [currencyCategory, setCurrencyCategory] = useState<'forex' | 'crypto'>('forex');
   const [search, setSearch] = useState('');
   const ref = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const { language, currency, setLanguage, setCurrency } = useCurrencyLocaleStore();
   const currentLang = LANGUAGES.find(l => l.code === language) || LANGUAGES[0];
   const currentCurrency = CURRENCIES.find(c => c.code === currency) || CURRENCIES[0];
@@ -62,6 +64,29 @@ export const LanguageToggle = memo(({
       return () => document.removeEventListener('keydown', handleEscape);
     }
   }, [isOpen]);
+
+  // Keep dropdown on-screen
+  useEffect(() => {
+    if (!isOpen || !dropdownRef.current || variant === 'row') return;
+    const el = dropdownRef.current;
+    const rect = el.getBoundingClientRect();
+    // Fix horizontal overflow
+    if (rect.right > window.innerWidth) {
+      el.style.left = 'auto';
+      el.style.right = '0';
+      el.style.transform = `translateX(${Math.min(0, window.innerWidth - rect.right - 8)}px)`;
+    }
+    if (rect.left < 0) {
+      el.style.left = '0';
+      el.style.right = 'auto';
+      el.style.transform = `translateX(${Math.abs(rect.left) + 8}px)`;
+    }
+    // Fix vertical overflow
+    if (rect.bottom > window.innerHeight) {
+      el.style.maxHeight = `${window.innerHeight - rect.top - 8}px`;
+      el.style.overflowY = 'auto';
+    }
+  }, [isOpen, variant]);
 
   const handleSelectLang = (lang: LocaleInfo) => {
     setLanguage(lang.code);
@@ -107,7 +132,7 @@ export const LanguageToggle = memo(({
   const dropdownAlign = dropAlign === 'left' ? 'left-0' : 'right-0';
 
   return (
-    <div className={`relative ${className}`} ref={ref}>
+    <div className={`relative ${variant === 'row' ? 'flex flex-col items-center w-full' : ''} ${className}`} ref={ref}>
       {/* Trigger Button */}
       {variant === 'icon' ? (
         <button
@@ -153,16 +178,175 @@ export const LanguageToggle = memo(({
         </button>
       )}
 
-      {/* Dropdown */}
-      {isOpen && (
+      {/* Dropdown - row variant: portal to body so it escapes sidebar overflow */}
+      {isOpen && variant === 'row' && typeof document !== 'undefined' && createPortal(
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 z-[10000]" 
+            style={{ background: 'rgba(0,0,0,0.5)' }}
+            onClick={() => setIsOpen(false)}
+          />
+          {/* Centered panel */}
+          <div
+            ref={dropdownRef}
+            className="fixed z-[10001] rounded-xl overflow-hidden"
+            style={{ 
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: 'calc(100vw - 2rem)',
+              maxWidth: '340px',
+              background: 'rgba(0,0,0,0.97)',
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
+              border: '1px solid rgba(255,255,255,0.15)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1)',
+            }}
+          >
+            <div className="flex" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+              <button
+                onClick={() => { setTab('language'); setSearch(''); }}
+                className="flex-1 py-2.5 text-xs font-medium transition-colors"
+                style={tab === 'language' 
+                  ? { color: 'rgb(255,255,255)', background: 'rgba(255,255,255,0.05)' }
+                  : { color: 'rgba(255,255,255,0.5)' }
+                }
+              >
+                🌐 Language
+              </button>
+              <button
+                onClick={() => { setTab('currency'); setSearch(''); }}
+                className="flex-1 py-2.5 text-xs font-medium transition-colors"
+                style={tab === 'currency' 
+                  ? { color: 'rgb(255,255,255)', background: 'rgba(255,255,255,0.05)' }
+                  : { color: 'rgba(255,255,255,0.5)' }
+                }
+              >
+                💰 Currency
+              </button>
+            </div>
+
+            <div className="p-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: 'rgba(255,255,255,0.4)' }} />
+                <input
+                  type="text"
+                  placeholder={`Search ${tab === 'language' ? 'languages' : 'currencies'}...`}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full h-7 pl-8 pr-3 rounded-lg text-xs focus:outline-none"
+                  style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgb(255,255,255)' }}
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            {/* List */}
+            <div className="max-h-[50vh] overflow-y-auto p-1">
+              {tab === 'language' ? (
+                <>
+                  {!search && (
+                    <div className="px-3 py-1">
+                      <span className="text-[9px] uppercase tracking-widest font-medium" style={{ color: 'rgba(255,255,255,0.3)' }}>Popular</span>
+                    </div>
+                  )}
+                  {filteredLangs.map((lang, i) => {
+                    const showAllSeparator = !search && i === POPULAR_LANG_CODES.length && POPULAR_LANG_CODES.includes(filteredLangs[i - 1]?.code);
+                    return (
+                      <div key={lang.code}>
+                        {showAllSeparator && (
+                          <div className="px-3 py-1 mt-1">
+                            <span className="text-[9px] uppercase tracking-widest font-medium" style={{ color: 'rgba(255,255,255,0.3)' }}>All Languages</span>
+                          </div>
+                        )}
+                        <button
+                          onClick={() => handleSelectLang(lang)}
+                          className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs transition-colors"
+                          style={language === lang.code 
+                            ? { background: 'rgba(255,255,255,0.1)', color: 'rgb(255,255,255)' }
+                            : { color: 'rgba(255,255,255,0.7)' }
+                          }
+                        >
+                          <span className="flex items-center gap-2">
+                            <span>{lang.flag}</span>
+                            <span>{lang.name}</span>
+                            <span style={{ color: 'rgba(255,255,255,0.3)' }}>({lang.nativeName})</span>
+                          </span>
+                          {language === lang.code && <Check className="w-3 h-3" style={{ color: 'rgb(74,222,128)' }} />}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </>
+              ) : (
+                <>
+                  <div className="flex gap-1 px-2 pb-1.5">
+                    <button
+                      onClick={() => { setCurrencyCategory('forex'); setSearch(''); }}
+                      className="flex-1 py-1 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-colors"
+                      style={currencyCategory === 'forex'
+                        ? { background: 'rgba(74,222,128,0.15)', color: 'rgb(74,222,128)', border: '1px solid rgba(74,222,128,0.3)' }
+                        : { color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)' }
+                      }
+                    >
+                      💱 Forex
+                    </button>
+                    <button
+                      onClick={() => { setCurrencyCategory('crypto'); setSearch(''); }}
+                      className="flex-1 py-1 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-colors"
+                      style={currencyCategory === 'crypto'
+                        ? { background: 'rgba(251,191,36,0.15)', color: 'rgb(251,191,36)', border: '1px solid rgba(251,191,36,0.3)' }
+                        : { color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)' }
+                      }
+                    >
+                      ₿ Crypto
+                    </button>
+                  </div>
+                  {filteredCurrencies.map((curr) => (
+                    <button
+                      key={curr.code}
+                      onClick={() => handleSelectCurrency(curr)}
+                      className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs transition-colors"
+                      style={currency === curr.code 
+                        ? { background: 'rgba(255,255,255,0.1)', color: 'rgb(255,255,255)' }
+                        : { color: 'rgba(255,255,255,0.7)' }
+                      }
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="font-mono w-6" style={{ color: 'rgba(255,255,255,0.5)' }}>{curr.symbol}</span>
+                        <span>{curr.name}</span>
+                        <span style={{ color: 'rgba(255,255,255,0.3)' }}>({curr.code})</span>
+                      </span>
+                      {currency === curr.code && <Check className="w-3 h-3" style={{ color: 'rgb(74,222,128)' }} />}
+                    </button>
+                  ))}
+                  {filteredCurrencies.length === 0 && (
+                    <div className="text-center py-3 text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                      No {currencyCategory === 'forex' ? 'currencies' : 'cryptocurrencies'} found
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </>,
+        document.body
+      )}
+
+      {/* Dropdown - non-row variants */}
+      {isOpen && variant !== 'row' && (
         <div
-          className={`absolute ${dropdownPos} ${variant === 'row' ? 'left-0 right-0' : dropdownAlign} ${variant === 'row' ? 'w-full' : 'w-72'} rounded-xl overflow-hidden z-[9999]`}
+          ref={dropdownRef}
+          className={`absolute ${dropdownPos} ${dropdownAlign} rounded-xl overflow-hidden z-[9999]`}
           style={{ 
             background: 'rgba(0,0,0,0.95)',
             backdropFilter: 'blur(24px)',
             WebkitBackdropFilter: 'blur(24px)',
             border: '1px solid rgba(255,255,255,0.15)',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1)' 
+            boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1)',
+            width: '288px',
+            maxWidth: 'calc(100vw - 1rem)',
           }}
         >
           <div className="flex" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>

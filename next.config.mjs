@@ -21,10 +21,11 @@ const nextConfig = {
     } : false,
   },
 
-  // Skip linting during build - run `npm run lint` separately
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // NOTE: eslint config removed - not supported in Next.js 16+
+  // Run `npm run lint` separately instead
+
+  // Allow local network dev origins (suppress warning)
+  allowedDevOrigins: ['192.168.1.162'],
 
   // Experimental features for Next.js 16
   experimental: {
@@ -38,6 +39,8 @@ const nextConfig = {
     parallelServerBuildTraces: true,
     // Use worker threads for webpack compilation (parallelism)
     webpackBuildWorker: true,
+    // Cache server component HMR responses - huge dev speed win
+    serverComponentsHmrCache: true,
     // Package import optimizations - tree shake these heavy packages
     optimizePackageImports: [
       '@splinetool/react-spline',
@@ -174,8 +177,11 @@ const nextConfig = {
     'metaapi.cloud-copyfactory-sdk',
   ],
 
-  // Next.js 16 uses Turbopack by default - add empty config to acknowledge
-  turbopack: {},
+  // Turbopack configuration for faster dev compilation
+  turbopack: {
+    // Reduce file resolution attempts - only look for these extensions
+    resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.mjs', '.json', '.css'],
+  },
 };
 
 export default nextConfig;

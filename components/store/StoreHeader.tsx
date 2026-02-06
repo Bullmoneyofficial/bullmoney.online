@@ -81,14 +81,9 @@ export function StoreHeader() {
   // Load Theme Picker preference
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('store_show_theme_picker');
-      // Default to false (hidden) unless explicitly set to true
-      const shouldShow = stored === 'true';
-      setShowThemePicker(shouldShow);
-      setThemePickerModalOpen(shouldShow); // Sync with modal state
-      if (shouldShow) {
-        window.dispatchEvent(new Event('store_theme_picker_toggle'));
-      }
+      // Always start OFF on page load
+      setShowThemePicker(false);
+      setThemePickerModalOpen(false);
     }
   }, [setThemePickerModalOpen]);
 
@@ -334,7 +329,7 @@ export function StoreHeader() {
                       href={cat.href}
                       onClick={() => setMobileMenuOpen(false)}
                       className="px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
-                      style={{ background: 'rgb(255,255,255)', color: 'rgb(0,0,0)', border: '1px solid rgb(255,255,255)' }}
+                      style={{ background: 'rgba(255,255,255,0.08)', color: 'rgb(255,255,255)', border: '1px solid rgba(255,255,255,0.15)' }}
                     >
                       <TextType text={cat.label} typingSpeed={Math.max(8, 25 - cat.label.length)} showCursor={false} loop={false} as="span" />
                     </Link>
@@ -381,7 +376,7 @@ export function StoreHeader() {
                   href="/login"
                   onClick={() => setMobileMenuOpen(false)}
                   className="mb-3 h-9 flex items-center justify-center gap-2 rounded-lg text-xs font-medium transition-colors"
-                  style={{ background: 'rgb(255,255,255)', color: 'rgb(0,0,0)', border: 'none' }}
+                  style={{ background: 'rgba(255,255,255,0.08)', color: 'rgb(255,255,255)', border: '1px solid rgba(255,255,255,0.15)' }}
                 >
                   <User className="w-4 h-4" />
                   <TextType text="Sign In / Register" typingSpeed={12} showCursor={false} loop={false} as="span" />
@@ -431,7 +426,7 @@ export function StoreHeader() {
                   className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg text-xs font-semibold transition-colors"
                   style={showThemePicker 
                     ? { background: 'rgb(14,165,233)', color: 'rgb(255,255,255)' }
-                    : { background: 'rgb(255,255,255)', color: 'rgb(0,0,0)' }
+                    : { background: 'rgba(255,255,255,0.08)', color: 'rgb(255,255,255)', border: '1px solid rgba(255,255,255,0.15)' }
                   }
                 >
                   <div className="flex items-center gap-2">
@@ -447,7 +442,7 @@ export function StoreHeader() {
                   className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg text-xs font-semibold transition-colors"
                   style={showUltimateHub 
                     ? { background: 'rgb(14,165,233)', color: 'rgb(255,255,255)' }
-                    : { background: 'rgb(255,255,255)', color: 'rgb(0,0,0)' }
+                    : { background: 'rgba(255,255,255,0.08)', color: 'rgb(255,255,255)', border: '1px solid rgba(255,255,255,0.15)' }
                   }
                 >
                   <div className="flex items-center gap-2">
@@ -469,7 +464,7 @@ export function StoreHeader() {
                     setAffiliateModalOpen(true);
                   }}
                   className="w-full flex items-center gap-2 py-2.5 px-3 rounded-lg text-xs font-semibold transition-colors"
-                  style={{ background: 'rgb(255,255,255)', color: 'rgb(0,0,0)' }}
+                  style={{ background: 'rgba(255,255,255,0.08)', color: 'rgb(255,255,255)', border: '1px solid rgba(255,255,255,0.15)' }}
                 >
                   <Users className="w-4 h-4" />
                   <TextType text="Affiliates" typingSpeed={15} showCursor={false} loop={false} as="span" />
@@ -482,7 +477,7 @@ export function StoreHeader() {
                     openProductsModal();
                   }}
                   className="w-full flex items-center gap-2 py-2.5 px-3 rounded-lg text-xs font-semibold transition-colors"
-                  style={{ background: 'rgb(255,255,255)', color: 'rgb(0,0,0)' }}
+                  style={{ background: 'rgba(255,255,255,0.08)', color: 'rgb(255,255,255)', border: '1px solid rgba(255,255,255,0.15)' }}
                 >
                   <Calendar className="w-4 h-4" />
                   <TextType text="Products" typingSpeed={18} showCursor={false} loop={false} as="span" />
@@ -495,7 +490,7 @@ export function StoreHeader() {
                     setFaqModalOpen(true);
                   }}
                   className="w-full flex items-center gap-2 py-2.5 px-3 rounded-lg text-xs font-semibold transition-colors"
-                  style={{ background: 'rgb(255,255,255)', color: 'rgb(0,0,0)' }}
+                  style={{ background: 'rgba(255,255,255,0.08)', color: 'rgb(255,255,255)', border: '1px solid rgba(255,255,255,0.15)' }}
                 >
                   <HelpCircle className="w-4 h-4" />
                   <TextType text="FAQ" typingSpeed={25} showCursor={false} loop={false} as="span" />
@@ -518,7 +513,7 @@ export function StoreHeader() {
                 href="/store"
                 onClick={() => setMobileMenuOpen(false)}
                 className="mt-2 w-full h-9 flex items-center justify-center rounded-lg text-sm font-medium active:scale-[0.98] transition-all"
-                style={{ background: 'rgb(255,255,255)', color: 'rgb(0,0,0)' }}
+                style={{ background: 'rgba(255,255,255,0.08)', color: 'rgb(255,255,255)', border: '1px solid rgba(255,255,255,0.15)' }}
               >
                 <TextType text="Shop Now" typingSpeed={18} showCursor={false} loop={false} as="span" />
               </Link>

@@ -1,0 +1,4550 @@
+/* Performance Optimizations - 120Hz Ultra Mode */
+
+/* ============================================================================
+   GLOBAL GPU ACCELERATION
+   ============================================================================ */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================================
+   120Hz REFRESH RATE OPTIMIZATIONS
+   ============================================================================ */
+html {
+  /* FIXED: Use 'auto' instead of 'smooth' - smooth causes jank with mouse wheel on big displays */
+  scroll-behavior: auto;
+  /* Enable high refresh rate scrolling on iOS Safari */
+  -webkit-overflow-scrolling: touch;
+  /* Note: Do NOT use contain on html - it breaks scrolling */
+  /* FIXED: Ensure desktop scroll works */
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+
+body {
+  /* Allow scrolling - CRITICAL for desktop and macOS */
+  overflow-x: hidden;
+  overflow-y: visible; /* FIXED: Use visible to allow content to extend naturally */
+  -webkit-overflow-scrolling: touch;
+  /* FIXED: Allow overscroll on desktop for natural feel */
+  overscroll-behavior: auto;
+}
+
+/* Force GPU layer creation for smoother 120Hz rendering */
+html.display-120hz body,
+html.display-90hz body {
+  /* Create compositing layer - but don't use will-change scroll-position as it can break scrolling */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Optimize animations for high refresh rate displays */
+@supports (animation-timeline: auto) {
+  :root {
+    /* Signal to browser we support high refresh rates */
+    --animation-timing: cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+}
+
+/* ============================================================================
+   ANIMATION & TRANSITION OPTIMIZATIONS
+   ============================================================================ */
+   
+/* Will-change for explicitly animated elements only */
+.animated-element {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* GPU acceleration for keyframe animations only */
+[class*="animate-spin"],
+[class*="animate-pulse"],
+[class*="animate-bounce"],
+[class*="animate-ping"] {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+/* Ultra-smooth transitions for 120Hz */
+.display-120hz .transition-all,
+.display-120hz .transition-transform,
+.display-120hz .transition-opacity {
+  /* Faster transitions look better at 120Hz */
+  transition-timing-function: cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+/* ============================================================================
+   CANVAS & WEBGL OPTIMIZATIONS (SPLINE)
+   ============================================================================ */
+canvas {
+  /* Enable GPU compositing */
+  transform: translateZ(0);
+  /* Optimize for retina + high refresh rate */
+  image-rendering: -webkit-optimize-contrast;
+  /* Allow touch scrolling to pass through */
+  touch-action: pan-y;
+  /* Force new stacking context */
+  isolation: isolate;
+}
+
+/* Spline scene container optimizations for 120Hz */
+[data-spline-scene],
+[data-spline] {
+  transform: translate3d(0, 0, 0);
+  /* Allow touch scrolling */
+  touch-action: pan-y;
+  /* Prevent repaints from affecting other elements */
+  isolation: isolate;
+}
+
+/* Force 120Hz on Spline canvas */
+.display-120hz canvas,
+.display-90hz canvas {
+  /* Request high refresh rate rendering */
+  will-change: contents;
+}
+
+/* ============================================================================
+   LAYOUT CONTAINMENT FOR PERFORMANCE
+   ============================================================================ */
+/* Apply containment only to specific performance-critical components */
+.perf-contain {
+  contain: layout style paint;
+}
+
+/* Strict containment only where explicitly needed */
+.perf-contain-strict {
+  contain: strict;
+}
+
+/* ============================================================================
+   HIGH-DPI & RETINA OPTIMIZATIONS
+   ============================================================================ */
+@media screen and (min-resolution: 2dppx) {
+  /* High DPI displays often support 120Hz */
+  .animated-element,
+  .transition-all,
+  [class*="hover:"] {
+    /* Use compositor-only properties for smooth 120Hz */
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+  }
+  
+  /* Optimize images for Retina + 120Hz */
+  img {
+    image-rendering: -webkit-optimize-contrast;
+  }
+}
+
+/* ============================================================================
+   TOUCH DEVICE 120Hz OPTIMIZATIONS
+   ============================================================================ */
+@media (hover: none) and (pointer: coarse) {
+  /* IMPORTANT: Don't use touch-action: manipulation globally as it breaks scroll */
+  
+  /* Optimize scroll containers for ProMotion */
+  .overflow-auto,
+  .overflow-scroll,
+  .overflow-y-auto,
+  .overflow-x-auto,
+  [class*="scroll"] {
+    -webkit-overflow-scrolling: touch;
+    /* Do NOT use scroll-behavior: smooth - it causes jank */
+    scroll-behavior: auto;
+    overscroll-behavior: contain;
+  }
+  
+  /* Prevent janky tap highlights */
+  button, a, [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* ============================================================================
+   ACCESSIBILITY - REDUCED MOTION
+   ============================================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================================
+   CONTENT VISIBILITY & LAZY LOADING
+   ============================================================================ */
+img {
+  content-visibility: auto;
+  contain-intrinsic-size: 300px 200px;
+}
+
+/* Lazy render off-screen sections */
+section,
+[data-section] {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
+}
+
+/* Font loading optimization */
+@font-face {
+  font-display: swap;
+}
+
+/* ============================================================================
+   VIDEO & MEDIA OPTIMIZATIONS
+   ============================================================================ */
+video,
+canvas,
+iframe {
+  /* Optimize for high refresh rate displays */
+  will-change: transform;
+  transform: translateZ(0);
+  /* Contain to prevent layout shifts */
+  contain: layout paint;
+}
+
+/* ============================================================================
+   120Hz-SPECIFIC ENHANCEMENTS
+   ============================================================================ */
+.display-120hz {
+  /* Enable all 120Hz optimizations */
+  --frame-budget: 8.33ms;
+  --vsync-interval: 8.33ms;
+}
+
+.display-90hz {
+  --frame-budget: 11.11ms;
+  --vsync-interval: 11.11ms;
+}
+
+/* CRITICAL: Do NOT use scroll-behavior: smooth for 120Hz - use native scroll */
+.display-120hz,
+.display-90hz {
+  scroll-behavior: auto;
+}
+
+.display-120hz *,
+.display-90hz * {
+  /* Optimize all animations for high refresh */
+  animation-timing-function: cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+/* ============================================================================
+   UNIFIED PERFORMANCE SYSTEM - COMPONENT STATE OPTIMIZATIONS
+   ============================================================================ */
+
+/* When FPS is critical - disable ALL non-essential animations */
+html.shimmer-quality-disabled {
+  --animation-duration-multiplier: 0.1;
+}
+
+html.shimmer-quality-disabled * {
+  animation-duration: 0.1s !important;
+  transition-duration: 0.1s !important;
+}
+
+html.shimmer-quality-disabled .shimmer-spin,
+html.shimmer-quality-disabled .shimmer-line,
+html.shimmer-quality-disabled .shimmer-pulse,
+html.shimmer-quality-disabled .shimmer-ping,
+html.shimmer-quality-disabled .page-spin,
+html.shimmer-quality-disabled .page-shimmer-ltr {
+  animation: none !important;
+}
+
+/* Low quality mode - slower, simpler animations */
+html.shimmer-quality-low {
+  --animation-duration-multiplier: 0.4;
+}
+
+html.shimmer-quality-low .shimmer-spin {
+  animation-duration: 6s !important;
+}
+
+html.shimmer-quality-low .shimmer-line {
+  animation-duration: 5s !important;
+}
+
+/* Medium quality - slightly reduced animations */
+html.shimmer-quality-medium {
+  --animation-duration-multiplier: 0.7;
+}
+
+html.shimmer-quality-medium .shimmer-spin {
+  animation-duration: 4s !important;
+}
+
+/* Scroll performance - pause animations during scroll */
+html.is-scrolling .shimmer-spin,
+html.is-scrolling .shimmer-line,
+html.is-scrolling .shimmer-pulse,
+html.is-scrolling .shimmer-glow,
+html.is-scrolling .page-spin,
+html.is-scrolling .page-shimmer-ltr,
+html.is-scrolling .shimmer-ping {
+  animation-play-state: paused !important;
+}
+
+html.is-scrolling canvas {
+  pointer-events: none;
+}
+
+/* Reduce GPU load on Spline during scroll */
+html.is-scrolling .spline-container canvas,
+html.is-scrolling [data-spline] canvas {
+  filter: blur(1px);
+  opacity: 0.95;
+  transition: filter 0.1s, opacity 0.1s;
+}
+
+/* Component-specific optimization classes */
+html.component-inactive-navbar .navbar-shimmer { animation: none !important; }
+html.component-inactive-audioWidget .audio-widget-shimmer { animation: none !important; }
+html.component-inactive-ultimatePanel .ultimate-panel-shimmer { animation: none !important; }
+html.component-inactive-movingTip .moving-tip-shimmer { animation: none !important; }
+html.component-inactive-staticTip .static-tip-shimmer { animation: none !important; }
+/* CRITICAL: Spline must always have pointer events enabled for interactivity */
+html.component-inactive-spline .spline-container { opacity: 0; pointer-events: auto !important; }
+
+/* Blur reduction for low-end devices */
+html.reduce-blur {
+  --blur-amount: 4px !important;
+}
+
+html.reduce-blur .backdrop-blur-2xl,
+html.reduce-blur .backdrop-blur-xl,
+html.reduce-blur .backdrop-blur-lg {
+  backdrop-filter: blur(4px) !important;
+}
+
+html.reduce-blur .backdrop-blur-md,
+html.reduce-blur .backdrop-blur-sm {
+  backdrop-filter: blur(2px) !important;
+}
+
+/* Shadow reduction for performance */
+html.reduce-shadows * {
+  box-shadow: none !important;
+}
+
+/* Reduce animations globally */
+html.reduce-animations * {
+  animation-duration: 0.1s !important;
+  transition-duration: 0.1s !important;
+}
+
+/* GPU-accelerated animation helpers */
+.gpu-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform;
+}
+
+.shimmer-gpu {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+/* 
+ * SPLINE INTERACTIVITY FIX
+ * Ensures Spline 3D scenes always have full pointer event support
+ * This file MUST be imported after performance-optimizations.css
+ */
+
+/* Override any pointer-events restrictions on Spline containers */
+.spline-page-container,
+.spline-container,
+.spline-wrapper,
+.spline-viewport-fill,
+[class*="spline"],
+canvas[data-spline],
+iframe[src*="spline"] {
+  pointer-events: auto !important;
+  touch-action: none !important;
+  cursor: grab !important;
+}
+
+/* Ensure Spline remains interactive even when component is marked inactive */
+html.component-inactive-spline .spline-container {
+  pointer-events: auto !important;
+}
+
+html.component-inactive-spline .spline-page-container {
+  pointer-events: auto !important;
+}
+
+/* Force touch action support */
+.spline-page-container,
+.spline-container,
+.spline-viewport-fill {
+  touch-action: none !important;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Ensure internal Spline canvases are interactive */
+.spline-container canvas,
+.spline-page-container canvas,
+.spline-viewport-fill canvas {
+  pointer-events: auto !important;
+  touch-action: none !important;
+}
+
+/* spline-viewer web component must receive all events */
+spline-viewer {
+  pointer-events: auto !important;
+  touch-action: none !important;
+  cursor: grab !important;
+  display: block !important;
+}
+
+spline-viewer canvas {
+  pointer-events: auto !important;
+  touch-action: none !important;
+}
+
+/* Safari-specific fixes for pointer events */
+@supports (-webkit-appearance: none) {
+  .spline-page-container,
+  .spline-container,
+  .spline-viewport-fill {
+    -webkit-touch-callout: none;
+    pointer-events: auto !important;
+    touch-action: none !important;
+  }
+  
+  .spline-container canvas,
+  .spline-page-container canvas,
+  .spline-viewport-fill canvas {
+    pointer-events: auto !important;
+    touch-action: none !important;
+  }
+
+  spline-viewer,
+  spline-viewer canvas {
+    pointer-events: auto !important;
+    touch-action: none !important;
+  }
+}
+
+/* Mobile touch interaction support */
+@media (hover: none) and (pointer: coarse) {
+  .spline-page-container,
+  .spline-container,
+  .spline-viewport-fill {
+    touch-action: none !important;
+    pointer-events: auto !important;
+  }
+  
+  .spline-container canvas,
+  .spline-page-container canvas,
+  .spline-viewport-fill canvas {
+    touch-action: none !important;
+    pointer-events: auto !important;
+  }
+
+  spline-viewer,
+  spline-viewer canvas {
+    pointer-events: auto !important;
+    touch-action: none !important;
+  }
+}
+
+/* Desktop mouse interaction support */
+@media (hover: hover) and (pointer: fine) {
+  .spline-page-container,
+  .spline-container,
+  .spline-viewport-fill {
+    cursor: grab !important;
+    pointer-events: auto !important;
+  }
+  
+  .spline-page-container:active,
+  .spline-container:active,
+  .spline-viewport-fill:active {
+    cursor: grabbing !important;
+  }
+
+  spline-viewer {
+    cursor: grab !important;
+  }
+
+  spline-viewer:active {
+    cursor: grabbing !important;
+  }
+}
+
+/* Ensure hero overlay elements don't block Spline interaction */
+.hero > *:not(.hero-spline-wrapper) {
+  pointer-events: none;
+}
+
+/* Re-enable pointer events on interactive overlays */
+.hero .pointer-events-auto,
+.hero button,
+.hero a,
+.hero [data-interactive="true"] .spline-container {
+  pointer-events: auto;
+}
+/* ============================================================================
+   120Hz ULTRA PERFORMANCE CSS - 2025 Edition
+   ============================================================================
+   
+   GOLDEN RULES:
+   1. Only animate: transform, opacity, filter
+   2. NEVER animate: width, height, top, left, margin, padding
+   3. Use will-change sparingly (only on actively animating elements)
+   4. Use transform: translateZ(0) for GPU layer promotion
+   
+   ============================================================================ */
+
+/* ============================================================================
+   CSS CUSTOM PROPERTIES FOR PERFORMANCE
+   ============================================================================ */
+:root {
+  /* Display refresh rate (set by JS) */
+  --native-refresh-rate: 60;
+  --target-fps: 60;
+  --frame-duration: 16.67ms;
+  --animation-speed: 1;
+  
+  /* Spring animations optimized for 120Hz */
+  --spring-stiff: cubic-bezier(0.5, 1.8, 0.4, 0.8);
+  --spring-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+  --spring-snappy: cubic-bezier(0.34, 1.56, 0.64, 1);
+  
+  /* Frame budgets */
+  --frame-budget-120: 8.33ms;
+  --frame-budget-90: 11.11ms;
+  --frame-budget-60: 16.67ms;
+  
+  /* GPU animation base */
+  --gpu-translate: translate3d(0, 0, 0);
+}
+
+/* ============================================================================
+   PERFORMANCE MODE CLASSES
+   ============================================================================ */
+.perf-ultra {
+  /* Maximum quality, all effects enabled */
+  --blur-enabled: 1;
+  --shadows-enabled: 1;
+  --glow-enabled: 1;
+  --particles-enabled: 1;
+}
+
+.perf-balanced {
+  /* Reduced effects for better battery */
+  --blur-enabled: 0.5;
+  --shadows-enabled: 1;
+  --glow-enabled: 0.5;
+  --particles-enabled: 0.5;
+}
+
+.perf-power-saver {
+  /* Minimal effects for maximum performance */
+  --blur-enabled: 0;
+  --shadows-enabled: 0.5;
+  --glow-enabled: 0;
+  --particles-enabled: 0;
+}
+
+/* ============================================================================
+   GPU LAYER UTILITIES
+   ============================================================================ */
+
+/* Force GPU layer - use sparingly */
+.gpu-layer {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* GPU layer with containment */
+.gpu-layer-contained {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  contain: layout paint style;
+}
+
+/* Animate-ready (add will-change on hover/focus) */
+.will-animate {
+  transition: transform 0.2s var(--spring-smooth),
+              opacity 0.2s var(--spring-smooth);
+}
+
+.will-animate:hover,
+.will-animate:focus-within {
+  will-change: transform, opacity;
+}
+
+/* ============================================================================
+   OPTIMIZED TRANSITION UTILITIES
+   ============================================================================ */
+
+/* Ultra-fast micro-interactions (buttons, links) */
+.transition-micro {
+  transition: transform 0.1s var(--spring-snappy),
+              opacity 0.1s ease-out;
+}
+
+/* Standard UI transitions */
+.transition-ui {
+  transition: transform 0.2s var(--spring-smooth),
+              opacity 0.2s ease-out;
+}
+
+/* Smooth content transitions */
+.transition-content {
+  transition: transform 0.35s var(--spring-smooth),
+              opacity 0.35s ease-out;
+}
+
+/* Page-level transitions */
+.transition-page {
+  transition: transform 0.5s var(--spring-smooth),
+              opacity 0.5s ease-out;
+}
+
+/* Adjust transition speed based on refresh rate */
+.display-120hz .transition-micro { transition-duration: 0.08s; }
+.display-120hz .transition-ui { transition-duration: 0.15s; }
+.display-120hz .transition-content { transition-duration: 0.28s; }
+.display-120hz .transition-page { transition-duration: 0.4s; }
+
+/* ============================================================================
+   HOVER EFFECTS (GPU-Only)
+   ============================================================================ */
+
+/* Scale up on hover */
+.hover-lift {
+  transition: transform 0.2s var(--spring-smooth),
+              box-shadow 0.2s ease-out;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px) translateZ(0);
+  box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.2);
+}
+
+/* Scale effect */
+.hover-scale {
+  transition: transform 0.2s var(--spring-snappy);
+}
+
+.hover-scale:hover {
+  transform: scale(1.02) translateZ(0);
+}
+
+/* Glow effect */
+.hover-glow {
+  position: relative;
+  transition: transform 0.2s var(--spring-smooth);
+}
+
+.hover-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.15), transparent 70%);
+  transition: opacity 0.3s ease-out;
+  pointer-events: none;
+  transform: translateZ(0);
+}
+
+.hover-glow:hover::after {
+  opacity: var(--glow-enabled, 1);
+}
+
+/* ============================================================================
+   SCROLL-LINKED ANIMATION UTILITIES
+   ============================================================================ */
+
+/* Fade in on scroll */
+.scroll-fade-in {
+  opacity: 0;
+  transform: translateY(30px) translateZ(0);
+  transition: opacity 0.6s ease-out, transform 0.6s var(--spring-smooth);
+}
+
+.scroll-fade-in.is-visible {
+  opacity: 1;
+  transform: translateY(0) translateZ(0);
+}
+
+/* Slide in from left */
+.scroll-slide-left {
+  opacity: 0;
+  transform: translateX(-40px) translateZ(0);
+  transition: opacity 0.5s ease-out, transform 0.5s var(--spring-smooth);
+}
+
+.scroll-slide-left.is-visible {
+  opacity: 1;
+  transform: translateX(0) translateZ(0);
+}
+
+/* Slide in from right */
+.scroll-slide-right {
+  opacity: 0;
+  transform: translateX(40px) translateZ(0);
+  transition: opacity 0.5s ease-out, transform 0.5s var(--spring-smooth);
+}
+
+.scroll-slide-right.is-visible {
+  opacity: 1;
+  transform: translateX(0) translateZ(0);
+}
+
+/* Scale up on scroll */
+.scroll-scale {
+  opacity: 0;
+  transform: scale(0.95) translateZ(0);
+  transition: opacity 0.5s ease-out, transform 0.5s var(--spring-smooth);
+}
+
+.scroll-scale.is-visible {
+  opacity: 1;
+  transform: scale(1) translateZ(0);
+}
+
+/* ============================================================================
+   LOADING STATES (GPU-Optimized)
+   ============================================================================ */
+
+/* Skeleton loading animation */
+@keyframes skeleton-pulse {
+  0%, 100% {
+    opacity: 0.3;
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3));
+  }
+  50% {
+    opacity: 0.8;
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.6));
+  }
+}
+
+.skeleton {
+  animation: skeleton-shimmer 2s ease-in-out infinite;
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.15) 20%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.15) 80%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  background-size: 200% 100%;
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.4));
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    transform: translateX(-100%) translateZ(0);
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%) translateZ(0);
+    opacity: 0.4;
+  }
+}
+
+/* ============================================================================
+   BUTTON OPTIMIZATIONS
+   ============================================================================ */
+
+button,
+.btn,
+[role="button"] {
+  /* GPU layer for instant response */
+  transform: translateZ(0);
+  transition: transform 0.15s var(--spring-snappy),
+              opacity 0.15s ease-out,
+              background-color 0.15s ease-out;
+  /* Prevent tap delay on mobile */
+  touch-action: manipulation;
+  /* No tap highlight */
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:active,
+.btn:active,
+[role="button"]:active {
+  transform: scale(0.97) translateZ(0);
+}
+
+/* ============================================================================
+   MODAL/OVERLAY OPTIMIZATIONS
+   ============================================================================ */
+
+.modal-backdrop {
+  /* GPU-accelerated backdrop */
+  backdrop-filter: blur(calc(8px * var(--blur-enabled, 1)));
+  -webkit-backdrop-filter: blur(calc(8px * var(--blur-enabled, 1)));
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transition: opacity 0.3s ease-out;
+  transform: translateZ(0);
+}
+
+.modal-backdrop.is-open {
+  opacity: 1;
+}
+
+.modal-content {
+  transform: scale(0.95) translateY(10px) translateZ(0);
+  opacity: 0;
+  transition: transform 0.3s var(--spring-smooth),
+              opacity 0.2s ease-out;
+}
+
+.modal-content.is-open {
+  transform: scale(1) translateY(0) translateZ(0);
+  opacity: 1;
+}
+
+/* ============================================================================
+   LENIS SMOOTH SCROLL OVERRIDES
+   ============================================================================ */
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+/* ============================================================================
+   RESPONSIVE 120Hz ADJUSTMENTS
+   ============================================================================ */
+
+/* Mobile: Lighter animations for battery */
+@media (max-width: 768px) and (hover: none) {
+  .hover-lift:hover,
+  .hover-scale:hover {
+    /* Disable hover effects on touch devices */
+    transform: none;
+  }
+  
+  /* Faster animations on mobile */
+  .transition-content {
+    transition-duration: 0.25s;
+  }
+  
+  .transition-page {
+    transition-duration: 0.35s;
+  }
+}
+
+/* ============================================================================
+   DESKTOP PERFORMANCE OPTIMIZATIONS
+   Optimized for Apple Silicon M1+ and high-performance desktops
+   ============================================================================ */
+
+/* High-performance desktop mode */
+.desktop-optimized,
+.high-performance {
+  /* Enable GPU compositing hints */
+  --gpu-compositing: true;
+  --animation-quality: high;
+}
+
+/* Desktop with 120Hz+ displays */
+.desktop-optimized.display-120hz,
+.high-performance.display-120hz {
+  /* Faster transitions for high-refresh displays */
+  --transition-micro: 0.06s;
+  --transition-ui: 0.12s;
+  --transition-content: 0.22s;
+  --transition-page: 0.35s;
+}
+
+/* Desktop-specific smooth scrolling */
+@media (min-width: 769px) and (hover: hover) {
+  html.desktop-optimized {
+    /* Use native smooth scroll momentum - CRITICAL for macOS trackpad */
+    scroll-behavior: auto !important;
+    overflow-y: scroll !important;
+    overscroll-behavior: auto;
+  }
+  
+  html.desktop-optimized body {
+    overflow-y: visible !important;
+    overscroll-behavior: auto;
+  }
+  
+  /* Optimize all transforms for GPU */
+  .desktop-optimized * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* GPU layer promotion for interactive elements */
+  .desktop-optimized button,
+  .desktop-optimized a,
+  .desktop-optimized [role="button"],
+  .desktop-optimized .interactive {
+    transform: translateZ(0);
+    will-change: transform, opacity;
+  }
+  
+  /* Faster hover transitions on desktop */
+  .desktop-optimized .hover-lift {
+    transition: transform 0.15s var(--spring-smooth),
+                box-shadow 0.15s ease-out;
+  }
+  
+  .desktop-optimized .hover-scale {
+    transition: transform 0.12s var(--spring-snappy);
+  }
+  
+  /* Smooth hover states */
+  .desktop-optimized .hover-lift:hover {
+    transform: translateY(-6px) translateZ(0);
+    box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.25);
+  }
+  
+  .desktop-optimized .hover-scale:hover {
+    transform: scale(1.03) translateZ(0);
+  }
+}
+
+/* Apple Silicon Mac optimizations */
+.desktop-optimized.display-120hz,
+.apple-silicon {
+  /* Ultra-smooth spring animations */
+  --spring-stiff: cubic-bezier(0.45, 1.85, 0.35, 0.85);
+  --spring-smooth: cubic-bezier(0.14, 1, 0.28, 1);
+  --spring-snappy: cubic-bezier(0.32, 1.6, 0.62, 1);
+}
+
+/* High-spec desktop (16GB+ RAM, discrete GPU) */
+.high-performance {
+  /* Enable all visual effects */
+  --blur-enabled: 1;
+  --shadows-enabled: 1;
+  --glow-enabled: 1;
+  --particles-enabled: 1;
+  --reflections-enabled: 1;
+}
+
+/* Backdrop blur optimizations for desktop */
+@media (min-width: 769px) {
+  .desktop-optimized .backdrop-blur-sm {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+  
+  .desktop-optimized .backdrop-blur-md {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  
+  .desktop-optimized .backdrop-blur-lg {
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+  
+  /* GPU-accelerated glass effect */
+  .desktop-optimized .glass-effect {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    transform: translateZ(0);
+  }
+}
+
+/* Ultra-wide monitors (2560px+) often have high refresh */
+@media (min-width: 2560px) {
+  /* Larger movement for bigger screens */
+  .hover-lift:hover {
+    transform: translateY(-8px) translateZ(0);
+  }
+  
+  .scroll-fade-in {
+    transform: translateY(60px) translateZ(0);
+  }
+  
+  .scroll-slide-left {
+    transform: translateX(-60px) translateZ(0);
+  }
+  
+  .scroll-slide-right {
+    transform: translateX(60px) translateZ(0);
+  }
+}
+
+/* 4K displays (3840px+) */
+@media (min-width: 3840px) {
+  .hover-lift:hover {
+    transform: translateY(-10px) translateZ(0);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* ============================================================================
+   DESKTOP 3D/CANVAS OPTIMIZATIONS
+   ============================================================================ */
+
+@media (min-width: 769px) {
+  /* Force GPU compositing for canvas elements on desktop */
+  .desktop-optimized canvas,
+  .high-performance canvas {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    /* Allow canvas to use full GPU power */
+    image-rendering: optimizeSpeed;
+  }
+  
+  /* Spline 3D scenes on high-end desktops */
+  .desktop-optimized [data-spline],
+  .high-performance [data-spline] {
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    /* Hint to browser for GPU acceleration */
+    will-change: contents;
+  }
+  
+  /* WebGL context optimization */
+  .desktop-optimized .webgl-container,
+  .high-performance .webgl-container {
+    contain: strict;
+    transform: translateZ(0);
+  }
+}
+
+/* ============================================================================
+   PRINT STYLES (Disable animations)
+   ============================================================================ */
+
+@media print {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+/* ============================================================================
+   120Hz ULTRA PERFORMANCE - Luxury Dashboard Optimization
+   ============================================================================
+   
+   This CSS file provides critical performance optimizations for 120Hz displays
+   on Apple Silicon devices, iPhones, Samsung, and Android devices.
+   It follows the "Glass Engine" rule and ensures smooth scrolling and GPU compositing.
+   
+   UPDATED 2026: Fixed mouse wheel scrolling on big displays
+   UPDATED 2026.1: Enhanced iPhone ProMotion support & fixed touch scrolling
+   ============================================================================ */
+
+/* ============================================================================
+   CRITICAL: SCROLL FIX - Make page scrollable at 120Hz
+   FIXED: Changed overscroll-behavior from 'none' to 'auto' to enable scrolling
+   FIXED 2026: Better mouse wheel support for big displays (1440px+)
+   FIXED 2026.1: iPhone and Android touch scrolling optimization
+   ============================================================================ */
+html {
+  /* Native scrolling - do NOT use scroll-behavior: smooth, it causes jank with mouse wheel */
+  overflow-y: auto !important;
+  overflow-x: hidden;
+  /* FIXED: Changed from 'none' to 'auto' - 'none' was blocking scroll on some devices */
+  overscroll-behavior: auto;
+  /* Touch scrolling for iOS - CRITICAL for smooth scrolling */
+  -webkit-overflow-scrolling: touch;
+  /* CRITICAL: Use 'auto' for instant mouse wheel response on big displays */
+  scroll-behavior: auto;
+  /* iPhone smooth touch */
+  touch-action: pan-y pan-x;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  overflow-y: visible;
+  overflow-x: hidden;
+  /* FIXED: Changed from 'none' to 'contain' - only prevent overscroll bounce */
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  /* Prevent body from being fixed */
+  position: relative !important;
+  height: auto !important;
+  min-height: 100vh;
+  /* Smooth touch scrolling */
+  touch-action: pan-y pan-x;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ============================================================================
+   IPHONE PROMOTION 120Hz OPTIMIZATIONS - Smooth scrolling on all iPhones
+   ============================================================================ */
+@supports (-webkit-touch-callout: none) {
+  /* iPhone-specific optimizations */
+  /* CRITICAL: Do NOT use transform on html/body - breaks fixed z-index */
+  html,
+  body {
+    -webkit-overflow-scrolling: touch !important;
+    /* DO NOT USE TRANSFORM HERE - breaks fixed positioning z-index */
+    /* -webkit-transform: translate3d(0, 0, 0); - REMOVED */
+    touch-action: pan-y pan-x;
+  }
+  
+  /* Smooth 120Hz scrolling on iPhone */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Fix Ultimate Hub scrolling on iPhone */
+  [data-ultimate-hub],
+  .ultimate-hub-panel,
+  [data-panel] {
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y pan-x !important;
+    overscroll-behavior: contain !important;
+  }
+}
+
+/* ============================================================================
+   ANDROID & SAMSUNG 120Hz OPTIMIZATIONS
+   ============================================================================ */
+@media (hover: none) and (pointer: coarse) {
+  /* All touch devices */
+  html,
+  body,
+  main,
+  [data-scrollable] {
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y pan-x;
+    overscroll-behavior-y: contain;
+  }
+  
+  /* Fix Android touch lag */
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  
+  /* Allow selection for inputs and text */
+  input,
+  textarea,
+  [contenteditable],
+  p,
+  span,
+  h1, h2, h3, h4, h5, h6 {
+    -webkit-user-select: auto;
+    user-select: auto;
+  }
+}
+
+/* ============================================================================
+   BIG DISPLAY OPTIMIZATIONS (1440px+) - Mouse wheel scrolling fixes
+   ============================================================================ */
+@media (min-width: 1440px) {
+  html {
+    /* Ensure instant scroll response on big displays */
+    scroll-behavior: auto !important;
+  }
+  
+  /* Disable scroll-snap for mouse users on big displays */
+  html:not(.touch-device) body,
+  html:not(.touch-device) main {
+    scroll-snap-type: none !important;
+  }
+  
+  html:not(.touch-device) section {
+    scroll-snap-align: none !important;
+    scroll-snap-stop: normal !important;
+  }
+}
+
+/* Override Lenis if it's blocking scroll */
+html.lenis,
+html.lenis-smooth,
+html.has-scroll-smooth {
+  overflow: auto !important;
+}
+
+html.lenis body,
+html.lenis-smooth body,
+html.has-scroll-smooth body {
+  overflow: visible !important;
+}
+
+/* ============================================================================
+   CSS CONTAINMENT - Critical for 120Hz Performance
+   ============================================================================ */
+
+/* Main scrollable containers */
+main,
+[data-allow-scroll],
+[data-scrollable] {
+  contain: layout style;
+  touch-action: pan-y pan-x;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Sections that don't affect siblings */
+section {
+  contain: layout style;
+}
+
+/* Cards and contained UI elements */
+.card,
+[data-card],
+.modal-content {
+  contain: layout paint style;
+}
+
+/* Strict containment for heavy components */
+.spline-container,
+[data-spline-scene],
+canvas {
+  contain: strict;
+  touch-action: pan-y;
+}
+
+/* ============================================================================
+   ULTIMATE HUB & MODAL SCROLLING FIX - iPhone, Android, Samsung
+   ============================================================================ */
+
+/* Ultimate Hub panel - smooth scrolling on all devices */
+[data-ultimate-hub],
+.ultimate-hub-panel,
+.ultimate-hub-content,
+[data-panel],
+[data-modal-panel] {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior-y: contain !important;
+  /* NO TRANSFORM - breaks z-index for fixed children */
+}
+
+/* Modal scrollable areas */
+.modal-scroll,
+[data-modal-scroll],
+.overflow-y-auto,
+.overflow-y-scroll {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior-y: contain !important;
+}
+
+/* Fix navbar touch issues */
+nav,
+header,
+[data-navbar],
+.navbar,
+.navigation {
+  touch-action: pan-y pan-x !important;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* Page layout - ensure scrolling works */
+[data-layout],
+.layout,
+.page-container {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior-y: contain !important;
+}
+
+/* ============================================================================
+   GLASS ENGINE RULE - GPU Compositing for Glassmorphism
+   ============================================================================ */
+
+/* All translucent/blur elements MUST have GPU layer */
+.backdrop-blur-sm,
+.backdrop-blur,
+.backdrop-blur-md,
+.backdrop-blur-lg,
+.backdrop-blur-xl,
+.backdrop-blur-2xl,
+.backdrop-blur-3xl,
+[class*="backdrop-blur"] {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  isolation: isolate;
+  /* Optimize blur compositing - standard + prefixed */
+  backdrop-filter: blur(var(--tw-backdrop-blur));
+  -webkit-backdrop-filter: blur(var(--tw-backdrop-blur));
+  will-change: auto; /* Only promote when needed */
+}
+
+/* Glass surfaces - optimized for 120Hz */
+.glass-surface,
+.glass-panel,
+[data-glass] {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  /* Use hardware-accelerated blur */
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  backdrop-filter: blur(16px) saturate(180%);
+  /* Prevent paint thrashing */
+  contain: paint layout;
+}
+
+/* ============================================================================
+   ANIMATION PERFORMANCE - Only animate compositor properties
+   ============================================================================ */
+
+/* Allowed animation properties (GPU accelerated) */
+.animate-gpu {
+  transform: translateZ(0);
+  will-change: transform, opacity;
+}
+
+/* Force GPU for common animations */
+@keyframes gpu-pulse {
+  0%, 100% { opacity: 1; transform: translateZ(0) scale(1); }
+  50% { opacity: 0.7; transform: translateZ(0) scale(1.02); }
+}
+
+@keyframes gpu-spin {
+  from { transform: translateZ(0) rotate(0deg); }
+  to { transform: translateZ(0) rotate(360deg); }
+}
+
+@keyframes gpu-bounce {
+  0%, 100% { transform: translateZ(0) translateY(0); }
+  50% { transform: translateZ(0) translateY(-10px); }
+}
+
+/* Replace default animations with GPU versions */
+.animate-pulse-gpu { animation: gpu-pulse 2s ease-in-out infinite; }
+.animate-spin-gpu { animation: gpu-spin 1s linear infinite; }
+.animate-bounce-gpu { animation: gpu-bounce 1s ease-in-out infinite; }
+
+/* ============================================================================
+   TICKER OPTIMIZATION - CSS-only marquee for 120Hz
+   ============================================================================ */
+
+.ticker-container {
+  contain: strict;
+  overflow: hidden;
+  transform: translateZ(0);
+}
+
+.ticker-track {
+  display: flex;
+  animation: ticker-scroll 40s linear infinite;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+@keyframes ticker-scroll {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+/* Pause on hover without re-render */
+.ticker-container:hover .ticker-track {
+  animation-play-state: paused;
+}
+
+/* ============================================================================
+   FIXED ELEMENTS - Navbar, Footer, Modals
+   ============================================================================ */
+
+/* Fixed elements need GPU layer to prevent scroll jank */
+nav[class*="fixed"],
+.fixed-header,
+.fixed-footer,
+[class*="fixed"][class*="bottom"],
+[class*="fixed"][class*="top"] {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  contain: layout paint;
+}
+
+/* Modal backdrops */
+.modal-backdrop,
+[data-backdrop],
+.overlay {
+  transform: translateZ(0);
+  contain: paint;
+}
+
+/* ============================================================================
+   SPLINE & CANVAS - 120Hz WebGL Optimization  
+   ============================================================================ */
+
+canvas {
+  transform: translateZ(0);
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  /* Allow scroll passthrough */
+  touch-action: pan-y;
+  pointer-events: auto;
+}
+
+/* Spline scene wrapper - isolate from UI */
+.spline-wrapper,
+[data-spline],
+[data-spline-scene] {
+  contain: strict;
+  isolation: isolate;
+  transform: translate3d(0, 0, 0);
+  /* Prevent Spline from blocking scroll */
+  touch-action: pan-y;
+}
+
+/* ============================================================================
+   REDUCE MOTION - Respect user preference
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .ticker-track {
+    animation: none !important;
+  }
+}
+
+/* ============================================================================
+   120Hz DISPLAY SPECIFIC OPTIMIZATIONS
+   ============================================================================ */
+
+/* ProMotion and high-refresh displays */
+@media screen and (min-resolution: 2dppx) {
+  .display-120hz,
+  .fps-120 {
+    /* Smoother curves for 120Hz */
+    --spring-smooth: cubic-bezier(0.2, 0, 0.2, 1);
+    --transition-fast: 0.1s;
+    --transition-normal: 0.2s;
+  }
+  
+  /* Faster transitions look better at 120Hz */
+  .display-120hz .transition-all {
+    transition-duration: var(--transition-fast);
+  }
+}
+
+/* ============================================================================
+   DESKTOP PERFORMANCE OPTIMIZATIONS
+   For Apple Silicon M1+ Macs and high-performance Windows/Linux desktops
+   ============================================================================ */
+
+/* Base desktop optimizations */
+@media (min-width: 769px) and (hover: hover) {
+  /* Force GPU compositing on interactive elements */
+  .desktop-optimized button,
+  .desktop-optimized a,
+  .desktop-optimized [role="button"],
+  .high-performance button,
+  .high-performance a,
+  .high-performance [role="button"] {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: transform;
+  }
+  
+  /* Optimize font rendering for desktop */
+  .desktop-optimized,
+  .high-performance {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  
+  /* Desktop hover states */
+  .desktop-optimized .hover-lift:hover,
+  .high-performance .hover-lift:hover {
+    transform: translateY(-4px) translateZ(0);
+    transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+/* Apple Silicon Mac specific optimizations */
+.apple-silicon {
+  /* Ultra-smooth animations for M1/M2/M3/M4 GPUs */
+  --animation-smoothing: 0.4;
+  --spring-stiff: cubic-bezier(0.45, 1.85, 0.35, 0.85);
+  --spring-smooth: cubic-bezier(0.14, 1, 0.28, 1);
+}
+
+.apple-silicon * {
+  /* Enable all visual effects on Apple Silicon */
+  -webkit-font-smoothing: antialiased;
+}
+
+.apple-silicon canvas {
+  /* Apple GPU WebGL optimizations */
+  transform: translate3d(0, 0, 0);
+  image-rendering: -webkit-optimize-contrast;
+}
+
+/* Discrete GPU optimizations (NVIDIA, AMD) */
+.discrete-gpu {
+  --blur-enabled: 1;
+  --shadows-enabled: 1;
+  --glow-enabled: 1;
+  --particles-enabled: 1;
+}
+
+.discrete-gpu canvas {
+  /* Full quality for discrete GPUs */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* High-performance desktop mode - maximum quality */
+.high-performance.perf-ultra {
+  --blur-amount: 24px;
+  --shadow-opacity: 1;
+  --glow-intensity: 1;
+  --animation-quality: high;
+}
+
+.high-performance.perf-ultra .backdrop-blur-lg {
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+}
+
+.high-performance.perf-ultra canvas,
+.high-performance.perf-ultra [data-spline] {
+  /* Maximum GPU utilization for 3D scenes */
+  contain: strict;
+  will-change: contents;
+}
+
+/* ============================================================================
+   LAYER MANAGEMENT - Prevent layer explosion
+   ============================================================================ */
+
+/* Only promote actively animating elements */
+.animating {
+  will-change: transform, opacity;
+}
+
+/* Remove will-change after animation ends */
+.animation-complete {
+  will-change: auto;
+}
+
+/* Limit backdrop-blur on mobile for performance */
+@media (max-width: 768px) {
+  .backdrop-blur-xl,
+  .backdrop-blur-2xl,
+  .backdrop-blur-3xl {
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+}
+
+/* ============================================================================
+   SCROLL SNAP - Optional smooth scroll sections
+   ============================================================================ */
+
+.scroll-snap-container {
+  scroll-snap-type: y proximity;
+  overscroll-behavior-y: contain;
+}
+
+.scroll-snap-section {
+  scroll-snap-align: start;
+}
+
+/* ============================================================================
+   DESKTOP LITE MODE - User-controlled performance optimization
+   ============================================================================
+   
+   When enabled via the lite mode toggle, this disables heavy render effects
+   (shadows, glows, backdrop-blur) while KEEPING ANIMATIONS working.
+   
+   This allows users with older hardware or who prefer cleaner visuals to
+   still enjoy the site with smooth animations.
+   ============================================================================ */
+
+/* Desktop Lite Mode - Disable heavy effects */
+html.desktop-lite-mode {
+  /* CSS variables for lite mode */
+  --lite-mode: 1;
+  --blur-enabled: 0;
+  --shadows-enabled: 0;
+  --glow-enabled: 0;
+}
+
+/* Disable backdrop blur in lite mode */
+html.desktop-lite-mode .backdrop-blur-sm,
+html.desktop-lite-mode .backdrop-blur,
+html.desktop-lite-mode .backdrop-blur-md,
+html.desktop-lite-mode .backdrop-blur-lg,
+html.desktop-lite-mode .backdrop-blur-xl,
+html.desktop-lite-mode .backdrop-blur-2xl,
+html.desktop-lite-mode .backdrop-blur-3xl,
+html.desktop-lite-mode [class*="backdrop-blur"] {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  /* Replace blur with solid semi-transparent background */
+  background-color: rgba(0, 0, 0, 0.85) !important;
+}
+
+/* Disable heavy box shadows in lite mode */
+html.desktop-lite-mode [style*="box-shadow"],
+html.desktop-lite-mode .shadow-lg,
+html.desktop-lite-mode .shadow-xl,
+html.desktop-lite-mode .shadow-2xl,
+html.desktop-lite-mode [class*="shadow-"] {
+  box-shadow: none !important;
+}
+
+/* Disable text shadows / glows in lite mode */
+html.desktop-lite-mode [style*="text-shadow"] {
+  text-shadow: none !important;
+}
+
+/* Disable filter effects (drop-shadow, blur) in lite mode */
+html.desktop-lite-mode [style*="filter"]:not(img):not(video) {
+  filter: none !important;
+}
+
+/* Glass surfaces in lite mode - use solid background */
+html.desktop-lite-mode .glass-surface,
+html.desktop-lite-mode .glass-panel,
+html.desktop-lite-mode [data-glass] {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  background-color: rgba(10, 10, 15, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Keep borders visible for visual clarity in lite mode */
+html.desktop-lite-mode .border-blue-500\/50,
+html.desktop-lite-mode [class*="border-blue"] {
+  border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Reduce animation complexity in lite mode (optional - keep enabled for smooth UX) */
+/* Note: We're NOT disabling animations, just reducing some complexity */
+html.desktop-lite-mode .animate-pulse {
+  animation-duration: 2s !important;
+}
+
+/* Keep core animations working - these are lightweight */
+html.desktop-lite-mode .animate-spin,
+html.desktop-lite-mode .animate-bounce,
+html.desktop-lite-mode .animate-ping {
+  /* Keep these running - they're GPU accelerated */
+}
+
+/* Spline/WebGL scenes - keep running but reduce quality hint */
+html.desktop-lite-mode canvas,
+html.desktop-lite-mode [data-spline-scene] {
+  /* Scenes stay enabled - this is just a hint */
+  image-rendering: optimizeSpeed;
+}
+
+/* Disable glow effects on buttons and interactive elements */
+html.desktop-lite-mode button:hover,
+html.desktop-lite-mode a:hover {
+  box-shadow: none !important;
+}
+
+/* Lite mode indicator styling */
+html.desktop-lite-mode [data-lite-indicator] {
+  display: flex !important;
+}
+
+/* Performance boost: reduce repaints */
+html.desktop-lite-mode * {
+  /* Hint to browser to optimize */
+  -webkit-font-smoothing: subpixel-antialiased;
+}
+/* ============================================================================
+   IPHONE & ANDROID TOUCH SCROLLING FIX
+   ============================================================================
+   
+   This file fixes touch scrolling issues on:
+   - iPhone (all models, especially ProMotion 120Hz)
+   - Samsung Galaxy (120Hz displays)
+   - All Android devices
+   
+   Issues fixed:
+   - Touch scrolling lag in Ultimate Hub
+   - Page scrolling stuttering
+   - Layout/navbar touch conflicts
+   - Modal scrolling issues
+   
+   UPDATED: January 2026
+   ============================================================================ */
+
+/* ============================================================================
+   GLOBAL TOUCH OPTIMIZATIONS
+   ============================================================================ */
+
+/* Root elements - enable smooth momentum scrolling */
+/* CRITICAL: Do NOT use transform on html/body - breaks fixed z-index */
+html,
+body {
+  /* iOS momentum scrolling */
+  -webkit-overflow-scrolling: touch !important;
+  /* Allow touch gestures for scrolling */
+  touch-action: pan-y pan-x;
+  /* Remove tap highlight */
+  -webkit-tap-highlight-color: transparent;
+  /* Prevent callouts on long-press */
+  -webkit-touch-callout: none;
+  /* DO NOT USE TRANSFORM HERE - breaks fixed positioning z-index */
+  /* transform: translate3d(0, 0, 0); - REMOVED - causes z-index issues */
+}
+
+/* All scrollable elements */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ============================================================================
+   ULTIMATE HUB - Fix scrolling on iPhone and Android
+   ============================================================================ */
+
+/* Hub panel container */
+[data-ultimate-hub],
+.ultimate-hub-panel,
+.ultimate-hub-container {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior-y: contain !important;
+  /* NO TRANSFORM - breaks z-index for fixed children */
+}
+
+/* Hub content areas */
+.ultimate-hub-content,
+.ultimate-hub-scroll,
+[data-hub-scroll] {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior-y: contain !important;
+}
+
+/* Hub tabs and navigation */
+.ultimate-hub-tabs,
+.ultimate-hub-nav,
+[data-hub-tabs] {
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ============================================================================
+   MODALS & PANELS - Fix scrolling issues
+   ============================================================================ */
+
+/* All modal containers */
+[role="dialog"],
+.modal,
+.modal-container,
+.modal-panel,
+[data-modal] {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior: contain !important;
+}
+
+/* Modal content areas */
+.modal-content,
+.modal-body,
+.modal-scroll,
+[data-modal-scroll] {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior-y: contain !important;
+  /* NO TRANSFORM - prevents z-index issues */
+}
+
+/* Modal headers/footers - prevent scroll but allow taps */
+.modal-header,
+.modal-footer,
+[data-modal-header],
+[data-modal-footer] {
+  touch-action: manipulation !important;
+  -webkit-overflow-scrolling: auto;
+}
+
+/* ============================================================================
+   LAYOUT & NAVIGATION - Fix touch conflicts
+   ============================================================================ */
+
+/* Main layout container */
+[data-layout],
+.layout,
+.page-container,
+.layout-wrapper {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior-y: contain !important;
+}
+
+/* Navigation bars */
+nav,
+header,
+[data-navbar],
+.navbar,
+.navigation,
+.nav-container {
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  /* Prevent scroll in navbar */
+  -webkit-overflow-scrolling: auto;
+  overscroll-behavior: none;
+}
+
+/* Main content area */
+main,
+[role="main"],
+.main-content {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior-y: contain !important;
+}
+
+/* ============================================================================
+   SCROLLABLE LISTS & CONTAINERS
+   ============================================================================ */
+
+/* Any overflow containers */
+.overflow-y-auto,
+.overflow-y-scroll,
+.overflow-x-auto,
+.overflow-x-scroll,
+[data-scrollable] {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior: contain !important;
+  /* REMOVED transform: translateZ(0) - breaks z-index for fixed children */
+}
+
+/* Nested scrollable areas */
+.overflow-y-auto .overflow-y-auto,
+.overflow-y-scroll .overflow-y-scroll {
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior: contain !important;
+}
+
+/* ============================================================================
+   BUTTONS & INTERACTIVE ELEMENTS - Prevent conflicts
+   ============================================================================ */
+
+/* All buttons and links */
+button,
+a,
+[role="button"],
+[data-button] {
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* Input elements */
+input,
+textarea,
+select,
+[contenteditable] {
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent;
+  /* Allow text selection */
+  -webkit-user-select: auto;
+  user-select: auto;
+}
+
+/* Draggable elements - ONLY these should have touch-action:none */
+[draggable]:not(.pointer-events-none),
+[data-draggable]:not(.pointer-events-none) {
+  touch-action: none !important;
+  -webkit-user-drag: element;
+}
+
+/* ============================================================================
+   IPHONE-SPECIFIC OPTIMIZATIONS
+   ============================================================================ */
+
+@supports (-webkit-touch-callout: none) {
+  /* iPhone detected */
+  
+  /* Root optimizations */
+  html,
+  body {
+    /* Force momentum scrolling */
+    -webkit-overflow-scrolling: touch !important;
+    /* Ensure touch gestures work */
+    touch-action: pan-y pan-x !important;
+  }
+  
+  /* All scrollable areas on iPhone */
+  [data-scrollable],
+  .overflow-y-auto,
+  .overflow-y-scroll {
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y pan-x !important;
+  }
+  
+  /* Fix Safari rubber-band effect */
+  body {
+    overscroll-behavior-y: contain !important;
+  }
+  
+  /* Prevent zoom on double-tap */
+  * {
+    touch-action: manipulation;
+  }
+}
+
+/* ============================================================================
+   ANDROID-SPECIFIC OPTIMIZATIONS
+   ============================================================================ */
+
+@media (hover: none) and (pointer: coarse) {
+  /* Touch device (Android/iPhone) */
+  
+  /* Remove tap delays */
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+  
+  /* Allow selection for text */
+  p, span, h1, h2, h3, h4, h5, h6,
+  input, textarea, [contenteditable] {
+    -webkit-user-select: auto;
+    user-select: auto;
+  }
+  
+  /* Fix Android scrolling lag */
+  html,
+  body,
+  main,
+  [data-scrollable] {
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y pan-x !important;
+  }
+}
+
+/* ============================================================================
+   SAMSUNG 120Hz OPTIMIZATIONS
+   ============================================================================ */
+
+/* Samsung devices with high refresh rate */
+.samsung-120hz html,
+.samsung-120hz body {
+  /* Enable smooth scrolling at 120Hz */
+  -webkit-overflow-scrolling: touch !important;
+  scroll-behavior: auto; /* Don't use smooth, causes lag */
+  touch-action: pan-y pan-x !important;
+}
+
+.samsung-120hz [data-scrollable],
+.samsung-120hz .overflow-y-auto {
+  -webkit-overflow-scrolling: touch !important;
+  /* NO TRANSFORM - breaks z-index for fixed children */
+}
+
+/* ============================================================================
+   IPHONE PROMOTION 120Hz
+   ============================================================================ */
+
+/* iPhone Pro models with 120Hz ProMotion */
+.iphone-promotion html,
+.iphone-promotion body {
+  /* Maximum smoothness */
+  -webkit-overflow-scrolling: touch !important;
+  scroll-behavior: auto;
+  touch-action: pan-y pan-x !important;
+}
+
+.iphone-promotion [data-scrollable],
+.iphone-promotion .overflow-y-auto,
+.iphone-promotion [data-ultimate-hub] {
+  -webkit-overflow-scrolling: touch !important;
+  /* NO TRANSFORM - breaks z-index for fixed children */
+}
+
+/* ============================================================================
+   DESKTOP IN MOBILE VIEW - Allow cursor/mouse scrolling
+   When desktop browser is resized to mobile viewport width
+   ============================================================================ */
+
+/* ============================================================================
+   DESKTOP POINTER EVENTS FIX
+   Ensure clicks work on all desktop devices regardless of input detection
+   ============================================================================ */
+
+/* Desktop: ensure all pointer events work */
+@media (min-width: 769px) {
+  /* All interactive elements must be clickable */
+  button,
+  a,
+  [role="button"],
+  input,
+  select,
+  textarea,
+  [tabindex]:not([tabindex="-1"]),
+  .cursor-pointer {
+    pointer-events: auto !important;
+  }
+
+  /* Scrollable containers */
+  .overflow-y-auto,
+  .overflow-y-scroll,
+  [data-scrollable],
+  [data-ultimate-hub],
+  [role="dialog"],
+  .modal-content,
+  main {
+    overflow-y: auto !important;
+    pointer-events: auto !important;
+  }
+}
+
+/* Small viewport with mouse (desktop resized) */
+@media (max-width: 768px) and (hover: hover) {
+  html, body {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+    cursor: auto;
+  }
+
+  /* Ensure mouse wheel events propagate */
+  * {
+    pointer-events: auto;
+  }
+}
+
+/* ============================================================================
+   FIX SPECIFIC ISSUE: Ultimate Hub scrolling
+   ============================================================================ */
+
+/* Force scrolling to work in all hub areas */
+[class*="ultimate"] {
+  -webkit-overflow-scrolling: touch !important;
+}
+
+[class*="hub"] {
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* Tab panels inside hub */
+[role="tabpanel"],
+[data-tab-panel] {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior-y: contain !important;
+}
+
+/* ============================================================================
+   PERFORMANCE: Reduce repaints on scroll
+   ============================================================================ */
+
+/* During scroll, reduce GPU overhead */
+@media (hover: none) {
+  /* Touch devices only */
+  
+  /* Contain paint during scroll */
+  .overflow-y-auto,
+  .overflow-y-scroll,
+  [data-scrollable] {
+    contain: layout style paint;
+  }
+  
+  /* Fixed elements should not repaint */
+  [data-fixed],
+  .fixed,
+  [style*="position: fixed"] {
+    contain: layout;
+    will-change: auto;
+  }
+}
+
+/* ============================================================================
+   DESKTOP PAGE ON MOBILE FIX
+   When users access /desktop on mobile devices, ensure clicks/taps work
+   ============================================================================ */
+
+/* Desktop page elements that need touch interaction */
+[data-desktop-mode="true"],
+[data-desktop-only],
+.desktop-only-mode {
+  touch-action: manipulation !important;
+  pointer-events: auto !important;
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Desktop page interactive elements */
+[data-desktop-mode="true"] button,
+[data-desktop-mode="true"] a,
+[data-desktop-mode="true"] [role="button"],
+[data-desktop-mode="true"] .cursor-pointer,
+[data-desktop-only] button,
+[data-desktop-only] a,
+[data-desktop-only] [role="button"],
+.desktop-only-mode button,
+.desktop-only-mode a,
+.desktop-only-mode [role="button"] {
+  touch-action: manipulation !important;
+  pointer-events: auto !important;
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
+  min-height: 44px; /* iOS minimum touch target */
+  min-width: 44px;
+}
+
+/* Desktop page Spline containers - allow touch interaction */
+[data-desktop-mode="true"] .spline-container,
+[data-desktop-mode="true"] [data-spline-scene],
+.desktop-only-mode .spline-container,
+.desktop-only-mode [data-spline-scene] {
+  touch-action: manipulation !important;
+  pointer-events: auto !important;
+  cursor: grab;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Desktop page sections - ensure touchable */
+[data-desktop-mode="true"] section,
+.desktop-only-mode section,
+[data-allow-scroll][data-desktop-only] {
+  touch-action: pan-y pan-x !important;
+  pointer-events: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ============================================================================
+}
+
+/* Horizontal scrollers - prevent Y scroll */
+.overflow-x-auto,
+.overflow-x-scroll {
+  touch-action: pan-x !important;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: none;
+}
+
+/* Vertical scrollers - prevent X scroll */
+.overflow-y-auto,
+.overflow-y-scroll {
+  touch-action: pan-y !important;
+  overscroll-behavior-y: contain;
+  overscroll-behavior-x: none;
+}
+/**
+ * Device Tier Optimizations
+ *
+ * CSS classes for device-tier-aware rendering.
+ * These are automatically applied by CacheManagerProvider based on device capabilities.
+ *
+ * Tiers:
+ * - ultra: Apple Silicon, discrete GPUs, 16GB+ RAM
+ * - high: 8GB+ RAM, 4+ cores
+ * - medium: 4GB+ RAM, basic GPU
+ * - low: 2-4GB RAM
+ * - minimal: <2GB RAM
+ */
+
+/* =================================================================
+   BASE PERFORMANCE VARIABLES
+   ================================================================= */
+
+:root {
+  /* Default animation speeds - modified by device tier */
+  --shimmer-speed: 3s;
+  --spin-speed: 4s;
+  --pulse-speed: 3s;
+  --glow-speed: 3s;
+
+  /* Animation quality */
+  --animation-quality: high;
+  --blur-amount: 20px;
+  --shadow-quality: full;
+
+  /* 3D quality */
+  --spline-quality: high;
+  --spline-enabled: 1;
+
+  /* FPS target (set by layout.tsx) */
+  --target-fps: 60;
+  --frame-duration: 16.67ms;
+}
+
+/* =================================================================
+   ULTRA TIER - Full quality, all effects enabled
+   ================================================================= */
+
+html.device-ultra,
+html[data-device-tier="ultra"] {
+  --shimmer-speed: 2.5s;
+  --spin-speed: 3s;
+  --animation-quality: ultra;
+  --spline-quality: ultra;
+}
+
+html.device-ultra .optimized-content.quality-ultra {
+  /* Full effects for ultra devices */
+}
+
+html.device-ultra .spline-container canvas {
+  image-rendering: high-quality;
+}
+
+/* =================================================================
+   HIGH TIER - Most effects, optimized animations
+   ================================================================= */
+
+html.device-high,
+html[data-device-tier="high"] {
+  --shimmer-speed: 3s;
+  --spin-speed: 4s;
+  --animation-quality: high;
+  --spline-quality: high;
+}
+
+html.device-high .optimized-content.quality-high {
+  /* Standard high quality */
+}
+
+/* =================================================================
+   MEDIUM TIER - Reduced animations, lighter effects
+   ================================================================= */
+
+html.device-medium,
+html[data-device-tier="medium"] {
+  --shimmer-speed: 4s;
+  --spin-speed: 5s;
+  --pulse-speed: 4s;
+  --glow-speed: 4s;
+  --animation-quality: medium;
+  --blur-amount: 12px;
+  --spline-quality: medium;
+}
+
+/* Slower animations */
+html.device-medium .shimmer-line,
+html.device-medium .shimmer-spin,
+html.device-medium .shimmer-pulse,
+html.device-medium .shimmer-glow {
+  animation-duration: var(--shimmer-speed) !important;
+}
+
+/* Reduced blur */
+html.device-medium .backdrop-blur-2xl,
+html.device-medium .backdrop-blur-xl {
+  backdrop-filter: blur(var(--blur-amount)) !important;
+}
+
+/* Simplify shadows */
+html.device-medium .shadow-2xl,
+html.device-medium .shadow-xl {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* =================================================================
+   LOW TIER - Minimal animations, simplified effects
+   ================================================================= */
+
+html.device-low,
+html[data-device-tier="low"] {
+  --shimmer-speed: 6s;
+  --spin-speed: 8s;
+  --pulse-speed: 6s;
+  --animation-quality: low;
+  --blur-amount: 8px;
+  --shadow-quality: reduced;
+  --spline-quality: low;
+  --spline-enabled: 0;
+}
+
+/* Slow down complex animations instead of disabling - keeps aesthetic */
+html.device-low .shimmer-spin,
+html.device-low .shimmer-glow,
+html.device-low .shimmer-float {
+  animation-duration: 12s !important;
+}
+
+/* Keep only essential animations but slow them down */
+html.device-low .shimmer-pulse {
+  animation-duration: 10s !important;
+}
+
+/* Keep shimmer left-to-right animation with slow speed */
+html.device-low .shimmer-line,
+html.device-low .shimmer-ltr {
+  animation-duration: 10s !important;
+}
+
+/* Keep minimal blur for glass effects - 6px minimum maintains look */
+html.device-low .backdrop-blur-2xl,
+html.device-low .backdrop-blur-xl,
+html.device-low .backdrop-blur-lg {
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+  background-color: rgba(0, 0, 0, 0.75) !important;
+}
+
+html.device-low .backdrop-blur-md,
+html.device-low .backdrop-blur {
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Simplify all shadows but keep some depth */
+html.device-low [class*="shadow-"] {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Slow down decorative elements instead of hiding */
+html.device-low .shimmer-border {
+  animation-duration: 14s !important;
+  opacity: 0.5 !important;
+}
+
+html.device-low .sparkles-container {
+  opacity: 0.3 !important;
+}
+
+/* Keep 3D scenes but at reduced quality via spline-wrapper.js */
+/* Don't hide them completely - let the wrapper handle quality */
+
+/* Reduce motion speed */
+html.device-low *:not(canvas):not(video) {
+  transition-duration: 100ms !important;
+}
+
+/* =================================================================
+   MINIMAL TIER - Bare essentials only
+   ================================================================= */
+
+html.device-minimal,
+html[data-device-tier="minimal"] {
+  --animation-quality: minimal;
+  --blur-amount: 4px;
+  --shadow-quality: minimal;
+  --spline-quality: disabled;
+  --spline-enabled: 0;
+}
+
+/* Very slow animations - keeps aesthetic without CPU cost */
+html.device-minimal *:not(canvas):not(video) {
+  transition-duration: 0ms !important;
+}
+
+/* Keep minimal blur for glass effects - 4px */
+html.device-minimal [class*="backdrop-blur"] {
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+html.device-minimal [class*="blur-"]:not([class*="backdrop-blur"]) {
+  filter: blur(2px) !important;
+}
+
+/* Minimal shadows - keep some depth */
+html.device-minimal [class*="shadow"] {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* VERY slow shimmers - keeps left-to-right effect */
+html.device-minimal .shimmer-border,
+html.device-minimal .shimmer-line,
+html.device-minimal .shimmer-spin,
+html.device-minimal .shimmer-pulse,
+html.device-minimal .shimmer-glow,
+html.device-minimal .shimmer-ltr {
+  animation-duration: 16s !important;
+  opacity: 0.3 !important;
+}
+
+html.device-minimal .sparkles-container {
+  opacity: 0.15 !important;
+}
+
+/* Spline containers handled by visibility CSS */
+
+/* Keep gradients but simplify */
+html.device-minimal .bg-linear-to-r,
+html.device-minimal .bg-linear-to-l,
+html.device-minimal .bg-linear-to-b,
+html.device-minimal .bg-linear-to-t {
+  opacity: 0.8 !important;
+}
+
+/* =================================================================
+   FPS-BASED QUALITY ADJUSTMENTS
+   (Applied by PerformanceProvider based on measured FPS)
+   ================================================================= */
+
+/* Already defined in UnifiedShimmer.tsx - keep slow animations, don't disable */
+html.shimmer-quality-low .shimmer-spin,
+html.shimmer-quality-low .shimmer-glow,
+html.shimmer-quality-low .shimmer-float {
+  animation-duration: 12s !important;
+}
+
+html.shimmer-quality-disabled .shimmer-line,
+html.shimmer-quality-disabled .shimmer-spin,
+html.shimmer-quality-disabled .shimmer-pulse,
+html.shimmer-quality-disabled .shimmer-glow {
+  animation-duration: 16s !important;
+  opacity: 0.35 !important;
+}
+
+/* =================================================================
+   SCROLL PERFORMANCE
+   ================================================================= */
+
+html.is-scrolling .shimmer-line,
+html.is-scrolling .shimmer-spin,
+html.is-scrolling .shimmer-glow,
+html.is-scrolling .shimmer-float {
+  animation-play-state: paused !important;
+}
+
+html.is-scrolling canvas {
+  pointer-events: none;
+  filter: blur(1px);
+  opacity: 0.9;
+}
+
+/* =================================================================
+   PREFERS-REDUCED-MOTION
+   ================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .shimmer-line,
+  .shimmer-spin,
+  .shimmer-pulse,
+  .shimmer-glow,
+  .shimmer-float {
+    animation: none !important;
+  }
+}
+
+/* =================================================================
+   MOBILE OPTIMIZATIONS
+   ================================================================= */
+
+@media (max-width: 768px) {
+  /* Slower animations on mobile to save battery */
+  .shimmer-line { animation-duration: 5s !important; }
+  .shimmer-spin { animation-duration: 6s !important; }
+  .shimmer-pulse { animation-duration: 5s !important; }
+
+  /* Reduced blur on mobile */
+  .backdrop-blur-2xl,
+  .backdrop-blur-xl {
+    backdrop-filter: blur(12px) !important;
+  }
+
+  /* Simpler shadows */
+  .shadow-2xl,
+  .shadow-xl {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
+  }
+}
+
+/* =================================================================
+   GPU ACCELERATION HINTS
+   ================================================================= */
+
+.gpu-accelerated,
+.shimmer-gpu,
+.spline-container,
+[data-spline] {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+/* Don't use will-change for everything - only heavy animations */
+.shimmer-spin,
+.shimmer-line {
+  will-change: transform;
+}
+
+.shimmer-pulse,
+.shimmer-glow {
+  will-change: opacity;
+}
+
+/* =================================================================
+   LAYOUT SHIFT PREVENTION
+   ================================================================= */
+
+/* Reserve space for Spline scenes to prevent CLS */
+.spline-container,
+[data-spline] {
+  min-height: 300px;
+  contain: strict;
+}
+
+/* Shimmer placeholders maintain size */
+.shimmer-placeholder {
+  min-height: inherit;
+  background: linear-gradient(
+    90deg,
+    rgba(30, 30, 30, 0.8) 0%,
+    rgba(50, 50, 50, 0.8) 50%,
+    rgba(30, 30, 30, 0.8) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer-placeholder 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer-placeholder {
+  0% { 
+    background-position: 200% 0;
+    opacity: 0.3;
+  }
+  25% {
+    opacity: 0.6;
+  }
+  50% { 
+    background-position: -200% 0;
+    opacity: 1;
+  }
+  75% {
+    opacity: 0.6;
+  }
+  100% { 
+    background-position: -200% 0;
+    opacity: 0.3;
+  }
+}
+/**
+ * Safari-Specific Optimizations CSS
+ * 
+ * This file contains CSS fixes specifically for Safari browsers.
+ * It works in conjunction with the safariOptimizations.ts JavaScript module.
+ * 
+ * Classes applied by JavaScript:
+ * - .is-safari: All Safari browsers
+ * - .is-mobile-safari: Safari on iPhone/iPad
+ * - .is-ios-safari: iOS Safari specifically
+ * - .safari-legacy: Safari < 15
+ * - .safari-modern: Safari >= 16
+ */
+
+/* ================================================================
+   SAFARI BASE FIXES
+   ================================================================ */
+
+/* Safari font rendering */
+html.is-safari {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Safari needs explicit GPU layer hints for animations */
+html.is-safari .animate-pulse,
+html.is-safari .animate-spin,
+html.is-safari .animate-bounce,
+html.is-safari .animate-ping {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* Safari backdrop-filter performance fix */
+html.is-safari .backdrop-blur-2xl {
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+}
+
+html.is-safari .backdrop-blur-xl {
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+html.is-safari .backdrop-blur-lg {
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+/* Safari gradient fix */
+html.is-safari .bg-linear-to-r,
+html.is-safari .bg-linear-to-l,
+html.is-safari .bg-linear-to-t,
+html.is-safari .bg-linear-to-b {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* ================================================================
+   SAFARI MOBILE FIXES
+   ================================================================ */
+
+/* iOS Safari viewport height fix */
+html.is-ios-safari {
+  min-height: -webkit-fill-available;
+  min-height: 100dvh;
+}
+
+html.is-ios-safari body {
+  min-height: -webkit-fill-available;
+  min-height: 100dvh;
+}
+
+/* Mobile Safari scrolling */
+html.is-mobile-safari body {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+}
+
+html.is-mobile-safari main {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+}
+
+/* iOS Safari safe area support */
+html.is-ios-safari main {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Safari position: fixed issues */
+html.is-ios-safari .fixed {
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+}
+
+/* Safari touch-action fix */
+html.is-mobile-safari [data-allow-scroll] {
+  touch-action: pan-y !important;
+  -webkit-touch-callout: none;
+}
+
+/* Safari tap highlight removal */
+html.is-mobile-safari button,
+html.is-mobile-safari a,
+html.is-mobile-safari [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ================================================================
+   SAFARI CANVAS & WEBGL FIXES
+   ================================================================ */
+
+/* Safari canvas rendering */
+html.is-safari canvas {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+/* Spline canvas optimization */
+html.is-safari .spline-container canvas,
+html.is-safari [data-spline] canvas {
+  image-rendering: auto;
+  image-rendering: -webkit-optimize-contrast;
+}
+
+/* ================================================================
+   SAFARI ANIMATION FIXES
+   ================================================================ */
+
+/* Safari shimmer animations with prefixes */
+html.is-safari .shimmer-line {
+  -webkit-animation: unified-shimmer-ltr 3s linear infinite;
+  animation: unified-shimmer-ltr 3s linear infinite;
+  -webkit-will-change: transform;
+  will-change: transform;
+}
+
+html.is-safari .shimmer-spin {
+  -webkit-animation: unified-spin 4s linear infinite;
+  animation: unified-spin 4s linear infinite;
+  -webkit-will-change: transform;
+  will-change: transform;
+}
+
+html.is-safari .shimmer-pulse {
+  -webkit-animation: unified-pulse 3s ease-in-out infinite;
+  animation: unified-pulse 3s ease-in-out infinite;
+  -webkit-will-change: opacity;
+  will-change: opacity;
+}
+
+/* Safari z-index stacking context fix */
+html.is-safari .isolate {
+  isolation: isolate;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+/* ================================================================
+   SAFARI LEGACY FIXES (< 15)
+   ================================================================ */
+
+/* Legacy Safari backdrop-filter fallback */
+html.safari-legacy .backdrop-blur-2xl,
+html.safari-legacy .backdrop-blur-xl,
+html.safari-legacy .backdrop-blur-lg {
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  background-color: rgba(0, 0, 0, 0.85);
+}
+
+/* Legacy Safari CSS contain fallback */
+html.safari-legacy [style*="contain: strict"],
+html.safari-legacy [style*="contain:strict"] {
+  contain: layout style;
+}
+
+/* Legacy Safari flexbox gap fallback */
+@supports not (gap: 1rem) {
+  html.safari-legacy .gap-1 > * + * { margin-left: 0.25rem; }
+  html.safari-legacy .gap-2 > * + * { margin-left: 0.5rem; }
+  html.safari-legacy .gap-3 > * + * { margin-left: 0.75rem; }
+  html.safari-legacy .gap-4 > * + * { margin-left: 1rem; }
+}
+
+/* ================================================================
+   SAFARI PERFORMANCE OPTIMIZATIONS
+   ================================================================ */
+
+/* Reduce animations on Safari when memory is constrained */
+html.is-safari.reduce-animations .shimmer-line,
+html.is-safari.reduce-animations .shimmer-spin,
+html.is-safari.reduce-animations .shimmer-pulse,
+html.is-safari.reduce-animations .shimmer-glow {
+  -webkit-animation: none !important;
+  animation: none !important;
+}
+
+/* Safari GPU compositing hints */
+html.is-safari .gpu-accelerated {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000;
+  perspective: 1000;
+}
+
+/* Safari text-shadow performance */
+html.is-safari .drop-shadow-lg,
+html.is-safari .drop-shadow-xl,
+html.is-safari .drop-shadow-2xl {
+  -webkit-filter: drop-shadow(0 10px 8px rgb(0 0 0 / 0.04)) drop-shadow(0 4px 3px rgb(0 0 0 / 0.1));
+  filter: drop-shadow(0 10px 8px rgb(0 0 0 / 0.04)) drop-shadow(0 4px 3px rgb(0 0 0 / 0.1));
+}
+
+/* ================================================================
+   SAFARI SCROLLBAR STYLING
+   ================================================================ */
+
+html.is-safari ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+html.is-safari ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html.is-safari ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+html.is-safari ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Hide scrollbars on mobile Safari */
+html.is-mobile-safari ::-webkit-scrollbar {
+  display: none;
+}
+
+/* ================================================================
+   SAFARI FORM FIXES
+   ================================================================ */
+
+/* Safari input styling */
+html.is-safari input,
+html.is-safari textarea,
+html.is-safari select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* Safari autofill background fix */
+html.is-safari input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px #000 inset !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+/* ================================================================
+   SAFARI MEDIA QUERY OVERRIDES
+   ================================================================ */
+
+/* Safari on retina displays */
+@media screen and (-webkit-min-device-pixel-ratio: 2) {
+  html.is-safari .text-sharp {
+    -webkit-font-smoothing: subpixel-antialiased;
+  }
+}
+
+/* Safari in dark mode */
+@media (prefers-color-scheme: dark) {
+  html.is-safari body {
+    color-scheme: dark;
+  }
+}
+/* ================================================================
+   MACOS SAFARI DESKTOP SCROLL FIXES
+   Critical for trackpad and mouse wheel scrolling
+   ================================================================ */
+
+/* macOS Safari scroll behavior */
+@media (min-width: 769px) and (hover: hover) {
+  html.is-safari {
+    scroll-behavior: auto !important;
+    overflow-y: scroll !important;
+    overscroll-behavior: auto;
+  }
+  
+  html.is-safari body {
+    overflow-y: visible !important;
+    overscroll-behavior: auto;
+  }
+  
+  /* Remove any scroll-snap that could interfere with trackpad */
+  html.is-safari,
+  html.is-safari body,
+  html.is-safari main {
+    scroll-snap-type: none !important;
+  }
+  
+  /* Ensure sections don't capture scroll */
+  html.is-safari section {
+    scroll-snap-align: none !important;
+    overflow: visible;
+  }
+}
+
+/* macOS-specific (non-iOS Safari) */
+html.is-safari.macos {
+  /* Trackpad momentum scrolling */
+  -webkit-overflow-scrolling: auto;
+}
+
+html.is-safari.macos body {
+  /* Allow natural overscroll for elastic effect */
+  overscroll-behavior: auto;
+}
+
+/* Ensure main content is scrollable on macOS Safari */
+html.is-safari.desktop-optimized main {
+  overflow: visible;
+}
+
+/* ================================================================
+   SAFARI DESKTOP DOCK & NAVBAR FIXES
+   Fixes blur rendering issues on dock icons for Analysis/Livestream
+   ================================================================ */
+
+/* Safari Desktop: Remove problematic filters from dock icons */
+html.is-safari .dock-icon-content {
+  filter: none !important;
+  -webkit-filter: none !important;
+}
+
+/* Safari: Fix dock icon rendering with simpler styling */
+html.is-safari .dock-icon-static {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  /* Use box-shadow instead of filter for glow */
+  box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
+}
+
+html.is-safari .dock-icon-static:hover {
+  box-shadow: 0 0 6px #ffffff, 0 0 12px #ffffff;
+}
+
+/* Safari: Fix dock container blur artifacts */
+html.is-safari .dock-container {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* Safari: Remove drop-shadow from dock icon labels */
+html.is-safari .dock-icon-label {
+  text-shadow: none;
+  -webkit-filter: none;
+  filter: none;
+}
+
+/* Safari Desktop: Fix tooltip blur rendering */
+html.is-safari .dock-tooltip {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: rgba(0, 0, 0, 0.95);
+}
+
+/* Safari: Ensure navbar buttons don't have blur artifacts */
+html.is-safari [data-navbar] button,
+html.is-safari [data-navbar] a {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  -webkit-filter: none;
+  filter: none;
+}
+
+/* Safari: Fix modal trigger buttons in dock */
+html.is-safari .dock-item button {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}/* Disable rotation-based "spin" animations (replace with subtle pulse).
+   This intentionally overrides Tailwind's `@keyframes spin` so any usage of
+   `animate-spin` or `animate-[spin_*]` stops rotating across the app. */
+
+@keyframes spin {
+  0%,
+  100% {
+    transform: none;
+    opacity: 0.55;
+  }
+  50% {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* Some parts of the app use a separate GPU spin keyframe. Disable that too. */
+@keyframes gpu-spin {
+  0%,
+  100% {
+    transform: none;
+    opacity: 0.55;
+  }
+  50% {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.animate-spin {
+  animation-timing-function: ease-in-out !important;
+}
+
+.animate-spin-gpu {
+  animation-timing-function: ease-in-out !important;
+}
+/**
+ * FPS OPTIMIZATION STYLES
+ * M1 Mac & Desktop Performance - Target 60fps minimum
+ * 
+ * Strategies:
+ * 1. Frame skipping for expensive effects
+ * 2. GPU acceleration for all animations
+ * 3. Disable expensive blur effects
+ * 4. Optimize paint and layout reflows
+ * 5. Hardware acceleration hints
+ */
+
+/* ========================================
+   GLOBAL GPU ACCELERATION
+   ======================================== */
+
+html {
+  /* Enable high-precision rendering */
+  scroll-behavior: auto; /* Use JS RAF-based scroll instead */
+}
+
+body {
+  /* Enable subpixel antialiasing */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  
+  /* Optimize rendering */
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  /* Prevent layout thrashing */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* ========================================
+   ANIMATION OPTIMIZATION
+   ======================================== */
+
+/* Use transform and opacity only - GPU accelerated */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) translateZ(0);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) translateZ(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%) translateZ(0);
+  }
+  to {
+    transform: translateX(0) translateZ(0);
+  }
+}
+
+/* Frame skipping for shimmers - only update every 2 frames */
+.shimmer-animated {
+  animation: shimmer 2s infinite;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* ========================================
+   BLUR ELIMINATION (M1 Mac Performance)
+   ======================================== */
+
+/* Disable all backdrop blur - expensive on M1 */
+.backdrop-blur,
+.backdrop-blur-sm,
+.backdrop-blur-md,
+.backdrop-blur-lg,
+.backdrop-blur-xl {
+  backdrop-filter: none !important;
+}
+
+/* Replace blur with solid/semi-transparent background */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  backdrop-filter: none !important;
+}
+
+.glass-dark {
+  background: rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: none !important;
+}
+
+/* Disable blur in modals */
+.modal .backdrop-blur,
+dialog .backdrop-blur {
+  backdrop-filter: none !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* ========================================
+   PAINT & LAYOUT CONTAINMENT
+   ======================================== */
+
+/* Isolate navbar from rest of page */
+nav {
+  contain: layout style paint;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Isolate footer */
+footer {
+  contain: layout style paint;
+  transform: translateZ(0);
+}
+
+/* Shimmer containers - prevent reflow */
+[data-shimmer] {
+  contain: paint;
+  will-change: auto;
+}
+
+/* Modal containers */
+.modal,
+dialog {
+  contain: layout style paint;
+  transform: translateZ(0);
+}
+
+/* ========================================
+   IMAGE OPTIMIZATION
+   ======================================== */
+
+img {
+  /* Native lazy loading */
+  loading: lazy;
+  /* Reduce repaints when loading */
+  content-visibility: auto;
+}
+
+/* Optimize background images */
+[style*="background-image"] {
+  contain: paint;
+  background-attachment: local;
+}
+
+/* ========================================
+   SHADOW OPTIMIZATION
+   ======================================== */
+
+/* Use simpler shadows - avoid complex layered shadows */
+.shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.shadow {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* Disable expensive shadows on mobile */
+@media (max-width: 768px) {
+  .shadow-lg,
+  .shadow-xl,
+  .shadow-2xl {
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.1) !important;
+  }
+}
+
+/* ========================================
+   SCROLL OPTIMIZATION
+   ======================================== */
+
+/* Optimize scroll containers */
+[data-scroll-container],
+.overflow-y-auto,
+.overflow-auto {
+  contain: layout style paint;
+  -webkit-overflow-scrolling: touch; /* Momentum scrolling on iOS */
+  overscroll-behavior: contain;
+}
+
+/* ========================================
+   ANIMATION MULTIPLIER
+   ======================================== */
+
+/* Use CSS custom properties for animation control */
+:root {
+  --animation-duration-multiplier: 0.7; /* Can be adjusted per device tier */
+  --blur-amount: 0px; /* Always 0 for M1 performance */
+  --shadow-opacity: 1;
+  --target-fps: 60;
+}
+
+/* Apply animation duration scaling */
+.animated {
+  animation-duration: calc(
+    var(--animation-duration-base, 0.5s) * var(--animation-duration-multiplier)
+  );
+}
+
+/* ========================================
+   DEVICE-TIER OPTIMIZATIONS
+   ======================================== */
+
+/* Ultra tier - all effects enabled (but with blur disabled) */
+html.fps-ultra {
+  --animation-duration-multiplier: 0.8;
+}
+
+/* High tier - normal quality */
+html.fps-high {
+  --animation-duration-multiplier: 0.7;
+}
+
+/* Medium tier - reduced animations */
+html.fps-medium {
+  --animation-duration-multiplier: 0.5;
+}
+
+html.fps-medium .animated {
+  animation: none;
+}
+
+/* Low tier - minimal animations */
+html.fps-low {
+  --animation-duration-multiplier: 0.3;
+}
+
+html.fps-low .animated,
+html.fps-low [data-animated] {
+  animation: none !important;
+}
+
+/* Minimal tier - no effects */
+html.fps-minimal {
+  --animation-duration-multiplier: 0.1;
+}
+
+html.fps-minimal .animated,
+html.fps-minimal [data-animated],
+html.fps-minimal .shimmer-animated {
+  animation: none !important;
+}
+
+html.fps-minimal [data-shimmer] {
+  display: none !important;
+}
+
+/* ========================================
+   SHIMMER QUALITY TIERS
+   ======================================== */
+
+/* High shimmer - normal speed */
+html.shimmer-quality-high [data-shimmer] {
+  opacity: 1;
+}
+
+/* Medium shimmer - slower animation */
+html.shimmer-quality-medium [data-shimmer] {
+  opacity: 0.7;
+  animation-duration: 3s !important;
+}
+
+/* Low shimmer - very slow */
+html.shimmer-quality-low [data-shimmer] {
+  opacity: 0.5;
+  animation-duration: 5s !important;
+}
+
+/* Disabled - hide all shimmers */
+html.shimmer-quality-disabled [data-shimmer] {
+  display: none !important;
+}
+
+/* ========================================
+   REDUCE MOTION
+   ======================================== */
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ========================================
+   MOBILE OPTIMIZATIONS
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* Reduce animation complexity on mobile */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Disable hover animations on touch devices */
+  @media (hover: none) {
+    :hover {
+      background-color: inherit;
+      color: inherit;
+    }
+  }
+  
+  /* Hardware acceleration for touch scrolling */
+  body {
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+  
+  /* Simpler animations on mobile */
+  html.is-mobile .animated {
+    animation: none;
+  }
+}
+
+/* ========================================
+   PERFORMANCE MONITORING
+   ======================================== */
+
+/* FPS Monitor styling */
+.fps-monitor {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 10000;
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 11px;
+  pointer-events: none;
+}
+
+/* ========================================
+   WILL-CHANGE OPTIMIZATION
+   ======================================== */
+
+/* Only use will-change for elements that actually animate */
+[data-animate] {
+  will-change: transform, opacity;
+}
+
+/* Remove will-change after animation completes */
+[data-animate].done {
+  will-change: auto;
+}
+
+/* ========================================
+   Z-INDEX OPTIMIZATION
+   ======================================== */
+
+/* Reduce z-index layers for simpler painting */
+.navbar {
+  z-index: 1000;
+}
+
+.modal {
+  z-index: 2000;
+}
+
+.toast {
+  z-index: 3000;
+}
+
+/* ========================================
+   TRANSFORM-ONLY ANIMATIONS
+   ======================================== */
+
+/* Ensure all animations use only GPU-accelerated properties */
+.transition-transform {
+  transition-property: transform;
+}
+
+.transition-opacity {
+  transition-property: opacity;
+}
+
+/* Avoid transitioning layout properties */
+.no-transition {
+  transition: none !important;
+}
+
+/* ========================================
+   FONT OPTIMIZATION
+   ======================================== */
+
+/* Use system fonts as fallback for performance */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+/* Limit font variants to reduce memory */
+@supports (font-variation-settings: normal) {
+  body {
+    font-variation-settings: 'wght' 400;
+  }
+  
+  strong,
+  .font-bold {
+    font-variation-settings: 'wght' 700;
+  }
+}
+
+/* ========================================
+   CRITICAL PERFORMANCE FIXES - NEW
+   ======================================== */
+
+/* DISABLE ALL SPINNING ANIMATIONS - Major GPU drain */
+.animate-\[spin,
+[class*="animate-[spin"],
+[style*="animation"][style*="spin"] {
+  animation: none !important;
+}
+
+/* Pause ALL animations during scroll */
+html.is-scrolling * {
+  animation-play-state: paused !important;
+  transition: none !important;
+}
+
+/* Disable backdrop-blur EVERYWHERE - extremely expensive */
+*,
+*::before,
+*::after {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Replace blur with solid backgrounds */
+.backdrop-blur-xl,
+.backdrop-blur-lg,
+.backdrop-blur-md,
+.backdrop-blur-sm,
+.backdrop-blur,
+[class*="backdrop-blur"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(0, 0, 0, 0.85) !important;
+}
+
+/* Disable expensive box shadows on scroll */
+html.is-scrolling .shadow-lg,
+html.is-scrolling .shadow-xl,
+html.is-scrolling .shadow-2xl,
+html.is-scrolling [class*="shadow-"] {
+  box-shadow: none !important;
+}
+
+/* Disable filter effects during scroll */
+html.is-scrolling [style*="filter"],
+html.is-scrolling [class*="drop-shadow"],
+html.is-scrolling .drop-shadow {
+  filter: none !important;
+}
+
+/* Disable all transforms except translateZ for compositing */
+html.is-scrolling [style*="transform"]:not([style*="translateZ"]) {
+  transform: none !important;
+}
+
+/* Kill conic gradients with spin - MAJOR CPU/GPU drain */
+[class*="conic-gradient"],
+[style*="conic-gradient"] {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.3), transparent) !important;
+  animation: none !important;
+}
+
+/* Disable framer-motion hover effects during scroll */
+html.is-scrolling [data-framer-component-type] {
+  pointer-events: none !important;
+}
+
+/* GPU layer optimization - force compositing for frequently animated elements */
+.gpu-accelerated,
+nav,
+footer,
+.modal,
+[data-spline],
+canvas {
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Avoid forcing containment on interactive layers to preserve stacking order */
+nav,
+footer,
+.modal,
+[data-spline],
+canvas {
+  contain: none;
+}
+
+/* Disable will-change on elements not currently animating */
+html.is-scrolling [style*="will-change"] {
+  will-change: auto !important;
+}
+
+/* Aggressive shimmer disable at low FPS */
+html.shimmer-quality-low [data-shimmer],
+html.shimmer-quality-low .shimmer-line,
+html.shimmer-quality-low .shimmer-border,
+html.fps-low [data-shimmer],
+html.fps-minimal [data-shimmer] {
+  display: none !important;
+  animation: none !important;
+}
+
+/* Disable particle effects */
+html.fps-low [class*="particle"],
+html.fps-low [class*="tsparticles"],
+html.fps-minimal [class*="particle"],
+html.fps-minimal [class*="tsparticles"] {
+  display: none !important;
+}
+
+/* ========================================
+   2026 ULTRA PERFORMANCE ENHANCEMENTS
+   ======================================== */
+
+/* CRITICAL: Content-visibility for off-screen sections */
+section,
+article,
+.content-section,
+[data-section] {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
+}
+
+/* Skip off-screen rendering entirely */
+[data-visibility="hidden"] {
+  content-visibility: hidden;
+  visibility: hidden;
+}
+
+/* Optimize very long lists */
+.virtual-list-item,
+[data-virtual-item] {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 50px;
+}
+
+/* CRITICAL: Force repaint boundaries */
+.repaint-boundary {
+  isolation: isolate;
+  contain: strict;
+}
+
+/* Optimized modal rendering */
+dialog[open],
+.modal-open {
+  contain: layout style paint size;
+  isolation: isolate;
+}
+
+dialog:not([open]),
+.modal:not(.modal-open) {
+  display: none !important;
+  content-visibility: hidden;
+}
+
+/* ULTRA: Disable all non-essential CSS during interaction */
+html.is-interacting .shimmer-line,
+html.is-interacting .shimmer-border,
+html.is-interacting .shimmer-glow,
+html.is-interacting [data-shimmer],
+html.is-interacting [class*="animate-pulse"] {
+  animation: none !important;
+  opacity: 0 !important;
+}
+
+/* Disable expensive gradients during scroll/interaction */
+html.is-scrolling [class*="bg-gradient"],
+html.is-interacting [class*="bg-gradient"] {
+  background: inherit !important;
+}
+
+/* CRITICAL: Optimize framer-motion */
+[data-framer-name],
+[data-framer-component-type],
+[data-framer-portal-id] {
+  contain: layout style;
+  will-change: auto;
+}
+
+/* Force layer promotion only for active animations */
+[data-framer-name].animating,
+.motion-animating {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+/* CRITICAL: Optimize SVG rendering */
+svg {
+  contain: strict;
+  transform: translateZ(0);
+}
+
+/* Disable SVG animations at low FPS */
+html.fps-low svg *,
+html.fps-minimal svg * {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* CRITICAL: Canvas optimization */
+canvas {
+  contain: strict;
+  isolation: isolate;
+  image-rendering: optimizeSpeed;
+}
+
+/* Desktop: relax containment to avoid stacking-context issues for overlays/modals */
+@media (min-width: 1024px) {
+  canvas,
+  video,
+  iframe,
+  [data-spline],
+  [data-spline-scene] {
+    contain: none !important;
+    isolation: auto !important;
+    will-change: auto !important;
+    transform: translateZ(0);
+  }
+}
+
+/* Reduce canvas quality at low FPS */
+html.fps-low canvas,
+html.fps-minimal canvas {
+  image-rendering: pixelated;
+  filter: none !important;
+}
+
+/* CRITICAL: Video optimization */
+video {
+  contain: strict;
+  object-fit: cover;
+}
+
+html.fps-low video,
+html.fps-minimal video {
+  display: none !important;
+}
+
+/* ULTRA: Aggressive touch scrolling optimization */
+@media (pointer: coarse) {
+  * {
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Disable all hover effects on touch devices */
+  *:hover {
+    animation-play-state: inherit !important;
+  }
+  
+  /* Simpler shadows on touch devices */
+  .shadow-lg,
+  .shadow-xl,
+  .shadow-2xl {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+  }
+}
+
+/* CRITICAL: Page visibility optimization */
+html.page-hidden * {
+  animation-play-state: paused !important;
+  transition: none !important;
+}
+
+/* CRITICAL: Battery saver mode detection */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+  
+  [data-shimmer],
+  .shimmer-line,
+  .shimmer-border {
+    display: none !important;
+  }
+}
+
+/* ULTRA: Print optimization */
+@media print {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
+}
+
+/* ========================================
+   DYNAMIC FPS-BASED ANIMATION SPEED
+   ======================================== */
+
+/* Animation speed scales with FPS tier */
+html.fps-ultra {
+  --animation-speed: 1;
+  --shimmer-duration: 2s;
+}
+
+html.fps-high {
+  --animation-speed: 0.85;
+  --shimmer-duration: 2.5s;
+}
+
+html.fps-medium {
+  --animation-speed: 0.6;
+  --shimmer-duration: 4s;
+}
+
+html.fps-low {
+  --animation-speed: 0;
+  --shimmer-duration: 0s;
+}
+
+html.fps-minimal {
+  --animation-speed: 0;
+  --shimmer-duration: 0s;
+}
+
+/* Apply dynamic animation speed */
+.dynamic-animation {
+  animation-duration: calc(var(--base-duration, 1s) * var(--animation-speed, 1)) !important;
+}
+
+.shimmer-line,
+.shimmer-border {
+  animation-duration: var(--shimmer-duration, 2s) !important;
+}
+/**
+ * Mobile & Scroll Performance Optimizations
+ * Targets: iPhone, Instagram, Android
+ * 
+ * Key optimizations:
+ * - Disable expensive effects during scroll
+ * - Use CSS containment to isolate expensive renders
+ * - GPU acceleration for animations
+ * - Reduce motion on low-end devices
+ */
+
+/* ============================================================
+   SCROLL PERFORMANCE - Pause animations during scroll
+   ============================================================ */
+
+/* During active scrolling, reduce expensive effects */
+html.is-scrolling {
+  /* Pause shimmer animations */
+  --shimmer-paused: 1;
+}
+
+html.is-scrolling .shimmer-spin,
+html.is-scrolling .shimmer-pulse,
+html.is-scrolling .shimmer-wave,
+html.is-scrolling .shimmer-border {
+  animation-play-state: paused !important;
+}
+
+/* Reduce filter effects during scroll */
+html.is-scrolling [style*="filter"] {
+  filter: none !important;
+}
+
+/* Pause parallax during scroll to save GPU memory */
+html.is-scrolling .parallax,
+html.is-scrolling [data-parallax] {
+  transform: none !important;
+}
+
+/* ============================================================
+   COMPONENT ISOLATION - CSS Containment
+   ============================================================ */
+
+/* Isolate expensive sections to prevent layout thrashing */
+section[data-allow-scroll],
+section[data-scrollable],
+main[data-allow-scroll] {
+  contain: layout style paint;
+  will-change: auto;
+  /* CRITICAL: Enable touch scrolling */
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior-y: contain;
+}
+
+/* When section is visible and nearby, enable GPU acceleration */
+section:not([style*="visibility: hidden"]) {
+  will-change: transform;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* CRITICAL: Main content scrolling - iPhone/Android */
+main,
+[role="main"],
+.main-content {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior-y: contain;
+}
+
+/* ============================================================
+   MOBILE TOUCH OPTIMIZATION
+   ============================================================ */
+
+@media (max-width: 768px) {
+  /* Reduce animations on mobile */
+  * {
+    /* Shorter transition durations for snappier feel */
+    transition-duration: 0.2s !important;
+  }
+
+  /* Disable expensive parallax on mobile */
+  [data-parallax],
+  .parallax,
+  .parallax-scroll {
+    transform: none !important;
+  }
+
+  /* Optimize backdrops for mobile */
+  .backdrop-blur,
+  .backdrop-blur-sm,
+  .backdrop-blur-md,
+  .backdrop-blur-lg {
+    backdrop-filter: none !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
+  }
+
+  /* Disable hover effects on touch devices */
+  .group:hover,
+  .group-hover\:,
+  [data-hover] {
+    /* Touch devices don't have hover state */
+  }
+
+  /* Optimize for single-threaded mobile */
+  html {
+    font-size: 16px; /* Prevent auto-zoom on iOS */
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* CRITICAL: Smooth scrolling on mobile (native) */
+  html {
+    scroll-behavior: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y pan-x !important;
+  }
+  
+  body {
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y pan-x !important;
+  }
+}
+
+/* ============================================================
+   ULTIMATE HUB & MODAL TOUCH SCROLLING - iPhone/Android
+   ============================================================ */
+
+[data-ultimate-hub],
+.ultimate-hub-panel,
+[data-panel],
+[role="dialog"] {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior-y: contain !important;
+  /* NO TRANSFORM - breaks z-index for fixed children */
+}
+
+/* Modal scrollable areas */
+.overflow-y-auto,
+.overflow-y-scroll,
+[data-scrollable] {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y pan-x !important;
+  overscroll-behavior-y: contain !important;
+}
+
+/* ============================================================
+   IPHONE SPECIFIC OPTIMIZATIONS
+   ============================================================ */
+
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari specific fixes - MOBILE ONLY */
+  
+  /* Fix viewport on iOS Safari - only apply on mobile viewports */
+  @media (max-width: 768px) {
+    html, body {
+      height: 100%;
+      height: 100dvh;
+      height: 100vh;
+    }
+
+    /* Prevent iOS Safari rubber band scroll */
+    body {
+      overscroll-behavior-y: contain;
+    }
+  }
+  
+  /* Desktop Safari must use auto height for proper scrolling */
+  @media (min-width: 769px) {
+    html, body {
+      height: auto !important;
+    }
+  }
+
+  /* iOS Safari font smoothing */
+  body,
+  button,
+  input,
+  select,
+  textarea {
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Disable tap highlight on iOS and fix input font size */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Fix position: fixed on iOS */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  /* Optimize animations for iOS */
+  .animate {
+    -webkit-animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* ============================================================
+   INSTAGRAM WEBVIEW OPTIMIZATION
+   ============================================================ */
+
+.is-instagram-webview,
+[data-browser*="instagram"] {
+  /* Reduce max animation duration in Instagram */
+  --max-animation-duration: 300ms;
+
+  /* Disable expensive effects in Instagram */
+}
+
+.is-instagram-webview .backdrop-blur,
+[data-browser*="instagram"] .backdrop-blur {
+  backdrop-filter: none !important;
+}
+
+/* ============================================================
+   ANIMATION PERFORMANCE
+   ============================================================ */
+
+/* GPU-accelerated animations only */
+@keyframes fps-optimized-fade {
+  0% {
+    opacity: 0;
+    will-change: opacity;
+  }
+  100% {
+    opacity: 1;
+    will-change: auto;
+  }
+}
+
+@keyframes fps-optimized-slide {
+  0% {
+    transform: translateY(20px);
+    will-change: transform;
+  }
+  100% {
+    transform: translateY(0);
+    will-change: auto;
+  }
+}
+
+/* Use these animations for critical path elements */
+.fade-in {
+  animation: fps-optimized-fade 0.3s ease-out forwards;
+}
+
+.slide-in {
+  animation: fps-optimized-slide 0.3s ease-out forwards;
+}
+
+/* ============================================================
+   MEMORY OPTIMIZATION - Cleanup off-screen content
+   ============================================================ */
+
+/* Hide off-screen elements more aggressively on mobile */
+@media (max-width: 768px) {
+  .off-screen {
+    visibility: hidden;
+    pointer-events: none;
+    /* Allow browser to free GPU memory */
+    will-change: auto;
+  }
+
+  /* De-allocate content outside viewport */
+  [data-offscreen] {
+    contain: strict;
+    content-visibility: auto;
+  }
+}
+
+/* ============================================================
+   SCROLLBAR OPTIMIZATION
+   ============================================================ */
+
+/* Custom scrollbar for better performance */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(var(--accent-rgb, 255, 255, 255), 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--accent-rgb, 255, 255, 255), 0.5);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--accent-rgb, 255, 255, 255), 0.3) transparent;
+}
+
+/* ============================================================
+   TOUCH ACTION OPTIMIZATION
+   FIXED: Only apply restrictive rules on mobile
+   ============================================================ */
+
+/* Mobile-only touch optimization */
+@media (max-width: 768px) {
+  html,
+  body {
+    touch-action: pan-y pinch-zoom;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
+
+/* Desktop needs full control */
+@media (min-width: 769px) {
+  html,
+  body {
+    touch-action: auto;
+    -webkit-user-select: auto;
+    user-select: auto;
+  }
+}
+
+/* Allow text selection where needed */
+p,
+span,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* ============================================================
+   FONT OPTIMIZATION
+   ============================================================ */
+
+/* Optimize font rendering */
+body {
+  -webkit-font-feature-settings: "kern" 1;
+  font-feature-settings: "kern" 1;
+  font-kerning: auto;
+}
+
+/* Disable font smoothing during scroll */
+html.is-scrolling {
+  -webkit-font-smoothing: grayscale;
+  font-smoothing: grayscale;
+}
+
+/* Restore after scroll */
+html:not(.is-scrolling) {
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================
+   LAYOUT STABILITY
+   ============================================================ */
+
+/* Prevent CLS (Cumulative Layout Shift) */
+section,
+article,
+main {
+  contain: layout;
+}
+
+/* Reserve space for expected dynamic content */
+.lazy-loaded-container {
+  min-height: 100px;
+  background-color: var(--skeleton-bg, rgba(0, 0, 0, 0.1));
+}
+
+/* ============================================================
+   DEBUG - Performance Monitoring (dev only)
+   ============================================================ */
+
+@supports (--variable: value) {
+  :root {
+    --scroll-fps: 60;
+    --is-scrolling: 0;
+  }
+
+  html.is-scrolling {
+    --is-scrolling: 1;
+  }
+}
+/**
+ * SmartMount CSS - Global freeze/unfreeze styles
+ * 
+ * When components are closed, they should consume ZERO resources.
+ * These styles ensure:
+ * 1. Animations stop completely when not visible
+ * 2. GPU memory is freed
+ * 3. Layout calculations are skipped
+ */
+
+/* ============================================================================
+   SMART FREEZE STATES
+   ============================================================================ */
+
+/* FROZEN STATE: Component is closed/hidden - stop ALL expensive operations */
+.smart-frozen,
+.smart-frozen *,
+[data-smart-frozen="true"],
+[data-smart-frozen="true"] * {
+  animation: none !important;
+  animation-play-state: paused !important;
+  transition: none !important;
+  will-change: auto !important;
+}
+
+/* Freeze backdrop effects (very expensive on GPU) */
+.smart-frozen [class*="backdrop-blur"],
+.smart-frozen [class*="backdrop-filter"],
+[data-smart-frozen="true"] [class*="backdrop-blur"],
+[data-smart-frozen="true"] [class*="backdrop-filter"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Freeze box shadows (GPU intensive) */
+.smart-frozen [class*="shadow-"],
+[data-smart-frozen="true"] [class*="shadow-"] {
+  box-shadow: none !important;
+}
+
+/* Freeze shimmer animations */
+.smart-frozen .shimmer-line,
+.smart-frozen .shimmer-border,
+.smart-frozen .shimmer-glow,
+.smart-frozen .shimmer-ping,
+.smart-frozen .shimmer-ltr,
+[data-smart-frozen="true"] .shimmer-line,
+[data-smart-frozen="true"] .shimmer-border,
+[data-smart-frozen="true"] .shimmer-glow,
+[data-smart-frozen="true"] .shimmer-ping,
+[data-smart-frozen="true"] .shimmer-ltr {
+  animation: none !important;
+  opacity: 0 !important;
+}
+
+/* Freeze Framer Motion portals */
+.smart-frozen [data-framer-portal-id],
+.smart-frozen [data-motion-pop-id],
+[data-smart-frozen="true"] [data-framer-portal-id],
+[data-smart-frozen="true"] [data-motion-pop-id] {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* ============================================================================
+   ACTIVE STATE: Component is open - full rendering
+   ============================================================================ */
+
+/* Keep interactive elements working when active */
+.smart-active button,
+.smart-active [role="button"],
+.smart-active a,
+.smart-active input,
+.smart-active textarea {
+  pointer-events: auto;
+  animation-play-state: running !important;
+}
+
+/* ============================================================================
+   CONTENT VISIBILITY OPTIMIZATION
+   ============================================================================ */
+
+/* Off-screen content should not be rendered */
+.smart-offscreen {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 300px;
+}
+
+/* Force GPU layers for visible content */
+.smart-visible {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* ============================================================================
+   MODAL CLOSED OPTIMIZATIONS
+   ============================================================================ */
+
+/* When any modal is closed, stop its content from consuming resources */
+[data-modal-closed="true"] {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  animation: none !important;
+}
+
+/* Modal portal optimization */
+.modal-portal-unmounted {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* ============================================================================
+   COMPONENT-SPECIFIC FREEZE STATES
+   ============================================================================ */
+
+/* Mobile Menu Freeze */
+[data-mobile-menu-closed="true"] {
+  display: none;
+  animation: none !important;
+}
+
+/* Audio Widget Menu Freeze (NOT the floating player) */
+[data-audio-widget-menu-closed="true"] {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Ultimate Control Panel Freeze */
+[data-ultimate-panel-closed="true"] {
+  display: none;
+  animation: none !important;
+}
+
+/* Navbar Modal Freeze */
+[data-navbar-modal-closed="true"] {
+  display: none;
+  animation: none !important;
+}
+
+/* ============================================================================
+   SCROLL PERFORMANCE OPTIMIZATION
+   ============================================================================ */
+
+/* During scroll, pause ALL non-critical animations */
+.is-scrolling .shimmer-line,
+.is-scrolling .shimmer-border,
+.is-scrolling .shimmer-glow,
+.is-scrolling .shimmer-ping,
+.is-scrolling .shimmer-ltr {
+  animation-play-state: paused !important;
+}
+
+.is-scrolling [class*="backdrop-blur"],
+.is-scrolling [class*="backdrop-filter"] {
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+}
+
+/* ============================================================================
+   REDUCED MOTION SUPPORT
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .smart-frozen *,
+  .smart-active * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ============================================================================
+   STRICT CONTAINMENT FOR CLOSED MODALS
+   ============================================================================ */
+
+/* Portal containers for closed modals */
+.modal-portal-container[data-open="false"] {
+  contain: strict;
+  content-visibility: hidden;
+}
+
+/* Ensure closed modals don't affect layout */
+.modal-container-closed {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  contain: strict;
+}
+/* ============================================
+   BIG DEVICE SCROLL OPTIMIZATIONS (2026)
+   Fixes for displays >= 1440px width
+   
+   UPDATED: Removed contain: strict which breaks z-index
+   ============================================ */
+
+@media (min-width: 1440px) {
+  /* Root scroll optimizations for big devices */
+  html.big-display {
+    scroll-behavior: smooth !important;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    scroll-padding-top: 80px; /* Account for navbar */
+    scroll-margin: 0;
+    height: auto !important;
+    min-height: 100vh !important;
+    /* FIXED: Use 'none' instead of anything that creates stacking context */
+    contain: none !important;
+    scroll-snap-type: none !important;
+  }
+
+  body.big-display-body {
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    min-height: 100vh !important;
+    height: auto !important;
+    /* Ensure smooth scrolling inheritance */
+    scroll-behavior: inherit;
+    scroll-snap-type: none !important;
+    /* FIXED: Don't create stacking context barrier */
+    contain: none !important;
+  }
+
+  /* Hero section optimizations for big displays */
+  .big-display .hero {
+    height: auto !important;
+    min-height: calc(100vh - 80px) !important;
+    max-height: none !important;
+    overflow: visible !important;
+    /* FIXED: Removed contain - was breaking modal z-index */
+  }
+
+  .big-display .hero-spline-wrapper {
+    height: calc(100vh - 80px) !important;
+    min-height: calc(100vh - 80px) !important;
+    max-height: none !important;
+    position: relative !important;
+    overflow: visible !important;
+    /* FIXED: Removed contain - was breaking modal z-index */
+  }
+
+  /* Main page sections for big devices */
+  .big-display #experience {
+    min-height: 1000px !important;
+    height: auto !important;
+    overflow: visible !important;
+    /* FIXED: Removed contain */
+  }
+
+  /* Spline containers for big devices */
+  .big-display .spline-container,
+  .big-display [data-spline-scene] {
+    /* FIXED: Removed contain - was creating stacking context barrier */
+    overflow: visible !important;
+  }
+
+  /* Navigation scroll optimizations */
+  .big-display .navbar {
+    position: fixed !important;
+    top: 0 !important;
+    z-index: 9999 !important;
+    /* ADDED: Ensure navbar stays on top */
+    isolation: isolate !important;
+  }
+
+  /* Parallax sections on big devices */
+  .big-display .hero-parallax-container {
+    overflow: visible !important;
+    transform: translateZ(0); /* GPU acceleration */
+  }
+
+  /* Container scroll animations */
+  .big-display .container-scroll {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Fix for theme overlays blocking scroll - FIXED: use touch-action:auto */
+  .big-display #theme-global-overlay,
+  .big-display #theme-edge-glow,
+  .big-display #theme-filter-overlay {
+    pointer-events: none !important;
+    touch-action: auto !important; /* FIXED: Allow touch/scroll passthrough */
+    z-index: 0 !important; /* FIXED: Was -1, now 0 to be valid */
+  }
+
+  /* Vertical page scroll adjustments */
+  .big-display .vertical-page-scroll {
+    right: 2rem !important; /* More space from edge on big screens */
+  }
+
+  /* Shop hero optimizations */
+  .big-display .shop-hero-parallax {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Blog hero optimizations */
+  .big-display .blog-hero {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* Ensure all content sections can scroll */
+  .big-display section[data-allow-scroll] {
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* Fix any fixed heights that might interfere */
+  .big-display .h-screen {
+    height: auto !important;
+    min-height: calc(100vh - 80px) !important;
+  }
+
+  /* Draggable split optimizations */
+  .big-display .draggable-split {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Testimonials and carousels */
+  .big-display .testimonials-carousel {
+    overflow: visible !important;
+    height: auto !important;
+  }
+}
+
+/* Ultra-wide display optimizations (>=1920px) */
+@media (min-width: 1920px) {
+  html.big-display {
+    scroll-padding-top: 100px; /* More space for ultra-wide */
+  }
+
+  .big-display .hero-spline-wrapper {
+    max-width: 1920px;
+    margin: 0 auto;
+  }
+
+  .big-display .hero canvas {
+    max-width: 1920px !important;
+    max-height: calc(100vh - 100px) !important;
+    margin: 0 auto;
+  }
+}
+
+/* 4K display optimizations (>=2560px) */
+@media (min-width: 2560px) {
+  .big-display .hero-spline-wrapper {
+    max-width: 2560px;
+    height: calc(100vh - 120px) !important;
+    min-height: calc(100vh - 120px) !important;
+  }
+
+  html.big-display {
+    scroll-padding-top: 120px;
+  }
+}
+
+/* Performance optimizations for all big devices */
+@media (min-width: 1440px) {
+  /* Do NOT blanket-apply transforms; it creates stacking contexts that break fixed elements */
+  .big-display body,
+  .big-display-body,
+  .big-display .fixed,
+  .big-display [role="dialog"],
+  .big-display [aria-modal="true"],
+  .big-display .modal,
+  .big-display [data-portal],
+  .big-display [data-radix-portal],
+  .big-display [data-backdrop],
+  .big-display .backdrop {
+    transform: none !important;
+  }
+
+  /* Targeted GPU acceleration for media/animated elements only */
+  .big-display img,
+  .big-display video,
+  .big-display canvas,
+  .big-display .animated,
+  .big-display [data-animated],
+  .big-display .gpu-accelerated,
+  .big-display [data-gpu],
+  .big-display .parallax,
+  .big-display .parallax-layer {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    will-change: transform;
+  }
+
+  /* Reduce motion for performance if needed */
+  @media (prefers-reduced-motion: reduce) {
+    .big-display * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

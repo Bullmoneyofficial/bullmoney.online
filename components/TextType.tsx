@@ -29,11 +29,14 @@ interface TextTypeProps {
 // Helper to determine if a color is light
 const isLightColor = (bgColor: string): boolean => {
   // Handle rgba/rgb format
-  const rgba = bgColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  const rgba = bgColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
   if (rgba) {
     const r = parseInt(rgba[1]);
     const g = parseInt(rgba[2]);
     const b = parseInt(rgba[3]);
+    const a = rgba[4] !== undefined ? parseFloat(rgba[4]) : 1;
+    // If alpha is very low, treat as transparent (not light)
+    if (a < 0.35) return false;
     // Calculate luminance
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
     return luminance > 0.5;
