@@ -4,10 +4,8 @@
  * Vercel Analytics & Speed Insights Wrapper
  * 
  * This client component wraps Vercel Analytics and SpeedInsights
- * with beforeSend callbacks that filter bot traffic and internal paths.
- * 
- * Required because Next.js 16 doesn't allow passing functions
- * directly from server components to client components.
+ * with beforeSend callbacks that filter bot traffic, internal paths,
+ * and respect cookie consent preferences.
  */
 
 import { Analytics } from "@vercel/analytics/react";

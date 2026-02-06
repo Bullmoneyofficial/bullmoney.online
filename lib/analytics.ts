@@ -236,7 +236,7 @@ export async function trackEvent(
   // Skip if disabled or bot
   if (!config.enabled && !config.debugMode) return;
   if (isBot()) return;
-  
+
   // Clean event name
   const cleanName = truncateString(eventName);
   
