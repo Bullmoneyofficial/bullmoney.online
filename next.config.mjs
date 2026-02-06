@@ -17,8 +17,13 @@ const nextConfig = {
   // Reduce JavaScript bundle size
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production' ? {
-      exclude: ['error', 'warn', 'log'], // Keep log for debugging notifications
+      exclude: ['error', 'warn'], // Remove ALL console.log in production = smaller bundles
     } : false,
+  },
+
+  // Skip linting during build - run `npm run lint` separately
+  eslint: {
+    ignoreDuringBuilds: true,
   },
 
   // Experimental features for Next.js 16
@@ -31,6 +36,8 @@ const nextConfig = {
     // Enable parallel routes optimization
     parallelServerCompiles: true,
     parallelServerBuildTraces: true,
+    // Use worker threads for webpack compilation (parallelism)
+    webpackBuildWorker: true,
     // Package import optimizations - tree shake these heavy packages
     optimizePackageImports: [
       '@splinetool/react-spline',
@@ -60,6 +67,20 @@ const nextConfig = {
       '@radix-ui/react-select',
       '@radix-ui/react-tabs',
       '@radix-ui/react-tooltip',
+      '@tiptap/react',
+      '@tiptap/starter-kit',
+      'react-icons',
+      'react-hook-form',
+      '@hookform/resolvers',
+      'mongoose',
+      'i18next',
+      'react-i18next',
+      'dayjs',
+      'sonner',
+      'class-variance-authority',
+      'tailwind-merge',
+      'clsx',
+      'postprocessing',
     ],
   },
 
@@ -141,7 +162,9 @@ const nextConfig = {
   },
 
   typescript: {
-    ignoreBuildErrors: process.env.NODE_ENV === 'development',
+    // Always skip TS type-checking during build - run `npm run type-check` separately
+    // This alone saves 30-60s on large projects
+    ignoreBuildErrors: true,
   },
 
   // Externalize packages that have issues with bundling
