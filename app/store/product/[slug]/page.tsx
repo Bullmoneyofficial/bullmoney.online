@@ -5,6 +5,7 @@ import { ProductGallery } from '@/components/shop/ProductGallery';
 import { ProductInfo } from '@/components/shop/ProductInfo';
 import { RelatedProducts } from '@/components/shop/RelatedProducts';
 import { ProductReviews } from '@/components/shop/ProductReviews';
+import { RecentlyViewedProducts } from '@/components/shop/RecentlyViewedProducts';
 
 // ============================================================================
 // PRODUCT DETAIL PAGE (PDP)
@@ -166,6 +167,9 @@ export default async function ProductPage({ params }: Props) {
         {product.related_products?.length > 0 && (
           <RelatedProducts products={product.related_products} />
         )}
+
+        {/* Recently Viewed Products */}
+        <RecentlyViewedProducts currentProductId={product.id} />
       </div>
     </>
   );

@@ -56,7 +56,7 @@ function LoadingScreen({ progress, message, priority }: {
   const isCritical = priority === 'critical';
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#050814] via-[#0b1226]/80 to-[#04060f] overflow-hidden">
+    <div className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-[#050814] via-[#0b1226]/80 to-[#04060f] overflow-hidden">
       {/* Animated background pattern */}
       <div className="absolute inset-0 opacity-[0.05]">
         <div
@@ -126,7 +126,7 @@ function LoadingScreen({ progress, message, priority }: {
             </div>
             <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-white via-white to-white rounded-full transition-all duration-300"
+                className="h-full bg-linear-to-r from-white via-white to-white rounded-full transition-all duration-300"
                 style={{
                   width: `${progress}%`,
                   backgroundSize: '200% 100%',
@@ -183,7 +183,7 @@ function ErrorScreen({
   fallback?: React.ReactNode;
 }) {
   return (
-    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-red-950/20 via-black to-red-950/20">
+    <div className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-red-950/20 via-black to-red-950/20">
       <div className="text-center space-y-4 p-8 rounded-2xl bg-red-500/10 border border-red-500/30 max-w-md backdrop-blur-sm">
         <div className="relative w-20 h-20 mx-auto">
           <div className="absolute inset-0 rounded-full bg-red-500/20 flex items-center justify-center animate-pulse">
@@ -200,7 +200,7 @@ function ErrorScreen({
 
         <button
           onClick={onRetry}
-          className="px-6 py-3 rounded-xl bg-gradient-to-r from-white to-white text-white font-semibold hover:from-white hover:to-white transition-all shadow-lg active:scale-95"
+          className="px-6 py-3 rounded-xl bg-linear-to-r from-white to-white text-white font-semibold hover:from-white hover:to-white transition-all shadow-lg active:scale-95"
         >
           🔄 Retry Loading
         </button>

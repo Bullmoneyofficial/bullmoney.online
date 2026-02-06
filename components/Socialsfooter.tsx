@@ -569,10 +569,10 @@ export const LiveViewersDashboard = () => {
 export const PromoBanner = ({ children }: { children?: ReactNode }) => {
   return (
     <PixelCard variant="blue" gap={6} speed={10} noFocus={true} className="group relative z-50 w-full border-none bg-white/10/20 py-3 backdrop-blur-md transition-colors hover:bg-white/30 rounded-none">
-      <div className="absolute left-0 top-0 h-[1px] w-full bg-gradient-to-r from-transparent via-white to-transparent opacity-50 shadow-[0_0_5px_rgba(255, 255, 255,0.5)]" /> 
+      <div className="absolute left-0 top-0 h-[1px] w-full bg-linear-to-r from-transparent via-white to-transparent opacity-50 shadow-[0_0_5px_rgba(255, 255, 255,0.5)]" /> 
       <div className="relative flex w-full items-center overflow-hidden">
-        <div className="pointer-events-none absolute left-0 z-10 h-full w-20 bg-gradient-to-r from-black via-transparent to-transparent" />
-        <div className="pointer-events-none absolute right-0 z-10 h-full w-20 bg-gradient-to-l from-black via-transparent to-transparent" />
+        <div className="pointer-events-none absolute left-0 z-10 h-full w-20 bg-linear-to-r from-black via-transparent to-transparent" />
+        <div className="pointer-events-none absolute right-0 z-10 h-full w-20 bg-linear-to-l from-black via-transparent to-transparent" />
         <motion.div initial={{ x: "0%" }} animate={{ x: "-50%" }} transition={{ duration: 60, repeat: Infinity, ease: "linear" }} className="flex whitespace-nowrap will-change-transform group-hover:[animation-play-state:paused]">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="flex items-center">

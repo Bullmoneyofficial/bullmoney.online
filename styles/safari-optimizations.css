@@ -51,10 +51,10 @@ html.is-safari .backdrop-blur-lg {
 }
 
 /* Safari gradient fix */
-html.is-safari .bg-gradient-to-r,
-html.is-safari .bg-gradient-to-l,
-html.is-safari .bg-gradient-to-t,
-html.is-safari .bg-gradient-to-b {
+html.is-safari .bg-linear-to-r,
+html.is-safari .bg-linear-to-l,
+html.is-safari .bg-linear-to-t,
+html.is-safari .bg-linear-to-b {
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }

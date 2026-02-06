@@ -2231,7 +2231,7 @@ function CardPattern({ mouseX, mouseY, randomString }: any) {
   return (
     <div className="pointer-events-none absolute inset-0">
       <motion.div 
-        className="absolute inset-0 bg-gradient-to-br from-red-500 via-red-600 to-rose-700 opacity-30 group-hover/card:opacity-90 backdrop-blur-xl transition duration-500" 
+        className="absolute inset-0 bg-linear-to-br from-red-500 via-red-600 to-rose-700 opacity-30 group-hover/card:opacity-90 backdrop-blur-xl transition duration-500" 
         style={{
           ...style,
           boxShadow: '0 0 40px rgba(239, 68, 68, 0.9), 0 0 80px rgba(220, 38, 38, 0.8), 0 0 120px rgba(225, 29, 72, 0.7), inset 0 0 50px rgba(239, 68, 68, 0.6)'
@@ -2286,7 +2286,7 @@ function CardPatternRed({ mouseX, mouseY, randomString }: any) {
   return (
     <div className="pointer-events-none absolute inset-0">
       <motion.div 
-        className="absolute inset-0 bg-gradient-to-br from-cyan-400 via-blue-600 to-blue-700 opacity-30 group-hover/card:opacity-90 backdrop-blur-xl transition duration-500" 
+        className="absolute inset-0 bg-linear-to-br from-cyan-400 via-blue-600 to-blue-700 opacity-30 group-hover/card:opacity-90 backdrop-blur-xl transition duration-500" 
         style={{
           ...style,
           boxShadow: '0 0 40px rgba(255, 255, 255, 0.9), 0 0 80px rgba(255, 255, 255, 0.8), 0 0 120px rgba(255, 255, 255, 0.7), inset 0 0 50px rgba(255, 255, 255, 0.6)'

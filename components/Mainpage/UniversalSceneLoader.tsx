@@ -89,7 +89,7 @@ function VideoFallback({ src, poster, alt, onLoad }: {
       />
 
       {/* Controls overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
         <div className="absolute bottom-6 left-6 flex gap-3">
           <button
             onClick={togglePlay}
@@ -156,7 +156,7 @@ function ImageFallback({ src, alt, onLoad }: {
       />
 
       {/* Gradient overlays */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/50" />
+      <div className="absolute inset-0 bg-linear-to-b from-black/30 via-transparent to-black/50" />
 
       {/* Data saver badge */}
       <div className="absolute top-6 right-6 px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white text-xs font-semibold">
@@ -182,7 +182,7 @@ function MinimalFallback({ alt, description }: {
   description: string;
 }) {
   return (
-    <div className="relative w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-950/30 via-black to-purple-950/30">
+    <div className="relative w-full h-full flex items-center justify-center bg-linear-to-br from-blue-950/30 via-black to-purple-950/30">
       {/* Subtle pattern */}
       <div
         className="absolute inset-0 opacity-5"
@@ -198,7 +198,7 @@ function MinimalFallback({ alt, description }: {
       <div className="relative z-10 text-center space-y-4 px-6 max-w-2xl">
         <div className="inline-block p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
           <div className="text-6xl mb-4">🎯</div>
-          <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-white mb-3">
+          <h2 className="text-4xl font-black text-transparent bg-clip-text bg-linear-to-r from-white to-white mb-3">
             {alt}
           </h2>
           <p className="text-lg text-white/70 leading-relaxed">
@@ -282,7 +282,7 @@ export function UniversalSceneLoader({
     >
       {/* Loading skeleton */}
       {!isLoaded && (
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/20 via-black to-purple-950/20 animate-pulse">
+        <div className="absolute inset-0 bg-linear-to-br from-blue-950/20 via-black to-purple-950/20 animate-pulse">
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-white/50 text-sm font-mono">
               Loading {content.type}...
@@ -334,7 +334,7 @@ export function UniversalSceneLoader({
       {label && isLoaded && (
         <div className="absolute bottom-8 left-8 z-20 pointer-events-none max-w-[80%]">
           <h2
-            className="text-4xl sm:text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/10 tracking-tighter select-none drop-shadow-2xl"
+            className="text-4xl sm:text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-linear-to-b from-white to-white/10 tracking-tighter select-none drop-shadow-2xl"
             style={{
               textShadow: '0 0 40px rgba(0,0,0,0.5)'
             }}

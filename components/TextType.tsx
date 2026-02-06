@@ -23,7 +23,23 @@ interface TextTypeProps {
   onSentenceComplete?: (sentence: string, index: number) => void;
   startOnVisible?: boolean;
   reverseMode?: boolean;
+  autoContrast?: boolean;
 }
+
+// Helper to determine if a color is light
+const isLightColor = (bgColor: string): boolean => {
+  // Handle rgba/rgb format
+  const rgba = bgColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  if (rgba) {
+    const r = parseInt(rgba[1]);
+    const g = parseInt(rgba[2]);
+    const b = parseInt(rgba[3]);
+    // Calculate luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.5;
+  }
+  return false;
+};
 
 const TextType = ({
   text,
@@ -36,14 +52,15 @@ const TextType = ({
   className = '',
   showCursor = true,
   hideCursorWhileTyping = false,
-  cursorCharacter = '|',
+  cursorCharacter = '▎',
   cursorClassName = '',
-  cursorBlinkDuration = 0.5,
+  cursorBlinkDuration = 0.7,
   textColors = [],
   variableSpeed,
   onSentenceComplete,
   startOnVisible = false,
   reverseMode = false,
+  autoContrast = true,
   ...props
 }: TextTypeProps & React.HTMLAttributes<HTMLElement>) => {
   const [displayedText, setDisplayedText] = useState('');
@@ -51,6 +68,7 @@ const TextType = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(!startOnVisible);
+  const [textColor, setTextColor] = useState<string | undefined>(undefined);
   const cursorRef = useRef<HTMLSpanElement>(null);
   const containerRef = useRef<HTMLElement>(null);
 
@@ -63,9 +81,39 @@ const TextType = ({
   }, [variableSpeed, typingSpeed]);
 
   const getCurrentTextColor = () => {
-    if (textColors.length === 0) return;
+    if (textColors.length === 0) return textColor;
     return textColors[currentTextIndex % textColors.length];
   };
+
+  // Auto-detect background color and set contrasting text color
+  useEffect(() => {
+    if (!autoContrast || !containerRef.current) return;
+
+    const detectBackground = () => {
+      let element: HTMLElement | null = containerRef.current;
+      while (element) {
+        const bgColor = window.getComputedStyle(element).backgroundColor;
+        // Check if background is not transparent
+        if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') {
+          if (isLightColor(bgColor)) {
+            setTextColor('#000000');
+          } else {
+            setTextColor(undefined); // Use inherit/default
+          }
+          return;
+        }
+        element = element.parentElement;
+      }
+      // Default - assume dark background
+      setTextColor(undefined);
+    };
+
+    // Detect on mount and after a small delay to ensure styles are applied
+    detectBackground();
+    const timeout = setTimeout(detectBackground, 100);
+    
+    return () => clearTimeout(timeout);
+  }, [autoContrast]);
 
   useEffect(() => {
     if (!startOnVisible || !containerRef.current) return;
@@ -89,11 +137,11 @@ const TextType = ({
     if (showCursor && cursorRef.current) {
       gsap.set(cursorRef.current, { opacity: 1 });
       gsap.to(cursorRef.current, {
-        opacity: 0,
+        opacity: 0.15,
         duration: cursorBlinkDuration,
         repeat: -1,
         yoyo: true,
-        ease: 'power2.inOut'
+        ease: 'sine.inOut'
       });
     }
   }, [showCursor, cursorBlinkDuration]);
@@ -186,6 +234,7 @@ const TextType = ({
       <span
         ref={cursorRef}
         className={`text-type__cursor ${cursorClassName} ${shouldHideCursor ? 'text-type__cursor--hidden' : ''}`}
+        style={{ color: getCurrentTextColor() || 'inherit' }}
       >
         {cursorCharacter}
       </span>

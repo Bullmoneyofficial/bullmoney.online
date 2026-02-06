@@ -138,7 +138,7 @@ const BackgroundGrids = () => {
         <GridLineVertical className="left-0" />
         <GridLineVertical className="left-auto right-0" />
       </div>
-      <div className="relative h-full w-full bg-gradient-to-b from-transparent via-neutral-100 to-transparent dark:via-neutral-800">
+      <div className="relative h-full w-full bg-linear-to-b from-transparent via-neutral-100 to-transparent dark:via-neutral-800">
         <GridLineVertical className="left-0" />
         <GridLineVertical className="left-auto right-0" />
       </div>
@@ -261,7 +261,7 @@ const CollisionMechanism = React.forwardRef<
           repeatDelay: beamOptions.repeatDelay || 0,
         }}
         className={cn(
-          "absolute left-96 top-20 m-auto h-14 w-px rounded-full bg-gradient-to-t from-orange-500 via-yellow-500 to-transparent",
+          "absolute left-96 top-20 m-auto h-14 w-px rounded-full bg-linear-to-t from-orange-500 via-yellow-500 to-transparent",
           beamOptions.className
         )}
       />
@@ -300,7 +300,7 @@ const Explosion = ({ ...props }: React.HTMLProps<HTMLDivElement>) => {
         animate={{ opacity: [0, 1, 0] }}
         exit={{ opacity: 0 }}
         transition={{ duration: 1, ease: "easeOut" }}
-        className="absolute -inset-x-10 top-0 m-auto h-[4px] w-10 rounded-full bg-gradient-to-r from-transparent via-orange-500 to-transparent blur-sm"
+        className="absolute -inset-x-10 top-0 m-auto h-[4px] w-10 rounded-full bg-linear-to-r from-transparent via-orange-500 to-transparent blur-sm"
       ></motion.div>
       {spans.map((span) => (
         <motion.span
@@ -312,7 +312,7 @@ const Explosion = ({ ...props }: React.HTMLProps<HTMLDivElement>) => {
             opacity: 0,
           }}
           transition={{ duration: Math.random() * 1.5 + 0.5, ease: "easeOut" }}
-          className="absolute h-1 w-1 rounded-full bg-gradient-to-b from-orange-500 to-yellow-500"
+          className="absolute h-1 w-1 rounded-full bg-linear-to-b from-orange-500 to-yellow-500"
         />
       ))}
     </div>

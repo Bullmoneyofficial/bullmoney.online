@@ -515,7 +515,7 @@ export const HeroLoaderOverlay = memo(({ visible, message, accentColor }: { visi
     }`}
     style={{ backgroundColor: 'rgba(0,0,0,0.95)' }}
   >
-    <div className="flex flex-col items-center gap-6 rounded-3xl border border-white/10 bg-gradient-to-br from-black via-gray-900/50 to-black px-8 py-12 text-center shadow-[0_30px_120px_rgba(0,0,0,0.8)] max-w-md mx-4">
+    <div className="flex flex-col items-center gap-6 rounded-3xl border border-white/10 bg-linear-to-br from-black via-gray-900/50 to-black px-8 py-12 text-center shadow-[0_30px_120px_rgba(0,0,0,0.8)] max-w-md mx-4">
       {/* Trading-themed animated loader */}
       <div className="relative h-20 w-20">
         {/* Outer ring */}

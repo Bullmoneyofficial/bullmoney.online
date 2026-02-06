@@ -221,7 +221,7 @@ export const OptimizedSplineLoader = memo<OptimizedSplineLoaderProps>(({
   // Render error state
   if (loadState === 'error') {
     return (
-      <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-neutral-950 to-black ${className}`}>
+      <div className={`w-full h-full flex items-center justify-center bg-linear-to-br from-neutral-950 to-black ${className}`}>
         <div className="text-center text-white/40 p-8">
           <div className="text-6xl mb-4">⚠️</div>
           <div className="text-sm">3D scene unavailable</div>

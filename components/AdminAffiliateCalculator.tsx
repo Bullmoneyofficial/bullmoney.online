@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { motion } from "framer-motion";
 import { 
   DollarSign, Users, TrendingUp, Award, Target, 
   Star, Trophy, Sparkles, Calculator, Info,
@@ -253,12 +252,9 @@ export function AdminAffiliateCalculator() {
       </div>
 
       {/* Current Tier Display */}
-      <motion.div 
-        className="bg-gradient-to-br from-slate-900 to-black rounded-xl border-2 p-6"
+      <div 
+        className="bg-linear-to-br from-slate-900 to-black rounded-xl border-2 p-6"
         style={{ borderColor: earnings.tier.color }}
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.3 }}
       >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -283,14 +279,12 @@ export function AdminAffiliateCalculator() {
         <div className="text-sm text-slate-400">
           <p>Range: {earnings.tier.minTraders} - {earnings.tier.maxTraders === Infinity ? '∞' : earnings.tier.maxTraders} traders</p>
         </div>
-      </motion.div>
+      </div>
 
       {/* Earnings Breakdown */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <motion.div 
+        <div 
           className="bg-slate-900/70 rounded-lg border border-slate-800 p-5"
-          whileHover={{ scale: 1.02 }}
-          transition={{ duration: 0.2 }}
         >
           <div className="flex items-center gap-2 mb-2">
             <DollarSign className="w-5 h-5 text-white" />
@@ -300,12 +294,10 @@ export function AdminAffiliateCalculator() {
           <p className="text-xs text-slate-500 mt-1">
             {earnings.breakdown.totalLots} lots × ${earnings.breakdown.commissionPerLot.toFixed(2)}/lot
           </p>
-        </motion.div>
+        </div>
 
-        <motion.div 
+        <div 
           className="bg-slate-900/70 rounded-lg border border-slate-800 p-5"
-          whileHover={{ scale: 1.02 }}
-          transition={{ duration: 0.2 }}
         >
           <div className="flex items-center gap-2 mb-2">
             <Coins className="w-5 h-5 text-yellow-400" />
@@ -315,12 +307,10 @@ export function AdminAffiliateCalculator() {
           <p className="text-xs text-slate-500 mt-1">
             {earnings.breakdown.socialMultiplier}x multiplier ({earnings.breakdown.monthlyPosts} posts/month)
           </p>
-        </motion.div>
+        </div>
 
-        <motion.div 
-          className="bg-gradient-to-br from-white/20 to-white/20 rounded-lg border-2 border-white/50 p-5"
-          whileHover={{ scale: 1.02 }}
-          transition={{ duration: 0.2 }}
+        <div 
+          className="bg-linear-to-br from-white/20 to-white/20 rounded-lg border-2 border-white/50 p-5"
         >
           <div className="flex items-center gap-2 mb-2">
             <Trophy className="w-5 h-5 text-white" />
@@ -328,7 +318,7 @@ export function AdminAffiliateCalculator() {
           </div>
           <p className="text-3xl font-bold text-white">${earnings.total.toFixed(2)}</p>
           <p className="text-xs text-white mt-1">Monthly Potential</p>
-        </motion.div>
+        </div>
       </div>
 
       {/* Calculation Breakdown */}
@@ -423,7 +413,7 @@ export function AdminAffiliateCalculator() {
                 )}
               </div>
 
-              <div className="bg-gradient-to-r from-white/20 to-white/20 rounded-lg p-4 border-2 border-white/50">
+              <div className="bg-linear-to-r from-white/20 to-white/20 rounded-lg p-4 border-2 border-white/50">
                 <div className="text-xs text-white mb-2 font-semibold">TOTAL EARNINGS</div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-white">${earnings.commission.toFixed(2)}</span>

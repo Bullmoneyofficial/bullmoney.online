@@ -324,8 +324,8 @@ export const CrashTrackerDisplay = memo(function CrashTrackerDisplay({
       className="relative rounded-xl overflow-hidden group"
     >
       {/* Glass Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-red-950/40 via-slate-900/50 to-orange-900/40 border border-red-400/40 rounded-xl transition-all duration-300 group-hover:border-red-300/60 shadow-lg shadow-red-500/10" />
-      <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-br from-red-950/40 via-slate-900/50 to-orange-900/40 border border-red-400/40 rounded-xl transition-all duration-300 group-hover:border-red-300/60 shadow-lg shadow-red-500/10" />
+      <div className="absolute inset-[1px] rounded-xl bg-linear-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
       
       {/* Shimmer Effect */}
       {shimmerEnabled && (
@@ -333,13 +333,13 @@ export const CrashTrackerDisplay = memo(function CrashTrackerDisplay({
           <motion.div 
             animate={{ x: ['0%', '200%'] }}
             transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-red-500/0 via-red-400/40 to-red-500/0 opacity-100"
+            className="absolute inset-y-0 left-[-100%] w-[100%] bg-linear-to-r from-red-500/0 via-red-400/40 to-red-500/0 opacity-100"
           />
         </div>
       )}
       
       {/* Gradient Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 to-orange-500/10 rounded-xl" />
+      <div className="absolute inset-0 bg-linear-to-br from-red-500/10 to-orange-500/10 rounded-xl" />
 
       {/* Content */}
       <div className="relative z-10 p-4">

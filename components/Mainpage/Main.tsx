@@ -156,7 +156,7 @@ export const SkeletonOne = () => {
       <motion.div
         {...props}
         className={cn(
-          "w-full h-14 md:h-40 p-2 rounded-lg relative shadow-lg flex items-center bg-gradient-to-b from-white to-white dark:from-neutral-800 dark:to-neutral-700 justify-center",
+          "w-full h-14 md:h-40 p-2 rounded-lg relative shadow-lg flex items-center bg-linear-to-b from-white to-white dark:from-neutral-800 dark:to-neutral-700 justify-center",
           props.className
         )}
       >

@@ -132,10 +132,13 @@ function SplinePageComponent({
   const [isDragging, setIsDragging] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   
-  // Desktop scene state
-  const [desktopScene, setDesktopScene] = useState<string>(SPLINE_SCENES[0]);
+  // Desktop scene state - Initialize immediately on desktop for instant load
+  const [desktopScene, setDesktopScene] = useState<string>(() => {
+    // SSR-safe: pick first scene immediately for desktop
+    return SPLINE_SCENES[0];
+  });
   
-  // Mobile scene state
+  // Mobile scene state - Null initially, loads after delay
   const [mobileScene, setMobileScene] = useState<MobileSplineScene | null>(null);
   
   const containerRef = useRef<HTMLDivElement>(null);
@@ -193,18 +196,60 @@ function SplinePageComponent({
     
     if (typeof window !== 'undefined') {
       if (isMobile) {
-        const scene = pickNextMobileScene();
-        setMobileScene(scene);
+        // Smart loading for mobile
+        // Check device memory - don't load Spline on low memory devices (<4GB)
+        const hasEnoughMemory = !('deviceMemory' in navigator) || 
+                               (navigator as any).deviceMemory >= 4;
+        
+        if (hasEnoughMemory) {
+          // Delay Spline load by 15 seconds on mobile
+          const mobileLoadTimer = setTimeout(() => {
+            // Use requestIdleCallback to load only when browser is idle
+            if ('requestIdleCallback' in window) {
+              requestIdleCallback(
+                () => {
+                  // Final check: ensure page is still visible
+                  if (document.visibilityState === 'visible' && mountedRef.current) {
+                    const scene = pickNextMobileScene();
+                    setMobileScene(scene);
+                  }
+                },
+                { timeout: 5000 } // Max wait 5 seconds for idle
+              );
+            } else {
+              // Fallback for browsers without requestIdleCallback
+              if (mountedRef.current) {
+                const scene = pickNextMobileScene();
+                setMobileScene(scene);
+              }
+            }
+          }, 15000); // 15 seconds delay
+          
+          return () => {
+            clearTimeout(mobileLoadTimer);
+            mountedRef.current = false;
+          };
+        }
+        // If not enough memory, mobileScene stays null (gradient background only)
       } else {
+        // Desktop - load immediately with high priority
         const scene = pickNextDesktopScene();
         setDesktopScene(scene);
-        // Preload the scene
-        const link = document.createElement('link');
-        link.rel = 'preload';
-        link.href = scene;
-        link.as = 'fetch';
-        link.crossOrigin = 'anonymous';
-        document.head.appendChild(link);
+        
+        // Aggressive preloading for desktop - use multiple strategies
+        const preloadLink = document.createElement('link');
+        preloadLink.rel = 'preload';
+        preloadLink.href = scene;
+        preloadLink.as = 'fetch';
+        preloadLink.crossOrigin = 'anonymous';
+        document.head.appendChild(preloadLink);
+        
+        // Also prefetch for caching
+        const prefetchLink = document.createElement('link');
+        prefetchLink.rel = 'prefetch';
+        prefetchLink.href = scene;
+        prefetchLink.crossOrigin = 'anonymous';
+        document.head.appendChild(prefetchLink);
       }
     }
     
@@ -306,6 +351,17 @@ function SplinePageComponent({
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
+      {/* Enhanced Gradient Background - Visible on mobile before Spline loads */}
+      {isMobile && !mobileScene && (
+        <div 
+          className="absolute inset-0 transition-opacity duration-1000"
+          style={{
+            background: 'radial-gradient(ellipse at 50% 30%, rgba(139, 92, 246, 0.3) 0%, rgba(59, 130, 246, 0.2) 30%, transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(236, 72, 153, 0.2) 0%, transparent 40%), linear-gradient(180deg, #0a0a0a 0%, #000000 100%)',
+            zIndex: 0,
+          }}
+        />
+      )}
+      
       {/* Loading Indicator */}
       <AnimatePresence>
         {!isLoaded && (

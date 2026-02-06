@@ -335,7 +335,7 @@ export function MobileQuickActions({
                 }}
                 role="tooltip"
               >
-                <div className="relative bg-gradient-to-br from-white to-white text-white text-[11px] font-bold px-3 py-2 rounded-lg shadow-2xl backdrop-blur-md border border-white/50 whitespace-nowrap">
+                <div className="relative bg-linear-to-br from-white to-white text-white text-[11px] font-bold px-3 py-2 rounded-lg shadow-2xl backdrop-blur-md border border-white/50 whitespace-nowrap">
                   Quick Settings
                   <div className="absolute w-2 h-2 bg-white -left-1 top-1/2 -translate-y-1/2 rotate-45 border-l border-b border-white/50" />
                 </div>

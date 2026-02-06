@@ -100,16 +100,16 @@ export function AboutContent() {
         </motion.section>
 
         {/* Divider */}
-        <div className="my-8 h-px w-full bg-gradient-to-r from-sky-500/20 via-white/20 to-indigo-500/20" />
+        <div className="my-8 h-px w-full bg-linear-to-r from-sky-500/20 via-white/20 to-indigo-500/20" />
         <TestimonialsCarousel />
 
         {/* CTA / Footer */}
-        <div className="mt-8 h-px w-full bg-gradient-to-r from-sky-500/20 via-white/20 to-indigo-500/20" />
+        <div className="mt-8 h-px w-full bg-linear-to-r from-sky-500/20 via-white/20 to-indigo-500/20" />
         <footer className="mt-6 flex items-center justify-between">
           <Link href="/" className="rounded-full px-3 py-1 text-sm font-semibold text-white bg-neutral-900 ring-1 ring-sky-500/30 hover:ring-sky-400/60">
             Back
           </Link>
-          <span className="text-sm bg-gradient-to-r from-sky-400 via-white to-indigo-400 bg-clip-text text-transparent font-semibold">
+          <span className="text-sm bg-linear-to-r from-sky-400 via-white to-indigo-400 bg-clip-text text-transparent font-semibold">
              •  •  •
           </span>
         </footer>
@@ -201,7 +201,7 @@ export function TestimonialsCarousel() {
               className="object-cover opacity-40"
               priority
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-black/95 via-black/70 to-transparent" />
             
             {/* Content - clean and spacious */}
             <div className="relative text-white max-w-xl space-y-4">

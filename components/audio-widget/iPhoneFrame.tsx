@@ -84,7 +84,7 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
       <div 
         className={cn(
           "relative rounded-[40px] overflow-hidden transition-all duration-500",
-          "bg-gradient-to-b from-[#2d2d32] via-[#1c1c21] to-[#0c0c10]",
+          "bg-linear-to-b from-[#2d2d32] via-[#1c1c21] to-[#0c0c10]",
           shouldSkipHeavyEffects ? "shadow-lg" : "shadow-[0_0_80px_rgba(0,0,0,0.9),0_20px_60px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.08)]",
           "border-[4px] border-slate-600/40",
           isLocked && "opacity-60"
@@ -97,7 +97,7 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
         
         {/* Reflective shimmer on frame */}
         <motion.div
-          className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/3 pointer-events-none rounded-[36px]"
+          className="absolute inset-0 bg-linear-to-br from-white/5 via-transparent to-white/3 pointer-events-none rounded-[36px]"
           animate={shouldSkipHeavyEffects ? {} : { opacity: [0.5, 0.8, 0.5] }}
           transition={shouldSkipHeavyEffects ? {} : { duration: 3, repeat: Infinity }}
         />
@@ -115,12 +115,12 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
           >
             {/* Camera Lens in Dynamic Island */}
             <div 
-              className="relative w-3 h-3 rounded-full bg-gradient-to-br from-slate-800 to-black ring-1 ring-slate-600/50 cursor-pointer group"
+              className="relative w-3 h-3 rounded-full bg-linear-to-br from-slate-800 to-black ring-1 ring-slate-600/50 cursor-pointer group"
               onClick={(e) => { e.stopPropagation(); onOpenCamera(); }}
               onMouseEnter={() => setHoveredButton('camera')}
               onMouseLeave={() => setHoveredButton(null)}
             >
-              <div className="absolute inset-[2px] rounded-full bg-gradient-to-br from-white/60 to-white/60" />
+              <div className="absolute inset-[2px] rounded-full bg-linear-to-br from-white/60 to-white/60" />
               <motion.div 
                 className="absolute inset-0 rounded-full bg-white/30"
                 animate={shouldSkipHeavyEffects ? {} : { opacity: [0.2, 0.5, 0.2] }}
@@ -168,8 +168,8 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
               className={cn(
                 "w-[5px] h-7 rounded-l-sm transition-all shadow-lg",
                 isMuted 
-                  ? "bg-gradient-to-b from-orange-400 to-orange-600 shadow-orange-500/40" 
-                  : "bg-gradient-to-b from-slate-500 to-slate-600"
+                  ? "bg-linear-to-b from-orange-400 to-orange-600 shadow-orange-500/40" 
+                  : "bg-linear-to-b from-slate-500 to-slate-600"
               )}
             />
             <ButtonTooltip show={hoveredButton === 'mute'} text={isMuted ? "🔇 Tap to Unmute" : "🔊 Tap to Mute"} position="right" color="orange" />
@@ -180,7 +180,7 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
             <motion.button
               whileTap={{ x: -2, scale: 0.95 }}
               onClick={(e) => { e.stopPropagation(); handleVolumeUp(); }}
-              className="w-[5px] h-10 rounded-l-sm bg-gradient-to-b from-slate-500 to-slate-600 hover:from-slate-400 hover:to-slate-500 transition-all shadow-lg"
+              className="w-[5px] h-10 rounded-l-sm bg-linear-to-b from-slate-500 to-slate-600 hover:from-slate-400 hover:to-slate-500 transition-all shadow-lg"
             />
             <ButtonTooltip show={hoveredButton === 'volUp'} text="🔊 Volume Up (+10)" position="right" color="blue" />
           </div>
@@ -190,7 +190,7 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
             <motion.button
               whileTap={{ x: -2, scale: 0.95 }}
               onClick={(e) => { e.stopPropagation(); handleVolumeDown(); }}
-              className="w-[5px] h-10 rounded-l-sm bg-gradient-to-b from-slate-500 to-slate-600 hover:from-slate-400 hover:to-slate-500 transition-all shadow-lg"
+              className="w-[5px] h-10 rounded-l-sm bg-linear-to-b from-slate-500 to-slate-600 hover:from-slate-400 hover:to-slate-500 transition-all shadow-lg"
             />
             <ButtonTooltip show={hoveredButton === 'volDown'} text="🔉 Volume Down (-10)" position="right" color="blue" />
           </div>
@@ -209,8 +209,8 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
             className={cn(
               "w-[5px] h-14 rounded-r-sm transition-all shadow-lg",
               isLocked 
-                ? "bg-gradient-to-b from-red-400 to-red-600 shadow-red-500/40" 
-                : "bg-gradient-to-b from-slate-500 to-slate-600 hover:from-slate-400 hover:to-slate-500"
+                ? "bg-linear-to-b from-red-400 to-red-600 shadow-red-500/40" 
+                : "bg-linear-to-b from-slate-500 to-slate-600 hover:from-slate-400 hover:to-slate-500"
             )}
           />
           <ButtonTooltip show={hoveredButton === 'power'} text={isLocked ? "🔓 Tap to Wake" : "🔒 Sleep/Wake"} position="left" color="red" />
@@ -284,9 +284,9 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
           </div>
 
           {/* Player Header */}
-          <div className={`relative flex items-center justify-between px-3 py-2.5 bg-gradient-to-r from-slate-900/90 to-slate-800/90 rounded-t-2xl border-b border-white/5 mt-2 ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-sm'}`}>
+          <div className={`relative flex items-center justify-between px-3 py-2.5 bg-linear-to-r from-slate-900/90 to-slate-800/90 rounded-t-2xl border-b border-white/5 mt-2 ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-sm'}`}>
             <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-xl bg-gradient-to-br from-white/30 to-white/30 shadow-inner">
+              <div className="p-1.5 rounded-xl bg-linear-to-br from-white/30 to-white/30 shadow-inner">
                 {SourceIcon && <SourceIcon className="w-5 h-5 text-sky-300" />}
               </div>
               <div>
@@ -315,7 +315,7 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
           >
             {!shouldSkipHeavyEffects && (
               <motion.div
-                className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none z-10"
+                className="absolute inset-0 bg-linear-to-tr from-transparent via-white/5 to-transparent pointer-events-none z-10"
                 animate={{ x: ['-100%', '200%'] }}
                 transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
               />
@@ -375,7 +375,7 @@ export const IPhoneFrame = React.memo(function IPhoneFrame({
                 initial={{ opacity: 0, y: 10, height: 0 }}
                 animate={{ opacity: 1, y: 0, height: 'auto' }}
                 exit={{ opacity: 0, y: -10, height: 0 }}
-                className="mt-3 mx-1 p-2.5 rounded-xl bg-gradient-to-br from-white/15 to-white/15 border border-white/10 overflow-hidden"
+                className="mt-3 mx-1 p-2.5 rounded-xl bg-linear-to-br from-white/15 to-white/15 border border-white/10 overflow-hidden"
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-1.5">

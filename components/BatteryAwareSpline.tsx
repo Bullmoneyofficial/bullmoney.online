@@ -115,7 +115,7 @@ export function BatteryAwareSpline({
 
   // Default placeholder
   const defaultPlaceholder = (
-    <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-white/5 to-black/30 flex items-center justify-center">
+    <div className="absolute inset-0 bg-linear-to-br from-white/10 via-white/5 to-black/30 flex items-center justify-center">
       <div className="text-center text-white/40">
         <div className="text-2xl mb-2">🔋</div>
         <div className="text-xs">Battery Saver Active</div>

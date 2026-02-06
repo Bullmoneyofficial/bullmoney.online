@@ -188,10 +188,10 @@ function InteractiveOrbSection({ onPlayGame }: { onPlayGame: () => void }) {
   }, []);
 
   return (
-    <FreezeZone className="relative rounded-3xl overflow-hidden border-2 border-white/30 bg-gradient-to-br from-black via-blue-950/30 to-black p-4 sm:p-8">
+    <FreezeZone className="relative rounded-3xl overflow-hidden border-2 border-white/30 bg-linear-to-br from-black via-blue-950/30 to-black p-4 sm:p-8">
       {/* Static top text - no animation */}
       <div className="absolute top-6 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
-        <div className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-white/30 to-white/30 border border-white/40 backdrop-blur-sm">
+        <div className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-linear-to-r from-white/30 to-white/30 border border-white/40 backdrop-blur-sm">
           <Gamepad2 className="w-5 h-5 text-white" />
           <span className="text-base font-semibold text-white">🕹️ Hidden Game Inside!</span>
           <Sparkles className="w-5 h-5 text-white" />
@@ -212,7 +212,7 @@ function InteractiveOrbSection({ onPlayGame }: { onPlayGame: () => void }) {
             </Suspense>
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-white/20 to-white/20 animate-pulse freeze-exempt" />
+              <div className="w-32 h-32 rounded-full bg-linear-to-br from-white/20 to-white/20 animate-pulse freeze-exempt" />
             </div>
           )}
         </div>
@@ -221,7 +221,7 @@ function InteractiveOrbSection({ onPlayGame }: { onPlayGame: () => void }) {
           type="button"
           onClick={onPlayGame}
           className="absolute z-[200] px-10 py-5 text-xl rounded-full font-bold text-white 
-            bg-gradient-to-r from-white via-white to-white
+            bg-linear-to-r from-white via-white to-white
             shadow-[0_0_40px_rgba(255, 255, 255,0.6)] hover:shadow-[0_0_80px_rgba(255, 255, 255,0.9)]
             hover:scale-110 active:scale-95
             transition-all duration-300 cursor-pointer
@@ -235,7 +235,7 @@ function InteractiveOrbSection({ onPlayGame }: { onPlayGame: () => void }) {
       {/* Static tip text at bottom */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
         <div className="px-8 py-4 rounded-2xl bg-black/70 border border-white/40 backdrop-blur-md">
-          <p className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-white">
+          <p className="text-xl font-bold text-transparent bg-clip-text bg-linear-to-r from-white via-white to-white">
             🎮 Click the button to play!
           </p>
         </div>
@@ -298,7 +298,7 @@ function PacManGameModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
           <div className="p-3 sm:p-4 md:p-6 freeze-exempt">
             {/* Header */}
             <div className="text-center mb-3 sm:mb-4 pt-2">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-400 to-yellow-400">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-linear-to-r from-yellow-400 via-orange-400 to-yellow-400">
                 🎮 PAC-MAN ARCADE 🎮
               </h2>
               <p className="text-yellow-400/70 text-xs sm:text-sm mt-1 sm:mt-2">

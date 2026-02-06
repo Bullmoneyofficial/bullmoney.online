@@ -2,9 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Minus, Plus, ShoppingBag, Heart, Truck, Shield, RotateCcw, Check } from 'lucide-react';
+import { Minus, Plus, ShoppingBag, Heart, Truck, Shield, RotateCcw, Check, Ruler, Package } from 'lucide-react';
+import Link from 'next/link';
 import { useCartStore } from '@/stores/cart-store';
+import { useWishlistStore } from '@/stores/wishlist-store';
+import { useRecentlyViewedStore } from '@/stores/recently-viewed-store';
 import { toast } from 'sonner';
+import CountUp from '@/components/CountUp';
+import TextType from '@/components/TextType';
+import { ShareProductButton } from '@/components/shop/ShareProductButton';
+import { BackInStockButton } from '@/components/shop/BackInStockButton';
+import { ShippingReturnsModal } from '@/components/shop/ShippingReturnsModal';
+import { SizeGuideModal } from '@/components/shop/SizeGuideModal';
 import type { ProductWithDetails, Variant } from '@/types/store';
 
 // ============================================================================
@@ -18,8 +27,13 @@ interface ProductInfoProps {
 export function ProductInfo({ product }: ProductInfoProps) {
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
   const [quantity, setQuantity] = useState(1);
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [showShippingModal, setShowShippingModal] = useState(false);
+  const [showSizeGuide, setShowSizeGuide] = useState(false);
   const { addItem, hasItem } = useCartStore();
+  const { toggleItem, hasItem: isWishlisted } = useWishlistStore();
+  const { addItem: addRecentlyViewed } = useRecentlyViewedStore();
+
+  const wishlisted = isWishlisted(product.id);
 
   // Extract unique options from variants
   const optionTypes = new Map<string, Set<string>>();
@@ -62,7 +76,19 @@ export function ProductInfo({ product }: ProductInfoProps) {
         setQuantity(Math.max(1, matchingVariant.inventory_count));
       }
     }
-  }, [selectedOptions, product.variants, quantity]);
+  }, [product.variants, quantity]);
+
+  // Track recently viewed
+  useEffect(() => {
+    addRecentlyViewed({
+      productId: product.id,
+      name: product.name,
+      slug: product.slug,
+      price: product.base_price,
+      image: product.primary_image || null,
+      category: product.category?.name,
+    });
+  }, [product.id]);  
 
   const price = product.base_price + (selectedVariant?.price_adjustment || 0);
   const comparePrice = product.compare_at_price;
@@ -110,13 +136,18 @@ export function ProductInfo({ product }: ProductInfoProps) {
   return (
     <div className="lg:sticky lg:top-24 space-y-8">
       {/* Breadcrumb */}
-      <nav className="text-sm text-white/40">
-        <span>Store</span>
-        <span className="mx-2">/</span>
+      <nav className="text-sm text-white/40 flex items-center gap-2 flex-wrap">
+        <Link href="/store" className="hover:text-white/60 transition-colors">Store</Link>
+        <span>/</span>
         {product.category && (
           <>
-            <span>{product.category.name}</span>
-            <span className="mx-2">/</span>
+            <Link
+              href={`/store?category=${product.category.slug || product.category.name.toLowerCase()}`}
+              className="hover:text-white/60 transition-colors"
+            >
+              {product.category.name}
+            </Link>
+            <span>/</span>
           </>
         )}
         <span className="text-white">{product.name}</span>
@@ -124,7 +155,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
 
       {/* Title & Price */}
       <div className="space-y-4">
-        <h1 className="text-4xl md:text-5xl font-light tracking-tight">{product.name}</h1>
+        <h1 className="text-4xl md:text-5xl font-light tracking-tight"><TextType text={product.name} typingSpeed={Math.max(8, 30 - product.name.length / 2)} showCursor cursorCharacter="_" cursorBlinkDuration={0.5} loop={false} as="span" /></h1>
         
         {ratingStats && ratingStats.count > 0 && (
           <div className="flex items-center gap-3">
@@ -152,7 +183,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
             <>
               <span className="text-xl text-white/40 line-through">${comparePrice.toFixed(2)}</span>
               <span className="px-2 py-1 bg-white text-black text-xs font-medium rounded-md">
-                Save {Math.round((1 - price / comparePrice) * 100)}%
+                Save <CountUp to={Math.round((1 - price / comparePrice) * 100)} from={0} duration={1} className="" />%
               </span>
             </>
           )}
@@ -166,9 +197,20 @@ export function ProductInfo({ product }: ProductInfoProps) {
       {/* Variant Options */}
       {Array.from(optionTypes.entries()).map(([optionKey, values]) => (
         <div key={optionKey} className="space-y-3">
-          <label className="text-sm font-medium uppercase tracking-wider text-white/60">
-            {optionKey}: <span className="text-white">{selectedOptions[optionKey]}</span>
-          </label>
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium uppercase tracking-wider text-white/60">
+              {optionKey}: <span className="text-white">{selectedOptions[optionKey]}</span>
+            </label>
+            {optionKey.toLowerCase() === 'size' && (
+              <button
+                onClick={() => setShowSizeGuide(true)}
+                className="flex items-center gap-1.5 text-xs text-white/50 hover:text-white/70 transition-colors"
+              >
+                <Ruler className="w-3.5 h-3.5" />
+                Size Guide
+              </button>
+            )}
+          </div>
           <div className="flex flex-wrap gap-2">
             {Array.from(values).map((value) => {
               const isSelected = selectedOptions[optionKey] === value;
@@ -254,6 +296,16 @@ export function ProductInfo({ product }: ProductInfoProps) {
           )}
         </div>
 
+        {/* Back in Stock - show when out of stock */}
+        {!isInStock && (
+          <BackInStockButton
+            productId={product.id}
+            productName={product.name}
+            variantName={selectedVariant?.name}
+          />
+        )}
+
+        {isInStock && (
         <div className="flex gap-3">
           {/* Quantity Selector */}
           <div className="flex items-center h-14 bg-white/5 border border-white/10 rounded-xl">
@@ -290,35 +342,48 @@ export function ProductInfo({ product }: ProductInfoProps) {
 
           {/* Wishlist Button */}
           <button
-            onClick={() => setIsWishlisted(!isWishlisted)}
+            onClick={() => {
+              const added = toggleItem({
+                productId: product.id,
+                name: product.name,
+                slug: product.slug,
+                price: product.base_price,
+                image: product.primary_image || null,
+              });
+              toast.success(added ? 'Added to wishlist' : 'Removed from wishlist');
+            }}
             className={`w-14 h-14 rounded-xl border flex items-center justify-center transition-colors
-              ${isWishlisted 
+              ${wishlisted 
                 ? 'bg-white/10 border-white/20' 
                 : 'bg-white/5 border-white/10 hover:border-white/20'
               }`}
           >
-            <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-white' : ''}`} />
+            <Heart className={`w-5 h-5 ${wishlisted ? 'fill-white' : ''}`} />
           </button>
+
+          {/* Share Button */}
+          <ShareProductButton productName={product.name} />
         </div>
+        )}
       </div>
 
       {/* Features */}
       <div className="grid grid-cols-3 gap-4 pt-4 border-t border-white/10">
-        <div className="text-center p-4">
+        <button onClick={() => setShowShippingModal(true)} className="text-center p-4 hover:bg-white/5 rounded-xl transition-colors cursor-pointer">
           <Truck className="w-6 h-6 mx-auto mb-2 text-white/60" />
           <p className="text-xs text-white/60">Free Shipping</p>
           <p className="text-xs text-white/40">Orders $150+</p>
-        </div>
-        <div className="text-center p-4">
+        </button>
+        <button onClick={() => setShowShippingModal(true)} className="text-center p-4 hover:bg-white/5 rounded-xl transition-colors cursor-pointer">
           <Shield className="w-6 h-6 mx-auto mb-2 text-white/60" />
           <p className="text-xs text-white/60">Secure Payment</p>
           <p className="text-xs text-white/40">256-bit SSL</p>
-        </div>
-        <div className="text-center p-4">
+        </button>
+        <button onClick={() => setShowShippingModal(true)} className="text-center p-4 hover:bg-white/5 rounded-xl transition-colors cursor-pointer">
           <RotateCcw className="w-6 h-6 mx-auto mb-2 text-white/60" />
           <p className="text-xs text-white/60">Easy Returns</p>
           <p className="text-xs text-white/40">30 day policy</p>
-        </div>
+        </button>
       </div>
 
       {/* SKU */}
@@ -327,6 +392,10 @@ export function ProductInfo({ product }: ProductInfoProps) {
           SKU: {selectedVariant.sku}
         </p>
       )}
+
+      {/* Modals */}
+      <ShippingReturnsModal isOpen={showShippingModal} onClose={() => setShowShippingModal(false)} />
+      <SizeGuideModal isOpen={showSizeGuide} onClose={() => setShowSizeGuide(false)} />
     </div>
   );
 }

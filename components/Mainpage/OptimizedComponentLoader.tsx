@@ -143,7 +143,7 @@ const LoadingSkeleton = memo<{
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-black via-neutral-950 to-black relative overflow-hidden"
+      className="w-full h-full flex flex-col items-center justify-center bg-linear-to-br from-black via-neutral-950 to-black relative overflow-hidden"
     >
       {/* Animated Background Grid */}
       <div className="absolute inset-0 opacity-5">
@@ -211,7 +211,7 @@ const LoadingSkeleton = memo<{
 
       {/* Scan Line Effect */}
       <motion.div
-        className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/50 to-transparent"
+        className="absolute left-0 right-0 h-[2px] bg-linear-to-r from-transparent via-white/50 to-transparent"
         animate={{
           top: ['0%', '100%'],
         }}

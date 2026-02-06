@@ -300,7 +300,7 @@ export const TextSkeleton = memo(function TextSkeleton({
       {Array.from({ length: lines }).map((_, i) => (
         <div
           key={i}
-          className="h-4 rounded bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 shimmer-pulse"
+          className="h-4 rounded bg-linear-to-r from-gray-800 via-gray-700 to-gray-800 shimmer-pulse"
           style={{ width: widths[i % widths.length] }}
         />
       ))}

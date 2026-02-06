@@ -139,7 +139,7 @@ const ChartNewsContent = memo(() => {
         )}
         
         {/* Inner Container */}
-        <div className="relative z-10 bg-gradient-to-b from-neutral-900 to-black rounded-2xl border border-white/20 overflow-hidden max-h-[92vh] flex flex-col">
+        <div className="relative z-10 bg-linear-to-b from-neutral-900 to-black rounded-2xl border border-white/20 overflow-hidden max-h-[92vh] flex flex-col">
           {!shouldSkipHeavyEffects && <ShimmerLine color="white" />}
           
           {/* Header */}

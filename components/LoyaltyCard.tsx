@@ -292,7 +292,7 @@ const CardDesign = ({ stamps, userEmail }: { stamps: number, userEmail?: string 
           <span className="text-[9px] text-zinc-500 uppercase tracking-[0.2em]">Membro Fidelidade</span>
         </div>
         <div className="flex flex-col items-end">
-             <div className="px-3 py-1 bg-gradient-to-r from-zinc-200 to-zinc-400 text-black border border-white/20 rounded-full text-[9px] font-bold uppercase tracking-widest mb-1 shadow-lg shadow-white/10">
+             <div className="px-3 py-1 bg-linear-to-r from-zinc-200 to-zinc-400 text-black border border-white/20 rounded-full text-[9px] font-bold uppercase tracking-widest mb-1 shadow-lg shadow-white/10">
                 VIP
              </div>
         </div>

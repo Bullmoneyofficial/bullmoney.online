@@ -320,7 +320,7 @@ export default function SolarSystem3D() {
       <div className="absolute top-0 left-0 right-0 z-20 text-center pt-6 md:pt-8 px-4">
         <h2 className="text-2xl md:text-4xl lg:text-5xl font-black text-white mb-3 drop-shadow-2xl">
           The{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">BULLMONEY</span>
+          <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-cyan-400">BULLMONEY</span>
           {" "}Crypto Universe
         </h2>
         <p className="text-xs md:text-sm text-blue-200 max-w-xl mx-auto">

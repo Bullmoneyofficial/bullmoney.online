@@ -187,7 +187,7 @@ function AccessPortal() {
                 <ShieldCheck className="w-3 h-3 text-sky-500" />
                 Restricted Area
               </motion.div>
-              <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-500 tracking-tighter">
+              <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-linear-to-b from-white to-slate-500 tracking-tighter">
                 HEADQUARTERS
               </h1>
             </div>
@@ -203,7 +203,7 @@ function AccessPortal() {
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                 className="absolute inset-0 rounded-full border border-sky-500/30"
               />
-              <div className="absolute inset-4 rounded-full bg-gradient-to-br from-slate-900 to-black flex items-center justify-center border border-slate-700 shadow-[0_0_60px_rgba(255, 255, 255,0.15)] group-hover:shadow-[0_0_100px_rgba(255, 255, 255,0.4)] transition-shadow duration-500">
+              <div className="absolute inset-4 rounded-full bg-linear-to-br from-slate-900 to-black flex items-center justify-center border border-slate-700 shadow-[0_0_60px_rgba(255, 255, 255,0.15)] group-hover:shadow-[0_0_100px_rgba(255, 255, 255,0.4)] transition-shadow duration-500">
                 <div className="text-center space-y-2">
                   <Lock className="w-10 h-10 text-white mx-auto mb-2 group-hover:text-sky-400 transition-colors" />
                   <p className="text-sm font-bold text-white tracking-[0.2em] group-hover:text-sky-300 transition-colors">ACCESS</p>
@@ -519,7 +519,7 @@ function AdminDashboard() {
               >
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center text-slate-300 font-bold border border-slate-700">
+                    <div className="w-10 h-10 rounded-full bg-linear-to-br from-slate-800 to-slate-900 flex items-center justify-center text-slate-300 font-bold border border-slate-700">
                        {(user.email || '?').charAt(0).toUpperCase()}
                     </div>
                     <div className="overflow-hidden">

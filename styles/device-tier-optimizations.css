@@ -233,10 +233,10 @@ html.device-minimal .sparkles-container {
 /* Spline containers handled by visibility CSS */
 
 /* Keep gradients but simplify */
-html.device-minimal .bg-gradient-to-r,
-html.device-minimal .bg-gradient-to-l,
-html.device-minimal .bg-gradient-to-b,
-html.device-minimal .bg-gradient-to-t {
+html.device-minimal .bg-linear-to-r,
+html.device-minimal .bg-linear-to-l,
+html.device-minimal .bg-linear-to-b,
+html.device-minimal .bg-linear-to-t {
   opacity: 0.8 !important;
 }
 

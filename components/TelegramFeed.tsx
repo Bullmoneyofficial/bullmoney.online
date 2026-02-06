@@ -93,7 +93,7 @@ export function TelegramFeed({
       {showHeader && (
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-white to-white rounded-lg">
+            <div className="p-2 bg-linear-to-br from-white to-white rounded-lg">
               <MessageCircle className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -147,7 +147,7 @@ export function TelegramFeed({
               transition={{ delay: index * 0.05 }}
               className="group relative"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-linear-to-r from-white/0 via-white/5 to-white/0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity" />
 
               <div className={`relative bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg transition-all backdrop-blur-sm overflow-hidden ${
                 compact ? 'p-3' : 'p-4'
@@ -155,7 +155,7 @@ export function TelegramFeed({
                 {/* Message Header */}
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-white to-white flex items-center justify-center text-white text-sm font-bold">
+                    <div className="w-8 h-8 rounded-full bg-linear-to-br from-white to-white flex items-center justify-center text-white text-sm font-bold">
                       {message.author.charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">

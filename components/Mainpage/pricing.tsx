@@ -60,8 +60,8 @@ export function Pricing() {
                 className={cn(
                   "h-[6px] w-[6px] rounded-full shadow-[0_0_18px_rgba(233,215,168,0.45)]",
                   activePartner === "Vantage broker"
-                    ? "bg-gradient-to-r from-white to-white shadow-[0_0_18px_rgba(255, 255, 255,0.45)]"
-                    : "bg-gradient-to-r from-sky-400 to-white shadow-[0_0_18px_rgba(255, 255, 255,0.45)]"
+                    ? "bg-linear-to-r from-white to-white shadow-[0_0_18px_rgba(255, 255, 255,0.45)]"
+                    : "bg-linear-to-r from-sky-400 to-white shadow-[0_0_18px_rgba(255, 255, 255,0.45)]"
                 )}
               />
               BENEFITS • COMMUNITY
@@ -72,8 +72,8 @@ export function Pricing() {
                 className={cn(
                   "bg-clip-text text-transparent",
                   activePartner === "Vantage broker"
-                    ? "bg-gradient-to-r from-white via-white to-white"
-                    : "bg-gradient-to-r from-sky-400 via-white to-white"
+                    ? "bg-linear-to-r from-white via-white to-white"
+                    : "bg-linear-to-r from-sky-400 via-white to-white"
                 )}
               >
                 WHAT YOU GET
@@ -106,8 +106,8 @@ export function Pricing() {
                     className={cn(
                       "h-[9px] w-[9px] rotate-45 rounded-[2px] shadow-[0_0_14px]",
                       activePartner === "Vantage broker"
-                        ? "bg-gradient-to-br from-white via-white to-white shadow-[0_0_14px_rgba(255, 255, 255,0.4)]"
-                        : "bg-gradient-to-br from-sky-400 via-white to-indigo-400 shadow-[0_0_14px_rgba(255, 255, 255,0.4)]"
+                        ? "bg-linear-to-br from-white via-white to-white shadow-[0_0_14px_rgba(255, 255, 255,0.4)]"
+                        : "bg-linear-to-br from-sky-400 via-white to-indigo-400 shadow-[0_0_14px_rgba(255, 255, 255,0.4)]"
                     )}
                   />
                 </span>
@@ -188,7 +188,7 @@ function ShimmerPanel({
       onMouseMove={onMove}
       className={cn(
         "relative overflow-hidden rounded-2xl p-5 ring-1 ring-white/10",
-        "bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-sm",
+        "bg-linear-to-br from-white/5 to-white/[0.02] backdrop-blur-sm",
         "shadow-[0_1px_1px_rgba(0,0,0,0.05),0_12px_60px_rgba(2,6,23,0.35)]",
         className
       )}
@@ -291,7 +291,7 @@ function CardPattern({
     <div className="pointer-events-none">
       <div className="absolute inset-0 rounded-2xl [mask-image:linear-gradient(white,transparent)] group-hover/card:opacity-50" />
       <motion.div
-        className="absolute inset-0 rounded-2xl bg-gradient-to-r from-white to-white opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500"
+        className="absolute inset-0 rounded-2xl bg-linear-to-r from-white to-white opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500"
         style={style}
       />
       <motion.div
@@ -378,7 +378,7 @@ function CardPatternRed({
     <div className="pointer-events-none">
       <div className="absolute inset-0 rounded-2xl [mask-image:linear-gradient(white,transparent)] group-hover/card:opacity-50" />
       <motion.div
-        className="absolute inset-0 rounded-2xl bg-gradient-to-r from-white to-white opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500"
+        className="absolute inset-0 rounded-2xl bg-linear-to-r from-white to-white opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500"
         style={style}
       />
       <motion.div

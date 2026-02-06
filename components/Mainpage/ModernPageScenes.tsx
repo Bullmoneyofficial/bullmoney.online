@@ -80,7 +80,7 @@ const SceneWrapper = memo<SceneWrapperProps>(({
   // Render disabled state
   if (disabled) {
     return (
-      <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-black via-gray-900/60 to-black ${className}`}>
+      <div className={`w-full h-full flex items-center justify-center bg-linear-to-br from-black via-gray-900/60 to-black ${className}`}>
         <div className="text-center px-6 py-5 rounded-2xl border border-white/10 bg-black/50 backdrop-blur">
           <div className="text-white/60 font-mono text-xs tracking-wider mb-2">
             PERFORMANCE MODE
@@ -212,8 +212,8 @@ export const FullScreenSection = memo<FullScreenSectionProps>(({
             />
 
             {/* Gradient overlays */}
-            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-black to-transparent pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black to-transparent pointer-events-none" />
+            <div className="absolute top-0 left-0 w-full h-32 bg-linear-to-b from-black to-transparent pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-full h-32 bg-linear-to-t from-black to-transparent pointer-events-none" />
 
             {/* Label */}
             <div
@@ -221,7 +221,7 @@ export const FullScreenSection = memo<FullScreenSectionProps>(({
                 isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
               }`}
             >
-              <h2 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/10 tracking-tighter select-none drop-shadow-2xl">
+              <h2 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-transparent bg-clip-text bg-linear-to-b from-white to-white/10 tracking-tighter select-none drop-shadow-2xl">
                 {config.label}
               </h2>
             </div>

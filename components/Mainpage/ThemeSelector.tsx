@@ -209,7 +209,7 @@ export const ThemeSelector = ({
                                         </div>
                                         
                                         {/* Label & Indicators */}
-                                        <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black via-black/95 to-transparent flex items-end justify-between">
+                                        <div className="absolute inset-x-0 bottom-0 p-3 bg-linear-to-t from-black via-black/95 to-transparent flex items-end justify-between">
                                             <div>
                                                 <div className="flex items-center gap-2">
                                                     <span className={`block text-[10px] font-bold uppercase tracking-wider ${isActive ? 'text-white text-glow' : 'text-gray-400 group-hover:text-gray-200'}`}>

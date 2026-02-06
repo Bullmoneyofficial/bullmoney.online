@@ -226,7 +226,7 @@ const SplineSceneWrapper = memo<{ sceneUrl: string; allowInput: boolean }>(
 
     if (hasError) {
       return (
-        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-neutral-950 to-black">
+        <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-neutral-950 to-black">
           <div className="text-center text-white/40 p-8">
             <div className="text-6xl mb-4">⚠️</div>
             <div className="text-sm">3D scene unavailable</div>
@@ -288,7 +288,7 @@ const FallbackView = memo<{
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className={`w-full h-full relative bg-gradient-to-br from-neutral-950 via-black to-neutral-900 ${className}`}
+      className={`w-full h-full relative bg-linear-to-br from-neutral-950 via-black to-neutral-900 ${className}`}
     >
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
@@ -326,7 +326,7 @@ const FallbackView = memo<{
           {/* Trading icon with pulse */}
           <div className="mb-6">
             <motion.div
-              className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-orange-500/20 to-red-500/20 flex items-center justify-center border-2 border-orange-500/40 relative"
+              className="w-20 h-20 mx-auto mb-4 rounded-full bg-linear-to-br from-orange-500/20 to-red-500/20 flex items-center justify-center border-2 border-orange-500/40 relative"
               animate={{ scale: [1, 1.05, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
@@ -339,7 +339,7 @@ const FallbackView = memo<{
             </motion.div>
           </div>
 
-          <h3 className="text-2xl font-bold text-white mb-3 bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
+          <h3 className="text-2xl font-bold text-white mb-3 bg-linear-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
             {errorMessage ? '🛡️ Performance Mode Active' : '⚡ SPEED OPTIMIZED'}
           </h3>
 
@@ -496,7 +496,7 @@ const CheckingAnimation = memo(() => {
         {/* Progress bar */}
         <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden">
           <motion.div
-            className="h-full bg-gradient-to-r from-white to-white"
+            className="h-full bg-linear-to-r from-white to-white"
             style={{ width: `${scanProgress}%` }}
             transition={{ duration: 0.1 }}
           />
@@ -584,7 +584,7 @@ const LoadingAnimation = memo(() => {
         {[0, 120, 240].map((angle, i) => (
           <motion.div
             key={i}
-            className="absolute w-3 h-3 bg-gradient-to-br from-white to-white rounded-full shadow-lg shadow-white/50"
+            className="absolute w-3 h-3 bg-linear-to-br from-white to-white rounded-full shadow-lg shadow-white/50"
             style={{
               top: '50%',
               left: '50%',
@@ -619,7 +619,7 @@ const LoadingAnimation = memo(() => {
           </div>
           <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden border border-white/20">
             <motion.div
-              className="h-full bg-gradient-to-r from-white via-white to-white bg-[length:200%_100%]"
+              className="h-full bg-linear-to-r from-white via-white to-white bg-[length:200%_100%]"
               style={{ width: `${loadPercent}%` }}
               animate={{ backgroundPosition: ['0% 0%', '100% 0%'] }}
               transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}

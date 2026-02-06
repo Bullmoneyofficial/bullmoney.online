@@ -4,7 +4,6 @@
 const BUILD_TIMESTAMP = new Date().toISOString();
 
 const nextConfig = {
-  output: 'standalone',
   reactStrictMode: false, // Disable StrictMode in prod - reduces double renders
   compress: true,
   productionBrowserSourceMaps: false,
@@ -29,6 +28,9 @@ const nextConfig = {
       dynamic: 30,
       static: 180,
     },
+    // Enable parallel routes optimization
+    parallelServerCompiles: true,
+    parallelServerBuildTraces: true,
     // Package import optimizations - tree shake these heavy packages
     optimizePackageImports: [
       '@splinetool/react-spline',
@@ -50,6 +52,14 @@ const nextConfig = {
       'zod',
       'zustand',
       'swr',
+      'date-fns',
+      'recharts',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-popover',
+      '@radix-ui/react-select',
+      '@radix-ui/react-tabs',
+      '@radix-ui/react-tooltip',
     ],
   },
 
@@ -114,6 +124,16 @@ const nextConfig = {
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      // Cache Spline scene files aggressively (large binary files)
+      {
+        source: '/:path*.splinecode',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=604800, stale-while-revalidate=86400',
           },
         ],
       },

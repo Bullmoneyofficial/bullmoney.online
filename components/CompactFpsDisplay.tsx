@@ -105,7 +105,7 @@ const CompactFpsDisplay: React.FC<CompactFpsDisplayProps> = ({
   return (
     <div className="fps-chart-container relative" data-fps-chart>
       {/* Glass Background - NO BLUR for performance */}
-      <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-white/30 via-white/15 to-slate-900/40 border border-white/40 shadow-lg shadow-white/20" />
+      <div className="absolute inset-0 rounded-lg bg-linear-to-br from-white/30 via-white/15 to-slate-900/40 border border-white/40 shadow-lg shadow-white/20" />
 
       {/* Content - Horizontal compact layout */}
       <div className="relative px-2 py-1.5 flex items-center gap-2">

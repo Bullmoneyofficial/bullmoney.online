@@ -108,7 +108,7 @@ export function MinimizedPlayer({
             className={cn(
               "fixed flex items-center overflow-hidden",
               shouldSkipHeavyEffects ? "" : "backdrop-blur-2xl",
-              "bg-gradient-to-br from-slate-900/98 via-gray-900/98 to-black/98",
+              "bg-linear-to-br from-slate-900/98 via-gray-900/98 to-black/98",
               "border-2 border-slate-500/60 shadow-2xl",
               "hover:shadow-white/40 hover:border-white/60 hover:scale-105",
               "active:scale-95",
@@ -173,7 +173,7 @@ export function MinimizedPlayer({
                 layout
                 className={cn(
                   "relative w-full h-full flex items-center justify-center overflow-hidden",
-                  "bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800",
+                  "bg-linear-to-br from-slate-800 via-slate-700 to-slate-800",
                   "border border-slate-500/50 shadow-inner"
                 )}
                 animate={{
@@ -237,7 +237,7 @@ export function MinimizedPlayer({
                 {/* Shimmer effect */}
                 {!shouldSkipHeavyEffects && (
                   <motion.div
-                    className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent"
+                    className="absolute inset-0 bg-linear-to-tr from-transparent via-white/10 to-transparent"
                     animate={{ x: ['-100%', '200%'] }}
                     transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
                   />

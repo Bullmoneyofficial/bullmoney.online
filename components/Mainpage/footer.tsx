@@ -51,7 +51,7 @@ export function Footer() {
       <footer id="footer" className="relative w-full overflow-hidden bg-black" data-allow-scroll style={{ touchAction: "pan-y" }}>
         <div className="relative">
           {/* Minimal top border */}
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+          <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-white/20 to-transparent" />
 
           <div className="max-w-7xl mx-auto relative z-10 px-4 sm:px-6 md:px-8 pt-12 md:pt-16 pb-8 md:pb-12"
             style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}>

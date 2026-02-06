@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useRef, useState, forwardRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Activity, Lock, AlertTriangle,
   CheckCircle2, ShieldAlert, Terminal, Database, Server,
@@ -178,12 +177,11 @@ const AdminReflectiveCard = forwardRef<HTMLDivElement, AdminPanelProps>(({
           </div>
 
           <div className="flex-1 flex flex-col justify-center">
-            <AnimatePresence mode="wait">
+            <div>
               
               {/* STATE: ACCESS DENIED */}
               {status === 'ACCESS_DENIED' && (
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+                <div
                   className="text-center space-y-4"
                 >
                   <AlertTriangle size={64} className="text-[#ff003c] mx-auto animate-pulse" />
@@ -194,13 +192,12 @@ const AdminReflectiveCard = forwardRef<HTMLDivElement, AdminPanelProps>(({
                   <div className="mt-8 p-3 bg-[#ff003c]/10 border border-[#ff003c]/30 rounded text-[10px]">
                     INCIDENT REPORTED TO ADMIN
                   </div>
-                </motion.div>
+                </div>
               )}
 
               {/* STATE: PIN ENTRY */}
               {status === 'PIN_ENTRY' && scanProgress === 0 && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                <div
                   className="w-full max-w-xs mx-auto text-center"
                 >
                   <Lock size={48} className="text-[#2997FF] mx-auto mb-6" />
@@ -232,24 +229,23 @@ const AdminReflectiveCard = forwardRef<HTMLDivElement, AdminPanelProps>(({
                       DECRYPT DATA
                     </button>
                   </form>
-                </motion.div>
+                </div>
               )}
 
               {/* STATE: LOADING DASHBOARD */}
               {scanProgress > 0 && scanProgress < 100 && (
-                <motion.div className="text-center w-full">
-                  <Activity size={48} className="text-[#00ff9d] mx-auto mb-4 animate-spin" />
+                <div className="text-center w-full">
+                  <Activity size={48} className="text-[#00ff9d] mx-auto mb-4" />
                   <p className="text-xs tracking-widest text-[#00ff9d] mb-2">DECRYPTING DATABASE...</p>
                   <div className="w-full h-1 bg-white/10 rounded overflow-hidden">
                     <div className="h-full bg-[#00ff9d]" style={{ width: `${scanProgress}%` }} />
                   </div>
-                </motion.div>
+                </div>
               )}
 
               {/* STATE: ADMIN DASHBOARD */}
               {status === 'DASHBOARD' && (
-                <motion.div 
-                  initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                <div
                   className="h-full overflow-y-auto pb-10"
                 >
                   {/* Server Status */}
@@ -309,10 +305,10 @@ const AdminReflectiveCard = forwardRef<HTMLDivElement, AdminPanelProps>(({
                     </div>
                   </div>
 
-                </motion.div>
+                </div>
               )}
 
-            </AnimatePresence>
+            </div>
           </div>
 
           {/* FOOTER */}

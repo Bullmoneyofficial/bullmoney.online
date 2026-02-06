@@ -544,7 +544,7 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
       {/* Header */}
       <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-neutral-800 bg-neutral-900/50">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-gradient-to-br from-white to-white rounded-xl">
+          <div className="p-2 bg-linear-to-br from-white to-white rounded-xl">
             <Tv className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -1149,7 +1149,7 @@ function AdminLogin({ onLogin }: { onLogin: () => void }) {
     >
       <div className="p-8">
         <div className="flex flex-col items-center mb-8">
-          <div className="p-3 bg-gradient-to-br from-white to-white rounded-2xl mb-4">
+          <div className="p-3 bg-linear-to-br from-white to-white rounded-2xl mb-4">
             <Tv className="w-8 h-8 text-white" />
           </div>
           <h2 className="text-white font-bold text-xl">Admin Access</h2>

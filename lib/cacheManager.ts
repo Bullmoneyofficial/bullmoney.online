@@ -294,14 +294,20 @@ function isVolatileKey(key: string): boolean {
  * Clear all caches except preserved keys (used on major updates)
  * PRESERVES: User preferences, auth state, analytics, device tier
  * CLEARS: Cached content, API responses, Spline scenes
+ * 
+ * CRITICAL: Auth/session keys are ALWAYS preserved, even on full cache clear.
+ * Uses backup-and-restore pattern for maximum safety.
  */
 function clearAllCaches(): void {
   const preserved = new Map<string, string>();
 
-  // Backup ALL keys that should be preserved
+  // Backup ALL keys that should be preserved (auth, preferences, etc.)
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    if (key && shouldPreserveKey(key)) {
+    if (!key) continue;
+    
+    // Preserve if it's in our preserved list
+    if (shouldPreserveKey(key)) {
       try {
         const value = localStorage.getItem(key);
         if (value) {
@@ -311,14 +317,30 @@ function clearAllCaches(): void {
       } catch (e) {
         // Ignore
       }
+      continue;
+    }
+    
+    // ALWAYS preserve Supabase auth tokens (sb-*, supabase.*)
+    if (key.startsWith('sb-') || key.startsWith('supabase')) {
+      try {
+        const value = localStorage.getItem(key);
+        if (value) {
+          preserved.set(key, value);
+          console.log(`[CacheManager] Preserving Supabase key: ${key}`);
+        }
+      } catch (e) {
+        // Ignore
+      }
     }
   }
 
-  // Clear all BullMoney-related keys (except preserved ones)
+  // Clear only BullMoney cache/volatile keys (NOT all bullmoney keys)
   const keysToRemove: string[] = [];
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    if (key?.startsWith('bullmoney') && !shouldPreserveKey(key)) {
+    if (!key) continue;
+    // Only remove keys we know are safe to clear
+    if (key.startsWith('bullmoney') && !shouldPreserveKey(key) && isVolatileKey(key)) {
       keysToRemove.push(key);
     }
   }
@@ -333,7 +355,7 @@ function clearAllCaches(): void {
     }
   });
 
-  // Restore preserved keys
+  // Restore preserved keys (safety net - re-write them in case they were accidentally removed)
   preserved.forEach((value, key) => {
     try {
       localStorage.setItem(key, value);
@@ -342,13 +364,13 @@ function clearAllCaches(): void {
     }
   });
 
-  // Also clear sessionStorage (but NOT Supabase auth)
+  // Also clear volatile sessionStorage keys (but NOT auth)
   try {
     const sessionKeysToRemove: string[] = [];
     for (let i = 0; i < sessionStorage.length; i++) {
       const key = sessionStorage.key(i);
-      // Only clear bullmoney session keys, not Supabase
-      if (key?.startsWith('bullmoney') && !shouldPreserveKey(key)) {
+      // Only clear known volatile keys, NEVER auth
+      if (key?.startsWith('bullmoney') && !shouldPreserveKey(key) && isVolatileKey(key)) {
         sessionKeysToRemove.push(key);
       }
     }

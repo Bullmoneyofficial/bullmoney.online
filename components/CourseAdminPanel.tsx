@@ -380,7 +380,7 @@ export default function CourseAdminPanel() {
   };
 
   return (
-    <div className="bg-gradient-to-br from-black via-gray-900 to-black text-white p-3 sm:p-6 space-y-3 overflow-y-auto max-h-[70vh] pr-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900/60 [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]">
+    <div className="bg-linear-to-br from-black via-gray-900 to-black text-white p-3 sm:p-6 space-y-3">
       <div className="w-full">
         {/* Header */}
         <div className="mb-4">
@@ -410,7 +410,7 @@ export default function CourseAdminPanel() {
 
         <div className="grid lg:grid-cols-2 gap-3 sm:gap-6">
           {/* Modules Section */}
-          <div className="bg-gradient-to-br from-gray-900/80 to-black border border-white/30 rounded-xl p-3 sm:p-6">
+          <div className="bg-linear-to-br from-gray-900/80 to-black border border-white/30 rounded-xl p-3 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg sm:text-2xl font-bold text-white" style={{ textShadow: '0 0 8px #ffffff' }}>Modules</h2>
               <button
@@ -487,7 +487,7 @@ export default function CourseAdminPanel() {
 
             {/* Module Edit Form */}
             {editingModule && (
-              <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4">
+              <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-3 sm:p-4">
                 <div className="bg-gray-900 border-2 border-white rounded-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
                   <div className="flex items-center justify-between p-4 sm:p-6 pb-3 sm:pb-4 border-b border-white/30">
                     <h3 className="text-lg sm:text-2xl font-bold text-white" style={{ textShadow: '0 0 8px #ffffff' }}>
@@ -565,7 +565,7 @@ export default function CourseAdminPanel() {
           </div>
 
           {/* Lessons Section */}
-          <div className="bg-gradient-to-br from-gray-900/80 to-black border border-white/30 rounded-xl p-3 sm:p-6">
+          <div className="bg-linear-to-br from-gray-900/80 to-black border border-white/30 rounded-xl p-3 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg sm:text-2xl font-bold text-white" style={{ textShadow: '0 0 8px #ffffff' }}>Lessons</h2>
               <button
@@ -637,7 +637,7 @@ export default function CourseAdminPanel() {
 
             {/* Lesson Edit Form */}
             {editingLesson && (
-              <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4">
+              <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-3 sm:p-4">
                 <div className="bg-gray-900 border-2 border-white rounded-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
                   <div className="flex items-center justify-between p-4 sm:p-6 pb-3 sm:pb-4 border-b border-white/30">
                     <h3 className="text-lg sm:text-2xl font-bold text-white" style={{ textShadow: '0 0 8px #ffffff' }}>

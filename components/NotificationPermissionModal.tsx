@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, BellOff, X, Zap, TrendingUp, Shield } from 'lucide-react';
+import { Bell, BellOff, X, Zap, TrendingUp, Shield, Check } from 'lucide-react';
+import { CardBody, CardContainer, CardItem } from '@/components/ui/3d-card';
+import { HoverBorderGradient } from '@/components/ui/hover-border-gradient';
 
 // ============================================================================
 // NOTIFICATION PERMISSION MODAL - COMPACT ULTIMATE HUB STYLE
@@ -117,12 +119,37 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
   const [step, setStep] = useState<'ask' | 'success' | 'declined' | 'blocked'>('ask');
   const [isReady, setIsReady] = useState(false);
   const [browserPermission, setBrowserPermission] = useState<NotificationPermission | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (typeof document !== 'undefined') {
       setPortalNode(document.body);
     }
   }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const checkMobile = () => window.innerWidth < 768;
+    setIsMobile(checkMobile());
+    const handleResize = () => setIsMobile(checkMobile());
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Gentle 3D tilt for desktop
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!containerRef.current || isMobile) return;
+    const { left, top, width, height } = containerRef.current.getBoundingClientRect();
+    const x = (e.clientX - left - width / 2) / 30;
+    const y = (e.clientY - top - height / 2) / 30;
+    containerRef.current.style.transform = `perspective(800px) rotateY(${x}deg) rotateX(${-y}deg)`;
+  };
+  const handleMouseLeave = () => {
+    if (containerRef.current) {
+      containerRef.current.style.transform = 'perspective(800px) rotateY(0deg) rotateX(0deg)';
+    }
+  };
 
   useEffect(() => {
     const checkShouldShow = () => {
@@ -241,324 +268,273 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
 
   if (!isVisible || !portalNode || !isReady) return null;
 
+  // ── Shared Apple-style content (used by both desktop 3D wrapper and mobile flat) ──
+  const popupContent = (
+    <div className="relative px-7 pt-10 pb-8">
+      {/* Close button */}
+      <button
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleClose(); }}
+        className="absolute top-3.5 right-3.5 w-8 h-8 flex items-center justify-center rounded-full
+                   border border-white/10 bg-white/[0.05]
+                   hover:bg-white/10 hover:border-white/20
+                   active:scale-90
+                   transition-all duration-200 ease-out z-50 cursor-pointer"
+        style={{ WebkitTapHighlightColor: 'transparent' }}
+      >
+        <X className="w-3.5 h-3.5 text-white/50" strokeWidth={2.5} />
+      </button>
+
+      {step === 'ask' && (
+        <>
+          {/* Bell icon */}
+          <motion.div
+            className="w-14 h-14 mx-auto mb-5 rounded-full border border-white/10 bg-white/[0.04] flex items-center justify-center relative"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.08, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <Bell className="w-6 h-6 text-white/80" strokeWidth={1.5} />
+            <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full" />
+          </motion.div>
+
+          {/* Title */}
+          <motion.h3
+            className="text-[22px] font-semibold text-white text-center tracking-tight leading-tight mb-1.5"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.12, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          >
+            Stay in the Loop
+          </motion.h3>
+
+          {/* Subtitle */}
+          <motion.p
+            className="text-[13px] text-white/40 text-center tracking-wide mb-6 font-normal leading-relaxed"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.18, duration: 0.35 }}
+          >
+            Get instant alerts for trades, signals & VIP drops
+          </motion.p>
+
+          {/* Feature pills */}
+          <motion.div
+            className="flex justify-center gap-2 mb-6"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.22, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {[
+              { icon: TrendingUp, text: 'Trades' },
+              { icon: Zap, text: 'Alerts' },
+              { icon: Shield, text: 'VIP' },
+            ].map((feature, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg
+                           border border-white/[0.08] bg-white/[0.03]"
+              >
+                <feature.icon className="w-3.5 h-3.5 text-white/50" strokeWidth={2} />
+                <span className="text-[11px] text-white/50 font-medium tracking-wide">{feature.text}</span>
+              </div>
+            ))}
+          </motion.div>
+
+          {/* Enable button — Apple white */}
+          <motion.button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleEnable(); }}
+            disabled={isLoading}
+            className="w-full py-3.5 rounded-xl font-semibold text-[15px] tracking-wide
+                       bg-white text-black
+                       border border-white/20
+                       hover:bg-white/90
+                       active:scale-[0.97] active:bg-white/80
+                       transition-all duration-200 ease-out
+                       cursor-pointer disabled:opacity-50"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.28, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {isLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                  className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full"
+                />
+                Enabling...
+              </span>
+            ) : (
+              <span className="flex items-center justify-center gap-2">
+                <Bell className="w-4 h-4" strokeWidth={2} />
+                Enable Notifications
+              </span>
+            )}
+          </motion.button>
+
+          {/* Decline button */}
+          <motion.button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDecline(); }}
+            className="w-full py-2.5 mt-2.5 rounded-xl font-medium text-[13px] tracking-wide
+                       text-white/35
+                       border border-white/[0.06]
+                       hover:text-white/50 hover:bg-white/[0.04] hover:border-white/[0.12]
+                       active:scale-[0.97]
+                       transition-all duration-200 ease-out
+                       cursor-pointer"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.34, duration: 0.3 }}
+          >
+            Maybe Later
+          </motion.button>
+        </>
+      )}
+
+      {step === 'success' && (
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center pt-2 pb-2">
+          <motion.div
+            className="w-14 h-14 mx-auto mb-5 rounded-full border border-white/10 bg-white/[0.04] flex items-center justify-center"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', damping: 15 }}
+          >
+            <Check className="w-6 h-6 text-white/80" strokeWidth={2} />
+          </motion.div>
+          <h3 className="text-[22px] font-semibold text-white text-center tracking-tight mb-1.5">All Set</h3>
+          <p className="text-[13px] text-white/40 text-center tracking-wide font-normal">You&apos;ll receive instant trade alerts</p>
+        </motion.div>
+      )}
+
+      {step === 'declined' && (
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center pt-2 pb-2">
+          <div className="w-14 h-14 mx-auto mb-5 rounded-full border border-white/10 bg-white/[0.04] flex items-center justify-center">
+            <BellOff className="w-6 h-6 text-white/40" strokeWidth={1.5} />
+          </div>
+          <h3 className="text-[22px] font-semibold text-white text-center tracking-tight mb-1.5">Notifications Off</h3>
+          <p className="text-[13px] text-white/40 text-center tracking-wide font-normal mb-5">You can enable them later in settings</p>
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleClose(); }}
+            className="px-8 py-2.5 rounded-xl font-medium text-[13px] tracking-wide
+                       text-white/50 border border-white/[0.08]
+                       hover:bg-white/[0.04] hover:border-white/[0.14]
+                       active:scale-[0.97]
+                       transition-all duration-200 ease-out cursor-pointer"
+          >
+            Got It
+          </button>
+        </motion.div>
+      )}
+
+      {step === 'blocked' && (
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center pt-2 pb-2">
+          <div className="w-14 h-14 mx-auto mb-5 rounded-full border border-white/10 bg-white/[0.04] flex items-center justify-center">
+            <BellOff className="w-6 h-6 text-white/40" strokeWidth={1.5} />
+          </div>
+          <h3 className="text-[22px] font-semibold text-white text-center tracking-tight mb-1.5">Blocked by Browser</h3>
+          <p className="text-[13px] text-white/40 text-center tracking-wide font-normal mb-5">
+            Notifications were previously blocked
+          </p>
+          
+          <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 mb-5 text-left space-y-2.5">
+            {[
+              'Tap the lock icon in the address bar',
+              'Find "Notifications" and change to "Allow"',
+              'Refresh this page',
+            ].map((text, i) => (
+              <div key={i} className="flex items-start gap-2.5">
+                <span className="text-[11px] text-white/30 font-semibold mt-px">{i + 1}.</span>
+                <span className="text-[12px] text-white/40 font-normal leading-relaxed">{text}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex gap-2.5">
+            <button
+              onClick={() => window.location.reload()}
+              className="flex-1 py-3 rounded-xl font-semibold text-[14px] tracking-wide
+                         bg-white text-black border border-white/20
+                         hover:bg-white/90 active:scale-[0.97] active:bg-white/80
+                         transition-all duration-200 ease-out cursor-pointer"
+            >
+              Refresh
+            </button>
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleClose(); }}
+              className="flex-1 py-3 rounded-xl font-medium text-[14px] tracking-wide
+                         text-white/40 border border-white/[0.08]
+                         hover:bg-white/[0.04] hover:border-white/[0.14]
+                         active:scale-[0.97]
+                         transition-all duration-200 ease-out cursor-pointer"
+            >
+              Close
+            </button>
+          </div>
+        </motion.div>
+      )}
+    </div>
+  );
+
   return createPortal(
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 flex items-center justify-center p-3"
+        className="fixed inset-0 flex items-center justify-center p-4"
         style={{ 
-          backgroundColor: 'rgba(0, 0, 0, 0.85)',
-          backdropFilter: 'blur(8px)',
+          background: 'transparent',
           zIndex: 2147483647,
-          cursor: 'auto',
         }}
+        onClick={handleClose}
       >
-        <div className="absolute inset-0 pointer-events-none" />
-
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.95, opacity: 0, y: 10 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 400 }}
-          className="relative w-full max-w-[280px] overflow-hidden rounded-xl"
-          style={{
-            background: 'linear-gradient(135deg, rgba(15, 15, 20, 0.98) 0%, rgba(20, 25, 35, 0.98) 100%)',
-            border: '1px solid rgba(255, 255, 255, 0.4)',
-            boxShadow: '0 0 30px rgba(255, 255, 255, 0.3), 0 0 60px rgba(255, 255, 255, 0.15), inset 0 0 30px rgba(255, 255, 255, 0.03)',
-            cursor: 'auto',
-          }}
-        >
-          {/* Close button */}
-          <button
-            onClick={handleClose}
-            className="absolute top-2 right-2 z-10 p-1 rounded-lg transition-all hover:bg-white/20"
-            style={{ color: 'rgba(255, 255, 255, 0.6)' }}
-          >
-            <X size={14} />
-          </button>
-
-          {/* Glow effect */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-16 bg-white/15 blur-[40px]" />
-          </div>
-
-          <div className="relative z-10 p-4">
-            {step === 'ask' && (
-              <>
-                {/* Icon */}
-                <div className="flex justify-center mb-3">
+        {/* Desktop: subtle 3D wrapper | Mobile: flat */}
+        {!isMobile ? (
+          <CardContainer className="w-full max-w-sm" containerClassName="py-0">
+            <CardBody className="w-full h-auto p-0">
+              <CardItem translateZ="40" className="w-full">
+                <HoverBorderGradient
+                  containerClassName="rounded-2xl w-full"
+                  className="p-0 bg-transparent w-full"
+                  as="div"
+                >
                   <motion.div
-                    animate={{ scale: [1, 1.05, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                    className="relative p-2.5 rounded-lg"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.3) 100%)',
-                      border: '1px solid rgba(255, 255, 255, 0.4)',
-                      boxShadow: '0 0 15px rgba(255, 255, 255, 0.3)',
-                    }}
+                    ref={containerRef}
+                    initial={{ opacity: 0, scale: 0.96, y: 24 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.96, y: 24 }}
+                    transition={{ type: 'spring', damping: 30, stiffness: 320, mass: 0.7 }}
+                    onClick={(e) => e.stopPropagation()}
+                    onMouseMove={handleMouseMove}
+                    onMouseLeave={handleMouseLeave}
+                    className="relative w-full overflow-hidden rounded-2xl bg-black"
+                    style={{ transition: 'transform 0.15s ease-out' }}
                   >
-                    <Bell size={22} className="text-white" style={{ filter: 'drop-shadow(0 0 6px #ffffff)' }} />
-                    <motion.div
-                      animate={{ scale: [1, 1.3, 1], opacity: [1, 0.5, 1] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                      className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full"
-                      style={{ boxShadow: '0 0 6px rgba(239, 68, 68, 0.8)' }}
-                    />
+                    <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
+                    <div className="absolute inset-0 border border-white/[0.06] rounded-2xl pointer-events-none z-2" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/[0.04] via-transparent to-transparent pointer-events-none rounded-2xl" />
+                    {popupContent}
                   </motion.div>
-                </div>
-
-                {/* Title */}
-                <h2 
-                  className="text-sm font-black text-center mb-1 uppercase tracking-wide"
-                  style={{ color: '#ffffff', textShadow: '0 0 10px rgba(255, 255, 255, 0.5)' }}
-                >
-                  Trade Alerts
-                </h2>
-
-                {/* Subtitle */}
-                <p className="text-center text-[10px] mb-3 font-medium" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                  Get instant notifications for trades & signals
-                </p>
-
-                {/* Features - compact grid */}
-                <div className="grid grid-cols-3 gap-1.5 mb-4">
-                  {[
-                    { icon: TrendingUp, text: 'Trades' },
-                    { icon: Zap, text: 'Alerts' },
-                    { icon: Shield, text: 'VIP' },
-                  ].map((feature, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.05 }}
-                      className="flex flex-col items-center gap-1 p-2 rounded-lg"
-                      style={{ 
-                        background: 'rgba(255, 255, 255, 0.1)', 
-                        border: '1px solid rgba(255, 255, 255, 0.2)' 
-                      }}
-                    >
-                      <feature.icon size={14} className="text-white" style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }} />
-                      <span className="text-[8px] font-bold uppercase tracking-wide" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
-                        {feature.text}
-                      </span>
-                    </motion.div>
-                  ))}
-                </div>
-
-                {/* Buttons */}
-                <div className="flex flex-col gap-2">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handleEnable}
-                    disabled={isLoading}
-                    className="w-full py-2.5 px-4 rounded-lg font-black text-[11px] uppercase tracking-wider text-white transition-all disabled:opacity-50"
-                    style={{
-                      background: 'linear-gradient(135deg, #ffffff 0%, #ffffff 100%)',
-                      border: '1px solid rgba(255, 255, 255, 0.5)',
-                      boxShadow: '0 0 15px rgba(255, 255, 255, 0.4), inset 0 1px 0 rgba(255,255,255,0.1)',
-                      textShadow: '0 0 8px rgba(255,255,255,0.5)'
-                    }}
-                  >
-                    {isLoading ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                          className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full"
-                        />
-                        Enabling...
-                      </span>
-                    ) : (
-                      <span className="flex items-center justify-center gap-1.5">
-                        <Bell size={12} />
-                        Enable Notifications
-                      </span>
-                    )}
-                  </motion.button>
-
-                  <button
-                    onClick={handleDecline}
-                    className="w-full py-2 px-4 rounded-lg font-bold text-[10px] uppercase tracking-wide transition-all hover:bg-white/10"
-                    style={{ 
-                      color: 'rgba(255, 255, 255, 0.5)',
-                      border: '1px solid rgba(255, 255, 255, 0.15)'
-                    }}
-                  >
-                    Maybe Later
-                  </button>
-                </div>
-              </>
-            )}
-
-            {step === 'success' && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="text-center py-4"
-              >
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: 'spring', damping: 12 }}
-                  className="inline-flex items-center justify-center w-12 h-12 rounded-lg mb-3"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.3) 100%)',
-                    border: '1px solid rgba(255, 255, 255, 0.4)',
-                    boxShadow: '0 0 20px rgba(255, 255, 255, 0.4)',
-                  }}
-                >
-                  <motion.svg
-                    initial={{ pathLength: 0 }}
-                    animate={{ pathLength: 1 }}
-                    transition={{ duration: 0.4, delay: 0.1 }}
-                    className="w-6 h-6 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={3}
-                    style={{ filter: 'drop-shadow(0 0 6px #ffffff)' }}
-                  >
-                    <motion.path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </motion.svg>
-                </motion.div>
-
-                <h3 
-                  className="text-sm font-black mb-1 uppercase tracking-wide" 
-                  style={{ color: '#ffffff', textShadow: '0 0 10px rgba(255, 255, 255, 0.5)' }}
-                >
-                  All Set!
-                </h3>
-                <p className="text-[10px] font-medium" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                  You&apos;ll receive instant trade alerts
-                </p>
-              </motion.div>
-            )}
-
-            {step === 'declined' && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="text-center py-4"
-              >
-                <div 
-                  className="inline-flex items-center justify-center w-12 h-12 rounded-lg mb-3"
-                  style={{ 
-                    background: 'rgba(239, 68, 68, 0.15)', 
-                    border: '1px solid rgba(239, 68, 68, 0.3)' 
-                  }}
-                >
-                  <BellOff size={22} className="text-red-400" style={{ filter: 'drop-shadow(0 0 4px #ef4444)' }} />
-                </div>
-
-                <h3 
-                  className="text-sm font-black mb-1 uppercase tracking-wide" 
-                  style={{ color: '#fca5a5', textShadow: '0 0 8px rgba(239, 68, 68, 0.4)' }}
-                >
-                  Disabled
-                </h3>
-                <p className="text-[9px] font-medium mb-3" style={{ color: 'rgba(252, 165, 165, 0.6)' }}>
-                  Enable later in browser settings
-                </p>
-                <button
-                  onClick={handleClose}
-                  className="px-4 py-1.5 rounded-lg font-bold text-[10px] uppercase tracking-wide transition-all hover:bg-red-500/15"
-                  style={{ 
-                    color: 'rgba(252, 165, 165, 0.7)', 
-                    border: '1px solid rgba(239, 68, 68, 0.25)' 
-                  }}
-                >
-                  Got it
-                </button>
-              </motion.div>
-            )}
-
-            {step === 'blocked' && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="text-center py-3"
-              >
-                <div 
-                  className="inline-flex items-center justify-center w-12 h-12 rounded-lg mb-3"
-                  style={{ 
-                    background: 'rgba(251, 191, 36, 0.15)', 
-                    border: '1px solid rgba(251, 191, 36, 0.3)',
-                    boxShadow: '0 0 15px rgba(251, 191, 36, 0.2)'
-                  }}
-                >
-                  <BellOff size={22} className="text-amber-400" style={{ filter: 'drop-shadow(0 0 4px #fbbf24)' }} />
-                </div>
-
-                <h3 
-                  className="text-sm font-black mb-1 uppercase tracking-wide" 
-                  style={{ color: '#fcd34d', textShadow: '0 0 8px rgba(251, 191, 36, 0.4)' }}
-                >
-                  Blocked by Browser
-                </h3>
-                <p className="text-[9px] font-medium mb-3 px-2" style={{ color: 'rgba(253, 230, 138, 0.7)' }}>
-                  Notifications were previously blocked. To enable:
-                </p>
-                
-                {/* Browser-specific instructions */}
-                <div 
-                  className="text-left p-2.5 rounded-lg mb-3 mx-1 space-y-1.5"
-                  style={{ 
-                    background: 'rgba(251, 191, 36, 0.1)', 
-                    border: '1px solid rgba(251, 191, 36, 0.2)' 
-                  }}
-                >
-                  <div className="flex items-start gap-2">
-                    <span className="text-[8px] font-black text-amber-400 mt-0.5">1.</span>
-                    <span className="text-[8px] font-medium" style={{ color: 'rgba(253, 230, 138, 0.8)' }}>
-                      Click the 🔒 lock icon in the address bar
-                    </span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="text-[8px] font-black text-amber-400 mt-0.5">2.</span>
-                    <span className="text-[8px] font-medium" style={{ color: 'rgba(253, 230, 138, 0.8)' }}>
-                      Find &ldquo;Notifications&rdquo; and change to &ldquo;Allow&rdquo;
-                    </span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="text-[8px] font-black text-amber-400 mt-0.5">3.</span>
-                    <span className="text-[8px] font-medium" style={{ color: 'rgba(253, 230, 138, 0.8)' }}>
-                      Refresh this page
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => window.location.reload()}
-                    className="flex-1 px-3 py-1.5 rounded-lg font-bold text-[9px] uppercase tracking-wide transition-all"
-                    style={{ 
-                      background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)',
-                      color: '#000',
-                      border: '1px solid rgba(251, 191, 36, 0.5)',
-                      boxShadow: '0 0 10px rgba(251, 191, 36, 0.3)'
-                    }}
-                  >
-                    Refresh Page
-                  </button>
-                  <button
-                    onClick={handleClose}
-                    className="px-3 py-1.5 rounded-lg font-bold text-[9px] uppercase tracking-wide transition-all hover:bg-amber-500/15"
-                    style={{ 
-                      color: 'rgba(253, 211, 77, 0.7)', 
-                      border: '1px solid rgba(251, 191, 36, 0.25)' 
-                    }}
-                  >
-                    Close
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </div>
-        </motion.div>
+                </HoverBorderGradient>
+              </CardItem>
+            </CardBody>
+          </CardContainer>
+        ) : (
+          <motion.div
+            ref={containerRef}
+            initial={{ opacity: 0, scale: 0.96, y: 24 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 24 }}
+            transition={{ type: 'spring', damping: 30, stiffness: 320, mass: 0.7 }}
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-sm overflow-hidden rounded-2xl bg-black border border-white/[0.08] shadow-2xl"
+          >
+            <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
+            {popupContent}
+          </motion.div>
+        )}
       </motion.div>
     </AnimatePresence>,
     portalNode

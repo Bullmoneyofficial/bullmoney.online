@@ -61,7 +61,7 @@ const Skeleton = ({ className = '' }: SkeletonProps) => (
 export const HeroSkeleton = () => (
   <div className="w-full h-screen relative bg-black overflow-hidden">
     {/* Background gradient */}
-    <div className="absolute inset-0 bg-gradient-to-br from-blue-950/20 via-black to-purple-950/20" />
+    <div className="absolute inset-0 bg-linear-to-br from-blue-950/20 via-black to-purple-950/20" />
 
     {/* Content skeleton */}
     <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 p-8">
@@ -96,7 +96,7 @@ export const HeroSkeleton = () => (
 
 // Spline scene skeleton
 export const SplineSkeleton = ({ label }: { label?: string }) => (
-  <div className="w-full h-full relative bg-gradient-to-br from-neutral-950 via-black to-neutral-900 overflow-hidden">
+  <div className="w-full h-full relative bg-linear-to-br from-neutral-950 via-black to-neutral-900 overflow-hidden">
     {/* Grid pattern */}
     <div className="absolute inset-0 opacity-5">
       <div
@@ -182,7 +182,7 @@ export const LoadingProgress = ({ progress }: { progress: number }) => (
   <div className="w-full max-w-md mx-auto">
     <div className="relative h-2 bg-white/10 rounded-full overflow-hidden">
       <div
-        className="absolute inset-y-0 left-0 bg-gradient-to-r from-white to-white transition-all duration-300 ease-out"
+        className="absolute inset-y-0 left-0 bg-linear-to-r from-white to-white transition-all duration-300 ease-out"
         style={{ width: `${progress}%` }}
       />
       <div

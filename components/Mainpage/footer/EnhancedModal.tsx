@@ -7,38 +7,17 @@ import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUnifiedPerformance } from "@/hooks/useDesktopPerformance";
 
-// Neon Blue Sign Styles (Static glow like Chartnews)
-const NEON_MODAL_STYLES = `
-  .modal-neon-blue-text {
+// Apple-style minimal black & white design
+const APPLE_MODAL_STYLES = `
+  .modal-apple-title {
     color: #ffffff;
-    text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, 0 0 12px #ffffff;
+    letter-spacing: -0.02em;
   }
-  .modal-neon-white-text {
-    color: #ffffff;
-    text-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff;
+  .modal-apple-text {
+    color: rgba(255, 255, 255, 0.9);
   }
-  .modal-neon-blue-border {
-    border: 2px solid #ffffff;
-    box-shadow: 0 0 4px #ffffff, 0 0 8px #ffffff, 0 0 16px #ffffff, inset 0 0 4px rgba(255, 255, 255, 0.3);
-  }
-  .modal-neon-blue-icon {
-    filter: drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff);
-  }
-`;
-
-// Mobile-optimized styles (no glows)
-const MOBILE_MODAL_STYLES = `
-  .modal-neon-blue-text {
-    color: #ffffff;
-  }
-  .modal-neon-white-text {
-    color: #ffffff;
-  }
-  .modal-neon-blue-border {
-    border: 2px solid #ffffff;
-  }
-  .modal-neon-blue-icon {
-    color: #ffffff;
+  .modal-apple-muted {
+    color: rgba(255, 255, 255, 0.5);
   }
 `;
 
@@ -57,7 +36,7 @@ export const EnhancedModal = ({
   children,
   maxWidth = "max-w-3xl",
 }: EnhancedModalProps) => {
-  const { isMobile, animations, shouldSkipHeavyEffects } = useUnifiedPerformance();
+  const { animations } = useUnifiedPerformance();
   const [mounted, setMounted] = useState(false);
   
   useEffect(() => {
@@ -91,7 +70,7 @@ export const EnhancedModal = ({
     <AnimatePresence mode="wait">
       {isOpen && (
         <>
-          <style dangerouslySetInnerHTML={{ __html: shouldSkipHeavyEffects ? MOBILE_MODAL_STYLES : NEON_MODAL_STYLES }} />
+          <style dangerouslySetInnerHTML={{ __html: APPLE_MODAL_STYLES }} />
           <motion.div
             key="modal-backdrop"
             initial={animations.modalBackdrop.initial}
@@ -101,7 +80,16 @@ export const EnhancedModal = ({
             className="fixed inset-0 flex items-center justify-center p-2 xs:p-3 sm:p-4 md:p-6"
             style={{ zIndex: 9999999999 }}
           >
-            <div onClick={onClose} className="absolute inset-0 bg-black/95" />
+            {/* Apple-style frosted backdrop */}
+            <div 
+              onClick={onClose} 
+              className="absolute inset-0"
+              style={{ 
+                backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)'
+              }}
+            />
 
             <motion.div
               initial={animations.modalContent.initial}
@@ -109,62 +97,49 @@ export const EnhancedModal = ({
               exit={animations.modalContent.exit}
               transition={animations.modalContent.transition}
               className={cn(
-                "relative w-full overflow-hidden rounded-xl xs:rounded-2xl sm:rounded-2xl md:rounded-3xl",
+                "relative w-full overflow-hidden rounded-2xl sm:rounded-[28px]",
                 maxWidth
               )}
-              style={shouldSkipHeavyEffects ? {} : {
-                boxShadow: '0 0 20px rgba(255, 255, 255, 0.5), 0 0 40px rgba(255, 255, 255, 0.3)'
+              style={{
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1)'
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Static neon border glow - skip on mobile */}
-              {!shouldSkipHeavyEffects && (
-                <div 
-                  className="absolute inset-[-2px] rounded-xl xs:rounded-2xl sm:rounded-2xl md:rounded-3xl pointer-events-none modal-neon-blue-border"
-                  style={{ background: 'transparent' }}
-                />
-              )}
+              {/* Apple-style subtle border */}
+              <div 
+                className="absolute inset-0 rounded-2xl sm:rounded-[28px] pointer-events-none"
+                style={{ 
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  background: 'transparent'
+                }}
+              />
 
-              <div className="relative z-10 m-[2px] flex max-h-[90vh] xs:max-h-[88vh] sm:max-h-[85vh] md:max-h-[82vh] lg:max-h-[80vh] flex-col rounded-xl xs:rounded-2xl sm:rounded-2xl md:rounded-3xl bg-black overflow-hidden min-h-0">
-                {/* Header with neon styling */}
+              <div className="relative z-10 flex max-h-[90vh] xs:max-h-[88vh] sm:max-h-[85vh] md:max-h-[82vh] lg:max-h-[80vh] flex-col rounded-2xl sm:rounded-[28px] bg-black overflow-hidden min-h-0">
+                {/* Apple-style clean header */}
                 <div 
-                  className="relative flex flex-row items-center justify-between px-3 xs:px-4 sm:px-5 md:px-6 py-2.5 xs:py-3 sm:py-3.5 md:py-4 bg-black shrink-0"
-                  style={shouldSkipHeavyEffects ? { borderBottom: '2px solid #ffffff' } : { 
-                    borderBottom: '2px solid #ffffff',
-                    boxShadow: '0 2px 8px rgba(255, 255, 255, 0.4)'
+                  className="relative flex flex-row items-center justify-between px-4 xs:px-5 sm:px-6 md:px-8 py-4 xs:py-5 sm:py-6 shrink-0"
+                  style={{ 
+                    background: 'linear-gradient(to bottom, rgba(255,255,255,0.05), transparent)',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
                   }}
                 >
-                  {/* Static neon line at top - skip on mobile */}
-                  {!shouldSkipHeavyEffects && (
-                    <div 
-                      className="absolute inset-x-0 top-0 h-[2px]"
-                      style={{ 
-                        background: '#ffffff',
-                        boxShadow: '0 0 8px #ffffff, 0 0 16px #ffffff'
-                      }}
-                    />
-                  )}
-
-                  {/* Title - always on left */}
-                  <div className="relative flex-1 text-sm xs:text-base sm:text-lg md:text-xl font-semibold tracking-wide modal-neon-white-text truncate pr-3 order-1">
+                  {/* Title - Apple style */}
+                  <div className="relative flex-1 text-base xs:text-lg sm:text-xl md:text-2xl font-semibold tracking-tight text-white truncate pr-4 order-1">
                     {title}
                   </div>
 
-                  {/* Close button - always on right */}
+                  {/* Apple-style close button */}
                   <button
                     onClick={onClose}
-                    className="relative z-[9999] p-1.5 xs:p-2 sm:p-2 md:p-2.5 rounded-full bg-black text-white min-w-[36px] min-h-[36px] xs:min-w-[40px] xs:min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] flex items-center justify-center group flex-shrink-0 transition-all duration-300 order-2 ml-auto"
-                    style={{
-                      border: '2px solid #ffffff',
-                      boxShadow: '0 0 4px #ffffff, 0 0 8px #ffffff'
-                    }}
+                    className="relative z-9999 w-8 h-8 xs:w-9 xs:h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center group shrink-0 transition-all duration-200 order-2 ml-auto hover:bg-white/10 active:bg-white/20"
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
                   >
-                    <X className="h-3.5 w-3.5 xs:h-4 xs:w-4 sm:h-5 sm:w-5 transition-transform group-hover:rotate-90 duration-300 modal-neon-blue-icon" style={{ color: '#ffffff' }} />
+                    <X className="h-4 w-4 xs:h-4.5 xs:w-4.5 sm:h-5 sm:w-5 text-white/80 transition-transform group-hover:scale-110 duration-200" />
                   </button>
                 </div>
 
                 <div 
-                  className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-3 xs:px-4 sm:px-5 md:px-6 py-3 xs:py-4 sm:py-5 md:py-6 footer-scrollbar relative bg-black"
+                  className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 xs:px-5 sm:px-6 md:px-8 py-4 xs:py-5 sm:py-6 footer-scrollbar relative bg-black"
                   style={{ 
                     WebkitOverflowScrolling: 'touch',
                     overscrollBehavior: 'contain',

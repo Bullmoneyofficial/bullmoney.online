@@ -45,7 +45,7 @@ export const ButtonTooltip = React.memo(function ButtonTooltip({
           style={{ zIndex: Z_INDEX.TOOLTIPS }}
         >
           <div className={cn(
-            "px-3 py-2 rounded-xl text-white text-[10px] font-semibold shadow-xl border bg-gradient-to-r",
+            "px-3 py-2 rounded-xl text-white text-[10px] font-semibold shadow-xl border bg-linear-to-r",
             shouldSkipHeavyEffects ? '' : 'backdrop-blur-md',
             colorClasses[color]
           )}>

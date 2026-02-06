@@ -144,7 +144,7 @@ const Card = ({ plan, onClick }: { plan: Plan; onClick: () => void }) => {
                   "font-medium text-xs px-3 py-1 rounded-full relative bg-neutral-900 dark:bg-white dark:text-black text-white"
                 )}
               >
-                <div className="absolute inset-x-0 bottom-0 w-3/4 mx-auto h-px bg-gradient-to-r from-transparent via-indigo-500 to-transparent"></div>
+                <div className="absolute inset-x-0 bottom-0 w-3/4 mx-auto h-px bg-linear-to-r from-transparent via-indigo-500 to-transparent"></div>
                 Featured
               </div>
             )}

@@ -12,7 +12,7 @@ export const TradingHoldUnlock = ({ onUnlock }: TradingHoldUnlockProps) => {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-gray-900 to-black rounded-lg"
+      className="flex flex-col items-center justify-center p-8 bg-linear-to-br from-gray-900 to-black rounded-lg"
     >
       <h2 className="text-2xl font-bold text-white mb-4">Trading Locked</h2>
       <p className="text-gray-400 mb-6 text-center">

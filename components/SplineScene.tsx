@@ -196,7 +196,7 @@ function SplineSceneComponent({
   if (showFallback) {
     return (
       <div 
-        className={`w-full h-full bg-gradient-to-br from-black via-neutral-950/30 to-black rounded-xl overflow-hidden relative spline-container ${className}`}
+        className={`w-full h-full bg-linear-to-br from-black via-neutral-950/30 to-black rounded-xl overflow-hidden relative spline-container ${className}`}
         data-spline-scene
         style={{ 
           minHeight: '300px',
@@ -419,7 +419,7 @@ function SplineSceneComponent({
         style={{ touchAction: 'manipulation', cursor: isDragging ? 'grabbing' : 'grab' }}
       >
         <Suspense fallback={
-          <div className="w-full h-full bg-gradient-to-br from-slate-950 to-neutral-950 flex items-center justify-center relative overflow-hidden">
+          <div className="w-full h-full bg-linear-to-br from-slate-950 to-neutral-950 flex items-center justify-center relative overflow-hidden">
             <ShimmerRadialGlow color="blue" intensity="medium" />
             <ShimmerSpinner size={32} color="blue" />
           </div>

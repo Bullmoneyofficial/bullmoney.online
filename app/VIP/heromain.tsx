@@ -214,7 +214,7 @@ const SystemOverrideOverlay = ({ onClose, embedded = false }: { onClose: () => v
                 initial={{ left: "-100%" }}
                 animate={{ left: "100%" }}
                 transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3, ease: "linear" }}
-                className="absolute top-0 bottom-0 w-[20px] bg-gradient-to-r from-transparent via-white/50 to-transparent -skew-x-12 z-10"
+                className="absolute top-0 bottom-0 w-[20px] bg-linear-to-r from-transparent via-white/50 to-transparent -skew-x-12 z-10"
             />
         </motion.div>
       )}
@@ -502,7 +502,7 @@ const VideoCard = React.memo(({
                 />
             )}
 
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90 pointer-events-none"></div>
+            <div className="absolute inset-0 bg-linear-to-t from-black via-black/20 to-transparent opacity-90 pointer-events-none"></div>
             
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                  <div className="bg-white/10 backdrop-blur-sm p-3 md:p-4 rounded-full opacity-100 md:opacity-0 md:group-hover/product:opacity-100 transition-opacity duration-300 scale-100 md:scale-75 md:group-hover/product:scale-100 border border-white/30">

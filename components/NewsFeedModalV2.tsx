@@ -70,7 +70,7 @@ const OptimizedNewsImage = memo(({
 
   if (!src || error) {
     return (
-      <div className={cn("bg-gradient-to-br from-white/20 to-black flex items-center justify-center", aspectRatio, className)}>
+      <div className={cn("bg-linear-to-br from-white/20 to-black flex items-center justify-center", aspectRatio, className)}>
         <Newspaper className="w-8 h-8 text-white/30" />
       </div>
     );
@@ -288,7 +288,7 @@ const NewsCard = memo(({
               !shouldSkipHeavyEffects && "transition-transform duration-300 group-hover:scale-105"
             )}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-black via-black/60 to-transparent" />
 
           {/* Preview Button */}
           <button
@@ -299,7 +299,7 @@ const NewsCard = memo(({
           </button>
 
           {/* Category Badge */}
-          <span className={`absolute top-3 left-3 px-2.5 py-1 rounded-full bg-gradient-to-r ${colorClass} text-[10px] font-bold uppercase tracking-widest border backdrop-blur-sm`}>
+          <span className={`absolute top-3 left-3 px-2.5 py-1 rounded-full bg-linear-to-r ${colorClass} text-[10px] font-bold uppercase tracking-widest border backdrop-blur-sm`}>
             {item.category || "Market"}
           </span>
         </div>
@@ -360,7 +360,7 @@ const NewsCard = memo(({
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className={`px-2 py-0.5 rounded-full bg-gradient-to-r ${colorClass} text-[8px] font-bold uppercase tracking-widest border`}>
+            <span className={`px-2 py-0.5 rounded-full bg-linear-to-r ${colorClass} text-[8px] font-bold uppercase tracking-widest border`}>
               {item.category || "News"}
             </span>
             <span className="text-[10px] font-mono text-slate-500">{timeAgo(item.published_at)}</span>
@@ -565,13 +565,13 @@ const NewsFeedContent = memo(() => {
         )}
 
         {/* Inner Container */}
-        <div className="relative z-10 bg-gradient-to-b from-neutral-900 to-black rounded-2xl border border-white/30 overflow-hidden max-h-[90vh] flex flex-col">
+        <div className="relative z-10 bg-linear-to-b from-neutral-900 to-black rounded-2xl border border-white/30 overflow-hidden max-h-[90vh] flex flex-col">
           {!shouldSkipHeavyEffects && <ShimmerLine color="blue" />}
 
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-white/20 flex-shrink-0">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-white/40 to-white/30 border border-white/40 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-linear-to-br from-white/40 to-white/30 border border-white/40 flex items-center justify-center">
                 <Newspaper className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -633,7 +633,7 @@ const NewsFeedContent = memo(() => {
                     className={cn(
                       "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wide transition-all whitespace-nowrap",
                       activeMarket === value
-                        ? "bg-gradient-to-r from-white to-white text-white shadow-lg shadow-white/25"
+                        ? "bg-linear-to-r from-white to-white text-white shadow-lg shadow-white/25"
                         : "bg-neutral-800/50 border border-white/20 text-slate-400 hover:border-white/50 hover:text-white"
                     )}
                   >
@@ -689,7 +689,7 @@ const NewsFeedContent = memo(() => {
                     <div className="flex items-center gap-3 mb-3">
                       <TrendingUp className="w-4 h-4 text-white" />
                       <h3 className="text-[10px] font-bold uppercase tracking-widest text-white">Featured Story</h3>
-                      <div className="flex-1 h-px bg-gradient-to-r from-white/30 to-transparent" />
+                      <div className="flex-1 h-px bg-linear-to-r from-white/30 to-transparent" />
                     </div>
                     <NewsCard
                       item={featured}
@@ -708,7 +708,7 @@ const NewsFeedContent = memo(() => {
                     <div className="flex items-center gap-3 mb-3">
                       <Newspaper className="w-4 h-4 text-white" />
                       <h3 className="text-[10px] font-bold uppercase tracking-widest text-white">Top Stories</h3>
-                      <div className="flex-1 h-px bg-gradient-to-r from-white/30 to-transparent" />
+                      <div className="flex-1 h-px bg-linear-to-r from-white/30 to-transparent" />
                     </div>
                     <div className="grid gap-3 md:grid-cols-2">
                       {topStories.map((item, i) => (
@@ -730,7 +730,7 @@ const NewsFeedContent = memo(() => {
                   <div>
                     <div className="flex items-center gap-3 mb-3">
                       <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">More Headlines</h3>
-                      <div className="flex-1 h-px bg-gradient-to-r from-slate-500/30 to-transparent" />
+                      <div className="flex-1 h-px bg-linear-to-r from-slate-500/30 to-transparent" />
                     </div>
                     <div className="grid gap-3 md:grid-cols-2">
                       {rest.map((item, i) => (
@@ -987,7 +987,7 @@ export const NewsFeedButton = memo(({ className }: { className?: string }) => {
         onClick={handleClick}
         className={cn(
           "inline-flex items-center gap-2 px-4 py-2 rounded-xl",
-          "bg-gradient-to-r from-white/50 to-white/50",
+          "bg-linear-to-r from-white/50 to-white/50",
           "border border-white/60 text-sm font-bold text-white",
           "hover:from-white/70 hover:to-white/70 transition-all",
           className

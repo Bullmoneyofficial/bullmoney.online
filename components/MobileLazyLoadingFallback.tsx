@@ -41,7 +41,7 @@ export const FooterSkeleton: React.FC = () => (
 
 // Skeleton for hero sections
 export const HeroSkeleton: React.FC = () => (
-  <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-black to-gray-900 animate-pulse">
+  <div className="min-h-screen flex items-center justify-center bg-linear-to-b from-black to-gray-900 animate-pulse">
     <div className="text-center space-y-6 p-8">
       <div className="h-16 w-96 max-w-full bg-gray-700 rounded mx-auto" />
       <div className="h-8 w-64 max-w-full bg-gray-700 rounded mx-auto" />

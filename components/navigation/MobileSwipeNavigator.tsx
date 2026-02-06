@@ -344,7 +344,7 @@ export default function MobileSwipeNavigator() {
             {/* Shimmer effect */}
             <div className="absolute inset-x-0 top-0 h-[2px] overflow-hidden">
               <div 
-                className="absolute inset-y-0 left-[-100%] w-full bg-gradient-to-r from-transparent via-white/80 to-transparent"
+                className="absolute inset-y-0 left-[-100%] w-full bg-linear-to-r from-transparent via-white/80 to-transparent"
                 style={{ animation: "swipe-shimmer 2s linear infinite" }} 
               />
             </div>

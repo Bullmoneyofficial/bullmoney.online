@@ -8,11 +8,12 @@
 .spline-page-container,
 .spline-container,
 .spline-wrapper,
+.spline-viewport-fill,
 [class*="spline"],
 canvas[data-spline],
 iframe[src*="spline"] {
   pointer-events: auto !important;
-  touch-action: manipulation !important;
+  touch-action: none !important;
   cursor: grab !important;
 }
 
@@ -27,8 +28,9 @@ html.component-inactive-spline .spline-page-container {
 
 /* Force touch action support */
 .spline-page-container,
-.spline-container {
-  touch-action: manipulation !important;
+.spline-container,
+.spline-viewport-fill {
+  touch-action: none !important;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
@@ -36,50 +38,105 @@ html.component-inactive-spline .spline-page-container {
 
 /* Ensure internal Spline canvases are interactive */
 .spline-container canvas,
-.spline-page-container canvas {
+.spline-page-container canvas,
+.spline-viewport-fill canvas {
   pointer-events: auto !important;
-  touch-action: manipulation !important;
+  touch-action: none !important;
+}
+
+/* spline-viewer web component must receive all events */
+spline-viewer {
+  pointer-events: auto !important;
+  touch-action: none !important;
+  cursor: grab !important;
+  display: block !important;
+}
+
+spline-viewer canvas {
+  pointer-events: auto !important;
+  touch-action: none !important;
 }
 
 /* Safari-specific fixes for pointer events */
 @supports (-webkit-appearance: none) {
   .spline-page-container,
-  .spline-container {
+  .spline-container,
+  .spline-viewport-fill {
     -webkit-touch-callout: none;
     pointer-events: auto !important;
+    touch-action: none !important;
   }
   
   .spline-container canvas,
-  .spline-page-container canvas {
+  .spline-page-container canvas,
+  .spline-viewport-fill canvas {
     pointer-events: auto !important;
+    touch-action: none !important;
+  }
+
+  spline-viewer,
+  spline-viewer canvas {
+    pointer-events: auto !important;
+    touch-action: none !important;
   }
 }
 
 /* Mobile touch interaction support */
 @media (hover: none) and (pointer: coarse) {
   .spline-page-container,
-  .spline-container {
-    touch-action: manipulation !important;
+  .spline-container,
+  .spline-viewport-fill {
+    touch-action: none !important;
     pointer-events: auto !important;
   }
   
   .spline-container canvas,
-  .spline-page-container canvas {
-    touch-action: manipulation !important;
+  .spline-page-container canvas,
+  .spline-viewport-fill canvas {
+    touch-action: none !important;
     pointer-events: auto !important;
+  }
+
+  spline-viewer,
+  spline-viewer canvas {
+    pointer-events: auto !important;
+    touch-action: none !important;
   }
 }
 
 /* Desktop mouse interaction support */
 @media (hover: hover) and (pointer: fine) {
   .spline-page-container,
-  .spline-container {
+  .spline-container,
+  .spline-viewport-fill {
     cursor: grab !important;
     pointer-events: auto !important;
   }
   
   .spline-page-container:active,
-  .spline-container:active {
+  .spline-container:active,
+  .spline-viewport-fill:active {
     cursor: grabbing !important;
   }
+
+  spline-viewer {
+    cursor: grab !important;
+  }
+
+  spline-viewer:active {
+    cursor: grabbing !important;
+  }
+}
+
+/* Ensure hero overlay elements don't block Spline interaction */
+.hero > *:not(.hero-spline-wrapper) {
+  pointer-events: none;
+}
+
+/* Re-enable pointer events on interactive overlays */
+.hero .pointer-events-auto,
+.hero button,
+.hero a,
+.hero [data-interactive="true"] .spline-container {
+  pointer-events: auto;
 }

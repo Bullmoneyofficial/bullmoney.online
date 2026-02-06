@@ -15,6 +15,11 @@ interface OrderDetails {
   currency?: string;
   lineItems?: Array<{ name: string; quantity: number; amount: number }>;
   createdAt?: string;
+  shippingDetails?: any;
+  trackingNumber?: string;
+  carrier?: string;
+  orderNumber?: string;
+  status?: string;
 }
 
 export default function SuccessPage() {
@@ -34,9 +39,40 @@ export default function SuccessPage() {
     if (sessionId) {
       fetch(`/api/stripe/session/${sessionId}`)
         .then((res) => res.json())
-        .then((data) => {
+        .then(async (data) => {
           if (!data.error) {
             setOrderDetails(data);
+
+            // Auto-save order to store_orders as fallback (in case webhook isn't configured)
+            try {
+              const saveRes = await fetch('/api/store/orders/auto-create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  session_id: sessionId,
+                  email: data.customerEmail,
+                  customer_name: data.customerName,
+                  amount_total: data.amountTotal,
+                  currency: data.currency,
+                  line_items: data.lineItems,
+                  shipping_details: data.shippingDetails,
+                }),
+              });
+              const saved = await saveRes.json();
+              if (saved.order_number) {
+                setOrderDetails(prev => prev ? {
+                  ...prev,
+                  orderNumber: saved.order_number,
+                  status: saved.status || 'processing',
+                  // tracking_number will be null — only real numbers from carriers
+                  trackingNumber: saved.tracking_number || undefined,
+                  carrier: saved.carrier || undefined,
+                } : prev);
+              }
+            } catch (e) {
+              // Webhook will handle it — this is just a fallback
+              console.log('Auto-create fallback skipped (webhook handles it)');
+            }
           }
         })
         .catch(console.error)
@@ -132,8 +168,31 @@ export default function SuccessPage() {
 
             <div>
               <p className="text-white/40 text-sm mb-1">Order ID</p>
-              <p className="text-white font-mono text-xs break-all">{sessionId}</p>
+              <p className="text-white font-mono text-xs break-all">{orderDetails.orderNumber || sessionId}</p>
             </div>
+
+            {/* Auto-tracking info */}
+            {orderDetails.trackingNumber ? (
+              <div className="pt-3 border-t border-white/10">
+                <p className="text-white/40 text-sm mb-1">Tracking Number</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold uppercase text-green-400 bg-green-500/10 px-2 py-0.5 rounded-full border border-green-500/20">
+                    {(orderDetails.carrier || '').replace(/_/g, ' ')}
+                  </span>
+                  <span className="text-white font-mono text-sm">{orderDetails.trackingNumber}</span>
+                </div>
+              </div>
+            ) : (
+              <div className="pt-3 border-t border-white/10">
+                <p className="text-white/40 text-sm mb-1">Status</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold uppercase text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                    Processing
+                  </span>
+                </div>
+                <p className="text-white/30 text-xs mt-1">Tracking number will appear in your Account once shipped with a real carrier</p>
+              </div>
+            )}
           </motion.div>
         )}
 
@@ -145,7 +204,7 @@ export default function SuccessPage() {
           className="space-y-4 mb-8"
         >
           <div className="flex items-start gap-4 text-left">
-            <div className="w-10 h-10 rounded-full bg-sky-500/20 flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-full bg-sky-500/20 flex items-center justify-center shrink-0">
               <Mail className="w-5 h-5 text-sky-500" />
             </div>
             <div>
@@ -157,7 +216,7 @@ export default function SuccessPage() {
           </div>
 
           <div className="flex items-start gap-4 text-left">
-            <div className="w-10 h-10 rounded-full bg-sky-500/20 flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-full bg-sky-500/20 flex items-center justify-center shrink-0">
               <Package className="w-5 h-5 text-sky-500" />
             </div>
             <div>

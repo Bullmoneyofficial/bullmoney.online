@@ -244,7 +244,7 @@ function ProductBentoCard({
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             />
             {/* Gloss Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#060010] via-transparent to-transparent opacity-60" />
+            <div className="absolute inset-0 bg-linear-to-t from-[#060010] via-transparent to-transparent opacity-60" />
           </div>
 
           {/* CONTENT */}
@@ -260,7 +260,7 @@ function ProductBentoCard({
             </p>
 
             <div className="flex items-center justify-between pt-3 border-t border-indigo-900/20 mt-auto">
-              <span className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-white">
+              <span className="text-xl font-bold text-transparent bg-clip-text bg-linear-to-r from-indigo-400 to-white">
                 ${formatPriceDisplay(product.price)} 
               </span>
               
@@ -414,10 +414,10 @@ export default function ProductsSection() {
         <div className="flex flex-col items-center justify-center mb-16 text-center">
             <div className="relative mb-6">
                 <h1 className="text-4xl md:text-7xl font-bold text-white tracking-tighter">
-                   BULLMONEY <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-white">VIP</span>
+                   BULLMONEY <span className="text-transparent bg-clip-text bg-linear-to-r from-indigo-400 to-white">VIP</span>
                 </h1>
                 {/* Decorative Line */}
-                <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-transparent via-indigo-500 to-transparent blur-[1px]" />
+                <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-24 h-1 bg-linear-to-r from-transparent via-indigo-500 to-transparent blur-[1px]" />
             </div>
             
             <p className="text-slate-400 max-w-xl mx-auto text-sm md:text-base leading-relaxed">
@@ -554,8 +554,8 @@ export default function ProductsSection() {
                                         alt={p.name}
                                         className="w-full h-full object-cover"
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-[#060010] via-transparent to-transparent opacity-80 md:hidden" />
-                                    <div className="absolute inset-0 bg-gradient-to-r from-[#060010] via-transparent to-transparent opacity-80 hidden md:block" style={{ transform: 'rotate(180deg)' }} />
+                                    <div className="absolute inset-0 bg-linear-to-t from-[#060010] via-transparent to-transparent opacity-80 md:hidden" />
+                                    <div className="absolute inset-0 bg-linear-to-r from-[#060010] via-transparent to-transparent opacity-80 hidden md:block" style={{ transform: 'rotate(180deg)' }} />
                                     
                                     <motion.div 
                                         layoutId={`card-category-${pid}`}
@@ -577,7 +577,7 @@ export default function ProductsSection() {
                                     </motion.h2>
                                     
                                     <div className="flex items-center gap-4 mb-8">
-                                        <span className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-white">
+                                        <span className="text-3xl font-bold text-transparent bg-clip-text bg-linear-to-r from-indigo-400 to-white">
                                             ${formatPriceDisplay(p.price)}
                                         </span>
                                     </div>

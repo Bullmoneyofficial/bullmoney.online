@@ -205,7 +205,7 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
     if (isMobile && memoryBlocked && !disabled && !forceLiteSpline) {
       return (
         <div
-          className="w-full h-full relative transition-opacity duration-700 parallax-layer flex items-center justify-center bg-gradient-to-br from-black via-gray-900/60 to-black"
+          className="w-full h-full relative transition-opacity duration-700 parallax-layer flex items-center justify-center bg-linear-to-br from-black via-gray-900/60 to-black"
           style={{ transform: `translateY(${inputActive ? 0 : parallaxOffset * 0.4}px) translateZ(0)` }}
         >
           <div
@@ -231,7 +231,7 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
     if (disabled && !forceLiteSpline && !forceLoadOverride) {
       return (
         <div
-          className="w-full h-full relative transition-opacity duration-700 parallax-layer flex items-center justify-center bg-gradient-to-br from-black via-gray-900/60 to-black"
+          className="w-full h-full relative transition-opacity duration-700 parallax-layer flex items-center justify-center bg-linear-to-br from-black via-gray-900/60 to-black"
           style={{
             transform: `translateY(${inputActive ? 0 : parallaxOffset * 0.5}px) translateZ(0)`,
           }}
@@ -265,7 +265,7 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
     if (disabled) {
       return (
         <div
-          className="w-full h-full relative flex items-center justify-center bg-gradient-to-br from-black via-gray-900/60 to-black"
+          className="w-full h-full relative flex items-center justify-center bg-linear-to-br from-black via-gray-900/60 to-black"
           style={{ transform: `translateY(${inputActive ? 0 : parallaxOffset * 0.35}px) translateZ(0)` }}
         >
           <div
@@ -336,7 +336,7 @@ export const SceneWrapper = memo(({ isVisible, sceneUrl, allowInput = true, forc
         )
       )}
       {isVisible && !isLoaded && (
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900/40 to-black/60 flex items-center justify-center z-20">
+        <div className="absolute inset-0 bg-linear-to-br from-gray-900/40 to-black/60 flex items-center justify-center z-20">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
         </div>
       )}
@@ -460,10 +460,10 @@ export const FullScreenSection = memo(({ config, activePage, onVisible, parallax
         )}
         {!isTSX && (
           <>
-            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-black to-transparent pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black to-transparent pointer-events-none" />
+            <div className="absolute top-0 left-0 w-full h-32 bg-linear-to-b from-black to-transparent pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-full h-32 bg-linear-to-t from-black to-transparent pointer-events-none" />
             <div className={`absolute bottom-24 left-6 sm:bottom-20 sm:left-8 md:bottom-20 md:left-10 z-20 pointer-events-none transition-all duration-1000 ease-out max-w-[85%] ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-              <h2 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/10 tracking-tighter select-none drop-shadow-2xl hover-lift">
+              <h2 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-transparent bg-clip-text bg-linear-to-b from-white to-white/10 tracking-tighter select-none drop-shadow-2xl hover-lift">
                 {config.label}
               </h2>
             </div>

@@ -18,7 +18,8 @@ import {
   X,
   ChevronLeft,
   Home,
-  Store
+  Store,
+  Mail
 } from 'lucide-react';
 
 // ============================================================================
@@ -32,6 +33,8 @@ const NAV_ITEMS = [
   { href: '/store/admin/orders', label: 'Orders', icon: ShoppingCart },
   { href: '/store/admin/products', label: 'Products', icon: Package },
   { href: '/store/admin/customers', label: 'Customers', icon: Users },
+  { href: '/store/admin/newsletter', label: 'Gmail Newsletter', icon: Mail },
+  { href: '/store/admin/emails', label: 'Emails', icon: Mail },
   { href: '/store/admin/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/store/admin/settings', label: 'Settings', icon: Settings },
 ];
@@ -133,13 +136,13 @@ export function AdminSidebar() {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex fixed top-0 left-0 bottom-0 w-64 bg-black border-r border-white/10 flex-col z-[960]">
+      <aside className="hidden md:flex fixed top-0 left-0 bottom-0 w-64 bg-black border-r border-white/10 flex-col z-960">
         <NavContent />
       </aside>
 
       {/* Mobile Header Bar */}
       {/* Mobile Header Bar - No blur, high z-index */}
-      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-black border-b border-white/10 z-[970] flex items-center justify-between px-4">
+      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-black border-b border-white/10 z-970 flex items-center justify-between px-4">
         {/* Back Button */}
         <button
           onClick={handleBack}

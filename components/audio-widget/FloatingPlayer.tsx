@@ -120,7 +120,7 @@ function CameraModal({
           onClick={(e) => e.stopPropagation()}
           className="relative w-[85vw] max-w-[340px] aspect-[9/16] rounded-[45px] overflow-hidden bg-black"
         >
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-black to-slate-900" />
+          <div className="absolute inset-0 bg-linear-to-b from-slate-900 via-black to-slate-900" />
           <button
             onClick={onClose}
             className="absolute top-4 right-4 w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/10"
@@ -859,7 +859,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
           onClick={() => { SoundEffects.click(); setPlayerHidden(false); }}
           className={cn(
             "fixed flex flex-col items-center justify-center gap-1 py-2 px-1.5 rounded-lg backdrop-blur-md transition-colors",
-            "bg-gradient-to-br from-white/20 via-white/10 to-black/60 hover:from-white/30 hover:to-black/70",
+            "bg-linear-to-br from-white/20 via-white/10 to-black/60 hover:from-white/30 hover:to-black/70",
             "border border-white/50 shadow-lg hover:shadow-white/60"
           )}
           style={{ bottom: 200, zIndex: Z_INDEX.PULL_TAB, left: '8px' }}
@@ -932,7 +932,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                   style={{ zIndex: Z_INDEX.SWIPE_HINT }}
                 >
                   <div className={cn(
-                    "px-4 py-2 rounded-2xl bg-gradient-to-r from-slate-900/95 via-gray-800/95 to-slate-900/95 border border-white/25 shadow-xl shadow-black/40 text-[10px] text-white/90 font-semibold flex items-center gap-2",
+                    "px-4 py-2 rounded-2xl bg-linear-to-r from-slate-900/95 via-gray-800/95 to-slate-900/95 border border-white/25 shadow-xl shadow-black/40 text-[10px] text-white/90 font-semibold flex items-center gap-2",
                     shouldSkipHeavyEffects ? "" : "backdrop-blur-xl"
                   )}>
                     <motion.div animate={shouldSkipHeavyEffects ? {} : { x: [-4, 4, -4] }} transition={shouldSkipHeavyEffects ? {} : { duration: 1.5, repeat: Infinity, ease: "easeInOut" }}>
@@ -944,7 +944,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                     </motion.div>
                   </div>
                   {/* Arrow pointing down to iPhone */}
-                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-3 h-3 bg-gradient-to-br from-gray-800/95 to-slate-900/95 rotate-45 border-r border-b border-white/25" />
+                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-3 h-3 bg-linear-to-br from-gray-800/95 to-slate-900/95 rotate-45 border-r border-b border-white/25" />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -954,7 +954,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
           <div 
             className={cn(
               "relative rounded-[40px] overflow-hidden transition-all duration-500",
-              "bg-gradient-to-b from-[#2d2d32] via-[#1c1c21] to-[#0c0c10]",
+              "bg-linear-to-b from-[#2d2d32] via-[#1c1c21] to-[#0c0c10]",
               "shadow-[0_0_80px_rgba(0,0,0,0.9),0_20px_60px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.08)]",
               "border-[4px] border-slate-600/40",
               isLocked && "opacity-60"
@@ -967,7 +967,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
             
             {/* Reflective shimmer on frame */}
             <motion.div
-              className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/3 pointer-events-none rounded-[36px]"
+              className="absolute inset-0 bg-linear-to-br from-white/5 via-transparent to-white/3 pointer-events-none rounded-[36px]"
               animate={shouldSkipHeavyEffects ? {} : { opacity: [0.5, 0.8, 0.5] }}
               transition={shouldSkipHeavyEffects ? {} : { duration: 3, repeat: Infinity }}
             />
@@ -985,12 +985,12 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               >
                 {/* Camera Lens in Dynamic Island */}
                 <div 
-                  className="relative w-3 h-3 rounded-full bg-gradient-to-br from-slate-800 to-black ring-1 ring-slate-600/50 cursor-pointer group"
+                  className="relative w-3 h-3 rounded-full bg-linear-to-br from-slate-800 to-black ring-1 ring-slate-600/50 cursor-pointer group"
                   onClick={(e) => { e.stopPropagation(); handleCamera(); }}
                   onMouseEnter={() => setHoveredButton('camera')}
                   onMouseLeave={() => setHoveredButton(null)}
                 >
-                  <div className="absolute inset-[2px] rounded-full bg-gradient-to-br from-black/80 to-black/60" />
+                  <div className="absolute inset-[2px] rounded-full bg-linear-to-br from-black/80 to-black/60" />
                   <motion.div 
                     className="absolute inset-0 rounded-full bg-white/30"
                     animate={shouldSkipHeavyEffects ? {} : { opacity: [0.2, 0.5, 0.2] }}
@@ -1042,8 +1042,8 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                   className={cn(
                     "w-[5px] h-7 rounded-l-sm transition-all shadow-lg",
                     isIframeMuted 
-                      ? "bg-gradient-to-b from-white to-black shadow-white/40" 
-                      : "bg-gradient-to-b from-white/30 to-black/60"
+                      ? "bg-linear-to-b from-white to-black shadow-white/40" 
+                      : "bg-linear-to-b from-white/30 to-black/60"
                   )}
                 />
                 <ButtonTooltip show={hoveredButton === 'mute'} text={isIframeMuted ? "🔇 Tap to Unmute" : "🔊 Tap to Mute"} position="right" color="blue" />
@@ -1058,7 +1058,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                 <motion.button
                   whileTap={{ x: -2, scale: 0.95 }}
                   onClick={(e) => { e.stopPropagation(); handleVolumeUp(); }}
-                  className="w-[5px] h-10 rounded-l-sm bg-gradient-to-b from-slate-500 to-slate-600 hover:from-slate-400 hover:to-slate-500 transition-all shadow-lg"
+                  className="w-[5px] h-10 rounded-l-sm bg-linear-to-b from-slate-500 to-slate-600 hover:from-slate-400 hover:to-slate-500 transition-all shadow-lg"
                 />
                 <ButtonTooltip show={hoveredButton === 'volUp'} text="🔊 Volume Up (+10)" position="right" color="blue" />
               </div>
@@ -1072,7 +1072,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                 <motion.button
                   whileTap={{ x: -2, scale: 0.95 }}
                   onClick={(e) => { e.stopPropagation(); handleVolumeDown(); }}
-                  className="w-[5px] h-10 rounded-l-sm bg-gradient-to-b from-slate-500 to-slate-600 hover:from-slate-400 hover:to-slate-500 transition-all shadow-lg"
+                  className="w-[5px] h-10 rounded-l-sm bg-linear-to-b from-slate-500 to-slate-600 hover:from-slate-400 hover:to-slate-500 transition-all shadow-lg"
                 />
                 <ButtonTooltip show={hoveredButton === 'volDown'} text="🔉 Volume Down (-10)" position="right" color="blue" />
               </div>
@@ -1091,8 +1091,8 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                 className={cn(
                   "w-[5px] h-14 rounded-r-sm transition-all shadow-lg",
                   isLocked 
-                    ? "bg-gradient-to-b from-white to-black shadow-white/40" 
-                    : "bg-gradient-to-b from-white/30 to-black/60 hover:from-white/40 hover:to-black/70"
+                    ? "bg-linear-to-b from-white to-black shadow-white/40" 
+                    : "bg-linear-to-b from-white/30 to-black/60 hover:from-white/40 hover:to-black/70"
                 )}
               />
               <ButtonTooltip show={hoveredButton === 'power'} text={isLocked ? "🔓 Tap to Wake" : "🔒 Sleep/Wake"} position="left" color="blue" />
@@ -1186,9 +1186,9 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               )}
 
               {/* Player Header */}
-              <div className="relative flex items-center justify-between px-3 py-2.5 bg-gradient-to-r from-black/80 to-black/60 rounded-t-2xl border-b border-white/5 backdrop-blur-sm mt-2">
+              <div className="relative flex items-center justify-between px-3 py-2.5 bg-linear-to-r from-black/80 to-black/60 rounded-t-2xl border-b border-white/5 backdrop-blur-sm mt-2">
                 <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-xl bg-gradient-to-br from-white/15 to-black/40 shadow-inner">
+                  <div className="p-1.5 rounded-xl bg-linear-to-br from-white/15 to-black/40 shadow-inner">
                     {sourceIcons[musicSource] && React.createElement(sourceIcons[musicSource]!, { className: "w-5 h-5 text-white" })}
                   </div>
                   <div>
@@ -1217,7 +1217,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               >
                 {/* Reflective Shimmer on player */}
                 <motion.div
-                  className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none z-10"
+                  className="absolute inset-0 bg-linear-to-tr from-transparent via-white/5 to-transparent pointer-events-none z-10"
                   animate={shouldSkipHeavyEffects ? {} : { x: ['-100%', '200%'] }}
                   transition={shouldSkipHeavyEffects ? {} : { duration: 5, repeat: Infinity, ease: "linear" }}
                 />
@@ -1274,7 +1274,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                     initial={{ opacity: 0, y: 10, height: 0 }}
                     animate={{ opacity: 1, y: 0, height: 'auto' }}
                     exit={{ opacity: 0, y: -10, height: 0 }}
-                    className="mt-3 mx-1 p-2.5 rounded-xl bg-gradient-to-br from-white/10 to-black/30 border border-white/10 overflow-hidden"
+                    className="mt-3 mx-1 p-2.5 rounded-xl bg-linear-to-br from-white/10 to-black/30 border border-white/10 overflow-hidden"
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-1.5">
@@ -1399,7 +1399,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               style={{ zIndex: Z_INDEX.HELPERS }}
             >
               <div className={cn(
-                "px-3 py-2 rounded-xl bg-gradient-to-r from-white/30 to-black/70 border border-white/30 shadow-xl text-[9px] text-white font-medium flex items-center gap-2",
+                "px-3 py-2 rounded-xl bg-linear-to-r from-white/30 to-black/70 border border-white/30 shadow-xl text-[9px] text-white font-medium flex items-center gap-2",
                 shouldSkipHeavyEffects ? "" : "backdrop-blur-xl"
               )}>
                 <IconInfoCircle className="w-3.5 h-3.5" />

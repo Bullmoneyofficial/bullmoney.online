@@ -74,14 +74,13 @@ import { isMobileDevice } from "@/lib/mobileDetection";
 // ✅ LOADING FALLBACKS - Mobile-optimized loading states
 import {
   HeroSkeleton,
-  FeaturesSkeleton,
   MinimalFallback,
   ContentSkeleton,
   CardSkeleton,
 } from "@/components/MobileLazyLoadingFallback";
 
 // ==========================================
-// ✅ MOBILE-OPTIMIZED LAZY LOADING - All components lazy loaded for mobile performance
+// ✅ PERFORMANCE OPTIMIZED: All components lazy loaded for faster initial load
 // ==========================================
 const Hero = dynamic(
   () => import("@/components/hero"),
@@ -99,9 +98,13 @@ const BullMoneyPromoScroll = dynamic(
   { ssr: false, loading: () => <MinimalFallback /> }
 );
 
-import { Features } from "@/components/features";
+// Features - single lazy import (removed duplicate static import)
+const Features = dynamic(
+  () => import("@/components/features").then(mod => ({ default: mod.Features })),
+  { ssr: false, loading: () => <MinimalFallback /> }
+);
 
-// UNIFIED SHIMMER SYSTEM - Import from single source
+// UNIFIED SHIMMER SYSTEM - These are lightweight CSS animations, safe to import statically
 import {
   ShimmerBorder,
   ShimmerLine,
@@ -111,7 +114,15 @@ import {
   ShimmerRadialGlow,
   ShimmerContainer
 } from "@/components/ui/UnifiedShimmer";
-import { HeroScrollDemo } from "@/components/HeroScrollDemo";
+
+// Trading Quick Access data - import separately for featured videos
+import { DISCORD_STAGE_FEATURED_VIDEOS } from "@/components/TradingQuickAccess";
+
+// HeroScrollDemo - lazy load
+const HeroScrollDemo = dynamic(
+  () => import("@/components/HeroScrollDemo").then(mod => ({ default: mod.HeroScrollDemo })),
+  { ssr: false }
+);
 
 const SplineSkeleton = dynamic(
   () => import("@/components/ui/LoadingSkeleton").then(mod => ({ default: mod.SplineSkeleton })),
@@ -129,10 +140,6 @@ import { useComponentTracking, useCrashTracker } from "@/lib/CrashTracker";
 import { useScrollOptimization } from "@/hooks/useScrollOptimization";
 import { useBigDeviceScrollOptimizer } from "@/lib/bigDeviceScrollOptimizer";
 import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
-const FeaturesLazy = dynamic(
-  () => import("@/components/features").then(mod => ({ default: mod.Features })),
-  { ssr: false, loading: () => <FeaturesSkeleton /> }
-);
 
 // Use optimized ticker for 120Hz performance - lazy load
 const LiveMarketTicker = dynamic(
@@ -143,7 +150,17 @@ const LiveMarketTicker = dynamic(
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
 import { useUIState } from "@/contexts/UIStateContext";
-import { DISCORD_STAGE_FEATURED_VIDEOS } from "@/components/TradingQuickAccess";
+
+// TradingQuickAccess component - lazy load
+const TradingQuickAccess = dynamic(
+  () => import("@/components/TradingQuickAccess").then(mod => ({ default: mod.default })),
+  { ssr: false }
+);
+
+// Features skeleton fallback (inline for faster load)
+const FeaturesSkeleton = () => (
+  <div className="w-full h-100 bg-linear-to-b from-black to-zinc-900/50 animate-pulse rounded-xl" />
+);
 
 const HiddenYoutubePlayer = dynamic(
   () => import("@/components/Mainpage/HiddenYoutubePlayer"),
@@ -226,7 +243,7 @@ const TestimonialsCarousel = dynamic(
 
 function DesktopHeroFallback() {
   return (
-    <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-black via-[#0a0a0a] to-black">
+    <div className="w-full h-full flex items-center justify-center bg-linear-to-b from-black via-[#0a0a0a] to-black">
       <div className="w-full max-w-6xl mx-auto px-6 py-16 flex flex-col items-center text-center gap-4">
         <p
           className="font-mono text-[10px] tracking-[0.2em] uppercase glass-text-gray"
@@ -285,16 +302,23 @@ function LazySplineContainer({ scene }: { scene: string }) {
     }
   }, []);
 
-  // HERO SPLINE: ALWAYS RENDERS ON ALL DEVICES - NO RESTRICTIONS
-  // Target: 50ms load time with zero lag (with mobile safety)
+  // HERO SPLINE: SKIP ON MOBILE TO PREVENT LAG - Desktop only for heavy 3D
+  // Target: 50ms load time with zero lag on desktop, no Spline on mobile
   useEffect(() => {
     if (deviceCheckDone.current) return;
     deviceCheckDone.current = true;
 
-    console.log('[LazySpline] HERO MODE: Enabled on ALL devices' + (isMobileDevice ? ' (MOBILE SAFE)' : ''));
+    // Skip Spline entirely on mobile devices to prevent lag
+    if (isMobileDevice) {
+      console.log('[LazySpline] MOBILE DETECTED: Skipping Spline to prevent lag');
+      setCanRender(false);
+      return;
+    }
+
+    console.log('[LazySpline] HERO MODE: Enabled on DESKTOP only');
     setCanRender(true);
     
-    // Ultra-aggressive preloading for 50ms target
+    // Ultra-aggressive preloading for 50ms target (desktop only)
     if (typeof window !== 'undefined') {
       const link = document.createElement('link');
       link.rel = 'preload';
@@ -310,7 +334,7 @@ function LazySplineContainer({ scene }: { scene: string }) {
         priority: 'high'
       } as any).catch(() => {});
     }
-  }, []);
+  }, [isMobileDevice]);
 
   // Performance monitoring for marginal devices
   useEffect(() => {
@@ -354,7 +378,7 @@ function LazySplineContainer({ scene }: { scene: string }) {
     }, { rootMargin: deviceTier === 'ultra' || deviceTier === 'high' ? '1400px' : deviceTier === 'medium' ? '1100px' : '600px' });
   }, [observe, hasLoadedOnce, canRender, deviceTier]);
 
-  const shouldShowSpline = true;
+  const shouldShowSpline = canRender && !isMobileDevice; // Don't show Spline on mobile at all
   const isPaused = false;
 
   return (
@@ -486,7 +510,8 @@ function HomeContent() {
   useAudioEngine(!isMuted, 'MECHANICAL');
   const canRenderMobileSections = !isMobile || allowMobileLazyRender;
   const canRenderHeavyDesktop = !isMobile && allowHeavyDesktop;
-  const FeaturesComponent = isMobile ? FeaturesLazy : Features;
+  // Use single dynamic Features component for all devices
+  const FeaturesComponent = Features;
   
   // Track FPS drops
   useEffect(() => {
@@ -835,7 +860,7 @@ function HomeContent() {
             pointer-events: none !important;
           }
         `}</style>
-        <div className="fixed inset-0 z-[99999] bg-black flex items-center justify-center">
+        <div className="fixed inset-0 z-99999 bg-black flex items-center justify-center">
           <ShimmerRadialGlow color="white" intensity="low" />
           <ShimmerSpinner size={48} color="white" />
         </div>
@@ -848,13 +873,13 @@ function HomeContent() {
       <style>{GLASS_STYLES}</style>
       
       {currentView === 'pagemode' && (
-        <div className="fixed inset-0 z-[99999] bg-black">
+        <div className="fixed inset-0 z-99999 bg-black">
           <PageMode onUnlock={handlePageModeUnlock} />
         </div>
       )}
 
       {currentView === 'loader' && (
-        <div className="fixed inset-0 z-[99999] bg-black">
+        <div className="fixed inset-0 z-99999 bg-black">
           <TradingUnlockLoader 
             onFinished={handleLoaderComplete}
           />

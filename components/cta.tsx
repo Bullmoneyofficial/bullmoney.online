@@ -120,7 +120,7 @@ const ContactSelectionModal = ({
                     >
                         {/* Background Effects */}
                         <div className="absolute inset-0 pointer-events-none opacity-20 mix-blend-overlay bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
-                        <div className="absolute inset-0 pointer-events-none opacity-30 bg-gradient-to-br from-white/10 to-transparent"></div>
+                        <div className="absolute inset-0 pointer-events-none opacity-30 bg-linear-to-br from-white/10 to-transparent"></div>
 
                         <button 
                             onClick={onClose} 
@@ -436,7 +436,7 @@ export function CTA() {
 
             {/* RIGHT: Card Swap Visual */}
             <div className="relative h-[650px] w-full flex items-center justify-center lg:justify-end perspective-1000">
-               <div className="absolute top-1/2 left-1/2 lg:left-[60%] -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-gradient-to-r from-white to-pink-200 dark:from-white/40 dark:to-pink-900/40 rounded-full blur-[100px] opacity-60 pointer-events-none" />
+               <div className="absolute top-1/2 left-1/2 lg:left-[60%] -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-linear-to-r from-white to-pink-200 dark:from-white/40 dark:to-pink-900/40 rounded-full blur-[100px] opacity-60 pointer-events-none" />
                
                <div className="mr-0 lg:mr-20"> 
                   <CardSwap 
@@ -458,7 +458,7 @@ export function CTA() {
                           className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all duration-500"
                         />
                         {/* Overlay on Card (Pre-Expand) */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                        <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
                            <span className="text-white font-serif text-2xl font-bold translate-y-2 group-hover:translate-y-0 transition-transform duration-300">{card.title}</span>
                            <div className="flex items-center gap-3 mt-2 translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75">
                              {card.price && <span className="text-white/90 text-sm font-semibold">{card.price.includes('€') ? card.price : `€${card.price}`}</span>}

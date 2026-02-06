@@ -71,7 +71,7 @@ export const CommentCard = memo(({
       <div className="flex gap-3">
         {/* Avatar */}
         <div className="flex-shrink-0">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-white to-white flex items-center justify-center overflow-hidden">
+          <div className="w-8 h-8 rounded-full bg-linear-to-br from-white to-white flex items-center justify-center overflow-hidden">
             {author?.avatar_url ? (
               <img src={author.avatar_url} alt={author.username} className="w-full h-full object-cover" />
             ) : (

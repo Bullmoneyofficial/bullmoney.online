@@ -824,7 +824,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ type: "spring", damping: 25 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-4xl max-h-[92vh] sm:max-h-[90vh] overflow-hidden rounded-2xl bg-gradient-to-b from-slate-950 via-slate-900 to-black shadow-2xl shadow-white/40 border border-white/40"
+            className="relative w-full max-w-4xl max-h-[92vh] sm:max-h-[90vh] overflow-hidden rounded-2xl bg-linear-to-b from-slate-950 via-slate-900 to-black shadow-2xl shadow-white/40 border border-white/40"
           >
             {/* Header */}
             <div className="sticky top-0 z-10 bg-white/10 px-4 sm:px-6 py-3 sm:py-4 border-b border-white/30">

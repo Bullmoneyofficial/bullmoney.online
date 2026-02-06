@@ -264,7 +264,7 @@ export const LiveMarketTickerOptimized: React.FC = memo(function LiveMarketTicke
   return (
     <>
       <TickerStyles />
-      <div className="fixed bottom-0 left-0 right-0 z-50 w-full overflow-hidden bg-gradient-to-r from-black via-gray-900 to-black border-t border-white/10 shadow-2xl transform translateZ-0">
+      <div className="fixed bottom-0 left-0 right-0 z-50 w-full overflow-hidden bg-linear-to-r from-black via-gray-900 to-black border-t border-white/10 shadow-2xl transform translateZ-0">
       {/* Background pattern - static, no animation */}
       <div className="absolute inset-0 opacity-5 pointer-events-none">
         <div
@@ -277,7 +277,7 @@ export const LiveMarketTickerOptimized: React.FC = memo(function LiveMarketTicke
       </div>
 
       {/* Top accent line */}
-      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-linear-to-r from-transparent via-white/50 to-transparent" />
 
       {/* Ticker content */}
       <div className="relative flex items-center h-10 px-4">
@@ -286,8 +286,8 @@ export const LiveMarketTickerOptimized: React.FC = memo(function LiveMarketTicke
         {/* CSS-animated ticker - NO Framer Motion */}
         <div className="ticker-container flex-1 overflow-hidden relative">
           {/* Fade masks */}
-          <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-900 to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-900 to-transparent z-10 pointer-events-none" />
+          <div className="absolute left-0 top-0 bottom-0 w-8 bg-linear-to-r from-gray-900 to-transparent z-10 pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-8 bg-linear-to-l from-gray-900 to-transparent z-10 pointer-events-none" />
           
           {/* Scrolling track - CSS animation */}
           <div className="ticker-track flex gap-6">

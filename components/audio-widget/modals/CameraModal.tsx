@@ -124,14 +124,14 @@ export const CameraModal = React.memo(function CameraModal({
             </svg>
 
             {/* iPhone Frame */}
-            <div className="absolute inset-0 bg-gradient-to-b from-[#1a1a1f] via-[#0f0f12] to-[#1a1a1f] rounded-[45px] border-[4px] border-slate-700/60 shadow-[0_0_80px_rgba(0,0,0,0.9),inset_0_2px_2px_rgba(255,255,255,0.05)]">
+            <div className="absolute inset-0 bg-linear-to-b from-[#1a1a1f] via-[#0f0f12] to-[#1a1a1f] rounded-[45px] border-[4px] border-slate-700/60 shadow-[0_0_80px_rgba(0,0,0,0.9),inset_0_2px_2px_rgba(255,255,255,0.05)]">
               {/* Titanium Edge */}
               <div className="absolute inset-[2px] rounded-[41px] border border-slate-600/30" />
               
               {/* Dynamic Island */}
               <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30">
                 <div className="bg-black rounded-full px-6 py-2 flex items-center gap-3">
-                  <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 ring-1 ring-slate-600">
+                  <div className="w-2.5 h-2.5 rounded-full bg-linear-to-br from-slate-800 to-slate-900 ring-1 ring-slate-600">
                     <motion.div className="w-full h-full rounded-full bg-white/40" animate={{ opacity: [0.4, 0.8, 0.4] }} transition={shouldSkipHeavyEffects ? {} : { duration: 1.5, repeat: Infinity }} />
                   </div>
                   <span className="text-[9px] text-white/60 font-medium">Recording</span>
@@ -142,7 +142,7 @@ export const CameraModal = React.memo(function CameraModal({
               <div className="absolute inset-[6px] rounded-[39px] overflow-hidden bg-black">
                 {/* Reflective shimmer overlay */}
                 <motion.div
-                  className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/8 to-transparent z-20 pointer-events-none"
+                  className="absolute inset-0 bg-linear-to-tr from-transparent via-white/8 to-transparent z-20 pointer-events-none"
                   animate={{ x: ['-100%', '200%'] }}
                   transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: "linear" }}
                 />

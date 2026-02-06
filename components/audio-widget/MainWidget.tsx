@@ -365,7 +365,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
               >
                 {/* Animated background shimmer */}
                 <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                  className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent"
                   animate={{ x: ['-100%', '100%'] }}
                   transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
                 />
@@ -412,7 +412,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                     {[0, 1, 2, 3, 4].map((i) => (
                       <motion.div
                         key={i}
-                        className="w-[3px] rounded-full bg-gradient-to-t from-white to-white/70"
+                        className="w-[3px] rounded-full bg-linear-to-t from-white to-white/70"
                         initial={{ height: 4 }}
                         animate={{ 
                           height: deviceVolumeDirection === 'up' 
@@ -681,7 +681,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                   exit={{ opacity: 0, scale: 0.8 }}
                   className="absolute right-0 bottom-[calc(100%+8px)] z-50 pointer-events-none"
                 >
-                  <div className={`relative p-2.5 rounded-xl bg-gradient-to-br from-black/80 to-black/60 border border-white/15 shadow-xl ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-md'}`}>
+                  <div className={`relative p-2.5 rounded-xl bg-linear-to-br from-black/80 to-black/60 border border-white/15 shadow-xl ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-md'}`}>
                     <div className="absolute -bottom-2 right-6 w-3 h-3 bg-black/70 rotate-45 border-b border-r border-white/15" />
                     <div className="flex items-center gap-2 whitespace-nowrap">
                       <motion.div 
@@ -927,7 +927,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
 
                     {/* Game Stats */}
                     {(!isMobileDevice || activeMobilePanel === 'game') && gameStats.gamesPlayed > 0 && (
-                      <div className={cn("mb-2 p-2 rounded-lg bg-gradient-to-br from-white/10 to-white/5 border border-white/15 relative overflow-hidden", isMobileDevice && "shadow-[0_10px_24px_rgba(0,0,0,0.5)]") }>
+                      <div className={cn("mb-2 p-2 rounded-lg bg-linear-to-br from-white/10 to-white/5 border border-white/15 relative overflow-hidden", isMobileDevice && "shadow-[0_10px_24px_rgba(0,0,0,0.5)]") }>
                         <GameShimmer colors="blue" />
                         <div className="flex items-center justify-between text-[10px] mb-1.5">
                           <div className="flex items-center gap-2">
@@ -964,7 +964,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
 
                     {/* Quick game start if no games played */}
                     {(!isMobileDevice || activeMobilePanel === 'game') && gameStats.gamesPlayed === 0 && streamingActive && (
-                      <div className={cn("mb-2 p-2 rounded-lg bg-gradient-to-br from-white/10 to-white/5 border border-white/15 relative overflow-hidden", isMobileDevice && "shadow-[0_10px_24px_rgba(0,0,0,0.5)]") }>
+                      <div className={cn("mb-2 p-2 rounded-lg bg-linear-to-br from-white/10 to-white/5 border border-white/15 relative overflow-hidden", isMobileDevice && "shadow-[0_10px_24px_rgba(0,0,0,0.5)]") }>
                         <GameShimmer colors="blue" />
                         <div className="text-[10px] text-white/80 mb-1.5 text-center">Try the catch game</div>
                         <GameControls isPlaying={isWandering} onStart={handleStartCatchGame} onStop={handleStopGame} />

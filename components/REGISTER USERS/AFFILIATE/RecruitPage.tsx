@@ -263,7 +263,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   return (
     <div className="min-h-screen bg-[#050B14] flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans">
       <div className={cn(
-        "absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent to-transparent opacity-50 transition-colors duration-500",
+        "absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent to-transparent opacity-50 transition-colors duration-500",
         isVantage ? "via-white" : "via-white"
       )} />
       <div className={cn(
@@ -299,8 +299,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                       className={cn(
                         "absolute inset-0 -z-10 rounded-full",
                         partner === "Vantage"
-                          ? "bg-gradient-to-r from-white to-white shadow-[0_0_25px_rgba(255, 255, 255,0.45)]"
-                          : "bg-gradient-to-r from-sky-500 to-white shadow-[0_0_25px_rgba(255, 255, 255,0.45)]"
+                          ? "bg-linear-to-r from-white to-white shadow-[0_0_25px_rgba(255, 255, 255,0.45)]"
+                          : "bg-linear-to-r from-sky-500 to-white shadow-[0_0_25px_rgba(255, 255, 255,0.45)]"
                       )}
                       transition={{ type: "spring", stiffness: 400, damping: 28 }}
                     />
@@ -325,8 +325,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 {...getStepProps(1)}
                 title={`Open Your ${activeBroker} Account`}
                 className={isVantage 
-                  ? "bg-gradient-to-br from-purple-950/40 via-slate-950 to-neutral-950"
-                  : "bg-gradient-to-br from-sky-950/40 via-slate-950 to-neutral-950"
+                  ? "bg-linear-to-br from-purple-950/40 via-slate-950 to-neutral-950"
+                  : "bg-linear-to-br from-sky-950/40 via-slate-950 to-neutral-950"
                 }
                 actions={
                   <div className="flex flex-wrap items-center justify-center gap-3">
@@ -348,8 +348,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                       className={cn(
                         "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-white shadow transition",
                         isVantage
-                          ? "bg-gradient-to-r from-white to-white hover:from-white hover:to-fuchsia-700"
-                          : "bg-gradient-to-r from-sky-500 to-white hover:from-sky-600 hover:to-white"
+                          ? "bg-linear-to-r from-white to-white hover:from-white hover:to-fuchsia-700"
+                          : "bg-linear-to-r from-sky-500 to-white hover:from-sky-600 hover:to-white"
                       )}
                     >
                       <span>Open {activeBroker} Account</span>
@@ -513,7 +513,7 @@ function StepCard({ number, number2, title, children, actions, className }: any)
       className
     )}>
       <div className={cn(
-        "pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-gradient-to-l blur-2xl",
+        "pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-linear-to-l blur-2xl",
         useRed ? "from-white/15 via-white/10 to-transparent" : "from-sky-500/15 via-white/10 to-transparent"
       )} />
       <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10" />
@@ -525,12 +525,12 @@ function StepCard({ number, number2, title, children, actions, className }: any)
           Step {n}
         </span>
         <span className="relative text-4xl font-black bg-clip-text text-transparent">
-          <span className={cn("bg-gradient-to-br bg-clip-text text-transparent",
+          <span className={cn("bg-linear-to-br bg-clip-text text-transparent",
             useRed ? "from-white via-white to-fuchsia-400" : "from-sky-400 via-white to-indigo-400"
           )}>
             {n}
           </span>
-          <span className={cn("pointer-events-none absolute inset-0 -z-10 blur-2xl bg-gradient-to-br",
+          <span className={cn("pointer-events-none absolute inset-0 -z-10 blur-2xl bg-linear-to-br",
             useRed ? "from-white/40 via-white/30 to-fuchsia-500/40" : "from-sky-500/40 via-white/30 to-indigo-500/40"
           )} />
         </span>
@@ -594,7 +594,7 @@ function CardPattern({ mouseX, mouseY, randomString }: any) {
   const style = { maskImage, WebkitMaskImage: maskImage as unknown as string };
   return (
     <div className="pointer-events-none absolute inset-0">
-      <motion.div className="absolute inset-0 bg-gradient-to-r from-white to-white opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
+      <motion.div className="absolute inset-0 bg-linear-to-r from-white to-white opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
       <motion.div className="absolute inset-0 opacity-0 mix-blend-overlay group-hover/card:opacity-100" style={style}>
         <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-white font-mono font-bold transition duration-500">{randomString}</p>
       </motion.div>
@@ -634,7 +634,7 @@ function CardPatternRed({ mouseX, mouseY, randomString }: any) {
   const style = { maskImage, WebkitMaskImage: maskImage as unknown as string };
   return (
     <div className="pointer-events-none absolute inset-0">
-      <motion.div className="absolute inset-0 bg-gradient-to-r from-white to-white opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
+      <motion.div className="absolute inset-0 bg-linear-to-r from-white to-white opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
       <motion.div className="absolute inset-0 opacity-0 mix-blend-overlay group-hover/card:opacity-100" style={style}>
         <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-white/90 font-mono font-bold transition duration-500">{randomString}</p>
       </motion.div>

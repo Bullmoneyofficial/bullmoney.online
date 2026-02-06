@@ -152,7 +152,7 @@ const OptimizedSplineSection = React.memo(({
   // Render fallback if Spline is disabled (except for critical scenes)
   if (!canRender) {
     return (
-      <div className={`relative w-full h-[100dvh] bg-gradient-to-br from-blue-950/20 via-black to-purple-950/20 flex items-center justify-center ${className}`}>
+      <div className={`relative w-full h-[100dvh] bg-linear-to-br from-blue-950/20 via-black to-purple-950/20 flex items-center justify-center ${className}`}>
         <div className="text-center px-6">
           <h2 className="text-4xl font-bold text-white/60 mb-4">3D Disabled</h2>
           <p className="text-white/40 text-sm">Enable in performance settings</p>
@@ -185,7 +185,7 @@ const OptimizedSplineSection = React.memo(({
       {/* Scene Label */}
       {label && (
         <div className="absolute bottom-20 sm:bottom-24 left-4 sm:left-6 z-20 pointer-events-none transition-all duration-1000 ease-out max-w-[85%]">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/10 tracking-tighter select-none drop-shadow-2xl">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-transparent bg-clip-text bg-linear-to-b from-white to-white/10 tracking-tighter select-none drop-shadow-2xl">
             {label}
           </h2>
         </div>
@@ -212,8 +212,8 @@ const OptimizedSplineSection = React.memo(({
       )}
 
       {/* Gradient overlays for smooth blending */}
-      <div className="absolute top-0 left-0 w-full h-24 sm:h-32 bg-gradient-to-b from-black to-transparent pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-full h-24 sm:h-32 bg-gradient-to-t from-black to-transparent pointer-events-none" />
+      <div className="absolute top-0 left-0 w-full h-24 sm:h-32 bg-linear-to-b from-black to-transparent pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-full h-24 sm:h-32 bg-linear-to-t from-black to-transparent pointer-events-none" />
     </div>
   );
 });

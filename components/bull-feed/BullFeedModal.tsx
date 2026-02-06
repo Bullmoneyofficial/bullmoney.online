@@ -332,7 +332,7 @@ const BullFeedContent = memo(() => {
         )}
         
         {/* Inner Container */}
-        <div className="relative z-10 h-full bg-gradient-to-b from-neutral-900 to-black rounded-2xl border border-white/30 overflow-hidden flex flex-col">
+        <div className="relative z-10 h-full bg-linear-to-b from-neutral-900 to-black rounded-2xl border border-white/30 overflow-hidden flex flex-col">
           {!shouldSkipHeavyEffects && <ShimmerLine color="blue" />}
           
           {/* Header */}

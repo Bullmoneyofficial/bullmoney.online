@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
 import { useAuthModalUI } from '@/contexts/UIStateContext';
 import { useMobilePerformance } from '@/hooks/useMobilePerformance';
+import { useRouter } from 'next/navigation';
 
 type AuthView = 'login' | 'signup' | 'forgot-password';
 
@@ -48,6 +49,7 @@ interface AuthContentProps {
 }
 
 const AuthContent = memo(({ onClose }: AuthContentProps) => {
+  const router = useRouter();
   const { signIn, signUp, isLoading: authLoading } = useAuth();
   const { signIn: recruitSignIn, isAuthenticated: isRecruitAuthenticated, recruit } = useRecruitAuth();
   const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects } = useMobilePerformance();
@@ -121,6 +123,7 @@ const AuthContent = memo(({ onClose }: AuthContentProps) => {
       if (recruitResult.success) {
         SoundEffects.click();
         onClose();
+        router.push('/store/account');
         return;
       }
       
@@ -129,13 +132,14 @@ const AuthContent = memo(({ onClose }: AuthContentProps) => {
       if (result.success) {
         SoundEffects.click();
         onClose();
+        router.push('/store/account');
       } else {
         setError(recruitResult.error || result.error || 'Invalid email or password');
       }
     } finally {
       setIsLoading(false);
     }
-  }, [email, password, signIn, recruitSignIn, onClose]);
+  }, [email, password, signIn, recruitSignIn, onClose, router]);
 
   const handleSignUp = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -186,7 +190,7 @@ const AuthContent = memo(({ onClose }: AuthContentProps) => {
       animate={animations.modalBackdrop.animate as TargetAndTransition}
       exit={animations.modalBackdrop.exit}
       transition={animations.modalBackdrop.transition}
-      className={`fixed inset-0 z-[2147483647] flex items-center justify-center p-4 bg-black/95 ${
+      className={`fixed inset-0 z-2147483647 flex items-center justify-center p-4 bg-black/95 ${
         shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'
       }`}
     >
@@ -204,13 +208,13 @@ const AuthContent = memo(({ onClose }: AuthContentProps) => {
       >
         {/* Shimmer Border - skip on mobile */}
         {!shouldSkipHeavyEffects && (
-          <div className="absolute inset-[-2px] overflow-hidden rounded-2xl pointer-events-none z-0">
+          <div className="absolute -inset-0.5 overflow-hidden rounded-2xl pointer-events-none z-0">
             <ShimmerBorder color="blue" intensity="low" />
           </div>
         )}
 
         {/* Inner Container */}
-        <div className="relative z-10 bg-gradient-to-b from-neutral-900 to-black rounded-2xl border border-white/30 overflow-hidden">
+        <div className="relative z-10 bg-linear-to-b from-neutral-900 to-black rounded-2xl border border-white/30 overflow-hidden">
           {!shouldSkipHeavyEffects && <ShimmerLine color="blue" />}
 
           {/* Header */}

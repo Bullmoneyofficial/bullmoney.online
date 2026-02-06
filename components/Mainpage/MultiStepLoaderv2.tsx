@@ -90,7 +90,7 @@ export const MultiStepLoaderV2 = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={animationConfig.useReducedMotion ? { duration: 0 } : { duration: 0.3 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-black via-gray-900 to-black backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-linear-to-br from-black via-gray-900 to-black backdrop-blur-sm"
         >
           <div className="text-center">
             <motion.div

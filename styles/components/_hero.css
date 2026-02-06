@@ -132,9 +132,9 @@
   position: absolute;
   inset: 0;
   z-index: 1;
-  contain: layout style paint;
+  contain: layout style;
   pointer-events: auto;
-  touch-action: pan-y;
+  touch-action: none;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -171,7 +171,7 @@
   min-height: 600px;
   overflow: hidden;
   contain: layout style;
-  touch-action: pan-y;
+  touch-action: none;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -355,6 +355,7 @@
     height: calc(100vh - 64px);
     height: calc(100dvh - 64px);
     min-height: 500px;
+    touch-action: none;
   }
   
   .hero-actions {

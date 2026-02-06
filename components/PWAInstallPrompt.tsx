@@ -95,7 +95,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
             bottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)',
           }}
         >
-          <div className="max-w-md mx-auto bg-gradient-to-r from-white to-white rounded-2xl shadow-2xl border border-white/20 overflow-hidden">
+          <div className="max-w-md mx-auto bg-linear-to-r from-white to-white rounded-2xl shadow-2xl border border-white/20 overflow-hidden">
             {/* Close Button */}
             <button
               onClick={handleDismiss}

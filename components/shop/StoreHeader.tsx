@@ -8,6 +8,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, Search, Menu, X, User, ChevronLeft, Home, LogOut } from 'lucide-react';
 import { useCartStore } from '@/stores/cart-store';
 import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
+import TextType from '@/components/TextType';
+import CountUp from '@/components/CountUp';
 
 // ============================================================================
 // STORE HEADER - NAVIGATION WITH PORTAL MOBILE MENU
@@ -15,6 +17,7 @@ import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
 // ============================================================================
 
 const NAV_LINKS = [
+  { href: '/store/account', label: 'Account' },
   { href: '/store', label: 'Shop' },
   { href: '/store?category=apparel', label: 'Apparel' },
   { href: '/store?category=accessories', label: 'Accessories' },
@@ -95,11 +98,11 @@ export function StoreHeader() {
 
           {/* Logo */}
           <Link href="/store" className="flex items-center gap-3">
-            <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-white to-white/60 flex items-center justify-center">
+            <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-linear-to-br from-white to-white/60 flex items-center justify-center">
               <span className="text-black font-bold text-base md:text-lg">B</span>
             </div>
             <span className="text-lg md:text-xl font-light tracking-tight hidden sm:block">
-              Store
+              <TextType text="Store" typingSpeed={25} showCursor={false} loop={false} as="span" />
             </span>
           </Link>
 
@@ -111,14 +114,14 @@ export function StoreHeader() {
                 href={link.href}
                 className="text-white/60 hover:text-white transition-colors text-sm tracking-wide"
               >
-                {link.label}
+                <TextType text={link.label} typingSpeed={Math.max(10, 30 - link.label.length)} showCursor={false} loop={false} as="span" />
               </Link>
             ))}
             <Link
               href="/store"
               className="h-10 px-5 flex items-center justify-center rounded-xl bg-white text-black text-sm font-medium hover:bg-white/90 transition-colors"
             >
-              Shop Now
+              <TextType text="Shop Now" typingSpeed={18} showCursor={false} loop={false} as="span" />
             </Link>
           </div>
 
@@ -169,7 +172,7 @@ export function StoreHeader() {
                     exit={{ opacity: 0, scale: 0.5 }}
                     className="text-sm font-medium"
                   >
-                    {itemCount}
+                    <CountUp to={itemCount} from={0} duration={0.5} separator="" className="" />
                   </motion.span>
                 )}
               </AnimatePresence>
@@ -208,7 +211,7 @@ export function StoreHeader() {
                 style={{ zIndex: 2147483649 }}
               >
               <div className="flex items-center justify-between mb-6">
-                <span className="text-xl font-light">Menu</span>
+                <span className="text-xl font-light"><TextType text="Menu" typingSpeed={25} showCursor={false} loop={false} as="span" /></span>
                 <button
                   onClick={() => setMobileMenuOpen(false)}
                   className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 active:bg-white/10"
@@ -238,14 +241,14 @@ export function StoreHeader() {
                       className="flex-1 h-9 flex items-center justify-center gap-2 rounded-lg bg-white/10 text-sm hover:bg-white/20 transition-colors"
                     >
                       <User className="w-4 h-4" />
-                      Profile
+                      <TextType text="Profile" typingSpeed={20} showCursor={false} loop={false} as="span" />
                     </Link>
                     <button
                       onClick={handleLogout}
                       className="flex-1 h-9 flex items-center justify-center gap-2 rounded-lg bg-white/10 text-sm hover:bg-white/20 transition-colors"
                     >
                       <LogOut className="w-4 h-4" />
-                      Logout
+                      <TextType text="Logout" typingSpeed={20} showCursor={false} loop={false} as="span" />
                     </button>
                   </div>
                 </div>
@@ -256,7 +259,7 @@ export function StoreHeader() {
                   className="mb-6 h-12 flex items-center justify-center gap-2 rounded-xl bg-white/10 border border-white/10 text-sm font-medium hover:bg-white/20 transition-colors"
                 >
                   <User className="w-5 h-5" />
-                  Sign In / Register
+                  <TextType text="Sign In / Register" typingSpeed={12} showCursor={false} loop={false} as="span" />
                 </Link>
               )}
               
@@ -268,7 +271,7 @@ export function StoreHeader() {
                     onClick={() => setMobileMenuOpen(false)}
                     className="block py-3 px-4 rounded-xl text-white/80 hover:bg-white/5 hover:text-white active:bg-white/10 transition-colors"
                   >
-                    {link.label}
+                    <TextType text={link.label} typingSpeed={Math.max(10, 25 - link.label.length)} showCursor={false} loop={false} as="span" />
                   </Link>
                 ))}
               </div>
@@ -280,7 +283,7 @@ export function StoreHeader() {
                 className="mt-4 w-full h-12 flex items-center justify-center gap-2 rounded-xl border border-white/10 text-white/60 hover:text-white hover:bg-white/5 transition-colors"
               >
                 <Home className="w-4 h-4" />
-                Back to Home
+                <TextType text="Back to Home" typingSpeed={15} showCursor={false} loop={false} as="span" />
               </Link>
 
               {/* Shop Now Button - Mobile */}
@@ -289,7 +292,7 @@ export function StoreHeader() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="mt-3 w-full h-12 flex items-center justify-center rounded-xl bg-white text-black font-medium hover:bg-white/90 active:scale-[0.98] transition-all"
               >
-                Shop Now
+                <TextType text="Shop Now" typingSpeed={18} showCursor={false} loop={false} as="span" />
               </Link>
               </motion.div>
             </>

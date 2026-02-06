@@ -129,7 +129,7 @@ export const CommentInput = memo(({
       <div className="flex gap-3">
         {/* User Avatar */}
         <div className="flex-shrink-0">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-white to-white flex items-center justify-center overflow-hidden">
+          <div className="w-8 h-8 rounded-full bg-linear-to-br from-white to-white flex items-center justify-center overflow-hidden">
             {user?.avatar_url ? (
               <img src={user.avatar_url} alt={user.username} className="w-full h-full object-cover" />
             ) : (

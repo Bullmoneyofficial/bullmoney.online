@@ -223,7 +223,7 @@ const AchievementBadge: React.FC<{ icon: React.ReactNode; label: string; show: b
         exit={{ x: 100, opacity: 0, scale: 0.5 }}
         transition={{ type: 'spring', bounce: 0.5 }}
       >
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-white to-white flex items-center justify-center">
+        <div className="w-10 h-10 rounded-full bg-linear-to-br from-white to-white flex items-center justify-center">
           {icon}
         </div>
         <div>

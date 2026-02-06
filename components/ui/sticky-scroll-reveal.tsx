@@ -218,7 +218,7 @@ export const StickyScroll = ({
             <div className="absolute inset-0 flex items-center justify-center opacity-60">
               <MiniGlobe />
             </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-black via-black/50 to-transparent" />
             {/* Content overlay */}
             <div className="relative z-10 flex flex-col items-center text-center px-4">
               <span className="text-2xl font-black text-white uppercase tracking-tight mb-1" style={{ fontFamily: "'Impact', 'Haettenschweiler', 'Arial Narrow Bold', sans-serif" }}>

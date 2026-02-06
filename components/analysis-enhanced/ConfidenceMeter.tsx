@@ -82,7 +82,7 @@ export const ConfidenceMeter = memo(({
           initial={{ width: 0 }}
           animate={{ width: `${percentage}%` }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
-          className={`absolute inset-y-0 left-0 bg-gradient-to-r ${colorGradient} rounded-full`}
+          className={`absolute inset-y-0 left-0 bg-linear-to-r ${colorGradient} rounded-full`}
         />
 
         {/* Indicator dot */}
@@ -109,7 +109,7 @@ export const ConfidenceIndicator = memo(({ score }: { score: number }) => {
     <div className="flex items-center gap-1.5">
       <div className={`w-8 h-1.5 bg-neutral-800 rounded-full overflow-hidden`}>
         <div
-          className={`h-full bg-gradient-to-r ${colorGradient} rounded-full`}
+          className={`h-full bg-linear-to-r ${colorGradient} rounded-full`}
           style={{ width: `${(clampedScore / 10) * 100}%` }}
         />
       </div>

@@ -231,7 +231,7 @@ export function MobileProductsDome() {
         transition={{ delay: 0.5, duration: 0.8 }}
       >
         {/* Fade gradient from black */}
-        <div className="absolute inset-x-0 -top-12 sm:-top-16 h-12 sm:h-16 bg-gradient-to-t from-black to-transparent pointer-events-none" />
+        <div className="absolute inset-x-0 -top-12 sm:-top-16 h-12 sm:h-16 bg-linear-to-t from-black to-transparent pointer-events-none" />
         
         {/* Stats Row */}
         <div className="flex items-center justify-center gap-4 sm:gap-6 mb-2 sm:mb-4 text-[10px] sm:text-xs text-white/50">
@@ -268,11 +268,9 @@ export function MobileProductsDome() {
               <Sparkles className="w-4 h-4" style={{ color: BLUE_THEME.primary }} />
               <span>EXPLORE VIP</span>
             </span>
-            {/* Shimmer effect */}
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12"
-              animate={{ x: ['-200%', '200%'] }}
-              transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', repeatDelay: 1 }}
+            {/* Shimmer effect - GPU CSS */}
+            <div
+              className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent -skew-x-12 store-shimmer-fast"
             />
           </motion.button>
           
@@ -316,7 +314,7 @@ export function MobileProductsDome() {
       
       {/* Bottom edge glow */}
       <div 
-        className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"
+        className="absolute bottom-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-white/20 to-transparent"
       />
     </section>
   );

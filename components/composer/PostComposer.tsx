@@ -303,7 +303,7 @@ const PostComposerContent = memo(() => {
         )}
         
         {/* Inner Container */}
-        <div className="relative z-10 h-full bg-gradient-to-b from-neutral-900 to-black rounded-2xl border border-white/30 overflow-hidden flex flex-col max-h-[95vh]">
+        <div className="relative z-10 h-full bg-linear-to-b from-neutral-900 to-black rounded-2xl border border-white/30 overflow-hidden flex flex-col max-h-[95vh]">
           {!shouldSkipHeavyEffects && <ShimmerLine color="blue" />}
           
           {/* Header */}

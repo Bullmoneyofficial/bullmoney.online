@@ -143,7 +143,7 @@ const TelegramChannelEmbed = React.memo(function TelegramChannelEmbed({ channel 
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => window.dispatchEvent(new CustomEvent('openProductsModal'))}
-          className="px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-bold rounded-lg shadow-lg shadow-amber-500/30 flex items-center gap-2"
+          className="px-4 py-2 bg-linear-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-bold rounded-lg shadow-lg shadow-amber-500/30 flex items-center gap-2"
         >
           <Crown className="w-3.5 h-3.5" />
           Unlock VIP Access
@@ -195,12 +195,12 @@ const TelegramChannelEmbed = React.memo(function TelegramChannelEmbed({ channel 
           <div className="flex items-start gap-2">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ${
               channel === 'vip' 
-                ? 'bg-gradient-to-br from-amber-500 to-orange-500' 
+                ? 'bg-linear-to-br from-amber-500 to-orange-500' 
                 : channel === 'shop'
-                ? 'bg-gradient-to-br from-white to-teal-500'
+                ? 'bg-linear-to-br from-white to-teal-500'
                 : channel === 'trades'
-                ? 'bg-gradient-to-br from-white to-white'
-                : 'bg-gradient-to-br from-white to-white'
+                ? 'bg-linear-to-br from-white to-white'
+                : 'bg-linear-to-br from-white to-white'
             }`}>
               {channel === 'vip' ? <Star className="w-4 h-4" /> : channel === 'shop' ? <ShoppingBag className="w-4 h-4" /> : channel === 'trades' ? <TrendingUp className="w-4 h-4" /> : 'B'}
             </div>
@@ -336,7 +336,7 @@ const LiveTradesTicker = React.memo(function LiveTradesTicker() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
     >
-      <div className="px-1 py-0.5 xs:py-1 bg-gradient-to-br from-zinc-900/95 via-zinc-800/95 to-zinc-900/90 backdrop-blur-xl rounded-b-lg border-x border-b border-white/30 hover:border-white/50 hover:bg-zinc-800/95 transition-all overflow-hidden min-w-[100px] xs:min-w-[120px] sm:min-w-[150px] md:min-w-[180px] lg:min-w-[220px] xl:min-w-[260px] 2xl:min-w-[300px] max-w-[100px] xs:max-w-[120px] sm:max-w-[150px] md:max-w-[180px] lg:max-w-[220px] xl:max-w-[260px] 2xl:max-w-[300px]">
+      <div className="px-1 py-0.5 xs:py-1 bg-linear-to-br from-zinc-900/95 via-zinc-800/95 to-zinc-900/90 backdrop-blur-xl rounded-b-lg border-x border-b border-white/30 hover:border-white/50 hover:bg-zinc-800/95 transition-all overflow-hidden min-w-[100px] xs:min-w-[120px] sm:min-w-[150px] md:min-w-[180px] lg:min-w-[220px] xl:min-w-[260px] 2xl:min-w-[300px] max-w-[100px] xs:max-w-[120px] sm:max-w-[150px] md:max-w-[180px] lg:max-w-[220px] xl:max-w-[260px] 2xl:max-w-[300px]">
         {/* Header row */}
         <div className="flex items-center justify-between mb-0.5">
           <div className="flex items-center gap-0.5">
@@ -383,7 +383,7 @@ const LiveTradesTicker = React.memo(function LiveTradesTicker() {
         {/* Progress bar - OPTIMIZED: Use will-change for better performance */}
         <div className="mt-0.5 h-[1px] bg-zinc-700/40 rounded-full overflow-hidden">
           <motion.div
-            className="h-full bg-gradient-to-r from-white via-white to-white"
+            className="h-full bg-linear-to-r from-white via-white to-white"
             initial={{ width: '0%' }}
             animate={{ width: '100%' }}
             transition={{ duration: 4, ease: 'linear' }}
@@ -966,10 +966,10 @@ export function CommunityQuickAccess() {
           }}
         >
           {/* Pill Content */}
-          <div className="relative rounded-r-2xl bg-gradient-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl hover:border-white/70 hover:shadow-white/40 min-w-[100px] xs:min-w-[120px] sm:min-w-[150px] md:min-w-[180px] lg:min-w-[220px] xl:min-w-[260px] 2xl:min-w-[300px]">
+          <div className="relative rounded-r-2xl bg-linear-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl hover:border-white/70 hover:shadow-white/40 min-w-[100px] xs:min-w-[120px] sm:min-w-[150px] md:min-w-[180px] lg:min-w-[220px] xl:min-w-[260px] 2xl:min-w-[300px]">
             {/* Enhanced pulsing glow background - OPTIMIZED: reduced animation speed to 3s */}
             <motion.div
-              className="absolute inset-0 rounded-r-2xl bg-gradient-to-r from-white/20 via-white/10 to-transparent opacity-0"
+              className="absolute inset-0 rounded-r-2xl bg-linear-to-r from-white/20 via-white/10 to-transparent opacity-0"
               animate={{
                 opacity: [0.3, 0.8, 0.3],
                 scale: [1, 1.05, 1],
@@ -1111,10 +1111,10 @@ export function CommunityQuickAccess() {
               exit={animations.modalContent.exit as TargetAndTransition}
               transition={animations.modalContent.transition}
               onClick={(e) => e.stopPropagation()}
-              className={`relative w-full max-w-[520px] max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 border border-white/30 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl shadow-white/20'}`}
+              className={`relative w-full max-w-[520px] max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-linear-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 border border-white/30 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl shadow-white/20'}`}
             >
                 {/* Header */}
-                <div className="p-2 sm:p-3 md:p-4 border-b border-white/20 bg-gradient-to-r from-white/10 to-white/10 flex-shrink-0">
+                <div className="p-2 sm:p-3 md:p-4 border-b border-white/20 bg-linear-to-r from-white/10 to-white/10 flex-shrink-0">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 min-w-0">
                       <MessageSquare className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 text-white flex-shrink-0" />
@@ -1189,7 +1189,7 @@ export function CommunityQuickAccess() {
                     }}
                     className={`flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-lg text-[8px] sm:text-xs font-semibold transition-all whitespace-nowrap ml-auto flex-shrink-0 ${
                       isAdmin 
-                        ? 'bg-gradient-to-r from-white to-white hover:from-white hover:to-white text-white border border-white/60 shadow-lg shadow-white/30 hover:shadow-white/50'
+                        ? 'bg-linear-to-r from-white to-white hover:from-white hover:to-white text-white border border-white/60 shadow-lg shadow-white/30 hover:shadow-white/50'
                         : 'bg-zinc-800/80 hover:bg-zinc-700/80 text-zinc-300 hover:text-white border border-zinc-600/40 hover:border-zinc-500/60'
                     }`}
                     title="Admin Panel - Manage VIP Status & Users (Cmd+Shift+A)"
@@ -1218,7 +1218,7 @@ export function CommunityQuickAccess() {
                 </div>
 
                 {/* Divider */}
-                <div className="h-px bg-gradient-to-r from-transparent via-white/30 to-transparent mx-2" />
+                <div className="h-px bg-linear-to-r from-transparent via-white/30 to-transparent mx-2" />
 
                 {/* Browser Switcher Section - Compact with detached hover menu */}
                 <div className="p-1.5 sm:p-2.5 md:p-3 flex-shrink-0">
@@ -1233,7 +1233,7 @@ export function CommunityQuickAccess() {
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       className="flex-1 flex items-center justify-center gap-0.5 sm:gap-1.5 md:gap-2 py-1 sm:py-2 px-1.5 sm:px-2.5 md:px-3 rounded-lg
-                        bg-gradient-to-r from-white to-white hover:from-white hover:to-white
+                        bg-linear-to-r from-white to-white hover:from-white hover:to-white
                         text-white font-semibold text-[8px] sm:text-xs md:text-xs whitespace-nowrap
                         border border-white/30
                         shadow-lg shadow-white/25
@@ -1252,8 +1252,8 @@ export function CommunityQuickAccess() {
                       className={`
                         flex items-center justify-center gap-0.5 sm:gap-1.5 py-1 sm:py-2 px-1.5 sm:px-3 rounded-lg
                         ${copied 
-                          ? 'bg-gradient-to-r from-white to-white' 
-                          : 'bg-gradient-to-r from-white to-white hover:from-white hover:to-white'
+                          ? 'bg-linear-to-r from-white to-white' 
+                          : 'bg-linear-to-r from-white to-white hover:from-white hover:to-white'
                         }
                         text-white font-semibold text-[8px] sm:text-xs
                         border border-white/30
@@ -1272,7 +1272,7 @@ export function CommunityQuickAccess() {
                 </div>
 
                 {/* Divider */}
-                <div className="h-px bg-gradient-to-r from-transparent via-white/30 to-transparent mx-2" />
+                <div className="h-px bg-linear-to-r from-transparent via-white/30 to-transparent mx-2" />
 
                 {/* Social Buttons Section - Compact for mobile */}
                 <div className="p-1.5 sm:p-2.5 md:p-3 space-y-1 sm:space-y-1.5 md:space-y-2 flex-shrink-0">
@@ -1283,7 +1283,7 @@ export function CommunityQuickAccess() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className="w-full flex items-center justify-center gap-0.5 sm:gap-1.5 md:gap-2 py-1 sm:py-1.5 md:py-2 px-1.5 sm:px-2.5 md:px-3 rounded-lg
-                      bg-gradient-to-r from-white to-white hover:from-white hover:to-white
+                      bg-linear-to-r from-white to-white hover:from-white hover:to-white
                       text-white font-semibold text-[8px] sm:text-xs md:text-xs
                       border border-white/30
                       shadow-lg shadow-white/25
@@ -1299,7 +1299,7 @@ export function CommunityQuickAccess() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className="w-full flex items-center justify-center gap-0.5 sm:gap-1.5 md:gap-2 py-1 sm:py-1.5 md:py-2 px-1.5 sm:px-2.5 md:px-3 rounded-lg
-                      bg-gradient-to-r from-white to-white hover:from-white hover:to-white
+                      bg-linear-to-r from-white to-white hover:from-white hover:to-white
                       text-white font-semibold text-[8px] sm:text-xs md:text-xs
                       border border-white/30
                       shadow-lg shadow-white/25
@@ -1315,7 +1315,7 @@ export function CommunityQuickAccess() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className="w-full flex items-center justify-center gap-0.5 sm:gap-1.5 md:gap-2 py-1 sm:py-1.5 md:py-2 px-1.5 sm:px-2.5 md:px-3 rounded-lg
-                      bg-gradient-to-r from-white to-white hover:from-white hover:to-white
+                      bg-linear-to-r from-white to-white hover:from-white hover:to-white
                       text-white font-semibold text-[8px] sm:text-xs md:text-xs
                       border border-white/30
                       shadow-lg shadow-white/25
@@ -1331,7 +1331,7 @@ export function CommunityQuickAccess() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className="w-full flex items-center justify-center gap-0.5 sm:gap-1.5 md:gap-2 py-1 sm:py-1.5 md:py-2 px-1.5 sm:px-2.5 md:px-3 rounded-lg
-                      bg-gradient-to-r from-white to-white hover:from-white hover:to-white
+                      bg-linear-to-r from-white to-white hover:from-white hover:to-white
                       text-white font-semibold text-[8px] sm:text-xs md:text-xs
                       border border-white/30
                       shadow-lg shadow-white/25
@@ -1347,7 +1347,7 @@ export function CommunityQuickAccess() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className="w-full flex items-center justify-center gap-0.5 sm:gap-1.5 md:gap-2 py-1.5 sm:py-2 px-1.5 sm:px-2.5 md:px-3 rounded-lg
-                      bg-gradient-to-r from-white to-white hover:from-white hover:to-white
+                      bg-linear-to-r from-white to-white hover:from-white hover:to-white
                       text-white font-bold text-[8px] sm:text-xs md:text-xs
                       border border-white/30
                       shadow-lg shadow-white/30
@@ -1383,9 +1383,9 @@ export function CommunityQuickAccess() {
               className="relative w-[90vw] max-w-[320px] pointer-events-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className={`bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 rounded-2xl border border-white/40 overflow-hidden ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl shadow-white/30'}`}>
+              <div className={`bg-linear-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 rounded-2xl border border-white/40 overflow-hidden ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl shadow-white/30'}`}>
                 {/* Header */}
-                <div className="p-4 border-b border-white/20 bg-gradient-to-r from-white/10 to-white/10">
+                <div className="p-4 border-b border-white/20 bg-linear-to-r from-white/10 to-white/10">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Monitor className="w-5 h-5 text-white" />
@@ -1425,7 +1425,7 @@ export function CommunityQuickAccess() {
                         whileTap={{ scale: 0.98 }}
                         disabled={isLoading}
                         className="w-full flex items-center justify-between p-3 rounded-lg
-                          bg-gradient-to-r from-white/10 to-white/10 hover:from-white/20 hover:to-white/20
+                          bg-linear-to-r from-white/10 to-white/10 hover:from-white/20 hover:to-white/20
                           text-white font-medium text-xs
                           border border-white/30 hover:border-white/50
                           transition-all duration-200

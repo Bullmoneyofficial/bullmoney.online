@@ -586,8 +586,8 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
               <button className={cn(
                 "flex items-center gap-2 px-4 py-2.5 rounded-lg text-white font-semibold text-sm transition-all",
                 isXMUser
-                  ? "bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 shadow-lg shadow-red-900/20"
-                  : "bg-gradient-to-r from-white to-white hover:from-white hover:to-white shadow-lg shadow-white/20"
+                  ? "bg-linear-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 shadow-lg shadow-red-900/20"
+                  : "bg-linear-to-r from-white to-white hover:from-white hover:to-white shadow-lg shadow-white/20"
               )}>
                 <Download className="w-4 h-4" /> Export
               </button>
@@ -620,7 +620,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
               <button className={cn(
                 "p-2 rounded-lg transition-all",
                 isXMUser
-                  ? "bg-gradient-to-r from-red-600 to-orange-600 text-white"
+                  ? "bg-linear-to-r from-red-600 to-orange-600 text-white"
                   : "bg-white text-black"
               )}>
                 <Download className="w-4 h-4" />
@@ -658,8 +658,8 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
         <div className={cn(
           "relative z-10 shrink-0 mb-6 md:mb-8 p-4 md:p-6 rounded-2xl border",
           isXMUser
-            ? "bg-gradient-to-br from-red-950/80 to-orange-950/80 border-red-500/20"
-            : "bg-gradient-to-br from-neutral-900 to-neutral-800/50 border-white/20"
+            ? "bg-linear-to-br from-red-950/80 to-orange-950/80 border-red-500/20"
+            : "bg-linear-to-br from-neutral-900 to-neutral-800/50 border-white/20"
         )}>
           {/* Mobile Layout */}
           <div className="lg:hidden space-y-4">
@@ -892,8 +892,8 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                         className={cn(
                           "h-full rounded-full",
                           isXMUser
-                            ? "bg-gradient-to-r from-red-600 to-orange-500"
-                            : "bg-gradient-to-r from-white to-white"
+                            ? "bg-linear-to-r from-red-600 to-orange-500"
+                            : "bg-linear-to-r from-white to-white"
                         )}
                       />
                     </div>
@@ -1021,7 +1021,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                   ].map((item) => (
                     <div key={item.step} className="relative">
                       {item.step < 4 && (
-                        <div className="hidden md:block absolute top-6 left-[calc(50%+40px)] w-[calc(100%-80px)] h-0.5 bg-gradient-to-r from-white/10 to-transparent" />
+                        <div className="hidden md:block absolute top-6 left-[calc(50%+40px)] w-[calc(100%-80px)] h-0.5 bg-linear-to-r from-white/10 to-transparent" />
                       )}
                       <div className="text-center">
                         <div className={cn(
@@ -1377,8 +1377,8 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                 <div className={cn(
                   "p-6 rounded-2xl border",
                   isXMUser 
-                    ? "bg-gradient-to-br from-red-950/50 to-orange-950/50 border-red-500/20" 
-                    : "bg-gradient-to-br from-cyan-950/50 to-cyan-950/50 border-white/20"
+                    ? "bg-linear-to-br from-red-950/50 to-orange-950/50 border-red-500/20" 
+                    : "bg-linear-to-br from-cyan-950/50 to-cyan-950/50 border-white/20"
                 )}>
                   <div className="flex items-center justify-between mb-4">
                     <div className={cn(
@@ -1628,8 +1628,8 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                           className={cn(
                             "h-full rounded-full",
                             isXMUser 
-                              ? "bg-gradient-to-r from-red-600 to-orange-500" 
-                              : "bg-gradient-to-r from-white to-white"
+                              ? "bg-linear-to-r from-red-600 to-orange-500" 
+                              : "bg-linear-to-r from-white to-white"
                           )}
                         />
                       </div>
@@ -1747,15 +1747,15 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                 <div className={cn(
                   "p-4 sm:p-6 border-b border-white/5 shrink-0",
                   isXMUser
-                    ? "bg-gradient-to-br from-red-950/50 to-transparent"
-                    : "bg-gradient-to-br from-cyan-950/50 to-transparent"
+                    ? "bg-linear-to-br from-red-950/50 to-transparent"
+                    : "bg-linear-to-br from-cyan-950/50 to-transparent"
                 )}>
                     <div className="flex items-start gap-3 sm:gap-4">
                          <div className={cn(
                             "w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center text-xl sm:text-2xl font-bold text-white shadow-lg shrink-0",
                             isXMUser
-                              ? "bg-gradient-to-br from-red-600 to-orange-600"
-                              : "bg-gradient-to-br from-white to-white"
+                              ? "bg-linear-to-br from-red-600 to-orange-600"
+                              : "bg-linear-to-br from-white to-white"
                           )}>
                             {selectedRecruit.email.charAt(0).toUpperCase()}
                          </div>
@@ -1974,8 +1974,8 @@ const EarningsCard = ({
     "p-3 sm:p-4 md:p-5 rounded-xl sm:rounded-2xl border transition-all",
     primary
       ? isXMUser
-        ? "bg-gradient-to-br from-red-950/60 to-orange-950/60 border-red-500/20"
-        : "bg-gradient-to-br from-cyan-950/60 to-cyan-950/60 border-white/20"
+        ? "bg-linear-to-br from-red-950/60 to-orange-950/60 border-red-500/20"
+        : "bg-linear-to-br from-cyan-950/60 to-cyan-950/60 border-white/20"
       : "bg-neutral-900/60 border-white/5"
   )}>
     <div className="flex items-center justify-between mb-2 sm:mb-3">

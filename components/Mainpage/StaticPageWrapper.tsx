@@ -308,7 +308,7 @@ export const SectionDivider = memo(() => {
   return (
     <div className="relative w-full h-px my-8 overflow-hidden">
       <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent"
+        className="absolute inset-0 bg-linear-to-r from-transparent via-white/50 to-transparent"
         initial={{ x: '-100%' }}
         whileInView={{ x: '100%' }}
         viewport={{ once: false }}
@@ -317,7 +317,7 @@ export const SectionDivider = memo(() => {
           ease: 'easeInOut',
         }}
       />
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent" />
     </div>
   );
 });

@@ -633,7 +633,7 @@ export default function TradingCourse() {
           
           {levels.length === 0 ? (
             <div className="max-w-2xl mx-auto">
-              <div className="bg-gradient-to-br from-gray-900/80 to-black border-2 border-white/30 rounded-xl p-8 text-center">
+              <div className="bg-linear-to-br from-gray-900/80 to-black border-2 border-white/30 rounded-xl p-8 text-center">
                 <BookOpen className="w-16 h-16 text-white/50 mx-auto mb-4" style={{ filter: 'drop-shadow(0 0 8px rgba(255, 255, 255,0.3))' }} />
                 <h3 className="text-xl font-bold text-white mb-2">No Course Levels Found</h3>
                 <p className="text-gray-400 mb-4">
@@ -665,7 +665,7 @@ export default function TradingCourse() {
                 }}
                 className="group cursor-pointer"
               >
-                <div className="relative bg-gradient-to-br from-gray-900/80 to-black border border-white/30 hover:border-white rounded-lg sm:rounded-xl p-2.5 sm:p-4 md:p-6 transition-all duration-300 active:scale-[0.98] sm:hover:scale-[1.02]" 
+                <div className="relative bg-linear-to-br from-gray-900/80 to-black border border-white/30 hover:border-white rounded-lg sm:rounded-xl p-2.5 sm:p-4 md:p-6 transition-all duration-300 active:scale-[0.98] sm:hover:scale-[1.02]" 
                      style={{ boxShadow: '0 0 8px rgba(255, 255, 255,0.1)' }}
                      onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 0 20px rgba(255, 255, 255,0.3)'}
                      onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 0 8px rgba(255, 255, 255,0.1)'}>
@@ -676,7 +676,7 @@ export default function TradingCourse() {
                   </div>
                   
                   <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 flex-shrink-0 bg-gradient-to-br from-white/20 to-white/20 rounded-full flex items-center justify-center"
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 flex-shrink-0 bg-linear-to-br from-white/20 to-white/20 rounded-full flex items-center justify-center"
                          style={{ boxShadow: '0 0 12px rgba(255, 255, 255,0.2)' }}>
                       <BookOpen className="text-white w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8" style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }} />
                     </div>
@@ -718,8 +718,8 @@ export default function TradingCourse() {
           <div className="grid lg:grid-cols-12 gap-2 sm:gap-3 md:gap-4 p-2 sm:p-3 md:p-4">
             {/* Sidebar - Modules & Lessons - Compact on mobile */}
             <div className="lg:col-span-4">
-              <div className="bg-gradient-to-br from-gray-900/80 to-black border border-white/30 rounded-lg p-2 sm:p-3 lg:sticky lg:top-4 max-h-[300px] sm:max-h-[400px] lg:max-h-[calc(100vh-120px)] overflow-y-auto">
-                <h3 className="text-xs sm:text-sm font-bold text-white mb-2 flex items-center gap-1.5 sticky top-0 bg-gradient-to-br from-gray-900/95 to-black/95 pb-1.5 -mt-2 -mx-2 px-2 pt-2 backdrop-blur-sm"
+              <div className="bg-linear-to-br from-gray-900/80 to-black border border-white/30 rounded-lg p-2 sm:p-3 lg:sticky lg:top-4 max-h-[300px] sm:max-h-[400px] lg:max-h-[calc(100vh-120px)] overflow-y-auto">
+                <h3 className="text-xs sm:text-sm font-bold text-white mb-2 flex items-center gap-1.5 sticky top-0 bg-linear-to-br from-gray-900/95 to-black/95 pb-1.5 -mt-2 -mx-2 px-2 pt-2 backdrop-blur-sm"
                     style={{ textShadow: '0 0 8px #ffffff' }}>
                   <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }} />
                   <span className="hidden sm:inline">Course Modules</span>
@@ -839,7 +839,7 @@ export default function TradingCourse() {
             {/* Main Content - Lesson Display */}
             <div className="lg:col-span-8">
               {selectedLesson ? (
-                <div className="bg-gradient-to-br from-gray-900/80 to-black border border-white/30 rounded-lg overflow-hidden">
+                <div className="bg-linear-to-br from-gray-900/80 to-black border border-white/30 rounded-lg overflow-hidden">
                   {/* Lesson Header - Ultra Compact for Mobile */}
                   <div className="border-b border-white/20 p-2 sm:p-3 md:p-4">
                     <div className="flex items-start justify-between gap-1.5 sm:gap-2 mb-1 sm:mb-2">
@@ -886,13 +886,13 @@ export default function TradingCourse() {
                         <div className="mb-4 sm:mb-6">
                           {selectedLesson.content_type === 'video' ? (
                             <div className="relative">
-                              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-white/20 to-white/20 rounded-full flex items-center justify-center"
+                              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-linear-to-br from-white/20 to-white/20 rounded-full flex items-center justify-center"
                                    style={{ boxShadow: '0 0 30px rgba(255, 255, 255,0.4)' }}>
                                 <Video className="w-8 h-8 sm:w-10 sm:h-10 text-white" style={{ filter: 'drop-shadow(0 0 8px #ffffff)' }} />
                               </div>
                             </div>
                           ) : (
-                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-white/20 to-white/20 rounded-full flex items-center justify-center"
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-linear-to-br from-white/20 to-white/20 rounded-full flex items-center justify-center"
                                  style={{ boxShadow: '0 0 30px rgba(255, 255, 255,0.4)' }}>
                               <FileText className="w-8 h-8 sm:w-10 sm:h-10 text-white" style={{ filter: 'drop-shadow(0 0 8px #ffffff)' }} />
                             </div>
@@ -943,7 +943,7 @@ export default function TradingCourse() {
 
                         {/* Article Content - Inline */}
                         {selectedLesson.article_content && (
-                          <div className="bg-gradient-to-br from-white/5 to-transparent border border-white/20 rounded-lg p-3 sm:p-4">
+                          <div className="bg-linear-to-br from-white/5 to-transparent border border-white/20 rounded-lg p-3 sm:p-4">
                             <div className="prose prose-invert prose-sm max-w-none">
                               <div 
                                 className="text-gray-300 text-[10px] sm:text-xs leading-relaxed whitespace-pre-wrap"
@@ -1086,7 +1086,7 @@ export default function TradingCourse() {
                   </div>
                 </div>
               ) : (
-                <div className="bg-gradient-to-br from-gray-900/80 to-black border border-white/30 rounded-lg p-4 sm:p-8 text-center">
+                <div className="bg-linear-to-br from-gray-900/80 to-black border border-white/30 rounded-lg p-4 sm:p-8 text-center">
                   <BookOpen className="mx-auto text-white/50 mb-2 sm:mb-3 w-8 h-8 sm:w-12 sm:h-12" style={{ filter: 'drop-shadow(0 0 8px rgba(255, 255, 255,0.3))' }} />
                   <h3 className="text-sm sm:text-lg font-bold text-white mb-1 sm:mb-2" style={{ textShadow: '0 0 8px #ffffff' }}>Select a Lesson</h3>
                   <p className="text-[10px] sm:text-xs text-gray-500">Choose a lesson from the sidebar to begin</p>

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
+import TextType from '@/components/TextType';
 
 // ============================================================================
 // RELATED PRODUCTS SECTION
@@ -54,7 +55,7 @@ export function RelatedProducts({ products }: RelatedProductsProps) {
               </div>
               
               <h3 className="font-medium line-clamp-1 group-hover:text-white/80 transition-colors">
-                {product.name}
+                <TextType text={product.name} typingSpeed={Math.max(5, 25 - product.name.length / 2)} showCursor={false} loop={false} as="span" />
               </h3>
               
               <div className="flex items-center gap-2 mt-1">

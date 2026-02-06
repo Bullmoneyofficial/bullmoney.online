@@ -125,7 +125,7 @@ function FuturisticHero({ onShow }: { onShow: () => void }) {
     >
       {/* Animated gradient background */}
       <motion.div
-        className="absolute inset-0 bg-gradient-to-br from-[#0b1729] via-[#111827] to-[#1e293b]"
+        className="absolute inset-0 bg-linear-to-br from-[#0b1729] via-[#111827] to-[#1e293b]"
         animate={{
           backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
         }}
@@ -247,7 +247,7 @@ export const TradingViewDropdown = ({
             <div className="mb-4 flex items-center justify-between">
               <button
                 onClick={() => setOpen((p) => !p)}
-                className="group relative flex items-center gap-3 rounded-full bg-gradient-to-r from-sky-500 via-white to-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-lg transition"
+                className="group relative flex items-center gap-3 rounded-full bg-linear-to-r from-sky-500 via-white to-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-lg transition"
               >
                 <span className="absolute inset-0 rounded-full border border-sky-400 opacity-0 blur-sm transition group-hover:opacity-100"></span>
                 <ChartBar className="relative z-10 h-4 w-4 transition-transform group-hover:rotate-12" />
@@ -277,7 +277,7 @@ export const TradingViewDropdown = ({
                       key={idx}
                       onClick={() => handleSelect(chart)}
                       className={cn(
-                        "block w-full px-4 py-2 text-left text-sm text-white transition-all duration-200 hover:bg-gradient-to-r hover:from-sky-600 hover:to-white",
+                        "block w-full px-4 py-2 text-left text-sm text-white transition-all duration-200 hover:bg-linear-to-r hover:from-sky-600 hover:to-white",
                         selected?.label === chart.label && "bg-sky-600/60 font-bold"
                       )}
                     >
@@ -447,7 +447,7 @@ function NewsFeed({ activeMarket }: { activeMarket: string }) {
     <div
       className={cn(
         "relative overflow-hidden rounded-2xl ring-1 ring-white/10",
-        "bg-gradient-to-br from-white/[0.03] to-white/[0.015] backdrop-blur-sm",
+        "bg-linear-to-br from-white/[0.03] to-white/[0.015] backdrop-blur-sm",
         "shadow-[0_1px_1px_rgba(0,0,0,0.05),0_12px_60px_rgba(2,6,23,0.35)]"
       )}
     >
@@ -477,7 +477,7 @@ function NewsFeed({ activeMarket }: { activeMarket: string }) {
           <button
             onClick={load}
             className="ml-2 inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-semibold
-              text-black bg-gradient-to-r from-gray-200 via-gray-300 to-gray-400
+              text-black bg-linear-to-r from-gray-200 via-gray-300 to-gray-400
               hover:from-gray-300 hover:via-gray-400 hover:to-gray-500
               shadow-lg shadow-gray-900/40 transition"
           >
@@ -490,7 +490,7 @@ function NewsFeed({ activeMarket }: { activeMarket: string }) {
       <div className="p-4">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-extrabold text-white/90">MAJOR HEADLINES</h3>
-          <div className="h-px w-1/2 bg-gradient-to-r from-sky-500/50 via-white/30 to-transparent" />
+          <div className="h-px w-1/2 bg-linear-to-r from-sky-500/50 via-white/30 to-transparent" />
         </div>
 
         <div className="mt-3 grid gap-3 md:grid-cols-5">
@@ -512,7 +512,7 @@ function NewsFeed({ activeMarket }: { activeMarket: string }) {
                   </div>
                   <div className="mt-1 line-clamp-3 text-sm font-semibold text-white/90">{item.title}</div>
                   <div className="mt-1 text-xs text-neutral-400">{timeAgo(item.published_at)}</div>
-                  <span className="pointer-events-none absolute -inset-px rounded-lg bg-gradient-to-r from-sky-500/0 via-white/0 to-indigo-500/0 opacity-0 transition group-hover:opacity-30" />
+                  <span className="pointer-events-none absolute -inset-px rounded-lg bg-linear-to-r from-sky-500/0 via-white/0 to-indigo-500/0 opacity-0 transition group-hover:opacity-30" />
                 </motion.a>
               ))}
         </div>

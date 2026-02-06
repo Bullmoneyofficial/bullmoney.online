@@ -203,7 +203,7 @@ const GameBoyPacman = () => {
         style={{ minHeight: '600px' }}
       >
         <div className="relative w-full max-w-[300px] sm:max-w-md lg:max-w-lg">
-          <div className="relative bg-gradient-to-b from-white to-white rounded-xl sm:rounded-3xl p-2 sm:p-4 lg:p-6 shadow-2xl border-2 sm:border-4 lg:border-8 border-white">
+          <div className="relative bg-linear-to-b from-white to-white rounded-xl sm:rounded-3xl p-2 sm:p-4 lg:p-6 shadow-2xl border-2 sm:border-4 lg:border-8 border-white">
             <div className="bg-black rounded-lg p-20 flex items-center justify-center">
               <div className="text-white text-lg sm:text-xl font-bold animate-pulse">
                 🎮 Loading...
@@ -924,7 +924,7 @@ const GameBoyPacmanGame = () => {
           <div 
             key={key}
             className={`flex items-center justify-center ${
-              wall ? `bg-gradient-to-br ${currentTheme.wall} border ${currentTheme.wallBorder} rounded-sm shadow-[inset_0_0_8px_rgba(255, 255, 255,0.5),0_0_4px_rgba(255, 255, 255,0.3)]` : 
+              wall ? `bg-linear-to-br ${currentTheme.wall} border ${currentTheme.wallBorder} rounded-sm shadow-[inset_0_0_8px_rgba(255, 255, 255,0.5),0_0_4px_rgba(255, 255, 255,0.3)]` : 
               isEmpty ? 'bg-black' : 'bg-black/60'
             }`}
             style={{ aspectRatio: '1/1' }}
@@ -1035,7 +1035,7 @@ const GameBoyPacmanGame = () => {
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-1 sm:p-4">
       <div className="relative w-full max-w-[300px] sm:max-w-md lg:max-w-lg">
-        <div className={`relative bg-gradient-to-b ${THEMES[theme as keyof typeof THEMES].shell} rounded-xl sm:rounded-3xl p-2 sm:p-4 lg:p-6 shadow-2xl border-2 sm:border-4 lg:border-8 ${THEMES[theme as keyof typeof THEMES].border}`}>
+        <div className={`relative bg-linear-to-b ${THEMES[theme as keyof typeof THEMES].shell} rounded-xl sm:rounded-3xl p-2 sm:p-4 lg:p-6 shadow-2xl border-2 sm:border-4 lg:border-8 ${THEMES[theme as keyof typeof THEMES].border}`}>
           {/* Enhanced shimmer effect */}
           <div className="absolute inset-0 rounded-xl sm:rounded-3xl opacity-60 pointer-events-none" style={{
             background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent)',
@@ -1050,11 +1050,11 @@ const GameBoyPacmanGame = () => {
           }} />
           
           <div className="relative mb-2 sm:mb-4 lg:mb-6">
-            <div className="absolute -inset-0.5 sm:-inset-1 bg-gradient-to-r from-white via-white to-white rounded-lg sm:rounded-xl blur opacity-75" style={{
+            <div className="absolute -inset-0.5 sm:-inset-1 bg-linear-to-r from-white via-white to-white rounded-lg sm:rounded-xl blur opacity-75" style={{
               backgroundSize: '200% 100%',
               animation: 'shimmer 2s infinite'
             }} />
-            <div className={`relative bg-gradient-to-br ${THEMES[theme as keyof typeof THEMES].screen} rounded-lg sm:rounded-xl p-1.5 sm:p-3 lg:p-4 border border-white sm:border-2 lg:border-4 shadow-inner`}>
+            <div className={`relative bg-linear-to-br ${THEMES[theme as keyof typeof THEMES].screen} rounded-lg sm:rounded-xl p-1.5 sm:p-3 lg:p-4 border border-white sm:border-2 lg:border-4 shadow-inner`}>
               <div className="flex justify-between items-center mb-1 sm:mb-2 px-1 sm:px-2">
                 <div className="flex gap-0.5 sm:gap-1 lg:gap-2">
                   {[...Array(lives)].map((_, i) => (
@@ -1117,7 +1117,7 @@ const GameBoyPacmanGame = () => {
                 {/* Combo counter */}
                 {showCombo && combo > 1 && (
                   <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none z-20">
-                    <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold px-3 py-1 rounded-full shadow-[0_0_20px_rgba(250,204,21,1)] animate-bounce text-sm sm:text-base">
+                    <div className="bg-linear-to-r from-yellow-400 to-orange-500 text-white font-bold px-3 py-1 rounded-full shadow-[0_0_20px_rgba(250,204,21,1)] animate-bounce text-sm sm:text-base">
                       {combo}x COMBO! +{combo * 5}
                     </div>
                   </div>
@@ -1162,7 +1162,7 @@ const GameBoyPacmanGame = () => {
                       )}
                       <button
                         onClick={resetBoard}
-                        className="px-4 sm:px-6 py-2 bg-gradient-to-r from-white to-white hover:from-white hover:to-white text-white rounded-lg font-bold shadow-[0_0_20px_rgba(255, 255, 255,0.6)] transition-all touch-manipulation active:scale-95"
+                        className="px-4 sm:px-6 py-2 bg-linear-to-r from-white to-white hover:from-white hover:to-white text-white rounded-lg font-bold shadow-[0_0_20px_rgba(255, 255, 255,0.6)] transition-all touch-manipulation active:scale-95"
                       >
                         PLAY AGAIN
                       </button>
@@ -1172,7 +1172,7 @@ const GameBoyPacmanGame = () => {
                 
                 {showHighScore && (
                   <div className="absolute inset-0 bg-black/90 flex items-center justify-center backdrop-blur-sm z-10">
-                    <div className="text-center bg-gradient-to-br from-white to-indigo-900 p-6 rounded-xl border-2 border-white shadow-[0_0_30px_rgba(255, 255, 255,0.6)]">
+                    <div className="text-center bg-linear-to-br from-white to-indigo-900 p-6 rounded-xl border-2 border-white shadow-[0_0_30px_rgba(255, 255, 255,0.6)]">
                       <Trophy className="w-12 h-12 mx-auto mb-3 text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,1)]" />
                       <h3 className="text-white font-bold text-xl mb-3 drop-shadow-[0_0_10px_rgba(255, 255, 255,1)]">
                         HIGH SCORE
@@ -1184,7 +1184,7 @@ const GameBoyPacmanGame = () => {
                       <div className="flex gap-2 justify-center">
                         <button
                           onClick={() => setShowHighScore(false)}
-                          className="px-6 py-2 bg-gradient-to-r from-white to-white hover:from-white hover:to-white text-white rounded-lg font-bold shadow-[0_0_20px_rgba(255, 255, 255,0.6)] transition-all touch-manipulation active:scale-95"
+                          className="px-6 py-2 bg-linear-to-r from-white to-white hover:from-white hover:to-white text-white rounded-lg font-bold shadow-[0_0_20px_rgba(255, 255, 255,0.6)] transition-all touch-manipulation active:scale-95"
                         >
                           CLOSE
                         </button>
@@ -1195,7 +1195,7 @@ const GameBoyPacmanGame = () => {
                               localStorage.removeItem('pacman-highscore');
                               setShowHighScore(false);
                             }}
-                            className="px-4 py-2 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white rounded-lg font-bold shadow-[0_0_20px_rgba(239,68,68,0.6)] transition-all touch-manipulation active:scale-95"
+                            className="px-4 py-2 bg-linear-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white rounded-lg font-bold shadow-[0_0_20px_rgba(239,68,68,0.6)] transition-all touch-manipulation active:scale-95"
                           >
                             RESET
                           </button>
@@ -1208,7 +1208,7 @@ const GameBoyPacmanGame = () => {
                 {/* Settings Modal */}
                 {showSettings && (
                   <div className="absolute inset-0 bg-black/90 flex items-center justify-center backdrop-blur-sm z-20">
-                    <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-4 sm:p-6 rounded-xl border-2 border-white shadow-[0_0_30px_rgba(255, 255, 255,0.6)] max-w-xs w-full mx-4">
+                    <div className="bg-linear-to-br from-gray-800 to-gray-900 p-4 sm:p-6 rounded-xl border-2 border-white shadow-[0_0_30px_rgba(255, 255, 255,0.6)] max-w-xs w-full mx-4">
                       <h3 className="text-white font-bold text-lg sm:text-xl mb-4 text-center drop-shadow-[0_0_10px_rgba(255, 255, 255,1)]">
                         SETTINGS
                       </h3>
@@ -1223,7 +1223,7 @@ const GameBoyPacmanGame = () => {
                               onClick={() => setDifficulty(diff)}
                               className={`py-2 px-3 rounded-lg font-bold text-xs transition-all touch-manipulation ${
                                 difficulty === diff
-                                  ? 'bg-gradient-to-r from-white to-pink-500 text-white shadow-[0_0_15px_rgba(255, 255, 255,0.8)]'
+                                  ? 'bg-linear-to-r from-white to-pink-500 text-white shadow-[0_0_15px_rgba(255, 255, 255,0.8)]'
                                   : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                               }`}
                             >
@@ -1265,7 +1265,7 @@ const GameBoyPacmanGame = () => {
                       
                       <button
                         onClick={() => setShowSettings(false)}
-                        className="w-full py-2 bg-gradient-to-r from-white to-pink-600 hover:from-white hover:to-pink-500 text-white rounded-lg font-bold shadow-[0_0_20px_rgba(255, 255, 255,0.6)] transition-all touch-manipulation active:scale-95"
+                        className="w-full py-2 bg-linear-to-r from-white to-pink-600 hover:from-white hover:to-pink-500 text-white rounded-lg font-bold shadow-[0_0_20px_rgba(255, 255, 255,0.6)] transition-all touch-manipulation active:scale-95"
                       >
                         CLOSE
                       </button>
@@ -1346,21 +1346,21 @@ const GameBoyPacmanGame = () => {
             <div className="flex gap-1.5 sm:gap-3 lg:gap-4">
               <button
                 onClick={resetBoard}
-                className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-white to-white hover:from-white hover:to-white rounded-full shadow-[0_0_20px_rgba(255, 255, 255,0.6)] flex items-center justify-center active:scale-95 transition-all border-2 border-white touch-manipulation hover:shadow-[0_0_30px_rgba(255, 255, 255,0.9)]"
+                className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-linear-to-br from-white to-white hover:from-white hover:to-white rounded-full shadow-[0_0_20px_rgba(255, 255, 255,0.6)] flex items-center justify-center active:scale-95 transition-all border-2 border-white touch-manipulation hover:shadow-[0_0_30px_rgba(255, 255, 255,0.9)]"
                 title="Restart"
               >
                 <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
               </button>
               <button
                 onClick={() => setShowHighScore(!showHighScore)}
-                className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-white to-indigo-600 hover:from-white hover:to-indigo-500 rounded-full shadow-[0_0_20px_rgba(255, 255, 255,0.6)] flex items-center justify-center active:scale-95 transition-all border-2 border-white touch-manipulation hover:shadow-[0_0_30px_rgba(255, 255, 255,0.9)]"
+                className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-linear-to-br from-white to-indigo-600 hover:from-white hover:to-indigo-500 rounded-full shadow-[0_0_20px_rgba(255, 255, 255,0.6)] flex items-center justify-center active:scale-95 transition-all border-2 border-white touch-manipulation hover:shadow-[0_0_30px_rgba(255, 255, 255,0.9)]"
                 title="High Score"
               >
                 <Trophy className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
               </button>
               <button
                 onClick={() => setShowSettings(!showSettings)}
-                className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-white to-pink-600 hover:from-white hover:to-pink-500 rounded-full shadow-[0_0_20px_rgba(255, 255, 255,0.6)] flex items-center justify-center active:scale-95 transition-all border-2 border-white touch-manipulation hover:shadow-[0_0_30px_rgba(255, 255, 255,0.9)]"
+                className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-linear-to-br from-white to-pink-600 hover:from-white hover:to-pink-500 rounded-full shadow-[0_0_20px_rgba(255, 255, 255,0.6)] flex items-center justify-center active:scale-95 transition-all border-2 border-white touch-manipulation hover:shadow-[0_0_30px_rgba(255, 255, 255,0.9)]"
                 title="Settings"
               >
                 <svg className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">

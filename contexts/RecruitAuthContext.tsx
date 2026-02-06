@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { createSupabaseClient } from '@/lib/supabase';
+import { persistSession, loadSession, clearSession, syncSessionLayers } from '@/lib/sessionPersistence';
 
 // Recruit profile matching the database schema
 export interface RecruitProfile {
@@ -46,39 +47,19 @@ export function RecruitAuthProvider({ children }: { children: React.ReactNode })
 
   const supabase = useMemo(() => createSupabaseClient(), []);
 
-  // Load saved session from localStorage (check both storage keys)
+  // Load saved session from ALL storage layers (localStorage, sessionStorage, cookie)
+  // NEVER clear session on transient errors - only on explicit sign-out
   useEffect(() => {
     const loadSavedSession = async () => {
       try {
-        // First check our primary storage key
-        let saved = localStorage.getItem(RECRUIT_STORAGE_KEY);
-        let fromPagemode = false;
+        // Use the redundant persistence layer to find session from any source
+        const sessionData = loadSession();
         
-        // If not found, check pagemode session as fallback
-        if (!saved) {
-          const pagemodeSession = localStorage.getItem(PAGEMODE_SESSION_KEY);
-          if (pagemodeSession) {
-            try {
-              const parsed = JSON.parse(pagemodeSession);
-              // Convert pagemode format to our format (pagemode uses 'id', we use 'recruitId')
-              if ((parsed.id || parsed.recruitId) && parsed.email) {
-                saved = JSON.stringify({
-                  recruitId: parsed.id || parsed.recruitId,
-                  email: parsed.email
-                });
-                fromPagemode = true;
-              }
-            } catch (e) {
-              console.error('Error parsing pagemode session:', e);
-            }
-          }
-        }
-        
-        if (saved) {
-          const { recruitId, email } = JSON.parse(saved);
+        if (sessionData) {
+          const { recruitId, email } = sessionData;
+          console.log('[RecruitAuth] Session found, verifying...', email);
           
           // Verify the session is still valid by fetching the recruit
-          // Use case-insensitive email match for consistency
           const { data, error } = await supabase
             .from('recruits')
             .select('*')
@@ -87,44 +68,58 @@ export function RecruitAuthProvider({ children }: { children: React.ReactNode })
             .single();
 
           if (!error && data) {
-            setRecruit(transformRecruitData(data));
+            const profile = transformRecruitData(data);
+            setRecruit(profile);
             
-            // If loaded from pagemode, also save to our storage key for consistency
-            if (fromPagemode) {
-              localStorage.setItem(RECRUIT_STORAGE_KEY, JSON.stringify({
-                recruitId: data.id,
-                email: data.email
-              }));
-            }
-            
-            // Ensure pagemode_completed is set for users with older sessions
-            localStorage.setItem('bullmoney_pagemode_completed', 'true');
+            // Sync all storage layers to ensure redundancy
+            persistSession({ recruitId: data.id, email: data.email });
+            console.log('[RecruitAuth] Session verified & synced:', email);
           } else if (error) {
-            // Only clear on actual errors (not network issues)
-            // Network errors should preserve session for retry
-            const isNetworkError = error.message?.includes('fetch') || 
-                                   error.message?.includes('network') ||
-                                   error.code === 'NETWORK_ERROR';
-            if (!isNetworkError) {
-              // User not found or invalid - clear session
-              localStorage.removeItem(RECRUIT_STORAGE_KEY);
-              localStorage.removeItem(PAGEMODE_SESSION_KEY);
-            }
+            // NEVER clear session on errors - user might just have network issues
+            // They'll stay "logged in" with cached profile until next successful verify
+            console.warn('[RecruitAuth] Verify failed (keeping session):', error.message);
+            
+            // Still set recruit from cached data so user isn't locked out
+            // Create a minimal profile from cached session data
+            setRecruit({
+              id: recruitId,
+              created_at: '',
+              email: email,
+              mt5_id: '',
+              affiliate_code: null,
+              referred_by_code: null,
+              social_handle: null,
+              task_broker_verified: false,
+              task_social_verified: false,
+              status: 'Active',
+              commission_balance: 0,
+              total_referred_manual: null,
+              used_code: false,
+              image_url: null,
+            });
           } else if (!data) {
-            // No data returned but no error - user not found
-            localStorage.removeItem(RECRUIT_STORAGE_KEY);
-            localStorage.removeItem(PAGEMODE_SESSION_KEY);
+            // No data AND no error = user truly doesn't exist in DB
+            // This is the ONLY case where we clear (user was deleted from DB)
+            console.warn('[RecruitAuth] User not found in DB, clearing session');
+            clearSession();
           }
         }
       } catch (error) {
-        console.error('Error loading saved session:', error);
-        localStorage.removeItem(RECRUIT_STORAGE_KEY);
+        console.error('[RecruitAuth] Session load error (keeping session):', error);
+        // DON'T clear session on unexpected errors - preserve user login
       } finally {
         setIsLoading(false);
       }
     };
 
     loadSavedSession();
+    
+    // Periodically sync session layers (every 5 minutes)
+    const syncInterval = setInterval(() => {
+      syncSessionLayers();
+    }, 5 * 60 * 1000);
+    
+    return () => clearInterval(syncInterval);
   }, [supabase]);
 
   // Transform database row to RecruitProfile
@@ -174,18 +169,12 @@ export function RecruitAuthProvider({ children }: { children: React.ReactNode })
       const recruitProfile = transformRecruitData(data);
       setRecruit(recruitProfile);
 
-      // Save session to localStorage (both keys for compatibility with pagemode)
-      localStorage.setItem(RECRUIT_STORAGE_KEY, JSON.stringify({
+      // Save session to ALL storage layers (localStorage, sessionStorage, cookie)
+      persistSession({
         recruitId: recruitProfile.id,
         email: recruitProfile.email,
-      }));
-      
-      // Also save to pagemode session key for full app compatibility
-      localStorage.setItem(PAGEMODE_SESSION_KEY, JSON.stringify({
-        id: recruitProfile.id,
-        email: recruitProfile.email,
-        timestamp: Date.now()
-      }));
+        timestamp: Date.now(),
+      });
 
       return { success: true };
     } catch (error) {
@@ -194,11 +183,10 @@ export function RecruitAuthProvider({ children }: { children: React.ReactNode })
     }
   }, [supabase]);
 
-  // Sign out
+  // Sign out - clear ALL storage layers
   const signOut = useCallback(() => {
     setRecruit(null);
-    localStorage.removeItem(RECRUIT_STORAGE_KEY);
-    localStorage.removeItem(PAGEMODE_SESSION_KEY);
+    clearSession();
   }, []);
 
   // Refresh recruit data

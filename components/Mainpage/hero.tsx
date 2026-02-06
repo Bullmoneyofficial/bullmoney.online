@@ -79,7 +79,7 @@ export const MediaCarousel: React.FC<MediaCarouselProps> = ({
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.98 }}
           transition={{ duration: 0.6, ease: "easeInOut" }}
-          className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-[#0a0a0a] via-[#0c0c0c] to-[#1a1a1a]"
+          className="absolute inset-0 flex items-center justify-center bg-linear-to-b from-[#0a0a0a] via-[#0c0c0c] to-[#1a1a1a]"
         >
           {slide.type === "image" && (
             <Image

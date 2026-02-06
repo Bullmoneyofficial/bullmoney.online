@@ -554,7 +554,7 @@ const EnhancedAnalysisContent = ({ onClose }: EnhancedAnalysisContentProps) => {
         )}
         
         {/* Inner Container */}
-        <div className="relative z-10 bg-gradient-to-b from-neutral-900 to-black rounded-2xl border border-white/30 overflow-hidden max-h-[95vh] flex flex-col">
+        <div className="relative z-10 bg-linear-to-b from-neutral-900 to-black rounded-2xl border border-white/30 overflow-hidden max-h-[95vh] flex flex-col">
           {!shouldSkipHeavyEffects && <ShimmerLine color="blue" />}
           
           {/* Header */}
@@ -866,7 +866,7 @@ const EnhancedAnalysisContent = ({ onClose }: EnhancedAnalysisContentProps) => {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={handleCopyTrade}
-                        className="px-4 py-2 rounded-lg bg-gradient-to-r from-white to-white text-white font-medium text-sm flex items-center gap-2"
+                        className="px-4 py-2 rounded-lg bg-linear-to-r from-white to-white text-white font-medium text-sm flex items-center gap-2"
                       >
                         <Copy className="w-4 h-4" />
                         Copy Trade

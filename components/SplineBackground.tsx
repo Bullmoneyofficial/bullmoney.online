@@ -78,7 +78,7 @@ function LazySplineSection({ scene, className = "", children, priority = false }
         
         {/* Gradient fallback - always visible until loaded */}
         <div 
-          className={`absolute inset-0 bg-gradient-to-br from-slate-900/50 via-blue-950/30 to-black transition-opacity duration-700 ${isLoaded ? 'opacity-0' : 'opacity-100'}`}
+          className={`absolute inset-0 bg-linear-to-br from-slate-900/50 via-blue-950/30 to-black transition-opacity duration-700 ${isLoaded ? 'opacity-0' : 'opacity-100'}`}
         />
       </div>
 

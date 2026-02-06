@@ -804,7 +804,7 @@ export default function BlogSection() {
 
                             {/* Image Area */}
                             <motion.div layoutId={`card-image-container-${p._id}`} className="relative h-64 sm:h-80 w-full shrink-0">
-                                <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 to-transparent z-10 opacity-80" />
+                                <div className="absolute inset-0 bg-linear-to-t from-neutral-900 to-transparent z-10 opacity-80" />
                                 <motion.img layoutId={`card-image-${p._id}`} src={p.imageUrl} alt={p.title} className="w-full h-full object-cover" />
                                 {/* Category Badge */}
                                 <motion.div layoutId={`card-category-${p._id}`} className="absolute top-4 left-4 z-20">
@@ -886,7 +886,7 @@ function BlogCard({ post, isAdmin, onClick, onEdit, onDelete, onToggleVisibility
     >
       {/* Image Container with Overlay */}
       <motion.div layoutId={`card-image-container-${post._id}`} className="relative aspect-[16/9] overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-transparent to-transparent opacity-80 z-10" />
+        <div className="absolute inset-0 bg-linear-to-t from-neutral-900 via-transparent to-transparent opacity-80 z-10" />
         <motion.img layoutId={`card-image-${post._id}`} src={post.imageUrl} alt={post.title} className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
         {/* Floating Category Badge */}
         <motion.div layoutId={`card-category-${post._id}`} className="absolute top-3 left-3 z-20">

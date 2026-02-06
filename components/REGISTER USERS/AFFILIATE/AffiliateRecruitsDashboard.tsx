@@ -205,7 +205,7 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
               <ArrowLeft className="w-4 h-4 mr-1" /> Overview
             </button>
             <h1 className="text-3xl font-black tracking-tighter text-white">
-              MY <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-white">RECRUITS</span>
+              MY <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white">RECRUITS</span>
             </h1>
             
             <div className="flex items-center gap-3 mt-3">
@@ -376,9 +376,9 @@ export default function AffiliateRecruitsDashboard({ onBack }: { onBack: () => v
                 </button>
 
                 {/* Header */}
-                <div className="p-8 pb-6 bg-gradient-to-b from-neutral-800/50 to-transparent border-b border-white/5">
+                <div className="p-8 pb-6 bg-linear-to-b from-neutral-800/50 to-transparent border-b border-white/5">
                     <div className="flex items-start gap-5">
-                         <motion.div layoutId={`avatar-${selectedRecruit.id}`} className="w-20 h-20 rounded-2xl bg-gradient-to-br from-white to-indigo-700 flex items-center justify-center text-3xl font-bold text-white shadow-lg shadow-white/40">
+                         <motion.div layoutId={`avatar-${selectedRecruit.id}`} className="w-20 h-20 rounded-2xl bg-linear-to-br from-white to-indigo-700 flex items-center justify-center text-3xl font-bold text-white shadow-lg shadow-white/40">
                             {selectedRecruit.email.charAt(0).toUpperCase()}
                          </motion.div>
                          <div className="flex-1 pt-1">

@@ -2,11 +2,51 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { supabase } from '@/lib/supabaseClient';
 import type { CartItem, ProductWithDetails, Variant, CartSummary } from '@/types/store';
 
 // ============================================================================
-// CART STORE - ZUSTAND WITH LOCAL STORAGE PERSISTENCE
+// CART STORE - ZUSTAND WITH SQL + LOCAL STORAGE PERSISTENCE
 // ============================================================================
+
+// Get current user email from localStorage session
+function getCartSessionEmail(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem('bullmoney_recruit_auth');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return parsed?.email || null;
+    }
+  } catch {}
+  return null;
+}
+
+// SQL helpers (fire-and-forget)
+async function sqlUpsertCartItem(email: string, item: CartItem) {
+  try {
+    await supabase.from('store_cart').upsert({
+      email,
+      item_id: item.id,
+      product_data: item.product,
+      variant_data: item.variant,
+      quantity: item.quantity,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'email,item_id' });
+  } catch {}
+}
+
+async function sqlRemoveCartItem(email: string, itemId: string) {
+  try {
+    await supabase.from('store_cart').delete().eq('email', email).eq('item_id', itemId);
+  } catch {}
+}
+
+async function sqlClearCart(email: string) {
+  try {
+    await supabase.from('store_cart').delete().eq('email', email);
+  } catch {}
+}
 
 interface CartStore {
   // State
@@ -14,6 +54,7 @@ interface CartStore {
   isOpen: boolean;
   discountCode: string | null;
   discountAmount: number;
+  _synced: boolean;
   
   // Actions
   addItem: (product: ProductWithDetails, variant: Variant, quantity?: number) => void;
@@ -33,6 +74,9 @@ interface CartStore {
   getSummary: () => CartSummary;
   getItemById: (itemId: string) => CartItem | undefined;
   hasItem: (productId: string, variantId: string) => boolean;
+
+  // SQL sync
+  syncFromSQL: (email: string) => Promise<void>;
 }
 
 const TAX_RATE = 0.0875; // 8.75% tax
@@ -47,6 +91,7 @@ export const useCartStore = create<CartStore>()(
       isOpen: false,
       discountCode: null,
       discountAmount: 0,
+      _synced: false,
       
       // Add item to cart
       addItem: (product, variant, quantity = 1) => {
@@ -69,6 +114,8 @@ export const useCartStore = create<CartStore>()(
               ...newItems[existingItemIndex],
               quantity: newQuantity,
             };
+            const email = getCartSessionEmail();
+            if (email) sqlUpsertCartItem(email, newItems[existingItemIndex]);
             return { items: newItems, isOpen: true };
           }
           
@@ -77,16 +124,17 @@ export const useCartStore = create<CartStore>()(
             return state; // Don't exceed stock
           }
           
+          const newItem: CartItem = {
+            id: itemId,
+            product,
+            variant,
+            quantity,
+          };
+          const email = getCartSessionEmail();
+          if (email) sqlUpsertCartItem(email, newItem);
+
           return {
-            items: [
-              ...state.items,
-              {
-                id: itemId,
-                product,
-                variant,
-                quantity,
-              },
-            ],
+            items: [...state.items, newItem],
             isOpen: true,
           };
         });
@@ -94,6 +142,8 @@ export const useCartStore = create<CartStore>()(
       
       // Remove item from cart
       removeItem: (itemId) => {
+        const email = getCartSessionEmail();
+        if (email) sqlRemoveCartItem(email, itemId);
         set((state) => ({
           items: state.items.filter(item => item.id !== itemId),
         }));
@@ -119,12 +169,16 @@ export const useCartStore = create<CartStore>()(
           
           const newItems = [...state.items];
           newItems[itemIndex] = { ...item, quantity };
+          const email = getCartSessionEmail();
+          if (email) sqlUpsertCartItem(email, newItems[itemIndex]);
           return { items: newItems };
         });
       },
       
       // Clear cart
       clearCart: () => {
+        const email = getCartSessionEmail();
+        if (email) sqlClearCart(email);
         set({ items: [], discountCode: null, discountAmount: 0 });
       },
       
@@ -180,6 +234,47 @@ export const useCartStore = create<CartStore>()(
       hasItem: (productId, variantId) => {
         const itemId = `${productId}-${variantId}`;
         return get().items.some(item => item.id === itemId);
+      },
+
+      // Pull cart from SQL and merge with local
+      syncFromSQL: async (email: string) => {
+        try {
+          const { data, error } = await supabase
+            .from('store_cart')
+            .select('*')
+            .eq('email', email)
+            .order('created_at', { ascending: false });
+
+          if (!error && data && data.length > 0) {
+            const sqlItems: CartItem[] = data.map((row: any) => ({
+              id: row.item_id,
+              product: row.product_data as ProductWithDetails,
+              variant: row.variant_data as Variant,
+              quantity: row.quantity || 1,
+            }));
+
+            // Merge: SQL is source of truth, keep local items not in SQL
+            const currentItems = get().items;
+            const sqlIds = new Set(sqlItems.map(i => i.id));
+            const localOnly = currentItems.filter(i => !sqlIds.has(i.id));
+
+            // Push local-only items to SQL
+            for (const item of localOnly) {
+              sqlUpsertCartItem(email, item);
+            }
+
+            set({ items: [...sqlItems, ...localOnly], _synced: true });
+          } else if (!error) {
+            // No SQL items - push local items to SQL
+            const currentItems = get().items;
+            for (const item of currentItems) {
+              sqlUpsertCartItem(email, item);
+            }
+            set({ _synced: true });
+          }
+        } catch {
+          // SQL unavailable, keep using local
+        }
       },
     }),
     {

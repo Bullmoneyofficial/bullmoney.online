@@ -154,7 +154,7 @@ const OptimizedNewsImage = memo(({
 
   if (!src || error) {
     return (
-      <div className={`bg-gradient-to-br from-white/20 to-black flex items-center justify-center ${className}`}>
+      <div className={`bg-linear-to-br from-white/20 to-black flex items-center justify-center ${className}`}>
         <Newspaper className="w-6 h-6 sm:w-8 sm:h-8 text-white/30" />
       </div>
     );
@@ -168,7 +168,7 @@ const OptimizedNewsImage = memo(({
   return (
     <div className={`relative overflow-hidden bg-neutral-900 ${className}`}>
       {!loaded && (
-        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-neutral-800 animate-pulse" />
+        <div className="absolute inset-0 bg-linear-to-br from-white/10 to-neutral-800 animate-pulse" />
       )}
       <img
         src={optimizedSrc}
@@ -241,7 +241,7 @@ const NewsCard = memo(({ item, preview, skipAnimations }: { item: NewsItem; prev
         <div className="flex-1 min-w-0 flex flex-col gap-1 sm:gap-1.5">
           {/* Header */}
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-            <span className={`px-1.5 py-0.5 sm:px-2 rounded-full bg-gradient-to-r ${colorClass} text-[8px] sm:text-[9px] font-bold uppercase tracking-wider border shrink-0`}>
+            <span className={`px-1.5 py-0.5 sm:px-2 rounded-full bg-linear-to-r ${colorClass} text-[8px] sm:text-[9px] font-bold uppercase tracking-wider border shrink-0`}>
               {item.category || "News"}
             </span>
             <span className="text-[8px] sm:text-[9px] font-mono text-white/70 truncate">
@@ -697,7 +697,7 @@ export const UltimateHubNewsTab = memo(() => {
               style={{ boxShadow: '0 0 40px rgba(251, 191, 36, 0.3)' }}
             >
               {/* Calendar Header */}
-              <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-2.5 sm:p-4 bg-gradient-to-b from-black via-black/98 to-transparent border-b border-amber-500/30">
+              <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-2.5 sm:p-4 bg-linear-to-b from-black via-black/98 to-transparent border-b border-amber-500/30">
                 <div className="flex items-center gap-1.5 sm:gap-2">
                   <CalendarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" style={{ filter: 'drop-shadow(0 0 6px #fbbf24)' }} />
                   <h3 className="text-xs sm:text-base font-bold text-amber-300" style={{ textShadow: '0 0 8px #fbbf24' }}>
@@ -730,7 +730,7 @@ export const UltimateHubNewsTab = memo(() => {
               </div>
 
               {/* Footer Info */}
-              <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-2.5 bg-gradient-to-t from-black via-black/98 to-transparent border-t border-amber-500/20">
+              <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-2.5 bg-linear-to-t from-black via-black/98 to-transparent border-t border-amber-500/20">
                 <div className="flex items-center justify-center gap-1.5">
                   <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-400/70" />
                   <p className="text-[9px] sm:text-[10px] text-center text-amber-400/70 font-medium">

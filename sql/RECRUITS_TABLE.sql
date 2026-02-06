@@ -77,7 +77,20 @@ CREATE TABLE IF NOT EXISTS public.recruits (
   notify_livestreams BOOLEAN DEFAULT true,
   notify_news BOOLEAN DEFAULT true,
   notify_vip BOOLEAN DEFAULT true,
-  notification_sound BOOLEAN DEFAULT true
+  notification_sound BOOLEAN DEFAULT true,
+  -- Store / Customer Account fields
+  display_name TEXT,
+  shipping_addresses JSONB DEFAULT '[]'::JSONB, -- Array of {label, name, street, city, state, zip, country, phone, isDefault}
+  preferred_currency TEXT DEFAULT 'USD',
+  preferred_language TEXT DEFAULT 'en',
+  store_order_count INTEGER DEFAULT 0,
+  store_total_spent DECIMAL(10,2) DEFAULT 0.00,
+  store_wishlist_ids TEXT[], -- Array of product IDs
+  store_last_order_at TIMESTAMP WITH TIME ZONE,
+  store_customer_since TIMESTAMP WITH TIME ZONE,
+  store_newsletter_subscribed BOOLEAN DEFAULT false,
+  store_size_preferences JSONB, -- {top: 'L', bottom: '32', hat: 'M'}
+  back_in_stock_subscriptions TEXT[] -- Array of product IDs
 );
 
 -- Ensure id column and primary key exist (if table was created without id)

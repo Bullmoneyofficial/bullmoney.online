@@ -8,7 +8,7 @@ import { ParallaxScroll } from "./ui/parallax-scroll";
 const FluidGlass = dynamic(() => import("./FluidGlass"), {
   ssr: false,
   loading: () => (
-    <div className="h-[600px] w-full flex items-center justify-center bg-gradient-to-b from-purple-900/20 to-transparent">
+    <div className="h-[600px] w-full flex items-center justify-center bg-linear-to-b from-purple-900/20 to-transparent">
       <div className="text-white text-xl animate-pulse">Loading 3D Experience...</div>
     </div>
   ),
@@ -20,25 +20,15 @@ export default function TradingShowcase() {
       {/* Hero Section with 3D Glass Effect */}
       <div className="relative w-full">
         {/* Background Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/30 via-black to-black z-0" />
+        <div className="absolute inset-0 bg-linear-to-b from-purple-900/30 via-black to-black z-0" />
         
-        {/* 3D Fluid Glass Component */}
-        <div className="relative z-10 h-[600px] md:h-[800px] lg:h-[1000px] w-full">
-          <Suspense fallback={<div className="h-full w-full bg-black" />}>
-            <FluidGlass 
-              mode="lens"
-              lensProps={{
-                scale: 0.25,
-                ior: 1.15,
-                thickness: 5,
-                chromaticAberration: 0.1,
-                anisotropy: 0.01,
-                transmission: 1,
-                roughness: 0,
-              }}
-            />
-          </Suspense>
-        </div>
+        {/* 3D Fluid Glass Component - now floats over entire page */}
+        <Suspense fallback={null}>
+          <FluidGlass />
+        </Suspense>
+        
+        {/* Spacer for hero height */}
+        <div className="relative z-10 h-[600px] md:h-[800px] lg:h-[1000px] w-full" />
 
         {/* Overlay Text */}
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-none">
@@ -52,7 +42,7 @@ export default function TradingShowcase() {
       </div>
 
       {/* Stats Bar */}
-      <div className="relative z-30 w-full bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-purple-600/20 backdrop-blur-xl border-y border-purple-500/30 py-8">
+      <div className="relative z-30 w-full bg-linear-to-r from-purple-600/20 via-pink-600/20 to-purple-600/20 backdrop-blur-xl border-y border-purple-500/30 py-8">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div>
@@ -100,7 +90,7 @@ export default function TradingShowcase() {
           <p className="text-lg md:text-xl text-purple-300 mb-8">
             Join thousands of successful traders who trust our signals and strategies.
           </p>
-          <button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-4 px-12 rounded-full text-lg transition-all transform hover:scale-105 shadow-2xl">
+          <button className="bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-4 px-12 rounded-full text-lg transition-all transform hover:scale-105 shadow-2xl">
             Get Started Today
           </button>
         </div>

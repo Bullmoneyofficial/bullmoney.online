@@ -23,6 +23,7 @@ import {
 import { useShop, type Product } from "@/components/ShopContext";
 import AdminLoginModal from "@/app/VIP/AdminLoginModal";
 import AdminPanel from "@/app/VIP/AdminPanel";
+import TextType from "@/components/TextType";
 import Faq from "@/app/oldstore/Faq";
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
@@ -131,12 +132,12 @@ const VideoCard = React.memo(({
       whileHover={{ y: -10 }}
       whileTap={{ scale: 0.98 }}
       onClick={() => setActive(product, uniqueLayoutId)}
-      className="group/product h-[14rem] w-[18rem] md:h-[22rem] md:w-[32rem] relative flex-shrink-0 cursor-pointer backface-hidden transform-gpu"
+      className="group/product h-56 w-[18rem] md:h-88 md:w-lg relative shrink-0 cursor-pointer backface-hidden transform-gpu"
     >
-      <div className="block h-full w-full md:group-hover/product:shadow-[0_0_40px_rgba(220,38,38,0.4)] transition-all duration-500 rounded-[20px] md:rounded-[24px] safari-fix-layer">
+      <div className="block h-full w-full md:group-hover/product:shadow-[0_0_40px_rgba(220,38,38,0.4)] transition-all duration-500 rounded-[20px] md:rounded-3xl safari-fix-layer">
         <motion.div 
             layoutId={uniqueLayoutId}
-            className="relative h-full w-full rounded-[20px] md:rounded-[24px] overflow-hidden bg-neutral-900 border border-neutral-800 md:group-hover/product:border-red-600/50 transition-colors safari-mask-fix"
+            className="relative h-full w-full rounded-[20px] md:rounded-3xl overflow-hidden bg-neutral-900 border border-neutral-800 md:group-hover/product:border-red-600/50 transition-colors safari-mask-fix"
         >
             {videoId ? (
                 <div className="absolute inset-0 w-full h-full bg-black pointer-events-none">
@@ -169,7 +170,7 @@ const VideoCard = React.memo(({
                 />
             )}
 
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90 pointer-events-none"></div>
+            <div className="absolute inset-0 bg-linear-to-t from-black via-black/20 to-transparent opacity-90 pointer-events-none"></div>
             
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                  <div className="bg-white/10 backdrop-blur-sm p-3 md:p-4 rounded-full opacity-100 md:opacity-0 md:group-hover/product:opacity-100 transition-opacity duration-300 scale-100 md:scale-75 md:group-hover/product:scale-100 border border-white/20">
@@ -185,7 +186,7 @@ const VideoCard = React.memo(({
                     </span>
                 </div>
                 <h2 className="text-white font-sans font-bold text-base md:text-xl leading-tight truncate w-full shadow-black drop-shadow-lg">
-                    {product.name}
+                    <TextType text={product.name} typingSpeed={Math.max(5, 25 - product.name.length / 2)} showCursor={false} loop={false} as="span" />
                 </h2>
             </div>
         </motion.div>
@@ -462,7 +463,7 @@ const HeroParallax = () => {
     `}</style>
         
     {/* --- ADMIN LOGIN MODAL --- */}
-    <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-[99999]">
+    <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-99999">
         <div className="pointer-events-auto">
              <AdminLoginModal 
                 open={isAdminLoginOpen} 
@@ -473,7 +474,7 @@ const HeroParallax = () => {
 
     {/* --- ADMIN CONTROLS --- */}
     {isAdmin && (
-        <div className="fixed bottom-8 right-8 z-[9990] flex flex-col gap-2">
+        <div className="fixed bottom-8 right-8 z-9990 flex flex-col gap-2">
             <button 
                 onClick={handleCreateNewVideo}
                 className="bg-white hover:bg-white/90 text-black p-3 md:p-4 rounded-full shadow-lg shadow-white/50 transition-all hover:scale-110 flex items-center justify-center"
@@ -491,12 +492,12 @@ const HeroParallax = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[9999] grid place-items-center bg-black/95 md:backdrop-blur-xl p-0 md:p-4 will-change-opacity"
+                className="fixed inset-0 z-9999 grid place-items-center bg-black/95 md:backdrop-blur-xl p-0 md:p-4 will-change-opacity"
                 onClick={handleClose}
             >
                 <motion.div
                     layoutId={activeLayoutId} 
-                    className="relative w-full max-w-7xl bg-neutral-900 border border-neutral-800 rounded-none md:rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row h-[100dvh] md:h-[85vh] md:max-h-[800px] safari-fix-layer"
+                    className="relative w-full max-w-7xl bg-neutral-900 border border-neutral-800 rounded-none md:rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row h-dvh md:h-[85vh] md:max-h-200 safari-fix-layer"
                     onClick={(e) => e.stopPropagation()} 
                 >
                     {/* FIXED: BACK BUTTON MOVED DOWN (top-24) to clear Navbar */}
@@ -621,7 +622,7 @@ const HeroParallax = () => {
                                 className="flex gap-2 mb-4"
                             >
                                 <span className="text-[10px] bg-red-600 text-white px-2 py-1 rounded font-bold font-mono uppercase tracking-widest flex items-center gap-1">
-                                   <Youtube size={12} className="fill-white" /> {activeProduct.category}
+                                   <Youtube size={12} className="fill-white" /> <TextType text={activeProduct.category} typingSpeed={Math.max(5, 25 - activeProduct.category.length)} showCursor={false} loop={false} as="span" />
                                 </span>
                             </motion.div>
                             <motion.h3 
@@ -630,7 +631,7 @@ const HeroParallax = () => {
                                 transition={{ delay: 0.3 }}
                                 className="text-xl md:text-2xl font-sans font-bold text-white mb-4 leading-tight"
                             >
-                                {activeProduct.name}
+                                <TextType text={activeProduct.name} typingSpeed={Math.max(8, 30 - activeProduct.name.length / 2)} showCursor cursorCharacter="_" cursorBlinkDuration={0.5} loop={false} as="span" />
                             </motion.h3>
                             <motion.div 
                                 initial={{ y: 20, opacity: 0 }}
@@ -638,7 +639,7 @@ const HeroParallax = () => {
                                 transition={{ delay: 0.4 }}
                                 className="text-neutral-400 text-xs md:text-sm leading-relaxed whitespace-pre-line"
                             >
-                                {activeProduct.description || "No description provided."}
+                                <TextType text={activeProduct.description || "No description provided."} typingSpeed={Math.max(2, 15 - (activeProduct.description?.length || 0) / 20)} showCursor={false} loop={false} as="span" />
                             </motion.div>
 
                             {/* --- FILLER CONTENT: UP NEXT --- */}
@@ -754,7 +755,7 @@ const HeroParallax = () => {
     {/* --- HERO SCROLL SECTION --- */}
     <div
         ref={ref}
-        className="h-[180vh] md:h-[240vh] pt-10 pb-0 overflow-hidden bg-black antialiased relative flex flex-col self-auto [perspective:1000px] [transform-style:preserve-3d]"
+        className="h-[180vh] md:h-[240vh] pt-10 pb-0 overflow-hidden bg-black antialiased relative flex flex-col self-auto perspective-[1000px] transform-3d"
     >
         {/* HEADER SECTION */}
         <div className="max-w-7xl relative mx-auto py-12 md:py-32 px-4 w-full z-20 mb-10 md:mb-32">
@@ -788,7 +789,7 @@ const HeroParallax = () => {
                 {(hero?.title || "Welcome VIP").split(" ").map((word: string, i: number) => (
                     <span 
                         key={i} 
-                        className="inline-block mr-3 text-transparent bg-clip-text bg-[linear-gradient(110deg,#FFFFFF,45%,#ffffff,55%,#FFFFFF)] bg-[length:250%_100%] animate-shimmer"
+                        className="inline-block mr-3 text-transparent bg-clip-text bg-[linear-gradient(110deg,#FFFFFF,45%,#ffffff,55%,#FFFFFF)] bg-size-[250%_100%] animate-shimmer"
                     >
                       {word}
                     </span>

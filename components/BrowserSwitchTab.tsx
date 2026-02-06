@@ -254,10 +254,10 @@ export function BrowserSwitchTab() {
           }}
         >
           {/* Pill Content */}
-          <div className="relative rounded-r-full bg-gradient-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl hover:border-white/70 hover:shadow-white/40">
+          <div className="relative rounded-r-full bg-linear-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl hover:border-white/70 hover:shadow-white/40">
             {/* Enhanced pulsing glow background */}
             <motion.div
-              className="absolute inset-0 rounded-r-full bg-gradient-to-r from-white/20 via-white/10 to-transparent opacity-0"
+              className="absolute inset-0 rounded-r-full bg-linear-to-r from-white/20 via-white/10 to-transparent opacity-0"
               animate={{
                 opacity: [0.3, 0.8, 0.3],
                 scale: [1, 1.05, 1],
@@ -351,9 +351,9 @@ export function BrowserSwitchTab() {
               }}
               onMouseLeave={() => setIsExpanded(false)}
             >
-              <div className="bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl rounded-2xl border border-white/30 shadow-2xl shadow-white/20 overflow-hidden">
+              <div className="bg-linear-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl rounded-2xl border border-white/30 shadow-2xl shadow-white/20 overflow-hidden">
                 {/* Header */}
-                <div className="p-4 border-b border-white/20 bg-gradient-to-r from-white/10 to-white/10">
+                <div className="p-4 border-b border-white/20 bg-linear-to-r from-white/10 to-white/10">
                   <div className="flex items-center gap-2 mb-2">
                     <Monitor className="w-4 h-4 text-white" />
                     <h3 className="text-sm font-bold text-white">Best on Chrome + Desktop</h3>
@@ -381,7 +381,7 @@ export function BrowserSwitchTab() {
                         disabled={isLoading}
                         className={`
                           w-full flex items-center justify-between p-2.5 rounded-lg
-                          bg-gradient-to-r from-zinc-800/50 to-zinc-900/50
+                          bg-linear-to-r from-zinc-800/50 to-zinc-900/50
                           border border-white/20
                           hover:border-white/40
                           hover:bg-white/10
@@ -428,8 +428,8 @@ export function BrowserSwitchTab() {
                     className={`
                       w-full flex items-center justify-center gap-2 py-2 px-3
                       ${copied 
-                        ? 'bg-gradient-to-r from-white to-white' 
-                        : 'bg-gradient-to-r from-zinc-700 to-zinc-600 hover:from-zinc-600 hover:to-zinc-500'
+                        ? 'bg-linear-to-r from-white to-white' 
+                        : 'bg-linear-to-r from-zinc-700 to-zinc-600 hover:from-zinc-600 hover:to-zinc-500'
                       }
                       text-white font-semibold text-xs rounded-lg
                       border border-zinc-600/50

@@ -583,7 +583,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                   exit={{ opacity: 0, scale: 0.8 }}
                   className="absolute left-0 bottom-[calc(100%+8px)] z-50 pointer-events-none"
                 >
-                  <div className="relative p-2.5 rounded-xl bg-gradient-to-br from-white/90 to-white/90 border border-white/50 shadow-xl backdrop-blur-md">
+                  <div className="relative p-2.5 rounded-xl bg-linear-to-br from-white/90 to-white/90 border border-white/50 shadow-xl backdrop-blur-md">
                     <div className="absolute -bottom-2 left-6 w-3 h-3 bg-white/90 rotate-45 border-b border-r border-white/50" />
                     <div className="flex items-center gap-2 whitespace-nowrap">
                       <motion.div 
@@ -625,7 +625,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                   }}
                   className={cn(
                     "relative h-10 w-10 rounded-xl flex items-center justify-center",
-                    "bg-gradient-to-br from-white/40 to-white/30",
+                    "bg-linear-to-br from-white/40 to-white/30",
                     "hover:from-white/50 hover:to-white/40",
                     "border border-white/50 transition-all duration-200"
                   )}
@@ -648,7 +648,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                     className={cn(
                       "relative h-10 w-10 rounded-xl flex items-center justify-center border",
                       isStreamingSource && streamingActive
-                        ? "bg-gradient-to-br from-white/40 to-white/30 border-white/60" 
+                        ? "bg-linear-to-br from-white/40 to-white/30 border-white/60" 
                         : "bg-white/15 border-white/25"
                     )}
                     animate={isStreamingSource && streamingActive ? { 
@@ -690,7 +690,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                     }}
                     className={cn(
                       "relative h-10 w-10 rounded-xl flex items-center justify-center",
-                      "bg-gradient-to-br from-white/25 to-white/15",
+                      "bg-linear-to-br from-white/25 to-white/15",
                       "hover:from-white/35 hover:to-white/25",
                       "border border-white/30 transition-all"
                     )}
@@ -783,7 +783,7 @@ const AudioWidget = React.memo(function AudioWidget() {
                               className={cn(
                                 "relative h-12 rounded-lg flex flex-col items-center justify-center gap-1 text-[9px] font-medium transition-all overflow-hidden",
                                 isActive
-                                  ? "bg-gradient-to-br from-white/25 via-sky-500/20 to-white/25 border-white/50 text-sky-100 border"
+                                  ? "bg-linear-to-br from-white/25 via-sky-500/20 to-white/25 border-white/50 text-sky-100 border"
                                   : "bg-white/15 border border-white/25 text-white/80 hover:bg-white/25 hover:text-white"
                               )}
                               whileTap={{ scale: 0.95 }}
@@ -847,7 +847,7 @@ const AudioWidget = React.memo(function AudioWidget() {
 
                     {/* Game Stats Section - Shows high score and catch count */}
                     {gameStats.gamesPlayed > 0 && (
-                      <div className="mb-2 p-2 rounded-lg bg-gradient-to-br from-white/10 to-white/10 border border-white/20 relative overflow-hidden">
+                      <div className="mb-2 p-2 rounded-lg bg-linear-to-br from-white/10 to-white/10 border border-white/20 relative overflow-hidden">
                         <GameShimmer colors="blue" />
                         <div className="flex items-center justify-between text-[10px] mb-1.5">
                           <div className="flex items-center gap-2">
@@ -900,7 +900,7 @@ const AudioWidget = React.memo(function AudioWidget() {
 
                     {/* Quick game start if no games played yet */}
                     {gameStats.gamesPlayed === 0 && streamingActive && (
-                      <div className="mb-2 p-2 rounded-lg bg-gradient-to-br from-white/10 to-white/10 border border-white/20 relative overflow-hidden">
+                      <div className="mb-2 p-2 rounded-lg bg-linear-to-br from-white/10 to-white/10 border border-white/20 relative overflow-hidden">
                         <GameShimmer colors="blue" />
                         <div className="text-[10px] text-white/60 mb-1.5 text-center">Try the catch game</div>
                         <GameControls
@@ -1305,16 +1305,16 @@ const AudioWidget = React.memo(function AudioWidget() {
                           <div className={cn(
                             "px-3 py-1.5 rounded-full text-white text-[10px] font-bold shadow-lg flex items-center gap-1.5 border border-white/20",
                             (isHovering || isNearPlayer)
-                              ? "bg-gradient-to-r from-sky-500/90 via-white/90 to-sky-500/90"
+                              ? "bg-linear-to-r from-sky-500/90 via-white/90 to-sky-500/90"
                               : isFleeing
-                              ? "bg-gradient-to-r from-white/90 via-sky-500/90 to-white/90"
+                              ? "bg-linear-to-r from-white/90 via-sky-500/90 to-white/90"
                               : isReturning
-                              ? "bg-gradient-to-r from-white/90 via-white/90 to-white/90"
+                              ? "bg-linear-to-r from-white/90 via-white/90 to-white/90"
                               : energy <= 20
-                              ? "bg-gradient-to-r from-slate-700/90 via-slate-600/90 to-slate-700/90"
+                              ? "bg-linear-to-r from-slate-700/90 via-slate-600/90 to-slate-700/90"
                               : energy <= 40
-                              ? "bg-gradient-to-r from-white/90 via-sky-600/90 to-white/90"
-                              : "bg-gradient-to-r from-white/90 via-white/90 to-white/90"
+                              ? "bg-linear-to-r from-white/90 via-sky-600/90 to-white/90"
+                              : "bg-linear-to-r from-white/90 via-white/90 to-white/90"
                           )}>
                             <motion.span
                               animate={{ 

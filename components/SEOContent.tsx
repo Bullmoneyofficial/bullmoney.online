@@ -29,7 +29,7 @@ interface AboutSectionProps {
 export function SEOAboutSection({ className = '', showAll = true }: AboutSectionProps) {
   return (
     <section className={`seo-about-section ${className}`}>
-      <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-white to-neutral-400 bg-clip-text text-transparent">
+      <h2 className="text-3xl font-bold mb-6 bg-linear-to-r from-white to-neutral-400 bg-clip-text text-transparent">
         Why BullMoney is the Home for Traders
       </h2>
       

@@ -1,15 +1,48 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo, Suspense } from 'react';
 import dynamic from 'next/dynamic';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Search, SlidersHorizontal, X, ChevronDown, Grid3X3, LayoutGrid, Sparkles, TrendingUp } from 'lucide-react';
-import { ProductCard } from '@/components/shop/ProductCard';
-import { FilterSheet } from '@/components/shop/FilterSheet';
-import { StoreHero3D } from '@/components/shop/StoreHero3D';
-import { MobileProductsDome } from '@/components/shop/MobileProductsDome';
+import { Search, SlidersHorizontal, X, ChevronDown, Grid3X3, Sparkles, TrendingUp, LayoutGrid, Rows3 } from 'lucide-react';
+import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
 import type { ProductWithDetails, PaginatedResponse, ProductFilters } from '@/types/store';
+import { useStoreSection } from './StoreMemoryContext';
+
+// ============================================================================
+// PERFORMANCE OPTIMIZED: Dynamic imports for heavy components
+// Reduces initial bundle size and speeds up first load
+// ============================================================================
+
+// Framer Motion - only load when animation is needed
+const MotionDiv = dynamic(() => import('framer-motion').then(mod => {
+  const { motion } = mod;
+  return { default: motion.div };
+}), { ssr: false });
+
+const AnimatePresence = dynamic(() => import('framer-motion').then(mod => ({ default: mod.AnimatePresence })), { ssr: false });
+
+// Heavy 3D component - deferred load
+const StoreHero3D = dynamic(() => import('@/components/shop/StoreHero3D').then(mod => ({ default: mod.StoreHero3D })), {
+  ssr: false,
+  loading: () => <div className="w-full h-100 bg-linear-to-b from-black via-zinc-900/50 to-black animate-pulse" />
+});
+
+// Product grids - load on demand
+const CircularProductGrid = dynamic(() => import('@/components/shop/CircularProductGrid').then(mod => ({ default: mod.CircularProductGrid })), { ssr: false });
+const GlassProductGrid = dynamic(() => import('@/components/shop/GlassProductGrid').then(mod => ({ default: mod.GlassProductGrid })), { ssr: false });
+
+// UI components - defer loading
+const ProductCard = dynamic(() => import('@/components/shop/ProductCard').then(mod => ({ default: mod.ProductCard })), { ssr: true });
+const HoverEffect = dynamic(() => import('@/components/ui/card-hover-effect').then(mod => ({ default: mod.HoverEffect })), { ssr: false });
+const FilterSheet = dynamic(() => import('@/components/shop/FilterSheet').then(mod => ({ default: mod.FilterSheet })), { ssr: false });
+const FocusCards = dynamic(() => import('@/components/ui/focus-cards').then(mod => ({ default: mod.FocusCards })), { ssr: false });
+const StoreFluidGlassSection = dynamic(() => import('@/components/shop/StoreFluidGlassSection').then(mod => ({ default: mod.StoreFluidGlassSection })), { ssr: false });
+const StoreFooter = dynamic(() => import('@/components/shop/StoreFooter').then(mod => ({ default: mod.StoreFooter })), { ssr: false });
+const SearchAutocomplete = dynamic(() => import('@/components/shop/SearchAutocomplete').then(mod => ({ default: mod.SearchAutocomplete })), { ssr: false });
+
+// Modals and overlays - lazy load
+const RewardsCardBanner = dynamic(() => import('@/components/RewardsCardBanner'), { ssr: false });
+const RewardsCard = dynamic(() => import('@/components/RewardsCard'), { ssr: false });
 
 // ============================================================================
 // STORE HOME - PRODUCT LISTING PAGE (PLP)
@@ -21,6 +54,7 @@ const SORT_OPTIONS = [
   { value: 'price_asc', label: 'Price: Low to High' },
   { value: 'price_desc', label: 'Price: High to Low' },
   { value: 'popular', label: 'Most Popular' },
+  { value: 'best_selling', label: 'Best Selling' },
 ];
 
 const CATEGORIES = [
@@ -37,6 +71,17 @@ export default function StorePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
+  // Recruit auth for rewards
+  const { recruit } = useRecruitAuth();
+  const [rewardsCardOpen, setRewardsCardOpen] = useState(false);
+  
+  // Smart memory: per-section visibility via IntersectionObserver
+  const hero = useStoreSection('hero');
+  const featured = useStoreSection('featured');
+  const productsSection = useStoreSection('products');
+  const fluidGlass = useStoreSection('fluidGlass');
+  const footer = useStoreSection('footer');
+  
   // State
   const [products, setProducts] = useState<ProductWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,8 +90,23 @@ export default function StorePage() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
-  const [gridSize, setGridSize] = useState<'small' | 'large'>('large');
+  const [mobileColumns, setMobileColumns] = useState(2);
+  const [desktopColumns, setDesktopColumns] = useState(5);
+  const [mobileRows, setMobileRows] = useState(2);
+  const [desktopRows, setDesktopRows] = useState(2);
   const [isMobile, setIsMobile] = useState(false);
+  const [viewMode, setViewMode] = useState<'circular' | 'grid' | 'glass'>('circular'); // Default to circular gallery
+  const [focusMobileColumns, setFocusMobileColumns] = useState<1 | 2 | 3>(2);
+  const [focusDesktopColumns, setFocusDesktopColumns] = useState<1 | 2 | 3>(2);
+  const [focusMobileRows, setFocusMobileRows] = useState<1 | 2 | 3>(3);
+  const [focusDesktopRows, setFocusDesktopRows] = useState<1 | 2 | 3>(1);
+  const [vipProducts, setVipProducts] = useState<{ id: string; name: string; price: number; image_url?: string; imageUrl?: string; visible?: boolean }[]>([]);
+  
+  // Column options
+  const MOBILE_COLUMN_OPTIONS = [1, 2, 3, 4];
+  const DESKTOP_COLUMN_OPTIONS = [4, 5, 6, 7, 8, 9];
+  const GRID_ROW_OPTIONS = [1, 2, 3] as const;
+  const FOCUS_LAYOUT_OPTIONS = [1, 2, 3] as const;
   
   // Search state with debouncing
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
@@ -60,6 +120,33 @@ export default function StorePage() {
     max_price: searchParams.get('max_price') ? Number(searchParams.get('max_price')) : undefined,
     sort_by: (searchParams.get('sort_by') as ProductFilters['sort_by']) || 'newest',
   });
+
+  // Sync filters with URL params when they change (e.g., from header pill nav)
+  useEffect(() => {
+    const urlCategory = searchParams.get('category') || '';
+    const urlMinPrice = searchParams.get('min_price') ? Number(searchParams.get('min_price')) : undefined;
+    const urlMaxPrice = searchParams.get('max_price') ? Number(searchParams.get('max_price')) : undefined;
+    const urlSortBy = (searchParams.get('sort_by') as ProductFilters['sort_by']) || 'newest';
+    const urlSearch = searchParams.get('search') || '';
+    
+    setFilters(prev => {
+      // Only update if different to avoid infinite loops
+      if (prev.category !== urlCategory || prev.min_price !== urlMinPrice || 
+          prev.max_price !== urlMaxPrice || prev.sort_by !== urlSortBy) {
+        return {
+          category: urlCategory,
+          min_price: urlMinPrice,
+          max_price: urlMaxPrice,
+          sort_by: urlSortBy,
+        };
+      }
+      return prev;
+    });
+    
+    if (urlSearch !== searchQuery) {
+      setSearchQuery(urlSearch);
+    }
+  }, [searchParams]);
 
   // Infinite scroll observer
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -81,20 +168,73 @@ export default function StorePage() {
     };
   }, [searchQuery]);
 
-  // Detect mobile and default to compact grid
+  // Detect mobile
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const checkMobile = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
-      if (mobile) {
-        setGridSize('small');
-      }
     };
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+  
+  // Dynamic grid classes based on column selection
+  const getGridClasses = () => {
+    const desktopColClass = {
+      4: 'md:grid-cols-4',
+      5: 'md:grid-cols-5',
+      6: 'md:grid-cols-6',
+      7: 'md:grid-cols-7',
+      8: 'md:grid-cols-8',
+      9: 'md:grid-cols-9',
+    }[desktopColumns] || 'md:grid-cols-5';
+    
+    const mobileColClass = {
+      1: 'grid-cols-1',
+      2: 'grid-cols-2',
+      3: 'grid-cols-3',
+      4: 'grid-cols-4',
+    }[mobileColumns] || 'grid-cols-2';
+    
+    return `${mobileColClass} ${desktopColClass}`;
+  };
+
+  const focusCards = useMemo(() => {
+    return vipProducts
+      .map((vip) => {
+        const src = vip.image_url || vip.imageUrl || '';
+        if (!src) return null;
+        return {
+          title: vip.name || 'VIP Product',
+          src,
+          price: vip.price,
+          description: (vip as any).description || '',
+          comingSoon: (vip as any).coming_soon || false,
+          buyUrl: (vip as any).buy_url || '',
+        };
+      })
+      .filter(Boolean)
+      .slice(0, 9) as { title: string; src: string; price: number; description: string; comingSoon: boolean; buyUrl: string }[];
+  }, [vipProducts]);
+
+  const focusMaxItems = useMemo(() => {
+    if (isMobile) {
+      // Show all VIP products on mobile, capped at 9
+      return Math.min(focusCards.length, 9);
+    }
+    const columns = focusDesktopColumns;
+    const rows = focusDesktopRows;
+    return Math.max(1, columns * rows);
+  }, [isMobile, focusCards.length, focusDesktopColumns, focusDesktopRows]);
+
+  const gridViewProducts = useMemo(() => {
+    const columns = isMobile ? mobileColumns : desktopColumns;
+    const rows = isMobile ? mobileRows : desktopRows;
+    const maxItems = Math.max(1, columns * rows);
+    return products.slice(0, maxItems);
+  }, [products, isMobile, mobileColumns, desktopColumns, mobileRows, desktopRows]);
 
 
   // Fetch products
@@ -140,6 +280,22 @@ export default function StorePage() {
   useEffect(() => {
     fetchProducts(1, false);
   }, [fetchProducts]);
+
+  // Fetch VIP products for featured section
+  useEffect(() => {
+    const fetchVip = async () => {
+      try {
+        const res = await fetch('/api/store/vip');
+        if (!res.ok) throw new Error('Failed to load VIP');
+        const json = await res.json();
+        const items = (json.data || []).filter((item: any) => item.visible !== false);
+        setVipProducts(items);
+      } catch (err) {
+        console.error('Failed to fetch VIP products:', err);
+      }
+    };
+    fetchVip();
+  }, []);
 
   // Update URL with filters
   useEffect(() => {
@@ -209,11 +365,133 @@ export default function StorePage() {
 
   return (
     <div className="bg-black" style={{ height: 'auto', minHeight: '100vh', overflow: 'visible' }}>
-      {/* Hero Section - Mobile uses DomeGallery, Desktop uses 3D Spline */}
-      {isMobile ? <MobileProductsDome /> : <StoreHero3D />}
+      {/* Rewards Card Banner */}
+      <RewardsCardBanner 
+        userEmail={recruit?.email || null}
+        onOpenRewardsCard={() => setRewardsCardOpen(true)}
+      />
+      
+      {/* Rewards Card Modal */}
+      <RewardsCard
+        isOpen={rewardsCardOpen}
+        onClose={() => setRewardsCardOpen(false)}
+        userEmail={recruit?.email || null}
+      />
+      
+      {/* Hero Section - 3D Spline Hero (only rendered when in/near viewport) */}
+      <div ref={hero.ref} style={{ minHeight: hero.shouldRender ? undefined : 400 }}>
+        {hero.shouldRender && <StoreHero3D paused={!hero.shouldAnimate} />}
+      </div>
 
       {/* Main Content */}
-      <section className="relative z-[50] max-w-[1800px] mx-auto px-3 md:px-8 pt-2 pb-4 md:py-12" style={{ isolation: 'isolate', height: 'auto', overflow: 'visible' }}>
+      <section 
+        className="relative z-50 max-w-450 mx-auto px-3 md:px-8 pt-2 pb-4 md:py-12" 
+        style={{ isolation: 'isolate', height: 'auto', overflow: 'visible' }}
+      >
+        {!loading && focusCards.length > 0 && (
+          <section ref={featured.ref} className="-mx-3 md:mx-0 mb-6 md:mb-8">
+            <div className="px-3 sm:px-8 lg:px-10">
+              <div className="max-w-5xl mx-auto">
+                <div className="flex flex-col gap-3 md:gap-4 mb-4 md:mb-5">
+                  <div>
+                    <p className="text-white/40 text-xs uppercase tracking-[0.2em]">Focus</p>
+                    <h2 className="text-white text-2xl md:text-3xl font-semibold">Featured Products</h2>
+                  </div>
+                  <div className="hidden md:flex items-center gap-2 text-white/70 justify-center w-full">
+                    <div className="flex items-center gap-2 h-12 px-3 bg-white/5 border border-white/10 rounded-xl">
+                      <Grid3X3 className="w-4 h-4 text-white/60" />
+                      <span className="text-white/60 text-sm">Columns</span>
+                      <div className="flex gap-1">
+                        {FOCUS_LAYOUT_OPTIONS.map((value) => (
+                          <button
+                            key={`d-col-${value}`}
+                            onClick={() => setFocusDesktopColumns(value)}
+                            className={`w-7 h-7 rounded-lg text-sm font-medium transition-all ${
+                              focusDesktopColumns === value
+                                ? 'bg-white text-black'
+                                : 'bg-white/10 text-white/70 hover:bg-white/20'
+                            }`}
+                            aria-pressed={focusDesktopColumns === value}
+                          >
+                            {value}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 h-12 px-3 bg-white/5 border border-white/10 rounded-xl">
+                      <Rows3 className="w-4 h-4 text-white/60" />
+                      <span className="text-white/60 text-sm">Rows</span>
+                      <div className="flex gap-1">
+                        {FOCUS_LAYOUT_OPTIONS.map((value) => (
+                          <button
+                            key={`d-row-${value}`}
+                            onClick={() => setFocusDesktopRows(value)}
+                            className={`w-7 h-7 rounded-lg text-sm font-medium transition-all ${
+                              focusDesktopRows === value
+                                ? 'bg-white text-black'
+                                : 'bg-white/10 text-white/70 hover:bg-white/20'
+                            }`}
+                            aria-pressed={focusDesktopRows === value}
+                          >
+                            {value}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex md:hidden items-center gap-2 text-white/70 justify-center">
+                  <div className="flex items-center gap-1.5 h-9 px-2 bg-white/5 border border-white/10 rounded-lg">
+                    <Grid3X3 className="w-3.5 h-3.5 text-white/50" />
+                    <div className="flex gap-1">
+                      {FOCUS_LAYOUT_OPTIONS.map((value) => (
+                        <button
+                          key={`m-col-${value}`}
+                          onClick={() => setFocusMobileColumns(value)}
+                          className={`w-6 h-6 rounded text-xs font-medium transition-all ${
+                            focusMobileColumns === value
+                              ? 'bg-white text-black'
+                              : 'bg-white/10 text-white/70 active:bg-white/20'
+                          }`}
+                          aria-pressed={focusMobileColumns === value}
+                        >
+                          {value}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 h-9 px-2 bg-white/5 border border-white/10 rounded-lg">
+                    <Rows3 className="w-3.5 h-3.5 text-white/50" />
+                    <div className="flex gap-1">
+                      {FOCUS_LAYOUT_OPTIONS.map((value) => (
+                        <button
+                          key={`m-row-${value}`}
+                          onClick={() => setFocusMobileRows(value)}
+                          className={`w-6 h-6 rounded text-xs font-medium transition-all ${
+                            focusMobileRows === value
+                              ? 'bg-white text-black'
+                              : 'bg-white/10 text-white/70 active:bg-white/20'
+                          }`}
+                          aria-pressed={focusMobileRows === value}
+                        >
+                          {value}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="md:h-auto md:max-w-5xl md:mx-auto">
+              <FocusCards
+                cards={focusCards}
+                mobileColumns={focusMobileColumns}
+                desktopColumns={focusDesktopColumns}
+                maxItems={focusMaxItems}
+              />
+            </div>
+          </section>
+        )}
         {/* Search and Filters Bar */}
         <div className="flex flex-col gap-2 mb-3 md:gap-4 md:mb-8">
           {/* Search Row */}
@@ -238,6 +516,11 @@ export default function StorePage() {
                   <X className="w-4 h-4" />
                 </button>
               )}
+              <SearchAutocomplete
+                searchQuery={searchQuery}
+                onSelect={(query) => { setSearchQuery(query); }}
+                onProductSelect={(slug) => { router.push(`/store/product/${slug}`); }}
+              />
             </div>
 
             {/* Filters Button - Mobile */}
@@ -307,20 +590,81 @@ export default function StorePage() {
             {/* Spacer */}
             <div className="flex-1" />
 
-            {/* Grid Toggle */}
-            <div className="flex h-12 bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-1 h-12 px-3 bg-white/5 border border-white/10 rounded-xl">
               <button
-                onClick={() => setGridSize('large')}
-                className={`px-3 transition-colors ${gridSize === 'large' ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                onClick={() => setViewMode('circular')}
+                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
+                  viewMode === 'circular' 
+                    ? 'bg-white text-black' 
+                    : 'bg-white/10 text-white/70 hover:bg-white/20'
+                }`}
+                title="Circular Gallery View"
               >
-                <LayoutGrid className="w-5 h-5" />
+                <Rows3 className="w-4 h-4" />
               </button>
               <button
-                onClick={() => setGridSize('small')}
-                className={`px-3 transition-colors ${gridSize === 'small' ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                onClick={() => setViewMode('glass')}
+                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
+                  viewMode === 'glass' 
+                    ? 'bg-white text-black' 
+                    : 'bg-white/10 text-white/70 hover:bg-white/20'
+                }`}
+                title="Glass Surface View"
               >
-                <Grid3X3 className="w-5 h-5" />
+                <Sparkles className="w-4 h-4" />
               </button>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
+                  viewMode === 'grid' 
+                    ? 'bg-white text-black' 
+                    : 'bg-white/10 text-white/70 hover:bg-white/20'
+                }`}
+                title="Grid View"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Desktop Column + Row Picker */}
+            <div className="flex items-center gap-2 h-12 px-3 bg-white/5 border border-white/10 rounded-xl">
+              <Grid3X3 className="w-4 h-4 text-white/60" />
+              <span className="text-white/60 text-sm">Columns:</span>
+              <div className="flex gap-1">
+                {DESKTOP_COLUMN_OPTIONS.map((cols) => (
+                  <button
+                    key={cols}
+                    onClick={() => setDesktopColumns(cols)}
+                    className={`w-7 h-7 rounded-lg text-sm font-medium transition-all ${
+                      desktopColumns === cols 
+                        ? 'bg-white text-black' 
+                        : 'bg-white/10 text-white/70 hover:bg-white/20'
+                    }`}
+                  >
+                    {cols}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex items-center gap-2 h-12 px-3 bg-white/5 border border-white/10 rounded-xl">
+              <Rows3 className="w-4 h-4 text-white/60" />
+              <span className="text-white/60 text-sm">Rows:</span>
+              <div className="flex gap-1">
+                {GRID_ROW_OPTIONS.map((rows) => (
+                  <button
+                    key={rows}
+                    onClick={() => setDesktopRows(rows)}
+                    className={`w-7 h-7 rounded-lg text-sm font-medium transition-all ${
+                      desktopRows === rows
+                        ? 'bg-white text-black'
+                        : 'bg-white/10 text-white/70 hover:bg-white/20'
+                    }`}
+                  >
+                    {rows}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -345,7 +689,7 @@ export default function StorePage() {
 
         {/* Active Filters */}
         {hasActiveFilters && (
-          <motion.div 
+          <MotionDiv 
             className="flex flex-wrap items-center gap-2 mb-6"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -380,7 +724,7 @@ export default function StorePage() {
             >
               Clear all
             </button>
-          </motion.div>
+          </MotionDiv>
         )}
 
         {/* Results Count */}
@@ -388,40 +732,114 @@ export default function StorePage() {
           <p className="text-white/40 text-sm">
             {loading ? 'Loading...' : `${total} ${total === 1 ? 'product' : 'products'}`}
           </p>
-          {/* Mobile Grid Toggle */}
-          <div className="flex md:hidden h-10 bg-white/5 border border-white/10 rounded-lg overflow-hidden">
-            <button
-              onClick={() => setGridSize('large')}
-              className={`px-2.5 transition-colors ${gridSize === 'large' ? 'bg-white/10' : ''}`}
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setGridSize('small')}
-              className={`px-2.5 transition-colors ${gridSize === 'small' ? 'bg-white/10' : ''}`}
-            >
-              <Grid3X3 className="w-4 h-4" />
-            </button>
+          {/* Mobile View & Column Controls */}
+          <div className="flex md:hidden items-center gap-2">
+            {/* View Mode Toggle Mobile */}
+            <div className="flex items-center gap-1 h-9 px-1.5 bg-white/5 border border-white/10 rounded-lg">
+              <button
+                onClick={() => setViewMode('circular')}
+                className={`w-6 h-6 rounded flex items-center justify-center transition-all ${
+                  viewMode === 'circular' 
+                    ? 'bg-white text-black' 
+                    : 'bg-white/10 text-white/70'
+                }`}
+              >
+                <Rows3 className="w-3 h-3" />
+              </button>
+              <button
+                onClick={() => setViewMode('glass')}
+                className={`w-6 h-6 rounded flex items-center justify-center transition-all ${
+                  viewMode === 'glass' 
+                    ? 'bg-white text-black' 
+                    : 'bg-white/10 text-white/70'
+                }`}
+              >
+                <Sparkles className="w-3 h-3" />
+              </button>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`w-6 h-6 rounded flex items-center justify-center transition-all ${
+                  viewMode === 'grid' 
+                    ? 'bg-white text-black' 
+                    : 'bg-white/10 text-white/70'
+                }`}
+              >
+                <LayoutGrid className="w-3 h-3" />
+              </button>
+            </div>
+            {/* Mobile Column + Row Picker */}
+            <div className="flex items-center gap-1.5 h-9 px-2 bg-white/5 border border-white/10 rounded-lg">
+              <Grid3X3 className="w-3.5 h-3.5 text-white/50" />
+              <div className="flex gap-1">
+                {MOBILE_COLUMN_OPTIONS.map((cols) => (
+                  <button
+                    key={cols}
+                    onClick={() => setMobileColumns(cols)}
+                    className={`w-6 h-6 rounded text-xs font-medium transition-all ${
+                      mobileColumns === cols 
+                        ? 'bg-white text-black' 
+                        : 'bg-white/10 text-white/70 active:bg-white/20'
+                    }`}
+                  >
+                    {cols}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 h-9 px-2 bg-white/5 border border-white/10 rounded-lg">
+              <Rows3 className="w-3.5 h-3.5 text-white/50" />
+              <div className="flex gap-1">
+                {GRID_ROW_OPTIONS.map((rows) => (
+                  <button
+                    key={rows}
+                    onClick={() => setMobileRows(rows)}
+                    className={`w-6 h-6 rounded text-xs font-medium transition-all ${
+                      mobileRows === rows
+                        ? 'bg-white text-black'
+                        : 'bg-white/10 text-white/70 active:bg-white/20'
+                    }`}
+                  >
+                    {rows}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Product Grid - Shopify-Like Responsive Layout */}
-        <div data-products-grid>
+        {/* Product Grid / Circular Gallery */}
+        <div ref={productsSection.ref} data-products-grid>
         {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-5 pb-8">
-            {Array.from({ length: 12 }).map((_, i) => (
+          viewMode === 'circular' ? (
+            <div className="flex flex-col gap-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="w-full h-75 md:h-100 bg-white/5 animate-pulse rounded-xl"
+                />
+              ))}
+            </div>
+          ) : viewMode === 'glass' ? (
+          <div className="flex flex-col gap-4">
+            {Array.from({ length: 3 }).map((_, i) => (
               <div
                 key={i}
-                className={`bg-white/5 animate-pulse ${
-                  gridSize === 'small'
-                    ? 'aspect-[2/3] rounded-lg'
-                    : 'aspect-3/4 rounded-lg sm:rounded-xl md:rounded-2xl'
-                }`}
+                className="w-full h-70 md:h-90 bg-white/5 animate-pulse rounded-2xl"
               />
             ))}
           </div>
+          ) : (
+          <div className={`grid ${getGridClasses()} gap-3 sm:gap-4 md:gap-5 pb-8`}>
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div
+                key={i}
+                className="bg-white/5 animate-pulse aspect-3/4 rounded-lg sm:rounded-xl md:rounded-2xl"
+              />
+            ))}
+          </div>
+          )
         ) : products.length === 0 ? (
-          <motion.div 
+          <MotionDiv 
             className="text-center py-16 md:py-20"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -437,30 +855,66 @@ export default function StorePage() {
             >
               Clear filters
             </button>
-          </motion.div>
-        ) : (
-          <motion.div 
-            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-5 pb-8 relative"
-            style={{ isolation: 'isolate', zIndex: 10, height: 'auto', overflow: 'visible', minHeight: 'auto' }}
-            layout
+          </MotionDiv>
+        ) : viewMode === 'circular' ? (
+          /* Circular Gallery View - Multiple Rows */
+          <MotionDiv
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="pb-8"
           >
-            <AnimatePresence mode="popLayout">
-              {products.map((product, index) => (
-                <motion.div
-                  key={product.id}
+            <CircularProductGrid
+              products={gridViewProducts}
+              rowHeight={isMobile ? 300 : 450}
+              itemsPerRow={isMobile ? mobileColumns : desktopColumns}
+              bend={1}
+              borderRadius={0.05}
+              scrollSpeed={2}
+              scrollEase={0.05}
+              textColor="#ffffff"
+              gap={isMobile ? 12 : 20}
+            />
+          </MotionDiv>
+        ) : viewMode === 'glass' ? (
+          /* Glass Surface View - Infinite Rows */
+          <MotionDiv
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="pb-8"
+          >
+            <GlassProductGrid
+              products={gridViewProducts}
+              rowHeight={isMobile ? 280 : 360}
+              itemsPerRow={isMobile ? mobileColumns : desktopColumns}
+              gap={isMobile ? 12 : 18}
+              scrollSpeed={isMobile ? 18 : 26}
+            />
+          </MotionDiv>
+        ) : (
+          /* Standard Grid View */
+          <MotionDiv 
+            className="pb-8 relative"
+            style={{ isolation: 'isolate', zIndex: 10, height: 'auto', overflow: 'visible', minHeight: 'auto' }}
+          >
+            <HoverEffect
+              items={products as ProductWithDetails[]}
+              layout="custom"
+              className={`grid ${getGridClasses()} gap-3 sm:gap-4 md:gap-5`}
+              getKey={(product) => (product as ProductWithDetails).id}
+              getLink={() => undefined}
+              renderItem={(product, index) => (
+                <MotionDiv
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ delay: Math.min(index * 0.02, 0.2) }}
-                  layout
                   className="h-full w-full mb-6 relative"
                   style={{ overflow: 'visible', zIndex: 1 }}
                 >
-                  <ProductCard product={product} compact={gridSize === 'small'} />
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </motion.div>
+                  <ProductCard product={product as ProductWithDetails} compact={mobileColumns >= 3 || desktopColumns >= 7} />
+                </MotionDiv>
+              )}
+            />
+          </MotionDiv>
         )}
         </div>
 
@@ -473,6 +927,21 @@ export default function StorePage() {
           </div>
         )}
       </section>
+
+      {/* Fluid Glass 3D Experience Section (only rendered when in/near viewport) - hidden on mobile, shown on desktop */}
+      <div ref={fluidGlass.ref} className="hidden md:block" style={{ minHeight: fluidGlass.shouldRender ? undefined : 400 }}>
+        {fluidGlass.shouldRender && (
+          <StoreFluidGlassSection 
+            height="100vh"
+            className="mt-8"
+          />
+        )}
+      </div>
+
+      {/* Store Footer (tracked for memory awareness) */}
+      <div ref={footer.ref}>
+        <StoreFooter />
+      </div>
 
       {/* Filter Sheet */}
       <FilterSheet

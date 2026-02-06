@@ -22,7 +22,7 @@ import { supabase } from "@/lib/supabaseClient"; // <-- ENSURED CORRECT SUPABASE
 
 // --- THEME CONSTANTS FOR HELPERS ---
 const BLUE_SHIMMER_GRADIENT = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #ffffff 50%, #00000000 100%)";
-const BLUE_TEXT_GRADIENT = "bg-gradient-to-r from-sky-400 via-white to-indigo-400";
+const BLUE_TEXT_GRADIENT = "bg-linear-to-r from-sky-400 via-white to-indigo-400";
 
 // ============================================================================
 // HELPER TIP COMPONENT (BLUE/BLACK THEME)
@@ -156,8 +156,8 @@ export function Pricing() {
     className={cn(
       "bg-clip-text text-transparent inline-block transition-all duration-300",
       activePartner === "Vantage broker"
-        ? "bg-gradient-to-r from-white via-white to-fuchsia-400 drop-shadow-[0_8px_28px_rgba(255, 255, 255,0.35)]"
-        : "bg-gradient-to-r from-sky-400 via-white to-indigo-400 drop-shadow-[0_8px_28px_rgba(255, 255, 255,0.35)]"
+        ? "bg-linear-to-r from-white via-white to-fuchsia-400 drop-shadow-[0_8px_28px_rgba(255, 255, 255,0.35)]"
+        : "bg-linear-to-r from-sky-400 via-white to-indigo-400 drop-shadow-[0_8px_28px_rgba(255, 255, 255,0.35)]"
     )}
   >
     BULLMONEY ALSO HAS A FREE OPTION!
@@ -229,8 +229,8 @@ export function Pricing() {
                   className={cn(
                     "absolute inset-0 -z-10 rounded-full",
                     partner === "Vantage broker"
-                      ? "bg-gradient-to-r from-white to-white shadow-[0_0_25px_rgba(255, 255, 255,0.45)]"
-                      : "bg-gradient-to-r from-sky-500 to-white shadow-[0_0_25px_rgba(255, 255, 255,0.45)]"
+                      ? "bg-linear-to-r from-white to-white shadow-[0_0_25px_rgba(255, 255, 255,0.45)]"
+                      : "bg-linear-to-r from-sky-500 to-white shadow-[0_0_25px_rgba(255, 255, 255,0.45)]"
                   )}
                   transition={{ type: "spring", stiffness: 400, damping: 28 }}
                 />
@@ -309,8 +309,8 @@ export function Pricing() {
         className={cn(
           "h-[6px] w-[6px] rounded-full shadow-[0_0_18px_rgba(233,215,168,0.45)]",
           activePartner === "Vantage broker"
-            ? "bg-gradient-to-r from-white to-white shadow-[0_0_18px_rgba(255, 255, 255,0.45)]"
-            : "bg-gradient-to-r from-sky-400 to-white shadow-[0_0_18px_rgba(255, 255, 255,0.45)]"
+            ? "bg-linear-to-r from-white to-white shadow-[0_0_18px_rgba(255, 255, 255,0.45)]"
+            : "bg-linear-to-r from-sky-400 to-white shadow-[0_0_18px_rgba(255, 255, 255,0.45)]"
         )}
       />
       LIMITED BENEFITS • FREE COMMUNITY
@@ -321,8 +321,8 @@ export function Pricing() {
         className={cn(
           "bg-clip-text text-transparent",
           activePartner === "Vantage broker"
-            ? "bg-gradient-to-r from-white via-white to-fuchsia-400"
-            : "bg-gradient-to-r from-sky-400 via-white to-indigo-400"
+            ? "bg-linear-to-r from-white via-white to-fuchsia-400"
+            : "bg-linear-to-r from-sky-400 via-white to-indigo-400"
         )}
       >
         WHAT YOU GET WITH FREE ACCESS
@@ -353,8 +353,8 @@ export function Pricing() {
             className={cn(
               "h-[9px] w-[9px] rotate-45 rounded-[2px] shadow-[0_0_14px]",
               activePartner === "Vantage broker"
-                ? "bg-gradient-to-br from-white via-white to-fuchsia-400 shadow-[0_0_14px_rgba(255, 255, 255,0.4)]"
-                : "bg-gradient-to-br from-sky-400 via-white to-indigo-400 shadow-[0_0_14px_rgba(255, 255, 255,0.4)]"
+                ? "bg-linear-to-br from-white via-white to-fuchsia-400 shadow-[0_0_14px_rgba(255, 255, 255,0.4)]"
+                : "bg-linear-to-br from-sky-400 via-white to-indigo-400 shadow-[0_0_14px_rgba(255, 255, 255,0.4)]"
             )}
           />
         </span>
@@ -421,7 +421,7 @@ function XMThreeSteps({ copyPartnerCode, copied, showCodeTip, showSubmitTip }: a
       <StepCard
         number={1}
         title="Step 1 — Open Your XM Live Account With Our Code"
-        className="col-span-1 md:col-span-2 p-6 md:p-8 bg-gradient-to-br from-sky-950 via-slate-950 to-neutral-950 relative" // Added relative for tip
+        className="col-span-1 md:col-span-2 p-6 md:p-8 bg-linear-to-br from-sky-950 via-slate-950 to-neutral-950 relative" // Added relative for tip
         actions={
           <div className="flex flex-wrap items-center justify-center gap-3 relative">
             {/* TIP 2: Code Button */}
@@ -452,7 +452,7 @@ function XMThreeSteps({ copyPartnerCode, copied, showCodeTip, showSubmitTip }: a
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold
-                         text-white bg-gradient-to-r from-sky-500 to-white hover:from-sky-600 hover:to-white
+                         text-white bg-linear-to-r from-sky-500 to-white hover:from-sky-600 hover:to-white
                          shadow transition"
             >
               <span>Open XM account</span>
@@ -508,7 +508,7 @@ function XMThreeSteps({ copyPartnerCode, copied, showCodeTip, showSubmitTip }: a
             href="/BULLMONEYULTRA.pdf"
             download
             className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold
-                       text-black bg-gradient-to-r from-gray-200 via-gray-300 to-gray-400
+                       text-black bg-linear-to-r from-gray-200 via-gray-300 to-gray-400
                        hover:from-gray-300 hover:via-gray-400 hover:to-gray-500
                        shadow-lg shadow-gray-900/40 transition"
           >
@@ -553,7 +553,7 @@ function XMThreeSteps({ copyPartnerCode, copied, showCodeTip, showSubmitTip }: a
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold
-                text-white bg-gradient-to-r from-purple-blue to-white hover:from-white hover:to-fuchsia-700
+                text-white bg-linear-to-r from-purple-blue to-white hover:from-white hover:to-fuchsia-700
                 shadow transition"
             >
               <span>Open XM account</span>
@@ -603,7 +603,7 @@ function VantageThreeSteps({ copyPartnerCode, copied, showCodeTip, showSubmitTip
       <StepCard
         number2={1}
         title="Open Your Vantage Live Account With BULLMONEY"
-        className="col-span-1 md:col-span-2 p-6 md:p-8 bg-gradient-to-br from-purple-950 via-slate-950 to-neutral-950 relative" // Added relative for tip
+        className="col-span-1 md:col-span-2 p-6 md:p-8 bg-linear-to-br from-purple-950 via-slate-950 to-neutral-950 relative" // Added relative for tip
         actions={
           <div className="flex flex-wrap items-center justify-center gap-3 relative">
             {/* TIP 2: Code Button */}
@@ -634,7 +634,7 @@ function VantageThreeSteps({ copyPartnerCode, copied, showCodeTip, showSubmitTip
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold
-                text-white bg-gradient-to-r from-white to-white hover:from-white hover:to-fuchsia-700
+                text-white bg-linear-to-r from-white to-white hover:from-white hover:to-fuchsia-700
                 shadow transition"
             >
               <span>Open Vantage account</span>
@@ -718,7 +718,7 @@ function VantageThreeSteps({ copyPartnerCode, copied, showCodeTip, showSubmitTip
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold
-                text-white bg-gradient-to-r from-white to-white hover:from-white hover:to-fuchsia-700
+                text-white bg-linear-to-r from-white to-white hover:from-white hover:to-fuchsia-700
                 shadow transition"
             >
               <span>Open Vantage account</span>
@@ -793,7 +793,7 @@ function StepCard({
         className
       )}
     >
-      <div className="pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-gradient-to-l from-sky-500/15 via-white/10 to-indigo-500/0 blur-2xl" />
+      <div className="pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-linear-to-l from-sky-500/15 via-white/10 to-indigo-500/0 blur-2xl" />
       <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10" />
 
       <div className="flex items-center justify-between">
@@ -811,7 +811,7 @@ function StepCard({
         <span className="relative text-4xl md:text-5xl font-black bg-clip-text text-transparent">
           <span
             className={cn(
-              "bg-gradient-to-br bg-clip-text text-transparent",
+              "bg-linear-to-br bg-clip-text text-transparent",
               useRed
                 ? "from-white via-white to-fuchsia-400"
                 : "from-sky-400 via-white to-indigo-400"
@@ -821,7 +821,7 @@ function StepCard({
           </span>
           <span
             className={cn(
-              "pointer-events-none absolute inset-0 -z-10 blur-2xl bg-gradient-to-br",
+              "pointer-events-none absolute inset-0 -z-10 blur-2xl bg-linear-to-br",
               useRed
                 ? "from-white/40 via-white/30 to-fuchsia-500/40"
                 : "from-sky-500/40 via-white/30 to-indigo-500/40"
@@ -925,14 +925,14 @@ function TrustPill({ children }: { children: React.ReactNode }) {
 
 function Accent({ children }: { children: React.ReactNode }) {
   return (
-    <span className="font-extrabold bg-gradient-to-r from-sky-400 via-white to-indigo-400 bg-clip-text text-transparent">
+    <span className="font-extrabold bg-linear-to-r from-sky-400 via-white to-indigo-400 bg-clip-text text-transparent">
       {children}
     </span>
   );
 }
 export function Accent2({ children }: { children: React.ReactNode }) {
   return (
-    <span className="font-extrabold bg-gradient-to-r from-white via-white to-fuchsia-400 bg-clip-text text-transparent">
+    <span className="font-extrabold bg-linear-to-r from-white via-white to-fuchsia-400 bg-clip-text text-transparent">
       {children}
     </span>
   );
@@ -1035,7 +1035,7 @@ function CardPattern({
     <div className="pointer-events-none">
       <div className="absolute inset-0 rounded-2xl [mask-image:linear-gradient(white,transparent)] group-hover/card:opacity-50" />
       <motion.div
-        className="absolute inset-0 rounded-2xl bg-gradient-to-r from-white to-white opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500"
+        className="absolute inset-0 rounded-2xl bg-linear-to-r from-white to-white opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500"
         style={style}
       />
       <motion.div
@@ -1120,7 +1120,7 @@ function CardPatternRed({
       <div className="absolute inset-0 rounded-2xl [mask-image:linear-gradient(white,transparent)] group-hover/card:opacity-50" />
       {/* interactive red gradient glow */}
       <motion.div
-        className="absolute inset-0 rounded-2xl bg-gradient-to-r from-white to-white opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500"
+        className="absolute inset-0 rounded-2xl bg-linear-to-r from-white to-white opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500"
         style={style}
       />
       {/* binary/monospace overlay with red tint */}
@@ -1284,7 +1284,7 @@ function SubmitProofForm({ showTip }: { showTip: boolean }) {
           disabled={sending}
           className={cn(
             "inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-black",
-            "bg-gradient-to-r from-gray-200 via-gray-300 to-gray-400 hover:from-gray-300 hover:via-gray-400 hover:to-gray-500",
+            "bg-linear-to-r from-gray-200 via-gray-300 to-gray-400 hover:from-gray-300 hover:via-gray-400 hover:to-gray-500",
             "shadow-lg shadow-gray-900/40 transition",
             sending && "opacity-70 cursor-not-allowed"
           )}
@@ -1497,14 +1497,14 @@ function ThreeBadge({ activePartner }: { activePartner: "Vantage broker" | "XM" 
       className={cn(
         "relative inline-block text-5xl md:text-7xl font-black bg-clip-text text-transparent",
         isVantage
-          ? "bg-gradient-to-r from-white via-white to-fuchsia-400 drop-shadow-[0_10px_35px_rgba(255, 255, 255,0.28)]"
-          : "bg-gradient-to-r from-sky-400 via-white to-indigo-400 drop-shadow-[0_10px_35px_rgba(255, 255, 255,0.25)]"
+          ? "bg-linear-to-r from-white via-white to-fuchsia-400 drop-shadow-[0_10px_35px_rgba(255, 255, 255,0.28)]"
+          : "bg-linear-to-r from-sky-400 via-white to-indigo-400 drop-shadow-[0_10px_35px_rgba(255, 255, 255,0.25)]"
       )}
     >
       3
       <span
         className={cn(
-          "pointer-events-none absolute inset-0 -z-10 blur-2xl bg-gradient-to-r",
+          "pointer-events-none absolute inset-0 -z-10 blur-2xl bg-linear-to-r",
           isVantage
             ? "from-white/30 via-white/30 to-fuchsia-500/30"
             : "from-sky-500/30 via-white/30 to-indigo-500/30"

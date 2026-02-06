@@ -103,7 +103,7 @@ export const FeedCard = memo(({
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
       onClick={handleClick}
-      className="group cursor-pointer rounded-2xl bg-gradient-to-b from-neutral-900/90 to-black/90 border border-neutral-800/50 hover:border-white/30 overflow-hidden transition-all duration-300"
+      className="group cursor-pointer rounded-2xl bg-linear-to-b from-neutral-900/90 to-black/90 border border-neutral-800/50 hover:border-white/30 overflow-hidden transition-all duration-300"
     >
       {/* Chart/Image Section */}
       <div className="relative aspect-[16/10] bg-neutral-900 overflow-hidden">
@@ -114,7 +114,7 @@ export const FeedCard = memo(({
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-neutral-800 to-neutral-900">
+          <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-neutral-800 to-neutral-900">
             <div className="text-6xl opacity-30">
               {analysis.direction === 'bullish' ? '📈' : analysis.direction === 'bearish' ? '📉' : '📊'}
             </div>
@@ -122,7 +122,7 @@ export const FeedCard = memo(({
         )}
         
         {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-transparent" />
         
         {/* Market & Direction Badges */}
         <div className="absolute top-3 left-3 flex items-center gap-2">
@@ -144,7 +144,7 @@ export const FeedCard = memo(({
         {/* Pro Badge */}
         {analysis.is_pro_only && (
           <div className="absolute top-3 right-3">
-            <span className="px-2 py-1 rounded-lg bg-gradient-to-r from-white to-pink-500 text-white text-xs font-bold flex items-center gap-1">
+            <span className="px-2 py-1 rounded-lg bg-linear-to-r from-white to-pink-500 text-white text-xs font-bold flex items-center gap-1">
               <Lock className="w-3 h-3" /> PRO
             </span>
           </div>
@@ -177,7 +177,7 @@ export const FeedCard = memo(({
         {/* Author Row */}
         {author && (
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-white to-white flex items-center justify-center overflow-hidden">
+            <div className="w-8 h-8 rounded-full bg-linear-to-br from-white to-white flex items-center justify-center overflow-hidden">
               {author.avatar_url ? (
                 <img src={author.avatar_url} alt={author.username} className="w-full h-full object-cover" />
               ) : (

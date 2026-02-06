@@ -2,6 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import TextType from "@/components/TextType";
 
 interface Product {
   id: string;
@@ -27,9 +28,9 @@ export const ShopMainpage = ({ products = [] }: ShopMainpageProps) => {
             className="bg-white/5 backdrop-blur-sm rounded-lg p-6 border border-white/10"
           >
             <h3 className="text-xl font-bold text-white mb-2">
-              {product.name}
+              <TextType text={product.name} typingSpeed={Math.max(5, 25 - product.name.length / 2)} showCursor={false} loop={false} as="span" />
             </h3>
-            <p className="text-gray-400 mb-4">{product.description}</p>
+            <p className="text-gray-400 mb-4"><TextType text={product.description} typingSpeed={Math.max(2, 15 - product.description.length / 20)} showCursor={false} loop={false} as="span" /></p>
             <p className="text-2xl font-bold text-white">${product.price}</p>
           </motion.div>
         ))}

@@ -17,7 +17,7 @@ export async function GET(
     }
 
     const session = await getStripe().checkout.sessions.retrieve(sessionId, {
-      expand: ['line_items', 'customer', 'payment_intent'],
+      expand: ['line_items', 'customer', 'payment_intent', 'shipping_details' as any],
     });
     const sessionData = session as Stripe.Checkout.Session;
 
@@ -34,7 +34,7 @@ export async function GET(
         quantity: item.quantity,
         amount: item.amount_total,
       })),
-      shippingDetails: (sessionData as any).shipping_details ?? null,
+      shippingDetails: (sessionData as any).shipping_details ?? (sessionData as any).shipping ?? null,
       metadata: sessionData.metadata,
       createdAt: new Date(sessionData.created * 1000).toISOString(),
     });

@@ -65,7 +65,7 @@ export function Pricing() {
             <h3 className="mt-1 text-2xl md:text-3xl font-black leading-tight">
               <span
                 className={cn(
-                  "bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white"
+                  "bg-clip-text text-transparent bg-linear-to-r from-white via-white to-white"
                 )}
               >
                 WHAT YOU GET
@@ -93,7 +93,7 @@ export function Pricing() {
                 >
                   <span
                     className={cn(
-                      "h-[9px] w-[9px] rotate-45 rounded-[2px] shadow-[0_0_14px] bg-gradient-to-br from-white via-white to-white shadow-[0_0_14px_rgba(255,255,255,0.4)]",
+                      "h-[9px] w-[9px] rotate-45 rounded-[2px] shadow-[0_0_14px] bg-linear-to-br from-white via-white to-white shadow-[0_0_14px_rgba(255,255,255,0.4)]",
                     )}
                   />
                 </span>
@@ -165,7 +165,7 @@ function ShimmerPanel({
       onMouseMove={onMove}
       className={cn(
         "relative overflow-hidden rounded-2xl p-5 ring-1 ring-white/10",
-        "bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-sm",
+        "bg-linear-to-br from-white/5 to-white/[0.02] backdrop-blur-sm",
         "shadow-[0_1px_1px_rgba(0,0,0,0.05),0_12px_60px_rgba(2,6,23,0.35)]",
         className
       )}
@@ -268,7 +268,7 @@ function CardPattern({
     <div className="pointer-events-none">
       <div className="absolute inset-0 rounded-2xl [mask-image:linear-gradient(white,transparent)] group-hover/card:opacity-50" />
       <motion.div
-        className="absolute inset-0 rounded-2xl bg-gradient-to-r from-white to-white opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500"
+        className="absolute inset-0 rounded-2xl bg-linear-to-r from-white to-white opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500"
         style={style}
       />
       <motion.div
@@ -355,7 +355,7 @@ function CardPatternRed({
     <div className="pointer-events-none">
       <div className="absolute inset-0 rounded-2xl [mask-image:linear-gradient(white,transparent)] group-hover/card:opacity-50" />
       <motion.div
-        className="absolute inset-0 rounded-2xl bg-gradient-to-r from-white to-white opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500"
+        className="absolute inset-0 rounded-2xl bg-linear-to-r from-white to-white opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500"
         style={style}
       />
       <motion.div

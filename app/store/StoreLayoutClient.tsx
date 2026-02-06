@@ -5,6 +5,7 @@ import { StoreHeader } from '@/components/store/StoreHeader';
 import { CartDrawer } from '@/components/shop/CartDrawer';
 import { Toaster } from 'sonner';
 import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
+import { syncSessionLayers } from '@/lib/sessionPersistence';
 
 // ============================================================================
 // STORE LAYOUT CLIENT WRAPPER
@@ -26,22 +27,20 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
     setMounted(true);
   }, []);
 
-  // Auto-login check using pagemode session
+  // Auto-login check using pagemode session + sync all storage layers
   useEffect(() => {
     if (!mounted) return;
     
-    // Check if user has pagemode session
-    const pagemodeSession = localStorage.getItem('bullmoney_session');
-    if (pagemodeSession) {
-      try {
-        const session = JSON.parse(pagemodeSession);
-        // Session exists - user is already logged in via pagemode
-        console.log('[Store] Pagemode session active:', session.email);
-      } catch (e) {
-        console.error('[Store] Error parsing pagemode session:', e);
-      }
+    // Sync session across all storage layers (localStorage, sessionStorage, cookie)
+    // This ensures the store always has access to auth from the main app
+    syncSessionLayers();
+    
+    if (isAuthenticated) {
+      console.log('[Store] Session active via RecruitAuth context');
+    } else {
+      console.log('[Store] No active session');
     }
-  }, [mounted]);
+  }, [mounted, isAuthenticated]);
 
   // Apply store-specific styles on mount
   useEffect(() => {
@@ -131,7 +130,6 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
       style={{
         position: 'relative',
         zIndex: 1,
-        isolation: 'isolate',
         paddingTop: `${MAIN_NAVBAR_HEIGHT.mobile}px`,
         width: '100%',
         height: 'auto',
@@ -151,12 +149,20 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
           .store-layout,
           .store-layout > *,
           .store-layout main,
-          .store-layout section,
           [data-store-page],
           [data-store-page] > *,
-          [data-store-page] main,
-          [data-store-page] section {
+          [data-store-page] main {
             height: auto !important;
+            max-height: none !important;
+            min-height: 0 !important;
+            overflow: visible !important;
+            contain: none !important;
+            content-visibility: visible !important;
+          }
+          
+          /* Sections inside store: allow natural flow but preserve hero height */
+          .store-layout section,
+          [data-store-page] section {
             max-height: none !important;
             min-height: 0 !important;
             overflow: visible !important;
@@ -210,11 +216,15 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
         
         /* Ensure store content scrolls properly */
         .store-layout {
-          -webkit-overflow-scrolling: touch !important;
-          overscroll-behavior: contain !important;
+          -webkit-overflow-scrolling: touch;
           background: #000;
           position: relative !important;
           height: auto !important;
+        }
+        
+        /* Only contain overscroll on actual mobile touch devices */
+        :global(html.is-mobile) .store-layout {
+          overscroll-behavior: contain;
         }
         
         /* Ensure main content can scroll */
@@ -227,10 +237,20 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
         
         /* MOBILE: Override any performance CSS that might clip products */
         @media (max-width: 767px) {
-          html.is-mobile .store-layout,
-          html.is-mobile [data-store-page],
+          /* Desktop small viewports: keep overflow visible so scrolling
+             chains to html/body naturally via mousewheel/trackpad */
           .store-layout,
           [data-store-page] {
+            overflow: visible !important;
+            height: auto !important;
+            max-height: none !important;
+          }
+          
+          /* Actual mobile (touch) devices: create a proper scroll container
+             so touch scrolling and overscroll-behavior work correctly.
+             Higher specificity via html.is-mobile wins over the above rule. */
+          html.is-mobile .store-layout,
+          html.is-mobile [data-store-page] {
             overflow-y: auto !important;
             overflow-x: hidden !important;
             height: auto !important;
@@ -245,8 +265,140 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
           }
         }
       `}</style>
+
+      {/* GPU Performance: shimmer keyframes + containment for store components */}
+      <style jsx global>{`
+        /* ================================================================
+           GPU-ACCELERATED SHIMMER - replaces framer-motion Infinity loops
+           Runs on compositor thread (transform + opacity only), zero JS cost
+           ================================================================ */
+        @keyframes store-shimmer {
+          0%   { transform: translateX(-200%) translateZ(0); }
+          100% { transform: translateX(200%) translateZ(0); }
+        }
+        @keyframes store-shimmer-border {
+          0%   { transform: translateX(-50%) translateZ(0); }
+          100% { transform: translateX(50%) translateZ(0); }
+        }
+        @keyframes store-spin {
+          to { transform: rotate(360deg) translateZ(0); }
+        }
+        @keyframes store-particle {
+          0%   { opacity: 0; transform: scale(0) translateY(0) translateZ(0); }
+          50%  { opacity: 0.6; transform: scale(1.5) translateY(-50px) translateZ(0); }
+          100% { opacity: 0; transform: scale(0) translateY(-100px) translateZ(0); }
+        }
+        /* GradientOrb ambient float */
+        @keyframes store-orb-float {
+          0%   { transform: scale(1) translate(0, 0) translateZ(0); opacity: 0.25; }
+          50%  { transform: scale(1.2) translate(30px, -20px) translateZ(0); opacity: 0.4; }
+          100% { transform: scale(1) translate(0, 0) translateZ(0); opacity: 0.25; }
+        }
+        /* Box-shadow glow pulse */
+        @keyframes store-glow-pulse {
+          0%, 100% { box-shadow: 0 0 40px rgba(25, 86, 180, 0.4), 0 0 80px rgba(25, 86, 180, 0.2); }
+          50%      { box-shadow: 0 0 60px rgba(25, 86, 180, 0.6), 0 0 100px rgba(25, 86, 180, 0.3); }
+        }
+        /* Dot pulse */
+        @keyframes store-pulse-dot {
+          0%, 100% { transform: scale(1) translateZ(0); opacity: 1; }
+          50%      { transform: scale(1.3) translateZ(0); opacity: 0.7; }
+        }
+        /* Scroll indicator bounce */
+        @keyframes store-scroll-bounce {
+          0%, 100% { transform: translateY(0) translateZ(0); }
+          50%      { transform: translateY(12px) translateZ(0); }
+        }
+        /* Opacity pulse */
+        @keyframes store-opacity-pulse {
+          0%, 100% { opacity: 0.4; }
+          50%      { opacity: 0.8; }
+        }
+        /* Float + rotate for mobile product cards */
+        @keyframes store-card-float {
+          0%, 100% { transform: translateY(0) rotate(var(--float-start-rot, -3deg)) translateZ(0); }
+          50%      { transform: translateY(var(--float-y, -8px)) rotate(var(--float-end-rot, 3deg)) translateZ(0); }
+        }
+        .store-orb-float {
+          animation: store-orb-float 8s ease-in-out infinite;
+          will-change: transform, opacity;
+        }
+        .store-glow-pulse {
+          animation: store-glow-pulse 2s ease-in-out infinite;
+        }
+        .store-pulse-dot {
+          animation: store-pulse-dot 1.5s ease-in-out infinite;
+          will-change: transform, opacity;
+        }
+        .store-scroll-bounce {
+          animation: store-scroll-bounce 2s ease-in-out infinite;
+          will-change: transform;
+        }
+        .store-opacity-pulse {
+          animation: store-opacity-pulse 2s ease-in-out infinite;
+          will-change: opacity;
+        }
+        .store-card-float {
+          animation: store-card-float var(--float-duration, 4s) ease-in-out var(--float-delay, 0s) infinite;
+          will-change: transform;
+          backface-visibility: hidden;
+        }
+        .store-shimmer {
+          animation: store-shimmer 3s ease-in-out infinite;
+          will-change: transform;
+          backface-visibility: hidden;
+        }
+        .store-shimmer-border {
+          animation: store-shimmer-border 4s ease-in-out infinite;
+          will-change: transform;
+          backface-visibility: hidden;
+          filter: blur(20px);
+        }
+        .store-shimmer-fast {
+          animation: store-shimmer 2s linear 1s infinite;
+          will-change: transform;
+          backface-visibility: hidden;
+        }
+        .store-spin {
+          animation: store-spin 0.5s linear infinite;
+          will-change: transform;
+        }
+
+        /* ================================================================
+           CSS CONTAINMENT - prevents layout thrash between sections
+           Each section is an independent layout/paint boundary
+           ================================================================ */
+        [data-section-id] {
+          contain: layout style paint;
+          content-visibility: auto;
+          contain-intrinsic-size: auto 400px;
+        }
+        /* Hero needs full height hint - NO containment that blocks scroll */
+        [data-section-id="hero"] {
+          contain-intrinsic-size: auto 90vh;
+          contain: style paint;
+          touch-action: pan-y;
+        }
+        /* Products grid can be large */
+        [data-section-id="products"] {
+          contain-intrinsic-size: auto 800px;
+        }
+
+        /* GPU layer promotion for animated containers */
+        .circular-product-row,
+        [data-products-grid] {
+          will-change: transform;
+          transform: translateZ(0);
+        }
+
+        /* Ensure product card images use GPU compositing */
+        [data-store-page] img {
+          will-change: transform;
+          backface-visibility: hidden;
+        }
+      `}</style>
       
-      {/* Store Header - Fixed below main navbar */}
+      {/* Store Header */}
       <StoreHeader />
       
       {/* Main Content - Below store header */}
@@ -260,9 +412,9 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
       {/* Cart Drawer */}
       <CartDrawer />
       
-      {/* Toast Notifications - No blur */}
+      {/* Toast Notifications - Top Center */}
       <Toaster 
-        position="bottom-right"
+        position="top-center"
         toastOptions={{
           style: {
             background: '#000',

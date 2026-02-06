@@ -178,7 +178,7 @@ export const LiveMarketTicker: React.FC = () => {
     // FIX APPLIED HERE:
     // Changed 'relative' to 'fixed bottom-0 left-0 z-50'
     // This pins it to the bottom of the viewport
-    <div className="fixed bottom-0 left-0 right-0 z-50 w-full overflow-hidden bg-gradient-to-r from-black via-gray-900 to-black border-t border-white/10 shadow-2xl backdrop-blur-sm">
+    <div className="fixed bottom-0 left-0 right-0 z-50 w-full overflow-hidden bg-linear-to-r from-black via-gray-900 to-black border-t border-white/10 shadow-2xl backdrop-blur-sm">
       
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-5 pointer-events-none">
@@ -192,7 +192,7 @@ export const LiveMarketTicker: React.FC = () => {
       </div>
 
       {/* Top accent line */}
-      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-linear-to-r from-transparent via-white/50 to-transparent" />
 
       {/* Ticker content */}
       <div className="relative flex items-center h-10 px-4">

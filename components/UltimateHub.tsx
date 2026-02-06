@@ -805,10 +805,10 @@ const NEON_STYLES = {
   purpleBorder: 'border-white/60 shadow-[0_0_12px_rgba(255, 255, 255,0.6),inset_0_0_8px_rgba(255, 255, 255,0.3)]',
   emeraldBorder: 'border-white/60 shadow-[0_0_12px_rgba(255,255,255,0.6),inset_0_0_8px_rgba(255,255,255,0.3)]',
   
-  blueBg: 'bg-gradient-to-br from-white/40 via-white/25 to-white/30 shadow-[0_0_20px_rgba(255, 255, 255,0.4)]',
-  cyanBg: 'bg-gradient-to-br from-white/40 via-white/25 to-white/30 shadow-[0_0_20px_rgba(255, 255, 255,0.4)]',
-  purpleBg: 'bg-gradient-to-br from-white/40 via-white/25 to-fuchsia-600/30 shadow-[0_0_20px_rgba(255, 255, 255,0.4)]',
-  darkBg: 'bg-gradient-to-br from-zinc-900/98 via-zinc-800/95 to-black/98 backdrop-blur-3xl',
+  blueBg: 'bg-linear-to-br from-white/40 via-white/25 to-white/30 shadow-[0_0_20px_rgba(255, 255, 255,0.4)]',
+  cyanBg: 'bg-linear-to-br from-white/40 via-white/25 to-white/30 shadow-[0_0_20px_rgba(255, 255, 255,0.4)]',
+  purpleBg: 'bg-linear-to-br from-white/40 via-white/25 to-fuchsia-600/30 shadow-[0_0_20px_rgba(255, 255, 255,0.4)]',
+  darkBg: 'bg-linear-to-br from-zinc-900/98 via-zinc-800/95 to-black/98 backdrop-blur-3xl',
   
   iconGlow: 'drop-shadow-[0_0_8px_rgba(255, 255, 255,0.8)]',
   iconGlowCyan: 'drop-shadow-[0_0_8px_rgba(255, 255, 255,0.8)]',
@@ -2719,7 +2719,7 @@ const FpsCandlestickChart = memo(({ fps, width = 80, height = 48, candleCount = 
 
   return (
     <div className="relative overflow-hidden rounded-lg" style={{ width, height }}>
-      <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-white/5 to-slate-900/25 border border-white/20" />
+      <div className="absolute inset-0 bg-linear-to-br from-white/15 via-white/5 to-slate-900/25 border border-white/20" />
       <svg width={width} height={height} className="relative z-10">
         {/* Grid lines */}
         {[0.25, 0.5, 0.75].map(pct => (
@@ -2763,7 +2763,7 @@ const FpsDisplay = memo(({ fps, deviceTier, jankScore }: { fps: number; deviceTi
   
   return (
     <div className="relative">
-      <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-white/30 via-white/15 to-slate-900/40 border border-white/40" />
+      <div className="absolute inset-0 rounded-lg bg-linear-to-br from-white/30 via-white/15 to-slate-900/40 border border-white/40" />
       <div className="relative px-2 py-1.5 flex items-center gap-2">
         <FpsCandlestickChart fps={fps} />
         <div className="flex flex-col gap-0.5 min-w-[40px]">
@@ -2862,7 +2862,7 @@ const StatCard = memo(({
     <motion.div
       initial={animate ? { opacity: 0, y: 10 } : false}
       animate={{ opacity: 1, y: 0 }}
-      className={`relative p-2.5 rounded-xl bg-gradient-to-br ${colorClasses[color]} border backdrop-blur-sm overflow-hidden`}
+      className={`relative p-2.5 rounded-xl bg-linear-to-br ${colorClasses[color]} border backdrop-blur-sm overflow-hidden`}
     >
       <div className="flex items-center justify-between mb-1">
         <span className="text-[9px] font-medium text-zinc-400 uppercase tracking-wide truncate">{label}</span>
@@ -3047,7 +3047,7 @@ const DeviceCenterPanel = memo(({
           dragElastic={0.2}
           onDragStart={() => setIsDragging(true)}
           onDragEnd={handleDragEnd}
-          className="fixed right-0 top-0 bottom-0 z-[2147483646] w-[320px] max-w-[90vw] bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl border-l border-white/30 shadow-2xl shadow-white/30 flex flex-col"
+          className="fixed right-0 top-0 bottom-0 z-[2147483646] w-[320px] max-w-[90vw] bg-linear-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl border-l border-white/30 shadow-2xl shadow-white/30 flex flex-col"
           style={{ paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
         >
           {/* Drag Handle */}
@@ -3059,7 +3059,7 @@ const DeviceCenterPanel = memo(({
           <div className="px-4 pb-3 border-b border-white/20">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-white to-white flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-linear-to-br from-white to-white flex items-center justify-center">
                   <Smartphone className="w-4 h-4 text-white neon-white-icon" />
                 </div>
                 <div>
@@ -3127,7 +3127,7 @@ const DeviceCenterPanel = memo(({
                   className="space-y-3"
                 >
                   {/* Device Info */}
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20">
+                  <div className="p-3 rounded-xl bg-linear-to-br from-white/10 to-white/5 border border-white/20">
                     <h4 className="text-[10px] font-bold text-white uppercase tracking-wider mb-2">Device</h4>
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-[10px]">
@@ -3158,7 +3158,7 @@ const DeviceCenterPanel = memo(({
                   </div>
 
                   {/* 3D Performance Grade */}
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-zinc-800/50 to-zinc-900/50 border border-zinc-700/30">
+                  <div className="p-3 rounded-xl bg-linear-to-br from-zinc-800/50 to-zinc-900/50 border border-zinc-700/30">
                     <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-3">3D Performance Score</h4>
                     <div className="flex items-center justify-center">
                       <div className="relative w-[100px] h-[100px]">
@@ -3187,7 +3187,7 @@ const DeviceCenterPanel = memo(({
                   </div>
 
                   {/* GPU Info */}
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-white/10 to-fuchsia-500/5 border border-white/20">
+                  <div className="p-3 rounded-xl bg-linear-to-br from-white/10 to-fuchsia-500/5 border border-white/20">
                     <h4 className="text-[10px] font-bold text-white uppercase tracking-wider mb-2">Graphics</h4>
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-[10px]">
@@ -3222,7 +3222,7 @@ const DeviceCenterPanel = memo(({
                   </div>
 
                   {/* Screen Info */}
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20">
+                  <div className="p-3 rounded-xl bg-linear-to-br from-white/10 to-white/5 border border-white/20">
                     <h4 className="text-[10px] font-bold text-white uppercase tracking-wider mb-2">Display</h4>
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-[10px]">
@@ -3256,7 +3256,7 @@ const DeviceCenterPanel = memo(({
 
                   {/* Battery Info (if supported) */}
                   {batteryInfo.supported && (
-                    <div className="p-3 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20">
+                    <div className="p-3 rounded-xl bg-linear-to-br from-white/10 to-white/5 border border-white/20">
                       <h4 className="text-[10px] font-bold text-white uppercase tracking-wider mb-2">Battery</h4>
                       <div className="space-y-1.5">
                         <div className="flex justify-between text-[10px]">
@@ -3350,7 +3350,7 @@ const DeviceCenterPanel = memo(({
                   </div>
 
                   {/* Performance Rings */}
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-zinc-800/50 to-zinc-900/50 border border-zinc-700/30">
+                  <div className="p-3 rounded-xl bg-linear-to-br from-zinc-800/50 to-zinc-900/50 border border-zinc-700/30">
                     <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-3">Real-Time Metrics</h4>
                     <div className="flex justify-around">
                       <PerformanceRing
@@ -3386,7 +3386,7 @@ const DeviceCenterPanel = memo(({
                   className="space-y-3"
                 >
                   {/* Connection Status */}
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20">
+                  <div className="p-3 rounded-xl bg-linear-to-br from-white/10 to-white/5 border border-white/20">
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="text-[10px] font-bold text-white uppercase tracking-wider">Connection</h4>
                       <ConnectionStatusBadge 
@@ -3417,7 +3417,7 @@ const DeviceCenterPanel = memo(({
                   </div>
 
                   {/* Speed Test */}
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-zinc-800/50 to-zinc-900/50 border border-zinc-700/30">
+                  <div className="p-3 rounded-xl bg-linear-to-br from-zinc-800/50 to-zinc-900/50 border border-zinc-700/30">
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Speed Test</h4>
                       <motion.button
@@ -3463,7 +3463,7 @@ const DeviceCenterPanel = memo(({
                   </div>
 
                   {/* Network Quality */}
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-zinc-800/50 to-zinc-900/50 border border-zinc-700/30">
+                  <div className="p-3 rounded-xl bg-linear-to-br from-zinc-800/50 to-zinc-900/50 border border-zinc-700/30">
                     <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-3">Quality Assessment</h4>
                     <div className="flex justify-around">
                       <PerformanceRing
@@ -3499,7 +3499,7 @@ const DeviceCenterPanel = memo(({
                   className="space-y-3"
                 >
                   {/* Core Web Vitals */}
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20">
+                  <div className="p-3 rounded-xl bg-linear-to-br from-white/10 to-white/5 border border-white/20">
                     <h4 className="text-[10px] font-bold text-white uppercase tracking-wider mb-2">Core Web Vitals</h4>
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-[10px]">
@@ -3559,7 +3559,7 @@ const DeviceCenterPanel = memo(({
                   </div>
 
                   {/* Real-Time Performance */}
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-zinc-800/50 to-zinc-900/50 border border-zinc-700/30">
+                  <div className="p-3 rounded-xl bg-linear-to-br from-zinc-800/50 to-zinc-900/50 border border-zinc-700/30">
                     <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-3">Runtime Performance</h4>
                     <div className="flex justify-around">
                       <PerformanceRing
@@ -3584,7 +3584,7 @@ const DeviceCenterPanel = memo(({
                   </div>
 
                   {/* FPS Candlestick Chart */}
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-zinc-800/50 to-zinc-900/50 border border-zinc-700/30">
+                  <div className="p-3 rounded-xl bg-linear-to-br from-zinc-800/50 to-zinc-900/50 border border-zinc-700/30">
                     <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">FPS History</h4>
                     <div className="flex justify-center">
                       <FpsCandlestickChart fps={fps} width={260} height={80} candleCount={15} />
@@ -3603,7 +3603,7 @@ const DeviceCenterPanel = memo(({
                   className="space-y-3"
                 >
                   {/* User Info */}
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20">
+                  <div className="p-3 rounded-xl bg-linear-to-br from-white/10 to-white/5 border border-white/20">
                     <h4 className="text-[10px] font-bold text-white uppercase tracking-wider mb-2">Account Status</h4>
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-[10px]">
@@ -3642,7 +3642,7 @@ const DeviceCenterPanel = memo(({
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => window.location.href = '/login'}
-                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-white to-white text-white font-bold text-xs"
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-linear-to-r from-white to-white text-white font-bold text-xs"
                       >
                         <User className="w-4 h-4" />
                         Sign In / Register
@@ -3655,7 +3655,7 @@ const DeviceCenterPanel = memo(({
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => window.dispatchEvent(new CustomEvent('openAdminVIPPanel'))}
-                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-white to-white text-white font-bold text-xs"
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-linear-to-r from-white to-white text-white font-bold text-xs"
                       >
                         <Shield className="w-4 h-4" />
                         Admin Panel
@@ -3664,7 +3664,7 @@ const DeviceCenterPanel = memo(({
                   </div>
 
                   {/* Session Info */}
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-zinc-800/50 to-zinc-900/50 border border-zinc-700/30">
+                  <div className="p-3 rounded-xl bg-linear-to-br from-zinc-800/50 to-zinc-900/50 border border-zinc-700/30">
                     <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">Session Info</h4>
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-[10px]">
@@ -3697,7 +3697,7 @@ const DeviceCenterPanel = memo(({
           </div>
 
           {/* Footer */}
-          <div className="p-3 border-t border-white/20 bg-gradient-to-r from-white/5 to-white/5">
+          <div className="p-3 border-t border-white/20 bg-linear-to-r from-white/5 to-white/5">
             <div className="text-[8px] text-zinc-500 text-center">
               All data from real device APIs • Auto-refreshing
             </div>
@@ -3832,7 +3832,7 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false, onNewMessa
     return (
       <div className="flex flex-col items-center justify-center py-8 px-4">
         <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${
-          isVipChannel ? 'bg-gradient-to-r from-blue-500 to-cyan-500' : 'bg-white/20'
+          isVipChannel ? 'bg-linear-to-r from-blue-500 to-cyan-500' : 'bg-white/20'
         }`}>
           {isVipChannel ? (
             <Crown className="w-6 h-6 text-white" />
@@ -3901,7 +3901,7 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false, onNewMessa
           className="block bg-white/5 hover:bg-white/10 rounded-lg p-3 border border-white/10 hover:border-white/40 transition-all group"
         >
           <div className="flex items-start gap-2">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 bg-gradient-to-br ${
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 bg-linear-to-br ${
               channel === 'vip' ? 'from-blue-500 to-cyan-500' :
               channel === 'shop' ? 'from-white to-teal-500' :
               channel === 'trades' ? 'from-white to-white' :
@@ -3979,7 +3979,7 @@ const LiveTradesTicker = memo(() => {
       rel="noopener noreferrer"
       className="block mt-0 -translate-y-0.5"
     >
-      <div className="px-1 py-0.5 bg-gradient-to-br from-zinc-900/95 via-zinc-800/95 to-zinc-900/90 backdrop-blur-xl rounded-b-lg border-x border-b border-white/30 hover:border-white/50 transition-all overflow-hidden">
+      <div className="px-1 py-0.5 bg-linear-to-br from-zinc-900/95 via-zinc-800/95 to-zinc-900/90 backdrop-blur-xl rounded-b-lg border-x border-b border-white/30 hover:border-white/50 transition-all overflow-hidden">
         <div className="flex items-center justify-between mb-0.5">
           <div className="flex items-center gap-0.5">
             <motion.div className="w-1 h-1 bg-white rounded-full"
@@ -4003,7 +4003,7 @@ const LiveTradesTicker = memo(() => {
         </AnimatePresence>
         
         <div className="mt-0.5 h-[1px] bg-zinc-700/40 rounded-full overflow-hidden">
-          <motion.div className="h-full bg-gradient-to-r from-white via-white to-white"
+          <motion.div className="h-full bg-linear-to-r from-white via-white to-white"
             initial={{ width: '0%' }}
             animate={{ width: '100%' }}
             transition={{ duration: 4, ease: 'linear' }}
@@ -4035,7 +4035,7 @@ const TradingTipPill = memo(() => {
   }, []);
 
   return (
-    <div className="relative rounded-r-full bg-gradient-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl px-1.5 py-1 overflow-hidden max-w-[180px]">
+    <div className="relative rounded-r-full bg-linear-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl px-1.5 py-1 overflow-hidden max-w-[180px]">
       <div className="flex items-center gap-1.5 relative z-10">
         <motion.div animate={isSpinning ? { rotate: 360, scale: [1, 1.2, 1] } : {}} transition={{ duration: 0.5 }}>
           <Sparkles className="w-2.5 h-2.5 text-white" />
@@ -4122,7 +4122,7 @@ const ModalWrapper = memo(({
             exit={animations.modalContent.exit as TargetAndTransition}
             transition={animations.modalContent.transition}
             onClick={e => e.stopPropagation()}
-            className={`relative w-full max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 border ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl'} ${colorClasses[color]}`}
+            className={`relative w-full max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-linear-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 border ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl'} ${colorClasses[color]}`}
             style={{ maxWidth }}
           >
             {children}
@@ -4159,7 +4159,7 @@ const TradingModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () =
   return (
     <ModalWrapper isOpen={isOpen} onClose={onClose}>
       {/* Header */}
-      <div className="p-3 border-b border-white/20 bg-gradient-to-r from-white/10 to-white/10">
+      <div className="p-3 border-b border-white/20 bg-linear-to-r from-white/10 to-white/10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <BarChart3 className="w-4 h-4 text-white" />
@@ -4345,7 +4345,7 @@ const CommunityModal = memo(({ isOpen, onClose, isVip, isAdmin }: {
   return (
     <ModalWrapper isOpen={isOpen} onClose={onClose} color="cyan">
       {/* Header */}
-      <div className="p-3 border-b border-white/20 bg-gradient-to-r from-white/10 to-white/10">
+      <div className="p-3 border-b border-white/20 bg-linear-to-r from-white/10 to-white/10">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <MessageSquare className="w-4 h-4 text-white" />
@@ -4409,7 +4409,7 @@ const CommunityModal = memo(({ isOpen, onClose, isVip, isAdmin }: {
             onClick={handleCopyLink}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 sm:py-2 px-2 sm:px-3 rounded-md sm:rounded-lg bg-gradient-to-r from-white to-white text-white font-semibold text-[10px] sm:text-xs"
+            className="flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 sm:py-2 px-2 sm:px-3 rounded-md sm:rounded-lg bg-linear-to-r from-white to-white text-white font-semibold text-[10px] sm:text-xs"
           >
             {copied ? <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> : <Copy className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
             {copied ? 'Copied!' : 'Copy Link'}
@@ -4429,7 +4429,7 @@ const CommunityModal = memo(({ isOpen, onClose, isVip, isAdmin }: {
                 onTouchStart={(e) => e.stopPropagation()}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className={`flex items-center justify-center gap-0.5 sm:gap-1 py-1 sm:py-1 px-1.5 sm:px-2 rounded-md bg-gradient-to-r ${link.color} text-white font-semibold text-[10px] sm:text-xs`}
+                className={`flex items-center justify-center gap-0.5 sm:gap-1 py-1 sm:py-1 px-1.5 sm:px-2 rounded-md bg-linear-to-r ${link.color} text-white font-semibold text-[10px] sm:text-xs`}
               >
                 <Icon className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" />
                 {link.name}
@@ -4664,9 +4664,9 @@ const BrowserModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () =
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             onClick={e => e.stopPropagation()}
-            className="w-[90vw] max-w-[320px] bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl rounded-2xl border border-white/40 shadow-2xl overflow-hidden"
+            className="w-[90vw] max-w-[320px] bg-linear-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl rounded-2xl border border-white/40 shadow-2xl overflow-hidden"
           >
-            <div className="p-4 border-b border-white/20 bg-gradient-to-r from-white/10 to-white/10">
+            <div className="p-4 border-b border-white/20 bg-linear-to-r from-white/10 to-white/10">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Monitor className="w-5 h-5 text-white" />
@@ -4697,7 +4697,7 @@ const BrowserModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                     whileHover={{ scale: 1.02, x: 4 }}
                     whileTap={{ scale: 0.98 }}
                     disabled={isLoading}
-                    className="w-full flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-white/10 to-white/10 hover:from-white/20 hover:to-white/20 text-white font-medium text-xs border border-white/30 hover:border-white/50 disabled:opacity-50"
+                    className="w-full flex items-center justify-between p-3 rounded-lg bg-linear-to-r from-white/10 to-white/10 hover:from-white/20 hover:to-white/20 text-white font-medium text-xs border border-white/30 hover:border-white/50 disabled:opacity-50"
                   >
                     <div className="flex items-center gap-2.5">
                       <div className="w-8 h-8 rounded-lg bg-white/20 border border-white/30 flex items-center justify-center">
@@ -6552,7 +6552,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         >
                           <motion.div
                             onClick={(e) => e.stopPropagation()}
-                            className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 border border-white/30 rounded-2xl p-6 max-w-md w-full mx-4 space-y-4"
+                            className="bg-linear-to-br from-zinc-900 via-zinc-800 to-zinc-900 border border-white/30 rounded-2xl p-6 max-w-md w-full mx-4 space-y-4"
                             style={{ boxShadow: '0 0 20px rgba(255, 255, 255, 0.4)' }}
                           >
                             <div className="flex items-center justify-between">
@@ -6647,7 +6647,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         </div>
 
                         {/* One-Click Trading */}
-                        <div className="p-3 rounded-xl bg-gradient-to-br from-white/20 to-white/20 border border-white/40" style={{ boxShadow: '0 0 12px rgba(255, 255, 255, 0.4)' }}>
+                        <div className="p-3 rounded-xl bg-linear-to-br from-white/20 to-white/20 border border-white/40" style={{ boxShadow: '0 0 12px rgba(255, 255, 255, 0.4)' }}>
                           <div className="flex items-center justify-between mb-3">
                             <h4 className="text-sm font-bold text-white neon-blue-text flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff' }}>
                               <Zap className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }} />
@@ -6831,7 +6831,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                           onClick={() => setShowBrokerSetup(true)}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
-                          className="px-6 py-3 rounded-lg bg-gradient-to-r from-white/30 to-white/30 text-white font-bold border border-white/60 neon-blue-text flex items-center gap-2"
+                          className="px-6 py-3 rounded-lg bg-linear-to-r from-white/30 to-white/30 text-white font-bold border border-white/60 neon-blue-text flex items-center gap-2"
                           style={{ boxShadow: '0 0 16px rgba(255, 255, 255, 0.4)' }}
                         >
                           <Zap className="w-5 h-5" />
@@ -8696,7 +8696,7 @@ export const UnifiedFpsPill = memo(({
                               TRADING HUB
                             </span>
                           </div>
-                          <div className="h-px w-48 bg-gradient-to-r from-transparent via-white to-transparent"
+                          <div className="h-px w-48 bg-linear-to-r from-transparent via-white to-transparent"
                             style={{ boxShadow: '0 0 8px #ffffff' }}
                           />
                         </div>
@@ -8710,7 +8710,7 @@ export const UnifiedFpsPill = memo(({
                             boxShadow: '0 0 8px #ffffff, 0 0 16px rgba(255, 255, 255,0.5), inset 0 0 8px rgba(255, 255, 255,0.3)'
                           }}
                         >
-                          <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-white/15 pointer-events-none z-10" />
+                          <div className="absolute inset-0 bg-linear-to-br from-white/15 via-transparent to-white/15 pointer-events-none z-10" />
                           <MiniGoldChart />
                         </div>
                         
@@ -8732,7 +8732,7 @@ export const UnifiedFpsPill = memo(({
                               </span>
                             </div>
                           </div>
-                          <div className="h-12 w-px bg-gradient-to-b from-transparent via-white to-transparent" style={{ boxShadow: '0 0 6px #ffffff' }} />
+                          <div className="h-12 w-px bg-linear-to-b from-transparent via-white to-transparent" style={{ boxShadow: '0 0 6px #ffffff' }} />
                           <div className="flex flex-col items-center gap-1">
                             <Bitcoin className="w-6 h-6 text-white neon-blue-icon" style={{ filter: 'drop-shadow(0 0 6px #ffffff)' }} />
                             <div className="flex flex-col items-center">
@@ -9005,7 +9005,7 @@ const FpsPill = memo(({
             hover: { x: -8, scale: 1.02 },
             minimized: { x: 2, scale: 0.95 }
           }}
-          className="relative rounded-l-3xl bg-gradient-to-br from-white/30 via-white/15 to-slate-900/40 backdrop-blur-2xl border-y border-l border-white/50 shadow-2xl hover:border-white/70 hover:shadow-white/40"
+          className="relative rounded-l-3xl bg-linear-to-br from-white/30 via-white/15 to-slate-900/40 backdrop-blur-2xl border-y border-l border-white/50 shadow-2xl hover:border-white/70 hover:shadow-white/40"
           onClick={(e) => {
             e.preventDefault();
             SoundEffects.click();
@@ -9069,9 +9069,9 @@ const TradingPill = memo(({ prices, isExpanded, onToggle }: {
         animate={{ x: [0, 8, 0, 6, 0] }}
         transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3, ease: 'easeInOut' }}
       >
-        <div className="relative rounded-r-full bg-gradient-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl hover:border-white/70">
+        <div className="relative rounded-r-full bg-linear-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl hover:border-white/70">
           <motion.div
-            className="absolute inset-0 rounded-r-full bg-gradient-to-r from-white/20 via-white/10 to-transparent"
+            className="absolute inset-0 rounded-r-full bg-linear-to-r from-white/20 via-white/10 to-transparent"
             animate={{ opacity: [0.3, 0.8, 0.3], scale: [1, 1.05, 1] }}
             transition={{ duration: 3, repeat: Infinity }}
             style={{ filter: 'blur(8px)' }}
@@ -9133,9 +9133,9 @@ const CommunityPill = memo(({ isExpanded, onToggle }: { isExpanded: boolean; onT
         animate={{ x: [0, 8, 0, 6, 0] }}
         transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3, ease: 'easeInOut' }}
       >
-        <div className="relative rounded-r-2xl bg-gradient-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl hover:border-white/70 min-w-[150px]">
+        <div className="relative rounded-r-2xl bg-linear-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl hover:border-white/70 min-w-[150px]">
           <motion.div
-            className="absolute inset-0 rounded-r-2xl bg-gradient-to-r from-white/20 via-white/10 to-transparent"
+            className="absolute inset-0 rounded-r-2xl bg-linear-to-r from-white/20 via-white/10 to-transparent"
             animate={{ opacity: [0.3, 0.8, 0.3], scale: [1, 1.05, 1] }}
             transition={{ duration: 3, repeat: Infinity }}
             style={{ filter: 'blur(8px)' }}
@@ -9182,9 +9182,9 @@ const BullMoneyTVPill = memo(({ isExpanded, onToggle }: { isExpanded: boolean; o
         animate={{ x: [0, 8, 0, 6, 0] }}
         transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3, ease: 'easeInOut' }}
       >
-        <div className="relative rounded-r-full bg-gradient-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl hover:border-white/70">
+        <div className="relative rounded-r-full bg-linear-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl hover:border-white/70">
           <motion.div
-            className="absolute inset-0 rounded-r-full bg-gradient-to-r from-white/20 via-fuchsia-500/10 to-transparent"
+            className="absolute inset-0 rounded-r-full bg-linear-to-r from-white/20 via-fuchsia-500/10 to-transparent"
             animate={{ opacity: [0.3, 0.8, 0.3], scale: [1, 1.05, 1] }}
             transition={{ duration: 2, repeat: Infinity }}
             style={{ filter: 'blur(8px)' }}

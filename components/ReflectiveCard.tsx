@@ -450,7 +450,7 @@ const ReflectiveCard = forwardRef<ReflectiveCardHandle, ReflectiveCardProps>(({
                 {/* 1. Header */}
                 <div className="flex items-center justify-between p-4 border-b border-white/10 bg-[#020617] z-10">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#2997FF] to-white p-[2px]">
+                        <div className="w-8 h-8 rounded-full bg-linear-to-tr from-[#2997FF] to-white p-[2px]">
                            <div className="w-full h-full rounded-full bg-black flex items-center justify-center text-[10px] font-bold">
                              {userData.name.slice(0,2)}
                            </div>

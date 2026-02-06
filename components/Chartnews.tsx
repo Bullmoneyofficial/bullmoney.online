@@ -163,7 +163,7 @@ const HighAestheticCard = memo(({
 }) => {
     const isMobile = useIsMobile();
         const cardSurface = quiet
-            ? "bg-gradient-to-b from-[#0b0f17] via-[#090d15] to-[#070a11] border border-white/10 shadow-[0_20px_50px_-35px_rgba(0,0,0,1)]"
+            ? "bg-linear-to-b from-[#0b0f17] via-[#090d15] to-[#070a11] border border-white/10 shadow-[0_20px_50px_-35px_rgba(0,0,0,1)]"
             : "bg-black";
         const iconFrame = quiet
             ? "border border-white/12 bg-white/5"
@@ -291,7 +291,7 @@ export const TradingViewDropdown = memo(({ onMarketChange, showTip, quiet = fals
   const { shouldSkipHeavyEffects, shouldDisableBackdropBlur } = useMobilePerformance();
   const chartHeight = isMobile ? 300 : 680;
     const containerClass = quiet
-        ? "relative mx-auto w-full max-w-screen-xl rounded-3xl bg-gradient-to-b from-[#0a0f17] via-[#0a0f17] to-[#060910] p-4 md:p-6 border border-white/10 shadow-[0_20px_50px_-35px_rgba(0,0,0,1)]"
+        ? "relative mx-auto w-full max-w-screen-xl rounded-3xl bg-linear-to-b from-[#0a0f17] via-[#0a0f17] to-[#060910] p-4 md:p-6 border border-white/10 shadow-[0_20px_50px_-35px_rgba(0,0,0,1)]"
         : "relative mx-auto w-full max-w-screen-xl rounded-3xl bg-black p-4 md:p-6";
     const frameBorder = quiet || shouldSkipHeavyEffects ? "border border-white/50" : "neon-blue-border";
     const closeText = quiet || shouldSkipHeavyEffects ? "text-white hover:text-white" : "neon-blue-text hover:neon-white-text";
@@ -839,7 +839,7 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                                 ) : (
                                                     <div className="h-44 w-full bg-black animate-pulse" />
                                                 )}
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                                                <div className="absolute inset-0 bg-linear-to-t from-black via-black/40 to-transparent" />
                                                 <button
                                                     type="button"
                                                     onClick={(e) => {
@@ -1191,7 +1191,7 @@ export function CTA() {
   }, []);
 
     return (
-        <div id="market-dashboard" className="w-full full-bleed viewport-full overflow-x-hidden bg-gradient-to-b from-[#05070c] via-[#060910] to-[#04060b] px-0 md:px-8 py-12">
+        <div id="market-dashboard" className="w-full full-bleed viewport-full overflow-x-hidden bg-linear-to-b from-[#05070c] via-[#060910] to-[#04060b] px-0 md:px-8 py-12">
             <style>{GLOBAL_STYLES}</style>
             <div className="mx-auto w-full max-w-6xl px-4 md:px-0">
                 <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] shadow-[0_25px_60px_-40px_rgba(0,0,0,1)] backdrop-blur-xl p-5 sm:p-7">

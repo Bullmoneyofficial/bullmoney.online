@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useShop, Product, Category } from "./ShopContext";
 import AdminLoginModal from "./AdminLoginModal";
 import AdminPanel from "./AdminPanel";
+import CountUp from "@/components/CountUp";
+import TextType from "@/components/TextType";
 import { gsap } from "gsap";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -226,7 +228,7 @@ function ProductBentoCard({
               layoutId={`card-category-${product.id}`}
               className="px-2.5 py-1 rounded-full bg-indigo-950/50 text-indigo-300 text-[10px] font-bold uppercase tracking-widest border border-indigo-500/20"
             >
-              {product.category}
+              <TextType text={product.category} typingSpeed={Math.max(5, 25 - product.category.length)} showCursor={false} loop={false} as="span" />
             </motion.div>
             {isAdmin && !product.visible && (
               <span className="text-[9px] px-2 py-0.5 rounded-md border border-yellow-500/30 text-yellow-500 bg-yellow-500/10 font-bold uppercase tracking-wider">
@@ -244,7 +246,7 @@ function ProductBentoCard({
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             />
             {/* Gloss Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#060010] via-transparent to-transparent opacity-60" />
+            <div className="absolute inset-0 bg-linear-to-t from-[#060010] via-transparent to-transparent opacity-60" />
           </div>
 
           {/* CONTENT */}
@@ -253,15 +255,15 @@ function ProductBentoCard({
               layoutId={`card-title-${product.id}`}
               className="text-lg font-bold text-white mb-2 leading-tight line-clamp-1"
             >
-              {product.name}
+              <TextType text={product.name} typingSpeed={Math.max(5, 25 - product.name.length / 2)} showCursor={false} loop={false} as="span" />
             </motion.h2>
             <p className="text-slate-400 text-xs line-clamp-2 leading-relaxed mb-4 flex-grow">
-              {product.description}
+              <TextType text={product.description} typingSpeed={Math.max(2, 15 - product.description.length / 20)} showCursor={false} loop={false} as="span" />
             </p>
 
             <div className="flex items-center justify-between pt-3 border-t border-indigo-900/20 mt-auto">
-              <span className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-white">
-                ${formatPriceDisplay(product.price)} 
+              <span className="text-xl font-bold text-transparent bg-clip-text bg-linear-to-r from-indigo-400 to-white">
+                $<CountUp to={Number(product.price) || 0} from={0} duration={1.5} separator="," className="" />
               </span>
               
               {/* COMING_SOON_BUTTON: To re-enable, add onClick={handleBuyNow}, change bg to bg-indigo-600 hover:bg-indigo-500, remove disabled, and text to "Get Access" */}
@@ -416,10 +418,10 @@ export default function ProductsSection() {
         <div className="flex flex-col items-center justify-center mb-16 text-center">
             <div className="relative mb-6">
                 <h1 className="text-4xl md:text-7xl font-bold text-white tracking-tighter">
-                   BULLMONEY <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-white">VIP</span>
+                   BULLMONEY <span className="text-transparent bg-clip-text bg-linear-to-r from-indigo-400 to-white">VIP</span>
                 </h1>
                 {/* Decorative Line */}
-                <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-transparent via-indigo-500 to-transparent blur-[1px]" />
+                <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-24 h-1 bg-linear-to-r from-transparent via-indigo-500 to-transparent blur-[1px]" />
             </div>
             
             <p className="text-slate-400 max-w-xl mx-auto text-sm md:text-base leading-relaxed">
@@ -556,8 +558,8 @@ export default function ProductsSection() {
                                         alt={p.name}
                                         className="w-full h-full object-cover"
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-[#060010] via-transparent to-transparent opacity-80 md:hidden" />
-                                    <div className="absolute inset-0 bg-gradient-to-r from-[#060010] via-transparent to-transparent opacity-80 hidden md:block" style={{ transform: 'rotate(180deg)' }} />
+                                    <div className="absolute inset-0 bg-linear-to-t from-[#060010] via-transparent to-transparent opacity-80 md:hidden" />
+                                    <div className="absolute inset-0 bg-linear-to-r from-[#060010] via-transparent to-transparent opacity-80 hidden md:block" style={{ transform: 'rotate(180deg)' }} />
                                     
                                     <motion.div 
                                         layoutId={`card-category-${pid}`}
@@ -579,7 +581,7 @@ export default function ProductsSection() {
                                     </motion.h2>
                                     
                                     <div className="flex items-center gap-4 mb-8">
-                                        <span className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-white">
+                                        <span className="text-3xl font-bold text-transparent bg-clip-text bg-linear-to-r from-indigo-400 to-white">
                                             ${formatPriceDisplay(p.price)}
                                         </span>
                                     </div>

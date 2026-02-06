@@ -82,7 +82,7 @@ export const BoredPopup = React.memo(function BoredPopup({
     >
       <div className="relative">
         {/* Main bubble */}
-        <div className="relative px-4 py-2.5 rounded-2xl bg-gradient-to-r from-white/95 via-sky-500/95 to-white/95 border border-sky-400/50 shadow-xl shadow-sky-500/30 backdrop-blur-sm">
+        <div className="relative px-4 py-2.5 rounded-2xl bg-linear-to-r from-white/95 via-sky-500/95 to-white/95 border border-sky-400/50 shadow-xl shadow-sky-500/30 backdrop-blur-sm">
           {/* Shimmer */}
           <GameShimmer colors="rainbow" speed="fast" />
           
@@ -110,7 +110,7 @@ export const BoredPopup = React.memo(function BoredPopup({
         </div>
         
         {/* Speech bubble tail */}
-        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-gradient-to-br from-white/95 to-sky-600/95 rotate-45 border-r border-b border-sky-400/50" />
+        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-linear-to-br from-white/95 to-sky-600/95 rotate-45 border-r border-b border-sky-400/50" />
       </div>
     </motion.div>
   );
@@ -155,7 +155,7 @@ export const QuickGameTutorial = React.memo(function QuickGameTutorial({
       onMouseEnter={() => onHoverChange?.(true)}
       onMouseLeave={() => onHoverChange?.(false)}
     >
-      <div className="relative overflow-hidden rounded-2xl border border-sky-400/25 bg-gradient-to-br from-blue-950/92 via-slate-900/95 to-blue-950/92 backdrop-blur-xl shadow-2xl">
+      <div className="relative overflow-hidden rounded-2xl border border-sky-400/25 bg-linear-to-br from-blue-950/92 via-slate-900/95 to-blue-950/92 backdrop-blur-xl shadow-2xl">
         <GameShimmer colors="blue" speed="fast" />
 
         <button
@@ -180,15 +180,15 @@ export const QuickGameTutorial = React.memo(function QuickGameTutorial({
 
           <div className="space-y-1.5 text-[10px] text-white/75">
             <div className="flex items-start gap-2">
-              <span className="mt-[3px] inline-block w-1.5 h-1.5 rounded-full bg-sky-200/80" />
+              <span className="mt-0.75 inline-block w-1.5 h-1.5 rounded-full bg-sky-200/80" />
               <span>Press Start to begin.</span>
             </div>
             <div className="flex items-start gap-2">
-              <span className="mt-[3px] inline-block w-1.5 h-1.5 rounded-full bg-sky-200/80" />
+              <span className="mt-0.75 inline-block w-1.5 h-1.5 rounded-full bg-sky-200/80" />
               <span>Move your cursor near it to make it run.</span>
             </div>
             <div className="flex items-start gap-2">
-              <span className="mt-[3px] inline-block w-1.5 h-1.5 rounded-full bg-sky-200/80" />
+              <span className="mt-0.75 inline-block w-1.5 h-1.5 rounded-full bg-sky-200/80" />
               <span>Click it to catch and score.</span>
             </div>
           </div>
@@ -262,7 +262,7 @@ export const QuickGameTutorial = React.memo(function QuickGameTutorial({
           exit={{ opacity: 0, y: 10, scale: 0.98 }}
           transition={{ type: "spring", stiffness: 280, damping: 22 }}
           className={cn(
-            "fixed w-[300px] pointer-events-auto",
+            "fixed w-75 pointer-events-auto",
             playerSide === "left" ? "left-3" : "right-3",
             className
           )}
@@ -316,7 +316,7 @@ export const QuickGameTutorialDemo = React.memo(function QuickGameTutorialDemo({
             onClick={(e) => e.stopPropagation()}
             className={cn(
               "relative w-[320px] max-w-[92vw] rounded-2xl overflow-hidden",
-              "bg-gradient-to-br from-blue-950/92 via-slate-900/95 to-blue-950/92",
+              "bg-linear-to-br from-blue-950/92 via-slate-900/95 to-blue-950/92",
               "border border-sky-400/25 shadow-2xl"
             )}
           >
@@ -515,14 +515,14 @@ export const CompactGameHUD = React.memo(function CompactGameHUD({
         {/* Energy bar */}
         <div className="relative h-1.5 rounded-full bg-black/50 overflow-hidden">
           <motion.div
-            className={cn("h-full rounded-full bg-gradient-to-r", getEnergyGradient())}
+            className={cn("h-full rounded-full bg-linear-to-r", getEnergyGradient())}
             animate={{ width: `${energy}%` }}
             transition={{ type: "spring", stiffness: 100, damping: 20 }}
           />
           {/* Shimmer on energy bar */}
           {variant !== "attached" && energy > 50 && (
             <div
-              className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-white/40 to-transparent"
+              className="shimmer-line shimmer-gpu absolute inset-y-0 -left-full w-full bg-linear-to-r from-transparent via-white/40 to-transparent"
               style={{ animationDuration: "3s" }}
             />
           )}
@@ -578,7 +578,7 @@ export const GameControls = React.memo(function GameControls({
           disabled={disabled}
           className={cn(
             "relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg overflow-hidden",
-            "bg-gradient-to-r from-white/40 via-sky-500/35 to-white/40",
+            "bg-linear-to-r from-white/40 via-sky-500/35 to-white/40",
             "border border-white/50 hover:border-sky-300/70",
             "text-[10px] font-medium text-sky-200 hover:text-sky-100",
             "transition-all duration-200",
@@ -599,7 +599,7 @@ export const GameControls = React.memo(function GameControls({
           disabled={disabled}
           className={cn(
             "relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg overflow-hidden",
-            "bg-gradient-to-r from-white/40 via-sky-500/35 to-white/40",
+            "bg-linear-to-r from-white/40 via-sky-500/35 to-white/40",
             "border border-white/50 hover:border-sky-300/70",
             "text-[10px] font-medium text-sky-200 hover:text-sky-100",
             "transition-all duration-200",
@@ -770,7 +770,7 @@ export const MotionTrail = React.memo(function MotionTrail({
   return (
     <motion.div
       className={cn(
-        "absolute inset-y-0 w-16 bg-gradient-to-r pointer-events-none",
+        "absolute inset-y-0 w-16 bg-linear-to-r pointer-events-none",
         colorMap[color],
         direction > 0 ? "-left-16" : "-right-16"
       )}
@@ -1006,7 +1006,7 @@ export const StatusBadge = React.memo(function StatusBadge({
     >
       {status === "escaped" && !skipHeavyEffects && (
         <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent"
+          className="absolute inset-0 bg-linear-to-r from-transparent via-white/25 to-transparent"
           animate={{ x: ["-120%", "220%"] }}
           transition={{ duration: 1.6, repeat: Infinity, ease: "linear", repeatDelay: 0.6 }}
           aria-hidden
@@ -1131,7 +1131,7 @@ export const AnimatedTip = React.memo(function AnimatedTip({
         </motion.span>
         <span>{text}</span>
         <div
-          className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-white/10 to-transparent"
+          className="shimmer-line shimmer-gpu absolute inset-y-0 -left-full w-full bg-linear-to-r from-transparent via-white/10 to-transparent"
           style={{ animationDuration: "5s", animationDelay: `${delay}s` }}
         />
       </motion.div>
@@ -1162,10 +1162,10 @@ export const StepGuide = React.memo(function StepGuide({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className="relative p-3 rounded-xl bg-gradient-to-br from-white/40 to-white/25 border border-white/50 overflow-hidden"
+      className="relative p-3 rounded-xl bg-linear-to-br from-white/40 to-white/25 border border-white/50 overflow-hidden"
     >
       <div
-        className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-white/10 to-transparent"
+        className="shimmer-line shimmer-gpu absolute inset-y-0 -left-full w-full bg-linear-to-r from-transparent via-white/10 to-transparent"
         style={{ animationDuration: "5s" }}
       />
 
@@ -1383,7 +1383,7 @@ export const EnergyBar = React.memo(function EnergyBar({
         variant === "game" ? "bg-black/40 border border-white/10" : "bg-white/10"
       )}>
         <motion.div
-          className={cn("h-full rounded-full bg-gradient-to-r", getEnergyColor())}
+          className={cn("h-full rounded-full bg-linear-to-r", getEnergyColor())}
           initial={{ width: 0 }}
           animate={{ width: `${percentage}%` }}
           transition={{ type: "spring", stiffness: 100, damping: 15 }}
@@ -1391,7 +1391,7 @@ export const EnergyBar = React.memo(function EnergyBar({
         {/* Shimmer effect when high energy */}
         {percentage > 70 && (
           <div
-            className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-transparent via-white/30 to-transparent"
+            className="shimmer-line shimmer-gpu absolute inset-y-0 -left-full w-full bg-linear-to-r from-transparent via-white/30 to-transparent"
             style={{ animationDuration: "3s" }}
           />
         )}
@@ -1447,7 +1447,7 @@ export const GameStats = React.memo(function GameStats({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="p-3 rounded-xl bg-gradient-to-br from-white/10 to-white/10 border border-white/20 backdrop-blur-sm"
+      className="p-3 rounded-xl bg-linear-to-br from-white/10 to-white/10 border border-white/20 backdrop-blur-sm"
     >
       {/* Current Score with animation */}
       <div className="flex items-center justify-between mb-3">
@@ -1469,7 +1469,7 @@ export const GameStats = React.memo(function GameStats({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="mb-3 py-2 px-3 rounded-lg bg-gradient-to-r from-sky-500/20 to-white/20 border border-sky-400/30 text-center"
+            className="mb-3 py-2 px-3 rounded-lg bg-linear-to-r from-sky-500/20 to-white/20 border border-sky-400/30 text-center"
           >
             <motion.span
               animate={skipHeavyEffects ? {} : { scale: [1, 1.1, 1] }}
@@ -1542,7 +1542,7 @@ export const GameHUD = React.memo(function GameHUD({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -10, scale: 0.95 }}
       className={cn(
-        "fixed z-[10000] pointer-events-none",
+        "fixed z-10000 pointer-events-none",
         isMobile ? "top-20 left-3 right-3" : "top-4 left-1/2 -translate-x-1/2"
       )}
     >
@@ -1645,14 +1645,14 @@ export const TouchIndicator = React.memo(function TouchIndicator({
 
   return (
     <motion.div
-      className="fixed z-[9995] pointer-events-none"
+      className="fixed z-9995 pointer-events-none"
       style={{ left: position.x - 30, top: position.y - 30 }}
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       exit={{ scale: 0, opacity: 0 }}
     >
       <motion.div
-        className="w-[60px] h-[60px] rounded-full border-2 border-white/50"
+        className="w-15 h-15 rounded-full border-2 border-white/50"
         animate={{ 
           scale: [1, 1.5, 1],
           opacity: [0.5, 0.2, 0.5],
@@ -1691,7 +1691,7 @@ export const GameOverScreen = React.memo(function GameOverScreen({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[10001] flex items-center justify-center bg-black/60 backdrop-blur-sm pointer-events-auto"
+      className="fixed inset-0 z-10001 flex items-center justify-center bg-black/60 backdrop-blur-sm pointer-events-auto"
       onClick={onClose}
     >
       <motion.div
@@ -1700,8 +1700,8 @@ export const GameOverScreen = React.memo(function GameOverScreen({
         exit={{ scale: 0.9, y: 10 }}
         onClick={(e) => e.stopPropagation()}
         className={cn(
-          "relative w-[280px] p-6 rounded-2xl border shadow-2xl overflow-hidden",
-          "bg-gradient-to-br from-blue-950/90 via-slate-900/95 to-blue-950/90",
+          "relative w-70 p-6 rounded-2xl border shadow-2xl overflow-hidden",
+          "bg-linear-to-br from-blue-950/90 via-slate-900/95 to-blue-950/90",
           wasCaught ? "border-white/10" : "border-sky-400/25"
         )}
       >
@@ -1787,7 +1787,7 @@ export const GameOverScreen = React.memo(function GameOverScreen({
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-4 py-2 px-4 rounded-xl bg-gradient-to-r from-sky-500/20 to-white/20 border border-sky-400/30 text-center"
+              className="mb-4 py-2 px-4 rounded-xl bg-linear-to-r from-sky-500/20 to-white/20 border border-sky-400/30 text-center"
             >
               <motion.div
                 animate={skipHeavyEffects ? {} : { scale: [1, 1.05, 1] }}
@@ -1813,7 +1813,7 @@ export const GameOverScreen = React.memo(function GameOverScreen({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={onPlayAgain}
-            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-white to-white text-white font-bold text-sm hover:from-white hover:to-white transition-all"
+            className="flex-1 py-3 rounded-xl bg-linear-to-r from-white to-white text-white font-bold text-sm hover:from-white hover:to-white transition-all"
           >
             Play Again
           </motion.button>

@@ -103,7 +103,7 @@
   }
   
   /* Ensure modal panels/cards inside fixed containers are above backdrops */
-  .fixed.inset-0 > .bg-gradient-to-br,
+  .fixed.inset-0 > .bg-linear-to-br,
   .fixed.inset-0 > div[class*="rounded"],
   .fixed.inset-0 > div[class*="shadow"] {
     position: relative !important;

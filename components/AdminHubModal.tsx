@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion, type TargetAndTransition } from "framer-motion";
 import {
   BarChart3,
   ClipboardList,
   Crown,
   Database,
+  Mail,
   Package,
   RefreshCw,
   Save,
@@ -19,12 +19,17 @@ import {
   GraduationCap,
   Users,
   HelpCircle,
+  ShoppingBag,
 } from "lucide-react";
 import { createSupabaseClient } from "@/lib/supabase";
 import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 import CourseAdminPanel from "@/components/CourseAdminPanel";
 import AffiliateAdminPanel from "@/app/recruit/AffiliateAdminPanel";
 import AdminAffiliateCalculator from "@/components/AdminAffiliateCalculator";
+import EmailAdminPanel from "@/components/EmailAdminPanel";
+import StoreAnalyticsPanel from "@/components/StoreAnalyticsPanel";
+import StorePromoManager from "@/components/StorePromoManager";
+import RewardsAdminPanel from "@/components/RewardsAdminPanel";
 
 // Generate a reasonably unique id when inserting rows from the client
 const safeId = () =>
@@ -47,7 +52,7 @@ const Row: React.FC<RowProps> = ({ title, subtitle, meta, onEdit, onDelete }) =>
       {subtitle ? <div className="text-slate-300 text-xs truncate">{subtitle}</div> : null}
       {meta ? <div className="text-slate-400 text-[11px] truncate">{meta}</div> : null}
     </div>
-    <div className="flex items-center gap-2 flex-shrink-0">
+    <div className="flex items-center gap-2 shrink-0">
       <button
         onClick={onEdit}
         className="p-1.5 rounded-md bg-white/20 hover:bg-white/30 border border-white/40 text-white transition-colors"
@@ -76,7 +81,7 @@ type TabButtonProps = {
 const TabButton: React.FC<TabButtonProps> = ({ label, icon, active, onClick }) => (
   <button
     onClick={onClick}
-    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm border transition-colors flex-shrink-0 whitespace-nowrap scroll-snap-align-start ${
+    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm border transition-colors shrink-0 whitespace-nowrap scroll-snap-align-start ${
       active
         ? "border-white/70 bg-white/10 text-white"
         : "border-slate-800 bg-slate-900/60 text-slate-300 hover:border-slate-700"
@@ -200,7 +205,7 @@ const MediaAttachmentList: React.FC<{ attachments?: any[]; skipEmbed?: boolean }
                 href={url}
                 target="_blank"
                 rel="noreferrer"
-                className="text-white text-sm hover:text-white break-words"
+                className="text-white text-sm hover:text-white wrap-break-word"
               >
                 {url}
               </a>
@@ -242,17 +247,19 @@ export function AdminHubModal({
   isOpen: boolean;
   onClose: () => void;
 }) {
-  // Mobile performance optimization
-  const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects } = useMobilePerformance();
+  // Performance optimization – always skip heavy render effects in admin panel on ALL devices
+  const { isMobile } = useMobilePerformance();
+  const shouldSkipHeavyEffects = true; // Admin panel always lightweight
   
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const adminEmailEnv = process.env.NEXT_PUBLIC_ADMIN_EMAIL?.toLowerCase() || "";
   const supabase = useMemo(() => createSupabaseClient(), []);
   const [activeTab, setActiveTab] = useState<
-    "products" | "services" | "livestream" | "analysis" | "recruits" | "course" | "affiliate" | "faq"
+    "products" | "services" | "livestream" | "analysis" | "recruits" | "course" | "affiliate" | "email" | "faq" | "store"
   >("products");
   const [affiliateView, setAffiliateView] = useState<"calculator" | "admin">("calculator");
+  const [storeView, setStoreView] = useState<"analytics" | "promos" | "rewards">("analytics");
   const [busy, setBusy] = useState(false);
   const isSyncing = useRef(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -583,14 +590,8 @@ export function AdminHubModal({
     }
   }, [isOpen, isAdmin, loadAll]);
 
-  // Auto-refresh every 1s while open (skip on mobile/low-end for better performance)
-  useEffect(() => {
-    if (!isOpen || !isAdmin || shouldSkipHeavyEffects) return;
-    const id = setInterval(() => {
-      syncTick();
-    }, 1000);
-    return () => clearInterval(id);
-  }, [isOpen, isAdmin, syncTick, shouldSkipHeavyEffects]);
+  // Auto-refresh disabled – admin panel skips heavy polling on all devices.
+  // Data is loaded once on open and can be manually refreshed via the Sync button.
 
   // -----------------------------------------------------------------------
   // CRUD HELPERS
@@ -889,7 +890,7 @@ export function AdminHubModal({
   // RENDER HELPERS
   // -----------------------------------------------------------------------
   const renderProducts = () => (
-    <div className="space-y-6 overflow-y-auto max-h-[70vh] pr-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900/60">
+    <div className="space-y-6">
       <div className="space-y-2">
         <div className="flex items-center justify-between px-2">
           <h3 className="text-white font-semibold text-sm">Store products (products table)</h3>
@@ -999,7 +1000,7 @@ export function AdminHubModal({
           const isEditing = vipForm.id === vid;
           const media = <ImagePreview src={p.image_url || p.imageUrl} alt={`VIP image: ${p.name || vid}`} />;
           const planPreview = p.planOptions ? (
-            <pre className="text-xs text-slate-200 bg-slate-900/60 rounded-md border border-slate-700 p-2 whitespace-pre-wrap break-words">{p.planOptions}</pre>
+            <pre className="text-xs text-slate-200 bg-slate-900/60 rounded-md border border-slate-700 p-2 whitespace-pre-wrap wrap-break-word">{p.planOptions}</pre>
           ) : null;
 
           return (
@@ -1174,7 +1175,7 @@ export function AdminHubModal({
     );
 
   const renderServices = () => (
-    <div className="space-y-2 overflow-y-auto overflow-x-hidden max-h-[70vh] pr-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900/60 [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]" style={{ touchAction: 'pan-y' }}>
+    <div className="space-y-2">
       <div className="flex items-center justify-between px-2">
         <h3 className="text-white font-semibold text-sm">Services</h3>
         <div className="flex items-center gap-2">
@@ -1333,7 +1334,7 @@ export function AdminHubModal({
   );
 
   const renderLivestream = () => (
-    <div className="space-y-3 overflow-y-auto overflow-x-hidden max-h-[70vh] pr-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900/60 [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]" style={{ touchAction: 'pan-y' }}>
+    <div className="space-y-3">
       <div className="flex items-center justify-between px-2">
         <h3 className="text-white font-semibold text-sm">Livestream videos</h3>
         <div className="flex items-center gap-2">
@@ -1464,7 +1465,7 @@ export function AdminHubModal({
   );
 
   const renderAnalyses = () => (
-    <div className="space-y-2 overflow-y-auto overflow-x-hidden max-h-[70vh] pr-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900/60 [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]" style={{ touchAction: 'pan-y' }}>
+    <div className="space-y-2">
       <div className="flex items-center justify-between px-2">
         <h3 className="text-white font-semibold text-sm">Analyses</h3>
         <div className="flex items-center gap-2">
@@ -1596,7 +1597,7 @@ export function AdminHubModal({
   );
 
   const renderRecruits = () => (
-    <div className="space-y-2 overflow-y-auto overflow-x-hidden max-h-[70vh] pr-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900/60 [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]" style={{ touchAction: 'pan-y' }}>
+    <div className="space-y-2">
       <div className="flex items-center justify-between px-2">
         <h3 className="text-white font-semibold text-sm">Recruits / VIP</h3>
         <div className="flex items-center gap-2">
@@ -1699,7 +1700,7 @@ export function AdminHubModal({
   );
 
   const renderFaq = () => (
-    <div className="space-y-2 overflow-y-auto max-h-[70vh] pr-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900/60 [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]">
+    <div className="space-y-2">
       <div className="flex items-center justify-between px-2">
         <h3 className="text-white font-semibold text-sm">FAQ Content Editor</h3>
         <div className="flex items-center gap-2">
@@ -1837,27 +1838,14 @@ export function AdminHubModal({
   // -----------------------------------------------------------------------
   // MAIN RENDER
   // -----------------------------------------------------------------------
-  return (
-    <AnimatePresence>
-      {isOpen && (
-          <motion.div
-            initial={animations.modalBackdrop.initial}
-            animate={animations.modalBackdrop.animate as TargetAndTransition}
-            exit={animations.modalBackdrop.exit}
-            transition={animations.modalBackdrop.transition}
-            className="fixed inset-0 z-[2147483647] flex items-center justify-center p-2 sm:p-4 bg-black/95 backdrop-blur-md"
-            onClick={onClose}
-          >
-          <motion.div
-            initial={animations.modalContent.initial}
-            animate={animations.modalContent.animate as TargetAndTransition}
-            exit={animations.modalContent.exit}
-            transition={animations.modalContent.transition}
+  return isOpen ? (
+        <div
+          className="fixed inset-0 z-2147483647 flex items-center justify-center p-2 sm:p-4 bg-black/95"
+          onClick={onClose}
+        >
+          <div
             onClick={(e) => e.stopPropagation()}
-              className={`w-full max-w-6xl sm:max-w-5xl md:max-w-6xl max-h-[92vh] overflow-y-auto overflow-x-hidden rounded-2xl border border-white/40 bg-gradient-to-b from-slate-950 via-slate-900 to-black [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain] ${
-                shouldSkipHeavyEffects ? '' : 'shadow-2xl shadow-white/40'
-              }`}
-              style={{ touchAction: 'auto' }}
+            className="w-full max-w-6xl sm:max-w-5xl md:max-w-6xl max-h-[92vh] overflow-hidden rounded-2xl border border-white/40 bg-linear-to-b from-slate-950 via-slate-900 to-black flex flex-col"
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/30 bg-white/10">
               <div className="flex items-center gap-2 text-white font-bold">
@@ -1869,7 +1857,7 @@ export function AdminHubModal({
                 )}
                 {busy ? (
                   <span className="text-[11px] text-slate-300 flex items-center gap-1">
-                    <RefreshCw className="w-3 h-3 animate-spin" /> syncing
+                    <RefreshCw className="w-3 h-3" /> syncing
                   </span>
                 ) : null}
               </div>
@@ -1889,7 +1877,10 @@ export function AdminHubModal({
               </div>
             </div>
 
-              <div className="px-3 sm:px-4 py-2 flex flex-nowrap sm:flex-wrap gap-1 sm:gap-2 overflow-x-auto overflow-y-hidden border-b border-slate-800 bg-slate-900/60 scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain] [scroll-snap-type:x_mandatory]" style={{ touchAction: 'pan-x pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
+              <div 
+                className="px-3 sm:px-4 py-2 flex flex-nowrap sm:flex-wrap gap-1 sm:gap-2 overflow-x-auto overflow-y-hidden border-b border-slate-800 bg-slate-900/60 scrollbar-none [-webkit-overflow-scrolling:touch] overscroll-x-contain [scroll-snap-type:x_mandatory] relative z-10" 
+                style={{ touchAction: 'pan-x pinch-zoom', WebkitOverflowScrolling: 'touch' }}
+              >
               <TabButton
                 label="Products"
                 icon={<Package className="w-4 h-4" />}
@@ -1933,6 +1924,18 @@ export function AdminHubModal({
                 onClick={() => setActiveTab("affiliate")}
               />
               <TabButton
+                label="Emails"
+                icon={<Mail className="w-4 h-4" />}
+                active={activeTab === "email"}
+                onClick={() => setActiveTab("email")}
+              />
+              <TabButton
+                label="Store Analytics"
+                icon={<ShoppingBag className="w-4 h-4" />}
+                active={activeTab === "store"}
+                onClick={() => setActiveTab("store")}
+              />
+              <TabButton
                 label="FAQ Editor"
                 icon={<HelpCircle className="w-4 h-4" />}
                 active={activeTab === "faq"}
@@ -1940,13 +1943,14 @@ export function AdminHubModal({
               />
             </div>
 
-              <div className="p-3 sm:p-4 bg-slate-950/70 overflow-hidden [overscroll-behavior:contain]">
+              <div className="p-3 sm:p-4 bg-slate-950/70 flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-900/30 hover:scrollbar-thumb-slate-500 relative z-0">
                 {!authChecked ? (
                   <div className="flex items-center justify-center gap-2 py-12 text-slate-300 text-sm">
-                    <RefreshCw className="w-4 h-4 animate-spin" /> Checking admin access...
+                    <RefreshCw className="w-4 h-4" /> Checking admin access...
                   </div>
                 ) : isAdmin ? (
-                  <>
+                  <div className="relative">
+                    {/* All sub-panels render without heavy effects */}
                     {activeTab === "products" && renderProducts()}
                     {activeTab === "services" && renderServices()}
                     {activeTab === "livestream" && renderLivestream()}
@@ -1954,6 +1958,46 @@ export function AdminHubModal({
                     {activeTab === "recruits" && renderRecruits()}
                     {activeTab === "course" && <CourseAdminPanel />}
                     {activeTab === "faq" && renderFaq()}
+                    {activeTab === "email" && <EmailAdminPanel />}
+                    {activeTab === "store" && (
+                      <div className="space-y-4">
+                        <div className="flex gap-2 p-1 bg-slate-900/50 rounded-lg border border-slate-800 w-fit">
+                          <button
+                            onClick={() => setStoreView?.("analytics")}
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                              (storeView || "analytics") === "analytics"
+                                ? "bg-white text-black"
+                                : "text-slate-400 hover:text-slate-300"
+                            }`}
+                          >
+                            Analytics
+                          </button>
+                          <button
+                            onClick={() => setStoreView?.("promos")}
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                              storeView === "promos"
+                                ? "bg-white text-black"
+                                : "text-slate-400 hover:text-slate-300"
+                            }`}
+                          >
+                            Promos & Gift Cards
+                          </button>
+                          <button
+                            onClick={() => setStoreView?.("rewards")}
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                              storeView === "rewards"
+                                ? "bg-white text-black"
+                                : "text-slate-400 hover:text-slate-300"
+                            }`}
+                          >
+                            Rewards
+                          </button>
+                        </div>
+                        {(storeView || "analytics") === "analytics" && <StoreAnalyticsPanel />}
+                        {storeView === "promos" && <StorePromoManager />}
+                        {storeView === "rewards" && <RewardsAdminPanel />}
+                      </div>
+                    )}
                     {activeTab === "affiliate" && (
                       <div className="space-y-4">
                         {/* Toggle between Calculator and Admin Panel */}
@@ -1988,7 +2032,7 @@ export function AdminHubModal({
                         )}
                       </div>
                     )}
-                  </>
+                  </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center gap-3 py-12 text-center text-slate-200">
                     <Shield className="w-6 h-6 text-amber-300" />
@@ -2017,15 +2061,13 @@ export function AdminHubModal({
               </div>
 
             {toast ? (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-lg bg-slate-800/90 text-white px-3 py-2 text-sm border border-white/40 shadow-lg">
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-lg bg-slate-800/90 text-white px-3 py-2 text-sm border border-white/40">
                 {toast}
               </div>
             ) : null}
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
+          </div>
+        </div>
+  ) : null;
 }
 
 // Small inline settings icon to avoid extra lucide import weight

@@ -534,7 +534,7 @@ export function TradingQuickAccess() {
             exit={animations.modalContent.exit as TargetAndTransition}
             transition={animations.modalContent.transition}
             onClick={(e) => e.stopPropagation()}
-            className={`relative w-full max-w-[500px] max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-purple-950/98 via-white/95 to-zinc-900/98 border border-white/50 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl shadow-white/50'}`}
+            className={`relative w-full max-w-[500px] max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-linear-to-br from-purple-950/98 via-white/95 to-zinc-900/98 border border-white/50 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl shadow-white/50'}`}
           >
               {/* Header */}
               <div className="p-3 sm:p-4 border-b border-white/30 bg-white/40">
@@ -891,10 +891,10 @@ export function TradingQuickAccess() {
           }}
         >
           {/* Pill Content */}
-          <div className="relative rounded-r-full bg-gradient-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl hover:border-white/70 hover:shadow-white/40">
+          <div className="relative rounded-r-full bg-linear-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl hover:border-white/70 hover:shadow-white/40">
             {/* Enhanced pulsing glow background - OPTIMIZED: reduced from 2s to 3s to reduce jank */}
             <motion.div
-              className="absolute inset-0 rounded-r-full bg-gradient-to-r from-white/20 via-white/10 to-transparent opacity-0"
+              className="absolute inset-0 rounded-r-full bg-linear-to-r from-white/20 via-white/10 to-transparent opacity-0"
               animate={{
                 opacity: [0.3, 0.8, 0.3],
                 scale: [1, 1.05, 1],
@@ -983,10 +983,10 @@ export function TradingQuickAccess() {
               className="mt-1 sm:mt-1.5 trading-tip-pill-container"
             >
               {/* Pill Container - Same style as price UI */}
-              <div className="trading-tip-pill relative rounded-r-full bg-gradient-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl hover:border-white/70 hover:shadow-white/40 transition-all duration-300 px-1.5 py-1 xs:px-2 xs:py-1 sm:px-3 sm:py-1.5 overflow-hidden max-w-[150px] xs:max-w-[180px] sm:max-w-none lg:min-w-[140px] xl:min-w-[160px] 2xl:min-w-[180px]">
+              <div className="trading-tip-pill relative rounded-r-full bg-linear-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl hover:border-white/70 hover:shadow-white/40 transition-all duration-300 px-1.5 py-1 xs:px-2 xs:py-1 sm:px-3 sm:py-1.5 overflow-hidden max-w-[150px] xs:max-w-[180px] sm:max-w-none lg:min-w-[140px] xl:min-w-[160px] 2xl:min-w-[180px]">
                 {/* Animated tip pulse background */}
                 <motion.div
-                  className="absolute inset-0 rounded-r-full bg-gradient-to-r from-white/15 via-white/10 to-transparent"
+                  className="absolute inset-0 rounded-r-full bg-linear-to-r from-white/15 via-white/10 to-transparent"
                   animate={{
                     opacity: [0, 0.5, 0],
                   }}
@@ -1081,7 +1081,7 @@ export function TradingQuickAccess() {
                 </div>
                 
                 {/* Subtle inner glow */}
-                <div className="absolute inset-0 rounded-r-full bg-gradient-to-r from-white/5 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 rounded-r-full bg-linear-to-r from-white/5 to-transparent pointer-events-none" />
               </div>
             </motion.div>
           )}
@@ -1157,10 +1157,10 @@ export function TradingQuickAccess() {
               exit={animations.modalContent.exit as TargetAndTransition}
               transition={animations.modalContent.transition}
               onClick={(e) => e.stopPropagation()}
-              className={`relative w-full max-w-[520px] max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 border border-white/30 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl shadow-white/20'}`}
+              className={`relative w-full max-w-[520px] max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-linear-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 border border-white/30 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl shadow-white/20'}`}
             >
                 {/* Header */}
-                <div className="p-2 sm:p-3 md:p-4 border-b border-white/20 bg-gradient-to-r from-white/10 to-white/10 flex-shrink-0">
+                <div className="p-2 sm:p-3 md:p-4 border-b border-white/20 bg-linear-to-r from-white/10 to-white/10 flex-shrink-0">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5 sm:gap-2">
                       <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white flex-shrink-0" />
@@ -1313,7 +1313,7 @@ export function TradingQuickAccess() {
                       transition-all duration-200 whitespace-nowrap
                       ${showForexFactory
                         ? 'bg-white/30 border border-white/50' 
-                        : 'bg-gradient-to-r from-zinc-700 to-zinc-600 hover:from-zinc-600 hover:to-zinc-500 border border-white/20'
+                        : 'bg-linear-to-r from-zinc-700 to-zinc-600 hover:from-zinc-600 hover:to-zinc-500 border border-white/20'
                       }
                     `}
                   >
@@ -1373,10 +1373,10 @@ export function TradingQuickAccess() {
             }}
           >
             {/* Purple Pill Content */}
-            <div className="relative rounded-r-full bg-gradient-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl hover:border-white/70 hover:shadow-white/40">
+            <div className="relative rounded-r-full bg-linear-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl hover:border-white/70 hover:shadow-white/40">
               {/* Enhanced pulsing glow background */}
               <motion.div
-                className="absolute inset-0 rounded-r-full bg-gradient-to-r from-white/20 via-fuchsia-500/10 to-transparent opacity-0"
+                className="absolute inset-0 rounded-r-full bg-linear-to-r from-white/20 via-fuchsia-500/10 to-transparent opacity-0"
                 animate={{
                   opacity: [0.3, 0.8, 0.3],
                   scale: [1, 1.05, 1],

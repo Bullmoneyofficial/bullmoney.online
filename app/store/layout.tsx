@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { StoreLayoutClient } from './StoreLayoutClient';
+import { StoreMemoryProvider } from './StoreMemoryContext';
 
 export const metadata: Metadata = {
   title: 'Bullmoney Store | Premium Trading Lifestyle',
@@ -16,5 +17,9 @@ export default function StoreLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <StoreLayoutClient>{children}</StoreLayoutClient>;
+  return (
+    <StoreMemoryProvider>
+      <StoreLayoutClient>{children}</StoreLayoutClient>
+    </StoreMemoryProvider>
+  );
 }

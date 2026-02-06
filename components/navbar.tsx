@@ -261,7 +261,12 @@ export const Navbar = memo(() => {
   
   // Use admin auth hook for centralized admin checking
   const { isAdmin } = useAdminAuth();
-  
+
+  const isDev = process.env.NODE_ENV === 'development';
+  // Dev toggle: allows admin to preview the site as a non-admin user
+  const [devAdminEnabled, setDevAdminEnabled] = useState(true);
+  const effectiveAdmin = isDev ? (isAdmin && devAdminEnabled) : false;
+
   const supabase = useMemo(() => createSupabaseClient(), []);
   const [hasAccountManagerAccess, setHasAccountManagerAccess] = useState<boolean>(() => getStoredAccountManagerAccess());
 
@@ -316,9 +321,9 @@ export const Navbar = memo(() => {
   }, [supabase]);
 
   const handleAdminClick = useCallback(() => {
-    if (!isAdmin) return;
+    if (!effectiveAdmin) return;
     openAdminModal();
-  }, [isAdmin, openAdminModal]);
+  }, [effectiveAdmin, openAdminModal]);
 
   // Cal embed hook
   const calOptions = useCalEmbed({
@@ -505,7 +510,7 @@ export const Navbar = memo(() => {
           3. Freeze animations during scroll
           4. Use content-visibility for off-screen sections
       */}
-      <LazyAdminModal isOpen={isAdminOpen} onClose={closeNavbarModal} />
+      {effectiveAdmin && <LazyAdminModal isOpen={isAdminOpen} onClose={closeNavbarModal} />}
       <LazyFaqModal isOpen={isFaqOpen} onClose={closeNavbarModal} />
       <LazyAffiliateModal isOpen={isAffiliateOpen} onClose={closeNavbarModal} />
       <LazyAccountManagerModal isOpen={isAccountManagerOpen} onClose={closeNavbarModal} />
@@ -548,7 +553,7 @@ export const Navbar = memo(() => {
         <DesktopNavbar
           ref={dockRef}
           isXMUser={isXMUser}
-          isAdmin={isAdmin}
+          isAdmin={effectiveAdmin}
           hasReward={hasReward}
           dockRef={dockRef}
           buttonRefs={buttonRefs}
@@ -611,18 +616,49 @@ export const Navbar = memo(() => {
       </motion.div>
       
       {/* Mobile Dropdown Menu */}
+      {/* DEV ONLY: Admin visibility toggle */}
+      {isDev && isAdmin && (
+        <button
+          onClick={() => setDevAdminEnabled(prev => !prev)}
+          style={{
+            position: 'fixed',
+            bottom: 12,
+            left: 12,
+            zIndex: 9999,
+            padding: '6px 12px',
+            borderRadius: 8,
+            border: '1px solid',
+            borderColor: devAdminEnabled ? '#a855f7' : '#666',
+            background: devAdminEnabled ? 'rgba(168,85,247,0.15)' : 'rgba(50,50,50,0.9)',
+            color: devAdminEnabled ? '#c084fc' : '#999',
+            fontSize: 11,
+            fontWeight: 600,
+            cursor: 'pointer',
+            backdropFilter: 'blur(8px)',
+            transition: 'all 0.2s',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+          }}
+          title={devAdminEnabled ? 'Click to view as non-admin' : 'Click to restore admin view'}
+        >
+          <span style={{ fontSize: 13 }}>{devAdminEnabled ? '🛡️' : '👤'}</span>
+          {devAdminEnabled ? 'Admin ON' : 'Admin OFF'}
+        </button>
+      )}
+
       {isMobile && allowMobileLazy && (
         <MobileDropdownMenu
           open={open}
           onClose={() => setOpen(false)}
           isXMUser={isXMUser}
           hasReward={hasReward}
-          isAdmin={isAdmin}
+          isAdmin={effectiveAdmin}
           showAccountManager={hasAccountManagerAccess}
           onAffiliateClick={() => { trackClick('affiliate_nav', { source: 'mobile_menu' }); openAffiliateModal(); }}
           onFaqClick={() => { trackClick('faq_nav', { source: 'mobile_menu' }); openFaqModal(); }}
           onAdminClick={() => { 
-            if (!isAdmin) return;
+            if (!effectiveAdmin) return;
             trackClick('admin_nav', { source: 'mobile_menu' }); 
             handleAdminClick(); 
           }}

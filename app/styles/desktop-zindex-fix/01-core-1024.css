@@ -400,7 +400,7 @@
   
   /* Discord Stage / LiveStream Modal content */
   div[class*="z-[2147483645]"].pointer-events-none > div,
-  div[class*="z-[2147483645]"] .bg-gradient-to-br {
+  div[class*="z-[2147483645]"] .bg-linear-to-br {
     z-index: 2147483646 !important;
   }
   
@@ -497,7 +497,7 @@
   }
   
   /* Trading pills - maintain minimum size at all resolutions */
-  .rounded-r-full.bg-gradient-to-br {
+  .rounded-r-full.bg-linear-to-br {
     /* Prevent shrinking */
     min-width: max-content !important;
     flex-shrink: 0 !important;

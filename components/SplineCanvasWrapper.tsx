@@ -90,7 +90,7 @@ const MemoizedSplineCanvas = memo(function MemoizedSplineCanvas({
  */
 const SplineFallback = memo(function SplineFallback() {
   return (
-    <div className="w-full h-full bg-gradient-to-br from-black via-blue-950/30 to-black rounded-xl overflow-hidden relative">
+    <div className="w-full h-full bg-linear-to-br from-black via-blue-950/30 to-black rounded-xl overflow-hidden relative">
       {/* Animated gradient */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent" />
       
@@ -129,7 +129,7 @@ const SplineFallback = memo(function SplineFallback() {
  */
 const LoadingSpinner = memo(function LoadingSpinner() {
   return (
-    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-black via-blue-950/20 to-black rounded-xl">
+    <div className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-black via-blue-950/20 to-black rounded-xl">
       <div className="w-8 h-8 border-2 border-white/30 border-t-blue-500 rounded-full animate-spin-gpu" />
     </div>
   );
@@ -239,7 +239,7 @@ export const SplineCanvasWrapper = memo(function SplineCanvasWrapper({
         </Suspense>
       ) : (
         // Placeholder when not visible - saves GPU memory
-        <div className="absolute inset-0 bg-gradient-to-br from-black via-blue-950/10 to-black rounded-xl">
+        <div className="absolute inset-0 bg-linear-to-br from-black via-blue-950/10 to-black rounded-xl">
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="w-6 h-6 rounded-full bg-white/20" />
           </div>

@@ -163,13 +163,13 @@ function StatCard({ icon: Icon, label, value, sublabel, color = '#ffffff' }: {
       <div className="absolute inset-0 bg-slate-900/90 border border-white/30 rounded-xl transition-all duration-300 group-hover:border-white/50 shadow-lg shadow-white/20" />
       
       {/* Inner highlight for depth */}
-      <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/8 via-transparent to-transparent pointer-events-none" />
+      <div className="absolute inset-[1px] rounded-xl bg-linear-to-br from-white/8 via-transparent to-transparent pointer-events-none" />
       
       {/* Unified Shimmer - LEFT TO RIGHT on hover */}
       <div 
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none overflow-hidden rounded-xl"
       >
-        <div className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-white/0 via-white/30 to-white/0" />
+        <div className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-linear-to-r from-white/0 via-white/30 to-white/0" />
       </div>
       
       {/* Accent glow */}
@@ -220,13 +220,13 @@ function PerformanceRing({ score, size = 120 }: { score: number; size?: number }
     <div className="relative group isolate" style={{ width: size, height: size }}>
       {/* Glass background - solid, no blur */}
       <div className="absolute inset-0 rounded-full bg-slate-900/90 border border-white/30 transition-all duration-300 group-hover:border-white/50 shadow-lg shadow-white/20" />
-      <div className="absolute inset-[1px] rounded-full bg-gradient-to-br from-white/8 via-transparent to-transparent pointer-events-none" />
+      <div className="absolute inset-[1px] rounded-full bg-linear-to-br from-white/8 via-transparent to-transparent pointer-events-none" />
       
       {/* Unified Shimmer - LEFT TO RIGHT using CSS animation */}
       <div 
         className="absolute inset-0 opacity-15 group-hover:opacity-25 transition-opacity pointer-events-none overflow-hidden rounded-full panel-shimmer"
       >
-        <div className="shimmer-ltr shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-white/0 via-white/30 to-white/0" style={{ animationDuration: '5s' }} />
+        <div className="shimmer-ltr shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-linear-to-r from-white/0 via-white/30 to-white/0" style={{ animationDuration: '5s' }} />
       </div>
       
       {/* SVG Ring - properly centered */}
@@ -465,16 +465,16 @@ function FpsPerformancePanel({ deviceInfo }: { deviceInfo: DeviceInfo | null }) 
     >
       {/* Main FPS Card */}
       <div className="relative p-4 rounded-xl overflow-hidden group">
-        <div className="absolute inset-0 bg-gradient-to-br from-green-950/40 via-slate-900/50 to-white/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
-        <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-linear-to-br from-green-950/40 via-slate-900/50 to-white/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
+        <div className="absolute inset-[1px] rounded-xl bg-linear-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
           <motion.div 
             animate={{ x: ['0%', '200%'] }}
             transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: "linear" }}
-            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-white/0 via-white/40 to-white/0 opacity-100"
+            className="absolute inset-y-0 left-[-100%] w-[100%] bg-linear-to-r from-white/0 via-white/40 to-white/0 opacity-100"
           />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/10 rounded-xl" />
+        <div className="absolute inset-0 bg-linear-to-br from-white/10 to-white/10 rounded-xl" />
         <div className="relative z-10 space-y-3">
           <div className="flex items-center justify-between">
             <div>
@@ -517,13 +517,13 @@ function FpsPerformancePanel({ deviceInfo }: { deviceInfo: DeviceInfo | null }) 
 
       {/* Device Tier & Quality Settings */}
       <div className="relative p-4 rounded-xl overflow-hidden group">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-white/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
-        <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-linear-to-br from-blue-950/40 via-slate-900/50 to-white/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
+        <div className="absolute inset-[1px] rounded-xl bg-linear-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
           <motion.div 
             animate={{ x: ['0%', '200%'] }}
             transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: "linear" }}
-            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-white/0 via-white/40 to-white/0 opacity-100"
+            className="absolute inset-y-0 left-[-100%] w-[100%] bg-linear-to-r from-white/0 via-white/40 to-white/0 opacity-100"
           />
         </div>
         <div className="relative z-10 space-y-3">
@@ -1029,7 +1029,7 @@ export function UltimateControlPanel({
                   minimized: { x: 2, scale: 0.95 }
                 }}
                 transition={{ type: 'spring', damping: 28, stiffness: 500, mass: 0.8 }}
-                className={`relative rounded-l-3xl bg-gradient-to-br from-white/30 via-white/15 to-slate-900/40 ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-2xl'} border-y border-l border-white/50 transition-colors duration-200 hover:border-white/70 shadow-2xl hover:shadow-white/40 hover:shadow-xl`}
+                className={`relative rounded-l-3xl bg-linear-to-br from-white/30 via-white/15 to-slate-900/40 ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-2xl'} border-y border-l border-white/50 transition-colors duration-200 hover:border-white/70 shadow-2xl hover:shadow-white/40 hover:shadow-xl`}
                 whileHover={shouldSkipHeavyEffects ? {} : { boxShadow: "0 0 40px rgba(255, 255, 255, 0.6), inset 0 0 20px rgba(255, 255, 255, 0.15)" }}
               >
                 {/* FPS Display - Animated between full and minimized pill states */}
@@ -1371,7 +1371,7 @@ export function UltimateControlPanel({
               </div>
               
               {/* Gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-950/10 via-transparent to-white/5 pointer-events-none" />
+              <div className="absolute inset-0 bg-linear-to-br from-blue-950/10 via-transparent to-white/5 pointer-events-none" />
               
               {/* Drag handle */}
               <div className="absolute left-0 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 py-3 px-2 cursor-grab active:cursor-grabbing z-20">
@@ -1387,7 +1387,7 @@ export function UltimateControlPanel({
               {/* Header */}
               <div className="px-6 pt-6 pb-4 relative z-10">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-white drop-shadow-lg">
+                  <h2 className="text-2xl font-black text-transparent bg-clip-text bg-linear-to-r from-white to-white drop-shadow-lg">
                     Device Center
                   </h2>
                   <div className="flex items-center gap-2">
@@ -1414,13 +1414,13 @@ export function UltimateControlPanel({
                           setIsMobilePanelMinimized(true);
                           onOpenChange(false);
                         }}
-                        className="relative p-3 rounded-full bg-gradient-to-br from-white/40 to-slate-900/60 hover:from-white/50 hover:to-slate-800/70 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation border border-white/40 shadow-lg shadow-white/20 overflow-hidden group"
+                        className="relative p-3 rounded-full bg-linear-to-br from-white/40 to-slate-900/60 hover:from-white/50 hover:to-slate-800/70 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation border border-white/40 shadow-lg shadow-white/20 overflow-hidden group"
                         style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                         aria-label="Minimize panel"
                       >
                         {/* Animated glow effect */}
                         <motion.div
-                          className="absolute inset-0 rounded-full bg-gradient-to-r from-white/0 via-white/20 to-white/0"
+                          className="absolute inset-0 rounded-full bg-linear-to-r from-white/0 via-white/20 to-white/0"
                           animate={shouldSkipHeavyEffects ? {} : { x: ['-100%', '100%'] }}
                           transition={shouldSkipHeavyEffects ? {} : { duration: 2, repeat: Infinity, ease: 'linear' }}
                         />
@@ -1489,9 +1489,9 @@ export function UltimateControlPanel({
 
               {/* Tabs */}
               <div className="px-6 pb-4 relative z-10">
-                <div className="relative flex gap-1 p-1.5 rounded-xl bg-gradient-to-r from-blue-950/50 via-slate-900/60 to-blue-950/50 border border-white/40 overflow-hidden isolate shadow-lg">
+                <div className="relative flex gap-1 p-1.5 rounded-xl bg-linear-to-r from-blue-950/50 via-slate-900/60 to-blue-950/50 border border-white/40 overflow-hidden isolate shadow-lg">
                   {/* Inner highlight */}
-                  <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute inset-[1px] rounded-xl bg-linear-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                   {/* Unified Shimmer for tabs */}
                   {shimmerEnabled && (
                     <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl panel-shimmer">
@@ -1645,8 +1645,8 @@ export function UltimateControlPanel({
 
                       {/* Screen Info */}
                       <div className="relative p-4 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-white/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
-                        <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+                        <div className="absolute inset-0 bg-linear-to-br from-blue-950/40 via-slate-900/50 to-white/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
+                        <div className="absolute inset-[1px] rounded-xl bg-linear-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                         {shimmerEnabled && (
                           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                             <div 
@@ -1658,7 +1658,7 @@ export function UltimateControlPanel({
                             />
                           </div>
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/10 rounded-xl" />
+                        <div className="absolute inset-0 bg-linear-to-br from-white/10 to-white/10 rounded-xl" />
                         <div className="relative z-10">
                           <div className="text-xs text-white/80 uppercase tracking-wider font-semibold mb-2">
                             Display
@@ -1695,8 +1695,8 @@ export function UltimateControlPanel({
                       {/* Battery */}
                       {deviceInfo && deviceInfo.battery.level >= 0 && (
                         <div className="relative p-4 rounded-xl overflow-hidden group">
-                          <div className="absolute inset-0 bg-gradient-to-br from-green-950/40 via-slate-900/50 to-white/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
-                          <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+                          <div className="absolute inset-0 bg-linear-to-br from-green-950/40 via-slate-900/50 to-white/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
+                          <div className="absolute inset-[1px] rounded-xl bg-linear-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                           {shimmerEnabled && (
                             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                               <div 
@@ -1708,7 +1708,7 @@ export function UltimateControlPanel({
                               />
                             </div>
                           )}
-                          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/10 rounded-xl" />
+                          <div className="absolute inset-0 bg-linear-to-br from-white/10 to-white/10 rounded-xl" />
                           <div className="relative z-10 flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <Battery size={18} className="text-white drop-shadow-lg" />
@@ -1764,16 +1764,16 @@ export function UltimateControlPanel({
 
                       {/* Connection Type */}
                       <div className="relative p-4 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-white/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
-                        <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+                        <div className="absolute inset-0 bg-linear-to-br from-blue-950/40 via-slate-900/50 to-white/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
+                        <div className="absolute inset-[1px] rounded-xl bg-linear-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                           <motion.div 
                             animate={{ x: ['0%', '200%'] }}
                             transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-white/0 via-white/40 to-white/0 opacity-100"
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-linear-to-r from-white/0 via-white/40 to-white/0 opacity-100"
                           />
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/10 rounded-xl" />
+                        <div className="absolute inset-0 bg-linear-to-br from-white/10 to-white/10 rounded-xl" />
                         <div className="relative z-10 flex items-center gap-3">
                           <Wifi size={24} className={`text-white ${shouldSkipHeavyEffects ? '' : 'drop-shadow-lg'}`} />
                           <div className="flex-1">
@@ -1794,13 +1794,13 @@ export function UltimateControlPanel({
                       </div>
 
                       <div className="relative p-4 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-white/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
-                        <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+                        <div className="absolute inset-0 bg-linear-to-br from-blue-950/40 via-slate-900/50 to-white/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
+                        <div className="absolute inset-[1px] rounded-xl bg-linear-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                           <motion.div 
                             animate={{ x: ['0%', '200%'] }}
                             transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-white/0 via-white/40 to-white/0 opacity-100"
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-linear-to-r from-white/0 via-white/40 to-white/0 opacity-100"
                           />
                         </div>
                         <div className="relative z-10">
@@ -1829,7 +1829,7 @@ export function UltimateControlPanel({
 
                       {/* Manual Speed Test */}
                       <div className="relative p-4 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-slate-900/40 to-white/30 border border-white/30 rounded-xl shadow-lg shadow-white/10" />
+                        <div className="absolute inset-0 bg-linear-to-br from-white/10 via-slate-900/40 to-white/30 border border-white/30 rounded-xl shadow-lg shadow-white/10" />
                         <div className="relative z-10 space-y-3">
                           <div className="flex items-center justify-between">
                             <div>
@@ -1869,16 +1869,16 @@ export function UltimateControlPanel({
 
                       {/* Location */}
                       <div className="relative p-4 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-purple-950/40 via-slate-900/50 to-pink-900/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
-                        <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+                        <div className="absolute inset-0 bg-linear-to-br from-purple-950/40 via-slate-900/50 to-pink-900/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
+                        <div className="absolute inset-[1px] rounded-xl bg-linear-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                           <motion.div 
                             animate={{ x: ['0%', '200%'] }}
                             transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-white/0 via-white/40 to-white/0 opacity-100"
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-linear-to-r from-white/0 via-white/40 to-white/0 opacity-100"
                           />
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-pink-500/10 rounded-xl" />
+                        <div className="absolute inset-0 bg-linear-to-br from-white/10 to-pink-500/10 rounded-xl" />
                         <div className="relative z-10 flex items-start justify-between gap-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
@@ -1948,13 +1948,13 @@ export function UltimateControlPanel({
                       />
 
                       <div className="relative p-4 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-white/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
-                        <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+                        <div className="absolute inset-0 bg-linear-to-br from-blue-950/40 via-slate-900/50 to-white/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
+                        <div className="absolute inset-[1px] rounded-xl bg-linear-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                           <motion.div 
                             animate={{ x: ['0%', '200%'] }}
                             transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-white/0 via-white/40 to-white/0 opacity-100"
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-linear-to-r from-white/0 via-white/40 to-white/0 opacity-100"
                           />
                         </div>
                         <div className="relative z-10 text-sm text-white/80 mb-3">Device Snapshot</div>
@@ -1972,16 +1972,16 @@ export function UltimateControlPanel({
 
                       {/* Memory */}
                       <div className="relative p-4 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-white/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
-                        <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+                        <div className="absolute inset-0 bg-linear-to-br from-blue-950/40 via-slate-900/50 to-white/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
+                        <div className="absolute inset-[1px] rounded-xl bg-linear-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                           <motion.div 
                             animate={{ x: ['0%', '200%'] }}
                             transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-white/0 via-white/40 to-white/0 opacity-100"
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-linear-to-r from-white/0 via-white/40 to-white/0 opacity-100"
                           />
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/10 rounded-xl" />
+                        <div className="absolute inset-0 bg-linear-to-br from-white/10 to-white/10 rounded-xl" />
                         <div className="relative z-10 flex items-center justify-between mb-3">
                           <span className="text-sm text-white/60">Memory Usage</span>
                           <span className="text-sm font-semibold text-white drop-shadow-lg">
@@ -1992,7 +1992,7 @@ export function UltimateControlPanel({
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${device.performance.memory.percentage}%` }}
-                            className="h-full bg-gradient-to-r from-white to-white rounded-full"
+                            className="h-full bg-linear-to-r from-white to-white rounded-full"
                           />
                         </div>
                         <div className="text-xs text-white/50 mt-2">
@@ -2002,16 +2002,16 @@ export function UltimateControlPanel({
 
                       {/* Queue Stats */}
                       <div className="relative p-4 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-orange-950/40 via-slate-900/50 to-red-900/40 border border-orange-400/40 rounded-xl transition-all duration-300 group-hover:border-orange-300/60 shadow-lg shadow-orange-500/10" />
-                        <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+                        <div className="absolute inset-0 bg-linear-to-br from-orange-950/40 via-slate-900/50 to-red-900/40 border border-orange-400/40 rounded-xl transition-all duration-300 group-hover:border-orange-300/60 shadow-lg shadow-orange-500/10" />
+                        <div className="absolute inset-[1px] rounded-xl bg-linear-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                           <motion.div 
                             animate={{ x: ['0%', '200%'] }}
                             transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-orange-500/0 via-orange-400/40 to-orange-500/0 opacity-100"
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-linear-to-r from-orange-500/0 via-orange-400/40 to-orange-500/0 opacity-100"
                           />
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-xl" />
+                        <div className="absolute inset-0 bg-linear-to-br from-orange-500/10 to-red-500/10 rounded-xl" />
                         <div className="relative z-10 text-sm text-white/60 mb-2">Scene Loading</div>
                         <div className="relative z-10 grid grid-cols-2 gap-2 text-sm">
                           <div>
@@ -2046,18 +2046,18 @@ export function UltimateControlPanel({
                     >
                       {/* User Info */}
                       <div className="relative p-6 rounded-xl overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-slate-900/50 to-white/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
-                        <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+                        <div className="absolute inset-0 bg-linear-to-br from-blue-950/40 via-slate-900/50 to-white/40 border border-white/40 rounded-xl transition-all duration-300 group-hover:border-white/60 shadow-lg shadow-white/10" />
+                        <div className="absolute inset-[1px] rounded-xl bg-linear-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
                           <motion.div 
                             animate={{ x: ['0%', '200%'] }}
                             transition={shouldSkipHeavyEffects ? {} : { duration: 4, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-white/0 via-white/40 to-white/0 opacity-100"
+                            className="absolute inset-y-0 left-[-100%] w-[100%] bg-linear-to-r from-white/0 via-white/40 to-white/0 opacity-100"
                           />
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/10 rounded-xl" />
+                        <div className="absolute inset-0 bg-linear-to-br from-white/10 to-white/10 rounded-xl" />
                         <div className="relative z-10 flex items-center gap-4 mb-4">
-                          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-white to-white flex items-center justify-center">
+                          <div className="w-16 h-16 rounded-full bg-linear-to-br from-white to-white flex items-center justify-center">
                             <User size={32} className="text-white" />
                           </div>
                           <div className="flex-1">
@@ -2103,7 +2103,7 @@ export function UltimateControlPanel({
                         <button
                           onClick={() => { SoundEffects.click(); handleRefresh(); }}
                           onMouseEnter={() => SoundEffects.hover()}
-                          className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-white/20 to-white/20 border border-white/40 text-white font-semibold hover:from-white/30 hover:to-white/30 hover:border-white/70 transition-all flex items-center justify-center gap-2"
+                          className="w-full px-4 py-3 rounded-xl bg-linear-to-r from-white/20 to-white/20 border border-white/40 text-white font-semibold hover:from-white/30 hover:to-white/30 hover:border-white/70 transition-all flex items-center justify-center gap-2"
                         >
                           <RefreshCw size={18} />
                           Refresh Website
@@ -2136,7 +2136,7 @@ export function UltimateControlPanel({
                             }
                           }}
                           onMouseEnter={() => SoundEffects.hover()}
-                          className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-white/20 to-white/20 border border-white/40 text-white font-semibold hover:from-white/30 hover:to-white/30 hover:border-white/70 transition-all flex items-center justify-center gap-2"
+                          className="w-full px-4 py-3 rounded-xl bg-linear-to-r from-white/20 to-white/20 border border-white/40 text-white font-semibold hover:from-white/30 hover:to-white/30 hover:border-white/70 transition-all flex items-center justify-center gap-2"
                         >
                           <Globe size={18} />
                           Copy Device Snapshot

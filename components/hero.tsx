@@ -652,7 +652,7 @@ const ProductCard = React.memo(({
                 className="object-cover object-center absolute h-full w-full inset-0 transition-transform duration-700 group-hover/product:scale-110 opacity-80 group-hover/product:opacity-100"
                 alt={project.title}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover/product:opacity-90 transition-opacity duration-500" />
+            <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover/product:opacity-90 transition-opacity duration-500" />
             <div className="absolute bottom-6 left-6 translate-y-2 group-hover/product:translate-y-0 transition-transform duration-500 w-[90%]">
                 <h2 className="text-white font-serif tracking-wide text-xl md:text-2xl drop-shadow-md truncate">
                    {project.title}
@@ -877,11 +877,11 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
         width: `${vw}px`,
         height: `${vh}px`,
         overflow: "hidden",
-        zIndex: 0,
+        zIndex: 1,
         // GPU layer
         transform: "translate3d(0,0,0)",
         willChange: "transform",
-        touchAction: 'manipulation', // UPDATED: Allow interaction
+        touchAction: 'none', // Allow full 3D interaction (rotation, zoom, pan)
         WebkitOverflowScrolling: 'touch',
         // BATTERY SAVER: Hide when saving
         visibility: isBatterySaving ? 'hidden' : 'visible',
@@ -900,7 +900,8 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          touchAction: 'manipulation', // UPDATED: Allow interaction
+          touchAction: 'none', // Full 3D interaction
+          pointerEvents: 'auto',
         }}
       >
         {shouldUseViewer ? (
@@ -912,8 +913,9 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
             events-target="global"
             style={{
               ...fullViewportStyles,
-              touchAction: 'manipulation', // UPDATED: Allow interaction on mobile/desktop
+              touchAction: 'none', // Full 3D interaction: rotate, zoom, pan
               pointerEvents: 'auto',
+              cursor: 'grab',
             }}
           />
         ) : (
@@ -932,7 +934,7 @@ const SplineSceneEmbed = React.memo(({ preferViewer, runtimeUrl, viewerUrl }: { 
                 left: 0,
                 height: 'calc(100% + 60px)',
                 marginBottom: '-60px',
-                touchAction: 'manipulation', // UPDATED: Allow interaction
+                touchAction: 'none', // Full 3D interaction
                 pointerEvents: 'auto',
               }}
             />
@@ -1799,7 +1801,7 @@ const HeroParallax = () => {
                     </div>
                 )}
                 
-                {!isEditing && <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-transparent to-transparent opacity-80 md:hidden" />}
+                {!isEditing && <div className="absolute inset-0 bg-linear-to-t from-neutral-900 via-transparent to-transparent opacity-80 md:hidden" />}
                 {!isEditing && (
                     <div className="absolute bottom-4 left-4 md:hidden">
                          <h3 className="text-3xl font-serif font-bold text-white">{activeProject.title}</h3>
@@ -1968,6 +1970,7 @@ const HeroParallax = () => {
           touchAction: 'manipulation', // UPDATED: Allow interaction
           minHeight: typeof window !== 'undefined' && window.innerWidth >= 1440 ? 'calc(100vh - 80px)' : '100dvh',
           height: '100dvh',
+          pointerEvents: 'none', // Pass events through to fixed-position Spline
         }}
         data-allow-scroll
         data-content
@@ -1979,9 +1982,9 @@ const HeroParallax = () => {
         <div 
           className="absolute inset-0 w-full h-full z-0 hero-spline-wrapper"
           style={{ 
-            contain: 'strict',
+            contain: 'layout style',
             isolation: 'isolate',
-            touchAction: 'manipulation', // UPDATED: Allow interaction
+            touchAction: 'manipulation', // Allow 3D interaction
             minHeight: '100dvh',
             pointerEvents: 'auto',
           }}
@@ -1996,8 +1999,8 @@ const HeroParallax = () => {
               left: 0,
               right: 0,
               bottom: 0,
-              contain: 'strict',
-              touchAction: 'manipulation', // UPDATED: Allow interaction
+              contain: 'layout style',
+              touchAction: 'none', // Full 3D interaction
               minHeight: '100dvh',
               pointerEvents: 'auto',
             }}
@@ -2038,9 +2041,9 @@ const HeroParallax = () => {
                   // Remove any padding/margin
                   margin: 0,
                   padding: 0,
-                  // Performance
-                  contain: 'strict',
-                  touchAction: 'manipulation', // UPDATED: Allow interaction
+                  // Performance - use layout style (NOT strict/paint which blocks pointer events)
+                  contain: 'layout style',
+                  touchAction: 'manipulation', // Allow full 3D interaction
                   pointerEvents: 'auto',
                   overflow: 'hidden',
                   // GPU acceleration
@@ -2080,7 +2083,7 @@ const HeroParallax = () => {
             </div>
           </div>
         </div>
-        <div className="max-w-7xl relative mx-auto pt-32 pb-12 md:py-32 px-4 w-full z-20 mb-10 md:mb-32">
+        <div className="max-w-7xl relative mx-auto pt-32 pb-12 md:py-32 px-4 w-full z-20 mb-10 md:mb-32 pointer-events-none">
             {/* SwipableButtons (Actions Panel) REMOVED here */}
         </div>
 

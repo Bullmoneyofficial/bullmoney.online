@@ -185,7 +185,7 @@ const ProductCard = memo(({
         {/* Animated Shimmer Border */}
         <div className="absolute inset-0 rounded-xl md:rounded-2xl p-[1px] overflow-hidden z-[1]">
           <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20"
+            className="absolute inset-0 bg-linear-to-r from-transparent via-white to-transparent opacity-20"
             style={{ width: '100%', filter: 'blur(20px)' }}
             animate={{
               x: ['-50%', '50%'],
@@ -203,7 +203,7 @@ const ProductCard = memo(({
         <div className="absolute inset-0 border border-white/20 rounded-xl md:rounded-2xl pointer-events-none z-[2]" />
         
         {/* Gradient overlay for depth */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent z-10 pointer-events-none" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent z-10 pointer-events-none" />
         
         {/* Product Image */}
         <img
@@ -233,7 +233,7 @@ const ProductCard = memo(({
             >
               {/* Shimmer effect */}
               <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                className="absolute inset-0 bg-linear-to-r from-transparent via-white/30 to-transparent"
                 style={{ width: '100%' }}
                 animate={{
                   x: ['-200%', '200%'],
@@ -558,7 +558,7 @@ const ProductsContent = memo(() => {
                   {/* Animated Shimmer Border */}
                   <div className="absolute inset-0 rounded-full p-[1px] overflow-hidden z-[1]">
                     <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20"
+                      className="absolute inset-0 bg-linear-to-r from-transparent via-white to-transparent opacity-20"
                       style={{ width: '100%', filter: 'blur(20px)' }}
                       animate={{
                         x: ['-50%', '50%'],
@@ -654,7 +654,7 @@ const ProductsContent = memo(() => {
                                   {/* Animated Shimmer Border */}
                                   <div className="absolute inset-0 rounded-xl p-[1px] overflow-hidden z-[1]">
                                     <motion.div
-                                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20"
+                                      className="absolute inset-0 bg-linear-to-r from-transparent via-white to-transparent opacity-20"
                                       style={{ width: '100%', filter: 'blur(20px)' }}
                                       animate={{
                                         x: ['-50%', '50%'],
@@ -715,7 +715,7 @@ const ProductsContent = memo(() => {
                           {/* Animated Shimmer Border */}
                           <div className="absolute inset-0 rounded-xl p-[1px] overflow-hidden z-[1]">
                             <motion.div
-                              className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20"
+                              className="absolute inset-0 bg-linear-to-r from-transparent via-white to-transparent opacity-20"
                               style={{ width: '100%', filter: 'blur(20px)' }}
                               animate={{
                                 x: ['-50%', '50%'],

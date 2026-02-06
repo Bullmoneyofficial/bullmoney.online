@@ -1695,7 +1695,7 @@ const LiveStreamContent = memo(() => {
           <div className="flex-1 flex flex-col min-w-0">
             <div className="relative aspect-video bg-black">
               {loading && activeTab === 'bullmoney' ? (
-                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-neutral-900 to-black">
+                <div className="absolute inset-0 flex items-center justify-center bg-linear-to-b from-neutral-900 to-black">
                   <div className="flex flex-col items-center gap-4">
                     <ShimmerSpinner size={48} color="blue" />
                     <p className="text-neutral-400 text-sm">Loading stream...</p>
@@ -1711,7 +1711,7 @@ const LiveStreamContent = memo(() => {
                   title={activeVideo.title}
                 />
               ) : activeTab === 'personal' && !youtubeAuth && !personalProfile ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-white/20 to-black">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-linear-to-b from-white/20 to-black">
                   <Youtube className="w-16 h-16 text-red-500/50" />
                   <p className="text-neutral-400 text-center max-w-xs">Connect your YouTube account to watch your playlists and liked videos</p>
                   <motion.button
@@ -1730,23 +1730,23 @@ const LiveStreamContent = memo(() => {
                   </motion.button>
                 </div>
               ) : activeTab === 'personal' && youtubeAuth && youtubeVideos.length === 0 && loadingYoutubeVideos ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-white/20 to-black">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-linear-to-b from-white/20 to-black">
                   <ShimmerSpinner size={48} color="blue" />
                   <p className="text-neutral-400 text-sm">Loading your videos...</p>
                 </div>
               ) : activeTab === 'personal' && youtubeAuth && youtubeVideos.length === 0 ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-white/20 to-black">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-linear-to-b from-white/20 to-black">
                   <Heart className="w-16 h-16 text-white/50" />
                   <p className="text-neutral-400 text-center max-w-xs">No videos found in this playlist</p>
                   <p className="text-neutral-500 text-xs">Try selecting a different playlist above</p>
                 </div>
               ) : activeTab === 'personal' && !youtubeAuth && loadingChannelVideos ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-white/20 to-black">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-linear-to-b from-white/20 to-black">
                   <ShimmerSpinner size={48} color="blue" />
                   <p className="text-neutral-400 text-sm">Loading channel videos...</p>
                 </div>
               ) : activeTab === 'personal' && !youtubeAuth && personalProfile && channelVideos.length === 0 && personalProfile.videos.length === 0 ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-white/20 to-black">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-linear-to-b from-white/20 to-black">
                   <Youtube className="w-16 h-16 text-white/50" />
                   {personalProfile.channelUrl ? (
                     <>
@@ -1768,7 +1768,7 @@ const LiveStreamContent = memo(() => {
                   )}
                 </div>
               ) : (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-neutral-900 to-black">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-linear-to-b from-neutral-900 to-black">
                   <Youtube className="w-16 h-16 text-white/50" />
                   <p className="text-neutral-500 text-center">No videos available</p>
                   {isAdmin && (

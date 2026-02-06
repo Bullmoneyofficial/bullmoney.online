@@ -348,7 +348,7 @@ export const PostComposerInline = memo(({ onSuccess }: PostComposerInlineProps) 
         whileTap={{ scale: 0.98 }}
         onClick={handleSubmit}
         disabled={isSubmitting || !title.trim() || !content.trim() || !pair.trim()}
-        className="w-full py-4 bg-gradient-to-r from-white to-white text-white rounded-xl font-bold text-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-white/25"
+        className="w-full py-4 bg-linear-to-r from-white to-white text-white rounded-xl font-bold text-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-white/25"
       >
         {isSubmitting ? (
           <>

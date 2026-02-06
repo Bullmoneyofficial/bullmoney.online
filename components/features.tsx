@@ -78,7 +78,7 @@ const getStickyScrollContent = (
       "15% OFF with BM15 • Instant funding up to $200K • 90% profit split • Fast payouts in 24-48hrs • No time limits on challenges • BullMoney's #1 recommended prop firm for beginners and pros alike.",
     content: (
       <div className="flex h-full w-full flex-col items-center justify-center bg-black p-8 rounded-2xl relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-br from-white/5 to-transparent" />
         <div className="relative z-10 flex flex-col items-center">
           <div className="text-center mb-4">
             <span className="broker-poster-font text-3xl text-white block mb-2">GOAT FUNDED</span>
@@ -115,7 +115,7 @@ const getStickyScrollContent = (
       "The World's #1 Prop Firm • Paid out $100M+ to traders • Scale up to $400K accounts • 80% profit split • Professional trading conditions • The ultimate test for serious traders.",
     content: (
       <div className="flex h-full w-full flex-col items-center justify-center bg-black p-8 rounded-2xl relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-br from-white/5 to-transparent" />
         <div className="relative z-10 flex flex-col items-center">
           <div className="text-center mb-4">
             <span className="broker-poster-font text-3xl text-white block mb-2">FTMO</span>
@@ -141,7 +141,7 @@ const getStickyScrollContent = (
       "Use code BULLMONEY • RAW spreads from 0.0 pips • Lightning-fast execution • MT4/MT5 supported • Regulated & trusted • The broker BullMoney traders use for live funded accounts.",
     content: (
       <div className="flex h-full w-full flex-col items-center justify-center bg-black p-8 rounded-2xl relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-br from-white/5 to-transparent" />
         <div className="relative z-10 flex flex-col items-center">
           <div className="text-center mb-4">
             <span className="broker-poster-font text-3xl text-white block mb-2">VANTAGE</span>
@@ -178,7 +178,7 @@ const getStickyScrollContent = (
       "Use code X3R7P • Trusted by 10M+ traders • Ultra-competitive spreads • 24/7 support • Multi-asset trading • Perfect for forex, indices, commodities and crypto CFDs.",
     content: (
       <div className="flex h-full w-full flex-col items-center justify-center bg-black p-8 rounded-2xl relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-br from-white/5 to-transparent" />
         <div className="relative z-10 flex flex-col items-center">
           <div className="text-center mb-4">
             <span className="broker-poster-font text-3xl text-white block mb-2">XM GLOBAL</span>

@@ -107,7 +107,7 @@ export function TelegramModal({ isOpen, onClose }: TelegramModalProps) {
             exit={animations.modalContent.exit}
             transition={animations.modalContent.transition}
             onClick={(e) => e.stopPropagation()}
-            className={`relative w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 border border-white/10 ${
+            className={`relative w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-linear-to-br from-zinc-900 via-zinc-800 to-zinc-900 border border-white/10 ${
               isMobile ? '' : 'shadow-2xl shadow-black/50'
             }`}
           >

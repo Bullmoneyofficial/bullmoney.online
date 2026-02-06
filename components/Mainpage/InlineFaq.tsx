@@ -203,7 +203,7 @@ const InlineFaq = () => {
             transition={{ delay: 0.3 }}
             className="flex items-center gap-2 mb-4"
           >
-            <div className="h-[1px] w-8 bg-gradient-to-r from-white to-transparent" />
+            <div className="h-[1px] w-8 bg-linear-to-r from-white to-transparent" />
             <Sparkles className="w-3 h-3 text-white" />
             <p className="text-xs uppercase text-white font-mono tracking-[0.25em]">
               About Us
@@ -248,7 +248,7 @@ const InlineFaq = () => {
                 transition={{ delay: 0.2 + 0.1 * categoryIndex }}
                 className="flex items-center gap-2 mb-4"
               >
-                <div className="h-[2px] w-8 bg-gradient-to-r from-white to-transparent" />
+                <div className="h-[2px] w-8 bg-linear-to-r from-white to-transparent" />
                 <p className="text-[11px] uppercase text-white font-mono tracking-[0.2em]">
                   {category.category}
                 </p>
@@ -408,11 +408,11 @@ const InlineFaq = () => {
             animate={{ opacity: 1, y: 0 }}
             className="flex items-center gap-2 mb-4 px-2"
           >
-            <div className="h-[2px] flex-1 bg-gradient-to-r from-white to-transparent" />
+            <div className="h-[2px] flex-1 bg-linear-to-r from-white to-transparent" />
             <p className="text-xs uppercase text-white font-mono tracking-[0.2em] whitespace-nowrap">
               {FAQ_CONTENT[currentCategoryIndex]?.category}
             </p>
-            <div className="h-[2px] flex-1 bg-gradient-to-l from-white to-transparent" />
+            <div className="h-[2px] flex-1 bg-linear-to-l from-white to-transparent" />
           </motion.div>
 
           {/* Horizontal Scroll Container */}
@@ -424,7 +424,7 @@ const InlineFaq = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-black via-black/50 to-transparent z-10 pointer-events-none flex items-center justify-start pl-1"
+                  className="absolute left-0 top-0 bottom-0 w-8 bg-linear-to-r from-black via-black/50 to-transparent z-10 pointer-events-none flex items-center justify-start pl-1"
                 >
                   <motion.div
                     animate={{ x: [-2, 2, -2] }}
@@ -443,7 +443,7 @@ const InlineFaq = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-black via-black/50 to-transparent z-10 pointer-events-none flex items-center justify-end pr-1"
+                  className="absolute right-0 top-0 bottom-0 w-8 bg-linear-to-l from-black via-black/50 to-transparent z-10 pointer-events-none flex items-center justify-end pr-1"
                 >
                   <motion.div
                     animate={{ x: [2, -2, 2] }}

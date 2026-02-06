@@ -78,13 +78,13 @@ export function FilterSheet({ isOpen, onClose, filters, onFilterChange, onClear 
             style={{ zIndex: 2147483648 }}
           />
 
-          {/* Sheet */}
+          {/* Sheet - Opens from right like StoreHeader mobile menu */}
           <motion.div
-            initial={{ x: '-100%' }}
+            initial={{ x: '100%' }}
             animate={{ x: 0 }}
-            exit={{ x: '-100%' }}
+            exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed top-0 left-0 bottom-0 w-full max-w-sm bg-black border-r border-white/10 flex flex-col"
+            className="fixed top-0 right-0 bottom-0 w-full max-w-sm bg-black border-l border-white/10 flex flex-col"
             style={{ zIndex: 2147483649 }}
           >
             {/* Header */}

@@ -1,9 +1,10 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Suspense, ReactNode, useEffect, useState } from "react";
+import { Suspense, ReactNode, useEffect, useState, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
+import { useUIState } from "@/contexts/UIStateContext";
 
 // ✅ IMPORT CRITICAL SEO/ANALYTICS DIRECTLY - These are lightweight and critical
 import WebVitalsEnhanced from "@/components/WebVitalsEnhanced";
@@ -107,6 +108,50 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
     }
   }, []);
 
+  // ============================================
+  // ADMIN PANEL KEYBOARD SHORTCUT: Ctrl+A+P
+  // ============================================
+  const { setAdminModalOpen } = useUIState();
+  const [adminKeySequence, setAdminKeySequence] = useState<string[]>([]);
+  
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check for Ctrl (or Cmd on Mac)
+      if (e.ctrlKey || e.metaKey) {
+        // Add pressed key to sequence
+        const key = e.key.toLowerCase();
+        
+        setAdminKeySequence(prev => {
+          const newSequence = [...prev, key].slice(-2); // Keep last 2 keys
+          
+          // Check if sequence is 'a' then 'p' while holding ctrl
+          if (newSequence.length === 2 && newSequence[0] === 'a' && newSequence[1] === 'p') {
+            e.preventDefault();
+            setAdminModalOpen(true);
+            return []; // Reset sequence
+          }
+          
+          return newSequence;
+        });
+      }
+    };
+    
+    const handleKeyUp = (e: KeyboardEvent) => {
+      // Reset sequence when ctrl/cmd is released
+      if (!e.ctrlKey && !e.metaKey) {
+        setAdminKeySequence([]);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [setAdminModalOpen]);
+
   // Dev-only guard to avoid crash when React tries to remove nodes that were already moved/removed by imperative code
   useEffect(() => {
     if (process.env.NODE_ENV !== "development") return;
@@ -185,7 +230,7 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
           DOM order matters for same z-index elements.
           Being last in DOM = renders on top.
           ============================================ */}
-      <ClientCursor />
+      {!isStorePage && <ClientCursor />}
     </>
   );
 }

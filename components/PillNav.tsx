@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
 import './PillNav.css';
+import TextType from '@/components/TextType';
 
 export type PillNavItem = {
   label: string;
@@ -294,9 +295,9 @@ const PillNav: React.FC<PillNavProps> = ({
                       }}
                     />
                     <span className="label-stack">
-                      <span className="pill-label">{item.label}</span>
+                      <span className="pill-label"><TextType text={item.label} typingSpeed={Math.max(8, 30 - item.label.length)} showCursor={false} loop={false} as="span" /></span>
                       <span className="pill-label-hover" aria-hidden="true">
-                        {item.label}
+                        <TextType text={item.label} typingSpeed={Math.max(8, 30 - item.label.length)} showCursor={false} loop={false} as="span" />
                       </span>
                     </span>
                   </Link>
@@ -317,9 +318,9 @@ const PillNav: React.FC<PillNavProps> = ({
                       }}
                     />
                     <span className="label-stack">
-                      <span className="pill-label">{item.label}</span>
+                      <span className="pill-label"><TextType text={item.label} typingSpeed={Math.max(8, 30 - item.label.length)} showCursor={false} loop={false} as="span" /></span>
                       <span className="pill-label-hover" aria-hidden="true">
-                        {item.label}
+                        <TextType text={item.label} typingSpeed={Math.max(8, 30 - item.label.length)} showCursor={false} loop={false} as="span" />
                       </span>
                     </span>
                   </a>
@@ -350,7 +351,7 @@ const PillNav: React.FC<PillNavProps> = ({
                   className={`mobile-menu-link${activeHref === item.href ? ' is-active' : ''}`}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  {item.label}
+                  <TextType text={item.label} typingSpeed={Math.max(8, 25 - item.label.length)} showCursor={false} loop={false} as="span" />
                 </Link>
               ) : (
                 <a
@@ -358,7 +359,7 @@ const PillNav: React.FC<PillNavProps> = ({
                   className={`mobile-menu-link${activeHref === item.href ? ' is-active' : ''}`}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  {item.label}
+                  <TextType text={item.label} typingSpeed={Math.max(8, 25 - item.label.length)} showCursor={false} loop={false} as="span" />
                 </a>
               )}
             </li>

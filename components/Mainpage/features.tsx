@@ -99,7 +99,7 @@ export function Features() {
       <div className="mt-20 grid cols-1 md:grid-cols-5 gap-4 md:auto-rows-[25rem] max-w-7xl mx-auto">
         
         {/* Left – 3 cols :: JOIN US */}
-        <Card className="flex flex-col justify-between md:col-span-3 bg-gradient-to-br from-black via-neutral-950 to-black border border-[#B8983A]/60">
+        <Card className="flex flex-col justify-between md:col-span-3 bg-linear-to-br from-black via-neutral-950 to-black border border-[#B8983A]/60">
           <CardSkeletonBody>
             <SkeletonOne />
           </CardSkeletonBody>
@@ -171,7 +171,7 @@ export function Features() {
         </Card>
 
         {/* Top-right – 2 cols :: Goat Funded info */}
-        <Card className="flex flex-col justify-between md:col-span-2 bg-gradient-to-br from-black via-neutral-950 to-black border border-[#B8983A]/60">
+        <Card className="flex flex-col justify-between md:col-span-2 bg-linear-to-br from-black via-neutral-950 to-black border border-[#B8983A]/60">
           <CardContent className="h-40">
             <CardTitle className={cn(GOLD_TEXT_GRADIENT, "bg-clip-text text-transparent")}>
               Goat Funded Trader
@@ -215,7 +215,7 @@ export function Features() {
         </Card>
 
         {/* Bottom-left – 2 cols :: Community links */}
-        <Card className="flex flex-col justify-between md:col-span-2 bg-gradient-to-br from-black via-neutral-950 to-black border border-[#B8983A]/60">
+        <Card className="flex flex-col justify-between md:col-span-2 bg-linear-to-br from-black via-neutral-950 to-black border border-[#B8983A]/60">
           <CardContent className="h-40">
             <h3 className={cn("font-sans text-base md:text-lg font-extrabold tracking-tight", GOLD_TEXT_GRADIENT, "bg-clip-text text-transparent")}>
               Find Our Links Below
@@ -250,7 +250,7 @@ export function Features() {
         </Card>
 
         {/* Bottom-right – 3 cols :: FTMO info */}
-        <Card className="flex flex-col justify-between md:col-span-3 bg-gradient-to-br from-black via-neutral-950 to-black border border-[#B8983A]/60">
+        <Card className="flex flex-col justify-between md:col-span-3 bg-linear-to-br from-black via-neutral-950 to-black border border-[#B8983A]/60">
           <CardContent className="h-auto">
             <CardTitle className={cn(GOLD_TEXT_GRADIENT, "bg-clip-text text-transparent")}>
               FTMO
@@ -435,7 +435,7 @@ export const SkeletonOne = () => {
       <motion.div
         {...props}
         className={cn(
-          "w-full h-14 md:h-40 p-2 rounded-lg relative shadow-lg flex items-center bg-gradient-to-b from-neutral-900 to-black justify-center",
+          "w-full h-14 md:h-40 p-2 rounded-lg relative shadow-lg flex items-center bg-linear-to-b from-neutral-900 to-black justify-center",
           props.className
         )}
       >
@@ -671,7 +671,7 @@ export const Globe = ({ className }: { className?: string }) => {
       {isBatterySaving && (
         <div
           style={{ width: 600, height: 600, maxWidth: "100%", aspectRatio: 1 }}
-          className={cn("pointer-events-none flex items-center justify-center bg-gradient-to-br from-neutral-900 to-black rounded-full", className)}
+          className={cn("pointer-events-none flex items-center justify-center bg-linear-to-br from-neutral-900 to-black rounded-full", className)}
         >
           <div className="text-center">
             <div className="text-4xl mb-2">🔋</div>

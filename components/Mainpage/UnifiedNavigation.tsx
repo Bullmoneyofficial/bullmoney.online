@@ -135,7 +135,7 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
                 disabled={disabled || currentPage <= 1}
                 className={`
                   relative z-10 w-11 h-11 md:w-14 md:h-14 rounded-full
-                  bg-gradient-to-br from-slate-950 to-black
+                  bg-linear-to-br from-slate-950 to-black
                   border border-white/30
                   flex items-center justify-center
                   transition-all duration-300 touch-manipulation
@@ -189,7 +189,7 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
                 disabled={disabled || currentPage >= totalPages}
                 className={`
                   relative z-10 w-11 h-11 md:w-14 md:h-14 rounded-full
-                  bg-gradient-to-br from-slate-950 to-black
+                  bg-linear-to-br from-slate-950 to-black
                   border border-white/30
                   flex items-center justify-center
                   transition-all duration-300 touch-manipulation
@@ -246,7 +246,7 @@ export const UnifiedNavigation: React.FC<UnifiedNavigationProps> = ({
               disabled={disabled}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="relative z-10 w-full h-full rounded-full bg-gradient-to-br from-slate-900 via-slate-950 to-black border border-white/30 flex items-center justify-center group"
+              className="relative z-10 w-full h-full rounded-full bg-linear-to-br from-slate-900 via-slate-950 to-black border border-white/30 flex items-center justify-center group"
               style={{
                 WebkitTapHighlightColor: 'transparent',
                 touchAction: 'manipulation',

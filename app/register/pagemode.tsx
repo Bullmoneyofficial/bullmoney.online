@@ -755,7 +755,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
         {/* Existing background elements */}
         <div className={cn(
-          "absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent to-transparent opacity-50 transition-colors duration-500",
+          "absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent to-transparent opacity-50 transition-colors duration-500",
           isVantage ? "via-purple-900" : "via-neutral-900"
         )} />
         <div className={cn(
@@ -867,8 +867,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                           className={cn(
                             "absolute inset-0 -z-10 rounded-full",
                             partner === "Vantage"
-                              ? "bg-gradient-to-r from-purple-500 to-violet-600 shadow-[0_0_25px_rgba(255, 255, 255,0.45)]"
-                              : "bg-gradient-to-r from-sky-500 to-blue-600 shadow-[0_0_25px_rgba(255, 255, 255,0.45)]"
+                              ? "bg-linear-to-r from-purple-500 to-violet-600 shadow-[0_0_25px_rgba(255, 255, 255,0.45)]"
+                              : "bg-linear-to-r from-sky-500 to-blue-600 shadow-[0_0_25px_rgba(255, 255, 255,0.45)]"
                           )}
                           transition={{ type: "spring", stiffness: 400, damping: 28 }}
                         />
@@ -911,7 +911,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         onClick={handleNext}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="w-full py-3.5 md:py-4 bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-xl font-bold text-base md:text-lg tracking-wide transition-all shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] flex items-center justify-center cursor-target"
+                        className="w-full py-3.5 md:py-4 bg-linear-to-r from-purple-600 to-purple-500 text-white rounded-xl font-bold text-base md:text-lg tracking-wide transition-all shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] flex items-center justify-center cursor-target"
                       >
                         Start Free Access <ArrowRight className="w-5 h-5 ml-2" />
                       </motion.button>
@@ -947,8 +947,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     {...getStepProps(1)}
                     title="Open Free Account"
                     className={isVantage 
-                      ? "bg-gradient-to-br from-purple-950/40 via-slate-950 to-neutral-950"
-                      : "bg-gradient-to-br from-sky-950/40 via-slate-950 to-neutral-950"
+                      ? "bg-linear-to-br from-purple-950/40 via-slate-950 to-neutral-950"
+                      : "bg-linear-to-br from-sky-950/40 via-slate-950 to-neutral-950"
                     }
                     actions={
                       <div className="flex flex-col gap-3 md:gap-4">
@@ -977,8 +977,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             className={cn(
                               "w-full py-3.5 rounded-xl font-bold text-white shadow transition flex items-center justify-center gap-2 cursor-target text-base",
                               isVantage
-                                ? "bg-gradient-to-r from-purple-500 to-violet-600 hover:from-violet-600 hover:to-fuchsia-700"
-                                : "bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700"
+                                ? "bg-linear-to-r from-purple-500 to-violet-600 hover:from-violet-600 hover:to-fuchsia-700"
+                                : "bg-linear-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700"
                             )}
                           >
                             <span>Open Free Account</span>
@@ -1207,7 +1207,7 @@ const StepCard = memo(({ number, number2, title, children, actions, className }:
       className
     )}>
       <div className={cn(
-        "pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-gradient-to-l blur-2xl",
+        "pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-linear-to-l blur-2xl",
         useRed ? "from-purple-500/15 via-violet-500/10 to-transparent" : "from-sky-500/15 via-blue-500/10 to-transparent"
       )} />
       <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10" />
@@ -1280,7 +1280,7 @@ function CardPattern({ mouseX, mouseY, randomString }: any) {
   const style = { maskImage, WebkitMaskImage: maskImage as unknown as string };
   return (
     <div className="pointer-events-none absolute inset-0">
-      <motion.div className="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-700 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
+      <motion.div className="absolute inset-0 bg-linear-to-r from-green-500 to-blue-700 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
       <motion.div className="absolute inset-0 opacity-0 mix-blend-overlay group-hover/card:opacity-100" style={style}>
         <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-white font-mono font-bold transition duration-500">{randomString}</p>
       </motion.div>
@@ -1321,7 +1321,7 @@ function CardPatternRed({ mouseX, mouseY, randomString }: any) {
   const style = { maskImage, WebkitMaskImage: maskImage as unknown as string };
   return (
     <div className="pointer-events-none absolute inset-0">
-      <motion.div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-violet-600 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
+      <motion.div className="absolute inset-0 bg-linear-to-r from-purple-500 to-violet-600 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
       <motion.div className="absolute inset-0 opacity-0 mix-blend-overlay group-hover/card:opacity-100" style={style}>
         <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-violet-100/90 font-mono font-bold transition duration-500">{randomString}</p>
       </motion.div>

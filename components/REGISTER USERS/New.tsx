@@ -734,7 +734,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       )}>
 
         {/* Existing background elements */}
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white to-transparent opacity-50" />
+        <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-white to-transparent opacity-50" />
         <div className="absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full blur-[80px] pointer-events-none transition-colors duration-500 gpu-accel bg-white/10" />
 
         <div className="mb-6 md:mb-8 text-center">
@@ -1223,7 +1223,7 @@ const StepCard = memo(({ number, number2, title, children, actions, className }:
         <span className="absolute inset-[-100%] animate-[spin_8s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ffffff_50%,#00000000_100%)] opacity-10" />
       </div>
       
-      <div className="pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-gradient-to-l blur-2xl from-white/20 via-white/10 to-transparent" />
+      <div className="pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-linear-to-l blur-2xl from-white/20 via-white/10 to-transparent" />
       <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10" />
       <div className="flex items-center justify-between mb-4 md:mb-6">
         <span className="inline-flex items-center gap-2 text-[10px] md:text-[11px] uppercase tracking-[0.18em] px-2 py-1 rounded-md ring-2 text-white/90 ring-white/30 bg-black/60">
@@ -1291,7 +1291,7 @@ function CardPattern({ mouseX, mouseY, randomString }: any) {
   const style = { maskImage, WebkitMaskImage: maskImage as unknown as string };
   return (
     <div className="pointer-events-none absolute inset-0">
-      <motion.div className="absolute inset-0 bg-gradient-to-r from-white to-white opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
+      <motion.div className="absolute inset-0 bg-linear-to-r from-white to-white opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
       <motion.div className="absolute inset-0 opacity-0 mix-blend-overlay group-hover/card:opacity-100" style={style}>
         <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-white font-mono font-bold transition duration-500">{randomString}</p>
       </motion.div>
@@ -1332,7 +1332,7 @@ function CardPatternRed({ mouseX, mouseY, randomString }: any) {
   const style = { maskImage, WebkitMaskImage: maskImage as unknown as string };
   return (
     <div className="pointer-events-none absolute inset-0">
-      <motion.div className="absolute inset-0 bg-gradient-to-r from-white to-white opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
+      <motion.div className="absolute inset-0 bg-linear-to-r from-white to-white opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
       <motion.div className="absolute inset-0 opacity-0 mix-blend-overlay group-hover/card:opacity-100" style={style}>
         <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-white/90 font-mono font-bold transition duration-500">{randomString}</p>
       </motion.div>

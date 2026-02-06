@@ -38,7 +38,7 @@ export function AboutContent() {
         </div>
 
         {/* chrome-blue accent stripe */}
-        <div className="pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-gradient-to-l from-sky-500/20 via-white/15 to-indigo-500/0 blur-2xl z-0" />
+        <div className="pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-linear-to-l from-sky-500/20 via-white/15 to-indigo-500/0 blur-2xl z-0" />
 
         {/* decorative SVG */}
         <svg
@@ -67,7 +67,7 @@ export function AboutContent() {
                   priority
                 />
               </div>
-              <h1 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-sky-400 via-white to-indigo-400 bg-clip-text text-transparent">
+              <h1 className="text-3xl md:text-4xl font-black bg-linear-to-r from-sky-400 via-white to-indigo-400 bg-clip-text text-transparent">
                 About Us
               </h1>
             </div>
@@ -111,7 +111,7 @@ export function AboutContent() {
           </motion.section>
 
           {/* Divider */}
-          <div className="my-8 h-px w-full bg-gradient-to-r from-sky-500/20 via-white/20 to-indigo-500/20" />
+          <div className="my-8 h-px w-full bg-linear-to-r from-sky-500/20 via-white/20 to-indigo-500/20" />
 
           {/* Our Brokers */}
           <motion.section {...fade}>
@@ -121,7 +121,7 @@ export function AboutContent() {
               {/* Vantage card */}
               <motion.article
                 {...fade}
-                className="rounded-2xl p-5 ring-1 ring-white/10 bg-gradient-to-br from-neutral-900/60 to-neutral-900/20"
+                className="rounded-2xl p-5 ring-1 ring-white/10 bg-linear-to-br from-neutral-900/60 to-neutral-900/20"
               >
                 <div className="flex items-center gap-3">
                   <div className="relative h-10 w-10 overflow-hidden rounded-lg ring-1 ring-white/10 bg-neutral-900">
@@ -146,7 +146,7 @@ export function AboutContent() {
               {/* XM card */}
               <motion.article
                 {...fade}
-                className="rounded-2xl p-5 ring-1 ring-white/10 bg-gradient-to-br from-neutral-900/60 to-neutral-900/20"
+                className="rounded-2xl p-5 ring-1 ring-white/10 bg-linear-to-br from-neutral-900/60 to-neutral-900/20"
               >
                 <div className="flex items-center gap-3">
                   <div className="relative h-10 w-10 overflow-hidden rounded-lg ring-1 ring-white/10 bg-neutral-900">
@@ -169,7 +169,7 @@ export function AboutContent() {
           </motion.section>
 
           {/* Divider */}
-          <div className="my-8 h-px w-full bg-gradient-to-r from-sky-500/20 via-white/20 to-indigo-500/20" />
+          <div className="my-8 h-px w-full bg-linear-to-r from-sky-500/20 via-white/20 to-indigo-500/20" />
 
           {/* Funded Firms */}
           <motion.section {...fade}>
@@ -179,7 +179,7 @@ export function AboutContent() {
               {/* GOAT Funded Trader */}
               <motion.article
                 {...fade}
-                className="rounded-2xl p-5 ring-1 ring-white/10 bg-gradient-to-br from-neutral-900/60 to-neutral-900/20"
+                className="rounded-2xl p-5 ring-1 ring-white/10 bg-linear-to-br from-neutral-900/60 to-neutral-900/20"
               >
                 <div className="flex items-center gap-3">
                   <div className="relative h-10 w-10 overflow-hidden rounded-lg ring-1 ring-white/10 bg-neutral-900">
@@ -202,7 +202,7 @@ export function AboutContent() {
               {/* FTMO */}
               <motion.article
                 {...fade}
-                className="rounded-2xl p-5 ring-1 ring-white/10 bg-gradient-to-br from-neutral-900/60 to-neutral-900/20"
+                className="rounded-2xl p-5 ring-1 ring-white/10 bg-linear-to-br from-neutral-900/60 to-neutral-900/20"
               >
                 <div className="flex items-center gap-3">
                   <div className="relative h-10 w-10 overflow-hidden rounded-lg ring-1 ring-white/10 bg-neutral-900">
@@ -228,7 +228,7 @@ export function AboutContent() {
           <TestimonialsCarousel />
 
           {/* CTA / Footer */}
-          <div className="mt-8 h-px w-full bg-gradient-to-r from-sky-500/20 via-white/20 to-indigo-500/20" />
+          <div className="mt-8 h-px w-full bg-linear-to-r from-sky-500/20 via-white/20 to-indigo-500/20" />
           <footer className="mt-6 flex items-center justify-between">
             <Link
               href="/"
@@ -236,7 +236,7 @@ export function AboutContent() {
             >
               Back
             </Link>
-            <span className="text-sm bg-gradient-to-r from-sky-400 via-white to-indigo-400 bg-clip-text text-transparent font-semibold">
+            <span className="text-sm bg-linear-to-r from-sky-400 via-white to-indigo-400 bg-clip-text text-transparent font-semibold">
               • • •
             </span>
           </footer>
@@ -313,7 +313,7 @@ export function TestimonialsCarousel() {
                 fill
                 className="object-cover opacity-60"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent" />
+              <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/60 to-transparent" />
               <div className="absolute bottom-10 left-8 text-white max-w-sm space-y-3">
                 <div className="flex items-center gap-3">
                   <div className="relative w-10 h-10 rounded-full overflow-hidden ring-1 ring-white/10 bg-neutral-800">

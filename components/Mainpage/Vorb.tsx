@@ -26,7 +26,7 @@ export const Vorb = ({
 }: VorbProps) => {
   return (
     <motion.div
-      className={`rounded-full bg-gradient-to-br from-white to-white ${className}`}
+      className={`rounded-full bg-linear-to-br from-white to-white ${className}`}
       style={{ width: size, height: size }}
       animate={{
         scale: [1, 1.2, 1],

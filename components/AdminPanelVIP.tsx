@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
   Users,
@@ -270,33 +269,22 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
   if (!isOpen) return null;
 
   return (
-    <AnimatePresence>
+    <>
       {/* Backdrop */}
-      <motion.div
-        key="admin-backdrop"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[9999998] bg-black/70 backdrop-blur-2xl"
+      <div
+        className="fixed inset-0 z-[9999998] bg-black/90"
         onClick={handleDoubleTap}
       />
       {/* Modal Container */}
-      <motion.div
-        key="admin-modal-container"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+      <div
         className="fixed inset-0 z-[9999999] flex items-center justify-center p-2 sm:p-3 md:p-4 pointer-events-none"
       >
         {/* Modal Content */}
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          className="relative w-full max-w-4xl md:max-w-5xl lg:max-w-6xl max-h-[93vh] sm:max-h-[92vh] bg-gradient-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl rounded-xl sm:rounded-2xl border border-white/50 shadow-2xl shadow-white/30 overflow-hidden flex flex-col pointer-events-auto"
+        <div
+          className="relative w-full max-w-4xl md:max-w-5xl lg:max-w-6xl max-h-[93vh] sm:max-h-[92vh] bg-linear-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 rounded-xl sm:rounded-2xl border border-white/50 overflow-hidden flex flex-col pointer-events-auto"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-2.5 sm:p-3 md:p-4 border-b border-white/30 flex-shrink-0 bg-gradient-to-r from-white/20 via-white/15 to-white/15">
+          <div className="flex items-center justify-between p-2.5 sm:p-3 md:p-4 border-b border-white/30 flex-shrink-0 bg-linear-to-r from-white/20 via-white/15 to-white/15">
             <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 min-w-0 flex-1">
               <Shield className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white flex-shrink-0 drop-shadow-[0_0_8px_rgba(255, 255, 255,0.6)]" />
               <h2 className="text-sm sm:text-base md:text-xl font-bold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)] truncate">Admin Panel</h2>
@@ -357,10 +345,10 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-2.5 sm:py-3 bg-gradient-to-r from-white to-white hover:from-white hover:to-white text-white font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base shadow-lg shadow-white/20"
+                  className="w-full py-2.5 sm:py-3 bg-linear-to-r from-white to-white hover:from-white hover:to-white text-white font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base shadow-lg shadow-white/20"
                 >
                   {loading ? (
-                    <Loader className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                    <Loader className="w-4 h-4 sm:w-5 sm:h-5" />
                   ) : (
                     <>
                       <Shield className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -416,7 +404,7 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                   disabled={refreshing}
                   className="p-2 hover:bg-white/25 rounded-lg transition-all border border-transparent hover:border-white/40"
                 >
-                  <RefreshCw className={`w-4 h-4 text-white drop-shadow-[0_0_4px_rgba(255, 255, 255,0.5)] ${refreshing ? 'animate-spin' : ''}`} />
+                  <RefreshCw className="w-4 h-4 text-white" />
                 </button>
               </div>
 
@@ -447,11 +435,9 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                     ).map((user) => {
                       const isRecruit = activeTab === 'recruits' || (activeTab === 'vip' && vipRecruits.some(r => r.id === user.id));
                       return (
-                      <motion.div
+                      <div
                         key={`${isRecruit ? 'recruit' : 'user'}-${user.id}`}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className={`p-3 bg-gradient-to-br from-white/10 via-white/5 to-zinc-900/30 hover:from-white/20 hover:via-white/10 hover:to-zinc-900/40 border rounded-lg cursor-pointer transition-all ${
+                        className={`p-3 bg-linear-to-br from-white/10 via-white/5 to-zinc-900/30 hover:from-white/20 hover:via-white/10 hover:to-zinc-900/40 border rounded-lg cursor-pointer transition-all ${
                           selectedUser?.id === user.id
                             ? 'border-white/60 shadow-lg shadow-white/10'
                             : 'border-white/20 hover:border-white/40'
@@ -465,8 +451,8 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                         <div className="flex items-center gap-3">
                           <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 ${
                             isRecruit 
-                              ? 'bg-gradient-to-br from-white to-indigo-500' 
-                              : 'bg-gradient-to-br from-white to-white'
+                              ? 'bg-linear-to-br from-white to-indigo-500' 
+                              : 'bg-linear-to-br from-white to-white'
                           }`}>
                             {user.avatar_url || user.image_url ? (
                               <img src={user.avatar_url || user.image_url} alt="" className="w-full h-full rounded-full object-cover" />
@@ -493,9 +479,9 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                               <p className="text-[10px] text-white/80 truncate drop-shadow-[0_0_3px_rgba(255, 255, 255,0.4)]">MT5: {user.mt5_id}</p>
                             )}
                           </div>
-                          <ChevronRight className="w-4 h-4 text-white flex-shrink-0 drop-shadow-[0_0_4px_rgba(255, 255, 255,0.5)]" />
+                          <ChevronRight className="w-4 h-4 text-white flex-shrink-0" />
                         </div>
-                      </motion.div>
+                      </div>
                     )})}
 
                     {((activeTab === 'users' && filteredUsers.length === 0) || 
@@ -525,7 +511,7 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                       {/* User Header */}
                       <div className="flex items-start justify-between mb-6">
                         <div className="flex items-center gap-3">
-                          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-white to-white flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-white/30">
+                          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-linear-to-br from-white to-white flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-white/30">
                             {selectedUser.avatar_url ? (
                               <img
                                 src={selectedUser.avatar_url || selectedUser.image_url}
@@ -578,8 +564,8 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                             onClick={() => toggleVipStatus(selectedUser.id, selectedUser.is_vip, (selectedUser as any)._isRecruit)}
                             className={`p-1.5 sm:p-2 rounded-lg transition-all font-semibold flex items-center gap-1.5 px-2.5 sm:px-3 whitespace-nowrap text-xs sm:text-sm ${
                               selectedUser.is_vip
-                                ? 'bg-gradient-to-r from-slate-600 to-slate-500 text-white hover:from-slate-500 hover:to-slate-400 shadow-lg shadow-slate-500/30'
-                                : 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white hover:from-indigo-500 hover:to-indigo-400 shadow-lg shadow-indigo-500/30'
+                                ? 'bg-linear-to-r from-slate-600 to-slate-500 text-white hover:from-slate-500 hover:to-slate-400 shadow-lg shadow-slate-500/30'
+                                : 'bg-linear-to-r from-indigo-600 to-indigo-500 text-white hover:from-indigo-500 hover:to-indigo-400 shadow-lg shadow-indigo-500/30'
                             }`}
                             title={selectedUser.is_vip ? 'Remove VIP Status' : 'Make VIP'}
                           >
@@ -599,7 +585,7 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                             onClick={() => setIsEditing(!isEditing)}
                             className={`p-1.5 sm:p-2 rounded-lg transition-all flex items-center gap-1.5 px-2.5 sm:px-3 whitespace-nowrap text-xs sm:text-sm font-semibold ${
                               isEditing
-                                ? 'bg-gradient-to-r from-white to-white text-white shadow-lg shadow-white/30'
+                                ? 'bg-linear-to-r from-white to-white text-white shadow-lg shadow-white/30'
                                 : 'bg-slate-800/70 border border-white/40 text-white hover:bg-slate-700/70 hover:border-white/60'
                             }`}
                           >
@@ -757,9 +743,9 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                               <button
                                 onClick={() => saveUserEdits((selectedUser as any)._isRecruit)}
                                 disabled={loading}
-                                className="flex-1 py-2 sm:py-2.5 bg-gradient-to-r from-white to-white hover:from-white hover:to-white text-white text-xs sm:text-sm font-semibold rounded-lg transition-all shadow-lg shadow-white/30 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex-1 py-2 sm:py-2.5 bg-linear-to-r from-white to-white hover:from-white hover:to-white text-white text-xs sm:text-sm font-semibold rounded-lg transition-all shadow-lg shadow-white/30 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
-                                {loading ? <Loader className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4 drop-shadow-[0_0_4px_rgba(255,255,255,0.5)]" />}
+                                {loading ? <Loader className="w-4 h-4" /> : <Check className="w-4 h-4" />}
                                 <span className="drop-shadow-[0_0_4px_rgba(255,255,255,0.3)]">Save Changes</span>
                               </button>
                               <button
@@ -864,24 +850,15 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
               </div>
             </div>
           )}
-        </motion.div>
+        </div>
 
         {/* Image Modal */}
-        <AnimatePresence>
           {imageModal && (
-            <motion.div
-              key="image-modal-backdrop"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+            <div
               className="fixed inset-0 z-[9999999] flex items-center justify-center p-4 bg-black/95"
               onClick={() => setImageModal(null)}
             >
-              <motion.div
-                key="image-modal-content"
-                initial={{ scale: 0.9 }}
-                animate={{ scale: 1 }}
-                exit={{ scale: 0.9 }}
+              <div
                 className="relative max-w-4xl max-h-[90vh]"
                 onClick={(e) => e.stopPropagation()}
               >
@@ -897,12 +874,11 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                   alt={imageModal.title}
                   className="max-w-full max-h-[85vh] object-contain rounded-lg"
                 />
-              </motion.div>
-            </motion.div>
+              </div>
+            </div>
           )}
-        </AnimatePresence>
-      </motion.div>
-    </AnimatePresence>
+      </div>
+    </>
   );
 }
 

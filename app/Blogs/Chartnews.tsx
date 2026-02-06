@@ -788,7 +788,7 @@ const NewsFeedContent = memo(({ activeMarket, onClose }: { activeMarket: MarketF
                                                 ) : (
                                                     <div className="h-44 w-full bg-black animate-pulse" />
                                                 )}
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                                                <div className="absolute inset-0 bg-linear-to-t from-black via-black/40 to-transparent" />
                                                 <button
                                                     type="button"
                                                     onClick={(e) => {

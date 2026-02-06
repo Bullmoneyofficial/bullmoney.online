@@ -22,7 +22,7 @@ const TelegramFeed = dynamic(
 
 export default function CommunityContent() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950 pt-32 pb-20">
+    <main className="min-h-screen bg-linear-to-b from-zinc-950 via-zinc-900 to-zinc-950 pt-32 pb-20">
       <div className="container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-16">
@@ -56,7 +56,7 @@ export default function CommunityContent() {
             href="https://discord.com/invite/9vVB44ZrNA"
             target="_blank"
             rel="noopener noreferrer"
-            className="group bg-gradient-to-br from-white to-white hover:from-white hover:to-white rounded-lg p-6 text-center transition-all hover:scale-105"
+            className="group bg-linear-to-br from-white to-white hover:from-white hover:to-white rounded-lg p-6 text-center transition-all hover:scale-105"
           >
             <div className="text-3xl mb-2">💬</div>
             <h3 className="text-white font-bold mb-1">Discord Server</h3>
@@ -70,7 +70,7 @@ export default function CommunityContent() {
             href="https://t.me/bullmoneyfx"
             target="_blank"
             rel="noopener noreferrer"
-            className="group bg-gradient-to-br from-white to-white hover:from-white hover:to-white rounded-lg p-6 text-center transition-all hover:scale-105"
+            className="group bg-linear-to-br from-white to-white hover:from-white hover:to-white rounded-lg p-6 text-center transition-all hover:scale-105"
           >
             <div className="text-3xl mb-2">✈️</div>
             <h3 className="text-white font-bold mb-1">Telegram Channel</h3>
@@ -84,7 +84,7 @@ export default function CommunityContent() {
             href="https://www.instagram.com/bullmoney.online/"
             target="_blank"
             rel="noopener noreferrer"
-            className="group bg-gradient-to-br from-white to-pink-600 hover:from-white hover:to-pink-500 rounded-lg p-6 text-center transition-all hover:scale-105"
+            className="group bg-linear-to-br from-white to-pink-600 hover:from-white hover:to-pink-500 rounded-lg p-6 text-center transition-all hover:scale-105"
           >
             <div className="text-3xl mb-2">📸</div>
             <h3 className="text-white font-bold mb-1">Instagram</h3>
@@ -98,7 +98,7 @@ export default function CommunityContent() {
             href="https://youtube.com/@bullmoney.online"
             target="_blank"
             rel="noopener noreferrer"
-            className="group bg-gradient-to-br from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 rounded-lg p-6 text-center transition-all hover:scale-105"
+            className="group bg-linear-to-br from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 rounded-lg p-6 text-center transition-all hover:scale-105"
           >
             <div className="text-3xl mb-2">🎬</div>
             <h3 className="text-white font-bold mb-1">YouTube Channel</h3>
@@ -111,7 +111,7 @@ export default function CommunityContent() {
 
         {/* Telegram Feed Section */}
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-white/10 via-white/5 to-transparent rounded-2xl blur-3xl -z-10" />
+          <div className="absolute inset-0 bg-linear-to-r from-white/10 via-white/5 to-transparent rounded-2xl blur-3xl -z-10" />
           
           <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-8">
             <TelegramFeed limit={15} refreshInterval={300000} />

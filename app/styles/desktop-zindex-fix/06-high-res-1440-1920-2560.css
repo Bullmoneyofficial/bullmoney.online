@@ -19,7 +19,7 @@
   }
   
   /* Trading pills - still left-anchored, maintain size */
-  .rounded-r-full.bg-gradient-to-br {
+  .rounded-r-full.bg-linear-to-br {
     min-width: max-content !important;
   }
 }

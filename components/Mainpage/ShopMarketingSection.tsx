@@ -142,8 +142,8 @@ export const SocialsRow = () => {
   return (
     <div className="relative flex w-full flex-col items-center justify-center overflow-hidden py-12">
       {/* Side Fade Gradients */}
-      <div className="absolute left-0 top-0 z-30 h-full w-32 bg-gradient-to-r from-neutral-950 via-neutral-950/80 to-transparent pointer-events-none"></div>
-      <div className="absolute right-0 top-0 z-30 h-full w-32 bg-gradient-to-l from-neutral-950 via-neutral-950/80 to-transparent pointer-events-none"></div>
+      <div className="absolute left-0 top-0 z-30 h-full w-32 bg-linear-to-r from-neutral-950 via-neutral-950/80 to-transparent pointer-events-none"></div>
+      <div className="absolute right-0 top-0 z-30 h-full w-32 bg-linear-to-l from-neutral-950 via-neutral-950/80 to-transparent pointer-events-none"></div>
 
       <div className="flex w-full overflow-hidden select-none">
         <motion.div
@@ -358,7 +358,7 @@ const BackgroundGrids = () => {
         <GridLineVertical className="left-0" />
         <GridLineVertical className="left-auto right-0" />
       </div>
-      <div className="relative h-full w-full bg-gradient-to-b from-transparent via-white/10 to-transparent">
+      <div className="relative h-full w-full bg-linear-to-b from-transparent via-white/10 to-transparent">
         <GridLineVertical className="left-0" />
         <GridLineVertical className="left-auto right-0" />
       </div>

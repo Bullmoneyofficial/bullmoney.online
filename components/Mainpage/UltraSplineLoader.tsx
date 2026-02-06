@@ -64,7 +64,7 @@ function UltraLoadingScreen({ progress, priority, fps }: {
   const etaSeconds = progress?.eta ? Math.ceil(progress.eta) : 0;
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#050814] via-[#0b1226]/90 to-[#04060f] overflow-hidden">
+    <div className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-[#050814] via-[#0b1226]/90 to-[#04060f] overflow-hidden">
       {/* Animated grid background */}
       <div className="absolute inset-0 opacity-[0.03]">
         <div
@@ -178,7 +178,7 @@ function UltraLoadingScreen({ progress, priority, fps }: {
             </span>
           </div>
 
-          <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-white">
+          <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-linear-to-r from-white via-white to-white">
             {progress
               ? `${((progress.loaded / progress.total) * 100).toFixed(0)}% Loaded`
               : 'Preparing Scene'}
@@ -190,14 +190,14 @@ function UltraLoadingScreen({ progress, priority, fps }: {
               {/* Progress bar */}
               <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden border border-white/20">
                 <div
-                  className="h-full bg-gradient-to-r from-white via-white to-white rounded-full relative overflow-hidden"
+                  className="h-full bg-linear-to-r from-white via-white to-white rounded-full relative overflow-hidden"
                   style={{
                     width: `${(progress.loaded / progress.total) * 100}%`,
                     transition: 'width 0.3s ease'
                   }}
                 >
                   <div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                    className="absolute inset-0 bg-linear-to-r from-transparent via-white/30 to-transparent"
                     style={{
                       animation: 'shimmer 2s infinite',
                       backgroundSize: '200% 100%'
@@ -523,7 +523,7 @@ export function UltraSplineLoader({
 
       {/* Error state */}
       {loadState.status === 'error' && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-red-950/20 via-black to-red-950/20">
+        <div className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-red-950/20 via-black to-red-950/20">
           <div className="text-center space-y-4 p-8 rounded-2xl bg-red-500/10 border border-red-500/30 max-w-md">
             <div className="text-4xl">⚠️</div>
             <h3 className="text-xl font-bold text-white">Load Failed</h3>
@@ -532,7 +532,7 @@ export function UltraSplineLoader({
             </p>
             <button
               onClick={() => window.location.reload()}
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-white to-white text-white font-semibold hover:from-white hover:to-white transition-all"
+              className="px-6 py-3 rounded-xl bg-linear-to-r from-white to-white text-white font-semibold hover:from-white hover:to-white transition-all"
             >
               Retry
             </button>

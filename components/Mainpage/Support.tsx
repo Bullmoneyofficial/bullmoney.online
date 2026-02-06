@@ -60,11 +60,11 @@ const SupportWidget = () => {
           <div className="absolute inset-0 rounded-full bg-white blur-md opacity-40 group-hover:opacity-75 group-hover:blur-lg transition-all duration-500"></div>
 
           {/* 2. MAIN BUTTON BACKGROUND (Gradient) */}
-          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white via-white to-indigo-700 shadow-[0_0_0_1px_rgba(255,255,255,0.1)] overflow-hidden">
+          <div className="absolute inset-0 rounded-full bg-linear-to-br from-white via-white to-indigo-700 shadow-[0_0_0_1px_rgba(255,255,255,0.1)] overflow-hidden">
             
             {/* 3. SHIMMER EFFECT (The light beam) */}
             <div className="absolute top-0 left-0 w-full h-full animate-shimmer">
-              <div className="w-1/2 h-full bg-gradient-to-r from-transparent via-white/40 to-transparent blur-sm"></div>
+              <div className="w-1/2 h-full bg-linear-to-r from-transparent via-white/40 to-transparent blur-sm"></div>
             </div>
             
             {/* 4. INNER SHADOW for depth */}
@@ -88,7 +88,7 @@ const SupportWidget = () => {
             {/* Notification Dot (Glowing Red/Pink for contrast) */}
             <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-gradient-to-r from-red-500 to-pink-600 border border-white shadow-sm"></span>
+              <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-linear-to-r from-red-500 to-pink-600 border border-white shadow-sm"></span>
             </span>
           </div>
         </a>
@@ -110,7 +110,7 @@ export default function App() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <span className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-white to-white tracking-tight">
+              <span className="text-2xl font-black bg-clip-text text-transparent bg-linear-to-r from-white to-white tracking-tight">
                 BULLMONEY
               </span>
             </div>
@@ -133,7 +133,7 @@ export default function App() {
             <div className="relative z-10 pb-8 bg-white sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32 pt-20 px-4 sm:px-6">
               <h1 className="text-4xl tracking-tighter font-extrabold text-slate-900 sm:text-5xl md:text-6xl mb-6">
                 <span className="block">Next Gen</span>
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-white to-white">
+                <span className="block text-transparent bg-clip-text bg-linear-to-r from-white to-white">
                   Crypto Support
                 </span>
               </h1>
@@ -142,7 +142,7 @@ export default function App() {
               </p>
               <div className="mt-8 sm:flex sm:justify-start">
                 <div className="rounded-full shadow-lg shadow-white/30">
-                  <a href="#" className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-bold rounded-full text-white bg-gradient-to-r from-white to-indigo-600 hover:from-white hover:to-indigo-700 md:py-4 md:text-lg md:px-10 transition-all">
+                  <a href="#" className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-bold rounded-full text-white bg-linear-to-r from-white to-indigo-600 hover:from-white hover:to-indigo-700 md:py-4 md:text-lg md:px-10 transition-all">
                     Start Trading
                   </a>
                 </div>

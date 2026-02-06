@@ -62,7 +62,7 @@ export function AdminButton() {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.8 }}
       onClick={openAdminPanel}
-      className={`fixed bottom-4 right-4 z-[99999] p-3 bg-gradient-to-r from-white to-white hover:from-white hover:to-white rounded-full transition-all group ${shouldSkipHeavyEffects ? '' : 'shadow-lg shadow-white/30'}`}
+      className={`fixed bottom-4 right-4 z-[99999] p-3 bg-linear-to-r from-white to-white hover:from-white hover:to-white rounded-full transition-all group ${shouldSkipHeavyEffects ? '' : 'shadow-lg shadow-white/30'}`}
       title="Open Admin Panel"
     >
       <Shield className="w-5 h-5 text-white" />

@@ -249,7 +249,7 @@ export const LiveMiniPreview = ({
       </div>
 
       {/* --- Main Chart Area (Hero) --- */}
-      <div className="h-28 relative w-full flex flex-col justify-end p-2 overflow-hidden bg-gradient-to-b from-white/[0.02] to-transparent">
+      <div className="h-28 relative w-full flex flex-col justify-end p-2 overflow-hidden bg-linear-to-b from-white/[0.02] to-transparent">
          
          {/* Price Overlay */}
          <div className="absolute top-2 left-2 z-10">

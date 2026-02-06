@@ -131,8 +131,6 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
         label: "Dashboard",
         tips: ["Manage Site", "Logout", "View Orders"],
         onClick: onAdminClick,
-        triggerComponent: undefined,
-        href: undefined
       });
     }
 
@@ -150,7 +148,7 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
             width: 'auto',
           }}
         >
-          <Link href="/" className="relative flex-shrink-0 w-16 h-16 block">
+          <Link href="/" className="relative shrink-0 w-16 h-16 block">
             <Image
               src="/ONcc2l601.svg"
               alt="BullMoney"
@@ -159,7 +157,7 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
               priority
             />
           </Link>
-          <Link href="/" className="flex-shrink-0 text-2xl font-semibold tracking-wide" style={{
+          <Link href="/" className="shrink-0 text-2xl font-semibold tracking-wide" style={{
             color: '#ffffff',
             textShadow: '0 0 8px rgba(255, 255, 255, 0.3)',
             letterSpacing: '0.05em'

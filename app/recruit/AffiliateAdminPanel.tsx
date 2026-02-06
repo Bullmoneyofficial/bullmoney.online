@@ -246,7 +246,7 @@ export default function AffiliateAdminPanel() {
             onClick={fetchRecruits}
             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-900/70 hover:bg-slate-800/70 border border-slate-800 text-sm whitespace-nowrap"
           >
-            <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} /> Refresh
+            <RefreshCw className="w-4 h-4" /> Refresh
           </button>
         </div>
 

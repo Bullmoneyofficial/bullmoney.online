@@ -132,7 +132,7 @@ function FuturisticHero({ onShow }: { onShow: () => void }) {
 
       {/* Animated gradient background */}
       <motion.div
-        className="absolute inset-0 bg-gradient-to-br from-[#0b1729] via-[#111827] to-[#1e293b]"
+        className="absolute inset-0 bg-linear-to-br from-[#0b1729] via-[#111827] to-[#1e293b]"
         animate={{
           backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
         }}
@@ -255,7 +255,7 @@ export const TradingViewDropdown = ({
             <div className="mb-4 flex items-center justify-between">
               <button
                 onClick={() => setOpen((p) => !p)}
-                className="group relative flex items-center gap-3 rounded-full bg-gradient-to-r from-sky-500 via-white to-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-lg transition"
+                className="group relative flex items-center gap-3 rounded-full bg-linear-to-r from-sky-500 via-white to-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-lg transition"
               >
                 <span className="absolute inset-0 rounded-full border border-sky-400 opacity-0 blur-sm transition group-hover:opacity-100"></span>
                 <ChartBar className="relative z-10 h-4 w-4 transition-transform group-hover:rotate-12" />
@@ -285,7 +285,7 @@ export const TradingViewDropdown = ({
                       key={idx}
                       onClick={() => handleSelect(chart)}
                       className={cn(
-                        "block w-full px-4 py-2 text-left text-sm text-white transition-all duration-200 hover:bg-gradient-to-r hover:from-sky-600 hover:to-white",
+                        "block w-full px-4 py-2 text-left text-sm text-white transition-all duration-200 hover:bg-linear-to-r hover:from-sky-600 hover:to-white",
                         selected.label === chart.label && "bg-sky-600/60 font-bold"
                       )}
                     >

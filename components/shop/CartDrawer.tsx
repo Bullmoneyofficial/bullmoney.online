@@ -3,11 +3,13 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Minus, Plus, ShoppingBag, ArrowRight, ChevronLeft, ArrowLeft } from 'lucide-react';
+import { X, Minus, Plus, ShoppingBag, ArrowRight, ChevronLeft, ArrowLeft, Tag, Loader2, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/stores/cart-store';
+import { toast } from 'sonner';
+import TextType from '@/components/TextType';
 
 // ============================================================================
 // CART DRAWER - SLIDE-OUT PANEL WITH PORTAL
@@ -25,14 +27,44 @@ export function CartDrawer() {
     updateQuantity, 
     getSummary,
     clearCart,
+    setDiscountCode,
+    discountCode,
   } = useCartStore();
 
   const summary = getSummary();
+  const [couponInput, setCouponInput] = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [showCoupon, setShowCoupon] = useState(false);
 
   // Mount check for portal
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const handleApplyCoupon = async () => {
+    if (!couponInput.trim() || couponLoading) return;
+    setCouponLoading(true);
+    try {
+      const res = await fetch('/api/store/coupon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: couponInput.trim().toUpperCase() }),
+      });
+      const data = await res.json();
+      if (res.ok && data.discount) {
+        setDiscountCode(couponInput.trim().toUpperCase(), data.discount);
+        toast.success(`Coupon applied! -$${data.discount.toFixed(2)} off`);
+        setShowCoupon(false);
+        setCouponInput('');
+      } else {
+        toast.error(data.error || 'Invalid coupon code');
+      }
+    } catch {
+      toast.error('Failed to validate coupon');
+    } finally {
+      setCouponLoading(false);
+    }
+  };
 
   const handleContinueShopping = () => {
     closeCart();
@@ -92,15 +124,26 @@ export function CartDrawer() {
             {/* Cart Items - Scrollable */}
             <div className="flex-1 overflow-y-auto overscroll-contain p-4 md:p-6">
               {items.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center">
-                  <ShoppingBag className="w-14 h-14 md:w-16 md:h-16 text-white/20 mb-4" />
-                  <p className="text-white/60 mb-4 md:mb-6">Your cart is empty</p>
+                <div className="h-full flex flex-col items-center justify-center text-center px-6">
+                  <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6">
+                    <ShoppingBag className="w-10 h-10 text-white/20" />
+                  </div>
+                  <h3 className="text-lg font-medium text-white mb-2">Your cart is empty</h3>
+                  <p className="text-white/40 text-sm mb-6 max-w-[240px]">
+                    Looks like you haven&apos;t added anything yet. Explore our collection!
+                  </p>
                   <button
                     onClick={handleContinueShopping}
-                    className="px-5 py-2.5 md:px-6 md:py-3 bg-white text-black rounded-xl text-sm md:text-base hover:bg-white/90 active:scale-95 transition-all flex items-center gap-2"
+                    className="px-6 py-3 bg-white text-black rounded-xl text-sm font-medium hover:bg-white/90 active:scale-95 transition-all flex items-center gap-2"
                   >
-                    <ArrowLeft className="w-4 h-4" />
-                    Continue Shopping
+                    <Sparkles className="w-4 h-4" />
+                    Browse Products
+                  </button>
+                  <button
+                    onClick={handleContinueShopping}
+                    className="mt-3 text-xs text-white/40 hover:text-white/60 transition-colors"
+                  >
+                    or go back to the store
                   </button>
                 </div>
               ) : (
@@ -145,7 +188,7 @@ export function CartDrawer() {
                             onClick={closeCart}
                             className="font-medium text-sm md:text-base hover:text-white/80 transition-colors line-clamp-2"
                           >
-                            {item.product.name}
+                            <TextType text={item.product.name} typingSpeed={Math.max(5, 25 - item.product.name.length / 2)} showCursor={false} loop={false} as="span" />
                           </Link>
                           {optionsText && (
                             <p className="text-white/40 text-xs md:text-sm mt-0.5">{optionsText}</p>
@@ -237,13 +280,61 @@ export function CartDrawer() {
                   </div>
                 )}
 
+                {/* Coupon Code */}
+                {!discountCode ? (
+                  <div className="pt-1">
+                    {!showCoupon ? (
+                      <button
+                        onClick={() => setShowCoupon(true)}
+                        className="flex items-center gap-2 text-xs text-white/50 hover:text-white/70 transition-colors"
+                      >
+                        <Tag className="w-3.5 h-3.5" />
+                        Have a coupon code?
+                      </button>
+                    ) : (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={couponInput}
+                          onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                          onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                          placeholder="Enter code"
+                          className="flex-1 h-10 px-3 bg-white/5 border border-white/10 rounded-lg text-xs text-white
+                                   placeholder:text-white/40 focus:outline-none focus:border-white/20 uppercase tracking-wider"
+                          autoFocus
+                        />
+                        <button
+                          onClick={handleApplyCoupon}
+                          disabled={couponLoading}
+                          className="h-10 px-4 bg-white/10 border border-white/10 rounded-lg text-xs font-medium
+                                   text-white hover:bg-white/20 disabled:opacity-50 transition-colors flex items-center gap-1.5"
+                        >
+                          {couponLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Apply'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between py-1">
+                    <span className="text-xs text-green-400 flex items-center gap-1.5">
+                      <Tag className="w-3 h-3" /> {discountCode}
+                    </span>
+                    <button
+                      onClick={() => setDiscountCode(null, 0)}
+                      className="text-xs text-white/40 hover:text-white/60 transition-colors"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+
                 {/* Actions */}
                 <div className="space-y-2 md:space-y-3 pt-1">
                   <Link
                     href="/store/checkout"
                     onClick={closeCart}
-                    className="w-full h-12 md:h-14 bg-white text-black rounded-xl font-medium
-                             flex items-center justify-center gap-2 hover:bg-white/90 active:scale-[0.98] transition-all"
+                    className="w-full h-12 md:h-14 bg-black text-white border border-white/20 rounded-xl font-medium
+                             flex items-center justify-center gap-2 hover:bg-white/5 active:scale-[0.98] transition-all"
                   >
                     Checkout
                     <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />

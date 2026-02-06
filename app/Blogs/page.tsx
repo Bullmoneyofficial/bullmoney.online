@@ -204,7 +204,7 @@ const BottomControls = ({
             onMouseLeave={() => setIsHovered(false)}
         >
             {showHelper && (
-                <div className="absolute -top-12 left-0 bg-gradient-to-r from-white to-white text-white text-[11px] px-3 py-1.5 rounded-lg shadow-xl animate-pulse flex items-center gap-2 whitespace-nowrap border border-white/20">
+                <div className="absolute -top-12 left-0 bg-linear-to-r from-white to-white text-white text-[11px] px-3 py-1.5 rounded-lg shadow-xl animate-pulse flex items-center gap-2 whitespace-nowrap border border-white/20">
                     <Sparkles size={12} />
                     Customize your vibe here!
                     <div className="absolute -bottom-1 left-4 w-2 h-2 bg-white rotate-45" />
@@ -278,7 +278,7 @@ const SupportWidget = ({ theme }: { theme: Theme }) => {
           className="group relative flex items-center justify-center w-16 h-16 rounded-full transition-all duration-300 hover:-translate-y-1"
         >
           <div className="absolute inset-0 rounded-full bg-[#0066ff] blur-[20px] opacity-40 animate-pulse group-hover:opacity-80 group-hover:scale-110 transition-all duration-500" />
-          <div className="relative flex items-center justify-center w-full h-full bg-gradient-to-br from-[#0033cc] via-[#0066ff] to-[#3399ff] rounded-full shadow-inner border border-[#66b3ff]/50 overflow-hidden z-10">
+          <div className="relative flex items-center justify-center w-full h-full bg-linear-to-br from-[#0033cc] via-[#0066ff] to-[#3399ff] rounded-full shadow-inner border border-[#66b3ff]/50 overflow-hidden z-10">
               <MessageCircle className="w-7 h-7 text-white relative z-30" strokeWidth={2.5} />
           </div>
         </a>

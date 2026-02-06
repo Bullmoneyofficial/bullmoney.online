@@ -247,7 +247,7 @@ export function MusicEmbedModal({
               </div>
 
               <div className="flex items-center gap-4 min-w-0">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-white/20 to-white/20 border border-white/10 flex items-center justify-center">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-linear-to-br from-white/20 to-white/20 border border-white/10 flex items-center justify-center">
                   <IconMusic className="w-6 h-6 sm:w-7 sm:h-7 text-white/80" />
                 </div>
                 <div className="min-w-0">

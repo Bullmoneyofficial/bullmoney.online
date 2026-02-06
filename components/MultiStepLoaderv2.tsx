@@ -1710,7 +1710,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                         initial={{ opacity: 0, scale: 0.8, rotate: -8 }}
                         animate={{ opacity: [0, 0.4, 0], scale: [0.8, 1.1, 1.5], rotate: [0, 6, 12] }}
                         transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-                        className="pointer-events-none absolute inset-[-12px] -z-10 rounded-full bg-gradient-to-r from-white/20 via-white/30 to-rose-400/20 blur-[10px]"
+                        className="pointer-events-none absolute inset-[-12px] -z-10 rounded-full bg-linear-to-r from-white/20 via-white/30 to-rose-400/20 blur-[10px]"
                         style={{ willChange: 'transform, opacity' }}
                       />
                       {Array.from({ length: 10 }).map((_, i) => (
@@ -1987,7 +1987,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                   }}
                 >
                   <motion.div
-                    className="h-full bg-gradient-to-r from-white via-white to-white relative origin-left"
+                    className="h-full bg-linear-to-r from-white via-white to-white relative origin-left"
                     style={{ 
                       width: `${progress}%`,
                       willChange: 'width',
@@ -2258,7 +2258,7 @@ export default function EnhancedQuickGate({ onFinished, reducedAnimations }: Loa
                   }}
                 >
                   <motion.div
-                    className="h-full bg-gradient-to-r from-white via-white to-white rounded-full relative"
+                    className="h-full bg-linear-to-r from-white via-white to-white rounded-full relative"
                     style={{ 
                       width: `${transitionProgress}%`,
                       boxShadow: '0 0 12px #ffffff, 0 0 24px rgba(255, 255, 255, 0.6)',

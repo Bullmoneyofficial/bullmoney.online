@@ -37,6 +37,7 @@ import { SmartScreensaverProvider } from "@/components/SmartScreensaver";
 
 // ✅ LAYOUT PROVIDERS - Client component wrapper for dynamic imports
 import { LayoutProviders } from "@/components/LayoutProviders";
+import { HreflangMeta } from "@/components/HreflangMeta";
 
 // Use system font stack with Inter as preference - avoids network dependency during build
 const inter = {
@@ -510,7 +511,7 @@ export default function RootLayout({
   if (storedVersion && storedVersion !== APP_VERSION) {
     console.log('[CacheBuster] Version mismatch:', storedVersion, '->', APP_VERSION);
     
-    // Clear everything
+    // Clear browser caches (NOT localStorage auth)
     if ('caches' in window) {
       caches.keys().then(function(names) {
         names.forEach(function(name) { caches.delete(name); });
@@ -522,23 +523,25 @@ export default function RootLayout({
       });
     }
     
-    // Clear storage except preserved keys
+    // SAFE clear: Only remove volatile/cache keys, ALWAYS preserve auth & session
     var keysToKeep = ['bullmoney_app_version'].concat(${JSON.stringify(PRESERVED_KEYS)});
     for (var i = localStorage.length - 1; i >= 0; i--) {
       var key = localStorage.key(i);
-      if (key && key.startsWith('bullmoney') && !keysToKeep.includes(key)) {
+      if (!key) continue;
+      // NEVER touch auth/session keys
+      if (keysToKeep.indexOf(key) !== -1) continue;
+      // NEVER touch Supabase auth tokens
+      if (key.indexOf('sb-') === 0 || key.indexOf('supabase') === 0) continue;
+      // NEVER touch cookie-backed auth
+      if (key.indexOf('bm_auth') === 0) continue;
+      // Only clear bullmoney cache/volatile keys
+      if (key.indexOf('bullmoney_cache') === 0 || key.indexOf('bullmoney_temp') === 0 || key.indexOf('bullmoney_spline') === 0 || key.indexOf('bullmoney_image') === 0 || key.indexOf('bullmoney_api') === 0 || key.indexOf('bullmoney_playlist') === 0 || key.indexOf('bullmoney_component') === 0) {
         localStorage.removeItem(key);
       }
     }
     
-    // Set new version and reload
+    // Set new version (NO reload - let React hydrate normally)
     localStorage.setItem('bullmoney_app_version', APP_VERSION);
-    
-    if (!sessionStorage.getItem('_bm_version_reloaded')) {
-      sessionStorage.setItem('_bm_version_reloaded', '1');
-      window.location.reload();
-      return;
-    }
   }
   
   // Initialize version on first load
@@ -981,86 +984,15 @@ export default function RootLayout({
                   }
                 }
               }, { passive: false });
-
-              // Performance Monitoring
-              if ('PerformanceObserver' in window) {
-                try {
-                  // First Contentful Paint
-                  const fcpObserver = new PerformanceObserver((list) => {
-                    for (const entry of list.getEntries()) {
-                      if (entry.name === 'first-contentful-paint') {
-                        console.log('[Perf] FCP:', Math.round(entry.startTime) + 'ms');
-                      }
-                    }
-                  });
-                  fcpObserver.observe({ entryTypes: ['paint'] });
-
-                  // Largest Contentful Paint
-                  const lcpObserver = new PerformanceObserver((list) => {
-                    const entries = list.getEntries();
-                    const lastEntry = entries[entries.length - 1];
-                    console.log('[Perf] LCP:', Math.round(lastEntry.startTime) + 'ms');
-                  });
-                  lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
-
-                  // First Input Delay
-                  const fidObserver = new PerformanceObserver((list) => {
-                    for (const entry of list.getEntries()) {
-                      const fid = entry.processingStart - entry.startTime;
-                      console.log('[Perf] FID:', Math.round(fid) + 'ms');
-                    }
-                  });
-                  fidObserver.observe({ entryTypes: ['first-input'] });
-
-                  // Cumulative Layout Shift
-                  let clsScore = 0;
-                  const clsObserver = new PerformanceObserver((list) => {
-                    for (const entry of list.getEntries()) {
-                      if (!entry.hadRecentInput) {
-                        clsScore += entry.value;
-                      }
-                    }
-                  });
-                  clsObserver.observe({ entryTypes: ['layout-shift'] });
-
-                  // Log final CLS on page hide
-                  window.addEventListener('visibilitychange', () => {
-                    if (document.visibilityState === 'hidden') {
-                      console.log('[Perf] CLS:', clsScore.toFixed(4));
-                    }
-                  });
-                } catch (e) {
-                  console.log('[Perf] Monitoring failed:', e);
-                }
-              }
-
-              // Install Prompt Handling
-              let deferredPrompt;
-              window.addEventListener('beforeinstallprompt', (e) => {
-                e.preventDefault();
-                deferredPrompt = e;
-                console.log('[PWA] Install prompt available');
-                // Dispatch custom event for React to handle
-                window.dispatchEvent(new CustomEvent('pwa-install-available'));
-              });
-
-              window.addEventListener('appinstalled', () => {
-                console.log('[PWA] App installed');
-                deferredPrompt = null;
-              });
-
-              // Expose install prompt method
-              window.showInstallPrompt = function() {
-                if (deferredPrompt) {
-                  deferredPrompt.prompt();
-                  deferredPrompt.userChoice.then((choiceResult) => {
-                    console.log('[PWA] User choice:', choiceResult.outcome);
-                    deferredPrompt = null;
-                  });
-                }
-              };
+              
+              // Performance monitoring loaded via external script for faster initial load
             `,
           }}
+        />
+        {/* External performance monitoring script - loaded after page is interactive */}
+        <Script 
+          src="/scripts/perf-monitor.js" 
+          strategy="afterInteractive"
         />
       </head>
       <body
@@ -1087,6 +1019,7 @@ export default function RootLayout({
                         <ShopProvider>
                           <SmartScreensaverProvider>
                             <LayoutProviders modal={modal}>
+                              <HreflangMeta />
                               {children}
                             </LayoutProviders>
                             {/* Unified Themes Panel (Colors + Effects) */}

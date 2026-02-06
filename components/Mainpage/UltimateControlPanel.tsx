@@ -127,13 +127,13 @@ function StatCard({ icon: Icon, label, value, sublabel, color = '#ffffff' }: {
       <div className="absolute inset-0 bg-slate-900/90 border border-white/30 rounded-xl transition-all duration-300 group-hover:border-white/50 shadow-lg shadow-white/20" />
       
       {/* Inner highlight for depth */}
-      <div className="absolute inset-[1px] rounded-xl bg-gradient-to-br from-white/8 via-transparent to-transparent pointer-events-none" />
+      <div className="absolute inset-[1px] rounded-xl bg-linear-to-br from-white/8 via-transparent to-transparent pointer-events-none" />
       
       {/* Unified Shimmer - LEFT TO RIGHT on hover */}
       <div 
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none overflow-hidden rounded-xl"
       >
-        <div className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-white/0 via-white/30 to-white/0" />
+        <div className="shimmer-line shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-linear-to-r from-white/0 via-white/30 to-white/0" />
       </div>
       
       {/* Accent glow */}
@@ -184,13 +184,13 @@ function PerformanceRing({ score, size = 120 }: { score: number; size?: number }
     <div className="relative group isolate" style={{ width: size, height: size }}>
       {/* Glass background - solid, no blur */}
       <div className="absolute inset-0 rounded-full bg-slate-900/90 border border-white/30 transition-all duration-300 group-hover:border-white/50 shadow-lg shadow-white/20" />
-      <div className="absolute inset-[1px] rounded-full bg-gradient-to-br from-white/8 via-transparent to-transparent pointer-events-none" />
+      <div className="absolute inset-[1px] rounded-full bg-linear-to-br from-white/8 via-transparent to-transparent pointer-events-none" />
       
       {/* Unified Shimmer - LEFT TO RIGHT using CSS animation */}
       <div 
         className="absolute inset-0 opacity-15 group-hover:opacity-25 transition-opacity pointer-events-none overflow-hidden rounded-full panel-shimmer"
       >
-        <div className="shimmer-ltr shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-gradient-to-r from-white/0 via-white/30 to-white/0" style={{ animationDuration: '5s' }} />
+        <div className="shimmer-ltr shimmer-gpu absolute inset-y-0 left-[-100%] w-[100%] bg-linear-to-r from-white/0 via-white/30 to-white/0" style={{ animationDuration: '5s' }} />
       </div>
       
       {/* SVG Ring - properly centered */}
@@ -405,7 +405,7 @@ export function UltimateControlPanel({
               onDragEnd={handleDragEnd}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="relative px-6 py-2.5 rounded-full bg-gradient-to-r from-white/90 to-white/90 backdrop-blur-xl border border-white/20 shadow-2xl flex items-center gap-2 pointer-events-auto group overflow-hidden"
+              className="relative px-6 py-2.5 rounded-full bg-linear-to-r from-white/90 to-white/90 backdrop-blur-xl border border-white/20 shadow-2xl flex items-center gap-2 pointer-events-auto group overflow-hidden"
               style={{
                 boxShadow: `0 8px 32px ${accentColor}40, 0 0 0 1px rgba(255,255,255,0.1)`
               }}
@@ -466,7 +466,7 @@ export function UltimateControlPanel({
               dragElastic={0.1}
               onDragEnd={handleDragEnd}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 z-[250000] max-h-[85vh] overflow-hidden rounded-t-3xl bg-gradient-to-b from-slate-900/95 to-black/95 backdrop-blur-xl border-t border-white/30 shadow-2xl panel-shimmer"
+              className="fixed bottom-0 left-0 right-0 z-[250000] max-h-[85vh] overflow-hidden rounded-t-3xl bg-linear-to-b from-slate-900/95 to-black/95 backdrop-blur-xl border-t border-white/30 shadow-2xl panel-shimmer"
               style={{
                 paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)'
               }}
@@ -631,7 +631,7 @@ export function UltimateControlPanel({
                       </div>
 
                       {/* Screen Info */}
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-white/10 border border-white/10">
+                      <div className="p-4 rounded-xl bg-linear-to-br from-white/10 to-white/10 border border-white/10">
                         <div className="text-xs text-white/50 uppercase tracking-wider font-semibold mb-2">
                           Display
                         </div>
@@ -653,13 +653,13 @@ export function UltimateControlPanel({
 
                       {/* Session + Cache */}
                       <div className="grid grid-cols-2 gap-3">
-                        <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/30">
+                        <div className="p-4 rounded-xl bg-linear-to-br from-white/10 to-white/5 border border-white/30">
                           <div className="text-xs text-white/70">Session length</div>
                           <div className="text-lg font-bold text-white">
                             {Math.max(1, Math.floor(sessionMs / 1000 / 60))} min
                           </div>
                         </div>
-                        <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/30">
+                        <div className="p-4 rounded-xl bg-linear-to-br from-white/10 to-white/5 border border-white/30">
                           <div className="text-xs text-white/70">Cache usage</div>
                           <div className="text-lg font-bold text-white">
                             {cacheUsageMB !== undefined ? `${cacheUsageMB.toFixed(1)} MB` : 'Measuring…'}
@@ -668,7 +668,7 @@ export function UltimateControlPanel({
                             <div className="text-[11px] text-white/60">Quota: {cacheQuotaMB.toFixed(1)} MB</div>
                           )}
                         </div>
-                        <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-400/30">
+                        <div className="p-4 rounded-xl bg-linear-to-br from-amber-500/10 to-orange-500/5 border border-amber-400/30">
                           <div className="text-xs text-amber-200/70">Storage</div>
                           <div className="text-lg font-bold text-white">
                             {deviceInfo.performance.storage?.available !== undefined
@@ -685,7 +685,7 @@ export function UltimateControlPanel({
 
                       {/* Battery */}
                       {deviceInfo.battery.level >= 0 && (
-                        <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-white/10 border border-white/10">
+                        <div className="p-4 rounded-xl bg-linear-to-br from-white/10 to-white/10 border border-white/10">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <Battery size={18} className="text-white" />
@@ -740,7 +740,7 @@ export function UltimateControlPanel({
                       </div>
 
                       {/* Connection Type */}
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-white/10 border border-white/10">
+                      <div className="p-4 rounded-xl bg-linear-to-br from-white/10 to-white/10 border border-white/10">
                         <div className="flex items-center gap-3">
                           <Wifi size={24} className="text-white" />
                           <div className="flex-1">
@@ -784,7 +784,7 @@ export function UltimateControlPanel({
                       </div>
 
                       {/* Manual Speed Test */}
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-white/10 border border-white/10 space-y-3">
+                      <div className="p-4 rounded-xl bg-linear-to-br from-white/10 to-white/10 border border-white/10 space-y-3">
                         <div className="flex items-center justify-between">
                           <div>
                             <div className="text-sm text-white/60">Speed test</div>
@@ -820,7 +820,7 @@ export function UltimateControlPanel({
                       </div>
 
                       {/* Location */}
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-pink-500/10 border border-white/10">
+                      <div className="p-4 rounded-xl bg-linear-to-br from-white/10 to-pink-500/10 border border-white/10">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
@@ -873,7 +873,7 @@ export function UltimateControlPanel({
                       </div>
 
                       {/* FPS */}
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-white/10 border border-white/10">
+                      <div className="p-4 rounded-xl bg-linear-to-br from-white/10 to-white/10 border border-white/10">
                         <div className="flex items-center justify-between">
                           <div>
                             <div className="text-sm text-white/50">Current FPS</div>
@@ -913,7 +913,7 @@ export function UltimateControlPanel({
                       </div>
 
                       {/* Memory */}
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-white/10 border border-white/10">
+                      <div className="p-4 rounded-xl bg-linear-to-br from-white/10 to-white/10 border border-white/10">
                         <div className="flex items-center justify-between mb-3">
                           <span className="text-sm text-white/50">Memory Usage</span>
                           <span className="text-sm font-semibold text-white">
@@ -924,7 +924,7 @@ export function UltimateControlPanel({
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${deviceInfo.performance.memory.percentage}%` }}
-                            className="h-full bg-gradient-to-r from-white to-white rounded-full"
+                            className="h-full bg-linear-to-r from-white to-white rounded-full"
                           />
                         </div>
                         <div className="text-xs text-white/40 mt-2">
@@ -933,7 +933,7 @@ export function UltimateControlPanel({
                       </div>
 
                       {/* Queue Stats */}
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-white/10">
+                      <div className="p-4 rounded-xl bg-linear-to-br from-orange-500/10 to-red-500/10 border border-white/10">
                         <div className="text-sm text-white/50 mb-2">Scene Loading</div>
                         <div className="grid grid-cols-2 gap-2 text-sm">
                           <div>
@@ -967,9 +967,9 @@ export function UltimateControlPanel({
                       className="space-y-4"
                     >
                       {/* User Info */}
-                      <div className="p-6 rounded-xl bg-gradient-to-br from-white/10 to-white/10 border border-white/10">
+                      <div className="p-6 rounded-xl bg-linear-to-br from-white/10 to-white/10 border border-white/10">
                         <div className="flex items-center gap-4 mb-4">
-                          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-white to-white flex items-center justify-center">
+                          <div className="w-16 h-16 rounded-full bg-linear-to-br from-white to-white flex items-center justify-center">
                             <User size={32} className="text-white" />
                           </div>
                           <div className="flex-1">
@@ -1014,7 +1014,7 @@ export function UltimateControlPanel({
                       <div className="space-y-2">
                         <button
                           onClick={handleRefresh}
-                          className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-white/20 to-white/20 border border-white/10 text-white font-semibold hover:from-white/30 hover:to-white/30 transition-all flex items-center justify-center gap-2"
+                          className="w-full px-4 py-3 rounded-xl bg-linear-to-r from-white/20 to-white/20 border border-white/10 text-white font-semibold hover:from-white/30 hover:to-white/30 transition-all flex items-center justify-center gap-2"
                         >
                           <RefreshCw size={18} />
                           Refresh Website
@@ -1042,7 +1042,7 @@ export function UltimateControlPanel({
                               alert('Clipboard unavailable; details logged to console');
                             }
                           }}
-                          className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-white/20 to-white/20 border border-white/10 text-white font-semibold hover:from-white/30 hover:to-white/30 transition-all flex items-center justify-center gap-2"
+                          className="w-full px-4 py-3 rounded-xl bg-linear-to-r from-white/20 to-white/20 border border-white/10 text-white font-semibold hover:from-white/30 hover:to-white/30 transition-all flex items-center justify-center gap-2"
                         >
                           <Globe size={18} />
                           Copy Device Snapshot

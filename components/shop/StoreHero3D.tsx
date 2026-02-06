@@ -1,22 +1,54 @@
 'use client';
 
-import { useRef, useEffect, useState, useMemo, useCallback, memo } from 'react';
+import { useRef, useEffect, useState, useMemo, useCallback, memo, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, Sparkles, ArrowRight, Zap, Star, TrendingUp, TrendingDown, Copy, Check, X, Gift, Box, Palette } from 'lucide-react';
-import { useProductsModalUI } from '@/contexts/UIStateContext';
+import { ShoppingBag, ArrowRight, Zap, Star, TrendingUp, TrendingDown, Copy, Check, X, Gift, Box, Palette } from 'lucide-react';
 import { CardBody, CardContainer, CardItem } from '@/components/ui/3d-card';
 import { HoverBorderGradient } from '@/components/ui/hover-border-gradient';
-import dynamic from 'next/dynamic';
+import { useProductsModalUI } from '@/contexts/UIStateContext';
 
-// Dynamic import for Spline (heavy 3D component)
-const Spline = dynamic(() => import('@splinetool/react-spline'), {
-  ssr: false,
-  loading: () => null,
-});
+import TextType from '@/components/TextType';
+import CountUp from '@/components/CountUp';
+import dynamic from 'next/dynamic';
 
 // Spline scene URL
 const SPLINE_SCENE = '/scene1.splinecode';
+
+// ---- Aggressive Spline Preloading ----
+// 1. Eagerly preload the Spline runtime JS bundle (warms module cache)
+const splineModulePromise = typeof window !== 'undefined'
+  ? import('@splinetool/react-spline')
+  : null;
+
+// 2. Eagerly preload the .splinecode scene file via fetch (warms HTTP cache)
+if (typeof window !== 'undefined') {
+  // Use link preload for highest priority
+  const link = document.createElement('link');
+  link.rel = 'preload';
+  link.href = SPLINE_SCENE;
+  link.as = 'fetch';
+  link.crossOrigin = 'anonymous';
+  // @ts-ignore - fetchpriority is valid but not in all TS defs
+  link.fetchPriority = 'high';
+  document.head.appendChild(link);
+
+  // Also start a background fetch to fully cache the scene bytes
+  fetch(SPLINE_SCENE, { priority: 'high', cache: 'force-cache' } as RequestInit).catch(() => {});
+}
+
+// Dynamic import for Spline (heavy 3D component) - resolves from pre-warmed promise
+const Spline = dynamic(
+  () => splineModulePromise || import('@splinetool/react-spline'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="absolute inset-0 bg-black flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+      </div>
+    ),
+  }
+);
 
 // ============================================================================
 // STORE HERO 3D - Trading-Themed Premium Experience
@@ -55,6 +87,7 @@ interface FloatingProduct {
   scale: number;
   delay: number;
   glow: string;
+  floatSeed: number; // For random space vacuum floating
   // Real product data from Supabase
   vipData?: VipProduct;
 }
@@ -69,13 +102,14 @@ const BLUE_THEME = {
   danger: '#ef4444',       // Red for down
 };
 
-// Default card positions (will be merged with real VIP data) - LARGER SCALES like crypto planets
+// Default card positions - space vacuum floating effect
+// Positions adjusted to keep cards safely in view
 const CARD_POSITIONS = [
-  { x: 12, y: 18, z: 100, rotateX: -15, rotateY: 25, scale: 1.0, delay: 0, glow: BLUE_THEME.primary },
-  { x: 78, y: 12, z: 80, rotateX: 10, rotateY: -20, scale: 0.85, delay: 0.2, glow: BLUE_THEME.secondary },
-  { x: 88, y: 55, z: 120, rotateX: -5, rotateY: 15, scale: 0.95, delay: 0.4, glow: BLUE_THEME.accent },
-  { x: 8, y: 62, z: 60, rotateX: 20, rotateY: -10, scale: 0.8, delay: 0.6, glow: BLUE_THEME.primary },
-  { x: 50, y: 78, z: 90, rotateX: -12, rotateY: 8, scale: 0.75, delay: 0.8, glow: BLUE_THEME.secondary },
+  { x: 15, y: 20, z: 100, rotateX: -15, rotateY: 25, scale: 1.1, delay: 0, glow: BLUE_THEME.primary, floatSeed: 1 },
+  { x: 72, y: 15, z: 80, rotateX: 10, rotateY: -20, scale: 0.95, delay: 0.2, glow: BLUE_THEME.secondary, floatSeed: 2 },
+  { x: 78, y: 50, z: 120, rotateX: -5, rotateY: 15, scale: 1.0, delay: 0.4, glow: BLUE_THEME.accent, floatSeed: 3 },
+  { x: 12, y: 58, z: 60, rotateX: 20, rotateY: -10, scale: 0.9, delay: 0.6, glow: BLUE_THEME.primary, floatSeed: 4 },
+  { x: 45, y: 72, z: 90, rotateX: -12, rotateY: 8, scale: 0.85, delay: 0.8, glow: BLUE_THEME.secondary, floatSeed: 5 },
 ];
 
 const CRYPTO_SYMBOLS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'XRPUSDT'];
@@ -108,13 +142,32 @@ const PromoCodePopup = ({
 }) => {
   const [copied, setCopied] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [isMouseEntered, setIsMouseEntered] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const promoCode = 'BULLMONEY15';
 
   useEffect(() => {
     setMounted(true);
+    const checkMobile = () => window.innerWidth < 768;
+    setIsMobile(checkMobile());
+    const handleResize = () => setIsMobile(checkMobile());
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Gentle 3D tilt on desktop (subtle, not dramatic)
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!containerRef.current || isMobile) return;
+    const { left, top, width, height } = containerRef.current.getBoundingClientRect();
+    const x = (e.clientX - left - width / 2) / 30; // divisor 30 = very gentle
+    const y = (e.clientY - top - height / 2) / 30;
+    containerRef.current.style.transform = `perspective(800px) rotateY(${x}deg) rotateX(${-y}deg)`;
+  };
+  const handleMouseLeave = () => {
+    if (containerRef.current) {
+      containerRef.current.style.transform = 'perspective(800px) rotateY(0deg) rotateX(0deg)';
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -126,31 +179,6 @@ const PromoCodePopup = ({
       document.body.style.overflow = '';
     };
   }, [isOpen]);
-
-  // 3D rotation effect
-  const applyRotation = (clientX: number, clientY: number) => {
-    if (!containerRef.current) return;
-    const { left, top, width, height } = containerRef.current.getBoundingClientRect();
-    const divisor = 15;
-    const x = (clientX - left - width / 2) / divisor;
-    const y = (clientY - top - height / 2) / divisor;
-    containerRef.current.style.transform = `rotateY(${x}deg) rotateX(${-y}deg)`;
-  };
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    applyRotation(e.clientX, e.clientY);
-  };
-
-  const handleMouseEnter = () => {
-    setIsMouseEntered(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsMouseEntered(false);
-    if (containerRef.current) {
-      containerRef.current.style.transform = `rotateY(0deg) rotateX(0deg)`;
-    }
-  };
 
   const handleCopy = async () => {
     try {
@@ -186,318 +214,251 @@ const PromoCodePopup = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[2147483647] flex items-center justify-center p-4"
+          className="fixed inset-0 z-2147483647 flex items-center justify-center p-4"
           style={{ 
-            background: 'rgba(0, 0, 0, 0.85)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)'
+            background: 'transparent',
           }}
           onClick={handleClose}
         >
-          {/* 3D Card Container - Same as ProductCard */}
-          <CardContainer className="w-full max-w-md md:max-w-lg" containerClassName="py-0">
-            <CardBody className="w-full h-auto p-0">
-              <CardItem translateZ="100" className="w-full">
-                <HoverBorderGradient
-                  containerClassName="rounded-3xl w-full"
-                  className="p-0 bg-transparent w-full"
-                  as="div"
-                >
-                  {/* Popup Container - 3D Glassmorphism Style */}
-                  <motion.div
-                    ref={containerRef}
-                    initial={{ opacity: 0, scale: 0.95, y: 20, rotateX: 10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                    transition={{ 
-                      type: 'spring', 
-                      damping: 25, 
-                      stiffness: 300,
-                      mass: 0.8
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                    className="relative w-full overflow-hidden"
-                    style={{
-                      background: 'rgba(0, 0, 0, 0.95)',
-                      borderRadius: '24px',
-                      boxShadow: '0 30px 80px -10px rgba(0, 0, 0, 0.8), 0 0 60px rgba(59, 130, 246, 0.2)',
-                    }}
+          {/* Desktop: subtle 3D wrapper | Mobile: flat */}
+          {!isMobile ? (
+            <CardContainer className="w-full max-w-sm" containerClassName="py-0">
+              <CardBody className="w-full h-auto p-0">
+                <CardItem translateZ="40" className="w-full">
+                  <HoverBorderGradient
+                    containerClassName="rounded-2xl w-full"
+                    className="p-0 bg-transparent w-full"
+                    as="div"
                   >
-                    {/* Animated Shimmer Border */}
-                    <div className="absolute inset-0 rounded-3xl p-[1px] overflow-hidden z-[1] pointer-events-none">
-                      <motion.div
-                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-30"
-                        style={{ width: '100%', filter: 'blur(20px)' }}
-                        animate={{
-                          x: ['-50%', '50%'],
-                        }}
-                        transition={{
-                          duration: 4,
-                          repeat: Infinity,
-                          ease: 'easeInOut',
-                        }}
-                      />
-                      <div className="absolute inset-[1px] bg-transparent rounded-3xl" />
-                    </div>
-                    
-                    {/* Static White Border */}
-                    <div className="absolute inset-0 border border-white/20 rounded-3xl pointer-events-none z-[2]" />
-                    
-                    {/* Gradient overlay for depth */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-transparent z-10 pointer-events-none rounded-3xl" />
+                    <motion.div
+                      ref={containerRef}
+                      initial={{ opacity: 0, scale: 0.96, y: 24 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.96, y: 24 }}
+                      transition={{ type: 'spring', damping: 30, stiffness: 320, mass: 0.7 }}
+                      onClick={(e) => e.stopPropagation()}
+                      onMouseMove={handleMouseMove}
+                      onMouseLeave={handleMouseLeave}
+                      className="relative w-full overflow-hidden rounded-2xl bg-black"
+                      style={{ transition: 'transform 0.15s ease-out' }}
+                    >
+                      {/* Subtle top highlight line */}
+                      <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
+                      {/* Faint border */}
+                      <div className="absolute inset-0 border border-white/[0.06] rounded-2xl pointer-events-none z-2" />
+                      {/* Top light reflection */}
+                      <div className="absolute inset-0 bg-gradient-to-b from-white/[0.04] via-transparent to-transparent pointer-events-none rounded-2xl" />
 
-              {/* Content */}
-              <div className="relative p-8 md:p-14 md:py-20 z-20" style={{ transform: 'translateZ(50px)' }}>
-                {/* Close button - 3D Glassmorphism style */}
-                <motion.button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleClose();
-                  }}
-                  className="absolute top-5 right-5 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 border border-white/20 backdrop-blur-sm transition-all hover:bg-white/20 z-50 pointer-events-auto cursor-pointer"
-                  style={{ WebkitTapHighlightColor: 'transparent', transform: 'translateZ(60px)' }}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
+                      <div className="relative px-7 pt-10 pb-8">
+                        {/* Close button */}
+                        <button
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleClose(); }}
+                          className="absolute top-3.5 right-3.5 w-8 h-8 flex items-center justify-center rounded-full
+                                     border border-white/10 bg-white/[0.05]
+                                     hover:bg-white/10 hover:border-white/20
+                                     active:scale-90
+                                     transition-all duration-200 ease-out z-50 cursor-pointer"
+                        >
+                          <X className="w-3.5 h-3.5 text-white/50" strokeWidth={2.5} />
+                        </button>
+
+                        {/* Icon */}
+                        <CardItem translateZ="20" className="w-full">
+                          <motion.div
+                            className="w-14 h-14 mx-auto mb-5 rounded-full border border-white/10 bg-white/[0.04] flex items-center justify-center"
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ delay: 0.08, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                          >
+                            <Gift className="w-6 h-6 text-white/80" strokeWidth={1.5} />
+                          </motion.div>
+                        </CardItem>
+
+                        {/* Title */}
+                        <CardItem translateZ="15" className="w-full">
+                          <motion.h3
+                            className="text-[22px] font-semibold text-white text-center tracking-tight leading-tight mb-1.5"
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.12, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                          >
+                            15% Off Your First Order
+                          </motion.h3>
+                        </CardItem>
+
+                        {/* Subtitle */}
+                        <motion.p
+                          className="text-[13px] text-white/40 text-center tracking-wide mb-7 font-normal leading-relaxed"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.18, duration: 0.35 }}
+                        >
+                          Use this exclusive code at checkout
+                        </motion.p>
+
+                        {/* Promo code box */}
+                        <CardItem translateZ="25" className="w-full">
+                          <motion.div
+                            className="relative mb-5"
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.22, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                          >
+                            <div
+                              className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-5 cursor-pointer
+                                         hover:bg-white/[0.06] hover:border-white/[0.14]
+                                         active:scale-[0.98]
+                                         transition-all duration-200 ease-out"
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCopy(); }}
+                            >
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-[10px] text-white/30 font-medium uppercase tracking-[0.12em] mb-1.5">Promo Code</p>
+                                  <p className="text-2xl font-bold text-white font-mono tracking-[0.15em]">{promoCode}</p>
+                                </div>
+                                <div className={`w-10 h-10 flex items-center justify-center rounded-full border transition-all duration-200 ease-out ${copied ? 'bg-white border-white/20' : 'bg-white/[0.05] border-white/10 hover:bg-white/10 hover:border-white/20 active:scale-90'}`}>
+                                  {copied ? <Check className="w-4 h-4 text-black" strokeWidth={2.5} /> : <Copy className="w-4 h-4 text-white/50" strokeWidth={2} />}
+                                </div>
+                              </div>
+                              <AnimatePresence>
+                                {copied && (
+                                  <motion.p initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="text-[11px] text-white/50 font-medium mt-2.5 text-center tracking-wide">Copied to clipboard</motion.p>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          </motion.div>
+                        </CardItem>
+
+                        {/* CTA Button */}
+                        <CardItem translateZ="20" className="w-full">
+                          <motion.button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleClose(); }}
+                            className="w-full py-3.5 rounded-xl font-semibold text-[15px] tracking-wide
+                                       bg-white text-black border border-white/20
+                                       hover:bg-white/90 active:scale-[0.97] active:bg-white/80
+                                       transition-all duration-200 ease-out cursor-pointer"
+                            initial={{ opacity: 0, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.28, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                          >
+                            Start Shopping
+                          </motion.button>
+                        </CardItem>
+
+                        {/* Fine print */}
+                        <motion.p className="text-center text-white/25 text-[11px] mt-5 tracking-wide font-normal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.34, duration: 0.3 }}>
+                          New customers only · Expires in 24 hours
+                        </motion.p>
+                      </div>
+                    </motion.div>
+                  </HoverBorderGradient>
+                </CardItem>
+              </CardBody>
+            </CardContainer>
+          ) : (
+            /* Mobile — flat Apple-style, no 3D */
+            <motion.div
+              ref={containerRef}
+              initial={{ opacity: 0, scale: 0.96, y: 24 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 24 }}
+              transition={{ type: 'spring', damping: 30, stiffness: 320, mass: 0.7 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-sm overflow-hidden rounded-2xl bg-black border border-white/[0.08] shadow-2xl"
+            >
+              <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
+
+              <div className="relative px-7 pt-10 pb-8">
+                <button
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleClose(); }}
+                  className="absolute top-3.5 right-3.5 w-8 h-8 flex items-center justify-center rounded-full
+                             border border-white/10 bg-white/[0.05]
+                             hover:bg-white/10 hover:border-white/20
+                             active:scale-90
+                             transition-all duration-200 ease-out z-50 cursor-pointer"
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
-                  <X className="w-5 h-5 text-white/70 hover:text-white transition-colors pointer-events-none" strokeWidth={2} />
-                </motion.button>
+                  <X className="w-3.5 h-3.5 text-white/50" strokeWidth={2.5} />
+                </button>
 
-                {/* Icon - Blue gradient with shimmer */}
                 <motion.div
-                  className="relative w-16 h-16 mx-auto mb-6 rounded-full flex items-center justify-center overflow-hidden"
-                  style={{ 
-                    background: 'linear-gradient(135deg, rgb(25, 86, 180), #3b82f6)',
-                    transform: 'translateZ(70px)',
-                    boxShadow: '0 10px 40px rgba(59, 130, 246, 0.4)'
-                  }}
+                  className="w-14 h-14 mx-auto mb-5 rounded-full border border-white/10 bg-white/[0.04] flex items-center justify-center"
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.1, duration: 0.5 }}
+                  transition={{ delay: 0.08, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                 >
-                  {/* Shimmer effect on icon */}
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                    animate={{
-                      x: ['-200%', '200%'],
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: 'linear',
-                      repeatDelay: 1,
-                    }}
-                  />
-                  <Gift className="w-7 h-7 text-white relative z-10" strokeWidth={2} />
+                  <Gift className="w-6 h-6 text-white/80" strokeWidth={1.5} />
                 </motion.div>
 
-                {/* Title */}
-                <motion.h3 
-                  className="text-3xl md:text-4xl font-bold text-center mb-3 tracking-tight text-white"
-                  style={{ transform: 'translateZ(60px)' }}
-                  initial={{ opacity: 0, y: 10 }}
+                <motion.h3
+                  className="text-[22px] font-semibold text-white text-center tracking-tight leading-tight mb-1.5"
+                  initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.15, duration: 0.4 }}
+                  transition={{ delay: 0.12, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
                 >
-                  Exclusive Offer
+                  15% Off Your First Order
                 </motion.h3>
-                
-                <motion.p 
-                  className="text-center mb-8 leading-relaxed text-white/60 text-lg"
-                  style={{ transform: 'translateZ(55px)' }}
+
+                <motion.p
+                  className="text-[13px] text-white/40 text-center tracking-wide mb-7 font-normal leading-relaxed"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: 0.2, duration: 0.4 }}
+                  transition={{ delay: 0.18, duration: 0.35 }}
                 >
-                  Get 15% off your first order with this code
+                  Use this exclusive code at checkout
                 </motion.p>
 
-                {/* Promo Code Box - Glassmorphism */}
-                <motion.div 
-                  className="relative mb-8"
-                  style={{ transform: 'translateZ(65px)' }}
-                  initial={{ opacity: 0, y: 10 }}
+                <motion.div
+                  className="relative mb-5"
+                  initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.25, duration: 0.4 }}
+                  transition={{ delay: 0.22, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
                 >
-                  <div className="relative overflow-hidden rounded-2xl">
-                    {/* Shimmer border */}
-                    <div className="absolute inset-0 rounded-2xl p-[1px] overflow-hidden z-[1] pointer-events-none">
-                      <motion.div
-                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20"
-                        style={{ width: '100%', filter: 'blur(20px)' }}
-                        animate={{
-                          x: ['-50%', '50%'],
-                        }}
-                        transition={{
-                          duration: 4,
-                          repeat: Infinity,
-                          ease: 'easeInOut',
-                        }}
-                      />
-                    </div>
-                    
-                    <div 
-                      className="relative flex items-center justify-between gap-3 p-5 rounded-2xl border border-white/20 bg-white/5 backdrop-blur-sm cursor-pointer hover:bg-white/10 transition-colors"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleCopy();
-                      }}
-                    >
-                      <div className="flex-1 pointer-events-none">
-                        <p className="text-xs font-medium mb-1.5 tracking-wide uppercase text-white/40">
-                          Promo Code
-                        </p>
-                        <p className="text-2xl md:text-3xl font-mono font-bold tracking-wider text-white"
-                          style={{ textShadow: '0 0 20px rgba(59, 130, 246, 0.5)' }}
-                        >
-                          {promoCode}
-                        </p>
-                      </div>
-                      <motion.button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleCopy();
-                        }}
-                        className="relative w-12 h-12 flex items-center justify-center rounded-full overflow-hidden z-50 pointer-events-auto cursor-pointer"
-                        style={{
-                          background: copied ? 'rgb(25, 86, 180)' : 'rgba(255, 255, 255, 0.1)',
-                        }}
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        {/* Shimmer effect */}
-                        <motion.div
-                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none"
-                          animate={{
-                            x: ['-200%', '200%'],
-                          }}
-                          transition={{
-                            duration: 2,
-                            repeat: Infinity,
-                            ease: 'linear',
-                            repeatDelay: 2,
-                          }}
-                        />
-                        <div className="absolute inset-0 border border-white/20 rounded-full pointer-events-none" />
-                        <AnimatePresence mode="wait">
-                          {copied ? (
-                            <motion.div
-                              key="check"
-                              initial={{ scale: 0, rotate: -180 }}
-                              animate={{ scale: 1, rotate: 0 }}
-                              exit={{ scale: 0, rotate: 180 }}
-                              transition={{ type: 'spring', damping: 15, stiffness: 400 }}
-                              className="pointer-events-none"
-                            >
-                              <Check className="w-5 h-5 text-white pointer-events-none" strokeWidth={2.5} />
-                            </motion.div>
-                          ) : (
-                            <motion.div
-                              key="copy"
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              exit={{ scale: 0 }}
-                              className="pointer-events-none"
-                            >
-                              <Copy className="w-5 h-5 text-white/70 pointer-events-none" strokeWidth={2} />
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </motion.button>
-                    </div>
-                  </div>
-                  
-                  {/* Copied feedback */}
-                  <AnimatePresence>
-                    {copied && (
-                      <motion.p
-                        initial={{ opacity: 0, y: -5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -5 }}
-                        className="absolute -bottom-7 left-0 right-0 text-center text-sm font-medium text-white"
-                      >
-                        ✓ Copied to clipboard
-                      </motion.p>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-
-                {/* CTA Button - Blue gradient with shimmer - Mobile only */}
-                <motion.div 
-                  className="relative overflow-hidden rounded-2xl md:hidden"
-                  style={{ transform: 'translateZ(70px)' }}
-                >
-                  {/* Shimmer border */}
-                  <div className="absolute inset-0 rounded-2xl p-[1px] overflow-hidden z-[1] pointer-events-none">
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-30"
-                      style={{ width: '100%', filter: 'blur(20px)' }}
-                      animate={{
-                        x: ['-50%', '50%'],
-                      }}
-                      transition={{
-                        duration: 3,
-                        repeat: Infinity,
-                        ease: 'easeInOut',
-                      }}
-                    />
-                  </div>
-                  
-                  <motion.button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleClose();
-                    }}
-                    className="relative w-full py-4 rounded-2xl font-bold text-white text-lg transition-all border border-white/20 z-50 pointer-events-auto cursor-pointer"
-                    style={{ 
-                      background: 'linear-gradient(135deg, rgb(25, 86, 180), #3b82f6)',
-                      boxShadow: '0 10px 40px rgba(59, 130, 246, 0.3)'
-                    }}
-                    whileHover={{ 
-                      scale: 1.02,
-                      boxShadow: '0 15px 50px rgba(59, 130, 246, 0.5)'
-                    }}
-                    whileTap={{ scale: 0.98 }}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3, duration: 0.4 }}
+                  <div
+                    className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-5 cursor-pointer
+                               hover:bg-white/[0.06] hover:border-white/[0.14]
+                               active:scale-[0.98]
+                               transition-all duration-200 ease-out"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCopy(); }}
+                    style={{ WebkitTapHighlightColor: 'transparent' }}
                   >
-                    {/* Button shimmer */}
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent rounded-2xl pointer-events-none"
-                      animate={{
-                        x: ['-200%', '200%'],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: 'linear',
-                        repeatDelay: 1,
-                      }}
-                    />
-                    <span className="relative z-10 pointer-events-none">Start Shopping</span>
-                  </motion.button>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] text-white/30 font-medium uppercase tracking-[0.12em] mb-1.5">Promo Code</p>
+                        <p className="text-2xl font-bold text-white font-mono tracking-[0.15em]">{promoCode}</p>
+                      </div>
+                      <div className={`w-10 h-10 flex items-center justify-center rounded-full border transition-all duration-200 ease-out ${copied ? 'bg-white border-white/20' : 'bg-white/[0.05] border-white/10 hover:bg-white/10 hover:border-white/20 active:scale-90'}`}>
+                        {copied ? <Check className="w-4 h-4 text-black" strokeWidth={2.5} /> : <Copy className="w-4 h-4 text-white/50" strokeWidth={2} />}
+                      </div>
+                    </div>
+                    <AnimatePresence>
+                      {copied && (
+                        <motion.p initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="text-[11px] text-white/50 font-medium mt-2.5 text-center tracking-wide">Copied to clipboard</motion.p>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </motion.div>
 
-                <motion.p 
-                  className="text-center mt-6 text-white/40 text-sm md:hidden"
-                  style={{ transform: 'translateZ(50px)' }}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.35, duration: 0.4 }}
+                <motion.button
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleClose(); }}
+                  className="w-full py-3.5 rounded-xl font-semibold text-[15px] tracking-wide
+                             bg-white text-black border border-white/20
+                             hover:bg-white/90 active:scale-[0.97] active:bg-white/80
+                             transition-all duration-200 ease-out cursor-pointer"
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.28, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
                 >
-                  Valid for new customers only. Expires in 24 hours.
+                  Start Shopping
+                </motion.button>
+
+                <motion.p className="text-center text-white/25 text-[11px] mt-5 tracking-wide font-normal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.34, duration: 0.3 }}>
+                  New customers only · Expires in 24 hours
                 </motion.p>
               </div>
             </motion.div>
-                </HoverBorderGradient>
-              </CardItem>
-            </CardBody>
-          </CardContainer>
+          )}
         </motion.div>
       )}
     </AnimatePresence>,
@@ -532,7 +493,7 @@ const CryptoTicker = ({ prices }: { prices: CryptoPrice[] }) => {
           <span className="text-xs text-white/50 font-mono">{formatUSD(crypto.price)}</span>
           <span className={`text-[10px] font-medium flex items-center gap-0.5 ${crypto.isUp ? 'text-green-400' : 'text-red-400'}`}>
             {crypto.isUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-            {Math.abs(crypto.change24h).toFixed(2)}%
+            <CountUp to={Math.abs(crypto.change24h)} from={0} duration={1.5} className="" />%
           </span>
         </motion.div>
       ))}
@@ -541,7 +502,7 @@ const CryptoTicker = ({ prices }: { prices: CryptoPrice[] }) => {
 };
 
 // ============================================================================
-// ANIMATED PARTICLE
+// ANIMATED PARTICLE - Pure CSS animation (GPU composited, zero JS cost)
 // ============================================================================
 const Particle = ({ delay, duration }: { delay: number; duration: number }) => {
   const size = Math.random() * 4 + 2;
@@ -549,25 +510,15 @@ const Particle = ({ delay, duration }: { delay: number; duration: number }) => {
   const startY = Math.random() * 100;
   
   return (
-    <motion.div
+    <div
       className="absolute rounded-full bg-[#1956B4]/30"
       style={{
         width: size,
         height: size,
         left: `${startX}%`,
         top: `${startY}%`,
-      }}
-      initial={{ opacity: 0, scale: 0 }}
-      animate={{
-        opacity: [0, 0.6, 0],
-        scale: [0, 1.5, 0],
-        y: [0, -100],
-      }}
-      transition={{
-        duration,
-        delay,
-        repeat: Infinity,
-        ease: 'easeOut',
+        animation: `store-particle ${duration}s ${delay}s ease-out infinite`,
+        willChange: 'transform, opacity',
       }}
     />
   );
@@ -613,6 +564,7 @@ const FloatingProductCard = ({
         x: springX,
         y: springY,
         zIndex: isExpanded ? 200 : Math.floor(product.z),
+        touchAction: 'pan-y',
       }}
       initial={{ opacity: 0, scale: 0, rotateX: 45, rotateY: -45 }}
       animate={{ 
@@ -636,13 +588,51 @@ const FloatingProductCard = ({
       <motion.div
         className="relative"
         animate={isExpanded ? {} : {
-          y: [0, -15, 0],
-          rotateZ: [-2, 2, -2],
+          // Random space vacuum floating - subtle movements to stay in view
+          y: [
+            0, 
+            -8 * (product.floatSeed % 3 + 1), 
+            4 * ((product.floatSeed + 1) % 2), 
+            -10 * (product.floatSeed % 2 + 0.5),
+            5 * (product.floatSeed % 4 - 1),
+            0
+          ],
+          x: [
+            0, 
+            5 * (product.floatSeed % 2 - 0.5), 
+            -6 * ((product.floatSeed + 2) % 3 - 1),
+            7 * (product.floatSeed % 3 - 1.5),
+            -4 * (product.floatSeed % 2),
+            0
+          ],
+          rotateZ: [
+            0, 
+            2 * (product.floatSeed % 3 - 1), 
+            -3 * ((product.floatSeed + 1) % 2),
+            1.5 * (product.floatSeed % 4 - 2),
+            -2 * (product.floatSeed % 2 + 0.5),
+            0
+          ],
+          rotateX: [
+            product.rotateX,
+            product.rotateX + 3 * (product.floatSeed % 2),
+            product.rotateX - 2 * ((product.floatSeed + 1) % 3),
+            product.rotateX + 2.5 * (product.floatSeed % 3 - 1),
+            product.rotateX
+          ],
+          rotateY: [
+            product.rotateY,
+            product.rotateY - 4 * (product.floatSeed % 3 - 1),
+            product.rotateY + 3 * ((product.floatSeed + 2) % 2),
+            product.rotateY - 3 * (product.floatSeed % 2),
+            product.rotateY
+          ],
         }}
         transition={{
-          duration: 6 + product.delay * 2,
+          duration: 10 + product.floatSeed * 2 + product.delay * 2,
           repeat: isExpanded ? 0 : Infinity,
           ease: 'easeInOut',
+          times: [0, 0.2, 0.4, 0.6, 0.8, 1],
         }}
       >
         {/* Blue glow effect */}
@@ -654,9 +644,9 @@ const FloatingProductCard = ({
           }}
         />
         
-        {/* Product card with TrueBlue theme - MOBILE ENLARGED like crypto planets */}
+        {/* Product card with TrueBlue theme - Floating cards */}
         <div 
-          className="relative w-32 h-40 sm:w-36 sm:h-44 md:w-32 md:h-44 lg:w-40 lg:h-52 rounded-2xl overflow-hidden"
+          className="relative w-28 h-36 sm:w-36 sm:h-44 md:w-40 md:h-52 lg:w-44 lg:h-56 rounded-2xl overflow-hidden touch-pan-y"
           style={{
             background: 'linear-gradient(145deg, rgba(25, 86, 180, 0.15) 0%, rgba(25, 86, 180, 0.05) 100%)',
             border: '1px solid rgba(255, 255, 255, 0.15)',
@@ -672,7 +662,7 @@ const FloatingProductCard = ({
           {productImage ? (
             <>
               {/* Gradient overlay for better text readability */}
-              <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent z-[1]" />
+              <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent z-1" />
               {/* Image filling full card height */}
               <img 
                 src={productImage}
@@ -690,22 +680,15 @@ const FloatingProductCard = ({
             </div>
           )}
           
-          {/* Shimmer overlay */}
-          <motion.div
-            className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent"
-            animate={{ x: ['-100%', '200%'] }}
-            transition={{ 
-              duration: 3, 
-              repeat: Infinity, 
-              repeatDelay: 4,
-              ease: 'easeInOut',
-            }}
+          {/* Shimmer overlay - GPU CSS animation */}
+          <div
+            className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent store-shimmer"
           />
           
           {/* Price tag with real data */}
-          <div className="absolute bottom-2 left-2 right-2 px-2 py-1.5 rounded-lg bg-black/80 border border-white/10 z-[2]">
-            <div className="text-[7px] md:text-[9px] text-white/80 truncate font-medium">{productName}</div>
-            <div className="text-[10px] md:text-xs text-white font-bold">{formatUSD(productPrice)}</div>
+          <div className="absolute bottom-2 left-2 right-2 px-2 py-1.5 rounded-lg bg-black/80 border border-white/10 z-2">
+            <div className="text-[7px] md:text-[9px] text-white/80 truncate font-medium"><TextType text={productName} typingSpeed={Math.max(5, 25 - productName.length)} showCursor={false} loop={false} as="span" /></div>
+            <div className="text-[10px] md:text-xs text-white font-bold">$<CountUp to={productPrice} from={0} duration={1.5} separator="," className="" /></div>
           </div>
         </div>
       </motion.div>
@@ -729,24 +712,13 @@ const GradientOrb = ({
   size: string;
   delay?: number;
 }) => (
-  <motion.div
-    className={`absolute rounded-full opacity-40 ${className}`}
+  <div
+    className={`absolute rounded-full store-orb-float ${className}`}
     style={{
       width: size,
       height: size,
       background: `radial-gradient(circle, ${color1} 0%, ${color2} 50%, transparent 70%)`,
-    }}
-    animate={{
-      scale: [1, 1.2, 1],
-      opacity: [0.25, 0.4, 0.25],
-      x: [0, 30, 0],
-      y: [0, -20, 0],
-    }}
-    transition={{
-      duration: 8,
-      delay,
-      repeat: Infinity,
-      ease: 'easeInOut',
+      animationDelay: `${delay}s`,
     }}
   />
 );
@@ -758,16 +730,34 @@ const SplineBackground = memo(function SplineBackground({
   grayscale = true,
   onInteraction,
   onHover,
+  playMode = false,
 }: { 
   grayscale?: boolean;
   onInteraction?: () => void;
   onHover?: () => void;
+  playMode?: boolean;
 }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const splineRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const splineWrapperRef = useRef<HTMLDivElement>(null);
+
+  // Memoize Spline style object to prevent re-renders (big perf win)
+  const splineStyle = useMemo(() => ({
+    position: 'absolute' as const,
+    inset: 0,
+    width: '100%',
+    height: '100%',
+    display: 'block' as const,
+    opacity: isLoaded ? 1 : 0,
+    transition: 'opacity 200ms ease-out, filter 200ms ease-out',
+    filter: grayscale ? 'grayscale(100%) saturate(0) contrast(1.1)' : 'none',
+    WebkitFilter: grayscale ? 'grayscale(100%) saturate(0) contrast(1.1)' : 'none',
+    pointerEvents: (playMode ? 'auto' : 'none') as any,
+    touchAction: playMode ? 'none' : 'pan-y',
+    zIndex: 1,
+  }), [isLoaded, grayscale, playMode]);
 
   const handleLoad = useCallback((splineApp: any) => {
     console.log('[StoreHero3D] Spline loaded');
@@ -795,18 +785,19 @@ const SplineBackground = memo(function SplineBackground({
       if (onHover) onHover();
     };
     
-    // Handle wheel events - scroll page instead of Spline zoom
+    // Handle wheel events - in play mode let Spline handle zoom, otherwise scroll page
     const handleWheel = (e: WheelEvent) => {
-      // Don't prevent default - let the scroll happen naturally
-      // But stop the event from reaching Spline's internal handlers
-      e.stopPropagation();
-      // Scroll the page instead
-      window.scrollBy({ top: e.deltaY, behavior: 'auto' });
+      if (playMode) {
+        // In play mode, let Spline handle its own zoom/scroll
+        return;
+      }
+      // Normal mode: don't interfere - let the event bubble up naturally for page scroll
     };
     
-    // Ensure canvas can receive pointer events
-    canvas.style.pointerEvents = 'auto';
-    canvas.style.touchAction = 'manipulation';
+    // Ensure canvas pointer events respect play mode
+    canvas.style.pointerEvents = playMode ? 'auto' : 'none';
+    // In play mode, allow all touch gestures for Spline interaction; otherwise allow vertical scrolling
+    canvas.style.touchAction = playMode ? 'none' : 'pan-y';
     
     // Attach wheel event handler to allow page scrolling
     canvas.addEventListener('wheel', handleWheel, { passive: true });
@@ -826,8 +817,10 @@ const SplineBackground = memo(function SplineBackground({
       canvas.removeEventListener('touchstart', handleInteraction as EventListener);
       canvas.removeEventListener('mousedown', handleInteraction as EventListener);
       canvas.removeEventListener('mousemove', handleHover as EventListener);
+      // Reset touch action on cleanup
+      canvas.style.touchAction = 'pan-y';
     };
-  }, [isLoaded, onInteraction, onHover]);
+  }, [isLoaded, onInteraction, onHover, playMode]);
 
   const handleError = useCallback((error: any) => {
     console.error('[StoreHero3D] Spline load error:', error);
@@ -845,12 +838,14 @@ const SplineBackground = memo(function SplineBackground({
     if (onHover) onHover();
   }, [onHover]);
 
-  // Handle wheel events on the container - allow page scrolling
+  // Handle wheel events on the container - in play mode let Spline handle, otherwise scroll page
   const handleContainerWheel = useCallback((e: React.WheelEvent) => {
-    // Allow natural scrolling by not preventing default
-    // Just ensure the scroll happens
-    e.stopPropagation();
-  }, []);
+    if (playMode) {
+      // In play mode, let Spline handle its own zoom/scroll
+      return;
+    }
+    // Normal mode: don't interfere - let scroll bubble naturally
+  }, [playMode]);
 
   return (
     <div 
@@ -859,9 +854,9 @@ const SplineBackground = memo(function SplineBackground({
       style={{ 
         zIndex: 0,
         backgroundColor: '#000',
-        pointerEvents: 'auto',
-        touchAction: 'manipulation',
-        cursor: 'grab',
+        pointerEvents: playMode ? 'auto' : 'none',
+        touchAction: playMode ? 'none' : 'pan-y',
+        cursor: playMode ? 'grab' : 'default',
       }}
       onMouseDown={handleSplineMouseDown}
       onTouchStart={handleSplineMouseDown}
@@ -871,13 +866,13 @@ const SplineBackground = memo(function SplineBackground({
       onTouchEnd={() => {}}
       onWheel={handleContainerWheel}
     >
-      {/* Animated gradient fallback */}
+      {/* Animated gradient fallback - fast fade once Spline is ready */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background: 'radial-gradient(ellipse at 50% 30%, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 30%, transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 40%), #000',
           opacity: hasError || !isLoaded ? 1 : 0,
-          transition: 'opacity 500ms ease-out',
+          transition: 'opacity 200ms ease-out',
           zIndex: -1,
         }}
       />
@@ -891,8 +886,8 @@ const SplineBackground = memo(function SplineBackground({
             inset: 0,
             width: '100%',
             height: '100%',
-            pointerEvents: 'auto',
-            touchAction: 'manipulation',
+            pointerEvents: playMode ? 'auto' : 'none',
+            touchAction: playMode ? 'none' : 'pan-y',
             zIndex: 1,
           }}
         >
@@ -900,20 +895,7 @@ const SplineBackground = memo(function SplineBackground({
             scene={SPLINE_SCENE}
             onLoad={handleLoad}
             onError={handleError}
-            style={{
-              position: 'absolute',
-              inset: 0,
-              width: '100%',
-              height: '100%',
-              display: 'block',
-              opacity: isLoaded ? 1 : 0.6,
-              transition: 'opacity 400ms ease-out, filter 400ms ease-out',
-              filter: grayscale ? 'grayscale(100%) saturate(0) contrast(1.1)' : 'none',
-              WebkitFilter: grayscale ? 'grayscale(100%) saturate(0) contrast(1.1)' : 'none',
-              pointerEvents: 'auto',
-              touchAction: 'manipulation',
-              zIndex: 1,
-          } as React.CSSProperties}
+            style={splineStyle as React.CSSProperties}
           />
         </div>
       )}
@@ -982,7 +964,7 @@ const Toggle3DButton = ({
     
     {/* Shimmer effect */}
     <motion.div
-      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12"
+      className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent -skew-x-12"
       animate={{ x: isActive ? ['-200%', '200%'] : '-200%' }}
       transition={{ 
         duration: 2, 
@@ -1079,7 +1061,7 @@ const ToggleGrayscaleButton = ({
     
     {/* Shimmer effect when color is on */}
     <motion.div
-      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12"
+      className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent -skew-x-12"
       animate={{ x: !isActive ? ['-200%', '200%'] : '-200%' }}
       transition={{ 
         duration: 2, 
@@ -1132,7 +1114,7 @@ const PlayWithSplineButton = ({
   <AnimatePresence>
     {isVisible && (
       <motion.div
-        className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none"
+        className="absolute inset-0 z-100 flex items-start justify-center pt-6 md:pt-8 pointer-events-none"
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
@@ -1141,48 +1123,30 @@ const PlayWithSplineButton = ({
         <motion.button
           onClick={onClick}
           className="group relative flex items-center gap-3 px-6 py-3 rounded-2xl overflow-hidden
-                     border border-[#1956B4]/50 bg-black/90 backdrop-blur-xl pointer-events-auto"
-          style={{
-            boxShadow: '0 0 40px rgba(25, 86, 180, 0.4), 0 0 80px rgba(25, 86, 180, 0.2)',
-          }}
+                     border border-[#1956B4]/50 bg-black/90 backdrop-blur-xl pointer-events-auto store-glow-pulse"
           whileHover={{ 
             scale: 1.05,
             boxShadow: '0 0 60px rgba(25, 86, 180, 0.6), 0 0 100px rgba(25, 86, 180, 0.3)',
           }}
           whileTap={{ scale: 0.95 }}
-          animate={{
-            boxShadow: [
-              '0 0 40px rgba(25, 86, 180, 0.4), 0 0 80px rgba(25, 86, 180, 0.2)',
-              '0 0 60px rgba(25, 86, 180, 0.6), 0 0 100px rgba(25, 86, 180, 0.3)',
-              '0 0 40px rgba(25, 86, 180, 0.4), 0 0 80px rgba(25, 86, 180, 0.2)',
-            ],
-          }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
         >
-          {/* Shimmer effect */}
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12"
-            animate={{ x: ['-200%', '200%'] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut', repeatDelay: 1 }}
+          {/* Shimmer effect - GPU CSS */}
+          <div
+            className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent -skew-x-12 store-shimmer-fast"
           />
           
-          {/* 3D Icon */}
-          <motion.div
-            animate={{ rotateY: [0, 360] }}
-            transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-          >
+          {/* 3D Icon - GPU CSS */}
+          <div style={{ animation: 'store-spin 3s linear infinite' }}>
             <Box className="w-5 h-5 text-[#1956B4]" strokeWidth={2} />
-          </motion.div>
+          </div>
           
           <span className="text-white font-semibold text-base tracking-wide relative z-10">
             Play with Spline
           </span>
           
-          {/* Pulsing dot */}
-          <motion.div
-            className="w-2 h-2 rounded-full bg-[#1956B4]"
-            animate={{ scale: [1, 1.3, 1], opacity: [1, 0.7, 1] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
+          {/* Pulsing dot - GPU CSS */}
+          <div
+            className="w-2 h-2 rounded-full bg-[#1956B4] store-pulse-dot"
           />
         </motion.button>
         
@@ -1206,7 +1170,7 @@ const ExitSplineModeButton = ({
     {isVisible && (
       <motion.button
         onClick={onClick}
-        className="fixed top-4 left-4 z-[100] flex items-center gap-2 px-4 py-2.5 rounded-2xl
+        className="fixed top-4 left-4 z-100 flex items-center gap-2 px-4 py-2.5 rounded-2xl
                    bg-black/90 backdrop-blur-xl border border-white/20 hover:border-white/40
                    transition-colors"
         initial={{ opacity: 0, x: -50 }}
@@ -1226,7 +1190,7 @@ const ExitSplineModeButton = ({
 // ============================================================================
 // MAIN STORE HERO COMPONENT
 // ============================================================================
-export function StoreHero3D() {
+export function StoreHero3D({ paused = false }: { paused?: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mouseX = useMotionValue(0.5);
   const mouseY = useMotionValue(0.5);
@@ -1235,8 +1199,15 @@ export function StoreHero3D() {
   const [showPromo, setShowPromo] = useState(false);
   const [cryptoPrices, setCryptoPrices] = useState<CryptoPrice[]>([]);
   const [floatingProducts, setFloatingProducts] = useState<FloatingProduct[]>([]);
-  const [show3DBackground, setShow3DBackground] = useState(true);
+  const [show3DBackground, setShow3DBackground] = useState(() => {
+    // Initialize to true for desktop (SSR-safe check)
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth >= 768;
+  });
   const [showGrayscale, setShowGrayscale] = useState(false);
+  
+  // Mobile performance: Track if hero section is in viewport
+  const [isHeroInView, setIsHeroInView] = useState(true);
   
   // Spline interaction states
   const [showPlayWithSpline, setShowPlayWithSpline] = useState(false);
@@ -1350,9 +1321,9 @@ export function StoreHero3D() {
     if (splineInteractionTimer.current) clearTimeout(splineInteractionTimer.current);
   }, []);
   
-  // Content fade cycle effect (5 second intervals) - paused when interacting with product
+  // Content fade cycle effect (5 second intervals) - paused when interacting with product or component paused
   useEffect(() => {
-    if (isSplinePlayMode || isInteractingWithProduct) return; // Don't fade when in play mode or interacting with product
+    if (isSplinePlayMode || isInteractingWithProduct || paused) return; // Don't fade when paused
     
     const fadeCycle = () => {
       // Fade out over 2.5s, then fade in over 2.5s
@@ -1366,11 +1337,11 @@ export function StoreHero3D() {
     const interval = setInterval(fadeCycle, 5000);
     
     return () => clearInterval(interval);
-  }, [isSplinePlayMode, isInteractingWithProduct]);
+  }, [isSplinePlayMode, isInteractingWithProduct, paused]);
   
   // Idle timer effect - show "Play with Spline" after 12 seconds of no clicks/hovers
   useEffect(() => {
-    if (isSplinePlayMode || userInteractedWithSpline) return;
+    if (isSplinePlayMode || userInteractedWithSpline || paused) return;
     
     // Start idle timer when component mounts
     idleTimer.current = setTimeout(() => {
@@ -1394,8 +1365,8 @@ export function StoreHero3D() {
       if (idleTimer.current) {
         clearTimeout(idleTimer.current);
       }
-    };
-  }, [isSplinePlayMode, userInteractedWithSpline]);
+    };  
+  }, [isSplinePlayMode, userInteractedWithSpline, paused]);
 
   // Fetch VIP products from Supabase
   const fetchVipProducts = useCallback(async () => {
@@ -1462,24 +1433,135 @@ export function StoreHero3D() {
 
   useEffect(() => {
     setIsVisible(true);
-    setIsMobile(window.innerWidth < 768);
+    const mobile = window.innerWidth < 768;
+    setIsMobile(mobile);
+    
+    // Mobile Scroll Performance Optimization
+    // Use Intersection Observer to detect when hero leaves viewport
+    let observer: IntersectionObserver | null = null;
+    if (mobile && containerRef.current) {
+      observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            // Hero is in view when intersecting
+            setIsHeroInView(entry.isIntersecting);
+            
+            // Log for debugging
+            if (!entry.isIntersecting) {
+              console.log('[StoreHero3D] Mobile: Hero scrolled out of view - pausing Spline');
+            } else {
+              console.log('[StoreHero3D] Mobile: Hero in view - resuming Spline');
+            }
+          });
+        },
+        {
+          threshold: 0.1, // Trigger when 10% of hero is visible
+          rootMargin: '0px',
+        }
+      );
+      
+      observer.observe(containerRef.current);
+    }
+    
+    // Smart 3D Background Loading Strategy
+    // Desktop: Load immediately (scene already preloaded at module level)
+    // Mobile: Short delay then load (scene bytes already cached from module-level fetch)
+    let splineLoadTimer: NodeJS.Timeout | undefined;
+    
+    if (!mobile) {
+      // Desktop - immediate load (runtime + scene already pre-warmed)
+      setShow3DBackground(true);
+    } else {
+      // Mobile - check device memory and load with short delay
+      
+      // Check if device has enough memory (>= 4GB)
+      const hasEnoughMemory = !('deviceMemory' in navigator) || 
+                             (navigator as any).deviceMemory >= 4;
+      
+      if (hasEnoughMemory) {
+        // Reduced delay: 3 seconds (scene already cached from module-level preload)
+        splineLoadTimer = setTimeout(() => {
+          if (document.visibilityState === 'visible') {
+            setShow3DBackground(true);
+          } else {
+            // Wait for tab to become visible
+            const onVisible = () => {
+              if (document.visibilityState === 'visible') {
+                setShow3DBackground(true);
+                document.removeEventListener('visibilitychange', onVisible);
+              }
+            };
+            document.addEventListener('visibilitychange', onVisible);
+          }
+        }, 3000); // 3 seconds (down from 15s)
+      }
+    }
     
     // Fetch VIP products and crypto prices on mount
     fetchVipProducts();
     fetchCryptoPrices();
-    const priceInterval = setInterval(fetchCryptoPrices, 15000);
+    const priceInterval = setInterval(fetchCryptoPrices, paused ? 120000 : 15000); // Slow down when paused
     
-    // Show promo popup after 3 seconds (only if not seen recently)
-    const hasSeenPromo = sessionStorage.getItem('store_promo_seen');
+    // Show promo popup after 3 seconds (once per hour)
+    // For testing: Clear localStorage.removeItem('store_promo_seen') to reset
+    const promoSeenKey = 'store_promo_seen';
     let promoTimer: NodeJS.Timeout | undefined;
-    if (!hasSeenPromo) {
+    
+    try {
+      const lastSeenTime = localStorage.getItem(promoSeenKey);
+      const oneHourAgo = Date.now() - (60 * 60 * 1000);
+      const shouldShowPromo = !lastSeenTime || parseInt(lastSeenTime) < oneHourAgo;
+      
+      console.log('[StoreHero3D] 🎉 Promo check:', { 
+        lastSeenTime, 
+        lastSeenDate: lastSeenTime ? new Date(parseInt(lastSeenTime)).toISOString() : 'never',
+        shouldShowPromo, 
+        isMobile: mobile,
+        userAgent: typeof window !== 'undefined' ? navigator.userAgent : 'ssr'
+      });
+      
+      if (shouldShowPromo) {
+        console.log('[StoreHero3D] ⏰ Setting promo timer for 3 seconds...');
+        promoTimer = setTimeout(() => {
+          console.log('[StoreHero3D] ✨ SHOWING PROMO POPUP NOW - isMobile:', mobile);
+          setShowPromo(true);
+          try {
+            localStorage.setItem(promoSeenKey, Date.now().toString());
+            console.log('[StoreHero3D] 💾 Saved timestamp to localStorage');
+          } catch (e) {
+            console.error('[StoreHero3D] ❌ Failed to set localStorage:', e);
+          }
+        }, 3000);
+      } else {
+        const timeUntilNextShow = parseInt(lastSeenTime || '0') + (60 * 60 * 1000) - Date.now();
+        const minutesRemaining = Math.ceil(timeUntilNextShow / 60000);
+        console.log('[StoreHero3D] ⏳ Promo not showing - seen recently. Will show again in', minutesRemaining, 'minutes');
+      }
+    } catch (e) {
+      // If localStorage fails (private browsing, etc), show popup anyway
+      console.warn('[StoreHero3D] ⚠️ localStorage error, showing promo anyway:', e);
       promoTimer = setTimeout(() => {
+        console.log('[StoreHero3D] ✨ SHOWING PROMO POPUP (localStorage fallback)');
         setShowPromo(true);
-        sessionStorage.setItem('store_promo_seen', 'true');
       }, 3000);
     }
     
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      
+      // Smart resize behavior:
+      // - If switching TO mobile: only disable 3D if already loaded (don't interfere with delayed loading)
+      // - If switching TO desktop: enable 3D immediately
+      if (mobile && show3DBackground) {
+        // User resized to mobile while Spline was showing - disable it
+        setShow3DBackground(false);
+      } else if (!mobile && !show3DBackground) {
+        // User resized to desktop - enable immediately
+        setShow3DBackground(true);
+      }
+      // Don't interfere with mobile delayed loading (when mobile && !show3DBackground)
+    };
     window.addEventListener('resize', handleResize);
     window.addEventListener('mousemove', handleMouseMove);
     
@@ -1488,9 +1570,15 @@ export function StoreHero3D() {
       window.removeEventListener('mousemove', handleMouseMove);
       clearInterval(priceInterval);
       if (promoTimer) clearTimeout(promoTimer);
+      if (splineLoadTimer) clearTimeout(splineLoadTimer);
       if (splineInteractionTimer.current) clearTimeout(splineInteractionTimer.current);
       if (idleTimer.current) clearTimeout(idleTimer.current);
       if (hoverDebounceTimer.current) clearTimeout(hoverDebounceTimer.current);
+      // Cleanup intersection observer
+      if (observer && containerRef.current) {
+        observer.unobserve(containerRef.current);
+        observer.disconnect();
+      }
     };
   }, [handleMouseMove, fetchCryptoPrices, fetchVipProducts]);
 
@@ -1508,14 +1596,7 @@ export function StoreHero3D() {
       {/* Promo Code Popup */}
       <PromoCodePopup isOpen={showPromo} onClose={() => setShowPromo(false)} />
       
-      {/* Play with Spline Button */}
-      <PlayWithSplineButton 
-        isVisible={showPlayWithSpline && !isSplinePlayMode} 
-        onClick={enterSplinePlayMode}
-        onExit={exitSplinePlayMode}
-      />
-      
-      {/* Exit Spline Mode Button */}
+      {/* Exit Spline Mode Button - stays fixed so user can always exit */}
       <ExitSplineModeButton 
         isVisible={isSplinePlayMode} 
         onClick={exitSplinePlayMode} 
@@ -1523,16 +1604,25 @@ export function StoreHero3D() {
 
       <section 
         ref={containerRef}
-        className="relative h-[60vh] sm:h-[65vh] md:h-[80vh] lg:h-[90vh] flex items-center justify-center overflow-hidden"
-        style={{ perspective: '1000px', pointerEvents: isSplinePlayMode ? 'auto' : 'auto' }}
+        className="relative h-screen md:h-[80vh] lg:h-[90vh] flex items-center justify-center overflow-hidden"
+        style={{ perspective: '1000px', touchAction: 'pan-y' }}
       >
         {/* === BACKGROUND LAYERS === */}
         
-        {/* Toggle Buttons - Top Right - Hide in Spline play mode */}
+        {/* Play with Spline Button - positioned within hero only - Desktop only */}
+        {!isMobile && (
+          <PlayWithSplineButton 
+            isVisible={showPlayWithSpline && !isSplinePlayMode} 
+            onClick={enterSplinePlayMode}
+            onExit={exitSplinePlayMode}
+          />
+        )}
+        
+        {/* Toggle Buttons - Top Right - Hide in Spline play mode and on mobile */}
         <AnimatePresence>
-          {!isSplinePlayMode && (
+          {!isSplinePlayMode && !isMobile && (
             <motion.div 
-              className="absolute top-4 right-4 z-[700] flex items-center gap-2"
+              className="absolute top-4 right-4 z-700 flex items-center gap-2"
               initial={{ opacity: 0 }}
               animate={{ opacity: contentOpacity }}
               exit={{ opacity: 0 }}
@@ -1556,7 +1646,9 @@ export function StoreHero3D() {
         
         {/* Conditional Background: Spline 3D or Plain Black */}
         <AnimatePresence mode="wait">
-          {show3DBackground ? (
+          {/* Mobile: Hide Spline when out of view for performance */}
+          {/* Desktop: Always show if enabled */}
+          {show3DBackground && (!isMobile || isHeroInView) ? (
             <motion.div
               key="spline-bg"
               className="absolute inset-0"
@@ -1565,7 +1657,7 @@ export function StoreHero3D() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <SplineBackground grayscale={showGrayscale} onInteraction={handleSplineInteraction} onHover={handleSplineHover} />
+              <SplineBackground grayscale={showGrayscale} onInteraction={handleSplineInteraction} onHover={handleSplineHover} playMode={isSplinePlayMode} />
             </motion.div>
           ) : (
             <motion.div
@@ -1635,11 +1727,12 @@ export function StoreHero3D() {
         </div>
 
         {/* === 3D FLOATING PRODUCTS - Real VIP Data === */}
-        {/* Hide in Spline play mode */}
+        {/* Visible on all devices - Hide only in Spline play mode */}
         <AnimatePresence>
-          {!isSplinePlayMode && !isMobile && floatingProducts.length > 0 && (
+          {!isSplinePlayMode && floatingProducts.length > 0 && (
             <motion.div 
               className="absolute inset-0 pointer-events-none"
+              style={{ touchAction: 'pan-y' }}
               initial={{ opacity: 0 }}
               animate={{ opacity: isInteractingWithProduct ? 1 : contentOpacity }}
               exit={{ opacity: 0 }}
@@ -1661,236 +1754,65 @@ export function StoreHero3D() {
           )}
         </AnimatePresence>
 
-        {/* Mobile floating elements - LARGER like crypto planets */}
-        {/* Hide in Spline play mode */}
-        <AnimatePresence>
-          {!isSplinePlayMode && isMobile && floatingProducts.length > 0 && (
-            <motion.div 
-              className="absolute inset-0 pointer-events-none overflow-hidden"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: contentOpacity }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              {floatingProducts.slice(0, 3).map((product, idx) => (
-              <motion.div
-                key={product.id}
-                className="absolute rounded-xl overflow-hidden bg-linear-to-br from-[#1956B4]/15 to-[#1956B4]/5 border border-[#1956B4]/20"
-                style={{
-                  width: '5rem',
-                  height: '6.5rem',
-                  left: idx === 0 ? '8%' : idx === 1 ? 'auto' : '12%',
-                  right: idx === 1 ? '10%' : 'auto',
-                  top: idx === 0 ? '15%' : idx === 1 ? '20%' : 'auto',
-                  bottom: idx === 2 ? '28%' : 'auto',
-                }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ 
-                  opacity: 0.7 - (idx * 0.1), 
-                  y: [0, -10 + (idx * 2), 0],
-                  rotate: [idx % 2 === 0 ? -5 : 5, idx % 2 === 0 ? 5 : -5, idx % 2 === 0 ? -5 : 5],
-                }}
-                transition={{ duration: 4 + idx, delay: idx * 0.5, repeat: Infinity, ease: 'easeInOut' }}
-              >
-                {/* Product image or fallback */}
-                {product.vipData?.image_url || product.vipData?.imageUrl ? (
-                  <>
-                    <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent z-[1]" />
-                    <img 
-                      src={product.vipData.image_url || product.vipData.imageUrl}
-                      alt={product.vipData.name || 'Product'}
-                      className="absolute inset-0 w-full h-full object-cover object-top opacity-90"
-                      loading="lazy"
-                    />
-                  </>
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-[#1956B4]/10 to-transparent">
-                    <ShoppingBag className="w-8 h-8 text-[#1956B4]/40" strokeWidth={1} />
-                  </div>
-                )}
-                {/* Price tag */}
-                {product.vipData && (
-                  <div className="absolute bottom-1.5 left-1.5 right-1.5 px-1.5 py-1 rounded-lg bg-black/80 border border-white/10 z-[2]">
-                    <div className="text-[7px] text-white/80 truncate font-medium">{product.vipData.name || 'Product'}</div>
-                    <div className="text-[9px] text-white font-bold">{formatUSD(product.vipData.price || 0)}</div>
-                  </div>
-                )}
-              </motion.div>
-            ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* === CONTENT === */}
         {/* Hide content in Spline play mode, fade with opacity cycle */}
         <AnimatePresence>
           {!isSplinePlayMode && (
             <motion.div 
-              className="relative z-[500] text-center px-4 max-w-5xl mx-auto pointer-events-none"
+              className="relative z-500 text-center px-4 max-w-3xl mx-auto"
+              style={{ pointerEvents: 'none', touchAction: 'pan-y' }}
               initial={{ opacity: 0 }}
               animate={{ opacity: isVisible ? (isInteractingWithProduct ? 1 : contentOpacity) : 0 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.5 }}
             >
-          {/* Badge - SEO: Trading Education */}
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ delay: 0.2, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="inline-flex items-center gap-2 mb-6 md:mb-8"
-            role="banner"
-            aria-label="Trading Education Platform"
-          >
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/20">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-              >
-                <Sparkles className="w-4 h-4 text-[#1956B4]" aria-hidden="true" />
-              </motion.div>
-              <span className="text-sm text-white font-medium">Premium Trading Education</span>
-              <div className="w-1.5 h-1.5 rounded-full bg-[#1956B4] animate-pulse" aria-hidden="true" />
-            </div>
-          </motion.div>
-
-          {/* Main Headline - SEO optimized for trading education */}
+          {/* Main Headline - Clean & Simple */}
           <motion.h1
-            initial={{ opacity: 0, y: 40 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 1, ease: [0.16, 1, 0.3, 1] }}
-            className="relative text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-light tracking-tight mb-4 md:mb-6 overflow-hidden"
+            transition={{ delay: 0.3, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="relative text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light tracking-tight mb-6 md:mb-8"
           >
-            <span className="block text-white">
-              Learn to Trade
-            </span>
-            {/* SEO-friendly subtitle */}
-            <span className="block text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-white/60 font-light mt-2">
-              Professional Education
-            </span>
-            {/* Smooth shimmer effect left to right */}
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
-              animate={{ x: ['-100%', '200%'] }}
-              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', repeatDelay: 2 }}
-              aria-hidden="true"
+            <TextType
+              text={["BullMoney"]}
+              typingSpeed={75}
+              pauseDuration={1500}
+              showCursor
+              cursorCharacter="_"
+              deletingSpeed={50}
+              loop={false}
+              cursorBlinkDuration={0.5}
+              className="text-white"
             />
           </motion.h1>
 
-          {/* Subheadline - SEO: Educational trading services, NO signals */}
+          {/* Single CTA Button */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="relative mb-8 md:mb-10 overflow-hidden"
-          >
-            <p className="text-lg sm:text-xl md:text-2xl text-white/70 font-light max-w-2xl mx-auto leading-relaxed">
-              Master the markets with{' '}
-              <span className="text-white relative inline-block">
-                expert-led trading courses
-                <motion.span
-                  className="absolute bottom-0 left-0 h-px bg-gradient-to-r from-white/60 to-white/30"
-                  initial={{ width: 0 }}
-                  animate={{ width: '100%' }}
-                  transition={{ delay: 1.2, duration: 0.8 }}
-                />
-              </span>
-              {' '}— forex, stocks, crypto education designed to build your skills.
-            </p>
-            {/* Educational disclaimer - SEO important */}
-            <p className="text-xs sm:text-sm text-white/40 mt-3 max-w-lg mx-auto">
-              Educational content only • No trading signals • Learn at your own pace
-            </p>
-            {/* Smooth shimmer effect */}
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none"
-              animate={{ x: ['-100%', '200%'] }}
-              transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', repeatDelay: 2.5 }}
-              aria-hidden="true"
-            />
-          </motion.div>
-
-          {/* CTA Buttons - Trading Education Focus */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="relative z-[600] flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-6 md:mb-10 pointer-events-auto"
-            role="navigation"
-            aria-label="Trading education enrollment options"
+            transition={{ delay: 0.5, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="relative z-600 pointer-events-auto"
             style={{ isolation: 'isolate' }}
           >
-            {/* Primary CTA - Start Learning */}
             <motion.button
-              onClick={() => openProductsModal(true)}
+              onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
               className="group relative px-8 py-4 rounded-2xl bg-black text-white font-medium overflow-hidden
                        border border-white/20 transition-all duration-300 hover:shadow-[0_0_40px_rgba(255,255,255,0.15)] pointer-events-auto"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              aria-label="Browse trading courses and VIP membership"
+              aria-label="Shop now"
             >
               <span className="relative z-10 flex items-center gap-2 font-semibold tracking-wide">
-                <span>START LEARNING</span>
+                <ShoppingBag className="w-4 h-4" />
+                <span>SHOP NOW</span>
               </span>
               {/* Continuous shimmer effect */}
-              <motion.div
-                className="absolute inset-0 bg-linear-to-r from-transparent via-white/40 to-transparent -skew-x-12"
-                animate={{ x: ['-200%', '200%'] }}
-                transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', repeatDelay: 1 }}
+              {/* Continuous shimmer effect - GPU CSS */}
+              <div
+                className="absolute inset-0 bg-linear-to-r from-transparent via-white/40 to-transparent -skew-x-12 store-shimmer-fast"
                 aria-hidden="true"
               />
             </motion.button>
-
-            {/* Secondary CTA - Discount */}
-            <motion.button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setShowPromo(true);
-              }}
-              className="group px-8 py-4 rounded-2xl bg-white/5 border border-white/20 text-white font-medium
-                       transition-all duration-300 hover:bg-white/10 hover:border-white/40 pointer-events-auto"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              aria-label="Get 15% discount on trading courses"
-            >
-              <span className="flex items-center gap-2">
-                <Gift className="w-4 h-4 text-[#1956B4]" aria-hidden="true" />
-                <span>Get 15% Off</span>
-              </span>
-            </motion.button>
-          </motion.div>
-
-          {/* Live Crypto Prices */}
-          {cryptoPrices.length > 0 && <CryptoTicker prices={cryptoPrices} />}
-
-          {/* Trust badges - Education focused */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1, duration: 0.8 }}
-            className="flex flex-wrap items-center justify-center gap-4 md:gap-8 mt-6"
-            role="list"
-            aria-label="Trading education benefits"
-          >
-            <div className="flex items-center gap-2 text-white/60 text-sm" role="listitem">
-              <Zap className="w-4 h-4 text-[#1956B4]" aria-hidden="true" />
-              <span>Instant Access</span>
-            </div>
-            <div className="hidden sm:block w-px h-4 bg-white/20" aria-hidden="true" />
-            <div className="flex items-center gap-2 text-white/60 text-sm" role="listitem">
-              <Star className="w-4 h-4 text-[#1956B4]" aria-hidden="true" />
-              <span>Expert Instructors</span>
-            </div>
-            <div className="hidden sm:block w-px h-4 bg-white/20" aria-hidden="true" />
-            <div className="flex items-center gap-2 text-white/60 text-sm" role="listitem">
-              <span className="w-2 h-2 rounded-full bg-[#1956B4] animate-pulse" aria-hidden="true" />
-              <span>Educational Only</span>
-            </div>
-            <div className="hidden sm:block w-px h-4 bg-white/20" aria-hidden="true" />
-            <div className="flex items-center gap-2 text-white/60 text-sm" role="listitem">
-              <TrendingUp className="w-4 h-4 text-[#1956B4]" aria-hidden="true" />
-              <span>No Signals</span>
-            </div>
           </motion.div>
             </motion.div>
           )}
@@ -1902,7 +1824,7 @@ export function StoreHero3D() {
         <AnimatePresence>
           {!isSplinePlayMode && (
             <motion.div 
-              className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"
+              className="absolute bottom-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-white/30 to-transparent"
               initial={{ opacity: 0 }}
               animate={{ opacity: contentOpacity }}
               exit={{ opacity: 0 }}
@@ -1935,17 +1857,13 @@ export function StoreHero3D() {
               transition={{ duration: 0.5 }}
             >
               <span className="text-xs text-white/60 uppercase tracking-widest">Scroll</span>
-              <motion.div
-                className="w-5 h-8 rounded-full border border-white/30 flex items-start justify-center p-1"
-                animate={{ opacity: [0.4, 0.8, 0.4] }}
-                transition={{ duration: 2, repeat: Infinity }}
+              <div
+                className="w-5 h-8 rounded-full border border-white/30 flex items-start justify-center p-1 store-opacity-pulse"
               >
-                <motion.div
-                  className="w-1 h-2 rounded-full bg-[#1956B4]/60"
-                  animate={{ y: [0, 12, 0] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                <div
+                  className="w-1 h-2 rounded-full bg-[#1956B4]/60 store-scroll-bounce"
                 />
-              </motion.div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

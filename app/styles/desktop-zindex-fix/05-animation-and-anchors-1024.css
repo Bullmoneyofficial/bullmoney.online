@@ -78,7 +78,7 @@
   }
   
   /* Price pill - maintain size */
-  .rounded-r-full[class*="bg-gradient-to-br"][class*="from-blue-600"] {
+  .rounded-r-full[class*="bg-linear-to-br"][class*="from-blue-600"] {
     min-width: max-content !important;
     flex-shrink: 0 !important;
   }

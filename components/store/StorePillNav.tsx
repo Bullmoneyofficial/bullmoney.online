@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { ShoppingBag, Search, User, Menu } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname } from 'next/navigation';
+import TextType from '@/components/TextType';
+import CountUp from '@/components/CountUp';
 
 // ============================================================================
 // STORE PILL NAV - Simple, Reliable Store Navigation
@@ -26,6 +28,7 @@ export interface StorePillNavProps {
   onCartClick?: () => void;
   onSearchClick?: () => void;
   onUserClick?: () => void;
+  onCategoryClick?: (href: string) => void;
   showSearch?: boolean;
   showUser?: boolean;
   showCart?: boolean;
@@ -50,6 +53,7 @@ export const StorePillNav: React.FC<StorePillNavProps> = ({
   onCartClick,
   onSearchClick,
   onUserClick,
+  onCategoryClick,
   showSearch = true,
   showUser = true,
   showCart = true,
@@ -98,16 +102,16 @@ export const StorePillNav: React.FC<StorePillNavProps> = ({
           <div className="flex items-center gap-3">
             <Link 
               href="/store" 
-              className="relative flex-shrink-0 w-14 h-14 block hover:scale-105 transition-transform"
+              className="relative shrink-0 w-14 h-14 block hover:scale-105 transition-transform"
             >
               <img src={logo} alt={logoAlt} className="w-full h-full object-cover" />
             </Link>
-            <Link href="/store" className="flex-shrink-0 text-xl font-semibold tracking-wide hidden sm:block" style={{
+            <Link href="/store" className="shrink-0 text-xl font-semibold tracking-wide hidden sm:block" style={{
               color: '#ffffff',
               textShadow: '0 0 8px rgba(255, 255, 255, 0.3)',
               letterSpacing: '0.05em'
             }}>
-              bullmoney
+              <TextType text="bullmoney" typingSpeed={25} showCursor={false} loop={false} as="span" />
             </Link>
           </div>
           
@@ -116,8 +120,8 @@ export const StorePillNav: React.FC<StorePillNavProps> = ({
             <ul className="flex items-stretch gap-0.5 h-full p-1">
               {items.map((item) => (
                 <li key={item.href} className="flex h-full">
-                  <Link
-                    href={item.href}
+                  <button
+                    onClick={() => onCategoryClick?.(item.href)}
                     className={`
                       flex items-center justify-center h-full px-4 rounded-full
                       text-xs font-semibold uppercase tracking-wide
@@ -129,8 +133,8 @@ export const StorePillNav: React.FC<StorePillNavProps> = ({
                     `}
                     aria-label={item.ariaLabel || item.label}
                   >
-                    {item.label}
-                  </Link>
+                    <TextType text={item.label} typingSpeed={Math.max(8, 30 - item.label.length)} showCursor={false} loop={false} as="span" />
+                  </button>
                 </li>
               ))}
             </ul>
@@ -186,7 +190,7 @@ export const StorePillNav: React.FC<StorePillNavProps> = ({
                       exit={{ opacity: 0, scale: 0.5 }}
                       className="text-sm font-medium"
                     >
-                      {cartCount}
+                      <CountUp to={cartCount} from={0} duration={0.5} separator="" className="" />
                     </motion.span>
                   )}
                 </AnimatePresence>

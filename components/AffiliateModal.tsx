@@ -2017,7 +2017,7 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
         className="relative w-full max-w-6xl h-[92vh] overflow-hidden rounded-2xl"
       >
         {/* Inner Container */}
-        <div className="relative z-10 bg-gradient-to-b from-neutral-900 to-black rounded-2xl border border-white/20 overflow-hidden h-full flex flex-col">
+        <div className="relative z-10 bg-linear-to-b from-neutral-900 to-black rounded-2xl border border-white/20 overflow-hidden h-full flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-white/10 flex-shrink-0">
             <div className="flex items-center gap-3">

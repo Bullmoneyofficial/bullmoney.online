@@ -108,7 +108,7 @@ export const PremiumButton = ({
         whileTap={{ scale: disabled ? 1 : 0.98 }}
         className={cn(
           "relative w-full h-full flex items-center justify-center gap-2",
-          "bg-gradient-to-r from-blue-950/40 via-slate-950 to-neutral-950",
+          "bg-linear-to-r from-blue-950/40 via-slate-950 to-neutral-950",
           "text-white font-bold uppercase tracking-wider",
           "hover:from-white/60 transition-all duration-300",
           "touch-manipulation",

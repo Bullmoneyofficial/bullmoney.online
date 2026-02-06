@@ -171,8 +171,8 @@
   }
   
   /* Ensure gradient backgrounds in modals render correctly */
-  .bg-gradient-to-br.from-zinc-900\/98,
-  .bg-gradient-to-br.from-blue-950\/98 {
+  .bg-linear-to-br.from-zinc-900\/98,
+  .bg-linear-to-br.from-blue-950\/98 {
     /* Force GPU rendering for gradient + blur */
     transform: translateZ(0) !important;
     -webkit-transform: translateZ(0) !important;

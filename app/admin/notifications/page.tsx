@@ -116,7 +116,7 @@ export default function NotificationAdminPanel() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20">
+          <div className="p-4 rounded-xl bg-linear-to-br from-white/10 to-white/5 border border-white/20">
             <div className="flex items-center gap-3">
               <Users className="w-5 h-5 text-white" />
               <span className="text-sm text-gray-400">Total Subscribers</span>
@@ -125,7 +125,7 @@ export default function NotificationAdminPanel() {
               {isLoading ? '...' : stats?.total_subscribers || 0}
             </p>
           </div>
-          <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20">
+          <div className="p-4 rounded-xl bg-linear-to-br from-white/10 to-white/5 border border-white/20">
             <div className="flex items-center gap-3">
               <Send className="w-5 h-5 text-white" />
               <span className="text-sm text-gray-400">Notifications Sent</span>
@@ -134,7 +134,7 @@ export default function NotificationAdminPanel() {
               {history.reduce((acc, h) => acc + h.sent_count, 0)}
             </p>
           </div>
-          <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20">
+          <div className="p-4 rounded-xl bg-linear-to-br from-white/10 to-white/5 border border-white/20">
             <div className="flex items-center gap-3">
               <History className="w-5 h-5 text-white" />
               <span className="text-sm text-gray-400">Total Campaigns</span>
@@ -209,7 +209,7 @@ export default function NotificationAdminPanel() {
             <button
               type="submit"
               disabled={isSending || !title || !body}
-              className="w-full py-4 rounded-xl font-semibold bg-gradient-to-r from-white to-white hover:from-white hover:to-white disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+              className="w-full py-4 rounded-xl font-semibold bg-linear-to-r from-white to-white hover:from-white hover:to-white disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
             >
               {isSending ? (
                 <>

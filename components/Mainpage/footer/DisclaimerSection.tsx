@@ -2,7 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { ChevronRight } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface DisclaimerSectionProps {
@@ -18,11 +18,12 @@ export const DisclaimerSection = ({ number, title, text, isOpen, onToggle }: Dis
 
   return (
     <div 
-      className="group relative rounded-lg overflow-hidden transition-all duration-300"
+      className={cn(
+        "group relative rounded-xl overflow-hidden transition-all duration-200",
+        isOpen ? "bg-white/3" : "bg-transparent hover:bg-white/2"
+      )}
       style={{
-        background: 'black',
-        border: '1px solid #ffffff',
-        boxShadow: isOpen ? '0 0 8px rgba(255, 255, 255, 0.5)' : '0 0 4px rgba(255, 255, 255, 0.3)'
+        border: '1px solid rgba(255, 255, 255, 0.08)'
       }}
     >
       <button
@@ -31,37 +32,24 @@ export const DisclaimerSection = ({ number, title, text, isOpen, onToggle }: Dis
         aria-expanded={isOpen}
         aria-controls={contentId}
         title={title}
-        className="relative flex w-full items-center justify-between text-left gap-1.5 xs:gap-2 p-1.5 xs:p-2 sm:p-2.5 min-h-[32px] xs:min-h-[36px]"
+        className="relative flex w-full items-center justify-between text-left gap-2 xs:gap-3 p-3 xs:p-3.5 sm:p-4 min-h-11 xs:min-h-[48px]"
       >
-        <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 min-w-0 flex-1">
+        <div className="flex items-center gap-2.5 xs:gap-3 min-w-0 flex-1">
+          {/* Apple-style number badge */}
           <span 
-            className="flex h-4 w-4 xs:h-4.5 xs:w-4.5 sm:h-5 sm:w-5 items-center justify-center rounded text-[7px] xs:text-[8px] sm:text-[9px] font-bold font-mono flex-shrink-0"
-            style={{
-              color: '#ffffff',
-              textShadow: '0 0 4px #ffffff',
-              border: '1px solid #ffffff',
-              boxShadow: '0 0 4px rgba(255, 255, 255, 0.5)',
-              background: 'rgba(255, 255, 255, 0.1)'
-            }}
+            className="flex h-6 w-6 xs:h-7 xs:w-7 items-center justify-center rounded-lg text-[10px] xs:text-xs font-medium font-mono shrink-0 bg-white/10 text-white/70"
           >
             {number}
           </span>
-          <span 
-            className="line-clamp-1 text-[10px] xs:text-xs sm:text-sm font-semibold"
-            style={{ color: '#ffffff', textShadow: '0 0 4px rgba(255, 255, 255, 0.5)' }}
-          >
+          <span className="line-clamp-1 text-sm xs:text-[15px] sm:text-base font-medium text-white tracking-tight">
             {title}
           </span>
         </div>
-        <ChevronRight
+        <ChevronDown
           className={cn(
-            "h-3.5 w-3.5 xs:h-4 xs:w-4 sm:h-4.5 sm:w-4.5 transition-transform duration-300 flex-shrink-0",
-            isOpen ? "rotate-90" : "rotate-0"
+            "h-4 w-4 xs:h-5 xs:w-5 text-white/40 transition-transform duration-200 shrink-0",
+            isOpen ? "rotate-180" : "rotate-0"
           )}
-          style={{ 
-            color: '#ffffff',
-            filter: 'drop-shadow(0 0 4px #ffffff)'
-          }}
         />
       </button>
 
@@ -70,14 +58,11 @@ export const DisclaimerSection = ({ number, title, text, isOpen, onToggle }: Dis
         aria-hidden={!isOpen}
         initial={false}
         animate={{ height: isOpen ? "auto" : 0, opacity: isOpen ? 1 : 0 }}
-        transition={{ duration: 0.25, ease: "easeInOut" }}
-        className="relative z-10 px-1.5 pb-1.5 xs:px-2 xs:pb-2 sm:px-2.5 sm:pb-2.5 overflow-hidden"
+        transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+        className="relative z-10 overflow-hidden"
       >
-        <div className="space-y-1" aria-hidden={!isOpen}>
-          <p 
-            className="text-[8px] xs:text-[9px] sm:text-[10px] pl-5 xs:pl-6 sm:pl-7 leading-relaxed"
-            style={{ color: '#9ca3af', textShadow: '0 0 2px rgba(156, 163, 175, 0.3)' }}
-          >
+        <div className="px-3 pb-3 xs:px-3.5 xs:pb-3.5 sm:px-4 sm:pb-4 pt-0">
+          <p className="text-[13px] xs:text-sm sm:text-[15px] pl-8 xs:pl-10 leading-relaxed text-white/60">
             {text}
           </p>
         </div>

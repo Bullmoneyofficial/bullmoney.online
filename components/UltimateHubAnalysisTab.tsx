@@ -427,7 +427,7 @@ export const UltimateHubAnalysisTab = memo(() => {
         {/* Market Badge & Direction - Collapse on mobile */}
         {!isMobile && (
           <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto text-nowrap scrollbar-hide">
-            <span className={`px-2 py-0.5 rounded-full bg-gradient-to-r ${marketColors[currentAnalysis.market]} text-[9px] font-bold uppercase text-white shrink-0`}>
+            <span className={`px-2 py-0.5 rounded-full bg-linear-to-r ${marketColors[currentAnalysis.market]} text-[9px] font-bold uppercase text-white shrink-0`}>
               {currentAnalysis.market}
             </span>
             <span className={`flex items-center gap-1 text-[10px] font-bold shrink-0 ${directionColors[currentAnalysis.direction]}`}>
@@ -441,7 +441,7 @@ export const UltimateHubAnalysisTab = memo(() => {
         )}
         {isMobile && (
           <div className="flex items-center gap-1 flex-wrap">
-            <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase text-white bg-gradient-to-r ${marketColors[currentAnalysis.market]}`}>
+            <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase text-white bg-linear-to-r ${marketColors[currentAnalysis.market]}`}>
               {currentAnalysis.market.charAt(0).toUpperCase()}
             </span>
             <span className={`text-[8px] font-bold ${directionColors[currentAnalysis.direction]}`}>

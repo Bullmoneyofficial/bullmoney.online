@@ -33,8 +33,8 @@ export interface VersionConfig {
 export const VERSION_CONFIG: VersionConfig = {
   version: APP_VERSION,
   buildTimestamp: BUILD_TIMESTAMP,
-  requiresFullCacheClear: true, // ENABLED: Force full cache clear for all users
-  compatibleVersions: [], // CLEARED: No compatible versions - everyone gets fresh state
+  requiresFullCacheClear: false, // DISABLED: Only clear volatile caches, NEVER auth/session data
+  compatibleVersions: [], // Auto-versions are always different, rely on volatile-only clearing
 };
 
 // Storage keys that should be PRESERVED across cache clears
@@ -91,6 +91,7 @@ export const VOLATILE_KEYS = [
 export const VOLATILE_PREFIXES = [
   'bullmoney_cache_',       // Any cache keys
   'bullmoney_temp_',        // Temporary data
+  'bullmoney_store_cache_', // Store data caches (orders, addresses etc.)
 ];
 
 // Keys to clear on major version updates only

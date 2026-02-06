@@ -239,8 +239,8 @@ export const TelegramConfirmationScreen: React.FC<TelegramConfirmationScreenProp
           <div className={cn(
             "flex items-center justify-center gap-2 p-2.5 rounded-lg border transition-all duration-500",
             joinedTelegram 
-              ? "bg-gradient-to-r from-white/20 to-white/20 border-white/60 neon-border-strong" 
-              : "bg-gradient-to-r from-white/10 to-white/10 border-white/40 neon-border"
+              ? "bg-linear-to-r from-white/20 to-white/20 border-white/60 neon-border-strong" 
+              : "bg-linear-to-r from-white/10 to-white/10 border-white/40 neon-border"
           )}>
             {joinedTelegram ? (
               <Unlock className="w-4 h-4 text-white neon-icon" />
@@ -273,7 +273,7 @@ export const TelegramConfirmationScreen: React.FC<TelegramConfirmationScreenProp
                 "w-20 h-20 md:w-24 md:h-24 rounded-full border-2 flex items-center justify-center transition-all group cursor-target", 
                 joinedTelegram 
                   ? "border-white bg-white/20 shadow-[0_0_20px_rgba(0,200,255,0.8),0_0_40px_rgba(0,200,255,0.6),0_0_60px_rgba(0,200,255,0.4),0_0_80px_rgba(0,200,255,0.2)] celebrate-pulse" 
-                  : "border-white bg-gradient-to-br from-white/30 to-white/30 shadow-[0_0_20px_rgba(0,200,255,0.7),0_0_40px_rgba(0,200,255,0.5),0_0_60px_rgba(0,200,255,0.3),0_0_80px_rgba(0,200,255,0.15)] hover:shadow-[0_0_30px_rgba(0,200,255,0.9),0_0_60px_rgba(0,200,255,0.7),0_0_90px_rgba(0,200,255,0.5),0_0_120px_rgba(0,200,255,0.3)] hover:scale-105 animate-pulse"
+                  : "border-white bg-linear-to-br from-white/30 to-white/30 shadow-[0_0_20px_rgba(0,200,255,0.7),0_0_40px_rgba(0,200,255,0.5),0_0_60px_rgba(0,200,255,0.3),0_0_80px_rgba(0,200,255,0.15)] hover:shadow-[0_0_30px_rgba(0,200,255,0.9),0_0_60px_rgba(0,200,255,0.7),0_0_90px_rgba(0,200,255,0.5),0_0_120px_rgba(0,200,255,0.3)] hover:scale-105 animate-pulse"
               )}
             >
               {joinedTelegram ? (

@@ -71,7 +71,7 @@ const HeroSection = memo(function HeroSection() {
         speed={0.3}
         direction="up"
       >
-        <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-900 to-black" />
+        <div className="absolute inset-0 bg-linear-to-b from-black via-gray-900 to-black" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255, 255, 255,0.15),transparent_70%)]" />
       </ParallaxDiv>
       
@@ -168,7 +168,7 @@ const InteractiveDemo = memo(function InteractiveDemo() {
   const scrollProgress = useScrollProgress();
   
   return (
-    <section className="py-24 px-4 bg-gradient-to-b from-transparent via-white/10 to-transparent">
+    <section className="py-24 px-4 bg-linear-to-b from-transparent via-white/10 to-transparent">
       <div className="max-w-4xl mx-auto">
         <Reveal direction="up">
           <h2 className="text-4xl font-bold text-white text-center mb-8">
@@ -207,7 +207,7 @@ const InteractiveDemo = memo(function InteractiveDemo() {
           </InteractiveCard>
           
           <InteractiveCard 
-            className="p-6 rounded-xl bg-gradient-to-br from-white/20 to-white/20 aspect-square flex items-center justify-center"
+            className="p-6 rounded-xl bg-linear-to-br from-white/20 to-white/20 aspect-square flex items-center justify-center"
             tiltIntensity={20}
             glowColor="rgba(255, 255, 255, 0.3)"
           >

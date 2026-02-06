@@ -6,8 +6,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, ShoppingBag, Heart, X, ExternalLink, CreditCard, Smartphone } from 'lucide-react';
+import CountUp from '@/components/CountUp';
+import TextType from '@/components/TextType';
 import type { ProductWithDetails } from '@/types/store';
 import { useCartStore } from '@/stores/cart-store';
+import { useWishlistStore } from '@/stores/wishlist-store';
 import { toast } from 'sonner';
 import { EncryptedText } from '@/components/Mainpage/encrypted-text';
 import { HoverBorderGradient } from '@/components/ui/hover-border-gradient';
@@ -26,14 +29,17 @@ interface ProductCardProps {
 
 export function ProductCard({ product, compact = false }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [showQuickView, setShowQuickView] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
   const [isLongPress, setIsLongPress] = useState(false);
   const [mounted, setMounted] = useState(false);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+  const touchStartPos = useRef<{ x: number; y: number } | null>(null);
+  const isScrolling = useRef(false);
   const { addItem } = useCartStore();
+  const { toggleItem, hasItem: isWishlisted } = useWishlistStore();
+  const isLiked = isWishlisted(product.id);
 
   const price = product.base_price;
   const comparePrice = product.compare_at_price;
@@ -70,22 +76,55 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
     };
   }, [showQuickView]);
 
-  // Long press handlers
-  const handleTouchStart = () => {
+  // Long press handlers with scroll detection
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartPos.current = { x: touch.clientX, y: touch.clientY };
+    isScrolling.current = false;
+    
     longPressTimer.current = setTimeout(() => {
-      setIsLongPress(true);
-      setShowQuickView(true);
+      if (!isScrolling.current) {
+        setIsLongPress(true);
+        setShowQuickView(true);
+      }
     }, 500);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartPos.current) return;
+    
+    const touch = e.touches[0];
+    const deltaX = Math.abs(touch.clientX - touchStartPos.current.x);
+    const deltaY = Math.abs(touch.clientY - touchStartPos.current.y);
+    
+    // If finger moved more than 10px, it's a scroll
+    if (deltaX > 10 || deltaY > 10) {
+      isScrolling.current = true;
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+        longPressTimer.current = null;
+      }
+    }
   };
 
   const handleTouchEnd = () => {
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
     }
-    if (!isLongPress) {
-      setShowQuickView(true);
+    
+    // Only open quick view if not scrolling and not from long press
+    // Don't open here — let onClick handle it to avoid double-fire
+    if (!isScrolling.current && !isLongPress) {
+      // Use a micro-delay so this doesn't race with onClick
+      requestAnimationFrame(() => {
+        setShowQuickView(true);
+      });
     }
+    
     setIsLongPress(false);
+    touchStartPos.current = null;
+    isScrolling.current = false;
   };
 
   const handleQuickAdd = async (e: React.MouseEvent) => {
@@ -118,8 +157,14 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
   const handleLike = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsLiked(!isLiked);
-    toast.success(isLiked ? 'Removed from wishlist' : 'Added to wishlist');
+    const added = toggleItem({
+      productId: product.id,
+      name: product.name,
+      slug: product.slug,
+      price: product.base_price,
+      image: product.primary_image || null,
+    });
+    toast.success(added ? 'Added to wishlist' : 'Removed from wishlist');
   };
 
   const handleDirectCheckout = async (paymentMethod: string) => {
@@ -205,44 +250,37 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
     <>
       <motion.article
         className="group relative h-full w-full flex flex-col cursor-pointer"
-        style={{ isolation: 'isolate' }}
+        style={{ isolation: 'isolate', touchAction: 'manipulation' }}
         onHoverStart={() => setIsHovered(true)}
         onHoverEnd={() => setIsHovered(false)}
         whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.2 }}
         onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onClick={(e) => {
-          // Open expanded view on both mobile and desktop
-          e.preventDefault();
+          // Open expanded view on both mobile and desktop (mouse clicks)
+          // Don't preventDefault — it can block click synthesis from touch on some browsers
+          e.stopPropagation();
           setShowQuickView(true);
         }}
       >
       {/* Image Container - Glassmorphism Border with Shimmer */}
       <div
         className={`relative overflow-hidden bg-white/5 ${
-          compact ? 'aspect-[4/5] rounded-lg' : 'aspect-[3/4] rounded-xl md:rounded-2xl'
+          compact ? 'aspect-4/5 rounded-lg' : 'aspect-3/4 rounded-xl md:rounded-2xl'
         }`}
       >
-          {/* Animated Shimmer Border */}
-          <div className="absolute inset-0 rounded-xl md:rounded-2xl p-[1px] overflow-hidden z-[1]">
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20"
-              style={{ width: '100%', filter: 'blur(20px)' }}
-              animate={{
-                x: ['-50%', '50%'],
-              }}
-              transition={{
-                duration: 4,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
+          {/* Animated Shimmer Border - GPU CSS animation */}
+          <div className="absolute inset-0 rounded-xl md:rounded-2xl p-px overflow-hidden z-1">
+            <div
+              className="absolute inset-0 bg-linear-to-r from-transparent via-white to-transparent opacity-20 store-shimmer-border"
             />
-            <div className="absolute inset-[1px] bg-transparent rounded-xl md:rounded-2xl" />
+            <div className="absolute inset-px bg-transparent rounded-xl md:rounded-2xl" />
           </div>
           
           {/* Static White Border */}
-          <div className="absolute inset-0 border border-white/20 rounded-xl md:rounded-2xl pointer-events-none z-[2]" />
+          <div className="absolute inset-0 border border-white/20 rounded-xl md:rounded-2xl pointer-events-none z-2" />
           
           {/* Gradient overlay for depth */}
           <div className="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -262,7 +300,7 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
           )}
 
           {/* Badges */}
-          <div className="absolute top-2 md:top-3 left-2 md:left-3 flex flex-col gap-1.5 z-[100]">
+          <div className="absolute top-2 md:top-3 left-2 md:left-3 flex flex-col gap-1.5 z-100">
             {hasDiscount && (
               <motion.span 
                 className="relative px-2 md:px-3 py-0.5 md:py-1 text-white text-[10px] md:text-xs font-semibold rounded-full shadow-lg overflow-hidden"
@@ -273,27 +311,12 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
               >
-                {/* Shimmer effect */}
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                  style={{ width: '100%' }}
-                  animate={{
-                    x: ['-200%', '200%'],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: 'linear',
-                    repeatDelay: 1,
-                  }}
+                {/* Shimmer effect - GPU CSS animation */}
+                <div
+                  className="absolute inset-0 bg-linear-to-r from-transparent via-white/30 to-transparent store-shimmer-fast"
                 />
                 <span className="relative z-10">
-                  <EncryptedText 
-                    text={`-${discount}%`}
-                    interval={100}
-                    revealDelayMs={30}
-                    className="tracking-wide"
-                  />
+                  -<CountUp to={discount} from={0} duration={1} className="tracking-wide" />%
                 </span>
               </motion.span>
             )}
@@ -307,19 +330,9 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
                 className="relative px-2 md:px-3 py-0.5 md:py-1 text-white text-[10px] md:text-xs font-medium rounded-full overflow-hidden"
                 style={{ backgroundColor: '#3b82f6' }}
               >
-                {/* Shimmer effect */}
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                  style={{ width: '100%' }}
-                  animate={{
-                    x: ['-200%', '200%'],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: 'linear',
-                    repeatDelay: 1,
-                  }}
+                {/* Shimmer effect - GPU CSS animation */}
+                <div
+                  className="absolute inset-0 bg-linear-to-r from-transparent via-white/30 to-transparent store-shimmer-fast"
                 />
                 <span className="relative z-10">
                   <EncryptedText 
@@ -337,24 +350,24 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
         </div>
 
         {/* Product Info */}
-        <div className={`mt-1.5 flex-1 flex flex-col relative z-[100] ${compact ? 'space-y-1' : 'md:mt-4 space-y-1.5 md:space-y-2'}`}>
+        <div className={`mt-1.5 flex-1 flex flex-col relative z-100 ${compact ? 'space-y-1' : 'md:mt-4 space-y-1.5 md:space-y-2'}`}>
           {product.category && !compact && (
             <p className="text-white/40 text-[10px] md:text-xs uppercase tracking-wider truncate">
-              {product.category.name}
+              <TextType text={product.category.name} typingSpeed={Math.max(5, 25 - product.category.name.length)} showCursor={false} loop={false} as="span" />
             </p>
           )}
           
           <h3 className={`text-white font-medium group-hover:text-white/80 transition-colors ${compact ? 'text-xs md:text-sm line-clamp-1' : 'text-sm md:text-base line-clamp-2'}`}>
-            {product.name}
+            <TextType text={product.name} typingSpeed={Math.max(5, 25 - product.name.length / 2)} showCursor={false} loop={false} as="span" />
           </h3>
 
           <div className="flex items-center gap-1.5 md:gap-2">
             <span className={`text-white font-semibold ${compact ? 'text-sm' : 'text-sm md:text-base'}`}>
-              ${price.toFixed(2)}
+              $<CountUp to={price} from={0} duration={1.5} separator="," className="" />
             </span>
             {hasDiscount && (
               <span className="text-white/40 line-through text-xs md:text-sm">
-                ${comparePrice.toFixed(2)}
+                $<CountUp to={comparePrice} from={0} duration={1.5} separator="," className="" />
               </span>
             )}
           </div>
@@ -362,19 +375,20 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
           {/* Variant Preview - Hidden on compact */}
           {!compact && product.variants && product.variants.length > 1 && (
             <div className="hidden md:flex items-center gap-1.5 pt-1">
-              {product.variants.slice(0, 4).map((variant) => (
-                variant.options?.color && (
+              {product.variants
+                .slice(0, 4)
+                .filter((variant) => variant.options?.color)
+                .map((variant) => (
                   <div
                     key={variant.id}
                     className="w-3.5 h-3.5 md:w-4 md:h-4 rounded-full border border-white/20 shadow-sm"
                     style={{ 
-                      backgroundColor: variant.options.color.toLowerCase() === 'white' 
+                      backgroundColor: variant.options!.color!.toLowerCase() === 'white' 
                         ? '#ffffff' 
-                        : variant.options.color.toLowerCase() 
+                        : variant.options!.color!.toLowerCase() 
                     }}
-                    title={variant.options.color}
+                    title={variant.options!.color}
                   />
-                )
               ))}
               {product.variants.length > 4 && (
                 <span className="text-white/40 text-xs">+{product.variants.length - 4}</span>
@@ -399,7 +413,7 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black backdrop-blur-sm overflow-hidden"
+          className="fixed inset-0 z-9999 flex items-center justify-center bg-black backdrop-blur-sm overflow-hidden"
           onClick={() => setShowQuickView(false)}
         >
           <motion.div
@@ -414,27 +428,18 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
             <CardItem translateZ={50} className="fixed top-6 right-6 z-50">
               <div className="relative w-12 h-12 rounded-full overflow-hidden">
                 {/* Animated Shimmer Border */}
-                <div className="absolute inset-0 rounded-full p-[1px] overflow-hidden z-[1]">
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20"
-                    style={{ width: '100%', filter: 'blur(20px)' }}
-                    animate={{
-                      x: ['-50%', '50%'],
-                    }}
-                    transition={{
-                      duration: 4,
-                      repeat: Infinity,
-                      ease: 'easeInOut',
-                    }}
+                <div className="absolute inset-0 rounded-full p-px overflow-hidden z-1">
+                  <div
+                    className="absolute inset-0 bg-linear-to-r from-transparent via-white to-transparent opacity-20 store-shimmer-border"
                   />
-                  <div className="absolute inset-[1px] bg-transparent rounded-full" />
+                  <div className="absolute inset-px bg-transparent rounded-full" />
                 </div>
                 
                 {/* Static White Border */}
-                <div className="absolute inset-0 border border-white/20 rounded-full pointer-events-none z-[2]" />
+                <div className="absolute inset-0 border border-white/20 rounded-full pointer-events-none z-2" />
                 
                 {/* Gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent z-10 pointer-events-none" />
+                <div className="absolute inset-0 bg-linear-to-b from-white/10 to-transparent z-10 pointer-events-none" />
                 
                 {/* Button Content */}
                 <motion.button
@@ -456,7 +461,7 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
               <div className="w-full max-w-6xl bg-black">
                 <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 bg-black">
                   {/* Product Image - Larger */}
-                  <div className="relative w-full aspect-square lg:aspect-[4/5] rounded-2xl overflow-hidden bg-black border border-white/20">
+                  <div className="relative w-full aspect-square lg:aspect-4/5 rounded-2xl overflow-hidden bg-black border border-white/20">
                     {product.primary_image ? (
                       <Image
                         src={product.primary_image.startsWith('/') ? product.primary_image : `/${product.primary_image.replace(/^public\//, '')}`}
@@ -474,7 +479,7 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
                     {/* Discount Badge */}
                     {hasDiscount && (
                       <div className="absolute top-4 left-4 px-4 py-2 text-white text-sm font-bold rounded-full" style={{ backgroundColor: 'rgb(25, 86, 180)' }}>
-                        -{discount}% OFF
+                        -<CountUp to={discount} from={0} duration={1} className="" />% OFF
                       </div>
                     )}
                   </div>
@@ -484,17 +489,17 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
                     <div className="space-y-3">
                       {product.category && (
                         <p className="text-sm uppercase tracking-wider font-semibold" style={{ color: 'rgb(25, 86, 180)' }}>
-                          {product.category.name}
+                          <TextType text={product.category.name} typingSpeed={Math.max(5, 25 - product.category.name.length)} showCursor={false} loop={false} as="span" />
                         </p>
                       )}
                       <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-                        {product.name}
+                        <TextType text={product.name} typingSpeed={Math.max(8, 30 - product.name.length / 2)} showCursor cursorCharacter="_" cursorBlinkDuration={0.5} loop={false} as="span" />
                       </h1>
                       
                       {/* Subtitle/Short Description */}
                       {product.description && (
                         <p className="text-lg text-white/70 leading-relaxed">
-                          {product.description}
+                          <TextType text={product.description} typingSpeed={Math.max(2, 15 - product.description.length / 20)} showCursor={false} loop={false} as="span" />
                         </p>
                       )}
                     </div>
@@ -502,15 +507,15 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
                     {/* Price */}
                     <div className="flex items-center gap-4 py-4 border-y border-white/10">
                       <span className="text-5xl font-bold text-white">
-                        ${(selectedVariant?.price || price).toFixed(2)}
+                        $<CountUp to={selectedVariant?.price || price} from={0} duration={1.5} separator="," className="" />
                       </span>
                       {hasDiscount && (
                         <>
                           <span className="text-2xl text-white/40 line-through">
-                            ${comparePrice.toFixed(2)}
+                            $<CountUp to={comparePrice} from={0} duration={1.5} separator="," className="" />
                           </span>
                           <span className="px-4 py-1.5 text-white text-base font-semibold rounded-full" style={{ backgroundColor: 'rgb(25, 86, 180)' }}>
-                            Save {discount}%
+                            Save <CountUp to={discount} from={0} duration={1} className="" />%
                           </span>
                         </>
                       )}
@@ -524,28 +529,20 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
                           <div className="flex flex-wrap gap-3">
                             {product.variants.map((variant, index) => (
                               <div key={variant.id} className="relative">
-                                {/* Animated Shimmer Border */}
-                                <div className="absolute inset-0 rounded-xl p-[1px] overflow-hidden z-[1]">
-                                  <motion.div
-                                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20"
-                                    style={{ width: '100%', filter: 'blur(20px)' }}
-                                    animate={{
-                                      x: ['-50%', '50%'],
-                                    }}
-                                    transition={{
-                                      duration: 4,
-                                      repeat: Infinity,
-                                      ease: 'easeInOut',
-                                    }}
+                                {/* Animated Shimmer Border - GPU CSS */}
+                                <div className="absolute inset-0 rounded-xl p-px overflow-hidden z-1">
+                                  <div
+                                    className="absolute inset-0 bg-linear-to-r from-transparent via-white to-transparent opacity-20 store-shimmer-border"
+                                    style={{ width: '100%' }}
                                   />
-                                  <div className="absolute inset-[1px] bg-transparent rounded-xl" />
+                                  <div className="absolute inset-px bg-transparent rounded-xl" />
                                 </div>
                                 
                                 {/* Static White Border */}
-                                <div className="absolute inset-0 border border-white/20 rounded-xl pointer-events-none z-[2]" />
+                                <div className="absolute inset-0 border border-white/20 rounded-xl pointer-events-none z-2" />
                                 
                                 {/* Gradient overlay */}
-                                <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent z-10 pointer-events-none" />
+                                <div className="absolute inset-0 bg-linear-to-b from-white/10 to-transparent z-10 pointer-events-none" />
                                 
                                 {/* Button */}
                                 <motion.button
@@ -588,28 +585,20 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
                   {/* Buy Now Button - Direct Stripe Checkout */}
                   <CardItem translateZ={40} className="w-full">
                     <div className="relative w-full overflow-hidden rounded-xl">
-                      {/* Animated Shimmer Border */}
-                      <div className="absolute inset-0 rounded-xl p-[1px] overflow-hidden z-[1]">
-                        <motion.div
-                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20"
-                          style={{ width: '100%', filter: 'blur(20px)' }}
-                          animate={{
-                            x: ['-50%', '50%'],
-                          }}
-                          transition={{
-                            duration: 4,
-                            repeat: Infinity,
-                            ease: 'easeInOut',
-                          }}
+                      {/* Animated Shimmer Border - GPU CSS */}
+                      <div className="absolute inset-0 rounded-xl p-px overflow-hidden z-1">
+                        <div
+                          className="absolute inset-0 bg-linear-to-r from-transparent via-white to-transparent opacity-20 store-shimmer-border"
+                          style={{ width: '100%' }}
                         />
-                        <div className="absolute inset-[1px] bg-transparent rounded-xl" />
+                        <div className="absolute inset-px bg-transparent rounded-xl" />
                       </div>
                       
                       {/* Static White Border */}
-                      <div className="absolute inset-0 border border-white/20 rounded-xl pointer-events-none z-[2]" />
+                      <div className="absolute inset-0 border border-white/20 rounded-xl pointer-events-none z-2" />
                       
                       {/* Gradient overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent z-10 pointer-events-none" />
+                      <div className="absolute inset-0 bg-linear-to-b from-white/10 to-transparent z-10 pointer-events-none" />
                       
                       {/* COMING_SOON_BUTTON: To re-enable, change disabled to {!isInStock}, restore onClick={handleBuyNow}, change bg color to rgb(25, 86, 180), and text to "Buy Now with Stripe" */}
                       <motion.button
@@ -634,28 +623,20 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
                     <div className="grid grid-cols-2 gap-3 w-full">
                       {/* Whop Pay Button */}
                       <div className="relative overflow-hidden rounded-xl">
-                        {/* Animated Shimmer Border */}
-                        <div className="absolute inset-0 rounded-xl p-[1px] overflow-hidden z-[1]">
-                          <motion.div
-                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20"
-                            style={{ width: '100%', filter: 'blur(20px)' }}
-                            animate={{
-                              x: ['-50%', '50%'],
-                            }}
-                            transition={{
-                              duration: 4,
-                              repeat: Infinity,
-                              ease: 'easeInOut',
-                            }}
+                        {/* Animated Shimmer Border - GPU CSS */}
+                        <div className="absolute inset-0 rounded-xl p-px overflow-hidden z-1">
+                          <div
+                            className="absolute inset-0 bg-linear-to-r from-transparent via-white to-transparent opacity-20 store-shimmer-border"
+                            style={{ width: '100%' }}
                           />
-                          <div className="absolute inset-[1px] bg-transparent rounded-xl" />
+                          <div className="absolute inset-px bg-transparent rounded-xl" />
                         </div>
                         
                         {/* Static White Border */}
-                        <div className="absolute inset-0 border border-white/20 rounded-xl pointer-events-none z-[2]" />
+                        <div className="absolute inset-0 border border-white/20 rounded-xl pointer-events-none z-2" />
                         
                         {/* Gradient overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent z-10 pointer-events-none" />
+                        <div className="absolute inset-0 bg-linear-to-b from-white/10 to-transparent z-10 pointer-events-none" />
                         
                         {/* Button */}
                         <motion.button
@@ -678,28 +659,20 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
                       
                       {/* Add to Cart Button */}
                       <div className="relative overflow-hidden rounded-xl">
-                        {/* Animated Shimmer Border */}
-                        <div className="absolute inset-0 rounded-xl p-[1px] overflow-hidden z-[1]">
-                          <motion.div
-                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20"
-                            style={{ width: '100%', filter: 'blur(20px)' }}
-                            animate={{
-                              x: ['-50%', '50%'],
-                            }}
-                            transition={{
-                              duration: 4,
-                              repeat: Infinity,
-                              ease: 'easeInOut',
-                            }}
+                        {/* Animated Shimmer Border - GPU CSS */}
+                        <div className="absolute inset-0 rounded-xl p-px overflow-hidden z-1">
+                          <div
+                            className="absolute inset-0 bg-linear-to-r from-transparent via-white to-transparent opacity-20 store-shimmer-border"
+                            style={{ width: '100%' }}
                           />
-                          <div className="absolute inset-[1px] bg-transparent rounded-xl" />
+                          <div className="absolute inset-px bg-transparent rounded-xl" />
                         </div>
                         
                         {/* Static White Border */}
-                        <div className="absolute inset-0 border border-white/20 rounded-xl pointer-events-none z-[2]" />
+                        <div className="absolute inset-0 border border-white/20 rounded-xl pointer-events-none z-2" />
                         
                         {/* Gradient overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent z-10 pointer-events-none" />
+                        <div className="absolute inset-0 bg-linear-to-b from-white/10 to-transparent z-10 pointer-events-none" />
                         
                         {/* Button */}
                         <motion.button
@@ -774,7 +747,7 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
                        flex items-center justify-center
                        transition-all duration-300
                        ${isLiked ? 'text-sky-400' : 'text-white/70'}`}
-            style={{ zIndex: 200 }}
+            style={{ zIndex: 9999 }}
             whileTap={{ scale: 0.9 }}
           >
             <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
@@ -789,15 +762,13 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
                        transition-all duration-200 active:scale-95
                        ${isAdding ? 'scale-95' : ''}
                        ${!isInStock ? 'opacity-50 cursor-not-allowed' : ''}`}
-            style={{ zIndex: 200 }}
+            style={{ zIndex: 9999 }}
             whileTap={{ scale: 0.95 }}
             disabled={!isInStock || isAdding}
           >
             {isAdding ? (
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 0.5, repeat: Infinity, ease: 'linear' }}
-                className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full"
+              <div
+                className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full store-spin"
               />
             ) : (
               <>
@@ -815,9 +786,8 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
     <>
       <div 
         className="block h-full w-full relative cursor-pointer" 
-        style={{ zIndex: 10 }}
+        style={{ zIndex: 10, touchAction: 'manipulation' }}
         onClick={(e) => {
-          e.preventDefault();
           e.stopPropagation();
           setShowQuickView(true);
         }}
@@ -844,7 +814,7 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
                      flex items-center justify-center
                      transition-all duration-300
                      ${isLiked ? 'text-sky-400' : 'text-white/70'}`}
-          style={{ zIndex: 200 }}
+          style={{ zIndex: 9999 }}
           whileTap={{ scale: 0.9 }}
         >
           <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
@@ -859,15 +829,13 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
                      transition-all duration-200 active:scale-95
                      ${isAdding ? 'scale-95' : ''}
                      ${!isInStock ? 'opacity-50 cursor-not-allowed' : ''}`}
-          style={{ zIndex: 200 }}
+          style={{ zIndex: 9999 }}
           whileTap={{ scale: 0.95 }}
           disabled={!isInStock || isAdding}
         >
           {isAdding ? (
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 0.5, repeat: Infinity, ease: 'linear' }}
-              className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full"
+            <div
+              className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full store-spin"
             />
           ) : (
             <>

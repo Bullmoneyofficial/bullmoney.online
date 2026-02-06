@@ -50,7 +50,7 @@ export default function AdminLoginModal({ open, onClose }: Props) {
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="w-full max-w-md mx-4 rounded-3xl overflow-hidden border border-sky-500/40 bg-gradient-to-b from-slate-900 via-slate-950 to-black shadow-[0_0_45px_rgba(255, 255, 255,0.45)] p-[1px]"
+            className="w-full max-w-md mx-4 rounded-3xl overflow-hidden border border-sky-500/40 bg-linear-to-b from-slate-900 via-slate-950 to-black shadow-[0_0_45px_rgba(255, 255, 255,0.45)] p-[1px]"
           >
             <div className="rounded-3xl bg-slate-950 py-6 px-5 sm:px-7">
               <h3 className="text-lg font-semibold mb-1">
@@ -103,7 +103,7 @@ export default function AdminLoginModal({ open, onClose }: Props) {
                   </button>
                   <button
                     type="submit"
-                    className="text-xs px-5 py-2 rounded-full bg-gradient-to-r from-sky-400 to-indigo-500 font-semibold shadow-[0_0_25px_rgba(255, 255, 255,0.45)]"
+                    className="text-xs px-5 py-2 rounded-full bg-linear-to-r from-sky-400 to-indigo-500 font-semibold shadow-[0_0_25px_rgba(255, 255, 255,0.45)]"
                   >
                     {state.isAdmin ? "Logout" : "Login"}
                   </button>

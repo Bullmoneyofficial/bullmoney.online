@@ -1573,7 +1573,7 @@ function GameUI({
           className="absolute top-10 left-1/2 -translate-x-1/2 pointer-events-auto"
           style={{ zIndex: 99999999999 }}
         >
-          <div className="backdrop-blur-xl bg-gradient-to-r from-orange-600/80 to-red-600/80 border border-orange-400/50 rounded-md px-2 py-0.5 text-white font-bold text-[8px] animate-pulse">
+          <div className="backdrop-blur-xl bg-linear-to-r from-orange-600/80 to-red-600/80 border border-orange-400/50 rounded-md px-2 py-0.5 text-white font-bold text-[8px] animate-pulse">
             {lastAchievement}
           </div>
         </div>
@@ -1581,7 +1581,7 @@ function GameUI({
 
       {vipUnlocked && (
         <div className="absolute top-10 left-1/2 -translate-x-1/2 pointer-events-auto" style={{ zIndex: 99999999999 }}>
-          <div className="backdrop-blur-xl bg-gradient-to-r from-yellow-500/80 to-amber-500/80 border border-yellow-300/60 rounded-md px-2 py-0.5 text-white font-black text-[8px] animate-pulse">
+          <div className="backdrop-blur-xl bg-linear-to-r from-yellow-500/80 to-amber-500/80 border border-yellow-300/60 rounded-md px-2 py-0.5 text-white font-black text-[8px] animate-pulse">
             VIP UNLOCKED
           </div>
         </div>

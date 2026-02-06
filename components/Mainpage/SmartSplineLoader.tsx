@@ -496,7 +496,7 @@ export const SmartSplineLoader = memo(({
   if (loadState === 'error') {
     const canRetry = retryCount < MAX_RETRIES;
     return (
-      <div className={`flex items-center justify-center w-full h-full bg-gradient-to-br from-black via-gray-900/50 to-black ${className}`}>
+      <div className={`flex items-center justify-center w-full h-full bg-linear-to-br from-black via-gray-900/50 to-black ${className}`}>
         <div className="text-center space-y-4 p-8 rounded-2xl bg-red-500/10 border border-red-500/30 max-w-md backdrop-blur-sm">
           <div className="relative w-20 h-20 mx-auto">
             <div className="absolute inset-0 rounded-full bg-red-500/20 flex items-center justify-center animate-pulse">
@@ -528,7 +528,7 @@ export const SmartSplineLoader = memo(({
                   hasLoadedRef.current = false;
                   loadSpline();
                 }}
-                className="px-6 py-3 rounded-xl bg-gradient-to-r from-white to-white text-white font-semibold hover:from-white hover:to-white transition-all shadow-[0_0_20px_rgba(255, 255, 255,0.3)] active:scale-95"
+                className="px-6 py-3 rounded-xl bg-linear-to-r from-white to-white text-white font-semibold hover:from-white hover:to-white transition-all shadow-[0_0_20px_rgba(255, 255, 255,0.3)] active:scale-95"
               >
                 🔄 Retry Loading ({MAX_RETRIES - retryCount} attempts left)
               </button>
@@ -540,7 +540,7 @@ export const SmartSplineLoader = memo(({
                   hasLoadedRef.current = false;
                   loadSpline();
                 }}
-                className="px-6 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold hover:from-orange-600 hover:to-red-600 transition-all active:scale-95"
+                className="px-6 py-3 rounded-xl bg-linear-to-r from-orange-500 to-red-500 text-white font-semibold hover:from-orange-600 hover:to-red-600 transition-all active:scale-95"
               >
                 🔄 Start Fresh
               </button>
@@ -574,7 +574,7 @@ export const SmartSplineLoader = memo(({
   return (
     <div ref={containerRef} className={`relative w-full h-full ${className}`} style={{ minHeight: '100%', minWidth: '100%' }}>
       {!hasSplineLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#050814] via-[#0b1226]/80 to-[#04060f] overflow-hidden z-10">
+        <div className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-[#050814] via-[#0b1226]/80 to-[#04060f] overflow-hidden z-10">
           {/* Subtle market chart background */}
           <div className="absolute inset-0 opacity-[0.08]">
             <svg className="w-full h-full" viewBox="0 0 400 200">
@@ -726,7 +726,7 @@ export const SmartSplineLoader = memo(({
                 <span className="text-white">SYNCING</span>
               </div>
               <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-white via-sky-400 to-white animate-pulse rounded-full" style={{ width: '75%' }} />
+                <div className="h-full bg-linear-to-r from-white via-sky-400 to-white animate-pulse rounded-full" style={{ width: '75%' }} />
               </div>
             </div>
           </div>

@@ -76,7 +76,7 @@ export function TelegramPreview({ limit = 3, onViewMore }: TelegramPreviewProps)
               className="bg-white/5 hover:bg-white/10 rounded-lg p-3 border border-white/10 hover:border-white/30 transition-all cursor-pointer group"
             >
               <div className="flex items-start gap-2">
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-white to-white flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                <div className="w-6 h-6 rounded-full bg-linear-to-br from-white to-white flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                   {message.author.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
