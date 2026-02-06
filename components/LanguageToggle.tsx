@@ -123,16 +123,21 @@ export const LanguageToggle = memo(({
       ) : variant === 'row' ? (
         <button
           onClick={() => { setIsOpen(!isOpen); setSearch(''); }}
-          className="w-full flex items-center justify-between py-2 px-3 rounded-lg text-xs transition-colors"
-          style={{ color: 'rgb(255,255,255)' }}
+          className="w-full flex items-center justify-between px-3 py-2 min-h-[36px] rounded-xl text-sm font-medium transition-all duration-200"
+          style={{ 
+            color: '#ffffff',
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+          }}
         >
           <div className="flex items-center gap-2">
-            <Globe className="w-4 h-4" />
+            <Globe className="w-4 h-4" strokeWidth={2} />
             <span>Language & Currency</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span>{currentLang.flag}</span>
-            <span style={{ color: 'rgba(255,255,255,0.7)' }}>{currentCurrency.code}</span>
+            <span className="text-base">{currentLang.flag}</span>
+            <span className="text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>{currentCurrency.code}</span>
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`} style={{ color: 'rgba(255,255,255,0.5)' }} />
           </div>
         </button>
       ) : (
@@ -151,7 +156,7 @@ export const LanguageToggle = memo(({
       {/* Dropdown */}
       {isOpen && (
         <div
-          className={`absolute ${dropdownPos} ${dropdownAlign} w-72 rounded-xl overflow-hidden z-[9999]`}
+          className={`absolute ${dropdownPos} ${variant === 'row' ? 'left-0 right-0' : dropdownAlign} ${variant === 'row' ? 'w-full' : 'w-72'} rounded-xl overflow-hidden z-[9999]`}
           style={{ 
             background: 'rgba(0,0,0,0.95)',
             backdropFilter: 'blur(24px)',
