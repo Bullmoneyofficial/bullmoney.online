@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Globe, ChevronDown, Search, Check } from 'lucide-react';
 import { useCurrencyLocaleStore, CURRENCIES, LANGUAGES, FOREX_CURRENCIES, CRYPTO_CURRENCIES } from '@/stores/currency-locale-store';
@@ -250,15 +251,17 @@ export function CurrencyLanguageSelector() {
   const currentCurrency = getCurrency();
   const currentLanguage = getLanguage();
 
+  // Outside-click is handled by the backdrop's onClick — no need for a document listener
+  // Close on Escape
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false);
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
+  }, [isOpen]);
 
   const currencySource = currencyCategory === 'forex' ? FOREX_CURRENCIES : CRYPTO_CURRENCIES;
   const filteredCurrencies = currencySource.filter(
@@ -287,15 +290,33 @@ export function CurrencyLanguageSelector() {
         <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -8, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.95 }}
-            transition={{ duration: 0.15 }}
-            className="absolute bottom-full mb-2 right-0 w-72 bg-black border border-white/10 rounded-xl shadow-2xl overflow-hidden z-[100]"
-          >
+      {isOpen && typeof document !== 'undefined' && createPortal(
+          <>
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 z-[10000]"
+              style={{ background: 'rgba(0,0,0,0.5)' }}
+              onClick={() => setIsOpen(false)}
+            />
+            {/* Centered panel */}
+            <div
+              id="currency-lang-popup"
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              className="fixed z-[10001] rounded-xl overflow-hidden"
+              style={{
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: 'calc(100vw - 2rem)',
+                maxWidth: '340px',
+                background: 'rgba(0,0,0,0.97)',
+                backdropFilter: 'blur(24px)',
+                WebkitBackdropFilter: 'blur(24px)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1)',
+              }}
+            >
             {/* Tabs */}
             <div className="flex border-b border-white/10">
               <button
@@ -402,9 +423,10 @@ export function CurrencyLanguageSelector() {
                 ))
               )}
             </div>
-          </motion.div>
+          </div>
+          </>,
+          document.body
         )}
-      </AnimatePresence>
     </div>
   );
 }

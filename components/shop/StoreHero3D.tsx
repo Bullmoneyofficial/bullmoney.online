@@ -1491,8 +1491,8 @@ export function StoreHero3D({ paused = false }: { paused?: boolean }) {
     
     // Fetch VIP products and crypto prices on mount
     fetchVipProducts();
-    fetchCryptoPrices();
-    const priceInterval = setInterval(fetchCryptoPrices, paused ? 120000 : 15000); // Slow down when paused
+    if (!paused) fetchCryptoPrices();
+    const priceInterval = paused ? null : setInterval(fetchCryptoPrices, 15000);
     
     // Show promo popup after 3 seconds (once per hour)
     // For testing: Clear localStorage.removeItem('store_promo_seen') to reset
@@ -1555,12 +1555,14 @@ export function StoreHero3D({ paused = false }: { paused?: boolean }) {
       // Don't interfere with mobile delayed loading (when mobile && !show3DBackground)
     };
     window.addEventListener('resize', handleResize);
-    window.addEventListener('mousemove', handleMouseMove);
+    if (!paused) {
+      window.addEventListener('mousemove', handleMouseMove);
+    }
     
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('mousemove', handleMouseMove);
-      clearInterval(priceInterval);
+      if (priceInterval) clearInterval(priceInterval);
       if (promoTimer) clearTimeout(promoTimer);
       if (splineLoadTimer) clearTimeout(splineLoadTimer);
       if (splineInteractionTimer.current) clearTimeout(splineInteractionTimer.current);
@@ -1572,7 +1574,7 @@ export function StoreHero3D({ paused = false }: { paused?: boolean }) {
         observer.disconnect();
       }
     };
-  }, [handleMouseMove, fetchCryptoPrices, fetchVipProducts]);
+  }, [handleMouseMove, fetchCryptoPrices, fetchVipProducts, paused]);
 
   // Generate particles
   const particles = useMemo(() => 

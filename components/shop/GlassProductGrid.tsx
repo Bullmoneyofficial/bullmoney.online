@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useEffect, useRef, useCallback } from 'react';
+import { useMemo, useEffect, useRef, useCallback, useState } from 'react';
 import type { ProductWithDetails } from '@/types/store';
 import GlassSurface, { type GlassSurfaceProps } from '@/components/GlassSurface';
 import { ProductCard } from '@/components/shop/ProductCard';
@@ -13,6 +13,7 @@ interface GlassProductGridProps {
   gap?: number;
   scrollSpeed?: number;
   glassProps?: Partial<GlassSurfaceProps>;
+  visibleCount?: number;
 }
 
 export function GlassProductGrid({
@@ -22,6 +23,7 @@ export function GlassProductGrid({
   gap = 18,
   scrollSpeed = 24,
   glassProps = {},
+  visibleCount,
 }: GlassProductGridProps) {
   const productRows = useMemo(() => {
     if (!products || products.length === 0) return [];
@@ -49,8 +51,9 @@ export function GlassProductGrid({
           rowHeight={rowHeight}
           gap={gap}
           scrollSpeed={scrollSpeed}
-          direction={rowIndex % 2 === 0 ? 1 : -1}
+          direction={1}
           glassProps={glassProps}
+          visibleCount={visibleCount}
         />
       ))}
     </div>
@@ -64,15 +67,17 @@ interface GlassProductRowProps {
   scrollSpeed: number;
   direction: 1 | -1;
   glassProps: Partial<GlassSurfaceProps>;
+  visibleCount?: number;
 }
 
-function GlassProductRow({ products, rowHeight, gap, scrollSpeed, direction, glassProps }: GlassProductRowProps) {
+function GlassProductRow({ products, rowHeight, gap, scrollSpeed, direction, glassProps, visibleCount }: GlassProductRowProps) {
   const rowRef = useRef<HTMLDivElement | null>(null);
   const autoScrollRef = useRef<number | null>(null);
   const autoScrollPosRef = useRef(0);
   const isPausedRef = useRef(false);
   const isVisibleRef = useRef(true);
   const isMobileRef = useRef(false);
+  const [containerWidth, setContainerWidth] = useState(0);
 
   // --- Swipe / drag state ---
   const isDraggingRef = useRef(false);
@@ -85,10 +90,30 @@ function GlassProductRow({ products, rowHeight, gap, scrollSpeed, direction, gla
   const lastDragTimeRef = useRef(0);
   const momentumRef = useRef<number | null>(null);
 
-  const repeatCount = products.length < 6 ? 4 : 3;
+  const repeatCount = products.length < 4 ? 8 : products.length < 8 ? 6 : 4;
   const repeatedProducts = Array.from({ length: repeatCount }, () => products).flat();
-  const cardWidth = Math.round(rowHeight * 0.72);
+  const defaultCardWidth = Math.round(rowHeight * 0.72);
+  // If visibleCount is set and we have a measured container, size cards to show exactly N at once
+  const rawCardWidth = visibleCount && containerWidth > 0
+    ? Math.round((containerWidth - (visibleCount + 1) * gap) / visibleCount)
+    : defaultCardWidth;
+  // Cap card width on desktop to prevent oversized cards
+  const maxCardWidth = 320;
+  const cardWidth = visibleCount ? Math.min(rawCardWidth, maxCardWidth) : rawCardWidth;
+  // Auto-compute card height from card width using 4:5 aspect ratio when visibleCount is set
+  const cardHeight = visibleCount ? Math.round(cardWidth * 1.25) : rowHeight;
   const trackPadding = Math.round(cardWidth * 0.6);
+
+  // Measure container width for visibleCount sizing
+  useEffect(() => {
+    if (!visibleCount) return;
+    const measure = () => {
+      if (rowRef.current) setContainerWidth(rowRef.current.clientWidth);
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [visibleCount]);
 
   // Detect mobile device
   useEffect(() => {
@@ -234,25 +259,25 @@ function GlassProductRow({ products, rowHeight, gap, scrollSpeed, direction, gla
     <div
       ref={rowRef}
       className="relative w-full overflow-x-auto overflow-y-visible scrollbar-hide select-none"
-      style={{ height: `${rowHeight}px`, contain: 'layout style', willChange: 'auto', cursor: isDraggingRef.current ? 'grabbing' : 'grab' }}
+      style={{ height: `${cardHeight + 70}px`, paddingBottom: '70px', willChange: 'auto', cursor: isDraggingRef.current ? 'grabbing' : 'grab' }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
       onClickCapture={onClickCapture}
-      onMouseEnter={() => { if (!isDraggingRef.current) isPausedRef.current = true; }}
-      onMouseLeave={() => { if (!isDraggingRef.current) { isPausedRef.current = false; } handleDragEnd(); }}
-      onTouchStart={() => { isPausedRef.current = true; }}
+      onMouseEnter={() => {}}
+      onMouseLeave={() => { handleDragEnd(); }}
+      onTouchStart={() => {}}
       onTouchEnd={() => { setTimeout(() => { if (!isDraggingRef.current) isPausedRef.current = false; }, 300); }}
     >
       <HoverEffect
         items={repeatedProducts}
         layout="custom"
-        className="flex items-stretch h-full"
+        className="flex items-start h-full"
         containerStyle={{
           gap: `${gap}px`,
-          paddingLeft: `${trackPadding}px`,
-          paddingRight: `${trackPadding}px`,
+          paddingLeft: `${gap}px`,
+          paddingRight: `${gap}px`,
         }}
         itemClassName="shrink-0"
         getItemStyle={() => ({ width: `${cardWidth}px` })}
@@ -261,9 +286,9 @@ function GlassProductRow({ products, rowHeight, gap, scrollSpeed, direction, gla
         renderItem={(product) => (
           <GlassSurface
             width={cardWidth}
-            height={rowHeight}
-            borderRadius={Math.round(cardWidth * 0.2)}
-            className="h-full w-full"
+            height={cardHeight}
+            borderRadius={Math.round(cardWidth * 0.1)}
+            className="w-full"
             displace={0.5}
             distortionScale={-180}
             redOffset={0}
@@ -274,7 +299,7 @@ function GlassProductRow({ products, rowHeight, gap, scrollSpeed, direction, gla
             mixBlendMode="screen"
             {...glassProps}
           >
-            <div className="h-full w-full p-2">
+            <div className="w-full p-2" style={{ minHeight: `${cardHeight}px` }}>
               <ProductCard product={product} compact={true} />
             </div>
           </GlassSurface>

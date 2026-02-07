@@ -3,6 +3,9 @@
 import { useEffect, useState } from 'react';
 import { StoreHeader } from '@/components/store/StoreHeader';
 import { CartDrawer } from '@/components/shop/CartDrawer';
+import dynamic from 'next/dynamic';
+
+const StoreSupportButton = dynamic(() => import('@/components/shop/StoreSupportButton'), { ssr: false });
 import { Toaster } from 'sonner';
 import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
 import { syncSessionLayers } from '@/lib/sessionPersistence';
@@ -49,7 +52,12 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
     
     // Hide theme overlays and blurs when store is active
     const hideOverlays = () => {
-      // Hide theme overlays
+      // Hide theme overlays — ONE-SHOT (no MutationObserver needed).
+      // The CSS rules below already handle any dynamically-added overlays via
+      // :global selectors. Previously a MutationObserver watched the entire
+      // document.body with subtree:true which caused a mutation storm:
+      //   GlobalThemeProvider creates overlay → observer fires → hides it →
+      //   OffscreenAnimationController observer fires → etc.
       const overlays = document.querySelectorAll('[data-theme-overlay], #theme-filter-overlay, #theme-global-overlay, #theme-edge-glow');
       overlays.forEach(el => {
         (el as HTMLElement).style.display = 'none';
@@ -57,26 +65,15 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
         (el as HTMLElement).style.pointerEvents = 'none';
         (el as HTMLElement).style.zIndex = '-1';
       });
-      
-      // Hide any backdrop-blur elements outside store
-      const blurElements = document.querySelectorAll('[class*="backdrop-blur"]:not([data-store-page] *)');
-      blurElements.forEach(el => {
-        if (!(el as HTMLElement).closest('[data-store-page]')) {
-          (el as HTMLElement).style.backdropFilter = 'none';
-          // Use setProperty for webkit prefix to avoid TypeScript error
-          (el as HTMLElement).style.setProperty('-webkit-backdrop-filter', 'none');
-        }
-      });
     };
     
     hideOverlays();
     
-    // Observe for any dynamically added overlays
-    const observer = new MutationObserver(hideOverlays);
-    observer.observe(document.body, { childList: true, subtree: true });
+    // Re-run once after a short delay to catch any overlays created during hydration
+    const timer = setTimeout(hideOverlays, 1500);
     
     return () => {
-      observer.disconnect();
+      clearTimeout(timer);
       // Restore overlays when leaving store
       const overlays = document.querySelectorAll('[data-theme-overlay], #theme-filter-overlay, #theme-global-overlay, #theme-edge-glow');
       overlays.forEach(el => {
@@ -414,6 +411,9 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
       
       {/* Cart Drawer */}
       <CartDrawer />
+      
+      {/* Floating Support Button */}
+      <StoreSupportButton />
       
       {/* Toast Notifications - Top Center */}
       <Toaster 

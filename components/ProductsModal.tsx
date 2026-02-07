@@ -303,6 +303,20 @@ const ProductsContent = memo(() => {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [expandedProduct, setExpandedProduct] = useState<VipProduct | null>(null);
 
+  // ESC key to close expanded product modal
+  useEffect(() => {
+    if (!expandedProduct) return;
+    
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setExpandedProduct(null);
+      }
+    };
+    
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [expandedProduct]);
+
   useEffect(() => {
     const fetchVip = async () => {
       try {
@@ -542,7 +556,7 @@ const ProductsContent = memo(() => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100000] flex items-center justify-center bg-black backdrop-blur-sm overflow-hidden"
+            className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/90 backdrop-blur-sm overflow-hidden p-8 sm:p-10 md:p-8"
             onClick={() => setExpandedProduct(null)}
             onTouchEnd={(e) => { if (e.target === e.currentTarget) setExpandedProduct(null); }}
           >
@@ -553,11 +567,11 @@ const ProductsContent = memo(() => {
               transition={{ type: "spring", duration: 0.5 }}
               onClick={(e) => e.stopPropagation()}
               onTouchEnd={(e) => e.stopPropagation()}
-              className="relative w-full h-full max-w-7xl max-h-full overflow-y-auto"
+              className="relative w-full max-w-[85vw] sm:max-w-2xl md:max-w-4xl lg:max-w-7xl max-h-[85vh] overflow-y-auto"
             >
-              {/* Close Button with Shimmer Border */}
-              <div className="fixed top-6 right-6 z-50">
-                <div className="relative w-12 h-12 rounded-full overflow-hidden">
+              {/* Close Button - Sticky on scroll */}
+              <div className="sticky top-4 right-4 md:top-6 md:right-6 z-[60] float-right mb-2">
+                <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-full overflow-hidden shadow-xl">
                   {/* Animated Shimmer Border */}
                   <div className="absolute inset-0 rounded-full p-[1px] overflow-hidden z-[1]">
                     <motion.div
@@ -576,28 +590,37 @@ const ProductsContent = memo(() => {
                   </div>
                   
                   {/* Static White Border */}
-                  <div className="absolute inset-0 border border-white/20 rounded-full pointer-events-none z-[2]" />
+                  <div className="absolute inset-0 border border-white/30 rounded-full pointer-events-none z-[2]" />
                   
                   {/* Button Content */}
                   <motion.button
-                    onClick={() => setExpandedProduct(null)}
-                    onTouchEnd={(e) => { e.stopPropagation(); setExpandedProduct(null); }}
-                    className="relative w-full h-full rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center transition-colors"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setExpandedProduct(null);
+                    }}
+                    onTouchEnd={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setExpandedProduct(null);
+                    }}
+                    className="relative w-full h-full rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md flex items-center justify-center transition-colors touch-manipulation"
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     initial={{ opacity: 0, scale: 0 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0 }}
+                    aria-label="Close"
                   >
-                    <X className="w-6 h-6 text-white" />
+                    <X className="w-7 h-7 md:w-8 md:h-8 text-white" />
                   </motion.button>
                 </div>
               </div>
 
               {/* Scrollable Content */}
-              <div className="min-h-full p-6 md:p-12 flex items-center justify-center bg-black">
+              <div className="min-h-full p-3 sm:p-6 md:p-8 lg:p-12 flex items-center justify-center bg-black">
                 <div className="w-full max-w-6xl bg-black">
-                  <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 bg-black">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6 md:gap-8 lg:gap-12 bg-black">
                     {/* Product Image - Larger */}
                     <div className="relative w-full aspect-square lg:aspect-[4/5] rounded-2xl overflow-hidden bg-black border border-white/20">
                       <img
@@ -713,62 +736,105 @@ const ProductsContent = memo(() => {
                       <div className="space-y-4 pt-6 bg-black">
                         <p className="text-white text-base font-semibold">Secure Checkout:</p>
                         
-                        {/* Buy Now Button */}
-                        <div className="relative w-full overflow-hidden rounded-xl">
-                          {/* Animated Shimmer Border */}
-                          <div className="absolute inset-0 rounded-xl p-[1px] overflow-hidden z-[1]">
-                            <motion.div
-                              className="absolute inset-0 bg-linear-to-r from-transparent via-white to-transparent opacity-20"
-                              style={{ width: '100%', filter: 'blur(20px)' }}
-                              animate={{
-                                x: ['-50%', '50%'],
+                        {/* Button Row */}
+                        <div className="flex gap-3">
+                          {/* Buy Now / Coming Soon Button */}
+                          <div className="relative flex-1 overflow-hidden rounded-xl">
+                            {/* Animated Shimmer Border */}
+                            <div className="absolute inset-0 rounded-xl p-[1px] overflow-hidden z-[1]">
+                              <motion.div
+                                className="absolute inset-0 bg-linear-to-r from-transparent via-white to-transparent opacity-20"
+                                style={{ width: '100%', filter: 'blur(20px)' }}
+                                animate={{
+                                  x: ['-50%', '50%'],
+                                }}
+                                transition={{
+                                  duration: 4,
+                                  repeat: Infinity,
+                                  ease: 'easeInOut',
+                                }}
+                              />
+                              <div className="absolute inset-[1px] bg-transparent rounded-xl" />
+                            </div>
+                            
+                            {/* Static White Border */}
+                            <div className="absolute inset-0 border border-white/20 rounded-xl pointer-events-none z-[2]" />
+                            
+                            {/* Button */}
+                            <motion.button
+                              onClick={() => {
+                                SoundEffects.click();
+                                const url = expandedProduct.buyUrl?.trim() || expandedProduct.planOptions?.[0]?.buy_url?.trim();
+                                if (url) {
+                                  window.open(url, "_blank", "noopener,noreferrer");
+                                }
                               }}
-                              transition={{
-                                duration: 4,
-                                repeat: Infinity,
-                                ease: 'easeInOut',
+                              disabled={expandedProduct.comingSoon || !expandedProduct.buyUrl}
+                              style={{
+                                backgroundColor: expandedProduct.comingSoon ? 'rgb(75, 75, 75)' : 'rgb(25, 86, 180)',
                               }}
-                            />
-                            <div className="absolute inset-[1px] bg-transparent rounded-xl" />
+                              className={`relative w-full py-5 text-white text-lg font-bold rounded-xl transition-all flex items-center justify-center gap-3 shadow-lg ${
+                                expandedProduct.comingSoon ? 'opacity-60 cursor-not-allowed' : 'hover:opacity-90 active:scale-98'
+                              }`}
+                              whileHover={expandedProduct.comingSoon ? {} : { scale: 1.02 }}
+                              whileTap={expandedProduct.comingSoon ? {} : { scale: 0.98 }}
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: expandedProduct.comingSoon ? 0.6 : 1, y: 0 }}
+                              transition={{ duration: 0.4 }}
+                            >
+                              {expandedProduct.comingSoon ? (
+                                <>
+                                  <CreditCard className="w-5 h-5" />
+                                  <span>Coming Soon</span>
+                                </>
+                              ) : (
+                                <>
+                                  <ExternalLink className="w-5 h-5" />
+                                  <span>Get Access Now</span>
+                                </>
+                              )}
+                            </motion.button>
                           </div>
-                          
-                          {/* Static White Border */}
-                          <div className="absolute inset-0 border border-white/20 rounded-xl pointer-events-none z-[2]" />
-                          
-                          {/* Button */}
-                          <motion.button
-                            onClick={() => {
-                              SoundEffects.click();
-                              const url = expandedProduct.buyUrl?.trim() || expandedProduct.planOptions?.[0]?.buy_url?.trim();
-                              if (url) {
-                                window.open(url, "_blank", "noopener,noreferrer");
-                              }
-                            }}
-                            disabled={expandedProduct.comingSoon || !expandedProduct.buyUrl}
-                            style={{
-                              backgroundColor: expandedProduct.comingSoon ? 'rgb(75, 75, 75)' : 'rgb(25, 86, 180)',
-                            }}
-                            className={`relative w-full py-5 text-white text-lg font-bold rounded-xl transition-all flex items-center justify-center gap-3 shadow-lg ${
-                              expandedProduct.comingSoon ? 'opacity-60 cursor-not-allowed' : 'hover:opacity-90 active:scale-98'
-                            }`}
-                            whileHover={expandedProduct.comingSoon ? {} : { scale: 1.02 }}
-                            whileTap={expandedProduct.comingSoon ? {} : { scale: 0.98 }}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: expandedProduct.comingSoon ? 0.6 : 1, y: 0 }}
-                            transition={{ duration: 0.4 }}
-                          >
-                            {expandedProduct.comingSoon ? (
-                              <>
-                                <CreditCard className="w-5 h-5" />
-                                <span>Coming Soon</span>
-                              </>
-                            ) : (
-                              <>
-                                <ExternalLink className="w-5 h-5" />
-                                <span>Get Access Now</span>
-                              </>
-                            )}
-                          </motion.button>
+
+                          {/* How to Pay with Crypto Button */}
+                          <div className="relative overflow-hidden rounded-xl">
+                            {/* Animated Shimmer Border */}
+                            <div className="absolute inset-0 rounded-xl p-[1px] overflow-hidden z-[1]">
+                              <motion.div
+                                className="absolute inset-0 bg-linear-to-r from-transparent via-blue-400 to-transparent opacity-20"
+                                style={{ width: '100%', filter: 'blur(20px)' }}
+                                animate={{
+                                  x: ['-50%', '50%'],
+                                }}
+                                transition={{
+                                  duration: 4,
+                                  repeat: Infinity,
+                                  ease: 'easeInOut',
+                                }}
+                              />
+                              <div className="absolute inset-[1px] bg-transparent rounded-xl" />
+                            </div>
+                            
+                            {/* Static Border */}
+                            <div className="absolute inset-0 border border-blue-500/30 rounded-xl pointer-events-none z-[2]" />
+                            
+                            {/* Button */}
+                            <motion.a
+                              href="/crypto-guide"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => SoundEffects.click()}
+                              className="relative h-full px-6 py-5 text-blue-400 hover:text-blue-300 text-base font-bold rounded-xl transition-all flex items-center justify-center gap-2 bg-blue-500/10 hover:bg-blue-500/20"
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.4, delay: 0.05 }}
+                            >
+                              <span className="text-xl">🪙</span>
+                              <span className="whitespace-nowrap">How to Use Crypto</span>
+                            </motion.a>
+                          </div>
                         </div>
 
                         <div className="flex items-center justify-center gap-3 text-white/40 text-xs pt-2">

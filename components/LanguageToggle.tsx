@@ -41,10 +41,14 @@ export const LanguageToggle = memo(({
   const currentLang = LANGUAGES.find(l => l.code === language) || LANGUAGES[0];
   const currentCurrency = CURRENCIES.find(c => c.code === currency) || CURRENCIES[0];
 
-  // Close on outside click
+  // Close on outside click (account for portaled popup)
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (
+        ref.current && !ref.current.contains(target) &&
+        dropdownRef.current && !dropdownRef.current.contains(target)
+      ) {
         setIsOpen(false);
       }
     };
@@ -65,27 +69,10 @@ export const LanguageToggle = memo(({
     }
   }, [isOpen]);
 
-  // Keep dropdown on-screen
+  // Keep dropdown on-screen (only for old absolute-positioned dropdowns, skip for centered portals)
   useEffect(() => {
     if (!isOpen || !dropdownRef.current || variant === 'row') return;
-    const el = dropdownRef.current;
-    const rect = el.getBoundingClientRect();
-    // Fix horizontal overflow
-    if (rect.right > window.innerWidth) {
-      el.style.left = 'auto';
-      el.style.right = '0';
-      el.style.transform = `translateX(${Math.min(0, window.innerWidth - rect.right - 8)}px)`;
-    }
-    if (rect.left < 0) {
-      el.style.left = '0';
-      el.style.right = 'auto';
-      el.style.transform = `translateX(${Math.abs(rect.left) + 8}px)`;
-    }
-    // Fix vertical overflow
-    if (rect.bottom > window.innerHeight) {
-      el.style.maxHeight = `${window.innerHeight - rect.top - 8}px`;
-      el.style.overflowY = 'auto';
-    }
+    // Portal popups are centered with fixed positioning — no repositioning needed
   }, [isOpen, variant]);
 
   const handleSelectLang = (lang: LocaleInfo) => {
@@ -190,6 +177,8 @@ export const LanguageToggle = memo(({
           {/* Centered panel */}
           <div
             ref={dropdownRef}
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
             className="fixed z-[10001] rounded-xl overflow-hidden"
             style={{ 
               top: '50%',
@@ -334,21 +323,34 @@ export const LanguageToggle = memo(({
         document.body
       )}
 
-      {/* Dropdown - non-row variants */}
-      {isOpen && variant !== 'row' && (
-        <div
-          ref={dropdownRef}
-          className={`absolute ${dropdownPos} ${dropdownAlign} rounded-xl overflow-hidden z-[9999]`}
-          style={{ 
-            background: 'rgba(0,0,0,0.95)',
-            backdropFilter: 'blur(24px)',
-            WebkitBackdropFilter: 'blur(24px)',
-            border: '1px solid rgba(255,255,255,0.15)',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1)',
-            width: '288px',
-            maxWidth: 'calc(100vw - 1rem)',
-          }}
-        >
+      {/* Dropdown - non-row variants: centered portal popup */}
+      {isOpen && variant !== 'row' && typeof document !== 'undefined' && createPortal(
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 z-[10000]" 
+            style={{ background: 'rgba(0,0,0,0.5)' }}
+            onClick={() => setIsOpen(false)}
+          />
+          {/* Centered panel */}
+          <div
+            ref={dropdownRef}
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            className="fixed z-[10001] rounded-xl overflow-hidden"
+            style={{ 
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: 'calc(100vw - 2rem)',
+              maxWidth: '340px',
+              background: 'rgba(0,0,0,0.97)',
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
+              border: '1px solid rgba(255,255,255,0.15)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1)',
+            }}
+          >
           <div className="flex" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
             <button
               onClick={() => { setTab('language'); setSearch(''); }}
@@ -481,6 +483,8 @@ export const LanguageToggle = memo(({
             )}
           </div>
         </div>
+        </>,
+        document.body
       )}
     </div>
   );

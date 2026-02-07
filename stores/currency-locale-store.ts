@@ -150,6 +150,38 @@ interface CurrencyLocaleStore {
   fetchLiveRates: () => Promise<void>;
 }
 
+// ============================================================================
+// CROSS-TAB / CROSS-DEVICE SYNC UTILITIES
+// BroadcastChannel for instant same-origin tab sync
+// Cookie for server-side rendering & cross-device persistence
+// ============================================================================
+
+let _langChannel: BroadcastChannel | null = null;
+function getLangChannel(): BroadcastChannel | null {
+  if (typeof BroadcastChannel === 'undefined') return null;
+  if (!_langChannel) {
+    try {
+      _langChannel = new BroadcastChannel('bullmoney-lang-sync');
+    } catch { /* Safari < 15.4 */ }
+  }
+  return _langChannel;
+}
+
+/** Persist language as a cookie so the server (and other tabs) can read it */
+function setLanguageCookie(lang: string) {
+  if (typeof document === 'undefined') return;
+  // 1 year expiry, SameSite=Lax, path=/
+  const expires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toUTCString();
+  document.cookie = `bm_lang=${lang}; path=/; expires=${expires}; SameSite=Lax`;
+}
+
+/** Read language cookie (for hydration fast-path) */
+function readLanguageCookie(): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(/(?:^|;\s*)bm_lang=([^;]+)/);
+  return match ? match[1] : null;
+}
+
 export const useCurrencyLocaleStore = create<CurrencyLocaleStore>()(
   persist(
     (set, get) => ({
@@ -161,12 +193,29 @@ export const useCurrencyLocaleStore = create<CurrencyLocaleStore>()(
 
       setCurrency: (code) => set({ currency: code }),
       setLanguage: (code) => {
+        const prev = get().language;
         set({ language: code });
+
         // Update <html lang> immediately
         if (typeof document !== 'undefined') {
           document.documentElement.lang = code;
           const rtl = ['ar', 'he', 'ur'].includes(code);
           document.documentElement.dir = rtl ? 'rtl' : 'ltr';
+        }
+
+        // Persist to cookie for SSR & cross-device
+        setLanguageCookie(code);
+
+        // Fire custom event for instant translation (before React re-render)
+        if (typeof window !== 'undefined' && prev !== code) {
+          window.dispatchEvent(new CustomEvent('bm-language-change', { detail: code }));
+        }
+
+        // Broadcast to other tabs instantly via BroadcastChannel
+        if (prev !== code) {
+          try {
+            getLangChannel()?.postMessage({ type: 'lang-change', language: code });
+          } catch { /* ignore closed channel */ }
         }
       },
       setAutoTranslate: (enabled) => set({ autoTranslateEnabled: enabled }),
@@ -234,6 +283,64 @@ export const useCurrencyLocaleStore = create<CurrencyLocaleStore>()(
         liveRates: state.liveRates,
         liveRatesFetchedAt: state.liveRatesFetchedAt,
       }),
+      onRehydrateStorage: () => {
+        return (state) => {
+          if (!state) return;
+          // Fast-path: read cookie for pre-hydration language
+          const cookieLang = readLanguageCookie();
+          if (cookieLang && cookieLang !== state.language) {
+            // Cookie may be more recent (set from another tab)
+            state.setLanguage(cookieLang);
+          } else {
+            // Ensure cookie is in sync with persisted state
+            setLanguageCookie(state.language);
+          }
+        };
+      },
     }
   )
 );
+
+// ============================================================================
+// CROSS-TAB SYNC LISTENERS
+// Listen for language changes from other tabs via BroadcastChannel + storage
+// ============================================================================
+if (typeof window !== 'undefined') {
+  // 1. BroadcastChannel — instant, same-origin, all tabs
+  const channel = getLangChannel();
+  if (channel) {
+    channel.onmessage = (event) => {
+      if (event.data?.type === 'lang-change' && event.data.language) {
+        const current = useCurrencyLocaleStore.getState().language;
+        if (current !== event.data.language) {
+          useCurrencyLocaleStore.getState().setLanguage(event.data.language);
+        }
+      }
+    };
+  }
+
+  // 2. Storage event — fallback for browsers without BroadcastChannel
+  //    Fires when localStorage is modified in a DIFFERENT tab
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'bullmoney-locale' && event.newValue) {
+      try {
+        const parsed = JSON.parse(event.newValue);
+        const storedLang = parsed?.state?.language;
+        if (storedLang && storedLang !== useCurrencyLocaleStore.getState().language) {
+          useCurrencyLocaleStore.getState().setLanguage(storedLang);
+        }
+      } catch { /* ignore parse errors */ }
+    }
+  });
+
+  // 3. Visibility change — re-check cookie when tab regains focus
+  //    Handles cross-device scenario where user returns to a stale tab
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      const cookieLang = readLanguageCookie();
+      if (cookieLang && cookieLang !== useCurrencyLocaleStore.getState().language) {
+        useCurrencyLocaleStore.getState().setLanguage(cookieLang);
+      }
+    }
+  });
+}

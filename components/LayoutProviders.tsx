@@ -82,26 +82,26 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
   const pathname = usePathname();
   const isStorePage = pathname.startsWith('/store');
   
-  // Check if user wants to show Ultimate Hub on store - default to FALSE (hide unless explicitly enabled)
-  const [showUltimateHubOnStore, setShowUltimateHubOnStore] = useState(false);
+  // Global Ultimate Hub visibility - controlled by toggle in navbar & store header
+  // Default OFF to prevent heavy component from loading and blocking page render
+  const [showUltimateHub, setShowUltimateHub] = useState(false);
   
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('store_show_ultimate_hub');
-      // Default to false (hiding Ultimate Hub) unless explicitly set to 'true'
-      setShowUltimateHubOnStore(stored === 'true');
+      // Default to false (hidden) — only show when user explicitly enabled it
+      setShowUltimateHub(stored === 'true');
       
       // Listen for changes
       const handleStorageChange = (event: Event) => {
         // Use event detail when available for immediate sync
         const detailValue = (event as CustomEvent<boolean>).detail;
         if (typeof detailValue === 'boolean') {
-          setShowUltimateHubOnStore(detailValue);
+          setShowUltimateHub(detailValue);
           return;
         }
         const stored = localStorage.getItem('store_show_ultimate_hub');
-        // Default to false (hiding Ultimate Hub) unless explicitly set to 'true'
-        setShowUltimateHubOnStore(stored === 'true');
+        setShowUltimateHub(stored === 'true');
       };
       window.addEventListener('store_ultimate_hub_toggle', handleStorageChange);
       return () => window.removeEventListener('store_ultimate_hub_toggle', handleStorageChange);
@@ -188,20 +188,26 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
         {/* Navbar rendered outside ClientProviders for fixed positioning - HIDDEN on store pages */}
         {!isStorePage && (allowMobileLazy || !isMobileViewport) && <Navbar />}
         
-        {/* ✅ ULTIMATE HUB - All-in-one unified component - HIDDEN on store pages unless toggled
+        {/* ✅ ULTIMATE HUB - All-in-one unified component - Controlled by toggle
             - Left side: Trading pill (prices), Community pill (Telegram), TV pill
             - Right side: FPS pill with Device Center Panel (4 tabs: Overview, Network, Performance, Account)
             - All real device data from browser APIs */}
-        {(!isStorePage || showUltimateHubOnStore) && (allowMobileLazy || !isMobileViewport) && <UltimateHub />}
+        {showUltimateHub && (allowMobileLazy || !isMobileViewport) && <UltimateHub />}
         
         {/* ✅ LAZY LOADED: All performance providers bundled */}
         <ClientProviders modal={modal}>
           {/* ✅ OFF-SCREEN ANIMATION PAUSE - Saves CPU by pausing invisible animations */}
-          <OffscreenAnimationController>
-            <div className="page-full">
-              {children}
-            </div>
-          </OffscreenAnimationController>
+          {/* SKIPPED on store pages — its global MutationObserver + IntersectionObserver
+              causes a mutation storm with StoreLayoutClient's own overlay-hiding logic */}
+          {isStorePage ? (
+            <div className="page-full">{children}</div>
+          ) : (
+            <OffscreenAnimationController>
+              <div className="page-full">
+                {children}
+              </div>
+            </OffscreenAnimationController>
+          )}
         </ClientProviders>
       </CacheManagerProvider>
 

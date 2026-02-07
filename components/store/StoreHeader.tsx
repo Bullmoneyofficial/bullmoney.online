@@ -65,7 +65,7 @@ export function StoreHeader() {
   const [faqModalOpen, setFaqModalOpen] = useState(false);
   const [accountManagerModalOpen, setAccountManagerModalOpen] = useState(false);
   const [showThemePicker, setShowThemePicker] = useState(false);
-  const [showUltimateHub, setShowUltimateHub] = useState(true);
+  const [showUltimateHub, setShowUltimateHub] = useState(false);
   const { openCart, getItemCount } = useCartStore();
   const { isAuthenticated, recruit, signOut } = useRecruitAuth();
   const { isAdmin } = useAdminAuth();

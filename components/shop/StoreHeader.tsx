@@ -74,30 +74,33 @@ export function StoreHeader() {
         <div className="absolute inset-0 bg-black border-b border-white/5" />
         
         <nav className="relative max-w-[1800px] mx-auto px-4 md:px-8 h-16 md:h-20 flex items-center justify-between gap-3">
-          {/* Back Button - Shown on nested pages */}
-          {isNestedPage && !isAdminPage && (
-            <motion.button
-              onClick={handleBack}
-              className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 transition-all"
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              whileTap={{ scale: 0.95 }}
+          {/* Left Section */}
+          <div className="flex items-center gap-2 flex-1 md:flex-none">
+            {/* Back Button - Shown on nested pages */}
+            {isNestedPage && !isAdminPage && (
+              <motion.button
+                onClick={handleBack}
+                className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 transition-all"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </motion.button>
+            )}
+
+            {/* Home Button - Go back to main site */}
+            <Link 
+              href="/"
+              className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
+              title="Back to Home"
             >
-              <ChevronLeft className="w-5 h-5" />
-            </motion.button>
-          )}
+              <Home className="w-4 h-4" />
+            </Link>
+          </div>
 
-          {/* Home Button - Go back to main site */}
-          <Link 
-            href="/"
-            className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
-            title="Back to Home"
-          >
-            <Home className="w-4 h-4" />
-          </Link>
-
-          {/* Logo */}
-          <Link href="/store" className="flex items-center gap-3">
+          {/* Logo - Centered on mobile */}
+          <Link href="/store" className="flex items-center gap-3 md:flex-none">
             <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-linear-to-br from-white to-white/60 flex items-center justify-center">
               <span className="text-black font-bold text-base md:text-lg">B</span>
             </div>
@@ -105,6 +108,9 @@ export function StoreHeader() {
               <TextType text="Store" typingSpeed={25} showCursor={false} loop={false} as="span" />
             </span>
           </Link>
+
+          {/* Right spacer for mobile centering */}
+          <div className="flex-1 md:hidden" />
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">

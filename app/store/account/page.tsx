@@ -463,8 +463,33 @@ export default function AccountPage() {
           0% { background-position: 200% 0; }
           100% { background-position: -200% 0; }
         }
+        /* Force white text on form elements for dark theme */
+        .account-page-form input,
+        .account-page-form select,
+        .account-page-form textarea,
+        .account-page-form option {
+          color: rgb(255, 255, 255) !important;
+          -webkit-text-fill-color: rgb(255, 255, 255);
+        }
+        .account-page-form input::placeholder,
+        .account-page-form textarea::placeholder {
+          color: rgba(255, 255, 255, 0.3) !important;
+          -webkit-text-fill-color: rgba(255, 255, 255, 0.3);
+        }
+        .account-page-form input:disabled {
+          color: rgba(255, 255, 255, 0.4) !important;
+          -webkit-text-fill-color: rgba(255, 255, 255, 0.4);
+        }
+        .account-page-form select option {
+          background: rgb(10, 10, 10);
+          color: rgb(255, 255, 255) !important;
+        }
+        /* Date input calendar icon */
+        .account-page-form input[type="date"]::-webkit-calendar-picker-indicator {
+          filter: invert(1);
+        }
       `}</style>
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black" style={{ color: 'rgb(255, 255, 255)' }}>
       <div className="max-w-350 mx-auto px-4 md:px-8 py-8 md:py-16">
         {/* Back to Store */}
         <Link
@@ -761,16 +786,16 @@ export default function AccountPage() {
                                 href={`/store/product/${item.slug}`}
                                 className="relative flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-black border border-white/30 rounded-lg text-xs text-white overflow-hidden group/btn hover:border-white/50 transition-colors"
                               >
-                                <span className="absolute inset-0 rounded-lg bg-linear-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
+                                <span className="pointer-events-none absolute inset-0 rounded-lg bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
                                 <Eye className="w-3 h-3 relative z-10" />
                                 <span className="relative z-10">View</span>
                               </Link>
                               <Link
-                                href={`/store/product/${item.slug}`}
-                                className="relative flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-black border border-white rounded-lg text-xs font-medium text-white overflow-hidden group/buy"
+                                href={`/store/product/${item.slug}?addToCart=true`}
+                                className="relative flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-black border border-white rounded-lg text-xs font-medium text-white overflow-hidden group/buy hover:bg-white/10 transition-colors"
                               >
                                 <span 
-                                  className="absolute inset-0 rounded-lg" 
+                                  className="pointer-events-none absolute inset-0 rounded-lg" 
                                   style={{ 
                                     background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)', 
                                     backgroundSize: '200% 100%',
@@ -851,7 +876,7 @@ export default function AccountPage() {
                         e.preventDefault();
                         handleSaveSettings(new FormData(e.currentTarget));
                       }}
-                      className="space-y-8 max-w-2xl"
+                      className="account-page-form space-y-8 max-w-2xl"
                     >
                       {/* Personal Information */}
                       <div className="space-y-4">
@@ -862,7 +887,8 @@ export default function AccountPage() {
                             <input
                               name="display_name"
                               defaultValue={user?.display_name || ''}
-                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              style={{ color: 'rgb(255, 255, 255)' }}
                               placeholder="Your display name"
                             />
                           </div>
@@ -871,7 +897,8 @@ export default function AccountPage() {
                             <input
                               name="full_name"
                               defaultValue={user?.full_name || ''}
-                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              style={{ color: 'rgb(255, 255, 255)' }}
                               placeholder="Your full name"
                             />
                           </div>
@@ -881,7 +908,8 @@ export default function AccountPage() {
                           <input
                             value={user?.email || ''}
                             disabled
-                            className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl text-white/40 cursor-not-allowed"
+                            className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl cursor-not-allowed"
+                            style={{ color: 'rgba(255, 255, 255, 0.4)' }}
                           />
                           <p className="text-xs text-white/30 mt-1">Email cannot be changed here</p>
                         </div>
@@ -891,7 +919,8 @@ export default function AccountPage() {
                             <input
                               name="phone"
                               defaultValue={user?.phone || ''}
-                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              style={{ color: 'rgb(255, 255, 255)' }}
                               placeholder="+1 (555) 000-0000"
                             />
                           </div>
@@ -901,7 +930,8 @@ export default function AccountPage() {
                               name="birth_date"
                               type="date"
                               defaultValue={user?.birth_date || ''}
-                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors scheme-dark"
+                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors scheme-dark"
+                              style={{ color: 'rgb(255, 255, 255)', colorScheme: 'dark' }}
                             />
                           </div>
                         </div>
@@ -911,7 +941,8 @@ export default function AccountPage() {
                             <input
                               name="country"
                               defaultValue={user?.country || ''}
-                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              style={{ color: 'rgb(255, 255, 255)' }}
                               placeholder="United States"
                             />
                           </div>
@@ -920,7 +951,8 @@ export default function AccountPage() {
                             <input
                               name="city"
                               defaultValue={user?.city || ''}
-                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              style={{ color: 'rgb(255, 255, 255)' }}
                               placeholder="New York"
                             />
                           </div>
@@ -929,7 +961,8 @@ export default function AccountPage() {
                             <select
                               name="timezone"
                               defaultValue={user?.timezone || ''}
-                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-white/20 transition-colors appearance-none"
+                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-white/20 transition-colors appearance-none"
+                              style={{ color: 'rgb(255, 255, 255)' }}
                             >
                               <option value="">Select timezone</option>
                               <option value="America/New_York">Eastern (ET)</option>
@@ -952,7 +985,8 @@ export default function AccountPage() {
                             name="bio"
                             defaultValue={user?.bio || ''}
                             rows={3}
-                            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors resize-none"
+                            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors resize-none"
+                            style={{ color: 'rgb(255, 255, 255)' }}
                             placeholder="Tell us about yourself..."
                           />
                         </div>
@@ -967,7 +1001,8 @@ export default function AccountPage() {
                             <input
                               name="telegram_username"
                               defaultValue={user?.telegram_username || ''}
-                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              style={{ color: 'rgb(255, 255, 255)' }}
                               placeholder="@username"
                             />
                           </div>
@@ -976,7 +1011,8 @@ export default function AccountPage() {
                             <input
                               name="discord_username"
                               defaultValue={user?.discord_username || ''}
-                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              style={{ color: 'rgb(255, 255, 255)' }}
                               placeholder="User#0000"
                             />
                           </div>
@@ -985,7 +1021,8 @@ export default function AccountPage() {
                             <input
                               name="instagram_username"
                               defaultValue={user?.instagram_username || ''}
-                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              style={{ color: 'rgb(255, 255, 255)' }}
                               placeholder="@handle"
                             />
                           </div>
@@ -994,7 +1031,8 @@ export default function AccountPage() {
                             <input
                               name="twitter_username"
                               defaultValue={user?.twitter_username || ''}
-                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              style={{ color: 'rgb(255, 255, 255)' }}
                               placeholder="@handle"
                             />
                           </div>
@@ -1010,7 +1048,8 @@ export default function AccountPage() {
                             <select
                               name="preferred_currency"
                               defaultValue={user?.preferred_currency || 'USD'}
-                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-white/20 transition-colors appearance-none"
+                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-white/20 transition-colors appearance-none"
+                              style={{ color: 'rgb(255, 255, 255)' }}
                             >
                               <option value="USD">USD ($)</option>
                               <option value="EUR">EUR (€)</option>
@@ -1026,7 +1065,8 @@ export default function AccountPage() {
                             <select
                               name="preferred_language"
                               defaultValue={user?.preferred_language || 'en'}
-                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-white/20 transition-colors appearance-none"
+                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-white/20 transition-colors appearance-none"
+                              style={{ color: 'rgb(255, 255, 255)' }}
                             >
                               <option value="en">English</option>
                               <option value="es">Spanish</option>
@@ -1044,7 +1084,8 @@ export default function AccountPage() {
                             <select
                               name="preferred_contact_method"
                               defaultValue={user?.preferred_contact_method || 'email'}
-                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-white/20 transition-colors appearance-none"
+                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-white/20 transition-colors appearance-none"
+                              style={{ color: 'rgb(255, 255, 255)' }}
                             >
                               <option value="email">Email</option>
                               <option value="phone">Phone</option>

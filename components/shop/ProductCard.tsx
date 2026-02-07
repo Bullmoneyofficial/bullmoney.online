@@ -5,9 +5,11 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, ShoppingBag, Heart, X, ExternalLink, CreditCard, Smartphone } from 'lucide-react';
+import { Plus, ShoppingBag, Heart, X, ExternalLink, CreditCard, Smartphone, Wallet } from 'lucide-react';
 import CountUp from '@/components/CountUp';
 import TextType from '@/components/TextType';
+import { CryptoPayButton } from '@/components/shop/CryptoPayButton';
+import { CryptoCheckoutTrigger } from '@/components/shop/CryptoCheckoutInline';
 import type { ProductWithDetails } from '@/types/store';
 import { useCartStore } from '@/stores/cart-store';
 import { useWishlistStore } from '@/stores/wishlist-store';
@@ -78,6 +80,20 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
     };
   }, [showQuickView]);
 
+  // ESC key to close modal
+  useEffect(() => {
+    if (!showQuickView) return;
+    
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowQuickView(false);
+      }
+    };
+    
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [showQuickView]);
+
   // Long press handlers with scroll detection
   const handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];
@@ -115,23 +131,17 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
       longPressTimer.current = null;
     }
     
-    // Only open quick view if not scrolling and not from long press
-    // Don't open here — let onClick handle it to avoid double-fire
-    if (!isScrolling.current && !isLongPress) {
-      // Use a micro-delay so this doesn't race with onClick
-      requestAnimationFrame(() => {
-        setShowQuickView(true);
-      });
-    }
+    // Don't open quick view here — let onClick handle it to avoid double-fire
+    // touchEnd fires before the synthetic click event on mobile
     
     setIsLongPress(false);
     touchStartPos.current = null;
     isScrolling.current = false;
   };
 
-  const handleQuickAdd = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleQuickAdd = async (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
     
     if (!defaultVariant) {
       toast.error('Please select options on the product page');
@@ -261,9 +271,8 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onClick={(e) => {
-          // Open expanded view on both mobile and desktop (mouse clicks)
-          // Don't preventDefault — it can block click synthesis from touch on some browsers
-          e.stopPropagation();
+          // Open expanded view on click - don't stopPropagation to allow 
+          // parent wrappers (PinContainer/outer div) to handle it too if needed
           setShowQuickView(true);
         }}
       >
@@ -415,7 +424,7 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-9999 flex items-center justify-center bg-black backdrop-blur-sm overflow-hidden"
+          className="fixed inset-0 z-9999 flex items-center justify-center bg-black/80 backdrop-blur-sm overflow-y-auto p-8 sm:p-10 md:p-8"
           onClick={() => setShowQuickView(false)}
         >
           <motion.div
@@ -423,12 +432,12 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
             transition={{ type: "spring", duration: 0.5 }}
-            className="relative w-full h-full max-w-7xl max-h-full overflow-y-auto"
+            className="relative w-full max-w-[85vw] sm:max-w-md md:max-w-2xl lg:max-w-6xl max-h-[85vh] overflow-y-auto my-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Close Button */}
-            <CardItem translateZ={50} className="fixed top-6 right-6 z-50">
-              <div className="relative w-12 h-12 rounded-full overflow-hidden">
+            {/* Close Button - Sticky on scroll */}
+            <CardItem translateZ={50} className="sticky top-2 right-2 md:top-4 md:right-4 z-[60] ml-auto w-fit mb-2">
+              <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-full overflow-hidden shadow-xl">
                 {/* Animated Shimmer Border */}
                 <div className="absolute inset-0 rounded-full p-px overflow-hidden z-1">
                   <div
@@ -438,32 +447,42 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
                 </div>
                 
                 {/* Static White Border */}
-                <div className="absolute inset-0 border border-white/20 rounded-full pointer-events-none z-2" />
+                <div className="absolute inset-0 border border-white/30 rounded-full pointer-events-none z-2" />
                 
                 {/* Gradient overlay */}
                 <div className="absolute inset-0 bg-linear-to-b from-white/10 to-transparent z-10 pointer-events-none" />
                 
                 {/* Button Content */}
                 <motion.button
-                  onClick={() => setShowQuickView(false)}
-                  className="relative w-full h-full rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center transition-colors"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowQuickView(false);
+                  }}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowQuickView(false);
+                  }}
+                  className="relative w-full h-full rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md flex items-center justify-center transition-colors touch-manipulation"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   initial={{ opacity: 0, scale: 0 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0 }}
+                  aria-label="Close"
                 >
-                  <X className="w-6 h-6 text-white" />
+                  <X className="w-6 h-6 md:w-7 md:h-7 text-white" />
                 </motion.button>
               </div>
             </CardItem>
 
             {/* Scrollable Content */}
-            <div className="min-h-full p-6 md:p-12 flex items-center justify-center bg-black">
-              <div className="w-full max-w-6xl bg-black">
-                <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 bg-black">
+            <div className="w-full p-3 sm:p-6 md:p-8 lg:p-12 bg-black rounded-2xl border border-white/10">
+              <div className="w-full bg-black">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6 lg:gap-12 bg-black">
                   {/* Product Image - Larger */}
-                  <div className="relative w-full aspect-square lg:aspect-4/5 rounded-2xl overflow-hidden bg-black border border-white/20">
+                  <div className="relative w-full aspect-square md:aspect-4/3 lg:aspect-4/5 rounded-lg md:rounded-xl lg:rounded-2xl overflow-hidden bg-black border border-white/20">
                     {product.primary_image ? (
                       <Image
                         src={product.primary_image.startsWith('/') ? product.primary_image : `/${product.primary_image.replace(/^public\//, '')}`}
@@ -480,43 +499,43 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
                     
                     {/* Discount Badge */}
                     {hasDiscount && (
-                      <div className="absolute top-4 left-4 px-4 py-2 text-white text-sm font-bold rounded-full" style={{ backgroundColor: 'rgb(25, 86, 180)' }}>
+                      <div className="absolute top-2 left-2 md:top-4 md:left-4 px-2 py-1 md:px-4 md:py-2 text-white text-xs md:text-sm font-bold rounded-full" style={{ backgroundColor: 'rgb(25, 86, 180)' }}>
                         -<CountUp to={discount} from={0} duration={1} className="" />% OFF
                       </div>
                     )}
                   </div>
 
                   {/* Product Details */}
-                  <div className="flex flex-col space-y-6">
-                    <div className="space-y-3">
+                  <div className="flex flex-col space-y-3 sm:space-y-4 md:space-y-6">
+                    <div className="space-y-2 md:space-y-3">
                       {product.category && (
-                        <p className="text-sm uppercase tracking-wider font-semibold" style={{ color: 'rgb(25, 86, 180)' }}>
+                        <p className="text-xs md:text-sm uppercase tracking-wider font-semibold" style={{ color: 'rgb(25, 86, 180)' }}>
                           <TextType text={product.category.name} typingSpeed={Math.max(5, 25 - product.category.name.length)} showCursor={false} loop={false} as="span" />
                         </p>
                       )}
-                      <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+                      <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight">
                         <TextType text={product.name} typingSpeed={Math.max(8, 30 - product.name.length / 2)} showCursor cursorCharacter="_" cursorBlinkDuration={0.5} loop={false} as="span" />
                       </h1>
                       
                       {/* Subtitle/Short Description */}
                       {product.description && (
-                        <p className="text-lg text-white/70 leading-relaxed">
+                        <p className="text-sm md:text-base lg:text-lg text-white/70 leading-relaxed">
                           <TextType text={product.description} typingSpeed={Math.max(2, 15 - product.description.length / 20)} showCursor={false} loop={false} as="span" />
                         </p>
                       )}
                     </div>
 
                     {/* Price */}
-                    <div className="flex items-center gap-4 py-4 border-y border-white/10">
-                      <span className="text-5xl font-bold text-white">
+                    <div className="flex items-center gap-2 md:gap-4 py-2 md:py-4 border-y border-white/10">
+                      <span className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">
                         {formatPrice(selectedVariant?.price || price)}
                       </span>
                       {hasDiscount && (
                         <>
-                          <span className="text-2xl text-white/40 line-through">
+                          <span className="text-lg sm:text-xl md:text-2xl text-white/40 line-through">
                             {formatPrice(comparePrice)}
                           </span>
-                          <span className="px-4 py-1.5 text-white text-base font-semibold rounded-full" style={{ backgroundColor: 'rgb(25, 86, 180)' }}>
+                          <span className="px-2 py-1 md:px-4 md:py-1.5 text-white text-xs md:text-base font-semibold rounded-full" style={{ backgroundColor: 'rgb(25, 86, 180)' }}>
                             Save <CountUp to={discount} from={0} duration={1} className="" />%
                           </span>
                         </>
@@ -527,8 +546,8 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
                     {product.variants && product.variants.length > 1 && (
                       <CardItem translateZ={30} className="w-full">
                         <div>
-                          <p className="text-white text-base font-semibold mb-3">Select Your Option:</p>
-                          <div className="flex flex-wrap gap-3">
+                          <p className="text-white text-sm md:text-base font-semibold mb-2 md:mb-3">Select Your Option:</p>
+                          <div className="flex flex-wrap gap-2 md:gap-3">
                             {product.variants.map((variant, index) => (
                               <div key={variant.id} className="relative">
                                 {/* Animated Shimmer Border - GPU CSS */}
@@ -548,11 +567,17 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
                                 
                                 {/* Button */}
                                 <motion.button
-                                  onClick={() => setSelectedVariant(variant)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedVariant(variant);
+                                  }}
+                                  onTouchEnd={(e) => e.stopPropagation()}
                                   style={{
                                     backgroundColor: selectedVariant?.id === variant.id ? 'rgb(25, 86, 180)' : 'rgba(255, 255, 255, 0.05)',
+                                    pointerEvents: 'all',
+                                    touchAction: 'auto'
                                   }}
-                                  className={`relative px-6 py-3 rounded-xl transition-all font-medium text-white ${
+                                  className={`relative px-3 py-2 md:px-6 md:py-3 rounded-xl transition-all font-medium text-sm md:text-base text-white ${
                                     selectedVariant?.id === variant.id
                                       ? 'scale-105 shadow-lg'
                                       : 'text-white/80 hover:text-white'
@@ -573,56 +598,109 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
                     )}
 
                 {/* Stock Status */}
-                <div className="flex items-center gap-3 p-4 bg-black rounded-xl border border-white/20">
-                  <div className={`w-3 h-3 rounded-full ${isInStock ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-                  <span className={`text-base font-semibold ${isInStock ? 'text-green-400' : 'text-red-400'}`}>
+                <div className="flex items-center gap-2 md:gap-3 p-2 md:p-4 bg-black rounded-xl border border-white/20">
+                  <div className={`w-2 h-2 md:w-3 md:h-3 rounded-full ${isInStock ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+                  <span className={`text-xs sm:text-sm md:text-base font-semibold ${isInStock ? 'text-green-400' : 'text-red-400'}`}>
                     {isInStock ? '✓ In Stock - Ready to Ship' : '✗ Out of Stock'}
                   </span>
                 </div>
 
                 {/* Payment Options */}
-                <div className="space-y-4 pt-6 bg-black">
-                  <p className="text-white text-base font-semibold">Secure Checkout:</p>
+                <div className="space-y-3 md:space-y-4 pt-4 md:pt-6 bg-black">
+                  <p className="text-white text-sm md:text-base font-semibold">Secure Checkout:</p>
                   
-                  {/* Buy Now Button - Direct Stripe Checkout */}
-                  <CardItem translateZ={40} className="w-full">
-                    <div className="relative w-full overflow-hidden rounded-xl">
-                      {/* Animated Shimmer Border - GPU CSS */}
-                      <div className="absolute inset-0 rounded-xl p-px overflow-hidden z-1">
-                        <div
-                          className="absolute inset-0 bg-linear-to-r from-transparent via-white to-transparent opacity-20 store-shimmer-border"
-                          style={{ width: '100%' }}
-                        />
-                        <div className="absolute inset-px bg-transparent rounded-xl" />
+                  {/* Pay with Crypto - Inline Checkout */}
+                  <CardItem translateZ={45} className="w-full" style={{ pointerEvents: 'all' }}>
+                    <CryptoCheckoutTrigger
+                      productName={product.name}
+                      productImage={product.primary_image}
+                      priceUSD={selectedVariant?.price || price}
+                      productId={product.id.toString()}
+                      variantId={selectedVariant?.id?.toString()}
+                      quantity={1}
+                      disabled={!isInStock}
+                    />
+                  </CardItem>
+
+                  {/* Buy Now Button + How to Use Crypto */}
+                  <CardItem translateZ={40} className="w-full" style={{ pointerEvents: 'all' }}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3 w-full">
+                      {/* Coming Soon / Buy Now Button */}
+                      <div className="relative overflow-hidden rounded-xl">
+                        {/* Animated Shimmer Border - GPU CSS */}
+                        <div className="absolute inset-0 rounded-xl p-px overflow-hidden z-1">
+                          <div
+                            className="absolute inset-0 bg-linear-to-r from-transparent via-white to-transparent opacity-20 store-shimmer-border"
+                            style={{ width: '100%' }}
+                          />
+                          <div className="absolute inset-px bg-transparent rounded-xl" />
+                        </div>
+                        
+                        {/* Static White Border */}
+                        <div className="absolute inset-0 border border-white/20 rounded-xl pointer-events-none z-2" />
+                        
+                        {/* Gradient overlay */}
+                        <div className="absolute inset-0 bg-linear-to-b from-white/10 to-transparent z-10 pointer-events-none" />
+                        
+                        {/* COMING_SOON_BUTTON: To re-enable, change disabled to {!isInStock}, restore onClick={handleBuyNow}, change bg color to rgb(25, 86, 180), and text to "Buy Now with Stripe" */}
+                        <motion.button
+                          // onClick={handleBuyNow} // COMING_SOON: Uncomment to re-enable
+                          disabled={true}
+                          style={{
+                            backgroundColor: 'rgb(75, 75, 75)',
+                          }}
+                          className="relative w-full py-3 md:py-5 opacity-60 text-white text-sm md:text-lg font-bold rounded-xl transition-all cursor-not-allowed flex items-center justify-center gap-2 md:gap-3 shadow-lg"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 0.6, y: 0 }}
+                          transition={{ duration: 0.4 }}
+                        >
+                          <CreditCard className="w-4 h-4 md:w-5 md:h-5" />
+                          <span>Coming Soon</span>
+                        </motion.button>
                       </div>
-                      
-                      {/* Static White Border */}
-                      <div className="absolute inset-0 border border-white/20 rounded-xl pointer-events-none z-2" />
-                      
-                      {/* Gradient overlay */}
-                      <div className="absolute inset-0 bg-linear-to-b from-white/10 to-transparent z-10 pointer-events-none" />
-                      
-                      {/* COMING_SOON_BUTTON: To re-enable, change disabled to {!isInStock}, restore onClick={handleBuyNow}, change bg color to rgb(25, 86, 180), and text to "Buy Now with Stripe" */}
-                      <motion.button
-                        // onClick={handleBuyNow} // COMING_SOON: Uncomment to re-enable
-                        disabled={true}
-                        style={{
-                          backgroundColor: 'rgb(75, 75, 75)',
-                        }}
-                        className="relative w-full py-5 opacity-60 text-white text-lg font-bold rounded-xl transition-all cursor-not-allowed flex items-center justify-center gap-3 shadow-lg"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 0.6, y: 0 }}
-                        transition={{ duration: 0.4 }}
-                      >
-                        <CreditCard className="w-5 h-5" />
-                        <span>Coming Soon</span>
-                      </motion.button>
+
+                      {/* How to Use Crypto Button */}
+                      <div className="relative overflow-hidden rounded-xl">
+                        {/* Animated Shimmer Border - GPU CSS */}
+                        <div className="absolute inset-0 rounded-xl p-px overflow-hidden z-1">
+                          <div
+                            className="absolute inset-0 bg-linear-to-r from-transparent via-blue-400 to-transparent opacity-20 store-shimmer-border"
+                            style={{ width: '100%' }}
+                          />
+                          <div className="absolute inset-px bg-transparent rounded-xl" />
+                        </div>
+                        
+                        {/* Static Border */}
+                        <div className="absolute inset-0 border border-blue-500/30 rounded-xl pointer-events-none z-2" />
+                        
+                        {/* Gradient overlay */}
+                        <div className="absolute inset-0 bg-linear-to-b from-blue-400/10 to-transparent z-10 pointer-events-none" />
+                        
+                        {/* Button */}
+                        <motion.a
+                          href="/crypto-guide"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="relative w-full h-full py-3 md:py-5 text-white hover:text-white/90 text-sm md:text-lg font-bold rounded-xl transition-all flex items-center justify-center gap-2 bg-black hover:bg-black/90 border border-white/10"
+                          style={{ pointerEvents: 'all', touchAction: 'auto' }}
+                          onClick={(e) => e.stopPropagation()}
+                          onTouchEnd={(e) => e.stopPropagation()}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.4, delay: 0.05 }}
+                        >
+                          <Wallet className="w-4 h-4 md:w-5 md:h-5" />
+                          <span>Crypto Guide</span>
+                        </motion.a>
+                      </div>
                     </div>
                   </CardItem>
 
                   {/* Alternative Payment Methods */}
-                  <CardItem translateZ={35} className="w-full">
-                    <div className="grid grid-cols-2 gap-3 w-full">
+                  <CardItem translateZ={35} className="w-full" style={{ pointerEvents: 'all' }}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3 w-full">
                       {/* Whop Pay Button */}
                       <div className="relative overflow-hidden rounded-xl">
                         {/* Animated Shimmer Border - GPU CSS */}
@@ -642,19 +720,25 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
                         
                         {/* Button */}
                         <motion.button
-                          onClick={() => handleDirectCheckout('Whop')}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDirectCheckout('Whop');
+                          }}
+                          onTouchEnd={(e) => e.stopPropagation()}
                           disabled={!isInStock}
                           style={{
                             backgroundColor: 'rgb(25, 86, 180)',
+                            pointerEvents: 'all',
+                            touchAction: 'auto'
                           }}
-                          className="relative w-full py-4 hover:opacity-90 disabled:opacity-50 text-white rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 disabled:cursor-not-allowed shadow-lg text-sm font-bold"
+                          className="relative w-full py-3 md:py-4 hover:opacity-90 disabled:opacity-50 text-white rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 disabled:cursor-not-allowed shadow-lg text-xs md:text-sm font-bold"
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.4, delay: 0.1 }}
                         >
-                          <CreditCard className="w-4 h-4" />
+                          <CreditCard className="w-3 h-3 md:w-4 md:h-4" />
                           <span className="text-sm font-medium">Whop Pay</span>
                         </motion.button>
                       </div>
@@ -678,31 +762,39 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
                         
                         {/* Button */}
                         <motion.button
-                          onClick={handleQuickAdd}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleQuickAdd();
+                          }}
+                          onTouchEnd={(e) => e.stopPropagation()}
                           disabled={!isInStock}
                           style={{
                             backgroundColor: 'rgb(25, 86, 180)',
+                            pointerEvents: 'all',
+                            touchAction: 'auto'
                           }}
-                          className="relative w-full py-4 hover:opacity-90 disabled:opacity-50 text-white rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 disabled:cursor-not-allowed shadow-lg text-sm font-bold"
+                          className="relative w-full py-3 md:py-4 hover:opacity-90 disabled:opacity-50 text-white rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 disabled:cursor-not-allowed shadow-lg text-xs md:text-sm font-bold"
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.4, delay: 0.15 }}
                         >
-                          <ShoppingBag className="w-4 h-4" />
+                          <ShoppingBag className="w-3 h-3 md:w-4 md:h-4" />
                           <span className="text-sm font-medium">Add to Cart</span>
                         </motion.button>
                       </div>
                     </div>
                   </CardItem>
 
-                  <div className="flex items-center justify-center gap-3 text-white/40 text-xs pt-2">
-                    <span>🔒 Secure Payment</span>
-                    <span>•</span>
-                    <span>💳 All Cards Accepted</span>
-                    <span>•</span>
-                    <span>📱 Apple & Google Pay</span>
+                  <div className="flex items-center justify-center gap-1.5 md:gap-3 text-white/40 text-[10px] md:text-xs pt-2 flex-wrap">
+                    <span>🔒 Secure</span>
+                    <span className="hidden sm:inline">•</span>
+                    <span>💳 Cards</span>
+                    <span className="hidden sm:inline">•</span>
+                    <span className="hidden md:inline">📱 Apple & Google Pay</span>
+                    <span className="hidden md:inline">•</span>
+                    <span>₿ Crypto</span>
                   </div>
                 </div>
               </div>
@@ -743,11 +835,12 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
           
           {/* Floating Buttons - Outside all card effects */}
           <motion.button
-            onClick={(e) => { e.stopPropagation(); handleLike(e); }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleLike(e); }}
             className={`absolute top-2 md:top-3 right-2 md:right-3 h-8 w-8 md:h-10 md:w-10 rounded-full 
                        bg-black/80 border border-white/10
                        flex items-center justify-center
-                       transition-all duration-300
+                       transition-all duration-300 pointer-events-auto
                        ${isLiked ? 'text-sky-400' : 'text-white/70'}`}
             style={{ zIndex: 9999 }}
             whileTap={{ scale: 0.9 }}
@@ -756,12 +849,13 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
           </motion.button>
           
           <motion.button
-            onClick={(e) => { e.stopPropagation(); handleQuickAdd(e); }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleQuickAdd(e); }}
             className={`absolute -bottom-5 md:bottom-10 left-1/2 -translate-x-1/2 h-10 md:h-11 px-5 md:px-6 rounded-full 
                        bg-white text-black flex items-center justify-center gap-2 shadow-2xl
                        border-2 border-black/10
                        hover:scale-105 hover:bg-gray-50 hover:shadow-xl
-                       transition-all duration-200 active:scale-95
+                       transition-all duration-200 active:scale-95 pointer-events-auto
                        ${isAdding ? 'scale-95' : ''}
                        ${!isInStock ? 'opacity-50 cursor-not-allowed' : ''}`}
             style={{ zIndex: 9999 }}
@@ -789,10 +883,7 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
       <div 
         className="block h-full w-full relative cursor-pointer" 
         style={{ zIndex: 50, touchAction: 'manipulation' }}
-        onClick={(e) => {
-          e.stopPropagation();
-          setShowQuickView(true);
-        }}
+        onClick={() => setShowQuickView(true)}
       >
         <CardContainer className="h-full w-full" containerClassName="py-0 h-full w-full">
           <CardBody className="h-full w-full p-0">
@@ -810,11 +901,12 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
         
         {/* Floating Buttons - Outside all card effects */}
         <motion.button
-          onClick={(e) => { e.stopPropagation(); handleLike(e); }}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleLike(e); }}
           className={`absolute top-2 md:top-3 right-2 md:right-3 h-8 w-8 md:h-10 md:w-10 rounded-full 
                      bg-black/80 border border-white/10
                      flex items-center justify-center
-                     transition-all duration-300
+                     transition-all duration-300 pointer-events-auto
                      ${isLiked ? 'text-sky-400' : 'text-white/70'}`}
           style={{ zIndex: 9999 }}
           whileTap={{ scale: 0.9 }}
@@ -823,12 +915,13 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
         </motion.button>
         
         <motion.button
-          onClick={(e) => { e.stopPropagation(); handleQuickAdd(e); }}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleQuickAdd(e); }}
           className={`absolute -bottom-5 md:bottom-10 left-1/2 -translate-x-1/2 h-10 md:h-11 px-5 md:px-6 rounded-full 
                      bg-white text-black flex items-center justify-center gap-2 shadow-2xl
                      border-2 border-black/10
                      hover:scale-105 hover:bg-gray-50 hover:shadow-xl
-                     transition-all duration-200 active:scale-95
+                     transition-all duration-200 active:scale-95 pointer-events-auto
                      ${isAdding ? 'scale-95' : ''}
                      ${!isInStock ? 'opacity-50 cursor-not-allowed' : ''}`}
           style={{ zIndex: 9999 }}

@@ -315,12 +315,23 @@ function CircularProductRow({ products, rowHeight, itemsPerRow, bend, gap, rowIn
   const onPointerDown = useCallback((e: React.PointerEvent) => {
     // Only left button for mouse
     if (e.pointerType === 'mouse' && e.button !== 0) return;
+    // Don't start drag if clicking on interactive elements (buttons, links, etc.)
+    const target = e.target as HTMLElement;
+    if (target.closest('button, a, [role="button"], input, select, textarea')) return;
     handleDragStart(e.clientX);
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    // Don't capture here — wait for real drag movement so child clicks still fire
   }, [handleDragStart]);
 
   const onPointerMove = useCallback((e: React.PointerEvent) => {
     handleDragMove(e.clientX);
+    // Only capture pointer after significant movement (actual drag, not a click)
+    if (isDraggingRef.current && dragDistanceRef.current > 5) {
+      try {
+        if (!(e.currentTarget as Element).hasPointerCapture(e.pointerId)) {
+          (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+        }
+      } catch {}
+    }
   }, [handleDragMove]);
 
   const onPointerUp = useCallback(() => {

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Minus, Plus, ShoppingBag, Heart, Truck, Shield, RotateCcw, Check, Ruler, Package } from 'lucide-react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useCartStore } from '@/stores/cart-store';
 import { useWishlistStore } from '@/stores/wishlist-store';
 import { useRecentlyViewedStore } from '@/stores/recently-viewed-store';
@@ -15,6 +16,7 @@ import { BackInStockButton } from '@/components/shop/BackInStockButton';
 import { ShippingReturnsModal } from '@/components/shop/ShippingReturnsModal';
 import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 import { SizeGuideModal } from '@/components/shop/SizeGuideModal';
+import { CryptoCheckoutTrigger } from '@/components/shop/CryptoCheckoutInline';
 import type { ProductWithDetails, Variant } from '@/types/store';
 
 // ============================================================================
@@ -26,11 +28,13 @@ interface ProductInfoProps {
 }
 
 export function ProductInfo({ product }: ProductInfoProps) {
+  const searchParams = useSearchParams();
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [showShippingModal, setShowShippingModal] = useState(false);
   const [showSizeGuide, setShowSizeGuide] = useState(false);
-  const { addItem, hasItem } = useCartStore();
+  const [autoAddTriggered, setAutoAddTriggered] = useState(false);
+  const { addItem, hasItem, openCart } = useCartStore();
   const { toggleItem, hasItem: isWishlisted } = useWishlistStore();
   const { addItem: addRecentlyViewed } = useRecentlyViewedStore();
   const formatPrice = useCurrencyLocaleStore((s) => s.formatPrice);
@@ -90,7 +94,25 @@ export function ProductInfo({ product }: ProductInfoProps) {
       image: product.primary_image || null,
       category: product.category?.name,
     });
-  }, [product.id]);  
+  }, [product.id]);
+
+  // Auto-add to cart when coming from wishlist "Buy Now" button
+  useEffect(() => {
+    const shouldAutoAdd = searchParams.get('addToCart') === 'true';
+    if (shouldAutoAdd && selectedVariant && !autoAddTriggered) {
+      const isInStock = selectedVariant.inventory_count > 0;
+      if (isInStock) {
+        setAutoAddTriggered(true);
+        addItem(product as ProductWithDetails, selectedVariant, 1);
+        openCart();
+        toast.success(`${product.name} added to cart!`);
+        // Clean up URL
+        const url = new URL(window.location.href);
+        url.searchParams.delete('addToCart');
+        window.history.replaceState({}, '', url.toString());
+      }
+    }
+  }, [searchParams, selectedVariant, autoAddTriggered, product, addItem, openCart]);
 
   const price = product.base_price + (selectedVariant?.price_adjustment || 0);
   const comparePrice = product.compare_at_price;
@@ -308,6 +330,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
         )}
 
         {isInStock && (
+        <>
         <div className="flex gap-3">
           {/* Quantity Selector */}
           <div className="flex items-center h-14 bg-white/5 border border-white/10 rounded-xl">
@@ -366,6 +389,29 @@ export function ProductInfo({ product }: ProductInfoProps) {
           {/* Share Button */}
           <ShareProductButton productName={product.name} />
         </div>
+        
+        {/* Pay with Crypto - Inline Checkout */}
+        <CryptoCheckoutTrigger
+          productName={product.name}
+          productImage={product.primary_image}
+          priceUSD={price}
+          productId={product.id.toString()}
+          variantId={selectedVariant?.id?.toString()}
+          quantity={quantity}
+          disabled={!isInStock || !selectedVariant}
+        />
+
+        {/* Crypto Guide Link */}
+        <a
+          href="/crypto-guide"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm text-white hover:text-white/90 bg-black hover:bg-black/90 border border-white/10 transition-all"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+          New to crypto? Learn how to pay →
+        </a>
+        </>
         )}
       </div>
 

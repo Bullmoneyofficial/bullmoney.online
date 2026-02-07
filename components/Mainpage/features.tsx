@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import React, { useEffect, useRef, useState } from "react";
 import { motion, useMotionValue, useMotionTemplate, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import createGlobe from "cobe";
+import { World, GlobeConfig } from "@/components/ui/globe";
 
 // --- THEME CONSTANTS ---
 const GOLD_SHIMMER_GRADIENT = "conic-gradient(from 90deg at 50% 50%, #00000000 0%, #D9BD6A 50%, #00000000 100%)";
@@ -586,23 +586,57 @@ export const SkeletonTwo = () => {
   );
 };
 
+// Gold-themed globe configuration
+const globeConfig: GlobeConfig = {
+  pointSize: 2,
+  globeColor: "#1a1a0a",
+  showAtmosphere: true,
+  atmosphereColor: "#D9BD6A",
+  atmosphereAltitude: 0.15,
+  emissive: "#0d0d05",
+  emissiveIntensity: 0.15,
+  shininess: 0.95,
+  polygonColor: "rgba(217, 189, 106, 0.6)",
+  ambientLight: "#B8983A",
+  directionalLeftLight: "#F6E7B6",
+  directionalTopLight: "#D9BD6A",
+  pointLight: "#F6E7B6",
+  arcTime: 1800,
+  arcLength: 0.85,
+  rings: 2,
+  maxRings: 4,
+  initialPosition: { lat: 25.2048, lng: 55.2708 }, // Dubai
+  autoRotate: true,
+  autoRotateSpeed: 0.8,
+};
+
+// Sample arc data connecting major trading hubs
+const sampleArcs = [
+  // New York to London
+  { order: 1, startLat: 40.7128, startLng: -74.006, endLat: 51.5074, endLng: -0.1278, arcAlt: 0.25, color: "#D9BD6A" },
+  // London to Tokyo
+  { order: 2, startLat: 51.5074, startLng: -0.1278, endLat: 35.6762, endLng: 139.6503, arcAlt: 0.35, color: "#F6E7B6" },
+  // Tokyo to Singapore
+  { order: 3, startLat: 35.6762, startLng: 139.6503, endLat: 1.3521, endLng: 103.8198, arcAlt: 0.2, color: "#B8983A" },
+  // Singapore to Dubai
+  { order: 4, startLat: 1.3521, startLng: 103.8198, endLat: 25.2048, endLng: 55.2708, arcAlt: 0.22, color: "#D9BD6A" },
+  // Dubai to New York
+  { order: 5, startLat: 25.2048, startLng: 55.2708, endLat: 40.7128, endLng: -74.006, arcAlt: 0.4, color: "#F6E7B6" },
+  // San Francisco to Hong Kong
+  { order: 6, startLat: 37.7749, startLng: -122.4194, endLat: 22.3193, endLng: 114.1694, arcAlt: 0.35, color: "#B8983A" },
+  // Hong Kong to London
+  { order: 7, startLat: 22.3193, startLng: 114.1694, endLat: 51.5074, endLng: -0.1278, arcAlt: 0.32, color: "#D9BD6A" },
+  // Sydney to Tokyo
+  { order: 8, startLat: -33.8688, startLng: 151.2093, endLat: 35.6762, endLng: 139.6503, arcAlt: 0.25, color: "#F6E7B6" },
+];
+
 export const Globe = ({ className }: { className?: string }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isBatterySaving, setIsBatterySaving] = useState(false);
-  const globeRef = useRef<ReturnType<typeof createGlobe> | null>(null);
 
   useEffect(() => {
     const handleFreeze = () => {
       console.log('[Globe] 🔋 Battery saver active');
       setIsBatterySaving(true);
-      if (globeRef.current) {
-        try {
-          globeRef.current.destroy();
-          globeRef.current = null;
-        } catch (e) {
-          console.error('[Globe] Error destroying globe:', e);
-        }
-      }
     };
     const handleUnfreeze = () => {
       console.log('[Globe] ⚡ Battery saver off');
@@ -617,56 +651,15 @@ export const Globe = ({ className }: { className?: string }) => {
     };
   }, []);
 
-  useEffect(() => {
-    if (isBatterySaving) return;
-    
-    let phi = 0;
-    if (!canvasRef.current) return;
-
-    const globe = createGlobe(canvasRef.current, {
-      devicePixelRatio: 2,
-      width: 600 * 2,
-      height: 600 * 2,
-      phi: 0,
-      theta: 0,
-      dark: 1,
-      diffuse: 1.2,
-      mapSamples: 16000,
-      mapBrightness: 6,
-      baseColor: [0.85, 0.78, 0.55], // ~ #D9BD6A
-      markerColor: [0.72, 0.60, 0.23], // ~ #B8983A
-      glowColor: [1, 1, 1],
-      markers: [
-        { location: [37.7595, -122.4367], size: 0.03 },
-        { location: [40.7128, -74.006], size: 0.1 },
-      ],
-      onRender: (state) => {
-        state.phi = phi;
-        phi += 0.015;
-      },
-    });
-    globeRef.current = globe;
-
-    return () => {
-      if (globe) {
-        try {
-          globe.destroy();
-          globeRef.current = null;
-        } catch (e) {
-          // Ignore destroy errors
-        }
-      }
-    };
-  }, [isBatterySaving]);
-
   return (
     <>
       {!isBatterySaving && (
-        <canvas
-          ref={canvasRef}
+        <div
           style={{ width: 600, height: 600, maxWidth: "100%", aspectRatio: 1 }}
           className={cn("pointer-events-none", className)}
-        />
+        >
+          <World globeConfig={globeConfig} data={sampleArcs} />
+        </div>
       )}
       {isBatterySaving && (
         <div

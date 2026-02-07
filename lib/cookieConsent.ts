@@ -1,3 +1,5 @@
+"use client";
+
 import Cookies from 'js-cookie';
 
 // Cookie consent categories

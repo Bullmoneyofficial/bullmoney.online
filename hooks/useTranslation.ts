@@ -68,7 +68,7 @@ async function loadTranslations(lang: string): Promise<Record<string, string>> {
 export function useTranslation() {
   const language = useCurrencyLocaleStore((s) => s.language);
   const [translations, setTranslations] = useState<Record<string, string>>(
-    translationCache[language] || {}
+    () => translationCache[language] || {}
   );
   const [loading, setLoading] = useState(false);
   const prevLang = useRef(language);
@@ -76,6 +76,16 @@ export function useTranslation() {
   useEffect(() => {
     if (language === 'en') {
       setTranslations({});
+      setLoading(false);
+      prevLang.current = language;
+      return;
+    }
+
+    // If cache already has this language, apply synchronously (instant switch)
+    if (translationCache[language]) {
+      setTranslations(translationCache[language]);
+      setLoading(false);
+      prevLang.current = language;
       return;
     }
 
@@ -86,6 +96,7 @@ export function useTranslation() {
       if (!cancelled) {
         setTranslations(t);
         setLoading(false);
+        prevLang.current = language;
       }
     });
 

@@ -11,6 +11,10 @@ import {
   IconUser,
   IconChartBar,
   IconShoppingBag,
+  IconPalette,
+  IconSparkles,
+  IconEye,
+  IconEyeOff,
 } from '@tabler/icons-react';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 // SMART MOUNT: Only import lightweight trigger components - heavy modals mount via UIState
@@ -19,6 +23,7 @@ import {
   UI_Z_INDEX,
   useProductsModalUI,
   useChartNewsUI,
+  useThemeSelectorModalUI,
 } from '@/contexts/UIStateContext';
 // UNIFIED SHIMMER SYSTEM - Import from single source
 import { ShimmerBorder, ShimmerLine, ShimmerRadialGlow, ShimmerDot } from '@/components/ui/UnifiedShimmer';
@@ -58,6 +63,47 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
     // SMART MOUNT: Use centralized UI state for modals - they mount ONLY when opened
     const { setIsOpen: setProductsOpen } = useProductsModalUI();
     const { setChartNewsOpen } = useChartNewsUI();
+    const { setIsOpen: setThemePickerModalOpen } = useThemeSelectorModalUI();
+    
+    // Toggle states for Theme Picker and Ultimate Hub - default ON for app pages
+    const [showThemePicker, setShowThemePicker] = useState(true);
+    const [showUltimateHub, setShowUltimateHub] = useState(true);
+    
+    // Load toggle preferences from localStorage & sync theme picker modal
+    useEffect(() => {
+      if (typeof window !== 'undefined') {
+        const storedTheme = localStorage.getItem('store_show_theme_picker');
+        // Default to true on app page unless explicitly set to 'false'
+        const themeValue = storedTheme !== 'false';
+        setShowThemePicker(themeValue);
+        setThemePickerModalOpen(themeValue);
+        // Ultimate Hub reads stored preference (default ON)
+        const storedHub = localStorage.getItem('store_show_ultimate_hub');
+        setShowUltimateHub(storedHub !== 'false');
+      }
+    }, [setThemePickerModalOpen]);
+    
+    // Listen for external toggle changes (e.g. from store header)
+    useEffect(() => {
+      const handleHubToggle = () => {
+        if (typeof window !== 'undefined') {
+          const stored = localStorage.getItem('store_show_ultimate_hub');
+          setShowUltimateHub(stored !== 'false');
+        }
+      };
+      const handleThemeToggle = () => {
+        if (typeof window !== 'undefined') {
+          const stored = localStorage.getItem('store_show_theme_picker');
+          setShowThemePicker(stored === 'true');
+        }
+      };
+      window.addEventListener('store_ultimate_hub_toggle', handleHubToggle);
+      window.addEventListener('store_theme_picker_toggle', handleThemeToggle);
+      return () => {
+        window.removeEventListener('store_ultimate_hub_toggle', handleHubToggle);
+        window.removeEventListener('store_theme_picker_toggle', handleThemeToggle);
+      };
+    }, []);
     
     // Track if component should render (delayed unmount for exit animation)
     const [shouldRender, setShouldRender] = useState(open);
@@ -135,6 +181,26 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
       onAccountManagerClick();
       onClose();
     }, [onAccountManagerClick, onClose]);
+    
+    const toggleThemePicker = useCallback(() => {
+      const newValue = !showThemePicker;
+      setShowThemePicker(newValue);
+      setThemePickerModalOpen(newValue);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('store_show_theme_picker', String(newValue));
+        window.dispatchEvent(new Event('store_theme_picker_toggle'));
+      }
+    }, [showThemePicker, setThemePickerModalOpen]);
+    
+    const toggleUltimateHub = useCallback(() => {
+      const newValue = !showUltimateHub;
+      setShowUltimateHub(newValue);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('store_show_ultimate_hub', String(newValue));
+        window.dispatchEvent(new CustomEvent('store_ultimate_hub_toggle', { detail: newValue }));
+        window.dispatchEvent(new Event('store_ultimate_hub_toggle'));
+      }
+    }, [showUltimateHub]);
     
     // SMART MOUNT: Return null if shouldn't render (component fully unmounted)
     if (!shouldRender) return null;
@@ -349,6 +415,63 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
               className="w-full"
             >
               <LanguageToggle variant="row" dropDirection="down" />
+            </motion.div>
+
+            {/* Toggles Divider */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.28 }}
+              className="h-px my-1"
+              style={{
+                background: 'linear-gradient(to right, transparent, rgba(255, 255, 255, 0.15), transparent)'
+              }}
+            />
+
+            {/* Toggles Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.29, duration: 0.3 }}
+              className="w-full space-y-1"
+            >
+              <p className="text-[10px] px-3 mb-1 uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.5)' }}>Toggles</p>
+              
+              {/* Theme Picker Toggle */}
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={toggleThemePicker}
+                className="w-full flex items-center justify-between text-sm font-medium px-3 py-2 min-h-[36px] rounded-xl transition-all duration-200 cursor-pointer"
+                style={showThemePicker 
+                  ? { background: 'rgba(255,255,255,0.15)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.3)' }
+                  : { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)' }
+                }
+              >
+                <div className="flex items-center gap-2">
+                  <IconPalette className="h-4 w-4" strokeWidth={2} />
+                  <span>Themes</span>
+                </div>
+                {showThemePicker ? <IconEye className="h-4 w-4" strokeWidth={2} /> : <IconEyeOff className="h-4 w-4" strokeWidth={2} />}
+              </motion.button>
+              
+              {/* Ultimate Hub Toggle */}
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={toggleUltimateHub}
+                className="w-full flex items-center justify-between text-sm font-medium px-3 py-2 min-h-[36px] rounded-xl transition-all duration-200 cursor-pointer"
+                style={showUltimateHub 
+                  ? { background: 'rgba(255,255,255,0.15)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.3)' }
+                  : { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)' }
+                }
+              >
+                <div className="flex items-center gap-2">
+                  <IconSparkles className="h-4 w-4" strokeWidth={2} />
+                  <span>Ultimate Hub</span>
+                </div>
+                {showUltimateHub ? <IconEye className="h-4 w-4" strokeWidth={2} /> : <IconEyeOff className="h-4 w-4" strokeWidth={2} />}
+              </motion.button>
             </motion.div>
 
             {/* Admin */}

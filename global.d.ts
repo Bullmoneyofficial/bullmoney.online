@@ -1,4 +1,5 @@
 declare module "@pqina/flip";
+declare module "matter-js";
 
 // Spline Viewer Web Component
 declare global {

@@ -21,10 +21,12 @@ import {
   Truck,
   Shield,
   ShoppingBag,
-  ChevronDown
+  ChevronDown,
+  Wallet
 } from 'lucide-react';
 
 import { useCartStore, useCheckoutStore } from '@/stores/cart-store';
+import { CryptoCheckoutTrigger } from '@/components/shop/CryptoCheckoutInline';
 
 // ============================================================================
 // CHECKOUT WIZARD - MULTI-STEP CHECKOUT FLOW
@@ -566,7 +568,27 @@ export function CheckoutWizard() {
                 >
                   <div>
                     <h2 className="text-2xl font-light mb-2">Payment</h2>
-                    <p className="text-white/40 text-sm">Enter your payment details</p>
+                    <p className="text-white/40 text-sm">Choose your payment method</p>
+                  </div>
+
+                  {/* Crypto Payment Option */}
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium text-white/60 uppercase tracking-wider">Pay with Cryptocurrency</p>
+                    <CryptoCheckoutTrigger
+                      productName="BullMoney Store Order"
+                      priceUSD={summary.total}
+                      productId="checkout-order"
+                      quantity={1}
+                      onPaymentSubmitted={(txHash, coin, network) => {
+                        toast.success('Crypto payment submitted! Verifying transaction...');
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1 border-t border-white/10" />
+                    <span className="text-white/30 text-sm">or pay with card</span>
+                    <div className="flex-1 border-t border-white/10" />
                   </div>
 
                   <Elements

@@ -1,0 +1,35 @@
+feat: major store upgrade - crypto payments, live quotes, UI overhaul & new pages
+
+Store & Shop:
+- Add crypto payment support (CryptoPayButton, CryptoCheckoutInline, CryptoPaymentModal, crypto-wallets lib)
+- Add MarketPriceTicker with live price data
+- Add FeaturedProductsTimeline with brand story timeline
+- Add AnimatedProductGrid, ProductsCarousel, StoreSupportButton
+- Add CryptoAcceptedBanner for store
+- Refactor store page into modular files (store.config, store.hooks, store.imports, store.utils)
+- Update GlassProductGrid, ProductCard, ProductInfo, CheckoutWizard, StoreHero3D
+- Update StoreHeader, StoreFooter, CurrencyLanguageSelector
+
+New Pages & Features:
+- Add crypto guide page (CryptoGuideDesktop, CryptoGuideMobile)
+- Add live quotes page with MetaTraderQuotes dashboard
+- Add TradingViewDashboard component
+- Add AI support chat API route
+
+UI Components:
+- Add Timeline, Globe, WorldMap, BentoGrid, AppleCardsCarousel, AnimatedTestimonials
+- Add FallingText, ScrambledText, TextPressure, InfiniteMenu, StaggeredMenu
+- Add home page SplineComponents and dynamic imports
+- Update 3d-pin, focus-cards UI components
+
+Infrastructure:
+- Add translation API route and update useTranslation hook
+- Add market-prices and live-quotes API routes
+- Add prefetchHelper lib
+- Add useCryptoPrices and useLiveQuotes hooks
+- Add use-outside-click hook
+- Update globals.css, tailwind config, global types
+- Add Supabase VIP RLS migration and email template migrations
+- Update LanguageToggle, LayoutProviders, ClientProviders
+- Update navbar (DesktopNavbar, MobileDropdownMenu)
+- Performance optimizations documented

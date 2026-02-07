@@ -1,74 +1,10 @@
 "use client";
 
-import { Suspense, useState, useEffect, useRef, useCallback } from "react";
+import { Suspense, useState, useEffect, useRef, useCallback, lazy } from "react";
 import dynamic from "next/dynamic";
 import { detectBrowser } from "@/lib/browserDetection";
-import { trackEvent, BullMoneyAnalytics } from "@/lib/analytics";
-
-const CookieConsent = dynamic(() => import('@/components/CookieConsent'), { ssr: false });
-
-// iPhone Glass Styles - Black and White Theme
-const GLASS_STYLES = `
-  html, body, #__next {
-    background: #000000;
-  }
-
-  .page-surface {
-    background: #000000;
-  }
-
-  @keyframes glass-shimmer {
-    0%, 100% { 
-      opacity: 0.95;
-    }
-    50% { 
-      opacity: 1;
-    }
-  }
-
-  .glass-text {
-    color: #ffffff;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  }
-
-  .glass-text-dark {
-    color: #1a1a1a;
-    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.1);
-  }
-
-  .glass-text-gray {
-    color: rgba(255, 255, 255, 0.7);
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-  }
-
-  .glass-border {
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-  }
-
-  .glass-card {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-  }
-
-  .glass-button {
-    background: rgba(255, 255, 255, 0.9);
-    color: #000000;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  }
-
-  .glass-button:hover {
-    background: rgba(255, 255, 255, 1);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-  }
-`;
+import { GLASS_STYLES } from "@/styles/glassStyles";
+import { deferAnalytics, smartPrefetch } from "@/lib/prefetchHelper";
 
 // ✅ MOBILE DETECTION - Conditional lazy loading for mobile optimization
 import { isMobileDevice } from "@/lib/mobileDetection";
@@ -82,29 +18,30 @@ import {
 } from "@/components/MobileLazyLoadingFallback";
 
 // ==========================================
-// ✅ PERFORMANCE OPTIMIZED: All components lazy loaded for faster initial load
+// ✅ PERFORMANCE OPTIMIZED: Centralized dynamic imports
 // ==========================================
-const Hero = dynamic(
-  () => import("@/components/hero"),
-  { ssr: false, loading: () => <HeroSkeleton /> }
-);
-
-// Desktop-optimized Hero with new layout
-const HeroDesktop = dynamic(
-  () => import("@/components/HeroDesktop"),
-  { ssr: false }
-);
-
-const BullMoneyPromoScroll = dynamic(
-  () => import("@/components/BullMoneyPromoScroll"),
-  { ssr: false, loading: () => <MinimalFallback /> }
-);
-
-// Features - single lazy import (removed duplicate static import)
-const Features = dynamic(
-  () => import("@/components/features").then(mod => ({ default: mod.Features })),
-  { ssr: false, loading: () => <MinimalFallback /> }
-);
+import {
+  Hero,
+  HeroDesktop,
+  MetaTraderQuotes,
+  BullMoneyPromoScroll,
+  Features,
+  TradingViewDashboard,
+  HeroScrollDemo,
+  SplineSkeleton,
+  LoadingSkeleton,
+  LiveMarketTicker,
+  TradingQuickAccess,
+  HiddenYoutubePlayer,
+  FooterComponent,
+  PageMode,
+  TradingUnlockLoader,
+  DraggableSplit,
+  SplineScene,
+  TestimonialsCarousel,
+  CookieConsent,
+  AppSupportButton,
+} from "@/components/home/dynamicImports";
 
 // UNIFIED SHIMMER SYSTEM - These are lightweight CSS animations, safe to import statically
 import {
@@ -117,333 +54,69 @@ import {
   ShimmerContainer
 } from "@/components/ui/UnifiedShimmer";
 
-// Trading Quick Access data - import separately for featured videos
-import { DISCORD_STAGE_FEATURED_VIDEOS } from "@/components/TradingQuickAccess";
-
-// HeroScrollDemo - lazy load
-const HeroScrollDemo = dynamic(
-  () => import("@/components/HeroScrollDemo").then(mod => ({ default: mod.HeroScrollDemo })),
-  { ssr: false }
-);
-
-const SplineSkeleton = dynamic(
-  () => import("@/components/ui/LoadingSkeleton").then(mod => ({ default: mod.SplineSkeleton })),
-  { ssr: true }
-);
-
-const LoadingSkeleton = dynamic(
-  () => import("@/components/ui/LoadingSkeleton").then(mod => ({ default: mod.LoadingSkeleton })),
-  { ssr: true }
-);
-
 import { useCacheContext } from "@/components/CacheManagerProvider";
 import { useUnifiedPerformance, useVisibility, useObserver, useComponentLifecycle } from "@/lib/UnifiedPerformanceSystem";
 import { useComponentTracking, useCrashTracker } from "@/lib/CrashTracker";
 import { useScrollOptimization } from "@/hooks/useScrollOptimization";
 import { useBigDeviceScrollOptimizer } from "@/lib/bigDeviceScrollOptimizer";
 import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
-
-// Use optimized ticker for 120Hz performance - lazy load
-const LiveMarketTicker = dynamic(
-  () => import("@/components/LiveMarketTickerOptimized").then(mod => ({ default: mod.LiveMarketTickerOptimized })),
-  { ssr: false, loading: () => <MinimalFallback /> }
-);
-
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
 import { useUIState } from "@/contexts/UIStateContext";
-
-// TradingQuickAccess component - lazy load
-const TradingQuickAccess = dynamic(
-  () => import("@/components/TradingQuickAccess").then(mod => ({ default: mod.default })),
-  { ssr: false }
-);
 
 // Features skeleton fallback (inline for faster load)
 const FeaturesSkeleton = () => (
   <div className="w-full h-100 bg-linear-to-b from-black to-zinc-900/50 animate-pulse rounded-xl" />
 );
 
-const HiddenYoutubePlayer = dynamic(
-  () => import("@/components/Mainpage/HiddenYoutubePlayer"),
-  { ssr: false }
-);
-
-// ✅ FOOTER - Only rendered on home page (removed from layout)
-const FooterComponent = dynamic(
-  () => import("@/components/Mainpage/footer").then((mod) => ({ default: mod.Footer })),
-  { ssr: false }
-);
-
-import { ALL_THEMES } from "@/constants/theme-data";
 import { useAudioEngine } from "@/app/hooks/useAudioEngine";
 import Image from "next/image";
 import Link from "next/link";
-import YouTubeVideoEmbed from "@/components/YouTubeVideoEmbed";
-import MobileDiscordHero from "@/components/MobileDiscordHero";
+
+// Lazy load heavy components that aren't needed immediately
+const MobileDiscordHero = dynamic(
+  () => import("@/components/MobileDiscordHero"),
+  { ssr: false, loading: () => <HeroSkeleton /> }
+);
 
 import { useDevSkipShortcut } from "@/hooks/useDevSkipShortcut";
 
-// Import Spline modals from separate file
-import {
-  type RemoteSplineMeta,
-  DRAGGABLE_SPLIT_SCENES,
-  ADDITIONAL_SPLINE_PAGES,
-  R4X_BOT_SCENE,
-  ALL_REMOTE_SPLINES,
-  RemoteSceneModal,
-  SplitSceneModal,
-  RemoteSplineShowcase,
-  SplitExperienceCard,
-  DraggableSplitExperience,
-  OrbSplineLauncher,
-  AllScenesModal,
-} from "@/components/SplineModals";
+// Lazy load Spline modals - only loaded when actually opened
+const SplineModals = dynamic(
+  () => import("@/components/SplineModals").then(mod => ({
+    default: () => null // This will be replaced with actual exports
+  })),
+  { ssr: false }
+);
+
+import type { RemoteSplineMeta } from "@/components/SplineModals";
+
+// Lazy load individual modal components
+const RemoteSceneModal = dynamic(
+  () => import("@/components/SplineModals").then(mod => ({ default: mod.RemoteSceneModal })),
+  { ssr: false }
+);
+
+const SplitSceneModal = dynamic(
+  () => import("@/components/SplineModals").then(mod => ({ default: mod.SplitSceneModal })),
+  { ssr: false }
+);
+
+const AllScenesModal = dynamic(
+  () => import("@/components/SplineModals").then(mod => ({ default: mod.AllScenesModal })),
+  { ssr: false }
+);
+
+const OrbSplineLauncher = dynamic(
+  () => import("@/components/SplineModals").then(mod => ({ default: mod.OrbSplineLauncher })),
+  { ssr: false }
+);
+
+// Import Spline utility components
+import { DesktopHeroFallback, LazySplineContainer } from "@/components/home/SplineComponents";
 
 // Legacy flag placeholder to satisfy stale client bundles that may reference it during Fast Refresh.
 const desktopHeroVariant = "spline";
-
-// Import loaders - lazy
-const PageMode = dynamic(
-  () => import("@/components/REGISTER USERS/pagemode"),
-  { ssr: false, loading: () => <MinimalFallback /> }
-);
-
-// ✅ NEW INTERACTIVE LOADER - Neon blue trading unlock experience (v3 Simple)
-const TradingUnlockLoader = dynamic(
-  () => import("@/components/MultiStepLoaderv3Simple"),
-  { 
-    ssr: false, 
-    loading: () => <MinimalFallback />,
-  }
-);
-
-// ✅ 3D SOLAR SYSTEM - Interactive space experience
-const SolarSystemGame = dynamic(
-  () => import("@/components/SolarSystemGame"),
-  { 
-    ssr: false, 
-    loading: () => <ContentSkeleton lines={6} />,
-  }
-);
-
-// Lazy imports for heavy 3D components - LOADED IMMEDIATELY for better scene performance
-const DraggableSplit = dynamic(
-  () => import('@/components/DraggableSplit'),
-  { ssr: true, loading: () => <ContentSkeleton lines={5} /> }
-);
-
-const SplineScene = dynamic(
-  () => import('@/components/SplineScene'),
-  { ssr: true, loading: () => <ContentSkeleton lines={4} /> }
-);
-
-const TestimonialsCarousel = dynamic(
-  () => import('@/components/Testimonial').then(mod => ({ default: mod.TestimonialsCarousel })),
-  { ssr: true, loading: () => <CardSkeleton /> }
-);
-
-function DesktopHeroFallback() {
-  return (
-    <div className="w-full h-full flex items-center justify-center bg-linear-to-b from-black via-[#0a0a0a] to-black">
-      <div className="w-full max-w-6xl mx-auto px-6 py-16 flex flex-col items-center text-center gap-4">
-        <p
-          className="font-mono text-[10px] tracking-[0.2em] uppercase glass-text-gray"
-        >
-          EST. 2024 • TRADING MENTORSHIP
-        </p>
-        <h1 className="text-4xl md:text-6xl font-black tracking-tight glass-text">
-          Master <span className="glass-text">trading</span> with us
-        </h1>
-        <p className="text-sm md:text-base max-w-3xl glass-text-gray">
-          Live trade calls, daily analysis, funded trader mentorship. Join 10,000+ traders learning forex, gold & crypto.
-        </p>
-        <div className="mt-4 inline-flex items-center gap-3">
-          <span className="px-6 py-3 rounded-full text-sm font-bold glass-button">
-            Loading your experience…
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// --- SMART CONTAINER: Handles Preloading & FPS Saving ---
-function LazySplineContainer({ scene }: { scene: string }) {
-  const [isInView, setIsInView] = useState(false);
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
-  const [canRender, setCanRender] = useState(true);
-  const [fpsMonitorActive, setFpsMonitorActive] = useState(false);
-  const [emergencyFallback, setEmergencyFallback] = useState(false);
-  const [isMobileDevice, setIsMobileDevice] = useState(false);
-  const [mobileSplineSettings, setMobileSplineSettings] = useState({ targetFPS: 60, maxDpr: 1.5 });
-  const containerRef = useRef<HTMLDivElement>(null);
-  const deviceCheckDone = useRef(false);
-  const fpsHistory = useRef<number[]>([]);
-  const performanceCheckInterval = useRef<any>(null);
-
-  // Use unified observer pool instead of individual IntersectionObserver
-  const { observe, deviceTier, averageFps } = useUnifiedPerformance();
-
-  // MOBILE CRASH FIX: Detect mobile and set conservative settings
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const ua = navigator.userAgent.toLowerCase();
-    const isMobile = /iphone|ipad|ipod|android|mobile/i.test(ua);
-    const memory = (navigator as any).deviceMemory || 4;
-    const isLowEnd = isMobile && (memory < 3 || window.innerWidth < 375);
-    
-    setIsMobileDevice(isMobile);
-    setMobileSplineSettings({
-      targetFPS: isLowEnd ? 24 : (isMobile ? 30 : 60),
-      maxDpr: isLowEnd ? 0.75 : (isMobile ? 1.0 : 1.5),
-    });
-    
-    if (isMobile) {
-      console.log('[LazySpline] Mobile device detected - using crash-safe settings');
-    }
-  }, []);
-
-  // HERO SPLINE: SKIP ON MOBILE TO PREVENT LAG - Desktop only for heavy 3D
-  // Target: 50ms load time with zero lag on desktop, no Spline on mobile
-  useEffect(() => {
-    if (deviceCheckDone.current) return;
-    deviceCheckDone.current = true;
-
-    // Skip Spline entirely on mobile devices to prevent lag
-    if (isMobileDevice) {
-      console.log('[LazySpline] MOBILE DETECTED: Skipping Spline to prevent lag');
-      setCanRender(false);
-      return;
-    }
-
-    console.log('[LazySpline] HERO MODE: Enabled on DESKTOP only');
-    setCanRender(true);
-    
-    // Ultra-aggressive preloading for 50ms target (desktop only)
-    if (typeof window !== 'undefined') {
-      const link = document.createElement('link');
-      link.rel = 'preload';
-      link.href = '/scene1.splinecode';
-      link.as = 'fetch';
-      link.crossOrigin = 'anonymous';
-      document.head.appendChild(link);
-      
-      fetch('/scene1.splinecode', { 
-        method: 'GET', 
-        mode: 'cors',
-        cache: 'force-cache',
-        priority: 'high'
-      } as any).catch(() => {});
-    }
-  }, [isMobileDevice]);
-
-  // Performance monitoring for marginal devices
-  useEffect(() => {
-    if (!fpsMonitorActive || !hasLoadedOnce) return;
-
-    const monitorPerformance = () => {
-      fpsHistory.current.push(averageFps);
-      
-      if (fpsHistory.current.length > 30) {
-        fpsHistory.current.shift();
-      }
-
-      if (fpsHistory.current.length >= 10) {
-        const recentAvg = fpsHistory.current.slice(-10).reduce((a, b) => a + b) / 10;
-        
-        if (recentAvg < 15 && !emergencyFallback) {
-          console.warn('[LazySpline] Emergency fallback triggered due to poor performance:', recentAvg);
-          setEmergencyFallback(true);
-        }
-      }
-    };
-
-    performanceCheckInterval.current = setInterval(monitorPerformance, 100);
-
-    return () => {
-      if (performanceCheckInterval.current) {
-        clearInterval(performanceCheckInterval.current);
-      }
-    };
-  }, [fpsMonitorActive, hasLoadedOnce, averageFps, emergencyFallback]);
-
-  // Use shared observer pool for visibility detection
-  useEffect(() => {
-    if (!containerRef.current || !canRender) return;
-
-    return observe(containerRef.current, (isIntersecting) => {
-      setIsInView(isIntersecting);
-      if (isIntersecting && !hasLoadedOnce) {
-        setHasLoadedOnce(true);
-      }
-    }, { rootMargin: deviceTier === 'ultra' || deviceTier === 'high' ? '1400px' : deviceTier === 'medium' ? '1100px' : '600px' });
-  }, [observe, hasLoadedOnce, canRender, deviceTier]);
-
-  const shouldShowSpline = canRender && !isMobileDevice; // Don't show Spline on mobile at all
-  const isPaused = false;
-
-  return (
-    <div
-      ref={containerRef}
-      className="w-full h-full relative isolate overflow-hidden rounded-xl spline-container"
-      data-spline-scene
-      data-hero-mode="true"
-      style={{
-        contain: 'layout style',
-        touchAction: 'pan-y',
-        position: 'relative',
-        minHeight: '300px',
-        height: '100%',
-        WebkitOverflowScrolling: 'touch',
-        overscrollBehavior: 'auto',
-      }}
-    >
-      {!hasLoadedOnce && !isInView && (
-        <div className="absolute inset-0 bg-transparent rounded-xl overflow-hidden backdrop-blur-sm" style={{ minHeight: '300px', backgroundColor: 'rgba(0, 0, 0, 0.3)' }}>
-          <ShimmerRadialGlow color="white" intensity="low" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <ShimmerSpinner size={32} color="white" speed="slow" />
-          </div>
-          <div className="absolute inset-0 rounded-xl pointer-events-none" style={{ borderColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.2)', borderWidth: '1px', borderStyle: 'solid' }} />
-        </div>
-      )}
-
-      {shouldShowSpline && (
-        <Suspense fallback={
-          <div className="absolute inset-0 flex items-center justify-center rounded-xl overflow-hidden backdrop-blur-sm" style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}>
-            <ShimmerRadialGlow color="white" intensity="medium" />
-            <ShimmerLine color="white" />
-            <ShimmerSpinner size={40} color="white" />
-          </div>
-        }>
-          <div
-            className="absolute inset-0 pointer-events-auto transition-opacity duration-300"
-            style={{
-              touchAction: 'manipulation',
-              opacity: isPaused ? 0 : 1,
-              visibility: isPaused ? 'hidden' : 'visible',
-              willChange: isPaused ? 'auto' : 'transform',
-              transform: 'translateZ(0)',
-            }}
-          >
-            <SplineScene scene={scene} />
-          </div>
-        </Suspense>
-      )}
-
-      {isPaused && (
-        <div className="absolute inset-0 bg-black rounded-xl overflow-hidden">
-          <ShimmerLine color="white" speed="slow" intensity="low" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <ShimmerSpinner size={32} color="white" speed="slow" />
-          </div>
-          <div className="absolute inset-0 rounded-xl pointer-events-none" style={{ borderColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.2)', borderWidth: '1px', borderStyle: 'solid' }} />
-        </div>
-      )}
-    </div>
-  );
-}
 
 function HomeContent() {
   const { optimizeSection } = useBigDeviceScrollOptimizer();
@@ -464,8 +137,28 @@ function HomeContent() {
   const [activeRemoteScene, setActiveRemoteScene] = useState<RemoteSplineMeta | null>(null);
   const [isSplitModalOpen, setIsSplitModalOpen] = useState(false);
   const [isAllScenesModalOpen, setIsAllScenesModalOpen] = useState(false);
+  const [featuredVideos, setFeaturedVideos] = useState<any[]>([]);
+  const [allRemoteSplines, setAllRemoteSplines] = useState<any[]>([]);
   const splinePreloadRanRef = useRef(false);
   const { setLoaderv2Open, setV2Unlocked, devSkipPageModeAndLoader, setDevSkipPageModeAndLoader, openDiscordStageModal, openAccountManagerModal } = useUIState();
+
+  // Defer analytics initialization until after page is interactive
+  useEffect(() => {
+    deferAnalytics(() => {
+      import("@/lib/analytics").then(({ trackEvent, BullMoneyAnalytics }) => {
+        // Analytics is now loaded and ready
+        console.log('[Performance] Analytics loaded after page interaction');
+      });
+    });
+
+    // Smart prefetch likely navigation routes after initial load
+    smartPrefetch([
+      { href: '/store', options: { priority: 'low' } },
+      { href: '/trading-showcase', options: { priority: 'low' } },
+      { href: '/community', options: { priority: 'low' } },
+      { href: '/course', options: { priority: 'low' } },
+    ]);
+  }, []);
 
   // Check for Account Manager query parameter and open modal
   useEffect(() => {
@@ -507,8 +200,18 @@ function HomeContent() {
   // Use global theme context
   const { activeThemeId, activeTheme, setAppLoading } = useGlobalTheme();
   
-  // Fallback theme lookup
-  const theme = activeTheme || ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0];
+  // Fallback theme lookup - lazy load theme data only when needed
+  const [theme, setTheme] = useState(activeTheme);
+  
+  useEffect(() => {
+    if (!activeTheme && !theme) {
+      import("@/constants/theme-data").then(({ ALL_THEMES }) => {
+        setTheme(ALL_THEMES.find(t => t.id === activeThemeId) || ALL_THEMES[0]);
+      });
+    } else if (activeTheme) {
+      setTheme(activeTheme);
+    }
+  }, [activeTheme, activeThemeId, theme]);
   useAudioEngine(!isMuted, 'MECHANICAL');
   const canRenderMobileSections = !isMobile || allowMobileLazyRender;
   const canRenderHeavyDesktop = !isMobile && allowHeavyDesktop;
@@ -628,7 +331,25 @@ function HomeContent() {
     if (savedMuted === 'true') setIsMuted(true);
   }, []);
 
-  // STEALTH PRE-LOADER - Preload Spline during pagemode
+  // Lazy load featured videos data only when needed
+  useEffect(() => {
+    if (isMobile && currentView === 'content' && canRenderMobileSections && featuredVideos.length === 0) {
+      import("@/components/TradingQuickAccess").then(mod => {
+        setFeaturedVideos(mod.DISCORD_STAGE_FEATURED_VIDEOS || []);
+      });
+    }
+  }, [isMobile, currentView, canRenderMobileSections, featuredVideos.length]);
+
+  // Lazy load Spline data only when needed
+  useEffect(() => {
+    if (canRenderHeavyDesktop && allRemoteSplines.length === 0) {
+      import("@/components/SplineModals").then(mod => {
+        setAllRemoteSplines(mod.ALL_REMOTE_SPLINES || []);
+      });
+    }
+  }, [canRenderHeavyDesktop, allRemoteSplines.length]);
+
+  // OPTIMIZED PRELOADER - Lighter and deferred
   useEffect(() => {
     const preloadSplineEngine = async () => {
       try {
@@ -641,38 +362,46 @@ function HomeContent() {
 
         splinePreloadRanRef.current = true;
 
+        // Only preload Spline runtime, defer scene loading
         await Promise.allSettled([
           import('@splinetool/runtime'),
-          import('@/components/SplineScene'),
-          import('@/components/DraggableSplit'),
           import('@/lib/spline-wrapper'),
         ]);
 
-        const preloadResource = (href: string, as: HTMLLinkElement['as'] = 'fetch') => {
-          if (typeof document === 'undefined') return;
-          const selector = `link[rel="preload"][href="${href}"]`;
-          if (document.querySelector(selector)) return;
-          const link = document.createElement('link');
-          link.rel = 'preload';
-          link.as = as;
-          link.href = href;
-          if (as === 'fetch' || as === 'document') {
-            link.crossOrigin = 'anonymous';
-          }
-          document.head.appendChild(link);
-        };
-        ALL_REMOTE_SPLINES.forEach(scene => {
-          preloadResource(scene.viewer, 'document');
-          preloadResource(scene.runtime);
-        });
+        // Preload scenes only if we have the data and on idle
+        if (allRemoteSplines.length > 0 && 'requestIdleCallback' in window) {
+          (window as any).requestIdleCallback(() => {
+            const preloadResource = (href: string, as: HTMLLinkElement['as'] = 'fetch') => {
+              if (typeof document === 'undefined') return;
+              const selector = `link[rel=\"preload\"][href=\"${href}\"]`;
+              if (document.querySelector(selector)) return;
+              const link = document.createElement('link');
+              link.rel = 'preload';
+              link.as = as;
+              link.href = href;
+              if (as === 'fetch' || as === 'document') {
+                link.crossOrigin = 'anonymous';
+              }
+              document.head.appendChild(link);
+            };
+            allRemoteSplines.forEach(scene => {
+              preloadResource(scene.viewer, 'document');
+              preloadResource(scene.runtime);
+            });
+          }, { timeout: 3000 });
+        }
 
-        console.log('[Page] Spline runtime + scenes preloaded during', currentView);
+        console.log('[Page] Spline runtime preloaded during', currentView);
       } catch (e) {
         console.warn("Preload failed", e);
       }
     };
-    preloadSplineEngine();
-  }, [deviceTier, currentView]);
+    
+    // Only run preload when we're ready and have desktop capabilities
+    if (canRenderHeavyDesktop || (currentView === 'pagemode' && !isMobile)) {
+      preloadSplineEngine();
+    }
+  }, [deviceTier, currentView, canRenderHeavyDesktop, isMobile, allRemoteSplines]);
 
   // Check localStorage on client mount to determine the correct view
   // This runs once on mount and sets the view based on user's previous progress
@@ -916,7 +645,7 @@ function HomeContent() {
               {isMobile ? (
                 canRenderMobileSections ? (
                   <MobileDiscordHero
-                    sources={DISCORD_STAGE_FEATURED_VIDEOS}
+                    sources={featuredVideos}
                     onOpenModal={openDiscordStageModal}
                     variant="mobile"
                   />
@@ -926,6 +655,17 @@ function HomeContent() {
               ) : (
                 <HeroDesktop />
               )}
+            </section>
+
+            {/* MetaTrader Quotes Section */}
+            <section
+              id="metatrader-quotes"
+              className="w-full full-bleed"
+              data-allow-scroll
+              data-content
+              data-theme-aware
+            >
+              <MetaTraderQuotes embedded />
             </section>
 
             {/* BullMoney Promo Scroll Section - Mobile Only */}
@@ -952,6 +692,17 @@ function HomeContent() {
               {canRenderMobileSections ? <FeaturesComponent /> : <FeaturesSkeleton />}
             </section>
 
+            {/* TradingView Dashboard - Full replica below features */}
+            <section
+              id="tradingview-dashboard"
+              className="w-full full-bleed px-2 sm:px-4 lg:px-6"
+              data-allow-scroll
+              data-content
+              data-theme-aware
+            >
+              <TradingViewDashboard />
+            </section>
+
             {canRenderHeavyDesktop && (
               <section 
                 id="experience" 
@@ -963,21 +714,6 @@ function HomeContent() {
               >
                 {/* Orb with Launch Button - Full Screen */}
                 <OrbSplineLauncher onOpenScenes={() => setIsAllScenesModalOpen(true)} />
-              </section>
-            )}
-
-            {/* 🌌 3D SOLAR SYSTEM - Mobile Only */}
-            {isMobile && (
-              <section
-                id="solar-system"
-                className="w-full full-bleed"
-                data-allow-scroll
-                data-content
-                data-theme-aware
-              >
-                <Suspense fallback={<ContentSkeleton lines={6} />}>
-                  <SolarSystemGame />
-                </Suspense>
               </section>
             )}
 
@@ -1017,7 +753,7 @@ function HomeContent() {
             <FooterComponent />
           </main>
 
-          {canRenderHeavyDesktop && theme.youtubeId && (
+          {canRenderHeavyDesktop && theme?.youtubeId && (
             <HiddenYoutubePlayer
               videoId={theme.youtubeId}
               isPlaying={!isMuted && !masterMuted}
@@ -1049,6 +785,7 @@ export default function Home() {
     <>
       <HomeContent />
       <CookieConsent />
+      <AppSupportButton />
     </>
   );
 }

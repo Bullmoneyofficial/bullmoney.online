@@ -1,4 +1,4 @@
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -11,11 +11,15 @@ import {
   IconUser,
   IconChartBar,
   IconShoppingBag,
+  IconPalette,
+  IconSparkles,
+  IconEye,
+  IconEyeOff,
 } from '@tabler/icons-react';
 import { PillDock } from './PillDock';
 import { MinimizedDock } from './MinimizedDock';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
-import { useChartNewsUI, useProductsModalUI } from '@/contexts/UIStateContext';
+import { useChartNewsUI, useProductsModalUI, useThemeSelectorModalUI } from '@/contexts/UIStateContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import './DesktopNavbar.css';
 
@@ -58,6 +62,66 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
   ) => {
     const { setChartNewsOpen } = useChartNewsUI();
     const { open: openProductsModal } = useProductsModalUI();
+    const { setIsOpen: setThemePickerModalOpen } = useThemeSelectorModalUI();
+    
+    // Toggle states for Theme Picker and Ultimate Hub - default ON for app pages
+    const [showThemePicker, setShowThemePicker] = useState(true);
+    const [showUltimateHub, setShowUltimateHub] = useState(true);
+    
+    // Load toggle preferences from localStorage & sync theme picker modal
+    useEffect(() => {
+      if (typeof window !== 'undefined') {
+        const storedTheme = localStorage.getItem('store_show_theme_picker');
+        // Default to true on app page unless explicitly set to 'false'
+        const themeValue = storedTheme !== 'false';
+        setShowThemePicker(themeValue);
+        setThemePickerModalOpen(themeValue);
+        const storedHub = localStorage.getItem('store_show_ultimate_hub');
+        setShowUltimateHub(storedHub !== 'false');
+      }
+    }, [setThemePickerModalOpen]);
+    
+    // Listen for external toggle changes
+    useEffect(() => {
+      const handleHubToggle = () => {
+        if (typeof window !== 'undefined') {
+          const stored = localStorage.getItem('store_show_ultimate_hub');
+          setShowUltimateHub(stored !== 'false');
+        }
+      };
+      const handleThemeToggle = () => {
+        if (typeof window !== 'undefined') {
+          const stored = localStorage.getItem('store_show_theme_picker');
+          setShowThemePicker(stored === 'true');
+        }
+      };
+      window.addEventListener('store_ultimate_hub_toggle', handleHubToggle);
+      window.addEventListener('store_theme_picker_toggle', handleThemeToggle);
+      return () => {
+        window.removeEventListener('store_ultimate_hub_toggle', handleHubToggle);
+        window.removeEventListener('store_theme_picker_toggle', handleThemeToggle);
+      };
+    }, []);
+    
+    const toggleThemePicker = useCallback(() => {
+      const newValue = !showThemePicker;
+      setShowThemePicker(newValue);
+      setThemePickerModalOpen(newValue);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('store_show_theme_picker', String(newValue));
+        window.dispatchEvent(new Event('store_theme_picker_toggle'));
+      }
+    }, [showThemePicker, setThemePickerModalOpen]);
+    
+    const toggleUltimateHub = useCallback(() => {
+      const newValue = !showUltimateHub;
+      setShowUltimateHub(newValue);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('store_show_ultimate_hub', String(newValue));
+        window.dispatchEvent(new CustomEvent('store_ultimate_hub_toggle', { detail: newValue }));
+        window.dispatchEvent(new Event('store_ultimate_hub_toggle'));
+      }
+    }, [showUltimateHub]);
     
     const handleChartNewsClick = useCallback(() => {
       SoundEffects.click();
@@ -220,6 +284,48 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
             }}
             isXMUser={isXMUser}
           />
+        </div>
+
+        {/* Toggle Buttons - bottom right, fade with dock */}
+        <div
+          className="absolute right-0 pointer-events-auto z-50 flex items-center gap-2"
+          style={{
+            top: '100%',
+            marginTop: 8,
+            opacity: isScrollMinimized ? 0 : 1,
+            transition: 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            pointerEvents: isScrollMinimized ? 'none' : 'auto',
+          }}
+        >
+          {/* Theme Picker Toggle */}
+          <button
+            onClick={toggleThemePicker}
+            className="h-8 px-3 flex items-center gap-2 rounded-lg transition-all duration-200 text-xs font-semibold"
+            style={showThemePicker 
+              ? { background: 'rgba(255,255,255,0.2)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.4)', backdropFilter: 'blur(12px)' }
+              : { background: 'rgba(0,0,0,0.7)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.15)', backdropFilter: 'blur(12px)' }
+            }
+            title={showThemePicker ? 'Theme Picker: ON' : 'Theme Picker: OFF'}
+          >
+            <IconPalette className="w-3.5 h-3.5" strokeWidth={2} />
+            <span>Themes</span>
+            {showThemePicker ? <IconEye className="w-3 h-3" strokeWidth={2} /> : <IconEyeOff className="w-3 h-3" strokeWidth={2} />}
+          </button>
+
+          {/* Ultimate Hub Toggle */}
+          <button
+            onClick={toggleUltimateHub}
+            className="h-8 px-3 flex items-center gap-2 rounded-lg transition-all duration-200 text-xs font-semibold"
+            style={showUltimateHub 
+              ? { background: 'rgba(255,255,255,0.2)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.4)', backdropFilter: 'blur(12px)' }
+              : { background: 'rgba(0,0,0,0.7)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.15)', backdropFilter: 'blur(12px)' }
+            }
+            title={showUltimateHub ? 'Ultimate Hub: ON' : 'Ultimate Hub: OFF'}
+          >
+            <IconSparkles className="w-3.5 h-3.5" strokeWidth={2} />
+            <span>Hub</span>
+            {showUltimateHub ? <IconEye className="w-3 h-3" strokeWidth={2} /> : <IconEyeOff className="w-3 h-3" strokeWidth={2} />}
+          </button>
         </div>
       </div>
     );

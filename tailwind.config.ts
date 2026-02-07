@@ -80,7 +80,36 @@ const config: Config = {
           400: "#FACC15", 
           500: "#EAB308",
         }
-      }
+      },
+      keyframes: {
+        waveSlide: {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        slideUp: {
+          '0%': { transform: 'translateY(10px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        slideInRight: {
+          '0%': { transform: 'translateX(-10px)', opacity: '0' },
+          '100%': { transform: 'translateX(0)', opacity: '1' },
+        },
+        scaleIn: {
+          '0%': { transform: 'scale(0.95)', opacity: '0' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+      },
+      animation: {
+        waveSlide: 'waveSlide 12s linear infinite',
+        fadeIn: 'fadeIn 0.5s ease-out forwards',
+        slideUp: 'slideUp 0.7s ease-out forwards',
+        slideInRight: 'slideInRight 0.5s ease-out forwards',
+        scaleIn: 'scaleIn 0.5s ease-out forwards',
+      },
     },
   },
   plugins: [],

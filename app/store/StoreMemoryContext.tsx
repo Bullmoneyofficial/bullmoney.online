@@ -103,6 +103,7 @@ export function StoreMemoryProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Unrender sections that have been off-screen for a while (cleanup timer)
+  // Use a longer grace period to avoid re-render churn when scrolling
   useEffect(() => {
     const cleanup = setInterval(() => {
       setSections((prev) => {
@@ -117,7 +118,7 @@ export function StoreMemoryProvider({ children }: { children: ReactNode }) {
         }
         return changed ? next : prev;
       });
-    }, 8000); // 8s grace period before unrendering off-screen sections
+    }, 30000); // 30s grace period (was 8s — too aggressive, caused re-render churn)
     return () => clearInterval(cleanup);
   }, []);
 

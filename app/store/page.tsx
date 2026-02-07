@@ -1,77 +1,63 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef, useMemo, Suspense } from 'react';
-import dynamic from 'next/dynamic';
 import { useSearchParams, useRouter } from 'next/navigation';
-
-const CookieConsent = dynamic(() => import('@/components/CookieConsent'), { ssr: false });
-import { Search, SlidersHorizontal, X, ChevronDown, Grid3X3, Sparkles, TrendingUp, LayoutGrid, Rows3 } from 'lucide-react';
+import { Search, SlidersHorizontal, X, ChevronDown, Sparkles, LayoutGrid, Rows3, Layers, Clock, LayoutDashboard } from 'lucide-react';
 import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
 import type { ProductWithDetails, PaginatedResponse, ProductFilters } from '@/types/store';
 import { useStoreSection } from './StoreMemoryContext';
 
 // ============================================================================
-// PERFORMANCE OPTIMIZED: Dynamic imports for heavy components
-// Reduces initial bundle size and speeds up first load
+// OPTIMIZED IMPORTS - Split into separate modules for faster compilation
 // ============================================================================
+import {
+  CookieConsent,
+  StoreHero3D,
+  CircularProductGrid,
+  AnimatedProductGrid,
+  ProductsCarousel,
+  ProductCard,
+  HoverEffect,
+  FilterSheet,
+  FocusCards,
+  FeaturedProductsTimeline,
+  GlassProductGrid,
+  StoreFluidGlassSection,
+  StoreFooter,
+  SearchAutocomplete,
+  WorldMap,
+  MarketPriceTicker,
+  RewardsCardBanner,
+  RewardsCard,
+  MotionDiv,
+  AnimatePresence,
+} from './store.imports';
 
-// Framer Motion - only load when animation is needed
-const MotionDiv = dynamic(() => import('framer-motion').then(mod => {
-  const { motion } = mod;
-  return { default: motion.div };
-}), { ssr: false });
+import {
+  SORT_OPTIONS,
+  CATEGORIES,
+  MOBILE_COLUMN_OPTIONS,
+  DESKTOP_COLUMN_OPTIONS,
+  GRID_ROW_OPTIONS,
+  FOCUS_LAYOUT_OPTIONS,
+} from './store.config';
 
-const AnimatePresence = dynamic(() => import('framer-motion').then(mod => ({ default: mod.AnimatePresence })), { ssr: false });
+import {
+  getGridClasses,
+  hasActiveFilters as checkActiveFilters,
+  buildUrlParams,
+  getFocusMaxItems,
+  getGridViewProducts,
+} from './store.utils';
 
-// Heavy 3D component - deferred load
-const StoreHero3D = dynamic(() => import('@/components/shop/StoreHero3D').then(mod => ({ default: mod.StoreHero3D })), {
-  ssr: false,
-  loading: () => <div className="w-full h-100 bg-linear-to-b from-black via-zinc-900/50 to-black animate-pulse" />
-});
-
-// Product grids - load on demand
-const CircularProductGrid = dynamic(() => import('@/components/shop/CircularProductGrid').then(mod => ({ default: mod.CircularProductGrid })), { ssr: false });
-const GlassProductGrid = dynamic(() => import('@/components/shop/GlassProductGrid').then(mod => ({ default: mod.GlassProductGrid })), { ssr: false });
-
-// UI components - defer loading
-const ProductCard = dynamic(() => import('@/components/shop/ProductCard').then(mod => ({ default: mod.ProductCard })), { ssr: true });
-const HoverEffect = dynamic(() => import('@/components/ui/card-hover-effect').then(mod => ({ default: mod.HoverEffect })), { ssr: false });
-const FilterSheet = dynamic(() => import('@/components/shop/FilterSheet').then(mod => ({ default: mod.FilterSheet })), { ssr: false });
-const FocusCards = dynamic(() => import('@/components/ui/focus-cards').then(mod => ({ default: mod.FocusCards })), { ssr: false });
-const StoreFluidGlassSection = dynamic(() => import('@/components/shop/StoreFluidGlassSection').then(mod => ({ default: mod.StoreFluidGlassSection })), { ssr: false });
-const StoreFooter = dynamic(() => import('@/components/shop/StoreFooter').then(mod => ({ default: mod.StoreFooter })), { ssr: false });
-const SearchAutocomplete = dynamic(() => import('@/components/shop/SearchAutocomplete').then(mod => ({ default: mod.SearchAutocomplete })), { ssr: false });
-
-// Modals and overlays - lazy load
-const RewardsCardBanner = dynamic(() => import('@/components/RewardsCardBanner'), { ssr: false });
-const RewardsCard = dynamic(() => import('@/components/RewardsCard'), { ssr: false });
-
-// ============================================================================
-// STORE HOME - PRODUCT LISTING PAGE (PLP)
-// Luxury Trading Aesthetic with Mobile-First Design
-// ============================================================================
-
-const SORT_OPTIONS = [
-  { value: 'newest', label: 'Newest' },
-  { value: 'price_asc', label: 'Price: Low to High' },
-  { value: 'price_desc', label: 'Price: High to Low' },
-  { value: 'popular', label: 'Most Popular' },
-  { value: 'best_selling', label: 'Best Selling' },
-];
-
-const CATEGORIES = [
-  { value: '', label: 'All Products', icon: Sparkles },
-  { value: 'apparel', label: 'Apparel', icon: null },
-  { value: 'accessories', label: 'Accessories', icon: null },
-  { value: 'tech-gear', label: 'Tech & Gear', icon: null },
-  { value: 'home-office', label: 'Home Office', icon: null },
-  { value: 'drinkware', label: 'Drinkware', icon: null },
-  { value: 'limited-edition', label: 'Limited Edition', icon: TrendingUp },
-];
+import { useProgressiveLoad, useIdleEffect } from './store.hooks';
 
 export default function StorePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  
+  // Progressive loading - renders in stages for faster initial load
+  const { showCritical, showInteractive, showBelowFold, showHeavy } = useProgressiveLoad();
   
   // Recruit auth for rewards
   const { recruit } = useRecruitAuth();
@@ -97,18 +83,32 @@ export default function StorePage() {
   const [mobileRows, setMobileRows] = useState(2);
   const [desktopRows, setDesktopRows] = useState(2);
   const [isMobile, setIsMobile] = useState(false);
-  const [viewMode, setViewMode] = useState<'circular' | 'grid' | 'glass'>('circular'); // Default to circular gallery
+  const [viewMode, setViewMode] = useState<'carousel' | 'circular' | 'grid' | 'animated'>('carousel'); // Default to carousel view
+  const [gridLayoutOpen, setGridLayoutOpen] = useState(false);
+  const gridLayoutRef = useRef<HTMLDivElement>(null);
+  const gridLayoutMobileRef = useRef<HTMLDivElement>(null);
   const [focusMobileColumns, setFocusMobileColumns] = useState<1 | 2 | 3>(2);
   const [focusDesktopColumns, setFocusDesktopColumns] = useState<1 | 2 | 3>(2);
   const [focusMobileRows, setFocusMobileRows] = useState<1 | 2 | 3>(3);
   const [focusDesktopRows, setFocusDesktopRows] = useState<1 | 2 | 3>(1);
   const [vipProducts, setVipProducts] = useState<{ id: string; name: string; price: number; image_url?: string; imageUrl?: string; visible?: boolean }[]>([]);
-  
-  // Column options
-  const MOBILE_COLUMN_OPTIONS = [1, 2, 3, 4];
-  const DESKTOP_COLUMN_OPTIONS = [4, 5, 6, 7, 8, 9];
-  const GRID_ROW_OPTIONS = [1, 2, 3] as const;
-  const FOCUS_LAYOUT_OPTIONS = [1, 2, 3] as const;
+  const [featuredViewMode, setFeaturedViewMode] = useState<'timeline' | 'grid'>('timeline');
+  const [timelineVisible, setTimelineVisible] = useState(true);
+  const featuredSectionRef = useRef<HTMLElement>(null);
+
+  // Close grid layout dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        gridLayoutRef.current && !gridLayoutRef.current.contains(e.target as Node) &&
+        gridLayoutMobileRef.current && !gridLayoutMobileRef.current.contains(e.target as Node)
+      ) {
+        setGridLayoutOpen(false);
+      }
+    };
+    if (gridLayoutOpen) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [gridLayoutOpen]);
   
   // Search state with debouncing
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
@@ -181,27 +181,12 @@ export default function StorePage() {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-  
-  // Dynamic grid classes based on column selection
-  const getGridClasses = () => {
-    const desktopColClass = {
-      4: 'md:grid-cols-4',
-      5: 'md:grid-cols-5',
-      6: 'md:grid-cols-6',
-      7: 'md:grid-cols-7',
-      8: 'md:grid-cols-8',
-      9: 'md:grid-cols-9',
-    }[desktopColumns] || 'md:grid-cols-5';
-    
-    const mobileColClass = {
-      1: 'grid-cols-1',
-      2: 'grid-cols-2',
-      3: 'grid-cols-3',
-      4: 'grid-cols-4',
-    }[mobileColumns] || 'grid-cols-2';
-    
-    return `${mobileColClass} ${desktopColClass}`;
-  };
+
+  // Manual toggle only — timeline stays as default, grid only if user selects it
+  const handleFeaturedViewChange = useCallback((mode: 'timeline' | 'grid') => {
+    setFeaturedViewMode(mode);
+    setTimelineVisible(mode === 'timeline');
+  }, []);
 
   const focusCards = useMemo(() => {
     return vipProducts
@@ -221,22 +206,15 @@ export default function StorePage() {
       .slice(0, 9) as { title: string; src: string; price: number; description: string; comingSoon: boolean; buyUrl: string }[];
   }, [vipProducts]);
 
-  const focusMaxItems = useMemo(() => {
-    if (isMobile) {
-      // Show all VIP products on mobile, capped at 9
-      return Math.min(focusCards.length, 9);
-    }
-    const columns = focusDesktopColumns;
-    const rows = focusDesktopRows;
-    return Math.max(1, columns * rows);
-  }, [isMobile, focusCards.length, focusDesktopColumns, focusDesktopRows]);
+  const focusMaxItems = useMemo(() => 
+    getFocusMaxItems(isMobile, focusCards.length, focusDesktopColumns, focusDesktopRows),
+    [isMobile, focusCards.length, focusDesktopColumns, focusDesktopRows]
+  );
 
-  const gridViewProducts = useMemo(() => {
-    const columns = isMobile ? mobileColumns : desktopColumns;
-    const rows = isMobile ? mobileRows : desktopRows;
-    const maxItems = Math.max(1, columns * rows);
-    return products.slice(0, maxItems);
-  }, [products, isMobile, mobileColumns, desktopColumns, mobileRows, desktopRows]);
+  const gridViewProducts = useMemo(() => 
+    getGridViewProducts(products, isMobile, mobileColumns, desktopColumns, mobileRows, desktopRows),
+    [products, isMobile, mobileColumns, desktopColumns, mobileRows, desktopRows]
+  );
 
 
   // Fetch products
@@ -283,31 +261,27 @@ export default function StorePage() {
     fetchProducts(1, false);
   }, [fetchProducts]);
 
-  // Fetch VIP products for featured section
-  useEffect(() => {
+  // Fetch VIP products - DEFERRED until below-fold content loads
+  useIdleEffect(() => {
+    if (!showBelowFold) return;
+    
     const fetchVip = async () => {
       try {
         const res = await fetch('/api/store/vip');
-        if (!res.ok) throw new Error('Failed to load VIP');
-        const json = await res.json();
+        const json = res.ok ? await res.json() : { data: [] };
         const items = (json.data || []).filter((item: any) => item.visible !== false);
         setVipProducts(items);
       } catch (err) {
-        console.error('Failed to fetch VIP products:', err);
+        // Silently degrade — VIP section will just be empty
+        if (process.env.NODE_ENV === 'development') console.warn('VIP fetch skipped:', err);
       }
     };
     fetchVip();
-  }, []);
+  }, [showBelowFold]);
 
   // Update URL with filters
   useEffect(() => {
-    const params = new URLSearchParams();
-    if (filters.category) params.set('category', filters.category);
-    if (filters.min_price) params.set('min_price', filters.min_price.toString());
-    if (filters.max_price) params.set('max_price', filters.max_price.toString());
-    if (filters.sort_by && filters.sort_by !== 'newest') params.set('sort_by', filters.sort_by);
-    if (debouncedSearch) params.set('search', debouncedSearch);
-
+    const params = buildUrlParams(filters, debouncedSearch);
     const newUrl = params.toString() ? `/store?${params}` : '/store';
     router.replace(newUrl, { scroll: false });
   }, [filters, debouncedSearch, router]);
@@ -363,135 +337,165 @@ export default function StorePage() {
     setDebouncedSearch('');
   };
 
-  const hasActiveFilters = filters.category || filters.min_price || filters.max_price || debouncedSearch;
+  const hasActiveFilters = checkActiveFilters(filters, debouncedSearch);
 
   return (
     <div className="bg-black" style={{ height: 'auto', minHeight: '100vh', overflow: 'visible' }}>
-      {/* Rewards Card Banner */}
-      <RewardsCardBanner 
-        userEmail={recruit?.email || null}
-        onOpenRewardsCard={() => setRewardsCardOpen(true)}
-      />
+      {/* Rewards Card Banner - Load when interactive */}
+      {showInteractive && (
+        <RewardsCardBanner 
+          userEmail={recruit?.email || null}
+          onOpenRewardsCard={() => setRewardsCardOpen(true)}
+        />
+      )}
       
       {/* Rewards Card Modal */}
-      <RewardsCard
-        isOpen={rewardsCardOpen}
-        onClose={() => setRewardsCardOpen(false)}
-        userEmail={recruit?.email || null}
-      />
+      {showInteractive && (
+        <RewardsCard
+          isOpen={rewardsCardOpen}
+          onClose={() => setRewardsCardOpen(false)}
+          userEmail={recruit?.email || null}
+        />
+      )}
       
-      {/* Hero Section - 3D Spline Hero (only rendered when in/near viewport) */}
-      <div ref={hero.ref} style={{ minHeight: hero.shouldRender ? undefined : 400 }}>
-        {hero.shouldRender && <StoreHero3D paused={!hero.shouldAnimate} />}
+      {/* Hero Section - 3D Spline Hero - DEFERRED to improve initial load */}
+      <div ref={hero.ref} style={{ minHeight: 400, contain: 'layout style paint' }}>
+        {showHeavy && hero.shouldRender && <StoreHero3D paused={!hero.shouldAnimate} />}
+        {!showHeavy && (
+          <div className="w-full h-100 bg-linear-to-b from-black via-zinc-900/50 to-black flex items-center justify-center">
+            <div className="text-white/40 text-lg">Loading...</div>
+          </div>
+        )}
       </div>
+
+      {/* Market Price Ticker - Top - Load when below fold is ready */}
+      {showBelowFold && <MarketPriceTicker direction="left" speed={15} />}
+
+      {/* World Map Section - DEFERRED heavy component */}
+      {showHeavy ? (
+      <section className="relative w-full min-h-[50vh] md:h-screen overflow-hidden bg-black">
+        <div className="absolute inset-0 z-0">
+          <WorldMap
+            dots={[
+              { start: { lat: 40.7128, lng: -74.006, label: 'New York' }, end: { lat: 51.5074, lng: -0.1278, label: 'London' } },
+              { start: { lat: 51.5074, lng: -0.1278, label: 'London' }, end: { lat: 35.6762, lng: 139.6503, label: 'Tokyo' } },
+              { start: { lat: 40.7128, lng: -74.006, label: 'New York' }, end: { lat: -33.8688, lng: 151.2093, label: 'Sydney' } },
+              { start: { lat: 1.3521, lng: 103.8198, label: 'Singapore' }, end: { lat: 25.2048, lng: 55.2708, label: 'Dubai' } },
+              { start: { lat: 35.6762, lng: 139.6503, label: 'Tokyo' }, end: { lat: 22.3193, lng: 114.1694, label: 'Hong Kong' } },
+              { start: { lat: 51.5074, lng: -0.1278, label: 'London' }, end: { lat: -33.9249, lng: 18.4241, label: 'Cape Town' }, color: '#3B82F6' },
+            ]}
+            lineColor="#ffffff"
+          />
+        </div>
+        <div className="absolute inset-x-0 top-8 md:inset-0 z-10 flex items-start md:items-center justify-center">
+          <div className="text-center px-4">
+            <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
+              Pay With Crypto
+            </h2>
+            <p className="text-white/60 text-base md:text-xl max-w-2xl mx-auto">
+              Our store accepts Bitcoin, Ethereum & more
+            </p>
+          </div>
+        </div>
+      </section>
+      ) : (
+      <section className="relative w-full min-h-[50vh] md:h-screen overflow-hidden bg-black flex items-center justify-center">
+        <div className="text-center px-4">
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
+            Pay With Crypto
+          </h2>
+          <p className="text-white/60 text-base md:text-xl max-w-2xl mx-auto">
+            Our store accepts Bitcoin, Ethereum & more
+          </p>
+        </div>
+      </section>
+      )}
+
+      {/* Market Price Ticker - Bottom */}
+      {showBelowFold && <MarketPriceTicker direction="right" speed={12} />}
 
       {/* Main Content */}
       <section 
-        className="relative z-50 max-w-450 mx-auto px-3 md:px-8 pt-2 pb-4 md:py-12" 
+        className="relative z-50 max-w-450 mx-auto px-4 md:px-8 pt-2 pb-4 md:py-12 bg-black" 
         style={{ isolation: 'isolate', height: 'auto', overflow: 'visible' }}
       >
-        {!loading && focusCards.length > 0 && (
-          <section ref={featured.ref} className="-mx-3 md:mx-0 mb-6 md:mb-8">
-            <div className="px-3 sm:px-8 lg:px-10">
-              <div className="max-w-5xl mx-auto">
-                <div className="flex flex-col gap-3 md:gap-4 mb-4 md:mb-5">
-                  <div>
-                    <p className="text-white/40 text-xs uppercase tracking-[0.2em]">Focus</p>
-                    <h2 className="text-white text-2xl md:text-3xl font-semibold">Featured Products</h2>
-                  </div>
-                  <div className="hidden md:flex items-center gap-2 text-white/70 justify-center w-full">
-                    <div className="flex items-center gap-2 h-12 px-3 bg-white/5 border border-white/10 rounded-xl">
-                      <Grid3X3 className="w-4 h-4 text-white/60" />
-                      <span className="text-white/60 text-sm">Columns</span>
-                      <div className="flex gap-1">
-                        {FOCUS_LAYOUT_OPTIONS.map((value) => (
-                          <button
-                            key={`d-col-${value}`}
-                            onClick={() => setFocusDesktopColumns(value)}
-                            className={`w-7 h-7 rounded-lg text-sm font-medium transition-all ${
-                              focusDesktopColumns === value
-                                ? 'bg-white text-black'
-                                : 'bg-white/10 text-white/70 hover:bg-white/20'
-                            }`}
-                            aria-pressed={focusDesktopColumns === value}
-                          >
-                            {value}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 h-12 px-3 bg-white/5 border border-white/10 rounded-xl">
-                      <Rows3 className="w-4 h-4 text-white/60" />
-                      <span className="text-white/60 text-sm">Rows</span>
-                      <div className="flex gap-1">
-                        {FOCUS_LAYOUT_OPTIONS.map((value) => (
-                          <button
-                            key={`d-row-${value}`}
-                            onClick={() => setFocusDesktopRows(value)}
-                            className={`w-7 h-7 rounded-lg text-sm font-medium transition-all ${
-                              focusDesktopRows === value
-                                ? 'bg-white text-black'
-                                : 'bg-white/10 text-white/70 hover:bg-white/20'
-                            }`}
-                            aria-pressed={focusDesktopRows === value}
-                          >
-                            {value}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex md:hidden items-center gap-2 text-white/70 justify-center">
-                  <div className="flex items-center gap-1.5 h-9 px-2 bg-white/5 border border-white/10 rounded-lg">
-                    <Grid3X3 className="w-3.5 h-3.5 text-white/50" />
-                    <div className="flex gap-1">
-                      {FOCUS_LAYOUT_OPTIONS.map((value) => (
-                        <button
-                          key={`m-col-${value}`}
-                          onClick={() => setFocusMobileColumns(value)}
-                          className={`w-6 h-6 rounded text-xs font-medium transition-all ${
-                            focusMobileColumns === value
-                              ? 'bg-white text-black'
-                              : 'bg-white/10 text-white/70 active:bg-white/20'
-                          }`}
-                          aria-pressed={focusMobileColumns === value}
-                        >
-                          {value}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1.5 h-9 px-2 bg-white/5 border border-white/10 rounded-lg">
-                    <Rows3 className="w-3.5 h-3.5 text-white/50" />
-                    <div className="flex gap-1">
-                      {FOCUS_LAYOUT_OPTIONS.map((value) => (
-                        <button
-                          key={`m-row-${value}`}
-                          onClick={() => setFocusMobileRows(value)}
-                          className={`w-6 h-6 rounded text-xs font-medium transition-all ${
-                            focusMobileRows === value
-                              ? 'bg-white text-black'
-                              : 'bg-white/10 text-white/70 active:bg-white/20'
-                          }`}
-                          aria-pressed={focusMobileRows === value}
-                        >
-                          {value}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+        {/* Featured Products - Timeline / Grid Toggle - DEFERRED below fold */}
+        {showBelowFold && !loading && focusCards.length > 0 && (
+          <section 
+            ref={(el) => { 
+              if (typeof featured.ref === 'function') featured.ref(el); 
+              if (featuredSectionRef) featuredSectionRef.current = el; 
+            }} 
+            className="-mx-4 md:-mx-8 mb-6 md:mb-8 bg-black rounded-2xl py-6"
+          >
+            {/* Toggle Header */}
+            <div className="flex flex-col items-center px-4 md:px-8 mb-6">
+              <h2 className="text-sm md:text-lg font-semibold text-white/80 tracking-wide uppercase mb-4">
+                Featured Products
+              </h2>
+              <div className="flex items-center gap-4 md:gap-6 perspective-[800px]">
+                <button
+                  onClick={() => handleFeaturedViewChange('timeline')}
+                  className={`group relative flex items-center gap-2 px-5 py-2.5 md:px-7 md:py-3 rounded-2xl text-xs md:text-sm font-bold tracking-wide uppercase transition-all duration-300 border-2 [transform-style:preserve-3d] ${
+                    featuredViewMode === 'timeline'
+                      ? 'bg-white text-black border-transparent shadow-[0_8px_30px_rgba(255,255,255,0.3),0_0_60px_rgba(255,0,0,0.15),0_0_60px_rgba(0,255,0,0.15),0_0_60px_rgba(0,100,255,0.15)] translate-y-0 [transform:rotateX(0deg)_translateZ(12px)] hover:[transform:rotateX(-5deg)_translateZ(20px)] hover:shadow-[0_12px_40px_rgba(255,255,255,0.4),0_0_80px_rgba(255,0,0,0.2),0_0_80px_rgba(0,255,0,0.2),0_0_80px_rgba(0,100,255,0.2)]'
+                      : 'bg-black text-white/70 border-white/10 shadow-[0_4px_15px_rgba(0,0,0,0.5)] [transform:rotateX(8deg)_translateZ(-4px)] hover:text-white hover:border-white/30 hover:[transform:rotateX(0deg)_translateZ(8px)] hover:shadow-[0_8px_25px_rgba(255,255,255,0.15),0_0_40px_rgba(255,0,0,0.1),0_0_40px_rgba(0,255,0,0.1),0_0_40px_rgba(0,100,255,0.1)]'
+                  }`}
+                >
+                  <Clock className="w-4 h-4 md:w-5 md:h-5" />
+                  <span>Timeline</span>
+                  {featuredViewMode === 'timeline' && (
+                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2/3 h-[3px] rounded-full bg-gradient-to-r from-red-500 via-green-400 to-blue-500 animate-pulse" />
+                  )}
+                </button>
+                <button
+                  onClick={() => handleFeaturedViewChange('grid')}
+                  className={`group relative flex items-center gap-2 px-5 py-2.5 md:px-7 md:py-3 rounded-2xl text-xs md:text-sm font-bold tracking-wide uppercase transition-all duration-300 border-2 [transform-style:preserve-3d] ${
+                    featuredViewMode === 'grid'
+                      ? 'bg-white text-black border-transparent shadow-[0_8px_30px_rgba(255,255,255,0.3),0_0_60px_rgba(255,0,0,0.15),0_0_60px_rgba(0,255,0,0.15),0_0_60px_rgba(0,100,255,0.15)] translate-y-0 [transform:rotateX(0deg)_translateZ(12px)] hover:[transform:rotateX(-5deg)_translateZ(20px)] hover:shadow-[0_12px_40px_rgba(255,255,255,0.4),0_0_80px_rgba(255,0,0,0.2),0_0_80px_rgba(0,255,0,0.2),0_0_80px_rgba(0,100,255,0.2)]'
+                      : 'bg-black text-white/70 border-white/10 shadow-[0_4px_15px_rgba(0,0,0,0.5)] [transform:rotateX(8deg)_translateZ(-4px)] hover:text-white hover:border-white/30 hover:[transform:rotateX(0deg)_translateZ(8px)] hover:shadow-[0_8px_25px_rgba(255,255,255,0.15),0_0_40px_rgba(255,0,0,0.1),0_0_40px_rgba(0,255,0,0.1),0_0_40px_rgba(0,100,255,0.1)]'
+                  }`}
+                >
+                  <LayoutDashboard className="w-4 h-4 md:w-5 md:h-5" />
+                  <span>Grid</span>
+                  {featuredViewMode === 'grid' && (
+                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2/3 h-[3px] rounded-full bg-gradient-to-r from-red-500 via-green-400 to-blue-500 animate-pulse" />
+                  )}
+                </button>
               </div>
             </div>
-            <div className="md:h-auto md:max-w-5xl md:mx-auto">
-              <FocusCards
-                cards={focusCards}
-                mobileColumns={focusMobileColumns}
-                desktopColumns={focusDesktopColumns}
-                maxItems={focusMaxItems}
-              />
-            </div>
+            {/* Conditional View */}
+            {featuredViewMode === 'timeline' ? (
+              <div
+                className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen transition-all duration-500 ease-in-out"
+                style={{
+                  opacity: timelineVisible ? 1 : 0,
+                  transform: timelineVisible ? 'translateY(0)' : 'translateY(-20px)',
+                  maxHeight: timelineVisible ? '9999px' : '0px',
+                  overflow: 'hidden',
+                }}
+              >
+                <FeaturedProductsTimeline products={focusCards} />
+              </div>
+            ) : (
+              <div className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen py-6 md:py-10 bg-black">
+                <GlassProductGrid
+                  products={products}
+                  rowHeight={300}
+                  itemsPerRow={999}
+                  gap={14}
+                  scrollSpeed={30}
+                  visibleCount={2}
+                  glassProps={{
+                    borderRadius: 18,
+                    displace: 0.5,
+                    distortionScale: -180,
+                    brightness: 50,
+                    opacity: 0.93,
+                  }}
+                />
+              </div>
+            )}
           </section>
         )}
         {/* Search and Filters Bar */}
@@ -592,81 +596,113 @@ export default function StorePage() {
             {/* Spacer */}
             <div className="flex-1" />
 
-            {/* View Mode Toggle */}
-            <div className="flex items-center gap-1 h-12 px-3 bg-white/5 border border-white/10 rounded-xl">
+            {/* Grid Layout Dropdown - Desktop */}
+            <div className="relative hidden md:block" ref={gridLayoutRef}>
               <button
-                onClick={() => setViewMode('circular')}
-                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
-                  viewMode === 'circular' 
-                    ? 'bg-white text-black' 
-                    : 'bg-white/10 text-white/70 hover:bg-white/20'
+                onClick={() => setGridLayoutOpen(!gridLayoutOpen)}
+                className={`h-11 px-5 flex items-center gap-2.5 rounded-full transition-all duration-200 ${
+                  gridLayoutOpen
+                    ? 'bg-white text-black shadow-lg shadow-white/10'
+                    : 'bg-white/[0.08] text-white/90 hover:bg-white/[0.14] border border-white/[0.08]'
                 }`}
-                title="Circular Gallery View"
-              >
-                <Rows3 className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setViewMode('glass')}
-                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
-                  viewMode === 'glass' 
-                    ? 'bg-white text-black' 
-                    : 'bg-white/10 text-white/70 hover:bg-white/20'
-                }`}
-                title="Glass Surface View"
-              >
-                <Sparkles className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
-                  viewMode === 'grid' 
-                    ? 'bg-white text-black' 
-                    : 'bg-white/10 text-white/70 hover:bg-white/20'
-                }`}
-                title="Grid View"
               >
                 <LayoutGrid className="w-4 h-4" />
+                <span className="text-[13px] font-semibold tracking-tight">Layout</span>
+                <ChevronDown className={`w-3.5 h-3.5 opacity-60 transition-transform duration-200 ${gridLayoutOpen ? 'rotate-180' : ''}`} />
               </button>
-            </div>
 
-            {/* Desktop Column + Row Picker */}
-            <div className="flex items-center gap-2 h-12 px-3 bg-white/5 border border-white/10 rounded-xl">
-              <Grid3X3 className="w-4 h-4 text-white/60" />
-              <span className="text-white/60 text-sm">Columns:</span>
-              <div className="flex gap-1">
-                {DESKTOP_COLUMN_OPTIONS.map((cols) => (
-                  <button
-                    key={cols}
-                    onClick={() => setDesktopColumns(cols)}
-                    className={`w-7 h-7 rounded-lg text-sm font-medium transition-all ${
-                      desktopColumns === cols 
-                        ? 'bg-white text-black' 
-                        : 'bg-white/10 text-white/70 hover:bg-white/20'
-                    }`}
-                  >
-                    {cols}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="flex items-center gap-2 h-12 px-3 bg-white/5 border border-white/10 rounded-xl">
-              <Rows3 className="w-4 h-4 text-white/60" />
-              <span className="text-white/60 text-sm">Rows:</span>
-              <div className="flex gap-1">
-                {GRID_ROW_OPTIONS.map((rows) => (
-                  <button
-                    key={rows}
-                    onClick={() => setDesktopRows(rows)}
-                    className={`w-7 h-7 rounded-lg text-sm font-medium transition-all ${
-                      desktopRows === rows
-                        ? 'bg-white text-black'
-                        : 'bg-white/10 text-white/70 hover:bg-white/20'
-                    }`}
-                  >
-                    {rows}
-                  </button>
-                ))}
-              </div>
+              {gridLayoutOpen && (
+                <div className="absolute right-0 top-full mt-3 z-[9999] w-[280px] bg-[#1c1c1e] border border-white/[0.08] rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.7)] p-5 space-y-5">
+                  {/* View Mode */}
+                  <div>
+                    <span className="text-white/40 text-[11px] font-semibold uppercase tracking-[0.08em]">View</span>
+                    <div className="grid grid-cols-4 gap-1.5 mt-2.5">
+                      {[
+                        { mode: 'carousel' as const, icon: Layers, label: 'Carousel' },
+                        { mode: 'circular' as const, icon: Rows3, label: 'Circular' },
+                        { mode: 'animated' as const, icon: Sparkles, label: 'Animated' },
+                        { mode: 'grid' as const, icon: LayoutGrid, label: 'Grid' },
+                      ].map(({ mode, icon: Icon, label }) => (
+                        <button
+                          key={mode}
+                          onClick={() => setViewMode(mode)}
+                          className={`h-10 rounded-xl flex flex-col items-center justify-center gap-1 text-[10px] font-medium transition-all duration-150 ${
+                            viewMode === mode
+                              ? 'bg-white text-black shadow-sm'
+                              : 'bg-white/[0.06] text-white/60 hover:bg-white/[0.12] hover:text-white/90'
+                          }`}
+                        >
+                          <Icon className="w-4 h-4" />
+                          <span>{label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-white/[0.06]" />
+
+                  {/* Columns */}
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-white/40 text-[11px] font-semibold uppercase tracking-[0.08em]">Columns</span>
+                      <span className="text-white/80 text-[13px] font-bold tabular-nums">{desktopColumns}</span>
+                    </div>
+                    <div className="mt-2.5">
+                      <input
+                        type="range"
+                        min={1}
+                        max={10}
+                        step={1}
+                        value={desktopColumns}
+                        onChange={(e) => setDesktopColumns(Number(e.target.value))}
+                        className="w-full h-1.5 appearance-none bg-white/[0.08] rounded-full outline-none cursor-pointer
+                          [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4
+                          [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md
+                          [&::-webkit-slider-thumb]:hover:scale-110 [&::-webkit-slider-thumb]:transition-transform
+                          [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full
+                          [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-md"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Rows */}
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-white/40 text-[11px] font-semibold uppercase tracking-[0.08em]">Rows</span>
+                      <span className="text-white/80 text-[13px] font-bold tabular-nums">
+                        {isFinite(desktopRows) ? desktopRows : '∞'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 mt-2.5">
+                      <input
+                        type="range"
+                        min={1}
+                        max={10}
+                        step={1}
+                        value={isFinite(desktopRows) ? desktopRows : 10}
+                        onChange={(e) => setDesktopRows(Number(e.target.value))}
+                        className="flex-1 h-1.5 appearance-none bg-white/[0.08] rounded-full outline-none cursor-pointer
+                          [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4
+                          [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md
+                          [&::-webkit-slider-thumb]:hover:scale-110 [&::-webkit-slider-thumb]:transition-transform
+                          [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full
+                          [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-md"
+                      />
+                      <button
+                        onClick={() => setDesktopRows(isFinite(desktopRows) ? Infinity : 2)}
+                        className={`shrink-0 h-8 w-8 rounded-lg text-[14px] font-bold transition-all duration-150 ${
+                          !isFinite(desktopRows)
+                            ? 'bg-white text-black shadow-sm'
+                            : 'bg-white/[0.06] text-white/50 hover:bg-white/[0.12] hover:text-white/90'
+                        }`}
+                        title="Show all rows"
+                      >
+                        ∞
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -731,88 +767,130 @@ export default function StorePage() {
 
         {/* Results Count */}
         <div className="flex items-center justify-between mb-2 md:mb-6">
-          <p className="text-white/40 text-sm">
+          <p className="text-white/40 text-sm min-w-0 flex-shrink">
             {loading ? 'Loading...' : `${total} ${total === 1 ? 'product' : 'products'}`}
           </p>
-          {/* Mobile View & Column Controls */}
-          <div className="flex md:hidden items-center gap-2">
-            {/* View Mode Toggle Mobile */}
-            <div className="flex items-center gap-1 h-9 px-1.5 bg-white/5 border border-white/10 rounded-lg">
-              <button
-                onClick={() => setViewMode('circular')}
-                className={`w-6 h-6 rounded flex items-center justify-center transition-all ${
-                  viewMode === 'circular' 
-                    ? 'bg-white text-black' 
-                    : 'bg-white/10 text-white/70'
-                }`}
-              >
-                <Rows3 className="w-3 h-3" />
-              </button>
-              <button
-                onClick={() => setViewMode('glass')}
-                className={`w-6 h-6 rounded flex items-center justify-center transition-all ${
-                  viewMode === 'glass' 
-                    ? 'bg-white text-black' 
-                    : 'bg-white/10 text-white/70'
-                }`}
-              >
-                <Sparkles className="w-3 h-3" />
-              </button>
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`w-6 h-6 rounded flex items-center justify-center transition-all ${
-                  viewMode === 'grid' 
-                    ? 'bg-white text-black' 
-                    : 'bg-white/10 text-white/70'
-                }`}
-              >
-                <LayoutGrid className="w-3 h-3" />
-              </button>
-            </div>
-            {/* Mobile Column + Row Picker */}
-            <div className="flex items-center gap-1.5 h-9 px-2 bg-white/5 border border-white/10 rounded-lg">
-              <Grid3X3 className="w-3.5 h-3.5 text-white/50" />
-              <div className="flex gap-1">
-                {MOBILE_COLUMN_OPTIONS.map((cols) => (
-                  <button
-                    key={cols}
-                    onClick={() => setMobileColumns(cols)}
-                    className={`w-6 h-6 rounded text-xs font-medium transition-all ${
-                      mobileColumns === cols 
-                        ? 'bg-white text-black' 
-                        : 'bg-white/10 text-white/70 active:bg-white/20'
-                    }`}
-                  >
-                    {cols}
-                  </button>
-                ))}
+          {/* Mobile Grid Layout Dropdown */}
+          <div className="relative md:hidden" ref={gridLayoutMobileRef}>
+            <button
+              onClick={() => setGridLayoutOpen(!gridLayoutOpen)}
+              className={`h-9 px-3.5 flex items-center gap-2 rounded-full transition-all duration-200 ${
+                gridLayoutOpen
+                  ? 'bg-white text-black shadow-lg shadow-white/10'
+                  : 'bg-white/[0.08] text-white/90 border border-white/[0.08]'
+              }`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span className="text-[12px] font-semibold tracking-tight">Layout</span>
+              <ChevronDown className={`w-3 h-3 opacity-60 transition-transform duration-200 ${gridLayoutOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {gridLayoutOpen && (
+              <div className="absolute right-0 top-full mt-2.5 z-[9999] w-[260px] bg-[#1c1c1e] border border-white/[0.08] rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.7)] p-4 space-y-4">
+                {/* View Mode */}
+                <div>
+                  <span className="text-white/40 text-[10px] font-semibold uppercase tracking-[0.08em]">View</span>
+                  <div className="grid grid-cols-4 gap-1 mt-2">
+                    {[
+                      { mode: 'carousel' as const, icon: Layers, label: 'Carousel' },
+                      { mode: 'circular' as const, icon: Rows3, label: 'Circular' },
+                      { mode: 'animated' as const, icon: Sparkles, label: 'Animated' },
+                      { mode: 'grid' as const, icon: LayoutGrid, label: 'Grid' },
+                    ].map(({ mode, icon: Icon, label }) => (
+                      <button
+                        key={mode}
+                        onClick={() => setViewMode(mode)}
+                        className={`h-11 rounded-xl flex flex-col items-center justify-center gap-0.5 text-[9px] font-semibold transition-all duration-150 ${
+                          viewMode === mode
+                            ? 'bg-white text-black shadow-sm'
+                            : 'bg-white/[0.06] text-white/60 active:bg-white/[0.15]'
+                        }`}
+                      >
+                        <Icon className="w-4 h-4" />
+                        <span>{label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="h-px bg-white/[0.06]" />
+
+                {/* Columns */}
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-white/40 text-[10px] font-semibold uppercase tracking-[0.08em]">Columns</span>
+                    <span className="text-white/80 text-[12px] font-bold tabular-nums">{mobileColumns}</span>
+                  </div>
+                  <div className="mt-2">
+                    <input
+                      type="range"
+                      min={1}
+                      max={6}
+                      step={1}
+                      value={mobileColumns}
+                      onChange={(e) => setMobileColumns(Number(e.target.value))}
+                      className="w-full h-1.5 appearance-none bg-white/[0.08] rounded-full outline-none cursor-pointer
+                        [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5
+                        [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md
+                        [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full
+                        [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-md"
+                    />
+                  </div>
+                </div>
+
+                {/* Rows */}
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-white/40 text-[10px] font-semibold uppercase tracking-[0.08em]">Rows</span>
+                    <span className="text-white/80 text-[12px] font-bold tabular-nums">
+                      {isFinite(mobileRows) ? mobileRows : '∞'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 mt-2">
+                    <input
+                      type="range"
+                      min={1}
+                      max={10}
+                      step={1}
+                      value={isFinite(mobileRows) ? mobileRows : 10}
+                      onChange={(e) => setMobileRows(Number(e.target.value))}
+                      className="flex-1 h-1.5 appearance-none bg-white/[0.08] rounded-full outline-none cursor-pointer
+                        [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5
+                        [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md
+                        [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full
+                        [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-md"
+                    />
+                    <button
+                      onClick={() => setMobileRows(isFinite(mobileRows) ? Infinity : 2)}
+                      className={`shrink-0 h-8 w-8 rounded-lg text-[14px] font-bold transition-all duration-150 ${
+                        !isFinite(mobileRows)
+                          ? 'bg-white text-black shadow-sm'
+                          : 'bg-white/[0.06] text-white/50 active:bg-white/[0.15]'
+                      }`}
+                      title="Show all rows"
+                    >
+                      ∞
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-1.5 h-9 px-2 bg-white/5 border border-white/10 rounded-lg">
-              <Rows3 className="w-3.5 h-3.5 text-white/50" />
-              <div className="flex gap-1">
-                {GRID_ROW_OPTIONS.map((rows) => (
-                  <button
-                    key={rows}
-                    onClick={() => setMobileRows(rows)}
-                    className={`w-6 h-6 rounded text-xs font-medium transition-all ${
-                      mobileRows === rows
-                        ? 'bg-white text-black'
-                        : 'bg-white/10 text-white/70 active:bg-white/20'
-                    }`}
-                  >
-                    {rows}
-                  </button>
-                ))}
-              </div>
-            </div>
+            )}
           </div>
         </div>
 
         {/* Product Grid / Circular Gallery */}
         <div ref={productsSection.ref} data-products-grid>
         {loading ? (
-          viewMode === 'circular' ? (
+          viewMode === 'carousel' ? (
+            <div className="flex gap-4 md:gap-6 overflow-hidden py-6 md:py-10">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="w-[280px] md:w-96 h-[400px] md:h-[500px] shrink-0 bg-white/5 animate-pulse rounded-3xl"
+                />
+              ))}
+            </div>
+          ) : viewMode === 'circular' ? (
             <div className="flex flex-col gap-4">
               {Array.from({ length: 3 }).map((_, i) => (
                 <div
@@ -821,7 +899,7 @@ export default function StorePage() {
                 />
               ))}
             </div>
-          ) : viewMode === 'glass' ? (
+          ) : viewMode === 'animated' ? (
           <div className="flex flex-col gap-4">
             {Array.from({ length: 3 }).map((_, i) => (
               <div
@@ -831,7 +909,7 @@ export default function StorePage() {
             ))}
           </div>
           ) : (
-          <div className={`grid ${getGridClasses()} gap-3 gap-y-6 sm:gap-4 sm:gap-y-8 md:gap-5 md:gap-y-10 lg:gap-y-12 pb-8`}>
+          <div className={`grid ${getGridClasses(mobileColumns, desktopColumns)} gap-3 gap-y-6 sm:gap-4 sm:gap-y-8 md:gap-5 md:gap-y-10 lg:gap-y-12 pb-8`}>
             {Array.from({ length: 12 }).map((_, i) => (
               <div
                 key={i}
@@ -858,6 +936,27 @@ export default function StorePage() {
               Clear filters
             </button>
           </MotionDiv>
+        ) : viewMode === 'carousel' ? (
+          /* Carousel View - Apple Cards Style */
+          <MotionDiv
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="-mx-4 md:-mx-8"
+          >
+            <ProductsCarousel
+              products={products}
+              title="All Products"
+              subtitle={`${total} ${total === 1 ? 'product' : 'products'} available`}
+              infinite={true}
+              onLoadMore={hasMore ? () => fetchProducts(page + 1, true) : undefined}
+              hasMore={hasMore}
+              loading={loadingMore}
+              mobileColumns={mobileColumns}
+              desktopColumns={desktopColumns}
+              mobileRows={mobileRows}
+              desktopRows={desktopRows}
+            />
+          </MotionDiv>
         ) : viewMode === 'circular' ? (
           /* Circular Gallery View - Multiple Rows */
           <MotionDiv
@@ -877,17 +976,18 @@ export default function StorePage() {
               gap={isMobile ? 12 : 20}
             />
           </MotionDiv>
-        ) : viewMode === 'glass' ? (
-          /* Glass Surface View - Infinite Rows */
+        ) : viewMode === 'animated' ? (
+          /* Animated View - Configurable Rows & Columns */
           <MotionDiv
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="pb-8"
           >
-            <GlassProductGrid
+            <AnimatedProductGrid
               products={gridViewProducts}
               rowHeight={isMobile ? 280 : 360}
-              itemsPerRow={isMobile ? mobileColumns : desktopColumns}
+              columns={isMobile ? mobileColumns : desktopColumns}
+              rows={isMobile ? mobileRows : desktopRows}
               gap={isMobile ? 12 : 18}
               scrollSpeed={isMobile ? 18 : 26}
             />
@@ -901,7 +1001,7 @@ export default function StorePage() {
             <HoverEffect
               items={products as ProductWithDetails[]}
               layout="custom"
-              className={`grid ${getGridClasses()} gap-3 gap-y-6 sm:gap-4 sm:gap-y-8 md:gap-5 md:gap-y-10 lg:gap-y-12`}
+              className={`grid ${getGridClasses(mobileColumns, desktopColumns)} gap-3 gap-y-6 sm:gap-4 sm:gap-y-8 md:gap-5 md:gap-y-10 lg:gap-y-12`}
               getKey={(product) => (product as ProductWithDetails).id}
               getLink={() => undefined}
               renderItem={(product, index) => (
@@ -930,31 +1030,40 @@ export default function StorePage() {
         )}
       </section>
 
-      {/* Fluid Glass 3D Experience Section (only rendered when in/near viewport) - hidden on mobile, shown on desktop */}
-      <div ref={fluidGlass.ref} className="hidden md:block" style={{ minHeight: fluidGlass.shouldRender ? undefined : 400 }}>
-        {fluidGlass.shouldRender && (
-          <StoreFluidGlassSection 
-            height="100vh"
-            className="mt-8"
-          />
-        )}
-      </div>
+      {/* Fluid Glass 3D Experience Section - DEFERRED heavy component */}
+      {showHeavy && (
+        <div ref={fluidGlass.ref} className="hidden md:block" style={{ minHeight: fluidGlass.shouldRender ? undefined : 400 }}>
+          {fluidGlass.shouldRender && (
+            <StoreFluidGlassSection 
+              height="100vh"
+              className="mt-8"
+            />
+          )}
+        </div>
+      )}
 
-      {/* Store Footer (tracked for memory awareness) */}
-      <div ref={footer.ref}>
-        <StoreFooter />
-      </div>
+      {/* Market Price Ticker - Before Footer */}
+      {showBelowFold && <MarketPriceTicker direction="right" speed={10} />}
 
-      {/* Filter Sheet */}
-      <FilterSheet
-        isOpen={showFilters}
-        onClose={() => setShowFilters(false)}
-        filters={filters}
-        onFilterChange={handleFilterChange}
-        onClear={clearFilters}
-      />
+      {/* Store Footer - Defer until below fold loaded */}
+      {showBelowFold && (
+        <div ref={footer.ref}>
+          <StoreFooter />
+        </div>
+      )}
 
-      {/* Cookie Consent Banner */}
+      {/* Filter Sheet - Load when interactive */}
+      {showInteractive && (
+        <FilterSheet
+          isOpen={showFilters}
+          onClose={() => setShowFilters(false)}
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          onClear={clearFilters}
+        />
+      )}
+
+      {/* Cookie Consent Banner - Load immediately */}
       <CookieConsent />
     </div>
   );

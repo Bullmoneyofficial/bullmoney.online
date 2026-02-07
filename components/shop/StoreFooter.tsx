@@ -239,13 +239,21 @@ export function StoreFooter() {
           {/* Copyright & Payment Methods */}
           <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
             {/* Payment Methods - Simple text for lightweight */}
-            <div className="flex items-center gap-2 text-white/30 text-xs">
+            <div className="flex items-center gap-2 text-white/30 text-xs flex-wrap">
               <span>Secure payments via</span>
               <span className="text-white/50 font-medium">Stripe</span>
               <span className="text-white/20">•</span>
               <span className="text-white/50 font-medium">Apple Pay</span>
               <span className="text-white/20">•</span>
               <span className="text-white/50 font-medium">Google Pay</span>
+              <span className="text-white/20">•</span>
+              <span className="text-white/50 font-medium">₿ BTC</span>
+              <span className="text-white/20">•</span>
+              <span className="text-white/50 font-medium">Ξ ETH</span>
+              <span className="text-white/20">•</span>
+              <span className="text-white/50 font-medium">◎ SOL</span>
+              <span className="text-white/20">•</span>
+              <span className="text-white/50 font-medium">₮ USDT</span>
             </div>
 
             {/* Copyright */}
