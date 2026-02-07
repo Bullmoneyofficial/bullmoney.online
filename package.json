@@ -32,7 +32,7 @@
     "@emailjs/browser": "^4.4.1",
     "@formspree/react": "^3.0.0",
     "@hookform/resolvers": "^5.2.2",
-    "@react-email/components": "^1.0.4",
+    "@react-email/components": "^1.0.7",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
     "@react-three/rapier": "^2.2.0",
