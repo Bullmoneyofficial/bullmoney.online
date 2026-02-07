@@ -8,7 +8,7 @@ import { detectBrowser } from '@/lib/browserDetection';
  * No external dependencies - generates sounds programmatically
  */
 
-type SoundType = 'click' | 'clickSoft' | 'hover' | 'hoverSoft' | 'confirm' | 'success' | 'open' | 'close' | 'boot' | 'error' | 'swipe' | 'swoosh' | 'tab' | 'mt5Entry' | 'tipChange';
+type SoundType = 'click' | 'clickSoft' | 'hover' | 'hoverSoft' | 'confirm' | 'success' | 'open' | 'close' | 'boot' | 'error' | 'swipe' | 'swoosh' | 'tab' | 'mt5Entry' | 'tipChange' | 'telegram' | 'notification' | 'addToCart' | 'purchase';
 
 // Web Audio API context singleton
 let audioContext: AudioContext | null = null;
@@ -323,6 +323,127 @@ const playMT5Entry = (volume: number) => {
   }
 };
 
+// Play Telegram-style message notification sound
+// Distinctive double-ping for incoming messages
+const playTelegramNotification = (volume: number) => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  
+  try {
+    const now = ctx.currentTime;
+    
+    // First ping - bright notification
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(880, now); // A5
+    gain1.gain.setValueAtTime(0, now);
+    gain1.gain.linearRampToValueAtTime(volume * 0.5, now + 0.01);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start(now);
+    osc1.stop(now + 0.2);
+    
+    // Second ping - slightly lower for rhythm
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(1046.5, now + 0.1); // C6
+    gain2.gain.setValueAtTime(0, now + 0.1);
+    gain2.gain.linearRampToValueAtTime(volume * 0.4, now + 0.11);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(now + 0.1);
+    osc2.stop(now + 0.3);
+  } catch (e) {
+    // Silent fail
+  }
+};
+
+// Play add to cart sound - satisfying pop
+const playAddToCart = (volume: number) => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  
+  try {
+    const now = ctx.currentTime;
+    
+    // Pop sound with quick frequency drop
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, now);
+    osc.frequency.exponentialRampToValueAtTime(400, now + 0.1);
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(volume * 0.5, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.2);
+    
+    // Confirmation tone
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(600, now + 0.08);
+    gain2.gain.setValueAtTime(0, now + 0.08);
+    gain2.gain.linearRampToValueAtTime(volume * 0.3, now + 0.09);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(now + 0.08);
+    osc2.stop(now + 0.25);
+  } catch (e) {
+    // Silent fail
+  }
+};
+
+// Play purchase/ka-ching sound
+const playPurchase = (volume: number) => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  
+  try {
+    const now = ctx.currentTime;
+    
+    // Ascending celebratory tones
+    [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const startTime = now + (i * 0.08);
+      
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, startTime);
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(volume * 0.4, startTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + 0.25);
+    });
+    
+    // Add shimmer at the end
+    const shimmer = ctx.createOscillator();
+    const shimmerGain = ctx.createGain();
+    shimmer.type = 'triangle';
+    shimmer.frequency.setValueAtTime(1318.5, now + 0.3);
+    shimmerGain.gain.setValueAtTime(0, now + 0.3);
+    shimmerGain.gain.linearRampToValueAtTime(volume * 0.2, now + 0.32);
+    shimmerGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+    shimmer.connect(shimmerGain);
+    shimmerGain.connect(ctx.destination);
+    shimmer.start(now + 0.3);
+    shimmer.stop(now + 0.65);
+  } catch (e) {
+    // Silent fail
+  }
+};
+
 // Preload sounds (initializes audio context on user interaction)
 export const preloadSounds = () => {
   if (typeof window === 'undefined') return;
@@ -397,6 +518,16 @@ export const useSoundEffects = (initialEnabled: boolean = true, initialVolume: n
       case 'mt5Entry':
       case 'tipChange':
         playMT5Entry(vol);
+        break;
+      case 'telegram':
+      case 'notification':
+        playTelegramNotification(vol);
+        break;
+      case 'addToCart':
+        playAddToCart(vol);
+        break;
+      case 'purchase':
+        playPurchase(vol);
         break;
     }
   }, []);
@@ -492,6 +623,16 @@ export const SoundEffects = {
       case 'tipChange':
         playMT5Entry(vol);
         break;
+      case 'telegram':
+      case 'notification':
+        playTelegramNotification(vol);
+        break;
+      case 'addToCart':
+        playAddToCart(vol);
+        break;
+      case 'purchase':
+        playPurchase(vol);
+        break;
     }
   },
   
@@ -507,6 +648,10 @@ export const SoundEffects = {
   swoosh: () => SoundEffects.play('swoosh'),
   tab: () => SoundEffects.play('tab'),
   mt5Entry: () => SoundEffects.play('mt5Entry'),
+  telegram: () => SoundEffects.play('telegram'),
+  notification: () => SoundEffects.play('notification'),
+  addToCart: () => SoundEffects.play('addToCart'),
+  purchase: () => SoundEffects.play('purchase'),
   tipChange: () => SoundEffects.play('tipChange'),
 };
 

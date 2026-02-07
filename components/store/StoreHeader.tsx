@@ -13,6 +13,7 @@ import dynamic from 'next/dynamic';
 import { StorePillNav } from './StorePillNav';
 import TextType from '@/components/TextType';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { SoundEffects } from '@/app/hooks/useSoundEffects';
 
 // Lazy load modals - same as main navbar
 const AdminHubModal = dynamic(() => import('@/components/AdminHubModal'), { ssr: false });
@@ -101,6 +102,7 @@ export function StoreHeader() {
   }, []);
   
   const toggleThemePicker = () => {
+    SoundEffects.click();
     const newValue = !showThemePicker;
     setShowThemePicker(newValue);
     setThemePickerModalOpen(newValue); // Actually control the modal
@@ -111,6 +113,7 @@ export function StoreHeader() {
   };
 
   const toggleUltimateHub = () => {
+    SoundEffects.click();
     const newValue = !showUltimateHub;
     setShowUltimateHub(newValue);
     if (typeof window !== 'undefined') {
@@ -122,12 +125,14 @@ export function StoreHeader() {
   };
 
   const handleLogout = () => {
+    SoundEffects.close();
     signOut();
     setMobileMenuOpen(false);
   };
   
   // Handle user click - open auth modal or go to account
   const handleUserClick = () => {
+    SoundEffects.click();
     if (isAuthenticated && recruit) {
       router.push('/store/account');
     } else {
@@ -137,11 +142,13 @@ export function StoreHeader() {
   
   // Handle search click - scroll to search on store page
   const handleSearchClick = () => {
+    SoundEffects.click();
     router.push('/store');
   };
   
   // Handle category click - navigate and scroll to products (only for store pages)
   const handleCategoryClick = (href: string) => {
+    SoundEffects.tab();
     // Open auth modal for login instead of navigating
     if (href === '/login') {
       setAuthModalOpen(true);
@@ -185,7 +192,10 @@ export function StoreHeader() {
         showCart={true}
         isAuthenticated={isAuthenticated}
         userInitial={recruit?.email?.charAt(0) || 'U'}
-        onMobileMenuClick={() => setMobileMenuOpen(true)}
+        onMobileMenuClick={() => {
+          SoundEffects.open();
+          setMobileMenuOpen(true);
+        }}
       />
       
       {/* Secondary Action Bar - Desktop only */}
@@ -196,20 +206,19 @@ export function StoreHeader() {
             {/* 🌐 Language Toggle */}
             <LanguageToggle variant="pill" dropDirection="down" dropAlign="left" />
 
-            {/* Theme Picker Toggle */}
-            <button
-              onClick={toggleThemePicker}
-              className="h-8 px-3 flex items-center gap-2 rounded-lg transition-colors text-xs font-semibold"
-              style={showThemePicker 
-                ? { background: 'rgb(14,165,233)', color: 'rgb(255,255,255)', border: '1px solid rgb(14,165,233)' }
-                : { background: 'rgb(255,255,255)', color: 'rgb(0,0,0)', border: '1px solid rgb(255,255,255)' }
-              }
-              title={showThemePicker ? 'Theme Picker: ON' : 'Theme Picker: OFF'}
-            >
-              <Palette className="w-3.5 h-3.5" />
-              <span><TextType text="Themes" typingSpeed={20} showCursor={false} loop={false} as="span" /></span>
-              {showThemePicker ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-            </button>
+            {/* Theme Picker Toggle - completely hidden when off */}
+            {showThemePicker && (
+              <button
+                onClick={toggleThemePicker}
+                className="h-8 px-3 flex items-center gap-2 rounded-lg transition-colors text-xs font-semibold"
+                style={{ background: 'rgb(14,165,233)', color: 'rgb(255,255,255)', border: '1px solid rgb(14,165,233)' }}
+                title="Theme Picker: ON"
+              >
+                <Palette className="w-3.5 h-3.5" />
+                <span><TextType text="Themes" typingSpeed={20} showCursor={false} loop={false} as="span" /></span>
+                <Eye className="w-3 h-3" />
+              </button>
+            )}
 
             {/* Ultimate Hub Toggle */}
             <button
@@ -296,7 +305,10 @@ export function StoreHeader() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setMobileMenuOpen(false)}
+              onClick={() => {
+                SoundEffects.close();
+                setMobileMenuOpen(false);
+              }}
               className="fixed inset-0 z-600"
               style={{ background: 'rgba(0,0,0,0.7)' }}
             />
@@ -420,21 +432,20 @@ export function StoreHeader() {
                 {/* 🌐 Language Selector */}
                 <LanguageToggle variant="row" dropDirection="down" />
 
-                {/* Theme Picker Toggle */}
-                <button
-                  onClick={toggleThemePicker}
-                  className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg text-xs font-semibold transition-colors"
-                  style={showThemePicker 
-                    ? { background: 'rgb(14,165,233)', color: 'rgb(255,255,255)' }
-                    : { background: 'rgba(255,255,255,0.08)', color: 'rgb(255,255,255)', border: '1px solid rgba(255,255,255,0.15)' }
-                  }
-                >
-                  <div className="flex items-center gap-2">
-                    <Palette className="w-4 h-4" />
-                    <span><TextType text="Theme Picker" typingSpeed={15} showCursor={false} loop={false} as="span" /></span>
-                  </div>
-                  {showThemePicker ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                </button>
+                {/* Theme Picker Toggle - completely hidden when off */}
+                {showThemePicker && (
+                  <button
+                    onClick={toggleThemePicker}
+                    className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg text-xs font-semibold transition-colors"
+                    style={{ background: 'rgb(14,165,233)', color: 'rgb(255,255,255)' }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Palette className="w-4 h-4" />
+                      <span><TextType text="Theme Picker" typingSpeed={15} showCursor={false} loop={false} as="span" /></span>
+                    </div>
+                    <Eye className="w-4 h-4" />
+                  </button>
+                )}
 
                 {/* Ultimate Hub Toggle */}
                 <button

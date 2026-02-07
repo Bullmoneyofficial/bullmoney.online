@@ -178,6 +178,7 @@ import { UltimateHubAnalysisTab } from '@/components/UltimateHubAnalysisTab';
 import { UltimateHubCommunityPostsTab } from '@/components/UltimateHubCommunityPostsTab';
 import { MOBILE_HELPER_TIPS } from '@/components/navbar/navbar.utils';
 import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
+import { SoundEffects } from '@/app/hooks/useSoundEffects';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -817,96 +818,6 @@ const NEON_STYLES = {
   iconGlowAmber: 'drop-shadow-[0_0_8px_rgba(251,191,36,0.8)]',
   iconGlowOrange: 'drop-shadow-[0_0_8px_rgba(251,146,60,0.8)]',
   iconGlowEmerald: 'drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]',
-};
-
-const SoundEffects = {
-  click: () => {
-    if (typeof window !== 'undefined' && 'AudioContext' in window) {
-      try {
-        const ctx = new AudioContext();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.frequency.value = 800;
-        gain.gain.value = 0.05;
-        osc.start();
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-        osc.stop(ctx.currentTime + 0.1);
-      } catch {}
-    }
-  },
-  hover: () => {
-    if (typeof window !== 'undefined' && 'AudioContext' in window) {
-      try {
-        const ctx = new AudioContext();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.frequency.value = 600;
-        gain.gain.value = 0.02;
-        osc.start();
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
-        osc.stop(ctx.currentTime + 0.05);
-      } catch {}
-    }
-  },
-  swoosh: () => {
-    if (typeof window !== 'undefined' && 'AudioContext' in window) {
-      try {
-        const ctx = new AudioContext();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(400, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.15);
-        gain.gain.setValueAtTime(0.08, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.15);
-      } catch {}
-    }
-  },
-  swipe: () => {
-    if (typeof window !== 'undefined' && 'AudioContext' in window) {
-      try {
-        const ctx = new AudioContext();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(300, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.1);
-        gain.gain.setValueAtTime(0.06, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.1);
-      } catch {}
-    }
-  },
-  success: () => {
-    if (typeof window !== 'undefined' && 'AudioContext' in window) {
-      try {
-        const ctx = new AudioContext();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
-        osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1); // E5
-        osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.2); // G5
-        gain.gain.setValueAtTime(0.06, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.3);
-      } catch {}
-    }
-  }
 };
 
 const getFpsColor = (fps: number) => {
@@ -3076,7 +2987,7 @@ const DeviceCenterPanel = memo(({
                 <motion.button
                   whileHover={{ scale: 1.1, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
-                  onClick={onClose}
+                  onClick={() => { SoundEffects.close(); onClose(); }}
                   className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/40 border border-white/30 flex items-center justify-center neon-blue-border"
                 >
                   <X className="w-4 h-4 neon-blue-icon" />
@@ -3101,7 +3012,7 @@ const DeviceCenterPanel = memo(({
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => { SoundEffects.tab(); setActiveTab(tab.id); }}
                   className={`flex-1 min-w-[70px] flex items-center justify-center gap-1.5 py-5 sm:py-3 px-2 sm:px-3 text-[10px] sm:text-[11px] font-semibold transition-all whitespace-nowrap min-h-[48px] sm:min-h-0 ${
                     activeTab === tab.id
                       ? 'text-white border-b-2 border-white bg-white/10'

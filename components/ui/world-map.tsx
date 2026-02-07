@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef, useMemo, useState, useEffect } from "react";
+import { useRef, useMemo, useState, useEffect, useCallback } from "react";
 import { motion } from "motion/react";
 import DottedMap from "dotted-map";
+import { useUnifiedPerformance } from "@/hooks/useDesktopPerformance";
 
 interface MapProps {
   dots?: Array<{
@@ -36,7 +37,7 @@ const HOTSPOT_CITIES = [
 ];
 
 // Shooting star / meteor data — staggered across the top of the map
-const METEORS = [
+const METEORS_FULL = [
   { startX: 80, startY: 6, angle: 28, length: 75, delay: 0, dur: 1.0 },
   { startX: 200, startY: 3, angle: 22, length: 95, delay: 2.8, dur: 1.3 },
   { startX: 350, startY: 10, angle: 33, length: 60, delay: 5.2, dur: 0.8 },
@@ -49,6 +50,13 @@ const METEORS = [
   { startX: 670, startY: 7, angle: 20, length: 90, delay: 23.0, dur: 1.3 },
   { startX: 420, startY: 1, angle: 29, length: 78, delay: 26.0, dur: 1.0 },
   { startX: 760, startY: 9, angle: 32, length: 60, delay: 28.5, dur: 0.85 },
+];
+
+// Lite set for mobile / low-memory (3 meteors instead of 12)
+const METEORS_LITE = [
+  { startX: 150, startY: 6, angle: 28, length: 75, delay: 0, dur: 1.0 },
+  { startX: 460, startY: 2, angle: 22, length: 90, delay: 8, dur: 1.3 },
+  { startX: 700, startY: 8, angle: 30, length: 65, delay: 16, dur: 1.1 },
 ];
 
 // Coins that travel along connection paths - each path gets a different coin
@@ -64,7 +72,7 @@ const TRAVELING_COINS = [
 ];
 
 // Crypto coins data - reduced for performance (6 coins instead of 15)
-const CRYPTO_COINS_DATA = [
+const CRYPTO_COINS_FULL = [
   // Major coins only - spread across oceans (real lat/lng)
   { symbol: 'BTC', color: '#F7931A', lat: 20, lng: -150, delay: 0 },
   { symbol: 'ETH', color: '#627EEA', lat: -10, lng: -45, delay: 0.3 },
@@ -73,6 +81,16 @@ const CRYPTO_COINS_DATA = [
   { symbol: 'BNB', color: '#F3BA2F', lat: 5, lng: 170, delay: 1.2 },
   { symbol: 'DOGE', color: '#C2A633', lat: -25, lng: 85, delay: 1.5 },
 ];
+
+// Lite set for mobile (3 coins instead of 6)
+const CRYPTO_COINS_LITE = [
+  { symbol: 'BTC', color: '#F7931A', lat: 20, lng: -150, delay: 0 },
+  { symbol: 'ETH', color: '#627EEA', lat: -10, lng: -45, delay: 0.3 },
+  { symbol: 'SOL', color: '#00FFA3', lat: 30, lng: -35, delay: 0.6 },
+];
+
+// Hotspot cities lite (4 instead of 7)
+const HOTSPOT_CITIES_LITE = HOTSPOT_CITIES.slice(0, 4);
 
 // ═══════ MERCATOR PROJECTION — matches DottedMap's EPSG:3857 projection ═══════
 const DEG2RAD = Math.PI / 180;
@@ -101,24 +119,41 @@ export default function WorldMap({
 }: MapProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const { shouldSkipHeavyEffects } = useUnifiedPerformance();
 
+  // Detect mobile / low-memory once
   useEffect(() => {
-    const check = () => setIsDesktop(window.innerWidth >= 1024);
+    const check = () => {
+      const w = window.innerWidth;
+      setIsDesktop(w >= 1024);
+      setIsMobile(w < 768);
+    };
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, []);
-  
-  // Memoize the map to prevent recreation on each render
+
+  // Lite mode: mobile OR low-memory/battery-saver devices
+  const isLite = isMobile || shouldSkipHeavyEffects;
+  const enableHeavyAnimations = !isLite;
+  const enableLineCoins = true;
+
+  // Pick appropriate data sets based on device capability
+  const METEORS = isLite ? METEORS_LITE : METEORS_FULL;
+  const CRYPTO_COINS_DATA = isLite ? CRYPTO_COINS_LITE : CRYPTO_COINS_FULL;
+  const hotspotCities = isLite ? HOTSPOT_CITIES_LITE : HOTSPOT_CITIES;
+
+  // Memoize the map — lower resolution grid for mobile
   const svgMap = useMemo(() => {
-    const map = new DottedMap({ height: 100, grid: "diagonal" });
+    const map = new DottedMap({ height: isLite ? 45 : 100, grid: "diagonal" });
     return map.getSVG({
-      radius: 0.22,
-      color: "#FFFFFF60",
+      radius: isLite ? 0.18 : 0.22,
+      color: isLite ? "#FFFFFF40" : "#FFFFFF60",
       shape: "circle",
       backgroundColor: "#000000",
     });
-  }, []);
+  }, [isLite]);
 
   // Web Mercator projection matching DottedMap's internal EPSG:3857
   const projectPoint = (lat: number, lng: number) => {
@@ -141,7 +176,8 @@ export default function WorldMap({
     <div 
       className="w-full h-full min-h-[60vh] md:h-screen md:w-screen bg-black relative font-sans overflow-hidden flex items-center justify-center"
     >
-      {/* Fake ocean wave overlays */}
+      {/* Fake ocean wave overlays - skip on mobile/lite */}
+      {!isLite && (
       <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
         <div
           className="absolute bottom-[18%] left-0 w-[200%] h-[2px] opacity-[0.07] animate-[waveSlide_12s_linear_infinite]"
@@ -165,6 +201,7 @@ export default function WorldMap({
           }}
         />
       </div>
+      )}
       <div className="relative w-full h-full max-w-none aspect-[2/1] md:aspect-auto md:h-full">
         <img
           src={`data:image/svg+xml;utf8,${encodeURIComponent(svgMap)}`}
@@ -178,18 +215,19 @@ export default function WorldMap({
           preserveAspectRatio="xMidYMid slice"
           className="absolute inset-0 w-full h-full pointer-events-none select-none"
         >
-        {/* Continent Labels - 3D Effect */}
+        {/* Continent Labels - 3D Effect (simplified on mobile) */}
         {CONTINENT_LABELS.map((continent, i) => {
           const pos = projectPoint(continent.lat, continent.lng);
           return (
             <g key={`continent-${i}`}>
-              {/* Shadow layer for 3D depth */}
+              {/* Shadow layer for 3D depth - desktop only */}
+              {!isLite && (
               <motion.text
                 x={pos.x + 1}
                 y={pos.y + 1}
                 textAnchor="middle"
                 fill="rgba(0,0,0,0.5)"
-                fontSize="14"
+                fontSize={isLite ? "10" : "14"}
                 fontWeight="900"
                 fontFamily="system-ui, sans-serif"
                 letterSpacing="0.15em"
@@ -199,26 +237,42 @@ export default function WorldMap({
               >
                 {continent.name}
               </motion.text>
+              )}
               {/* Main text layer */}
-              <motion.text
-                x={pos.x}
-                y={pos.y}
-                textAnchor="middle"
-                fill="rgba(255,255,255,0.6)"
-                fontSize="14"
-                fontWeight="900"
-                fontFamily="system-ui, sans-serif"
-                letterSpacing="0.15em"
-                style={{
-                  textShadow: '0 0 10px rgba(255,255,255,0.3), 0 2px 4px rgba(0,0,0,0.5)',
-                  filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))',
-                }}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, delay: 0.15 * i }}
-              >
-                {continent.name}
-              </motion.text>
+              {isLite ? (
+                <text
+                  x={pos.x}
+                  y={pos.y}
+                  textAnchor="middle"
+                  fill="rgba(255,255,255,0.4)"
+                  fontSize="10"
+                  fontWeight="900"
+                  fontFamily="system-ui, sans-serif"
+                  letterSpacing="0.15em"
+                >
+                  {continent.name}
+                </text>
+              ) : (
+                <motion.text
+                  x={pos.x}
+                  y={pos.y}
+                  textAnchor="middle"
+                  fill="rgba(255,255,255,0.6)"
+                  fontSize="14"
+                  fontWeight="900"
+                  fontFamily="system-ui, sans-serif"
+                  letterSpacing="0.15em"
+                  style={{
+                    textShadow: '0 0 10px rgba(255,255,255,0.3), 0 2px 4px rgba(0,0,0,0.5)',
+                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))',
+                  }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.6, delay: 0.1 * i }}
+                >
+                  {continent.name}
+                </motion.text>
+              )}
             </g>
           );
         })}
@@ -231,7 +285,8 @@ export default function WorldMap({
           const gradientId = `path-gradient-${i}`;
           return (
             <g key={`path-group-${i}`}>
-              {/* Glow effect */}
+              {/* Glow effect - desktop only */}
+              {!isLite && (
               <motion.path
                 d={createCurvedPath(startPoint, endPoint)}
                 fill="none"
@@ -247,50 +302,66 @@ export default function WorldMap({
                   ease: "easeOut",
                 }}
               />
+              )}
               {/* Main path */}
-              <motion.path
-                d={createCurvedPath(startPoint, endPoint)}
-                fill="none"
-                stroke={`url(#${gradientId})`}
-                strokeWidth="2"
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{
-                  duration: 1.5,
-                  delay: 0.4 * i,
-                  ease: "easeOut",
-                }}
-              />
-              {/* Traveling crypto coin animation along path - cycles through different coins per path */}
-              {(() => {
+              {isLite ? (
+                <path
+                  d={createCurvedPath(startPoint, endPoint)}
+                  fill="none"
+                  stroke={pathColor}
+                  strokeWidth="1.5"
+                  strokeOpacity={0.6}
+                />
+              ) : (
+                <motion.path
+                  d={createCurvedPath(startPoint, endPoint)}
+                  fill="none"
+                  stroke={`url(#${gradientId})`}
+                  strokeWidth="2"
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{
+                    duration: 1.5,
+                    delay: 0.4 * i,
+                    ease: "easeOut",
+                  }}
+                />
+              )}
+              {/* Traveling crypto coin animation along path */}
+              {enableLineCoins && (() => {
                 const coin = TRAVELING_COINS[i % TRAVELING_COINS.length];
-                const totalDuration = 4;
+                const totalDuration = isLite ? 6 : 4;
                 const baseDelay = 0.5 * i + 1.5;
-                const repeatDelay = 8;
+                const repeatDelay = isLite ? 14 : 8;
+                const burstCount = isLite ? 2 : 6;
+                const burstDist = isLite ? 10 : 18;
                 return (
                   <>
-                    {/* Moving coin */}
                     <motion.g
                       initial={{ offsetDistance: "0%", opacity: 0, scale: 1 }}
-                      animate={{
-                        offsetDistance: "100%",
-                        opacity: [0, 1, 1, 1, 1],
-                        scale: [1, 1, 1, 1.8, 0],
-                      }}
+                      animate={
+                        isLite
+                          ? { offsetDistance: "100%", opacity: [0, 1, 1, 0.8, 0] }
+                          : { offsetDistance: "100%", opacity: [0, 1, 1, 1, 1], scale: [1, 1, 1, 1.8, 0] }
+                      }
                       transition={{
                         duration: totalDuration,
                         delay: baseDelay,
                         repeat: Infinity,
                         repeatDelay: repeatDelay,
                         ease: "linear",
-                        scale: {
-                          duration: totalDuration,
-                          delay: baseDelay,
-                          repeat: Infinity,
-                          repeatDelay: repeatDelay,
-                          times: [0, 0.85, 0.92, 0.97, 1],
-                          ease: "easeOut",
-                        },
+                        ...(isLite
+                          ? {}
+                          : {
+                              scale: {
+                                duration: totalDuration,
+                                delay: baseDelay,
+                                repeat: Infinity,
+                                repeatDelay: repeatDelay,
+                                times: [0, 0.85, 0.92, 0.97, 1],
+                                ease: "easeOut",
+                              },
+                            }),
                         opacity: {
                           duration: totalDuration,
                           delay: baseDelay,
@@ -306,61 +377,32 @@ export default function WorldMap({
                         transformOrigin: "0px 0px",
                       }}
                     >
-                      {/* Coin glow */}
-                      <circle
-                        cx="0"
-                        cy="0"
-                        r="8"
-                        fill={coin.color}
-                        opacity="0.25"
-                      />
-                      {/* Main coin body */}
-                      <circle
-                        cx="0"
-                        cy="0"
-                        r="5.5"
-                        fill={coin.color}
-                      />
-                      {/* Inner ring for 3D depth */}
-                      <circle
-                        cx="0"
-                        cy="0"
-                        r="4.5"
-                        fill="none"
-                        stroke="rgba(255,255,255,0.3)"
-                        strokeWidth="0.4"
-                      />
-                      {/* Coin symbol */}
+                      {!isLite && <circle cx="0" cy="0" r="8" fill={coin.color} opacity="0.25" />}
+                      <circle cx="0" cy="0" r={isLite ? 4.5 : 5.5} fill={coin.color} />
+                      {!isLite && (
+                        <circle cx="0" cy="0" r="4.5" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.4" />
+                      )}
                       <text
                         x="0"
                         y="2"
                         textAnchor="middle"
-                        fill="#FFFFFF"
-                        fontSize="6"
+                        fill="#FFF"
+                        fontSize={isLite ? "4" : "6"}
                         fontWeight="bold"
                         fontFamily="system-ui, sans-serif"
                       >
                         {coin.symbol}
                       </text>
-                      {/* Shine highlight */}
-                      <ellipse
-                        cx="-1.5"
-                        cy="-1.5"
-                        rx="2"
-                        ry="1"
-                        fill="rgba(255,255,255,0.35)"
-                      />
+                      {!isLite && <ellipse cx="-1.5" cy="-1.5" rx="2" ry="1" fill="rgba(255,255,255,0.35)" />}
                     </motion.g>
-                    {/* Explosion burst at endpoint */}
-                    {[0, 1, 2, 3, 4, 5].map((burstIdx) => {
-                      const angle = (burstIdx * 60) * (Math.PI / 180);
-                      const burstDist = 18;
+                    {Array.from({ length: burstCount }).map((_, burstIdx) => {
+                      const angle = (burstIdx * (360 / burstCount)) * (Math.PI / 180);
                       return (
                         <motion.circle
                           key={`burst-${i}-${burstIdx}`}
                           cx={endPoint.x}
                           cy={endPoint.y}
-                          r="2.5"
+                          r={isLite ? 1.6 : 2.5}
                           fill={coin.color}
                           initial={{ opacity: 0, scale: 0 }}
                           animate={{
@@ -380,16 +422,15 @@ export default function WorldMap({
                         />
                       );
                     })}
-                    {/* Central explosion flash */}
                     <motion.circle
                       cx={endPoint.x}
                       cy={endPoint.y}
-                      r="4"
+                      r={isLite ? 2.6 : 4}
                       fill={coin.color}
                       initial={{ opacity: 0, scale: 0 }}
                       animate={{
                         opacity: [0, 0, 0.8, 0],
-                        scale: [0, 0, 3, 0],
+                        scale: [0, 0, isLite ? 2 : 3, 0],
                       }}
                       transition={{
                         duration: totalDuration + 0.6,
@@ -422,14 +463,15 @@ export default function WorldMap({
           return (
             <g key={`points-group-${i}`}>
               <g key={`start-${i}`}>
-                {/* Core dot - simplified, no pulse */}
+                {/* Core dot */}
                 <circle
                   cx={projectPoint(dot.start.lat, dot.start.lng).x}
                   cy={projectPoint(dot.start.lat, dot.start.lng).y}
-                  r="4"
+                  r={isLite ? "3" : "4"}
                   fill={pathColor}
                 />
-                {/* Single subtle pulse ring - slower animation */}
+                {/* Pulse ring - desktop only */}
+                {!isLite && (
                 <circle
                   cx={projectPoint(dot.start.lat, dot.start.lng).x}
                   cy={projectPoint(dot.start.lat, dot.start.lng).y}
@@ -437,33 +479,21 @@ export default function WorldMap({
                   fill={pathColor}
                   opacity="0.4"
                 >
-                  <animate
-                    attributeName="r"
-                    from="4"
-                    to="10"
-                    dur="3s"
-                    begin={`${i * 0.5}s`}
-                    repeatCount="indefinite"
-                  />
-                  <animate
-                    attributeName="opacity"
-                    from="0.4"
-                    to="0"
-                    dur="3s"
-                    begin={`${i * 0.5}s`}
-                    repeatCount="indefinite"
-                  />
+                  <animate attributeName="r" from="4" to="10" dur="3s" begin={`${i * 0.5}s`} repeatCount="indefinite" />
+                  <animate attributeName="opacity" from="0.4" to="0" dur="3s" begin={`${i * 0.5}s`} repeatCount="indefinite" />
                 </circle>
+                )}
               </g>
               <g key={`end-${i}`}>
-                {/* Core dot - simplified, no pulse */}
+                {/* Core dot */}
                 <circle
                   cx={projectPoint(dot.end.lat, dot.end.lng).x}
                   cy={projectPoint(dot.end.lat, dot.end.lng).y}
-                  r="4"
+                  r={isLite ? "3" : "4"}
                   fill={pathColor}
                 />
-                {/* Single subtle pulse ring - slower animation */}
+                {/* Pulse ring - desktop only */}
+                {!isLite && (
                 <circle
                   cx={projectPoint(dot.end.lat, dot.end.lng).x}
                   cy={projectPoint(dot.end.lat, dot.end.lng).y}
@@ -471,23 +501,10 @@ export default function WorldMap({
                   fill={pathColor}
                   opacity="0.4"
                 >
-                  <animate
-                    attributeName="r"
-                    from="4"
-                    to="10"
-                    dur="3s"
-                    begin={`${i * 0.5 + 0.3}s`}
-                    repeatCount="indefinite"
-                  />
-                  <animate
-                    attributeName="opacity"
-                    from="0.4"
-                    to="0"
-                    dur="3s"
-                    begin={`${i * 0.5 + 0.3}s`}
-                    repeatCount="indefinite"
-                  />
+                  <animate attributeName="r" from="4" to="10" dur="3s" begin={`${i * 0.5 + 0.3}s`} repeatCount="indefinite" />
+                  <animate attributeName="opacity" from="0.4" to="0" dur="3s" begin={`${i * 0.5 + 0.3}s`} repeatCount="indefinite" />
                 </circle>
+                )}
               </g>
             </g>
           );
@@ -500,6 +517,21 @@ export default function WorldMap({
           const swayDur = 6 + (i * 1.2);
           const tiltDur = 4 + (i * 0.9);
           
+          if (isLite) {
+            return (
+              <g key={`crypto-lite-${coin.symbol}-${i}`}>
+                <circle cx={pos.x} cy={pos.y} r="6" fill={coin.color} opacity="0.85" />
+                <circle cx={pos.x} cy={pos.y} r="4.5" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="0.4" />
+                <text x={pos.x} y={pos.y + 2.5} textAnchor="middle" fill="#FFF" fontSize="4.5" fontWeight="bold" fontFamily="system-ui, sans-serif">
+                  {coin.symbol}
+                </text>
+                <circle cx={pos.x} cy={pos.y} r="6" fill="none" stroke="rgba(255,255,255,0.25)">
+                  <animate attributeName="opacity" values="0.2;0.5;0.2" dur="4s" repeatCount="indefinite" />
+                </circle>
+              </g>
+            );
+          }
+
           return (
             <motion.g
               key={`crypto-${coin.symbol}-${i}`}
@@ -634,7 +666,7 @@ export default function WorldMap({
         })}
 
         {/* ═══════ BULLMONEY BRAND — South Africa ═══════ */}
-        {(() => {
+        {enableHeavyAnimations && (() => {
           const saPos = projectPoint(isDesktop ? -50 : -22, 25); // Lower on desktop
           const letters = 'BULLMONEY'.split('');
           return (
@@ -736,7 +768,7 @@ export default function WorldMap({
         })()}
 
         {/* ═══════ HOTSPOT FINANCE CITIES ═══════ */}
-        {HOTSPOT_CITIES.map((city, i) => {
+        {enableHeavyAnimations && HOTSPOT_CITIES.map((city, i) => {
           const pos = projectPoint(city.lat, city.lng);
           return (
             <g key={`hotspot-${i}`}>
@@ -767,7 +799,7 @@ export default function WorldMap({
         })}
 
         {/* ═══════ ORBITING SATELLITE RINGS (around endpoint cities) ═══════ */}
-        {dots.map((dot, i) => {
+        {enableHeavyAnimations && dots.map((dot, i) => {
           const startPos = projectPoint(dot.start.lat, dot.start.lng);
           const endPos = projectPoint(dot.end.lat, dot.end.lng);
           return (
@@ -841,7 +873,30 @@ export default function WorldMap({
         {/* ═══════ RADAR / SONAR SWEEP — Atlantic Ocean ═══════ */}
         {(() => {
           const radarCenter = projectPoint(25, -35); // Mid-Atlantic
-          const radarR = 60;
+          const radarR = isLite ? 40 : 60;
+          if (isLite) {
+            return (
+              <g>
+                <circle
+                  cx={radarCenter.x}
+                  cy={radarCenter.y}
+                  r={radarR}
+                  fill="none"
+                  stroke="rgba(0,212,255,0.18)"
+                  strokeWidth="0.8"
+                />
+                <circle cx={radarCenter.x} cy={radarCenter.y} r={radarR * 0.66} fill="none" stroke="rgba(0,212,255,0.12)" strokeWidth="0.5" />
+                <circle cx={radarCenter.x} cy={radarCenter.y} r={radarR * 0.33} fill="none" stroke="rgba(0,212,255,0.12)" strokeWidth="0.5" />
+                <circle cx={radarCenter.x} cy={radarCenter.y} r={radarR} fill="none" stroke="rgba(0,212,255,0.22)" strokeWidth="1">
+                  <animate attributeName="opacity" values="0.1;0.35;0.1" dur="6s" repeatCount="indefinite" />
+                </circle>
+                <circle cx={radarCenter.x} cy={radarCenter.y} r="1.8" fill="rgba(0,212,255,0.6)">
+                  <animate attributeName="opacity" values="0.4;0.9;0.4" dur="3s" repeatCount="indefinite" />
+                </circle>
+              </g>
+            );
+          }
+
           return (
             <g>
               {/* Radar boundary ring — bright */}
@@ -936,7 +991,7 @@ export default function WorldMap({
         })()}
 
         {/* ═══════ SHOOTING STARS / METEORS — random burn-up ═══════ */}
-        {METEORS.map((m, i) => {
+        {enableHeavyAnimations && METEORS.map((m, i) => {
           const rad = (m.angle * Math.PI) / 180;
           const endX = m.startX + Math.cos(rad) * m.length;
           const endY = m.startY + Math.sin(rad) * m.length;

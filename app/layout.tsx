@@ -30,6 +30,8 @@ import { LayoutProviders } from "@/components/LayoutProviders";
 import { HreflangMeta } from "@/components/HreflangMeta";
 import { ServerHreflangMeta } from "@/components/ServerHreflangMeta";
 
+
+
 // Use system font stack with Inter as preference - avoids network dependency during build
 const inter = {
   className: "font-sans",
@@ -750,25 +752,10 @@ export default function RootLayout({
     });
   }
 
-  // Start loading immediately
+  // Start loading immediately - ONLY the default scene
   if (typeof window !== 'undefined') {
-    // Load primary scene first (highest priority)
-    loadAndCache('/scene1.splinecode', true).then(function() {
-      // Then load other scenes in background
-      if ('requestIdleCallback' in window) {
-        requestIdleCallback(function() {
-          SPLINE_SCENES.slice(1).forEach(function(scene) {
-            loadAndCache(scene, false);
-          });
-        }, { timeout: 2000 });
-      } else {
-        setTimeout(function() {
-          SPLINE_SCENES.slice(1).forEach(function(scene) {
-            loadAndCache(scene, false);
-          });
-        }, 100);
-      }
-    });
+    // Load primary scene only (scene 1 is always available)
+    loadAndCache('/scene1.splinecode', true);
     
     // Preload the Spline runtime module
     if (window.innerWidth >= 768) {
@@ -1075,6 +1062,7 @@ export default function RootLayout({
             </GlobalThemeProvider>
           </ThemesProvider>
         </ThemeProvider>
+
       </body>
     </html>
   );

@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef, useMemo, Suspense } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Search, SlidersHorizontal, X, ChevronDown, Sparkles, LayoutGrid, Rows3, Layers, Clock, LayoutDashboard } from 'lucide-react';
 import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
 import type { ProductWithDetails, PaginatedResponse, ProductFilters } from '@/types/store';
 import { useStoreSection } from './StoreMemoryContext';
+import { useSound } from '@/contexts/SoundContext';
 
 // ============================================================================
 // OPTIMIZED IMPORTS - Split into separate modules for faster compilation
@@ -58,6 +59,9 @@ export default function StorePage() {
   
   // Progressive loading - renders in stages for faster initial load
   const { showCritical, showInteractive, showBelowFold, showHeavy } = useProgressiveLoad();
+  
+  // Initialize trading sounds from context
+  const { sounds } = useSound();
   
   // Recruit auth for rewards
   const { recruit } = useRecruitAuth();
@@ -182,11 +186,23 @@ export default function StorePage() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Additional mobile deferral to keep initial load snappy
+  useEffect(() => {
+    if (!isMobile) {
+      setMobileDeferReady(true);
+      return;
+    }
+    setMobileDeferReady(false);
+    const timer = setTimeout(() => setMobileDeferReady(true), 1200);
+    return () => clearTimeout(timer);
+  }, [isMobile]);
+
   // Manual toggle only — timeline stays as default, grid only if user selects it
   const handleFeaturedViewChange = useCallback((mode: 'timeline' | 'grid') => {
+    sounds.buttonClick();
     setFeaturedViewMode(mode);
     setTimelineVisible(mode === 'timeline');
-  }, []);
+  }, [sounds]);
 
   const focusCards = useMemo(() => {
     return vipProducts
@@ -215,6 +231,60 @@ export default function StorePage() {
     getGridViewProducts(products, isMobile, mobileColumns, desktopColumns, mobileRows, desktopRows),
     [products, isMobile, mobileColumns, desktopColumns, mobileRows, desktopRows]
   );
+
+  const shouldShowHero = hero.shouldRender && (showHeavy || (isMobile && showInteractive));
+  const [mobileDeferReady, setMobileDeferReady] = useState(true);
+  const shouldShowBelowFold = showBelowFold && (!isMobile || mobileDeferReady);
+  const shouldShowHeavySections = showHeavy && (!isMobile || mobileDeferReady);
+  const [sequenceVisibility, setSequenceVisibility] = useState({
+    featured: false,
+    worldMap: false,
+    fluidGlass: false,
+    footer: false,
+  });
+  const sequenceDelayMs = 140;
+  const shouldShowFeatured = shouldShowBelowFold && sequenceVisibility.featured;
+  const shouldShowWorldMap = shouldShowHeavySections && sequenceVisibility.worldMap;
+  const shouldShowFluidGlass = shouldShowHeavySections && sequenceVisibility.fluidGlass;
+  const shouldShowFooter = shouldShowBelowFold && sequenceVisibility.footer;
+
+  useEffect(() => {
+    if (!shouldShowBelowFold) {
+      setSequenceVisibility({
+        featured: false,
+        worldMap: false,
+        fluidGlass: false,
+        footer: false,
+      });
+      return;
+    }
+
+    setSequenceVisibility((prev) => (prev.featured ? prev : { ...prev, featured: true }));
+  }, [shouldShowBelowFold]);
+
+  useEffect(() => {
+    if (!sequenceVisibility.featured) return;
+    const timer = setTimeout(() => {
+      setSequenceVisibility((prev) => (prev.worldMap ? prev : { ...prev, worldMap: true }));
+    }, sequenceDelayMs);
+    return () => clearTimeout(timer);
+  }, [sequenceVisibility.featured, sequenceDelayMs]);
+
+  useEffect(() => {
+    if (!sequenceVisibility.worldMap) return;
+    const timer = setTimeout(() => {
+      setSequenceVisibility((prev) => (prev.fluidGlass ? prev : { ...prev, fluidGlass: true }));
+    }, sequenceDelayMs);
+    return () => clearTimeout(timer);
+  }, [sequenceVisibility.worldMap, sequenceDelayMs]);
+
+  useEffect(() => {
+    if (!sequenceVisibility.fluidGlass) return;
+    const timer = setTimeout(() => {
+      setSequenceVisibility((prev) => (prev.footer ? prev : { ...prev, footer: true }));
+    }, sequenceDelayMs);
+    return () => clearTimeout(timer);
+  }, [sequenceVisibility.fluidGlass, sequenceDelayMs]);
 
 
   // Fetch products
@@ -360,8 +430,8 @@ export default function StorePage() {
       
       {/* Hero Section - 3D Spline Hero - DEFERRED to improve initial load */}
       <div ref={hero.ref} style={{ minHeight: 400, contain: 'layout style paint' }}>
-        {showHeavy && hero.shouldRender && <StoreHero3D paused={!hero.shouldAnimate} />}
-        {!showHeavy && (
+        {shouldShowHero && <StoreHero3D paused={!hero.shouldAnimate} />}
+        {!shouldShowHero && (
           <div className="w-full h-100 bg-linear-to-b from-black via-zinc-900/50 to-black flex items-center justify-center">
             <div className="text-white/40 text-lg">Loading...</div>
           </div>
@@ -369,10 +439,12 @@ export default function StorePage() {
       </div>
 
       {/* Market Price Ticker - Top - Load when below fold is ready */}
-      {showBelowFold && <MarketPriceTicker direction="left" speed={15} />}
+      <div className={shouldShowBelowFold ? '' : 'opacity-0 pointer-events-none max-h-0 overflow-hidden'}>
+        <MarketPriceTicker direction="left" speed={15} />
+      </div>
 
       {/* World Map Section - DEFERRED heavy component */}
-      {showHeavy ? (
+      {shouldShowWorldMap ? (
       <section className="relative w-full min-h-[50vh] md:h-screen overflow-hidden bg-black">
         <div className="absolute inset-0 z-0">
           <WorldMap
@@ -412,7 +484,9 @@ export default function StorePage() {
       )}
 
       {/* Market Price Ticker - Bottom */}
-      {showBelowFold && <MarketPriceTicker direction="right" speed={12} />}
+      <div className={shouldShowBelowFold ? '' : 'opacity-0 pointer-events-none max-h-0 overflow-hidden'}>
+        <MarketPriceTicker direction="right" speed={12} />
+      </div>
 
       {/* Main Content */}
       <section 
@@ -420,7 +494,7 @@ export default function StorePage() {
         style={{ isolation: 'isolate', height: 'auto', overflow: 'visible' }}
       >
         {/* Featured Products - Timeline / Grid Toggle - DEFERRED below fold */}
-        {showBelowFold && !loading && focusCards.length > 0 && (
+        {shouldShowFeatured && !loading && focusCards.length > 0 && (
           <section 
             ref={(el) => { 
               if (typeof featured.ref === 'function') featured.ref(el); 
@@ -582,7 +656,7 @@ export default function StorePage() {
 
             {/* Filters Button - Desktop */}
             <button
-              onClick={() => setShowFilters(true)}
+              onClick={() => { sounds.filterApply(); setShowFilters(true); }}
               className="h-12 px-4 flex items-center gap-2 bg-white/5 border border-white/10
                        rounded-xl text-white hover:bg-white/10 transition-colors"
             >
@@ -599,7 +673,7 @@ export default function StorePage() {
             {/* Grid Layout Dropdown - Desktop */}
             <div className="relative hidden md:block" ref={gridLayoutRef}>
               <button
-                onClick={() => setGridLayoutOpen(!gridLayoutOpen)}
+                onClick={() => { sounds.buttonClick(); setGridLayoutOpen(!gridLayoutOpen); }}
                 className={`h-11 px-5 flex items-center gap-2.5 rounded-full transition-all duration-200 ${
                   gridLayoutOpen
                     ? 'bg-white text-black shadow-lg shadow-white/10'
@@ -625,7 +699,7 @@ export default function StorePage() {
                       ].map(({ mode, icon: Icon, label }) => (
                         <button
                           key={mode}
-                          onClick={() => setViewMode(mode)}
+                          onClick={() => { sounds.buttonClick(); setViewMode(mode); }}
                           className={`h-10 rounded-xl flex flex-col items-center justify-center gap-1 text-[10px] font-medium transition-all duration-150 ${
                             viewMode === mode
                               ? 'bg-white text-black shadow-sm'
@@ -1031,7 +1105,7 @@ export default function StorePage() {
       </section>
 
       {/* Fluid Glass 3D Experience Section - DEFERRED heavy component */}
-      {showHeavy && (
+      {shouldShowFluidGlass && (
         <div ref={fluidGlass.ref} className="hidden md:block" style={{ minHeight: fluidGlass.shouldRender ? undefined : 400 }}>
           {fluidGlass.shouldRender && (
             <StoreFluidGlassSection 
@@ -1043,10 +1117,12 @@ export default function StorePage() {
       )}
 
       {/* Market Price Ticker - Before Footer */}
-      {showBelowFold && <MarketPriceTicker direction="right" speed={10} />}
+      <div className={shouldShowBelowFold ? '' : 'opacity-0 pointer-events-none max-h-0 overflow-hidden'}>
+        <MarketPriceTicker direction="right" speed={10} />
+      </div>
 
       {/* Store Footer - Defer until below fold loaded */}
-      {showBelowFold && (
+      {shouldShowFooter && (
         <div ref={footer.ref}>
           <StoreFooter />
         </div>

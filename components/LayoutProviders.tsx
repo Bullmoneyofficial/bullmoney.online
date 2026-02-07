@@ -65,6 +65,11 @@ const NotificationPermissionModal = dynamic(
   { ssr: false, loading: () => null }
 );
 
+const CookieConsent = dynamic(
+  () => import("@/components/CookieConsent"),
+  { ssr: false, loading: () => null }
+);
+
 interface LayoutProvidersProps {
   children: ReactNode;
   modal?: ReactNode;
@@ -85,6 +90,7 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
   // Global Ultimate Hub visibility - controlled by toggle in navbar & store header
   // Default OFF to prevent heavy component from loading and blocking page render
   const [showUltimateHub, setShowUltimateHub] = useState(false);
+  const [mountStage, setMountStage] = useState(0);
   
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -107,6 +113,24 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
       return () => window.removeEventListener('store_ultimate_hub_toggle', handleStorageChange);
     }
   }, []);
+
+  useEffect(() => {
+    setMountStage(0);
+
+    const timers: Array<ReturnType<typeof setTimeout>> = [];
+    timers.push(setTimeout(() => setMountStage(1), 0));
+    timers.push(setTimeout(() => setMountStage(2), 70));
+    timers.push(setTimeout(() => setMountStage(3), 150));
+
+    return () => {
+      timers.forEach(clearTimeout);
+    };
+  }, [pathname]);
+
+  const canShowNavbar = mountStage >= 1;
+  const canShowChildren = mountStage >= 2;
+  const canShowUltimateHub = mountStage >= 2;
+  const canShowCursor = mountStage >= 3;
 
   // ============================================
   // ADMIN PANEL KEYBOARD SHORTCUT: Ctrl+A+P
@@ -176,9 +200,11 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
 
   return (
     <>
-      {/* 🔔 NOTIFICATION PERMISSION MODAL - FIRST! Shows immediately on first load 
+        <CookieConsent />
+
+        {/* 🔔 NOTIFICATION PERMISSION MODAL - FIRST! Shows immediately on first load 
           Must be rendered FIRST to appear ABOVE everything including welcome screens */}
-      <NotificationPermissionModal />
+        <NotificationPermissionModal />
       
       {/* Global Shimmer Styles - ensures all shimmers are synchronized */}
       <ShimmerStylesProvider />
@@ -186,29 +212,33 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
       {/* Cache Manager - Handles version-based cache invalidation */}
       <CacheManagerProvider>
         {/* Navbar rendered outside ClientProviders for fixed positioning - HIDDEN on store pages */}
-        {!isStorePage && (allowMobileLazy || !isMobileViewport) && <Navbar />}
+        {canShowNavbar && !isStorePage && (allowMobileLazy || !isMobileViewport) && <Navbar />}
         
         {/* ✅ ULTIMATE HUB - All-in-one unified component - Controlled by toggle
             - Left side: Trading pill (prices), Community pill (Telegram), TV pill
             - Right side: FPS pill with Device Center Panel (4 tabs: Overview, Network, Performance, Account)
             - All real device data from browser APIs */}
-        {showUltimateHub && (allowMobileLazy || !isMobileViewport) && <UltimateHub />}
+        {canShowUltimateHub && showUltimateHub && (allowMobileLazy || !isMobileViewport) && <UltimateHub />}
         
         {/* ✅ LAZY LOADED: All performance providers bundled */}
-        <ClientProviders modal={modal}>
-          {/* ✅ OFF-SCREEN ANIMATION PAUSE - Saves CPU by pausing invisible animations */}
-          {/* SKIPPED on store pages — its global MutationObserver + IntersectionObserver
-              causes a mutation storm with StoreLayoutClient's own overlay-hiding logic */}
-          {isStorePage ? (
-            <div className="page-full">{children}</div>
-          ) : (
-            <OffscreenAnimationController>
-              <div className="page-full">
-                {children}
-              </div>
-            </OffscreenAnimationController>
-          )}
-        </ClientProviders>
+        {canShowChildren ? (
+          <ClientProviders modal={modal}>
+            {/* ✅ OFF-SCREEN ANIMATION PAUSE - Saves CPU by pausing invisible animations */}
+            {/* SKIPPED on store pages — its global MutationObserver + IntersectionObserver
+                causes a mutation storm with StoreLayoutClient's own overlay-hiding logic */}
+            {isStorePage ? (
+              <div className="page-full">{children}</div>
+            ) : (
+              <OffscreenAnimationController>
+                <div className="page-full">
+                  {children}
+                </div>
+              </OffscreenAnimationController>
+            )}
+          </ClientProviders>
+        ) : (
+          <MinimalFallback />
+        )}
       </CacheManagerProvider>
 
       {/* ✅ VERCEL TRACKING - Enhanced Analytics & Speed Insights */}
@@ -236,7 +266,7 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
           DOM order matters for same z-index elements.
           Being last in DOM = renders on top.
           ============================================ */}
-      {!isStorePage && <ClientCursor />}
+      {canShowCursor && !isStorePage && <ClientCursor />}
     </>
   );
 }

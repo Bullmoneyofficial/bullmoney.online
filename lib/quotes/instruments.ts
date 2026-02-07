@@ -1,7 +1,7 @@
 // Full catalog of tradeable instruments for MetaTrader Quotes
 // Sources: Binance WebSocket (crypto), API route (forex/metals)
 
-export type InstrumentType = 'crypto' | 'forex' | 'metal';
+export type InstrumentType = 'crypto' | 'forex' | 'metal' | 'index';
 
 export interface Instrument {
   symbol: string;
@@ -14,6 +14,7 @@ export interface Instrument {
   forexBase?: string;
   forexQuote?: string;
   metalId?: string;
+  indexId?: string;
   defaultSpreadPips: number;
   suffix: string;
   contractSize?: number;
@@ -77,6 +78,25 @@ const metal = (
   metalId,
   defaultSpreadPips: spreadPips,
   suffix: 'm#',
+});
+
+// ─── INDICES ─────────────────────────────────────────────────
+const index = (
+  symbol: string,
+  displayName: string,
+  indexId: string,
+  digits: number,
+  spreadPips: number
+): Instrument => ({
+  symbol,
+  displayName,
+  type: 'index',
+  category: 'Indices',
+  digits,
+  pipette: false,
+  indexId,
+  defaultSpreadPips: spreadPips,
+  suffix: '',
 });
 
 export const ALL_INSTRUMENTS: Instrument[] = [
@@ -185,6 +205,16 @@ export const ALL_INSTRUMENTS: Instrument[] = [
   metal('XAGUSD', 'Silver',    'XAG', 3, true,  20),
   metal('XPTUSD', 'Platinum',  'XPT', 2, false, 50),
   metal('XPDUSD', 'Palladium', 'XPD', 2, false, 80),
+
+  // ══════════════════════════════════════════════════════════
+  // INDICES — Polled via API route
+  // ══════════════════════════════════════════════════════════
+  index('US100',  'NASDAQ 100',    'NQ=F',   1, 100),
+  index('US30',   'Dow Jones 30',  'YM=F',   0, 150),
+  index('US500',  'S&P 500',       'ES=F',   1, 50),
+  index('DE40',   'DAX 40',        'FDAX=F', 1, 80),
+  index('UK100',  'FTSE 100',      'Z=F',    1, 70),
+  index('JP225',  'Nikkei 225',    'NI225=F',0, 100),
 ];
 
 // ─── Lookup maps ────────────────────────────────────────────
@@ -194,6 +224,7 @@ export const INSTRUMENTS_BY_TYPE: Record<InstrumentType, Instrument[]> = {
   crypto: ALL_INSTRUMENTS.filter((i) => i.type === 'crypto'),
   forex: ALL_INSTRUMENTS.filter((i) => i.type === 'forex'),
   metal: ALL_INSTRUMENTS.filter((i) => i.type === 'metal'),
+  index: ALL_INSTRUMENTS.filter((i) => i.type === 'index'),
 };
 
 // Default watchlist for new users
@@ -202,12 +233,5 @@ export const DEFAULT_WATCHLIST = [
   'BTCUSD',
   'ETHUSD',
   'XRPUSD',
-  'DOGEUSD',
-  'SOLUSD',
-  'LTCUSD',
-  'SHIBUSD',
-  'EURUSD',
-  'GBPUSD',
-  'USDJPY',
-  'XAGUSD',
+  'US100',
 ];

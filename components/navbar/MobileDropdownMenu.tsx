@@ -251,7 +251,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
           />
           
           <motion.div 
-            className="flex flex-col gap-1 w-full relative z-10 p-2"
+            className="flex flex-col gap-0.5 w-full relative z-10 p-1.5"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1, duration: 0.3 }}
@@ -299,7 +299,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
                 whileTap={{ scale: 0.98 }}
                 onHoverStart={() => SoundEffects.hover()}
                 onTouchStart={() => SoundEffects.click()}
-                className="w-full flex items-center gap-2 text-sm font-medium cursor-pointer px-3 py-2 min-h-[36px] rounded-xl transition-all duration-200"
+                className="w-full flex items-center gap-2 text-[13px] font-medium cursor-pointer px-2.5 py-1.5 min-h-[32px] rounded-lg transition-all duration-200"
                 style={{
                   color: '#ffffff',
                   backgroundColor: 'rgba(255, 255, 255, 0.05)',
@@ -324,7 +324,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
                   whileTap={{ scale: 0.98 }}
                   onHoverStart={() => SoundEffects.hover()}
                   onTouchStart={() => SoundEffects.click()}
-                  className="w-full flex items-center gap-2 text-sm font-medium cursor-pointer px-3 py-2 min-h-[36px] rounded-xl transition-all duration-200"
+                  className="w-full flex items-center gap-2 text-[13px] font-medium cursor-pointer px-2.5 py-1.5 min-h-[32px] rounded-lg transition-all duration-200"
                   style={{
                     color: '#ffffff',
                     backgroundColor: 'rgba(255, 255, 255, 0.05)',
@@ -361,7 +361,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
                 whileTap={{ scale: 0.98 }}
                 onHoverStart={() => SoundEffects.hover()}
                 onClick={handleProductsClick}
-                className="w-full flex items-center gap-2 text-sm font-medium px-3 py-2 min-h-[36px] rounded-xl transition-all duration-200 cursor-pointer"
+                className="w-full flex items-center gap-2 text-[13px] font-medium px-2.5 py-1.5 min-h-[32px] rounded-lg transition-all duration-200 cursor-pointer"
                 style={{
                   color: '#ffffff',
                   backgroundColor: 'rgba(255, 255, 255, 0.05)',
@@ -385,7 +385,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
                 whileTap={{ scale: 0.98 }}
                 onHoverStart={() => SoundEffects.hover()}
                 onClick={handleChartNewsClick}
-                className="w-full flex items-center gap-2 text-sm font-medium px-3 py-2 min-h-[36px] rounded-xl transition-all duration-200 cursor-pointer"
+                className="w-full flex items-center gap-2 text-[13px] font-medium px-2.5 py-1.5 min-h-[32px] rounded-lg transition-all duration-200 cursor-pointer"
                 style={{
                   color: '#ffffff',
                   backgroundColor: 'rgba(255, 255, 255, 0.05)',
@@ -422,7 +422,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.28 }}
-              className="h-px my-1"
+              className="h-px my-0.5"
               style={{
                 background: 'linear-gradient(to right, transparent, rgba(255, 255, 255, 0.15), transparent)'
               }}
@@ -433,16 +433,16 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.29, duration: 0.3 }}
-              className="w-full space-y-1"
+              className="w-full space-y-0.5"
             >
-              <p className="text-[10px] px-3 mb-1 uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.5)' }}>Toggles</p>
+              <p className="text-[9px] px-2.5 mb-0.5 uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.5)' }}>Toggles</p>
               
               {/* Theme Picker Toggle */}
               <motion.button
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={toggleThemePicker}
-                className="w-full flex items-center justify-between text-sm font-medium px-3 py-2 min-h-[36px] rounded-xl transition-all duration-200 cursor-pointer"
+                className="w-full flex items-center justify-between text-[13px] font-medium px-2.5 py-1.5 min-h-[32px] rounded-lg transition-all duration-200 cursor-pointer"
                 style={showThemePicker 
                   ? { background: 'rgba(255,255,255,0.15)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.3)' }
                   : { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)' }
@@ -460,7 +460,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={toggleUltimateHub}
-                className="w-full flex items-center justify-between text-sm font-medium px-3 py-2 min-h-[36px] rounded-xl transition-all duration-200 cursor-pointer"
+                className="w-full flex items-center justify-between text-[13px] font-medium px-2.5 py-1.5 min-h-[32px] rounded-lg transition-all duration-200 cursor-pointer"
                 style={showUltimateHub 
                   ? { background: 'rgba(255,255,255,0.15)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.3)' }
                   : { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)' }
@@ -488,7 +488,7 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
                   onHoverStart={() => SoundEffects.hover()}
                   onTouchStart={() => SoundEffects.click()}
                   onClick={handleAdminClick}
-                  className="w-full flex items-center gap-2 text-xs font-medium uppercase tracking-wide transition-all duration-200 px-3 py-2 min-h-[36px] rounded-xl"
+                  className="w-full flex items-center gap-2 text-[11px] font-medium uppercase tracking-wide transition-all duration-200 px-2.5 py-1.5 min-h-[32px] rounded-lg"
                   style={{
                     color: '#ffffff',
                     backgroundColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.15)',
@@ -526,7 +526,7 @@ const ThemedMenuItem = memo(({ delay, href, onClick, icon, label, highlighted = 
         href={href}
         onClick={() => { SoundEffects.click(); onClick(); }}
         onTouchStart={() => SoundEffects.click()}
-        className="flex items-center gap-2 text-sm font-medium w-full px-3 py-2 min-h-[36px] rounded-xl transition-all duration-200"
+        className="flex items-center gap-2 text-[13px] font-medium w-full px-2.5 py-1.5 min-h-[32px] rounded-lg transition-all duration-200"
         style={{
           color: highlighted ? '#000000' : '#ffffff',
           background: highlighted 

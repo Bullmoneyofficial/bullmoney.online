@@ -590,7 +590,7 @@ export function UltimateControlPanel({
   isAuthenticated = false,
   showServicesButton = true,
   showContactButton = true,
-  showThemeButton = true,
+  showThemeButton = false,
   showAdminButton = true,
   showIdentityButton = true,
 }: UltimateControlPanelProps) {

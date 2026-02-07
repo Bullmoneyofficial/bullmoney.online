@@ -64,16 +64,16 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
     const { open: openProductsModal } = useProductsModalUI();
     const { setIsOpen: setThemePickerModalOpen } = useThemeSelectorModalUI();
     
-    // Toggle states for Theme Picker and Ultimate Hub - default ON for app pages
-    const [showThemePicker, setShowThemePicker] = useState(true);
+    // Toggle states for Theme Picker and Ultimate Hub - default OFF until user explicitly enables
+    const [showThemePicker, setShowThemePicker] = useState(false);
     const [showUltimateHub, setShowUltimateHub] = useState(true);
     
     // Load toggle preferences from localStorage & sync theme picker modal
     useEffect(() => {
       if (typeof window !== 'undefined') {
         const storedTheme = localStorage.getItem('store_show_theme_picker');
-        // Default to true on app page unless explicitly set to 'false'
-        const themeValue = storedTheme !== 'false';
+        // Default to false on first load — only open when explicitly set to 'true'
+        const themeValue = storedTheme === 'true';
         setShowThemePicker(themeValue);
         setThemePickerModalOpen(themeValue);
         const storedHub = localStorage.getItem('store_show_ultimate_hub');

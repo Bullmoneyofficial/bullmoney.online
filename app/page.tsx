@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect, useRef, useCallback, lazy } from "react";
+import { Suspense, useState, useEffect, useRef, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { detectBrowser } from "@/lib/browserDetection";
 import { GLASS_STYLES } from "@/styles/glassStyles";
@@ -27,6 +27,8 @@ import {
   BullMoneyPromoScroll,
   Features,
   TradingViewDashboard,
+  BullMoneyCommunity,
+  BreakingNewsTicker,
   HeroScrollDemo,
   SplineSkeleton,
   LoadingSkeleton,
@@ -39,7 +41,6 @@ import {
   DraggableSplit,
   SplineScene,
   TestimonialsCarousel,
-  CookieConsent,
   AppSupportButton,
 } from "@/components/home/dynamicImports";
 
@@ -80,6 +81,27 @@ const MobileDiscordHero = dynamic(
 );
 
 import { useDevSkipShortcut } from "@/hooks/useDevSkipShortcut";
+
+// ✅ SECTION IMPORTS - All page sections in one file for easier editing
+const ToastProvider = dynamic(
+  () => import("./PageSections").then(mod => mod.ToastProvider),
+  { ssr: false, loading: () => null }
+);
+
+const TelegramSection = dynamic(
+  () => import("./PageSections").then(mod => mod.TelegramSection),
+  { ssr: false, loading: () => <MinimalFallback /> }
+);
+
+const QuotesSection = dynamic(
+  () => import("./PageSections").then(mod => mod.QuotesSection),
+  { ssr: false, loading: () => <MinimalFallback /> }
+);
+
+const BreakingNewsSection = dynamic(
+  () => import("./PageSections").then(mod => mod.BreakingNewsSection),
+  { ssr: false, loading: () => <MinimalFallback /> }
+);
 
 // Lazy load Spline modals - only loaded when actually opened
 const SplineModals = dynamic(
@@ -217,6 +239,12 @@ function HomeContent() {
   const canRenderHeavyDesktop = !isMobile && allowHeavyDesktop;
   // Use single dynamic Features component for all devices
   const FeaturesComponent = Features;
+  const [sequenceStage, setSequenceStage] = useState(0);
+  const showStage1 = currentView === 'content' && sequenceStage >= 1;
+  const showStage2 = currentView === 'content' && sequenceStage >= 2;
+  const showStage3 = currentView === 'content' && sequenceStage >= 3;
+  const showStage4 = currentView === 'content' && sequenceStage >= 4;
+  const showStage5 = currentView === 'content' && sequenceStage >= 5;
   
   // Track FPS drops
   useEffect(() => {
@@ -224,6 +252,24 @@ function HomeContent() {
       trackPerformanceWarning('page', averageFps, `FPS dropped to ${averageFps}`);
     }
   }, [averageFps, currentView, trackPerformanceWarning]);
+
+  useEffect(() => {
+    if (currentView !== 'content') {
+      setSequenceStage(0);
+      return;
+    }
+
+    setSequenceStage(1);
+    const timers: Array<ReturnType<typeof setTimeout>> = [];
+    timers.push(setTimeout(() => setSequenceStage(2), 140));
+    timers.push(setTimeout(() => setSequenceStage(3), 280));
+    timers.push(setTimeout(() => setSequenceStage(4), 420));
+    timers.push(setTimeout(() => setSequenceStage(5), 560));
+
+    return () => {
+      timers.forEach(clearTimeout);
+    };
+  }, [currentView]);
   
   // Smart preloading based on usage patterns
   useEffect(() => {
@@ -657,16 +703,21 @@ function HomeContent() {
               )}
             </section>
 
-            {/* MetaTrader Quotes Section */}
-            <section
-              id="metatrader-quotes"
-              className="w-full full-bleed"
-              data-allow-scroll
-              data-content
-              data-theme-aware
-            >
-              <MetaTraderQuotes embedded />
-            </section>
+            {/* Dashboard Sections with Toast Notifications */}
+            {showStage1 ? (
+              <ToastProvider>
+                {/* BullMoney Community — Live Telegram Feed */}
+                <TelegramSection />
+
+                {/* MetaTrader Quotes Section */}
+                <QuotesSection />
+
+                {/* Breaking News Ticker - Live market/geopolitics headlines */}
+                <BreakingNewsSection />
+              </ToastProvider>
+            ) : (
+              <MinimalFallback />
+            )}
 
             {/* BullMoney Promo Scroll Section - Mobile Only */}
             {isMobile && (
@@ -677,7 +728,7 @@ function HomeContent() {
                 data-content
                 data-theme-aware
               >
-                {canRenderMobileSections ? <BullMoneyPromoScroll /> : <MinimalFallback />}
+                {showStage2 && canRenderMobileSections ? <BullMoneyPromoScroll /> : <MinimalFallback />}
               </section>
             )}
 
@@ -689,21 +740,10 @@ function HomeContent() {
               data-content
               data-theme-aware
             >
-              {canRenderMobileSections ? <FeaturesComponent /> : <FeaturesSkeleton />}
+              {showStage2 && canRenderMobileSections ? <FeaturesComponent /> : <FeaturesSkeleton />}
             </section>
 
-            {/* TradingView Dashboard - Full replica below features */}
-            <section
-              id="tradingview-dashboard"
-              className="w-full full-bleed px-2 sm:px-4 lg:px-6"
-              data-allow-scroll
-              data-content
-              data-theme-aware
-            >
-              <TradingViewDashboard />
-            </section>
-
-            {canRenderHeavyDesktop && (
+            {showStage3 && canRenderHeavyDesktop && (
               <section 
                 id="experience" 
                 className="w-full full-bleed bg-black" 
@@ -718,7 +758,7 @@ function HomeContent() {
             )}
 
             {/* Mobile-only Testimonials Section */}
-            {canRenderMobileSections && (
+            {showStage4 && canRenderMobileSections && (
               <section id="testimonials" className="w-full max-w-5xl mx-auto px-4 py-12 md:hidden" data-allow-scroll data-content data-theme-aware style={{ touchAction: 'pan-y' }}>
                 <div className="relative text-center mb-6">
                   <h2 className="text-lg font-bold text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(to right, white, var(--accent-color, #ffffff), white)', filter: 'drop-shadow(0 0 15px rgba(var(--accent-rgb, 255, 255, 255), 0.5))' }}>
@@ -743,17 +783,17 @@ function HomeContent() {
               </section>
             )}
 
-            {canRenderMobileSections && (
+            {showStage4 && canRenderMobileSections && (
               <section id="ticker" className="w-full px-2 sm:px-4" data-allow-scroll data-footer data-theme-aware>
                 <LiveMarketTicker />
               </section>
             )}
 
             {/* ✅ FOOTER - Only on home page */}
-            <FooterComponent />
+            {showStage5 && <FooterComponent />}
           </main>
 
-          {canRenderHeavyDesktop && theme?.youtubeId && (
+          {showStage5 && canRenderHeavyDesktop && theme?.youtubeId && (
             <HiddenYoutubePlayer
               videoId={theme.youtubeId}
               isPlaying={!isMuted && !masterMuted}
@@ -761,13 +801,13 @@ function HomeContent() {
             />
           )}
 
-          {canRenderHeavyDesktop && (
+          {showStage5 && canRenderHeavyDesktop && (
             <SplitSceneModal open={isSplitModalOpen} onClose={() => setIsSplitModalOpen(false)} />
           )}
-          {canRenderHeavyDesktop && (
+          {showStage5 && canRenderHeavyDesktop && (
             <RemoteSceneModal scene={activeRemoteScene} onClose={() => setActiveRemoteScene(null)} />
           )}
-          {canRenderHeavyDesktop && (
+          {showStage5 && canRenderHeavyDesktop && (
             <AllScenesModal 
               open={isAllScenesModalOpen} 
               onClose={() => setIsAllScenesModalOpen(false)}
@@ -784,7 +824,6 @@ export default function Home() {
   return (
     <>
       <HomeContent />
-      <CookieConsent />
       <AppSupportButton />
     </>
   );

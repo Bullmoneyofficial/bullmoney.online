@@ -6,6 +6,7 @@ import { ThemeCategory, SoundProfile, ALL_THEMES } from '@/constants/theme-data'
 import { useGlobalTheme } from '@/contexts/GlobalThemeProvider';
 import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 import { LiveThemePreviewOverlay } from '@/components/LiveThemePreviewOverlay';
+import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import '@/styles/themes/supreme-z-index.css';
 
 interface ThemeSelectorModalProps {
@@ -31,6 +32,7 @@ export const ThemeSelectorModal = ({ isOpen, onClose }: ThemeSelectorModalProps)
   }, [globalThemeId, isOpen]);
 
   const handleSave = (themeId: string) => {
+    SoundEffects.confirm();
     // Find the full theme object
     const selectedTheme = ALL_THEMES.find(t => t.id === themeId);
     
@@ -172,7 +174,7 @@ export const ThemeSelectorModal = ({ isOpen, onClose }: ThemeSelectorModalProps)
               </span>
             </div>
             <button
-              onClick={onClose}
+              onClick={() => { SoundEffects.close(); onClose(); }}
               className="p-2 rounded-lg border transition-all group relative"
               style={{
                 background: 'rgba(var(--accent-rgb, 255, 255, 255), 0.1)',

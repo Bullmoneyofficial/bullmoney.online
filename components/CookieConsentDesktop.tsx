@@ -13,6 +13,7 @@ import {
   shouldShowBanner,
   resetPageLoadCounter,
 } from '@/lib/cookieConsent';
+import { SoundEffects } from '@/app/hooks/useSoundEffects';
 
 interface CookieToggleProps {
   label: string;
@@ -46,8 +47,14 @@ function CookieToggle({ label, description, icon, checked, disabled, onChange }:
         </div>
       </div>
       <button
-        onClick={() => !disabled && onChange(!checked)}
+        onClick={() => {
+          if (!disabled) {
+            SoundEffects.click();
+            onChange(!checked);
+          }
+        }}
         disabled={disabled}
+        onMouseEnter={() => !disabled && SoundEffects.hover()}
         style={{
           width: 40,
           height: 24,
@@ -104,18 +111,21 @@ export default function CookieConsentDesktop() {
   }, []);
 
   const handleAcceptAll = () => {
+    SoundEffects.confirm();
     acceptAllCookies();
     resetPageLoadCounter();
     setVisible(false);
   };
 
   const handleDecline = () => {
+    SoundEffects.click();
     declineOptionalCookies();
     resetPageLoadCounter();
     setVisible(false);
   };
 
   const handleSavePreferences = () => {
+    SoundEffects.success();
     saveConsentPreferences(prefs);
     resetPageLoadCounter();
     setVisible(false);

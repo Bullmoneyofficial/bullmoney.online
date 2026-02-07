@@ -8,6 +8,8 @@ import { CardBody, CardContainer, CardItem } from '@/components/ui/3d-card';
 import { HoverBorderGradient } from '@/components/ui/hover-border-gradient';
 import { useProductsModalUI } from '@/contexts/UIStateContext';
 import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
+import { SoundEffects } from '@/app/hooks/useSoundEffects';
+import { useUnifiedPerformance } from '@/hooks/useDesktopPerformance';
 
 import TextType from '@/components/TextType';
 import CountUp from '@/components/CountUp';
@@ -16,14 +18,16 @@ import dynamic from 'next/dynamic';
 // Spline scene URL
 const SPLINE_SCENE = '/scene1.splinecode';
 
-// ---- Aggressive Spline Preloading ----
+// ---- Aggressive Spline Preloading (disabled by default in production) ----
+const shouldPreloadSpline = typeof window !== 'undefined' && process.env.NODE_ENV !== 'production';
+
 // 1. Eagerly preload the Spline runtime JS bundle (warms module cache)
-const splineModulePromise = typeof window !== 'undefined'
+const splineModulePromise = shouldPreloadSpline
   ? import('@splinetool/react-spline')
   : null;
 
 // 2. Eagerly preload the .splinecode scene file via fetch (warms HTTP cache)
-if (typeof window !== 'undefined') {
+if (shouldPreloadSpline) {
   // Use link preload for highest priority
   const link = document.createElement('link');
   link.rel = 'preload';
@@ -104,13 +108,13 @@ const BLUE_THEME = {
 };
 
 // Default card positions - space vacuum floating effect
-// Positions adjusted to keep cards safely in view
+// Positions adjusted to keep cards safely in view, optimized for mobile
 const CARD_POSITIONS = [
-  { x: 15, y: 20, z: 100, rotateX: -15, rotateY: 25, scale: 1.1, delay: 0, glow: BLUE_THEME.primary, floatSeed: 1 },
-  { x: 72, y: 15, z: 80, rotateX: 10, rotateY: -20, scale: 0.95, delay: 0.2, glow: BLUE_THEME.secondary, floatSeed: 2 },
-  { x: 78, y: 50, z: 120, rotateX: -5, rotateY: 15, scale: 1.0, delay: 0.4, glow: BLUE_THEME.accent, floatSeed: 3 },
-  { x: 12, y: 58, z: 60, rotateX: 20, rotateY: -10, scale: 0.9, delay: 0.6, glow: BLUE_THEME.primary, floatSeed: 4 },
-  { x: 45, y: 72, z: 90, rotateX: -12, rotateY: 8, scale: 0.85, delay: 0.8, glow: BLUE_THEME.secondary, floatSeed: 5 },
+  { x: 15, y: 22, z: 100, rotateX: -12, rotateY: 20, scale: 1.0, delay: 0, glow: BLUE_THEME.primary, floatSeed: 1 },
+  { x: 72, y: 18, z: 80, rotateX: 8, rotateY: -15, scale: 0.9, delay: 0.2, glow: BLUE_THEME.secondary, floatSeed: 2 },
+  { x: 75, y: 52, z: 120, rotateX: -5, rotateY: 12, scale: 0.95, delay: 0.4, glow: BLUE_THEME.accent, floatSeed: 3 },
+  { x: 12, y: 60, z: 60, rotateX: 15, rotateY: -8, scale: 0.85, delay: 0.6, glow: BLUE_THEME.primary, floatSeed: 4 },
+  { x: 45, y: 75, z: 90, rotateX: -10, rotateY: 6, scale: 0.8, delay: 0.8, glow: BLUE_THEME.secondary, floatSeed: 5 },
 ];
 
 const CRYPTO_SYMBOLS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'XRPUSDT'];
@@ -135,6 +139,7 @@ const PromoCodePopup = ({
   const [isMobile, setIsMobile] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const promoCode = 'BULLMONEY15';
+  const { shouldSkipHeavyEffects } = useUnifiedPerformance();
 
   useEffect(() => {
     setMounted(true);
@@ -184,6 +189,7 @@ const PromoCodePopup = ({
         document.execCommand('copy');
         document.body.removeChild(textArea);
       }
+      SoundEffects.success();
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -192,6 +198,7 @@ const PromoCodePopup = ({
   };
 
   const handleClose = useCallback(() => {
+    SoundEffects.close();
     onClose();
   }, [onClose]);
 
@@ -243,7 +250,7 @@ const PromoCodePopup = ({
                       <div className="relative px-7 pt-10 pb-8">
                         {/* Close button */}
                         <button
-                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleClose(); }}
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); SoundEffects.click(); handleClose(); }}
                           className="absolute top-3.5 right-3.5 w-8 h-8 flex items-center justify-center rounded-full
                                      border border-white/10 bg-white/[0.05]
                                      hover:bg-white/10 hover:border-white/20
@@ -300,7 +307,7 @@ const PromoCodePopup = ({
                                          hover:bg-white/[0.06] hover:border-white/[0.14]
                                          active:scale-[0.98]
                                          transition-all duration-200 ease-out"
-                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCopy(); }}
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); SoundEffects.click(); handleCopy(); }}
                             >
                               <div className="flex items-center justify-between gap-3">
                                 <div className="flex-1 min-w-0">
@@ -323,7 +330,7 @@ const PromoCodePopup = ({
                         {/* CTA Button */}
                         <CardItem translateZ="20" className="w-full">
                           <motion.button
-                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleClose(); }}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); SoundEffects.click(); handleClose(); }}
                             className="w-full py-3.5 rounded-xl font-semibold text-[15px] tracking-wide
                                        bg-white text-black border border-white/20
                                        hover:bg-white/90 active:scale-[0.97] active:bg-white/80
@@ -362,7 +369,7 @@ const PromoCodePopup = ({
 
               <div className="relative px-7 pt-10 pb-8">
                 <button
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleClose(); }}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); SoundEffects.click(); handleClose(); }}
                   className="absolute top-3.5 right-3.5 w-8 h-8 flex items-center justify-center rounded-full
                              border border-white/10 bg-white/[0.05]
                              hover:bg-white/10 hover:border-white/20
@@ -411,7 +418,7 @@ const PromoCodePopup = ({
                                hover:bg-white/[0.06] hover:border-white/[0.14]
                                active:scale-[0.98]
                                transition-all duration-200 ease-out"
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCopy(); }}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); SoundEffects.click(); handleCopy(); }}
                     style={{ WebkitTapHighlightColor: 'transparent' }}
                   >
                     <div className="flex items-center justify-between gap-3">
@@ -432,7 +439,7 @@ const PromoCodePopup = ({
                 </motion.div>
 
                 <motion.button
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleClose(); }}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); SoundEffects.click(); handleClose(); }}
                   className="w-full py-3.5 rounded-xl font-semibold text-[15px] tracking-wide
                              bg-white text-black border border-white/20
                              hover:bg-white/90 active:scale-[0.97] active:bg-white/80
@@ -461,7 +468,7 @@ const PromoCodePopup = ({
 // ============================================================================
 // LIVE CRYPTO TICKER
 // ============================================================================
-const CryptoTicker = ({ prices }: { prices: CryptoPrice[] }) => {
+const CryptoTicker = memo(function CryptoTicker({ prices }: { prices: CryptoPrice[] }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -491,7 +498,7 @@ const CryptoTicker = ({ prices }: { prices: CryptoPrice[] }) => {
       ))}
     </motion.div>
   );
-};
+});
 
 // ============================================================================
 // ANIMATED PARTICLE - Pure CSS animation (GPU composited, zero JS cost)
@@ -527,6 +534,7 @@ const FloatingProductCard = ({
   onInteractionStart,
   onInteractionEnd,
   onCardClick,
+  skipParallax = false,
 }: { 
   product: FloatingProduct;
   mouseX: ReturnType<typeof useMotionValue<number>>;
@@ -535,12 +543,15 @@ const FloatingProductCard = ({
   onInteractionStart?: () => void;
   onInteractionEnd?: () => void;
   onCardClick?: () => void;
+  skipParallax?: boolean;
 }) => {
-  const parallaxX = useTransform(mouseX, [0, 1], [-30 * (product.z / 100), 30 * (product.z / 100)]);
-  const parallaxY = useTransform(mouseY, [0, 1], [-20 * (product.z / 100), 20 * (product.z / 100)]);
+  // Skip expensive parallax springs on mobile — zero overhead from useTransform/useSpring
+  const parallaxX = useTransform(mouseX, [0, 1], skipParallax ? [0, 0] : [-30 * (product.z / 100), 30 * (product.z / 100)]);
+  const parallaxY = useTransform(mouseY, [0, 1], skipParallax ? [0, 0] : [-20 * (product.z / 100), 20 * (product.z / 100)]);
   
-  const springX = useSpring(parallaxX, { stiffness: 100, damping: 30 });
-  const springY = useSpring(parallaxY, { stiffness: 100, damping: 30 });
+  const springConfig = skipParallax ? { stiffness: 300, damping: 50 } : { stiffness: 100, damping: 30 };
+  const springX = useSpring(parallaxX, springConfig);
+  const springY = useSpring(parallaxY, springConfig);
 
   const vip = product.vipData;
   const productName = vip?.name || 'Premium';
@@ -575,74 +586,82 @@ const FloatingProductCard = ({
       onTouchStart={onInteractionStart}
       onTouchEnd={onInteractionEnd}
       onClick={onCardClick}
-      whileHover={{ scale: product.scale * 1.15 }}
+      whileHover={{ scale: product.scale * 1.1 }}
     >
       <motion.div
         className="relative"
-        animate={isExpanded ? {} : {
-          // Random space vacuum floating - subtle movements to stay in view
+        animate={isExpanded ? {} : (skipParallax ? {
+          // Mobile: Simple gentle float only (2 keyframes = much cheaper)
+          y: [0, -4, 0],
+          x: [0, 2, 0],
+        } : {
+          // Desktop: Random space vacuum floating - subtle movements to stay in view
           y: [
             0, 
-            -8 * (product.floatSeed % 3 + 1), 
-            4 * ((product.floatSeed + 1) % 2), 
-            -10 * (product.floatSeed % 2 + 0.5),
-            5 * (product.floatSeed % 4 - 1),
+            -5 * (product.floatSeed % 3 + 1), 
+            3 * ((product.floatSeed + 1) % 2), 
+            -6 * (product.floatSeed % 2 + 0.5),
+            3 * (product.floatSeed % 4 - 1),
             0
           ],
           x: [
             0, 
-            5 * (product.floatSeed % 2 - 0.5), 
-            -6 * ((product.floatSeed + 2) % 3 - 1),
-            7 * (product.floatSeed % 3 - 1.5),
-            -4 * (product.floatSeed % 2),
+            3 * (product.floatSeed % 2 - 0.5), 
+            -4 * ((product.floatSeed + 2) % 3 - 1),
+            4 * (product.floatSeed % 3 - 1.5),
+            -3 * (product.floatSeed % 2),
             0
           ],
           rotateZ: [
             0, 
-            2 * (product.floatSeed % 3 - 1), 
-            -3 * ((product.floatSeed + 1) % 2),
-            1.5 * (product.floatSeed % 4 - 2),
-            -2 * (product.floatSeed % 2 + 0.5),
+            1.5 * (product.floatSeed % 3 - 1), 
+            -2 * ((product.floatSeed + 1) % 2),
+            1 * (product.floatSeed % 4 - 2),
+            -1.5 * (product.floatSeed % 2 + 0.5),
             0
           ],
           rotateX: [
             product.rotateX,
-            product.rotateX + 3 * (product.floatSeed % 2),
-            product.rotateX - 2 * ((product.floatSeed + 1) % 3),
-            product.rotateX + 2.5 * (product.floatSeed % 3 - 1),
+            product.rotateX + 2 * (product.floatSeed % 2),
+            product.rotateX - 1.5 * ((product.floatSeed + 1) % 3),
+            product.rotateX + 1.5 * (product.floatSeed % 3 - 1),
             product.rotateX
           ],
           rotateY: [
             product.rotateY,
-            product.rotateY - 4 * (product.floatSeed % 3 - 1),
-            product.rotateY + 3 * ((product.floatSeed + 2) % 2),
-            product.rotateY - 3 * (product.floatSeed % 2),
+            product.rotateY - 2.5 * (product.floatSeed % 3 - 1),
+            product.rotateY + 2 * ((product.floatSeed + 2) % 2),
+            product.rotateY - 2 * (product.floatSeed % 2),
             product.rotateY
           ],
-        }}
+        })}
         transition={{
-          duration: 10 + product.floatSeed * 2 + product.delay * 2,
+          duration: skipParallax ? 6 : (10 + product.floatSeed * 2 + product.delay * 2),
           repeat: isExpanded ? 0 : Infinity,
           ease: 'easeInOut',
-          times: [0, 0.2, 0.4, 0.6, 0.8, 1],
+          ...(skipParallax ? {} : { times: [0, 0.2, 0.4, 0.6, 0.8, 1] }),
         }}
       >
-        {/* Blue glow effect */}
-        <div 
-          className="absolute inset-0 opacity-50 rounded-3xl"
-          style={{ 
-            background: `radial-gradient(circle, ${product.glow} 0%, transparent 70%)`,
-            transform: 'scale(1.5)',
-          }}
-        />
+        {/* Blue glow effect — skip on mobile for GPU savings */}
+        {!skipParallax && (
+          <div 
+            className="absolute inset-0 opacity-40 sm:opacity-50 rounded-3xl"
+            style={{ 
+              background: `radial-gradient(circle, ${product.glow} 0%, transparent 70%)`,
+              transform: 'scale(1.2)',
+            }}
+          />
+        )}
         
         {/* Product card with TrueBlue theme - Floating cards */}
         <div 
-          className="relative w-28 h-36 sm:w-36 sm:h-44 md:w-40 md:h-52 lg:w-44 lg:h-56 rounded-2xl overflow-hidden touch-pan-y"
+          className="relative w-20 h-28 sm:w-32 sm:h-40 md:w-40 md:h-52 lg:w-44 lg:h-56 rounded-xl sm:rounded-2xl overflow-hidden touch-pan-y"
           style={{
             background: 'linear-gradient(145deg, rgba(25, 86, 180, 0.15) 0%, rgba(25, 86, 180, 0.05) 100%)',
             border: '1px solid rgba(255, 255, 255, 0.15)',
-            boxShadow: `
+            boxShadow: skipParallax
+              ? '0 12px 24px -6px rgba(0, 0, 0, 0.4)'
+              : `
               0 25px 50px -12px rgba(0, 0, 0, 0.5),
               0 0 0 1px rgba(255, 255, 255, 0.1) inset,
               0 0 60px -20px ${product.glow}40
@@ -666,7 +685,7 @@ const FloatingProductCard = ({
           ) : (
             <div className="absolute inset-2 rounded-xl bg-linear-to-br from-[#1956B4]/10 to-transparent flex items-center justify-center">
               <ShoppingBag 
-                className="w-6 h-6 md:w-10 md:h-10 text-[#1956B4]/40" 
+                className="w-5 h-5 sm:w-6 sm:h-6 md:w-10 md:h-10 text-[#1956B4]/40" 
                 strokeWidth={1}
               />
             </div>
@@ -678,9 +697,9 @@ const FloatingProductCard = ({
           />
           
           {/* Price tag with real data */}
-          <div className="absolute bottom-2 left-2 right-2 px-2 py-1.5 rounded-lg bg-black/80 border border-white/10 z-2">
-            <div className="text-[7px] md:text-[9px] text-white/80 truncate font-medium"><TextType text={productName} typingSpeed={Math.max(5, 25 - productName.length)} showCursor={false} loop={false} as="span" /></div>
-            <div className="text-[10px] md:text-xs text-white font-bold">{useCurrencyLocaleStore.getState().formatPrice(productPrice)}</div>
+          <div className="absolute bottom-1.5 sm:bottom-2 left-1.5 sm:left-2 right-1.5 sm:right-2 px-1.5 sm:px-2 py-1 sm:py-1.5 rounded-lg bg-black/80 border border-white/10 z-2">
+            <div className="text-[6px] sm:text-[7px] md:text-[9px] text-white/80 truncate font-medium"><TextType text={productName} typingSpeed={Math.max(5, 25 - productName.length)} showCursor={false} loop={false} as="span" /></div>
+            <div className="text-[9px] sm:text-[10px] md:text-xs text-white font-bold">{useCurrencyLocaleStore.getState().formatPrice(productPrice)}</div>
           </div>
         </div>
       </motion.div>
@@ -919,7 +938,7 @@ const Toggle3DButton = ({
   onClick: () => void;
 }) => (
   <motion.button
-    onClick={onClick}
+    onClick={() => { SoundEffects.click(); onClick(); }}
     className="group relative z-50 flex items-center gap-2 px-4 py-2.5 rounded-2xl overflow-hidden
                border transition-all duration-300"
     style={{
@@ -1016,7 +1035,7 @@ const ToggleGrayscaleButton = ({
   onClick: () => void;
 }) => (
   <motion.button
-    onClick={onClick}
+    onClick={() => { SoundEffects.click(); onClick(); }}
     className="group relative z-50 flex items-center gap-2 px-4 py-2.5 rounded-2xl overflow-hidden
                border transition-all duration-300"
     style={{
@@ -1097,11 +1116,13 @@ const ToggleGrayscaleButton = ({
 const PlayWithSplineButton = ({ 
   isVisible, 
   onClick,
-  onExit
+  onExit,
+  skipHeavyEffects = false
 }: { 
   isVisible: boolean;
   onClick: () => void;
   onExit: () => void;
+  skipHeavyEffects?: boolean;
 }) => (
   <AnimatePresence>
     {isVisible && (
@@ -1113,10 +1134,10 @@ const PlayWithSplineButton = ({
         transition={{ type: 'spring', damping: 20, stiffness: 300 }}
       >
         <motion.button
-          onClick={onClick}
-          className="group relative flex items-center gap-3 px-6 py-3 rounded-2xl overflow-hidden
-                     border border-[#1956B4]/50 bg-black/90 backdrop-blur-xl pointer-events-auto store-glow-pulse"
-          whileHover={{ 
+          onClick={() => { SoundEffects.click(); onClick(); }}
+          className={`group relative flex items-center gap-3 px-6 py-3 rounded-2xl overflow-hidden
+                     border border-[#1956B4]/50 bg-black/90 pointer-events-auto store-glow-pulse ${skipHeavyEffects ? '' : 'backdrop-blur-xl'}`}
+          whileHover={skipHeavyEffects ? { scale: 1.05 } : { 
             scale: 1.05,
             boxShadow: '0 0 60px rgba(25, 86, 180, 0.6), 0 0 100px rgba(25, 86, 180, 0.3)',
           }}
@@ -1153,18 +1174,20 @@ const PlayWithSplineButton = ({
 // ============================================================================
 const ExitSplineModeButton = ({ 
   isVisible, 
-  onClick 
+  onClick,
+  skipHeavyEffects = false
 }: { 
   isVisible: boolean;
   onClick: () => void;
+  skipHeavyEffects?: boolean;
 }) => (
   <AnimatePresence>
     {isVisible && (
       <motion.button
-        onClick={onClick}
-        className="fixed top-4 left-4 z-100 flex items-center gap-2 px-4 py-2.5 rounded-2xl
-                   bg-black/90 backdrop-blur-xl border border-white/20 hover:border-white/40
-                   transition-colors"
+        onClick={() => { SoundEffects.click(); onClick(); }}
+        className={`fixed top-4 left-4 z-100 flex items-center gap-2 px-4 py-2.5 rounded-2xl
+                   bg-black/90 border border-white/20 hover:border-white/40
+                   transition-colors ${skipHeavyEffects ? '' : 'backdrop-blur-xl'}`}
         initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: -50 }}
@@ -1183,6 +1206,9 @@ const ExitSplineModeButton = ({
 // MAIN STORE HERO COMPONENT
 // ============================================================================
 export function StoreHero3D({ paused = false }: { paused?: boolean }) {
+  const isProd = process.env.NODE_ENV === 'production';
+  const autoLoad3D = !isProd || process.env.NEXT_PUBLIC_STORE_AUTO_3D === 'true';
+  const enableLiveCrypto = !isProd || process.env.NEXT_PUBLIC_STORE_LIVE_CRYPTO === 'true';
   const containerRef = useRef<HTMLDivElement>(null);
   const mouseX = useMotionValue(0.5);
   const mouseY = useMotionValue(0.5);
@@ -1194,9 +1220,14 @@ export function StoreHero3D({ paused = false }: { paused?: boolean }) {
   const [show3DBackground, setShow3DBackground] = useState(() => {
     // Initialize to true for desktop (SSR-safe check)
     if (typeof window === 'undefined') return false;
+    if (!autoLoad3D) return false;
     return window.innerWidth >= 768;
   });
   const [showGrayscale, setShowGrayscale] = useState(false);
+  
+  // Performance optimization
+  const { shouldSkipHeavyEffects } = useUnifiedPerformance();
+  const enableParticles = !isProd && !shouldSkipHeavyEffects;
   
   // Mobile performance: Track if hero section is in viewport
   const [isHeroInView, setIsHeroInView] = useState(true);
@@ -1314,8 +1345,9 @@ export function StoreHero3D({ paused = false }: { paused?: boolean }) {
   }, []);
   
   // Content fade cycle effect (5 second intervals) - paused when interacting with product or component paused
+  // PERF: Skip on mobile — the opacity state updates every 5s cause unnecessary re-renders
   useEffect(() => {
-    if (isSplinePlayMode || isInteractingWithProduct || paused) return; // Don't fade when paused
+    if (isProd || isSplinePlayMode || isInteractingWithProduct || paused || isMobile) return; // Don't fade when paused, in prod, or on mobile
     
     const fadeCycle = () => {
       // Fade out over 2.5s, then fade in over 2.5s
@@ -1329,7 +1361,7 @@ export function StoreHero3D({ paused = false }: { paused?: boolean }) {
     const interval = setInterval(fadeCycle, 5000);
     
     return () => clearInterval(interval);
-  }, [isSplinePlayMode, isInteractingWithProduct, paused]);
+  }, [isSplinePlayMode, isInteractingWithProduct, paused, isMobile]);
   
   // Idle timer effect - show "Play with Spline" after 12 seconds of no clicks/hovers
   useEffect(() => {
@@ -1457,42 +1489,33 @@ export function StoreHero3D({ paused = false }: { paused?: boolean }) {
     
     // Smart 3D Background Loading Strategy
     // Desktop: Load immediately (scene already preloaded at module level)
-    // Mobile: Short delay then load (scene bytes already cached from module-level fetch)
+    // Mobile: Minimal delay then load to reduce perceived latency
     let splineLoadTimer: NodeJS.Timeout | undefined;
     
     if (!mobile) {
       // Desktop - immediate load (runtime + scene already pre-warmed)
-      setShow3DBackground(true);
+      if (autoLoad3D) setShow3DBackground(true);
     } else {
-      // Mobile - check device memory and load with short delay
-      
-      // Check if device has enough memory (>= 4GB)
-      const hasEnoughMemory = !('deviceMemory' in navigator) || 
-                             (navigator as any).deviceMemory >= 4;
-      
-      if (hasEnoughMemory) {
-        // Reduced delay: 3 seconds (scene already cached from module-level preload)
-        splineLoadTimer = setTimeout(() => {
+      // Mobile - load immediately once the tab is visible
+      if (document.visibilityState === 'visible') {
+        if (autoLoad3D) setShow3DBackground(true);
+      } else {
+        const onVisible = () => {
           if (document.visibilityState === 'visible') {
-            setShow3DBackground(true);
-          } else {
-            // Wait for tab to become visible
-            const onVisible = () => {
-              if (document.visibilityState === 'visible') {
-                setShow3DBackground(true);
-                document.removeEventListener('visibilitychange', onVisible);
-              }
-            };
-            document.addEventListener('visibilitychange', onVisible);
+            if (autoLoad3D) setShow3DBackground(true);
+            document.removeEventListener('visibilitychange', onVisible);
           }
-        }, 3000); // 3 seconds (down from 15s)
+        };
+        document.addEventListener('visibilitychange', onVisible);
       }
     }
     
     // Fetch VIP products and crypto prices on mount
+    // PERF: Mobile uses 30s polling vs 15s desktop
     fetchVipProducts();
-    if (!paused) fetchCryptoPrices();
-    const priceInterval = paused ? null : setInterval(fetchCryptoPrices, 15000);
+    if (enableLiveCrypto && !paused) fetchCryptoPrices();
+    const cryptoInterval = mobile ? 30000 : 15000;
+    const priceInterval = (!enableLiveCrypto || paused) ? null : setInterval(fetchCryptoPrices, cryptoInterval);
     
     // Show promo popup after 3 seconds (once per hour)
     // For testing: Clear localStorage.removeItem('store_promo_seen') to reset
@@ -1548,7 +1571,7 @@ export function StoreHero3D({ paused = false }: { paused?: boolean }) {
       if (mobile && show3DBackground) {
         // User resized to mobile while Spline was showing - disable it
         setShow3DBackground(false);
-      } else if (!mobile && !show3DBackground) {
+      } else if (!mobile && !show3DBackground && autoLoad3D) {
         // User resized to desktop - enable immediately
         setShow3DBackground(true);
       }
@@ -1574,16 +1597,17 @@ export function StoreHero3D({ paused = false }: { paused?: boolean }) {
         observer.disconnect();
       }
     };
-  }, [handleMouseMove, fetchCryptoPrices, fetchVipProducts, paused]);
+  }, [autoLoad3D, enableLiveCrypto, fetchCryptoPrices, fetchVipProducts, handleMouseMove, paused]);
 
-  // Generate particles
+  // Generate particles — fewer on mobile for better perf
+  const particleCount = enableParticles ? (isMobile ? 8 : 20) : 0;
   const particles = useMemo(() => 
-    Array.from({ length: 20 }).map((_, i) => ({
+    Array.from({ length: particleCount }).map((_, i) => ({
       id: i,
       delay: Math.random() * 5,
       duration: 4 + Math.random() * 4,
     })), 
-  []);
+  [particleCount]);
 
   return (
     <>
@@ -1599,7 +1623,13 @@ export function StoreHero3D({ paused = false }: { paused?: boolean }) {
       <section 
         ref={containerRef}
         className="relative h-screen md:h-[80vh] lg:h-[90vh] flex items-center justify-center overflow-hidden"
-        style={{ perspective: '1000px', touchAction: 'pan-y' }}
+        style={{ 
+          perspective: '1000px', 
+          touchAction: 'pan-y',
+          contain: 'layout style paint',      // PERF: Isolate layout/paint to this subtree
+          contentVisibility: 'auto' as any,   // PERF: Skip rendering when off-screen
+          containIntrinsicSize: '0 100vh',    // Hint for content-visibility sizing
+        }}
       >
         {/* === BACKGROUND LAYERS === */}
         
@@ -1742,6 +1772,7 @@ export function StoreHero3D({ paused = false }: { paused?: boolean }) {
                   onInteractionStart={() => handleProductInteractionStart(product.id)}
                   onInteractionEnd={handleProductInteractionEnd}
                   onCardClick={() => openProductsModal(true)}
+                  skipParallax={isMobile}
                 />
               ))}
             </motion.div>
@@ -1789,7 +1820,7 @@ export function StoreHero3D({ paused = false }: { paused?: boolean }) {
             style={{ isolation: 'isolate' }}
           >
             <motion.button
-              onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
+              onClick={() => { SoundEffects.click(); window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); }}
               className="group relative px-8 py-4 rounded-2xl bg-black text-white font-medium overflow-hidden
                        border border-white/20 transition-all duration-300 hover:shadow-[0_0_40px_rgba(255,255,255,0.15)] pointer-events-auto"
               whileHover={{ scale: 1.02 }}

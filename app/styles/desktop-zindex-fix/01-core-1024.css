@@ -5,18 +5,19 @@
      PREMIUM VISUAL ENHANCEMENTS
      ============================================ */
   
-  /* Smooth transitions for all elements */
-  * {
+  /* Smooth transitions for all elements (except dashboard widgets) */
+  *:not([data-theme-aware] *):not(.tradingview-widget-container *) {
     transition: box-shadow 0.3s ease, transform 0.3s ease, opacity 0.3s ease !important;
   }
   
   /* Premium glass morphism for cards and containers */
-  .card,
-  .container,
-  section,
-  article,
-  [class*="card"],
-  [class*="panel"] {
+  /* Exclude dashboard sections with data-theme-aware from glass morphism */
+  .card:not([data-theme-aware] *),
+  .container:not([data-theme-aware] *),
+  section:not([data-theme-aware]):not(#tradingview-dashboard):not(#metatrader-quotes):not(#breaking-news):not(#telegram-community),
+  article:not([data-theme-aware] *),
+  [class*="card"]:not([data-theme-aware] *),
+  [class*="panel"]:not([data-theme-aware] *) {
     backdrop-filter: blur(20px) saturate(180%) !important;
     -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
     background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05)) !important;
@@ -25,6 +26,23 @@
       0 8px 32px 0 rgba(0, 0, 0, 0.37),
       inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
       0 0 20px rgba(255, 255, 255, 0.1) !important;
+  }
+  
+  /* Ensure dashboard sections maintain their dark theme */
+  section[data-theme-aware],
+  section#tradingview-dashboard,
+  section#metatrader-quotes,
+  section#breaking-news,
+  section#telegram-community {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  
+  /* Preserve TradingView widget styling */
+  .tradingview-widget-container,
+  .tradingview-widget-container * {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
   
   /* Shiny hover effects for interactive elements */
@@ -38,6 +56,17 @@
       0 0 30px rgba(255, 255, 255, 0.3),
       inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
     filter: brightness(1.1) !important;
+  }
+  
+  /* Exclude dashboard sections from hover transforms */
+  [data-theme-aware] button:hover,
+  [data-theme-aware] a:hover,
+  [data-theme-aware] [role="button"]:hover,
+  .tradingview-widget-container button:hover,
+  .tradingview-widget-container a:hover {
+    transform: none !important;
+    box-shadow: none !important;
+    filter: none !important;
   }
   
   /* Premium glow animation */

@@ -12,6 +12,7 @@ import {
 
 import { motion, AnimatePresence, useMotionTemplate, useMotionValue } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { SoundEffects } from '@/app/hooks/useSoundEffects';
 
 // --- IMPORT SEPARATE LOADER COMPONENT ---
 import { MultiStepLoader} from "@/components/Mainpage/MultiStepLoader"; 
@@ -465,6 +466,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   const handleNext = (e?: React.SyntheticEvent) => {
     if (e) e.preventDefault();
     setSubmitError(null);
+    SoundEffects.click();
 
     // INTRO -> STEP 1
     if (step === 0) {
@@ -502,12 +504,14 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
   const handleBack = () => {
     if (step > 0) {
+      SoundEffects.click();
       setStep(step - 1);
       setSubmitError(null);
     }
   };
 
   const toggleViewMode = () => {
+    SoundEffects.tab();
     if (viewMode === 'register') {
       setViewMode('login');
       setStep(0); 

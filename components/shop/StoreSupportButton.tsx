@@ -22,6 +22,7 @@ import {
   Users,
   Globe,
 } from 'lucide-react';
+import { SoundEffects } from '@/app/hooks/useSoundEffects';
 
 // ============================================================================
 // SUPPORT BUTTON — Apple-style monochrome floating widget
@@ -178,6 +179,7 @@ export function SupportButton({ position = 'right' }: SupportButtonProps) {
   useEffect(() => { if (view === 'chat') setTimeout(() => inputRef.current?.focus(), 300); }, [view]);
 
   const handleOpen = () => {
+    SoundEffects.open();
     setIsOpen(true);
     setHasUnread(false);
     if (messages.length === 0) {
@@ -191,11 +193,13 @@ export function SupportButton({ position = 'right' }: SupportButtonProps) {
   };
 
   const navigateTo = (v: View, catId?: string) => {
+    SoundEffects.tab();
     setView(v);
     if (catId) setSelectedCategory(catId);
   };
 
   const goBack = () => {
+    SoundEffects.tab();
     if (view === 'faq-category') setView('faq');
     else if (view === 'telegram' || view === 'discord') setView('social');
     else setView('home');
@@ -243,6 +247,7 @@ export function SupportButton({ position = 'right' }: SupportButtonProps) {
   }, [inputValue, chatHistory]);
 
   const handleFaqClick = (q: string, a: string) => {
+    SoundEffects.click();
     setMessages(p => [...p, { id: Date.now().toString(), type: 'user', content: q, timestamp: new Date() }]);
     setChatHistory(prev => [...prev, { role: 'user', content: q }, { role: 'assistant', content: a }]);
     setIsTyping(true);
@@ -275,8 +280,8 @@ export function SupportButton({ position = 'right' }: SupportButtonProps) {
       onMouseEnter: (e: React.MouseEvent) => { Object.assign((e.currentTarget as HTMLElement).style, glass.rowHover); },
       onMouseLeave: (e: React.MouseEvent) => { Object.assign((e.currentTarget as HTMLElement).style, glass.rowReset); },
     };
-    if (href) return <a className={base} style={{ ...glass.row }} href={href} target="_blank" rel="noopener noreferrer" {...handlers}>{children}</a>;
-    if (onClick) return <button className={base} style={{ ...glass.row }} onClick={onClick} {...handlers}>{children}</button>;
+    if (href) return <a className={base} style={{ ...glass.row }} href={href} target="_blank" rel="noopener noreferrer" onClick={() => SoundEffects.click()} {...handlers}>{children}</a>;
+    if (onClick) return <button className={base} style={{ ...glass.row }} onClick={() => { SoundEffects.click(); onClick(); }} {...handlers}>{children}</button>;
     return <div className={base} style={{ ...glass.row }} {...handlers}>{children}</div>;
   };
 
@@ -298,8 +303,8 @@ export function SupportButton({ position = 'right' }: SupportButtonProps) {
     <>
       {/* Floating Button */}
       <motion.button
-        onClick={isOpen ? () => setIsOpen(false) : handleOpen}
-        className={`fixed bottom-24 ${side} z-[9999] flex items-center justify-center w-12 h-12 rounded-full`}
+        onClick={isOpen ? () => { SoundEffects.close(); setIsOpen(false); } : handleOpen}
+        className={`fixed bottom-6 md:bottom-24 ${side} z-[9999] flex items-center justify-center w-12 h-12 rounded-full`}
         style={{
           background: isOpen ? 'rgba(255,255,255,0.06)' : 'rgb(0, 0, 0)',
           backdropFilter: 'blur(20px) saturate(180%)',
@@ -340,7 +345,7 @@ export function SupportButton({ position = 'right' }: SupportButtonProps) {
             exit={{ opacity: 0, y: -4, scale: 0.95 }}
             transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
             onClick={handleOpen}
-            className={`fixed bottom-40 ${side} z-[9999] cursor-pointer max-w-55`}
+            className={`fixed bottom-20 md:bottom-40 ${side} z-[9999] cursor-pointer max-w-55`}
             style={{
               background: 'rgba(0, 0, 0, 0.92)',
               backdropFilter: 'blur(24px) saturate(180%)',
@@ -368,7 +373,7 @@ export function SupportButton({ position = 'right' }: SupportButtonProps) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 14, scale: 0.97 }}
             transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
-            className={`fixed bottom-30 ${side} z-[9998] w-85 max-w-[calc(100vw-40px)] rounded-2xl overflow-hidden flex flex-col`}
+            className={`fixed bottom-20 md:bottom-30 ${side} z-[9998] w-85 max-w-[calc(100vw-40px)] rounded-2xl overflow-hidden flex flex-col`}
             style={{ height: 'min(560px, calc(100vh - 120px))', ...glass.panel }}
           >
             {/* Header */}

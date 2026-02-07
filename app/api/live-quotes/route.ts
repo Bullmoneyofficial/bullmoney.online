@@ -5,6 +5,7 @@ import { ALL_INSTRUMENTS, Instrument, INSTRUMENT_MAP } from '@/lib/quotes/instru
 interface CachedData {
   rates: Record<string, number>; // USD-based rates  { EUR: 0.92, GBP: 0.79, ... }
   metals: Record<string, number>; // { XAU: 2650, XAG: 31.5, XPT: 980, XPD: 1050 }
+  indices: Record<string, number>; // { US100: 21500, US30: 42000, ... }
   dailyOpens: Record<string, number>; // Cached opens per symbol
   dailyHighs: Record<string, number>;
   dailyLows: Record<string, number>;
@@ -85,6 +86,57 @@ async function fetchMetalPrices(): Promise<Record<string, number>> {
   return {};
 }
 
+// ─── Fetch index prices (Yahoo Finance) ───────────────────
+async function fetchIndexPrices(): Promise<Record<string, number>> {
+  const indexInstruments = ALL_INSTRUMENTS.filter((i) => i.type === 'index' && i.indexId);
+  if (indexInstruments.length === 0) return {};
+
+  const results: Record<string, number> = {};
+
+  // Fetch from Yahoo Finance chart API for each index
+  const fetches = indexInstruments.map(async (inst) => {
+    try {
+      const res = await fetch(
+        `https://query1.finance.yahoo.com/v8/finance/chart/${inst.indexId}?interval=1d&range=1d`,
+        {
+          headers: {
+            'User-Agent': 'Mozilla/5.0',
+            Accept: 'application/json',
+          },
+          next: { revalidate: 30 },
+        }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        const meta = data?.chart?.result?.[0]?.meta;
+        if (meta?.regularMarketPrice) {
+          results[inst.symbol] = meta.regularMarketPrice;
+        }
+      }
+    } catch {}
+  });
+
+  await Promise.all(fetches);
+
+  // Fallback: use typical values for common indices if fetch failed
+  const fallbacks: Record<string, number> = {
+    US100: 21500,
+    US30: 42800,
+    US500: 5950,
+    DE40: 19200,
+    UK100: 8100,
+    JP225: 38500,
+  };
+
+  for (const inst of indexInstruments) {
+    if (!results[inst.symbol] && fallbacks[inst.symbol]) {
+      results[inst.symbol] = fallbacks[inst.symbol];
+    }
+  }
+
+  return results;
+}
+
 // ─── Calculate forex cross rate ──────────────────────────────
 function crossRate(
   base: string,
@@ -141,9 +193,10 @@ export async function GET(request: Request) {
   // ── Refresh cache if stale ──────────────────────────────
   const now = Date.now();
   if (!cache || now - cache.ts > CACHE_TTL) {
-    const [rates, metals] = await Promise.all([
+    const [rates, metals, indices] = await Promise.all([
       fetchForexRates(),
       fetchMetalPrices(),
+      fetchIndexPrices(),
     ]);
 
     // Preserve daily opens/highs/lows or initialize
@@ -151,7 +204,7 @@ export async function GET(request: Request) {
     const dailyHighs = cache?.dailyHighs ?? {};
     const dailyLows = cache?.dailyLows ?? {};
 
-    cache = { rates, metals, dailyOpens, dailyHighs, dailyLows, ts: now };
+    cache = { rates, metals, indices, dailyOpens, dailyHighs, dailyLows, ts: now };
   }
 
   // ── Build response ──────────────────────────────────────
@@ -183,6 +236,8 @@ export async function GET(request: Request) {
       );
     } else if (instrument.type === 'metal' && instrument.metalId) {
       mid = cache.metals[instrument.metalId] ?? null;
+    } else if (instrument.type === 'index') {
+      mid = cache.indices[sym] ?? null;
     }
 
     if (mid === null || mid <= 0) continue;
@@ -209,7 +264,9 @@ export async function GET(request: Request) {
 
     // Simulate realistic volume
     const baseVolume =
-      instrument.type === 'metal' ? 5000 + Math.random() * 3000 : 10000 + Math.random() * 20000;
+      instrument.type === 'metal' ? 5000 + Math.random() * 3000
+        : instrument.type === 'index' ? 50000 + Math.random() * 30000
+        : 10000 + Math.random() * 20000;
 
     result[sym] = {
       bid: parseFloat(bid.toFixed(instrument.digits)),

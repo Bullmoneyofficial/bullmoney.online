@@ -8,6 +8,13 @@ import {
   ALL_INSTRUMENTS,
 } from './instruments';
 
+// Mobile detection helper
+const isMobileDevice = () => {
+  if (typeof window === 'undefined') return false;
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || 
+         ('ontouchstart' in window && window.innerWidth < 1024);
+};
+
 // ─── Types ──────────────────────────────────────────────────
 export interface LiveQuote {
   symbol: string;
@@ -33,7 +40,8 @@ export interface LiveQuote {
 
 // ─── Constants ──────────────────────────────────────────────
 const WATCHLIST_KEY = 'mt5-watchlist';
-const FOREX_POLL_MS = 5_000;
+const FOREX_POLL_MS_DESKTOP = 5_000;
+const FOREX_POLL_MS_MOBILE = 8_000; // Slower on mobile to save battery
 const BINANCE_WS_URL = 'wss://stream.binance.com:9443/stream';
 
 // ─── Helpers ────────────────────────────────────────────────
@@ -74,11 +82,14 @@ export function useLiveQuotes() {
   const [quotes, setQuotes] = useState<Map<string, LiveQuote>>(new Map());
   const [watchlist, setWatchlistState] = useState<string[]>([]);
   const [connected, setConnected] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
   const wsRef = useRef<WebSocket | null>(null);
   const prevPrices = useRef<Map<string, number>>(new Map());
   const forexTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
+  const isMobile = useRef(isMobileDevice());
+  const pollInterval = isMobile.current ? FOREX_POLL_MS_MOBILE : FOREX_POLL_MS_DESKTOP;
 
   // ── Load watchlist from localStorage ─────────────────────
   useEffect(() => {
@@ -92,6 +103,21 @@ export function useLiveQuotes() {
     setWatchlistState(initial);
     return () => {
       mountedRef.current = false;
+    };
+  }, []);
+
+  // ── Visibility observer for performance ───────────────────
+  useEffect(() => {
+    if (typeof document === 'undefined' || typeof IntersectionObserver === 'undefined') return;
+    
+    // Use document visibility API as a simple check
+    const handleVisibilityChange = () => {
+      setIsVisible(!document.hidden);
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 
@@ -196,7 +222,7 @@ export function useLiveQuotes() {
   // BINANCE WEBSOCKET — Real-time crypto
   // ══════════════════════════════════════════════════════════
   useEffect(() => {
-    if (cryptoInstruments.length === 0) return;
+    if (cryptoInstruments.length === 0 || !isVisible) return;
 
     // Build lookup: binanceSymbol → Instrument
     const binanceLookup = new Map<string, Instrument>();
@@ -246,10 +272,11 @@ export function useLiveQuotes() {
       };
 
       ws.onclose = () => {
-        if (mountedRef.current) {
+        if (mountedRef.current && isVisible) {
           setConnected(false);
-          // Reconnect after 3 seconds
-          reconnectTimerRef.current = setTimeout(connect, 3000);
+          // Reconnect after 3s on desktop, 5s on mobile to save battery
+          const delay = isMobile.current ? 5000 : 3000;
+          reconnectTimerRef.current = setTimeout(connect, delay);
         }
       };
     };
@@ -267,9 +294,9 @@ export function useLiveQuotes() {
         reconnectTimerRef.current = null;
       }
     };
-    // Re-connect when crypto watchlist changes
+    // Re-connect when crypto watchlist changes or visibility changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cryptoInstruments.map((i) => i.symbol).join(',')]);
+  }, [cryptoInstruments.map((i) => i.symbol).join(','), isVisible]);
 
   // ══════════════════════════════════════════════════════════
   // FOREX & METALS — Poll API route
@@ -314,13 +341,13 @@ export function useLiveQuotes() {
   }, [nonCryptoInstruments.map((i) => i.symbol).join(','), updateQuote]);
 
   useEffect(() => {
-    if (nonCryptoInstruments.length === 0) return;
+    if (nonCryptoInstruments.length === 0 || !isVisible) return;
     fetchForexMetals();
-    forexTimerRef.current = setInterval(fetchForexMetals, FOREX_POLL_MS);
+    forexTimerRef.current = setInterval(fetchForexMetals, pollInterval);
     return () => {
       if (forexTimerRef.current) clearInterval(forexTimerRef.current);
     };
-  }, [fetchForexMetals, nonCryptoInstruments.length]);
+  }, [fetchForexMetals, nonCryptoInstruments.length, pollInterval, isVisible]);
 
   // ── Build ordered array from watchlist ───────────────────
   const orderedQuotes: LiveQuote[] = watchlist

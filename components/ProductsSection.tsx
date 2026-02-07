@@ -11,6 +11,7 @@ import TextType from "@/components/TextType";
 import { gsap } from "gsap";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { useSound } from "@/contexts/SoundContext";
 import { 
   ChevronDown, 
   Search, 
@@ -194,6 +195,7 @@ type ProductBentoCardProps = {
   onToggleVisibility: () => void;
   disableAnimations: boolean;
   onClick: () => void;
+  sounds: ReturnType<typeof useSound>['sounds'];
 };
 
 function ProductBentoCard({
@@ -204,11 +206,13 @@ function ProductBentoCard({
   onToggleVisibility,
   disableAnimations,
   onClick,
+  sounds,
 }: ProductBentoCardProps) {
   
   const handleBuyNow = (e: React.MouseEvent) => {
     e.stopPropagation();
     // Coming soon - checkout disabled temporarily
+    sounds.warning();
     alert("Coming Soon!");
     return;
   };
@@ -218,10 +222,10 @@ function ProductBentoCard({
       layoutId={`card-container-${product.id}`}
       className="relative h-full"
       disableAnimations={disableAnimations}
-      onClick={onClick}
+      onClick={() => { sounds.modalOpen(); onClick(); }}
     >
       <ShimmerBorder rounded="rounded-2xl" className="h-full hover:shadow-[0_0_20px_rgba(255, 255, 255,0.3)] transition-shadow duration-500">
-        <div className="p-4 md:p-5 w-full h-full relative flex flex-col justify-between bg-[#060010]"> 
+        <div className="p-4 md:p-5 w-full h-full relative flex flex-col justify-between bg-[#060010]" onMouseEnter={() => sounds.buttonHover()}> 
           
           {/* HEADER */}
           <div className="relative z-10 flex justify-between items-start mb-3">
@@ -284,13 +288,13 @@ function ProductBentoCard({
               className="mt-3 pt-2 border-t border-dashed border-indigo-900/30 flex justify-end gap-2 z-20"
               onClick={(e) => e.stopPropagation()}
             >
-              <button onClick={onEdit} className="p-1.5 rounded-md hover:bg-indigo-900/30 text-indigo-400 hover:text-white transition-colors">
+              <button onClick={() => { sounds.adminAction(); onEdit(); }} className="p-1.5 rounded-md hover:bg-indigo-900/30 text-indigo-400 hover:text-white transition-colors">
                 <Edit size={14} />
               </button>
-              <button onClick={onToggleVisibility} className="p-1.5 rounded-md hover:bg-indigo-900/30 text-indigo-400 hover:text-white transition-colors">
+              <button onClick={() => { sounds.adminAction(); onToggleVisibility(); }} className="p-1.5 rounded-md hover:bg-indigo-900/30 text-indigo-400 hover:text-white transition-colors">
                 {product.visible ? <Eye size={14} /> : <EyeOff size={14} />}
               </button>
-              <button onClick={onDelete} className="p-1.5 rounded-md hover:bg-red-900/30 text-red-400 hover:text-white transition-colors">
+              <button onClick={() => { sounds.delete(); onDelete(); }} className="p-1.5 rounded-md hover:bg-red-900/30 text-red-400 hover:text-white transition-colors">
                 <Trash2 size={14} />
               </button>
             </div>
@@ -319,6 +323,9 @@ export default function ProductsSection() {
     deleteProduct,
   } = useShop();
   const { formatPrice } = useCurrencyLocaleStore();
+  
+  // Initialize trading sounds from context
+  const { sounds } = useSound();
 
   const [filters, setFilters] = useState<Filters>({
     search: "",
@@ -337,6 +344,7 @@ export default function ProductsSection() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   const toggleSortDirection = () => {
+    sounds.sortChange();
     setSortDirection(prev => (prev === 'asc' ? 'desc' : 'asc'));
   };
 
@@ -443,7 +451,12 @@ export default function ProductsSection() {
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 w-4 h-4 transition-colors" />
                             <input
                                 value={filters.search}
-                                onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
+                                onChange={(e) => {
+                                  if (e.target.value.length > filters.search.length) {
+                                    sounds.buttonClick();
+                                  }
+                                  setFilters((f) => ({ ...f, search: e.target.value }));
+                                }}
                                 placeholder="Search products..."
                                 className="w-full bg-black/50 border border-white/10 rounded-lg pl-9 pr-4 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/50 transition-colors"
                             />
@@ -453,7 +466,10 @@ export default function ProductsSection() {
                         <div className="relative w-full sm:w-48">
                             <select
                                 value={filters.category}
-                                onChange={(e) => setFilters((f) => ({ ...f, category: e.target.value }))}
+                                onChange={(e) => {
+                                  sounds.filterApply();
+                                  setFilters((f) => ({ ...f, category: e.target.value }));
+                                }}
                                 className="w-full appearance-none bg-black/50 border border-white/10 rounded-lg pl-4 pr-10 py-2 text-sm text-slate-300 focus:outline-none focus:border-indigo-500/50 cursor-pointer transition-colors"
                             >
                                 <option value="all">All Categories</option>
@@ -479,7 +495,10 @@ export default function ProductsSection() {
 
                         {/* Admin Toggle */}
                         <button
-                            onClick={() => setLoginOpen(true)}
+                            onClick={() => {
+                              sounds.adminAction();
+                              setLoginOpen(true);
+                            }}
                             className={cn(
                                 "px-3 py-2 rounded-lg border text-xs font-medium flex items-center gap-2 transition-all",
                                 isAdmin 
@@ -509,6 +528,7 @@ export default function ProductsSection() {
                         onToggleVisibility={() => toggleVisibility(pid)}
                         disableAnimations={false}
                         onClick={() => setExpandedId(pid)}
+                        sounds={sounds}
                     />
                 );
             })}
@@ -529,7 +549,10 @@ export default function ProductsSection() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                onClick={() => setExpandedId(null)}
+                onClick={() => {
+                  sounds.modalClose();
+                  setExpandedId(null);
+                }}
                 className="absolute inset-0 bg-black/80 backdrop-blur-md"
             />
             
@@ -546,7 +569,11 @@ export default function ProductsSection() {
                             >
                                 {/* Close Button */}
                                 <button
-                                    onClick={(e) => { e.stopPropagation(); setExpandedId(null); }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      sounds.modalClose();
+                                      setExpandedId(null);
+                                    }}
                                     className="absolute top-4 right-4 z-50 p-2 bg-black/50 hover:bg-black/80 text-white rounded-full backdrop-blur-md transition-colors border border-white/10 group"
                                 >
                                     <X size={20} className="group-hover:rotate-90 transition-transform" />
@@ -605,8 +632,13 @@ export default function ProductsSection() {
                                             <button
                                                 onClick={() => {
                                                     const url = p.buyUrl?.trim();
-                                                    if (url) window.open(url, "_blank");
-                                                    else alert("No buy link available");
+                                                    if (url) {
+                                                      sounds.purchase();
+                                                      window.open(url, "_blank");
+                                                    } else {
+                                                      sounds.error();
+                                                      alert("No buy link available");
+                                                    }
                                                 }}
                                                 className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-all"
                                             >

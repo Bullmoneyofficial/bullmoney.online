@@ -45,9 +45,37 @@ export const Features = dynamic(
   { ssr: false, loading: () => <MinimalFallback /> }
 );
 
+export const BullMoneyCommunity = dynamic(
+  () => import(/* webpackChunkName: "community-feed" */ "@/components/BullMoneyCommunity"),
+  { ssr: false, loading: () => <MinimalFallback /> }
+);
+
+export const BreakingNewsTicker = dynamic(
+  () => import(/* webpackChunkName: "breaking-news" */ "@/components/BreakingNewsTicker"),
+  { ssr: false, loading: () => <MinimalFallback /> }
+);
+
+const TradingViewDashboardSkeleton = () => (
+  <div className="w-full bg-black rounded-xl border border-[#1a1a1a] overflow-hidden" style={{ minHeight: 600 }}>
+    <div className="flex items-center gap-3 px-4 py-2.5 border-b border-[#1a1a1a]">
+      <div className="w-7 h-7 rounded bg-[#111] animate-pulse" />
+      <div className="h-4 w-28 rounded bg-[#111] animate-pulse" />
+    </div>
+    <div className="flex items-center gap-2 px-3 py-2 border-b border-[#1a1a1a] overflow-x-auto">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div key={i} className="h-7 w-16 rounded-full bg-[#0a0a0a] border border-[#1a1a1a] animate-pulse shrink-0" />
+      ))}
+    </div>
+    <div className="w-full h-[46px] bg-[#060606] border-b border-[#1a1a1a] animate-pulse" />
+    <div className="w-full flex-1 bg-black" style={{ height: 450 }}>
+      <div className="w-full h-full bg-[#060606] animate-pulse" />
+    </div>
+  </div>
+);
+
 export const TradingViewDashboard = dynamic(
   () => import(/* webpackChunkName: "tv-dashboard" */ "@/components/TradingViewDashboard"),
-  { ssr: false, loading: () => <MinimalFallback /> }
+  { ssr: false, loading: () => <TradingViewDashboardSkeleton /> }
 );
 
 // LOW PRIORITY - Below the fold, load on demand

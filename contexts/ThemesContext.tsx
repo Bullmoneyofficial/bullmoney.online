@@ -1843,18 +1843,18 @@ export function ThemesPanel() {
   } = useUIState();
   
   // Check if we're on store page and theme picker is disabled
-  const [storeThemePickerEnabled, setStoreThemePickerEnabled] = useState(true);
+  const [storeThemePickerEnabled, setStoreThemePickerEnabled] = useState(false);
   
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const checkStoreThemePicker = () => {
-        // Check if on store page
-        const isStorePage = window.location.pathname.startsWith('/store');
-        if (isStorePage) {
-          const stored = localStorage.getItem('store_show_theme_picker');
-          setStoreThemePickerEnabled(stored === 'true');
-        } else {
-          setStoreThemePickerEnabled(true); // Always show on non-store pages
+        const stored = localStorage.getItem('store_show_theme_picker');
+        // Only show when user explicitly enabled it (default OFF on first load)
+        const enabled = stored === 'true';
+        setStoreThemePickerEnabled(enabled);
+        // Also close the panel when the toggle is turned off
+        if (!enabled && isOpen) {
+          setIsOpen(false);
         }
       };
       
@@ -1865,7 +1865,7 @@ export function ThemesPanel() {
         window.removeEventListener('store_theme_picker_toggle', checkStoreThemePicker);
       };
     }
-  }, []);
+  }, [isOpen, setIsOpen]);
   
   const shouldHideToggleButton = !storeThemePickerEnabled || !isWelcomeScreenActive && (isMobileMenuOpen || isAnyModalOpen || isUltimateHubOpen || isUltimatePanelOpen);
   const [activeTab, setActiveTab] = useState<'effects' | 'colors'>('effects');

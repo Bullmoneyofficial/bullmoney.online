@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { useUnifiedPerformance } from '@/hooks/useDesktopPerformance';
 import {
   Menu,
   Pencil,
@@ -128,6 +129,18 @@ function toTradingViewSymbol(symbol: string, category: string): string {
   if (symbol === 'XAGUSD') return 'OANDA:XAGUSD';
   if (symbol === 'XPTUSD') return 'TVC:PLATINUM';
   if (symbol === 'XPDUSD') return 'TVC:PALLADIUM';
+  // Indices
+  if (category === 'Indices') {
+    const indexMap: Record<string, string> = {
+      US100: 'NASDAQ:NDX',
+      US30: 'DJ:DJI',
+      US500: 'SP:SPX',
+      DE40: 'XETR:DAX',
+      UK100: 'SPREADEX:FTSE',
+      JP225: 'TVC:NI225',
+    };
+    return indexMap[symbol] || `TVC:${symbol}`;
+  }
   // Forex
   return `FX:${symbol}`;
 }
@@ -337,7 +350,7 @@ const DailyRangeBar = ({ low, high, current, color }: { low: number; high: numbe
 };
 
 // --- Big Figure Price Display ---
-const PriceDisplay = ({
+const PriceDisplay = React.memo(({
   price,
   digits,
   pipette,
@@ -381,10 +394,10 @@ const PriceDisplay = ({
       {pipette && <span className={`${s.sup} -mt-2`}>{superPost}</span>}
     </div>
   );
-};
+});
 
 // --- Mobile Quote Row (pixel-perfect MT5 iOS) ---
-const QuoteRowMobile = ({ data, editMode, onRemove, onTap }: { data: LiveQuote; editMode?: boolean; onRemove?: (s: string) => void; onTap?: (q: LiveQuote) => void }) => {
+const QuoteRowMobile = React.memo(({ data, editMode, onRemove, onTap }: { data: LiveQuote; editMode?: boolean; onRemove?: (s: string) => void; onTap?: (q: LiveQuote) => void }) => {
   const isPositive = data.change >= 0;
   const changeColor = isPositive ? 'text-[#3b82f6]' : 'text-[#ef4444]';
 
@@ -443,10 +456,10 @@ const QuoteRowMobile = ({ data, editMode, onRemove, onTap }: { data: LiveQuote; 
       </div>
     </div>
   );
-};
+});
 
 // --- Desktop Quote Row (expanded with extra columns) ---
-const QuoteRowDesktop = ({ data, isHovered, editMode, onRemove, onTap }: { data: LiveQuote; isHovered: boolean; editMode?: boolean; onRemove?: (s: string) => void; onTap?: (q: LiveQuote) => void }) => {
+const QuoteRowDesktop = React.memo(({ data, isHovered, editMode, onRemove, onTap }: { data: LiveQuote; isHovered: boolean; editMode?: boolean; onRemove?: (s: string) => void; onTap?: (q: LiveQuote) => void }) => {
   const isPositive = data.change >= 0;
   const changeColor = isPositive ? 'text-[#3b82f6]' : 'text-[#ef4444]';
   const changeBg = isPositive ? 'bg-blue-500/10' : 'bg-red-500/10';
@@ -531,7 +544,7 @@ const QuoteRowDesktop = ({ data, isHovered, editMode, onRemove, onTap }: { data:
       </div>
     </div>
   );
-};
+});
 
 // --- Desktop Header Row ---
 const DesktopHeaderRow = () => (
@@ -661,6 +674,7 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   Crypto: <Coins size={16} />,
   Forex: <Globe size={16} />,
   Metals: <Gem size={16} />,
+  Indices: <BarChart3 size={16} />,
 };
 
 function InstrumentPicker({
@@ -677,13 +691,14 @@ function InstrumentPicker({
   onRemove: (s: string) => void;
 }) {
   const [pickerSearch, setPickerSearch] = useState('');
-  const [activeCategory, setActiveCategory] = useState<'all' | 'crypto' | 'forex' | 'metal'>('all');
+  const [activeCategory, setActiveCategory] = useState<'all' | 'crypto' | 'forex' | 'metal' | 'index'>('all');
 
   const categories = [
     { id: 'all' as const, label: 'All', count: ALL_INSTRUMENTS.length },
     { id: 'crypto' as const, label: 'Crypto', count: INSTRUMENTS_BY_TYPE.crypto.length },
     { id: 'forex' as const, label: 'Forex', count: INSTRUMENTS_BY_TYPE.forex.length },
     { id: 'metal' as const, label: 'Metals', count: INSTRUMENTS_BY_TYPE.metal.length },
+    { id: 'index' as const, label: 'Indices', count: INSTRUMENTS_BY_TYPE.index.length },
   ];
 
   const filtered = useMemo(() => {
@@ -816,6 +831,10 @@ export default function MetaTraderQuotes({ embedded = false }: { embedded?: bool
   const [utcTime, setUtcTime] = useState('');
   const [chartQuote, setChartQuote] = useState<LiveQuote | null>(null);
   const [showMT5Links, setShowMT5Links] = useState(false);
+  
+  // Performance detection
+  const { isMobile, isTablet, shouldSkipHeavyEffects } = useUnifiedPerformance();
+  const isMobileDevice = isMobile || isTablet;
 
   const { quotes, watchlist, addSymbol, removeSymbol, connected } = useLiveQuotes();
 
@@ -827,13 +846,14 @@ export default function MetaTraderQuotes({ embedded = false }: { embedded?: bool
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  // Live UTC clock
+  // Live UTC clock (update less frequently on mobile)
   useEffect(() => {
     const tick = () => setUtcTime(new Date().toISOString().slice(11, 19));
     tick();
-    const id = setInterval(tick, 1000);
+    const interval = isMobileDevice ? 2000 : 1000; // 2s on mobile, 1s on desktop
+    const id = setInterval(tick, interval);
     return () => clearInterval(id);
-  }, []);
+  }, [isMobileDevice]);
 
   const filteredQuotes = useMemo(
     () =>

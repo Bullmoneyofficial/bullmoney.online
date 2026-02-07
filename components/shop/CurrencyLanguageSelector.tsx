@@ -294,8 +294,8 @@ export function CurrencyLanguageSelector() {
           <>
             {/* Backdrop */}
             <div
-              className="fixed inset-0 z-[10000]"
-              style={{ background: 'rgba(0,0,0,0.5)' }}
+              className="fixed inset-0"
+              style={{ background: 'rgba(0,0,0,0.5)', zIndex: 2147483646 }}
               onClick={() => setIsOpen(false)}
             />
             {/* Centered panel */}
@@ -303,8 +303,9 @@ export function CurrencyLanguageSelector() {
               id="currency-lang-popup"
               onClick={(e) => e.stopPropagation()}
               onMouseDown={(e) => e.stopPropagation()}
-              className="fixed z-[10001] rounded-xl overflow-hidden"
+              className="fixed rounded-xl overflow-hidden"
               style={{
+                zIndex: 2147483647,
                 top: '50%',
                 left: '50%',
                 transform: 'translate(-50%, -50%)',

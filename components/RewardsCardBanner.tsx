@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Award, Gift, Sparkles, ArrowRight, CreditCard, Star, Zap, Crown, Check } from "lucide-react";
 import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
+import { useUnifiedPerformance } from '@/hooks/useDesktopPerformance';
 import LogoLoop from "./LogoLoop";
 import type { LogoItem } from "./LogoLoop";
 
@@ -37,6 +38,7 @@ interface RewardsCardBannerProps {
 
 export default function RewardsCardBanner({ userEmail, onOpenRewardsCard }: RewardsCardBannerProps) {
   const { formatPrice } = useCurrencyLocaleStore();
+  const { isMobile, shouldSkipHeavyEffects } = useUnifiedPerformance();
   const [rewards, setRewards] = useState<RewardsData | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -62,24 +64,26 @@ export default function RewardsCardBanner({ userEmail, onOpenRewardsCard }: Rewa
 
   return (
     <div className="relative w-full bg-black border-b border-white/20 overflow-hidden">
-      {/* Background subtle pattern */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-5">
-        <div className="absolute -top-20 left-1/4 w-80 h-80 rounded-full bg-white blur-3xl" />
-        <div className="absolute -bottom-20 right-1/4 w-80 h-80 rounded-full bg-white blur-3xl" />
-      </div>
+      {/* Background subtle pattern — skip blur-3xl on mobile/low-end (expensive GPU filter) */}
+      {!shouldSkipHeavyEffects && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-5">
+          <div className="absolute -top-20 left-1/4 w-80 h-80 rounded-full bg-white blur-3xl" />
+          <div className="absolute -bottom-20 right-1/4 w-80 h-80 rounded-full bg-white blur-3xl" />
+        </div>
+      )}
 
       {/* Logo Loop Strip */}
       <div className="relative h-8 bg-white/5 border-b border-white/10">
         <LogoLoop
           logos={rewardLogos}
-          speed={60}
+          speed={isMobile ? 40 : 60}
           direction="left"
           logoHeight={20}
-          gap={80}
+          gap={isMobile ? 60 : 80}
           hoverSpeed={20}
           fadeOut
           fadeOutColor="#000000"
-          scaleOnHover
+          scaleOnHover={!isMobile}
           ariaLabel="Rewards benefits"
           className="h-full"
         />
@@ -92,7 +96,7 @@ export default function RewardsCardBanner({ userEmail, onOpenRewardsCard }: Rewa
           <div className="flex items-center gap-4">
             {/* Bullmoney Card Icon */}
             <div className="relative shrink-0">
-              <div className="absolute inset-0 rounded-xl blur-md bg-white/20 animate-pulse" />
+              {!shouldSkipHeavyEffects && <div className="absolute inset-0 rounded-xl blur-md bg-white/20 animate-pulse" />}
               <div className="relative w-14 h-10 rounded-lg bg-white shadow-lg flex items-center justify-center">
                 <div className="absolute inset-0.5 rounded-md bg-linear-to-br from-white/90 to-white/70" />
                 <span className="relative text-black font-black text-[10px] tracking-tighter">BULL</span>
@@ -172,7 +176,7 @@ export default function RewardsCardBanner({ userEmail, onOpenRewardsCard }: Rewa
           background-clip: text;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
-          animation: shimmer 3s linear infinite;
+          animation: ${shouldSkipHeavyEffects ? 'none' : 'shimmer 3s linear infinite'};
         }
         
         .group:hover .shimmer-text {

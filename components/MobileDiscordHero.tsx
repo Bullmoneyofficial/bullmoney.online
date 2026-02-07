@@ -6,7 +6,10 @@ import { createSupabaseClient } from '@/lib/supabase';
 import UltimateHub from './UltimateHub';
 import ProductsSection from './ProductsSection';
 import { useUltimateHubUI, useProductsModalUI, useBgPickerModalUI } from '@/contexts/UIStateContext';
+import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import dynamic from 'next/dynamic';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Box, Palette } from 'lucide-react';
 
 // Dynamic import for Spline (heavy 3D component)
 const Spline = dynamic(() => import('@splinetool/react-spline'), {
@@ -15,7 +18,26 @@ const Spline = dynamic(() => import('@splinetool/react-spline'), {
 });
 
 // Available Spline scenes
-const SPLINE_SCENES = ['/scene1.splinecode', '/scene.splinecode', '/scene2.splinecode'];
+const SPLINE_SCENES = [
+  '/scene.splinecode',
+  '/scene1.splinecode',
+  '/scene2.splinecode',
+  '/scene3.splinecode',
+  '/scene4.splinecode',
+  '/scene5.splinecode',
+  '/scene6.splinecode'
+];
+
+// Spline scene names for display
+const SPLINE_SCENE_NAMES: Record<string, string> = {
+  '/scene.splinecode': 'Default Scene',
+  '/scene1.splinecode': 'Scene 1',
+  '/scene2.splinecode': 'Scene 2',
+  '/scene3.splinecode': 'Scene 3',
+  '/scene4.splinecode': 'Scene 4',
+  '/scene5.splinecode': 'Scene 5',
+  '/scene6.splinecode': 'Scene 6'
+};
 
 // =============================================================================
 // SPLINE ULTRA-FAST CACHING SYSTEM
@@ -24,6 +46,7 @@ const SPLINE_SCENES = ['/scene1.splinecode', '/scene.splinecode', '/scene2.splin
 const SPLINE_CACHE_NAME = 'spline-scenes-v1';
 const SPLINE_MEMORY_CACHE = new Map<string, ArrayBuffer>();
 let splineCacheInitialized = false;
+const hasCacheAPI = typeof window !== 'undefined' && 'caches' in window;
 
 // Check for pre-populated cache from layout script
 function getGlobalMemoryCache(): Record<string, ArrayBuffer> {
@@ -33,13 +56,15 @@ function getGlobalMemoryCache(): Record<string, ArrayBuffer> {
   return {};
 }
 
-// Preload and cache all Spline scenes on first visit
+// Preload and cache ONLY the default scene on first visit
+// Additional scenes are downloaded on-demand and cached in the app
 async function initSplineCache(): Promise<void> {
   if (splineCacheInitialized || typeof window === 'undefined') return;
   splineCacheInitialized = true;
 
   const startTime = performance.now();
-  console.log('[SplineCache] Initializing ultra-fast cache...');
+  const defaultScene = SPLINE_SCENES[0]; // scene1 always loads
+  console.log('[SplineCache] Initializing - caching default scene only...');
 
   // First, sync from global memory cache (populated by layout script)
   const globalCache = getGlobalMemoryCache();
@@ -51,50 +76,40 @@ async function initSplineCache(): Promise<void> {
   });
 
   try {
-    // Open persistent cache
-    const cache = await caches.open(SPLINE_CACHE_NAME);
+    // Open persistent cache (if available)
+    const cache = hasCacheAPI ? await caches.open(SPLINE_CACHE_NAME) : null;
 
-    // Check and load each scene
-    await Promise.all(SPLINE_SCENES.map(async (scene) => {
-      try {
-        // Check memory first (fastest)
-        if (SPLINE_MEMORY_CACHE.has(scene)) {
-          console.log(`[SplineCache] ${scene} already in memory`);
-          return;
-        }
-
-        // Check Cache API (second fastest)
-        const cachedResponse = await cache.match(scene);
+    // Only cache the default scene on init
+    try {
+      if (SPLINE_MEMORY_CACHE.has(defaultScene)) {
+        console.log(`[SplineCache] ${defaultScene} already in memory`);
+      } else {
+        const cachedResponse = cache ? await cache.match(defaultScene) : null;
         if (cachedResponse) {
           const buffer = await cachedResponse.arrayBuffer();
-          SPLINE_MEMORY_CACHE.set(scene, buffer);
-          console.log(`[SplineCache] ${scene} loaded from Cache API in ${(performance.now() - startTime).toFixed(1)}ms`);
-          return;
+          SPLINE_MEMORY_CACHE.set(defaultScene, buffer);
+          console.log(`[SplineCache] ${defaultScene} loaded from Cache API in ${(performance.now() - startTime).toFixed(1)}ms`);
+        } else {
+          console.log(`[SplineCache] Fetching ${defaultScene} from network...`);
+          const response = await fetch(defaultScene, { 
+            cache: 'force-cache',
+            priority: 'high' as RequestPriority
+          });
+          if (response.ok) {
+            const responseClone = response.clone();
+            if (cache) await cache.put(defaultScene, responseClone);
+            const buffer = await response.arrayBuffer();
+            SPLINE_MEMORY_CACHE.set(defaultScene, buffer);
+            console.log(`[SplineCache] ${defaultScene} cached in ${(performance.now() - startTime).toFixed(1)}ms`);
+          }
         }
-
-        // Fetch and cache (first load only)
-        console.log(`[SplineCache] Fetching ${scene} from network...`);
-        const response = await fetch(scene, { 
-          cache: 'force-cache',
-          priority: 'high' as RequestPriority
-        });
-        
-        if (response.ok) {
-          // Clone for Cache API storage
-          const responseClone = response.clone();
-          await cache.put(scene, responseClone);
-          
-          // Store in memory for instant access
-          const buffer = await response.arrayBuffer();
-          SPLINE_MEMORY_CACHE.set(scene, buffer);
-          console.log(`[SplineCache] ${scene} cached in ${(performance.now() - startTime).toFixed(1)}ms`);
-        }
-      } catch (err) {
-        console.warn(`[SplineCache] Failed to cache ${scene}:`, err);
       }
-    }));
+    } catch (err) {
+      console.warn(`[SplineCache] Failed to cache ${defaultScene}:`, err);
+    }
 
-    console.log(`[SplineCache] All scenes cached in ${(performance.now() - startTime).toFixed(1)}ms`);
+    // Extra scenes (2-7) are NOT auto-restored — they require explicit download
+    console.log(`[SplineCache] Init done in ${(performance.now() - startTime).toFixed(1)}ms`);
   } catch (err) {
     console.warn('[SplineCache] Cache initialization failed:', err);
   }
@@ -119,7 +134,7 @@ function getCachedSplineScene(scene: string): string {
     const blob = new Blob([buffer], { type: 'application/octet-stream' });
     return URL.createObjectURL(blob);
   }
-  return scene; // Fallback to network URL
+  return ''; // Not cached — must be downloaded first
 }
 
 // Check if scene is cached (for instant load detection)
@@ -138,15 +153,13 @@ if (typeof window !== 'undefined') {
     setTimeout(initSplineCache, 0);
   }
 
-  // Also preload with link tags for browser-level caching
-  SPLINE_SCENES.forEach((scene) => {
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.as = 'fetch';
-    link.href = scene;
-    link.crossOrigin = 'anonymous';
-    document.head.appendChild(link);
-  });
+  // Also preload with link tag for browser-level caching (default scene only)
+  const defaultLink = document.createElement('link');
+  defaultLink.rel = 'preload';
+  defaultLink.as = 'fetch';
+  defaultLink.href = SPLINE_SCENES[0];
+  defaultLink.crossOrigin = 'anonymous';
+  document.head.appendChild(defaultLink);
 }
 
 // Import the cool background effects
@@ -164,8 +177,9 @@ import GridDistortion from './GridDistortion';
 // -----------------------------------------------------------------------------
 const Styles = () => (
   <style>{`
+    @keyframes spline-dl-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     :root {
-      --bg-dark: #050507;
+      --bg-dark: #000000;
       --text-main: #ffffff;
       --text-muted: #86868b;
       --glass-border: rgba(255, 255, 255, 0.1);
@@ -210,6 +224,20 @@ const Styles = () => (
       pointer-events: none; /* Crucial for mobile scrolling */
     }
 
+    .cycling-bg-layer.scene-switching .cycling-bg-item,
+    .cycling-bg-layer.scene-switching ~ * {
+      animation-play-state: paused !important;
+      transition: none !important;
+      will-change: auto !important;
+    }
+    .cycling-bg-layer.scene-switching::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 10;
+    }
+
     /* CYCLING BACKGROUND EFFECTS LAYER - Main Background */
     .cycling-bg-layer {
       position: absolute;
@@ -244,6 +272,32 @@ const Styles = () => (
     .cycling-bg-item.fading-out {
       opacity: 0;
       transition: opacity 2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .spline-scene {
+      width: 100%;
+      height: 100%;
+      transform-origin: center center;
+      will-change: transform;
+    }
+
+    .spline-scene-inner {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      transform-origin: center center;
+      will-change: transform;
+    }
+
+    @media (max-width: 768px) {
+      .spline-scene-inner {
+        width: 118%;
+        height: 118%;
+        left: -9%;
+        top: -9%;
+        transform: scale(0.85);
+      }
     }
 
     /* Hero Content Overlay */
@@ -668,10 +722,10 @@ const Styles = () => (
 
     /* Background Selector Panel */
     .bg-selector-toggle {
-      position: fixed;
-      top: 80px;
-      left: 50%;
-      transform: translateX(-50%);
+      position: relative;
+      top: auto;
+      left: auto;
+      transform: none;
       z-index: 9998;
       height: 40px;
       padding: 0 16px;
@@ -701,7 +755,7 @@ const Styles = () => (
     .bg-selector-toggle:hover {
       background: rgba(0, 0, 0, 0.65);
       border-color: rgba(255, 255, 255, 0.3);
-      transform: translateX(-50%) scale(1.02);
+      transform: scale(1.02);
       box-shadow: 
         0 4px 12px rgba(0, 0, 0, 0.4),
         inset 0 1px 0 rgba(255, 255, 255, 0.15);
@@ -951,7 +1005,6 @@ const Styles = () => (
     /* Mobile responsive for selector panel */
     @media (max-width: 480px) {
       .bg-selector-toggle {
-        top: 70px;
         height: 40px;
         padding: 0 12px;
         font-size: 12px;
@@ -985,7 +1038,6 @@ const Styles = () => (
     /* Extra small mobile (< 360px) */
     @media (max-width: 359px) {
       .bg-selector-toggle {
-        top: 65px;
         height: 36px;
         padding: 0 10px;
       }
@@ -1366,17 +1418,35 @@ const getInitialEffectIndex = (effectsLength: number, reloadsPerCycle: number): 
       console.log('[CyclingBG] Version change detected - clearing cache, showing Spline');
     }
     
+    // SKIP SPLINE ON VERY FIRST LOAD — it's too heavy for first impressions
+    // After first visit, Spline is allowed
+    const FIRST_VISIT_KEY = 'bullmoney-has-visited';
+    const hasEverVisited = localStorage.getItem(FIRST_VISIT_KEY);
+    const isFirstEverLoad = !hasEverVisited;
+    if (isFirstEverLoad) {
+      localStorage.setItem(FIRST_VISIT_KEY, 'true');
+    }
+    
     // ALWAYS show Spline on first load of each browser session (if no favorites)
+    // UNLESS it's the very first visit ever
     const sessionKey = 'bullmoney-bg-session-started';
     const hasSessionStarted = sessionStorage.getItem(sessionKey);
     
     if (!hasSessionStarted) {
-      // First load of this session - FORCE Spline
       sessionStorage.setItem(sessionKey, Date.now().toString());
+      if (isFirstEverLoad) {
+        // First ever load — skip Spline, show darkVeil (index 4)
+        const fallbackIndex = 4; // darkVeil
+        localStorage.setItem('bg-effect-index', fallbackIndex.toString());
+        localStorage.setItem('bg-reload-count', '0');
+        console.log('[CyclingBG] First ever visit — skipping Spline, showing darkVeil');
+        return fallbackIndex;
+      }
+      // Returning session — show Spline
       localStorage.setItem('bg-effect-index', '0');
       localStorage.setItem('bg-reload-count', '0');
       console.log('[CyclingBG] First session load - showing Spline (index 0)');
-      return 0; // Spline is at index 0 - ALWAYS first on session start
+      return 0;
     }
     
     const storedIndex = localStorage.getItem('bg-effect-index');
@@ -1434,9 +1504,9 @@ const BullMoneyHeroText: React.FC<BullMoneyHeroTextProps> = ({ onOpenHub, onOpen
       and our VIP community. Start your trading journey today.
     </p>
     <div className="hero-cta-buttons">
-      <button onClick={onOpenHub} className="btn-vip">Access Trades & Tools</button>
-      <button onClick={onOpenShop} className="btn-shop">GET VIP</button>
-      <button onClick={onOpenNewShop} className="btn-shop btn-new-shop">Visit Shop</button>
+      <button onClick={() => { SoundEffects.click(); onOpenHub?.(); }} className="btn-vip">Access Trades & Tools</button>
+      <button onClick={() => { SoundEffects.click(); onOpenShop?.(); }} className="btn-shop">GET VIP</button>
+      <button onClick={() => { SoundEffects.click(); onOpenNewShop?.(); }} className="btn-shop btn-new-shop">Visit Shop</button>
     </div>
   </div>
 );
@@ -1463,7 +1533,7 @@ const YouTubePlayer: React.FC<{ videoId: string; loading?: boolean; error?: bool
 );
 
 // --- SPLINE BACKGROUND COMPONENT (for cycling backgrounds) ---
-const SplineBackground = memo(function SplineBackground() {
+const SplineBackground = memo(function SplineBackground({ grayscale = true, sceneUrl }: { grayscale?: boolean; sceneUrl: string }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [cachedSceneUrl, setCachedSceneUrl] = useState<string | null>(null);
@@ -1471,8 +1541,8 @@ const SplineBackground = memo(function SplineBackground() {
   const loadStartTime = useRef<number>(0);
   const blobUrlRef = useRef<string | null>(null);
   
-  // Use scene1 for fastest load
-  const scene = SPLINE_SCENES[0];
+  // Use provided scene URL
+  const scene = sceneUrl;
 
   // Initialize cache and get cached URL
   useEffect(() => {
@@ -1563,49 +1633,60 @@ const SplineBackground = memo(function SplineBackground() {
 
       {/* Spline container - uses cached blob URL for instant loading */}
       {!hasError && cachedSceneUrl && (
-        <Spline
-          scene={sceneToLoad}
-          onLoad={handleLoad}
-          onError={handleError}
+        <div className="absolute inset-0 spline-scene">
+          <div className="spline-scene-inner">
+            <Spline
+              scene={sceneToLoad}
+              onLoad={handleLoad}
+              onError={handleError}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                width: '100%',
+                height: '100%',
+                display: 'block',
+                opacity: isLoaded ? 1 : 0.6,
+                transition: 'opacity 400ms ease-out',
+                filter: grayscale ? 'grayscale(100%) saturate(0) contrast(1.1)' : 'none',
+                WebkitFilter: grayscale ? 'grayscale(100%) saturate(0) contrast(1.1)' : 'none',
+                pointerEvents: 'auto',
+                zIndex: 1,
+                transition: 'opacity 400ms ease-out, filter 300ms ease-out',
+              } as React.CSSProperties}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Color-kill overlay - above Spline for color effect, but pointer-events:none lets clicks through */}
+      {grayscale && (
+        <div
+          className="absolute inset-0"
           style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            display: 'block',
-            opacity: isLoaded ? 1 : 0.6,
-            transition: 'opacity 400ms ease-out',
-            filter: 'grayscale(100%) saturate(0) contrast(1.1)',
-            WebkitFilter: 'grayscale(100%) saturate(0) contrast(1.1)',
-            pointerEvents: 'auto',
-            zIndex: 1,
+            zIndex: 10,
+            backgroundColor: '#808080',
+            mixBlendMode: 'color',
+            WebkitMixBlendMode: 'color',
+            pointerEvents: 'none',
+            transition: 'opacity 300ms ease-out',
           } as React.CSSProperties}
         />
       )}
 
-      {/* Color-kill overlay - above Spline for color effect, but pointer-events:none lets clicks through */}
-      <div
-        className="absolute inset-0"
-        style={{
-          zIndex: 10,
-          backgroundColor: '#808080',
-          mixBlendMode: 'color',
-          WebkitMixBlendMode: 'color',
-          pointerEvents: 'none',
-        } as React.CSSProperties}
-      />
-
       {/* Extra saturation kill overlay - above Spline for effect, pointer-events:none lets clicks through */}
-      <div
-        className="absolute inset-0"
-        style={{
-          zIndex: 11,
-          backgroundColor: 'rgba(128, 128, 128, 0.3)',
-          mixBlendMode: 'saturation',
-          WebkitMixBlendMode: 'saturation',
-          pointerEvents: 'none',
-        } as React.CSSProperties}
-      />
+      {grayscale && (
+        <div
+          className="absolute inset-0"
+          style={{
+            zIndex: 11,
+            backgroundColor: 'rgba(128, 128, 128, 0.3)',
+            mixBlendMode: 'saturation',
+            WebkitMixBlendMode: 'saturation',
+            pointerEvents: 'none',
+            transition: 'opacity 300ms ease-out',
+          } as React.CSSProperties}
+        />
+      )}
     </div>
   );
 });
@@ -1648,6 +1729,548 @@ const saveBgPreferences = (favorites: BackgroundEffect[], enabled: BackgroundEff
   }
 };
 
+// Load color preferences from localStorage
+const loadColorPreferences = (): { mode: 'color' | 'grayscale' | 'custom', color: { h: number, s: number, l: number, a: number } } => {
+  if (typeof window === 'undefined') return { mode: 'grayscale', color: { h: 0, s: 50, l: 50, a: 0.5 } };
+  try {
+    const stored = localStorage.getItem('color-preferences');
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.error('[ColorPrefs] Error loading:', e);
+  }
+  return { mode: 'grayscale', color: { h: 0, s: 50, l: 50, a: 0.5 } };
+};
+
+// Save color preferences to localStorage
+const saveColorPreferences = (mode: 'color' | 'grayscale' | 'custom', color: { h: number, s: number, l: number, a: number }) => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem('color-preferences', JSON.stringify({ mode, color }));
+  } catch (e) {
+    console.error('[ColorPrefs] Error saving:', e);
+  }
+};
+
+// ============================================================================
+// 3D TOGGLE BUTTON - Activates Spline Background (styled like StoreHero3D)
+// ============================================================================
+const Toggle3DButton = ({ 
+  isActive, 
+  onClick,
+  onLongPress
+}: { 
+  isActive: boolean; 
+  onClick: () => void;
+  onLongPress?: () => void;
+}) => {
+  const timerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const [wasLongPress, setWasLongPress] = React.useState(false);
+
+  const startLongPress = () => {
+    if (onLongPress) {
+      setWasLongPress(false);
+      timerRef.current = setTimeout(() => {
+        setWasLongPress(true);
+        onLongPress();
+        SoundEffects.click();
+      }, 500); // Long press after 500ms
+    }
+  };
+
+  const cancelLongPress = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // Only for left click
+    if (e.button === 0) {
+      startLongPress();
+    }
+  };
+
+  const handleMouseUp = () => {
+    cancelLongPress();
+  };
+
+  const handleMouseLeave = () => {
+    cancelLongPress();
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    startLongPress();
+  };
+
+  const handleTouchEnd = () => {
+    cancelLongPress();
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    // Small delay to check if it was a long press
+    setTimeout(() => {
+      if (!wasLongPress) {
+        SoundEffects.click();
+        onClick();
+      }
+      setWasLongPress(false);
+    }, 10);
+  };
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (onLongPress) {
+      onLongPress();
+      SoundEffects.click();
+    }
+  };
+
+  // Cleanup on unmount
+  React.useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
+
+  return (
+    <motion.button
+      onClick={handleClick}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseLeave}
+      onContextMenu={handleContextMenu}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
+      className="group relative z-50 flex items-center gap-2 px-4 py-2.5 rounded-2xl overflow-hidden
+                 border transition-all duration-300"
+      style={{
+        background: isActive 
+          ? 'linear-gradient(135deg, rgba(25, 86, 180, 0.3) 0%, rgba(25, 86, 180, 0.1) 100%)' 
+          : 'rgba(255, 255, 255, 0.05)',
+        borderColor: isActive ? 'rgba(25, 86, 180, 0.5)' : 'rgba(255, 255, 255, 0.2)',
+        boxShadow: isActive 
+          ? '0 0 30px rgba(25, 86, 180, 0.3), inset 0 0 20px rgba(25, 86, 180, 0.1)' 
+          : 'none',
+      }}
+      whileHover={{ 
+        scale: 1.05,
+        boxShadow: '0 0 40px rgba(25, 86, 180, 0.4), inset 0 0 25px rgba(25, 86, 180, 0.15)',
+      }}
+      whileTap={{ scale: 0.95 }}
+      initial={{ opacity: 0, y: 20, rotateX: 45 }}
+      animate={{ opacity: 1, y: 0, rotateX: 0 }}
+      transition={{ 
+        type: 'spring', 
+        damping: 20, 
+        stiffness: 300,
+        delay: 0.5 
+      }}
+    >
+    {/* 3D depth effect */}
+    <motion.div
+      className="absolute inset-0 rounded-2xl"
+      style={{
+        background: 'linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(0,0,0,0.2) 100%)',
+        pointerEvents: 'none',
+      }}
+    />
+    
+    {/* Shimmer effect */}
+    <motion.div
+      className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent -skew-x-12"
+      animate={{ x: isActive ? ['-200%', '200%'] : '-200%' }}
+      transition={{ 
+        duration: 2, 
+        repeat: isActive ? Infinity : 0, 
+        ease: 'easeInOut',
+        repeatDelay: 1 
+      }}
+    />
+    
+    {/* Icon with 3D rotation */}
+    <motion.div
+      animate={{ 
+        rotateY: isActive ? [0, 360] : 0,
+      }}
+      transition={{ 
+        duration: 2, 
+        repeat: isActive ? Infinity : 0,
+        ease: 'linear',
+      }}
+    >
+      <Box 
+        className={`w-4 h-4 relative z-10 transition-colors duration-300 ${
+          isActive ? 'text-[#1956B4]' : 'text-white/60'
+        }`} 
+        strokeWidth={2} 
+      />
+    </motion.div>
+    
+    <span className={`text-sm font-medium relative z-10 transition-colors duration-300 ${
+      isActive ? 'text-white' : 'text-white/60'
+    }`}>
+      3D
+    </span>
+    
+    {/* Hold indicator - shows menu is available */}
+    <motion.div
+      className="relative z-10 flex gap-0.5"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 0.4 }}
+      transition={{ delay: 1 }}
+    >
+      <div className="w-1 h-1 rounded-full bg-current" />
+      <div className="w-1 h-1 rounded-full bg-current" />
+      <div className="w-1 h-1 rounded-full bg-current" />
+    </motion.div>
+    
+    {/* Active indicator dot */}
+    <AnimatePresence>
+      {isActive && (
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          exit={{ scale: 0 }}
+          className="w-1.5 h-1.5 rounded-full bg-[#1956B4] animate-pulse relative z-10"
+        />
+      )}
+    </AnimatePresence>
+  </motion.button>
+  );
+};
+
+// ============================================================================
+// GRAYSCALE TOGGLE BUTTON - Toggles Color/B&W (styled like StoreHero3D)
+// ============================================================================
+const ToggleGrayscaleButton = ({ 
+  isActive, 
+  onClick,
+  label = 'Color'
+}: { 
+  isActive: boolean; 
+  onClick: () => void;
+  label?: string;
+}) => (
+  <motion.button
+    onClick={() => { SoundEffects.click(); onClick(); }}
+    className="group relative z-50 flex items-center gap-2 px-4 py-2.5 rounded-2xl overflow-hidden
+               border transition-all duration-300"
+    style={{
+      background: isActive 
+        ? 'rgba(255, 255, 255, 0.05)' 
+        : 'linear-gradient(135deg, rgba(25, 86, 180, 0.3) 0%, rgba(25, 86, 180, 0.1) 100%)',
+      borderColor: isActive ? 'rgba(255, 255, 255, 0.2)' : 'rgba(25, 86, 180, 0.5)',
+      boxShadow: !isActive 
+        ? '0 0 30px rgba(25, 86, 180, 0.3), inset 0 0 20px rgba(25, 86, 180, 0.1)' 
+        : 'none',
+    }}
+    whileHover={{ 
+      scale: 1.05,
+      boxShadow: '0 0 40px rgba(25, 86, 180, 0.4)',
+    }}
+    whileTap={{ scale: 0.95 }}
+    initial={{ opacity: 0, y: 20, rotateX: 45 }}
+    animate={{ opacity: 1, y: 0, rotateX: 0 }}
+    transition={{ 
+      type: 'spring', 
+      damping: 20, 
+      stiffness: 300,
+      delay: 0.6 
+    }}
+  >
+    {/* 3D depth effect */}
+    <motion.div
+      className="absolute inset-0 rounded-2xl"
+      style={{
+        background: 'linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(0,0,0,0.2) 100%)',
+        pointerEvents: 'none',
+      }}
+    />
+    
+    {/* Shimmer effect when color is on */}
+    <motion.div
+      className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent -skew-x-12"
+      animate={{ x: !isActive ? ['-200%', '200%'] : '-200%' }}
+      transition={{ 
+        duration: 2, 
+        repeat: !isActive ? Infinity : 0, 
+        ease: 'easeInOut',
+        repeatDelay: 1 
+      }}
+    />
+    
+    {/* Icon */}
+    <Palette 
+      className={`w-4 h-4 relative z-10 transition-colors duration-300 ${
+        !isActive ? 'text-[#1956B4]' : 'text-white/60'
+      }`} 
+      strokeWidth={2} 
+    />
+    
+    <span className={`text-sm font-medium relative z-10 transition-colors duration-300 ${
+      !isActive ? 'text-white' : 'text-white/60'
+    }`}>
+      {label}
+    </span>
+    
+    {/* Active indicator dot when color is ON */}
+    <AnimatePresence>
+      {!isActive && (
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          exit={{ scale: 0 }}
+          className="w-1.5 h-1.5 rounded-full bg-[#1956B4] animate-pulse relative z-10"
+        />
+      )}
+    </AnimatePresence>
+  </motion.button>
+);
+
+// ============================================================================
+// COLOR PICKER PANEL - Full Color Customization (styled like bg picker)
+// ============================================================================
+const ColorPickerPanel = ({
+  isOpen,
+  onClose,
+  colorMode,
+  customColor,
+  onColorModeChange,
+  onCustomColorChange
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  colorMode: 'color' | 'grayscale' | 'custom';
+  customColor: { h: number, s: number, l: number, a: number };
+  onColorModeChange: (mode: 'color' | 'grayscale' | 'custom') => void;
+  onCustomColorChange: (color: { h: number, s: number, l: number, a: number }) => void;
+}) => {
+  if (!isOpen) return null;
+
+  // Preset colors for quick selection
+  const presetColors = [
+    { name: 'Blue', h: 210, s: 80, l: 50 },
+    { name: 'Purple', h: 270, s: 80, l: 50 },
+    { name: 'Pink', h: 330, s: 80, l: 60 },
+    { name: 'Red', h: 0, s: 80, l: 50 },
+    { name: 'Orange', h: 30, s: 80, l: 50 },
+    { name: 'Yellow', h: 60, s: 80, l: 50 },
+    { name: 'Green', h: 120, s: 80, l: 40 },
+    { name: 'Cyan', h: 180, s: 80, l: 50 },
+  ];
+
+  const handlePresetClick = (preset: { h: number, s: number, l: number }) => {
+    onCustomColorChange({ ...preset, a: customColor.a });
+    onColorModeChange('custom');
+  };
+
+  return (
+    <div className="bg-selector-panel" style={{ top: '140px', maxWidth: '400px' }}>
+      <div className="bg-selector-header">
+        <div>
+          <h3 className="bg-selector-title">Color Overlay</h3>
+          <p className="bg-selector-subtitle">Apply custom colors to all backgrounds</p>
+        </div>
+        <button 
+          onClick={onClose}
+          style={{ background: 'none', border: 'none', color: '#fff', fontSize: '18px', cursor: 'pointer' }}
+        >
+          ×
+        </button>
+      </div>
+      
+      {/* Mode Selection */}
+      <div style={{ padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+          <button
+            onClick={() => onColorModeChange('color')}
+            style={{
+              padding: '10px',
+              borderRadius: '8px',
+              border: colorMode === 'color' ? '2px solid #1956B4' : '1px solid rgba(255,255,255,0.2)',
+              background: colorMode === 'color' ? 'rgba(25, 86, 180, 0.3)' : 'rgba(255,255,255,0.05)',
+              color: '#fff',
+              cursor: 'pointer',
+              fontSize: '12px',
+              fontWeight: colorMode === 'color' ? 'bold' : 'normal'
+            }}
+          >
+            Full Color
+          </button>
+          <button
+            onClick={() => onColorModeChange('grayscale')}
+            style={{
+              padding: '10px',
+              borderRadius: '8px',
+              border: colorMode === 'grayscale' ? '2px solid #1956B4' : '1px solid rgba(255,255,255,0.2)',
+              background: colorMode === 'grayscale' ? 'rgba(25, 86, 180, 0.3)' : 'rgba(255,255,255,0.05)',
+              color: '#fff',
+              cursor: 'pointer',
+              fontSize: '12px',
+              fontWeight: colorMode === 'grayscale' ? 'bold' : 'normal'
+            }}
+          >
+            B&W
+          </button>
+          <button
+            onClick={() => onColorModeChange('custom')}
+            style={{
+              padding: '10px',
+              borderRadius: '8px',
+              border: colorMode === 'custom' ? '2px solid #1956B4' : '1px solid rgba(255,255,255,0.2)',
+              background: colorMode === 'custom' ? 'rgba(25, 86, 180, 0.3)' : 'rgba(255,255,255,0.05)',
+              color: '#fff',
+              cursor: 'pointer',
+              fontSize: '12px',
+              fontWeight: colorMode === 'custom' ? 'bold' : 'normal'
+            }}
+          >
+            Custom
+          </button>
+        </div>
+      </div>
+
+      {/* Preset Colors */}
+      {colorMode === 'custom' && (
+        <>
+          <div style={{ padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', marginBottom: '8px' }}>
+              Quick Presets
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+              {presetColors.map(preset => (
+                <button
+                  key={preset.name}
+                  onClick={() => handlePresetClick(preset)}
+                  style={{
+                    padding: '20px',
+                    borderRadius: '8px',
+                    border: '2px solid rgba(255,255,255,0.2)',
+                    background: `hsl(${preset.h}, ${preset.s}%, ${preset.l}%)`,
+                    cursor: 'pointer',
+                    position: 'relative',
+                    overflow: 'hidden'
+                  }}
+                  title={preset.name}
+                >
+                  <span style={{
+                    position: 'absolute',
+                    bottom: '2px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    fontSize: '9px',
+                    color: preset.l > 50 ? '#000' : '#fff',
+                    fontWeight: 'bold',
+                    textShadow: preset.l > 50 ? '0 0 2px white' : '0 0 2px black'
+                  }}>
+                    {preset.name}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Custom Color Sliders */}
+          <div style={{ padding: '16px' }}>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)', display: 'block', marginBottom: '8px' }}>
+                Hue: {Math.round(customColor.h)}°
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="360"
+                value={customColor.h}
+                onChange={(e) => onCustomColorChange({ ...customColor, h: parseInt(e.target.value) })}
+                style={{ width: '100%' }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)', display: 'block', marginBottom: '8px' }}>
+                Saturation: {Math.round(customColor.s)}%
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={customColor.s}
+                onChange={(e) => onCustomColorChange({ ...customColor, s: parseInt(e.target.value) })}
+                style={{ width: '100%' }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)', display: 'block', marginBottom: '8px' }}>
+                Lightness: {Math.round(customColor.l)}%
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={customColor.l}
+                onChange={(e) => onCustomColorChange({ ...customColor, l: parseInt(e.target.value) })}
+                style={{ width: '100%' }}
+              />
+            </div>
+
+            <div>
+              <label style={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)', display: 'block', marginBottom: '8px' }}>
+                Opacity: {Math.round(customColor.a * 100)}%
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={customColor.a * 100}
+                onChange={(e) => onCustomColorChange({ ...customColor, a: parseInt(e.target.value) / 100 })}
+                style={{ width: '100%' }}
+              />
+            </div>
+
+            {/* Color Preview */}
+            <div style={{
+              marginTop: '16px',
+              padding: '20px',
+              borderRadius: '8px',
+              background: `hsla(${customColor.h}, ${customColor.s}%, ${customColor.l}%, ${customColor.a})`,
+              border: '2px solid rgba(255,255,255,0.2)',
+              textAlign: 'center',
+              color: customColor.l > 50 ? '#000' : '#fff',
+              fontWeight: 'bold',
+              fontSize: '14px'
+            }}>
+              Preview
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Footer */}
+      <div className="bg-selector-footer">
+        <button 
+          className="bg-footer-btn primary" 
+          onClick={onClose}
+        >
+          Done
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// -----------------------------------------------------------------------------
+// 4. CYCLING BACKGROUND - Single Memory-Efficient Effect
+// -----------------------------------------------------------------------------
+
 const CyclingBackground: React.FC<CyclingBackgroundProps> = ({ 
   reloadsPerCycle = 2, // Switch background every 2 reloads
   // SPLINE FIRST (index 0) - prioritized 60% of the time
@@ -1669,6 +2292,20 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
   const [toast, setToast] = useState<string | null>(null);
   const [favorites, setFavorites] = useState<BackgroundEffect[]>([]);
   const [enabledEffects, setEnabledEffects] = useState<BackgroundEffect[]>(effects as BackgroundEffect[]);
+  const [showGrayscale, setShowGrayscale] = useState(true);
+  
+  // Color System State
+  const [colorMode, setColorMode] = useState<'color' | 'grayscale' | 'custom'>('grayscale');
+  const [customColor, setCustomColor] = useState({ h: 0, s: 50, l: 50, a: 0.5 }); // HSL for easier manipulation
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  
+  const [show3DOverlay, setShow3DOverlay] = useState(false);
+  const [isSceneSwitching, setIsSceneSwitching] = useState(false);
+  const [showSpline, setShowSpline] = useState(true); // Control Spline visibility
+  const [currentSplineScene, setCurrentSplineScene] = useState(SPLINE_SCENES[0]); // Current spline scene
+  const [showSplinePanel, setShowSplinePanel] = useState(false); // Spline selector panel
+  const [downloadingScenes, setDownloadingScenes] = useState<Set<string>>(new Set());
+  const [cacheVersion, setCacheVersion] = useState(0); // forces UI refresh on cache changes
 
   // Load preferences on mount
   useEffect(() => {
@@ -1679,6 +2316,12 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
     if (prefs.enabled.length > 0) {
       setEnabledEffects(prefs.enabled);
     }
+    
+    // Load color preferences
+    const colorPrefs = loadColorPreferences();
+    setColorMode(colorPrefs.mode);
+    setCustomColor(colorPrefs.color);
+    setShowGrayscale(colorPrefs.mode === 'grayscale');
   }, []);
 
   // Show toast notification
@@ -1820,11 +2463,141 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
     }
   };
 
+  // Download (cache to app) a specific spline scene — no file download, just stores in Cache API
+  const downloadSplineScene = useCallback(async (sceneUrl: string) => {
+    // Already cached? Skip
+    if (isSplineCached(sceneUrl)) {
+      showToast(`${SPLINE_SCENE_NAMES[sceneUrl]} already cached`);
+      return;
+    }
+    setDownloadingScenes(prev => new Set(prev).add(sceneUrl));
+    try {
+      const response = await fetch(sceneUrl, { cache: 'force-cache', priority: 'low' as RequestPriority });
+      if (!response.ok) throw new Error('Failed to fetch');
+      const responseClone = response.clone();
+      if (hasCacheAPI) {
+        const cache = await caches.open(SPLINE_CACHE_NAME);
+        await cache.put(sceneUrl, responseClone);
+      }
+      const buffer = await response.arrayBuffer();
+      SPLINE_MEMORY_CACHE.set(sceneUrl, buffer);
+      setCacheVersion(v => v + 1); // force UI update
+      showToast(`${SPLINE_SCENE_NAMES[sceneUrl]} cached ✓`);
+    } catch (err) {
+      console.error('Failed to cache scene:', err);
+      showToast('Failed to cache scene');
+    } finally {
+      setDownloadingScenes(prev => {
+        const next = new Set(prev);
+        next.delete(sceneUrl);
+        return next;
+      });
+    }
+  }, [showToast]);
+
+  // Download all spline scenes to app cache
+  const downloadAllSplineScenes = useCallback(async () => {
+    const uncached = SPLINE_SCENES.filter(s => !isSplineCached(s));
+    if (uncached.length === 0) {
+      showToast('All scenes already cached ✓');
+      return;
+    }
+    for (const scene of uncached) {
+      await downloadSplineScene(scene);
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+    showToast(`${uncached.length} scenes cached ✓`);
+  }, [downloadSplineScene, showToast]);
+
+  // Clear all cached spline scenes (forces re-download)
+  const clearAllSplineCache = useCallback(async () => {
+    try {
+      // Delete entire Cache API store
+      if (hasCacheAPI) await caches.delete(SPLINE_CACHE_NAME);
+      // Clear memory cache
+      SPLINE_MEMORY_CACHE.clear();
+      // Clear global cache if present
+      if (typeof window !== 'undefined' && (window as any).__SPLINE_MEMORY_CACHE__) {
+        const g = (window as any).__SPLINE_MEMORY_CACHE__;
+        Object.keys(g).forEach(k => delete g[k]);
+      }
+      // Reset to default scene
+      setCurrentSplineScene(SPLINE_SCENES[0]);
+      localStorage.removeItem('currentSplineScene');
+      // Re-cache scene1 (always available)
+      splineCacheInitialized = false;
+      await initSplineCache();
+      setCacheVersion(v => v + 1); // force UI update
+      showToast('Cache cleared — scene 1 re-cached');
+    } catch (err) {
+      console.error('Failed to clear cache:', err);
+      showToast('Failed to clear cache');
+    }
+  }, [showToast]);
+
+  // Switch to a specific spline scene (only if cached or default)
+  // Pauses other work so Spline can load smoothly
+  const switchSplineScene = useCallback((sceneUrl: string) => {
+    const isDefault = sceneUrl === SPLINE_SCENES[0];
+    if (!isDefault && !isSplineCached(sceneUrl)) {
+      showToast('Download this scene first');
+      return;
+    }
+    if (sceneUrl === currentSplineScene) return; // already active
+    
+    // Phase 1: unmount old scene + pause animations
+    setIsSceneSwitching(true);
+    
+    // Phase 2: after a frame, swap the scene URL so only one Spline instance loads
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        setCurrentSplineScene(sceneUrl);
+        localStorage.setItem('currentSplineScene', sceneUrl);
+        // Phase 3: resume after Spline has started mounting
+        setTimeout(() => {
+          setIsSceneSwitching(false);
+          showToast(`Switched to ${SPLINE_SCENE_NAMES[sceneUrl]}`);
+        }, 300);
+      }, 50);
+    });
+  }, [showToast, currentSplineScene]);
+
+  // Handle color mode changes
+  const handleColorModeChange = useCallback((mode: 'color' | 'grayscale' | 'custom') => {
+    setColorMode(mode);
+    setShowGrayscale(mode === 'grayscale');
+    saveColorPreferences(mode, customColor);
+    
+    const modeNames = { color: 'Full Color', grayscale: 'Black & White', custom: 'Custom Color' };
+    showToast(`${modeNames[mode]} mode`);
+  }, [customColor, showToast]);
+
+  // Handle custom color changes
+  const handleCustomColorChange = useCallback((color: { h: number, s: number, l: number, a: number }) => {
+    setCustomColor(color);
+    saveColorPreferences(colorMode, color);
+  }, [colorMode]);
+
+  // Load saved spline scene on mount (only if still cached)
+  useEffect(() => {
+    const saved = localStorage.getItem('currentSplineScene');
+    if (saved && SPLINE_SCENES.includes(saved)) {
+      const isDefault = saved === SPLINE_SCENES[0];
+      if (isDefault || isSplineCached(saved)) {
+        setCurrentSplineScene(saved);
+      } else {
+        // Scene was cleared from cache — reset to default
+        localStorage.removeItem('currentSplineScene');
+        setCurrentSplineScene(SPLINE_SCENES[0]);
+      }
+    }
+  }, []);
+
   // Render a single effect component - only one at a time for memory efficiency
   const renderEffect = (effect: BackgroundEffect) => {
     switch (effect) {
       case 'spline':
-        return <SplineBackground />;
+        return showSpline ? <SplineBackground grayscale={showGrayscale} sceneUrl={currentSplineScene} /> : null;
       case 'liquidEther':
         return (
           <LiquidEther
@@ -1978,14 +2751,83 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
   };
 
   return (
-    <div className="cycling-bg-layer">
+    <div className={`cycling-bg-layer${isSceneSwitching ? ' scene-switching' : ''}`}>
       {/* Single effect - only one rendered at a time for memory efficiency */}
       <div 
         className={`cycling-bg-item ${isReady ? 'active' : ''}`}
         key={`effect-${currentIndex}`}
       >
-        {renderEffect(currentEffect)}
+        {isSceneSwitching && currentEffect === 'spline' ? null : renderEffect(currentEffect)}
       </div>
+
+      {/* 3D Spline Overlay — shown/hidden by 3D toggle button */}
+      {show3DOverlay && !isSceneSwitching && (
+        <div 
+          className="cycling-bg-item active"
+          style={{ position: 'absolute', inset: 0, zIndex: 1 }}
+        >
+          <SplineBackground grayscale={showGrayscale} sceneUrl={currentSplineScene} />
+        </div>
+      )}
+      
+      {/* Universal Color Overlay System - applies to ALL backgrounds */}
+      {colorMode === 'grayscale' && (
+        <>
+          {/* Grayscale filter overlay - color kill */}
+          <div
+            className="absolute inset-0"
+            style={{
+              zIndex: 100,
+              backgroundColor: '#808080',
+              mixBlendMode: 'color',
+              WebkitMixBlendMode: 'color',
+              pointerEvents: 'none',
+              transition: 'opacity 300ms ease-out',
+            } as React.CSSProperties}
+          />
+          
+          {/* Extra saturation kill overlay */}
+          <div
+            className="absolute inset-0"
+            style={{
+              zIndex: 101,
+              backgroundColor: 'rgba(128, 128, 128, 0.3)',
+              mixBlendMode: 'saturation',
+              WebkitMixBlendMode: 'saturation',
+              pointerEvents: 'none',
+              transition: 'opacity 300ms ease-out',
+            } as React.CSSProperties}
+          />
+        </>
+      )}
+      
+      {colorMode === 'custom' && (
+        <>
+          {/* Custom color overlay with user-selected color */}
+          <div
+            className="absolute inset-0"
+            style={{
+              zIndex: 100,
+              backgroundColor: `hsla(${customColor.h}, ${customColor.s}%, ${customColor.l}%, ${customColor.a})`,
+              mixBlendMode: 'color',
+              WebkitMixBlendMode: 'color',
+              pointerEvents: 'none',
+              transition: 'background-color 300ms ease-out',
+            } as React.CSSProperties}
+          />
+          
+          {/* Additional overlay for enhanced color effect */}
+          <div
+            className="absolute inset-0"
+            style={{
+              zIndex: 101,
+              background: `radial-gradient(circle at 50% 50%, hsla(${customColor.h}, ${customColor.s}%, ${customColor.l}%, ${customColor.a * 0.3}) 0%, transparent 70%)`,
+              pointerEvents: 'none',
+              transition: 'background 300ms ease-out',
+            } as React.CSSProperties}
+          />
+        </>
+      )}
       
       {/* Content overlay based on current effect */}
       {isReady && (
@@ -1994,20 +2836,48 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
         </div>
       )}
 
-      {/* Background Selector Toggle Button */}
-      <button 
-        className="bg-selector-toggle"
-        onClick={() => setShowPanel(!showPanel)}
-        title="Background Settings (Ctrl+B)"
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="3" width="7" height="7" rx="1" />
-          <rect x="14" y="3" width="7" height="7" rx="1" />
-          <rect x="3" y="14" width="7" height="7" rx="1" />
-          <rect x="14" y="14" width="7" height="7" rx="1" />
-        </svg>
-        <span>BG Picker</span>
-      </button>
+      {/* Stacked Control Buttons — BG Picker, Color, 3D (vertically) */}
+      <div className="fixed z-9998 flex flex-col items-center gap-2" style={{ top: 80, left: '50%', transform: 'translateX(-50%)' }}>
+        {/* BG Picker Button */}
+        <button 
+          className="bg-selector-toggle" 
+          style={{ position: 'relative', top: 'auto', left: 'auto', transform: 'none' }}
+          onClick={() => setShowPanel(!showPanel)}
+          title="Background Settings (Ctrl+B)"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx="1" />
+            <rect x="14" y="3" width="7" height="7" rx="1" />
+            <rect x="3" y="14" width="7" height="7" rx="1" />
+            <rect x="14" y="14" width="7" height="7" rx="1" />
+          </svg>
+          <span>BG Picker</span>
+        </button>
+
+        {/* Color Toggle */}
+        <ToggleGrayscaleButton 
+          isActive={showGrayscale} 
+          onClick={() => setShowColorPicker(!showColorPicker)}
+          label={colorMode === 'grayscale' ? 'B&W' : colorMode === 'custom' ? 'Custom' : 'Color'}
+        />
+
+        {/* 3D Toggle - Click to hide/show, Hold to open scene picker */}
+        <div className="flex flex-col items-center gap-1">
+          <Toggle3DButton 
+            isActive={showSpline} 
+            onClick={() => setShowSpline(!showSpline)}
+            onLongPress={() => setShowSplinePanel(!showSplinePanel)}
+          />
+          <motion.span 
+            className="text-[9px] text-white/40 font-medium tracking-wide"
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+          >
+            Hold • Download
+          </motion.span>
+        </div>
+      </div>
 
       {/* Background Selector Panel */}
       {showPanel && (
@@ -2081,6 +2951,129 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
           </div>
         </div>
       )}
+
+      {/* Spline Scene Selector Panel */}
+      {showSplinePanel && (
+        <div className="bg-selector-panel" style={{ top: '140px' }}>
+          <div className="bg-selector-header">
+            <div>
+              <h3 className="bg-selector-title">3D Spline Scenes</h3>
+              <p className="bg-selector-subtitle">Hold 3D button to open • Click to switch</p>
+            </div>
+            <button 
+              onClick={() => setShowSplinePanel(false)}
+              style={{ background: 'none', border: 'none', color: '#fff', fontSize: '18px', cursor: 'pointer' }}
+            >
+              ×
+            </button>
+          </div>
+          
+          <div className="bg-selector-list">
+            {SPLINE_SCENES.map((sceneUrl, index) => {
+              const isActive = currentSplineScene === sceneUrl;
+              const isDownloading = downloadingScenes.has(sceneUrl);
+              // cacheVersion forces re-eval after clear/download
+              const isCached = cacheVersion >= 0 && isSplineCached(sceneUrl);
+              const isDefault = index === 0; // scene1 = always available
+              
+              return (
+                <div 
+                  key={sceneUrl}
+                  className={`bg-selector-item ${isActive ? 'active' : ''}`}
+                >
+                  <div 
+                    className="bg-item-toggle enabled"
+                    style={{ fontSize: '12px', fontWeight: 'bold' }}
+                  >
+                    {index + 1}
+                  </div>
+                  
+                  <div className="bg-item-info" onClick={() => {
+                    if (isCached || isDefault) {
+                      switchSplineScene(sceneUrl);
+                    } else {
+                      // Must download first — don't auto-switch
+                      showToast('Download this scene first');
+                    }
+                  }}>
+                    <div className="bg-item-name">
+                      {SPLINE_SCENE_NAMES[sceneUrl]}
+                      {isDefault && <span style={{ marginLeft: 6, fontSize: '9px', opacity: 0.5 }}>DEFAULT</span>}
+                      {!isDefault && isCached && <span style={{ marginLeft: 6, fontSize: '9px', opacity: 0.5 }}>CACHED</span>}
+                    </div>
+                  </div>
+                  
+                  {!isDefault && (
+                    <button
+                      className="bg-item-fav"
+                      onClick={(e) => { e.stopPropagation(); downloadSplineScene(sceneUrl); }}
+                      disabled={isDownloading || isCached}
+                      title={isCached ? 'Scene cached in app' : 'Cache this scene to app'}
+                      style={{ opacity: isDownloading ? 0.5 : isCached ? 0.3 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      {isDownloading ? (
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ animation: 'spline-dl-spin 1s linear infinite' }}>
+                          <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" strokeDasharray="28" strokeDashoffset="8" strokeLinecap="round" />
+                        </svg>
+                      ) : isCached ? (
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                          <path d="M3 8.5L6.5 12L13 4" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      ) : (
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                          <path d="M8 2v8m0 0L5 7m3 3l3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M3 12h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                        </svg>
+                      )}
+                    </button>
+                  )}
+                  
+                  <button
+                    className="bg-item-select"
+                    onClick={() => switchSplineScene(sceneUrl)}
+                  >
+                    {isActive ? 'Active' : 'Select'}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+          
+          <div className="bg-selector-footer">
+            <button 
+              className="bg-footer-btn" 
+              onClick={downloadAllSplineScenes}
+              disabled={downloadingScenes.size > 0}
+            >
+              Cache All ({SPLINE_SCENES.length})
+            </button>
+            <button 
+              className="bg-footer-btn" 
+              onClick={clearAllSplineCache}
+              disabled={downloadingScenes.size > 0}
+              style={{ color: '#ff6b6b' }}
+            >
+              Clear Cache
+            </button>
+            <button 
+              className="bg-footer-btn primary" 
+              onClick={() => setShowSplinePanel(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Color Picker Panel */}
+      <ColorPickerPanel
+        isOpen={showColorPicker}
+        onClose={() => setShowColorPicker(false)}
+        colorMode={colorMode}
+        customColor={customColor}
+        onColorModeChange={handleColorModeChange}
+        onCustomColorChange={handleCustomColorChange}
+      />
 
       {/* Toast notification */}
       {toast && (

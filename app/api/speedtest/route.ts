@@ -17,6 +17,19 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 
 const execAsync = promisify(exec);
+const DEBUG_API_LOGS = process.env.DEBUG_API_LOGS === 'true';
+
+const logInfo = (...args: unknown[]) => {
+  if (DEBUG_API_LOGS) {
+    console.log(...args);
+  }
+};
+
+const logWarn = (...args: unknown[]) => {
+  if (DEBUG_API_LOGS) {
+    console.warn(...args);
+  }
+};
 
 // Cache results to prevent abuse
 const cache = new Map<string, { result: any; timestamp: number; ttl: number }>();
@@ -46,7 +59,7 @@ export async function GET(request: NextRequest) {
       command += ` --server-id=${serverId}`;
     }
 
-    console.log('[Speedtest API] Running:', command);
+    logInfo('[Speedtest API] Running:', command);
     
     // Run the official Ookla CLI speedtest
     const { stdout, stderr } = await execAsync(command, {
@@ -55,7 +68,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (stderr && !stderr.includes('Speedtest')) {
-      console.warn('[Speedtest API] stderr:', stderr);
+      logWarn('[Speedtest API] stderr:', stderr);
     }
 
     // Parse JSON output
@@ -93,7 +106,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    console.log('[Speedtest API] Result:', {
+    logInfo('[Speedtest API] Result:', {
       down: transformed.downMbps,
       up: transformed.upMbps,
       ping: transformed.latency,

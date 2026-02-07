@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect, useRef } from 'react';
 import { trackUIStateChange, trackEvent, type AnalyticsEventData } from '@/lib/analytics';
+import { SoundEffects } from '@/app/hooks/useSoundEffects';
 
 /**
  * UIStateContext - Centralized UI state management with mutual exclusion
@@ -379,8 +380,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
       // Mobile menu has highest priority - closes everything else
       closeOthers('mobileMenu');
       trackUIStateChange('mobileMenu', 'open');
+      SoundEffects.open();
     } else {
       trackUIStateChange('mobileMenu', 'close');
+      SoundEffects.close();
     }
     setIsMobileMenuOpenState(open);
   }, [closeOthers]);
@@ -389,8 +392,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (open) {
       closeOthers('audioWidget');
       trackUIStateChange('audioWidget', 'open');
+      SoundEffects.open();
     } else {
       trackUIStateChange('audioWidget', 'close');
+      SoundEffects.close();
     }
     setIsAudioWidgetOpenState(open);
   }, [closeOthers]);
@@ -399,8 +404,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (open) {
       closeOthers('ultimatePanel');
       trackUIStateChange('ultimatePanel', 'open');
+      SoundEffects.open();
     } else {
       trackUIStateChange('ultimatePanel', 'close');
+      SoundEffects.close();
     }
     setIsUltimatePanelOpenState(open);
   }, [closeOthers]);
@@ -409,8 +416,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (open) {
       closeOthers('ultimateHub');
       trackUIStateChange('ultimateHub', 'open');
+      SoundEffects.open();
     } else {
       trackUIStateChange('ultimateHub', 'close');
+      SoundEffects.close();
     }
     setIsUltimateHubOpenState(open);
   }, [closeOthers]);
@@ -419,8 +428,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (open) {
       closeOthers('footer');
       trackUIStateChange('footer', 'open');
+      SoundEffects.open();
     } else {
       trackUIStateChange('footer', 'close');
+      SoundEffects.close();
     }
     setIsFooterOpenState(open);
   }, [closeOthers]);
@@ -429,8 +440,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (open) {
       closeOthers('chartnews');
       trackUIStateChange('chartNews', 'open');
+      SoundEffects.open();
     } else {
       trackUIStateChange('chartNews', 'close');
+      SoundEffects.close();
     }
     setIsChartNewsOpenState(open);
   }, [closeOthers]);
@@ -440,8 +453,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (open) {
       closeOthers('analysisModal');
       trackUIStateChange('analysisModal', 'open');
+      SoundEffects.open();
     } else {
       trackUIStateChange('analysisModal', 'close');
+      SoundEffects.close();
     }
     setIsAnalysisModalOpenState(open);
   }, [closeOthers]);
@@ -450,8 +465,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (open) {
       closeOthers('liveStreamModal');
       trackUIStateChange('liveStreamModal', 'open');
+      SoundEffects.open();
     } else {
       trackUIStateChange('liveStreamModal', 'close');
+      SoundEffects.close();
     }
     setIsLiveStreamModalOpenState(open);
   }, [closeOthers]);
@@ -460,8 +477,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (open) {
       closeOthers('productsModal');
       trackUIStateChange('productsModal', 'open');
+      SoundEffects.open();
     } else {
       trackUIStateChange('productsModal', 'close');
+      SoundEffects.close();
     }
     setIsProductsModalOpenState(open);
   }, [closeOthers]);
@@ -470,8 +489,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (open) {
       closeOthers('servicesModal');
       trackUIStateChange('servicesModal', 'open');
+      SoundEffects.open();
     } else {
       trackUIStateChange('servicesModal', 'close');
+      SoundEffects.close();
     }
     setIsServicesModalOpenState(open);
   }, [closeOthers]);
@@ -480,8 +501,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (open) {
       closeOthers('affiliateModal');
       trackUIStateChange('affiliateModal', 'open');
+      SoundEffects.open();
     } else {
       trackUIStateChange('affiliateModal', 'close');
+      SoundEffects.close();
     }
     setIsAffiliateModalOpenState(open);
   }, [closeOthers]);
@@ -490,8 +513,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (open) {
       closeOthers('themeSelectorModal');
       trackUIStateChange('themeSelectorModal', 'open');
+      SoundEffects.open();
     } else {
       trackUIStateChange('themeSelectorModal', 'close');
+      SoundEffects.close();
     }
     setIsThemeSelectorModalOpenState(open);
   }, [closeOthers]);
@@ -500,8 +525,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (open) {
       closeOthers('adminModal');
       trackUIStateChange('adminModal', 'open');
+      SoundEffects.open();
     } else {
       trackUIStateChange('adminModal', 'close');
+      SoundEffects.close();
     }
     setIsAdminModalOpenState(open);
   }, [closeOthers]);
@@ -510,8 +537,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (open) {
       closeOthers('faqModal');
       trackUIStateChange('faqModal', 'open');
+      SoundEffects.open();
     } else {
       trackUIStateChange('faqModal', 'close');
+      SoundEffects.close();
     }
     setIsFaqModalOpenState(open);
   }, [closeOthers]);
@@ -520,8 +549,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (open) {
       closeOthers('appsModal');
       trackUIStateChange('appsModal', 'open');
+      SoundEffects.open();
     } else {
       trackUIStateChange('appsModal', 'close');
+      SoundEffects.close();
     }
     setIsAppsModalOpenState(open);
   }, [closeOthers]);
@@ -530,8 +561,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (open) {
       closeOthers('disclaimerModal');
       trackUIStateChange('disclaimerModal', 'open');
+      SoundEffects.open();
     } else {
       trackUIStateChange('disclaimerModal', 'close');
+      SoundEffects.close();
     }
     setIsDisclaimerModalOpenState(open);
   }, [closeOthers]);
@@ -562,8 +595,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (open) {
       closeOthers('authModal');
       trackUIStateChange('authModal', 'open');
+      SoundEffects.open();
     } else {
       trackUIStateChange('authModal', 'close');
+      SoundEffects.close();
     }
     setIsAuthModalOpenState(open);
   }, [closeOthers]);
@@ -572,8 +607,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (open) {
       closeOthers('bullFeedModal');
       trackUIStateChange('bullFeedModal', 'open');
+      SoundEffects.open();
     } else {
       trackUIStateChange('bullFeedModal', 'close');
+      SoundEffects.close();
     }
     setIsBullFeedModalOpenState(open);
   }, [closeOthers]);
@@ -582,8 +619,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (open) {
       closeOthers('postComposerModal');
       trackUIStateChange('postComposerModal', 'open');
+      SoundEffects.open();
     } else {
       trackUIStateChange('postComposerModal', 'close');
+      SoundEffects.close();
     }
     setIsPostComposerModalOpenState(open);
   }, [closeOthers]);
@@ -592,8 +631,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (open) {
       closeOthers('heroSceneModal');
       trackUIStateChange('heroSceneModal', 'open');
+      SoundEffects.open();
     } else {
       trackUIStateChange('heroSceneModal', 'close');
+      SoundEffects.close();
     }
     setIsHeroSceneModalOpenState(open);
   }, [closeOthers]);
@@ -602,8 +643,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (open) {
       closeOthers('discordStageModal');
       trackUIStateChange('discordStageModal', 'open');
+      SoundEffects.open();
     } else {
       trackUIStateChange('discordStageModal', 'close');
+      SoundEffects.close();
     }
     setIsDiscordStageModalOpenState(open);
   }, [closeOthers]);
@@ -612,8 +655,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (open) {
       closeOthers('accountManagerModal');
       trackUIStateChange('accountManagerModal', 'open');
+      SoundEffects.open();
     } else {
       trackUIStateChange('accountManagerModal', 'close');
+      SoundEffects.close();
     }
     setIsAccountManagerModalOpenState(open);
   }, [closeOthers]);
@@ -622,8 +667,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (open) {
       closeOthers('bgPickerModal');
       trackUIStateChange('bgPickerModal', 'open');
+      SoundEffects.open();
     } else {
       trackUIStateChange('bgPickerModal', 'close');
+      SoundEffects.close();
     }
     setIsBgPickerModalOpenState(open);
   }, [closeOthers]);

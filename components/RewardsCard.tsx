@@ -6,6 +6,7 @@ import {
   CreditCard, Sparkles, ShoppingBag, DollarSign, Trophy
 } from "lucide-react";
 import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
+import { useUnifiedPerformance } from '@/hooks/useDesktopPerformance';
 
 // ============================================================================
 // REWARDS CARD — Real Credit Card Style with Bullmoney Branding
@@ -61,6 +62,7 @@ const TIER_CONFIG: Record<string, { color: string; cardBg: string; icon: React.R
 
 export default function RewardsCard({ isOpen, onClose, userEmail }: RewardsCardProps) {
   const { formatPrice } = useCurrencyLocaleStore();
+  const { isMobile, shouldSkipHeavyEffects } = useUnifiedPerformance();
   const [rewards, setRewards] = useState<RewardsData | null>(null);
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -136,7 +138,9 @@ export default function RewardsCard({ isOpen, onClose, userEmail }: RewardsCardP
             style={{ 
               aspectRatio: "1.586/1",
               background: tier.cardBg,
-              boxShadow: `
+              boxShadow: shouldSkipHeavyEffects
+                ? '0 25px 50px -20px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1)'
+                : `
                 0 50px 100px -20px rgba(0,0,0,0.6),
                 0 30px 60px -30px rgba(0,0,0,0.5),
                 0 0 0 1px rgba(255,255,255,0.1),
@@ -145,10 +149,14 @@ export default function RewardsCard({ isOpen, onClose, userEmail }: RewardsCardP
               `
             }}
           >
-          {/* Holographic/Metallic shimmer overlay */}
-          <div className="absolute inset-0 opacity-60 pointer-events-none" style={{ background: "linear-gradient(to top right, rgba(59, 130, 246, 0.2), transparent, transparent)" }} />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_20%,rgba(255,255,255,0.15),transparent_50%)] pointer-events-none" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_80%,rgba(0,0,0,0.2),transparent_50%)] pointer-events-none" />
+          {/* Holographic/Metallic shimmer overlay — skip on mobile */}
+          {!shouldSkipHeavyEffects && (
+            <>
+              <div className="absolute inset-0 opacity-60 pointer-events-none" style={{ background: "linear-gradient(to top right, rgba(59, 130, 246, 0.2), transparent, transparent)" }} />
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_20%,rgba(255,255,255,0.15),transparent_50%)] pointer-events-none" />
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_80%,rgba(0,0,0,0.2),transparent_50%)] pointer-events-none" />
+            </>
+          )}
           
           {/* Card Content */}
           <div className="relative h-full p-5 flex flex-col justify-between">
@@ -233,7 +241,8 @@ export default function RewardsCard({ isOpen, onClose, userEmail }: RewardsCardP
 
         {/* Stats Panel - Below card */}
         <div 
-          className="w-full max-w-90 md:max-w-130 rounded-2xl bg-black/95 backdrop-blur-md border border-white/10 shadow-2xl overflow-hidden"
+          className="w-full max-w-90 md:max-w-130 rounded-2xl bg-black/95 border border-white/10 shadow-2xl overflow-hidden"
+          style={{ backdropFilter: shouldSkipHeavyEffects ? 'none' : 'blur(12px)' }}
         >
           <div className="overflow-y-auto p-4 max-h-62.5 md:max-h-75">
             {loading ? (
@@ -254,7 +263,7 @@ export default function RewardsCard({ isOpen, onClose, userEmail }: RewardsCardP
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-white/40 text-[10px] uppercase tracking-wider font-medium">Punch Card</p>
                     {(rewards?.punches || 0) >= 20 && (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold animate-pulse" style={{ backgroundColor: "rgba(59, 130, 246, 0.2)", color: "rgb(96, 165, 250)" }}>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${shouldSkipHeavyEffects ? '' : 'animate-pulse'}`} style={{ backgroundColor: "rgba(59, 130, 246, 0.2)", color: "rgb(96, 165, 250)" }}>
                         FREE REWARD!
                       </span>
                     )}
@@ -275,7 +284,7 @@ export default function RewardsCard({ isOpen, onClose, userEmail }: RewardsCardP
                                 : "bg-white/5 border border-white/10 text-white/20 scale-95"
                           }`}
                           style={{ 
-                            transitionDelay: isFilled ? `${i * 30}ms` : "0ms",
+                            transitionDelay: isFilled ? `${i * (shouldSkipHeavyEffects ? 10 : 30)}ms` : "0ms",
                             ...(isFilled ? { background: "linear-gradient(135deg, rgb(96, 165, 250) 0%, rgb(37, 99, 235) 100%)", boxShadow: "0 4px 6px -1px rgba(59, 130, 246, 0.3)" } : {}),
                             ...(isReward && !isFilled ? { backgroundColor: "rgba(59, 130, 246, 0.2)", borderColor: "rgba(96, 165, 250, 0.5)", color: "rgb(96, 165, 250)" } : {})
                           }}

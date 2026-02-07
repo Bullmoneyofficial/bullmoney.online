@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
 import './PillNav.css';
 import TextType from '@/components/TextType';
+import { SoundEffects } from '@/app/hooks/useSoundEffects';
 
 export type PillNavItem = {
   label: string;
@@ -179,6 +180,7 @@ const PillNav: React.FC<PillNavProps> = ({
   const toggleMobileMenu = () => {
     const newState = !isMobileMenuOpen;
     setIsMobileMenuOpen(newState);
+    SoundEffects.play(newState ? 'open' : 'close');
 
     const hamburger = hamburgerRef.current;
     const menu = mobileMenuRef.current;
@@ -349,7 +351,10 @@ const PillNav: React.FC<PillNavProps> = ({
                 <Link
                   to={item.href}
                   className={`mobile-menu-link${activeHref === item.href ? ' is-active' : ''}`}
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  onClick={() => {
+                    SoundEffects.tab();
+                    setIsMobileMenuOpen(false);
+                  }}
                 >
                   <TextType text={item.label} typingSpeed={Math.max(8, 25 - item.label.length)} showCursor={false} loop={false} as="span" />
                 </Link>
@@ -357,7 +362,10 @@ const PillNav: React.FC<PillNavProps> = ({
                 <a
                   href={item.href}
                   className={`mobile-menu-link${activeHref === item.href ? ' is-active' : ''}`}
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  onClick={() => {
+                    SoundEffects.tab();
+                    setIsMobileMenuOpen(false);
+                  }}
                 >
                   <TextType text={item.label} typingSpeed={Math.max(8, 25 - item.label.length)} showCursor={false} loop={false} as="span" />
                 </a>

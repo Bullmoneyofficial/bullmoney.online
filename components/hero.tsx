@@ -17,6 +17,7 @@ import Image from "next/image";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { Loader2, Edit2, Save, X, Trash2, Upload, Instagram, Send } from "lucide-react";
+import { SoundEffects } from '@/app/hooks/useSoundEffects';
 
 // ✅ MOBILE DETECTION - For conditional lazy loading
 import { isMobileDevice } from '@/lib/mobileDetection';
@@ -564,7 +565,7 @@ const ContactSelectionModal = ({
                          <div className="absolute inset-0 pointer-events-none opacity-30" style={{ background: 'linear-gradient(to bottom right, rgba(var(--accent-rgb, 255, 255, 255), 0.1), transparent)' }}></div>
 
                         <button 
-                            onClick={onClose} 
+                            onClick={() => { SoundEffects.close(); onClose(); }} 
                             className="absolute top-3 right-3 z-50 p-2 bg-neutral-900 border border-neutral-800 rounded-full text-neutral-400 hover:text-white hover:bg-neutral-800 transition-all shadow-lg"
                             style={{ '--hover-border': 'var(--accent-color, #ffffff)' } as React.CSSProperties}
                             onMouseOver={(e) => (e.currentTarget.style.borderColor = 'var(--accent-color, #ffffff)')}
@@ -637,7 +638,7 @@ const ProductCard = React.memo(({
       style={{ x: translate, willChange }}
       whileHover={{ y: -10 }}
       whileTap={{ scale: 0.98 }}
-      onClick={() => setActive(project, uniqueLayoutId)} 
+      onClick={() => { SoundEffects.click(); setActive(project, uniqueLayoutId); }} 
       className="group/product h-[20rem] w-[18rem] md:h-[30rem] md:w-[28rem] relative flex-shrink-0 cursor-pointer backface-hidden transform-gpu"
     >
       <div className="block h-full w-full group-hover/product:shadow-2xl transition-all duration-500 rounded-xl safari-fix-layer">
@@ -1752,7 +1753,7 @@ const HeroParallax = () => {
             onClick={(e) => e.stopPropagation()} 
           >
             <button
-                onClick={handleClose}
+                onClick={() => { SoundEffects.close(); handleClose(); }}
                 className="absolute top-4 right-4 z-50 p-2 bg-black/40 backdrop-blur border border-white/10 rounded-full text-white hover:bg-white hover:text-black transition-colors"
             >
                 <X size={20} />
@@ -1760,7 +1761,7 @@ const HeroParallax = () => {
 
             {canEdit && !isEditing && (
               <button
-                onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
+                onClick={(e) => { e.stopPropagation(); SoundEffects.click(); setIsEditing(true); }}
                 className="absolute top-4 left-4 md:left-auto md:right-16 z-50 p-2 rounded-full text-black transition-colors shadow-lg flex gap-2 items-center px-4 font-bold text-xs theme-accent-bg"
                 style={{ backgroundColor: 'var(--accent-color, #ffffff)' }}
                 onMouseOver={(e) => (e.currentTarget.style.opacity = '0.85')}

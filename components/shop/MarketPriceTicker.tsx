@@ -247,7 +247,14 @@ export const MarketPriceTicker = memo(function MarketPriceTicker({
     };
   }, [fetchPrices]);
 
-  const logoItems: LogoItem[] = assets.map(asset => ({
+  const loopAssets = React.useMemo(() => {
+    if (assets.length === 0) return [];
+    const minItems = 60;
+    const repeatCount = Math.max(2, Math.ceil(minItems / assets.length));
+    return Array.from({ length: repeatCount }, () => assets).flat();
+  }, [assets]);
+
+  const logoItems: LogoItem[] = loopAssets.map(asset => ({
     node: <TickerItemContent asset={asset} />,
     title: `${asset.name}: ${formatPrice(asset.price)}`,
     ariaLabel: `${asset.name} price: ${formatPrice(asset.price)}, ${asset.change24h >= 0 ? 'up' : 'down'} ${Math.abs(asset.change24h).toFixed(2)}%`,
@@ -266,7 +273,7 @@ export const MarketPriceTicker = memo(function MarketPriceTicker({
         speed={speed}
         direction={direction}
         logoHeight={32}
-        gap={24}
+        gap={12}
         pauseOnHover={false}
         fadeOut
         fadeOutColor="black"

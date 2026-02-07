@@ -8,6 +8,7 @@ import { useUIState } from "@/contexts/UIStateContext";
 import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
 import { MobilePerformanceProvider } from "@/contexts/MobilePerformanceProvider";
 import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
+import { SoundProvider } from "@/contexts/SoundContext";
 
 // ✅ LOADING FALLBACKS - Mobile optimized
 import { MinimalFallback } from "@/components/MobileLazyLoadingFallback";
@@ -231,27 +232,29 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
     return (
       <ErrorBoundary>
         <MobilePerformanceProvider>
-          <AuthProvider>
-            {modal}
-            <div data-lenis-content>
-              <main
-                className="min-h-screen"
-                style={{
-                  touchAction: 'auto',
-                  overflow: 'visible',
-                  position: 'relative',
-                  zIndex: 1,
-                  height: 'auto',
-                  isolation: 'auto',
-                  contain: 'none',
-                }}
-                data-allow-scroll
-                data-scrollable
-              >
-                {children}
-              </main>
-            </div>
-          </AuthProvider>
+          <SoundProvider enabled={!masterMuted} volume={0.4}>
+            <AuthProvider>
+              {modal}
+              <div data-lenis-content>
+                <main
+                  className="min-h-screen"
+                  style={{
+                    touchAction: 'auto',
+                    overflow: 'visible',
+                    position: 'relative',
+                    zIndex: 1,
+                    height: 'auto',
+                    isolation: 'auto',
+                    contain: 'none',
+                  }}
+                  data-allow-scroll
+                  data-scrollable
+                >
+                  {children}
+                </main>
+              </div>
+            </AuthProvider>
+          </SoundProvider>
         </MobilePerformanceProvider>
       </ErrorBoundary>
     );
@@ -260,12 +263,13 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
   return (
     <ErrorBoundary>
       <MobilePerformanceProvider>
-        <AuthProvider>
-          {/* NOTE: UIStateProvider is already provided by MobileMenuProvider in layout.tsx */}
-          {/* NOTE: RecruitAuthProvider is now in layout.tsx to wrap Navbar */}
+        <SoundProvider enabled={!masterMuted} volume={0.4}>
+          <AuthProvider>
+            {/* NOTE: UIStateProvider is already provided by MobileMenuProvider in layout.tsx */}
+            {/* NOTE: RecruitAuthProvider is now in layout.tsx to wrap Navbar */}
 
-          {/* CRITICAL: FPS Scroll Optimizer - pauses animations during scroll */}
-          <FpsScrollOptimizer />
+            {/* CRITICAL: FPS Scroll Optimizer - pauses animations during scroll */}
+            <FpsScrollOptimizer />
       
           <UnifiedPerformanceProvider startDelay={2000}>
             <CrashTrackerProvider>
@@ -348,7 +352,8 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
               </FpsOptimizerProvider>
             </CrashTrackerProvider>
           </UnifiedPerformanceProvider>
-        </AuthProvider>
+          </AuthProvider>
+        </SoundProvider>
       </MobilePerformanceProvider>
     </ErrorBoundary>
   );

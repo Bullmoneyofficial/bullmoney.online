@@ -9,6 +9,7 @@ import {
   useTransform,
 } from "framer-motion";
 import { useMobilePerformance } from "@/hooks/useMobilePerformance";
+import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { 
   Lock, 
   Unlock, 
@@ -3603,6 +3604,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
     const clientX = 'touches' in e ? e.changedTouches?.[0]?.clientX || 0 : e.clientX;
     const clientY = 'touches' in e ? e.changedTouches?.[0]?.clientY || 0 : e.clientY;
     addTapRipple(clientX, clientY);
+    SoundEffects.click();
     
     // Trigger combo system for all tap-based interactions
     if (['tap', 'doubleTap', 'pulse', 'tripleTap', 'speedTap'].includes(currentMode.mode)) {
@@ -4571,7 +4573,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
 
                 {/* Retry button */}
                 <motion.button
-                  onClick={handleRetry}
+                  onClick={() => { SoundEffects.click(); handleRetry(); }}
                   className="px-8 py-3 rounded-xl font-bold text-white transition-all"
                   style={{
                     background: "linear-gradient(135deg, #ffffff, #ffffff)",
@@ -4595,6 +4597,7 @@ export default function TradingUnlockLoader({ onFinished }: LoaderProps) {
                   <motion.button
                     onClick={() => {
                       // Skip directly to site
+                      SoundEffects.click();
                       setFailureCount(2);
                       completedRef.current = true;
                       setIsUnlocked(true);
