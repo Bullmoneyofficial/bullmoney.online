@@ -172,12 +172,434 @@ import LetterGlitch from './LetterGlitch';
 import Ballpit from './Ballpit';
 import GridDistortion from './GridDistortion';
 
+// =============================================================================
+// AESTHETIC LIGHTWEIGHT MOBILE HERO (CSS-only, no heavy libs)
+// Shows when 3D Spline is toggled off — gorgeous minimalist sand/dark aesthetic
+// =============================================================================
+const SECTION_NAV_ITEMS = [
+  { id: 'hero', label: 'Home', icon: '✦', bg: 'rgba(255,255,255,0.06)' },
+  { id: 'bullmoney-community', label: 'Community', icon: '💬', bg: 'rgba(59,130,246,0.12)' },
+  { id: 'metatrader-quotes', label: 'Live Quotes', icon: '📊', bg: 'rgba(34,197,94,0.12)' },
+  { id: 'bullmoney-promo', label: 'Promo', icon: '🔥', bg: 'rgba(249,115,22,0.12)' },
+  { id: 'features', label: 'Features', icon: '⚡', bg: 'rgba(168,85,247,0.12)' },
+  { id: 'testimonials', label: 'Testimonials', icon: '⭐', bg: 'rgba(234,179,8,0.12)' },
+  { id: 'ticker', label: 'Market Ticker', icon: '📈', bg: 'rgba(6,182,212,0.12)' },
+];
+
+const MobileAestheticHero = memo(function MobileAestheticHero() {
+  const [navOpen, setNavOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on outside tap
+  useEffect(() => {
+    if (!navOpen) return;
+    const handleClick = (e: MouseEvent | TouchEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setNavOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('touchstart', handleClick, { passive: true });
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('touchstart', handleClick);
+    };
+  }, [navOpen]);
+
+  const scrollToSection = useCallback((sectionId: string) => {
+    setNavOpen(false);
+    requestAnimationFrame(() => {
+      const el = document.getElementById(sectionId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  }, []);
+
+  return (
+    <div className="aesthetic-hero-root">
+      {/* Gradient base – warm dark sand tones */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: 'linear-gradient(160deg, #0a0a0a 0%, #0d0b09 20%, #100e0a 40%, #0c0a08 60%, #080808 100%)',
+      }} />
+
+      {/* Floating color orbs – ultra lightweight GPU composited */}
+      <div className="aesthetic-hero-orb" style={{
+        width: 340, height: 340, top: '-10%', left: '-15%',
+        background: 'radial-gradient(circle, rgba(194,154,108,0.25) 0%, transparent 70%)',
+        animation: 'aesthetic-drift 20s ease-in-out infinite',
+      }} />
+      <div className="aesthetic-hero-orb" style={{
+        width: 280, height: 280, bottom: '-5%', right: '-10%',
+        background: 'radial-gradient(circle, rgba(139,115,85,0.2) 0%, transparent 70%)',
+        animation: 'aesthetic-drift-2 25s ease-in-out infinite',
+      }} />
+      <div className="aesthetic-hero-orb" style={{
+        width: 200, height: 200, top: '40%', left: '60%',
+        background: 'radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%)',
+        animation: 'aesthetic-drift-3 18s ease-in-out infinite',
+      }} />
+      {/* Subtle accent orb */}
+      <div className="aesthetic-hero-orb" style={{
+        width: 160, height: 160, top: '15%', right: '20%',
+        background: 'radial-gradient(circle, rgba(194,154,108,0.1) 0%, transparent 70%)',
+        animation: 'aesthetic-pulse 6s ease-in-out infinite',
+      }} />
+
+      {/* Film grain texture */}
+      <div className="aesthetic-hero-grain" />
+
+      {/* Drifting diagonal lines */}
+      <div className="aesthetic-hero-line" style={{ top: '30%', animationDelay: '0s', animationDuration: '14s' }} />
+      <div className="aesthetic-hero-line" style={{ top: '55%', animationDelay: '-5s', animationDuration: '18s' }} />
+      <div className="aesthetic-hero-line" style={{ top: '78%', animationDelay: '-9s', animationDuration: '22s' }} />
+
+      {/* Vignette */}
+      <div style={{
+        position: 'absolute', inset: 0, zIndex: 3, pointerEvents: 'none',
+        background: 'radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0,0,0,0.6) 100%)',
+      }} />
+
+      {/* Content layer */}
+      <div style={{
+        position: 'absolute', inset: 0, zIndex: 10,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        padding: '20px', pointerEvents: 'none',
+      }}>
+        {/* Spacer to push content to true center (balances the scroll hint) */}
+        <div style={{ flex: 1 }} />
+
+        {/* Centered content block */}
+        <div style={{
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28,
+        }}>
+        {/* Brand mark */}
+        <div style={{
+          animation: 'aesthetic-fade-up 0.8s ease both',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
+        }}>
+          {/* Thin accent line */}
+          <div style={{
+            width: 40, height: 1,
+            background: 'linear-gradient(90deg, transparent, rgba(194,154,108,0.5), transparent)',
+          }} />
+
+          {/* Title */}
+          <div style={{ position: 'relative' }}>
+            <h1 style={{
+              fontSize: 'clamp(2.2rem, 10vw, 3.8rem)',
+              fontWeight: 800,
+              letterSpacing: '-0.04em',
+              lineHeight: 1,
+              color: '#fff',
+              margin: 0,
+              textAlign: 'center',
+            }}>
+              Bull<span style={{ color: 'rgba(194,154,108,0.9)' }}>Money</span>
+            </h1>
+            {/* Shimmer sweep over title */}
+            <div className="aesthetic-title-shimmer" style={{
+              position: 'absolute', inset: 0, borderRadius: 8,
+            }} />
+          </div>
+
+          {/* Tagline */}
+          <p style={{
+            fontSize: 14, fontWeight: 400, letterSpacing: '0.08em',
+            color: 'rgba(255,255,255,0.35)', margin: 0, textTransform: 'uppercase',
+            animation: 'aesthetic-fade-up 0.8s ease 0.2s both',
+          }}>
+            Trade Smarter
+          </p>
+        </div>
+
+        {/* Divider dot cluster */}
+        <div style={{
+          display: 'flex', gap: 6, alignItems: 'center',
+          animation: 'aesthetic-fade-up 0.8s ease 0.35s both',
+        }}>
+          <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(194,154,108,0.3)' }} />
+          <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'rgba(194,154,108,0.5)' }} />
+          <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(194,154,108,0.3)' }} />
+        </div>
+
+        {/* Section Navigation Dropdown Toggle */}
+        <div ref={dropdownRef} style={{
+          position: 'relative',
+          pointerEvents: 'auto',
+          animation: 'aesthetic-fade-up 0.8s ease 0.5s both',
+          zIndex: 50,
+        }}>
+          <button
+            className="aesthetic-nav-btn"
+            onClick={() => setNavOpen(prev => !prev)}
+            aria-expanded={navOpen}
+            aria-label="Navigate to section"
+          >
+            <span style={{ fontSize: 15 }}>✦</span>
+            <span>Explore Sections</span>
+            <svg
+              width="14" height="14" viewBox="0 0 14 14" fill="none"
+              style={{
+                transition: 'transform 0.3s cubic-bezier(0.4,0,0.2,1)',
+                transform: navOpen ? 'rotate(180deg)' : 'rotate(0)',
+              }}
+            >
+              <path d="M3 5.5L7 9.5L11 5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+
+          {/* Section Nav Modal */}
+          {navOpen && (
+            <div className="aesthetic-nav-backdrop" onClick={() => setNavOpen(false)}>
+              <div className="aesthetic-nav-dropdown" onClick={(e) => e.stopPropagation()}>
+                <div className="aesthetic-nav-dropdown-title">Go to Section</div>
+                {SECTION_NAV_ITEMS.map((item, i) => (
+                  <button
+                    key={item.id}
+                    className="aesthetic-nav-item"
+                    onClick={() => scrollToSection(item.id)}
+                    style={{ animationDelay: `${i * 30}ms` }}
+                  >
+                    <span className="aesthetic-nav-item-icon" style={{ background: item.bg }}>
+                      {item.icon}
+                    </span>
+                    <span>{item.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        {/* End centered content block */}
+        </div>
+
+        {/* Spacer + scroll hint pinned to bottom */}
+        <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', pointerEvents: 'none' }}>
+        {/* Scroll hint at bottom */}
+        <div className="aesthetic-scroll-hint" style={{
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+          paddingBottom: 12,
+        }}>
+          <span style={{
+            fontSize: 11, fontWeight: 500, letterSpacing: '0.12em',
+            color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase',
+          }}>
+            Scroll to explore
+          </span>
+          <div style={{
+            width: 20, height: 32, borderRadius: 10,
+            border: '1.5px solid rgba(255,255,255,0.15)',
+            display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+            paddingTop: 6,
+          }}>
+            <div style={{
+              width: 3, height: 6, borderRadius: 2,
+              background: 'rgba(194,154,108,0.5)',
+              animation: 'aesthetic-fade-up 1.5s ease-in-out infinite alternate',
+            }} />
+          </div>
+        </div>
+        </div>
+      </div>
+    </div>
+  );
+});
+
 // -----------------------------------------------------------------------------
 // 1. RESPONSIVE STYLES (One File Requirement)
 // -----------------------------------------------------------------------------
 const Styles = () => (
   <style>{`
     @keyframes spline-dl-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    /* ── Aesthetic Mobile Hero Animations ── */
+    @keyframes aesthetic-drift {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      25% { transform: translate(30px, -20px) scale(1.05); }
+      50% { transform: translate(-20px, 15px) scale(0.95); }
+      75% { transform: translate(15px, 25px) scale(1.02); }
+    }
+    @keyframes aesthetic-drift-2 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(-40px, 20px) scale(1.08); }
+      66% { transform: translate(25px, -30px) scale(0.92); }
+    }
+    @keyframes aesthetic-drift-3 {
+      0%, 100% { transform: translate(0, 0) scale(1.05); }
+      50% { transform: translate(20px, 30px) scale(0.9); }
+    }
+    @keyframes aesthetic-pulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.7; }
+    }
+    @keyframes aesthetic-grain {
+      0%, 100% { transform: translate(0, 0); }
+      10% { transform: translate(-5%, -10%); }
+      20% { transform: translate(-15%, 5%); }
+      30% { transform: translate(7%, -25%); }
+      40% { transform: translate(-5%, 25%); }
+      50% { transform: translate(-15%, 10%); }
+      60% { transform: translate(15%, 0%); }
+      70% { transform: translate(0%, 15%); }
+      80% { transform: translate(3%, 35%); }
+      90% { transform: translate(-10%, 10%); }
+    }
+    @keyframes aesthetic-line-drift {
+      0% { transform: translateX(-100%) rotate(-45deg); }
+      100% { transform: translateX(200%) rotate(-45deg); }
+    }
+    @keyframes aesthetic-fade-up {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes aesthetic-shimmer {
+      0% { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+    @keyframes nav-dropdown-in {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .aesthetic-hero-root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: #000;
+    }
+    .aesthetic-hero-grain {
+      position: absolute;
+      inset: -50%;
+      width: 200%;
+      height: 200%;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      animation: aesthetic-grain 8s steps(10) infinite;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.5;
+    }
+    .aesthetic-hero-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.35;
+      will-change: transform;
+      pointer-events: none;
+    }
+    .aesthetic-hero-line {
+      position: absolute;
+      width: 200%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+      animation: aesthetic-line-drift 12s linear infinite;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .aesthetic-nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 100px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      color: rgba(255,255,255,0.7);
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .aesthetic-nav-btn:active {
+      transform: scale(0.96);
+      background: rgba(255,255,255,0.08);
+    }
+    .aesthetic-nav-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: nav-backdrop-in 0.2s ease forwards;
+      padding: 16px;
+    }
+    @keyframes nav-backdrop-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .aesthetic-nav-dropdown {
+      position: relative;
+      width: calc(100vw - 32px);
+      max-width: 400px;
+      background: rgba(12, 12, 14, 0.95);
+      backdrop-filter: blur(40px) saturate(1.4);
+      -webkit-backdrop-filter: blur(40px) saturate(1.4);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 8px;
+      animation: nav-dropdown-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05) inset;
+    }
+    .aesthetic-nav-dropdown-title {
+      text-align: center;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+      padding: 8px 0 4px;
+    }
+    .aesthetic-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 10px;
+      color: rgba(255,255,255,0.65);
+      font-size: 12px;
+      font-weight: 450;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+    .aesthetic-nav-item:active {
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+    }
+    .aesthetic-nav-item-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .aesthetic-scroll-hint {
+      animation: aesthetic-fade-up 1s ease 1.5s both;
+    }
+    .aesthetic-title-shimmer {
+      background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0) 100%);
+      background-size: 200% 100%;
+      animation: aesthetic-shimmer 3s ease-in-out infinite;
+    }
+
     :root {
       --bg-dark: #000000;
       --text-main: #ffffff;
@@ -210,6 +632,7 @@ const Styles = () => (
       justify-content: center;
       padding: 20px;
       overflow: hidden; /* Contain background elements */
+      touch-action: pan-y; /* Allow vertical scrolling on mobile */
     }
 
     /* BACKGROUND LAYER */
@@ -246,8 +669,15 @@ const Styles = () => (
       width: 100%;
       height: 100%;
       z-index: 1;
-      pointer-events: auto; /* Allow Spline interactions */
+      pointer-events: none; /* Let scroll pass through on mobile */
+      touch-action: pan-y; /* Allow vertical scrolling */
       overflow: hidden;
+    }
+
+    @media (min-width: 769px) {
+      .cycling-bg-layer {
+        pointer-events: auto; /* Allow Spline interactions on desktop */
+      }
     }
 
     .cycling-bg-item {
@@ -266,7 +696,14 @@ const Styles = () => (
 
     .cycling-bg-item.active {
       opacity: 1;
-      pointer-events: auto; /* Enable interactions when active */
+      pointer-events: none; /* Don't block scrolling on mobile */
+      touch-action: pan-y; /* Allow vertical scrolling */
+    }
+
+    @media (min-width: 769px) {
+      .cycling-bg-item.active {
+        pointer-events: auto; /* Enable interactions on desktop */
+      }
     }
 
     .cycling-bg-item.fading-out {
@@ -279,6 +716,8 @@ const Styles = () => (
       height: 100%;
       transform-origin: center center;
       will-change: transform;
+      pointer-events: none; /* Don't block scrolling */
+      touch-action: pan-y;
     }
 
     .spline-scene-inner {
@@ -288,6 +727,25 @@ const Styles = () => (
       height: 100%;
       transform-origin: center center;
       will-change: transform;
+      pointer-events: none; /* Don't block scrolling */
+      touch-action: pan-y;
+    }
+
+    /* Spline canvas itself - disable touch capture on mobile */
+    .spline-scene-inner canvas,
+    .spline-scene-inner > div {
+      pointer-events: none !important;
+      touch-action: pan-y !important;
+    }
+
+    @media (min-width: 769px) {
+      .spline-scene,
+      .spline-scene-inner,
+      .spline-scene-inner canvas,
+      .spline-scene-inner > div {
+        pointer-events: auto !important;
+        touch-action: auto !important;
+      }
     }
 
     @media (max-width: 768px) {
@@ -1590,9 +2048,9 @@ const SplineBackground = memo(function SplineBackground({ grayscale = true, scen
       className="absolute inset-0 w-full h-full overflow-hidden"
       style={{ 
         zIndex: 0,
-        touchAction: 'pan-y', // Allow vertical scrolling, Spline handles other gestures
+        touchAction: 'pan-y', // Allow vertical scrolling
         backgroundColor: '#000',
-        pointerEvents: 'auto', // Enable interactions with Spline
+        pointerEvents: 'none', // Don't block scroll on mobile
         WebkitOverflowScrolling: 'touch', // Smooth scroll on iOS
       }}
     >
@@ -1649,8 +2107,9 @@ const SplineBackground = memo(function SplineBackground({ grayscale = true, scen
                 transition: 'opacity 400ms ease-out',
                 filter: grayscale ? 'grayscale(100%) saturate(0) contrast(1.1)' : 'none',
                 WebkitFilter: grayscale ? 'grayscale(100%) saturate(0) contrast(1.1)' : 'none',
-                pointerEvents: 'auto',
+                pointerEvents: 'none', // Don't block touch scroll on mobile
                 zIndex: 1,
+                touchAction: 'pan-y',
                 transition: 'opacity 400ms ease-out, filter 300ms ease-out',
               } as React.CSSProperties}
             />
@@ -1802,7 +2261,7 @@ const Toggle3DButton = ({
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    e.preventDefault();
+    // Don't preventDefault - it blocks page scrolling on mobile
     startLongPress();
   };
 
@@ -2597,7 +3056,7 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
   const renderEffect = (effect: BackgroundEffect) => {
     switch (effect) {
       case 'spline':
-        return showSpline ? <SplineBackground grayscale={showGrayscale} sceneUrl={currentSplineScene} /> : null;
+        return showSpline ? <SplineBackground grayscale={showGrayscale} sceneUrl={currentSplineScene} /> : <MobileAestheticHero />;
       case 'liquidEther':
         return (
           <LiquidEther

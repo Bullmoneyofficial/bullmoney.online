@@ -1,6 +1,6 @@
 // Z-Index Constants - Centralized for consistency
 // Using very high values to ensure ALL elements render ABOVE everything else
-// Hierarchy: Base < Controls < HUD < Effects < Hints < Helpers < Tutorial < Tooltips < Modal
+// Hierarchy: Base < Controls < HUD < Effects < Hints < Helpers < Tutorial < Tooltips < Chat < Modal
 export const Z_INDEX = {
   PULL_TAB: 2147483600,        // Minimized pull tab - high priority
   PLAYER_BASE: 2147483610,     // Main iPhone container
@@ -13,5 +13,6 @@ export const Z_INDEX = {
   HELPERS: 2147483680,         // First time help tips
   TUTORIAL: 2147483690,        // Game tutorial - MUST be above iPhone
   TOOLTIPS: 2147483695,        // Button tooltips - highest UI element
+  OPEN_CHAT: 2147483696,       // Open chat button/overlay
   CAMERA_MODAL: 2147483647,    // Camera modal - max safe integer
 } as const;

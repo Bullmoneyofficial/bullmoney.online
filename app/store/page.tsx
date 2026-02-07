@@ -193,7 +193,7 @@ export default function StorePage() {
       return;
     }
     setMobileDeferReady(false);
-    const timer = setTimeout(() => setMobileDeferReady(true), 1200);
+    const timer = setTimeout(() => setMobileDeferReady(true), 400);
     return () => clearTimeout(timer);
   }, [isMobile]);
 
@@ -236,55 +236,15 @@ export default function StorePage() {
   const [mobileDeferReady, setMobileDeferReady] = useState(true);
   const shouldShowBelowFold = showBelowFold && (!isMobile || mobileDeferReady);
   const shouldShowHeavySections = showHeavy && (!isMobile || mobileDeferReady);
-  const [sequenceVisibility, setSequenceVisibility] = useState({
-    featured: false,
-    worldMap: false,
-    fluidGlass: false,
-    footer: false,
-  });
-  const sequenceDelayMs = 140;
-  const shouldShowFeatured = shouldShowBelowFold && sequenceVisibility.featured;
-  const shouldShowWorldMap = shouldShowHeavySections && sequenceVisibility.worldMap;
-  const shouldShowFluidGlass = shouldShowHeavySections && sequenceVisibility.fluidGlass;
-  const shouldShowFooter = shouldShowBelowFold && sequenceVisibility.footer;
 
-  useEffect(() => {
-    if (!shouldShowBelowFold) {
-      setSequenceVisibility({
-        featured: false,
-        worldMap: false,
-        fluidGlass: false,
-        footer: false,
-      });
-      return;
-    }
+  // All below-fold sections appear together instantly — no staggered delays
+  const shouldShowFeatured = shouldShowBelowFold;
+  const shouldShowWorldMap = shouldShowHeavySections;
+  const shouldShowFluidGlass = shouldShowHeavySections;
+  const shouldShowFooter = shouldShowBelowFold;
 
-    setSequenceVisibility((prev) => (prev.featured ? prev : { ...prev, featured: true }));
-  }, [shouldShowBelowFold]);
-
-  useEffect(() => {
-    if (!sequenceVisibility.featured) return;
-    const timer = setTimeout(() => {
-      setSequenceVisibility((prev) => (prev.worldMap ? prev : { ...prev, worldMap: true }));
-    }, sequenceDelayMs);
-    return () => clearTimeout(timer);
-  }, [sequenceVisibility.featured, sequenceDelayMs]);
-
-  useEffect(() => {
-    if (!sequenceVisibility.worldMap) return;
-    const timer = setTimeout(() => {
-      setSequenceVisibility((prev) => (prev.fluidGlass ? prev : { ...prev, fluidGlass: true }));
-    }, sequenceDelayMs);
-    return () => clearTimeout(timer);
-  }, [sequenceVisibility.worldMap, sequenceDelayMs]);
-
-  useEffect(() => {
-    if (!sequenceVisibility.fluidGlass) return;
-    const timer = setTimeout(() => {
-      setSequenceVisibility((prev) => (prev.footer ? prev : { ...prev, footer: true }));
-    }, sequenceDelayMs);
-    return () => clearTimeout(timer);
-  }, [sequenceVisibility.fluidGlass, sequenceDelayMs]);
+  // Below-fold sections are now gated only by shouldShowBelowFold/shouldShowHeavySections.
+  // No staggered chain needed — content-visibility: auto handles the rest.
 
 
   // Fetch products
@@ -429,9 +389,18 @@ export default function StorePage() {
       )}
       
       {/* Hero Section - 3D Spline Hero - DEFERRED to improve initial load */}
-      <div ref={hero.ref} style={{ minHeight: 400, contain: 'layout style paint' }}>
-        {shouldShowHero && <StoreHero3D paused={!hero.shouldAnimate} />}
-        {!shouldShowHero && (
+      <div
+        ref={hero.ref}
+        style={{
+          minHeight: 400,
+          contain: 'layout style paint',
+          contentVisibility: 'auto',
+          containIntrinsicSize: 'auto 400px',
+        } as React.CSSProperties}
+      >
+        {shouldShowHero ? (
+          <StoreHero3D paused={!hero.shouldAnimate} />
+        ) : (
           <div className="w-full h-100 bg-linear-to-b from-black via-zinc-900/50 to-black flex items-center justify-center">
             <div className="text-white/40 text-lg">Loading...</div>
           </div>
@@ -439,26 +408,41 @@ export default function StorePage() {
       </div>
 
       {/* Market Price Ticker - Top - Load when below fold is ready */}
-      <div className={shouldShowBelowFold ? '' : 'opacity-0 pointer-events-none max-h-0 overflow-hidden'}>
-        <MarketPriceTicker direction="left" speed={15} />
+      <div
+        style={{
+          contentVisibility: 'auto',
+          containIntrinsicSize: 'auto 48px',
+          visibility: shouldShowBelowFold ? 'visible' : 'hidden',
+          height: shouldShowBelowFold ? 'auto' : 0,
+          overflow: 'hidden',
+        } as React.CSSProperties}
+      >
+        {shouldShowBelowFold && <MarketPriceTicker direction="left" speed={15} />}
       </div>
 
-      {/* World Map Section - DEFERRED heavy component */}
-      {shouldShowWorldMap ? (
-      <section className="relative w-full min-h-[50vh] md:h-screen overflow-hidden bg-black">
-        <div className="absolute inset-0 z-0">
-          <WorldMap
-            dots={[
-              { start: { lat: 40.7128, lng: -74.006, label: 'New York' }, end: { lat: 51.5074, lng: -0.1278, label: 'London' } },
-              { start: { lat: 51.5074, lng: -0.1278, label: 'London' }, end: { lat: 35.6762, lng: 139.6503, label: 'Tokyo' } },
-              { start: { lat: 40.7128, lng: -74.006, label: 'New York' }, end: { lat: -33.8688, lng: 151.2093, label: 'Sydney' } },
-              { start: { lat: 1.3521, lng: 103.8198, label: 'Singapore' }, end: { lat: 25.2048, lng: 55.2708, label: 'Dubai' } },
-              { start: { lat: 35.6762, lng: 139.6503, label: 'Tokyo' }, end: { lat: 22.3193, lng: 114.1694, label: 'Hong Kong' } },
-              { start: { lat: 51.5074, lng: -0.1278, label: 'London' }, end: { lat: -33.9249, lng: 18.4241, label: 'Cape Town' }, color: '#3B82F6' },
-            ]}
-            lineColor="#ffffff"
-          />
-        </div>
+      {/* World Map Section - stays mounted once loaded, uses content-visibility */}
+      <section
+        className="relative w-full min-h-[50vh] md:h-screen overflow-hidden bg-black"
+        style={{
+          contentVisibility: 'auto',
+          containIntrinsicSize: 'auto 50vh',
+        } as React.CSSProperties}
+      >
+        {shouldShowWorldMap && (
+          <div className="absolute inset-0 z-0">
+            <WorldMap
+              dots={[
+                { start: { lat: 40.7128, lng: -74.006, label: 'New York' }, end: { lat: 51.5074, lng: -0.1278, label: 'London' } },
+                { start: { lat: 51.5074, lng: -0.1278, label: 'London' }, end: { lat: 35.6762, lng: 139.6503, label: 'Tokyo' } },
+                { start: { lat: 40.7128, lng: -74.006, label: 'New York' }, end: { lat: -33.8688, lng: 151.2093, label: 'Sydney' } },
+                { start: { lat: 1.3521, lng: 103.8198, label: 'Singapore' }, end: { lat: 25.2048, lng: 55.2708, label: 'Dubai' } },
+                { start: { lat: 35.6762, lng: 139.6503, label: 'Tokyo' }, end: { lat: 22.3193, lng: 114.1694, label: 'Hong Kong' } },
+                { start: { lat: 51.5074, lng: -0.1278, label: 'London' }, end: { lat: -33.9249, lng: 18.4241, label: 'Cape Town' }, color: '#3B82F6' },
+              ]}
+              lineColor="#ffffff"
+            />
+          </div>
+        )}
         <div className="absolute inset-x-0 top-8 md:inset-0 z-10 flex items-start md:items-center justify-center">
           <div className="text-center px-4">
             <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
@@ -470,28 +454,28 @@ export default function StorePage() {
           </div>
         </div>
       </section>
-      ) : (
-      <section className="relative w-full min-h-[50vh] md:h-screen overflow-hidden bg-black flex items-center justify-center">
-        <div className="text-center px-4">
-          <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
-            Pay With Crypto
-          </h2>
-          <p className="text-white/60 text-base md:text-xl max-w-2xl mx-auto">
-            Our store accepts Bitcoin, Ethereum & more
-          </p>
-        </div>
-      </section>
-      )}
 
       {/* Market Price Ticker - Bottom */}
-      <div className={shouldShowBelowFold ? '' : 'opacity-0 pointer-events-none max-h-0 overflow-hidden'}>
-        <MarketPriceTicker direction="right" speed={12} />
+      <div
+        style={{
+          contentVisibility: 'auto',
+          containIntrinsicSize: 'auto 48px',
+          visibility: shouldShowBelowFold ? 'visible' : 'hidden',
+          height: shouldShowBelowFold ? 'auto' : 0,
+          overflow: 'hidden',
+        } as React.CSSProperties}
+      >
+        {shouldShowBelowFold && <MarketPriceTicker direction="right" speed={12} />}
       </div>
 
       {/* Main Content */}
       <section 
         className="relative z-50 max-w-450 mx-auto px-4 md:px-8 pt-2 pb-4 md:py-12 bg-black" 
-        style={{ isolation: 'isolate', height: 'auto', overflow: 'visible' }}
+        style={{
+          isolation: 'isolate',
+          height: 'auto',
+          overflow: 'visible',
+        }}
       >
         {/* Featured Products - Timeline / Grid Toggle - DEFERRED below fold */}
         {shouldShowFeatured && !loading && focusCards.length > 0 && (
@@ -501,6 +485,10 @@ export default function StorePage() {
               if (featuredSectionRef) featuredSectionRef.current = el; 
             }} 
             className="-mx-4 md:-mx-8 mb-6 md:mb-8 bg-black rounded-2xl py-6"
+            style={{
+              contentVisibility: 'auto',
+              containIntrinsicSize: 'auto 600px',
+            } as React.CSSProperties}
           >
             {/* Toggle Header */}
             <div className="flex flex-col items-center px-4 md:px-8 mb-6">
@@ -953,7 +941,14 @@ export default function StorePage() {
         </div>
 
         {/* Product Grid / Circular Gallery */}
-        <div ref={productsSection.ref} data-products-grid>
+        <div
+          ref={productsSection.ref}
+          data-products-grid
+          style={{
+            contentVisibility: 'auto',
+            containIntrinsicSize: 'auto 800px',
+          } as React.CSSProperties}
+        >
         {loading ? (
           viewMode === 'carousel' ? (
             <div className="flex gap-4 md:gap-6 overflow-hidden py-6 md:py-10">
@@ -1104,29 +1099,47 @@ export default function StorePage() {
         )}
       </section>
 
-      {/* Fluid Glass 3D Experience Section - DEFERRED heavy component */}
-      {shouldShowFluidGlass && (
-        <div ref={fluidGlass.ref} className="hidden md:block" style={{ minHeight: fluidGlass.shouldRender ? undefined : 400 }}>
-          {fluidGlass.shouldRender && (
-            <StoreFluidGlassSection 
-              height="100vh"
-              className="mt-8"
-            />
-          )}
-        </div>
-      )}
-
-      {/* Market Price Ticker - Before Footer */}
-      <div className={shouldShowBelowFold ? '' : 'opacity-0 pointer-events-none max-h-0 overflow-hidden'}>
-        <MarketPriceTicker direction="right" speed={10} />
+      {/* Fluid Glass 3D Experience Section - stays mounted, CSS hidden off-screen */}
+      <div
+        ref={fluidGlass.ref}
+        className="hidden md:block"
+        style={{
+          minHeight: 400,
+          contentVisibility: 'auto',
+          containIntrinsicSize: 'auto 100vh',
+        } as React.CSSProperties}
+      >
+        {shouldShowFluidGlass && (
+          <StoreFluidGlassSection 
+            height="100vh"
+            className="mt-8"
+          />
+        )}
       </div>
 
-      {/* Store Footer - Defer until below fold loaded */}
-      {shouldShowFooter && (
-        <div ref={footer.ref}>
-          <StoreFooter />
-        </div>
-      )}
+      {/* Market Price Ticker - Before Footer */}
+      <div
+        style={{
+          contentVisibility: 'auto',
+          containIntrinsicSize: 'auto 48px',
+          visibility: shouldShowBelowFold ? 'visible' : 'hidden',
+          height: shouldShowBelowFold ? 'auto' : 0,
+          overflow: 'hidden',
+        } as React.CSSProperties}
+      >
+        {shouldShowBelowFold && <MarketPriceTicker direction="right" speed={10} />}
+      </div>
+
+      {/* Store Footer - stays mounted once loaded */}
+      <div
+        ref={footer.ref}
+        style={{
+          contentVisibility: 'auto',
+          containIntrinsicSize: 'auto 200px',
+        } as React.CSSProperties}
+      >
+        {shouldShowFooter && <StoreFooter />}
+      </div>
 
       {/* Filter Sheet - Load when interactive */}
       {showInteractive && (

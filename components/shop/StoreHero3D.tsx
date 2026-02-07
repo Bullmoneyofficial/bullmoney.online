@@ -1445,15 +1445,37 @@ export function StoreHero3D({ paused = false }: { paused?: boolean }) {
     }
   }, []);
 
-  // Handle mouse movement for parallax
+  // Handle mouse movement for parallax — throttled to RAF cadence
+  const heroRectRef = useRef<{ left: number; top: number; width: number; height: number } | null>(null);
+  const mouseMoveRafRef = useRef<number | null>(null);
+  const pendingMouseRef = useRef<{ x: number; y: number } | null>(null);
+
+  // Cache container rect (invalidated on resize via the resize handler below)
+  const updateHeroRect = useCallback(() => {
+    if (containerRef.current) {
+      const r = containerRef.current.getBoundingClientRect();
+      heroRectRef.current = { left: r.left, top: r.top, width: r.width, height: r.height };
+    }
+  }, []);
+
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!containerRef.current || isMobile) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = (e.clientY - rect.top) / rect.height;
-    mouseX.set(x);
-    mouseY.set(y);
-  }, [mouseX, mouseY, isMobile]);
+    // Store pending position and schedule a single RAF update
+    pendingMouseRef.current = { x: e.clientX, y: e.clientY };
+    if (mouseMoveRafRef.current !== null) return; // already scheduled
+    mouseMoveRafRef.current = requestAnimationFrame(() => {
+      mouseMoveRafRef.current = null;
+      const pos = pendingMouseRef.current;
+      if (!pos) return;
+      if (!heroRectRef.current) updateHeroRect();
+      const rect = heroRectRef.current;
+      if (!rect || rect.width === 0) return;
+      const x = (pos.x - rect.left) / rect.width;
+      const y = (pos.y - rect.top) / rect.height;
+      mouseX.set(x);
+      mouseY.set(y);
+    });
+  }, [mouseX, mouseY, isMobile, updateHeroRect]);
 
   useEffect(() => {
     setIsVisible(true);
@@ -1467,15 +1489,7 @@ export function StoreHero3D({ paused = false }: { paused?: boolean }) {
       observer = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
-            // Hero is in view when intersecting
             setIsHeroInView(entry.isIntersecting);
-            
-            // Log for debugging
-            if (!entry.isIntersecting) {
-              console.log('[StoreHero3D] Mobile: Hero scrolled out of view - pausing Spline');
-            } else {
-              console.log('[StoreHero3D] Mobile: Hero in view - resuming Spline');
-            }
           });
         },
         {
@@ -1578,13 +1592,18 @@ export function StoreHero3D({ paused = false }: { paused?: boolean }) {
       // Don't interfere with mobile delayed loading (when mobile && !show3DBackground)
     };
     window.addEventListener('resize', handleResize);
+    // Invalidate hero rect cache on resize
+    const handleResizeRect = () => { heroRectRef.current = null; };
+    window.addEventListener('resize', handleResizeRect);
     if (!paused) {
-      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mousemove', handleMouseMove, { passive: true });
     }
     
     return () => {
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('resize', handleResizeRect);
       window.removeEventListener('mousemove', handleMouseMove);
+      if (mouseMoveRafRef.current !== null) cancelAnimationFrame(mouseMoveRafRef.current);
       if (priceInterval) clearInterval(priceInterval);
       if (promoTimer) clearTimeout(promoTimer);
       if (splineLoadTimer) clearTimeout(splineLoadTimer);

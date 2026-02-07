@@ -60,14 +60,14 @@ export function useProgressiveLoad() {
   
   useEffect(() => {
     // Stage 0: Initial render (immediate)
-    // Stage 1: Critical interactive elements (after 50ms)
-    const timer1 = setTimeout(() => setLoadStage(1), 50);
+    // Stage 1: Critical interactive elements (after 16ms — next frame)
+    const timer1 = setTimeout(() => setLoadStage(1), 16);
     
-    // Stage 2: Below-fold content (after 500ms)
-    const timer2 = setTimeout(() => setLoadStage(2), 500);
+    // Stage 2: Below-fold content (after 150ms — feels instant)
+    const timer2 = setTimeout(() => setLoadStage(2), 150);
     
-    // Stage 3: Heavy animations and extras (after 1500ms or idle)
-    const timer3 = setTimeout(() => setLoadStage(3), 1500);
+    // Stage 3: Heavy animations and extras (after 500ms or idle)
+    const timer3 = setTimeout(() => setLoadStage(3), 500);
     
     return () => {
       clearTimeout(timer1);

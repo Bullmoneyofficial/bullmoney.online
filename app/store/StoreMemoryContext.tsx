@@ -88,9 +88,10 @@ export function StoreMemoryProvider({ children }: { children: ReactNode }) {
         });
       },
       {
-        // Render 50vh before section enters viewport, keep 25vh after leaving
-        rootMargin: '50% 0px 50% 0px',
-        threshold: [0, 0.1],
+        // Generous margins: start rendering 75vh before entering viewport
+        // so content is ready well before the user scrolls to it.
+        rootMargin: '75% 0px 75% 0px',
+        threshold: [0, 0.05],
       }
     );
 
@@ -102,25 +103,15 @@ export function StoreMemoryProvider({ children }: { children: ReactNode }) {
     return () => observerRef.current?.disconnect();
   }, []);
 
-  // Unrender sections that have been off-screen for a while (cleanup timer)
-  // Use a longer grace period to avoid re-render churn when scrolling
-  useEffect(() => {
-    const cleanup = setInterval(() => {
-      setSections((prev) => {
-        const next = { ...prev };
-        let changed = false;
-        for (const id of Object.keys(next) as SectionId[]) {
-          if (!next[id].inView && next[id].shouldRender) {
-            // Off-screen + still rendered → unrender after grace period
-            next[id] = { ...next[id], shouldRender: false, shouldAnimate: false };
-            changed = true;
-          }
-        }
-        return changed ? next : prev;
-      });
-    }, 30000); // 30s grace period (was 8s — too aggressive, caused re-render churn)
-    return () => clearInterval(cleanup);
-  }, []);
+  // NOTE: We intentionally do NOT unrender sections once they've been mounted.
+  // The old 30s cleanup interval caused full unmount/remount cycles which:
+  //   - destroyed & recreated entire React sub-trees
+  //   - re-triggered dynamic imports
+  //   - restarted animations from scratch
+  //   - caused layout shifts and jank on low-memory devices
+  // Instead, we rely on CSS `content-visibility: auto` on the section wrappers
+  // to let the browser natively skip painting off-screen content while keeping
+  // the DOM alive. `shouldAnimate` still toggles to save GPU/CPU.
 
   // Pause animations on idle
   useEffect(() => {
@@ -140,9 +131,19 @@ export function StoreMemoryProvider({ children }: { children: ReactNode }) {
   }, [isUserActive]);
 
   // Listen for user activity (scroll, pointer, touch)
+  // Throttle to max 1 call per 200ms to avoid flooding React state updates during fast scroll
   useEffect(() => {
     const events = ['scroll', 'pointermove', 'pointerdown', 'touchstart', 'keydown'] as const;
-    const handler = () => resetIdleTimer();
+    let ticking = false;
+    const handler = () => {
+      if (ticking) return;
+      ticking = true;
+      // Use rAF to batch — prevents scroll jank from synchronous setState
+      requestAnimationFrame(() => {
+        resetIdleTimer();
+        ticking = false;
+      });
+    };
 
     for (const evt of events) {
       window.addEventListener(evt, handler, { passive: true });

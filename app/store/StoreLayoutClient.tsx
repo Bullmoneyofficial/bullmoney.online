@@ -154,8 +154,6 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
             max-height: none !important;
             min-height: 0 !important;
             overflow: visible !important;
-            contain: none !important;
-            content-visibility: visible !important;
           }
           
           /* Sections inside store: allow natural flow but preserve hero height */
@@ -164,8 +162,6 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
             max-height: none !important;
             min-height: 0 !important;
             overflow: visible !important;
-            contain: none !important;
-            content-visibility: visible !important;
           }
         }
         
@@ -210,6 +206,8 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
           overflow-y: auto !important;
           overflow-x: hidden !important;
           height: auto !important;
+          /* Prevent page-level repaints during scroll */
+          -webkit-overflow-scrolling: touch;
         }
         
         /* Ensure store content scrolls properly */
@@ -218,6 +216,9 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
           background: #000;
           position: relative !important;
           height: auto !important;
+          /* GPU compositing for the entire store shell */
+          transform: translateZ(0);
+          backface-visibility: hidden;
         }
         
         /* Only contain overscroll on actual mobile touch devices */
@@ -257,9 +258,7 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
           
           html.is-mobile .store-layout section,
           .store-layout section {
-            contain: none !important;
-            content-visibility: visible !important;
-            contain-intrinsic-size: auto !important;
+            /* Allow content-visibility: auto to work for performance */
           }
         }
       `}</style>
@@ -385,13 +384,11 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
         /* GPU layer promotion for animated containers */
         .circular-product-row,
         [data-products-grid] {
-          will-change: transform;
           transform: translateZ(0);
         }
 
-        /* Ensure product card images use GPU compositing */
+        /* Product card images: GPU compositing only during transitions */
         [data-store-page] img {
-          will-change: transform;
           backface-visibility: hidden;
         }
       `}</style>
