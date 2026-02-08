@@ -236,6 +236,88 @@ iframe {
 }
 
 /* ============================================================================
+   SAFARI / WEBKIT PROMOTION 120fps FIX
+   ============================================================================
+   Safari on iOS caps requestAnimationFrame at 60fps by default (power saving)
+   even on ProMotion 120Hz displays. CSS compositor animations DO run at 120fps.
+   
+   The trick: a persistent invisible CSS animation using transform signals
+   Safari's compositor to stay in 120Hz mode. This also unlocks RAF to 120fps,
+   which benefits framer-motion, three.js, Spline, GSAP, etc.
+   
+   For WKWebView (Instagram, TikTok, Facebook in-app browsers), the host app
+   controls preferredFramesPerSecond but this CSS trick still helps.
+   ============================================================================ */
+
+/* Safari-only: invisible animation that keeps compositor in 120Hz mode */
+@supports (-webkit-hyphens: none) {
+  .display-120hz::after {
+    content: '';
+    position: fixed;
+    top: -1px;
+    left: -1px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+    z-index: -9999;
+    will-change: transform;
+    -webkit-animation: safari-promotion-trigger 1s linear infinite;
+    animation: safari-promotion-trigger 1s linear infinite;
+  }
+
+  @-webkit-keyframes safari-promotion-trigger {
+    from { -webkit-transform: translateZ(0); transform: translateZ(0); }
+    to { -webkit-transform: translateZ(0.01px); transform: translateZ(0.01px); }
+  }
+
+  @keyframes safari-promotion-trigger {
+    from { transform: translateZ(0); }
+    to { transform: translateZ(0.01px); }
+  }
+}
+
+/* High-refresh display media query — targets 120Hz+ screens */
+@media (update: fast) {
+  /* Ensure all animated elements use compositor-only properties for 120fps */
+  .animated-element,
+  [data-framer-motion],
+  [data-motion],
+  canvas,
+  [data-spline],
+  [data-spline-scene] {
+    will-change: transform, opacity;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+
+  /* Smoother transitions at 120Hz — shorter durations feel right */
+  .transition-all,
+  .transition-transform,
+  .transition-opacity,
+  .transition-colors {
+    transition-timing-function: cubic-bezier(0.2, 0, 0.2, 1);
+  }
+}
+
+/* iOS Safari ProMotion: ensure scroll and touch animations use 120Hz */
+@supports (-webkit-touch-callout: none) {
+  /* iOS-only: optimize scroll containers for ProMotion */
+  .display-120hz .overflow-auto,
+  .display-120hz .overflow-scroll,
+  .display-120hz .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: auto;
+  }
+
+  /* iOS: force GPU compositing on animated canvas elements */
+  .display-120hz canvas {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* ============================================================================
    UNIFIED PERFORMANCE SYSTEM - COMPONENT STATE OPTIMIZATIONS
    ============================================================================ */
 

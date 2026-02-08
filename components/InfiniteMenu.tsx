@@ -739,8 +739,13 @@ class InfiniteGridMenu {
   }
 
   public resize(): void {
-    const needsResize = resizeCanvasToDisplaySize(this.canvas);
+    this.viewportSize = vec2.set(
+      this.viewportSize || vec2.create(),
+      this.canvas.clientWidth,
+      this.canvas.clientHeight
+    );
     if (!this.gl) return;
+    const needsResize = resizeCanvasToDisplaySize(this.gl.canvas as HTMLCanvasElement);
     if (needsResize) {
       this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
     }
@@ -769,8 +774,8 @@ class InfiniteGridMenu {
     }
     this.gl = gl;
 
-    vec2.set(this.viewportSize, this.canvas.clientWidth, this.canvas.clientHeight);
-    vec2.clone(this.drawBufferSize);
+    this.viewportSize = vec2.fromValues(this.canvas.clientWidth, this.canvas.clientHeight);
+    this.drawBufferSize = vec2.clone(this.viewportSize);
 
     this.discProgram = createProgram(gl, [discVertShaderSource, discFragShaderSource], null, {
       aModelPosition: 0,
@@ -845,6 +850,24 @@ class InfiniteGridMenu {
             const img = new Image();
             img.crossOrigin = 'anonymous';
             img.onload = () => resolve(img);
+            img.onerror = () => {
+              // Fallback: create a colored placeholder canvas
+              const fallback = document.createElement('canvas');
+              fallback.width = 512;
+              fallback.height = 512;
+              const fCtx = fallback.getContext('2d')!;
+              fCtx.fillStyle = '#1a1a2e';
+              fCtx.fillRect(0, 0, 512, 512);
+              fCtx.fillStyle = '#ffffff';
+              fCtx.font = 'bold 32px sans-serif';
+              fCtx.textAlign = 'center';
+              fCtx.textBaseline = 'middle';
+              fCtx.fillText(item.title || 'Product', 256, 256);
+              // Convert canvas to Image for drawImage compatibility
+              const fallbackImg = new Image();
+              fallbackImg.onload = () => resolve(fallbackImg);
+              fallbackImg.src = fallback.toDataURL();
+            };
             img.src = item.image;
           })
       )
@@ -1050,10 +1073,10 @@ class InfiniteGridMenu {
 
 const defaultItems: MenuItem[] = [
   {
-    image: 'https://picsum.photos/900/900?grayscale',
-    link: 'https://google.com/',
-    title: '',
-    description: ''
+    image: '/bullmoney-logo.png',
+    link: '/',
+    title: 'Bull Money',
+    description: 'Trading Community'
   }
 ];
 
@@ -1072,7 +1095,6 @@ const InfiniteMenu: FC<InfiniteMenuProps> = ({ items = [], scale = 1.0 }) => {
     let sketch: InfiniteGridMenu | null = null;
 
     const handleActiveItem = (index: number) => {
-      if (!items.length) return;
       const itemIndex = index % items.length;
       setActiveItem(items[itemIndex]);
     };

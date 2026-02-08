@@ -8,8 +8,8 @@ import { cn } from "@/lib/utils";
 import { Suspense } from "react";
 import { APP_VERSION, PRESERVED_KEYS } from "@/lib/appVersion";
 
-// ✅ CUSTOM EVENT TRACKING - Track user interactions across the site
-import { trackEvent } from "@/lib/analytics";
+// ✅ CUSTOM EVENT TRACKING - Removed from layout (static import pulled analytics into every page)
+// Import trackEvent in individual client components that need it instead.
 
 // ✅ PROVIDERS - Context providers for root layout
 import { ThemeProvider } from "@/context/providers";
@@ -683,15 +683,13 @@ export default function RootLayout({
         {/* PERFORMANCE: Preload critical assets with proper priorities */}
         <link rel="preload" href="/ONcc2l601.svg" as="image" fetchPriority="high" />
         
-        {/* LCP FIX: Preload hero Spline scene with HIGH priority for <2.5s LCP */}
-        <link rel="preload" href="/scene1.splinecode" as="fetch" crossOrigin="anonymous" fetchPriority="high" />
-
-        {/* CLS FIX: Prefetch other Spline scenes with lower priority */}
-        <link rel="prefetch" href="/scene.splinecode" as="fetch" crossOrigin="anonymous" />
-        <link rel="prefetch" href="/scene2.splinecode" as="fetch" crossOrigin="anonymous" />
-        <link rel="prefetch" href="/scene4.splinecode" as="fetch" crossOrigin="anonymous" />
-        <link rel="prefetch" href="/scene5.splinecode" as="fetch" crossOrigin="anonymous" />
-        <link rel="prefetch" href="/scene6.splinecode" as="fetch" crossOrigin="anonymous" />
+        {/* 
+          PERFORMANCE FIX: Removed all Spline scene preload/prefetch tags.
+          Scene1 (6.9MB) was being preloaded with HIGH priority, competing with 
+          critical JS/CSS for bandwidth. 5 other scenes (total ~13MB) were prefetched.
+          Spline scenes are now loaded on-demand by the SplineBackground component
+          via the Cache API system, which already handles caching efficiently.
+        */}
         
         {/* LCP FIX: Critical inline script to start hero scene preload immediately */}
         <script
@@ -813,159 +811,10 @@ export default function RootLayout({
         <link rel="shortcut icon" href="/ONcc2l601.svg" />
         <link rel="apple-touch-icon" href="/ONcc2l601.svg" />
 
-        {/* Service Worker & Performance Scripts */}
+        {/* Service Worker & Essential Scripts - PERFORMANCE: Only critical viewport/touch fixes inline */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              // ULTRA-FAST: Preload Spline runtime by triggering dynamic import early
-              (function preloadSpline() {
-                // Prefetch the hero scene immediately
-                const sceneLink = document.createElement('link');
-                sceneLink.rel = 'preload';
-                sceneLink.href = '/scene1.splinecode';
-                sceneLink.as = 'fetch';
-                sceneLink.crossOrigin = 'anonymous';
-                document.head.appendChild(sceneLink);
-                
-                console.log('⚡ Spline scene preload initiated');
-              })();
-              
-              // 120Hz Display Detection & Optimization - Ultra Mode
-              (function detect120Hz() {
-                const root = document.documentElement;
-                let nativeHz = 60;
-                let measured = false;
-                
-                // Modern Screen API (Chrome 110+)
-                if ('refreshRate' in screen) {
-                  nativeHz = Math.min(screen.refreshRate, 120);
-                  measured = true;
-                }
-                
-                // Detect ProMotion & high-refresh devices via UA + screen
-                if (!measured) {
-                  const ua = navigator.userAgent.toLowerCase();
-                  const w = screen.width;
-                  const h = screen.height;
-                  const dpr = window.devicePixelRatio;
-                  const cores = navigator.hardwareConcurrency || 4;
-                  const memory = navigator.deviceMemory || 8;
-                  
-                  // iPhone Pro (13/14/15/16 Pro/Pro Max)
-                  if (/iphone/.test(ua) && dpr >= 3) {
-                    if (w === 393 || w === 430 || w === 390 || w === 428 || w === 402 || w === 440 || h >= 844) {
-                      nativeHz = 120;
-                    }
-                  }
-                  // iPad Pro (all support ProMotion)
-                  else if (/ipad/.test(ua) && dpr >= 2 && w >= 1024) {
-                    nativeHz = 120;
-                  }
-                  // ENHANCED: Apple Silicon Mac detection (M1, M2, M3, M4+)
-                  else if (/macintosh|mac os x/i.test(ua)) {
-                    // Check for Apple Silicon via high core count or WebGL
-                    let isAppleSilicon = cores >= 8;
-                    try {
-                      const canvas = document.createElement('canvas');
-                      const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
-                      if (gl) {
-                        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-                        if (debugInfo) {
-                          const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL).toLowerCase();
-                          if (renderer.includes('apple') && (renderer.includes('gpu') || /m[1-9]/.test(renderer))) {
-                            isAppleSilicon = true;
-                            root.classList.add('apple-silicon');
-                            console.log('🍎 Apple Silicon Mac detected:', renderer);
-                          }
-                        }
-                      }
-                    } catch (e) {}
-                    
-                    if (isAppleSilicon) {
-                      nativeHz = 120; // ProMotion on MacBook Pro 14"/16"
-                      root.classList.add('desktop-optimized', 'high-performance');
-                    }
-                  }
-                  // Samsung Galaxy S/Note/Ultra
-                  else if (/samsung|sm-g|sm-n|sm-s/i.test(ua) && dpr >= 2.5) {
-                    nativeHz = 120;
-                  }
-                  // OnePlus, Xiaomi, high-end Android
-                  else if (/oneplus|xiaomi|redmi|poco|oppo|realme|vivo/i.test(ua) && dpr >= 2.5) {
-                    nativeHz = 120;
-                  }
-                  // Google Pixel Pro (90Hz+)
-                  else if (/pixel.*pro/i.test(ua)) {
-                    nativeHz = 90;
-                  }
-                  // ENHANCED: High-spec Windows/Linux desktops
-                  else if (!(/mobi|android|iphone|ipad/i.test(ua))) {
-                    // Check for discrete GPU
-                    let hasDiscreteGPU = false;
-                    try {
-                      const canvas = document.createElement('canvas');
-                      const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
-                      if (gl) {
-                        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-                        if (debugInfo) {
-                          const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL).toLowerCase();
-                          hasDiscreteGPU = renderer.includes('nvidia') || renderer.includes('geforce') || 
-                                           renderer.includes('radeon') || renderer.includes('amd') ||
-                                           renderer.includes('rtx') || renderer.includes('gtx');
-                          if (hasDiscreteGPU) {
-                            root.classList.add('discrete-gpu');
-                          }
-                        }
-                      }
-                    } catch (e) {}
-                    
-                    // High-spec desktop with likely high-refresh monitor
-                    if (w >= 2560 || (hasDiscreteGPU && memory >= 8) || (memory >= 16 && cores >= 8)) {
-                      nativeHz = 120;
-                      root.classList.add('desktop-optimized', 'high-performance');
-                      console.log('🖥️ High-performance desktop detected');
-                    }
-                  }
-                }
-                
-                // Measure actual FPS capability
-                let frames = 0, startTime = performance.now();
-                function measureFps(timestamp) {
-                  frames++;
-                  if (frames < 20) {
-                    requestAnimationFrame(measureFps);
-                  } else {
-                    const elapsed = timestamp - startTime;
-                    const fps = Math.round((frames / elapsed) * 1000);
-                    const actualHz = fps >= 110 ? 120 : fps >= 80 ? 90 : 60;
-                    const finalHz = Math.min(nativeHz, actualHz);
-                    
-                    root.style.setProperty('--measured-fps', actualHz);
-                    root.style.setProperty('--actual-target-fps', finalHz);
-                    
-                    if (actualHz >= 110) {
-                      root.classList.add('fps-120');
-                      console.log('⚡ 120Hz CONFIRMED: ' + fps + 'fps measured');
-                    } else if (actualHz >= 80) {
-                      root.classList.add('fps-90');
-                      console.log('⚡ 90Hz CONFIRMED: ' + fps + 'fps measured');
-                    }
-                  }
-                }
-                requestAnimationFrame(measureFps);
-                
-                const targetHz = Math.min(nativeHz, 120);
-                root.style.setProperty('--native-refresh-rate', nativeHz);
-                root.style.setProperty('--target-fps', targetHz);
-                root.style.setProperty('--frame-duration', (1000 / targetHz) + 'ms');
-                root.style.setProperty('--frame-budget', (1000 / targetHz * 0.9) + 'ms');
-                
-                if (nativeHz >= 120) root.classList.add('display-120hz');
-                else if (nativeHz >= 90) root.classList.add('display-90hz');
-                
-                console.log('🖥️ Display: ' + nativeHz + 'Hz detected, targeting ' + targetHz + 'fps');
-              })();
-              
               // Service Worker Registration
               const __BM_SW_ENABLED__ = ${swEnabled ? "true" : "false"};
               if (__BM_SW_ENABLED__ && 'serviceWorker' in navigator) {
@@ -986,7 +835,6 @@ export default function RootLayout({
               window.addEventListener('orientationchange', setVH);
 
               // SIMPLIFIED: Only prevent pull-to-refresh at very top of page
-              // All other scrolling is allowed by default
               let touchStartY = 0;
               
               document.addEventListener('touchstart', function(e) {
@@ -994,17 +842,13 @@ export default function RootLayout({
               }, { passive: true });
 
               document.addEventListener('touchmove', function(e) {
-                // Always allow multi-touch gestures (pinch zoom)
                 if (e.touches.length > 1) return;
                 
                 const touchY = e.touches[0].clientY;
                 const deltaY = touchY - touchStartY;
                 const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
                 
-                // Only prevent default at the very top when pulling down (refresh gesture)
-                // This prevents accidental pull-to-refresh but allows all normal scrolling
                 if (scrollTop <= 0 && deltaY > 10) {
-                  // Check if we're in a modal or fixed overlay that should block
                   const target = e.target;
                   const isInModal = target && target.closest && target.closest('.fixed[style*="z-index"]');
                   if (!isInModal) {
@@ -1012,8 +856,123 @@ export default function RootLayout({
                   }
                 }
               }, { passive: false });
-              
-              // Performance monitoring loaded via external script for faster initial load
+            `,
+          }}
+        />
+        {/* 
+          PERFORMANCE FIX: 120Hz detection moved to afterInteractive.
+          Was previously running synchronously in <head> — creating WebGL canvas,
+          reading GPU info, and running 20 RAF frames BEFORE React hydration.
+          This alone was adding 300-500ms to First Contentful Paint.
+        */}
+        <Script
+          id="detect-120hz"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function detect120Hz() {
+                const root = document.documentElement;
+                let nativeHz = 60;
+                let measured = false;
+                
+                if ('refreshRate' in screen) {
+                  nativeHz = Math.min(screen.refreshRate, 120);
+                  measured = true;
+                }
+                
+                if (!measured) {
+                  const ua = navigator.userAgent.toLowerCase();
+                  const w = screen.width;
+                  const h = screen.height;
+                  const dpr = window.devicePixelRatio;
+                  const cores = navigator.hardwareConcurrency || 4;
+                  const memory = navigator.deviceMemory || 8;
+                  
+                  if (/iphone/.test(ua) && dpr >= 3) {
+                    if (w === 393 || w === 430 || w === 390 || w === 428 || w === 402 || w === 440 || h >= 844) {
+                      nativeHz = 120;
+                    }
+                  } else if (/ipad/.test(ua) && dpr >= 2 && w >= 1024) {
+                    nativeHz = 120;
+                  } else if (/macintosh|mac os x/i.test(ua)) {
+                    let isAppleSilicon = cores >= 8;
+                    try {
+                      const canvas = document.createElement('canvas');
+                      const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
+                      if (gl) {
+                        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                        if (debugInfo) {
+                          const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL).toLowerCase();
+                          if (renderer.includes('apple') && (renderer.includes('gpu') || /m[1-9]/.test(renderer))) {
+                            isAppleSilicon = true;
+                            root.classList.add('apple-silicon');
+                          }
+                        }
+                      }
+                    } catch (e) {}
+                    if (isAppleSilicon) {
+                      nativeHz = 120;
+                      root.classList.add('desktop-optimized', 'high-performance');
+                    }
+                  } else if (/samsung|sm-g|sm-n|sm-s/i.test(ua) && dpr >= 2.5) {
+                    nativeHz = 120;
+                  } else if (/oneplus|xiaomi|redmi|poco|oppo|realme|vivo/i.test(ua) && dpr >= 2.5) {
+                    nativeHz = 120;
+                  } else if (/pixel.*pro/i.test(ua)) {
+                    nativeHz = 90;
+                  } else if (!(/mobi|android|iphone|ipad/i.test(ua))) {
+                    let hasDiscreteGPU = false;
+                    try {
+                      const canvas = document.createElement('canvas');
+                      const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
+                      if (gl) {
+                        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                        if (debugInfo) {
+                          const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL).toLowerCase();
+                          hasDiscreteGPU = renderer.includes('nvidia') || renderer.includes('geforce') || 
+                                           renderer.includes('radeon') || renderer.includes('amd') ||
+                                           renderer.includes('rtx') || renderer.includes('gtx');
+                          if (hasDiscreteGPU) root.classList.add('discrete-gpu');
+                        }
+                      }
+                    } catch (e) {}
+                    if (w >= 2560 || (hasDiscreteGPU && memory >= 8) || (memory >= 16 && cores >= 8)) {
+                      nativeHz = 120;
+                      root.classList.add('desktop-optimized', 'high-performance');
+                    }
+                  }
+                }
+                
+                // Measure actual FPS — now runs AFTER page is interactive
+                let frames = 0, startTime = performance.now();
+                function measureFps(timestamp) {
+                  frames++;
+                  if (frames < 20) {
+                    requestAnimationFrame(measureFps);
+                  } else {
+                    const elapsed = timestamp - startTime;
+                    const fps = Math.round((frames / elapsed) * 1000);
+                    const actualHz = fps >= 110 ? 120 : fps >= 80 ? 90 : 60;
+                    const finalHz = Math.min(nativeHz, actualHz);
+                    
+                    root.style.setProperty('--measured-fps', actualHz);
+                    root.style.setProperty('--actual-target-fps', finalHz);
+                    
+                    if (actualHz >= 110) root.classList.add('fps-120');
+                    else if (actualHz >= 80) root.classList.add('fps-90');
+                  }
+                }
+                requestAnimationFrame(measureFps);
+                
+                const targetHz = Math.min(nativeHz, 120);
+                root.style.setProperty('--native-refresh-rate', nativeHz);
+                root.style.setProperty('--target-fps', targetHz);
+                root.style.setProperty('--frame-duration', (1000 / targetHz) + 'ms');
+                root.style.setProperty('--frame-budget', (1000 / targetHz * 0.9) + 'ms');
+                
+                if (nativeHz >= 120) root.classList.add('display-120hz');
+                else if (nativeHz >= 90) root.classList.add('display-90hz');
+              })();
             `,
           }}
         />

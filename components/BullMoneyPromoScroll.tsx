@@ -15,7 +15,8 @@ export default function BullMoneyPromoScroll() {
       className="relative w-full min-h-screen flex items-center justify-center overflow-hidden bg-black"
       style={{
         position: 'relative',
-        padding: '6rem 1.5rem'
+        padding: '6rem 1.5rem',
+        paddingTop: '8rem'
       }}
     >
       {/* Animated background gradient */}
@@ -31,7 +32,7 @@ export default function BullMoneyPromoScroll() {
       <div 
         className="relative z-10 max-w-5xl mx-auto text-center"
         style={{
-          paddingTop: '20vh'
+          paddingTop: '12vh'
         }}
       >
         {/* Badge */}

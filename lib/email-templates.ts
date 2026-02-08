@@ -859,6 +859,273 @@ export function welcomeEmail(email: string): { subject: string; html: string } {
 }
 
 // ============================================================================
+// CRYPTO PAYMENT TEMPLATES - Used by crypto-payment API & admin hub
+// All templates support {{variable}} replacement for SQL-based editing
+// ============================================================================
+
+export interface CryptoEmailVars {
+  order_number: string;
+  tx_hash: string;
+  coin: string;
+  network: string;
+  amount_usd: string;
+  amount_crypto: string;
+  locked_price?: string;
+  product_name: string;
+  quantity: string;
+  sender_wallet?: string;
+  wallet_address: string;
+  status: string;
+  customer_email?: string;
+  explorer_url: string;
+  site_url: string;
+  confirmations?: string;
+  required_confirmations?: string;
+  confirmed_at?: string;
+  refund_amount_usd?: string;
+  refund_tx_hash?: string;
+  refund_reason?: string;
+  refund_wallet?: string;
+}
+
+/**
+ * Admin: Crypto Payment Received — full details + invoice
+ * Slug: crypto_payment_admin
+ */
+export function cryptoPaymentAdminEmail(vars: CryptoEmailVars): { subject: string; html: string } {
+  const content = `
+    <h2 style="color: ${BRAND_BLUE}; font-size: 20px; font-weight: 700; margin: 0 0 20px;">New Crypto Payment Received</h2>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${CARD_BG}" style="background-color: ${CARD_BG}; border: 1px solid ${BORDER_COLOR}; border-radius: 12px;">
+      <tr><td style="padding: 20px;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Order</td><td style="padding: 8px 0; color: #fff; font-size: 14px; text-align: right; font-weight: 600;">${vars.order_number}</td></tr>
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Customer</td><td style="padding: 8px 0; color: ${BRAND_BLUE}; font-size: 14px; text-align: right;">${vars.customer_email || 'N/A'}</td></tr>
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Product</td><td style="padding: 8px 0; color: #fff; font-size: 14px; text-align: right;">${vars.product_name} x${vars.quantity}</td></tr>
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Amount (USD)</td><td style="padding: 8px 0; color: #fff; font-size: 14px; text-align: right; font-weight: 700;">$${vars.amount_usd}</td></tr>
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Crypto</td><td style="padding: 8px 0; color: #fff; font-size: 14px; text-align: right;">${vars.amount_crypto} ${vars.coin}</td></tr>
+          ${vars.locked_price ? `<tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Locked Rate</td><td style="padding: 8px 0; color: #fff; font-size: 14px; text-align: right;">1 ${vars.coin} = $${vars.locked_price}</td></tr>` : ''}
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Network</td><td style="padding: 8px 0; color: #fff; font-size: 14px; text-align: right;">${vars.network}</td></tr>
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">TX Hash</td><td style="padding: 8px 0; font-size: 12px; text-align: right;"><a href="${vars.explorer_url}" style="color: ${BRAND_BLUE}; font-family: monospace; word-break: break-all;">${vars.tx_hash}</a></td></tr>
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">To Wallet</td><td style="padding: 8px 0; color: #fff; font-size: 11px; text-align: right; font-family: monospace; word-break: break-all;">${vars.wallet_address}</td></tr>
+          ${vars.sender_wallet ? `<tr><td style="padding: 8px 0; color: #888; font-size: 14px;">From Wallet</td><td style="padding: 8px 0; color: #fff; font-size: 11px; text-align: right; font-family: monospace; word-break: break-all;">${vars.sender_wallet}</td></tr>` : ''}
+        </table>
+      </td></tr>
+    </table>
+    <div style="background: #0a1628; border: 1px solid #1d4ed8; border-radius: 8px; padding: 12px 16px; margin-top: 16px;">
+      <p style="color: #93c5fd; font-size: 13px; margin: 0;">Status: <strong>PENDING VERIFICATION</strong> — Auto-verifying on blockchain every 5 min.</p>
+    </div>
+    <div style="margin-top: 16px;">
+      <a href="${vars.explorer_url}" style="display: inline-block; padding: 10px 20px; background: #1d4ed8; color: #fff; font-weight: 600; font-size: 13px; text-decoration: none; border-radius: 8px; margin-right: 8px;">View on Explorer</a>
+      <a href="${vars.site_url}/admin" style="display: inline-block; padding: 10px 20px; background: #fff; color: #000; font-weight: 600; font-size: 13px; text-decoration: none; border-radius: 8px;">Admin Panel</a>
+    </div>
+  `;
+  return {
+    subject: `[BullMoney] New Crypto Payment — ${vars.amount_crypto} ${vars.coin} ($${vars.amount_usd}) — ${vars.order_number}`,
+    html: emailWrapper(content),
+  };
+}
+
+/**
+ * Customer: Payment Received — pending verification
+ * Slug: crypto_payment_customer
+ */
+export function cryptoPaymentCustomerEmail(vars: CryptoEmailVars): { subject: string; html: string } {
+  const content = `
+    <div style="text-align: center; margin-bottom: 24px;">
+      <h2 style="font-size: 24px; font-weight: 700; margin: 0 0 8px; color: #fff;">Payment Received</h2>
+      <p style="color: #888; font-size: 14px; margin: 0;">Thank you for your purchase from BullMoney</p>
+    </div>
+    <div style="background: #0a1628; border: 1px solid #1d4ed8; border-radius: 12px; padding: 20px; margin-bottom: 20px; text-align: center;">
+      <p style="color: #93c5fd; font-size: 13px; margin: 0 0 4px;">Order Number</p>
+      <p style="color: #fff; font-size: 22px; font-weight: 700; margin: 0; letter-spacing: 1px;">${vars.order_number}</p>
+    </div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${CARD_BG}" style="background-color: ${CARD_BG}; border: 1px solid ${BORDER_COLOR}; border-radius: 12px;">
+      <tr><td style="padding: 20px;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Product</td><td style="padding: 8px 0; color: #fff; font-size: 14px; text-align: right;">${vars.product_name} x${vars.quantity}</td></tr>
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Total (USD)</td><td style="padding: 8px 0; color: #fff; font-size: 14px; text-align: right; font-weight: 700;">$${vars.amount_usd}</td></tr>
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Paid</td><td style="padding: 8px 0; color: #fff; font-size: 14px; text-align: right;">${vars.amount_crypto} ${vars.coin}</td></tr>
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Network</td><td style="padding: 8px 0; color: #fff; font-size: 14px; text-align: right;">${vars.network}</td></tr>
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Status</td><td style="padding: 8px 0; color: #f59e0b; font-size: 14px; text-align: right; font-weight: 600;">Pending Verification</td></tr>
+        </table>
+      </td></tr>
+    </table>
+    <div style="background: ${CARD_BG}; border: 1px solid ${BORDER_COLOR}; border-radius: 12px; padding: 16px; margin-top: 16px;">
+      <p style="color: #888; font-size: 12px; margin: 0 0 6px;">Transaction Hash</p>
+      <a href="${vars.explorer_url}" style="color: ${BRAND_BLUE}; font-size: 12px; font-family: monospace; word-break: break-all; text-decoration: underline;">${vars.tx_hash}</a>
+    </div>
+    <div style="background: #0f0f0f; border: 1px solid ${BORDER_COLOR}; border-radius: 12px; padding: 16px; margin-top: 16px;">
+      <h3 style="color: #fff; font-size: 14px; margin: 0 0 8px;">What happens next?</h3>
+      <ol style="color: #ccc; font-size: 13px; line-height: 2; margin: 0; padding-left: 20px;">
+        <li>Our system is verifying your transaction on the blockchain</li>
+        <li>You'll receive an email once payment is confirmed</li>
+        <li>Your order will be processed automatically after confirmation</li>
+      </ol>
+    </div>
+    <div style="text-align: center; margin-top: 20px;">
+      <a href="${vars.explorer_url}" style="display: inline-block; padding: 12px 32px; background: #1d4ed8; color: #fff; font-weight: 600; font-size: 14px; text-decoration: none; border-radius: 10px;">Track on Blockchain</a>
+    </div>
+    <div style="text-align: center; margin-top: 16px;">
+      <p style="color: #666; font-size: 12px; margin: 0;">Refund Policy: Crypto payments over $100 are eligible for refund within 14 days. Payments under $100 are non-refundable.</p>
+    </div>
+  `;
+  return {
+    subject: `Your BullMoney Order ${vars.order_number} — Payment Received`,
+    html: emailWrapper(content, vars.customer_email),
+  };
+}
+
+/**
+ * Customer: Payment Confirmed — blockchain verified
+ * Slug: crypto_payment_confirmed
+ */
+export function cryptoPaymentConfirmedEmail(vars: CryptoEmailVars): { subject: string; html: string } {
+  const content = `
+    <div style="text-align: center; margin-bottom: 24px;">
+      <h2 style="font-size: 24px; font-weight: 700; margin: 0 0 8px; color: #22c55e;">Payment Confirmed</h2>
+      <p style="color: #888; font-size: 14px; margin: 0;">Your crypto payment has been verified on the blockchain</p>
+    </div>
+    <div style="background: #052e16; border: 1px solid #22c55e; border-radius: 12px; padding: 20px; margin-bottom: 20px; text-align: center;">
+      <p style="color: #4ade80; font-size: 13px; margin: 0 0 4px;">Order Number</p>
+      <p style="color: #fff; font-size: 22px; font-weight: 700; margin: 0; letter-spacing: 1px;">${vars.order_number}</p>
+    </div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${CARD_BG}" style="background-color: ${CARD_BG}; border: 1px solid ${BORDER_COLOR}; border-radius: 12px;">
+      <tr><td style="padding: 20px;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Product</td><td style="padding: 8px 0; color: #fff; font-size: 14px; text-align: right;">${vars.product_name}</td></tr>
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Total</td><td style="padding: 8px 0; color: #fff; font-size: 14px; text-align: right; font-weight: 700;">$${vars.amount_usd}</td></tr>
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Paid</td><td style="padding: 8px 0; color: #fff; font-size: 14px; text-align: right;">${vars.amount_crypto} ${vars.coin}</td></tr>
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Confirmations</td><td style="padding: 8px 0; color: #22c55e; font-size: 14px; text-align: right; font-weight: 600;">${vars.confirmations || ''}/${vars.required_confirmations || ''}</td></tr>
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Status</td><td style="padding: 8px 0; color: #22c55e; font-size: 14px; text-align: right; font-weight: 600;">Confirmed</td></tr>
+        </table>
+      </td></tr>
+    </table>
+    <div style="background: #0f0f0f; border: 1px solid ${BORDER_COLOR}; border-radius: 12px; padding: 16px; margin-top: 16px;">
+      <h3 style="color: #fff; font-size: 14px; margin: 0 0 8px;">Your order is being processed</h3>
+      <p style="color: #ccc; font-size: 13px; line-height: 1.6; margin: 0;">Your payment has been verified and your order is now being processed. Digital products will be delivered shortly, and physical items will ship within 2-3 business days.</p>
+    </div>
+    <div style="text-align: center; margin-top: 20px;">
+      <a href="${vars.explorer_url}" style="display: inline-block; padding: 12px 32px; background: #22c55e; color: #000; font-weight: 700; font-size: 14px; text-decoration: none; border-radius: 10px;">View Transaction</a>
+    </div>
+  `;
+  return {
+    subject: `BullMoney Order ${vars.order_number} — Payment Confirmed`,
+    html: emailWrapper(content, vars.customer_email),
+  };
+}
+
+/**
+ * Customer: Payment Failed
+ * Slug: crypto_payment_failed
+ */
+export function cryptoPaymentFailedEmail(vars: CryptoEmailVars & { reason?: string }): { subject: string; html: string } {
+  const content = `
+    <div style="text-align: center; margin-bottom: 24px;">
+      <h2 style="font-size: 24px; font-weight: 700; margin: 0 0 8px; color: #ef4444;">Payment Could Not Be Verified</h2>
+      <p style="color: #888; font-size: 14px; margin: 0;">We were unable to verify your transaction on the blockchain</p>
+    </div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${CARD_BG}" style="background-color: ${CARD_BG}; border: 1px solid ${BORDER_COLOR}; border-radius: 12px;">
+      <tr><td style="padding: 20px;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Order</td><td style="padding: 8px 0; color: #fff; font-size: 14px; text-align: right;">${vars.order_number}</td></tr>
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Product</td><td style="padding: 8px 0; color: #fff; font-size: 14px; text-align: right;">${vars.product_name}</td></tr>
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Amount</td><td style="padding: 8px 0; color: #fff; font-size: 14px; text-align: right;">$${vars.amount_usd} (${vars.amount_crypto} ${vars.coin})</td></tr>
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">TX Hash</td><td style="padding: 8px 0; font-size: 11px; text-align: right;"><a href="${vars.explorer_url}" style="color: ${BRAND_BLUE}; font-family: monospace; word-break: break-all;">${vars.tx_hash}</a></td></tr>
+        </table>
+      </td></tr>
+    </table>
+    <div style="background: #1c0a0a; border: 1px solid #ef4444; border-radius: 12px; padding: 16px; margin-top: 16px;">
+      <h3 style="color: #fca5a5; font-size: 14px; margin: 0 0 8px;">What to do next</h3>
+      <ul style="color: #ccc; font-size: 13px; line-height: 2; margin: 0; padding-left: 20px;">
+        <li>Verify the transaction hash is correct on the block explorer</li>
+        <li>Make sure the transaction was sent to the correct wallet address</li>
+        <li>If this is an error, contact support with your order number</li>
+      </ul>
+    </div>
+    <div style="text-align: center; margin-top: 20px;">
+      <a href="mailto:officialbullmoneywebsite@gmail.com?subject=Payment%20Issue%20${vars.order_number}" style="display: inline-block; padding: 12px 32px; background: #fff; color: #000; font-weight: 700; font-size: 14px; text-decoration: none; border-radius: 10px;">Contact Support</a>
+    </div>
+  `;
+  return {
+    subject: `BullMoney Order ${vars.order_number} — Payment Issue`,
+    html: emailWrapper(content, vars.customer_email),
+  };
+}
+
+/**
+ * Customer: Refund Processed
+ * Slug: crypto_refund_processed
+ */
+export function cryptoRefundProcessedEmail(vars: CryptoEmailVars): { subject: string; html: string } {
+  const content = `
+    <div style="text-align: center; margin-bottom: 24px;">
+      <h2 style="font-size: 24px; font-weight: 700; margin: 0 0 8px; color: #22c55e;">Refund Completed</h2>
+      <p style="color: #888; font-size: 14px; margin: 0;">Your refund has been sent to your crypto wallet</p>
+    </div>
+    <div style="background: #052e16; border: 1px solid #22c55e; border-radius: 12px; padding: 20px; margin-bottom: 20px; text-align: center;">
+      <p style="color: #4ade80; font-size: 13px; margin: 0 0 4px;">Refunded Amount</p>
+      <p style="color: #fff; font-size: 22px; font-weight: 700; margin: 0;">$${vars.refund_amount_usd || vars.amount_usd}</p>
+    </div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${CARD_BG}" style="background-color: ${CARD_BG}; border: 1px solid ${BORDER_COLOR}; border-radius: 12px;">
+      <tr><td style="padding: 20px;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Order</td><td style="padding: 8px 0; color: #fff; font-size: 14px; text-align: right;">${vars.order_number}</td></tr>
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Refund TX</td><td style="padding: 8px 0; font-size: 11px; text-align: right; font-family: monospace; word-break: break-all; color: ${BRAND_BLUE};">${vars.refund_tx_hash || 'N/A'}</td></tr>
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Coin</td><td style="padding: 8px 0; color: #fff; font-size: 14px; text-align: right;">${vars.coin}</td></tr>
+          ${vars.refund_reason ? `<tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Reason</td><td style="padding: 8px 0; color: #ccc; font-size: 14px; text-align: right;">${vars.refund_reason}</td></tr>` : ''}
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Status</td><td style="padding: 8px 0; color: #22c55e; font-size: 14px; text-align: right; font-weight: 600;">Completed</td></tr>
+        </table>
+      </td></tr>
+    </table>
+    <p style="color: #ccc; font-size: 13px; text-align: center; margin-top: 16px;">The refund transaction may take a few minutes to appear in your wallet depending on the blockchain network.</p>
+  `;
+  return {
+    subject: `BullMoney Order ${vars.order_number} — Refund Processed`,
+    html: emailWrapper(content, vars.customer_email),
+  };
+}
+
+/**
+ * Customer: Refund Denied
+ * Slug: crypto_refund_denied
+ */
+export function cryptoRefundDeniedEmail(vars: CryptoEmailVars & { denial_reason?: string }): { subject: string; html: string } {
+  const content = `
+    <div style="text-align: center; margin-bottom: 24px;">
+      <h2 style="font-size: 24px; font-weight: 700; margin: 0 0 8px; color: #ef4444;">Refund Request Not Eligible</h2>
+      <p style="color: #888; font-size: 14px; margin: 0;">Your refund request could not be processed</p>
+    </div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${CARD_BG}" style="background-color: ${CARD_BG}; border: 1px solid ${BORDER_COLOR}; border-radius: 12px;">
+      <tr><td style="padding: 20px;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Order</td><td style="padding: 8px 0; color: #fff; font-size: 14px; text-align: right;">${vars.order_number}</td></tr>
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Amount</td><td style="padding: 8px 0; color: #fff; font-size: 14px; text-align: right;">$${vars.amount_usd}</td></tr>
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Status</td><td style="padding: 8px 0; color: #ef4444; font-size: 14px; text-align: right; font-weight: 600;">Denied</td></tr>
+        </table>
+      </td></tr>
+    </table>
+    <div style="background: #1c0a0a; border: 1px solid #ef4444; border-radius: 12px; padding: 16px; margin-top: 16px;">
+      <p style="color: #fca5a5; font-size: 13px; margin: 0;"><strong>Reason:</strong> ${vars.denial_reason || 'Does not meet refund policy requirements'}</p>
+    </div>
+    <div style="background: #0f0f0f; border: 1px solid ${BORDER_COLOR}; border-radius: 12px; padding: 16px; margin-top: 16px;">
+      <h3 style="color: #fff; font-size: 14px; margin: 0 0 8px;">Refund Policy</h3>
+      <ul style="color: #ccc; font-size: 13px; line-height: 2; margin: 0; padding-left: 20px;">
+        <li>Crypto payments under $100 are <strong>non-refundable</strong> due to blockchain transaction fees</li>
+        <li>Refunds must be requested within 14 days of payment confirmation</li>
+        <li>Refunds are processed in the original cryptocurrency at the current market rate</li>
+      </ul>
+    </div>
+    <div style="text-align: center; margin-top: 20px;">
+      <a href="mailto:officialbullmoneywebsite@gmail.com?subject=Refund%20Question%20${vars.order_number}" style="display: inline-block; padding: 12px 32px; background: #222; color: #fff; font-weight: 700; font-size: 14px; text-decoration: none; border-radius: 10px;">Contact Support</a>
+    </div>
+  `;
+  return {
+    subject: `BullMoney Order ${vars.order_number} — Refund Request Update`,
+    html: emailWrapper(content, vars.customer_email),
+  };
+}
+
+// ============================================================================
 // EXPORTS
 // ============================================================================
 export const EmailTemplates = {
@@ -870,6 +1137,13 @@ export const EmailTemplates = {
   flashSale: flashSaleEmail,
   affiliatePromo: affiliatePromoEmail,
   weeklyDigest: weeklyDigestEmail,
+  // Crypto payment templates
+  cryptoPaymentAdmin: cryptoPaymentAdminEmail,
+  cryptoPaymentCustomer: cryptoPaymentCustomerEmail,
+  cryptoPaymentConfirmed: cryptoPaymentConfirmedEmail,
+  cryptoPaymentFailed: cryptoPaymentFailedEmail,
+  cryptoRefundProcessed: cryptoRefundProcessedEmail,
+  cryptoRefundDenied: cryptoRefundDeniedEmail,
 };
 
 export default EmailTemplates;

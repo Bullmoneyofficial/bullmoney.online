@@ -5,7 +5,7 @@ import { Renderer, Program, Mesh, Color as OglColor, Triangle } from 'ogl';
 import { createSupabaseClient } from '@/lib/supabase';
 import UltimateHub from './UltimateHub';
 import ProductsSection from './ProductsSection';
-import { useUltimateHubUI, useProductsModalUI, useBgPickerModalUI } from '@/contexts/UIStateContext';
+import { useUltimateHubUI, useProductsModalUI, useBgPickerModalUI, useColorPickerModalUI, useSplinePanelModalUI } from '@/contexts/UIStateContext';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -748,6 +748,22 @@ const Styles = () => (
       }
     }
 
+    /* MOBILE SPLINE PLAY MODE — unlock 3D interaction when toggled */
+    .hero-wrapper.spline-play-mode .cycling-bg-layer,
+    .hero-wrapper.spline-play-mode .cycling-bg-item.active,
+    .hero-wrapper.spline-play-mode .spline-scene,
+    .hero-wrapper.spline-play-mode .spline-scene-inner,
+    .hero-wrapper.spline-play-mode .spline-scene-inner canvas,
+    .hero-wrapper.spline-play-mode .spline-scene-inner > div {
+      pointer-events: auto !important;
+      touch-action: pan-y !important;
+    }
+    .hero-wrapper.spline-play-mode .hero-content-overlay {
+      opacity: 0;
+      pointer-events: none !important;
+      transition: opacity 0.3s ease;
+    }
+
     @media (max-width: 768px) {
       .spline-scene-inner {
         width: 118%;
@@ -1184,7 +1200,7 @@ const Styles = () => (
       top: auto;
       left: auto;
       transform: none;
-      z-index: 9998;
+      z-index: 2147483647;
       height: 40px;
       padding: 0 16px;
       border-radius: 20px;
@@ -1231,14 +1247,14 @@ const Styles = () => (
       top: 130px;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 9997;
+      z-index: 2147483647;
       width: 320px;
       max-height: 70vh;
-      background: rgba(0, 0, 0, 0.6);
+      background: rgba(0, 0, 0, 0.85);
       border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 16px;
-      backdrop-filter: blur(20px) saturate(180%);
-      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      backdrop-filter: blur(30px) saturate(200%);
+      -webkit-backdrop-filter: blur(30px) saturate(200%);
       box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
       overflow: hidden;
       transform-origin: top center;
@@ -1266,6 +1282,7 @@ const Styles = () => (
       justify-content: space-between;
       gap: 12px;
       flex-shrink: 0;
+      background: rgba(10, 10, 14, 0.95);
     }
 
     .bg-selector-title {
@@ -1289,6 +1306,7 @@ const Styles = () => (
       flex-direction: column;
       gap: 6px;
       -webkit-overflow-scrolling: touch;
+      background: rgba(8, 8, 12, 0.9);
     }
 
     .bg-selector-item {
@@ -1404,6 +1422,7 @@ const Styles = () => (
       display: flex;
       gap: 8px;
       flex-shrink: 0;
+      background: rgba(10, 10, 14, 0.95);
     }
 
     .bg-footer-btn {
@@ -1437,7 +1456,7 @@ const Styles = () => (
       bottom: 80px;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 9999;
+      z-index: 2147483647;
       padding: 12px 24px;
       background: rgba(20, 20, 23, 0.95);
       border: 1px solid rgba(255, 255, 255, 0.2);
@@ -1824,120 +1843,47 @@ interface CyclingBackgroundProps {
 const ALL_EFFECTS: BackgroundEffect[] = ['spline', 'liquidEther', 'galaxy', 'terminal', 'darkVeil', 'lightPillar', 'letterGlitch', 'gridScan', 'ballpit', 'gridDistortion'];
 
 // Helper to get initial effect index from localStorage (runs only once)
-// FAVORITES PRIORITY: If user has favorites, ALWAYS show one of their favorites (100%)
+// SPLINE IS ALWAYS DEFAULT — users must manually pick to switch
 const getInitialEffectIndex = (effectsLength: number, reloadsPerCycle: number): number => {
   // SSR safety - always return Spline (index 0)
   if (typeof window === 'undefined') return 0;
   
   try {
-    // Check for user favorites FIRST - they take 100% priority
-    const prefsStr = localStorage.getItem('bg-preferences');
-    if (prefsStr) {
-      const prefs = JSON.parse(prefsStr);
-      const favorites: BackgroundEffect[] = prefs.favorites || [];
-      const enabled: BackgroundEffect[] = prefs.enabled || [];
-      
-      // If user has favorites, ALWAYS show one of them (100% of the time)
-      if (favorites.length > 0) {
-        // Pick a random favorite
-        const randomFav = favorites[Math.floor(Math.random() * favorites.length)];
-        const favIndex = ALL_EFFECTS.indexOf(randomFav);
-        if (favIndex !== -1) {
-          console.log('[CyclingBG] Showing FAVORITE:', randomFav, 'at index', favIndex);
-          localStorage.setItem('bg-effect-index', favIndex.toString());
-          return favIndex;
-        }
-      }
-      
-      // If no favorites but has enabled list, pick from enabled
-      if (enabled.length > 0) {
-        const randomEnabled = enabled[Math.floor(Math.random() * enabled.length)];
-        const enabledIndex = ALL_EFFECTS.indexOf(randomEnabled);
-        if (enabledIndex !== -1) {
-          console.log('[CyclingBG] Showing enabled effect:', randomEnabled, 'at index', enabledIndex);
-          localStorage.setItem('bg-effect-index', enabledIndex.toString());
-          return enabledIndex;
+    // Only use a different bg if user explicitly picked one via BG Picker
+    const userPicked = localStorage.getItem('bg-user-picked');
+    if (userPicked === 'true') {
+      const storedIndex = localStorage.getItem('bg-effect-index');
+      if (storedIndex !== null) {
+        const idx = parseInt(storedIndex, 10);
+        if (idx >= 0 && idx < effectsLength) {
+          console.log('[CyclingBG] User-picked background:', ALL_EFFECTS[idx], 'at index', idx);
+          return idx;
         }
       }
     }
     
     // FORCE CLEAR old cache on version change - ensures Spline shows
     const VERSION_KEY = 'bullmoney-bg-version';
-    const CURRENT_VERSION = 'v4-favorites-first';
+    const CURRENT_VERSION = 'v5-spline-always-default';
     const storedVersion = localStorage.getItem(VERSION_KEY);
     
     if (storedVersion !== CURRENT_VERSION) {
       // Clear all old data and force Spline
       localStorage.removeItem('bg-effect-index');
       localStorage.removeItem('bg-reload-count');
+      localStorage.removeItem('bg-user-picked');
       sessionStorage.removeItem('bullmoney-bg-session-started');
       sessionStorage.removeItem('bg-first-effect-shown');
       localStorage.setItem(VERSION_KEY, CURRENT_VERSION);
       console.log('[CyclingBG] Version change detected - clearing cache, showing Spline');
     }
     
-    // SKIP SPLINE ON VERY FIRST LOAD — it's too heavy for first impressions
-    // After first visit, Spline is allowed
-    const FIRST_VISIT_KEY = 'bullmoney-has-visited';
-    const hasEverVisited = localStorage.getItem(FIRST_VISIT_KEY);
-    const isFirstEverLoad = !hasEverVisited;
-    if (isFirstEverLoad) {
-      localStorage.setItem(FIRST_VISIT_KEY, 'true');
-    }
-    
-    // ALWAYS show Spline on first load of each browser session (if no favorites)
-    // UNLESS it's the very first visit ever
-    const sessionKey = 'bullmoney-bg-session-started';
-    const hasSessionStarted = sessionStorage.getItem(sessionKey);
-    
-    if (!hasSessionStarted) {
-      sessionStorage.setItem(sessionKey, Date.now().toString());
-      if (isFirstEverLoad) {
-        // First ever load — skip Spline, show darkVeil (index 4)
-        const fallbackIndex = 4; // darkVeil
-        localStorage.setItem('bg-effect-index', fallbackIndex.toString());
-        localStorage.setItem('bg-reload-count', '0');
-        console.log('[CyclingBG] First ever visit — skipping Spline, showing darkVeil');
-        return fallbackIndex;
-      }
-      // Returning session — show Spline
-      localStorage.setItem('bg-effect-index', '0');
-      localStorage.setItem('bg-reload-count', '0');
-      console.log('[CyclingBG] First session load - showing Spline (index 0)');
-      return 0;
-    }
-    
-    const storedIndex = localStorage.getItem('bg-effect-index');
-    const storedReloads = localStorage.getItem('bg-reload-count');
-    
-    let effectIndex = storedIndex ? parseInt(storedIndex, 10) : 0;
-    let reloadCount = storedReloads ? parseInt(storedReloads, 10) : 0;
-    
-    // Increment reload count
-    reloadCount += 1;
-    
-    // Check if we should cycle to next effect
-    if (reloadCount >= reloadsPerCycle) {
-      // SPLINE PRIORITY: 80% chance to show Spline, 20% chance for random other effect
-      const random = Math.random();
-      if (random < 0.8) {
-        // 80% - Go back to Spline
-        effectIndex = 0;
-      } else {
-        // 20% - Pick a RANDOM non-Spline effect (never in order)
-        // Generate random index from 1 to effectsLength-1 (excluding Spline at 0)
-        const randomNonSplineIndex = Math.floor(Math.random() * (effectsLength - 1)) + 1;
-        effectIndex = randomNonSplineIndex;
-      }
-      reloadCount = 0;
-    }
-    
-    // Store updated values
-    localStorage.setItem('bg-effect-index', effectIndex.toString());
-    localStorage.setItem('bg-reload-count', reloadCount.toString());
-    
-    console.log('[CyclingBG] Showing effect index:', effectIndex, '(0=Spline, 1=LiquidEther, etc)');
-    return effectIndex;
+    // SPLINE IS ALWAYS DEFAULT — no cycling, no randomization
+    // User must explicitly pick a different background via BG Picker
+    console.log('[CyclingBG] Defaulting to Spline (index 0) — user must pick to switch');
+    localStorage.setItem('bg-effect-index', '0');
+    localStorage.setItem('bg-reload-count', '0');
+    return 0;
   } catch (e) {
     console.error('[CyclingBG] Error:', e);
     return 0; // Fallback - show Spline
@@ -1994,10 +1940,13 @@ const YouTubePlayer: React.FC<{ videoId: string; loading?: boolean; error?: bool
 const SplineBackground = memo(function SplineBackground({ grayscale = true, sceneUrl }: { grayscale?: boolean; sceneUrl: string }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const [cachedSceneUrl, setCachedSceneUrl] = useState<string | null>(null);
+  const [cacheChecked, setCacheChecked] = useState(false);
   const splineRef = useRef<any>(null);
   const loadStartTime = useRef<number>(0);
   const blobUrlRef = useRef<string | null>(null);
+  const MAX_RETRIES = 2;
   
   // Use provided scene URL
   const scene = sceneUrl;
@@ -2013,14 +1962,24 @@ const SplineBackground = memo(function SplineBackground({ grayscale = true, scen
       const url = getCachedSplineScene(scene);
       blobUrlRef.current = url.startsWith('blob:') ? url : null;
       setCachedSceneUrl(url);
+      setCacheChecked(true);
       
       if (isSplineCached(scene)) {
         console.log(`[SplineBackground] Using cached scene (${(performance.now() - loadStartTime.current).toFixed(1)}ms to blob URL)`);
       }
+    }).catch(() => {
+      // Cache failed - still allow direct load
+      setCacheChecked(true);
     });
+    
+    // Fallback: if cache takes too long, proceed with direct URL after 2s
+    const timeout = setTimeout(() => {
+      setCacheChecked(true);
+    }, 2000);
 
     // Cleanup blob URL on unmount
     return () => {
+      clearTimeout(timeout);
       if (blobUrlRef.current) {
         URL.revokeObjectURL(blobUrlRef.current);
       }
@@ -2037,11 +1996,24 @@ const SplineBackground = memo(function SplineBackground({ grayscale = true, scen
 
   const handleError = useCallback((error: any) => {
     console.error('[SplineBackground] Load error:', error);
-    setHasError(true);
-  }, []);
+    setRetryCount(prev => {
+      if (prev < MAX_RETRIES) {
+        console.log(`[SplineBackground] Retrying... attempt ${prev + 2}/${MAX_RETRIES + 1}`);
+        // Reset after a short delay so Spline remounts
+        setTimeout(() => {
+          setHasError(false);
+          setIsLoaded(false);
+        }, 1500);
+        return prev + 1;
+      }
+      console.error('[SplineBackground] Max retries reached, showing fallback');
+      setHasError(true);
+      return prev;
+    });
+  }, [MAX_RETRIES]);
 
-  // Don't render until we have the cached URL ready
-  const sceneToLoad = cachedSceneUrl || scene;
+  // Use cached URL if available, otherwise fall back to direct URL once cache check is done
+  const sceneToLoad = cachedSceneUrl || (cacheChecked ? scene : null);
 
   return (
     <div 
@@ -2089,8 +2061,8 @@ const SplineBackground = memo(function SplineBackground({ grayscale = true, scen
         )}
       </div>
 
-      {/* Spline container - uses cached blob URL for instant loading */}
-      {!hasError && cachedSceneUrl && (
+      {/* Spline container - uses cached blob URL for instant loading, falls back to direct URL */}
+      {!hasError && sceneToLoad && (
         <div className="absolute inset-0 spline-scene">
           <div className="spline-scene-inner">
             <Spline
@@ -2190,7 +2162,7 @@ const saveBgPreferences = (favorites: BackgroundEffect[], enabled: BackgroundEff
 
 // Load color preferences from localStorage
 const loadColorPreferences = (): { mode: 'color' | 'grayscale' | 'custom', color: { h: number, s: number, l: number, a: number } } => {
-  if (typeof window === 'undefined') return { mode: 'grayscale', color: { h: 0, s: 50, l: 50, a: 0.5 } };
+  if (typeof window === 'undefined') return { mode: 'color', color: { h: 0, s: 50, l: 50, a: 0.5 } };
   try {
     const stored = localStorage.getItem('color-preferences');
     if (stored) {
@@ -2199,7 +2171,7 @@ const loadColorPreferences = (): { mode: 'color' | 'grayscale' | 'custom', color
   } catch (e) {
     console.error('[ColorPrefs] Error loading:', e);
   }
-  return { mode: 'grayscale', color: { h: 0, s: 50, l: 50, a: 0.5 } };
+  return { mode: 'color', color: { h: 0, s: 50, l: 50, a: 0.5 } };
 };
 
 // Save color preferences to localStorage
@@ -2532,7 +2504,7 @@ const ColorPickerPanel = ({
   };
 
   return (
-    <div className="bg-selector-panel" style={{ top: '140px', maxWidth: '400px' }}>
+    <div className="bg-selector-panel" style={{ top: '140px', maxWidth: '400px', zIndex: 2147483647 }}>
       <div className="bg-selector-header">
         <div>
           <h3 className="bg-selector-title">Color Overlay</h3>
@@ -2744,6 +2716,10 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
 }) => {
   // Use context for BG picker panel state with mutual exclusion
   const { isOpen: showPanel, setIsOpen: setShowPanel } = useBgPickerModalUI();
+  // Use context for Color picker panel state with mutual exclusion
+  const { isOpen: showColorPicker, setIsOpen: setShowColorPicker } = useColorPickerModalUI();
+  // Use context for Spline panel state with mutual exclusion
+  const { isOpen: showSplinePanel, setIsOpen: setShowSplinePanel } = useSplinePanelModalUI();
   
   // Use lazy initialization to get index synchronously on first render - prevents flicker
   const [currentIndex, setCurrentIndex] = useState(() => getInitialEffectIndex(effects.length, reloadsPerCycle));
@@ -2751,20 +2727,33 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
   const [toast, setToast] = useState<string | null>(null);
   const [favorites, setFavorites] = useState<BackgroundEffect[]>([]);
   const [enabledEffects, setEnabledEffects] = useState<BackgroundEffect[]>(effects as BackgroundEffect[]);
-  const [showGrayscale, setShowGrayscale] = useState(true);
+  const [showGrayscale, setShowGrayscale] = useState(false);
   
   // Color System State
-  const [colorMode, setColorMode] = useState<'color' | 'grayscale' | 'custom'>('grayscale');
+  const [colorMode, setColorMode] = useState<'color' | 'grayscale' | 'custom'>('color');
   const [customColor, setCustomColor] = useState({ h: 0, s: 50, l: 50, a: 0.5 }); // HSL for easier manipulation
-  const [showColorPicker, setShowColorPicker] = useState(false);
   
   const [show3DOverlay, setShow3DOverlay] = useState(false);
   const [isSceneSwitching, setIsSceneSwitching] = useState(false);
   const [showSpline, setShowSpline] = useState(true); // Control Spline visibility
-  const [currentSplineScene, setCurrentSplineScene] = useState(SPLINE_SCENES[0]); // Current spline scene
-  const [showSplinePanel, setShowSplinePanel] = useState(false); // Spline selector panel
+  const [splinePlayMode, setSplinePlayMode] = useState(false); // Mobile 3D interaction toggle
+  const [currentSplineScene, setCurrentSplineScene] = useState(SPLINE_SCENES[3]); // Default to Scene 3 for mobile
   const [downloadingScenes, setDownloadingScenes] = useState<Set<string>>(new Set());
   const [cacheVersion, setCacheVersion] = useState(0); // forces UI refresh on cache changes
+
+  // Toggle spline-play-mode class on .hero-wrapper for mobile 3D interactivity
+  useEffect(() => {
+    const wrapper = document.querySelector('.hero-wrapper');
+    if (!wrapper) return;
+    if (splinePlayMode) {
+      wrapper.classList.add('spline-play-mode');
+    } else {
+      wrapper.classList.remove('spline-play-mode');
+    }
+    return () => {
+      wrapper.classList.remove('spline-play-mode');
+    };
+  }, [splinePlayMode]);
 
   // Load preferences on mount
   useEffect(() => {
@@ -2789,7 +2778,7 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
     setTimeout(() => setToast(null), 2000);
   }, []);
 
-  // Switch to specific background
+  // Switch to specific background (marks as user-picked so it persists across reloads)
   const switchToBackground = useCallback((index: number) => {
     if (index >= 0 && index < effects.length) {
       const effect = effects[index] as BackgroundEffect;
@@ -2800,6 +2789,8 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
       setCurrentIndex(index);
       localStorage.setItem('bg-effect-index', index.toString());
       localStorage.setItem('bg-reload-count', '0');
+      // Mark as explicitly user-picked so it sticks across reloads
+      localStorage.setItem('bg-user-picked', 'true');
       showToast(`Switched to ${EFFECT_NAMES[effect]}`);
     }
   }, [effects, enabledEffects, showToast]);
@@ -3041,13 +3032,13 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
   useEffect(() => {
     const saved = localStorage.getItem('currentSplineScene');
     if (saved && SPLINE_SCENES.includes(saved)) {
-      const isDefault = saved === SPLINE_SCENES[0];
+      const isDefault = saved === SPLINE_SCENES[0] || saved === SPLINE_SCENES[3];
       if (isDefault || isSplineCached(saved)) {
         setCurrentSplineScene(saved);
       } else {
-        // Scene was cleared from cache — reset to default
+        // Scene was cleared from cache — reset to default (Scene 3 for mobile)
         localStorage.removeItem('currentSplineScene');
-        setCurrentSplineScene(SPLINE_SCENES[0]);
+        setCurrentSplineScene(SPLINE_SCENES[3]);
       }
     }
   }, []);
@@ -3296,11 +3287,11 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
       )}
 
       {/* Stacked Control Buttons — BG Picker, Color, 3D (vertically) */}
-      <div className="fixed z-9998 flex flex-col items-center gap-2" style={{ top: 80, left: '50%', transform: 'translateX(-50%)' }}>
+      <div style={{ position: 'fixed', top: 80, left: 0, right: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, zIndex: 2147483647, pointerEvents: 'none' }}>
         {/* BG Picker Button */}
         <button 
           className="bg-selector-toggle" 
-          style={{ position: 'relative', top: 'auto', left: 'auto', transform: 'none' }}
+          style={{ position: 'relative', top: 'auto', left: 'auto', transform: 'none', pointerEvents: 'auto' }}
           onClick={() => setShowPanel(!showPanel)}
           title="Background Settings (Ctrl+B)"
         >
@@ -3314,14 +3305,16 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
         </button>
 
         {/* Color Toggle */}
-        <ToggleGrayscaleButton 
-          isActive={showGrayscale} 
-          onClick={() => setShowColorPicker(!showColorPicker)}
-          label={colorMode === 'grayscale' ? 'B&W' : colorMode === 'custom' ? 'Custom' : 'Color'}
-        />
+        <div style={{ pointerEvents: 'auto' }}>
+          <ToggleGrayscaleButton 
+            isActive={showGrayscale} 
+            onClick={() => setShowColorPicker(!showColorPicker)}
+            label={colorMode === 'grayscale' ? 'B&W' : colorMode === 'custom' ? 'Custom' : 'Color'}
+          />
+        </div>
 
         {/* 3D Toggle - Click to hide/show, Hold to open scene picker */}
-        <div className="flex flex-col items-center gap-1">
+        <div className="flex flex-col items-center gap-1" style={{ pointerEvents: 'auto' }}>
           <Toggle3DButton 
             isActive={showSpline} 
             onClick={() => setShowSpline(!showSpline)}
@@ -3336,11 +3329,53 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
             Hold • Download
           </motion.span>
         </div>
+
+        {/* Interact 3D Button — toggles mobile Spline interactivity */}
+        {showSpline && currentEffect === 'spline' && (
+          <button
+            style={{
+              pointerEvents: 'auto',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '6px 14px',
+              borderRadius: 12,
+              border: splinePlayMode ? '1px solid rgba(239,68,68,0.5)' : '1px solid rgba(194,154,108,0.4)',
+              background: splinePlayMode ? 'rgba(239,68,68,0.15)' : 'rgba(0,0,0,0.7)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              color: splinePlayMode ? '#fca5a5' : 'rgba(255,255,255,0.8)',
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: '0.04em',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
+            onClick={() => setSplinePlayMode(!splinePlayMode)}
+          >
+            {splinePlayMode ? (
+              <>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+                Exit 3D
+              </>
+            ) : (
+              <>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                </svg>
+                Interact 3D
+              </>
+            )}
+          </button>
+        )}
       </div>
 
       {/* Background Selector Panel */}
       {showPanel && (
-        <div className="bg-selector-panel">
+        <div className="bg-selector-panel" style={{ zIndex: 2147483647 }}>
           <div className="bg-selector-header">
             <div>
               <h3 className="bg-selector-title">Background Effects</h3>
@@ -3413,7 +3448,7 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
 
       {/* Spline Scene Selector Panel */}
       {showSplinePanel && (
-        <div className="bg-selector-panel" style={{ top: '140px' }}>
+        <div className="bg-selector-panel" style={{ top: '140px', zIndex: 2147483647 }}>
           <div className="bg-selector-header">
             <div>
               <h3 className="bg-selector-title">3D Spline Scenes</h3>

@@ -1,3 +1,5 @@
+/* Note: this CSS is only an example, you can overlay whatever you want using the activeItem logic */
+
 #infinite-grid-menu-canvas {
   cursor: grab;
   width: 100%;
@@ -19,7 +21,7 @@
   height: 60px;
   display: grid;
   place-items: center;
-  background: cyan;
+  background: #5227ff;
   border: none;
   border-radius: 50%;
   cursor: pointer;
@@ -30,7 +32,7 @@
   user-select: none;
   position: absolute;
   font-weight: 900;
-  font-size: 4rem;
+  font-size: 3rem;
   left: 1.6em;
   top: 50%;
 }
@@ -38,7 +40,7 @@
 .action-button-icon {
   user-select: none;
   position: relative;
-  color: #060010;
+  color: #fff;
   top: 2px;
   font-size: 26px;
 }
@@ -67,7 +69,7 @@
   position: absolute;
   max-width: 10ch;
   top: 50%;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   right: 1%;
   transform: translate(0, -50%);
 }
@@ -105,4 +107,11 @@
   opacity: 0;
   pointer-events: none;
   transition: 0.1s ease;
+}
+
+@media (max-width: 1500px) {
+  .face-title,
+  .face-description {
+    display: none;
+  }
 }

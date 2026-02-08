@@ -12,6 +12,7 @@ import {
 
 import { motion, AnimatePresence, useMotionTemplate, useMotionValue } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { persistSession } from '@/lib/sessionPersistence';
 
 // --- IMPORT SEPARATE LOADER COMPONENT ---
 import { MultiStepLoader} from "@/components/Mainpage/MultiStepLoader"; 
@@ -539,49 +540,37 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     setSubmitError(null);
 
     try {
-      const { data: existingUser } = await supabase
-        .from("recruits")
-        .select("id")
-        .eq("email", formData.email)
-        .maybeSingle();
-
-      if (existingUser) {
-        throw new Error("This email is already registered. Please Login.");
-      }
-
-      const insertPayload = {
-        email: formData.email,
-        mt5_id: formData.mt5Number,
-        password: formData.password, 
-        referred_by_code: formData.referralCode || null,
-        used_code: true,
-      };
-
-      const { data: newUser, error } = await supabase
-        .from("recruits")
-        .insert([insertPayload])
-        .select()
-        .single();
-      
-      if (error) throw error;
-
-      if (newUser) {
-        // Save persistent session (both storage keys for compatibility)
-        localStorage.setItem("bullmoney_session", JSON.stringify({
-          id: newUser.id,
+      const res = await fetch('/api/recruit-auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           email: formData.email,
-          timestamp: Date.now()
-        }));
-        
-        // Also save to recruit auth storage key for immediate auth context detection
-        localStorage.setItem("bullmoney_recruit_auth", JSON.stringify({
-          recruitId: newUser.id,
-          email: formData.email
-        }));
-        
-        // Clear draft
-        localStorage.removeItem("bullmoney_draft");
+          password: formData.password,
+          mt5_id: formData.mt5Number,
+          referred_by_code: formData.referralCode || null,
+          used_code: true,
+        }),
+      });
+
+      const result = await res.json();
+      if (!res.ok || !result?.success || !result?.recruit) {
+        if (res.status === 409) {
+          throw new Error('This email is already registered. Please Login.');
+        }
+        throw new Error(result?.error || 'Connection failed. Please check your internet.');
       }
+
+      const newUser = result.recruit;
+      persistSession({
+        recruitId: newUser.id,
+        email: newUser.email,
+        mt5Id: newUser.mt5_id || formData.mt5Number,
+        isVip: newUser.is_vip === true,
+        timestamp: Date.now(),
+      });
+
+      // Clear draft
+      localStorage.removeItem("bullmoney_draft");
 
       setTimeout(() => {
         setStep(5); // Success
@@ -604,32 +593,26 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase
-        .from("recruits")
-        .select("id") 
-        .eq("email", loginEmail)
-        .eq("password", loginPassword) 
-        .maybeSingle();
+      const res = await fetch('/api/recruit-auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+      });
 
-      if (error) throw new Error(error.message);
-
-      if (!data) {
+      const result = await res.json();
+      if (!res.ok || !result?.success || !result?.recruit) {
         await new Promise(r => setTimeout(r, 800));
-        throw new Error("Invalid email or password.");
+        throw new Error(result?.error || 'Invalid email or password.');
       }
 
-      // Save persistent session (both storage keys for compatibility)
-      localStorage.setItem("bullmoney_session", JSON.stringify({
-        id: data.id,
-        email: loginEmail,
-        timestamp: Date.now()
-      }));
-      
-      // Also save to recruit auth storage key for immediate auth context detection
-      localStorage.setItem("bullmoney_recruit_auth", JSON.stringify({
-        recruitId: data.id,
-        email: loginEmail
-      }));
+      const recruit = result.recruit;
+      persistSession({
+        recruitId: recruit.id,
+        email: recruit.email,
+        mt5Id: recruit.mt5_id,
+        isVip: recruit.is_vip === true,
+        timestamp: Date.now(),
+      });
 
       setTimeout(() => {
         setLoading(false);

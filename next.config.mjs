@@ -116,10 +116,34 @@ const nextConfig = {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
           },
-          // Disable aggressive caching - always revalidate
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=(), payment=()',
+          },
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin',
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'same-origin',
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
+          },
+          // CACHE FIX: no-cache allows browsers to store cached copies but MUST
+          // revalidate with the server before serving (via ETag/If-Modified-Since).
+          // This ensures every visitor sees the latest version while still getting
+          // fast 304 responses when content hasn't changed.
+          // s-maxage=60 lets Vercel's CDN serve cached copies for 60s.
           {
             key: 'Cache-Control',
-            value: 'no-cache, no-store, must-revalidate',
+            value: 'no-cache, s-maxage=60',
           },
         ],
       },

@@ -1842,8 +1842,18 @@ export function ThemesPanel() {
     isWelcomeScreenActive,
   } = useUIState();
   
+  // Mounted state to prevent hydration flash
+  const [mounted, setMounted] = useState(false);
+  
   // Check if we're on store page and theme picker is disabled
   const [storeThemePickerEnabled, setStoreThemePickerEnabled] = useState(false);
+  
+  // CRITICAL: Ensure panel is closed on mount - prevent flash
+  useEffect(() => {
+    setMounted(true);
+    // Force close on mount to prevent any flash
+    setIsOpen(false);
+  }, []);
   
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -1977,8 +1987,8 @@ export function ThemesPanel() {
         </button>
       )}
 
-      {/* Panel */}
-      {isOpen && (
+      {/* Panel - only render after mounted and explicitly opened */}
+      {mounted && isOpen && (
         <div
           className="themes-panel themes-panel-isolated"
           style={{

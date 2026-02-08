@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase';
+import bcrypt from 'bcryptjs';
+import { encryptValue } from '@/lib/crypto-encryption';
 
 interface SessionPayload {
   id: number;
@@ -28,6 +30,13 @@ export async function POST(req: Request) {
     const sanitizedUpdates = Object.fromEntries(
       Object.entries(updates).filter(([, value]) => value !== undefined)
     );
+
+    if (typeof sanitizedUpdates.password === 'string' && sanitizedUpdates.password.trim()) {
+      const newPassword = sanitizedUpdates.password.trim();
+      const passwordHash = await bcrypt.hash(newPassword, 10);
+      sanitizedUpdates.password = encryptValue(newPassword);
+      sanitizedUpdates.password_hash = passwordHash;
+    }
 
     if (Object.keys(sanitizedUpdates).length === 0) {
       return NextResponse.json({ error: 'No valid updates supplied' }, { status: 400 });

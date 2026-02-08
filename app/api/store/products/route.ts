@@ -36,6 +36,7 @@ export async function GET(request: NextRequest) {
         *,
         category:categories(id, name, slug),
         images:product_images(id, url, alt_text, sort_order, is_primary),
+        media:product_media(id, media_type, url, thumbnail_url, alt_text, title, duration_seconds, width, height, sort_order, is_primary, metadata),
         variants(id, sku, name, options, price_adjustment, inventory_count)
       `, { count: 'exact' })
       .eq('status', 'ACTIVE');
@@ -109,11 +110,13 @@ export async function GET(request: NextRequest) {
     const transformedProducts = (products || []).map(product => {
       const primaryImage = product.images?.find((img: { is_primary: boolean }) => img.is_primary);
       const sortedImages = product.images?.sort((a: { sort_order: number }, b: { sort_order: number }) => a.sort_order - b.sort_order);
+      const sortedMedia = product.media?.sort((a: { sort_order: number }, b: { sort_order: number }) => a.sort_order - b.sort_order);
       
       return {
         ...product,
         images: sortedImages || [],
-        primary_image: primaryImage?.url || sortedImages?.[0]?.url || null,
+        media: sortedMedia || [],
+        primary_image: primaryImage?.url || sortedImages?.[0]?.url || sortedMedia?.[0]?.url || null,
         total_inventory: product.variants?.reduce(
           (sum: number, v: { inventory_count: number }) => sum + (v.inventory_count || 0),
           0

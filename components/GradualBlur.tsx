@@ -1,5 +1,6 @@
 import React, { CSSProperties, useEffect, useRef, useState, useMemo, PropsWithChildren } from 'react';
-import * as math from 'mathjs';
+// Replaced 16MB mathjs with native Math — only pow() and round() were used
+const math = { pow: Math.pow, round: Math.round };
 
 import './GradualBlur.css';
 

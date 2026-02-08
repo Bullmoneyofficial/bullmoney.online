@@ -9,13 +9,19 @@ import { createClient } from '@supabase/supabase-js';
 // Falls back to hardcoded template if DB fetch fails
 // ============================================================================
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
-  },
-});
+const ADMIN_EMAIL = 'officialbullmoneywebsite@gmail.com';
+
+function createTransporter() {
+  const rawPass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || '';
+  const password = rawPass.replace(/^["']|["']$/g, '').replace(/\s+/g, '');
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.SMTP_USER || process.env.GMAIL_USER,
+      pass: password,
+    },
+  });
+}
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -250,8 +256,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
-      console.error('[Order Email] GMAIL_USER or GMAIL_APP_PASSWORD not configured');
+    const smtpUser = process.env.SMTP_USER || process.env.GMAIL_USER;
+    const smtpPass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD;
+    if (!smtpUser || !smtpPass) {
+      console.error('[Order Email] SMTP_USER/SMTP_PASS not configured');
       return NextResponse.json({ error: 'Email service not configured' }, { status: 500 });
     }
 
@@ -299,12 +307,24 @@ export async function POST(request: NextRequest) {
     const emailSubject = dbTemplate?.subject || subjectFallback[data.type] || `Order Update - ${data.orderNumber}`;
     const emailHtml = dbTemplate?.html || generateOrderConfirmationHtml(data);
 
+    const transporter = createTransporter();
+    const fromAddress = process.env.SMTP_FROM || `"Bullmoney Store" <${smtpUser}>`;
+
+    // Send to customer
     await transporter.sendMail({
-      from: `"Bullmoney Store" <${process.env.GMAIL_USER}>`,
+      from: fromAddress,
       to: data.to,
       subject: emailSubject,
       html: emailHtml,
     });
+
+    // Send admin copy with all order details to officialbullmoneywebsite@gmail.com
+    transporter.sendMail({
+      from: fromAddress,
+      to: ADMIN_EMAIL,
+      subject: `[ADMIN] ${emailSubject} — ${data.to}`,
+      html: emailHtml,
+    }).catch((err: Error) => console.error('[Order Email] Admin copy failed:', err));
 
     return NextResponse.json({ success: true, source: dbTemplate ? 'database' : 'fallback' });
   } catch (error: any) {

@@ -70,6 +70,12 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
     const setCursorX = gsap.quickSetter(cursor, "x", "px");
     const setCursorY = gsap.quickSetter(cursor, "y", "px");
     const setRotation = gsap.quickSetter(cursor, "rotation", "deg");
+
+    // Helper to immediately reposition the cursor without waiting for the ticker.
+    const jumpTo = (x: number, y: number) => {
+      setCursorX(x);
+      setCursorY(y);
+    };
     
     // Corner Setters
     const setCorner1 = corners[0] ? { x: gsap.quickSetter(corners[0], "x", "px"), y: gsap.quickSetter(corners[0], "y", "px") } : { x: () => {}, y: () => {} };
@@ -168,25 +174,30 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
 
     // --- INPUTS ---
     const updateInput = (x: number, y: number) => {
-        state.current.lastInputTime = Date.now();
-        state.current.tx = x; state.current.ty = y;
-        
-        // Show cursor on first input (was hidden to prevent top-left flash)
-        if (!state.current.hasReceivedInput) {
-            state.current.hasReceivedInput = true;
-            cursor.style.opacity = '1';
-            // Instantly jump to mouse position on first move
-            state.current.x = x;
-            state.current.y = y;
-        }
-        
-        if (state.current.isIdle) {
-            state.current.isIdle = false; state.current.ghostRect = null;
-            state.current.x = x; state.current.y = y;
-        }
+      state.current.lastInputTime = Date.now();
+      state.current.tx = x; state.current.ty = y;
+      gsap.ticker.wake();
+      
+      // Show cursor on first input (was hidden to prevent top-left flash)
+      if (!state.current.hasReceivedInput) {
+          state.current.hasReceivedInput = true;
+          cursor.style.opacity = '1';
+          // Instantly jump to mouse position on first move
+          state.current.x = x;
+          state.current.y = y;
+      }
+      
+      if (state.current.isIdle) {
+          state.current.isIdle = false; state.current.ghostRect = null;
+          state.current.x = x; state.current.y = y;
+      }
+
+      // Ensure the visual cursor snaps to the latest pointer position even if the ticker is paused.
+      jumpTo(x, y);
     };
 
-    const onMove = (e: MouseEvent) => updateInput(e.clientX, e.clientY);
+    const onPointerMove = (e: PointerEvent) => updateInput(e.clientX, e.clientY);
+    const onMouseMove = (e: MouseEvent) => updateInput(e.clientX, e.clientY);
     const onTouch = (e: TouchEvent) => {
       if (e.touches.length && e.touches[0]) {
         updateInput(e.touches[0].clientX, e.touches[0].clientY);
@@ -280,7 +291,9 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
     }, 1000);
 
     // Bindings
-    window.addEventListener('mousemove', onMove);
+    window.addEventListener('pointermove', onPointerMove, { passive: true });
+    // Fallback for browsers/environments that suppress pointer events
+    window.addEventListener('mousemove', onMouseMove, { passive: true });
     window.addEventListener('mousedown', onClick);
     window.addEventListener('touchstart', onTouchStart, { passive: true });
     window.addEventListener('touchmove', onTouch, { passive: true });
@@ -292,7 +305,8 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
     return () => {
       modalObserver.disconnect();
       gsap.ticker.remove(renderLoop); clearInterval(idleTimer); spinTl.current?.kill();
-      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mousedown', onClick);
       window.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchmove', onTouch);

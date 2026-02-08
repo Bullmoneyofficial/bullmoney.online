@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "motion/react";
 
-import { useState } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import type { CSSProperties, ReactNode } from "react";
 
 export type HoverEffectItem = {
@@ -37,12 +37,32 @@ export const HoverEffect = <T,>({
   renderItem,
   onItemRef,
 }: HoverEffectProps<T>) => {
+  // Use a ref to track hover without re-rendering ALL items.
+  // Only the hovered/unhovered items re-render via CSS :hover pseudo-class.
+  const hoveredIndexRef = useRef<number | null>(null);
   let [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
-  const containerClass = cn(
+  // Debounced hover setter — avoids rapid state thrashing during fast mouse movement
+  const hoverRafRef = useRef<number | null>(null);
+  const handleMouseEnter = useCallback((idx: number) => {
+    hoveredIndexRef.current = idx;
+    if (hoverRafRef.current) cancelAnimationFrame(hoverRafRef.current);
+    hoverRafRef.current = requestAnimationFrame(() => {
+      setHoveredIndex(idx);
+    });
+  }, []);
+  const handleMouseLeave = useCallback(() => {
+    hoveredIndexRef.current = null;
+    if (hoverRafRef.current) cancelAnimationFrame(hoverRafRef.current);
+    hoverRafRef.current = requestAnimationFrame(() => {
+      setHoveredIndex(null);
+    });
+  }, []);
+
+  const containerClass = useMemo(() => cn(
     layout === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 py-10" : "",
     className
-  );
+  ), [layout, className]);
 
   return (
     <div className={containerClass} style={containerStyle}>
@@ -75,8 +95,8 @@ export const HoverEffect = <T,>({
             ref={(el: HTMLElement | null) => {
               onItemRef?.(idx, el as HTMLDivElement | null);
             }}
-            onMouseEnter={() => setHoveredIndex(idx)}
-            onMouseLeave={() => setHoveredIndex(null)}
+            onMouseEnter={() => handleMouseEnter(idx)}
+            onMouseLeave={handleMouseLeave}
           >
             <AnimatePresence key={`presence-${key}`} mode="wait">
               {hoveredIndex === idx && (

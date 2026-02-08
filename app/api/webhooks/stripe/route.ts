@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+import { sendEmail } from '@/lib/email-service';
 
 // ============================================================================
 // STRIPE WEBHOOK HANDLER
 // Handles payment_intent.succeeded and updates order status
+// All payment events email officialbullmoneywebsite@gmail.com + customer
 // ============================================================================
+
+const ADMIN_EMAIL = 'officialbullmoneywebsite@gmail.com';
 
 // Lazy initialization to avoid build-time errors
 let _stripe: Stripe | null = null;
@@ -274,16 +278,63 @@ async function sendOrderConfirmationEmail(order: {
     return;
   }
 
-  // TODO: Integrate with email service (Resend, SendGrid, etc.)
-  console.log(`Sending confirmation email to ${email} for order ${order.order_number}`);
-  
-  // Example with Resend:
-  // await resend.emails.send({
-  //   from: 'orders@bullmoney.store',
-  //   to: email,
-  //   subject: `Order Confirmed - ${order.order_number}`,
-  //   react: OrderConfirmationEmail({ order }),
-  // });
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bullmoney.shop';
+
+  const customerHtml = `
+    <div style="font-family: -apple-system, sans-serif; max-width: 600px; margin: 0 auto; background: #000; color: #fff; padding: 32px; border-radius: 16px;">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <h1 style="font-size: 24px; font-weight: 700; margin: 0 0 8px; color: #22c55e;">Payment Successful</h1>
+        <p style="color: #888; font-size: 14px; margin: 0;">Thank you for your purchase from BullMoney</p>
+      </div>
+      <div style="background: #052e16; border: 1px solid #22c55e; border-radius: 12px; padding: 20px; margin-bottom: 20px; text-align: center;">
+        <p style="color: #4ade80; font-size: 13px; margin: 0 0 4px;">Order Number</p>
+        <p style="color: #fff; font-size: 22px; font-weight: 700; margin: 0; letter-spacing: 1px;">${order.order_number}</p>
+      </div>
+      <div style="background: #111; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Total</td><td style="padding: 8px 0; color: #fff; font-size: 14px; text-align: right; font-weight: 700;">$${(order.total / 100).toFixed(2)}</td></tr>
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Payment Method</td><td style="padding: 8px 0; color: #fff; font-size: 14px; text-align: right;">Card (Stripe)</td></tr>
+          <tr><td style="padding: 8px 0; color: #888; font-size: 14px;">Status</td><td style="padding: 8px 0; color: #22c55e; font-size: 14px; text-align: right; font-weight: 600;">Confirmed</td></tr>
+        </table>
+      </div>
+      <div style="text-align: center; margin-top: 20px;">
+        <a href="${siteUrl}/store" style="display: inline-block; padding: 12px 32px; background: #fff; color: #000; font-weight: 700; font-size: 14px; text-decoration: none; border-radius: 10px;">Continue Shopping</a>
+      </div>
+      <hr style="border: none; border-top: 1px solid #222; margin: 24px 0;" />
+      <p style="color: #444; font-size: 11px; margin: 0; text-align: center;">&copy; ${new Date().getFullYear()} BullMoney. All rights reserved.</p>
+    </div>
+  `;
+
+  // Send customer email
+  sendEmail({
+    to: email,
+    subject: `BullMoney Order ${order.order_number} — Payment Confirmed`,
+    html: customerHtml,
+  }).catch((err) => console.error('[Stripe] Customer email failed:', err));
+
+  // Send admin notification with full details
+  const adminHtml = `
+    <div style="font-family: -apple-system, sans-serif; max-width: 600px; margin: 0 auto; background: #000; color: #fff; padding: 32px; border-radius: 16px;">
+      <h1 style="font-size: 20px; font-weight: 700; margin: 0 0 20px; color: #22c55e;">New Stripe Payment</h1>
+      <div style="background: #111; padding: 20px; border-radius: 12px; margin-bottom: 16px;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr><td style="padding: 6px 0; color: #888; font-size: 13px;">Order</td><td style="padding: 6px 0; color: #fff; font-size: 13px; text-align: right; font-weight: 600;">${order.order_number}</td></tr>
+          <tr><td style="padding: 6px 0; color: #888; font-size: 13px;">Customer</td><td style="padding: 6px 0; color: #3b82f6; font-size: 13px; text-align: right;">${email}</td></tr>
+          <tr><td style="padding: 6px 0; color: #888; font-size: 13px;">Total</td><td style="padding: 6px 0; color: #fff; font-size: 13px; text-align: right; font-weight: 700;">$${(order.total / 100).toFixed(2)}</td></tr>
+          <tr><td style="padding: 6px 0; color: #888; font-size: 13px;">Method</td><td style="padding: 6px 0; color: #fff; font-size: 13px; text-align: right;">Stripe (Card)</td></tr>
+        </table>
+      </div>
+      <a href="${siteUrl}/admin" style="display: inline-block; padding: 10px 20px; background: #fff; color: #000; font-weight: 600; font-size: 13px; text-decoration: none; border-radius: 8px;">Admin Panel</a>
+    </div>
+  `;
+
+  sendEmail({
+    to: ADMIN_EMAIL,
+    subject: `[BullMoney] New Payment: $${(order.total / 100).toFixed(2)} — ${order.order_number} — ${email}`,
+    html: adminHtml,
+  }).catch((err) => console.error('[Stripe] Admin email failed:', err));
+
+  console.log(`[Stripe] Emails sent for order ${order.order_number} to ${email} + admin`);
 }
 
 // Note: In Next.js App Router, body parsing is disabled by default for route handlers

@@ -90,7 +90,7 @@ function GlassProductRow({ products, rowHeight, gap, scrollSpeed, direction, gla
   const lastDragTimeRef = useRef(0);
   const momentumRef = useRef<number | null>(null);
 
-  const repeatCount = products.length < 4 ? 8 : products.length < 8 ? 6 : 4;
+  const repeatCount = products.length < 4 ? 4 : products.length < 8 ? 3 : 2;
   const repeatedProducts = Array.from({ length: repeatCount }, () => products).flat();
   const defaultCardWidth = Math.round(rowHeight * 0.72);
   // If visibleCount is set and we have a measured container, size cards to show exactly N at once
@@ -104,25 +104,41 @@ function GlassProductRow({ products, rowHeight, gap, scrollSpeed, direction, gla
   const cardHeight = visibleCount ? Math.round(cardWidth * 1.25) : rowHeight;
   const trackPadding = Math.round(cardWidth * 0.6);
 
-  // Measure container width for visibleCount sizing
+  // Measure container width for visibleCount sizing — rAF debounced
   useEffect(() => {
     if (!visibleCount) return;
     const measure = () => {
       if (rowRef.current) setContainerWidth(rowRef.current.clientWidth);
     };
     measure();
-    window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
+    let rafId: number | null = null;
+    const handleResize = () => {
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => { measure(); rafId = null; });
+    };
+    window.addEventListener('resize', handleResize, { passive: true });
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
   }, [visibleCount]);
 
-  // Detect mobile device
+  // Detect mobile device — rAF debounced
   useEffect(() => {
     const checkMobile = () => {
       isMobileRef.current = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
     };
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    let rafId: number | null = null;
+    const handleResize = () => {
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => { checkMobile(); rafId = null; });
+    };
+    window.addEventListener('resize', handleResize, { passive: true });
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
   }, []);
 
   // Pause rAF when row is off-screen
@@ -259,15 +275,13 @@ function GlassProductRow({ products, rowHeight, gap, scrollSpeed, direction, gla
     <div
       ref={rowRef}
       className="relative w-full overflow-x-auto overflow-y-visible scrollbar-hide select-none"
-      style={{ height: `${cardHeight + 70}px`, paddingBottom: '70px', willChange: 'auto', cursor: isDraggingRef.current ? 'grabbing' : 'grab' }}
+      style={{ height: `${cardHeight + 70}px`, paddingBottom: '70px', willChange: 'auto', contain: 'layout style', cursor: isDraggingRef.current ? 'grabbing' : 'grab' } as React.CSSProperties}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
       onClickCapture={onClickCapture}
-      onMouseEnter={() => {}}
-      onMouseLeave={() => { handleDragEnd(); }}
-      onTouchStart={() => {}}
+      onMouseLeave={handleDragEnd}
       onTouchEnd={() => { setTimeout(() => { if (!isDraggingRef.current) isPausedRef.current = false; }, 300); }}
     >
       <HoverEffect

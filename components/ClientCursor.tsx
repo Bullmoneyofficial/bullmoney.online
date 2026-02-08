@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { detectBrowser } from '@/lib/browserDetection';
 
 // Dynamically import TargetCursor to avoid SSR issues
-const TargetCursor = dynamic(() => import('@/components/TargertCursor'), {
+const TargetCursor = dynamic(() => import('@/components/TargetCursor'), {
   ssr: false,
   loading: () => null,
 });

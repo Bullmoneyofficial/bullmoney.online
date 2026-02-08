@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { supabase } from '@/lib/supabaseClient';
+import { loadSession } from '@/lib/sessionPersistence';
 
 // ============================================================================
 // WISHLIST STORE - ZUSTAND WITH SQL + LOCAL STORAGE PERSISTENCE
@@ -53,15 +54,8 @@ async function sqlRemoveWishlistItem(email: string, productId: string) {
 
 // Get current user email from localStorage session
 function getSessionEmail(): string | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const raw = localStorage.getItem('bullmoney_recruit_auth');
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      return parsed?.email || null;
-    }
-  } catch {}
-  return null;
+  const session = loadSession();
+  return session?.email || null;
 }
 
 export const useWishlistStore = create<WishlistStore>()(

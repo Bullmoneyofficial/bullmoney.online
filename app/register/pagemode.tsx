@@ -13,6 +13,7 @@ import {
 import { motion, AnimatePresence, useMotionTemplate, useMotionValue } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
+import { persistSession } from '@/lib/sessionPersistence';
 
 // --- IMPORT SEPARATE LOADER COMPONENT ---
 import { MultiStepLoader} from "@/components/Mainpage/MultiStepLoader"; 
@@ -543,57 +544,40 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     setSubmitError(null);
 
     try {
-      const { data: existingUser } = await supabase
-        .from("recruits")
-        .select("id")
-        .eq("email", formData.email)
-        .maybeSingle();
-
-      if (existingUser) {
-        throw new Error("This email is already registered. Please Login.");
-      }
-
-      const insertPayload = {
-        email: formData.email,
-        mt5_id: formData.mt5Number,
-        password: formData.password, 
-        referred_by_code: formData.referralCode || null,
-        used_code: true,
-      };
-
-      const { data: newUser, error } = await supabase
-        .from("recruits")
-        .insert([insertPayload])
-        .select()
-        .single();
-      
-      if (error) throw error;
-
-      if (newUser) {
-        // Save persistent session (both storage keys for compatibility)
-        // Include is_vip status (false by default for new users)
-        localStorage.setItem("bullmoney_session", JSON.stringify({
-          id: newUser.id,
+      const res = await fetch('/api/recruit-auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           email: formData.email,
-          is_vip: newUser.is_vip || false,
-          timestamp: Date.now()
-        }));
-        
-        // Also save to recruit auth storage key for immediate auth context detection
-        localStorage.setItem("bullmoney_recruit_auth", JSON.stringify({
-          recruitId: newUser.id,
-          email: formData.email
-        }));
-        
-        // Mark pagemode as completed
-        localStorage.setItem("bullmoney_pagemode_completed", "true");
-        
-        // Dispatch custom event so trading journal and other components pick up the session immediately
-        window.dispatchEvent(new Event('bullmoney_session_changed'));
-        
-        // Clear draft
-        localStorage.removeItem("bullmoney_draft");
+          password: formData.password,
+          mt5_id: formData.mt5Number,
+          referred_by_code: formData.referralCode || null,
+          used_code: true,
+        }),
+      });
+
+      const result = await res.json();
+      if (!res.ok || !result?.success || !result?.recruit) {
+        if (res.status === 409) {
+          throw new Error('This email is already registered. Please Login.');
+        }
+        throw new Error(result?.error || 'Connection failed. Please check your internet.');
       }
+
+      const newUser = result.recruit;
+      persistSession({
+        recruitId: newUser.id,
+        email: newUser.email,
+        mt5Id: newUser.mt5_id || formData.mt5Number,
+        isVip: newUser.is_vip === true,
+        timestamp: Date.now(),
+      });
+
+      // Dispatch custom event so trading journal and other components pick up the session immediately
+      window.dispatchEvent(new Event('bullmoney_session_changed'));
+
+      // Clear draft
+      localStorage.removeItem("bullmoney_draft");
 
       setTimeout(() => {
         setStep(5); // Success
@@ -616,42 +600,31 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase
-        .from("recruits")
-        .select("id, is_vip") 
-        .eq("email", loginEmail)
-        .eq("password", loginPassword) 
-        .maybeSingle();
+      const res = await fetch('/api/recruit-auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+      });
 
-      if (error) throw new Error(error.message);
-
-      if (!data) {
+      const result = await res.json();
+      if (!res.ok || !result?.success || !result?.recruit) {
         await new Promise(r => setTimeout(r, 800));
-        throw new Error("Invalid email or password.");
+        throw new Error(result?.error || 'Invalid email or password.');
       }
 
-      // Save persistent session (both storage keys for compatibility)
-      // Include is_vip status for auto-unlocking VIP content in UltimateHub
-      localStorage.setItem("bullmoney_session", JSON.stringify({
-        id: data.id,
-        email: loginEmail,
-        is_vip: data.is_vip || false,
-        timestamp: Date.now()
-      }));
-      
-      // Also save to recruit auth storage key for immediate auth context detection
-      localStorage.setItem("bullmoney_recruit_auth", JSON.stringify({
-        recruitId: data.id,
-        email: loginEmail
-      }));
-      
+      const recruit = result.recruit;
+      persistSession({
+        recruitId: recruit.id,
+        email: recruit.email,
+        mt5Id: recruit.mt5_id,
+        isVip: recruit.is_vip === true,
+        timestamp: Date.now(),
+      });
+
       // Mark telegram as confirmed for existing users logging in
       // This ensures Telegram screen NEVER shows for login route, only for new signups
       localStorage.setItem("bullmoney_telegram_confirmed", "true");
-      
-      // Mark pagemode as completed
-      localStorage.setItem("bullmoney_pagemode_completed", "true");
-      
+
       // Dispatch custom event so trading journal and other components pick up the session immediately
       window.dispatchEvent(new Event('bullmoney_session_changed'));
 

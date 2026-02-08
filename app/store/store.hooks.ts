@@ -54,23 +54,24 @@ export function useIdleMount(delay = 0) {
 /**
  * Progressively loads features based on priority
  * Returns flags indicating which feature sets should be active
+ * ✅ MATCHES app/page.tsx sequenceStage pattern (140ms intervals for 120fps feel)
  */
 export function useProgressiveLoad() {
   const [loadStage, setLoadStage] = useState(0);
   
   useEffect(() => {
     // Stage 0: Initial render (immediate)
-    // Stage 1: Critical interactive elements (after 16ms — next frame)
-    const timer1 = setTimeout(() => setLoadStage(1), 16);
+    // Stage 1: Critical interactive elements (next frame — 1 frame at 60fps)
+    const timer1 = requestAnimationFrame(() => setLoadStage(1));
     
-    // Stage 2: Below-fold content (after 150ms — feels instant)
-    const timer2 = setTimeout(() => setLoadStage(2), 150);
+    // Stage 2: Below-fold content (after 140ms — matches home page staging)
+    const timer2 = setTimeout(() => setLoadStage(2), 140);
     
-    // Stage 3: Heavy animations and extras (after 500ms or idle)
-    const timer3 = setTimeout(() => setLoadStage(3), 500);
+    // Stage 3: Heavy animations and extras (after 280ms — 2x stage interval)
+    const timer3 = setTimeout(() => setLoadStage(3), 280);
     
     return () => {
-      clearTimeout(timer1);
+      cancelAnimationFrame(timer1);
       clearTimeout(timer2);
       clearTimeout(timer3);
     };

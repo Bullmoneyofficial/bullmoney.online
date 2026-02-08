@@ -271,49 +271,13 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Scroll-minimize disabled — widget should stay visible during scrolling
+  // Previously this would minimize the widget on scroll which caused it to stay minimized
   useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      const scrollDelta = Math.abs(currentScrollY - lastScrollY.current);
-      
-      // Update lastScrollY for next comparison
-      lastScrollY.current = currentScrollY;
-      
-      // Trigger minimization on significant scroll when widget is not open
-      if (scrollDelta > 10 && !open && !isMinimizedRef.current) {
-        isMinimizedRef.current = true;
-        setIsScrollMinimized(true);
-        
-        // Clear existing timeout
-        if (scrollTimeoutRef.current) {
-          clearTimeout(scrollTimeoutRef.current);
-        }
-        
-        // Set timeout to expand back after scroll stops
-        scrollTimeoutRef.current = setTimeout(() => {
-          isMinimizedRef.current = false;
-          setIsScrollMinimized(false);
-        }, 1500); // Expand back 1.5s after scroll stops
-      } else if (scrollDelta > 10 && isMinimizedRef.current) {
-        // Keep extending the timeout while still scrolling
-        if (scrollTimeoutRef.current) {
-          clearTimeout(scrollTimeoutRef.current);
-        }
-        scrollTimeoutRef.current = setTimeout(() => {
-          isMinimizedRef.current = false;
-          setIsScrollMinimized(false);
-        }, 1500);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-    };
-  }, [open, setIsScrollMinimized]);
+    // Ensure widget is never stuck in scroll-minimized state
+    setIsScrollMinimized(false);
+    isMinimizedRef.current = false;
+  }, [setIsScrollMinimized]);
 
   // Reset minimized state when widget opens
   useEffect(() => {

@@ -19,6 +19,7 @@ const Spline = dynamic(() => import('@splinetool/react-spline'), {
 });
 
 // Available Spline scenes
+// NOTE: SPLINE_SCENES[0] is the "Default Scene" but desktop defaults to Scene 1 (index 1)
 const SPLINE_SCENES = [
   '/scene.splinecode',
   '/scene1.splinecode',
@@ -28,6 +29,9 @@ const SPLINE_SCENES = [
   '/scene5.splinecode',
   '/scene6.splinecode'
 ];
+
+// Desktop default scene index
+const DESKTOP_DEFAULT_SCENE_INDEX = 1;
 
 // Spline scene names for display
 const SPLINE_SCENE_NAMES: Record<string, string> = {
@@ -1515,10 +1519,13 @@ const YouTubePlayer: React.FC<{ videoId: string; loading?: boolean; error?: bool
 const SplineBackground = memo(function SplineBackground({ grayscale = true, sceneUrl }: { grayscale?: boolean; sceneUrl: string }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const [cachedSceneUrl, setCachedSceneUrl] = useState<string | null>(null);
+  const [cacheChecked, setCacheChecked] = useState(false);
   const splineRef = useRef<any>(null);
   const loadStartTime = useRef<number>(0);
   const blobUrlRef = useRef<string | null>(null);
+  const MAX_RETRIES = 2;
   
   // Use provided scene URL
   const scene = sceneUrl;
@@ -1534,14 +1541,24 @@ const SplineBackground = memo(function SplineBackground({ grayscale = true, scen
       const url = getCachedSplineScene(scene);
       blobUrlRef.current = url.startsWith('blob:') ? url : null;
       setCachedSceneUrl(url);
+      setCacheChecked(true);
       
       if (isSplineCached(scene)) {
         console.log(`[SplineBackground] Using cached scene (${(performance.now() - loadStartTime.current).toFixed(1)}ms to blob URL)`);
       }
+    }).catch(() => {
+      // Cache failed - still allow direct load
+      setCacheChecked(true);
     });
+    
+    // Fallback: if cache takes too long, proceed with direct URL after 2s
+    const timeout = setTimeout(() => {
+      setCacheChecked(true);
+    }, 2000);
 
     // Cleanup blob URL on unmount
     return () => {
+      clearTimeout(timeout);
       if (blobUrlRef.current) {
         URL.revokeObjectURL(blobUrlRef.current);
       }
@@ -1558,11 +1575,24 @@ const SplineBackground = memo(function SplineBackground({ grayscale = true, scen
 
   const handleError = useCallback((error: any) => {
     console.error('[SplineBackground] Load error:', error);
-    setHasError(true);
-  }, []);
+    setRetryCount(prev => {
+      if (prev < MAX_RETRIES) {
+        console.log(`[SplineBackground] Retrying... attempt ${prev + 2}/${MAX_RETRIES + 1}`);
+        // Reset after a short delay so Spline remounts
+        setTimeout(() => {
+          setHasError(false);
+          setIsLoaded(false);
+        }, 1500);
+        return prev + 1;
+      }
+      console.error('[SplineBackground] Max retries reached, showing fallback');
+      setHasError(true);
+      return prev;
+    });
+  }, [MAX_RETRIES]);
 
-  // Don't render until we have the cached URL ready
-  const sceneToLoad = cachedSceneUrl || scene;
+  // Use cached URL if available, otherwise fall back to direct URL once cache check is done
+  const sceneToLoad = cachedSceneUrl || (cacheChecked ? scene : null);
 
   return (
     <div 
@@ -1610,8 +1640,8 @@ const SplineBackground = memo(function SplineBackground({ grayscale = true, scen
         )}
       </div>
 
-      {/* Spline container - uses cached blob URL for instant loading */}
-      {!hasError && cachedSceneUrl && (
+      {/* Spline container - uses cached blob URL for instant loading, falls back to direct URL */}
+      {!hasError && sceneToLoad && (
         <Spline
           scene={sceneToLoad}
           onLoad={handleLoad}
@@ -2259,7 +2289,7 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
   const [isReady, setIsReady] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
   const [showSpline, setShowSpline] = useState(true); // Control Spline visibility
-  const [currentSplineScene, setCurrentSplineScene] = useState(SPLINE_SCENES[0]); // Current spline scene
+  const [currentSplineScene, setCurrentSplineScene] = useState(SPLINE_SCENES[DESKTOP_DEFAULT_SCENE_INDEX]); // Default to Scene 1 for desktop
   const [showSplinePanel, setShowSplinePanel] = useState(false); // Spline selector panel
   const [downloadingScenes, setDownloadingScenes] = useState<Set<string>>(new Set());
   const [cacheVersion, setCacheVersion] = useState(0); // forces UI refresh on cache changes
@@ -2478,13 +2508,13 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
   useEffect(() => {
     const saved = localStorage.getItem('currentSplineScene');
     if (saved && SPLINE_SCENES.includes(saved)) {
-      const isDefault = saved === SPLINE_SCENES[0];
+      const isDefault = saved === SPLINE_SCENES[0] || saved === SPLINE_SCENES[DESKTOP_DEFAULT_SCENE_INDEX];
       if (isDefault || isSplineCached(saved)) {
         setCurrentSplineScene(saved);
       } else {
-        // Scene was cleared from cache — reset to default
+        // Scene was cleared from cache — reset to desktop default (Scene 1)
         localStorage.removeItem('currentSplineScene');
-        setCurrentSplineScene(SPLINE_SCENES[0]);
+        setCurrentSplineScene(SPLINE_SCENES[DESKTOP_DEFAULT_SCENE_INDEX]);
       }
     }
   }, []);

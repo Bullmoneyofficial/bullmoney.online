@@ -99,14 +99,22 @@ function CircularProductRow({ products, rowHeight, itemsPerRow, bend, gap, rowIn
   const lastDragTimeRef = useRef(0);
   const momentumRef = useRef<number | null>(null);
 
-  // Detect mobile device
+  // Detect mobile device — rAF debounced
   useEffect(() => {
     const checkMobile = () => {
       isMobileRef.current = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
     };
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    let rafId: number | null = null;
+    const handleMobileCheck = () => {
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => { checkMobile(); rafId = null; });
+    };
+    window.addEventListener('resize', handleMobileCheck, { passive: true });
+    return () => {
+      window.removeEventListener('resize', handleMobileCheck);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
   }, []);
 
   const updateCurve = useCallback((forceUpdate = false) => {

@@ -699,7 +699,16 @@ export function CheckoutWizard() {
                           <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-white/5 shrink-0">
                             {item.product.primary_image ? (
                               <Image
-                                src={item.product.primary_image}
+                                src={(() => {
+                                  let src = item.product.primary_image;
+                                  if (src.startsWith('/http://') || src.startsWith('/https://')) {
+                                    src = src.substring(1);
+                                  }
+                                  if (src.startsWith('http://') || src.startsWith('https://')) {
+                                    return src;
+                                  }
+                                  return src.startsWith('/') ? src : `/${src.replace(/^public\//, '')}`;
+                                })()}
                                 alt={item.product.name}
                                 fill
                                 className="object-cover"
@@ -739,7 +748,16 @@ export function CheckoutWizard() {
                         <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-white/5 shrink-0">
                           {item.product.primary_image ? (
                             <Image
-                              src={item.product.primary_image}
+                              src={(() => {
+                                let src = item.product.primary_image;
+                                if (src.startsWith('/http://') || src.startsWith('/https://')) {
+                                  src = src.substring(1);
+                                }
+                                if (src.startsWith('http://') || src.startsWith('https://')) {
+                                  return src;
+                                }
+                                return src.startsWith('/') ? src : `/${src.replace(/^public\//, '')}`;
+                              })()}
                               alt={item.product.name}
                               fill
                               className="object-cover"

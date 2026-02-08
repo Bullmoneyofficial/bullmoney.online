@@ -86,7 +86,9 @@ export type UIComponentType =
   | 'heroSceneModal'      // Hero scene selector modal
   | 'discordStageModal'   // Discord Stage live stream modal
   | 'accountManagerModal' // Account Manager modal
-  | 'bgPickerModal';      // Background picker modal (MobileDiscordHero)
+  | 'bgPickerModal'        // Background picker modal (MobileDiscordHero)
+  | 'colorPickerModal'    // Color picker modal (MobileDiscordHero)
+  | 'splinePanelModal';   // Spline scene picker modal (MobileDiscordHero)
 
 // Legacy type for backwards compatibility
 export type NavbarModalType = 'admin' | 'faq' | 'affiliate' | 'themeSelector' | null;
@@ -118,6 +120,8 @@ interface UIStateContextType {
   isDiscordStageModalOpen: boolean; // Discord Stage modal
   isAccountManagerModalOpen: boolean; // Account Manager modal
   isBgPickerModalOpen: boolean; // BG Picker modal
+  isColorPickerModalOpen: boolean; // Color picker modal
+  isSplinePanelModalOpen: boolean; // Spline scene picker modal
   isV2Unlocked: boolean;
   devSkipPageModeAndLoader: boolean; // Dev flag to skip pagemode and loader
   isWelcomeScreenActive: boolean;  // Welcome screen active - allows AudioWidget to show
@@ -159,6 +163,8 @@ interface UIStateContextType {
   setDiscordStageModalOpen: (open: boolean) => void;
   setAccountManagerModalOpen: (open: boolean) => void;
   setBgPickerModalOpen: (open: boolean) => void;
+  setColorPickerModalOpen: (open: boolean) => void;
+  setSplinePanelModalOpen: (open: boolean) => void;
   setV2Unlocked: (unlocked: boolean) => void;
   setDevSkipPageModeAndLoader: (skip: boolean) => void;
   setWelcomeScreenActive: (active: boolean) => void;
@@ -183,6 +189,8 @@ interface UIStateContextType {
   openDiscordStageModal: () => void;
   openAccountManagerModal: () => void;
   openBgPickerModal: () => void;
+  openColorPickerModal: () => void;
+  openSplinePanelModal: () => void;
   closeNavbarModal: () => void;
 
   // Close all UI components
@@ -231,6 +239,8 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const [isDiscordStageModalOpen, setIsDiscordStageModalOpenState] = useState(false);
   const [isAccountManagerModalOpen, setIsAccountManagerModalOpenState] = useState(false);
   const [isBgPickerModalOpen, setIsBgPickerModalOpenState] = useState(false);
+  const [isColorPickerModalOpen, setIsColorPickerModalOpenState] = useState(false);
+  const [isSplinePanelModalOpen, setIsSplinePanelModalOpenState] = useState(false);
   const [isV2Unlocked, setIsV2UnlockedState] = useState(
     () => typeof window !== 'undefined' && sessionStorage.getItem('affiliate_unlock_complete') === 'true'
   );
@@ -256,7 +266,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isThemeSelectorModalOpen || isAdminModalOpen || isFaqModalOpen ||
     isAppsModalOpen || isDisclaimerModalOpen || isPagemodeOpen || isLoaderv2Open ||
     isAuthModalOpen || isBullFeedModalOpen || isPostComposerModalOpen || isHeroSceneModalOpen || isDiscordStageModalOpen ||
-    isAccountManagerModalOpen || isBgPickerModalOpen;
+    isAccountManagerModalOpen || isBgPickerModalOpen || isColorPickerModalOpen || isSplinePanelModalOpen;
 
   // Derived state: is any component currently open?
   const isAnyOpen = isMobileMenuOpen || isAudioWidgetOpen || isUltimatePanelOpen || isUltimateHubOpen || isAnyModalOpen;
@@ -312,6 +322,8 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isDiscordStageModalOpen ? 'discordStageModal' :
     isAccountManagerModalOpen ? 'accountManagerModal' :
     isBgPickerModalOpen ? 'bgPickerModal' :
+    isColorPickerModalOpen ? 'colorPickerModal' :
+    isSplinePanelModalOpen ? 'splinePanelModal' :
     null;
 
   // Closes all other components except the one specified
@@ -341,6 +353,8 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (except !== 'discordStageModal') setIsDiscordStageModalOpenState(false);
     if (except !== 'accountManagerModal') setIsAccountManagerModalOpenState(false);
     if (except !== 'bgPickerModal') setIsBgPickerModalOpenState(false);
+    if (except !== 'colorPickerModal') setIsColorPickerModalOpenState(false);
+    if (except !== 'splinePanelModal') setIsSplinePanelModalOpenState(false);
   }, []);
 
   // Closes all modals but preserves floating elements state
@@ -366,6 +380,8 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setIsDiscordStageModalOpenState(false);
     setIsAccountManagerModalOpenState(false);
     setIsBgPickerModalOpenState(false);
+    setIsColorPickerModalOpenState(false);
+    setIsSplinePanelModalOpenState(false);
   }, []);
 
   // Closes all components
@@ -675,6 +691,30 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setIsBgPickerModalOpenState(open);
   }, [closeOthers]);
 
+  const setColorPickerModalOpen = useCallback((open: boolean) => {
+    if (open) {
+      closeOthers('colorPickerModal');
+      trackUIStateChange('colorPickerModal', 'open');
+      SoundEffects.open();
+    } else {
+      trackUIStateChange('colorPickerModal', 'close');
+      SoundEffects.close();
+    }
+    setIsColorPickerModalOpenState(open);
+  }, [closeOthers]);
+
+  const setSplinePanelModalOpen = useCallback((open: boolean) => {
+    if (open) {
+      closeOthers('splinePanelModal');
+      trackUIStateChange('splinePanelModal', 'open');
+      SoundEffects.open();
+    } else {
+      trackUIStateChange('splinePanelModal', 'close');
+      SoundEffects.close();
+    }
+    setIsSplinePanelModalOpenState(open);
+  }, [closeOthers]);
+
   const setV2Unlocked = useCallback((unlocked: boolean) => {
     setIsV2UnlockedState(unlocked);
     if (typeof window !== 'undefined') {
@@ -742,6 +782,8 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const openDiscordStageModal = useCallback(() => setDiscordStageModalOpen(true), [setDiscordStageModalOpen]);
   const openAccountManagerModal = useCallback(() => setAccountManagerModalOpen(true), [setAccountManagerModalOpen]);
   const openBgPickerModal = useCallback(() => setBgPickerModalOpen(true), [setBgPickerModalOpen]);
+  const openColorPickerModal = useCallback(() => setColorPickerModalOpen(true), [setColorPickerModalOpen]);
+  const openSplinePanelModal = useCallback(() => setSplinePanelModalOpen(true), [setSplinePanelModalOpen]);
   const closeNavbarModal = useCallback(() => {
     setIsAdminModalOpenState(false);
     setIsFaqModalOpenState(false);
@@ -839,6 +881,8 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isDiscordStageModalOpen,
     isAccountManagerModalOpen,
     isBgPickerModalOpen,
+    isColorPickerModalOpen,
+    isSplinePanelModalOpen,
     isV2Unlocked,
     devSkipPageModeAndLoader,
     isWelcomeScreenActive,
@@ -877,6 +921,8 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setDiscordStageModalOpen,
     setAccountManagerModalOpen,
     setBgPickerModalOpen,
+    setColorPickerModalOpen,
+    setSplinePanelModalOpen,
     setV2Unlocked,
     setDevSkipPageModeAndLoader,
     setWelcomeScreenActive: setIsWelcomeScreenActiveState,
@@ -899,6 +945,8 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     openDiscordStageModal,
     openAccountManagerModal,
     openBgPickerModal,
+    openColorPickerModal,
+    openSplinePanelModal,
     closeNavbarModal,
     closeAll,
     closeAllModals,
@@ -1191,4 +1239,14 @@ export function useDiscordStageModalUI() {
 export function useBgPickerModalUI() {
   const { isBgPickerModalOpen, setBgPickerModalOpen, openBgPickerModal } = useUIState();
   return { isOpen: isBgPickerModalOpen, setIsOpen: setBgPickerModalOpen, open: openBgPickerModal };
+}
+
+export function useColorPickerModalUI() {
+  const { isColorPickerModalOpen, setColorPickerModalOpen, openColorPickerModal } = useUIState();
+  return { isOpen: isColorPickerModalOpen, setIsOpen: setColorPickerModalOpen, open: openColorPickerModal };
+}
+
+export function useSplinePanelModalUI() {
+  const { isSplinePanelModalOpen, setSplinePanelModalOpen, openSplinePanelModal } = useUIState();
+  return { isOpen: isSplinePanelModalOpen, setIsOpen: setSplinePanelModalOpen, open: openSplinePanelModal };
 }

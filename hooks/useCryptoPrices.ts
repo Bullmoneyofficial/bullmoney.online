@@ -32,6 +32,7 @@ const COIN_TO_GECKO: Record<string, string> = {
   XRP: 'ripple',
   DOGE: 'dogecoin',
   USDT: 'tether',
+  USDC: 'usd-coin',
   BNB: 'binancecoin',
   ADA: 'cardano',
   AVAX: 'avalanche-2',

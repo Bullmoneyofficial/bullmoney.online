@@ -23,6 +23,7 @@ export async function GET(
         *,
         category:categories(id, name, slug, description),
         images:product_images(id, url, alt_text, sort_order, is_primary),
+        media:product_media(id, media_type, url, thumbnail_url, alt_text, title, duration_seconds, width, height, sort_order, is_primary, metadata),
         variants(id, sku, name, options, price_adjustment, inventory_count, low_stock_threshold),
         reviews(
           id,
@@ -47,6 +48,11 @@ export async function GET(
 
     // Sort images
     const sortedImages = product.images?.sort(
+      (a: { sort_order: number }, b: { sort_order: number }) => a.sort_order - b.sort_order
+    );
+    
+    // Sort media
+    const sortedMedia = product.media?.sort(
       (a: { sort_order: number }, b: { sort_order: number }) => a.sort_order - b.sort_order
     );
     
@@ -81,7 +87,8 @@ export async function GET(
     return NextResponse.json({
       ...product,
       images: sortedImages,
-      primary_image: primaryImage?.url || sortedImages?.[0]?.url || null,
+      media: sortedMedia || [],
+      primary_image: primaryImage?.url || sortedImages?.[0]?.url || sortedMedia?.[0]?.url || null,
       reviews: approvedReviews,
       related_products: transformedRelated,
       total_inventory: product.variants?.reduce(

@@ -60,7 +60,6 @@ interface UserAccountData {
   total_referred_manual?: number;
   telegram_username?: string;
   discord_username?: string;
-  password?: string;
   instagram_username?: string;
   facebook_username?: string;
   twitter_username?: string;
@@ -310,7 +309,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
       // Fetch user's recruit data with explicit email filter
       const { data: recruitData, error: recruitError } = await supabase
         .from('recruits')
-        .select('*')
+        .select('id, email, full_name, image_url, is_vip, vip_updated_at, mt5_id, broker_name, status, created_at, affiliate_code, commission_balance, total_referred_manual, telegram_username, discord_username, instagram_username, facebook_username, twitter_username, youtube_username, twitch_username, tiktok_username, cell_number, country, city, timezone, birth_date, preferred_contact_method, trading_experience_years, trading_style, risk_tolerance, preferred_instruments, trading_timezone, account_balance_range, preferred_leverage, favorite_pairs, trading_strategy, win_rate_target, monthly_profit_target, hobbies, personality_traits, trading_goals, learning_style, notification_preferences, preferred_chart_timeframe, uses_automated_trading, attends_live_sessions, bio')
         .eq('email', userEmail)
         .maybeSingle(); // Use maybeSingle to handle case where user doesn't exist
 
@@ -372,7 +371,6 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
         total_referred_manual: recruitData.total_referred_manual || 0,
         telegram_username: recruitData.telegram_username,
         discord_username: recruitData.discord_username,
-        password: recruitData.password,
         instagram_username: recruitData.instagram_username,
         facebook_username: recruitData.facebook_username,
         twitter_username: recruitData.twitter_username,
@@ -1228,19 +1226,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                         <label className="block text-sm font-medium text-slate-400 mb-1">Current Password</label>
                         <div className="flex items-center gap-2 px-4 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
                           <Shield className="h-4 w-4 text-white" />
-                          <span className="text-white font-mono flex-1">
-                            {showPassword ? (accountData.password || '••••••••') : '••••••••'}
-                          </span>
-                          <button
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="p-1 hover:bg-slate-800 rounded transition-colors"
-                          >
-                            {showPassword ? (
-                              <EyeOff className="h-4 w-4 text-slate-400" />
-                            ) : (
-                              <Eye className="h-4 w-4 text-slate-400" />
-                            )}
-                          </button>
+                          <span className="text-white font-mono flex-1">Hidden for security</span>
                         </div>
                       </div>
                     ) : (

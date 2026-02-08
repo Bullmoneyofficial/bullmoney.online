@@ -11,6 +11,12 @@
   isolation: isolate;
 }
 
+/* Ensure the custom cursor never captures pointer events */
+.target-cursor-wrapper * {
+  pointer-events: none !important;
+  user-select: none;
+}
+
 /* Center dot - Glowing core */
 .target-cursor-dot {
   position: absolute;

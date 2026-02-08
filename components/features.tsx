@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import Image from "next/image";
-import createGlobe from "cobe";
+// cobe globe is dynamically imported inside the Globe component to reduce initial chunk size
 import { detectBrowser } from "@/lib/browserDetection";
 import { useUnifiedPerformance } from "@/hooks/useDesktopPerformance";
 import { StickyScroll } from "@/components/ui/sticky-scroll-reveal";
@@ -965,40 +965,47 @@ const Globe = ({ reducedMotion = false }: { reducedMotion?: boolean }) => {
     if (!canvasRef.current) return;
 
     let phi = 0;
-    let globe: ReturnType<typeof createGlobe> | null = null;
+    let globe: any = null;
+    let canceled = false;
 
     setShowFallback(false);
 
-    try {
-      globe = createGlobe(canvasRef.current, {
-        devicePixelRatio: Math.min(window.devicePixelRatio, 2),
-        width: size * 2,
-        height: size * 2,
-        phi: 0,
-        theta: 0,
-        dark: 1,
-        diffuse: 1.2,
-        mapSamples,
-        mapBrightness: 6,
-        baseColor: [1, 1, 1],
-        markerColor: [1, 1, 1],
-        glowColor: [1, 1, 1],
-        markers: [
-          { location: [37.7595, -122.4367], size: 0.03 },
-          { location: [40.7128, -74.006], size: 0.1 },
-        ],
-        onRender: (state) => {
-          state.phi = phi;
-          phi += rotationSpeed;
-        },
-      });
-    } catch (e) {
-      console.error('[Globe] Failed to create:', e);
+    // Dynamically import cobe only when Globe mounts
+    import("cobe").then(({ default: createGlobe }) => {
+      if (canceled || !canvasRef.current) return;
+      try {
+        globe = createGlobe(canvasRef.current, {
+          devicePixelRatio: Math.min(window.devicePixelRatio, 2),
+          width: size * 2,
+          height: size * 2,
+          phi: 0,
+          theta: 0,
+          dark: 1,
+          diffuse: 1.2,
+          mapSamples,
+          mapBrightness: 6,
+          baseColor: [1, 1, 1],
+          markerColor: [1, 1, 1],
+          glowColor: [1, 1, 1],
+          markers: [
+            { location: [37.7595, -122.4367], size: 0.03 },
+            { location: [40.7128, -74.006], size: 0.1 },
+          ],
+          onRender: (state) => {
+            state.phi = phi;
+            phi += rotationSpeed;
+          },
+        });
+      } catch (e) {
+        console.error('[Globe] Failed to create:', e);
+        setShowFallback(true);
+      }
+    }).catch(() => {
       setShowFallback(true);
-      return;
-    }
+    });
 
     return () => {
+      canceled = true;
       if (globe) {
         try {
           globe.destroy();

@@ -8,8 +8,20 @@ import type { ProductWithDetails, PaginatedResponse, ProductFilters } from '@/ty
 import { useStoreSection } from './StoreMemoryContext';
 import { useSound } from '@/contexts/SoundContext';
 
+// ✅ PERFORMANCE HOOKS - Matching app/page.tsx optimization stack
+import { useScrollOptimization } from '@/hooks/useScrollOptimization';
+import { useBigDeviceScrollOptimizer } from '@/lib/bigDeviceScrollOptimizer';
+import { useMobileLazyRender } from '@/hooks/useMobileLazyRender';
+import { useUnifiedPerformance } from '@/lib/UnifiedPerformanceSystem';
+import { useComponentTracking, useCrashTracker } from '@/lib/CrashTracker';
+import { deferAnalytics, smartPrefetch } from '@/lib/prefetchHelper';
+import {
+  ShimmerSpinner,
+  ShimmerRadialGlow,
+} from '@/components/ui/UnifiedShimmer';
+
 // ============================================================================
-// OPTIMIZED IMPORTS - Split into separate modules for faster compilation
+// ✅ OPTIMIZED IMPORTS - Split into separate modules for faster compilation
 // ============================================================================
 import {
   CookieConsent,
@@ -27,6 +39,8 @@ import {
   StoreFooter,
   SearchAutocomplete,
   WorldMap,
+  InfiniteMenu,
+  FlyingPosters,
   MarketPriceTicker,
   RewardsCardBanner,
   RewardsCard,
@@ -57,8 +71,34 @@ export default function StorePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
+  // ✅ PERFORMANCE OPTIMIZATION STACK - Matching app/page.tsx patterns
   // Progressive loading - renders in stages for faster initial load
   const { showCritical, showInteractive, showBelowFold, showHeavy } = useProgressiveLoad();
+  
+  // Scroll optimization for 120fps - same as home page
+  useScrollOptimization();
+  const { optimizeSection } = useBigDeviceScrollOptimizer();
+  
+  // Device tier awareness, FPS monitoring, preload/unload hints
+  const {
+    deviceTier,
+    registerComponent,
+    unregisterComponent,
+    averageFps,
+    shimmerQuality,
+    preloadQueue,
+    unloadQueue,
+  } = useUnifiedPerformance();
+  
+  // Crash & perf tracking
+  const { trackClick, trackError, trackCustom } = useComponentTracking('store-page');
+  const { trackPerformanceWarning } = useCrashTracker();
+  
+  // Mobile lazy render (smart, not just a 400ms timeout)
+  const { shouldRender: allowMobileLazyRender } = useMobileLazyRender(240);
+  
+  // Heavy desktop gating via requestIdleCallback (same pattern as home page)
+  const [allowHeavyDesktop, setAllowHeavyDesktop] = useState(false);
   
   // Initialize trading sounds from context
   const { sounds } = useSound();
@@ -174,7 +214,7 @@ export default function StorePage() {
     };
   }, [searchQuery]);
 
-  // Detect mobile
+  // Detect mobile — debounced to avoid layout thrash on resize
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const checkMobile = () => {
@@ -182,20 +222,148 @@ export default function StorePage() {
       setIsMobile(mobile);
     };
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    let rafId: number | null = null;
+    const handleResize = () => {
+      if (rafId) return; // skip if already queued
+      rafId = requestAnimationFrame(() => {
+        checkMobile();
+        rafId = null;
+      });
+    };
+    window.addEventListener('resize', handleResize, { passive: true });
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
   }, []);
 
-  // Additional mobile deferral to keep initial load snappy
+  // ✅ DEFERRED ANALYTICS - Load analytics after page is interactive (same as home page)
+  useEffect(() => {
+    deferAnalytics(() => {
+      import('@/lib/analytics').then(({ trackEvent, BullMoneyAnalytics }) => {
+        console.log('[Store] Analytics loaded after page interaction');
+      });
+    });
+
+    // Smart prefetch likely navigation routes after initial load
+    smartPrefetch([
+      { href: '/', options: { priority: 'low' } },
+      { href: '/store/checkout', options: { priority: 'low' } },
+      { href: '/trading-showcase', options: { priority: 'low' } },
+      { href: '/community', options: { priority: 'low' } },
+    ]);
+
+    // ✅ SPLINE PRELOAD — Same strategy as home page
+    // Preload runtime + scene file during idle time so 3D loads instantly
+    if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+      const preloadSpline = () => {
+        // 1. Preload Spline runtime (shares module cache with spline-wrapper)
+        import('@splinetool/runtime').catch(() => {});
+        // 2. Preload the wrapper component  
+        import('@/lib/spline-wrapper').catch(() => {});
+      };
+
+      if ('requestIdleCallback' in window) {
+        (window as any).requestIdleCallback(preloadSpline, { timeout: 2000 });
+      } else {
+        setTimeout(preloadSpline, 1000);
+      }
+    }
+  }, []);
+
+  // ✅ HEAVY DESKTOP GATING via requestIdleCallback (same as home page)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (isMobile) {
+      setAllowHeavyDesktop(false);
+      return;
+    }
+
+    let cancelled = false;
+    const enable = () => {
+      if (!cancelled) setAllowHeavyDesktop(true);
+    };
+
+    if ('requestIdleCallback' in window) {
+      const id = (window as any).requestIdleCallback(enable, { timeout: 1200 });
+      return () => {
+        cancelled = true;
+        (window as any).cancelIdleCallback(id);
+      };
+    }
+
+    const timeout = setTimeout(enable, 1200);
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+    };
+  }, [isMobile]);
+
+  // ✅ FPS TRACKING - Monitor drops same as home page
+  useEffect(() => {
+    if (averageFps < 25) {
+      trackPerformanceWarning('store-page', averageFps, `FPS dropped to ${averageFps}`);
+    }
+  }, [averageFps, trackPerformanceWarning]);
+
+  // ✅ COMPONENT REGISTRATION for unified performance tracking
+  const componentsRegisteredRef = useRef(false);
+  const registerComponentRef = useRef(registerComponent);
+  const unregisterComponentRef = useRef(unregisterComponent);
+  const trackCustomRef = useRef(trackCustom);
+  const optimizeSectionRef = useRef(optimizeSection);
+
+  useEffect(() => {
+    registerComponentRef.current = registerComponent;
+    unregisterComponentRef.current = unregisterComponent;
+    trackCustomRef.current = trackCustom;
+    optimizeSectionRef.current = optimizeSection;
+  });
+
+  useEffect(() => {
+    if (showInteractive && !componentsRegisteredRef.current) {
+      componentsRegisteredRef.current = true;
+      registerComponentRef.current('store-hero', 9);
+      registerComponentRef.current('store-products', 7);
+      registerComponentRef.current('store-ticker', 5);
+      trackCustomRef.current('store_loaded', { deviceTier, shimmerQuality });
+
+      if (typeof window !== 'undefined' && window.innerWidth >= 1440) {
+        setTimeout(() => {
+          optimizeSectionRef.current('hero');
+          optimizeSectionRef.current('products');
+        }, 100);
+      }
+    }
+    return () => {
+      if (componentsRegisteredRef.current) {
+        componentsRegisteredRef.current = false;
+        unregisterComponentRef.current('store-hero');
+        unregisterComponentRef.current('store-products');
+        unregisterComponentRef.current('store-ticker');
+      }
+    };
+  }, [showInteractive, deviceTier, shimmerQuality]);
+
+  // Smart preloading based on usage patterns
+  useEffect(() => {
+    if (preloadQueue.length > 0) {
+      console.log('[Store] Preload suggestions:', preloadQueue);
+    }
+    if (unloadQueue.length > 0) {
+      console.log('[Store] Unload suggestions:', unloadQueue);
+    }
+  }, [preloadQueue, unloadQueue]);
+
+  // ✅ MOBILE DEFERRAL - Use smart useMobileLazyRender instead of simple timeout
   useEffect(() => {
     if (!isMobile) {
       setMobileDeferReady(true);
       return;
     }
-    setMobileDeferReady(false);
-    const timer = setTimeout(() => setMobileDeferReady(true), 400);
-    return () => clearTimeout(timer);
-  }, [isMobile]);
+    // Use the hook-based signal for smarter deferral
+    setMobileDeferReady(allowMobileLazyRender);
+  }, [isMobile, allowMobileLazyRender]);
 
   // Manual toggle only — timeline stays as default, grid only if user selects it
   const handleFeaturedViewChange = useCallback((mode: 'timeline' | 'grid') => {
@@ -232,19 +400,85 @@ export default function StorePage() {
     [products, isMobile, mobileColumns, desktopColumns, mobileRows, desktopRows]
   );
 
+  // ✅ MEMOIZE GRID RENDER ITEM — prevents HoverEffect children from remounting
+  const isCompactGrid = mobileColumns >= 3 || desktopColumns >= 7;
+  const gridGetKey = useCallback((product: any) => (product as ProductWithDetails).id, []);
+  const gridGetLink = useCallback(() => undefined, []);
+  const gridRenderItem = useCallback((product: any, index: number) => (
+    <MotionDiv
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: Math.min(index * 0.02, 0.2) }}
+      className="h-full w-full mb-6 relative"
+      style={{ overflow: 'visible', zIndex: 1 }}
+    >
+      <ProductCard product={product as ProductWithDetails} compact={isCompactGrid} />
+    </MotionDiv>
+  ), [isCompactGrid]);
+
+  const canRenderMobileSections = !isMobile || allowMobileLazyRender;
+  const canRenderHeavyDesktop = !isMobile && allowHeavyDesktop;
+
+  // ✅ MEMOIZE STATIC OBJECTS — prevent re-creating on every render
+  const worldMapDots = useMemo(() => [
+    { start: { lat: 40.7128, lng: -74.006, label: 'New York' }, end: { lat: 51.5074, lng: -0.1278, label: 'London' } },
+    { start: { lat: 51.5074, lng: -0.1278, label: 'London' }, end: { lat: 35.6762, lng: 139.6503, label: 'Tokyo' } },
+    { start: { lat: 40.7128, lng: -74.006, label: 'New York' }, end: { lat: -33.8688, lng: 151.2093, label: 'Sydney' } },
+    { start: { lat: 1.3521, lng: 103.8198, label: 'Singapore' }, end: { lat: 25.2048, lng: 55.2708, label: 'Dubai' } },
+    { start: { lat: 35.6762, lng: 139.6503, label: 'Tokyo' }, end: { lat: 22.3193, lng: 114.1694, label: 'Hong Kong' } },
+    { start: { lat: 51.5074, lng: -0.1278, label: 'London' }, end: { lat: -33.9249, lng: 18.4241, label: 'Cape Town' }, color: '#3B82F6' },
+  ], []);
+
   const shouldShowHero = hero.shouldRender && (showHeavy || (isMobile && showInteractive));
   const [mobileDeferReady, setMobileDeferReady] = useState(true);
-  const shouldShowBelowFold = showBelowFold && (!isMobile || mobileDeferReady);
-  const shouldShowHeavySections = showHeavy && (!isMobile || mobileDeferReady);
+  const shouldShowBelowFold = showBelowFold && (!isMobile || mobileDeferReady) && canRenderMobileSections;
+  const shouldShowHeavySections = showHeavy && (canRenderHeavyDesktop || (isMobile && mobileDeferReady && canRenderMobileSections));
 
-  // All below-fold sections appear together instantly — no staggered delays
+  // ✅ STAGGERED HEAVY SECTIONS — like home page sequenceStage
+  // Only render 1-2 heavy sections at a time to avoid GPU overload
+  const [heavyStage, setHeavyStage] = useState(0);
+  useEffect(() => {
+    if (!shouldShowHeavySections) { setHeavyStage(0); return; }
+    // Stage 1: Featured products (lightweight)
+    setHeavyStage(1);
+    const t2 = setTimeout(() => setHeavyStage(2), 400);   // Stage 2: WorldMap
+    const t3 = setTimeout(() => setHeavyStage(3), 1200);  // Stage 3: FluidGlass (heaviest)
+    return () => { clearTimeout(t2); clearTimeout(t3); };
+  }, [shouldShowHeavySections]);
+
   const shouldShowFeatured = shouldShowBelowFold;
-  const shouldShowWorldMap = shouldShowHeavySections;
-  const shouldShowFluidGlass = shouldShowHeavySections;
+  const shouldShowWorldMap = shouldShowHeavySections && heavyStage >= 2;
+  const [showInfiniteMenu, setShowInfiniteMenu] = useState(false);
+
+  // Logo items for InfiniteMenu
+  const infiniteMenuItems = useMemo(() => [
+    { image: '/bullmoney-logo.png', link: '/', title: 'Bull Money', description: 'Trading Community' },
+    { image: '/FTMO_LOGO.png', link: 'https://ftmo.com', title: 'FTMO', description: 'Prop Trading' },
+    { image: '/Vantage-logo.jpg', link: 'https://vantage.com', title: 'Vantage', description: 'Forex Broker' },
+    { image: '/GTFLOGO.png', link: '/', title: 'GTF', description: 'Get Funded' },
+    { image: '/eqlogo.png', link: '/', title: 'EQ', description: 'Trading Tools' },
+    { image: '/xm-logo.png', link: 'https://xm.com', title: 'XM', description: 'Global Broker' },
+    { image: '/FTMO_LOGOB.png', link: 'https://ftmo.com', title: 'FTMO', description: 'Challenge' },
+    { image: '/bullmoneyvantage.png', link: '/', title: 'Bull x Vantage', description: 'Partnership' },
+  ], []);
+
+  // Logo image paths for FlyingPosters
+  const flyingPosterImages = useMemo(() => [
+    '/bullmoney-logo.png',
+    '/FTMO_LOGO.png',
+    '/Vantage-logo.jpg',
+    '/GTFLOGO.png',
+    '/eqlogo.png',
+    '/xm-logo.png',
+    '/FTMO_LOGOB.png',
+    '/bullmoneyvantage.png',
+  ], []);
+  // FluidGlass = heaviest WebGL component — only on desktop, only after everything else
+  const shouldShowFluidGlass = canRenderHeavyDesktop && heavyStage >= 3;
   const shouldShowFooter = shouldShowBelowFold;
 
-  // Below-fold sections are now gated only by shouldShowBelowFold/shouldShowHeavySections.
-  // No staggered chain needed — content-visibility: auto handles the rest.
+  // ✅ PAUSE HERO WHEN SCROLLED OUT OF VIEW — stops Spline + all animations
+  const isHeroPaused = !hero.shouldAnimate;
 
 
   // Fetch products
@@ -351,12 +585,12 @@ export default function StorePage() {
     }
   }, [products.length, hasMore, loading, loadingMore, page, fetchProducts]);
 
-  const handleFilterChange = (newFilters: Partial<ProductFilters>) => {
+  const handleFilterChange = useCallback((newFilters: Partial<ProductFilters>) => {
     setFilters(prev => ({ ...prev, ...newFilters }));
     setPage(1);
-  };
+  }, []);
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setFilters({
       category: '',
       min_price: undefined,
@@ -365,12 +599,12 @@ export default function StorePage() {
     });
     setSearchQuery('');
     setDebouncedSearch('');
-  };
+  }, []);
 
   const hasActiveFilters = checkActiveFilters(filters, debouncedSearch);
 
   return (
-    <div className="bg-black" style={{ height: 'auto', minHeight: '100vh', overflow: 'visible' }}>
+    <div className="bg-black" style={{ height: 'auto', minHeight: '100vh', overflow: 'visible' }} data-allow-scroll data-scrollable data-content>
       {/* Rewards Card Banner - Load when interactive */}
       {showInteractive && (
         <RewardsCardBanner 
@@ -397,19 +631,23 @@ export default function StorePage() {
           contentVisibility: 'auto',
           containIntrinsicSize: 'auto 400px',
         } as React.CSSProperties}
+        data-allow-scroll
+        data-content
       >
         {shouldShowHero ? (
-          <StoreHero3D paused={!hero.shouldAnimate} />
+          <StoreHero3D paused={isHeroPaused} />
         ) : (
           <div className="w-full h-100 bg-linear-to-b from-black via-zinc-900/50 to-black flex items-center justify-center">
-            <div className="text-white/40 text-lg">Loading...</div>
+            <ShimmerRadialGlow color="white" intensity="low" />
+            <ShimmerSpinner size={48} color="white" />
           </div>
         )}
       </div>
 
-      {/* Market Price Ticker - Top - Load when below fold is ready */}
+      {/* Market Price Ticker - Top - Only render when below fold AND visible */}
       <div
         style={{
+          contain: 'layout style paint',
           contentVisibility: 'auto',
           containIntrinsicSize: 'auto 48px',
           visibility: shouldShowBelowFold ? 'visible' : 'hidden',
@@ -420,44 +658,92 @@ export default function StorePage() {
         {shouldShowBelowFold && <MarketPriceTicker direction="left" speed={15} />}
       </div>
 
-      {/* World Map Section - stays mounted once loaded, uses content-visibility */}
+      {/* World Map / Flying Posters Section — ✅ Toggle between views */}
       <section
-        className="relative w-full min-h-[50vh] md:h-screen overflow-hidden bg-black"
+        className={`relative w-full overflow-hidden bg-black transition-all duration-700 ease-in-out ${
+          showInfiniteMenu ? 'min-h-[80vh] md:min-h-[120vh]' : 'min-h-[50vh] md:h-screen'
+        }`}
         style={{
+          contain: 'style paint',
           contentVisibility: 'auto',
-          containIntrinsicSize: 'auto 50vh',
+          containIntrinsicSize: showInfiniteMenu ? 'auto 120vh' : 'auto 50vh',
         } as React.CSSProperties}
+        data-allow-scroll
+        data-content
       >
-        {shouldShowWorldMap && (
+        {/* Toggle Button */}
+        <div className="absolute top-4 right-4 z-30">
+          <button
+            onClick={() => setShowInfiniteMenu(prev => !prev)}
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm font-medium hover:bg-white/20 transition-all duration-300"
+          >
+            {showInfiniteMenu ? (
+              <><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Map View</>
+            ) : (
+              <><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg> Partners</>
+            )}
+          </button>
+        </div>
+
+        {/* World Map View */}
+        {!showInfiniteMenu && shouldShowWorldMap && (
           <div className="absolute inset-0 z-0">
             <WorldMap
-              dots={[
-                { start: { lat: 40.7128, lng: -74.006, label: 'New York' }, end: { lat: 51.5074, lng: -0.1278, label: 'London' } },
-                { start: { lat: 51.5074, lng: -0.1278, label: 'London' }, end: { lat: 35.6762, lng: 139.6503, label: 'Tokyo' } },
-                { start: { lat: 40.7128, lng: -74.006, label: 'New York' }, end: { lat: -33.8688, lng: 151.2093, label: 'Sydney' } },
-                { start: { lat: 1.3521, lng: 103.8198, label: 'Singapore' }, end: { lat: 25.2048, lng: 55.2708, label: 'Dubai' } },
-                { start: { lat: 35.6762, lng: 139.6503, label: 'Tokyo' }, end: { lat: 22.3193, lng: 114.1694, label: 'Hong Kong' } },
-                { start: { lat: 51.5074, lng: -0.1278, label: 'London' }, end: { lat: -33.9249, lng: 18.4241, label: 'Cape Town' }, color: '#3B82F6' },
-              ]}
+              dots={worldMapDots}
               lineColor="#ffffff"
             />
           </div>
         )}
-        <div className="absolute inset-x-0 top-8 md:inset-0 z-10 flex items-start md:items-center justify-center">
-          <div className="text-center px-4">
-            <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
-              Pay With Crypto
-            </h2>
-            <p className="text-white/60 text-base md:text-xl max-w-2xl mx-auto">
-              Our store accepts Bitcoin, Ethereum & more
-            </p>
+
+        {/* Flying Posters View */}
+        {showInfiniteMenu && shouldShowWorldMap && (
+          <div className="absolute inset-0 z-0">
+            <FlyingPosters
+              items={flyingPosterImages}
+              planeWidth={160}
+              planeHeight={160}
+              distortion={2}
+              scrollEase={0.01}
+              cameraFov={50}
+              cameraZ={12}
+              style={{ width: '100%', height: '100%' }}
+            />
           </div>
-        </div>
+        )}
+
+        {/* Overlay Text — only show on map view */}
+        {!showInfiniteMenu && (
+          <div className="absolute inset-x-0 top-8 md:inset-0 z-10 flex items-start md:items-center justify-center">
+            <div className="text-center px-4">
+              <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
+                Pay With Crypto
+              </h2>
+              <p className="text-white/60 text-base md:text-xl max-w-2xl mx-auto">
+                Our store accepts Bitcoin, Ethereum & more
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Overlay Text — Infinite Menu view */}
+        {showInfiniteMenu && (
+          <div className="absolute inset-x-0 top-8 z-10 flex justify-center pointer-events-none">
+            <div className="text-center px-4">
+              <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold text-white mb-2 drop-shadow-lg">
+                Our Partners
+              </h2>
+              <p className="text-white/50 text-sm md:text-lg max-w-2xl mx-auto">
+                Trusted brokers & prop firms we work with
+              </p>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* Market Price Ticker - Bottom */}
       <div
         style={{
+          contain: 'layout style paint',
           contentVisibility: 'auto',
           containIntrinsicSize: 'auto 48px',
           visibility: shouldShowBelowFold ? 'visible' : 'hidden',
@@ -475,7 +761,10 @@ export default function StorePage() {
           isolation: 'isolate',
           height: 'auto',
           overflow: 'visible',
+          contain: 'layout style',
         }}
+        data-allow-scroll
+        data-content
       >
         {/* Featured Products - Timeline / Grid Toggle - DEFERRED below fold */}
         {shouldShowFeatured && !loading && focusCards.length > 0 && (
@@ -944,7 +1233,10 @@ export default function StorePage() {
         <div
           ref={productsSection.ref}
           data-products-grid
+          data-allow-scroll
+          data-content
           style={{
+            contain: 'layout style',
             contentVisibility: 'auto',
             containIntrinsicSize: 'auto 800px',
           } as React.CSSProperties}
@@ -1065,25 +1357,15 @@ export default function StorePage() {
           /* Standard Grid View */
           <MotionDiv 
             className="pb-8 relative"
-            style={{ isolation: 'isolate', zIndex: 10, height: 'auto', overflow: 'visible', minHeight: 'auto' }}
+            style={{ isolation: 'isolate', zIndex: 10, height: 'auto', overflow: 'visible', minHeight: 'auto', contain: 'layout style' }}
           >
             <HoverEffect
               items={products as ProductWithDetails[]}
               layout="custom"
               className={`grid ${getGridClasses(mobileColumns, desktopColumns)} gap-3 gap-y-6 sm:gap-4 sm:gap-y-8 md:gap-5 md:gap-y-10 lg:gap-y-12`}
-              getKey={(product) => (product as ProductWithDetails).id}
-              getLink={() => undefined}
-              renderItem={(product, index) => (
-                <MotionDiv
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: Math.min(index * 0.02, 0.2) }}
-                  className="h-full w-full mb-6 relative"
-                  style={{ overflow: 'visible', zIndex: 1 }}
-                >
-                  <ProductCard product={product as ProductWithDetails} compact={mobileColumns >= 3 || desktopColumns >= 7} />
-                </MotionDiv>
-              )}
+              getKey={gridGetKey}
+              getLink={gridGetLink}
+              renderItem={gridRenderItem}
             />
           </MotionDiv>
         )}
@@ -1105,11 +1387,14 @@ export default function StorePage() {
         className="hidden md:block"
         style={{
           minHeight: 400,
+          contain: 'layout style paint',
           contentVisibility: 'auto',
           containIntrinsicSize: 'auto 100vh',
         } as React.CSSProperties}
+        data-allow-scroll
+        data-content
       >
-        {shouldShowFluidGlass && (
+        {shouldShowFluidGlass && canRenderHeavyDesktop && (
           <StoreFluidGlassSection 
             height="100vh"
             className="mt-8"
@@ -1120,23 +1405,27 @@ export default function StorePage() {
       {/* Market Price Ticker - Before Footer */}
       <div
         style={{
+          contain: 'layout style paint',
           contentVisibility: 'auto',
           containIntrinsicSize: 'auto 48px',
-          visibility: shouldShowBelowFold ? 'visible' : 'hidden',
-          height: shouldShowBelowFold ? 'auto' : 0,
+          visibility: shouldShowFooter ? 'visible' : 'hidden',
+          height: shouldShowFooter ? 'auto' : 0,
           overflow: 'hidden',
         } as React.CSSProperties}
       >
-        {shouldShowBelowFold && <MarketPriceTicker direction="right" speed={10} />}
+        {shouldShowFooter && <MarketPriceTicker direction="right" speed={10} />}
       </div>
 
       {/* Store Footer - stays mounted once loaded */}
       <div
         ref={footer.ref}
         style={{
+          contain: 'layout style paint',
           contentVisibility: 'auto',
           containIntrinsicSize: 'auto 200px',
         } as React.CSSProperties}
+        data-allow-scroll
+        data-content
       >
         {shouldShowFooter && <StoreFooter />}
       </div>

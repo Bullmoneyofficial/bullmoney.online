@@ -179,7 +179,16 @@ export function SearchAutocomplete({ query, searchQuery, onSelect, onProductSele
                     <div className="w-12 h-12 rounded-lg overflow-hidden bg-white/5 shrink-0">
                       {product.primary_image ? (
                         <Image
-                          src={product.primary_image}
+                          src={(() => {
+                            let src = product.primary_image;
+                            if (src.startsWith('/http://') || src.startsWith('/https://')) {
+                              src = src.substring(1);
+                            }
+                            if (src.startsWith('http://') || src.startsWith('https://')) {
+                              return src;
+                            }
+                            return src.startsWith('/') ? src : `/${src.replace(/^public\//, '')}`;
+                          })()}
                           alt={product.name}
                           width={48}
                           height={48}

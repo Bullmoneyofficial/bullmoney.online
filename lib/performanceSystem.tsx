@@ -294,10 +294,152 @@ interface FPSMonitorProps {
 
 export const FPSMonitor = memo(({ enabled = false, position = 'bottom-right' }: FPSMonitorProps) => {
   const [fps, setFps] = useState(0);
+  const [speedMbps, setSpeedMbps] = useState<number | null>(null);
+  const [isTesting, setIsTesting] = useState(false);
+  const [speedSources, setSpeedSources] = useState<{ method: string; speed: number }[]>([]);
   const frameCountRef = useRef(0);
   const lastTimeRef = useRef(performance.now());
   const rafIdRef = useRef<number | null>(null);
   const isFrozenRef = useRef(false);
+
+  // Speed test function - runs ALL methods and shows combined result
+  const runSpeedTest = async () => {
+    if (isTesting) return;
+    setIsTesting(true);
+    setSpeedMbps(null);
+    setSpeedSources([]);
+    
+    const results: { method: string; speed: number }[] = [];
+    const nav = navigator as any;
+    
+    try {
+      // METHOD 1: Navigator Connection API (Chrome/Edge/Android)
+      if (nav.connection?.downlink && nav.connection.downlink > 0) {
+        results.push({ method: 'API', speed: nav.connection.downlink });
+        console.log('[SpeedTest] API:', nav.connection.downlink, 'Mbps');
+      }
+      
+      // METHOD 2: Performance timing from ALREADY loaded resources (works everywhere!)
+      // This is the most reliable method as it uses actual page load data
+      if (performance.getEntriesByType) {
+        const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
+        const validResources = resources.filter(r => {
+          // Only resources with valid transfer size and timing
+          return r.transferSize > 1000 && r.duration > 10 && r.responseEnd > 0;
+        });
+        
+        if (validResources.length > 0) {
+          // Calculate speed for each resource
+          const speeds = validResources.slice(-10).map(r => {
+            const sizeBits = r.transferSize * 8;
+            const durationSec = r.duration / 1000;
+            return sizeBits / durationSec / 1000000; // Mbps
+          }).filter(s => s > 0 && s < 1000); // Filter unrealistic values
+          
+          if (speeds.length > 0) {
+            // Use median for more accurate result
+            speeds.sort((a, b) => a - b);
+            const median = speeds[Math.floor(speeds.length / 2)];
+            results.push({ method: 'RES', speed: median });
+            console.log('[SpeedTest] RES:', median.toFixed(1), 'Mbps from', speeds.length, 'resources');
+          }
+        }
+      }
+      
+      // METHOD 3: Navigation timing (page load speed)
+      if (performance.getEntriesByType) {
+        const navEntries = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
+        if (navEntries.length > 0) {
+          const nav = navEntries[0];
+          if (nav.transferSize > 0 && nav.responseEnd > nav.responseStart) {
+            const sizeBits = nav.transferSize * 8;
+            const durationSec = (nav.responseEnd - nav.responseStart) / 1000;
+            if (durationSec > 0) {
+              const mbps = sizeBits / durationSec / 1000000;
+              if (mbps > 0 && mbps < 1000) {
+                results.push({ method: 'NAV', speed: mbps });
+                console.log('[SpeedTest] NAV:', mbps.toFixed(1), 'Mbps');
+              }
+            }
+          }
+        }
+      }
+      
+      // METHOD 4: RTT estimation (quick estimate)
+      if (nav.connection?.rtt && nav.connection.rtt > 0) {
+        const rtt = nav.connection.rtt;
+        // Better RTT to speed mapping based on network type
+        let estimatedMbps: number;
+        const effectiveType = nav.connection.effectiveType || '';
+        
+        if (effectiveType === '4g') estimatedMbps = rtt < 50 ? 50 : rtt < 100 ? 30 : 15;
+        else if (effectiveType === '3g') estimatedMbps = rtt < 100 ? 5 : 2;
+        else if (effectiveType === '2g') estimatedMbps = 0.5;
+        else estimatedMbps = rtt < 50 ? 50 : rtt < 100 ? 25 : rtt < 200 ? 10 : 5;
+        
+        results.push({ method: 'RTT', speed: estimatedMbps });
+        console.log('[SpeedTest] RTT:', estimatedMbps, 'Mbps (rtt:', rtt, 'ms, type:', effectiveType, ')');
+      }
+      
+      // METHOD 5: Try a real download test with fetch (works on most browsers)
+      try {
+        // Use data URL approach - generate random data and measure
+        const testSize = 50000; // 50KB test
+        const startTime = performance.now();
+        
+        // Create a blob URL from random data
+        const randomData = new Uint8Array(testSize);
+        crypto.getRandomValues(randomData);
+        const blob = new Blob([randomData]);
+        const url = URL.createObjectURL(blob);
+        
+        // Read it back to measure internal throughput
+        const response = await fetch(url);
+        const data = await response.arrayBuffer();
+        URL.revokeObjectURL(url);
+        
+        const endTime = performance.now();
+        const duration = (endTime - startTime) / 1000;
+        
+        if (duration > 0.001 && data.byteLength > 0) {
+          const sizeBits = data.byteLength * 8;
+          const mbps = sizeBits / duration / 1000000;
+          // This measures internal speed, so cap it at a reasonable network max
+          const cappedMbps = Math.min(mbps, 500);
+          results.push({ method: 'INT', speed: cappedMbps });
+          console.log('[SpeedTest] INT:', cappedMbps.toFixed(1), 'Mbps (internal)');
+        }
+      } catch (e) {
+        console.log('[SpeedTest] INT failed:', e);
+      }
+      
+      // Calculate final speed from all methods
+      console.log('[SpeedTest] All results:', results);
+      
+      if (results.length > 0) {
+        // Use median of results for more accurate estimate
+        const speeds = results.map(r => r.speed).sort((a, b) => a - b);
+        const medianSpeed = speeds[Math.floor(speeds.length / 2)];
+        setSpeedMbps(Math.round(medianSpeed * 10) / 10);
+        setSpeedSources(results.map(r => ({ ...r, speed: Math.round(r.speed * 10) / 10 })));
+      } else {
+        // Absolute fallback - estimate from memory/device
+        const memory = (navigator as any).deviceMemory || 4;
+        const fallbackSpeed = memory >= 8 ? 50 : memory >= 4 ? 25 : 10;
+        setSpeedMbps(fallbackSpeed);
+        setSpeedSources([{ method: 'EST', speed: fallbackSpeed }]);
+        console.log('[SpeedTest] Using device estimate:', fallbackSpeed, 'Mbps');
+      }
+    } catch (error) {
+      console.warn('[SpeedTest] Failed:', error);
+      // Still try to show something
+      const fallbackSpeed = 10;
+      setSpeedMbps(fallbackSpeed);
+      setSpeedSources([{ method: 'ERR', speed: fallbackSpeed }]);
+    }
+    
+    setIsTesting(false);
+  };
 
   useEffect(() => {
     // Listen for battery saver freeze/unfreeze events
@@ -362,40 +504,120 @@ export const FPSMonitor = memo(({ enabled = false, position = 'bottom-right' }: 
     'bottom-right': 'bottom-3 right-3 sm:bottom-4 sm:right-4',
   };
 
-  // Apple style: All white, minimal, clean
+  // Dark style: Black background, white text, minimal
   const isPoorPerformance = fps < 30;
-  const pulseStyle = isPoorPerformance ? `
-    @keyframes fps-pulse-warning {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.6; }
-    }
-    .fps-monitor { animation: fps-pulse-warning 1.5s ease-in-out infinite; }
-  ` : '';
+  const getSpeedLabel = () => {
+    if (isTesting) return '...';
+    if (speedMbps === null) return '—';
+    if (speedMbps === -1) return 'ERR';
+    return `${speedMbps}`;
+  };
 
   return (
-    <>
-      <style>{pulseStyle}</style>
-      <div 
-        className={`fixed ${positionClasses[position]} z-[99999] ${isPoorPerformance ? 'fps-monitor' : ''}`}
-        style={{
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          border: '0.5px solid rgba(255, 255, 255, 0.5)',
-          borderRadius: '6px',
-          padding: '6px 10px',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.6)',
-          fontSize: '11px',
-          fontWeight: '600',
-          fontFamily: 'system-ui, -apple-system, sans-serif',
-          color: '#000000',
-          letterSpacing: '-0.3px',
-          opacity: isPoorPerformance ? 0.8 : 1,
-        }}
-      >
-        <span style={{ fontSize: '9px', letterSpacing: '0.5px' }}>● {fps}</span>
+    <div 
+      className={`fixed ${positionClasses[position]} z-[99999]`}
+      style={{
+        background: 'rgba(0, 0, 0, 0.9)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        border: '1px solid rgba(255, 255, 255, 0.15)',
+        borderRadius: '8px',
+        padding: '8px 12px',
+        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.4)',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        color: '#ffffff',
+        width: 'fit-content',
+        height: 'fit-content',
+        boxSizing: 'border-box',
+        pointerEvents: 'auto',
+        animation: isPoorPerformance ? 'fps-pulse-warning 1.5s ease-in-out infinite' : 'none',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '4px',
+      }}
+    >
+      {/* Main row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {/* FPS Display */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span style={{ fontSize: '9px', opacity: 0.5, fontWeight: '500' }}>●</span>
+          <span style={{ 
+            fontSize: '13px', 
+            fontWeight: '600',
+            fontVariantNumeric: 'tabular-nums',
+          }}>
+            {fps}
+          </span>
+          <span style={{ fontSize: '8px', opacity: 0.5, fontWeight: '500' }}>FPS</span>
+        </div>
+        
+        {/* Divider */}
+        <div style={{ width: '1px', height: '14px', background: 'rgba(255, 255, 255, 0.2)' }} />
+        
+        {/* Speed Test Button */}
+        <button
+          onClick={runSpeedTest}
+          disabled={isTesting}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            background: 'transparent',
+            border: 'none',
+            padding: '0',
+            cursor: isTesting ? 'wait' : 'pointer',
+            color: '#ffffff',
+            opacity: isTesting ? 0.7 : 1,
+          }}
+          title={speedSources.length > 0 ? speedSources.map(s => `${s.method}: ${s.speed}`).join(' | ') : 'Click to test speed'}
+        >
+          <span style={{ 
+            fontSize: '11px', 
+            fontWeight: '600',
+            fontVariantNumeric: 'tabular-nums',
+          }}>
+            {getSpeedLabel()}
+          </span>
+          {speedMbps !== null && speedMbps !== -1 && !isTesting ? (
+            <span style={{ fontSize: '8px', opacity: 0.5 }}>Mbps</span>
+          ) : (
+            <span style={{ fontSize: '8px', opacity: 0.5 }}>{isTesting ? '' : 'TEST'}</span>
+          )}
+        </button>
       </div>
-    </>
+      
+      {/* Show all sources when available */}
+      {speedSources.length > 0 && !isTesting && (
+        <div style={{ 
+          display: 'flex', 
+          gap: '8px', 
+          flexWrap: 'wrap',
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          paddingTop: '4px',
+          marginTop: '2px',
+        }}>
+          {speedSources.map((s, i) => (
+            <span key={i} style={{ 
+              fontSize: '8px', 
+              opacity: 0.5,
+              fontWeight: '500',
+              fontVariantNumeric: 'tabular-nums',
+            }}>
+              {s.method}:{s.speed}
+            </span>
+          ))}
+        </div>
+      )}
+      
+      {isPoorPerformance && (
+        <style dangerouslySetInnerHTML={{ __html: `
+          @keyframes fps-pulse-warning {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+          }
+        `}} />
+      )}
+    </div>
   );
 });
 FPSMonitor.displayName = 'FPSMonitor';

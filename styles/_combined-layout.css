@@ -2108,7 +2108,7 @@ select,
 .desktop-only-mode {
   touch-action: manipulation !important;
   pointer-events: auto !important;
-  -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Desktop page interactive elements */
@@ -2124,7 +2124,7 @@ select,
 .desktop-only-mode [role="button"] {
   touch-action: manipulation !important;
   pointer-events: auto !important;
-  -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
+  -webkit-tap-highlight-color: transparent;
   min-height: 44px; /* iOS minimum touch target */
   min-width: 44px;
 }

@@ -42,7 +42,16 @@ export function RelatedProducts({ products }: RelatedProductsProps) {
               <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-white/5 mb-4">
                 {product.primary_image ? (
                   <Image
-                    src={product.primary_image}
+                    src={(() => {
+                      let src = product.primary_image;
+                      if (src.startsWith('/http://') || src.startsWith('/https://')) {
+                        src = src.substring(1);
+                      }
+                      if (src.startsWith('http://') || src.startsWith('https://')) {
+                        return src;
+                      }
+                      return src.startsWith('/') ? src : `/${src.replace(/^public\//, '')}`;
+                    })()}
                     alt={product.name}
                     fill
                     className="object-cover transition-transform duration-500 group-hover:scale-105"

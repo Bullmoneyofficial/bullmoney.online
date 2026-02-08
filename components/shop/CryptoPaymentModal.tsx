@@ -7,6 +7,7 @@ import {
   X, Copy, Check, ExternalLink, ArrowLeft, RefreshCw, Wallet,
   ChevronDown, Clock, Shield, QrCode, CreditCard, Zap, AlertCircle,
 } from 'lucide-react';
+import { QRCodeSVG as QRCode } from 'qrcode.react';
 import { toast } from 'sonner';
 import {
   AVAILABLE_COINS,
@@ -33,68 +34,8 @@ interface CryptoPaymentModalProps {
   productId: string;
   variantId?: string;
   quantity?: number;
+  customerEmail?: string;  // Pre-fill if user is logged in
   onPaymentSubmitted?: (txHash: string, coin: string, network: string) => void;
-}
-
-// Generate a simple QR code as SVG using a basic encoding
-// (no external library needed - uses a simple grid pattern from the address data)
-function QRCodeSVG({ data, size = 200 }: { data: string; size?: number }) {
-  // Simple deterministic pattern from address string
-  // For production, consider adding qrcode.react - this creates a visual placeholder
-  const cells = 25;
-  const cellSize = size / cells;
-  
-  // Generate a deterministic grid from the data string
-  const grid: boolean[][] = [];
-  const hash = data.split('').reduce((acc, c, i) => acc + c.charCodeAt(0) * (i + 1), 0);
-  
-  for (let y = 0; y < cells; y++) {
-    grid[y] = [];
-    for (let x = 0; x < cells; x++) {
-      // Border pattern (finder patterns)
-      const isFinderArea = 
-        (x < 7 && y < 7) || (x >= cells - 7 && y < 7) || (x < 7 && y >= cells - 7);
-      const isFinderBorder = isFinderArea && (
-        x === 0 || y === 0 || x === 6 || y === 6 || 
-        x === cells - 1 || y === cells - 1 || x === cells - 7 || y === cells - 7 ||
-        (x >= 2 && x <= 4 && y >= 2 && y <= 4) ||
-        (x >= cells - 5 && x <= cells - 3 && y >= 2 && y <= 4) ||
-        (x >= 2 && x <= 4 && y >= cells - 5 && y <= cells - 3)
-      );
-      
-      if (isFinderBorder) {
-        grid[y][x] = true;
-      } else if (isFinderArea) {
-        grid[y][x] = false;
-      } else {
-        // Data area - use hash-based deterministic pattern
-        const charIdx = (x * cells + y) % data.length;
-        const charCode = data.charCodeAt(charIdx);
-        grid[y][x] = ((charCode * (x + 1) * (y + 1) + hash) % 3) !== 0;
-      }
-    }
-  }
-
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="rounded-lg">
-      <rect width={size} height={size} fill="white" rx="8" />
-      {grid.map((row, y) =>
-        row.map((cell, x) =>
-          cell ? (
-            <rect
-              key={`${x}-${y}`}
-              x={x * cellSize + 1}
-              y={y * cellSize + 1}
-              width={cellSize - 0.5}
-              height={cellSize - 0.5}
-              fill="black"
-              rx={1}
-            />
-          ) : null
-        )
-      )}
-    </svg>
-  );
 }
 
 export function CryptoPaymentModal({
@@ -106,16 +47,23 @@ export function CryptoPaymentModal({
   productId,
   variantId,
   quantity = 1,
+  customerEmail: propEmail,
   onPaymentSubmitted,
 }: CryptoPaymentModalProps) {
   const [step, setStep] = useState<PaymentStep>('method');
   const [selectedCoin, setSelectedCoin] = useState<string | null>(null);
   const [selectedWallet, setSelectedWallet] = useState<WalletAddress | null>(null);
   const [txHash, setTxHash] = useState('');
+  const [customerEmail, setCustomerEmail] = useState(propEmail || '');
   const [copied, setCopied] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [countdown, setCountdown] = useState(900); // 15 min payment window
   const [paymentSubmitting, setPaymentSubmitting] = useState(false);
+  const [paymentId, setPaymentId] = useState<string | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<{
+    status: string; progress: number; confirmations?: number;
+    requiredConfirmations?: number; message?: string; isTerminal?: boolean;
+  } | null>(null);
   const copyTimeoutRef = useRef<NodeJS.Timeout>(undefined);
   
   const { getPrice, convertUsdToCrypto, loading: pricesLoading, refresh: refreshPrices, lastUpdated } = useCryptoPrices();
@@ -135,6 +83,8 @@ export function CryptoPaymentModal({
       setTxHash('');
       setCopied(false);
       setCountdown(900);
+      setPaymentId(null);
+      setPaymentStatus(null);
       refreshPrices();
     }
   }, [isOpen, refreshPrices]);
@@ -157,6 +107,25 @@ export function CryptoPaymentModal({
 
     return () => clearInterval(timer);
   }, [step, isOpen]);
+
+  // Poll payment status when on confirm step
+  useEffect(() => {
+    if (step !== 'confirm' || !paymentId || !isOpen) return;
+    let cancelled = false;
+    const poll = async () => {
+      try {
+        const res = await fetch(`/api/crypto-payment/status?paymentId=${paymentId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (!cancelled) setPaymentStatus(data);
+          if (data.isTerminal) return; // stop polling
+        }
+      } catch { /* ignore */ }
+      if (!cancelled) setTimeout(poll, 15000);
+    };
+    poll();
+    return () => { cancelled = true; };
+  }, [step, paymentId, isOpen]);
 
   // Lock body scroll
   useEffect(() => {
@@ -211,12 +180,15 @@ export function CryptoPaymentModal({
       toast.error('Please enter your transaction hash');
       return;
     }
+    if (!customerEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail.trim())) {
+      toast.error('Please enter a valid email address for your receipt');
+      return;
+    }
     if (!selectedCoin || !selectedWallet) return;
 
     setPaymentSubmitting(true);
     
     try {
-      // Record the crypto payment intent
       const res = await fetch('/api/crypto-payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -227,28 +199,33 @@ export function CryptoPaymentModal({
           walletAddress: selectedWallet.address,
           amountUSD: priceUSD * quantity,
           amountCrypto: convertUsdToCrypto(priceUSD * quantity, selectedCoin),
+          lockedPrice: getPrice(selectedCoin),
           productId,
           variantId,
           quantity,
           productName,
+          customerEmail: customerEmail.trim(),
         }),
       });
 
-      if (res.ok) {
-        toast.success('Payment submitted! We\'ll verify your transaction shortly.');
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setPaymentId(data.paymentId || null);
+        toast.success('Payment submitted! Check your email for confirmation.');
+        setStep('confirm');
+        onPaymentSubmitted?.(txHash.trim(), selectedCoin, selectedWallet.network);
+      } else if (data.status === 'duplicate') {
+        setPaymentId(data.paymentId || null);
+        toast.success('Payment already recorded. Check your email for updates.');
         setStep('confirm');
         onPaymentSubmitted?.(txHash.trim(), selectedCoin, selectedWallet.network);
       } else {
-        // Still show success for direct send - API might not exist yet
-        toast.success('Payment submitted! We\'ll verify your transaction shortly.');
-        setStep('confirm');
-        onPaymentSubmitted?.(txHash.trim(), selectedCoin, selectedWallet.network);
+        toast.error(data.error || 'Failed to record payment. Please contact support.');
       }
-    } catch {
-      // Graceful fallback - show success even if API doesn't exist
-      toast.success('Payment recorded! We\'ll verify your transaction shortly.');
-      setStep('confirm');
-      onPaymentSubmitted?.(txHash.trim(), selectedCoin, selectedWallet.network);
+    } catch (err) {
+      console.error('[CryptoPayment] Submit error:', err);
+      toast.error('Network error. Please check your connection and try again.');
     } finally {
       setPaymentSubmitting(false);
     }
@@ -567,7 +544,14 @@ export function CryptoPaymentModal({
                     
                     {/* QR Code */}
                     <div className="bg-white p-3 rounded-xl">
-                      <QRCodeSVG data={selectedWallet.address} size={180} />
+                      <QRCode
+                        value={selectedWallet.address}
+                        size={180}
+                        bgColor="#ffffff"
+                        fgColor="#000000"
+                        level="M"
+                        className="rounded-lg bg-white"
+                      />
                     </div>
 
                     {/* Address with copy */}
@@ -597,6 +581,23 @@ export function CryptoPaymentModal({
                       <ExternalLink className="w-3 h-3" />
                       View on explorer
                     </a>
+                  </div>
+
+                  {/* Email for Receipt */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-white">
+                      Email Address <span className="text-white/40">(for invoice & updates)</span>
+                    </label>
+                    <input
+                      type="email"
+                      value={customerEmail}
+                      onChange={(e) => setCustomerEmail(e.target.value)}
+                      placeholder="your@email.com"
+                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder-white/30 focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20"
+                    />
+                    <p className="text-xs text-white/30">
+                      You&apos;ll receive your invoice and payment status updates here.
+                    </p>
                   </div>
 
                   {/* Transaction Hash Input */}
@@ -666,6 +667,41 @@ export function CryptoPaymentModal({
                       You&apos;ll receive a confirmation email once verified.
                     </p>
                   </div>
+
+                  {/* Live Status Tracker */}
+                  {paymentStatus && (
+                    <div className="p-3 rounded-xl bg-white/5 border border-white/10 max-w-sm mx-auto space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className={`font-medium ${
+                          paymentStatus.status === 'confirmed' ? 'text-green-400' :
+                          paymentStatus.status === 'failed' ? 'text-red-400' :
+                          'text-yellow-400'
+                        }`}>
+                          {paymentStatus.message || paymentStatus.status}
+                        </span>
+                        {paymentStatus.confirmations != null && paymentStatus.requiredConfirmations && (
+                          <span className="text-white/40">
+                            {paymentStatus.confirmations}/{paymentStatus.requiredConfirmations}
+                          </span>
+                        )}
+                      </div>
+                      <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-700 ${
+                            paymentStatus.status === 'confirmed' ? 'bg-green-500' :
+                            paymentStatus.status === 'failed' ? 'bg-red-500' :
+                            'bg-yellow-500'
+                          }`}
+                          style={{ width: `${paymentStatus.progress}%` }}
+                        />
+                      </div>
+                      {!paymentStatus.isTerminal && (
+                        <p className="text-[10px] text-white/30 flex items-center gap-1 justify-center">
+                          <RefreshCw className="w-2.5 h-2.5 animate-spin" /> Auto-updating
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   {txHash && (
                     <div className="p-3 rounded-xl bg-white/5 border border-white/10 max-w-sm mx-auto">

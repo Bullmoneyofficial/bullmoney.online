@@ -169,7 +169,16 @@ export function CartDrawer() {
                         <div className="relative w-20 h-20 md:w-24 md:h-24 rounded-lg md:rounded-xl overflow-hidden bg-white/5 shrink-0">
                           {item.product.primary_image ? (
                             <Image
-                              src={item.product.primary_image}
+                              src={(() => {
+                                let src = item.product.primary_image;
+                                if (src.startsWith('/http://') || src.startsWith('/https://')) {
+                                  src = src.substring(1);
+                                }
+                                if (src.startsWith('http://') || src.startsWith('https://')) {
+                                  return src;
+                                }
+                                return src.startsWith('/') ? src : `/${src.replace(/^public\//, '')}`;
+                              })()}
                               alt={item.product.name}
                               fill
                               className="object-cover"

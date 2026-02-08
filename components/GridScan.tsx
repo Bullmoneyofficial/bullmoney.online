@@ -1,7 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { EffectComposer, RenderPass, EffectPass, BloomEffect, ChromaticAberrationEffect } from 'postprocessing';
-import * as THREE from 'three';
-import * as faceapi from 'face-api.js';
+import { Vector2, Vector3, Scene, OrthographicCamera, WebGLRenderer, Mesh, PlaneGeometry, ShaderMaterial, MathUtils, SRGBColorSpace, NoToneMapping, BufferGeometry, Color } from 'three';
+// face-api.js (8.1MB) — dynamically imported only when webcam is enabled
+type FaceApi = typeof import('face-api.js');
+let faceapiModule: FaceApi | null = null;
+const loadFaceApi = async (): Promise<FaceApi> => {
+  if (!faceapiModule) {
+    faceapiModule = await import('face-api.js');
+  }
+  return faceapiModule;
+};
 import './GridScan.css';
 
 type GridScanProps = {
@@ -337,8 +345,8 @@ export const GridScan: React.FC<GridScanProps> = ({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
-  const materialRef = useRef<THREE.ShaderMaterial | null>(null);
+  const rendererRef = useRef<WebGLRenderer | null>(null);
+  const materialRef = useRef<ShaderMaterial | null>(null);
   const composerRef = useRef<EffectComposer | null>(null);
   const bloomRef = useRef<BloomEffect | null>(null);
   const chromaRef = useRef<ChromaticAberrationEffect | null>(null);
@@ -347,12 +355,12 @@ export const GridScan: React.FC<GridScanProps> = ({
   const [modelsReady, setModelsReady] = useState(false);
   const [uiFaceActive, setUiFaceActive] = useState(false);
 
-  const lookTarget = useRef(new THREE.Vector2(0, 0));
+  const lookTarget = useRef(new Vector2(0, 0));
   const tiltTarget = useRef(0);
   const yawTarget = useRef(0);
 
-  const lookCurrent = useRef(new THREE.Vector2(0, 0));
-  const lookVel = useRef(new THREE.Vector2(0, 0));
+  const lookCurrent = useRef(new Vector2(0, 0));
+  const lookVel = useRef(new Vector2(0, 0));
   const tiltCurrent = useRef(0);
   const tiltVel = useRef(0);
   const yawCurrent = useRef(0);
@@ -380,15 +388,15 @@ export const GridScan: React.FC<GridScanProps> = ({
   const bufT = useRef<number[]>([]);
   const bufYaw = useRef<number[]>([]);
 
-  const s = THREE.MathUtils.clamp(sensitivity, 0, 1);
-  const skewScale = THREE.MathUtils.lerp(0.06, 0.2, s);
-  const tiltScale = THREE.MathUtils.lerp(0.12, 0.3, s);
-  const yawScale = THREE.MathUtils.lerp(0.1, 0.28, s);
-  const depthResponse = THREE.MathUtils.lerp(0.25, 0.45, s);
-  const smoothTime = THREE.MathUtils.lerp(0.45, 0.12, s);
+  const s = MathUtils.clamp(sensitivity, 0, 1);
+  const skewScale = MathUtils.lerp(0.06, 0.2, s);
+  const tiltScale = MathUtils.lerp(0.12, 0.3, s);
+  const yawScale = MathUtils.lerp(0.1, 0.28, s);
+  const depthResponse = MathUtils.lerp(0.25, 0.45, s);
+  const smoothTime = MathUtils.lerp(0.45, 0.12, s);
   const maxSpeed = Infinity;
 
-  const yBoost = THREE.MathUtils.lerp(1.2, 1.6, s);
+  const yBoost = MathUtils.lerp(1.2, 1.6, s);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -454,22 +462,22 @@ export const GridScan: React.FC<GridScanProps> = ({
     const container = containerRef.current;
     if (!container) return;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    const renderer = new WebGLRenderer({ antialias: true, alpha: true });
     rendererRef.current = renderer;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.NoToneMapping;
+    renderer.outputColorSpace = SRGBColorSpace;
+    renderer.toneMapping = NoToneMapping;
     renderer.autoClear = false;
     renderer.setClearColor(0x000000, 0);
     container.appendChild(renderer.domElement);
 
     const uniforms = {
       iResolution: {
-        value: new THREE.Vector3(container.clientWidth, container.clientHeight, renderer.getPixelRatio())
+        value: new Vector3(container.clientWidth, container.clientHeight, renderer.getPixelRatio())
       },
       iTime: { value: 0 },
-      uSkew: { value: new THREE.Vector2(0, 0) },
+      uSkew: { value: new Vector2(0, 0) },
       uTilt: { value: 0 },
       uYaw: { value: 0 },
       uLineThickness: { value: lineThickness },
@@ -491,7 +499,7 @@ export const GridScan: React.FC<GridScanProps> = ({
       uScanCount: { value: 0 }
     };
 
-    const material = new THREE.ShaderMaterial({
+    const material = new ShaderMaterial({
       uniforms,
       vertexShader: vert,
       fragmentShader: frag,
@@ -501,9 +509,9 @@ export const GridScan: React.FC<GridScanProps> = ({
     });
     materialRef.current = material;
 
-    const scene = new THREE.Scene();
-    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
+    const scene = new Scene();
+    const camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    const quad = new Mesh(new PlaneGeometry(2, 2), material);
     scene.add(quad);
 
     let composer: EffectComposer | null = null;
@@ -522,7 +530,7 @@ export const GridScan: React.FC<GridScanProps> = ({
       bloomRef.current = bloom;
 
       const chroma = new ChromaticAberrationEffect({
-        offset: new THREE.Vector2(chromaticAberration, chromaticAberration),
+        offset: new Vector2(chromaticAberration, chromaticAberration),
         radialModulation: true,
         modulationOffset: 0.0
       });
@@ -572,10 +580,10 @@ export const GridScan: React.FC<GridScanProps> = ({
       yawCurrent.current = yawSm.value;
       yawVel.current = yawSm.v;
 
-      const skew = new THREE.Vector2(lookCurrent.current.x * skewScale, -lookCurrent.current.y * yBoost * skewScale);
+      const skew = new Vector2(lookCurrent.current.x * skewScale, -lookCurrent.current.y * yBoost * skewScale);
       material.uniforms.uSkew.value.set(skew.x, skew.y);
       material.uniforms.uTilt.value = tiltCurrent.current * tiltScale;
-      material.uniforms.uYaw.value = THREE.MathUtils.clamp(yawCurrent.current * yawScale, -0.6, 0.6);
+      material.uniforms.uYaw.value = MathUtils.clamp(yawCurrent.current * yawScale, -0.6, 0.6);
 
       material.uniforms.iTime.value = now / 1000;
       renderer.clear(true, true, true);
@@ -592,7 +600,7 @@ export const GridScan: React.FC<GridScanProps> = ({
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       window.removeEventListener('resize', onResize);
       material.dispose();
-      (quad.geometry as THREE.BufferGeometry).dispose();
+      (quad.geometry as BufferGeometry).dispose();
       if (composerRef.current) {
         composerRef.current.dispose();
         composerRef.current = null;
@@ -618,8 +626,8 @@ export const GridScan: React.FC<GridScanProps> = ({
     if (m) {
       const u = m.uniforms;
       u.uLineThickness.value = lineThickness;
-      (u.uLinesColor.value as THREE.Color).copy(srgbColor(linesColor));
-      (u.uScanColor.value as THREE.Color).copy(srgbColor(scanColor));
+      (u.uLinesColor.value as Color).copy(srgbColor(linesColor));
+      (u.uScanColor.value as Color).copy(srgbColor(scanColor));
       u.uGridScale.value = gridScale;
       u.uLineStyle.value = lineStyle === 'dashed' ? 1 : lineStyle === 'dotted' ? 2 : 0;
       u.uLineJitter.value = Math.max(0, Math.min(1, lineJitter || 0));
@@ -668,10 +676,10 @@ export const GridScan: React.FC<GridScanProps> = ({
       if (uiFaceActive) return;
       const gamma = e.gamma ?? 0;
       const beta = e.beta ?? 0;
-      const nx = THREE.MathUtils.clamp(gamma / 45, -1, 1);
-      const ny = THREE.MathUtils.clamp(-beta / 30, -1, 1);
+      const nx = MathUtils.clamp(gamma / 45, -1, 1);
+      const ny = MathUtils.clamp(-beta / 30, -1, 1);
       lookTarget.current.set(nx, ny);
-      tiltTarget.current = THREE.MathUtils.degToRad(gamma) * 0.4;
+      tiltTarget.current = MathUtils.degToRad(gamma) * 0.4;
     };
     window.addEventListener('deviceorientation', handler);
     return () => {
@@ -683,6 +691,7 @@ export const GridScan: React.FC<GridScanProps> = ({
     let canceled = false;
     const load = async () => {
       try {
+        const faceapi = await loadFaceApi();
         await Promise.all([
           faceapi.nets.tinyFaceDetector.loadFromUri(modelsPath),
           faceapi.nets.faceLandmark68TinyNet.loadFromUri(modelsPath)
@@ -718,6 +727,7 @@ export const GridScan: React.FC<GridScanProps> = ({
         return;
       }
 
+      const faceapi = await loadFaceApi();
       const opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 });
 
       const detect = async (ts: number) => {
@@ -742,7 +752,7 @@ export const GridScan: React.FC<GridScanProps> = ({
               const nxm = median(bufX.current);
               const nym = median(bufY.current);
 
-              const look = new THREE.Vector2(Math.tanh(nxm), Math.tanh(nym));
+              const look = new Vector2(Math.tanh(nxm), Math.tanh(nym));
 
               const faceSize = Math.min(1, Math.hypot(box.width / vw, box.height / vh));
               const depthScale = 1 + depthResponse * (faceSize - 0.25);
@@ -764,7 +774,7 @@ export const GridScan: React.FC<GridScanProps> = ({
               const dL = dist2(tip, leftCheek);
               const dR = dist2(tip, rightCheek);
               const eyeDist = Math.hypot(rc.x - lc.x, rc.y - lc.y) + 1e-6;
-              let yawSignal = THREE.MathUtils.clamp((dR - dL) / (eyeDist * 1.6), -1, 1);
+              let yawSignal = MathUtils.clamp((dR - dL) / (eyeDist * 1.6), -1, 1);
               yawSignal = Math.tanh(yawSignal);
               medianPush(bufYaw.current, yawSignal, 5);
               yawTarget.current = median(bufYaw.current);
@@ -823,18 +833,18 @@ export const GridScan: React.FC<GridScanProps> = ({
 };
 
 function srgbColor(hex: string) {
-  const c = new THREE.Color(hex);
+  const c = new Color(hex);
   return c.convertSRGBToLinear();
 }
 
 function smoothDampVec2(
-  current: THREE.Vector2,
-  target: THREE.Vector2,
-  currentVelocity: THREE.Vector2,
+  current: Vector2,
+  target: Vector2,
+  currentVelocity: Vector2,
   smoothTime: number,
   maxSpeed: number,
   deltaTime: number
-): THREE.Vector2 {
+): Vector2 {
   const out = current.clone();
   smoothTime = Math.max(0.0001, smoothTime);
   const omega = 2 / smoothTime;

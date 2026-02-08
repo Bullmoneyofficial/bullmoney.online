@@ -1,5 +1,5 @@
 "use client";
-import React, { useMemo } from "react";
+import React, { useMemo, useRef, useEffect, useState, memo } from "react";
 import { Timeline } from "@/components/ui/timeline";
 import Link from "next/link";
 import Image from "next/image";
@@ -18,8 +18,8 @@ interface FeaturedProductsTimelineProps {
   products: VipProduct[];
 }
 
-// --- 1. THE ANIMATION ENGINE (Injecting Apple-style Keyframes) ---
-const AnimationStyles = () => (
+// --- 1. THE ANIMATION ENGINE (Injecting Apple-style Keyframes — memoized to inject only once) ---
+const AnimationStyles = memo(() => (
   <style jsx global>{`
     /* 1. Blur Reveal (Apple's signature headline effect) */
     @keyframes blur-in {
@@ -90,7 +90,11 @@ const AnimationStyles = () => (
     .anim-elastic { animation: elastic-slide 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
     .anim-scale { animation: soft-scale 0.8s ease-out forwards; }
     .anim-fade-up { animation: fade-up 0.6s ease-out forwards; }
-    .anim-glow { animation: glow-pulse 3s infinite; }
+    .anim-glow { animation: glow-pulse 3s infinite; animation-play-state: paused; }
+    
+    /* Only animate when section is in viewport */
+    .timeline-visible .anim-glow { animation-play-state: running; }
+    .timeline-visible .anim-shimmer { animation-play-state: running; }
     
     /* Delay Utilities */
     .delay-100 { animation-delay: 100ms; }
@@ -98,11 +102,12 @@ const AnimationStyles = () => (
     .delay-300 { animation-delay: 300ms; }
     .delay-500 { animation-delay: 500ms; }
   `}</style>
-);
+));
+AnimationStyles.displayName = 'AnimationStyles';
 
 // --- 2. SUB-COMPONENTS ---
 
-const SectionHeader = ({ title, subtitle }: { title: string; subtitle: string }) => (
+const SectionHeader = memo(({ title, subtitle }: { title: string; subtitle: string }) => (
   <div className="mb-8 pl-1">
     {/* Animation 3: Shimmer Text on Title */}
     <h3 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-neutral-200 to-neutral-500 anim-shimmer mb-3">
@@ -113,9 +118,10 @@ const SectionHeader = ({ title, subtitle }: { title: string; subtitle: string })
       {subtitle}
     </p>
   </div>
-);
+));
+SectionHeader.displayName = 'SectionHeader';
 
-const StoryCard = ({
+const StoryCard = memo(({
   period,
   title,
   description,
@@ -155,9 +161,10 @@ const StoryCard = ({
       </div>
     </div>
   );
-};
+});
+StoryCard.displayName = 'StoryCard';
 
-const ProductCard = ({ product, idx }: { product: VipProduct; idx: number }) => (
+const ProductCard = memo(({ product, idx }: { product: VipProduct; idx: number }) => (
   <Link
     href={product.buyUrl || "#"}
     className="group relative block w-full perspective-1000"
@@ -197,11 +204,26 @@ const ProductCard = ({ product, idx }: { product: VipProduct; idx: number }) => 
       </div>
     </div>
   </Link>
-);
+));
+ProductCard.displayName = 'TimelineProductCard';
 
 // --- 3. MAIN COMPONENT ---
 
 export function FeaturedProductsTimeline({ products }: FeaturedProductsTimelineProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  // Only run animations when in viewport
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { rootMargin: '100px 0px', threshold: 0.05 }
+    );
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   // Memoize sorted data
   const { featured, newArrivals, comingSoon } = useMemo(() => ({
     featured: products.filter((p) => !p.comingSoon).slice(0, 4),
@@ -209,124 +231,128 @@ export function FeaturedProductsTimeline({ products }: FeaturedProductsTimelineP
     comingSoon: products.filter((p) => p.comingSoon),
   }), [products]);
 
-  // Construct Timeline Data
-  const timelineData = [
-    {
-      title: "Vision",
-      content: (
-        <div className="mb-12">
-          {/* Animation 7: Soft Scale */}
-          <p className="text-neutral-300 italic text-lg md:text-xl font-light border-l-2 border-white/20 pl-6 anim-scale">
-            "We didn't just build a brand. We built a standard."
-          </p>
-        </div>
-      ),
-    },
-    {
-      title: "2023",
-      content: (
-        <div className="space-y-12">
-          <StoryCard
-            idx={1}
-            period="Jan - Jun '23"
-            title="The Origin"
-            description="One laptop. One trader. Zero marketing budget. Just raw chart analysis posted at 3AM."
-          />
-          <StoryCard
-            idx={2}
-            period="Jul - Dec '23"
-            title="The Signal"
-            description="Viral growth purely through word of mouth. The inner circle began to form."
-          />
-        </div>
-      ),
-    },
-    {
-      title: "2024",
-      content: (
-        <div className="space-y-12">
-          <StoryCard
-            idx={3}
-            period="Expansion"
-            title="The Ecosystem"
-            description="Discord launch. Live mentorship. Real-time execution. We turned followers into profitable traders."
-          />
-        </div>
-      ),
-    },
-    {
-      title: "2025",
-      content: (
-        <div className="space-y-12">
-          <StoryCard
-            idx={4}
-            period="Current Era"
-            title="Store Launch"
-            description="Premium tools and physical goods for the 1%."
-          />
-          {/* Animation 10: Cursor Blink Effect */}
-          <div className="inline-block border-r-2 border-white pr-2 animate-[cursor-blink_1s_step-end_infinite]">
-             <p className="text-white text-sm font-mono mt-4">10,000+ Members. Loading next chapter...</p>
+  // Construct Timeline Data — memoized to prevent JSX rebuilds every render
+  const timelineData = useMemo(() => {
+    const data: { title: string; content: React.ReactNode }[] = [
+      {
+        title: "Vision",
+        content: (
+          <div className="mb-12">
+            {/* Animation 7: Soft Scale */}
+            <p className="text-neutral-300 italic text-lg md:text-xl font-light border-l-2 border-white/20 pl-6 anim-scale">
+              "We didn't just build a brand. We built a standard."
+            </p>
           </div>
-        </div>
-      ),
-    },
-  ];
+        ),
+      },
+      {
+        title: "2023",
+        content: (
+          <div className="space-y-12">
+            <StoryCard
+              idx={1}
+              period="Jan - Jun '23"
+              title="The Origin"
+              description="One laptop. One trader. Zero marketing budget. Just raw chart analysis posted at 3AM."
+            />
+            <StoryCard
+              idx={2}
+              period="Jul - Dec '23"
+              title="The Signal"
+              description="Viral growth purely through word of mouth. The inner circle began to form."
+            />
+          </div>
+        ),
+      },
+      {
+        title: "2024",
+        content: (
+          <div className="space-y-12">
+            <StoryCard
+              idx={3}
+              period="Expansion"
+              title="The Ecosystem"
+              description="Discord launch. Live mentorship. Real-time execution. We turned followers into profitable traders."
+            />
+          </div>
+        ),
+      },
+      {
+        title: "2025",
+        content: (
+          <div className="space-y-12">
+            <StoryCard
+              idx={4}
+              period="Current Era"
+              title="Store Launch"
+              description="Premium tools and physical goods for the 1%."
+            />
+            {/* Animation 10: Cursor Blink Effect */}
+            <div className="inline-block border-r-2 border-white pr-2 animate-[cursor-blink_1s_step-end_infinite]">
+               <p className="text-white text-sm font-mono mt-4">10,000+ Members. Loading next chapter...</p>
+            </div>
+          </div>
+        ),
+      },
+    ];
 
-  // Logic to push Product Grids
-  if (featured.length > 0) {
-    timelineData.push({
-      title: "Shop",
-      content: (
-        <div>
-          <SectionHeader 
-            title="Featured Collection" 
-            subtitle="High-demand items curated for our top traders." 
-          />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            {featured.map((p, i) => <ProductCard key={i} product={p} idx={i} />)}
+    // Logic to push Product Grids
+    if (featured.length > 0) {
+      data.push({
+        title: "Shop",
+        content: (
+          <div>
+            <SectionHeader 
+              title="Featured Collection" 
+              subtitle="High-demand items curated for our top traders." 
+            />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+              {featured.map((p, i) => <ProductCard key={i} product={p} idx={i} />)}
+            </div>
           </div>
-        </div>
-      ),
-    });
-  }
+        ),
+      });
+    }
 
-  if (newArrivals.length > 0) {
-    timelineData.push({
-      title: "Fresh",
-      content: (
-        <div>
-          <SectionHeader 
-            title="Just Arrived" 
-            subtitle="The latest drops. Limited stock available." 
-          />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            {newArrivals.map((p, i) => <ProductCard key={i} product={p} idx={i + 4} />)}
+    if (newArrivals.length > 0) {
+      data.push({
+        title: "Fresh",
+        content: (
+          <div>
+            <SectionHeader 
+              title="Just Arrived" 
+              subtitle="The latest drops. Limited stock available." 
+            />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+              {newArrivals.map((p, i) => <ProductCard key={i} product={p} idx={i + 4} />)}
+            </div>
           </div>
-        </div>
-      ),
-    });
-  }
+        ),
+      });
+    }
 
-  if (comingSoon.length > 0) {
-    timelineData.push({
-      title: "Soon",
-      content: (
-        <div>
-          <SectionHeader 
-            title="In Development" 
-            subtitle="A sneak peek at what's coming next to the store." 
-          />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            {comingSoon.slice(0, 4).map((p, i) => <ProductCard key={i} product={p} idx={i + 8} />)}
+    if (comingSoon.length > 0) {
+      data.push({
+        title: "Soon",
+        content: (
+          <div>
+            <SectionHeader 
+              title="In Development" 
+              subtitle="A sneak peek at what's coming next to the store." 
+            />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+              {comingSoon.slice(0, 4).map((p, i) => <ProductCard key={i} product={p} idx={i + 8} />)}
+            </div>
           </div>
-        </div>
-      ),
-    });
-  }
+        ),
+      });
+    }
+
+    return data;
+  }, [featured, newArrivals, comingSoon]);
 
   return (
-    <div className="w-full bg-neutral-950 font-sans antialiased text-neutral-200">
+    <div ref={containerRef} className={`w-full bg-neutral-950 font-sans antialiased text-neutral-200 ${isVisible ? 'timeline-visible' : ''}`}>
       <AnimationStyles />
       <div className="w-full px-2 md:px-6 lg:px-10">
         <Timeline data={timelineData} />

@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { supabase } from '@/lib/supabaseClient';
+import { loadSession } from '@/lib/sessionPersistence';
 import type { CartItem, ProductWithDetails, Variant, CartSummary } from '@/types/store';
 
 // ============================================================================
@@ -11,15 +12,8 @@ import type { CartItem, ProductWithDetails, Variant, CartSummary } from '@/types
 
 // Get current user email from localStorage session
 function getCartSessionEmail(): string | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const raw = localStorage.getItem('bullmoney_recruit_auth');
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      return parsed?.email || null;
-    }
-  } catch {}
-  return null;
+  const session = loadSession();
+  return session?.email || null;
 }
 
 // SQL helpers (fire-and-forget)

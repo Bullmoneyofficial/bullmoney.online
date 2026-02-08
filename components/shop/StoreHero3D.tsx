@@ -14,37 +14,58 @@ import { useUnifiedPerformance } from '@/hooks/useDesktopPerformance';
 import TextType from '@/components/TextType';
 import CountUp from '@/components/CountUp';
 import dynamic from 'next/dynamic';
+import FlyingPosters from '@/components/FlyingPosters';
 
 // Spline scene URL
 const SPLINE_SCENE = '/scene1.splinecode';
 
-// ---- Aggressive Spline Preloading (disabled by default in production) ----
-const shouldPreloadSpline = typeof window !== 'undefined' && process.env.NODE_ENV !== 'production';
+// =============================================================================
+// ✅ SPLINE ULTRA-FAST LOADING — Same strategy as home page (spline-wrapper)
+// Uses @/lib/spline-wrapper which:
+//  • Preloads @splinetool/runtime at module import (shares with home page)
+//  • Multi-layer cache: Memory → Cache API → Service Worker → Network
+//  • Adaptive DPR + FPS limiting per device tier
+//  • Battery saver + emergency shutdown
+//  • Creates blob URLs for instant re-loads
+//  • Target: <100ms load on cached visit
+// =============================================================================
 
-// 1. Eagerly preload the Spline runtime JS bundle (warms module cache)
-const splineModulePromise = shouldPreloadSpline
-  ? import('@splinetool/react-spline')
-  : null;
+// ---- ALWAYS preload scene file (works in dev AND production) ----
+if (typeof window !== 'undefined') {
+  // 1. <link rel="preload"> for highest browser-level priority
+  const existingLink = document.querySelector(`link[rel="preload"][href="${SPLINE_SCENE}"]`);
+  if (!existingLink) {
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.href = SPLINE_SCENE;
+    link.as = 'fetch';
+    link.crossOrigin = 'anonymous';
+    // @ts-ignore - fetchpriority is valid but not in all TS defs
+    link.fetchPriority = 'high';
+    document.head.appendChild(link);
+  }
 
-// 2. Eagerly preload the .splinecode scene file via fetch (warms HTTP cache)
-if (shouldPreloadSpline) {
-  // Use link preload for highest priority
-  const link = document.createElement('link');
-  link.rel = 'preload';
-  link.href = SPLINE_SCENE;
-  link.as = 'fetch';
-  link.crossOrigin = 'anonymous';
-  // @ts-ignore - fetchpriority is valid but not in all TS defs
-  link.fetchPriority = 'high';
-  document.head.appendChild(link);
+  // 2. Background fetch to warm HTTP cache + Cache API
+  fetch(SPLINE_SCENE, { priority: 'high', cache: 'force-cache' } as RequestInit)
+    .then(async (res) => {
+      if (res.ok && 'caches' in window) {
+        try {
+          const cache = await caches.open('bullmoney-spline-hero-v4');
+          await cache.put(SPLINE_SCENE, res.clone());
+        } catch {}
+      }
+    })
+    .catch(() => {});
 
-  // Also start a background fetch to fully cache the scene bytes
-  fetch(SPLINE_SCENE, { priority: 'high', cache: 'force-cache' } as RequestInit).catch(() => {});
+  // 3. Preload the Spline runtime module (shares cache with home page's spline-wrapper)
+  import('@splinetool/runtime').catch(() => {});
 }
 
-// Dynamic import for Spline (heavy 3D component) - resolves from pre-warmed promise
-const Spline = dynamic(
-  () => splineModulePromise || import('@splinetool/react-spline'),
+// ✅ Use the home page's optimized spline-wrapper instead of raw @splinetool/react-spline
+// This gives us: preloaded runtime, multi-layer caching, adaptive DPR, FPS limiting,
+// battery saver, emergency shutdown — all the things that make the home page fast
+const SplineWrapperDynamic = dynamic(
+  () => import(/* webpackChunkName: "spline-wrapper" */ '@/lib/spline-wrapper'),
   {
     ssr: false,
     loading: () => (
@@ -535,6 +556,7 @@ const FloatingProductCard = ({
   onInteractionEnd,
   onCardClick,
   skipParallax = false,
+  isPaused = false,
 }: { 
   product: FloatingProduct;
   mouseX: ReturnType<typeof useMotionValue<number>>;
@@ -544,12 +566,14 @@ const FloatingProductCard = ({
   onInteractionEnd?: () => void;
   onCardClick?: () => void;
   skipParallax?: boolean;
+  isPaused?: boolean;
 }) => {
-  // Skip expensive parallax springs on mobile — zero overhead from useTransform/useSpring
-  const parallaxX = useTransform(mouseX, [0, 1], skipParallax ? [0, 0] : [-30 * (product.z / 100), 30 * (product.z / 100)]);
-  const parallaxY = useTransform(mouseY, [0, 1], skipParallax ? [0, 0] : [-20 * (product.z / 100), 20 * (product.z / 100)]);
+  // Skip expensive parallax springs on mobile or when paused
+  const shouldSkip = skipParallax || isPaused;
+  const parallaxX = useTransform(mouseX, [0, 1], shouldSkip ? [0, 0] : [-30 * (product.z / 100), 30 * (product.z / 100)]);
+  const parallaxY = useTransform(mouseY, [0, 1], shouldSkip ? [0, 0] : [-20 * (product.z / 100), 20 * (product.z / 100)]);
   
-  const springConfig = skipParallax ? { stiffness: 300, damping: 50 } : { stiffness: 100, damping: 30 };
+  const springConfig = shouldSkip ? { stiffness: 300, damping: 50 } : { stiffness: 100, damping: 30 };
   const springX = useSpring(parallaxX, springConfig);
   const springY = useSpring(parallaxY, springConfig);
 
@@ -590,7 +614,7 @@ const FloatingProductCard = ({
     >
       <motion.div
         className="relative"
-        animate={isExpanded ? {} : (skipParallax ? {
+        animate={isExpanded || isPaused ? {} : (skipParallax ? {
           // Mobile: Simple gentle float only (2 keyframes = much cheaper)
           y: [0, -4, 0],
           x: [0, 2, 0],
@@ -736,6 +760,12 @@ const GradientOrb = ({
 
 // ============================================================================
 // SPLINE BACKGROUND COMPONENT - 3D Interactive Scene
+// ✅ Now uses @/lib/spline-wrapper (same as home page) for:
+//    • Preloaded runtime (shared with home page)
+//    • Multi-layer caching (Memory → Cache API → Service Worker)
+//    • Adaptive DPR + FPS limiting per device tier
+//    • Battery saver + emergency shutdown
+//    • ~100ms load on cached visits
 // ============================================================================
 const SplineBackground = memo(function SplineBackground({ 
   grayscale = true,
@@ -752,83 +782,49 @@ const SplineBackground = memo(function SplineBackground({
   const [hasError, setHasError] = useState(false);
   const splineRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const splineWrapperRef = useRef<HTMLDivElement>(null);
 
-  // Memoize Spline style object to prevent re-renders (big perf win)
-  const splineStyle = useMemo(() => ({
-    position: 'absolute' as const,
-    inset: 0,
-    width: '100%',
-    height: '100%',
-    display: 'block' as const,
-    opacity: isLoaded ? 1 : 0,
-    transition: 'opacity 200ms ease-out, filter 200ms ease-out',
-    filter: grayscale ? 'grayscale(100%) saturate(0) contrast(1.1)' : 'none',
-    WebkitFilter: grayscale ? 'grayscale(100%) saturate(0) contrast(1.1)' : 'none',
-    pointerEvents: (playMode ? 'auto' : 'none') as any,
-    touchAction: playMode ? 'none' : 'pan-y',
-    zIndex: 1,
-  }), [isLoaded, grayscale, playMode]);
-
-  const handleLoad = useCallback((splineApp: any) => {
-    console.log('[StoreHero3D] Spline loaded');
-    splineRef.current = splineApp;
+  const handleLoad = useCallback(() => {
+    console.log('[StoreHero3D] Spline loaded via spline-wrapper');
     setIsLoaded(true);
     setHasError(false);
   }, []);
 
   // Attach canvas event listeners once Spline is loaded
   useEffect(() => {
-    if (!isLoaded || !splineWrapperRef.current) return;
+    if (!isLoaded || !containerRef.current) return;
     
-    const canvas = splineWrapperRef.current.querySelector('canvas');
+    const canvas = containerRef.current.querySelector('canvas');
     if (!canvas) return;
     
     console.log('[StoreHero3D] ✅ Canvas found, attaching event listeners');
     
-    // Generic interaction handlers
     const handleInteraction = () => {
-      console.log('[StoreHero3D] Canvas interaction detected');
       if (onInteraction) onInteraction();
     };
-    
-    const handleHover = () => {
+    const handleHoverEv = () => {
       if (onHover) onHover();
     };
-    
-    // Handle wheel events - in play mode let Spline handle zoom, otherwise scroll page
     const handleWheel = (e: WheelEvent) => {
-      if (playMode) {
-        // In play mode, let Spline handle its own zoom/scroll
-        return;
-      }
-      // Normal mode: don't interfere - let the event bubble up naturally for page scroll
+      if (playMode) return; // Let Spline handle zoom in play mode
     };
     
-    // Ensure canvas pointer events respect play mode
     canvas.style.pointerEvents = playMode ? 'auto' : 'none';
-    // In play mode, allow all touch gestures for Spline interaction; otherwise allow vertical scrolling
     canvas.style.touchAction = playMode ? 'none' : 'pan-y';
     
-    // Attach wheel event handler to allow page scrolling
     canvas.addEventListener('wheel', handleWheel, { passive: true });
-    
-    // Attach multiple event types for broad compatibility
     canvas.addEventListener('pointerdown', handleInteraction as EventListener);
-    canvas.addEventListener('pointermove', handleHover as EventListener);
+    canvas.addEventListener('pointermove', handleHoverEv as EventListener);
     canvas.addEventListener('touchstart', handleInteraction as EventListener, { passive: true });
     canvas.addEventListener('mousedown', handleInteraction as EventListener);
-    canvas.addEventListener('mousemove', handleHover as EventListener);
+    canvas.addEventListener('mousemove', handleHoverEv as EventListener);
     
-    // Cleanup function
     return () => {
       canvas.removeEventListener('wheel', handleWheel);
       canvas.removeEventListener('pointerdown', handleInteraction as EventListener);
-      canvas.removeEventListener('pointermove', handleHover as EventListener);
+      canvas.removeEventListener('pointermove', handleHoverEv as EventListener);
       canvas.removeEventListener('touchstart', handleInteraction as EventListener);
       canvas.removeEventListener('mousedown', handleInteraction as EventListener);
-      canvas.removeEventListener('mousemove', handleHover as EventListener);
-      // Reset touch action on cleanup
+      canvas.removeEventListener('mousemove', handleHoverEv as EventListener);
       canvas.style.touchAction = 'pan-y';
     };
   }, [isLoaded, onInteraction, onHover, playMode]);
@@ -838,25 +834,24 @@ const SplineBackground = memo(function SplineBackground({
     setHasError(true);
   }, []);
   
-  // Handle container-level interactions as fallback
   const handleSplineMouseDown = useCallback(() => {
-    console.log('[StoreHero3D] Container mousedown detected');
+    if (!playMode) return;
     if (onInteraction) onInteraction();
-  }, [onInteraction]);
+  }, [onInteraction, playMode]);
   
-  // Handle mouse hover on Spline
   const handleSplineMouseEnter = useCallback(() => {
+    if (!playMode) return;
     if (onHover) onHover();
-  }, [onHover]);
+  }, [onHover, playMode]);
 
-  // Handle wheel events on the container - in play mode let Spline handle, otherwise scroll page
   const handleContainerWheel = useCallback((e: React.WheelEvent) => {
-    if (playMode) {
-      // In play mode, let Spline handle its own zoom/scroll
-      return;
-    }
-    // Normal mode: don't interfere - let scroll bubble naturally
+    if (playMode) return;
   }, [playMode]);
+
+  // Callback to receive the Spline app instance for external control
+  const handleSplineApp = useCallback((app: any) => {
+    splineRef.current = app;
+  }, []);
 
   return (
     <div 
@@ -868,14 +863,16 @@ const SplineBackground = memo(function SplineBackground({
         pointerEvents: playMode ? 'auto' : 'none',
         touchAction: playMode ? 'none' : 'pan-y',
         cursor: playMode ? 'grab' : 'default',
+        // ✅ Grayscale via CSS filter on container (more efficient than mix-blend overlay)
+        filter: grayscale ? 'grayscale(100%) saturate(0) contrast(1.1)' : 'none',
+        WebkitFilter: grayscale ? 'grayscale(100%) saturate(0) contrast(1.1)' : 'none',
+        transition: 'filter 400ms ease-out',
       }}
-      onMouseDown={handleSplineMouseDown}
-      onTouchStart={handleSplineMouseDown}
-      onMouseEnter={handleSplineMouseEnter}
-      onMouseMove={handleSplineMouseEnter}
-      onMouseLeave={() => {}}
-      onTouchEnd={() => {}}
-      onWheel={handleContainerWheel}
+      onMouseDown={playMode ? handleSplineMouseDown : undefined}
+      onTouchStart={playMode ? handleSplineMouseDown : undefined}
+      onMouseEnter={playMode ? handleSplineMouseEnter : undefined}
+      onMouseMove={playMode ? handleSplineMouseEnter : undefined}
+      onWheel={playMode ? handleContainerWheel : undefined}
     >
       {/* Animated gradient fallback - fast fade once Spline is ready */}
       <div
@@ -888,41 +885,24 @@ const SplineBackground = memo(function SplineBackground({
         }}
       />
 
-      {/* Spline 3D Scene - Interactive Wrapper */}
+      {/* ✅ Spline 3D via spline-wrapper — same as home page */}
+      {/* isHero=true → instant load (no IntersectionObserver wait) */}
+      {/* onSplineApp → expose app instance for external control */}
       {!hasError && (
-        <div
-          ref={splineWrapperRef}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            pointerEvents: playMode ? 'auto' : 'none',
-            touchAction: playMode ? 'none' : 'pan-y',
-            zIndex: 1,
-          }}
-        >
-          <Spline
+        <Suspense fallback={
+          <div className="absolute inset-0 bg-black flex items-center justify-center">
+            <div className="w-8 h-8 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+          </div>
+        }>
+          <SplineWrapperDynamic
             scene={SPLINE_SCENE}
+            isHero={true}
             onLoad={handleLoad}
             onError={handleError}
-            style={splineStyle as React.CSSProperties}
+            onSplineApp={handleSplineApp}
           />
-        </div>
+        </Suspense>
       )}
-
-      {/* Color-kill overlay - grayscale effect */}
-      <div
-        className="absolute inset-0"
-        style={{
-          zIndex: 10,
-          backgroundColor: grayscale ? '#808080' : 'transparent',
-          mixBlendMode: grayscale ? 'color' : 'normal',
-          WebkitMixBlendMode: grayscale ? 'color' : 'normal',
-          pointerEvents: 'none',
-          transition: 'background-color 400ms ease-out',
-        } as React.CSSProperties}
-      />
     </div>
   );
 });
@@ -1207,13 +1187,19 @@ const ExitSplineModeButton = ({
 // ============================================================================
 export function StoreHero3D({ paused = false }: { paused?: boolean }) {
   const isProd = process.env.NODE_ENV === 'production';
-  const autoLoad3D = !isProd || process.env.NEXT_PUBLIC_STORE_AUTO_3D === 'true';
+  // ✅ ALWAYS auto-load 3D — the home page does, and spline-wrapper handles quality adaptation
+  // Previously disabled in prod, which meant Spline loaded COLD when user toggled it on
+  const autoLoad3D = true;
   const enableLiveCrypto = !isProd || process.env.NEXT_PUBLIC_STORE_LIVE_CRYPTO === 'true';
   const containerRef = useRef<HTMLDivElement>(null);
   const mouseX = useMotionValue(0.5);
   const mouseY = useMotionValue(0.5);
   const [isVisible, setIsVisible] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  // Initialize isMobile from window width if available (avoids flash of wrong layout)
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < 768;
+  });
   const [showPromo, setShowPromo] = useState(false);
   const [cryptoPrices, setCryptoPrices] = useState<CryptoPrice[]>([]);
   const [floatingProducts, setFloatingProducts] = useState<FloatingProduct[]>([]);
@@ -1328,6 +1314,8 @@ export function StoreHero3D({ paused = false }: { paused?: boolean }) {
   const enterSplinePlayMode = useCallback(() => {
     setIsSplinePlayMode(true);
     setShowPlayWithSpline(false);
+    // Prevent page scroll while in 3D play mode (especially important on mobile)
+    document.body.style.overflow = 'hidden';
     // Clear all timers
     if (idleTimer.current) clearTimeout(idleTimer.current);
     if (hoverDebounceTimer.current) clearTimeout(hoverDebounceTimer.current);
@@ -1338,6 +1326,8 @@ export function StoreHero3D({ paused = false }: { paused?: boolean }) {
   const exitSplinePlayMode = useCallback(() => {
     setIsSplinePlayMode(false);
     setUserInteractedWithSpline(false);
+    // Restore page scroll
+    document.body.style.overflow = '';
     // Clear all timers
     if (idleTimer.current) clearTimeout(idleTimer.current);
     if (hoverDebounceTimer.current) clearTimeout(hoverDebounceTimer.current);
@@ -1364,8 +1354,11 @@ export function StoreHero3D({ paused = false }: { paused?: boolean }) {
   }, [isSplinePlayMode, isInteractingWithProduct, paused, isMobile]);
   
   // Idle timer effect - show "Play with Spline" after 12 seconds of no clicks/hovers
+  // On mobile: show immediately after 3 seconds since there's no hover
   useEffect(() => {
     if (isSplinePlayMode || userInteractedWithSpline || paused) return;
+    
+    const delay = isMobile ? 3000 : 12000;
     
     // Start idle timer when component mounts
     idleTimer.current = setTimeout(() => {
@@ -1373,7 +1366,7 @@ export function StoreHero3D({ paused = false }: { paused?: boolean }) {
         setUserInteractedWithSpline(true);
         setShowPlayWithSpline(true);
         
-        // Auto-hide after 8 seconds
+        // Auto-hide after 8 seconds (longer on mobile for discoverability)
         if (splineInteractionTimer.current) {
           clearTimeout(splineInteractionTimer.current);
         }
@@ -1381,16 +1374,16 @@ export function StoreHero3D({ paused = false }: { paused?: boolean }) {
           if (!isSplinePlayMode) {
             setShowPlayWithSpline(false);
           }
-        }, 8000);
+        }, isMobile ? 12000 : 8000);
       }
-    }, 12000); // 12 seconds idle
+    }, delay);
     
     return () => {
       if (idleTimer.current) {
         clearTimeout(idleTimer.current);
       }
     };  
-  }, [isSplinePlayMode, userInteractedWithSpline, paused]);
+  }, [isSplinePlayMode, userInteractedWithSpline, paused, isMobile]);
 
   // Fetch VIP products from Supabase
   const fetchVipProducts = useCallback(async () => {
@@ -1482,19 +1475,25 @@ export function StoreHero3D({ paused = false }: { paused?: boolean }) {
     const mobile = window.innerWidth < 768;
     setIsMobile(mobile);
     
-    // Mobile Scroll Performance Optimization
+    // ✅ PERF: Scroll Performance Optimization (mobile + desktop)
     // Use Intersection Observer to detect when hero leaves viewport
+    // Unmounts Spline 3D + pauses floating card animations when off-screen
     let observer: IntersectionObserver | null = null;
-    if (mobile && containerRef.current) {
+    let observerReady = false;
+    if (containerRef.current) {
       observer = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
+            if (!observerReady) {
+              observerReady = true;
+              return; // Skip first callback — always render on mount/reload
+            }
             setIsHeroInView(entry.isIntersecting);
           });
         },
         {
-          threshold: 0.1, // Trigger when 10% of hero is visible
-          rootMargin: '0px',
+          threshold: 0.05, // Trigger when 5% of hero is visible
+          rootMargin: '200px 0px', // Pre-load slightly before entering viewport
         }
       );
       
@@ -1628,6 +1627,25 @@ export function StoreHero3D({ paused = false }: { paused?: boolean }) {
     })), 
   [particleCount]);
 
+  // Build FlyingPosters image URLs and product info from VIP products for mobile
+  const flyingPosterImages = useMemo(() => {
+    if (floatingProducts.length === 0) return [];
+    return floatingProducts
+      .filter(p => p.vipData && (p.vipData.image_url || p.vipData.imageUrl))
+      .map(p => p.vipData!.image_url || p.vipData!.imageUrl || '');
+  }, [floatingProducts]);
+
+  const flyingPosterProducts = useMemo(() => {
+    if (floatingProducts.length === 0) return [];
+    return floatingProducts
+      .filter(p => p.vipData && (p.vipData.image_url || p.vipData.imageUrl))
+      .map(p => ({
+        name: p.vipData!.name || 'Product',
+        price: p.vipData!.price || 0,
+        image: p.vipData!.image_url || p.vipData!.imageUrl || '',
+      }));
+  }, [floatingProducts]);
+
   return (
     <>
       {/* Promo Code Popup */}
@@ -1639,9 +1657,61 @@ export function StoreHero3D({ paused = false }: { paused?: boolean }) {
         onClick={exitSplinePlayMode} 
       />
 
+      {/* ===== MOBILE: FlyingPosters Hero ===== */}
+      {isMobile && (
+        <section
+          ref={containerRef}
+          className="relative flex flex-col items-center justify-center bg-black md:hidden"
+          style={{ height: '100svh', minHeight: '500px' }}
+        >
+          {/* FlyingPosters — fills the hero area */}
+          {flyingPosterImages.length > 0 && (
+            <FlyingPosters
+              items={flyingPosterImages}
+              products={flyingPosterProducts}
+              planeWidth={340}
+              planeHeight={340}
+              distortion={1}
+              scrollEase={0.12}
+              cameraFov={50}
+              cameraZ={10}
+              style={{ position: 'absolute', inset: 0, zIndex: 1 }}
+            />
+          )}
+
+          {/* CTA overlay at bottom */}
+          <div className="absolute bottom-12 left-0 right-0 z-10 flex flex-col items-center gap-4 px-4">
+            <motion.button
+              onClick={() => { SoundEffects.click(); openProductsModal(true); }}
+              className="group relative px-8 py-4 rounded-2xl bg-black/80 text-white font-medium overflow-hidden
+                       border border-white/20 transition-all duration-300 backdrop-blur-sm"
+              whileTap={{ scale: 0.98 }}
+              aria-label="Shop now"
+            >
+              <span className="relative z-10 flex items-center gap-2 font-semibold tracking-wide">
+                <ShoppingBag className="w-4 h-4" />
+                <span>SHOP NOW</span>
+              </span>
+              <div
+                className="absolute inset-0 bg-linear-to-r from-transparent via-white/40 to-transparent -skew-x-12 store-shimmer-fast"
+                aria-hidden="true"
+              />
+            </motion.button>
+          </div>
+
+          {/* Top fade */}
+          <div className="absolute top-0 left-0 right-0 h-24 bg-linear-to-b from-black/80 to-transparent pointer-events-none z-[5]" />
+          {/* Bottom fade */}
+          <div className="absolute bottom-0 left-0 right-0 h-28 bg-linear-to-t from-black to-transparent pointer-events-none z-[5]" />
+          {/* Bottom chrome line */}
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-white/30 to-transparent z-[5]" />
+        </section>
+      )}
+
+      {/* ===== DESKTOP: Original 3D Spline Hero ===== */}
       <section 
-        ref={containerRef}
-        className="relative h-screen md:h-[80vh] lg:h-[90vh] flex items-center justify-center overflow-hidden"
+        ref={!isMobile ? containerRef : undefined}
+        className={`relative h-screen md:h-[80vh] lg:h-[90vh] flex items-center justify-center overflow-hidden ${isMobile ? 'hidden' : ''}`}
         style={{ 
           perspective: '1000px', 
           touchAction: 'pan-y',
@@ -1652,14 +1722,12 @@ export function StoreHero3D({ paused = false }: { paused?: boolean }) {
       >
         {/* === BACKGROUND LAYERS === */}
         
-        {/* Play with Spline Button - positioned within hero only - Desktop only */}
-        {!isMobile && (
-          <PlayWithSplineButton 
-            isVisible={showPlayWithSpline && !isSplinePlayMode} 
-            onClick={enterSplinePlayMode}
-            onExit={exitSplinePlayMode}
-          />
-        )}
+        {/* Play with Spline Button - positioned within hero on all devices */}
+        <PlayWithSplineButton 
+          isVisible={showPlayWithSpline && !isSplinePlayMode} 
+          onClick={enterSplinePlayMode}
+          onExit={exitSplinePlayMode}
+        />
         
         {/* Toggle Buttons - Top Right - Hide in Spline play mode and on mobile */}
         <AnimatePresence>
@@ -1689,9 +1757,10 @@ export function StoreHero3D({ paused = false }: { paused?: boolean }) {
         
         {/* Conditional Background: Spline 3D or Plain Black */}
         <AnimatePresence mode="wait">
+          {/* ✅ PERF: Unmount Spline when hero is paused (off-screen) to free GPU */}
           {/* Mobile: Hide Spline when out of view for performance */}
-          {/* Desktop: Always show if enabled */}
-          {show3DBackground && (!isMobile || isHeroInView) ? (
+          {/* Desktop: Also unmount when paused */}
+          {show3DBackground && !paused && (!isMobile || isHeroInView) ? (
             <motion.div
               key="spline-bg"
               className="absolute inset-0"
@@ -1792,6 +1861,7 @@ export function StoreHero3D({ paused = false }: { paused?: boolean }) {
                   onInteractionEnd={handleProductInteractionEnd}
                   onCardClick={() => openProductsModal(true)}
                   skipParallax={isMobile}
+                  isPaused={paused}
                 />
               ))}
             </motion.div>

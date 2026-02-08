@@ -4,11 +4,13 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   BarChart3,
   ClipboardList,
+  Coins,
   Crown,
   Database,
   Mail,
   Package,
   RefreshCw,
+  RotateCcw,
   Save,
   Shield,
   Video,
@@ -31,6 +33,8 @@ import StoreAnalyticsPanel from "@/components/StoreAnalyticsPanel";
 import StorePromoManager from "@/components/StorePromoManager";
 import RewardsAdminPanel from "@/components/RewardsAdminPanel";
 import NewsletterMessagesPanel from "@/components/NewsletterMessagesPanel";
+import CryptoPaymentsAdminPanel from "@/components/CryptoPaymentsAdminPanel";
+import CryptoRefundsAdminPanel from "@/components/CryptoRefundsAdminPanel";
 import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 
 // Generate a reasonably unique id when inserting rows from the client
@@ -258,7 +262,7 @@ export function AdminHubModal({
   const adminEmailEnv = process.env.NEXT_PUBLIC_ADMIN_EMAIL?.toLowerCase() || "";
   const supabase = useMemo(() => createSupabaseClient(), []);
   const [activeTab, setActiveTab] = useState<
-    "products" | "services" | "livestream" | "analysis" | "recruits" | "course" | "affiliate" | "email" | "faq" | "store"
+    "products" | "services" | "livestream" | "analysis" | "recruits" | "course" | "affiliate" | "email" | "faq" | "store" | "crypto" | "crypto_refunds"
   >("products");
   const [affiliateView, setAffiliateView] = useState<"calculator" | "admin">("calculator");
   const [storeView, setStoreView] = useState<"analytics" | "promos" | "rewards" | "messages">("analytics");
@@ -1938,6 +1942,18 @@ export function AdminHubModal({
                 onClick={() => setActiveTab("store")}
               />
               <TabButton
+                label="Crypto Payments"
+                icon={<Coins className="w-4 h-4" />}
+                active={activeTab === "crypto"}
+                onClick={() => setActiveTab("crypto")}
+              />
+              <TabButton
+                label="Crypto Refunds"
+                icon={<RotateCcw className="w-4 h-4" />}
+                active={activeTab === "crypto_refunds"}
+                onClick={() => setActiveTab("crypto_refunds")}
+              />
+              <TabButton
                 label="FAQ Editor"
                 icon={<HelpCircle className="w-4 h-4" />}
                 active={activeTab === "faq"}
@@ -1961,6 +1977,8 @@ export function AdminHubModal({
                     {activeTab === "course" && <CourseAdminPanel />}
                     {activeTab === "faq" && renderFaq()}
                     {activeTab === "email" && <EmailAdminPanel />}
+                    {activeTab === "crypto" && <CryptoPaymentsAdminPanel />}
+                    {activeTab === "crypto_refunds" && <CryptoRefundsAdminPanel />}
                     {activeTab === "store" && (
                       <div className="space-y-4">
                         <div className="flex gap-2 p-1 bg-slate-900/50 rounded-lg border border-slate-800 w-fit">

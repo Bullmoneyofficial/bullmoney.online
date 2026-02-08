@@ -10,6 +10,7 @@ export interface RecruitProfile {
   created_at: string;
   email: string;
   mt5_id: string;
+  is_vip: boolean;
   affiliate_code: string | null;
   referred_by_code: string | null;
   social_handle: string | null;
@@ -62,7 +63,7 @@ export function RecruitAuthProvider({ children }: { children: React.ReactNode })
           // Verify the session is still valid by fetching the recruit
           const { data, error } = await supabase
             .from('recruits')
-            .select('*')
+            .select('id, created_at, email, mt5_id, is_vip, affiliate_code, referred_by_code, social_handle, task_broker_verified, task_social_verified, status, commission_balance, total_referred_manual, used_code, image_url')
             .eq('id', recruitId)
             .ilike('email', email)
             .single();
@@ -72,7 +73,12 @@ export function RecruitAuthProvider({ children }: { children: React.ReactNode })
             setRecruit(profile);
             
             // Sync all storage layers to ensure redundancy
-            persistSession({ recruitId: data.id, email: data.email });
+            persistSession({
+              recruitId: data.id,
+              email: data.email,
+              mt5Id: data.mt5_id,
+              isVip: data.is_vip === true,
+            });
             console.log('[RecruitAuth] Session verified & synced:', email);
           } else if (error) {
             // NEVER clear session on errors - user might just have network issues
@@ -86,6 +92,7 @@ export function RecruitAuthProvider({ children }: { children: React.ReactNode })
               created_at: '',
               email: email,
               mt5_id: '',
+              is_vip: false,
               affiliate_code: null,
               referred_by_code: null,
               social_handle: null,
@@ -128,6 +135,7 @@ export function RecruitAuthProvider({ children }: { children: React.ReactNode })
     created_at: data.created_at,
     email: data.email,
     mt5_id: data.mt5_id,
+    is_vip: data.is_vip === true,
     affiliate_code: data.affiliate_code,
     referred_by_code: data.referred_by_code,
     social_handle: data.social_handle,
@@ -146,33 +154,26 @@ export function RecruitAuthProvider({ children }: { children: React.ReactNode })
     password: string
   ): Promise<{ success: boolean; error?: string }> => {
     try {
-      // Query the recruits table for matching email (case-insensitive)
-      // First find the user by email, then verify password
-      const { data: recruits, error: fetchError } = await supabase
-        .from('recruits')
-        .select('*')
-        .ilike('email', email.trim());  // Case-insensitive email match
+      const res = await fetch('/api/recruit-auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), password }),
+      });
 
-      if (fetchError) {
-        console.error('Login error:', fetchError, 'Email:', email.trim());
-        return { success: false, error: 'Unable to connect. Please try again.' };
+      const result = await res.json();
+      if (!res.ok || !result?.success || !result?.recruit) {
+        return { success: false, error: result?.error || 'Invalid email or password' };
       }
 
-      // Find matching recruit with correct password
-      const data = recruits?.find(r => r.password === password);
-
-      if (!data) {
-        console.error('Login error: No matching credentials', 'Email:', email.trim());
-        return { success: false, error: 'Invalid email or password' };
-      }
-
-      const recruitProfile = transformRecruitData(data);
+      const recruitProfile = transformRecruitData(result.recruit);
       setRecruit(recruitProfile);
 
       // Save session to ALL storage layers (localStorage, sessionStorage, cookie)
       persistSession({
         recruitId: recruitProfile.id,
         email: recruitProfile.email,
+        mt5Id: recruitProfile.mt5_id,
+        isVip: recruitProfile.is_vip,
         timestamp: Date.now(),
       });
 
@@ -196,7 +197,7 @@ export function RecruitAuthProvider({ children }: { children: React.ReactNode })
     try {
       const { data, error } = await supabase
         .from('recruits')
-        .select('*')
+        .select('id, created_at, email, mt5_id, is_vip, affiliate_code, referred_by_code, social_handle, task_broker_verified, task_social_verified, status, commission_balance, total_referred_manual, used_code, image_url')
         .eq('id', recruit.id)
         .single();
 

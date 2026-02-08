@@ -86,7 +86,7 @@ export function ProductsCarousel({
     [columns, repeatCount]
   );
 
-  // Detect mobile
+  // Detect mobile — rAF debounced
   useEffect(() => {
     const checkMobile = () => {
       isMobileRef.current =
@@ -94,8 +94,16 @@ export function ProductsCarousel({
         window.innerWidth < 768;
     };
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    let rafId: number | null = null;
+    const handleResize = () => {
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => { checkMobile(); rafId = null; });
+    };
+    window.addEventListener('resize', handleResize, { passive: true });
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
   }, []);
 
   // Pause rAF when off-screen
@@ -296,7 +304,7 @@ export function ProductsCarousel({
         <div
           className="flex w-full overflow-x-scroll overflow-y-visible overscroll-x-auto pt-6 pb-28 md:pt-10 md:pb-40 [scrollbar-width:none] cursor-grab active:cursor-grabbing"
           ref={carouselRef}
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', willChange: 'scroll-position', contain: 'layout style' } as React.CSSProperties}
           onMouseDown={onMouseDown}
           onMouseMove={onMouseMove}
           onMouseUp={onMouseUp}

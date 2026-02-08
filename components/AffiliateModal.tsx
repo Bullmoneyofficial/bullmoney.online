@@ -14,6 +14,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { createClient } from '@supabase/supabase-js';
+import { persistSession } from '@/lib/sessionPersistence';
 
 // --- ANALYTICS ---
 import { BullMoneyAnalytics, trackEvent } from '@/lib/analytics';
@@ -827,51 +828,44 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
     });
 
     try {
-      const { data: existingUser } = await supabase
-        .from("recruits")
-        .select("id")
-        .eq("email", formData.email)
-        .maybeSingle();
+      const res = await fetch('/api/recruit-auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          mt5_id: formData.mt5Number,
+          referred_by_code: formData.referralCode || null,
+          used_code: true,
+        }),
+      });
 
-      if (existingUser) {
-        throw new Error("This email is already registered. Please Login.");
+      const result = await res.json();
+      if (!res.ok || !result?.success || !result?.recruit) {
+        if (res.status === 409) {
+          throw new Error('This email is already registered. Please Login.');
+        }
+        throw new Error(result?.error || 'Connection failed. Please check your internet.');
       }
 
-      const insertPayload = {
-        email: formData.email,
-        mt5_id: formData.mt5Number,
-        password: formData.password,
-        referred_by_code: formData.referralCode || null,
-        used_code: true,
-      };
+      const newUser = result.recruit;
+      persistSession({
+        recruitId: newUser.id,
+        email: newUser.email,
+        mt5Id: newUser.mt5_id || formData.mt5Number,
+        isVip: newUser.is_vip === true,
+        timestamp: Date.now(),
+      });
 
-      const { data: newUser, error } = await supabase
-        .from("recruits")
-        .insert([insertPayload])
-        .select()
-        .single();
+      BullMoneyAnalytics.trackAffiliateSignup(formData.referralCode || 'direct');
+      trackEvent('signup', { 
+        method: 'email', 
+        broker: activeBroker,
+        source: 'affiliate_modal' 
+      });
       
-      if (error) throw error;
-
-      if (newUser) {
-        localStorage.setItem("bullmoney_session", JSON.stringify({
-          id: newUser.id,
-          email: formData.email,
-          mt5_id: formData.mt5Number,
-          timestamp: Date.now(),
-          broker: activeBroker
-        }));
-        
-        BullMoneyAnalytics.trackAffiliateSignup(formData.referralCode || 'direct');
-        trackEvent('signup', { 
-          method: 'email', 
-          broker: activeBroker,
-          source: 'affiliate_modal' 
-        });
-        
-        if (activeBroker === 'XM') {
-          setIsXMUser(true);
-        }
+      if (activeBroker === 'XM') {
+        setIsXMUser(true);
       }
 
       setTimeout(() => setStep('success'), 1000);

@@ -13,6 +13,9 @@ import { SoundProvider } from "@/contexts/SoundContext";
 // ✅ LOADING FALLBACKS - Mobile optimized
 import { MinimalFallback } from "@/components/MobileLazyLoadingFallback";
 
+// ✅ PERFORMANCE PROVIDER - Monitors FPS and device tier with built-in FPS monitor
+import PerformanceProvider from "@/lib/performanceSystem";
+
 // CRITICAL: Import FPS scroll optimizer for pause-during-scroll behavior
 const FpsScrollOptimizer = dynamic(
   () => import("@/components/FpsScrollOptimizer").then((mod) => ({ default: mod.FpsScrollOptimizer })),
@@ -38,41 +41,8 @@ const ThemeOverlay = dynamic(
   { ssr: false }
 );
 
-// Lazy load performance providers for faster initial compile
-const PerformanceProvider = dynamic(
-  () => import("@/components/PerformanceProvider").then((mod) => ({ default: mod.PerformanceProvider })),
-  { ssr: false }
-);
-
-const FPSCounter = dynamic(
-  () => import("@/components/PerformanceProvider").then((mod) => ({ default: mod.FPSCounter })),
-  { ssr: false }
-);
-
-const FpsOptimizerProvider = dynamic(
-  () => import("@/lib/FpsOptimizer").then((mod) => ({ default: mod.FpsOptimizerProvider })),
-  { ssr: false }
-);
-
-const UnifiedPerformanceProvider = dynamic(
-  () => import("@/lib/UnifiedPerformanceSystem").then((mod) => ({ default: mod.UnifiedPerformanceProvider })),
-  { ssr: false }
-);
-
-const CrashTrackerProvider = dynamic(
-  () => import("@/lib/CrashTracker").then((mod) => ({ default: mod.CrashTrackerProvider })),
-  { ssr: false }
-);
-
-const FpsMonitor = dynamic(
-  () => import("@/components/FpsMonitor"),
-  { ssr: false }
-);
-
-// NOTE: ClientCursor is now rendered in LayoutProviders (LAST in DOM)
-// to ensure it appears above MultiStepLoaderv2, pagemode, and all modals
-
-// AudioWidget stays loaded - NOT lazy unmounted - for audio persistence
+// ✅ MOBILE-OPTIMIZED LAZY LOADING - All heavy components lazy loaded
+// Admin Panel Provider (lazy loaded)
 const AudioWidget = dynamic(
   () => import("@/components/audio-widget/AudioWidget"),
   { ssr: false, loading: () => <MinimalFallback /> }
@@ -230,52 +200,59 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
   // ==================================================================
   if (isStorePage) {
     return (
-      <ErrorBoundary>
-        <MobilePerformanceProvider>
-          <SoundProvider enabled={!masterMuted} volume={0.4}>
-            <AuthProvider>
-              {modal}
-              <div data-lenis-content>
-                <main
-                  className="min-h-screen"
-                  style={{
-                    touchAction: 'auto',
-                    overflow: 'visible',
-                    position: 'relative',
-                    zIndex: 1,
-                    height: 'auto',
-                    isolation: 'auto',
-                    contain: 'none',
-                  }}
-                  data-allow-scroll
-                  data-scrollable
-                >
-                  {children}
-                </main>
-              </div>
-            </AuthProvider>
-          </SoundProvider>
-        </MobilePerformanceProvider>
-      </ErrorBoundary>
+      <PerformanceProvider showFPS={true}>
+        <ErrorBoundary>
+          <MobilePerformanceProvider>
+            <SoundProvider enabled={!masterMuted} volume={0.4}>
+              <AuthProvider>
+                {modal}
+                <div data-lenis-content>
+                  <main
+                    className="min-h-screen"
+                    style={{
+                      touchAction: 'auto',
+                      overflow: 'visible',
+                      position: 'relative',
+                      zIndex: 1,
+                      height: 'auto',
+                      isolation: 'auto',
+                      contain: 'none',
+                    }}
+                    data-allow-scroll
+                    data-scrollable
+                  >
+                    {children}
+                  </main>
+                </div>
+              </AuthProvider>
+            </SoundProvider>
+          </MobilePerformanceProvider>
+        </ErrorBoundary>
+      </PerformanceProvider>
     );
   }
 
   return (
-    <ErrorBoundary>
-      <MobilePerformanceProvider>
-        <SoundProvider enabled={!masterMuted} volume={0.4}>
-          <AuthProvider>
+    <PerformanceProvider showFPS={true}>
+      <ErrorBoundary>
+        <MobilePerformanceProvider>
+          <SoundProvider enabled={!masterMuted} volume={0.4}>
+            <AuthProvider>
             {/* NOTE: UIStateProvider is already provided by MobileMenuProvider in layout.tsx */}
             {/* NOTE: RecruitAuthProvider is now in layout.tsx to wrap Navbar */}
 
             {/* CRITICAL: FPS Scroll Optimizer - pauses animations during scroll */}
             <FpsScrollOptimizer />
       
-          <UnifiedPerformanceProvider startDelay={2000}>
-            <CrashTrackerProvider>
-              <FpsOptimizerProvider enableMonitoring={true} monitoringInterval={500} startDelay={1000}>
-                <PerformanceProvider enableSmoothScroll={true}>
-                <FpsMonitor show={false} />
+          {/* 
+            PERFORMANCE FIX: Removed 4 nested performance monitoring providers.
+            CrashTrackerProvider, FpsOptimizerProvider, PerformanceProvider, and 
+            UnifiedPerformanceProvider were running 3 concurrent RAF loops + ~5 setInterval 
+            timers (including a 30s network speed test). FpsMonitor was hidden (show={false}) 
+            but still consuming CPU. These monitoring tools were ironically the biggest 
+            source of performance drain. Kept FpsScrollOptimizer as it pauses animations
+            during scroll which is genuinely useful.
+          */}
               {/* NOTE: ClientCursor moved to LayoutProviders - rendered LAST in DOM */}
               {/* AudioWidget stays mounted - NOT lazy unmounted - for audio persistence */}
               {allowMobileComponents && <AudioWidget />}
@@ -302,16 +279,11 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
                 <main 
                   className="min-h-screen"
                   style={{ 
-                    // Filter is now applied via ThemeOverlay and CSS ::before
-                    // No direct filter here to avoid scroll issues
-                    touchAction: 'auto', // FIXED: Allow ALL interactions including scroll
-                    overflow: 'visible', // FIXED: Allow content to overflow naturally
-                    // Ensure proper stacking - but don't create barrier
+                    touchAction: 'auto',
+                    overflow: 'visible',
                     position: 'relative',
                     zIndex: 1,
-                    // CRITICAL: No height constraints
                     height: 'auto',
-                    // DESKTOP FIX: Don't create stacking context
                     isolation: 'auto',
                     contain: 'none',
                   }}
@@ -320,9 +292,7 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
                 >
                   {children}
                 </main>
-                {/* NOTE: Footer moved to page.tsx only */}
               </div>
-              <FPSCounter />
               
               {/* 
                 SMART MOUNT GLOBAL MODALS v3.0:
@@ -333,29 +303,13 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
               */}
               {allowMobileComponents && <LazyGlobalModals />}
               
-              {/* 
-                ADMIN VIP PANEL PROVIDER:
-                - Opens via window.dispatchEvent(new CustomEvent('openAdminVIPPanel'))
-                - Or keyboard shortcut: Ctrl+Shift+A (Cmd+Shift+A on Mac)
-                - Lazy loaded - zero cost until first opened
-              */}
               <AdminVIPPanelProvider />
-              
-              {/* 
-                ADMIN BUTTON:
-                - Only visible when mrbullmoney@gmail.com is logged in
-                - Fixed position bottom-right corner
-                - Opens the Admin VIP Panel
-              */}
               <AdminButton />
-                </PerformanceProvider>
-              </FpsOptimizerProvider>
-            </CrashTrackerProvider>
-          </UnifiedPerformanceProvider>
           </AuthProvider>
         </SoundProvider>
       </MobilePerformanceProvider>
-    </ErrorBoundary>
+      </ErrorBoundary>
+    </PerformanceProvider>
   );
 }
 

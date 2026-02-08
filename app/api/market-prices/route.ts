@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { promises as fs } from 'fs';
 
 const COIN_IDS = [
   { id: 'bitcoin', symbol: 'BTC' },
@@ -33,12 +34,102 @@ const FALLBACK_METALS: Record<string, { price: number; change: number }> = {
   XPD: { price: 1050, change: 0.2 },
 };
 
+const METALS_URLS = [
+  'https://api.metals.live/v1/spot',
+  'https://metals.live/v1/spot',
+];
+
+const CACHE_FILE = '/tmp/market-prices.json';
+
+async function fetchJsonWithTimeout(url: string, timeoutMs: number) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Non-OK status ${response.status}`);
+    }
+
+    return await response.json();
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+function isWeekendInTimeZone(timeZone: string) {
+  try {
+    const weekday = new Intl.DateTimeFormat('en-US', {
+      weekday: 'short',
+      timeZone,
+    }).format(new Date());
+    return weekday === 'Sat' || weekday === 'Sun';
+  } catch {
+    const weekday = new Intl.DateTimeFormat('en-US', {
+      weekday: 'short',
+      timeZone: 'UTC',
+    }).format(new Date());
+    return weekday === 'Sat' || weekday === 'Sun';
+  }
+}
+
+async function readCache() {
+  try {
+    const raw = await fs.readFile(CACHE_FILE, 'utf8');
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+async function writeCache(data: any) {
+  const payload = {
+    ...data,
+    cachedAt: new Date().toISOString(),
+  };
+  await fs.writeFile(CACHE_FILE, JSON.stringify(payload));
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const showCrypto = searchParams.get('crypto') !== 'false';
   const showMetals = searchParams.get('metals') !== 'false';
+  const timeZoneHeader = request.headers.get('x-timezone') || 'UTC';
+
+  if (isWeekendInTimeZone(timeZoneHeader)) {
+    const cached = await readCache();
+    const weekendResults: any = {};
+
+    if (showCrypto && cached?.crypto) {
+      weekendResults.crypto = cached.crypto;
+    }
+
+    if (showMetals && cached?.metals) {
+      weekendResults.metals = cached.metals;
+    }
+
+    if (Object.keys(weekendResults).length > 0) {
+      if (cached?.cachedAt) {
+        weekendResults.cachedAt = cached.cachedAt;
+      }
+      return NextResponse.json(weekendResults, {
+        headers: {
+          'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+          'X-Weekend-Cache': 'hit',
+        },
+      });
+    }
+  }
 
   const results: any = {};
+  let cryptoLive = false;
+  let metalsLive = false;
 
   // Fetch crypto prices
   if (showCrypto) {
@@ -62,6 +153,7 @@ export async function GET(request: Request) {
       if (cryptoRes.ok) {
         const cryptoData = await cryptoRes.json();
         results.crypto = cryptoData;
+        cryptoLive = true;
       } else {
         console.warn('CoinGecko API returned non-OK status:', cryptoRes.status);
         results.crypto = 'fallback';
@@ -75,22 +167,23 @@ export async function GET(request: Request) {
   // Fetch metal prices
   if (showMetals) {
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-      
-      const metalsRes = await fetch('https://api.metals.live/v1/spot', {
-        signal: controller.signal,
-        headers: {
-          'Accept': 'application/json',
-        },
-      });
-      
-      clearTimeout(timeoutId);
+      let metalsData: any = null;
+      let lastError: unknown = null;
 
-      if (metalsRes.ok) {
-        const metalsData = await metalsRes.json();
+      for (const url of METALS_URLS) {
+        try {
+          metalsData = await fetchJsonWithTimeout(url, 5000);
+          break;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      if (metalsData) {
         results.metals = metalsData;
+        metalsLive = true;
       } else {
+        console.warn('Metals API fetch failed:', lastError);
         results.metals = 'fallback';
       }
     } catch (error) {
@@ -121,6 +214,25 @@ export async function GET(request: Request) {
         palladium: FALLBACK_METALS.XPD.price,
       }
     ];
+  }
+
+  if (cryptoLive || metalsLive) {
+    const cached = (await readCache()) || {};
+    const cachedAt = new Date().toISOString();
+    if (cryptoLive) {
+      cached.crypto = results.crypto;
+    }
+    if (metalsLive) {
+      cached.metals = results.metals;
+    }
+    cached.cachedAt = cachedAt;
+    results.cachedAt = cachedAt;
+    await writeCache(cached);
+  } else {
+    const cached = await readCache();
+    if (cached?.cachedAt) {
+      results.cachedAt = cached.cachedAt;
+    }
   }
 
   return NextResponse.json(results, {

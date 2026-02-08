@@ -281,13 +281,13 @@ export function CurrencyLanguageSelector() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => { setIsOpen(!isOpen); setSearch(''); }}
-        className="flex items-center gap-1.5 h-8 px-2.5 bg-white/5 border border-white/10 rounded-lg
-                   text-white/70 text-xs hover:bg-white/10 transition-colors"
+        className="flex items-center gap-1 h-7 px-2 bg-white/5 border border-white/10 rounded-md
+                   text-white/70 text-[10px] hover:bg-white/10 transition-colors sm:h-8 sm:px-2.5 sm:text-xs sm:gap-1.5 sm:rounded-lg"
       >
-        <Globe className="w-3.5 h-3.5" />
-        <span>{currentLanguage.flag}</span>
-        <span>{currentCurrency.code}</span>
-        <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <Globe className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+        <span className="text-[10px] sm:text-xs">{currentLanguage.flag}</span>
+        <span className="text-[10px] sm:text-xs">{currentCurrency.code}</span>
+        <ChevronDown className={`w-2.5 h-2.5 sm:w-3 sm:h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && typeof document !== 'undefined' && createPortal(

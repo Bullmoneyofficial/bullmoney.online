@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useEffect, useState, useCallback } from 'react';
+import { useMemo, useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IconArrowLeft, IconArrowRight } from '@tabler/icons-react';
 import type { ProductWithDetails } from '@/types/store';
@@ -28,12 +28,30 @@ export function AnimatedProductGrid({
 }: AnimatedProductGridProps) {
   const [active, setActive] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isVisibleRef = useRef(true);
 
+  // Pause autoplay when component is off-screen
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
+    if (!containerRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { isVisibleRef.current = entry.isIntersecting; },
+      { threshold: 0.05 }
+    );
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  // Debounced resize for isMobile
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    const check = () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => setIsMobile(window.innerWidth < 768), 150);
+    };
     check();
     window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
+    return () => { window.removeEventListener('resize', check); clearTimeout(timeout); };
   }, []);
 
   // Use columns prop if provided, otherwise fall back to itemsPerRow, default to 4
@@ -60,15 +78,21 @@ export function AnimatedProductGrid({
     setActive((prev) => (prev - 1 + pages.length) % pages.length);
   }, [pages.length]);
 
-  // Autoplay
+  // Autoplay - only when visible
   useEffect(() => {
     if (autoplay && pages.length > 1) {
-      const interval = setInterval(handleNext, 5000);
+      const interval = setInterval(() => {
+        if (isVisibleRef.current) handleNext();
+      }, 5000);
       return () => clearInterval(interval);
     }
   }, [autoplay, handleNext, pages.length]);
 
-  const randomRotateY = () => Math.floor(Math.random() * 21) - 10;
+  // Stable rotation values per page to avoid recalculating in render
+  const rotationValues = useMemo(() => 
+    pages.map(() => Math.floor(Math.random() * 21) - 10),
+    [pages.length] // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   if (!products || products.length === 0 || pages.length === 0) {
     return null;
@@ -79,15 +103,15 @@ export function AnimatedProductGrid({
   const totalHeight = (cardHeight * rowsPerPage) + (gap * (rowsPerPage - 1));
 
   return (
-    <div className="w-full">
+    <div className="w-full" ref={containerRef}>
       {/* Card stack area */}
-      <div className="relative w-full" style={{ minHeight: `${totalHeight + 40}px` }}>
+      <div className="relative w-full" style={{ minHeight: `${totalHeight + 40}px`, contain: 'layout style', willChange: 'auto' }}>
         <AnimatePresence mode="popLayout">
           <motion.div
             key={active}
-            initial={{ opacity: 0, scale: 0.95, y: 30, rotate: randomRotateY() * 0.3 }}
+            initial={{ opacity: 0, scale: 0.95, y: 30, rotate: (rotationValues[active] || 0) * 0.3 }}
             animate={{ opacity: 1, scale: 1, y: 0, rotate: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -30, rotate: randomRotateY() * 0.3 }}
+            exit={{ opacity: 0, scale: 0.95, y: -30, rotate: (rotationValues[active] || 0) * 0.3 }}
             transition={{ duration: 0.4, ease: 'easeInOut' }}
             className="w-full"
           >

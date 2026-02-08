@@ -1,110 +1,138 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import {
+  ShimmerSpinner,
+  ShimmerRadialGlow,
+} from "@/components/ui/UnifiedShimmer";
 
 // ============================================================================
-// PRODUCTION OPTIMIZED DYNAMIC IMPORTS - Priority-based loading
+// ✅ PRODUCTION OPTIMIZED DYNAMIC IMPORTS - Priority-based loading
+// Matches app/page.tsx patterns: webpackChunkName, webpackPrefetch, shimmer fallbacks
 // ============================================================================
+
+// Lightweight shimmer fallback matching home page style
+const ShimmerFallback = () => (
+  <div className="w-full h-24 flex items-center justify-center">
+    <ShimmerSpinner size={24} color="white" />
+  </div>
+);
 
 // CRITICAL - Load immediately (above the fold)
-export const CookieConsent = dynamic(() => import('@/components/CookieConsent'), { 
-  ssr: false,
-  loading: () => null,
-});
+export const CookieConsent = dynamic(
+  () => import(/* webpackChunkName: "store-cookie" */ '@/components/CookieConsent'),
+  { ssr: false, loading: () => null }
+);
 
-export const SearchAutocomplete = dynamic(() => import('@/components/shop/SearchAutocomplete').then(mod => mod.SearchAutocomplete), { 
-  ssr: false,
-  loading: () => null,
-});
+export const SearchAutocomplete = dynamic(
+  () => import(/* webpackChunkName: "store-search", webpackPrefetch: true */ '@/components/shop/SearchAutocomplete').then(mod => mod.SearchAutocomplete),
+  { ssr: false, loading: () => null }
+);
 
 // HIGH PRIORITY - Load after initial render (visible on first screen)
-export const StoreHero3D = dynamic(() => import('@/components/shop/StoreHero3D').then(mod => ({ default: mod.StoreHero3D })), {
-  ssr: false,
-  loading: () => <div className="w-full h-100 bg-linear-to-b from-black via-zinc-900/50 to-black" />
-});
+export const StoreHero3D = dynamic(
+  () => import(/* webpackChunkName: "store-hero-3d", webpackPrefetch: true */ '@/components/shop/StoreHero3D').then(mod => ({ default: mod.StoreHero3D })),
+  { ssr: false, loading: () => <div className="w-full h-100 bg-linear-to-b from-black via-zinc-900/50 to-black flex items-center justify-center"><ShimmerRadialGlow color="white" intensity="low" /><ShimmerSpinner size={48} color="white" /></div> }
+);
 
-export const MarketPriceTicker = dynamic(() => import('@/components/shop/MarketPriceTicker'), { 
-  ssr: false,
-  loading: () => <div className="h-12 bg-black/50" />
-});
+export const MarketPriceTicker = dynamic(
+  () => import(/* webpackChunkName: "store-ticker", webpackPrefetch: true */ '@/components/shop/MarketPriceTicker'),
+  { ssr: false, loading: () => <div className="h-12 bg-black/50" /> }
+);
 
 // MEDIUM PRIORITY - Load when needed (interactive elements)
-export const ProductCard = dynamic(() => import('@/components/shop/ProductCard').then(mod => mod.ProductCard), { 
-  ssr: false,
-  loading: () => <div className="bg-white/5 animate-pulse aspect-3/4 rounded-2xl" />
-});
+export const ProductCard = dynamic(
+  () => import(/* webpackChunkName: "store-product-card" */ '@/components/shop/ProductCard').then(mod => mod.ProductCard),
+  { ssr: false, loading: () => <div className="bg-white/5 animate-pulse aspect-3/4 rounded-2xl" /> }
+);
 
-export const FilterSheet = dynamic(() => import('@/components/shop/FilterSheet').then(mod => mod.FilterSheet), { 
-  ssr: false,
-  loading: () => null,
-});
+export const FilterSheet = dynamic(
+  () => import(/* webpackChunkName: "store-filters" */ '@/components/shop/FilterSheet').then(mod => mod.FilterSheet),
+  { ssr: false, loading: () => null }
+);
 
 // LOW PRIORITY - Defer until viewport or interaction (below fold)
-export const ProductsCarousel = dynamic(() => import('@/components/shop/ProductsCarousel'), { 
-  ssr: false,
-  loading: () => <div className="h-96 bg-black/50 animate-pulse rounded-3xl" />
-});
+export const ProductsCarousel = dynamic(
+  () => import(/* webpackChunkName: "store-carousel" */ '@/components/shop/ProductsCarousel'),
+  { ssr: false, loading: () => <ShimmerFallback /> }
+);
 
-export const CircularProductGrid = dynamic(() => import('@/components/shop/CircularProductGrid'), { 
-  ssr: false,
-  loading: () => <div className="h-screen bg-black/50 animate-pulse" />
-});
+export const CircularProductGrid = dynamic(
+  () => import(/* webpackChunkName: "store-circular-grid" */ '@/components/shop/CircularProductGrid'),
+  { ssr: false, loading: () => <ShimmerFallback /> }
+);
 
-export const AnimatedProductGrid = dynamic(() => import('@/components/shop/AnimatedProductGrid'), { 
-  ssr: false,
-  loading: () => <div className="h-screen bg-black/50 animate-pulse" />
-});
+export const AnimatedProductGrid = dynamic(
+  () => import(/* webpackChunkName: "store-animated-grid" */ '@/components/shop/AnimatedProductGrid'),
+  { ssr: false, loading: () => <ShimmerFallback /> }
+);
 
-export const HoverEffect = dynamic(() => import('@/components/ui/card-hover-effect').then(mod => mod.HoverEffect), { 
-  ssr: false,
-  loading: () => null,
-});
+export const HoverEffect = dynamic(
+  () => import(/* webpackChunkName: "store-hover" */ '@/components/ui/card-hover-effect').then(mod => mod.HoverEffect),
+  { ssr: false, loading: () => null }
+);
 
-export const FocusCards = dynamic(() => import('@/components/ui/focus-cards').then(mod => mod.FocusCards), { 
-  ssr: false,
-  loading: () => <div className="h-96 bg-black/50 animate-pulse rounded-3xl" />
-});
+export const FocusCards = dynamic(
+  () => import(/* webpackChunkName: "store-focus-cards" */ '@/components/ui/focus-cards').then(mod => mod.FocusCards),
+  { ssr: false, loading: () => <ShimmerFallback /> }
+);
 
-export const FeaturedProductsTimeline = dynamic(() => import('@/components/shop/FeaturedProductsTimeline').then(mod => mod.FeaturedProductsTimeline), { 
-  ssr: false,
-  loading: () => <div className="h-96 bg-black/50 animate-pulse rounded-3xl" />
-});
+export const FeaturedProductsTimeline = dynamic(
+  () => import(/* webpackChunkName: "store-timeline" */ '@/components/shop/FeaturedProductsTimeline').then(mod => mod.FeaturedProductsTimeline),
+  { ssr: false, loading: () => <ShimmerFallback /> }
+);
 
-export const GlassProductGrid = dynamic(() => import('@/components/shop/GlassProductGrid').then(mod => mod.GlassProductGrid), { 
-  ssr: false,
-  loading: () => <div className="h-[500px] bg-black/50 animate-pulse rounded-3xl" />
-});
+export const GlassProductGrid = dynamic(
+  () => import(/* webpackChunkName: "store-glass-grid" */ '@/components/shop/GlassProductGrid').then(mod => mod.GlassProductGrid),
+  { ssr: false, loading: () => <ShimmerFallback /> }
+);
 
-// DEFERRED - Load on demand only
-export const WorldMap = dynamic(() => import('@/components/ui/world-map'), { 
-  ssr: false,
-  loading: () => <div className="h-screen bg-black" />
-});
+// DEFERRED - Load on demand only (heavy 3D / below fold)
+export const WorldMap = dynamic(
+  () => import(/* webpackChunkName: "store-world-map" */ '@/components/ui/world-map'),
+  { ssr: false, loading: () => <div className="h-screen bg-black" /> }
+);
 
-export const StoreFluidGlassSection = dynamic(() => import('@/components/shop/StoreFluidGlassSection'), { 
-  ssr: false,
-  loading: () => <div className="h-screen bg-black/50" />
-});
+export const InfiniteMenu = dynamic(
+  () => import(/* webpackChunkName: "store-infinite-menu" */ '@/components/InfiniteMenu'),
+  { ssr: false, loading: () => <div className="h-screen bg-black" /> }
+);
 
-export const StoreFooter = dynamic(() => import('@/components/shop/StoreFooter'), { 
-  ssr: false,
-  loading: () => <div className="h-48 bg-black/50" />
-});
+export const FlyingPosters = dynamic(
+  () => import(/* webpackChunkName: "store-flying-posters" */ '@/components/FlyingPosters'),
+  { ssr: false, loading: () => <div className="h-screen bg-black" /> }
+);
 
-export const RewardsCardBanner = dynamic(() => import('@/components/RewardsCardBanner'), { 
-  ssr: false,
-  loading: () => null,
-});
+export const StoreFluidGlassSection = dynamic(
+  () => import(/* webpackChunkName: "store-fluid-glass" */ '@/components/shop/StoreFluidGlassSection'),
+  { ssr: false, loading: () => <div className="h-screen bg-black/50" /> }
+);
 
-export const RewardsCard = dynamic(() => import('@/components/RewardsCard'), { 
-  ssr: false,
-  loading: () => null,
-});
+export const StoreFooter = dynamic(
+  () => import(/* webpackChunkName: "store-footer" */ '@/components/shop/StoreFooter'),
+  { ssr: false, loading: () => <div className="h-48 bg-black/50" /> }
+);
+
+export const RewardsCardBanner = dynamic(
+  () => import(/* webpackChunkName: "store-rewards-banner" */ '@/components/RewardsCardBanner'),
+  { ssr: false, loading: () => null }
+);
+
+export const RewardsCard = dynamic(
+  () => import(/* webpackChunkName: "store-rewards-card" */ '@/components/RewardsCard'),
+  { ssr: false, loading: () => null }
+);
 
 // MOTION - Only load when animations are triggered
-export const MotionDiv = dynamic(() => import('framer-motion').then(mod => {
-  const { motion } = mod;
-  return { default: motion.div };
-}), { ssr: false });
+export const MotionDiv = dynamic(
+  () => import(/* webpackChunkName: "framer-motion" */ 'framer-motion').then(mod => {
+    const { motion } = mod;
+    return { default: motion.div };
+  }),
+  { ssr: false }
+);
 
-export const AnimatePresence = dynamic(() => import('framer-motion').then(mod => ({ default: mod.AnimatePresence })), { ssr: false });
+export const AnimatePresence = dynamic(
+  () => import(/* webpackChunkName: "framer-motion" */ 'framer-motion').then(mod => ({ default: mod.AnimatePresence })),
+  { ssr: false }
+);

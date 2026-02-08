@@ -18,9 +18,10 @@
   text-size-adjust: 100%;
   /* Remove tap highlight on mobile */
   -webkit-tap-highlight-color: transparent;
-  /* Prevent layout thrashing */
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
+  /* NOTE: backface-visibility: hidden removed from global * selector.
+     It was promoting EVERY element to its own GPU compositing layer,
+     exhausting iOS GPU memory (512MB-1GB) and causing jank.
+     Now applied only to elements that actually need it (see .gpu-accelerated). */
 }
 
 /* ============================================

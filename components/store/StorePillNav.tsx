@@ -1,13 +1,16 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, memo } from 'react';
 import Link from 'next/link';
 import { ShoppingBag, Search, User, Menu } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname } from 'next/navigation';
-import TextType from '@/components/TextType';
-import CountUp from '@/components/CountUp';
+import dynamic from 'next/dynamic';
 import { LanguageToggle } from '@/components/LanguageToggle';
+
+// Lazy-load framer-motion — only needed for cart badge animation
+const LazyMotionButton = dynamic(() => import('framer-motion').then(m => ({ default: m.motion.button })), { ssr: false });
+const LazyMotionSpan = dynamic(() => import('framer-motion').then(m => ({ default: m.motion.span })), { ssr: false });
+const LazyAnimatePresence = dynamic(() => import('framer-motion').then(m => ({ default: m.AnimatePresence })), { ssr: false });
 
 // ============================================================================
 // STORE PILL NAV - Simple, Reliable Store Navigation
@@ -45,7 +48,7 @@ export interface StorePillNavProps {
   initialLoadAnimation?: boolean;
 }
 
-export const StorePillNav: React.FC<StorePillNavProps> = ({
+export const StorePillNav: React.FC<StorePillNavProps> = memo(({
   logo = '/BULL.svg',
   logoAlt = 'Bullmoney',
   items = [],
@@ -69,24 +72,18 @@ export const StorePillNav: React.FC<StorePillNavProps> = ({
     setMounted(true);
   }, []);
 
-  // Determine active href based on current pathname
-  const getActiveHref = () => {
+  // Determine active href based on current pathname (memoized)
+  const activeHref = useMemo(() => {
     if (!pathname || !items || items.length === 0) return '/store';
-    
-    // Check for exact matches first
     const exactMatch = items.find(item => item.href === pathname);
     if (exactMatch) return exactMatch.href;
-    
-    // Default to /store if on store page
     if (pathname.startsWith('/store')) return '/store';
     return '';
-  };
-  
-  const activeHref = getActiveHref();
+  }, [pathname, items]);
 
-  const handleMobileMenuClick = () => {
+  const handleMobileMenuClick = useCallback(() => {
     onMobileMenuClick?.();
-  };
+  }, [onMobileMenuClick]);
 
   // SSR fallback
   if (!mounted) {
@@ -112,7 +109,7 @@ export const StorePillNav: React.FC<StorePillNavProps> = ({
               textShadow: '0 0 8px rgba(255, 255, 255, 0.3)',
               letterSpacing: '0.05em'
             }}>
-              <TextType text="bullmoney" typingSpeed={25} showCursor={false} loop={false} as="span" />
+              bullmoney
             </Link>
           </div>
           
@@ -130,7 +127,7 @@ export const StorePillNav: React.FC<StorePillNavProps> = ({
                     }
                     aria-label={item.ariaLabel || item.label}
                   >
-                    <TextType text={item.label} typingSpeed={Math.max(8, 30 - item.label.length)} showCursor={false} loop={false} as="span" />
+                    {item.label}
                   </button>
                 </li>
               ))}
@@ -175,7 +172,7 @@ export const StorePillNav: React.FC<StorePillNavProps> = ({
             
             {/* Cart */}
             {showCart && (
-              <motion.button
+              <LazyMotionButton
                 className="h-10 px-4 flex items-center gap-2 rounded-xl transition-colors"
                 style={{ background: 'rgb(255,255,255)', color: 'rgb(0,0,0)' }}
                 onClick={onCartClick}
@@ -183,20 +180,20 @@ export const StorePillNav: React.FC<StorePillNavProps> = ({
                 aria-label="Shopping Cart"
               >
                 <ShoppingBag className="w-5 h-5" />
-                <AnimatePresence mode="wait">
+                <LazyAnimatePresence mode="wait">
                   {cartCount > 0 && (
-                    <motion.span
+                    <LazyMotionSpan
                       key={cartCount}
                       initial={{ opacity: 0, scale: 0.5 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.5 }}
                       className="text-sm font-medium"
                     >
-                      <CountUp to={cartCount} from={0} duration={0.5} separator="" className="" />
-                    </motion.span>
+                      {cartCount}
+                    </LazyMotionSpan>
                   )}
-                </AnimatePresence>
-              </motion.button>
+                </LazyAnimatePresence>
+              </LazyMotionButton>
             )}
             
             {/* Mobile Menu Toggle */}
@@ -213,6 +210,8 @@ export const StorePillNav: React.FC<StorePillNavProps> = ({
       </header>
     </>
   );
-};
+});
+
+StorePillNav.displayName = 'StorePillNav';
 
 export default StorePillNav;

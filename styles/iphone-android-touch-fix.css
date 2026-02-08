@@ -413,7 +413,7 @@ select,
 .desktop-only-mode {
   touch-action: manipulation !important;
   pointer-events: auto !important;
-  -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Desktop page interactive elements */
@@ -429,7 +429,7 @@ select,
 .desktop-only-mode [role="button"] {
   touch-action: manipulation !important;
   pointer-events: auto !important;
-  -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
+  -webkit-tap-highlight-color: transparent;
   min-height: 44px; /* iOS minimum touch target */
   min-width: 44px;
 }
@@ -471,4 +471,39 @@ select,
   touch-action: pan-y !important;
   overscroll-behavior-y: contain;
   overscroll-behavior-x: none;
+}
+
+/* ============================================================================
+   MOBILE TAP FLASH FIX
+   Prevents black/white flash on first touch for cookie consent, promo popups,
+   3D toggle buttons, and all interactive elements in mobile browsers / in-app browsers
+   ============================================================================ */
+button,
+a,
+[role="button"],
+input,
+select,
+textarea,
+label,
+[tabindex],
+.cursor-pointer,
+[data-cookie-consent] *,
+[data-promo-popup] *,
+[data-3d-toggle] *,
+.cookie-consent *,
+.promo-popup *,
+.spline-toggle *,
+.effect-button * {
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-touch-callout: none;
+  outline: none;
+}
+
+/* Prevent background flash on active state in WebView / in-app browsers */
+button:active,
+a:active,
+[role="button"]:active,
+.cursor-pointer:active {
+  -webkit-tap-highlight-color: transparent !important;
+  background-color: inherit;
 }

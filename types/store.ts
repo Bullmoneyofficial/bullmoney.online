@@ -90,7 +90,31 @@ export interface ProductImage {
   created_at: ISODateString;
 }
 
+// Product Media (Images + Videos)
+export type MediaType = 'image' | 'video';
+
+export interface ProductMedia {
+  id: UUID;
+  product_id: UUID;
+  media_type: MediaType;
+  url: string;
+  thumbnail_url: string | null;
+  alt_text: string | null;
+  title: string | null;
+  duration_seconds: number | null;
+  width: number | null;
+  height: number | null;
+  file_size_bytes: number | null;
+  mime_type: string | null;
+  sort_order: number;
+  is_primary: boolean;
+  metadata: Record<string, unknown>;
+  created_at: ISODateString;
+  updated_at: ISODateString;
+}
+
 export interface VariantOptions {
+  media?: ProductMedia[]; // New: unified media array (images + videos)
   size?: string;
   color?: string;
   [key: string]: string | undefined;

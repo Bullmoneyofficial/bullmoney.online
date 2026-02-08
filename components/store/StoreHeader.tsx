@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
 import { X, User, Home, LogOut, Users, HelpCircle, Calendar, Settings, Eye, EyeOff, Palette, Sparkles } from 'lucide-react';
 import { useCartStore } from '@/stores/cart-store';
 import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
@@ -11,9 +10,12 @@ import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { useProductsModalUI, useThemeSelectorModalUI, useAuthModalUI } from '@/contexts/UIStateContext';
 import dynamic from 'next/dynamic';
 import { StorePillNav } from './StorePillNav';
-import TextType from '@/components/TextType';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
+
+// Lazy-load framer-motion — only needed when mobile menu is opened
+const LazyMotionDiv = dynamic(() => import('framer-motion').then(m => ({ default: m.motion.div })), { ssr: false });
+const LazyAnimatePresence = dynamic(() => import('framer-motion').then(m => ({ default: m.AnimatePresence })), { ssr: false });
 
 // Lazy load modals - same as main navbar
 const AdminHubModal = dynamic(() => import('@/components/AdminHubModal'), { ssr: false });
@@ -101,53 +103,56 @@ export function StoreHeader() {
     }
   }, []);
   
-  const toggleThemePicker = () => {
+  const toggleThemePicker = useCallback(() => {
     SoundEffects.click();
-    const newValue = !showThemePicker;
-    setShowThemePicker(newValue);
-    setThemePickerModalOpen(newValue); // Actually control the modal
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('store_show_theme_picker', String(newValue));
-      window.dispatchEvent(new Event('store_theme_picker_toggle'));
-    }
-  };
+    setShowThemePicker(prev => {
+      const newValue = !prev;
+      setThemePickerModalOpen(newValue);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('store_show_theme_picker', String(newValue));
+        window.dispatchEvent(new Event('store_theme_picker_toggle'));
+      }
+      return newValue;
+    });
+  }, [setThemePickerModalOpen]);
 
-  const toggleUltimateHub = () => {
+  const toggleUltimateHub = useCallback(() => {
     SoundEffects.click();
-    const newValue = !showUltimateHub;
-    setShowUltimateHub(newValue);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('store_show_ultimate_hub', String(newValue));
-      // Fire both CustomEvent (with detail) and plain Event for backward compatibility
-      window.dispatchEvent(new CustomEvent('store_ultimate_hub_toggle', { detail: newValue }));
-      window.dispatchEvent(new Event('store_ultimate_hub_toggle'));
-    }
-  };
+    setShowUltimateHub(prev => {
+      const newValue = !prev;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('store_show_ultimate_hub', String(newValue));
+        window.dispatchEvent(new CustomEvent('store_ultimate_hub_toggle', { detail: newValue }));
+        window.dispatchEvent(new Event('store_ultimate_hub_toggle'));
+      }
+      return newValue;
+    });
+  }, []);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     SoundEffects.close();
     signOut();
     setMobileMenuOpen(false);
-  };
+  }, [signOut]);
   
   // Handle user click - open auth modal or go to account
-  const handleUserClick = () => {
+  const handleUserClick = useCallback(() => {
     SoundEffects.click();
     if (isAuthenticated && recruit) {
       router.push('/store/account');
     } else {
       setAuthModalOpen(true);
     }
-  };
+  }, [isAuthenticated, recruit, router, setAuthModalOpen]);
   
   // Handle search click - scroll to search on store page
-  const handleSearchClick = () => {
+  const handleSearchClick = useCallback(() => {
     SoundEffects.click();
     router.push('/store');
-  };
+  }, [router]);
   
   // Handle category click - navigate and scroll to products (only for store pages)
-  const handleCategoryClick = (href: string) => {
+  const handleCategoryClick = useCallback((href: string) => {
     SoundEffects.tab();
     // Open auth modal for login instead of navigating
     if (href === '/login') {
@@ -165,7 +170,17 @@ export function StoreHeader() {
         }
       }, 100);
     }
-  };
+  }, [router, setAuthModalOpen]);
+
+  const handleOpenMobileMenu = useCallback(() => {
+    SoundEffects.open();
+    setMobileMenuOpen(true);
+  }, []);
+
+  const handleCloseMobileMenu = useCallback(() => {
+    SoundEffects.close();
+    setMobileMenuOpen(false);
+  }, []);
 
   return (
     <>
@@ -192,10 +207,7 @@ export function StoreHeader() {
         showCart={true}
         isAuthenticated={isAuthenticated}
         userInitial={recruit?.email?.charAt(0) || 'U'}
-        onMobileMenuClick={() => {
-          SoundEffects.open();
-          setMobileMenuOpen(true);
-        }}
+        onMobileMenuClick={handleOpenMobileMenu}
       />
       
       {/* Secondary Action Bar - Desktop only */}
@@ -215,7 +227,7 @@ export function StoreHeader() {
                 title="Theme Picker: ON"
               >
                 <Palette className="w-3.5 h-3.5" />
-                <span><TextType text="Themes" typingSpeed={20} showCursor={false} loop={false} as="span" /></span>
+                <span>Themes</span>
                 <Eye className="w-3 h-3" />
               </button>
             )}
@@ -231,7 +243,7 @@ export function StoreHeader() {
               title={showUltimateHub ? 'Ultimate Hub: ON' : 'Ultimate Hub: OFF'}
             >
               <Sparkles className="w-3.5 h-3.5" />
-              <span><TextType text="Hub" typingSpeed={25} showCursor={false} loop={false} as="span" /></span>
+              <span>Hub</span>
               {showUltimateHub ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
             </button>
           </div>
@@ -245,7 +257,7 @@ export function StoreHeader() {
               style={{ background: 'rgb(255,255,255)', color: 'rgb(0,0,0)', border: '1px solid rgb(255,255,255)' }}
             >
               <Users className="w-3.5 h-3.5" />
-              <span><TextType text="Affiliates" typingSpeed={15} showCursor={false} loop={false} as="span" /></span>
+              <span>Affiliates</span>
             </button>
             
             {/* Products Button */}
@@ -255,7 +267,7 @@ export function StoreHeader() {
               style={{ background: 'rgb(255,255,255)', color: 'rgb(0,0,0)', border: '1px solid rgb(255,255,255)' }}
             >
               <Calendar className="w-3.5 h-3.5" />
-              <span><TextType text="Products" typingSpeed={18} showCursor={false} loop={false} as="span" /></span>
+              <span>Products</span>
             </button>
             
             {/* FAQ Button */}
@@ -265,7 +277,7 @@ export function StoreHeader() {
               style={{ background: 'rgb(255,255,255)', color: 'rgb(0,0,0)', border: '1px solid rgb(255,255,255)' }}
             >
               <HelpCircle className="w-3.5 h-3.5" />
-              <span><TextType text="FAQ" typingSpeed={25} showCursor={false} loop={false} as="span" /></span>
+              <span>FAQ</span>
             </button>
             
             {/* Account Manager - Desktop only, shown for authenticated users */}
@@ -277,7 +289,7 @@ export function StoreHeader() {
                 title="Account Manager"
               >
                 <User className="w-3.5 h-3.5" />
-                <span><TextType text="Account" typingSpeed={18} showCursor={false} loop={false} as="span" /></span>
+                <span>Account</span>
               </button>
             )}
             
@@ -290,7 +302,7 @@ export function StoreHeader() {
                 title="Admin Panel"
               >
                 <Settings className="w-3.5 h-3.5" />
-                <span><TextType text="Admin" typingSpeed={20} showCursor={false} loop={false} as="span" /></span>
+                <span>Admin</span>
               </button>
             )}
           </div>
@@ -298,21 +310,18 @@ export function StoreHeader() {
       </div>
 
       {/* Mobile Menu */}
-      <AnimatePresence>
+      <LazyAnimatePresence>
         {mobileMenuOpen && (
           <>
-            <motion.div
+            <LazyMotionDiv
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => {
-                SoundEffects.close();
-                setMobileMenuOpen(false);
-              }}
+              onClick={handleCloseMobileMenu}
               className="fixed inset-0 z-600"
               style={{ background: 'rgba(0,0,0,0.7)' }}
             />
-            <motion.div
+            <LazyMotionDiv
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
@@ -321,7 +330,7 @@ export function StoreHeader() {
               style={{ background: 'rgb(0,0,0)', borderLeft: '1px solid rgba(255,255,255,0.1)' }}
             >
               <div className="flex items-center justify-between mb-3">
-                <span className="text-lg font-light" style={{ color: 'rgb(255,255,255)' }}><TextType text="Menu" typingSpeed={25} showCursor={false} loop={false} as="span" /></span>
+                <span className="text-lg font-light" style={{ color: 'rgb(255,255,255)' }}>Menu</span>
                 <button
                   onClick={() => setMobileMenuOpen(false)}
                   className="h-8 w-8 flex items-center justify-center rounded-lg"
@@ -333,7 +342,7 @@ export function StoreHeader() {
 
               {/* Shop Categories */}
               <div className="mb-4">
-                <h3 className="text-xs font-semibold uppercase tracking-wider mb-2 px-1" style={{ color: 'rgba(255,255,255,0.7)' }}><TextType text="Shop Categories" typingSpeed={15} showCursor={false} loop={false} as="span" /></h3>
+                <h3 className="text-xs font-semibold uppercase tracking-wider mb-2 px-1" style={{ color: 'rgba(255,255,255,0.7)' }}>Shop Categories</h3>
                 <div className="flex flex-wrap gap-1.5">
                   {STORE_CATEGORIES.map((cat) => (
                     <Link
@@ -343,7 +352,7 @@ export function StoreHeader() {
                       className="px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
                       style={{ background: 'rgba(255,255,255,0.08)', color: 'rgb(255,255,255)', border: '1px solid rgba(255,255,255,0.15)' }}
                     >
-                      <TextType text={cat.label} typingSpeed={Math.max(8, 25 - cat.label.length)} showCursor={false} loop={false} as="span" />
+                      {cat.label}
                     </Link>
                   ))}
                 </div>
@@ -371,7 +380,7 @@ export function StoreHeader() {
                       style={{ background: 'rgba(255,255,255,0.15)', color: 'rgb(255,255,255)' }}
                     >
                       <User className="w-3 h-3" />
-                      <TextType text="Profile" typingSpeed={20} showCursor={false} loop={false} as="span" />
+                      Profile
                     </Link>
                     <button
                       onClick={handleLogout}
@@ -379,7 +388,7 @@ export function StoreHeader() {
                       style={{ background: 'rgba(255,255,255,0.15)', color: 'rgb(255,255,255)' }}
                     >
                       <LogOut className="w-3 h-3" />
-                      <TextType text="Logout" typingSpeed={20} showCursor={false} loop={false} as="span" />
+                      Logout
                     </button>
                   </div>
                 </div>
@@ -391,7 +400,7 @@ export function StoreHeader() {
                   style={{ background: 'rgba(255,255,255,0.08)', color: 'rgb(255,255,255)', border: '1px solid rgba(255,255,255,0.15)' }}
                 >
                   <User className="w-4 h-4" />
-                  <TextType text="Sign In / Register" typingSpeed={12} showCursor={false} loop={false} as="span" />
+                  Sign In / Register
                 </Link>
               )}
               
@@ -406,7 +415,7 @@ export function StoreHeader() {
                   style={{ background: 'linear-gradient(to bottom right, rgba(168,85,247,0.2), rgba(236,72,153,0.2))', border: '1px solid rgba(168,85,247,0.3)', color: 'rgb(216,180,254)' }}
                 >
                   <Settings className="w-4 h-4" style={{ color: 'rgb(216,180,254)' }} />
-                  <TextType text="Admin Panel" typingSpeed={15} showCursor={false} loop={false} as="span" />
+                  Admin Panel
                 </button>
               )}
               
@@ -421,13 +430,13 @@ export function StoreHeader() {
                   style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', color: 'rgb(255,255,255)' }}
                 >
                   <User className="w-4 h-4" style={{ color: 'rgb(255,255,255)' }} />
-                  <TextType text="Account Manager" typingSpeed={12} showCursor={false} loop={false} as="span" />
+                  Account Manager
                 </button>
               )}
               
               {/* Toggles Section - Mobile */}
               <div className="space-y-1 mb-3 pb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                <p className="text-[10px] px-3 mb-1 uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.6)' }}><TextType text="Toggles" typingSpeed={20} showCursor={false} loop={false} as="span" /></p>
+                <p className="text-[10px] px-3 mb-1 uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.6)' }}>Toggles</p>
                 
                 {/* 🌐 Language Selector */}
                 <LanguageToggle variant="row" dropDirection="down" />
@@ -441,7 +450,7 @@ export function StoreHeader() {
                   >
                     <div className="flex items-center gap-2">
                       <Palette className="w-4 h-4" />
-                      <span><TextType text="Theme Picker" typingSpeed={15} showCursor={false} loop={false} as="span" /></span>
+                      <span>Theme Picker</span>
                     </div>
                     <Eye className="w-4 h-4" />
                   </button>
@@ -458,7 +467,7 @@ export function StoreHeader() {
                 >
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4" />
-                    <span><TextType text="Ultimate Hub" typingSpeed={15} showCursor={false} loop={false} as="span" /></span>
+                    <span>Ultimate Hub</span>
                   </div>
                   {showUltimateHub ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                 </button>
@@ -466,7 +475,7 @@ export function StoreHeader() {
               
               {/* Site Features - Mobile */}
               <div className="space-y-0.5 mb-3 pb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                <p className="text-[10px] px-3 mb-1 uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.6)' }}><TextType text="Features" typingSpeed={18} showCursor={false} loop={false} as="span" /></p>
+                <p className="text-[10px] px-3 mb-1 uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.6)' }}>Features</p>
                 
                 {/* Affiliates */}
                 <button
@@ -478,7 +487,7 @@ export function StoreHeader() {
                   style={{ background: 'rgba(255,255,255,0.08)', color: 'rgb(255,255,255)', border: '1px solid rgba(255,255,255,0.15)' }}
                 >
                   <Users className="w-4 h-4" />
-                  <TextType text="Affiliates" typingSpeed={15} showCursor={false} loop={false} as="span" />
+                  Affiliates
                 </button>
                 
                 {/* Products */}
@@ -491,7 +500,7 @@ export function StoreHeader() {
                   style={{ background: 'rgba(255,255,255,0.08)', color: 'rgb(255,255,255)', border: '1px solid rgba(255,255,255,0.15)' }}
                 >
                   <Calendar className="w-4 h-4" />
-                  <TextType text="Products" typingSpeed={18} showCursor={false} loop={false} as="span" />
+                  Products
                 </button>
                 
                 {/* FAQ */}
@@ -504,7 +513,7 @@ export function StoreHeader() {
                   style={{ background: 'rgba(255,255,255,0.08)', color: 'rgb(255,255,255)', border: '1px solid rgba(255,255,255,0.15)' }}
                 >
                   <HelpCircle className="w-4 h-4" />
-                  <TextType text="FAQ" typingSpeed={25} showCursor={false} loop={false} as="span" />
+                  FAQ
                 </button>
               </div>
 
@@ -516,7 +525,7 @@ export function StoreHeader() {
                 style={{ border: '1px solid rgba(255,255,255,0.3)', color: 'rgb(255,255,255)', background: 'rgb(0,0,0)' }}
               >
                 <Home className="w-3.5 h-3.5" />
-                <TextType text="Back to Home" typingSpeed={15} showCursor={false} loop={false} as="span" />
+                Back to Home
               </Link>
 
               {/* Shop Now Button - Mobile */}
@@ -526,12 +535,12 @@ export function StoreHeader() {
                 className="mt-2 w-full h-9 flex items-center justify-center rounded-lg text-sm font-medium active:scale-[0.98] transition-all"
                 style={{ background: 'rgba(255,255,255,0.08)', color: 'rgb(255,255,255)', border: '1px solid rgba(255,255,255,0.15)' }}
               >
-                <TextType text="Shop Now" typingSpeed={18} showCursor={false} loop={false} as="span" />
+                Shop Now
               </Link>
-            </motion.div>
+            </LazyMotionDiv>
           </>
         )}
-      </AnimatePresence>
+      </LazyAnimatePresence>
       
       {/* All Modals - Same as Main Site Navigation */}
       

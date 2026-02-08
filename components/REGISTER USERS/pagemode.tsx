@@ -20,6 +20,7 @@ import {
 
 import { motion, AnimatePresence, useMotionTemplate, useMotionValue } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { persistSession } from '@/lib/sessionPersistence';
 
 // --- UNIFIED SHIMMER SYSTEM ---
 import { ShimmerLine, ShimmerBorder, ShimmerSpinner, ShimmerRadialGlow } from '@/components/ui/UnifiedShimmer';
@@ -1067,66 +1068,48 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     });
 
     try {
-      const { data: existingUser } = await supabase
-        .from("recruits")
-        .select("id")
-        .eq("email", formData.email)
-        .maybeSingle();
-
-      if (existingUser) {
-        throw new Error("This email is already registered. Please Login.");
-      }
-
-      const insertPayload = {
-        email: formData.email,
-        mt5_id: formData.mt5Number,
-        password: formData.password, 
-        referred_by_code: formData.referralCode || null,
-        used_code: true,
-      };
-
-      const { data: newUser, error } = await supabase
-        .from("recruits")
-        .insert([insertPayload])
-        .select()
-        .single();
-      
-      if (error) throw error;
-
-      if (newUser) {
-        // Save persistent session (both storage keys for compatibility)
-        // Include is_vip status (false by default for new users)
-        localStorage.setItem("bullmoney_session", JSON.stringify({
-          id: newUser.id,
+      const res = await fetch('/api/recruit-auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           email: formData.email,
-          mt5_id: formData.mt5Number, // Save MT5 ID for affiliate modal persistence
-          is_vip: newUser.is_vip || false, // Store VIP status for auto-unlock
-          timestamp: Date.now()
-        }));
-        
-        // Dispatch event so other components (like TradingJournal) can detect session change
-        window.dispatchEvent(new Event('bullmoney_session_changed'));
-        
-        // Also save to recruit auth storage key for immediate auth context detection
-        localStorage.setItem("bullmoney_recruit_auth", JSON.stringify({
-          recruitId: newUser.id,
-          email: formData.email
-        }));
-        
-        // Mark pagemode as completed - user should NEVER see pagemode again
-        localStorage.setItem("bullmoney_pagemode_completed", "true");
-        
-        // Clear draft
-        localStorage.removeItem("bullmoney_draft");
-        
-        // Track successful signup
-        BullMoneyAnalytics.trackAffiliateSignup(formData.referralCode || 'direct');
-        trackEvent('signup', { 
-          method: 'email', 
-          broker: activeBroker,
-          source: 'pagemode' 
-        });
+          password: formData.password,
+          mt5_id: formData.mt5Number,
+          referred_by_code: formData.referralCode || null,
+          used_code: true,
+        }),
+      });
+
+      const result = await res.json();
+      if (!res.ok || !result?.success || !result?.recruit) {
+        if (res.status === 409) {
+          throw new Error('This email is already registered. Please Login.');
+        }
+        throw new Error(result?.error || 'Connection failed. Please check your internet.');
       }
+
+      const newUser = result.recruit;
+      persistSession({
+        recruitId: newUser.id,
+        email: newUser.email,
+        mt5Id: newUser.mt5_id || formData.mt5Number,
+        isVip: newUser.is_vip === true,
+        timestamp: Date.now(),
+      });
+
+      // Dispatch event so other components (like TradingJournal) can detect session change
+      window.dispatchEvent(new Event('bullmoney_session_changed'));
+
+      // Clear draft
+      localStorage.removeItem("bullmoney_draft");
+
+      // Track successful signup
+      BullMoneyAnalytics.trackAffiliateSignup(formData.referralCode || 'direct');
+      trackEvent('signup', { 
+        method: 'email', 
+        broker: activeBroker,
+        source: 'pagemode' 
+      });
 
       setLoading(false);
       setStep(4); // Move to Telegram confirmation
@@ -1158,42 +1141,30 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     trackEvent('login_attempt', { source: 'pagemode' });
 
     try {
-      const { data, error } = await supabase
-        .from("recruits")
-        .select("id, mt5_id, is_vip") 
-        .eq("email", loginEmail)
-        .eq("password", loginPassword) 
-        .maybeSingle();
+      const res = await fetch('/api/recruit-auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+      });
 
-      if (error) throw new Error(error.message);
-
-      if (!data) {
+      const result = await res.json();
+      if (!res.ok || !result?.success || !result?.recruit) {
         await new Promise(r => setTimeout(r, 800));
-        throw new Error("Invalid email or password.");
+        throw new Error(result?.error || 'Invalid email or password.');
       }
 
-      // Save persistent session (both storage keys for compatibility)
-      // Include is_vip status for auto-unlocking VIP content in UltimateHub
-      localStorage.setItem("bullmoney_session", JSON.stringify({
-        id: data.id,
-        email: loginEmail,
-        mt5_id: data.mt5_id, // Save MT5 ID for affiliate modal persistence
-        is_vip: data.is_vip || false, // Store VIP status for auto-unlock
-        timestamp: Date.now()
-      }));
-      
+      const recruit = result.recruit;
+      persistSession({
+        recruitId: recruit.id,
+        email: recruit.email,
+        mt5Id: recruit.mt5_id,
+        isVip: recruit.is_vip === true,
+        timestamp: Date.now(),
+      });
+
       // Dispatch event so other components (like TradingJournal) can detect session change
       window.dispatchEvent(new Event('bullmoney_session_changed'));
-      
-      // Also save to recruit auth storage key for immediate auth context detection
-      localStorage.setItem("bullmoney_recruit_auth", JSON.stringify({
-        recruitId: data.id,
-        email: loginEmail
-      }));
-      
-      // Mark pagemode as completed - user should NEVER see pagemode again
-      localStorage.setItem("bullmoney_pagemode_completed", "true");
-      
+
       // Mark telegram as confirmed for existing users logging in
       // This ensures Telegram screen NEVER shows for login route, only for new signups
       localStorage.setItem("bullmoney_telegram_confirmed", "true");

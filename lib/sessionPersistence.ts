@@ -26,6 +26,8 @@ interface SessionData {
   recruitId: string;
   email: string;
   timestamp?: number;
+  mt5Id?: string;
+  isVip?: boolean;
 }
 
 // ============================================================================
@@ -115,6 +117,8 @@ export function persistSession(data: SessionData): void {
     id: data.recruitId,
     email: data.email,
     timestamp: data.timestamp || Date.now(),
+    ...(data.mt5Id ? { mt5_id: data.mt5Id } : {}),
+    ...(typeof data.isVip === 'boolean' ? { is_vip: data.isVip } : {}),
   });
 
   // 1) localStorage (primary)

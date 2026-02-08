@@ -123,6 +123,7 @@ export const MarketPriceTicker = memo(function MarketPriceTicker({
         cache: 'no-store',
         headers: {
           'Accept': 'application/json',
+          'x-timezone': Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         },
       });
 
