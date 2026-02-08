@@ -97,7 +97,7 @@ export const Timeline = ({ data, headerTitle, headerSubtitle, hideHeader = false
 
   return (
     <div
-      className="w-full bg-black font-sans px-3 md:px-10"
+      className="w-full bg-[rgb(0,0,0)] font-sans px-3 md:px-10"
       ref={containerRef}
     >
       {!hideHeader && (

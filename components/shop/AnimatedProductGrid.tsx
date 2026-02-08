@@ -159,8 +159,8 @@ export function AnimatedProductGrid({
                 }}
               >
                 {pages[(active + 1) % pages.length]?.map((product) => (
-                  <div key={`ghost1-${product.id}`} className="shrink-0 rounded-3xl bg-white/4"
-                    style={{ width: cardWidth, height: cardHeight }} />
+                  <div key={`ghost1-${product.id}`} className="shrink-0 rounded-3xl"
+                    style={{ width: cardWidth, height: cardHeight, backgroundColor: 'rgba(0,0,0,0.03)' }} />
                 ))}
               </div>
             </div>
@@ -177,8 +177,8 @@ export function AnimatedProductGrid({
                 }}
               >
                 {pages[(active + 2) % pages.length]?.map((product) => (
-                  <div key={`ghost2-${product.id}`} className="shrink-0 rounded-3xl bg-white/3"
-                    style={{ width: cardWidth, height: cardHeight }} />
+                  <div key={`ghost2-${product.id}`} className="shrink-0 rounded-3xl"
+                    style={{ width: cardWidth, height: cardHeight, backgroundColor: 'rgba(0,0,0,0.02)' }} />
                 ))}
               </div>
             </div>
@@ -191,9 +191,10 @@ export function AnimatedProductGrid({
         <div className="flex items-center justify-center gap-4 mt-6">
           <button
             onClick={handlePrev}
-            className="group/button flex h-10 w-10 md:h-11 md:w-11 items-center justify-center rounded-full bg-white/8 border border-white/8 hover:bg-white/15 transition-all"
+            className="group/button flex h-10 w-10 md:h-11 md:w-11 items-center justify-center rounded-full transition-all"
+            style={{ backgroundColor: 'rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.08)' }}
           >
-            <IconArrowLeft className="h-5 w-5 text-white/70 transition-transform duration-300 group-hover/button:rotate-12 group-hover/button:text-white" />
+            <IconArrowLeft className="h-5 w-5 transition-transform duration-300 group-hover/button:rotate-12" style={{ color: 'rgba(0,0,0,0.5)' }} />
           </button>
 
           {/* Page dots */}
@@ -202,20 +203,22 @@ export function AnimatedProductGrid({
               <button
                 key={i}
                 onClick={() => setActive(i)}
-                className={`rounded-full transition-all duration-300 ${
-                  i === active
-                    ? 'w-6 h-2 bg-white'
-                    : 'w-2 h-2 bg-white/20 hover:bg-white/40'
-                }`}
+                className="rounded-full transition-all duration-300"
+                style={{
+                  width: i === active ? 24 : 8,
+                  height: 8,
+                  backgroundColor: i === active ? '#1d1d1f' : 'rgba(0,0,0,0.15)'
+                }}
               />
             ))}
           </div>
 
           <button
             onClick={handleNext}
-            className="group/button flex h-10 w-10 md:h-11 md:w-11 items-center justify-center rounded-full bg-white/8 border border-white/8 hover:bg-white/15 transition-all"
+            className="group/button flex h-10 w-10 md:h-11 md:w-11 items-center justify-center rounded-full transition-all"
+            style={{ backgroundColor: 'rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.08)' }}
           >
-            <IconArrowRight className="h-5 w-5 text-white/70 transition-transform duration-300 group-hover/button:-rotate-12 group-hover/button:text-white" />
+            <IconArrowRight className="h-5 w-5 transition-transform duration-300 group-hover/button:-rotate-12" style={{ color: 'rgba(0,0,0,0.5)' }} />
           </button>
         </div>
       )}

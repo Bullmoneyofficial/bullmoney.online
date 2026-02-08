@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { X, User, Home, LogOut, Users, HelpCircle, Calendar, Settings, Eye, EyeOff, Palette, Sparkles } from 'lucide-react';
+import { X, User, Home, LogOut, Users, HelpCircle, Calendar, Settings, Sparkles } from 'lucide-react';
 import { useCartStore } from '@/stores/cart-store';
 import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
@@ -63,12 +63,14 @@ const MAIN_NAV_BUTTONS = [
 
 export function StoreHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [affiliateModalOpen, setAffiliateModalOpen] = useState(false);
   const [faqModalOpen, setFaqModalOpen] = useState(false);
   const [accountManagerModalOpen, setAccountManagerModalOpen] = useState(false);
   const [showThemePicker, setShowThemePicker] = useState(false);
   const [showUltimateHub, setShowUltimateHub] = useState(false);
+  const desktopMenuCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { openCart, getItemCount } = useCartStore();
   const { isAuthenticated, recruit, signOut } = useRecruitAuth();
   const { isAdmin } = useAdminAuth();
@@ -80,6 +82,14 @@ export function StoreHeader() {
   const { setIsOpen: setAuthModalOpen } = useAuthModalUI();
   const itemCount = getItemCount();
   const router = useRouter();
+
+  useEffect(() => {
+    return () => {
+      if (desktopMenuCloseTimer.current) {
+        clearTimeout(desktopMenuCloseTimer.current);
+      }
+    };
+  }, []);
   
   // Load Theme Picker preference
   useEffect(() => {
@@ -127,6 +137,35 @@ export function StoreHeader() {
       }
       return newValue;
     });
+  }, []);
+
+  const desktopLinks = useMemo(() => {
+    const links = [
+      { label: 'Affiliates', onClick: () => setAffiliateModalOpen(true), variant: 'link' as const },
+      { label: 'Products', onClick: () => openProductsModal(), variant: 'link' as const },
+      { label: 'FAQ', onClick: () => setFaqModalOpen(true), variant: 'link' as const },
+      { label: 'Themes', onClick: toggleThemePicker, isActive: showThemePicker, variant: 'toggle' as const },
+      { label: 'Hub', onClick: toggleUltimateHub, isActive: showUltimateHub, variant: 'toggle' as const },
+    ];
+
+    return links;
+  }, [openProductsModal, setAffiliateModalOpen, setFaqModalOpen, showThemePicker, showUltimateHub, toggleThemePicker, toggleUltimateHub]);
+
+  const openDesktopMenu = useCallback(() => {
+    if (desktopMenuCloseTimer.current) {
+      clearTimeout(desktopMenuCloseTimer.current);
+      desktopMenuCloseTimer.current = null;
+    }
+    setDesktopMenuOpen(true);
+  }, []);
+
+  const scheduleDesktopMenuClose = useCallback(() => {
+    if (desktopMenuCloseTimer.current) {
+      clearTimeout(desktopMenuCloseTimer.current);
+    }
+    desktopMenuCloseTimer.current = setTimeout(() => {
+      setDesktopMenuOpen(false);
+    }, 140);
   }, []);
 
   const handleLogout = useCallback(() => {
@@ -186,9 +225,10 @@ export function StoreHeader() {
     <>
       {/* Modern Pill Navigation Header */}
       <StorePillNav
-        logo="/ONcc2l601.svg"
+        logo="/IMG_2921.PNG"
         logoAlt="Bullmoney Store"
         items={STORE_NAV_ITEMS}
+        desktopLinks={desktopLinks}
         className="store-main-nav"
         ease="power2.easeOut"
         baseColor="#000000"
@@ -208,103 +248,157 @@ export function StoreHeader() {
         isAuthenticated={isAuthenticated}
         userInitial={recruit?.email?.charAt(0) || 'U'}
         onMobileMenuClick={handleOpenMobileMenu}
+        onDesktopMenuEnter={openDesktopMenu}
+        onDesktopMenuLeave={scheduleDesktopMenuClose}
       />
-      
-      {/* Secondary Action Bar - Desktop only */}
-      <div className="fixed top-16 left-0 right-0 z-490 backdrop-blur-sm hidden lg:block" style={{ background: 'rgb(0,0,0)', borderBottom: '1px solid rgba(255,255,255,0.15)' }}>
-        <div className="max-w-450 mx-auto px-6 h-12 flex items-center justify-between">
-          {/* Left: Quick Actions */}
-          <div className="flex items-center gap-2">
-            {/* 🌐 Language Toggle */}
-            <LanguageToggle variant="pill" dropDirection="down" dropAlign="left" />
 
-            {/* Theme Picker Toggle - completely hidden when off */}
-            {showThemePicker && (
-              <button
-                onClick={toggleThemePicker}
-                className="h-8 px-3 flex items-center gap-2 rounded-lg transition-colors text-xs font-semibold"
-                style={{ background: 'rgb(14,165,233)', color: 'rgb(255,255,255)', border: '1px solid rgb(14,165,233)' }}
-                title="Theme Picker: ON"
-              >
-                <Palette className="w-3.5 h-3.5" />
-                <span>Themes</span>
-                <Eye className="w-3 h-3" />
-              </button>
-            )}
+      {/* Desktop Dropdown Menu - Apple-style */}
+      {desktopMenuOpen && (
+        <div
+          className="fixed left-0 right-0 bottom-0 hidden lg:block pointer-events-none"
+          style={{
+            top: '48px',
+            zIndex: 480,
+            background: 'rgba(15,15,15,0.08)',
+            backdropFilter: 'blur(18px)',
+            WebkitBackdropFilter: 'blur(18px)',
+          }}
+        />
+      )}
+      <div
+        className={`fixed left-0 right-0 z-490 hidden lg:block transition-opacity ${desktopMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+        style={{ top: '48px' }}
+        onMouseEnter={openDesktopMenu}
+        onMouseLeave={scheduleDesktopMenuClose}
+      >
+        <div style={{ background: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
+          <div className="max-w-[1200px] mx-auto px-10 py-10 grid grid-cols-3 gap-10">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: 'rgba(0,0,0,0.5)' }}>Shop</p>
+              <div className="mt-5 space-y-3">
+                {STORE_CATEGORIES.map(cat => (
+                  <Link
+                    key={cat.value}
+                    href={cat.href}
+                    onClick={() => setDesktopMenuOpen(false)}
+                    className="block text-2xl font-medium tracking-tight transition-colors"
+                    style={{ color: 'rgba(0,0,0,0.9)' }}
+                  >
+                    {cat.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
 
-            {/* Ultimate Hub Toggle */}
-            <button
-              onClick={toggleUltimateHub}
-              className="h-8 px-3 flex items-center gap-2 rounded-lg transition-colors text-xs font-semibold"
-              style={showUltimateHub 
-                ? { background: 'rgb(14,165,233)', color: 'rgb(255,255,255)', border: '1px solid rgb(14,165,233)' }
-                : { background: 'rgb(255,255,255)', color: 'rgb(0,0,0)', border: '1px solid rgb(255,255,255)' }
-              }
-              title={showUltimateHub ? 'Ultimate Hub: ON' : 'Ultimate Hub: OFF'}
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Hub</span>
-              {showUltimateHub ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-            </button>
-          </div>
-          
-          {/* Right: Feature Links */}
-          <div className="flex items-center gap-2">
-            {/* Affiliates Button */}
-            <button
-              onClick={() => setAffiliateModalOpen(true)}
-              className="h-8 px-3 flex items-center gap-2 rounded-lg transition-colors text-xs font-semibold"
-              style={{ background: 'rgb(255,255,255)', color: 'rgb(0,0,0)', border: '1px solid rgb(255,255,255)' }}
-            >
-              <Users className="w-3.5 h-3.5" />
-              <span>Affiliates</span>
-            </button>
-            
-            {/* Products Button */}
-            <button
-              onClick={() => openProductsModal()}
-              className="h-8 px-3 flex items-center gap-2 rounded-lg transition-colors text-xs font-semibold"
-              style={{ background: 'rgb(255,255,255)', color: 'rgb(0,0,0)', border: '1px solid rgb(255,255,255)' }}
-            >
-              <Calendar className="w-3.5 h-3.5" />
-              <span>Products</span>
-            </button>
-            
-            {/* FAQ Button */}
-            <button
-              onClick={() => setFaqModalOpen(true)}
-              className="h-8 px-3 flex items-center gap-2 rounded-lg transition-colors text-xs font-semibold"
-              style={{ background: 'rgb(255,255,255)', color: 'rgb(0,0,0)', border: '1px solid rgb(255,255,255)' }}
-            >
-              <HelpCircle className="w-3.5 h-3.5" />
-              <span>FAQ</span>
-            </button>
-            
-            {/* Account Manager - Desktop only, shown for authenticated users */}
-            {isAuthenticated && recruit && (
-              <button
-                onClick={() => setAccountManagerModalOpen(true)}
-                className="h-8 px-3 flex items-center gap-2 rounded-lg transition-colors text-xs font-semibold"
-                style={{ background: 'rgb(255,255,255)', color: 'rgb(0,0,0)', border: '1px solid rgb(255,255,255)' }}
-                title="Account Manager"
-              >
-                <User className="w-3.5 h-3.5" />
-                <span>Account</span>
-              </button>
-            )}
-            
-            {/* Admin Button - Desktop only, dev only */}
-            {effectiveAdmin && (
-              <button
-                onClick={() => setAdminModalOpen(true)}
-                className="h-8 px-3 flex items-center gap-2 rounded-lg transition-all text-xs font-semibold"
-                style={{ background: 'rgb(168,85,247)', border: '1px solid rgb(168,85,247)', color: 'rgb(255,255,255)' }}
-                title="Admin Panel"
-              >
-                <Settings className="w-3.5 h-3.5" />
-                <span>Admin</span>
-              </button>
-            )}
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: 'rgba(0,0,0,0.5)' }}>Quick Links</p>
+              <div className="mt-5 space-y-3">
+                <button
+                  onClick={() => {
+                    setDesktopMenuOpen(false);
+                    setAffiliateModalOpen(true);
+                  }}
+                  className="block text-left text-2xl font-medium tracking-tight transition-colors"
+                  style={{ color: 'rgba(0,0,0,0.9)' }}
+                >
+                  Affiliates
+                </button>
+                <button
+                  onClick={() => {
+                    setDesktopMenuOpen(false);
+                    openProductsModal();
+                  }}
+                  className="block text-left text-2xl font-medium tracking-tight transition-colors"
+                  style={{ color: 'rgba(0,0,0,0.9)' }}
+                >
+                  Products
+                </button>
+                <button
+                  onClick={() => {
+                    setDesktopMenuOpen(false);
+                    setFaqModalOpen(true);
+                  }}
+                  className="block text-left text-2xl font-medium tracking-tight transition-colors"
+                  style={{ color: 'rgba(0,0,0,0.9)' }}
+                >
+                  FAQ
+                </button>
+                {isAuthenticated && recruit ? (
+                  <button
+                    onClick={() => {
+                      setDesktopMenuOpen(false);
+                      setAccountManagerModalOpen(true);
+                    }}
+                    className="block text-left text-2xl font-medium tracking-tight transition-colors"
+                    style={{ color: 'rgba(0,0,0,0.9)' }}
+                  >
+                    Account
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setDesktopMenuOpen(false);
+                      setAuthModalOpen(true);
+                    }}
+                    className="block text-left text-2xl font-medium tracking-tight transition-colors"
+                    style={{ color: 'rgba(0,0,0,0.9)' }}
+                  >
+                    Sign In
+                  </button>
+                )}
+                <Link
+                  href="/"
+                  onClick={() => setDesktopMenuOpen(false)}
+                  className="block text-left text-2xl font-medium tracking-tight transition-colors"
+                  style={{ color: 'rgba(0,0,0,0.9)' }}
+                >
+                  Back to Home
+                </Link>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: 'rgba(0,0,0,0.5)' }}>Preferences</p>
+              <div className="mt-5 space-y-3">
+                <div className="max-w-[260px]">
+                  <LanguageToggle variant="row" dropDirection="down" tone="light" />
+                </div>
+                {showThemePicker && (
+                  <button
+                    onClick={() => {
+                      toggleThemePicker();
+                      setDesktopMenuOpen(false);
+                    }}
+                    className="block text-left text-lg font-medium tracking-tight transition-colors"
+                    style={{ color: 'rgba(0,0,0,0.85)' }}
+                  >
+                    Theme Picker
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    toggleUltimateHub();
+                    setDesktopMenuOpen(false);
+                  }}
+                  className="block text-left text-lg font-medium tracking-tight transition-colors"
+                  style={{ color: showUltimateHub ? 'rgb(0,0,0)' : 'rgba(0,0,0,0.85)' }}
+                >
+                  Ultimate Hub {showUltimateHub ? 'On' : 'Off'}
+                </button>
+                {effectiveAdmin && (
+                  <button
+                    onClick={() => {
+                      setDesktopMenuOpen(false);
+                      setAdminModalOpen(true);
+                    }}
+                    className="block text-left text-lg font-medium tracking-tight transition-colors"
+                    style={{ color: 'rgba(0,0,0,0.85)' }}
+                  >
+                    Admin Panel
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -327,81 +421,59 @@ export function StoreHeader() {
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
               className="fixed top-0 right-0 bottom-0 w-72 max-w-[80vw] z-700 p-4 flex flex-col overflow-y-auto"
-              style={{ background: 'rgb(0,0,0)', borderLeft: '1px solid rgba(255,255,255,0.1)' }}
+              style={{ background: 'rgb(255,255,255)', borderLeft: '1px solid rgba(0,0,0,0.1)' }}
             >
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-lg font-light" style={{ color: 'rgb(255,255,255)' }}>Menu</span>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-2xl font-medium" style={{ color: 'rgb(0,0,0)' }}>Menu</span>
                 <button
                   onClick={() => setMobileMenuOpen(false)}
                   className="h-8 w-8 flex items-center justify-center rounded-lg"
-                  style={{ background: 'rgba(255,255,255,0.05)', color: 'rgb(255,255,255)' }}
+                  style={{ background: 'rgba(0,0,0,0.05)', color: 'rgb(0,0,0)' }}
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              {/* Shop Categories */}
-              <div className="mb-4">
-                <h3 className="text-xs font-semibold uppercase tracking-wider mb-2 px-1" style={{ color: 'rgba(255,255,255,0.7)' }}>Shop Categories</h3>
-                <div className="flex flex-wrap gap-1.5">
-                  {STORE_CATEGORIES.map((cat) => (
-                    <Link
-                      key={cat.value}
-                      href={cat.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
-                      style={{ background: 'rgba(255,255,255,0.08)', color: 'rgb(255,255,255)', border: '1px solid rgba(255,255,255,0.15)' }}
-                    >
-                      {cat.label}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
               {/* Account Section */}
               {isAuthenticated && recruit ? (
-                <div className="mb-3 p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)' }}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.15)' }}>
-                      <span className="text-sm font-medium uppercase" style={{ color: 'rgb(255,255,255)' }}>
-                        {recruit.email.charAt(0)}
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium truncate" style={{ color: 'rgb(255,255,255)' }}>{recruit.email}</p>
-                      <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>Member</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Link
-                      href="/recruit"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="flex-1 h-7 flex items-center justify-center gap-1.5 rounded-md text-xs transition-colors"
-                      style={{ background: 'rgba(255,255,255,0.15)', color: 'rgb(255,255,255)' }}
-                    >
-                      <User className="w-3 h-3" />
-                      Profile
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="flex-1 h-7 flex items-center justify-center gap-1.5 rounded-md text-xs transition-colors"
-                      style={{ background: 'rgba(255,255,255,0.15)', color: 'rgb(255,255,255)' }}
-                    >
-                      <LogOut className="w-3 h-3" />
-                      Logout
-                    </button>
-                  </div>
+                <div className="mb-6 space-y-3">
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      setAccountManagerModalOpen(true);
+                    }}
+                    className="block text-left text-2xl font-medium tracking-tight transition-colors"
+                    style={{ color: 'rgba(0,0,0,0.95)' }}
+                  >
+                    Account
+                  </button>
+                  <Link
+                    href="/recruit"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block text-left text-2xl font-medium tracking-tight transition-colors"
+                    style={{ color: 'rgba(0,0,0,0.95)' }}
+                  >
+                    Profile
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="block text-left text-2xl font-medium tracking-tight transition-colors"
+                    style={{ color: 'rgba(0,0,0,0.95)' }}
+                  >
+                    Logout
+                  </button>
                 </div>
               ) : (
-                <Link
-                  href="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="mb-3 h-9 flex items-center justify-center gap-2 rounded-lg text-xs font-medium transition-colors"
-                  style={{ background: 'rgba(255,255,255,0.08)', color: 'rgb(255,255,255)', border: '1px solid rgba(255,255,255,0.15)' }}
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setAuthModalOpen(true);
+                  }}
+                  className="mb-6 w-full text-left text-2xl font-medium tracking-tight transition-colors"
+                  style={{ color: 'rgba(0,0,0,0.95)' }}
                 >
-                  <User className="w-4 h-4" />
                   Sign In / Register
-                </Link>
+                </button>
               )}
               
               {/* Admin Button - Mobile, dev only */}
@@ -411,108 +483,92 @@ export function StoreHeader() {
                     setMobileMenuOpen(false);
                     setAdminModalOpen(true);
                   }}
-                  className="mb-2 h-8 flex items-center justify-center gap-1.5 rounded-lg text-xs font-medium transition-all"
-                  style={{ background: 'linear-gradient(to bottom right, rgba(168,85,247,0.2), rgba(236,72,153,0.2))', border: '1px solid rgba(168,85,247,0.3)', color: 'rgb(216,180,254)' }}
+                  className="mb-6 text-left text-2xl font-medium tracking-tight transition-colors"
+                  style={{ color: 'rgba(113,46,165,0.95)' }}
                 >
-                  <Settings className="w-4 h-4" style={{ color: 'rgb(216,180,254)' }} />
                   Admin Panel
                 </button>
               )}
               
-              {/* Account Manager Button - Mobile (for authenticated users) */}
-              {isAuthenticated && recruit && (
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    setAccountManagerModalOpen(true);
-                  }}
-                  className="mb-2 h-8 flex items-center justify-center gap-1.5 rounded-lg text-xs font-medium transition-all"
-                  style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', color: 'rgb(255,255,255)' }}
-                >
-                  <User className="w-4 h-4" style={{ color: 'rgb(255,255,255)' }} />
-                  Account Manager
-                </button>
-              )}
-              
               {/* Toggles Section - Mobile */}
-              <div className="space-y-1 mb-3 pb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                <p className="text-[10px] px-3 mb-1 uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.6)' }}>Toggles</p>
-                
-                {/* 🌐 Language Selector */}
-                <LanguageToggle variant="row" dropDirection="down" />
+              <div className="space-y-4 mb-6">
+                <LanguageToggle
+                  variant="row"
+                  dropDirection="down"
+                  dropAlign="left"
+                  rowDropdown="inline"
+                  tone="light"
+                />
 
-                {/* Theme Picker Toggle - completely hidden when off */}
-                {showThemePicker && (
-                  <button
-                    onClick={toggleThemePicker}
-                    className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg text-xs font-semibold transition-colors"
-                    style={{ background: 'rgb(14,165,233)', color: 'rgb(255,255,255)' }}
+                <button
+                  onClick={toggleThemePicker}
+                  className="w-full flex items-center justify-between text-left text-2xl font-medium tracking-tight"
+                  style={{ color: 'rgba(0,0,0,0.95)' }}
+                  role="switch"
+                  aria-checked={showThemePicker}
+                >
+                  <span>Themes</span>
+                  <span
+                    className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
+                    style={{ background: showThemePicker ? 'rgba(0,0,0,0.9)' : 'rgba(0,0,0,0.2)' }}
                   >
-                    <div className="flex items-center gap-2">
-                      <Palette className="w-4 h-4" />
-                      <span>Theme Picker</span>
-                    </div>
-                    <Eye className="w-4 h-4" />
-                  </button>
-                )}
+                    <span
+                      className={`inline-block h-5 w-5 rounded-full transition-transform ${showThemePicker ? 'translate-x-5' : 'translate-x-1'}`}
+                      style={{ background: showThemePicker ? 'rgb(255,255,255)' : 'rgb(0,0,0)' }}
+                    />
+                  </span>
+                </button>
 
-                {/* Ultimate Hub Toggle */}
                 <button
                   onClick={toggleUltimateHub}
-                  className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg text-xs font-semibold transition-colors"
-                  style={showUltimateHub 
-                    ? { background: 'rgb(14,165,233)', color: 'rgb(255,255,255)' }
-                    : { background: 'rgba(255,255,255,0.08)', color: 'rgb(255,255,255)', border: '1px solid rgba(255,255,255,0.15)' }
-                  }
+                  className="w-full flex items-center justify-between text-left text-2xl font-medium tracking-tight"
+                  style={{ color: 'rgba(0,0,0,0.95)' }}
+                  role="switch"
+                  aria-checked={showUltimateHub}
                 >
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4" />
-                    <span>Ultimate Hub</span>
-                  </div>
-                  {showUltimateHub ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                  <span>Hub</span>
+                  <span
+                    className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
+                    style={{ background: showUltimateHub ? 'rgba(0,0,0,0.9)' : 'rgba(0,0,0,0.2)' }}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 rounded-full transition-transform ${showUltimateHub ? 'translate-x-5' : 'translate-x-1'}`}
+                      style={{ background: showUltimateHub ? 'rgb(255,255,255)' : 'rgb(0,0,0)' }}
+                    />
+                  </span>
                 </button>
               </div>
               
               {/* Site Features - Mobile */}
-              <div className="space-y-0.5 mb-3 pb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                <p className="text-[10px] px-3 mb-1 uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.6)' }}>Features</p>
-                
-                {/* Affiliates */}
+              <div className="space-y-3 mb-6">
                 <button
                   onClick={() => {
                     setMobileMenuOpen(false);
                     setAffiliateModalOpen(true);
                   }}
-                  className="w-full flex items-center gap-2 py-2.5 px-3 rounded-lg text-xs font-semibold transition-colors"
-                  style={{ background: 'rgba(255,255,255,0.08)', color: 'rgb(255,255,255)', border: '1px solid rgba(255,255,255,0.15)' }}
+                  className="block text-left text-2xl font-medium tracking-tight transition-colors"
+                  style={{ color: 'rgba(0,0,0,0.95)' }}
                 >
-                  <Users className="w-4 h-4" />
                   Affiliates
                 </button>
-                
-                {/* Products */}
                 <button
                   onClick={() => {
                     setMobileMenuOpen(false);
                     openProductsModal();
                   }}
-                  className="w-full flex items-center gap-2 py-2.5 px-3 rounded-lg text-xs font-semibold transition-colors"
-                  style={{ background: 'rgba(255,255,255,0.08)', color: 'rgb(255,255,255)', border: '1px solid rgba(255,255,255,0.15)' }}
+                  className="block text-left text-2xl font-medium tracking-tight transition-colors"
+                  style={{ color: 'rgba(0,0,0,0.95)' }}
                 >
-                  <Calendar className="w-4 h-4" />
                   Products
                 </button>
-                
-                {/* FAQ */}
                 <button
                   onClick={() => {
                     setMobileMenuOpen(false);
                     setFaqModalOpen(true);
                   }}
-                  className="w-full flex items-center gap-2 py-2.5 px-3 rounded-lg text-xs font-semibold transition-colors"
-                  style={{ background: 'rgba(255,255,255,0.08)', color: 'rgb(255,255,255)', border: '1px solid rgba(255,255,255,0.15)' }}
+                  className="block text-left text-2xl font-medium tracking-tight transition-colors"
+                  style={{ color: 'rgba(0,0,0,0.95)' }}
                 >
-                  <HelpCircle className="w-4 h-4" />
                   FAQ
                 </button>
               </div>
@@ -521,10 +577,9 @@ export function StoreHeader() {
               <Link
                 href="/"
                 onClick={() => setMobileMenuOpen(false)}
-                className="mt-2 w-full h-9 flex items-center justify-center gap-1.5 rounded-lg text-xs transition-colors"
-                style={{ border: '1px solid rgba(255,255,255,0.3)', color: 'rgb(255,255,255)', background: 'rgb(0,0,0)' }}
+                className="block text-left text-2xl font-medium tracking-tight transition-colors"
+                style={{ color: 'rgba(0,0,0,0.95)' }}
               >
-                <Home className="w-3.5 h-3.5" />
                 Back to Home
               </Link>
 
@@ -532,8 +587,8 @@ export function StoreHeader() {
               <Link
                 href="/store"
                 onClick={() => setMobileMenuOpen(false)}
-                className="mt-2 w-full h-9 flex items-center justify-center rounded-lg text-sm font-medium active:scale-[0.98] transition-all"
-                style={{ background: 'rgba(255,255,255,0.08)', color: 'rgb(255,255,255)', border: '1px solid rgba(255,255,255,0.15)' }}
+                className="mt-2 block text-left text-2xl font-medium tracking-tight transition-colors"
+                style={{ color: 'rgba(0,0,0,0.95)' }}
               >
                 Shop Now
               </Link>

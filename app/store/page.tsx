@@ -41,9 +41,6 @@ import {
   WorldMap,
   InfiniteMenu,
   FlyingPosters,
-  MarketPriceTicker,
-  RewardsCardBanner,
-  RewardsCard,
   MotionDiv,
   AnimatePresence,
 } from './store.imports';
@@ -105,7 +102,6 @@ export default function StorePage() {
   
   // Recruit auth for rewards
   const { recruit } = useRecruitAuth();
-  const [rewardsCardOpen, setRewardsCardOpen] = useState(false);
   
   // Smart memory: per-section visibility via IntersectionObserver
   const hero = useStoreSection('hero');
@@ -605,23 +601,6 @@ export default function StorePage() {
 
   return (
     <div className="bg-black" style={{ height: 'auto', minHeight: '100vh', overflow: 'visible' }} data-allow-scroll data-scrollable data-content>
-      {/* Rewards Card Banner - Load when interactive */}
-      {showInteractive && (
-        <RewardsCardBanner 
-          userEmail={recruit?.email || null}
-          onOpenRewardsCard={() => setRewardsCardOpen(true)}
-        />
-      )}
-      
-      {/* Rewards Card Modal */}
-      {showInteractive && (
-        <RewardsCard
-          isOpen={rewardsCardOpen}
-          onClose={() => setRewardsCardOpen(false)}
-          userEmail={recruit?.email || null}
-        />
-      )}
-      
       {/* Hero Section - 3D Spline Hero - DEFERRED to improve initial load */}
       <div
         ref={hero.ref}
@@ -637,28 +616,14 @@ export default function StorePage() {
         {shouldShowHero ? (
           <StoreHero3D paused={isHeroPaused} />
         ) : (
-          <div className="w-full h-100 bg-linear-to-b from-black via-zinc-900/50 to-black flex items-center justify-center">
+          <div className="w-full h-100 bg-gradient-to-b from-black via-zinc-900/50 to-black flex items-center justify-center">
             <ShimmerRadialGlow color="white" intensity="low" />
             <ShimmerSpinner size={48} color="white" />
           </div>
         )}
       </div>
 
-      {/* Market Price Ticker - Top - Only render when below fold AND visible */}
-      <div
-        style={{
-          contain: 'layout style paint',
-          contentVisibility: 'auto',
-          containIntrinsicSize: 'auto 48px',
-          visibility: shouldShowBelowFold ? 'visible' : 'hidden',
-          height: shouldShowBelowFold ? 'auto' : 0,
-          overflow: 'hidden',
-        } as React.CSSProperties}
-      >
-        {shouldShowBelowFold && <MarketPriceTicker direction="left" speed={15} />}
-      </div>
-
-      {/* World Map / Flying Posters Section — ✅ Toggle between views */}
+      {/* World Map / Flying Posters Section - Toggle between views */}
       <section
         className={`relative w-full overflow-hidden bg-black transition-all duration-700 ease-in-out ${
           showInfiniteMenu ? 'min-h-[80vh] md:min-h-[120vh]' : 'min-h-[50vh] md:h-screen'
@@ -740,20 +705,6 @@ export default function StorePage() {
         )}
       </section>
 
-      {/* Market Price Ticker - Bottom */}
-      <div
-        style={{
-          contain: 'layout style paint',
-          contentVisibility: 'auto',
-          containIntrinsicSize: 'auto 48px',
-          visibility: shouldShowBelowFold ? 'visible' : 'hidden',
-          height: shouldShowBelowFold ? 'auto' : 0,
-          overflow: 'hidden',
-        } as React.CSSProperties}
-      >
-        {shouldShowBelowFold && <MarketPriceTicker direction="right" speed={12} />}
-      </div>
-
       {/* Main Content */}
       <section 
         className="relative z-50 max-w-450 mx-auto px-4 md:px-8 pt-2 pb-4 md:py-12 bg-black" 
@@ -766,89 +717,6 @@ export default function StorePage() {
         data-allow-scroll
         data-content
       >
-        {/* Featured Products - Timeline / Grid Toggle - DEFERRED below fold */}
-        {shouldShowFeatured && !loading && focusCards.length > 0 && (
-          <section 
-            ref={(el) => { 
-              if (typeof featured.ref === 'function') featured.ref(el); 
-              if (featuredSectionRef) featuredSectionRef.current = el; 
-            }} 
-            className="-mx-4 md:-mx-8 mb-6 md:mb-8 bg-black rounded-2xl py-6"
-            style={{
-              contentVisibility: 'auto',
-              containIntrinsicSize: 'auto 600px',
-            } as React.CSSProperties}
-          >
-            {/* Toggle Header */}
-            <div className="flex flex-col items-center px-4 md:px-8 mb-6">
-              <h2 className="text-sm md:text-lg font-semibold text-white/80 tracking-wide uppercase mb-4">
-                Featured Products
-              </h2>
-              <div className="flex items-center gap-4 md:gap-6 perspective-[800px]">
-                <button
-                  onClick={() => handleFeaturedViewChange('timeline')}
-                  className={`group relative flex items-center gap-2 px-5 py-2.5 md:px-7 md:py-3 rounded-2xl text-xs md:text-sm font-bold tracking-wide uppercase transition-all duration-300 border-2 [transform-style:preserve-3d] ${
-                    featuredViewMode === 'timeline'
-                      ? 'bg-white text-black border-transparent shadow-[0_8px_30px_rgba(255,255,255,0.3),0_0_60px_rgba(255,0,0,0.15),0_0_60px_rgba(0,255,0,0.15),0_0_60px_rgba(0,100,255,0.15)] translate-y-0 [transform:rotateX(0deg)_translateZ(12px)] hover:[transform:rotateX(-5deg)_translateZ(20px)] hover:shadow-[0_12px_40px_rgba(255,255,255,0.4),0_0_80px_rgba(255,0,0,0.2),0_0_80px_rgba(0,255,0,0.2),0_0_80px_rgba(0,100,255,0.2)]'
-                      : 'bg-black text-white/70 border-white/10 shadow-[0_4px_15px_rgba(0,0,0,0.5)] [transform:rotateX(8deg)_translateZ(-4px)] hover:text-white hover:border-white/30 hover:[transform:rotateX(0deg)_translateZ(8px)] hover:shadow-[0_8px_25px_rgba(255,255,255,0.15),0_0_40px_rgba(255,0,0,0.1),0_0_40px_rgba(0,255,0,0.1),0_0_40px_rgba(0,100,255,0.1)]'
-                  }`}
-                >
-                  <Clock className="w-4 h-4 md:w-5 md:h-5" />
-                  <span>Timeline</span>
-                  {featuredViewMode === 'timeline' && (
-                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2/3 h-[3px] rounded-full bg-gradient-to-r from-red-500 via-green-400 to-blue-500 animate-pulse" />
-                  )}
-                </button>
-                <button
-                  onClick={() => handleFeaturedViewChange('grid')}
-                  className={`group relative flex items-center gap-2 px-5 py-2.5 md:px-7 md:py-3 rounded-2xl text-xs md:text-sm font-bold tracking-wide uppercase transition-all duration-300 border-2 [transform-style:preserve-3d] ${
-                    featuredViewMode === 'grid'
-                      ? 'bg-white text-black border-transparent shadow-[0_8px_30px_rgba(255,255,255,0.3),0_0_60px_rgba(255,0,0,0.15),0_0_60px_rgba(0,255,0,0.15),0_0_60px_rgba(0,100,255,0.15)] translate-y-0 [transform:rotateX(0deg)_translateZ(12px)] hover:[transform:rotateX(-5deg)_translateZ(20px)] hover:shadow-[0_12px_40px_rgba(255,255,255,0.4),0_0_80px_rgba(255,0,0,0.2),0_0_80px_rgba(0,255,0,0.2),0_0_80px_rgba(0,100,255,0.2)]'
-                      : 'bg-black text-white/70 border-white/10 shadow-[0_4px_15px_rgba(0,0,0,0.5)] [transform:rotateX(8deg)_translateZ(-4px)] hover:text-white hover:border-white/30 hover:[transform:rotateX(0deg)_translateZ(8px)] hover:shadow-[0_8px_25px_rgba(255,255,255,0.15),0_0_40px_rgba(255,0,0,0.1),0_0_40px_rgba(0,255,0,0.1),0_0_40px_rgba(0,100,255,0.1)]'
-                  }`}
-                >
-                  <LayoutDashboard className="w-4 h-4 md:w-5 md:h-5" />
-                  <span>Grid</span>
-                  {featuredViewMode === 'grid' && (
-                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2/3 h-[3px] rounded-full bg-gradient-to-r from-red-500 via-green-400 to-blue-500 animate-pulse" />
-                  )}
-                </button>
-              </div>
-            </div>
-            {/* Conditional View */}
-            {featuredViewMode === 'timeline' ? (
-              <div
-                className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen transition-all duration-500 ease-in-out"
-                style={{
-                  opacity: timelineVisible ? 1 : 0,
-                  transform: timelineVisible ? 'translateY(0)' : 'translateY(-20px)',
-                  maxHeight: timelineVisible ? '9999px' : '0px',
-                  overflow: 'hidden',
-                }}
-              >
-                <FeaturedProductsTimeline products={focusCards} />
-              </div>
-            ) : (
-              <div className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen py-6 md:py-10 bg-black">
-                <GlassProductGrid
-                  products={products}
-                  rowHeight={300}
-                  itemsPerRow={999}
-                  gap={14}
-                  scrollSpeed={30}
-                  visibleCount={2}
-                  glassProps={{
-                    borderRadius: 18,
-                    displace: 0.5,
-                    distortionScale: -180,
-                    brightness: 50,
-                    opacity: 0.93,
-                  }}
-                />
-              </div>
-            )}
-          </section>
-        )}
         {/* Search and Filters Bar */}
         <div className="flex flex-col gap-2 mb-3 md:gap-4 md:mb-8">
           {/* Search Row */}
@@ -1371,6 +1239,90 @@ export default function StorePage() {
         )}
         </div>
 
+        {/* Featured Products - Timeline / Grid Toggle - AFTER products section */}
+        {shouldShowFeatured && !loading && focusCards.length > 0 && (
+          <section 
+            ref={(el) => { 
+              if (typeof featured.ref === 'function') featured.ref(el); 
+              if (featuredSectionRef) featuredSectionRef.current = el; 
+            }} 
+            className="-mx-4 md:-mx-8 mb-6 md:mb-8 bg-black rounded-2xl py-6 mt-12"
+            style={{
+              contentVisibility: 'auto',
+              containIntrinsicSize: 'auto 600px',
+            } as React.CSSProperties}
+          >
+            {/* Toggle Header */}
+            <div className="flex flex-col items-center px-4 md:px-8 mb-6">
+              <h2 className="text-sm md:text-lg font-semibold text-white/80 tracking-wide uppercase mb-4">
+                Featured Products
+              </h2>
+              <div className="flex items-center gap-4 md:gap-6 perspective-[800px]">
+                <button
+                  onClick={() => handleFeaturedViewChange('timeline')}
+                  className={`group relative flex items-center gap-2 px-5 py-2.5 md:px-7 md:py-3 rounded-2xl text-xs md:text-sm font-bold tracking-wide uppercase transition-all duration-300 border-2 [transform-style:preserve-3d] ${
+                    featuredViewMode === 'timeline'
+                      ? 'bg-white text-black border-transparent shadow-[0_8px_30px_rgba(255,255,255,0.3),0_0_60px_rgba(255,0,0,0.15),0_0_60px_rgba(0,255,0,0.15),0_0_60px_rgba(0,100,255,0.15)] translate-y-0 [transform:rotateX(0deg)_translateZ(12px)] hover:[transform:rotateX(-5deg)_translateZ(20px)] hover:shadow-[0_12px_40px_rgba(255,255,255,0.4),0_0_80px_rgba(255,0,0,0.2),0_0_80px_rgba(0,255,0,0.2),0_0_80px_rgba(0,100,255,0.2)]'
+                      : 'bg-black text-white/70 border-white/10 shadow-[0_4px_15px_rgba(0,0,0,0.5)] [transform:rotateX(8deg)_translateZ(-4px)] hover:text-white hover:border-white/30 hover:[transform:rotateX(0deg)_translateZ(8px)] hover:shadow-[0_8px_25px_rgba(255,255,255,0.15),0_0_40px_rgba(255,0,0,0.1),0_0_40px_rgba(0,255,0,0.1),0_0_40px_rgba(0,100,255,0.1)]'
+                  }`}
+                >
+                  <Clock className="w-4 h-4 md:w-5 md:h-5" />
+                  <span>Timeline</span>
+                  {featuredViewMode === 'timeline' && (
+                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2/3 h-[3px] rounded-full bg-gradient-to-r from-red-500 via-green-400 to-blue-500 animate-pulse" />
+                  )}
+                </button>
+                <button
+                  onClick={() => handleFeaturedViewChange('grid')}
+                  className={`group relative flex items-center gap-2 px-5 py-2.5 md:px-7 md:py-3 rounded-2xl text-xs md:text-sm font-bold tracking-wide uppercase transition-all duration-300 border-2 [transform-style:preserve-3d] ${
+                    featuredViewMode === 'grid'
+                      ? 'bg-white text-black border-transparent shadow-[0_8px_30px_rgba(255,255,255,0.3),0_0_60px_rgba(255,0,0,0.15),0_0_60px_rgba(0,255,0,0.15),0_0_60px_rgba(0,100,255,0.15)] translate-y-0 [transform:rotateX(0deg)_translateZ(12px)] hover:[transform:rotateX(-5deg)_translateZ(20px)] hover:shadow-[0_12px_40px_rgba(255,255,255,0.4),0_0_80px_rgba(255,0,0,0.2),0_0_80px_rgba(0,255,0,0.2),0_0_80px_rgba(0,100,255,0.2)]'
+                      : 'bg-black text-white/70 border-white/10 shadow-[0_4px_15px_rgba(0,0,0,0.5)] [transform:rotateX(8deg)_translateZ(-4px)] hover:text-white hover:border-white/30 hover:[transform:rotateX(0deg)_translateZ(8px)] hover:shadow-[0_8px_25px_rgba(255,255,255,0.15),0_0_40px_rgba(255,0,0,0.1),0_0_40px_rgba(0,255,0,0.1),0_0_40px_rgba(0,100,255,0.1)]'
+                  }`}
+                >
+                  <LayoutDashboard className="w-4 h-4 md:w-5 md:h-5" />
+                  <span>Grid</span>
+                  {featuredViewMode === 'grid' && (
+                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2/3 h-[3px] rounded-full bg-gradient-to-r from-red-500 via-green-400 to-blue-500 animate-pulse" />
+                  )}
+                </button>
+              </div>
+            </div>
+            {/* Conditional View */}
+            {featuredViewMode === 'timeline' ? (
+              <div
+                className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen transition-all duration-500 ease-in-out"
+                style={{
+                  opacity: timelineVisible ? 1 : 0,
+                  transform: timelineVisible ? 'translateY(0)' : 'translateY(-20px)',
+                  maxHeight: timelineVisible ? '9999px' : '0px',
+                  overflow: 'hidden',
+                }}
+              >
+                <FeaturedProductsTimeline products={focusCards} />
+              </div>
+            ) : (
+              <div className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen py-6 md:py-10 bg-black">
+                <GlassProductGrid
+                  products={products}
+                  rowHeight={300}
+                  itemsPerRow={999}
+                  gap={14}
+                  scrollSpeed={30}
+                  visibleCount={2}
+                  glassProps={{
+                    borderRadius: 18,
+                    displace: 0.5,
+                    distortionScale: -180,
+                    brightness: 50,
+                    opacity: 0.93,
+                  }}
+                />
+              </div>
+            )}
+          </section>
+        )}
+
         {/* Load More Trigger */}
         {hasMore && !loading && (
           <div ref={loadMoreRef} className="h-20 flex items-center justify-center mt-8">
@@ -1400,20 +1352,6 @@ export default function StorePage() {
             className="mt-8"
           />
         )}
-      </div>
-
-      {/* Market Price Ticker - Before Footer */}
-      <div
-        style={{
-          contain: 'layout style paint',
-          contentVisibility: 'auto',
-          containIntrinsicSize: 'auto 48px',
-          visibility: shouldShowFooter ? 'visible' : 'hidden',
-          height: shouldShowFooter ? 'auto' : 0,
-          overflow: 'hidden',
-        } as React.CSSProperties}
-      >
-        {shouldShowFooter && <MarketPriceTicker direction="right" speed={10} />}
       </div>
 
       {/* Store Footer - stays mounted once loaded */}

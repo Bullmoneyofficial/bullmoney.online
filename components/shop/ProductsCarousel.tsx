@@ -250,7 +250,7 @@ export function ProductsCarousel({
   if (products.length === 0) {
     return (
       <div className={cn('w-full py-20 flex items-center justify-center', className)}>
-        <p className="text-white/50 text-lg">No products available</p>
+        <p style={{ color: 'rgba(0,0,0,0.4)', fontSize: 18 }}>No products available</p>
       </div>
     );
   }
@@ -271,11 +271,11 @@ export function ProductsCarousel({
       <div className="max-w-7xl mx-auto px-4 md:px-6 mb-6">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-8">
           <div className="flex-1 min-w-0">
-            <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold text-white font-sans">
+            <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold font-sans" style={{ color: '#1d1d1f' }}>
               {title}
             </h2>
             {subtitle && (
-              <p className="text-white/60 text-base md:text-lg mt-2">{subtitle}</p>
+              <p className="text-base md:text-lg mt-2" style={{ color: 'rgba(0,0,0,0.5)' }}>{subtitle}</p>
             )}
           </div>
           
@@ -283,16 +283,18 @@ export function ProductsCarousel({
           <div className="flex justify-center md:justify-end shrink-0 animate-in fade-in slide-in-from-top-4 duration-700">
             <div className="flex gap-3">
               <button
-                className="group flex h-11 w-11 md:h-14 md:w-14 items-center justify-center rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/25 hover:border-white/40 hover:scale-110 active:scale-95 transition-all duration-300 ease-out shadow-lg hover:shadow-xl hover:shadow-white/10"
+                className="group flex h-11 w-11 md:h-14 md:w-14 items-center justify-center rounded-full backdrop-blur-md hover:scale-110 active:scale-95 transition-all duration-300 ease-out"
+                style={{ backgroundColor: 'rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.1)', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
                 onClick={scrollLeftFn}
               >
-                <IconArrowNarrowLeft className="h-5 w-5 md:h-6 md:w-6 text-white group-hover:scale-110 transition-transform duration-300" />
+                <IconArrowNarrowLeft className="h-5 w-5 md:h-6 md:w-6 group-hover:scale-110 transition-transform duration-300" style={{ color: '#1d1d1f' }} />
               </button>
               <button
-                className="group flex h-11 w-11 md:h-14 md:w-14 items-center justify-center rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/25 hover:border-white/40 hover:scale-110 active:scale-95 transition-all duration-300 ease-out shadow-lg hover:shadow-xl hover:shadow-white/10"
+                className="group flex h-11 w-11 md:h-14 md:w-14 items-center justify-center rounded-full backdrop-blur-md hover:scale-110 active:scale-95 transition-all duration-300 ease-out"
+                style={{ backgroundColor: 'rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.1)', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
                 onClick={scrollRightFn}
               >
-                <IconArrowNarrowRight className="h-5 w-5 md:h-6 md:w-6 text-white group-hover:scale-110 transition-transform duration-300" />
+                <IconArrowNarrowRight className="h-5 w-5 md:h-6 md:w-6 group-hover:scale-110 transition-transform duration-300" style={{ color: '#1d1d1f' }} />
               </button>
             </div>
           </div>
@@ -315,9 +317,9 @@ export function ProductsCarousel({
           onMouseEnter={handleMouseEnter}
         >
           {/* Left gradient fade */}
-          <div className="pointer-events-none absolute left-0 top-0 z-20 h-full w-16 md:w-24 bg-gradient-to-r from-black to-transparent" />
+          <div className="pointer-events-none absolute left-0 top-0 z-20 h-full w-16 md:w-24" style={{ background: 'linear-gradient(to right, #ffffff, transparent)' }} />
           {/* Right gradient fade */}
-          <div className="pointer-events-none absolute right-0 top-0 z-20 h-full w-16 md:w-24 bg-gradient-to-l from-black to-transparent" />
+          <div className="pointer-events-none absolute right-0 top-0 z-20 h-full w-16 md:w-24" style={{ background: 'linear-gradient(to left, #ffffff, transparent)' }} />
 
           <div
             className="flex flex-row px-4 md:px-8"
@@ -345,7 +347,7 @@ export function ProductsCarousel({
             {onLoadMore && hasMore && (
               <div ref={loadMoreRef} className="flex items-center justify-center w-20 shrink-0">
                 {loading && (
-                  <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                  <div style={{ width: 32, height: 32, border: '2px solid rgba(0,0,0,0.1)', borderTopColor: 'rgba(0,0,0,0.7)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
                 )}
               </div>
             )}

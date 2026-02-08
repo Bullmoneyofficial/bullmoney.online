@@ -171,7 +171,7 @@ const ProductCard = memo(({ product, idx }: { product: VipProduct; idx: number }
   >
     {/* Animation 5: 3D Flip Up entry for the card itself */}
     <div 
-      className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl bg-neutral-900 border border-white/5 shadow-2xl transition-all duration-500 group-hover:border-white/20 anim-flip origin-bottom"
+      className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl bg-[rgb(0,0,0)] border border-white/5 shadow-2xl transition-all duration-500 group-hover:border-white/20 anim-flip origin-bottom"
       style={{ animationDelay: `${idx * 150}ms` }}
     >
       <Image
@@ -352,7 +352,7 @@ export function FeaturedProductsTimeline({ products }: FeaturedProductsTimelineP
   }, [featured, newArrivals, comingSoon]);
 
   return (
-    <div ref={containerRef} className={`w-full bg-neutral-950 font-sans antialiased text-neutral-200 ${isVisible ? 'timeline-visible' : ''}`}>
+    <div ref={containerRef} className={`w-full bg-[rgb(0,0,0)] font-sans antialiased text-neutral-200 ${isVisible ? 'timeline-visible' : ''}`}>
       <AnimationStyles />
       <div className="w-full px-2 md:px-6 lg:px-10">
         <Timeline data={timelineData} />

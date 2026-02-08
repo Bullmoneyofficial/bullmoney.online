@@ -31,17 +31,17 @@ function CookieToggle({ label, description, icon, checked, disabled, onChange }:
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '14px 0',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        padding: '10px 0',
+        borderBottom: '1px solid rgba(0,0,0,0.06)',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flex: 1 }}>
-        <div style={{ marginTop: 2, opacity: 0.5, flexShrink: 0 }}>{icon}</div>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, flex: 1 }}>
+        <div style={{ marginTop: 1, opacity: 0.4, flexShrink: 0 }}>{icon}</div>
         <div>
-          <div style={{ fontSize: 15, fontWeight: 600, color: '#fff', letterSpacing: '-0.01em' }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#1d1d1f', letterSpacing: '-0.01em' }}>
             {label}
           </div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 2, lineHeight: 1.4 }}>
+          <div style={{ fontSize: 11, color: 'rgba(0,0,0,0.4)', marginTop: 1, lineHeight: 1.35 }}>
             {description}
           </div>
         </div>
@@ -55,29 +55,30 @@ function CookieToggle({ label, description, icon, checked, disabled, onChange }:
         }}
         disabled={disabled}
         style={{
-          width: 44,
-          height: 26,
-          borderRadius: 13,
+          width: 40,
+          height: 24,
+          borderRadius: 12,
           border: 'none',
           cursor: disabled ? 'not-allowed' : 'pointer',
           position: 'relative',
-          background: checked ? '#fff' : 'rgba(255,255,255,0.15)',
+          background: checked ? '#1d1d1f' : 'rgba(0,0,0,0.1)',
           transition: 'background 0.2s ease',
           flexShrink: 0,
-          marginLeft: 12,
+          marginLeft: 10,
         }}
         aria-label={`Toggle ${label}`}
       >
         <div
           style={{
-            width: 20,
-            height: 20,
-            borderRadius: 10,
-            background: checked ? '#000' : 'rgba(255,255,255,0.4)',
+            width: 18,
+            height: 18,
+            borderRadius: 9,
+            background: '#fff',
             position: 'absolute',
             top: 3,
-            left: checked ? 21 : 3,
-            transition: 'left 0.2s ease, background 0.2s ease',
+            left: checked ? 19 : 3,
+            transition: 'left 0.2s ease',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
           }}
         />
       </button>
@@ -137,90 +138,99 @@ export default function CookieConsentMobile() {
     <AnimatePresence>
       {visible && (
         <motion.div
-          initial={{ y: '100%', opacity: 0 }}
+          initial={{ y: '-100%', opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: '100%', opacity: 0 }}
-          transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+          exit={{ y: '-100%', opacity: 0 }}
+          transition={{ type: 'spring', damping: 30, stiffness: 320 }}
           style={{
             position: 'fixed',
-            bottom: 0,
+            top: 0,
             left: 0,
             right: 0,
             zIndex: 2147483647,
             display: 'flex',
             justifyContent: 'center',
             pointerEvents: 'none',
-            padding: '0 12px 12px',
+            padding: '0 8px',
           }}
         >
           <div
             style={{
               width: '100%',
               maxWidth: 420,
-              background: '#0a0a0a',
-              borderRadius: 20,
-              border: '1px solid rgba(255,255,255,0.08)',
+              background: 'rgba(255,255,255,0.98)',
+              backdropFilter: 'blur(40px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+              borderRadius: '0 0 16px 16px',
+              border: '1px solid rgba(0,0,0,0.08)',
+              borderTop: 'none',
               pointerEvents: 'auto',
               overflow: 'hidden',
-              boxShadow: '0 -4px 40px rgba(0,0,0,0.5)',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)',
             }}
           >
             {/* Compact Banner */}
-            <div style={{ padding: '16px 18px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Cookie size={18} color="#fff" strokeWidth={1.5} />
-                <span style={{ fontSize: 14, fontWeight: 600, color: '#fff', letterSpacing: '-0.01em' }}>
+            <div style={{ padding: '14px 14px 12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Cookie size={15} color="#1d1d1f" strokeWidth={1.5} />
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#1d1d1f', letterSpacing: '-0.01em' }}>
                   We use cookies
                 </span>
               </div>
               <p
                 style={{
-                  fontSize: 12,
-                  color: 'rgba(255,255,255,0.45)',
-                  marginTop: 6,
-                  lineHeight: 1.5,
-                  margin: '6px 0 0',
+                  fontSize: 11,
+                  color: 'rgba(0,0,0,0.45)',
+                  marginTop: 4,
+                  lineHeight: 1.45,
+                  margin: '4px 0 0',
                 }}
               >
-                We use cookies to improve your experience. You can customize your preferences below.
+                We use cookies to improve your experience. Customize below.
               </p>
 
               {/* Action Buttons */}
-              <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-                <button
-                  onClick={handleDecline}
-                  style={{
-                    flex: 1,
-                    padding: '10px 0',
-                    borderRadius: 10,
-                    border: '1px solid rgba(255,255,255,0.12)',
-                    background: 'transparent',
-                    color: '#fff',
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    letterSpacing: '-0.01em',
-                  }}
-                >
-                  Decline
-                </button>
-                <button
-                  onClick={handleAcceptAll}
-                  style={{
-                    flex: 1,
-                    padding: '10px 0',
-                    borderRadius: 10,
-                    border: 'none',
-                    background: '#fff',
-                    color: '#000',
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    letterSpacing: '-0.01em',
-                  }}
-                >
-                  Accept All
-                </button>
+              <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+                <div style={{ flex: 1, textAlign: 'center' }}>
+                  <button
+                    onClick={handleDecline}
+                    style={{
+                      width: '100%',
+                      padding: '8px 0',
+                      borderRadius: 8,
+                      border: '1px solid rgba(0,0,0,0.12)',
+                      background: 'transparent',
+                      color: '#1d1d1f',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      letterSpacing: '-0.01em',
+                    }}
+                  >
+                    Decline
+                  </button>
+                  <p style={{ fontSize: 9, color: 'rgba(0,0,0,0.3)', marginTop: 3, lineHeight: 1.3 }}>Essential only</p>
+                </div>
+                <div style={{ flex: 1, textAlign: 'center' }}>
+                  <button
+                    onClick={handleAcceptAll}
+                    style={{
+                      width: '100%',
+                      padding: '8px 0',
+                      borderRadius: 8,
+                      border: 'none',
+                      background: '#1d1d1f',
+                      color: '#fff',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      letterSpacing: '-0.01em',
+                    }}
+                  >
+                    Accept All
+                  </button>
+                  <p style={{ fontSize: 9, color: 'rgba(0,0,0,0.3)', marginTop: 3, lineHeight: 1.3 }}>Recommended</p>
+                </div>
               </div>
 
               {/* Manage Toggle */}
@@ -230,20 +240,20 @@ export default function CookieConsentMobile() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: 4,
+                  gap: 3,
                   width: '100%',
-                  marginTop: 10,
-                  padding: '6px 0',
+                  marginTop: 8,
+                  padding: '4px 0',
                   background: 'transparent',
                   border: 'none',
-                  color: 'rgba(255,255,255,0.4)',
-                  fontSize: 12,
+                  color: 'rgba(0,0,0,0.35)',
+                  fontSize: 11,
                   cursor: 'pointer',
                   fontWeight: 500,
                 }}
               >
                 Manage Preferences
-                {expanded ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+                {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
               </button>
             </div>
 
@@ -259,36 +269,36 @@ export default function CookieConsentMobile() {
                 >
                   <div
                     style={{
-                      padding: '0 18px 16px',
-                      borderTop: '1px solid rgba(255,255,255,0.06)',
+                      padding: '0 14px 14px',
+                      borderTop: '1px solid rgba(0,0,0,0.06)',
                     }}
                   >
                     <CookieToggle
                       label="Essential"
-                      description="Required for core site functionality"
-                      icon={<Shield size={16} color="#fff" />}
+                      description="Required for core functionality"
+                      icon={<Shield size={14} color="#1d1d1f" />}
                       checked={true}
                       disabled
                       onChange={() => {}}
                     />
                     <CookieToggle
                       label="Functional"
-                      description="Language, preferences, and enhanced features"
-                      icon={<Wrench size={16} color="#fff" />}
+                      description="Language & preferences"
+                      icon={<Wrench size={14} color="#1d1d1f" />}
                       checked={prefs.functional}
                       onChange={(v) => setPrefs((p) => ({ ...p, functional: v }))}
                     />
                     <CookieToggle
                       label="Analytics"
                       description="Usage data to improve our platform"
-                      icon={<BarChart3 size={16} color="#fff" />}
+                      icon={<BarChart3 size={14} color="#1d1d1f" />}
                       checked={prefs.analytics}
                       onChange={(v) => setPrefs((p) => ({ ...p, analytics: v }))}
                     />
                     <CookieToggle
                       label="Marketing"
-                      description="Personalized content and advertisements"
-                      icon={<Megaphone size={16} color="#fff" />}
+                      description="Personalized content and ads"
+                      icon={<Megaphone size={14} color="#1d1d1f" />}
                       checked={prefs.marketing}
                       onChange={(v) => setPrefs((p) => ({ ...p, marketing: v }))}
                     />
@@ -297,13 +307,13 @@ export default function CookieConsentMobile() {
                       onClick={handleSavePreferences}
                       style={{
                         width: '100%',
-                        marginTop: 14,
-                        padding: '11px 0',
-                        borderRadius: 10,
-                        border: '1px solid rgba(255,255,255,0.15)',
+                        marginTop: 10,
+                        padding: '8px 0',
+                        borderRadius: 8,
+                        border: '1px solid rgba(0,0,0,0.12)',
                         background: 'transparent',
-                        color: '#fff',
-                        fontSize: 13,
+                        color: '#1d1d1f',
+                        fontSize: 12,
                         fontWeight: 600,
                         cursor: 'pointer',
                         letterSpacing: '-0.01em',

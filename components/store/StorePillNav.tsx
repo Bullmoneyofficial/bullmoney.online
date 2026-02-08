@@ -1,11 +1,9 @@
 'use client';
 
-import React, { useEffect, useState, useMemo, useCallback, memo } from 'react';
+import React, { useEffect, useState, useCallback, memo } from 'react';
 import Link from 'next/link';
 import { ShoppingBag, Search, User, Menu } from 'lucide-react';
-import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { LanguageToggle } from '@/components/LanguageToggle';
 
 // Lazy-load framer-motion — only needed for cart badge animation
 const LazyMotionButton = dynamic(() => import('framer-motion').then(m => ({ default: m.motion.button })), { ssr: false });
@@ -23,10 +21,20 @@ export type StorePillNavItem = {
   ariaLabel?: string;
 };
 
+export type StorePillNavLink = {
+  label: string;
+  href?: string;
+  onClick?: () => void;
+  ariaLabel?: string;
+  isActive?: boolean;
+  variant?: 'link' | 'toggle';
+};
+
 export interface StorePillNavProps {
   logo?: string;
   logoAlt?: string;
   items: StorePillNavItem[];
+  desktopLinks?: StorePillNavLink[];
   className?: string;
   cartCount?: number;
   onCartClick?: () => void;
@@ -39,6 +47,8 @@ export interface StorePillNavProps {
   isAuthenticated?: boolean;
   userInitial?: string;
   onMobileMenuClick?: () => void;
+  onDesktopMenuEnter?: () => void;
+  onDesktopMenuLeave?: () => void;
   // Legacy props (ignored but kept for compatibility)
   ease?: string;
   baseColor?: string;
@@ -51,35 +61,27 @@ export interface StorePillNavProps {
 export const StorePillNav: React.FC<StorePillNavProps> = memo(({
   logo = '/BULL.svg',
   logoAlt = 'Bullmoney',
-  items = [],
+  desktopLinks = [],
   className = '',
   cartCount = 0,
   onCartClick,
   onSearchClick,
   onUserClick,
-  onCategoryClick,
   showSearch = true,
   showUser = true,
   showCart = true,
   isAuthenticated = false,
   userInitial = 'U',
   onMobileMenuClick,
+  onDesktopMenuEnter,
+  onDesktopMenuLeave,
 }) => {
-  const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Determine active href based on current pathname (memoized)
-  const activeHref = useMemo(() => {
-    if (!pathname || !items || items.length === 0) return '/store';
-    const exactMatch = items.find(item => item.href === pathname);
-    if (exactMatch) return exactMatch.href;
-    if (pathname.startsWith('/store')) return '/store';
-    return '';
-  }, [pathname, items]);
 
   const handleMobileMenuClick = useCallback(() => {
     onMobileMenuClick?.();
@@ -88,106 +90,136 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
   // SSR fallback
   if (!mounted) {
     return (
-      <header className="fixed top-0 left-0 right-0 z-500 h-16" style={{ background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }} />
+      <header className="fixed top-0 left-0 right-0 z-500 h-12" style={{ background: 'rgb(255,255,255)' }} />
     );
   }
 
   return (
     <>
-      <header className={`fixed top-0 left-0 right-0 z-500 ${className}`} style={{ background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-        <nav className="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between gap-4">
+      <header className={`fixed top-0 left-0 right-0 z-500 ${className}`} style={{ background: 'rgb(255,255,255)' }}>
+        <nav
+          className="w-full px-6 md:px-10 h-12 flex items-center justify-between gap-6"
+          style={{ background: 'rgb(255,255,255)' }}
+          onMouseEnter={onDesktopMenuEnter}
+          onMouseLeave={onDesktopMenuLeave}
+        >
           {/* Left: Logo & Title */}
           <div className="flex items-center gap-3">
-            <Link 
-              href="/store" 
-              className="relative shrink-0 w-14 h-14 block hover:scale-105 transition-transform"
+            <Link
+              href="/store"
+              className="relative shrink-0 w-8 h-8 block"
+              aria-label="Bullmoney Store"
             >
-              <img src={logo} alt={logoAlt} className="w-full h-full object-cover" />
+              <img
+                src={logo}
+                alt={logoAlt}
+                className="w-full h-full object-contain"
+              />
             </Link>
-            <Link href="/store" className="shrink-0 text-xl font-semibold tracking-wide hidden sm:block" style={{
-              color: '#ffffff',
-              textShadow: '0 0 8px rgba(255, 255, 255, 0.3)',
-              letterSpacing: '0.05em'
-            }}>
+            <Link href="/store" className="shrink-0 text-[13px] font-medium tracking-wide hidden sm:block" style={{ color: '#111111' }}>
               bullmoney
             </Link>
           </div>
-          
-          {/* Center: Pill Navigation (Desktop) */}
-          <div className="hidden lg:flex items-center h-10 rounded-full" style={{ background: 'rgb(0,0,0)', border: '1px solid rgba(255,255,255,0.25)' }}>
-            <ul className="flex items-stretch gap-0.5 h-full p-1">
-              {items.map((item) => (
-                <li key={item.href} className="flex h-full">
+
+          {/* Center: Simple Links (Desktop) */}
+          <div className="hidden lg:flex items-center gap-3 text-[12px] font-medium tracking-wide" style={{ color: 'rgba(0,0,0,0.85)' }}>
+            {desktopLinks.map((link) => {
+              const linkClass = `transition-colors text-black hover:text-white ${link.isActive ? '' : 'hover:opacity-100'}`;
+              const pillClass = 'h-8 px-4 rounded-full bg-white flex items-center gap-2 border border-black/10 transition-colors hover:bg-black hover:border-black';
+              if (link.variant === 'toggle') {
+                return (
                   <button
-                    onClick={() => onCategoryClick?.(item.href)}
-                    className="flex items-center justify-center h-full px-4 rounded-full text-xs font-semibold uppercase tracking-wide transition-all duration-200"
-                    style={activeHref === item.href 
-                      ? { background: 'rgb(255,255,255)', color: 'rgb(0,0,0)' }
-                      : { color: 'rgb(255,255,255)' }
-                    }
-                    aria-label={item.ariaLabel || item.label}
+                    key={link.label}
+                    onClick={link.onClick}
+                    className={pillClass}
+                    aria-label={link.ariaLabel || link.label}
+                    role="switch"
+                    aria-checked={!!link.isActive}
                   >
-                    {item.label}
+                    <span className={linkClass}>{link.label}</span>
+                    <span
+                      className="relative inline-flex h-4 w-7 items-center rounded-full transition-colors"
+                      style={{ background: link.isActive ? 'rgba(0,0,0,0.85)' : 'rgba(0,0,0,0.2)' }}
+                    >
+                      <span
+                        className={`inline-block h-3 w-3 rounded-full transition-transform ${link.isActive ? 'translate-x-3' : 'translate-x-1'}`}
+                        style={{ background: link.isActive ? 'rgb(255,255,255)' : 'rgb(0,0,0)' }}
+                      />
+                    </span>
                   </button>
-                </li>
-              ))}
-            </ul>
+                );
+              }
+              if (link.href) {
+                return (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    className={`${pillClass} ${linkClass}`}
+                    aria-label={link.ariaLabel || link.label}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              }
+              return (
+                <button
+                  key={link.label}
+                  onClick={link.onClick}
+                  className={`${pillClass} ${linkClass}`}
+                  aria-label={link.ariaLabel || link.label}
+                >
+                  {link.label}
+                </button>
+              );
+            })}
           </div>
-          
+
           {/* Right: Actions */}
-          <div className="flex items-center gap-2">
-            {/* 🌐 Language Toggle */}
-            <LanguageToggle variant="icon" dropDirection="down" />
-            
-            {/* Search */}
+          <div className="flex items-center gap-1.5">
             {showSearch && (
-              <button 
-                className="h-10 w-10 flex items-center justify-center rounded-xl transition-colors" 
-                style={{ background: 'rgba(255,255,255,0.12)', color: 'rgb(255,255,255)' }}
+              <button
+                className="h-8 w-8 flex items-center justify-center rounded-full transition-colors bg-white border border-black/10"
+                style={{ color: 'rgba(0,0,0,0.85)' }}
                 onClick={onSearchClick}
                 aria-label="Search"
               >
-                <Search className="w-5 h-5" />
+                <Search className="w-4 h-4" />
               </button>
             )}
-            
-            {/* User */}
+
             {showUser && (
-              <button 
-                className="h-10 w-10 flex items-center justify-center rounded-xl transition-colors"
-                style={isAuthenticated 
-                  ? { background: 'rgba(255,255,255,0.15)', color: 'rgb(255,255,255)' }
-                  : { background: 'rgba(255,255,255,0.12)', color: 'rgb(255,255,255)' }
-                }
+              <button
+                className="h-8 w-8 flex items-center justify-center rounded-full transition-colors bg-white border border-black/10"
+                style={{ color: 'rgba(0,0,0,0.85)' }}
                 onClick={onUserClick}
                 aria-label="Account"
               >
                 {isAuthenticated ? (
-                  <span className="text-sm font-medium uppercase" style={{ color: 'rgb(255,255,255)' }}>{userInitial}</span>
+                  <span className="text-[12px] font-semibold uppercase" style={{ color: '#111111' }}>{userInitial}</span>
                 ) : (
-                  <User className="w-5 h-5" />
+                  <User className="w-4 h-4" />
                 )}
               </button>
             )}
-            
-            {/* Cart */}
+
             {showCart && (
               <LazyMotionButton
-                className="h-10 px-4 flex items-center gap-2 rounded-xl transition-colors"
-                style={{ background: 'rgb(255,255,255)', color: 'rgb(0,0,0)' }}
+                className="h-8 px-2.5 flex items-center gap-1.5 rounded-full transition-colors bg-white border border-black/10"
+                style={{ color: 'rgba(0,0,0,0.85)' }}
                 onClick={onCartClick}
                 whileTap={{ scale: 0.95 }}
                 aria-label="Shopping Cart"
               >
-                <ShoppingBag className="w-5 h-5" />
+                <ShoppingBag className="w-4 h-4" />
                 <LazyAnimatePresence mode="wait">
                   {cartCount > 0 && (
                     <LazyMotionSpan
                       key={cartCount}
-                      initial={{ opacity: 0, scale: 0.5 }}
+                      initial={{ opacity: 0, scale: 0.6 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.5 }}
-                      className="text-sm font-medium"
+                      exit={{ opacity: 0, scale: 0.6 }}
+                      className="text-[11px] font-semibold"
+                      style={{ color: '#111111' }}
                     >
                       {cartCount}
                     </LazyMotionSpan>
@@ -195,15 +227,15 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
                 </LazyAnimatePresence>
               </LazyMotionButton>
             )}
-            
+
             {/* Mobile Menu Toggle */}
             <button
-              className="lg:hidden h-10 w-10 flex items-center justify-center rounded-xl transition-colors"
-              style={{ background: 'rgba(255,255,255,0.12)', color: 'rgb(255,255,255)' }}
+              className="lg:hidden h-8 w-8 flex items-center justify-center rounded-full transition-colors bg-white border border-black/10"
+              style={{ color: 'rgba(0,0,0,0.85)' }}
               onClick={handleMobileMenuClick}
               aria-label="Toggle menu"
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-4 h-4" />
             </button>
           </div>
         </nav>

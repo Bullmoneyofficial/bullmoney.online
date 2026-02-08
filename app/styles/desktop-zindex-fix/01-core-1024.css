@@ -12,12 +12,12 @@
   
   /* Premium glass morphism for cards and containers */
   /* Exclude dashboard sections with data-theme-aware from glass morphism */
-  .card:not([data-theme-aware] *),
-  .container:not([data-theme-aware] *),
-  section:not([data-theme-aware]):not(#tradingview-dashboard):not(#metatrader-quotes):not(#breaking-news):not(#telegram-community),
-  article:not([data-theme-aware] *),
-  [class*="card"]:not([data-theme-aware] *),
-  [class*="panel"]:not([data-theme-aware] *) {
+  .card:not([data-theme-aware] *):not([data-store-section] *),
+  .container:not([data-theme-aware] *):not([data-store-section] *),
+  section:not([data-theme-aware]):not([data-store-section]):not(#tradingview-dashboard):not(#metatrader-quotes):not(#breaking-news):not(#telegram-community),
+  article:not([data-theme-aware] *):not([data-store-section] *),
+  [class*="card"]:not([data-theme-aware] *):not([data-store-section] *),
+  [class*="panel"]:not([data-theme-aware] *):not([data-store-section] *) {
     backdrop-filter: blur(20px) saturate(180%) !important;
     -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
     background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05)) !important;
@@ -26,6 +26,18 @@
       0 8px 32px 0 rgba(0, 0, 0, 0.37),
       inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
       0 0 20px rgba(255, 255, 255, 0.1) !important;
+  }
+
+  /* Store page: force pure black, no glass morphism */
+  [data-store-section],
+  [data-store-section] section,
+  [data-store-section] div,
+  [data-store-section] [class*="card"],
+  [data-store-section] [class*="panel"] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: none !important;
+    box-shadow: none !important;
   }
   
   /* Ensure dashboard sections maintain their dark theme */
@@ -58,10 +70,14 @@
     filter: brightness(1.1) !important;
   }
   
-  /* Exclude dashboard sections from hover transforms */
+  /* Exclude dashboard sections and store from hover transforms */
   [data-theme-aware] button:hover,
   [data-theme-aware] a:hover,
   [data-theme-aware] [role="button"]:hover,
+  [data-store-section] button:hover,
+  [data-store-section] a:hover,
+  [data-store-section] [role="button"]:hover,
+  [data-store-section] .cursor-pointer:hover,
   .tradingview-widget-container button:hover,
   .tradingview-widget-container a:hover {
     transform: none !important;

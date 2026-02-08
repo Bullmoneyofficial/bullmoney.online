@@ -13,6 +13,16 @@
 @import "./styles/70-mobile-performance.css";
 @import "../styles/themes/supreme-z-index.css";
 
+/* Hide horizontal scrollbar for the world map scroller */
+.world-map-scroll {
+  scrollbar-width: none;
+}
+
+.world-map-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
 /* =============================================
    GLOBAL THEME ACCENT OVERRIDES (ALL MODALS)
    ============================================= */
@@ -104,13 +114,42 @@ footer .accent,
 
 /* Core page wrappers */
 main,
-section,
+section:not([data-apple-section]):not([data-products-section]),
 article,
 [data-theme-aware],
 [data-page],
 [data-section] {
   --page-accent: var(--neon-accent);
   --page-accent-rgb: var(--neon-accent-rgb);
+}
+
+/* =============================================
+   APPLE SECTION ISOLATION — defeat all theme
+   overlays, neon borders, accent text, etc.
+   ============================================= */
+[data-apple-section],
+[data-apple-section-wrapper],
+[data-products-section],
+[data-products-section-wrapper] {
+  --page-accent: unset !important;
+  --page-accent-rgb: unset !important;
+  --neon-accent: unset !important;
+  --neon-accent-rgb: unset !important;
+  --neon-border: unset !important;
+  --neon-border-soft: unset !important;
+  --neon-glow: unset !important;
+  --accent-color: unset !important;
+  --accent-rgb: unset !important;
+  filter: none !important;
+  -webkit-filter: none !important;
+}
+
+[data-apple-section] *,
+[data-apple-section-wrapper] *,
+[data-products-section] *,
+[data-products-section-wrapper] * {
+  text-shadow: none !important;
+  transition-delay: 0s !important;
 }
 
 /* Navbar + header + hub wrappers */
@@ -429,6 +468,20 @@ body[data-modal-open="true"] button[title*="Close" i]:hover {
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y pan-x;
   overscroll-behavior: contain;
+}
+
+/* Store featured section: prevent glass panels between map and products */
+.store-layout .featured-section-clean {
+  background: #000 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.store-layout .featured-section-clean::before,
+.store-layout .featured-section-clean::after {
+  content: none !important;
 }
 
 /* Timeline text animations — never hide text, only animate transform */

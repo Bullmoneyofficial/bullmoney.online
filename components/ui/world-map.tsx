@@ -114,13 +114,44 @@ const SVG_W = Math.round(SVG_H * MERC_X_RANGE / MERC_Y_RANGE); // ~841
 
 export default function WorldMap({
   dots = [],
-  lineColor = "#ffffff",
+  lineColor = "#000000",
   showCryptoCoins = true,
 }: MapProps) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
+  const dragStartXRef = useRef(0);
+  const dragStartScrollLeftRef = useRef(0);
+  const lastDragXRef = useRef(0);
+  const lastDragTimeRef = useRef(0);
+  const velocityRef = useRef(0);
+  const inertiaRef = useRef<number | null>(null);
   const [isDesktop, setIsDesktop] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [showDragHint, setShowDragHint] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   const { shouldSkipHeavyEffects } = useUnifiedPerformance();
+
+  // ✅ PERF: Only render map when visible in viewport (saves ~1-2s on initial load)
+  useEffect(() => {
+    if (!containerRef.current || typeof IntersectionObserver === 'undefined') {
+      // Fallback: show after short delay
+      const t = setTimeout(() => setIsVisible(true), 800);
+      return () => clearTimeout(t);
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.01, rootMargin: '200px' }
+    );
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   // Detect mobile / low-memory once
   useEffect(() => {
@@ -138,6 +169,9 @@ export default function WorldMap({
   const isLite = isMobile || shouldSkipHeavyEffects;
   const enableHeavyAnimations = !isLite;
   const enableLineCoins = true;
+  const mobileCoinScale = isMobile ? 1.35 : 1;
+  const lineCoinScale = isMobile ? 1.5 : 1;
+  const allowRadarAnimations = !isMobile;
 
   // Pick appropriate data sets based on device capability
   const METEORS = isLite ? METEORS_LITE : METEORS_FULL;
@@ -145,13 +179,25 @@ export default function WorldMap({
   const hotspotCities = isLite ? HOTSPOT_CITIES_LITE : HOTSPOT_CITIES;
 
   // Memoize the map — lower resolution grid for mobile
+  // Primary layer: darker, denser dots for the main landmasses
   const svgMap = useMemo(() => {
-    const map = new DottedMap({ height: isLite ? 45 : 100, grid: "diagonal" });
+    const map = new DottedMap({ height: isLite ? 80 : 180, grid: "diagonal" });
     return map.getSVG({
-      radius: isLite ? 0.18 : 0.22,
-      color: isLite ? "#FFFFFF40" : "#FFFFFF60",
+      radius: isLite ? 0.3 : 0.38,
+      color: isLite ? "#000000B0" : "#000000DD",
       shape: "circle",
-      backgroundColor: "#000000",
+      backgroundColor: "#FFFFFF",
+    });
+  }, [isLite]);
+
+  // Secondary layer: dim fill dots to cover gaps between main dots
+  const svgMapFill = useMemo(() => {
+    const map = new DottedMap({ height: isLite ? 100 : 220, grid: "vertical" });
+    return map.getSVG({
+      radius: isLite ? 0.2 : 0.25,
+      color: isLite ? "#00000040" : "#00000055",
+      shape: "circle",
+      backgroundColor: "transparent",
     });
   }, [isLite]);
 
@@ -172,10 +218,121 @@ export default function WorldMap({
     return `M ${start.x} ${start.y} Q ${midX} ${midY} ${end.x} ${end.y}`;
   };
 
+  const handlePointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    if (!scrollRef.current) return;
+    if (showDragHint) {
+      setShowDragHint(false);
+    }
+    isDraggingRef.current = true;
+    dragStartXRef.current = event.clientX;
+    dragStartScrollLeftRef.current = scrollRef.current.scrollLeft;
+    lastDragXRef.current = event.clientX;
+    lastDragTimeRef.current = performance.now();
+    velocityRef.current = 0;
+    if (inertiaRef.current !== null) {
+      cancelAnimationFrame(inertiaRef.current);
+      inertiaRef.current = null;
+    }
+    scrollRef.current.setPointerCapture(event.pointerId);
+  }, [showDragHint]);
+
+  const handlePointerMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    if (!scrollRef.current || !isDraggingRef.current) return;
+    const deltaX = event.clientX - dragStartXRef.current;
+    scrollRef.current.scrollLeft = dragStartScrollLeftRef.current - deltaX;
+    const now = performance.now();
+    const dt = now - lastDragTimeRef.current;
+    if (dt > 0) {
+      const dx = event.clientX - lastDragXRef.current;
+      velocityRef.current = dx / dt;
+      lastDragXRef.current = event.clientX;
+      lastDragTimeRef.current = now;
+    }
+  }, []);
+
+  const handlePointerUp = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    if (!scrollRef.current) return;
+    isDraggingRef.current = false;
+    scrollRef.current.releasePointerCapture(event.pointerId);
+    const container = scrollRef.current;
+    let velocity = velocityRef.current * -1;
+    const friction = 0.97;
+    const minVelocity = 0.015;
+    const step = () => {
+      if (!container) return;
+      velocity *= friction;
+      if (Math.abs(velocity) < minVelocity) {
+        inertiaRef.current = null;
+        return;
+      }
+      container.scrollLeft += velocity * 16;
+      inertiaRef.current = requestAnimationFrame(step);
+    };
+    if (Math.abs(velocity) >= minVelocity) {
+      inertiaRef.current = requestAnimationFrame(step);
+    }
+  }, []);
+
   return (
+    <>
+    {/* Scoped !important reset — same pattern as AppleProductsSection */}
+    <style>{`
+      [data-crypto-section],
+      [data-crypto-section] *,
+      [data-crypto-section] *::before,
+      [data-crypto-section] *::after {
+        filter: none !important;
+        -webkit-filter: none !important;
+      }
+      [data-crypto-section] {
+        background-color: #ffffff !important;
+        isolation: isolate !important;
+        position: relative !important;
+        z-index: 1 !important;
+      }
+    `}</style>
     <div 
-      className="w-full h-full min-h-[60vh] md:h-screen md:w-screen bg-black relative font-sans overflow-hidden flex items-center justify-center"
+      ref={(el) => {
+        scrollRef.current = el;
+        (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+      }}
+      className="world-map-scroll w-full h-full min-h-[100svh] md:min-h-0 md:h-full md:w-screen relative font-sans overflow-x-auto overflow-y-hidden md:overflow-hidden flex items-center justify-start md:justify-center touch-pan-x cursor-grab active:cursor-grabbing"
+      style={{ backgroundColor: '#ffffff' }}
+      data-crypto-section
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerLeave={handlePointerUp}
+      onPointerCancel={handlePointerUp}
     >
+      {/* ✅ PERF: Show loading state while map is deferred */}
+      {!isVisible ? (
+        <div className="absolute inset-0 flex items-center justify-center bg-white">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-10 h-10 border-2 border-black/10 border-t-black/60 rounded-full animate-spin" />
+            <span className="text-black/40 text-sm">Loading map...</span>
+          </div>
+        </div>
+      ) : (
+        <>
+      {showDragHint && (
+        <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 0.95, scale: [1, 1.05, 1] }}
+            transition={{ duration: 1.4, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }}
+            className="rounded-full px-6 py-3 bg-white/90 text-black shadow-xl border border-black/10 flex items-center gap-3"
+            style={{ fontFamily: 'system-ui, sans-serif', letterSpacing: '0.08em', fontWeight: 600, textTransform: 'uppercase' }}
+          >
+            <span className="text-sm">Drag to explore</span>
+            <div className="flex items-center gap-1 text-xs tracking-wider">
+              <span>&lt;</span>
+              <span>&gt;</span>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       {/* Fake ocean wave overlays - skip on mobile/lite */}
       {!isLite && (
       <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
@@ -202,7 +359,15 @@ export default function WorldMap({
         />
       </div>
       )}
-      <div className="relative w-full h-full max-w-none aspect-[2/1] md:aspect-auto md:h-full">
+      <div className="relative flex-none h-full w-full min-w-[200vw] md:min-w-0 md:w-full max-w-none aspect-[2/1] md:aspect-auto md:h-full">
+        {/* Dim fill layer — covers gaps between main dots */}
+        <img
+          src={`data:image/svg+xml;utf8,${encodeURIComponent(svgMapFill)}`}
+          className="absolute inset-0 w-full h-full object-cover [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)] pointer-events-none select-none"
+          alt=""
+          draggable={false}
+        />
+        {/* Primary dot layer — darker, main landmasses */}
         <img
           src={`data:image/svg+xml;utf8,${encodeURIComponent(svgMap)}`}
           className="absolute inset-0 w-full h-full object-cover [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)] pointer-events-none select-none"
@@ -226,7 +391,7 @@ export default function WorldMap({
                 x={pos.x + 1}
                 y={pos.y + 1}
                 textAnchor="middle"
-                fill="rgba(0,0,0,0.5)"
+                fill="rgba(255,255,255,0.5)"
                 fontSize={isLite ? "10" : "14"}
                 fontWeight="900"
                 fontFamily="system-ui, sans-serif"
@@ -244,7 +409,7 @@ export default function WorldMap({
                   x={pos.x}
                   y={pos.y}
                   textAnchor="middle"
-                  fill="rgba(255,255,255,0.4)"
+                  fill="#000000"
                   fontSize="10"
                   fontWeight="900"
                   fontFamily="system-ui, sans-serif"
@@ -257,14 +422,13 @@ export default function WorldMap({
                   x={pos.x}
                   y={pos.y}
                   textAnchor="middle"
-                  fill="rgba(255,255,255,0.6)"
+                  fill="#000000"
                   fontSize="14"
                   fontWeight="900"
                   fontFamily="system-ui, sans-serif"
                   letterSpacing="0.15em"
                   style={{
-                    textShadow: '0 0 10px rgba(255,255,255,0.3), 0 2px 4px rgba(0,0,0,0.5)',
-                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))',
+                    textShadow: '0 0 8px rgba(0,0,0,0.1)',
                   }}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -378,24 +542,24 @@ export default function WorldMap({
                       }}
                     >
                       {!isLite && <circle cx="0" cy="0" r="8" fill={coin.color} opacity="0.25" />}
-                      <circle cx="0" cy="0" r={isLite ? 4.5 : 5.5} fill={coin.color} />
+                      <circle cx="0" cy="0" r={(isLite ? 4.5 : 5.5) * lineCoinScale} fill={coin.color} />
                       {!isLite && (
-                        <circle cx="0" cy="0" r="4.5" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.4" />
+                        <circle cx="0" cy="0" r="4.5" fill="none" stroke="rgba(0,0,0,0.3)" strokeWidth="0.4" />
                       )}
                       <text
                         x="0"
                         y="2"
                         textAnchor="middle"
-                        fill="#FFF"
-                        fontSize={isLite ? "4" : "6"}
+                        fill="#000"
+                        fontSize={(isLite ? 4 : 6) * lineCoinScale}
                         fontWeight="bold"
                         fontFamily="system-ui, sans-serif"
                       >
                         {coin.symbol}
                       </text>
-                      {!isLite && <ellipse cx="-1.5" cy="-1.5" rx="2" ry="1" fill="rgba(255,255,255,0.35)" />}
+                      {!isLite && <ellipse cx="-1.5" cy="-1.5" rx="2" ry="1" fill="rgba(0,0,0,0.2)" />}
                     </motion.g>
-                    {Array.from({ length: burstCount }).map((_, burstIdx) => {
+                    {!isMobile && Array.from({ length: burstCount }).map((_, burstIdx) => {
                       const angle = (burstIdx * (360 / burstCount)) * (Math.PI / 180);
                       return (
                         <motion.circle
@@ -422,25 +586,27 @@ export default function WorldMap({
                         />
                       );
                     })}
-                    <motion.circle
-                      cx={endPoint.x}
-                      cy={endPoint.y}
-                      r={isLite ? 2.6 : 4}
-                      fill={coin.color}
-                      initial={{ opacity: 0, scale: 0 }}
-                      animate={{
-                        opacity: [0, 0, 0.8, 0],
-                        scale: [0, 0, isLite ? 2 : 3, 0],
-                      }}
-                      transition={{
-                        duration: totalDuration + 0.6,
-                        delay: baseDelay,
-                        repeat: Infinity,
-                        repeatDelay: repeatDelay - 0.6,
-                        times: [0, 0.9, 0.95, 1],
-                        ease: "easeOut",
-                      }}
-                    />
+                    {!isMobile && (
+                      <motion.circle
+                        cx={endPoint.x}
+                        cy={endPoint.y}
+                        r={isLite ? 2.6 : 4}
+                        fill={coin.color}
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{
+                          opacity: [0, 0, 0.8, 0],
+                          scale: [0, 0, isLite ? 2 : 3, 0],
+                        }}
+                        transition={{
+                          duration: totalDuration + 0.6,
+                          delay: baseDelay,
+                          repeat: Infinity,
+                          repeatDelay: repeatDelay - 0.6,
+                          times: [0, 0.9, 0.95, 1],
+                          ease: "easeOut",
+                        }}
+                      />
+                    )}
                   </>
                 );
               })()}
@@ -511,21 +677,40 @@ export default function WorldMap({
         })}
 
         {/* Floating Crypto Coins in Ocean Areas - wave drift */}
-        {showCryptoCoins && CRYPTO_COINS_DATA.map((coin, i) => {
+        {showCryptoCoins && isMobile && CRYPTO_COINS_DATA.map((coin, i) => {
+          const pos = projectPoint(coin.lat, coin.lng);
+          const baseRadius = 6 * mobileCoinScale;
+          const innerRadius = 4.5 * mobileCoinScale;
+          const textSize = 4.5 * mobileCoinScale;
+          return (
+            <g key={`crypto-mobile-${coin.symbol}-${i}`}>
+              <circle cx={pos.x} cy={pos.y} r={baseRadius} fill={coin.color} opacity="0.9" />
+              <circle cx={pos.x} cy={pos.y} r={innerRadius} fill="none" stroke="rgba(0,0,0,0.25)" strokeWidth="0.4" />
+              <text x={pos.x} y={pos.y + 2.5} textAnchor="middle" fill="#000" fontSize={textSize} fontWeight="bold" fontFamily="system-ui, sans-serif">
+                {coin.symbol}
+              </text>
+            </g>
+          );
+        })}
+
+        {showCryptoCoins && !isMobile && CRYPTO_COINS_DATA.map((coin, i) => {
           const pos = projectPoint(coin.lat, coin.lng);
           const bobDur = 3 + (i * 0.7);
           const swayDur = 6 + (i * 1.2);
           const tiltDur = 4 + (i * 0.9);
           
           if (isLite) {
+            const baseRadius = 6 * mobileCoinScale;
+            const innerRadius = 4.5 * mobileCoinScale;
+            const textSize = 4.5 * mobileCoinScale;
             return (
               <g key={`crypto-lite-${coin.symbol}-${i}`}>
-                <circle cx={pos.x} cy={pos.y} r="6" fill={coin.color} opacity="0.85" />
-                <circle cx={pos.x} cy={pos.y} r="4.5" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="0.4" />
-                <text x={pos.x} y={pos.y + 2.5} textAnchor="middle" fill="#FFF" fontSize="4.5" fontWeight="bold" fontFamily="system-ui, sans-serif">
+                <circle cx={pos.x} cy={pos.y} r={baseRadius} fill={coin.color} opacity="0.85" />
+                <circle cx={pos.x} cy={pos.y} r={innerRadius} fill="none" stroke="rgba(0,0,0,0.2)" strokeWidth="0.4" />
+                <text x={pos.x} y={pos.y + 2.5} textAnchor="middle" fill="#000" fontSize={textSize} fontWeight="bold" fontFamily="system-ui, sans-serif">
                   {coin.symbol}
                 </text>
-                <circle cx={pos.x} cy={pos.y} r="6" fill="none" stroke="rgba(255,255,255,0.25)">
+                <circle cx={pos.x} cy={pos.y} r={baseRadius} fill="none" stroke="rgba(0,0,0,0.25)">
                   <animate attributeName="opacity" values="0.2;0.5;0.2" dur="4s" repeatCount="indefinite" />
                 </circle>
               </g>
@@ -633,7 +818,7 @@ export default function WorldMap({
                       cy={pos.y}
                       r="9"
                       fill="none"
-                      stroke="rgba(255,255,255,0.25)"
+                      stroke="rgba(0,0,0,0.25)"
                       strokeWidth="0.5"
                     />
                     
@@ -642,7 +827,7 @@ export default function WorldMap({
                       x={pos.x}
                       y={pos.y + 3}
                       textAnchor="middle"
-                      fill="#FFF"
+                      fill="#000"
                       fontSize="5.5"
                       fontWeight="bold"
                       fontFamily="system-ui, sans-serif"
@@ -656,7 +841,7 @@ export default function WorldMap({
                       cy={pos.y - 3}
                       rx="3"
                       ry="1.5"
-                      fill="rgba(255,255,255,0.35)"
+                      fill="rgba(0,0,0,0.2)"
                     />
                   </motion.g>
                 </motion.g>
@@ -793,7 +978,7 @@ export default function WorldMap({
                 transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }}
               />
               {/* Inner bright dot */}
-              <circle cx={pos.x} cy={pos.y} r="1.2" fill="#fff" opacity="0.9" />
+              <circle cx={pos.x} cy={pos.y} r="1.2" fill="#000" opacity="0.9" />
             </g>
           );
         })}
@@ -816,11 +1001,11 @@ export default function WorldMap({
                       cy={startPos.y}
                       r={orbitR}
                       fill="none"
-                      stroke="rgba(255,255,255,0.06)"
+                      stroke="rgba(0,0,0,0.06)"
                       strokeWidth="0.3"
                       strokeDasharray="2 4"
                     />
-                    <circle cx={startPos.x} cy={startPos.y} r="1" fill="rgba(255,255,255,0.7)">
+                    <circle cx={startPos.x} cy={startPos.y} r="1" fill="rgba(0,0,0,0.7)">
                       <animateTransform
                         attributeName="transform"
                         type="rotate"
@@ -847,11 +1032,11 @@ export default function WorldMap({
                       cy={endPos.y}
                       r={orbitR}
                       fill="none"
-                      stroke="rgba(255,255,255,0.06)"
+                      stroke="rgba(0,0,0,0.06)"
                       strokeWidth="0.3"
                       strokeDasharray="2 4"
                     />
-                    <circle cx={endPos.x} cy={endPos.y} r="1" fill="rgba(255,255,255,0.6)">
+                    <circle cx={endPos.x} cy={endPos.y} r="1" fill="rgba(0,0,0,0.6)">
                       <animateTransform
                         attributeName="transform"
                         type="rotate"
@@ -888,10 +1073,14 @@ export default function WorldMap({
                 <circle cx={radarCenter.x} cy={radarCenter.y} r={radarR * 0.66} fill="none" stroke="rgba(0,212,255,0.12)" strokeWidth="0.5" />
                 <circle cx={radarCenter.x} cy={radarCenter.y} r={radarR * 0.33} fill="none" stroke="rgba(0,212,255,0.12)" strokeWidth="0.5" />
                 <circle cx={radarCenter.x} cy={radarCenter.y} r={radarR} fill="none" stroke="rgba(0,212,255,0.22)" strokeWidth="1">
-                  <animate attributeName="opacity" values="0.1;0.35;0.1" dur="6s" repeatCount="indefinite" />
+                  {allowRadarAnimations && (
+                    <animate attributeName="opacity" values="0.1;0.35;0.1" dur="6s" repeatCount="indefinite" />
+                  )}
                 </circle>
                 <circle cx={radarCenter.x} cy={radarCenter.y} r="1.8" fill="rgba(0,212,255,0.6)">
-                  <animate attributeName="opacity" values="0.4;0.9;0.4" dur="3s" repeatCount="indefinite" />
+                  {allowRadarAnimations && (
+                    <animate attributeName="opacity" values="0.4;0.9;0.4" dur="3s" repeatCount="indefinite" />
+                  )}
                 </circle>
               </g>
             );
@@ -1006,7 +1195,7 @@ export default function WorldMap({
               <defs>
                 <linearGradient id={`meteor-grad-${i}`} x1="0%" y1="0%" x2="100%" y2="0%"
                   gradientTransform={`rotate(${m.angle})`}>
-                  <stop offset="0%" stopColor="#FFFFFF" stopOpacity="1" />
+                  <stop offset="0%" stopColor="#000000" stopOpacity="1" />
                   <stop offset="20%" stopColor="#FFE4B5" stopOpacity="0.8" />
                   <stop offset="50%" stopColor="#FFA500" stopOpacity="0.4" />
                   <stop offset="80%" stopColor="#FF4500" stopOpacity="0.15" />
@@ -1015,7 +1204,7 @@ export default function WorldMap({
               </defs>
               {/* Meteor head — shrinks as it burns up */}
               <motion.circle
-                fill="#FFFFFF"
+                fill="#000000"
                 initial={{ cx: m.startX, cy: m.startY, opacity: 0, r: 2 }}
                 animate={{
                   cx: [m.startX, endX],
@@ -1031,7 +1220,7 @@ export default function WorldMap({
                   times: [0, 0.1, 0.6, 0.9, 1],
                   ease: "linear",
                 }}
-                style={{ filter: 'drop-shadow(0 0 3px #fff) drop-shadow(0 0 6px #FFA500)' }}
+                style={{ filter: 'drop-shadow(0 0 3px #333) drop-shadow(0 0 6px #FFA500)' }}
               />
               {/* Meteor tail streak — fading burn trail */}
               <motion.line
@@ -1143,6 +1332,9 @@ export default function WorldMap({
 
       </svg>
       </div>
+        </>
+      )}
     </div>
+    </>
   );
 }

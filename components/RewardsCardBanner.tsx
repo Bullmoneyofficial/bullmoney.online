@@ -14,12 +14,12 @@ import type { LogoItem } from "./LogoLoop";
 
 // Partner/Feature logos for the loop
 const rewardLogos: LogoItem[] = [
-  { node: <Star className="w-5 h-5 text-white" />, title: "5% Cashback" },
-  { node: <Gift className="w-5 h-5 text-white" />, title: "Free Rewards" },
-  { node: <Zap className="w-5 h-5 text-white" />, title: "Instant Points" },
-  { node: <Crown className="w-5 h-5 text-white" />, title: "VIP Perks" },
-  { node: <CreditCard className="w-5 h-5 text-white" />, title: "Store Credit" },
-  { node: <Award className="w-5 h-5 text-white" />, title: "Exclusive Deals" },
+  { node: <Star className="w-4 h-4 text-black/80" />, title: "5% Cashback" },
+  { node: <Gift className="w-4 h-4 text-black/80" />, title: "Free Rewards" },
+  { node: <Zap className="w-4 h-4 text-black/80" />, title: "Instant Points" },
+  { node: <Crown className="w-4 h-4 text-black/80" />, title: "VIP Perks" },
+  { node: <CreditCard className="w-4 h-4 text-black/80" />, title: "Store Credit" },
+  { node: <Award className="w-4 h-4 text-black/80" />, title: "Exclusive Deals" },
 ];
 
 interface RewardsData {
@@ -63,56 +63,31 @@ export default function RewardsCardBanner({ userEmail, onOpenRewardsCard }: Rewa
   }, [fetchRewards]);
 
   return (
-    <div className="relative w-full bg-black border-b border-white/20 overflow-hidden">
-      {/* Background subtle pattern — skip blur-3xl on mobile/low-end (expensive GPU filter) */}
-      {!shouldSkipHeavyEffects && (
-        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-5">
-          <div className="absolute -top-20 left-1/4 w-80 h-80 rounded-full bg-white blur-3xl" />
-          <div className="absolute -bottom-20 right-1/4 w-80 h-80 rounded-full bg-white blur-3xl" />
-        </div>
-      )}
-
-      {/* Logo Loop Strip */}
-      <div className="relative h-8 bg-white/5 border-b border-white/10">
-        <LogoLoop
-          logos={rewardLogos}
-          speed={isMobile ? 40 : 60}
-          direction="left"
-          logoHeight={20}
-          gap={isMobile ? 60 : 80}
-          hoverSpeed={20}
-          fadeOut
-          fadeOutColor="#000000"
-          scaleOnHover={!isMobile}
-          ariaLabel="Rewards benefits"
-          className="h-full"
-        />
-      </div>
+    <div className="relative w-full bg-white overflow-hidden">
 
       {/* Main Content */}
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-6">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-5">
           {/* Left: Branding + Info */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {/* Bullmoney Card Icon */}
             <div className="relative shrink-0">
-              {!shouldSkipHeavyEffects && <div className="absolute inset-0 rounded-xl blur-md bg-white/20 animate-pulse" />}
-              <div className="relative w-14 h-10 rounded-lg bg-white shadow-lg flex items-center justify-center">
-                <div className="absolute inset-0.5 rounded-md bg-linear-to-br from-white/90 to-white/70" />
-                <span className="relative text-black font-black text-[10px] tracking-tighter">BULL</span>
+              <div className="relative w-12 h-9 rounded-lg bg-white shadow-sm flex items-center justify-center border border-black/10">
+                <div className="absolute inset-0.5 rounded-md bg-linear-to-br from-white to-zinc-100" />
+                <span className="relative text-black font-black text-[9px] tracking-tighter">BULL</span>
                 <div className="absolute bottom-1 right-1">
-                  <Award className="w-2.5 h-2.5 text-black/80" />
+                  <Award className="w-2.5 h-2.5 text-black/70" />
                 </div>
               </div>
             </div>
 
             <div>
-              <h3 className="text-white font-bold text-sm sm:text-base flex items-center gap-2">
-                <Sparkles className="w-3.5 h-3.5 text-white" />
+              <h3 className="text-black font-bold text-[12px] sm:text-[13px] flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-black" />
                 <span className="shimmer-text">Bullmoney Rewards</span>
               </h3>
-              <p className="text-white/60 text-[11px] sm:text-xs">
-                Earn <span className="font-semibold text-white">1 punch</span> per {formatPrice(25)} spent
+              <p className="text-black/60 text-[10px] sm:text-[11px]">
+                Earn <span className="font-semibold text-black">1 punch</span> per {formatPrice(25)} spent
                 <span className="hidden sm:inline"> · 20 punches = FREE reward</span>
               </p>
             </div>
@@ -120,24 +95,24 @@ export default function RewardsCardBanner({ userEmail, onOpenRewardsCard }: Rewa
 
           {/* Center: Mini Punch Progress (if logged in) */}
           {rewards && (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/20">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-black/10">
               <div className="flex gap-0.5">
                 {[...Array(10)].map((_, i) => (
                   <div
                     key={i}
                     className="w-2 h-2 rounded-full transition-all"
                     style={i < Math.min(rewards.punches, 10) 
-                      ? { background: "white", boxShadow: "0 1px 2px rgba(255, 255, 255, 0.3)" }
-                      : { background: "rgba(255, 255, 255, 0.2)" }
+                      ? { background: "rgb(0,0,0)", boxShadow: "0 1px 2px rgba(0, 0, 0, 0.2)" }
+                      : { background: "rgba(0, 0, 0, 0.15)" }
                     }
                   />
                 ))}
               </div>
-              <span className="text-[10px] text-white/50">
+              <span className="text-[10px] text-black/50">
                 {rewards.punches}/20
               </span>
               {rewards.punches >= 10 && (
-                <span className="text-[9px] font-medium text-white shimmer-text">Halfway!</span>
+                <span className="text-[9px] font-medium text-black shimmer-text">Halfway!</span>
               )}
             </div>
           )}
@@ -145,13 +120,30 @@ export default function RewardsCardBanner({ userEmail, onOpenRewardsCard }: Rewa
           {/* Right: CTA */}
           <button
             onClick={onOpenRewardsCard}
-            className="group flex items-center gap-2 px-4 py-2 bg-black text-white font-bold text-xs rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 whitespace-nowrap border-2 border-white hover:bg-white hover:text-black"
+            className="group flex items-center gap-2 px-4 py-2 bg-white text-black font-bold text-xs rounded-full shadow-sm hover:shadow-md transition-all duration-300 whitespace-nowrap border border-black/15"
           >
             <CreditCard className="w-3.5 h-3.5" />
             <span className="shimmer-text">{userEmail ? "View Card" : "Get Rewards"}</span>
             <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
           </button>
         </div>
+      </div>
+
+      {/* Logo Loop Strip */}
+      <div className="relative h-7 bg-white">
+        <LogoLoop
+          logos={rewardLogos}
+          speed={isMobile ? 40 : 60}
+          direction="right"
+          logoHeight={16}
+          gap={isMobile ? 50 : 70}
+          hoverSpeed={20}
+          fadeOut
+          fadeOutColor="#ffffff"
+          scaleOnHover={!isMobile}
+          ariaLabel="Rewards benefits"
+          className="h-full logoloop--force-motion"
+        />
       </div>
 
       {/* Shimmer CSS */}
@@ -168,28 +160,15 @@ export default function RewardsCardBanner({ userEmail, onOpenRewardsCard }: Rewa
         .shimmer-text {
           background: linear-gradient(
             90deg,
-            rgba(255, 255, 255, 0.8) 0%,
-            rgba(255, 255, 255, 1) 50%,
-            rgba(255, 255, 255, 0.8) 100%
+            rgba(0, 0, 0, 0.7) 0%,
+            rgba(0, 0, 0, 1) 50%,
+            rgba(0, 0, 0, 0.7) 100%
           );
           background-size: 200% auto;
           background-clip: text;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           animation: ${shouldSkipHeavyEffects ? 'none' : 'shimmer 3s linear infinite'};
-        }
-        
-        .group:hover .shimmer-text {
-          background: linear-gradient(
-            90deg,
-            rgba(0, 0, 0, 0.8) 0%,
-            rgba(0, 0, 0, 1) 50%,
-            rgba(0, 0, 0, 0.8) 100%
-          );
-          background-size: 200% auto;
-          background-clip: text;
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
         }
       `}</style>
     </div>

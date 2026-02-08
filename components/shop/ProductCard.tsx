@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback, memo } from 'react';
+import { useState, useRef, useEffect, useCallback, memo, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -20,6 +20,92 @@ import { HoverBorderGradient } from '@/components/ui/hover-border-gradient';
 import { PinContainer } from '@/components/ui/3d-pin';
 import { CardBody, CardContainer, CardItem } from '@/components/ui/3d-card';
 import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
+
+// ============================================================================
+// PULSE ANIMATION FOR HEART ICON
+// ============================================================================
+const heartPulseStyle = `
+@keyframes heartPulseBlue {
+  0% {
+    filter: drop-shadow(0 0 3px rgba(50,117,248,0.3));
+    transform: scale(1);
+  }
+  15% {
+    filter: drop-shadow(0 0 10px rgba(50,117,248,0.8)) drop-shadow(0 0 20px rgba(56,189,248,0.4));
+    transform: scale(1.22);
+  }
+  30% {
+    filter: drop-shadow(0 0 4px rgba(50,117,248,0.4));
+    transform: scale(0.95);
+  }
+  45% {
+    filter: drop-shadow(0 0 8px rgba(50,117,248,0.7)) drop-shadow(0 0 16px rgba(56,189,248,0.35));
+    transform: scale(1.12);
+  }
+  60%, 100% {
+    filter: drop-shadow(0 0 3px rgba(50,117,248,0.3));
+    transform: scale(1);
+  }
+}
+@keyframes heartFillCycle {
+  0%, 60%, 100% {
+    fill: transparent;
+    stroke: #3b82f6;
+  }
+  15%, 45% {
+    fill: #3b82f6;
+    stroke: #60a5fa;
+  }
+  30% {
+    fill: rgba(59,130,246,0.3);
+    stroke: #60a5fa;
+  }
+}
+.heart-pulse-blue {
+  animation: heartPulseBlue 1.8s ease-in-out infinite;
+}
+.heart-pulse-blue path {
+  animation: heartFillCycle 1.8s ease-in-out infinite;
+}
+@keyframes heartLineDash {
+  0% {
+    stroke-dashoffset: 80;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes heartLineGlow {
+  0%, 60%, 100% {
+    opacity: 0.35;
+    filter: drop-shadow(0 0 1px rgba(59,130,246,0.2));
+  }
+  15% {
+    opacity: 1;
+    filter: drop-shadow(0 0 8px rgba(59,130,246,0.9)) drop-shadow(0 0 16px rgba(96,165,250,0.4));
+  }
+  45% {
+    opacity: 0.85;
+    filter: drop-shadow(0 0 6px rgba(59,130,246,0.7));
+  }
+}
+@keyframes heartLineThick {
+  0%, 60%, 100% {
+    stroke-width: 1;
+  }
+  15% {
+    stroke-width: 2;
+  }
+  45% {
+    stroke-width: 1.6;
+  }
+}
+.heart-ecg-line {
+  stroke-dasharray: 40;
+  stroke-dashoffset: 80;
+  animation: heartLineDash 1.8s linear infinite, heartLineGlow 1.8s ease-in-out infinite, heartLineThick 1.8s ease-in-out infinite;
+}
+`;
 
 // ============================================================================
 // BRAND LOGO SVG COMPONENTS
@@ -84,6 +170,21 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
   const use3DPin = typeof product.id === 'string' 
     ? product.id.charCodeAt(0) % 2 === 0 
     : (product.id as number) % 2 === 0;
+
+  // Random neon glow animation delay per card (2-8s range)
+  const neonDelay = useMemo(() => {
+    const hash = typeof product.id === 'string'
+      ? product.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
+      : (product.id as number);
+    return (hash % 7) * 0.9 + 0.5; // 0.5s to 6.8s
+  }, [product.id]);
+
+  const neonDuration = useMemo(() => {
+    const hash = typeof product.id === 'string'
+      ? product.id.split('').reduce((a, c) => a + c.charCodeAt(0) * 3, 0)
+      : (product.id as number) * 3;
+    return 3 + (hash % 4); // 3s to 6s
+  }, [product.id]);
 
   useEffect(() => {
     setMounted(true);
@@ -314,8 +415,20 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
   const cardContent = (
     <>
       <motion.article
-        className="group relative h-full w-full flex flex-col cursor-pointer"
-        style={{ isolation: 'isolate', touchAction: 'manipulation', zIndex: 1, contain: 'layout style paint' }}
+        className="group relative h-full w-full flex flex-col cursor-pointer overflow-hidden rounded-xl md:rounded-2xl"
+        style={{
+          isolation: 'isolate',
+          touchAction: 'manipulation',
+          zIndex: 1,
+          contain: 'layout style paint',
+          background: 'linear-gradient(135deg, #0a1628 0%, #0d2147 40%, #102a5a 60%, #0a1628 100%)',
+          border: '1px solid rgba(50,117,248,0.25)',
+          boxShadow: isHovered
+            ? '0 0 20px rgba(50,117,248,0.6), 0 0 40px rgba(50,117,248,0.3), 0 0 80px rgba(50,117,248,0.15), inset 0 1px 0 rgba(120,180,255,0.3)'
+            : undefined,
+          animation: `neon-glow-pulse ${neonDuration}s ease-in-out ${neonDelay}s infinite`,
+          transition: 'box-shadow 0.4s ease',
+        }}
         onHoverStart={() => setIsHovered(true)}
         onHoverEnd={() => setIsHovered(false)}
         whileTap={{ scale: 0.98 }}
@@ -329,25 +442,74 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
           setShowQuickView(true);
         }}
       >
-      {/* Image Container - Glassmorphism Border with Shimmer */}
+      {/* Full-card blue shimmer overlay — intensifies on hover */}
       <div
-        className={`relative overflow-hidden bg-white/5 ${
+        className="absolute inset-0 store-shimmer-border pointer-events-none rounded-xl md:rounded-2xl"
+        style={{
+          background: isHovered
+            ? 'linear-gradient(90deg, transparent 0%, rgba(50,117,248,0.3) 20%, rgba(100,170,255,0.5) 50%, rgba(50,117,248,0.3) 80%, transparent 100%)'
+            : 'linear-gradient(90deg, transparent 0%, rgba(50,117,248,0.12) 25%, rgba(80,150,255,0.2) 50%, rgba(50,117,248,0.12) 75%, transparent 100%)',
+          width: '200%',
+          left: '-50%',
+          zIndex: 0,
+          transition: 'background 0.4s ease',
+        }}
+      />
+      {/* Animated neon edge glow at top */}
+      <div
+        className="absolute top-0 left-0 right-0 pointer-events-none"
+        style={{
+          height: isHovered ? 2 : 1,
+          background: isHovered
+            ? 'linear-gradient(90deg, transparent, rgba(80,160,255,0.8), rgba(160,210,255,0.9), rgba(80,160,255,0.8), transparent)'
+            : 'linear-gradient(90deg, transparent, rgba(50,117,248,0.5), rgba(120,180,255,0.6), rgba(50,117,248,0.5), transparent)',
+          boxShadow: isHovered ? '0 0 12px rgba(80,160,255,0.6)' : 'none',
+          zIndex: 0,
+          transition: 'all 0.4s ease',
+        }}
+      />
+      {/* Bottom neon edge */}
+      <div
+        className="absolute bottom-0 left-0 right-0 pointer-events-none"
+        style={{
+          height: isHovered ? 2 : 0,
+          background: 'linear-gradient(90deg, transparent, rgba(80,160,255,0.6), rgba(160,210,255,0.7), rgba(80,160,255,0.6), transparent)',
+          boxShadow: isHovered ? '0 0 12px rgba(80,160,255,0.5)' : 'none',
+          zIndex: 0,
+          transition: 'all 0.4s ease',
+          opacity: isHovered ? 1 : 0,
+        }}
+      />
+      {/* Image Container - Light theme with blue shimmer */}
+      <div
+        className={`relative overflow-hidden ${
           compact ? 'aspect-4/5 rounded-lg' : 'aspect-3/4 rounded-xl md:rounded-2xl'
         }`}
+        style={{ backgroundColor: 'rgba(10,22,40,0.6)', boxShadow: '0 2px 12px rgba(50,117,248,0.12)' }}
       >
-          {/* Animated Shimmer Border - GPU CSS animation */}
-          <div className="absolute inset-0 rounded-xl md:rounded-2xl p-px overflow-hidden z-1">
+          {/* Animated Blue Shimmer Border - intensifies on hover */}
+          <div className="absolute inset-0 rounded-xl md:rounded-2xl overflow-hidden z-1">
             <div
-              className="absolute inset-0 bg-linear-to-r from-transparent via-white to-transparent opacity-20 store-shimmer-border"
+              className="absolute inset-0 store-shimmer-border"
+              style={{
+                background: isHovered
+                  ? 'linear-gradient(90deg, transparent 0%, rgba(80,160,255,0.5) 25%, rgba(120,190,255,0.9) 50%, rgba(80,160,255,0.5) 75%, transparent 100%)'
+                  : 'linear-gradient(90deg, transparent 0%, rgba(50,117,248,0.3) 30%, rgba(50,117,248,0.7) 50%, rgba(50,117,248,0.3) 70%, transparent 100%)',
+                width: '200%',
+                left: '-50%',
+                transition: 'background 0.4s ease',
+              }}
             />
-            <div className="absolute inset-px bg-transparent rounded-xl md:rounded-2xl" />
           </div>
           
-          {/* Static White Border */}
-          <div className="absolute inset-0 border border-white/20 rounded-xl md:rounded-2xl pointer-events-none z-2" />
+          {/* Static Border — brighter on hover */}
+          <div className="absolute inset-0 rounded-xl md:rounded-2xl pointer-events-none z-2" style={{
+            border: isHovered ? '1px solid rgba(80,160,255,0.35)' : '1px solid rgba(50,117,248,0.12)',
+            transition: 'border-color 0.4s ease',
+          }} />
           
           {/* Gradient overlay for depth */}
-          <div className="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="absolute inset-0 bg-linear-to-t from-black/30 via-transparent to-transparent z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           
           {product.primary_image ? (
             <Image
@@ -370,22 +532,24 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-white/10 to-white/5">
-              <span className="text-white/20 text-4xl md:text-6xl font-light">B</span>
+            <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(to bottom right, rgba(50,117,248,0.08), rgba(50,117,248,0.04))' }}>
+              <span style={{ color: 'rgba(120,180,255,0.3)', fontSize: '3rem', fontWeight: 300 }}>B</span>
             </div>
           )}
 
-          {/* Badges - Apple style black/white */}
+          {/* Badges - Black style */}
           <div className="absolute top-2 md:top-3 left-2 md:left-3 flex flex-col gap-1.5" style={{ zIndex: 9990 }}>
             {hasDiscount && (
               <motion.span 
-                className="relative px-2 md:px-3 py-0.5 md:py-1 bg-white text-black text-[10px] md:text-xs font-bold rounded-full shadow-lg overflow-hidden"
+                className="relative px-2 md:px-3 py-0.5 md:py-1 bg-black text-white text-[10px] md:text-xs font-bold rounded-full shadow-lg overflow-hidden"
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
+                style={{ border: '1px solid rgba(255,255,255,0.15)' }}
               >
-                {/* Shimmer effect - GPU CSS animation */}
+                {/* Blue Shimmer effect - GPU CSS animation */}
                 <div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent store-shimmer-fast"
+                  className="absolute inset-0 store-shimmer-fast"
+                  style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(50,117,248,0.3) 40%, rgba(50,117,248,0.5) 50%, rgba(50,117,248,0.3) 60%, transparent 100%)' }}
                 />
                 <span className="relative z-10">
                   -<CountUp to={discount} from={0} duration={1} className="tracking-wide" />%
@@ -393,17 +557,19 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
               </motion.span>
             )}
             {!isInStock && (
-              <span className="px-2 md:px-3 py-0.5 md:py-1 bg-black/80 backdrop-blur-sm text-white text-[10px] md:text-xs rounded-full border border-white/20 shadow-lg font-semibold">
+              <span className="px-2 md:px-3 py-0.5 md:py-1 backdrop-blur-sm text-[10px] md:text-xs rounded-full shadow-lg font-semibold" style={{ backgroundColor: 'rgba(0,0,0,0.9)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.2)' }}>
                 Sold out
               </span>
             )}
             {product.featured && isInStock && (
               <motion.span 
-                className="relative px-2 md:px-3 py-0.5 md:py-1 bg-white text-black text-[10px] md:text-xs font-bold rounded-full overflow-hidden shadow-lg"
+                className="relative px-2 md:px-3 py-0.5 md:py-1 bg-black text-white text-[10px] md:text-xs font-bold rounded-full overflow-hidden shadow-lg"
+                style={{ border: '1px solid rgba(255,255,255,0.15)' }}
               >
-                {/* Shimmer effect - GPU CSS animation */}
+                {/* Blue Shimmer effect - GPU CSS animation */}
                 <div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent store-shimmer-fast"
+                  className="absolute inset-0 store-shimmer-fast"
+                  style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(50,117,248,0.3) 40%, rgba(50,117,248,0.5) 50%, rgba(50,117,248,0.3) 60%, transparent 100%)' }}
                 />
                 <span className="relative z-10">
                   <EncryptedText 
@@ -421,23 +587,23 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
         </div>
 
         {/* Product Info */}
-        <div className={`mt-1.5 flex-1 flex flex-col relative ${compact ? 'space-y-1' : 'md:mt-4 space-y-1.5 md:space-y-2'}`} style={{ zIndex: 9990 }}>
+        <div className={`mt-1.5 flex-1 flex flex-col relative px-2 md:px-3 pb-2 md:pb-3 ${compact ? 'space-y-1' : 'md:mt-4 space-y-1.5 md:space-y-2'}`} style={{ zIndex: 9990 }}>
           {product.category && !compact && (
-            <p className="text-white/40 text-[10px] md:text-xs uppercase tracking-wider truncate drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
+            <p className="text-[10px] md:text-xs uppercase tracking-wider truncate" style={{ color: 'rgba(120,180,255,0.6)' }}>
               <TextType text={product.category.name} typingSpeed={Math.max(5, 25 - product.category.name.length)} showCursor={false} loop={false} as="span" />
             </p>
           )}
           
-          <h3 className={`text-white font-medium group-hover:text-white/80 transition-colors drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] ${compact ? 'text-xs md:text-sm line-clamp-1' : 'text-sm md:text-base line-clamp-2'}`}>
+          <h3 className={`font-medium transition-colors ${compact ? 'text-xs md:text-sm line-clamp-1' : 'text-sm md:text-base line-clamp-2'}`} style={{ color: '#f5f5f7' }}>
             <TextType text={product.name} typingSpeed={Math.max(5, 25 - product.name.length / 2)} showCursor={false} loop={false} as="span" />
           </h3>
 
           <div className="flex items-center gap-1.5 md:gap-2">
-            <span className={`text-white font-semibold drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] ${compact ? 'text-sm' : 'text-sm md:text-base'}`}>
+            <span className={`font-semibold ${compact ? 'text-sm' : 'text-sm md:text-base'}`} style={{ color: '#ffffff' }}>
               {formatPrice(price)}
             </span>
             {hasDiscount && (
-              <span className="text-white/40 line-through text-xs md:text-sm drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
+              <span className="line-through text-xs md:text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>
                 {formatPrice(comparePrice)}
               </span>
             )}
@@ -452,24 +618,25 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                 .map((variant) => (
                   <div
                     key={variant.id}
-                    className="w-3.5 h-3.5 md:w-4 md:h-4 rounded-full border border-white/20 shadow-sm"
+                    className="w-3.5 h-3.5 md:w-4 md:h-4 rounded-full shadow-sm"
                     style={{ 
                       backgroundColor: variant.options!.color!.toLowerCase() === 'white' 
                         ? '#ffffff' 
-                        : variant.options!.color!.toLowerCase() 
+                        : variant.options!.color!.toLowerCase(),
+                      border: '1px solid rgba(255,255,255,0.2)'
                     }}
                     title={variant.options!.color}
                   />
               ))}
               {product.variants.length > 4 && (
-                <span className="text-white/40 text-xs">+{product.variants.length - 4}</span>
+                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>+{product.variants.length - 4}</span>
               )}
             </div>
           )}
           
           {/* Mobile variant count */}
           {!compact && product.variants && product.variants.length > 1 && (
-            <p className="md:hidden text-white/40 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
+            <p className="md:hidden text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
               {product.variants.length} options
             </p>
           )}
@@ -566,7 +733,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                       />
                       {/* Discount Badge */}
                       {hasDiscount && (
-                        <div className="absolute top-3 left-3 md:top-4 md:left-4 px-3 py-1.5 md:px-4 md:py-2 bg-white text-black text-xs md:text-sm font-bold rounded-full shadow-lg">
+                        <div className="absolute top-3 left-3 md:top-4 md:left-4 px-3 py-1.5 md:px-4 md:py-2 bg-black text-white text-xs md:text-sm font-bold rounded-full shadow-lg" style={{ border: '1px solid rgba(255,255,255,0.15)' }}>
                           -<CountUp to={discount} from={0} duration={1} className="" />% OFF
                         </div>
                       )}
@@ -608,7 +775,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                         <span className="text-lg sm:text-xl md:text-2xl text-white/40 line-through">
                           {formatPrice(comparePrice)}
                         </span>
-                        <span className="px-3 py-1 md:px-4 md:py-1.5 bg-white text-black text-xs md:text-sm font-bold rounded-full shadow-lg">
+                        <span className="px-3 py-1 md:px-4 md:py-1.5 bg-black text-white text-xs md:text-sm font-bold rounded-full shadow-lg" style={{ border: '1px solid rgba(255,255,255,0.15)' }}>
                           Save <CountUp to={discount} from={0} duration={1} className="" />%
                         </span>
                       </>
@@ -867,6 +1034,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
     return (
       <>
         <div 
+          data-product-card
           className="h-full w-full flex items-center justify-center relative cursor-pointer" 
           style={{ zIndex: 50, contentVisibility: 'auto', containIntrinsicSize: 'auto 400px' } as React.CSSProperties}
         >
@@ -892,38 +1060,54 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleLike(e); }}
             className={`absolute top-2 md:top-3 right-2 md:right-3 h-8 w-8 md:h-10 md:w-10 rounded-full 
-                       bg-black/80 border border-white/10
                        flex items-center justify-center
                        transition-all duration-300 pointer-events-auto
-                       ${isLiked ? 'text-sky-400' : 'text-white/70'}`}
-            style={{ zIndex: 9999 }}
+                       ${isLiked ? 'text-sky-400' : ''}`}
+            style={{ 
+              zIndex: 9999,
+              backgroundColor: 'rgba(10,22,40,0.85)',
+              border: '1px solid rgba(50,117,248,0.3)',
+              boxShadow: '0 2px 8px rgba(16,42,90,0.3)',
+              backdropFilter: 'blur(8px)',
+              color: isLiked ? undefined : 'rgba(255,255,255,0.6)'
+            }}
             whileTap={{ scale: 0.9 }}
           >
-            <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+            <style dangerouslySetInnerHTML={{ __html: heartPulseStyle }} />
+            <svg className="absolute -top-3 left-1/2 -translate-x-1/2" width="30" height="10" viewBox="0 0 30 10" fill="none">
+              <path d="M0 5 L5 5 L7 2 L9 8 L11 1 L13 7 L15 3 L17 6 L19 5 L23 5 L25 3 L27 6 L30 5" 
+                stroke={isLiked ? '#38bdf8' : '#3b82f6'} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"
+                className="heart-ecg-line" fill="none" />
+            </svg>
+            <Heart className={`w-4 h-4 ${isLiked ? 'fill-current text-sky-400' : 'heart-pulse-blue'}`} style={!isLiked ? { fill: 'transparent', stroke: '#3b82f6' } : undefined} />
           </motion.button>
           
           <motion.button
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleQuickAdd(e); }}
             className={`absolute -bottom-5 md:bottom-10 left-1/2 -translate-x-1/2 h-10 md:h-11 px-5 md:px-6 rounded-full 
-                       bg-white text-black flex items-center justify-center gap-2 shadow-2xl
-                       border-2 border-black/10
-                       hover:scale-105 hover:bg-gray-50 hover:shadow-xl
+                       flex items-center justify-center gap-2
                        transition-all duration-200 active:scale-95 pointer-events-auto
                        ${isAdding ? 'scale-95' : ''}
                        ${!isInStock ? 'opacity-50 cursor-not-allowed' : ''}`}
-            style={{ zIndex: 9999 }}
+            style={{ 
+              zIndex: 9999,
+              background: 'linear-gradient(135deg, #1956b4,  #3275f8)',
+              color: '#ffffff',
+              border: '1px solid rgba(50,117,248,0.5)',
+              boxShadow: '0 4px 16px rgba(50,117,248,0.3)'
+            }}
             whileTap={{ scale: 0.95 }}
             disabled={!isInStock || isAdding}
           >
             {isAdding ? (
               <div
-                className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full store-spin"
+                style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.2)', borderTopColor: '#ffffff', borderRadius: '50%', animation: 'spin 1s linear infinite' }}
               />
             ) : (
               <>
                 <Plus className="w-4 h-4 md:w-5 md:h-5" strokeWidth={2.5} />
-                <span className="text-xs md:text-sm font-semibold tracking-wide">Add</span>
+                <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.02em' }}>Add</span>
               </>
             )}
           </motion.button>
@@ -935,6 +1119,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
   return (
     <>
       <div 
+        data-product-card
         className="block h-full w-full relative cursor-pointer" 
         style={{ zIndex: 50, touchAction: 'manipulation', contentVisibility: 'auto', containIntrinsicSize: 'auto 400px' } as React.CSSProperties}
         onClick={() => setShowQuickView(true)}
@@ -959,38 +1144,54 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleLike(e); }}
           className={`absolute top-2 md:top-3 right-2 md:right-3 h-8 w-8 md:h-10 md:w-10 rounded-full 
-                     bg-black/80 border border-white/10
                      flex items-center justify-center
                      transition-all duration-300 pointer-events-auto
-                     ${isLiked ? 'text-sky-400' : 'text-white/70'}`}
-          style={{ zIndex: 9999 }}
+                     ${isLiked ? 'text-sky-400' : ''}`}
+          style={{ 
+            zIndex: 9999,
+            backgroundColor: 'rgba(10,22,40,0.85)',
+            border: '1px solid rgba(50,117,248,0.3)',
+            boxShadow: '0 2px 8px rgba(16,42,90,0.3)',
+            backdropFilter: 'blur(8px)',
+            color: isLiked ? undefined : 'rgba(255,255,255,0.6)'
+          }}
           whileTap={{ scale: 0.9 }}
         >
-          <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+          <style dangerouslySetInnerHTML={{ __html: heartPulseStyle }} />
+          <svg className="absolute -top-3 left-1/2 -translate-x-1/2" width="30" height="10" viewBox="0 0 30 10" fill="none">
+            <path d="M0 5 L5 5 L7 2 L9 8 L11 1 L13 7 L15 3 L17 6 L19 5 L23 5 L25 3 L27 6 L30 5" 
+              stroke={isLiked ? '#38bdf8' : '#3b82f6'} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"
+              className="heart-ecg-line" fill="none" />
+          </svg>
+          <Heart className={`w-4 h-4 ${isLiked ? 'fill-current text-sky-400' : 'heart-pulse-blue'}`} style={!isLiked ? { fill: 'transparent', stroke: '#3b82f6' } : undefined} />
         </motion.button>
         
         <motion.button
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleQuickAdd(e); }}
           className={`absolute -bottom-5 md:bottom-10 left-1/2 -translate-x-1/2 h-10 md:h-11 px-5 md:px-6 rounded-full 
-                     bg-white text-black flex items-center justify-center gap-2 shadow-2xl
-                     border-2 border-black/10
-                     hover:scale-105 hover:bg-gray-50 hover:shadow-xl
+                     flex items-center justify-center gap-2
                      transition-all duration-200 active:scale-95 pointer-events-auto
                      ${isAdding ? 'scale-95' : ''}
                      ${!isInStock ? 'opacity-50 cursor-not-allowed' : ''}`}
-          style={{ zIndex: 9999 }}
+          style={{ 
+            zIndex: 9999,
+            background: 'linear-gradient(135deg, #1956b4, #3275f8)',
+            color: '#ffffff',
+            border: '1px solid rgba(50,117,248,0.5)',
+            boxShadow: '0 4px 16px rgba(50,117,248,0.3)'
+          }}
           whileTap={{ scale: 0.95 }}
           disabled={!isInStock || isAdding}
         >
           {isAdding ? (
             <div
-              className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full store-spin"
+              style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.2)', borderTopColor: '#ffffff', borderRadius: '50%', animation: 'spin 1s linear infinite' }}
             />
           ) : (
             <>
               <Plus className="w-4 h-4 md:w-5 md:h-5" strokeWidth={2.5} />
-              <span className="text-xs md:text-sm font-semibold tracking-wide">Add</span>
+              <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.02em' }}>Add</span>
             </>
           )}
         </motion.button>

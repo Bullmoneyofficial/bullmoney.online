@@ -67,8 +67,8 @@ header,
 
 /* Staggered transition for middle content */
 main,
-section,
-[data-content],
+section:not([data-apple-section]):not([data-products-section]),
+[data-content]:not([data-apple-section-wrapper]):not([data-products-section-wrapper]),
 .hero {
   transition-delay: 0.2s;
 }
