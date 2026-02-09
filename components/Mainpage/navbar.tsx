@@ -14,7 +14,10 @@ export interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ setShowConfigurator, activeThemeId, onThemeChange }) => {
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-transparent border-none">
+    <nav
+      className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-transparent border-none"
+      data-navbar-transparent="true"
+    >
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between h-16">
           {/* Logo with shimmer - Using unified shimmer system */}

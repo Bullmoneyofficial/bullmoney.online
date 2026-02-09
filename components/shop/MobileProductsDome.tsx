@@ -74,19 +74,36 @@ export function MobileProductsDome() {
     }
   }, []);
 
-  // Fetch Store products
+  // Fetch Store products (now VIP products)
   const fetchStoreProducts = useCallback(async () => {
     try {
-      const params = new URLSearchParams();
-      params.set('page', '1');
-      params.set('limit', '20'); // Get more products for the dome
-      
-      const response = await fetch(`/api/store/products?${params}`);
-      if (!response.ok) throw new Error('Failed to fetch store products');
+      const response = await fetch('/api/store/vip');
+      if (!response.ok) throw new Error('Failed to fetch VIP products');
       const data = await response.json();
-      setStoreProducts(data.data || []);
+      const normalized = (data.data || [])
+        .filter((item: any) => item.visible !== false)
+        .map((item: any, index: number) => {
+          const imageUrl = item.image_url || item.imageUrl || null;
+          return {
+            id: item.id || `vip-${index + 1}`,
+            name: item.name || `VIP Access ${index + 1}`,
+            images: imageUrl
+              ? [{
+                  id: `${item.id || `vip-${index + 1}`}-image-1`,
+                  product_id: item.id || `vip-${index + 1}`,
+                  url: imageUrl,
+                  alt_text: item.name || `VIP Access ${index + 1}`,
+                  sort_order: 0,
+                  is_primary: true,
+                  created_at: '',
+                  updated_at: '',
+                }]
+              : [],
+          } as ProductWithDetails;
+        });
+      setStoreProducts(normalized);
     } catch (error) {
-      console.error('Failed to fetch store products:', error);
+      console.error('Failed to fetch VIP products:', error);
     }
   }, []);
 

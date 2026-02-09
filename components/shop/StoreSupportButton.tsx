@@ -306,6 +306,7 @@ export function SupportButton({ position = 'right' }: SupportButtonProps) {
         onClick={isOpen ? () => { SoundEffects.close(); setIsOpen(false); } : handleOpen}
         className={`fixed bottom-6 md:bottom-24 ${side} z-[9999] flex items-center justify-center w-12 h-12 rounded-full`}
         style={{
+          position: 'fixed',
           background: isOpen ? 'rgba(255,255,255,0.06)' : 'rgb(0, 0, 0)',
           backdropFilter: 'blur(20px) saturate(180%)',
           WebkitBackdropFilter: 'blur(20px) saturate(180%)',

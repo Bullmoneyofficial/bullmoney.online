@@ -532,7 +532,7 @@ export const Navbar = memo(() => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: mounted ? 1 : 0, y: mounted ? 0 : -20 }}
         transition={{ duration: 0.5 }}
-        className="fixed top-8 inset-x-0 z-40 w-full px-4 pointer-events-none navbar"
+        className="fixed top-0 inset-x-0 z-40 w-full px-4 pointer-events-none navbar"
         style={{
           transition: 'opacity 0.3s ease-in-out, border-color 0.4s ease-out, box-shadow 0.4s ease-out',
           transitionDelay: '0.35s', // Navbar transitions last (top element in bottom-to-top)

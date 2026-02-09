@@ -2,7 +2,10 @@
 
 import React, { useEffect, useState, useCallback, memo } from 'react';
 import Link from 'next/link';
-import { ShoppingBag, Search, User, Menu } from 'lucide-react';
+import ShoppingBag from 'lucide-react/dist/esm/icons/shopping-bag';
+import Search from 'lucide-react/dist/esm/icons/search';
+import User from 'lucide-react/dist/esm/icons/user';
+import Menu from 'lucide-react/dist/esm/icons/menu';
 import dynamic from 'next/dynamic';
 
 // Lazy-load framer-motion — only needed for cart badge animation
@@ -96,10 +99,15 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
 
   return (
     <>
-      <header className={`fixed top-0 left-0 right-0 z-500 ${className}`} style={{ background: 'rgb(255,255,255)' }}>
+      <header
+        className={`fixed top-0 left-0 right-0 z-500 ${className}`}
+        style={{ background: 'rgb(255,255,255)' }}
+        data-apple-section
+      >
         <nav
           className="w-full px-6 md:px-10 h-12 flex items-center justify-between gap-6"
           style={{ background: 'rgb(255,255,255)' }}
+          data-apple-section
           onMouseEnter={onDesktopMenuEnter}
           onMouseLeave={onDesktopMenuLeave}
         >

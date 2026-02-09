@@ -14,13 +14,10 @@ import { syncSessionLayers } from '@/lib/sessionPersistence';
 // ============================================================================
 // STORE LAYOUT CLIENT WRAPPER
 // Handles client-side rendering, scroll fixes, and overlay isolation
-// Positions store BELOW main navbar (80px desktop, 64px mobile)
+// Positions store below StoreHeader (fixed 48px)
 // ============================================================================
 
-const MAIN_NAVBAR_HEIGHT = {
-  mobile: 64,
-  desktop: 80,
-};
+const STORE_HEADER_HEIGHT = 48;
 
 export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
@@ -123,22 +120,23 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
 
   return (
     <div 
-      className="store-layout bg-black text-white"
+      className="store-layout bg-white text-black"
       data-store-page
       style={{
         position: 'relative',
         zIndex: 1,
-        paddingTop: `${MAIN_NAVBAR_HEIGHT.mobile}px`,
+        paddingTop: `${STORE_HEADER_HEIGHT}px`,
         width: '100%',
         height: 'auto',
         overflow: 'visible',
+        backgroundColor: '#ffffff',
       }}
     >
       {/* CSS for responsive navbar offset and overlay hiding */}
       <style jsx>{`
         @media (min-width: 768px) {
           .store-layout {
-            padding-top: ${MAIN_NAVBAR_HEIGHT.desktop}px !important;
+            padding-top: ${STORE_HEADER_HEIGHT}px !important;
           }
         }
         
@@ -202,7 +200,7 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
         :global(html.store-active),
         :global(html.store-active body),
         :global(body.store-page-body) {
-          background: #000 !important;
+          background: #ffffff !important;
           overflow-y: auto !important;
           overflow-x: hidden !important;
           height: auto !important;
@@ -213,7 +211,7 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
         /* Ensure store content scrolls properly */
         .store-layout {
           -webkit-overflow-scrolling: touch;
-          background: #000;
+          background: #ffffff;
           position: relative !important;
           height: auto !important;
           /* GPU compositing for the entire store shell */
@@ -399,8 +397,8 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
       {/* Auto-translate provider is now in root LayoutProviders for global coverage */}
       
       {/* Main Content - Below store header */}
-      <main 
-        className="pt-16 md:pt-20 w-full"
+      <main
+        className="w-full"
         style={{ overflow: 'visible', height: 'auto' }}
       >
         {children}

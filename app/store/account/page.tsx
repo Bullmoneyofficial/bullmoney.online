@@ -4,12 +4,31 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { 
-  User, Package, Heart, MapPin, CreditCard, Settings, LogOut, 
-  ChevronRight, Truck, Check, Clock, ArrowLeft, Edit2, Plus, Trash2,
-  ShoppingBag, Eye, ExternalLink, X, MapPinned, PackageCheck, CircleDot,
-  Save, Loader2, Search
-} from 'lucide-react';
+import User from 'lucide-react/dist/esm/icons/user';
+import Package from 'lucide-react/dist/esm/icons/package';
+import Heart from 'lucide-react/dist/esm/icons/heart';
+import MapPin from 'lucide-react/dist/esm/icons/map-pin';
+import CreditCard from 'lucide-react/dist/esm/icons/credit-card';
+import Settings from 'lucide-react/dist/esm/icons/settings';
+import LogOut from 'lucide-react/dist/esm/icons/log-out';
+import ChevronRight from 'lucide-react/dist/esm/icons/chevron-right';
+import Truck from 'lucide-react/dist/esm/icons/truck';
+import Check from 'lucide-react/dist/esm/icons/check';
+import Clock from 'lucide-react/dist/esm/icons/clock';
+import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left';
+import Edit2 from 'lucide-react/dist/esm/icons/edit-2';
+import Plus from 'lucide-react/dist/esm/icons/plus';
+import Trash2 from 'lucide-react/dist/esm/icons/trash-2';
+import ShoppingBag from 'lucide-react/dist/esm/icons/shopping-bag';
+import Eye from 'lucide-react/dist/esm/icons/eye';
+import ExternalLink from 'lucide-react/dist/esm/icons/external-link';
+import X from 'lucide-react/dist/esm/icons/x';
+import MapPinned from 'lucide-react/dist/esm/icons/map-pinned';
+import PackageCheck from 'lucide-react/dist/esm/icons/package-check';
+import CircleDot from 'lucide-react/dist/esm/icons/circle-dot';
+import Save from 'lucide-react/dist/esm/icons/save';
+import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
+import Search from 'lucide-react/dist/esm/icons/search';
 import { useWishlistStore } from '@/stores/wishlist-store';
 import { useCartStore } from '@/stores/cart-store';
 import { useRecruitAuth } from '@/contexts/RecruitAuthContext';

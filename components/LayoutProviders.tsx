@@ -45,6 +45,11 @@ const UltimateHub = dynamic(
   { ssr: false }
 );
 
+const AppSupportButton = dynamic(
+  () => import("@/components/shop/StoreSupportButton").then(mod => ({ default: mod.AppSupportButton })),
+  { ssr: false }
+);
+
 // ✅ NAVBAR - Lazy load for mobile (named export)
 const Navbar = dynamic(
   () => import("@/components/navbar").then(mod => ({ default: mod.Navbar })),
@@ -219,6 +224,9 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
             - Right side: FPS pill with Device Center Panel (4 tabs: Overview, Network, Performance, Account)
             - All real device data from browser APIs */}
         {canShowUltimateHub && showUltimateHub && (allowMobileLazy || !isMobileViewport) && <UltimateHub />}
+
+        {/* ✅ SUPPORT BUTTON - Global floating support widget (hidden on store pages) */}
+        {canShowUltimateHub && !isStorePage && <AppSupportButton />}
         
         {/* ✅ LAZY LOADED: All performance providers bundled */}
         {canShowChildren ? (

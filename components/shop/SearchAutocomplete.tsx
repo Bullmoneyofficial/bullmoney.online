@@ -52,11 +52,52 @@ export function SearchAutocomplete({ query, searchQuery, onSelect, onProductSele
     const fetchSuggestions = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/store/products?search=${encodeURIComponent(actualQuery)}&limit=5`, {
-          signal: controller.signal,
-        });
+        const res = await fetch('/api/store/vip', { signal: controller.signal });
         const data = await res.json();
-        setSuggestions(data.data || []);
+        const normalized = (data.data || [])
+          .filter((item: any) => item.visible !== false)
+          .map((item: any, index: number) => {
+            const planOptions = Array.isArray(item.plan_options) ? item.plan_options : [];
+            const price = Number(item.price ?? planOptions[0]?.price ?? 0);
+            const imageUrl = item.image_url || item.imageUrl || null;
+            const name = item.name || `VIP Access ${index + 1}`;
+            const slug = name
+              .toLowerCase()
+              .trim()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/(^-|-$)/g, '') || 'vip';
+
+            return {
+              id: item.id || `vip-${index + 1}`,
+              name,
+              slug,
+              description: item.description || null,
+              short_description: item.description || null,
+              base_price: price,
+              compare_at_price: null,
+              category: { id: 'vip', name: 'VIP', slug: 'vip' },
+              details: {
+                buy_url: item.buy_url || planOptions[0]?.buy_url || null,
+              },
+              images: imageUrl
+                ? [{
+                    id: `${item.id || `vip-${index + 1}`}-image-1`,
+                    product_id: item.id || `vip-${index + 1}`,
+                    url: imageUrl,
+                    alt_text: name,
+                    sort_order: 0,
+                    is_primary: true,
+                    created_at: '',
+                    updated_at: '',
+                  }]
+                : [],
+              primary_image: imageUrl,
+            } as ProductWithDetails;
+          })
+          .filter((product: ProductWithDetails) => product.name.toLowerCase().includes(actualQuery.toLowerCase()))
+          .slice(0, 5);
+
+        setSuggestions(normalized);
       } catch {
         // Aborted or error
       } finally {
@@ -166,45 +207,74 @@ export function SearchAutocomplete({ query, searchQuery, onSelect, onProductSele
               </div>
             ) : (
               <div className="divide-y divide-white/5">
-                {suggestions.map((product) => (
-                  <Link
-                    key={product.id}
-                    href={`/store/product/${product.slug}`}
-                    onClick={() => {
-                      handleSelectSearch(actualQuery);
-                      onClose?.();
-                    }}
-                    className="flex items-center gap-3 p-3 hover:bg-white/5 transition-colors"
-                  >
-                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-white/5 shrink-0">
-                      {product.primary_image ? (
-                        <Image
-                          src={(() => {
-                            let src = product.primary_image;
-                            if (src.startsWith('/http://') || src.startsWith('/https://')) {
-                              src = src.substring(1);
-                            }
-                            if (src.startsWith('http://') || src.startsWith('https://')) {
-                              return src;
-                            }
-                            return src.startsWith('/') ? src : `/${src.replace(/^public\//, '')}`;
-                          })()}
-                          alt={product.name}
-                          width={48}
-                          height={48}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-white/20">B</div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm truncate">{product.name}</p>
-                      <p className="text-white/50 text-xs">{product.category?.name} • {useCurrencyLocaleStore.getState().formatPrice(product.base_price)}</p>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-white/30 shrink-0" />
-                  </Link>
-                ))}
+                {suggestions.map((product) => {
+                  const buyUrl = (product.details as { buy_url?: string } | undefined)?.buy_url;
+                  const href = buyUrl || '/VIP';
+                  const isExternal = href.startsWith('http://') || href.startsWith('https://');
+                  const rowContent = (
+                    <>
+                      <div className="w-12 h-12 rounded-lg overflow-hidden bg-white/5 shrink-0">
+                        {product.primary_image ? (
+                          <Image
+                            src={(() => {
+                              let src = product.primary_image;
+                              if (src.startsWith('/http://') || src.startsWith('/https://')) {
+                                src = src.substring(1);
+                              }
+                              if (src.startsWith('http://') || src.startsWith('https://')) {
+                                return src;
+                              }
+                              return src.startsWith('/') ? src : `/${src.replace(/^public\//, '')}`;
+                            })()}
+                            alt={product.name}
+                            width={48}
+                            height={48}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-white/20">B</div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-sm truncate">{product.name}</p>
+                        <p className="text-white/50 text-xs">{product.category?.name} • {useCurrencyLocaleStore.getState().formatPrice(product.base_price)}</p>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-white/30 shrink-0" />
+                    </>
+                  );
+
+                  if (isExternal) {
+                    return (
+                      <a
+                        key={product.id}
+                        href={href}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={() => {
+                          handleSelectSearch(actualQuery);
+                          onClose?.();
+                        }}
+                        className="flex items-center gap-3 p-3 hover:bg-white/5 transition-colors"
+                      >
+                        {rowContent}
+                      </a>
+                    );
+                  }
+
+                  return (
+                    <Link
+                      key={product.id}
+                      href={href}
+                      onClick={() => {
+                        handleSelectSearch(actualQuery);
+                        onClose?.();
+                      }}
+                      className="flex items-center gap-3 p-3 hover:bg-white/5 transition-colors"
+                    >
+                      {rowContent}
+                    </Link>
+                  );
+                })}
                 <button
                   onClick={() => handleSelectSearch(query)}
                   className="w-full p-3 text-center text-sm text-white/60 hover:bg-white/5 hover:text-white transition-colors"

@@ -143,7 +143,7 @@ export const LanguageToggle = memo(({
       ) : variant === 'row' ? (
         <button
           onClick={() => { setIsOpen(!isOpen); setSearch(''); }}
-          className="w-full flex items-center justify-between px-2.5 py-1.5 min-h-[32px] rounded-xl text-xs font-medium transition-all duration-200 whitespace-nowrap sm:px-3 sm:py-2 sm:min-h-[36px] sm:text-sm"
+          className="w-full flex items-center justify-between px-2.5 py-1.5 min-h-[30px] rounded-xl text-[11px] font-medium transition-all duration-200 whitespace-nowrap sm:px-3 sm:py-1.5 sm:min-h-[34px] sm:text-xs"
           style={{ 
             color: isLight ? '#111111' : '#ffffff',
             backgroundColor: isLight ? 'rgb(255, 255, 255)' : 'rgba(255, 255, 255, 0.05)',
@@ -186,16 +186,16 @@ export const LanguageToggle = memo(({
           className={`absolute ${dropdownPos} ${dropdownAlign} rounded-xl overflow-hidden`}
           style={{
             zIndex: 60,
-            width: 'min(240px, 78vw)',
+            width: 'min(200px, 72vw)',
             background: 'rgb(255,255,255)',
             border: '1px solid rgba(0,0,0,0.12)',
-            boxShadow: '0 12px 32px rgba(0,0,0,0.12)',
+            boxShadow: '0 10px 24px rgba(0,0,0,0.12)',
           }}
         >
           <div className="flex" style={{ borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
             <button
               onClick={() => { setTab('language'); setSearch(''); }}
-              className="flex-1 py-2 text-[11px] font-medium transition-colors"
+              className="flex-1 py-1.5 text-[10px] font-medium transition-colors"
               style={tab === 'language'
                 ? { color: 'rgb(0,0,0)', background: 'rgba(0,0,0,0.04)' }
                 : { color: 'rgba(0,0,0,0.5)' }
@@ -205,7 +205,7 @@ export const LanguageToggle = memo(({
             </button>
             <button
               onClick={() => { setTab('currency'); setSearch(''); }}
-              className="flex-1 py-2 text-[11px] font-medium transition-colors"
+              className="flex-1 py-1.5 text-[10px] font-medium transition-colors"
               style={tab === 'currency'
                 ? { color: 'rgb(0,0,0)', background: 'rgba(0,0,0,0.04)' }
                 : { color: 'rgba(0,0,0,0.5)' }
@@ -215,7 +215,7 @@ export const LanguageToggle = memo(({
             </button>
           </div>
 
-          <div className="p-2" style={{ borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
+          <div className="p-1.5" style={{ borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: 'rgba(0,0,0,0.4)' }} />
               <input
@@ -223,13 +223,13 @@ export const LanguageToggle = memo(({
                 placeholder={`Search ${tab === 'language' ? 'languages' : 'currencies'}...`}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full h-6.5 pl-7 pr-2.5 rounded-lg text-[11px] focus:outline-none"
+                className="w-full h-6 pl-7 pr-2 rounded-lg text-[10px] focus:outline-none"
                 style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.12)', color: 'rgb(0,0,0)' }}
               />
             </div>
           </div>
 
-          <div className="max-h-56 overflow-y-auto p-1">
+          <div className="max-h-48 overflow-y-auto p-1">
             {tab === 'language' ? (
               <>
                 {!search && (
@@ -248,7 +248,7 @@ export const LanguageToggle = memo(({
                       )}
                       <button
                         onClick={() => handleSelectLang(lang)}
-                        className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs transition-colors"
+                        className="w-full flex items-center justify-between px-2.5 py-1 rounded-lg text-[11px] transition-colors"
                         style={language === lang.code
                           ? { background: 'rgba(0,0,0,0.06)', color: 'rgb(0,0,0)' }
                           : { color: 'rgba(0,0,0,0.75)' }
@@ -270,7 +270,7 @@ export const LanguageToggle = memo(({
                 <div className="flex gap-1 px-2 pb-1.5">
                   <button
                     onClick={() => { setCurrencyCategory('forex'); setSearch(''); }}
-                    className="flex-1 py-1 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-colors"
+                    className="flex-1 py-1 rounded-md text-[9px] font-semibold uppercase tracking-wide transition-colors"
                     style={currencyCategory === 'forex'
                       ? { background: 'rgba(16,185,129,0.12)', color: 'rgb(16,185,129)', border: '1px solid rgba(16,185,129,0.25)' }
                       : { color: 'rgba(0,0,0,0.45)', border: '1px solid rgba(0,0,0,0.08)' }
@@ -280,7 +280,7 @@ export const LanguageToggle = memo(({
                   </button>
                   <button
                     onClick={() => { setCurrencyCategory('crypto'); setSearch(''); }}
-                    className="flex-1 py-1 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-colors"
+                    className="flex-1 py-1 rounded-md text-[9px] font-semibold uppercase tracking-wide transition-colors"
                     style={currencyCategory === 'crypto'
                       ? { background: 'rgba(245,158,11,0.12)', color: 'rgb(245,158,11)', border: '1px solid rgba(245,158,11,0.25)' }
                       : { color: 'rgba(0,0,0,0.45)', border: '1px solid rgba(0,0,0,0.08)' }
@@ -293,7 +293,7 @@ export const LanguageToggle = memo(({
                   <button
                     key={curr.code}
                     onClick={() => handleSelectCurrency(curr)}
-                    className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs transition-colors"
+                    className="w-full flex items-center justify-between px-2.5 py-1 rounded-lg text-[11px] transition-colors"
                     style={currency === curr.code
                       ? { background: 'rgba(0,0,0,0.06)', color: 'rgb(0,0,0)' }
                       : { color: 'rgba(0,0,0,0.75)' }

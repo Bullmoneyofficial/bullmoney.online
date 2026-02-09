@@ -431,18 +431,34 @@ export default function RootLayout({
     html.style.scrollSnapType = 'none';
     html.style.overscrollBehavior = 'auto';
     
-    // Body must not constrain scrolling
-    body.style.height = 'auto';
-    body.style.overflowY = 'visible';
-    body.style.overflowX = 'hidden';
-    body.style.overscrollBehavior = 'auto';
+    var applyBodyScrollFixes = function(targetBody) {
+      if (!targetBody) return false;
+      // Body must not constrain scrolling
+      targetBody.style.height = 'auto';
+      targetBody.style.overflowY = 'visible';
+      targetBody.style.overflowX = 'hidden';
+      targetBody.style.overscrollBehavior = 'auto';
+      return true;
+    };
+
+    if (!applyBodyScrollFixes(body)) {
+      document.addEventListener('DOMContentLoaded', function() {
+        applyBodyScrollFixes(document.body);
+      }, { once: true });
+    }
     
     console.log('[DesktopScroll] Desktop scroll fixes applied early');
     
     // Enhanced big device detection
     if (window.innerWidth >= 1440) {
       html.classList.add('big-display');
-      body.classList.add('big-display-body');
+      if (body) {
+        body.classList.add('big-display-body');
+      } else {
+        document.addEventListener('DOMContentLoaded', function() {
+          if (document.body) document.body.classList.add('big-display-body');
+        }, { once: true });
+      }
       console.log('[DesktopScroll] Big display detected - enhanced scroll mode enabled');
       
       // Apply big device scroll optimizations
@@ -718,6 +734,24 @@ export default function RootLayout({
     }
     
     // Check Cache API
+    var canUseCache = typeof caches !== 'undefined' && 'caches' in window;
+    if (!canUseCache) {
+      return fetch(scene, {
+        method: 'GET',
+        mode: 'cors',
+        credentials: 'omit',
+        cache: 'force-cache',
+        priority: isPrimary ? 'high' : 'low'
+      }).then(function(response) {
+        if (response.ok) {
+          return response.arrayBuffer().then(function(buffer) {
+            cacheToMemory(scene, buffer);
+            console.log('[SplinePreload] Fetched (no Cache API) ' + scene + ' (' + (performance.now() - startTime).toFixed(1) + 'ms)');
+          });
+        }
+      });
+    }
+
     return caches.open(SPLINE_CACHE_NAME).then(function(cache) {
       return cache.match(scene).then(function(cachedResponse) {
         if (cachedResponse) {

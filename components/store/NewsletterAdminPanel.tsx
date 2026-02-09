@@ -1,28 +1,26 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  Mail, 
-  Users, 
-  TrendingUp, 
-  Download, 
-  Search, 
-  Filter,
-  MoreHorizontal,
-  Award,
-  Clock,
-  Send,
-  Eye,
-  Trash2,
-  UserPlus,
-  CheckCircle,
-  XCircle,
-  RefreshCw,
-  BarChart3,
-  Settings,
-  Crown,
-  MessageSquare
-} from 'lucide-react';
+import Mail from 'lucide-react/dist/esm/icons/mail';
+import Users from 'lucide-react/dist/esm/icons/users';
+import TrendingUp from 'lucide-react/dist/esm/icons/trending-up';
+import Download from 'lucide-react/dist/esm/icons/download';
+import Search from 'lucide-react/dist/esm/icons/search';
+import Filter from 'lucide-react/dist/esm/icons/filter';
+import MoreHorizontal from 'lucide-react/dist/esm/icons/more-horizontal';
+import Award from 'lucide-react/dist/esm/icons/award';
+import Clock from 'lucide-react/dist/esm/icons/clock';
+import Send from 'lucide-react/dist/esm/icons/send';
+import Eye from 'lucide-react/dist/esm/icons/eye';
+import Trash2 from 'lucide-react/dist/esm/icons/trash-2';
+import UserPlus from 'lucide-react/dist/esm/icons/user-plus';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import XCircle from 'lucide-react/dist/esm/icons/x-circle';
+import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
+import BarChart3 from 'lucide-react/dist/esm/icons/bar-chart-3';
+import Settings from 'lucide-react/dist/esm/icons/settings';
+import Crown from 'lucide-react/dist/esm/icons/crown';
+import MessageSquare from 'lucide-react/dist/esm/icons/message-square';
 import { createSupabaseClient } from '@/lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 

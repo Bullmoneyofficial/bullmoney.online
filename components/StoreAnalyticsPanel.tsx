@@ -1,39 +1,37 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import {
-  RefreshCw,
-  DollarSign,
-  ShoppingCart,
-  Users,
-  TrendingUp,
-  TrendingDown,
-  Package,
-  Truck,
-  Eye,
-  Heart,
-  Gift,
-  Tag,
-  BarChart3,
-  Globe,
-  AlertCircle,
-  ChevronDown,
-  ChevronUp,
-  Zap,
-  Target,
-  Activity,
-  Clock,
-  ArrowUpRight,
-  ArrowDownRight,
-  Search,
-  Star,
-  Layers,
-  MapPin,
-  CreditCard,
-  Percent,
-  Award,
-  ShoppingBag,
-} from "lucide-react";
+import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
+import DollarSign from 'lucide-react/dist/esm/icons/dollar-sign';
+import ShoppingCart from 'lucide-react/dist/esm/icons/shopping-cart';
+import Users from 'lucide-react/dist/esm/icons/users';
+import TrendingUp from 'lucide-react/dist/esm/icons/trending-up';
+import TrendingDown from 'lucide-react/dist/esm/icons/trending-down';
+import Package from 'lucide-react/dist/esm/icons/package';
+import Truck from 'lucide-react/dist/esm/icons/truck';
+import Eye from 'lucide-react/dist/esm/icons/eye';
+import Heart from 'lucide-react/dist/esm/icons/heart';
+import Gift from 'lucide-react/dist/esm/icons/gift';
+import Tag from 'lucide-react/dist/esm/icons/tag';
+import BarChart3 from 'lucide-react/dist/esm/icons/bar-chart-3';
+import Globe from 'lucide-react/dist/esm/icons/globe';
+import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
+import ChevronDown from 'lucide-react/dist/esm/icons/chevron-down';
+import ChevronUp from 'lucide-react/dist/esm/icons/chevron-up';
+import Zap from 'lucide-react/dist/esm/icons/zap';
+import Target from 'lucide-react/dist/esm/icons/target';
+import Activity from 'lucide-react/dist/esm/icons/activity';
+import Clock from 'lucide-react/dist/esm/icons/clock';
+import ArrowUpRight from 'lucide-react/dist/esm/icons/arrow-up-right';
+import ArrowDownRight from 'lucide-react/dist/esm/icons/arrow-down-right';
+import Search from 'lucide-react/dist/esm/icons/search';
+import Star from 'lucide-react/dist/esm/icons/star';
+import Layers from 'lucide-react/dist/esm/icons/layers';
+import MapPin from 'lucide-react/dist/esm/icons/map-pin';
+import CreditCard from 'lucide-react/dist/esm/icons/credit-card';
+import Percent from 'lucide-react/dist/esm/icons/percent';
+import Award from 'lucide-react/dist/esm/icons/award';
+import ShoppingBag from 'lucide-react/dist/esm/icons/shopping-bag';
 import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 
 // ============================================================================

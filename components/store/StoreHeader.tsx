@@ -3,7 +3,15 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { X, User, Home, LogOut, Users, HelpCircle, Calendar, Settings, Sparkles } from 'lucide-react';
+import X from 'lucide-react/dist/esm/icons/x';
+import User from 'lucide-react/dist/esm/icons/user';
+import Home from 'lucide-react/dist/esm/icons/home';
+import LogOut from 'lucide-react/dist/esm/icons/log-out';
+import Users from 'lucide-react/dist/esm/icons/users';
+import HelpCircle from 'lucide-react/dist/esm/icons/help-circle';
+import Calendar from 'lucide-react/dist/esm/icons/calendar';
+import Settings from 'lucide-react/dist/esm/icons/settings';
+import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
 import { useCartStore } from '@/stores/cart-store';
 import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
@@ -12,6 +20,7 @@ import dynamic from 'next/dynamic';
 import { StorePillNav } from './StorePillNav';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
+import RewardsCardBanner from '@/components/RewardsCardBanner';
 
 // Lazy-load framer-motion — only needed when mobile menu is opened
 const LazyMotionDiv = dynamic(() => import('framer-motion').then(m => ({ default: m.motion.div })), { ssr: false });
@@ -71,6 +80,7 @@ export function StoreHeader() {
   const [showThemePicker, setShowThemePicker] = useState(false);
   const [showUltimateHub, setShowUltimateHub] = useState(false);
   const desktopMenuCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hubToggleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { openCart, getItemCount } = useCartStore();
   const { isAuthenticated, recruit, signOut } = useRecruitAuth();
   const { isAdmin } = useAdminAuth();
@@ -87,6 +97,9 @@ export function StoreHeader() {
     return () => {
       if (desktopMenuCloseTimer.current) {
         clearTimeout(desktopMenuCloseTimer.current);
+      }
+      if (hubToggleTimer.current) {
+        clearTimeout(hubToggleTimer.current);
       }
     };
   }, []);
@@ -126,10 +139,9 @@ export function StoreHeader() {
     });
   }, [setThemePickerModalOpen]);
 
-  const toggleUltimateHub = useCallback(() => {
-    SoundEffects.click();
+  const applyUltimateHubToggle = useCallback((nextValue?: boolean) => {
     setShowUltimateHub(prev => {
-      const newValue = !prev;
+      const newValue = typeof nextValue === 'boolean' ? nextValue : !prev;
       if (typeof window !== 'undefined') {
         localStorage.setItem('store_show_ultimate_hub', String(newValue));
         window.dispatchEvent(new CustomEvent('store_ultimate_hub_toggle', { detail: newValue }));
@@ -138,6 +150,21 @@ export function StoreHeader() {
       return newValue;
     });
   }, []);
+
+  const toggleUltimateHub = useCallback(() => {
+    SoundEffects.click();
+    if (desktopMenuOpen) {
+      setDesktopMenuOpen(false);
+      if (hubToggleTimer.current) {
+        clearTimeout(hubToggleTimer.current);
+      }
+      hubToggleTimer.current = setTimeout(() => {
+        applyUltimateHubToggle();
+      }, 180);
+      return;
+    }
+    applyUltimateHubToggle();
+  }, [applyUltimateHubToggle, desktopMenuOpen]);
 
   const desktopLinks = useMemo(() => {
     const links = [
@@ -189,6 +216,15 @@ export function StoreHeader() {
     SoundEffects.click();
     router.push('/store');
   }, [router]);
+
+  const handleRewardsClick = useCallback(() => {
+    SoundEffects.click();
+    if (isAuthenticated && recruit) {
+      router.push('/store/account');
+    } else {
+      setAuthModalOpen(true);
+    }
+  }, [isAuthenticated, recruit, router, setAuthModalOpen]);
   
   // Handle category click - navigate and scroll to products (only for store pages)
   const handleCategoryClick = useCallback((href: string) => {
@@ -231,10 +267,10 @@ export function StoreHeader() {
         desktopLinks={desktopLinks}
         className="store-main-nav"
         ease="power2.easeOut"
-        baseColor="#000000"
-        pillColor="#ffffff"
-        hoveredPillTextColor="#000000"
-        pillTextColor="#000000"
+        baseColor="#ffffff"
+        pillColor="#f5f5f7"
+        hoveredPillTextColor="#111111"
+        pillTextColor="#111111"
         initialLoadAnimation={false}
         // Store-specific props
         cartCount={itemCount}
@@ -252,6 +288,13 @@ export function StoreHeader() {
         onDesktopMenuLeave={scheduleDesktopMenuClose}
       />
 
+      <div data-apple-section style={{ background: 'rgb(255,255,255)' }}>
+        <RewardsCardBanner
+          userEmail={recruit?.email || null}
+          onOpenRewardsCard={handleRewardsClick}
+        />
+      </div>
+
       {/* Desktop Dropdown Menu - Apple-style */}
       {desktopMenuOpen && (
         <div
@@ -259,7 +302,7 @@ export function StoreHeader() {
           style={{
             top: '48px',
             zIndex: 480,
-            background: 'rgba(15,15,15,0.08)',
+              background: 'rgba(255,255,255,0.7)',
             backdropFilter: 'blur(18px)',
             WebkitBackdropFilter: 'blur(18px)',
           }}
@@ -270,6 +313,7 @@ export function StoreHeader() {
         style={{ top: '48px' }}
         onMouseEnter={openDesktopMenu}
         onMouseLeave={scheduleDesktopMenuClose}
+        data-apple-section
       >
         <div style={{ background: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
           <div className="max-w-[1200px] mx-auto px-10 py-10 grid grid-cols-3 gap-10">
@@ -361,7 +405,14 @@ export function StoreHeader() {
               <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: 'rgba(0,0,0,0.5)' }}>Preferences</p>
               <div className="mt-5 space-y-3">
                 <div className="max-w-[260px]">
-                  <LanguageToggle variant="row" dropDirection="down" tone="light" />
+                  <LanguageToggle
+                    variant="row"
+                    dropDirection="down"
+                    dropAlign="left"
+                    rowDropdown="inline"
+                    tone="light"
+                    className="w-full"
+                  />
                 </div>
                 {showThemePicker && (
                   <button
@@ -413,7 +464,7 @@ export function StoreHeader() {
               exit={{ opacity: 0 }}
               onClick={handleCloseMobileMenu}
               className="fixed inset-0 z-600"
-              style={{ background: 'rgba(0,0,0,0.7)' }}
+              style={{ background: 'rgba(0,0,0,0.25)' }}
             />
             <LazyMotionDiv
               initial={{ x: '100%' }}
@@ -422,6 +473,7 @@ export function StoreHeader() {
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
               className="fixed top-0 right-0 bottom-0 w-72 max-w-[80vw] z-700 p-4 flex flex-col overflow-y-auto"
               style={{ background: 'rgb(255,255,255)', borderLeft: '1px solid rgba(0,0,0,0.1)' }}
+              data-apple-section
             >
               <div className="flex items-center justify-between mb-4">
                 <span className="text-2xl font-medium" style={{ color: 'rgb(0,0,0)' }}>Menu</span>
@@ -498,6 +550,7 @@ export function StoreHeader() {
                   dropAlign="left"
                   rowDropdown="inline"
                   tone="light"
+                  className="w-full"
                 />
 
                 <button
@@ -646,9 +699,9 @@ export function StoreHeader() {
             padding: '6px 12px',
             borderRadius: 8,
             border: '1px solid',
-            borderColor: devAdminEnabled ? '#a855f7' : '#666',
-            background: devAdminEnabled ? 'rgba(168,85,247,0.15)' : 'rgba(50,50,50,0.9)',
-            color: devAdminEnabled ? '#c084fc' : '#999',
+            borderColor: devAdminEnabled ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.15)',
+            background: devAdminEnabled ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.75)',
+            color: devAdminEnabled ? '#111111' : 'rgba(0,0,0,0.6)',
             fontSize: 11,
             fontWeight: 600,
             cursor: 'pointer',

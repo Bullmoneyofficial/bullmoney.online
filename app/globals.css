@@ -152,6 +152,64 @@ article,
   transition-delay: 0s !important;
 }
 
+/* =============================================
+   CRYPTO CHECKOUT - LIGHT APPLE STYLE OVERRIDES
+   ============================================= */
+
+.crypto-apple {
+  color: #111111;
+}
+
+.crypto-apple [class*="text-white/"] {
+  color: rgba(0, 0, 0, 0.6) !important;
+}
+
+.crypto-apple .text-white {
+  color: #111111 !important;
+}
+
+.crypto-apple [class*="bg-white/"] {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+.crypto-apple [class*="border-white/"] {
+  border-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+.crypto-apple input,
+.crypto-apple textarea {
+  color: #111111 !important;
+  background-color: rgba(0, 0, 0, 0.03) !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+.crypto-apple input::placeholder,
+.crypto-apple textarea::placeholder {
+  color: rgba(0, 0, 0, 0.35) !important;
+}
+
+
+/* =============================================
+   APPLE BLACK + WHITE SURFACE
+   ============================================= */
+
+[data-apple-bw] {
+  background-color: #000000 !important;
+  color: #f5f5f7;
+  background-image:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.18), transparent 55%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(0, 0, 0, 0.2));
+  background-attachment: fixed;
+}
+
+[data-apple-bw] a {
+  color: #f5f5f7;
+}
+
+[data-apple-bw] a:hover {
+  color: #ffffff;
+}
+
 /* Navbar + header + hub wrappers */
 nav,
 header,

@@ -1082,35 +1082,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
             <Heart className={`w-4 h-4 ${isLiked ? 'fill-current text-sky-400' : 'heart-pulse-blue'}`} style={!isLiked ? { fill: 'transparent', stroke: '#3b82f6' } : undefined} />
           </motion.button>
           
-          <motion.button
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleQuickAdd(e); }}
-            className={`absolute -bottom-5 md:bottom-10 left-1/2 -translate-x-1/2 h-10 md:h-11 px-5 md:px-6 rounded-full 
-                       flex items-center justify-center gap-2
-                       transition-all duration-200 active:scale-95 pointer-events-auto
-                       ${isAdding ? 'scale-95' : ''}
-                       ${!isInStock ? 'opacity-50 cursor-not-allowed' : ''}`}
-            style={{ 
-              zIndex: 9999,
-              background: 'linear-gradient(135deg, #1956b4,  #3275f8)',
-              color: '#ffffff',
-              border: '1px solid rgba(50,117,248,0.5)',
-              boxShadow: '0 4px 16px rgba(50,117,248,0.3)'
-            }}
-            whileTap={{ scale: 0.95 }}
-            disabled={!isInStock || isAdding}
-          >
-            {isAdding ? (
-              <div
-                style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.2)', borderTopColor: '#ffffff', borderRadius: '50%', animation: 'spin 1s linear infinite' }}
-              />
-            ) : (
-              <>
-                <Plus className="w-4 h-4 md:w-5 md:h-5" strokeWidth={2.5} />
-                <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.02em' }}>Add</span>
-              </>
-            )}
-          </motion.button>
+
         </div>
       </>
     );
@@ -1166,35 +1138,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
           <Heart className={`w-4 h-4 ${isLiked ? 'fill-current text-sky-400' : 'heart-pulse-blue'}`} style={!isLiked ? { fill: 'transparent', stroke: '#3b82f6' } : undefined} />
         </motion.button>
         
-        <motion.button
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleQuickAdd(e); }}
-          className={`absolute -bottom-5 md:bottom-10 left-1/2 -translate-x-1/2 h-10 md:h-11 px-5 md:px-6 rounded-full 
-                     flex items-center justify-center gap-2
-                     transition-all duration-200 active:scale-95 pointer-events-auto
-                     ${isAdding ? 'scale-95' : ''}
-                     ${!isInStock ? 'opacity-50 cursor-not-allowed' : ''}`}
-          style={{ 
-            zIndex: 9999,
-            background: 'linear-gradient(135deg, #1956b4, #3275f8)',
-            color: '#ffffff',
-            border: '1px solid rgba(50,117,248,0.5)',
-            boxShadow: '0 4px 16px rgba(50,117,248,0.3)'
-          }}
-          whileTap={{ scale: 0.95 }}
-          disabled={!isInStock || isAdding}
-        >
-          {isAdding ? (
-            <div
-              style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.2)', borderTopColor: '#ffffff', borderRadius: '50%', animation: 'spin 1s linear infinite' }}
-            />
-          ) : (
-            <>
-              <Plus className="w-4 h-4 md:w-5 md:h-5" strokeWidth={2.5} />
-              <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.02em' }}>Add</span>
-            </>
-          )}
-        </motion.button>
+
       </div>
     </>
   );

@@ -3,7 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { CheckCircle, Package, Mail, Loader2 } from 'lucide-react';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import Package from 'lucide-react/dist/esm/icons/package';
+import Mail from 'lucide-react/dist/esm/icons/mail';
+import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
 import Link from 'next/link';
 import { useCartStore } from '@/stores/cart-store';
 

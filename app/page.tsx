@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect, useRef, useCallback } from "react";
+import { Suspense, useState, useEffect, useRef, useCallback, type CSSProperties, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import { detectBrowser } from "@/lib/browserDetection";
 import { GLASS_STYLES } from "@/styles/glassStyles";
@@ -41,7 +41,6 @@ import {
   DraggableSplit,
   SplineScene,
   TestimonialsCarousel,
-  AppSupportButton,
 } from "@/components/home/dynamicImports";
 
 // UNIFIED SHIMMER SYSTEM - These are lightweight CSS animations, safe to import statically
@@ -69,6 +68,66 @@ import { useUIState } from "@/contexts/UIStateContext";
 const FeaturesSkeleton = () => (
   <div className="w-full h-100 bg-linear-to-b from-black to-zinc-900/50 animate-pulse rounded-xl" />
 );
+
+function DeferredRender({
+  children,
+  fallback,
+  rootMargin = "260px",
+  minDelayMs = 0,
+  idle = true,
+}: {
+  children: ReactNode;
+  fallback?: ReactNode;
+  rootMargin?: string;
+  minDelayMs?: number;
+  idle?: boolean;
+}) {
+  const [shouldRender, setShouldRender] = useState(false);
+  const hostRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (shouldRender) return;
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let idleId: number | null = null;
+    let observer: IntersectionObserver | null = null;
+
+    const activate = () => {
+      if (!cancelled) setShouldRender(true);
+    };
+
+    if (minDelayMs > 0) {
+      timeoutId = setTimeout(activate, minDelayMs);
+    }
+
+    if (idle && typeof window !== "undefined" && "requestIdleCallback" in window) {
+      idleId = (window as any).requestIdleCallback(activate, { timeout: 2000 });
+    }
+
+    if (typeof IntersectionObserver !== "undefined" && hostRef.current) {
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) activate();
+        },
+        { rootMargin }
+      );
+      observer.observe(hostRef.current);
+    } else if (!idle) {
+      activate();
+    }
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+      if (idleId && typeof window !== "undefined" && "cancelIdleCallback" in window) {
+        (window as any).cancelIdleCallback(idleId);
+      }
+      if (observer) observer.disconnect();
+    };
+  }, [shouldRender, rootMargin, minDelayMs, idle]);
+
+  return <div ref={hostRef}>{shouldRender ? children : fallback ?? null}</div>;
+}
 
 import { useAudioEngine } from "@/app/hooks/useAudioEngine";
 import Image from "next/image";
@@ -245,6 +304,11 @@ function HomeContent() {
   const showStage3 = currentView === 'content' && sequenceStage >= 3;
   const showStage4 = currentView === 'content' && sequenceStage >= 4;
   const showStage5 = currentView === 'content' && sequenceStage >= 5;
+  const deferredSectionStyle: CSSProperties = {
+    contentVisibility: 'auto',
+    containIntrinsicSize: '900px',
+    contain: 'layout paint',
+  };
   
   // Track FPS drops
   useEffect(() => {
@@ -443,11 +507,13 @@ function HomeContent() {
       }
     };
     
-    // Only run preload when we're ready and have desktop capabilities
-    if (canRenderHeavyDesktop || (currentView === 'pagemode' && !isMobile)) {
+    const canPreloadSpline = currentView === 'content' && canRenderHeavyDesktop && sequenceStage >= 3;
+
+    // Only run preload when content is active and the heavy section is about to appear
+    if (canPreloadSpline) {
       preloadSplineEngine();
     }
-  }, [deviceTier, currentView, canRenderHeavyDesktop, isMobile, allRemoteSplines]);
+  }, [deviceTier, currentView, canRenderHeavyDesktop, isMobile, allRemoteSplines, sequenceStage]);
 
   // Check localStorage on client mount to determine the correct view
   // This runs once on mount and sets the view based on user's previous progress
@@ -705,16 +771,27 @@ function HomeContent() {
 
             {/* Dashboard Sections with Toast Notifications */}
             {showStage1 ? (
-              <ToastProvider>
-                {/* BullMoney Community — Live Telegram Feed */}
-                <TelegramSection />
+              <DeferredRender fallback={<MinimalFallback />} rootMargin="320px">
+                <section
+                  id="dashboards"
+                  className="w-full"
+                  style={deferredSectionStyle}
+                  data-allow-scroll
+                  data-content
+                  data-theme-aware
+                >
+                  <ToastProvider>
+                    {/* BullMoney Community — Live Telegram Feed */}
+                    <TelegramSection />
 
-                {/* MetaTrader Quotes Section */}
-                <QuotesSection />
+                    {/* MetaTrader Quotes Section */}
+                    <QuotesSection />
 
-                {/* Breaking News Ticker - Live market/geopolitics headlines */}
-                <BreakingNewsSection />
-              </ToastProvider>
+                    {/* Breaking News Ticker - Live market/geopolitics headlines */}
+                    <BreakingNewsSection />
+                  </ToastProvider>
+                </section>
+              </DeferredRender>
             ) : (
               <MinimalFallback />
             )}
@@ -724,23 +801,36 @@ function HomeContent() {
               <section
                 id="bullmoney-promo"
                 className="w-full full-bleed"
+                style={deferredSectionStyle}
                 data-allow-scroll
                 data-content
                 data-theme-aware
               >
-                {showStage2 && canRenderMobileSections ? <BullMoneyPromoScroll /> : <MinimalFallback />}
+                {showStage2 && canRenderMobileSections ? (
+                  <DeferredRender fallback={<MinimalFallback />} rootMargin="360px">
+                    <BullMoneyPromoScroll />
+                  </DeferredRender>
+                ) : (
+                  <MinimalFallback />
+                )}
               </section>
             )}
 
             <section
               id="features"
               className="w-full full-bleed viewport-full px-2 sm:px-4"
-              style={isMobile ? { minHeight: '80dvh' } : undefined}
+              style={isMobile ? { minHeight: '80dvh', ...deferredSectionStyle } : deferredSectionStyle}
               data-allow-scroll
               data-content
               data-theme-aware
             >
-              {showStage2 && canRenderMobileSections ? <FeaturesComponent /> : <FeaturesSkeleton />}
+              {showStage2 && canRenderMobileSections ? (
+                <DeferredRender fallback={<FeaturesSkeleton />} rootMargin="360px">
+                  <FeaturesComponent />
+                </DeferredRender>
+              ) : (
+                <FeaturesSkeleton />
+              )}
             </section>
 
             {showStage3 && canRenderHeavyDesktop && (
@@ -750,16 +840,26 @@ function HomeContent() {
                 data-allow-scroll 
                 data-content 
                 data-theme-aware 
-                style={{ backgroundColor: '#000000' }}
+                style={{ backgroundColor: '#000000', ...deferredSectionStyle }}
               >
                 {/* Orb with Launch Button - Full Screen */}
-                <OrbSplineLauncher onOpenScenes={() => setIsAllScenesModalOpen(true)} />
+                <DeferredRender fallback={<MinimalFallback />} rootMargin="420px" minDelayMs={300}>
+                  <OrbSplineLauncher onOpenScenes={() => setIsAllScenesModalOpen(true)} />
+                </DeferredRender>
               </section>
             )}
 
             {/* Mobile-only Testimonials Section */}
             {showStage4 && canRenderMobileSections && (
-              <section id="testimonials" className="w-full max-w-5xl mx-auto px-4 py-12 md:hidden" data-allow-scroll data-content data-theme-aware style={{ touchAction: 'pan-y' }}>
+              <section
+                id="testimonials"
+                className="w-full max-w-5xl mx-auto px-4 py-12 md:hidden"
+                data-allow-scroll
+                data-content
+                data-theme-aware
+                style={{ touchAction: 'pan-y', ...deferredSectionStyle }}
+              >
+                <DeferredRender fallback={<LoadingSkeleton variant="card" height={320} />} rootMargin="420px">
                 <div className="relative text-center mb-6">
                   <h2 className="text-lg font-bold text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(to right, white, var(--accent-color, #ffffff), white)', filter: 'drop-shadow(0 0 15px rgba(var(--accent-rgb, 255, 255, 255), 0.5))' }}>
                     What Traders Say
@@ -780,17 +880,33 @@ function HomeContent() {
                     </Suspense>
                   </div>
                 </div>
+                </DeferredRender>
               </section>
             )}
 
             {showStage4 && canRenderMobileSections && (
-              <section id="ticker" className="w-full px-2 sm:px-4" data-allow-scroll data-footer data-theme-aware>
-                <LiveMarketTicker />
+              <section
+                id="ticker"
+                className="w-full px-2 sm:px-4"
+                data-allow-scroll
+                data-footer
+                data-theme-aware
+                style={deferredSectionStyle}
+              >
+                <DeferredRender fallback={<MinimalFallback />} rootMargin="420px">
+                  <LiveMarketTicker />
+                </DeferredRender>
               </section>
             )}
 
             {/* ✅ FOOTER - Only on home page */}
-            {showStage5 && <FooterComponent />}
+            {showStage5 && (
+              <DeferredRender fallback={<MinimalFallback />} rootMargin="420px">
+                <div style={deferredSectionStyle}>
+                  <FooterComponent />
+                </div>
+              </DeferredRender>
+            )}
           </main>
 
           {showStage5 && canRenderHeavyDesktop && theme?.youtubeId && (
@@ -824,7 +940,6 @@ export default function Home() {
   return (
     <>
       <HomeContent />
-      <AppSupportButton />
     </>
   );
 }

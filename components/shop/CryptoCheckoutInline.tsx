@@ -535,9 +535,9 @@ export function CryptoCheckoutInline({
   const checkoutContent = (
     <div
       ref={checkoutRef}
-      className={`w-full relative ${
+      className={`w-full relative flex flex-col ${
         inline
-          ? 'rounded-2xl border border-white/15 overflow-hidden shadow-2xl'
+          ? 'rounded-2xl border border-white/15 overflow-hidden shadow-2xl max-h-[70vh]'
           : 'max-w-lg mx-auto rounded-2xl border border-white/15 overflow-hidden shadow-2xl'
       }`}
       style={{ backgroundColor: '#000' }}
@@ -613,7 +613,7 @@ export function CryptoCheckoutInline({
       )}
 
       {/* ── Content ────────────────────────────────────────────── */}
-      <div className="p-4 md:p-5 max-h-[65vh] overflow-y-auto">
+      <div className={`p-4 md:p-5 overflow-y-auto ${inline ? 'max-h-[40vh] md:max-h-[45vh]' : 'max-h-[65vh]'}`}>
         <AnimatePresence mode="wait">
           {/* ═══════════════════════════════════════════════════════
               STEP: SELECT CRYPTOCURRENCY
@@ -1531,9 +1531,13 @@ export function CryptoCheckoutTrigger({
   variantId,
   quantity = 1,
   disabled = false,
+  compact = false,
+  theme = 'dark',
   onPaymentSubmitted,
 }: Omit<CryptoCheckoutInlineProps, 'onClose' | 'inline'> & {
   disabled?: boolean;
+  compact?: boolean;
+  theme?: 'dark' | 'light';
 }) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -1547,6 +1551,7 @@ export function CryptoCheckoutTrigger({
         variantId={variantId}
         quantity={quantity}
         inline
+        theme={theme}
         onClose={() => setIsOpen(false)}
         onPaymentSubmitted={(txHash, coin, network) => {
           onPaymentSubmitted?.(txHash, coin, network);
@@ -1565,25 +1570,30 @@ export function CryptoCheckoutTrigger({
       onTouchEnd={(e) => e.stopPropagation()}
       disabled={disabled}
       style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
-      className="w-full py-4 md:py-5 rounded-2xl font-bold text-sm md:text-base transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 bg-white text-black hover:bg-white/90 shadow-lg"
+      className={compact
+        ? 'w-full py-2.5 md:py-3 rounded-xl font-semibold text-xs md:text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 bg-black text-white hover:bg-black/90 shadow-md'
+        : 'w-full py-4 md:py-5 rounded-2xl font-bold text-sm md:text-base transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 bg-white text-black hover:bg-white/90 shadow-lg'
+      }
       whileHover={disabled ? {} : { scale: 1.02 }}
       whileTap={disabled ? {} : { scale: 0.98 }}
     >
-      <svg className="w-5 h-5 md:w-6 md:h-6" viewBox="0 0 24 24" fill="none">
+      <svg className={compact ? 'w-4 h-4 md:w-5 md:h-5' : 'w-5 h-5 md:w-6 md:h-6'} viewBox="0 0 24 24" fill="none">
         <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
         <path d="M8 12.5L12 7L16 12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
         <line x1="12" y1="7" x2="12" y2="17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
       </svg>
       <span>Pay with Crypto</span>
-      <div className="flex items-center gap-1 ml-1 opacity-50">
-        <span className="text-[10px] md:text-xs font-medium">BTC</span>
-        <span className="text-[8px]">•</span>
-        <span className="text-[10px] md:text-xs font-medium">ETH</span>
-        <span className="text-[8px]">•</span>
-        <span className="text-[10px] md:text-xs font-medium">SOL</span>
-        <span className="text-[8px]">•</span>
-        <span className="text-[10px] md:text-xs font-medium">+4</span>
-      </div>
+      {!compact && (
+        <div className="flex items-center gap-1 ml-1 opacity-50">
+          <span className="text-[10px] md:text-xs font-medium">BTC</span>
+          <span className="text-[8px]">•</span>
+          <span className="text-[10px] md:text-xs font-medium">ETH</span>
+          <span className="text-[8px]">•</span>
+          <span className="text-[10px] md:text-xs font-medium">SOL</span>
+          <span className="text-[8px]">•</span>
+          <span className="text-[10px] md:text-xs font-medium">+4</span>
+        </div>
+      )}
     </motion.button>
   );
 }

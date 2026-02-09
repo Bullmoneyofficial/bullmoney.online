@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useLayoutEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUIState } from "@/contexts/UIStateContext";
 import { isMobileDevice } from "@/lib/mobileDetection";
@@ -16,6 +17,8 @@ interface MultiStepLoaderV2Props {
   loop?: boolean;
   onFinished?: () => void;
   reducedAnimations?: boolean; // Mobile optimization flag
+  theme?: 'dark' | 'light';
+  usePortal?: boolean;
 }
 
 export const MultiStepLoaderV2 = ({
@@ -29,9 +32,12 @@ export const MultiStepLoaderV2 = ({
   loop = true,
   onFinished = () => {},
   reducedAnimations = false,
+  theme = 'dark',
+  usePortal = true,
 }: MultiStepLoaderV2Props) => {
   const [currentState, setCurrentState] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [mounted, setMounted] = useState(false);
   
   // --- UI STATE CONTEXT: Signal to minimize audio widget while loader is active ---
   const { setLoaderv2Open } = useUIState();
@@ -39,6 +45,7 @@ export const MultiStepLoaderV2 = ({
   // ✅ MOBILE DETECTION - Detect once on mount to avoid re-renders
   useEffect(() => {
     setIsMobile(isMobileDevice());
+    setMounted(true);
   }, []);
   
   // ✅ OPTIMIZED DURATION FOR MOBILE
@@ -82,7 +89,17 @@ export const MultiStepLoaderV2 = ({
     useReducedMotion: isMobile || reducedAnimations,
   }), [isMobile, reducedAnimations]);
 
-  return (
+  const isLight = theme === 'light';
+  const containerClass = isLight
+    ? 'fixed inset-0 z-[999999] flex items-center justify-center bg-white'
+    : 'fixed inset-0 z-[999999] flex items-center justify-center bg-linear-to-br from-black via-gray-900 to-black backdrop-blur-sm';
+  const titleClass = isLight
+    ? 'text-black text-2xl font-bold mb-4'
+    : 'text-white text-2xl font-bold mb-4';
+  const dotActiveClass = isLight ? 'bg-black' : 'bg-white';
+  const dotInactiveClass = isLight ? 'bg-black/30' : 'bg-white/30';
+
+  const content = (
     <AnimatePresence mode="wait">
       {loading && (
         <motion.div
@@ -90,16 +107,29 @@ export const MultiStepLoaderV2 = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={animationConfig.useReducedMotion ? { duration: 0 } : { duration: 0.3 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-linear-to-br from-black via-gray-900 to-black backdrop-blur-sm"
+          className={containerClass}
         >
-          <div className="text-center">
+          <div
+            className="text-center w-full px-6 flex flex-col items-center justify-center"
+            style={{
+              paddingTop: 'env(safe-area-inset-top, 0px)',
+              paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+            }}
+          >
+            <img
+              src="/IMG_2921.PNG"
+              alt="BullMoney"
+              className="h-[200px] sm:h-[240px] w-auto mb-8"
+              loading="eager"
+              decoding="async"
+            />
             <motion.div
               key={currentState}
               initial={{ opacity: 0, y: animationConfig.useReducedMotion ? 0 : 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: animationConfig.useReducedMotion ? 0 : -20 }}
               transition={animationConfig.useReducedMotion ? { duration: 0 } : { duration: 0.2 }}
-              className="text-white text-2xl font-bold mb-4"
+              className={titleClass}
             >
               {loadingStates[currentState]?.text}
             </motion.div>
@@ -111,7 +141,7 @@ export const MultiStepLoaderV2 = ({
                   animate={{ scale: 1 }}
                   transition={animationConfig.useReducedMotion ? { duration: 0 } : { duration: 0.2 }}
                   className={`h-3 w-3 rounded-full ${
-                    index === currentState ? "bg-white" : "bg-white/30"
+                    index === currentState ? dotActiveClass : dotInactiveClass
                   }`}
                 />
               ))}
@@ -121,6 +151,12 @@ export const MultiStepLoaderV2 = ({
       )}
     </AnimatePresence>
   );
+
+  if (usePortal && mounted && typeof document !== "undefined") {
+    return createPortal(content, document.body);
+  }
+
+  return content;
 };
 
 export default MultiStepLoaderV2;

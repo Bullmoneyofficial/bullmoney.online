@@ -13,6 +13,9 @@ interface MapProps {
   }>;
   lineColor?: string;
   showCryptoCoins?: boolean;
+  forceLite?: boolean;
+  forceVisible?: boolean;
+  className?: string;
 }
 
 // Continent label positions (approximate centers)
@@ -89,6 +92,18 @@ const CRYPTO_COINS_LITE = [
   { symbol: 'SOL', color: '#00FFA3', lat: 30, lng: -35, delay: 0.6 },
 ];
 
+// Trade routes for floating ships (approximate, real-world corridors)
+const SHIP_ROUTES_FULL = [
+  { start: { lat: 31.2304, lng: 121.4737 }, end: { lat: 34.0522, lng: -118.2437 } },
+  { start: { lat: 1.3521, lng: 103.8198 }, end: { lat: 51.9244, lng: 4.4777 } },
+  { start: { lat: 25.2048, lng: 55.2708 }, end: { lat: 19.076, lng: 72.8777 } },
+  { start: { lat: 9.1012, lng: -79.4029 }, end: { lat: 29.9511, lng: -90.0715 } },
+  { start: { lat: -33.9249, lng: 18.4241 }, end: { lat: -23.5505, lng: -46.6333 } },
+  { start: { lat: 35.6762, lng: 139.6503 }, end: { lat: 37.7749, lng: -122.4194 } },
+];
+
+const SHIP_ROUTES_LITE = SHIP_ROUTES_FULL.slice(0, 3);
+
 // Hotspot cities lite (4 instead of 7)
 const HOTSPOT_CITIES_LITE = HOTSPOT_CITIES.slice(0, 4);
 
@@ -116,6 +131,9 @@ export default function WorldMap({
   dots = [],
   lineColor = "#000000",
   showCryptoCoins = true,
+  forceLite = false,
+  forceVisible = false,
+  className,
 }: MapProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -128,13 +146,17 @@ export default function WorldMap({
   const inertiaRef = useRef<number | null>(null);
   const [isDesktop, setIsDesktop] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [showDragHint, setShowDragHint] = useState(true);
-  const [isVisible, setIsVisible] = useState(false);
+  const [showDragHint, setShowDragHint] = useState(false);
+  const [isVisible, setIsVisible] = useState(forceVisible);
   const containerRef = useRef<HTMLDivElement>(null);
   const { shouldSkipHeavyEffects } = useUnifiedPerformance();
 
   // ✅ PERF: Only render map when visible in viewport (saves ~1-2s on initial load)
   useEffect(() => {
+    if (forceVisible) {
+      setIsVisible(true);
+      return;
+    }
     if (!containerRef.current || typeof IntersectionObserver === 'undefined') {
       // Fallback: show after short delay
       const t = setTimeout(() => setIsVisible(true), 800);
@@ -166,7 +188,7 @@ export default function WorldMap({
   }, []);
 
   // Lite mode: mobile OR low-memory/battery-saver devices
-  const isLite = isMobile || shouldSkipHeavyEffects;
+  const isLite = forceLite || isMobile || shouldSkipHeavyEffects;
   const enableHeavyAnimations = !isLite;
   const enableLineCoins = true;
   const mobileCoinScale = isMobile ? 1.35 : 1;
@@ -177,29 +199,32 @@ export default function WorldMap({
   const METEORS = isLite ? METEORS_LITE : METEORS_FULL;
   const CRYPTO_COINS_DATA = isLite ? CRYPTO_COINS_LITE : CRYPTO_COINS_FULL;
   const hotspotCities = isLite ? HOTSPOT_CITIES_LITE : HOTSPOT_CITIES;
+  const shipRoutes = isLite ? SHIP_ROUTES_LITE : SHIP_ROUTES_FULL;
 
   // Memoize the map — lower resolution grid for mobile
+  const baseMapHeight = isLite ? 80 : 180;
+
   // Primary layer: darker, denser dots for the main landmasses
   const svgMap = useMemo(() => {
-    const map = new DottedMap({ height: isLite ? 80 : 180, grid: "diagonal" });
+    const map = new DottedMap({ height: baseMapHeight, grid: "diagonal" });
     return map.getSVG({
       radius: isLite ? 0.3 : 0.38,
-      color: isLite ? "#000000B0" : "#000000DD",
+      color: isLite ? "#FFFFFFB0" : "#FFFFFFDD",
       shape: "circle",
-      backgroundColor: "#FFFFFF",
+      backgroundColor: "#000000",
     });
-  }, [isLite]);
+  }, [baseMapHeight, isLite]);
 
   // Secondary layer: dim fill dots to cover gaps between main dots
   const svgMapFill = useMemo(() => {
-    const map = new DottedMap({ height: isLite ? 100 : 220, grid: "vertical" });
+    const map = new DottedMap({ height: baseMapHeight, grid: "vertical" });
     return map.getSVG({
       radius: isLite ? 0.2 : 0.25,
-      color: isLite ? "#00000040" : "#00000055",
+      color: isLite ? "#FFFFFF40" : "#FFFFFF55",
       shape: "circle",
       backgroundColor: "transparent",
     });
-  }, [isLite]);
+  }, [baseMapHeight, isLite]);
 
   // Web Mercator projection matching DottedMap's internal EPSG:3857
   const projectPoint = (lat: number, lng: number) => {
@@ -285,7 +310,7 @@ export default function WorldMap({
         -webkit-filter: none !important;
       }
       [data-crypto-section] {
-        background-color: #ffffff !important;
+        background-color: #000000 !important;
         isolation: isolate !important;
         position: relative !important;
         z-index: 1 !important;
@@ -296,8 +321,8 @@ export default function WorldMap({
         scrollRef.current = el;
         (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
       }}
-      className="world-map-scroll w-full h-full min-h-[100svh] md:min-h-0 md:h-full md:w-screen relative font-sans overflow-x-auto overflow-y-hidden md:overflow-hidden flex items-center justify-start md:justify-center touch-pan-x cursor-grab active:cursor-grabbing"
-      style={{ backgroundColor: '#ffffff' }}
+      className={`world-map-scroll w-full h-full min-h-[100svh] md:min-h-0 md:h-full md:w-screen relative font-sans overflow-x-auto overflow-y-hidden md:overflow-hidden flex items-center justify-start md:justify-center touch-pan-x cursor-grab active:cursor-grabbing${className ? ` ${className}` : ''}`}
+      style={{ backgroundColor: '#000000' }}
       data-crypto-section
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
@@ -307,10 +332,10 @@ export default function WorldMap({
     >
       {/* ✅ PERF: Show loading state while map is deferred */}
       {!isVisible ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-white">
+        <div className="absolute inset-0 flex items-center justify-center bg-black">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-10 h-10 border-2 border-black/10 border-t-black/60 rounded-full animate-spin" />
-            <span className="text-black/40 text-sm">Loading map...</span>
+            <div className="w-10 h-10 border-2 border-white/10 border-t-white/70 rounded-full animate-spin" />
+            <span className="text-white/60 text-sm">Loading map...</span>
           </div>
         </div>
       ) : (
@@ -550,7 +575,7 @@ export default function WorldMap({
                         x="0"
                         y="2"
                         textAnchor="middle"
-                        fill="#000"
+                        fill="#ffffff"
                         fontSize={(isLite ? 4 : 6) * lineCoinScale}
                         fontWeight="bold"
                         fontFamily="system-ui, sans-serif"
@@ -676,6 +701,43 @@ export default function WorldMap({
           );
         })}
 
+        {/* Shipping routes with floating ships */}
+        {!isLite && shipRoutes.map((route, i) => {
+          const startPoint = projectPoint(route.start.lat, route.start.lng);
+          const endPoint = projectPoint(route.end.lat, route.end.lng);
+          const path = createCurvedPath(startPoint, endPoint);
+          const duration = 16 + i * 2.5;
+          return (
+            <g key={`ship-route-${i}`}>
+              <path
+                d={path}
+                fill="none"
+                stroke="rgba(0,130,255,0.15)"
+                strokeWidth="1"
+                strokeDasharray="4 6"
+              />
+              <motion.g
+                initial={{ offsetDistance: '0%' }}
+                animate={{ offsetDistance: '100%' }}
+                transition={{ duration, repeat: Infinity, ease: 'linear', delay: i * 0.8 }}
+                style={{
+                  offsetPath: `path("${path}")`,
+                  offsetRotate: 'auto',
+                  transformOrigin: '0px 0px',
+                }}
+              >
+                <path
+                  d="M -6 3 L -3 -2 L 0 -3 L 3 -2 L 6 3 Z"
+                  fill="#ffffff"
+                  stroke="rgba(0,130,255,0.6)"
+                  strokeWidth="0.6"
+                />
+                <circle cx="0" cy="4.5" r="2" fill="rgba(0,130,255,0.25)" />
+              </motion.g>
+            </g>
+          );
+        })}
+
         {/* Floating Crypto Coins in Ocean Areas - wave drift */}
         {showCryptoCoins && isMobile && CRYPTO_COINS_DATA.map((coin, i) => {
           const pos = projectPoint(coin.lat, coin.lng);
@@ -686,7 +748,7 @@ export default function WorldMap({
             <g key={`crypto-mobile-${coin.symbol}-${i}`}>
               <circle cx={pos.x} cy={pos.y} r={baseRadius} fill={coin.color} opacity="0.9" />
               <circle cx={pos.x} cy={pos.y} r={innerRadius} fill="none" stroke="rgba(0,0,0,0.25)" strokeWidth="0.4" />
-              <text x={pos.x} y={pos.y + 2.5} textAnchor="middle" fill="#000" fontSize={textSize} fontWeight="bold" fontFamily="system-ui, sans-serif">
+              <text x={pos.x} y={pos.y + 2.5} textAnchor="middle" fill="#ffffff" fontSize={textSize} fontWeight="bold" fontFamily="system-ui, sans-serif">
                 {coin.symbol}
               </text>
             </g>
@@ -707,7 +769,7 @@ export default function WorldMap({
               <g key={`crypto-lite-${coin.symbol}-${i}`}>
                 <circle cx={pos.x} cy={pos.y} r={baseRadius} fill={coin.color} opacity="0.85" />
                 <circle cx={pos.x} cy={pos.y} r={innerRadius} fill="none" stroke="rgba(0,0,0,0.2)" strokeWidth="0.4" />
-                <text x={pos.x} y={pos.y + 2.5} textAnchor="middle" fill="#000" fontSize={textSize} fontWeight="bold" fontFamily="system-ui, sans-serif">
+                <text x={pos.x} y={pos.y + 2.5} textAnchor="middle" fill="#ffffff" fontSize={textSize} fontWeight="bold" fontFamily="system-ui, sans-serif">
                   {coin.symbol}
                 </text>
                 <circle cx={pos.x} cy={pos.y} r={baseRadius} fill="none" stroke="rgba(0,0,0,0.25)">
@@ -827,7 +889,7 @@ export default function WorldMap({
                       x={pos.x}
                       y={pos.y + 3}
                       textAnchor="middle"
-                      fill="#000"
+                      fill="#ffffff"
                       fontSize="5.5"
                       fontWeight="bold"
                       fontFamily="system-ui, sans-serif"

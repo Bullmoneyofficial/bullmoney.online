@@ -35,7 +35,7 @@
   /* NO FILTER - use color variables instead */
   transition: border-color 0.5s ease-in-out, box-shadow 0.5s ease-in-out;
   position: fixed;
-  top: 8px;
+  top: 0;
   left: 0;
   right: 0;
   width: 100%;

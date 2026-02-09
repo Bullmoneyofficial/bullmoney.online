@@ -1,11 +1,28 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  RefreshCw, Plus, Trash2, Pencil, X, Check, Tag, Gift, Percent,
-  DollarSign, Calendar, Hash, ToggleLeft, ToggleRight, ChevronDown,
-  Copy, AlertCircle, Search, CreditCard, Truck, Clock, Shield,
-} from "lucide-react";
+import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
+import Plus from 'lucide-react/dist/esm/icons/plus';
+import Trash2 from 'lucide-react/dist/esm/icons/trash-2';
+import Pencil from 'lucide-react/dist/esm/icons/pencil';
+import X from 'lucide-react/dist/esm/icons/x';
+import Check from 'lucide-react/dist/esm/icons/check';
+import Tag from 'lucide-react/dist/esm/icons/tag';
+import Gift from 'lucide-react/dist/esm/icons/gift';
+import Percent from 'lucide-react/dist/esm/icons/percent';
+import DollarSign from 'lucide-react/dist/esm/icons/dollar-sign';
+import Calendar from 'lucide-react/dist/esm/icons/calendar';
+import Hash from 'lucide-react/dist/esm/icons/hash';
+import ToggleLeft from 'lucide-react/dist/esm/icons/toggle-left';
+import ToggleRight from 'lucide-react/dist/esm/icons/toggle-right';
+import ChevronDown from 'lucide-react/dist/esm/icons/chevron-down';
+import Copy from 'lucide-react/dist/esm/icons/copy';
+import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
+import Search from 'lucide-react/dist/esm/icons/search';
+import CreditCard from 'lucide-react/dist/esm/icons/credit-card';
+import Truck from 'lucide-react/dist/esm/icons/truck';
+import Clock from 'lucide-react/dist/esm/icons/clock';
+import Shield from 'lucide-react/dist/esm/icons/shield';
 
 // ============================================================================
 // STORE PROMO MANAGER — CRUD for Discount Codes & Gift Cards

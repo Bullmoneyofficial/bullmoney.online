@@ -1,161 +1,203 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { Search, SlidersHorizontal, X, ChevronDown, Sparkles, LayoutGrid, Rows3, Layers, Clock, LayoutDashboard } from 'lucide-react';
-import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import dynamic from 'next/dynamic';
+import { createPortal } from 'react-dom';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Search from 'lucide-react/dist/esm/icons/search';
+import ShoppingBag from 'lucide-react/dist/esm/icons/shopping-bag';
+import CreditCard from 'lucide-react/dist/esm/icons/credit-card';
+import X from 'lucide-react/dist/esm/icons/x';
 import type { ProductWithDetails, PaginatedResponse, ProductFilters } from '@/types/store';
+import { ProductCard } from '@/components/shop/ProductCard';
+import { SearchAutocomplete } from '@/components/shop/SearchAutocomplete';
+import { CryptoCheckoutTrigger } from '@/components/shop/CryptoCheckoutInline';
+import { WorldMapPlaceholder } from '@/components/ui/world-map-placeholder';
+import { AnimatedProductGrid } from '@/components/shop/AnimatedProductGrid';
+import { CircularProductGrid } from '@/components/shop/CircularProductGrid';
+import { ProductsCarousel } from '@/components/shop/ProductsCarousel';
 import { useStoreSection } from './StoreMemoryContext';
-import { useSound } from '@/contexts/SoundContext';
+import { buildUrlParams, hasActiveFilters as checkActiveFilters } from './store.utils';
+import { SORT_OPTIONS, CATEGORIES } from './store.config';
+import { useCartStore } from '@/stores/cart-store';
+import { useProductsModalUI } from '@/contexts/UIStateContext';
+import { SoundEffects } from '@/app/hooks/useSoundEffects';
 
-// ✅ PERFORMANCE HOOKS - Matching app/page.tsx optimization stack
-import { useScrollOptimization } from '@/hooks/useScrollOptimization';
-import { useBigDeviceScrollOptimizer } from '@/lib/bigDeviceScrollOptimizer';
-import { useMobileLazyRender } from '@/hooks/useMobileLazyRender';
-import { useUnifiedPerformance } from '@/lib/UnifiedPerformanceSystem';
-import { useComponentTracking, useCrashTracker } from '@/lib/CrashTracker';
-import { deferAnalytics, smartPrefetch } from '@/lib/prefetchHelper';
-import {
-  ShimmerSpinner,
-  ShimmerRadialGlow,
-} from '@/components/ui/UnifiedShimmer';
+const PAGE_SIZE = 12;
 
-// ============================================================================
-// ✅ OPTIMIZED IMPORTS - Split into separate modules for faster compilation
-// ============================================================================
-import {
-  CookieConsent,
-  StoreHero3D,
-  CircularProductGrid,
-  AnimatedProductGrid,
-  ProductsCarousel,
-  ProductCard,
-  HoverEffect,
-  FilterSheet,
-  FocusCards,
-  FeaturedProductsTimeline,
-  GlassProductGrid,
-  StoreFluidGlassSection,
-  StoreFooter,
-  SearchAutocomplete,
-  WorldMap,
-  InfiniteMenu,
-  FlyingPosters,
-  MotionDiv,
-  AnimatePresence,
-} from './store.imports';
+const SplineBackground = dynamic(() => import('@/components/SplineBackground'), {
+  ssr: false,
+  loading: () => null,
+});
 
-import {
-  SORT_OPTIONS,
-  CATEGORIES,
-  MOBILE_COLUMN_OPTIONS,
-  DESKTOP_COLUMN_OPTIONS,
-  GRID_ROW_OPTIONS,
-  FOCUS_LAYOUT_OPTIONS,
-} from './store.config';
+const WorldMap = dynamic(() => import('@/components/ui/world-map'), {
+  ssr: false,
+  loading: () => <WorldMapPlaceholder className="h-full w-full" />,
+});
 
-import {
-  getGridClasses,
-  hasActiveFilters as checkActiveFilters,
-  buildUrlParams,
-  getFocusMaxItems,
-  getGridViewProducts,
-} from './store.utils';
+const MultiStepLoaderV2 = dynamic(() => import('@/components/Mainpage/MultiStepLoaderv2'), {
+  ssr: false,
+});
 
-import { useProgressiveLoad, useIdleEffect } from './store.hooks';
+const ToastProvider = dynamic(() => import('../PageSections').then((mod) => mod.ToastProvider), {
+  ssr: false,
+  loading: () => null,
+});
+
+const QuotesSection = dynamic(() => import('../PageSections').then((mod) => mod.QuotesSection), {
+  ssr: false,
+  loading: () => <div className="h-40 w-full animate-pulse rounded-2xl bg-black/5" />,
+});
+
+const BreakingNewsSection = dynamic(() => import('../PageSections').then((mod) => mod.BreakingNewsSection), {
+  ssr: false,
+  loading: () => <div className="h-32 w-full animate-pulse rounded-2xl bg-black/5" />,
+});
+
+const TelegramSection = dynamic(() => import('../PageSections').then((mod) => mod.TelegramSection), {
+  ssr: false,
+  loading: () => <div className="h-40 w-full animate-pulse rounded-2xl bg-black/5" />,
+});
+
+const MetaTraderQuotes = dynamic(() => import('@/components/MetaTraderQuotes'), {
+  ssr: false,
+  loading: () => <div className="h-40 w-full animate-pulse rounded-2xl bg-black/5" />,
+});
+
+const BreakingNewsTicker = dynamic(() => import('@/components/BreakingNewsTicker'), {
+  ssr: false,
+  loading: () => <div className="h-32 w-full animate-pulse rounded-2xl bg-black/5" />,
+});
+
+const BullMoneyCommunity = dynamic(() => import('@/components/BullMoneyCommunity'), {
+  ssr: false,
+  loading: () => <div className="h-40 w-full animate-pulse rounded-2xl bg-black/5" />,
+});
+
+const Features = dynamic(() => import('@/components/features').then((mod) => ({ default: mod.Features })), {
+  ssr: false,
+  loading: () => <div className="h-60 w-full animate-pulse rounded-2xl bg-black/5" />,
+});
+
+const TestimonialsCarousel = dynamic(() => import('@/components/Testimonial').then((mod) => ({ default: mod.TestimonialsCarousel })), {
+  ssr: false,
+  loading: () => <div className="h-60 w-full animate-pulse rounded-2xl bg-black/5" />,
+});
+
+const FooterComponent = dynamic(() => import('@/components/Mainpage/footer').then((mod) => ({ default: mod.Footer })), {
+  ssr: false,
+});
+
+const HERO_SLIDE_DURATION = 6;
+
+const HERO_CAROUSEL_SLIDES = [
+  { type: 'image' as const, src: '/bullmoney-logo.png', alt: 'BullMoney logo' },
+  { type: 'image' as const, src: '/bullmoneyvantage.png', alt: 'BullMoney Vantage' },
+  { type: 'image' as const, src: '/Fvfront.png', alt: 'BullMoney product front' },
+  { type: 'image' as const, src: '/IMG_2921.PNG', alt: 'BullMoney mark' },
+  { type: 'image' as const, src: '/Img1.jpg', alt: 'BullMoney product preview' },
+  { type: 'video' as const, src: '/newhero.mp4', poster: '/Img1.jpg' },
+  { type: 'world-map' as const },
+  { type: 'spline' as const, scene: '/scene1.splinecode' },
+  { type: 'spline' as const, scene: '/scene3.splinecode' },
+];
+
+const HERO_WORLD_MAP_DOTS = [
+  {
+    start: { lat: 40.7128, lng: -74.006, label: 'New York' },
+    end: { lat: 51.5074, lng: -0.1278, label: 'London' },
+    color: '#00D4FF',
+  },
+  {
+    start: { lat: 1.3521, lng: 103.8198, label: 'Singapore' },
+    end: { lat: 25.2048, lng: 55.2708, label: 'Dubai' },
+    color: '#00FFA3',
+  },
+  {
+    start: { lat: 35.6762, lng: 139.6503, label: 'Tokyo' },
+    end: { lat: 37.7749, lng: -122.4194, label: 'San Francisco' },
+    color: '#FF6B35',
+  },
+];
+
+const HERO_TYPE_WEIGHTS = {
+  'world-map': 0.6,
+  spline: 0.3,
+  image: 0.03,
+  video: 0.07,
+} as const;
+
+const pickHeroSlideIndex = () => {
+  const buckets = {
+    'world-map': [] as number[],
+    spline: [] as number[],
+    image: [] as number[],
+    video: [] as number[],
+  };
+
+  HERO_CAROUSEL_SLIDES.forEach((slide, index) => {
+    buckets[slide.type].push(index);
+  });
+
+  const roll = Math.random();
+  const cutoffs = [
+    HERO_TYPE_WEIGHTS['world-map'],
+    HERO_TYPE_WEIGHTS['world-map'] + HERO_TYPE_WEIGHTS.spline,
+    HERO_TYPE_WEIGHTS['world-map'] + HERO_TYPE_WEIGHTS.spline + HERO_TYPE_WEIGHTS.image,
+  ];
+
+  let type: keyof typeof buckets = 'video';
+  if (roll < cutoffs[0]) type = 'world-map';
+  else if (roll < cutoffs[1]) type = 'spline';
+  else if (roll < cutoffs[2]) type = 'image';
+
+  const pool = buckets[type];
+  if (!pool.length) return 0;
+  return pool[Math.floor(Math.random() * pool.length)];
+};
 
 export default function StorePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
-  // ✅ PERFORMANCE OPTIMIZATION STACK - Matching app/page.tsx patterns
-  // Progressive loading - renders in stages for faster initial load
-  const { showCritical, showInteractive, showBelowFold, showHeavy } = useProgressiveLoad();
-  
-  // Scroll optimization for 120fps - same as home page
-  useScrollOptimization();
-  const { optimizeSection } = useBigDeviceScrollOptimizer();
-  
-  // Device tier awareness, FPS monitoring, preload/unload hints
-  const {
-    deviceTier,
-    registerComponent,
-    unregisterComponent,
-    averageFps,
-    shimmerQuality,
-    preloadQueue,
-    unloadQueue,
-  } = useUnifiedPerformance();
-  
-  // Crash & perf tracking
-  const { trackClick, trackError, trackCustom } = useComponentTracking('store-page');
-  const { trackPerformanceWarning } = useCrashTracker();
-  
-  // Mobile lazy render (smart, not just a 400ms timeout)
-  const { shouldRender: allowMobileLazyRender } = useMobileLazyRender(240);
-  
-  // Heavy desktop gating via requestIdleCallback (same pattern as home page)
-  const [allowHeavyDesktop, setAllowHeavyDesktop] = useState(false);
-  
-  // Initialize trading sounds from context
-  const { sounds } = useSound();
-  
-  // Recruit auth for rewards
-  const { recruit } = useRecruitAuth();
-  
-  // Smart memory: per-section visibility via IntersectionObserver
   const hero = useStoreSection('hero');
-  const featured = useStoreSection('featured');
   const productsSection = useStoreSection('products');
-  const fluidGlass = useStoreSection('fluidGlass');
-  const footer = useStoreSection('footer');
-  
-  // State
+  const featuredSection = useStoreSection('featured');
+  const footerSection = useStoreSection('footer');
+
   const [products, setProducts] = useState<ProductWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const [showFilters, setShowFilters] = useState(false);
-  const [mobileColumns, setMobileColumns] = useState(2);
-  const [desktopColumns, setDesktopColumns] = useState(5);
-  const [mobileRows, setMobileRows] = useState(2);
-  const [desktopRows, setDesktopRows] = useState(2);
-  const [isMobile, setIsMobile] = useState(false);
-  const [viewMode, setViewMode] = useState<'carousel' | 'circular' | 'grid' | 'animated'>('carousel'); // Default to carousel view
-  const [gridLayoutOpen, setGridLayoutOpen] = useState(false);
-  const gridLayoutRef = useRef<HTMLDivElement>(null);
-  const gridLayoutMobileRef = useRef<HTMLDivElement>(null);
-  const [focusMobileColumns, setFocusMobileColumns] = useState<1 | 2 | 3>(2);
-  const [focusDesktopColumns, setFocusDesktopColumns] = useState<1 | 2 | 3>(2);
-  const [focusMobileRows, setFocusMobileRows] = useState<1 | 2 | 3>(3);
-  const [focusDesktopRows, setFocusDesktopRows] = useState<1 | 2 | 3>(1);
-  const [vipProducts, setVipProducts] = useState<{ id: string; name: string; price: number; image_url?: string; imageUrl?: string; visible?: boolean }[]>([]);
-  const [featuredViewMode, setFeaturedViewMode] = useState<'timeline' | 'grid'>('timeline');
-  const [timelineVisible, setTimelineVisible] = useState(true);
-  const featuredSectionRef = useRef<HTMLElement>(null);
 
-  // Close grid layout dropdown on outside click
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        gridLayoutRef.current && !gridLayoutRef.current.contains(e.target as Node) &&
-        gridLayoutMobileRef.current && !gridLayoutMobileRef.current.contains(e.target as Node)
-      ) {
-        setGridLayoutOpen(false);
-      }
-    };
-    if (gridLayoutOpen) document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [gridLayoutOpen]);
-  
-  // Search state with debouncing
+  const [expandedProduct, setExpandedProduct] = useState<ProductWithDetails | null>(null);
+  const [viewerProduct, setViewerProduct] = useState<ProductWithDetails | null>(null);
+  const [viewerMounted, setViewerMounted] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [checkoutProduct, setCheckoutProduct] = useState<ProductWithDetails | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<
+    'cart' | 'stripe' | 'whop' | 'skrill'
+  >('cart');
+  const [useGridLayouts, setUseGridLayouts] = useState(true);
+  const [heroSlideIndex] = useState(() => pickHeroSlideIndex());
+  const [showHeroMapOverlay] = useState(() => Math.random() < 0.05);
+  const heroSlide = HERO_CAROUSEL_SLIDES[heroSlideIndex];
+  const heroIsWorldMap = heroSlide?.type === 'world-map';
+  const heroTitleColor = 'rgb(255,255,255)';
+  const heroMetaColor = 'rgb(255,255,255)';
+  const heroBodyColor = 'rgb(255,255,255)';
+  const heroTextShadow = heroIsWorldMap ? 'none' : '0 6px 18px rgba(0,0,0,0.45)';
+  const heroTitleShadow = heroIsWorldMap ? 'none' : '0 10px 30px rgba(0,0,0,0.5)';
+  const heroBodyShadow = heroIsWorldMap ? 'none' : '0 8px 22px rgba(0,0,0,0.4)';
+
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
-  // Filter state
+  const { open: openProductsModal } = useProductsModalUI();
+
   const [filters, setFilters] = useState<ProductFilters>({
     category: searchParams.get('category') || '',
     min_price: searchParams.get('min_price') ? Number(searchParams.get('min_price')) : undefined,
@@ -163,18 +205,77 @@ export default function StorePage() {
     sort_by: (searchParams.get('sort_by') as ProductFilters['sort_by']) || 'newest',
   });
 
-  // Sync filters with URL params when they change (e.g., from header pill nav)
+  const [showLoader, setShowLoader] = useState(true);
+
+  const addItem = useCartStore((state) => state.addItem);
+  const paddingBoost = isDesktop ? 60 : 15;
+
+  const currencyFormatter = useMemo(() => new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 2,
+  }), []);
+
+  const formatPrice = useCallback((value: number) => currencyFormatter.format(value || 0), [currencyFormatter]);
+  const normalizeAssetUrl = useCallback((src: string) => {
+    let normalized = src;
+    if (normalized.startsWith('/http://') || normalized.startsWith('/https://')) {
+      normalized = normalized.substring(1);
+    }
+    if (normalized.startsWith('http://') || normalized.startsWith('https://')) {
+      return normalized;
+    }
+    return normalized.startsWith('/') ? normalized : `/${normalized.replace(/^public\//, '')}`;
+  }, []);
+
+  const handleOpenVip = useCallback(() => {
+    SoundEffects.click();
+    openProductsModal();
+  }, [openProductsModal]);
+
+  const handleVisitShop = useCallback(() => {
+    SoundEffects.click();
+    const target = document.querySelector('[data-products-grid]');
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, []);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const update = (event: MediaQueryListEvent) => setIsDesktop(event.matches);
+    setIsDesktop(mq.matches);
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+
+  useEffect(() => {
+    setViewerMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setShowLoader(false), 1800);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!isDesktop) setExpandedProduct(null);
+  }, [isDesktop]);
+
   useEffect(() => {
     const urlCategory = searchParams.get('category') || '';
     const urlMinPrice = searchParams.get('min_price') ? Number(searchParams.get('min_price')) : undefined;
     const urlMaxPrice = searchParams.get('max_price') ? Number(searchParams.get('max_price')) : undefined;
     const urlSortBy = (searchParams.get('sort_by') as ProductFilters['sort_by']) || 'newest';
     const urlSearch = searchParams.get('search') || '';
-    
-    setFilters(prev => {
-      // Only update if different to avoid infinite loops
-      if (prev.category !== urlCategory || prev.min_price !== urlMinPrice || 
-          prev.max_price !== urlMaxPrice || prev.sort_by !== urlSortBy) {
+
+    setFilters((prev) => {
+      if (
+        prev.category !== urlCategory ||
+        prev.min_price !== urlMinPrice ||
+        prev.max_price !== urlMaxPrice ||
+        prev.sort_by !== urlSortBy
+      ) {
         return {
           category: urlCategory,
           min_price: urlMinPrice,
@@ -184,301 +285,66 @@ export default function StorePage() {
       }
       return prev;
     });
-    
+
     if (urlSearch !== searchQuery) {
       setSearchQuery(urlSearch);
     }
-  }, [searchParams]);
+  }, [searchParams, searchQuery]);
 
-  // Infinite scroll observer
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
-  const autoLoadRef = useRef(0);
-
-  // Debounce search
   useEffect(() => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     searchTimeoutRef.current = setTimeout(() => {
       setDebouncedSearch(searchQuery);
-    }, 400);
+    }, 250);
     return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     };
   }, [searchQuery]);
 
-  // Detect mobile — debounced to avoid layout thrash on resize
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const checkMobile = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-    };
-    checkMobile();
-    let rafId: number | null = null;
-    const handleResize = () => {
-      if (rafId) return; // skip if already queued
-      rafId = requestAnimationFrame(() => {
-        checkMobile();
-        rafId = null;
-      });
-    };
-    window.addEventListener('resize', handleResize, { passive: true });
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      if (rafId) cancelAnimationFrame(rafId);
-    };
-  }, []);
+    if (!expandedProduct) return;
 
-  // ✅ DEFERRED ANALYTICS - Load analytics after page is interactive (same as home page)
-  useEffect(() => {
-    deferAnalytics(() => {
-      import('@/lib/analytics').then(({ trackEvent, BullMoneyAnalytics }) => {
-        console.log('[Store] Analytics loaded after page interaction');
-      });
-    });
-
-    // Smart prefetch likely navigation routes after initial load
-    smartPrefetch([
-      { href: '/', options: { priority: 'low' } },
-      { href: '/store/checkout', options: { priority: 'low' } },
-      { href: '/trading-showcase', options: { priority: 'low' } },
-      { href: '/community', options: { priority: 'low' } },
-    ]);
-
-    // ✅ SPLINE PRELOAD — Same strategy as home page
-    // Preload runtime + scene file during idle time so 3D loads instantly
-    if (typeof window !== 'undefined' && window.innerWidth >= 768) {
-      const preloadSpline = () => {
-        // 1. Preload Spline runtime (shares module cache with spline-wrapper)
-        import('@splinetool/runtime').catch(() => {});
-        // 2. Preload the wrapper component  
-        import('@/lib/spline-wrapper').catch(() => {});
-      };
-
-      if ('requestIdleCallback' in window) {
-        (window as any).requestIdleCallback(preloadSpline, { timeout: 2000 });
-      } else {
-        setTimeout(preloadSpline, 1000);
-      }
-    }
-  }, []);
-
-  // ✅ HEAVY DESKTOP GATING via requestIdleCallback (same as home page)
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (isMobile) {
-      setAllowHeavyDesktop(false);
-      return;
-    }
-
-    let cancelled = false;
-    const enable = () => {
-      if (!cancelled) setAllowHeavyDesktop(true);
-    };
-
-    if ('requestIdleCallback' in window) {
-      const id = (window as any).requestIdleCallback(enable, { timeout: 1200 });
-      return () => {
-        cancelled = true;
-        (window as any).cancelIdleCallback(id);
-      };
-    }
-
-    const timeout = setTimeout(enable, 1200);
-    return () => {
-      cancelled = true;
-      clearTimeout(timeout);
-    };
-  }, [isMobile]);
-
-  // ✅ FPS TRACKING - Monitor drops same as home page
-  useEffect(() => {
-    if (averageFps < 25) {
-      trackPerformanceWarning('store-page', averageFps, `FPS dropped to ${averageFps}`);
-    }
-  }, [averageFps, trackPerformanceWarning]);
-
-  // ✅ COMPONENT REGISTRATION for unified performance tracking
-  const componentsRegisteredRef = useRef(false);
-  const registerComponentRef = useRef(registerComponent);
-  const unregisterComponentRef = useRef(unregisterComponent);
-  const trackCustomRef = useRef(trackCustom);
-  const optimizeSectionRef = useRef(optimizeSection);
-
-  useEffect(() => {
-    registerComponentRef.current = registerComponent;
-    unregisterComponentRef.current = unregisterComponent;
-    trackCustomRef.current = trackCustom;
-    optimizeSectionRef.current = optimizeSection;
-  });
-
-  useEffect(() => {
-    if (showInteractive && !componentsRegisteredRef.current) {
-      componentsRegisteredRef.current = true;
-      registerComponentRef.current('store-hero', 9);
-      registerComponentRef.current('store-products', 7);
-      registerComponentRef.current('store-ticker', 5);
-      trackCustomRef.current('store_loaded', { deviceTier, shimmerQuality });
-
-      if (typeof window !== 'undefined' && window.innerWidth >= 1440) {
-        setTimeout(() => {
-          optimizeSectionRef.current('hero');
-          optimizeSectionRef.current('products');
-        }, 100);
-      }
-    }
-    return () => {
-      if (componentsRegisteredRef.current) {
-        componentsRegisteredRef.current = false;
-        unregisterComponentRef.current('store-hero');
-        unregisterComponentRef.current('store-products');
-        unregisterComponentRef.current('store-ticker');
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setExpandedProduct(null);
       }
     };
-  }, [showInteractive, deviceTier, shimmerQuality]);
 
-  // Smart preloading based on usage patterns
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [expandedProduct]);
+
   useEffect(() => {
-    if (preloadQueue.length > 0) {
-      console.log('[Store] Preload suggestions:', preloadQueue);
-    }
-    if (unloadQueue.length > 0) {
-      console.log('[Store] Unload suggestions:', unloadQueue);
-    }
-  }, [preloadQueue, unloadQueue]);
+    if (!viewerProduct) return;
 
-  // ✅ MOBILE DEFERRAL - Use smart useMobileLazyRender instead of simple timeout
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setViewerProduct(null);
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [viewerProduct]);
+
   useEffect(() => {
-    if (!isMobile) {
-      setMobileDeferReady(true);
-      return;
-    }
-    // Use the hook-based signal for smarter deferral
-    setMobileDeferReady(allowMobileLazyRender);
-  }, [isMobile, allowMobileLazyRender]);
+    if (!checkoutOpen) return;
 
-  // Manual toggle only — timeline stays as default, grid only if user selects it
-  const handleFeaturedViewChange = useCallback((mode: 'timeline' | 'grid') => {
-    sounds.buttonClick();
-    setFeaturedViewMode(mode);
-    setTimelineVisible(mode === 'timeline');
-  }, [sounds]);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setCheckoutOpen(false);
+      }
+    };
 
-  const focusCards = useMemo(() => {
-    return vipProducts
-      .map((vip) => {
-        const src = vip.image_url || vip.imageUrl || '';
-        if (!src) return null;
-        return {
-          title: vip.name || 'VIP Product',
-          src,
-          price: vip.price,
-          description: (vip as any).description || '',
-          comingSoon: (vip as any).coming_soon || false,
-          buyUrl: (vip as any).buy_url || '',
-        };
-      })
-      .filter(Boolean)
-      .slice(0, 9) as { title: string; src: string; price: number; description: string; comingSoon: boolean; buyUrl: string }[];
-  }, [vipProducts]);
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [checkoutOpen]);
 
-  const focusMaxItems = useMemo(() => 
-    getFocusMaxItems(isMobile, focusCards.length, focusDesktopColumns, focusDesktopRows),
-    [isMobile, focusCards.length, focusDesktopColumns, focusDesktopRows]
-  );
-
-  const gridViewProducts = useMemo(() => 
-    getGridViewProducts(products, isMobile, mobileColumns, desktopColumns, mobileRows, desktopRows),
-    [products, isMobile, mobileColumns, desktopColumns, mobileRows, desktopRows]
-  );
-
-  // ✅ MEMOIZE GRID RENDER ITEM — prevents HoverEffect children from remounting
-  const isCompactGrid = mobileColumns >= 3 || desktopColumns >= 7;
-  const gridGetKey = useCallback((product: any) => (product as ProductWithDetails).id, []);
-  const gridGetLink = useCallback(() => undefined, []);
-  const gridRenderItem = useCallback((product: any, index: number) => (
-    <MotionDiv
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: Math.min(index * 0.02, 0.2) }}
-      className="h-full w-full mb-6 relative"
-      style={{ overflow: 'visible', zIndex: 1 }}
-    >
-      <ProductCard product={product as ProductWithDetails} compact={isCompactGrid} />
-    </MotionDiv>
-  ), [isCompactGrid]);
-
-  const canRenderMobileSections = !isMobile || allowMobileLazyRender;
-  const canRenderHeavyDesktop = !isMobile && allowHeavyDesktop;
-
-  // ✅ MEMOIZE STATIC OBJECTS — prevent re-creating on every render
-  const worldMapDots = useMemo(() => [
-    { start: { lat: 40.7128, lng: -74.006, label: 'New York' }, end: { lat: 51.5074, lng: -0.1278, label: 'London' } },
-    { start: { lat: 51.5074, lng: -0.1278, label: 'London' }, end: { lat: 35.6762, lng: 139.6503, label: 'Tokyo' } },
-    { start: { lat: 40.7128, lng: -74.006, label: 'New York' }, end: { lat: -33.8688, lng: 151.2093, label: 'Sydney' } },
-    { start: { lat: 1.3521, lng: 103.8198, label: 'Singapore' }, end: { lat: 25.2048, lng: 55.2708, label: 'Dubai' } },
-    { start: { lat: 35.6762, lng: 139.6503, label: 'Tokyo' }, end: { lat: 22.3193, lng: 114.1694, label: 'Hong Kong' } },
-    { start: { lat: 51.5074, lng: -0.1278, label: 'London' }, end: { lat: -33.9249, lng: 18.4241, label: 'Cape Town' }, color: '#3B82F6' },
-  ], []);
-
-  const shouldShowHero = hero.shouldRender && (showHeavy || (isMobile && showInteractive));
-  const [mobileDeferReady, setMobileDeferReady] = useState(true);
-  const shouldShowBelowFold = showBelowFold && (!isMobile || mobileDeferReady) && canRenderMobileSections;
-  const shouldShowHeavySections = showHeavy && (canRenderHeavyDesktop || (isMobile && mobileDeferReady && canRenderMobileSections));
-
-  // ✅ STAGGERED HEAVY SECTIONS — like home page sequenceStage
-  // Only render 1-2 heavy sections at a time to avoid GPU overload
-  const [heavyStage, setHeavyStage] = useState(0);
-  useEffect(() => {
-    if (!shouldShowHeavySections) { setHeavyStage(0); return; }
-    // Stage 1: Featured products (lightweight)
-    setHeavyStage(1);
-    const t2 = setTimeout(() => setHeavyStage(2), 400);   // Stage 2: WorldMap
-    const t3 = setTimeout(() => setHeavyStage(3), 1200);  // Stage 3: FluidGlass (heaviest)
-    return () => { clearTimeout(t2); clearTimeout(t3); };
-  }, [shouldShowHeavySections]);
-
-  const shouldShowFeatured = shouldShowBelowFold;
-  const shouldShowWorldMap = shouldShowHeavySections && heavyStage >= 2;
-  const [showInfiniteMenu, setShowInfiniteMenu] = useState(false);
-
-  // Logo items for InfiniteMenu
-  const infiniteMenuItems = useMemo(() => [
-    { image: '/bullmoney-logo.png', link: '/', title: 'Bull Money', description: 'Trading Community' },
-    { image: '/FTMO_LOGO.png', link: 'https://ftmo.com', title: 'FTMO', description: 'Prop Trading' },
-    { image: '/Vantage-logo.jpg', link: 'https://vantage.com', title: 'Vantage', description: 'Forex Broker' },
-    { image: '/GTFLOGO.png', link: '/', title: 'GTF', description: 'Get Funded' },
-    { image: '/eqlogo.png', link: '/', title: 'EQ', description: 'Trading Tools' },
-    { image: '/xm-logo.png', link: 'https://xm.com', title: 'XM', description: 'Global Broker' },
-    { image: '/FTMO_LOGOB.png', link: 'https://ftmo.com', title: 'FTMO', description: 'Challenge' },
-    { image: '/bullmoneyvantage.png', link: '/', title: 'Bull x Vantage', description: 'Partnership' },
-  ], []);
-
-  // Logo image paths for FlyingPosters
-  const flyingPosterImages = useMemo(() => [
-    '/bullmoney-logo.png',
-    '/FTMO_LOGO.png',
-    '/Vantage-logo.jpg',
-    '/GTFLOGO.png',
-    '/eqlogo.png',
-    '/xm-logo.png',
-    '/FTMO_LOGOB.png',
-    '/bullmoneyvantage.png',
-  ], []);
-  // FluidGlass = heaviest WebGL component — only on desktop, only after everything else
-  const shouldShowFluidGlass = canRenderHeavyDesktop && heavyStage >= 3;
-  const shouldShowFooter = shouldShowBelowFold;
-
-  // ✅ PAUSE HERO WHEN SCROLLED OUT OF VIEW — stops Spline + all animations
-  const isHeroPaused = !hero.shouldAnimate;
-
-
-  // Fetch products
-  const fetchProducts = useCallback(async (pageNum: number, append = false) => {
+  const fetchProducts = useCallback(async (
+    pageNum: number,
+    append: boolean,
+    signal?: AbortSignal
+  ) => {
     if (pageNum === 1) {
       setLoading(true);
     } else {
@@ -488,101 +354,49 @@ export default function StorePage() {
     try {
       const params = new URLSearchParams();
       params.set('page', pageNum.toString());
-      params.set('limit', '12');
-      
+      params.set('limit', PAGE_SIZE.toString());
       if (filters.category) params.set('category', filters.category);
       if (filters.min_price) params.set('min_price', filters.min_price.toString());
       if (filters.max_price) params.set('max_price', filters.max_price.toString());
       if (filters.sort_by) params.set('sort_by', filters.sort_by);
       if (debouncedSearch) params.set('search', debouncedSearch);
 
-      const response = await fetch(`/api/store/products?${params}`);
+      const response = await fetch(`/api/store/products?${params.toString()}`, { signal });
       const data: PaginatedResponse<ProductWithDetails> = await response.json();
 
       if (append) {
-        setProducts(prev => [...prev, ...(data.data || [])]);
+        setProducts((prev) => [...prev, ...(data.data || [])]);
       } else {
         setProducts(data.data || []);
       }
-      
-      setTotal(data.total);
-      setHasMore(data.has_more);
+
+      setTotal(data.total || 0);
+      setHasMore(Boolean(data.has_more));
       setPage(pageNum);
     } catch (error) {
-      console.error('Failed to fetch products:', error);
+      if ((error as Error).name !== 'AbortError') {
+        console.error('Failed to fetch products:', error);
+      }
     } finally {
       setLoading(false);
       setLoadingMore(false);
     }
   }, [filters, debouncedSearch]);
 
-  // Initial fetch and filter changes
   useEffect(() => {
-    fetchProducts(1, false);
+    const controller = new AbortController();
+    fetchProducts(1, false, controller.signal);
+    return () => controller.abort();
   }, [fetchProducts]);
 
-  // Fetch VIP products - DEFERRED until below-fold content loads
-  useIdleEffect(() => {
-    if (!showBelowFold) return;
-    
-    const fetchVip = async () => {
-      try {
-        const res = await fetch('/api/store/vip');
-        const json = res.ok ? await res.json() : { data: [] };
-        const items = (json.data || []).filter((item: any) => item.visible !== false);
-        setVipProducts(items);
-      } catch (err) {
-        // Silently degrade — VIP section will just be empty
-        if (process.env.NODE_ENV === 'development') console.warn('VIP fetch skipped:', err);
-      }
-    };
-    fetchVip();
-  }, [showBelowFold]);
-
-  // Update URL with filters
   useEffect(() => {
     const params = buildUrlParams(filters, debouncedSearch);
-    const newUrl = params.toString() ? `/store?${params}` : '/store';
+    const newUrl = params.toString() ? `/store?${params.toString()}` : '/store';
     router.replace(newUrl, { scroll: false });
   }, [filters, debouncedSearch, router]);
 
-  // Infinite scroll
-  useEffect(() => {
-    if (observerRef.current) {
-      observerRef.current.disconnect();
-    }
-
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loadingMore && !loading) {
-          fetchProducts(page + 1, true);
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (loadMoreRef.current) {
-      observerRef.current.observe(loadMoreRef.current);
-    }
-
-    return () => observerRef.current?.disconnect();
-  }, [hasMore, loadingMore, loading, page, fetchProducts]);
-
-  // Ensure small screens load enough items to fill the viewport
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (window.innerWidth >= 768) return;
-    if (loading || loadingMore || !hasMore) return;
-    if (products.length === 0) return;
-
-    if (products.length < 8 && autoLoadRef.current < 2) {
-      autoLoadRef.current += 1;
-      fetchProducts(page + 1, true);
-    }
-  }, [products.length, hasMore, loading, loadingMore, page, fetchProducts]);
-
-  const handleFilterChange = useCallback((newFilters: Partial<ProductFilters>) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
+  const handleFilterChange = useCallback((next: Partial<ProductFilters>) => {
+    setFilters((prev) => ({ ...prev, ...next }));
     setPage(1);
   }, []);
 
@@ -597,790 +411,1192 @@ export default function StorePage() {
     setDebouncedSearch('');
   }, []);
 
+  const canAddToCart = useCallback((product: ProductWithDetails) => {
+    const variant = product.variants?.[0];
+    return Boolean(variant && variant.inventory_count > 0);
+  }, []);
+
+  const handleAddToCart = useCallback((product: ProductWithDetails) => {
+    const variant = product.variants?.[0];
+    if (!variant || variant.inventory_count <= 0) return;
+    addItem(product, variant, 1);
+  }, [addItem]);
+
+  const handleAddClick = useCallback((product: ProductWithDetails) => {
+    const desktopNow = typeof window !== 'undefined'
+      ? window.matchMedia('(min-width: 1024px)').matches
+      : isDesktop;
+
+    handleAddToCart(product);
+    if (desktopNow) {
+      setExpandedProduct(product);
+    }
+  }, [handleAddToCart, isDesktop]);
+
+  const confirmExpandedAdd = useCallback(() => {
+    if (!expandedProduct) return;
+    handleAddToCart(expandedProduct);
+    setExpandedProduct(null);
+  }, [expandedProduct, handleAddToCart]);
+
+  const handleCheckoutAction = useCallback(async () => {
+    if (!checkoutProduct) return;
+    const variant = checkoutProduct.variants?.[0];
+    if (!variant || variant.inventory_count <= 0) return;
+
+    if (paymentMethod === 'cart') {
+      addItem(checkoutProduct, variant, 1);
+      setCheckoutOpen(false);
+      return;
+    }
+
+    if (paymentMethod === 'whop') {
+      const buyUrl = (checkoutProduct.details as { buy_url?: string } | undefined)?.buy_url;
+      const checkoutUrl = buyUrl || `https://whop.com/checkout/${checkoutProduct.slug}`;
+      window.open(checkoutUrl, '_blank');
+      setCheckoutOpen(false);
+      return;
+    }
+
+    if (paymentMethod === 'skrill') {
+      try {
+        const response = await fetch('/api/skrill/create-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            productId: checkoutProduct.id,
+            variantId: variant.id,
+            name: checkoutProduct.name,
+            description: checkoutProduct.description,
+            price: variant.price || checkoutProduct.base_price,
+            quantity: 1,
+            image: checkoutProduct.primary_image,
+          }),
+        });
+        const data = await response.json();
+        if (data.url) {
+          window.location.href = data.url;
+          return;
+        }
+      } catch (error) {
+        console.error('Skrill checkout error:', error);
+      }
+    }
+  }, [addItem, checkoutProduct, paymentMethod]);
+
   const hasActiveFilters = checkActiveFilters(filters, debouncedSearch);
+  const featuredProducts = useMemo(() => products.slice(0, 4), [products]);
+  const timelineProducts = useMemo(() => products.slice(4, 8), [products]);
+  const heroMedia = useMemo(() => {
+    const slide = HERO_CAROUSEL_SLIDES[heroSlideIndex];
+
+    if (slide.type === 'image') {
+      return (
+        <img
+          src={slide.src}
+          alt={slide.alt}
+          className="absolute inset-0 z-0 h-full w-full object-cover"
+          loading="eager"
+          decoding="async"
+        />
+      );
+    }
+
+    if (slide.type === 'video') {
+      return (
+        <video
+          className="absolute inset-0 z-0 h-full w-full object-cover"
+          autoPlay
+          muted
+          loop
+          playsInline
+          poster={slide.poster}
+        >
+          <source src={slide.src} type="video/mp4" />
+        </video>
+      );
+    }
+
+    if (slide.type === 'world-map') {
+      return (
+        <div
+          className="absolute inset-0 z-0 h-full w-full"
+          style={{ pointerEvents: 'auto', touchAction: 'pan-x' }}
+        >
+          <div className="absolute inset-0 bg-white">
+            <WorldMapPlaceholder className="min-h-0" />
+          </div>
+          <div className="absolute inset-0 pointer-events-none">
+            <style>{`
+              @keyframes heroLineFlow { 0% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -120; } }
+              @keyframes heroListPulse { 0%, 100% { opacity: 0.55; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-2px); } }
+              @keyframes heroGlow { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.6; } }
+            `}</style>
+            <div className="absolute left-6 top-6 rounded-2xl border border-black/10 bg-white/90 px-4 py-3 shadow-[0_12px_30px_rgba(0,0,0,0.08)]">
+              <p className="text-[10px] uppercase tracking-[0.32em] text-black/45">Markets + Sessions</p>
+              <ul className="mt-2 space-y-1 text-xs font-semibold text-black/70">
+                {[
+                  'Tokyo Session · 00:00-09:00 UTC',
+                  'London Session · 07:00-16:00 UTC',
+                  'New York Session · 13:00-22:00 UTC',
+                  'Crypto · 24/7 Global',
+                ].map((item, idx) => (
+                  <li
+                    key={item}
+                    style={{ animation: 'heroListPulse 6s ease-in-out infinite', animationDelay: `${idx * 0.6}s` }}
+                  >
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <svg
+              viewBox="0 0 1000 500"
+              className="absolute inset-0 h-full w-full"
+              preserveAspectRatio="xMidYMid slice"
+              aria-hidden="true"
+            >
+              <defs>
+                <linearGradient id="heroLineBlue" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#0A84FF" stopOpacity="0" />
+                  <stop offset="15%" stopColor="#0A84FF" stopOpacity="0.9" />
+                  <stop offset="85%" stopColor="#0A84FF" stopOpacity="0.9" />
+                  <stop offset="100%" stopColor="#0A84FF" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+
+              <path
+                id="route-ny-lon"
+                d="M 280 190 Q 460 70 640 170"
+                fill="none"
+                stroke="url(#heroLineBlue)"
+                strokeWidth="2"
+                strokeDasharray="10 12"
+                style={{ animation: 'heroLineFlow 8s linear infinite' }}
+              />
+              <path
+                id="route-lon-dxb"
+                d="M 640 170 Q 700 190 760 240"
+                fill="none"
+                stroke="url(#heroLineBlue)"
+                strokeWidth="2"
+                strokeDasharray="10 12"
+                style={{ animation: 'heroLineFlow 7s linear infinite' }}
+              />
+              <path
+                id="route-tyo-sg"
+                d="M 820 190 Q 760 260 720 300"
+                fill="none"
+                stroke="url(#heroLineBlue)"
+                strokeWidth="2"
+                strokeDasharray="10 12"
+                style={{ animation: 'heroLineFlow 6s linear infinite' }}
+              />
+
+              <g style={{ animation: 'heroGlow 3s ease-in-out infinite' }}>
+                <circle cx="280" cy="190" r="4" fill="#0A84FF" />
+                <circle cx="640" cy="170" r="4" fill="#0A84FF" />
+                <circle cx="760" cy="240" r="4" fill="#0A84FF" />
+                <circle cx="820" cy="190" r="4" fill="#0A84FF" />
+                <circle cx="720" cy="300" r="4" fill="#0A84FF" />
+              </g>
+
+              <g>
+                <circle r="7" fill="#0A84FF" opacity="0.9">
+                  <animateMotion dur="1s" repeatCount="indefinite">
+                    <mpath href="#route-ny-lon" />
+                  </animateMotion>
+                </circle>
+                <text fontSize="6" fontWeight="700" fill="#000" textAnchor="middle" dy="2">
+                  <animateMotion dur="1s" repeatCount="indefinite">
+                    <mpath href="#route-ny-lon" />
+                  </animateMotion>
+                  BTC
+                </text>
+              </g>
+              <g>
+                <circle r="7" fill="#0A84FF" opacity="0.9">
+                  <animateMotion dur="1s" repeatCount="indefinite" begin="0.2s">
+                    <mpath href="#route-lon-dxb" />
+                  </animateMotion>
+                </circle>
+                <text fontSize="6" fontWeight="700" fill="#000" textAnchor="middle" dy="2">
+                  <animateMotion dur="1s" repeatCount="indefinite" begin="0.2s">
+                    <mpath href="#route-lon-dxb" />
+                  </animateMotion>
+                  ETH
+                </text>
+              </g>
+              <g>
+                <circle r="7" fill="#0A84FF" opacity="0.9">
+                  <animateMotion dur="1s" repeatCount="indefinite" begin="0.4s">
+                    <mpath href="#route-tyo-sg" />
+                  </animateMotion>
+                </circle>
+                <text fontSize="6" fontWeight="700" fill="#000" textAnchor="middle" dy="2">
+                  <animateMotion dur="1s" repeatCount="indefinite" begin="0.4s">
+                    <mpath href="#route-tyo-sg" />
+                  </animateMotion>
+                  SOL
+                </text>
+              </g>
+            </svg>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div
+        className="absolute inset-0 z-0 h-full w-full"
+        style={{ pointerEvents: 'auto', touchAction: 'pan-y' }}
+      >
+        <SplineBackground scene={slide.scene} className="h-full w-full" priority />
+      </div>
+    );
+  }, [heroSlideIndex]);
+
+  const expandedPrimaryImage = useMemo(() => {
+    if (!expandedProduct) return '';
+    if (expandedProduct.primary_image) return expandedProduct.primary_image;
+    const primary = expandedProduct.images?.find((img) => img.is_primary);
+    return primary?.url || expandedProduct.images?.[0]?.url || '';
+  }, [expandedProduct]);
+
+  const viewerMedia = useMemo(() => {
+    if (!viewerProduct) return null;
+    const media = (viewerProduct as ProductWithDetails & { media?: Array<{ url: string; media_type?: string; is_primary?: boolean }> }).media;
+    const primaryMedia = media?.find((item) => item.is_primary) || media?.[0];
+    const primaryImage = viewerProduct.primary_image
+      || viewerProduct.images?.find((img) => img.is_primary)?.url
+      || viewerProduct.images?.[0]?.url;
+
+    if (primaryImage) {
+      return { url: normalizeAssetUrl(primaryImage), type: 'image' } as const;
+    }
+
+    if (primaryMedia?.url) {
+      return {
+        url: normalizeAssetUrl(primaryMedia.url),
+        type: primaryMedia.media_type === 'video' ? 'video' : 'image',
+      } as const;
+    }
+
+    return null;
+  }, [viewerProduct]);
+
+  const expandedVariant = expandedProduct?.variants?.[0];
+  const expandedInventory = expandedVariant?.inventory_count;
+  const expandedInStock = expandedProduct ? canAddToCart(expandedProduct) : false;
+  const expandedBuyUrl = (expandedProduct?.details as { buy_url?: string } | undefined)?.buy_url;
+  const expandedDetailsHref = expandedBuyUrl || '/VIP';
+  const checkoutVariant = checkoutProduct?.variants?.[0];
+  const checkoutInStock = Boolean(checkoutVariant && checkoutVariant.inventory_count > 0);
+  const checkoutPrice = checkoutVariant?.price || checkoutProduct?.base_price || 0;
+  const handleExpandedBuy = useCallback(async (method: typeof paymentMethod) => {
+    if (!expandedProduct) return;
+    const variant = expandedProduct.variants?.[0];
+    if (!variant || variant.inventory_count <= 0) return;
+
+    if (method === 'cart') {
+      confirmExpandedAdd();
+      return;
+    }
+
+    if (method === 'whop') {
+      const buyUrl = (expandedProduct.details as { buy_url?: string } | undefined)?.buy_url;
+      const checkoutUrl = buyUrl || `https://whop.com/checkout/${expandedProduct.slug}`;
+      window.open(checkoutUrl, '_blank');
+      setExpandedProduct(null);
+      return;
+    }
+
+    if (method === 'skrill') {
+      try {
+        const response = await fetch('/api/skrill/create-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            productId: expandedProduct.id,
+            variantId: variant.id,
+            name: expandedProduct.name,
+            description: expandedProduct.description,
+            price: variant.price || expandedProduct.base_price,
+            quantity: 1,
+            image: expandedProduct.primary_image,
+          }),
+        });
+        const data = await response.json();
+        if (data.url) {
+          window.location.href = data.url;
+          return;
+        }
+      } catch (error) {
+        console.error('Skrill checkout error:', error);
+      }
+    }
+  }, [confirmExpandedAdd, expandedProduct]);
+
+  if (showLoader) {
+    return (
+      <div className="fixed inset-0 z-[99999] bg-white">
+        <MultiStepLoaderV2
+          loading
+          loop={false}
+          duration={700}
+          theme="light"
+          loadingStates={[
+            { text: 'Preparing store...' },
+            { text: 'Loading drops...' },
+            { text: 'Ready.' },
+          ]}
+        />
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-black" style={{ height: 'auto', minHeight: '100vh', overflow: 'visible' }} data-allow-scroll data-scrollable data-content>
-      {/* Hero Section - 3D Spline Hero - DEFERRED to improve initial load */}
+    <div
+      data-store-page
+      style={{
+        minHeight: '100vh',
+        width: '100%',
+        backgroundColor: 'rgb(255,255,255)',
+        color: '#1d1d1f',
+      }}
+    >
       <div
-        ref={hero.ref}
-        style={{
-          minHeight: 400,
-          contain: 'layout style paint',
-          contentVisibility: 'auto',
-          containIntrinsicSize: 'auto 400px',
-        } as React.CSSProperties}
-        data-allow-scroll
-        data-content
+        className={`fixed left-0 right-0 z-[495] hidden lg:block transition-all duration-200 ease-out ${expandedProduct ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-full pointer-events-none'}`}
+        style={{ top: 0 }}
+        role="dialog"
+        aria-label="Quick add preview"
+        aria-hidden={!expandedProduct}
       >
-        {shouldShowHero ? (
-          <StoreHero3D paused={isHeroPaused} />
-        ) : (
-          <div className="w-full h-100 bg-gradient-to-b from-black via-zinc-900/50 to-black flex items-center justify-center">
-            <ShimmerRadialGlow color="white" intensity="low" />
-            <ShimmerSpinner size={48} color="white" />
+        <div className="mx-auto w-full max-w-6xl px-5">
+          <div className="overflow-hidden rounded-3xl border border-black/10 bg-white shadow-[0_12px_40px_rgba(0,0,0,0.08)] backdrop-blur-xl">
+            <div className="flex items-center gap-4 px-5 py-4">
+              <div className="h-16 w-16 overflow-hidden rounded-2xl bg-black/5">
+                {expandedPrimaryImage ? (
+                  <img
+                    src={expandedPrimaryImage}
+                    alt={expandedProduct?.name || 'Product preview'}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-xs" style={{ color: 'rgba(0,0,0,0.45)' }}>
+                    Preview
+                  </div>
+                )}
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'rgba(0,0,0,0.45)' }}>
+                  Quick add
+                </p>
+                <div className="mt-1 flex flex-wrap items-center gap-3">
+                  <h3 className="truncate text-lg font-semibold tracking-tight">{expandedProduct?.name}</h3>
+                  {expandedProduct && (
+                    <span className="rounded-full bg-black/5 px-3 py-1 text-sm font-medium" style={{ color: 'rgba(0,0,0,0.7)' }}>
+                      {formatPrice(expandedProduct.base_price)}
+                    </span>
+                  )}
+                </div>
+                <p className="mt-2 line-clamp-2 text-sm" style={{ color: 'rgba(0,0,0,0.6)' }}>
+                  {expandedProduct?.short_description || expandedProduct?.description || 'A focused essential designed for the desk.'}
+                </p>
+                <div className="mt-2 flex flex-wrap items-center gap-3 text-xs" style={{ color: 'rgba(0,0,0,0.6)' }}>
+                  {expandedVariant?.name && <span>{expandedVariant.name}</span>}
+                  {expandedInventory !== undefined && (
+                    <span className={`rounded-full px-2 py-1 ${expandedInStock ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+                      {expandedInStock ? `${Math.max(0, expandedInventory)} in stock` : 'Out of stock'}
+                    </span>
+                  )}
+                </div>
+                <div className="mt-3 w-full grid grid-cols-2 gap-2 text-xs font-semibold">
+                  <button
+                    type="button"
+                    onClick={() => handleExpandedBuy('cart')}
+                    disabled={!expandedInStock}
+                    className={`rounded-full px-3 py-2 inline-flex items-center justify-center gap-2 ${
+                      expandedInStock
+                        ? 'bg-black text-white hover:bg-black/90'
+                        : 'bg-black/10 text-black/40 cursor-not-allowed'
+                    }`}
+                  >
+                    <ShoppingBag className="h-3.5 w-3.5" />
+                    Add to Cart
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleExpandedBuy('whop')}
+                    disabled={!expandedInStock}
+                    className={`rounded-full px-3 py-2 inline-flex items-center justify-center gap-2 ${
+                      expandedInStock
+                        ? 'bg-white border border-black/10 text-black hover:bg-black/5'
+                        : 'bg-black/10 text-black/40 cursor-not-allowed'
+                    }`}
+                  >
+                    <CreditCard className="h-3.5 w-3.5" />
+                    Pay with Whop
+                  </button>
+                  <button
+                    type="button"
+                    disabled
+                    className="rounded-full px-3 py-2 inline-flex items-center justify-center gap-2 bg-black/10 text-black/40 cursor-not-allowed"
+                  >
+                    <CreditCard className="h-3.5 w-3.5" />
+                    Skrill - Soon
+                  </button>
+                  <button
+                    type="button"
+                    disabled
+                    className="rounded-full px-3 py-2 inline-flex items-center justify-center gap-2 bg-black/10 text-black/40 cursor-not-allowed"
+                  >
+                    <CreditCard className="h-3.5 w-3.5" />
+                    Stripe - Soon
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col items-end gap-2 sm:flex-row">
+                <Link
+                  href={expandedDetailsHref}
+                  className="rounded-full border border-black/10 px-4 py-2 text-xs font-semibold"
+                  style={{ color: 'rgba(0,0,0,0.75)' }}
+                  onClick={() => setExpandedProduct(null)}
+                >
+                  View details
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setExpandedProduct(null)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-black/10"
+                  style={{ color: 'rgba(0,0,0,0.6)' }}
+                  aria-label="Close quick add"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
           </div>
-        )}
+        </div>
       </div>
 
-      {/* World Map / Flying Posters Section - Toggle between views */}
       <section
-        className={`relative w-full overflow-hidden bg-black transition-all duration-700 ease-in-out ${
-          showInfiniteMenu ? 'min-h-[80vh] md:min-h-[120vh]' : 'min-h-[50vh] md:h-screen'
-        }`}
+        ref={hero.ref}
+        data-apple-section
         style={{
-          contain: 'style paint',
-          contentVisibility: 'auto',
-          containIntrinsicSize: showInfiniteMenu ? 'auto 120vh' : 'auto 50vh',
-        } as React.CSSProperties}
-        data-allow-scroll
-        data-content
+          backgroundColor: 'rgb(255,255,255)',
+          borderBottom: '1px solid rgba(0,0,0,0.06)',
+        }}
       >
-        {/* Toggle Button */}
-        <div className="absolute top-4 right-4 z-30">
-          <button
-            onClick={() => setShowInfiniteMenu(prev => !prev)}
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm font-medium hover:bg-white/20 transition-all duration-300"
+        <div className="relative min-h-screen w-full overflow-hidden">
+          {heroMedia}
+          {showHeroMapOverlay && (
+            <div className="absolute inset-0 z-[2] pointer-events-none bg-white/85">
+              <WorldMap dots={HERO_WORLD_MAP_DOTS} lineColor="#00D4FF" forceVisible forceLite showCryptoCoins />
+            </div>
+          )}
+          <div
+            className="absolute inset-0 z-[1]"
+            style={{
+              background: 'rgba(0,0,0,0.35)',
+              mixBlendMode: 'multiply',
+              pointerEvents: 'none',
+            }}
+          />
+          <div
+            className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl flex-col justify-center px-6 sm:px-10 pointer-events-none"
+            style={{ paddingTop: 48 + paddingBoost, paddingBottom: 40 + paddingBoost }}
           >
-            {showInfiniteMenu ? (
-              <><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Map View</>
-            ) : (
-              <><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg> Partners</>
-            )}
-          </button>
+            <div className="flex items-center gap-3" style={{ color: heroTitleColor, textShadow: heroTextShadow }}>
+              <img
+                src="/IMG_2921.PNG"
+                alt="BullMoney"
+                className="h-16 w-auto sm:h-18"
+                loading="eager"
+                decoding="async"
+              />
+              <p className="text-[11px] uppercase tracking-[0.32em]" style={{ color: heroMetaColor }}>
+                BullMoney Store
+              </p>
+            </div>
+            <h1
+              className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight"
+              style={{ color: heroTitleColor, textShadow: heroTitleShadow }}
+            >
+              Premium trading essentials, built for focus.
+            </h1>
+            <p
+              className="mt-4 max-w-2xl text-sm sm:text-base"
+              style={{ color: heroBodyColor, textShadow: heroBodyShadow }}
+            >
+              Clean materials, calm layouts, and purposeful gear for traders who value clarity.
+            </p>
+            <div className="mt-6 flex flex-wrap items-center gap-3 pointer-events-auto sm:flex-row lg:flex-col lg:items-start lg:w-full">
+              <button
+                type="button"
+                onClick={handleOpenVip}
+                className="rounded-full border-2 border-white/40 bg-white/10 px-5 py-2 text-[11px] sm:text-sm font-semibold uppercase tracking-[0.08em] text-white backdrop-blur-sm transition-transform duration-200 hover:-translate-y-0.5 hover:border-white/60 hover:bg-white/20"
+              >
+                GET VIP
+              </button>
+              <button
+                type="button"
+                onClick={handleVisitShop}
+                className="rounded-full border-2 px-5 py-2 text-[11px] sm:text-sm font-semibold uppercase tracking-[0.08em] text-white transition-transform duration-200 hover:-translate-y-0.5 lg:self-end"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(41, 151, 255, 0.2), rgba(41, 151, 255, 0.1))',
+                  borderColor: 'rgba(41, 151, 255, 0.45)',
+                }}
+              >
+                Visit Shop
+              </button>
+            </div>
+          </div>
         </div>
-
-        {/* World Map View */}
-        {!showInfiniteMenu && shouldShowWorldMap && (
-          <div className="absolute inset-0 z-0">
-            <WorldMap
-              dots={worldMapDots}
-              lineColor="#ffffff"
-            />
-          </div>
-        )}
-
-        {/* Flying Posters View */}
-        {showInfiniteMenu && shouldShowWorldMap && (
-          <div className="absolute inset-0 z-0">
-            <FlyingPosters
-              items={flyingPosterImages}
-              planeWidth={160}
-              planeHeight={160}
-              distortion={2}
-              scrollEase={0.01}
-              cameraFov={50}
-              cameraZ={12}
-              style={{ width: '100%', height: '100%' }}
-            />
-          </div>
-        )}
-
-        {/* Overlay Text — only show on map view */}
-        {!showInfiniteMenu && (
-          <div className="absolute inset-x-0 top-8 md:inset-0 z-10 flex items-start md:items-center justify-center">
-            <div className="text-center px-4">
-              <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
-                Pay With Crypto
-              </h2>
-              <p className="text-white/60 text-base md:text-xl max-w-2xl mx-auto">
-                Our store accepts Bitcoin, Ethereum & more
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Overlay Text — Infinite Menu view */}
-        {showInfiniteMenu && (
-          <div className="absolute inset-x-0 top-8 z-10 flex justify-center pointer-events-none">
-            <div className="text-center px-4">
-              <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold text-white mb-2 drop-shadow-lg">
-                Our Partners
-              </h2>
-              <p className="text-white/50 text-sm md:text-lg max-w-2xl mx-auto">
-                Trusted brokers & prop firms we work with
-              </p>
-            </div>
-          </div>
-        )}
       </section>
 
-      {/* Main Content */}
-      <section 
-        className="relative z-50 max-w-450 mx-auto px-4 md:px-8 pt-2 pb-4 md:py-12 bg-black" 
-        style={{
-          isolation: 'isolate',
-          height: 'auto',
-          overflow: 'visible',
-          contain: 'layout style',
-        }}
-        data-allow-scroll
-        data-content
+      <section
+        data-apple-section
+        style={{ backgroundColor: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.04)' }}
       >
-        {/* Search and Filters Bar */}
-        <div className="flex flex-col gap-2 mb-3 md:gap-4 md:mb-8">
-          {/* Search Row */}
-          <div className="flex gap-2">
-            {/* Search Input - Full width on mobile */}
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 md:w-5 md:h-5" />
+        <div className="mx-auto w-full max-w-[26rem] sm:max-w-3xl lg:max-w-[90rem] px-4 sm:px-8" style={{ paddingTop: 24, paddingBottom: 32 }}>
+          <div className="flex flex-col gap-3">
+            <p className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'rgba(0,0,0,0.45)' }}>
+              Live dashboards
+            </p>
+            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">Market intelligence.</h2>
+            <p className="text-sm sm:text-base max-w-2xl" style={{ color: 'rgba(0,0,0,0.6)' }}>
+              A streamlined look at quotes, headlines, and community signals tailored for the store.
+            </p>
+          </div>
+
+          <div className="mt-6 lg:hidden">
+            <ToastProvider>
+              <QuotesSection />
+              <BreakingNewsSection />
+              <TelegramSection />
+            </ToastProvider>
+          </div>
+
+          <div className="mt-6 hidden lg:grid gap-4 lg:gap-6 lg:grid-cols-3 items-stretch justify-items-stretch">
+            <div className="w-full rounded-2xl sm:rounded-3xl border border-black/10 bg-white p-3 sm:p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] text-left">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold">Market Quotes</h3>
+                <span className="rounded-full border border-black/10 px-2 py-1 text-[10px] uppercase tracking-[0.24em]" style={{ color: 'rgba(0,0,0,0.5)' }}>
+                  Live
+                </span>
+              </div>
+              <div className="mt-3 sm:mt-4 overflow-hidden rounded-2xl border border-black/5 bg-white min-h-[320px] sm:min-h-[420px]">
+                <div
+                  className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain"
+                  style={{ filter: 'invert(1) hue-rotate(180deg)' }}
+                >
+                  <MetaTraderQuotes embedded />
+                </div>
+              </div>
+            </div>
+
+            <div className="w-full rounded-2xl sm:rounded-3xl border border-black/10 bg-white p-3 sm:p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] text-left">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold">Breaking News</h3>
+                <span className="rounded-full border border-black/10 px-2 py-1 text-[10px] uppercase tracking-[0.24em]" style={{ color: 'rgba(0,0,0,0.5)' }}>
+                  Live
+                </span>
+              </div>
+              <div className="mt-3 sm:mt-4 overflow-hidden rounded-2xl border border-black/5 bg-white min-h-[320px] sm:min-h-[420px]">
+                <div
+                  className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain"
+                  style={{ filter: 'invert(1) hue-rotate(180deg)' }}
+                >
+                  <BreakingNewsTicker />
+                </div>
+              </div>
+            </div>
+
+            <div className="w-full rounded-2xl sm:rounded-3xl border border-black/10 bg-white p-3 sm:p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] text-left">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold">Community Signals</h3>
+                <span className="rounded-full border border-black/10 px-2 py-1 text-[10px] uppercase tracking-[0.24em]" style={{ color: 'rgba(0,0,0,0.5)' }}>
+                  Live
+                </span>
+              </div>
+              <div className="mt-3 sm:mt-4 overflow-hidden rounded-2xl border border-black/5 bg-white min-h-[320px] sm:min-h-[420px]">
+                <div
+                  className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain"
+                  style={{ filter: 'invert(1) hue-rotate(180deg)' }}
+                >
+                  <BullMoneyCommunity />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        data-apple-section
+        style={{ backgroundColor: 'rgb(255,255,255)' }}
+      >
+        <div className="mx-auto w-full max-w-7xl px-5 sm:px-8" style={{ paddingTop: 28 + paddingBoost, paddingBottom: 28 + paddingBoost }}>
+          <div className="flex flex-col gap-3">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2" style={{ color: 'rgba(0,0,0,0.35)' }} />
               <input
                 type="text"
-                placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-9 pl-8 pr-3 bg-white/5 border border-white/10 rounded-xl text-[12px]
-                         text-white placeholder:text-white/40 focus:outline-none focus:border-white/20
-                         focus:bg-white/[0.07] transition-all md:h-12 md:pl-12 md:text-base"
+                placeholder="Search products"
+                className="h-11 w-full rounded-full border border-black/10 bg-white pl-11 pr-10 text-sm outline-none"
+                style={{
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                }}
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white active:scale-95"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1"
+                  style={{ color: 'rgba(0,0,0,0.5)' }}
+                  aria-label="Clear search"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="h-4 w-4" />
                 </button>
               )}
               <SearchAutocomplete
                 searchQuery={searchQuery}
-                onSelect={(query) => { setSearchQuery(query); }}
-                onProductSelect={(slug) => { router.push(`/store/product/${slug}`); }}
+                onSelect={(query) => setSearchQuery(query)}
               />
             </div>
 
-            {/* Filters Button - Mobile */}
-            <button
-              onClick={() => setShowFilters(true)}
-              className="h-12 w-12 md:hidden flex items-center justify-center bg-white/5 border border-white/10
-                       rounded-xl text-white active:bg-white/10 transition-colors relative"
-            >
-              <SlidersHorizontal className="w-5 h-5" />
-              {hasActiveFilters && (
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full" />
-              )}
-            </button>
-          </div>
-
-          {/* Desktop Controls Row */}
-          <div className="hidden md:flex items-center gap-3">
-            {/* Category Dropdown */}
-            <div className="relative">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
               <select
                 value={filters.category || ''}
                 onChange={(e) => handleFilterChange({ category: e.target.value })}
-                className="h-12 pl-4 pr-10 bg-white/5 border border-white/10 rounded-xl
-                         text-white appearance-none cursor-pointer focus:outline-none
-                         focus:border-white/20 hover:bg-white/[0.07] transition-all"
+                className="h-10 rounded-full border border-black/10 bg-white px-4 text-sm outline-none"
               >
-                {CATEGORIES.map(cat => (
-                  <option key={cat.value} value={cat.value} className="bg-black">
+                {CATEGORIES.map((cat) => (
+                  <option key={cat.value} value={cat.value}>
                     {cat.label}
                   </option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />
-            </div>
 
-            {/* Sort Dropdown */}
-            <div className="relative">
               <select
                 value={filters.sort_by || 'newest'}
                 onChange={(e) => handleFilterChange({ sort_by: e.target.value as ProductFilters['sort_by'] })}
-                className="h-12 pl-4 pr-10 bg-white/5 border border-white/10 rounded-xl
-                         text-white appearance-none cursor-pointer focus:outline-none
-                         focus:border-white/20 hover:bg-white/[0.07] transition-all"
+                className="h-10 rounded-full border border-black/10 bg-white px-4 text-sm outline-none"
               >
-                {SORT_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value} className="bg-black">
+                {SORT_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
                     {opt.label}
                   </option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />
-            </div>
 
-            {/* Filters Button - Desktop */}
-            <button
-              onClick={() => { sounds.filterApply(); setShowFilters(true); }}
-              className="h-12 px-4 flex items-center gap-2 bg-white/5 border border-white/10
-                       rounded-xl text-white hover:bg-white/10 transition-colors"
-            >
-              <SlidersHorizontal className="w-4 h-4" />
-              <span>Filters</span>
               {hasActiveFilters && (
-                <span className="w-2 h-2 bg-white rounded-full" />
+                <button
+                  onClick={clearFilters}
+                  className="h-10 rounded-full border border-black/10 px-4 text-sm"
+                  style={{ color: 'rgba(0,0,0,0.6)' }}
+                >
+                  Clear filters
+                </button>
               )}
-            </button>
 
-            {/* Spacer */}
-            <div className="flex-1" />
-
-            {/* Grid Layout Dropdown - Desktop */}
-            <div className="relative hidden md:block" ref={gridLayoutRef}>
               <button
-                onClick={() => { sounds.buttonClick(); setGridLayoutOpen(!gridLayoutOpen); }}
-                className={`h-11 px-5 flex items-center gap-2.5 rounded-full transition-all duration-200 ${
-                  gridLayoutOpen
-                    ? 'bg-white text-black shadow-lg shadow-white/10'
-                    : 'bg-white/[0.08] text-white/90 hover:bg-white/[0.14] border border-white/[0.08]'
-                }`}
+                type="button"
+                onClick={() => setUseGridLayouts((prev) => !prev)}
+                className="h-10 rounded-full border border-black/10 px-4 text-sm"
+                style={{ color: 'rgba(0,0,0,0.6)' }}
+                aria-pressed={useGridLayouts}
               >
-                <LayoutGrid className="w-4 h-4" />
-                <span className="text-[13px] font-semibold tracking-tight">Layout</span>
-                <ChevronDown className={`w-3.5 h-3.5 opacity-60 transition-transform duration-200 ${gridLayoutOpen ? 'rotate-180' : ''}`} />
+                {useGridLayouts ? 'Standard view' : 'Grid view'}
               </button>
-
-              {gridLayoutOpen && (
-                <div className="absolute right-0 top-full mt-3 z-[9999] w-[280px] bg-[#1c1c1e] border border-white/[0.08] rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.7)] p-5 space-y-5">
-                  {/* View Mode */}
-                  <div>
-                    <span className="text-white/40 text-[11px] font-semibold uppercase tracking-[0.08em]">View</span>
-                    <div className="grid grid-cols-4 gap-1.5 mt-2.5">
-                      {[
-                        { mode: 'carousel' as const, icon: Layers, label: 'Carousel' },
-                        { mode: 'circular' as const, icon: Rows3, label: 'Circular' },
-                        { mode: 'animated' as const, icon: Sparkles, label: 'Animated' },
-                        { mode: 'grid' as const, icon: LayoutGrid, label: 'Grid' },
-                      ].map(({ mode, icon: Icon, label }) => (
-                        <button
-                          key={mode}
-                          onClick={() => { sounds.buttonClick(); setViewMode(mode); }}
-                          className={`h-10 rounded-xl flex flex-col items-center justify-center gap-1 text-[10px] font-medium transition-all duration-150 ${
-                            viewMode === mode
-                              ? 'bg-white text-black shadow-sm'
-                              : 'bg-white/[0.06] text-white/60 hover:bg-white/[0.12] hover:text-white/90'
-                          }`}
-                        >
-                          <Icon className="w-4 h-4" />
-                          <span>{label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="h-px bg-white/[0.06]" />
-
-                  {/* Columns */}
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-white/40 text-[11px] font-semibold uppercase tracking-[0.08em]">Columns</span>
-                      <span className="text-white/80 text-[13px] font-bold tabular-nums">{desktopColumns}</span>
-                    </div>
-                    <div className="mt-2.5">
-                      <input
-                        type="range"
-                        min={1}
-                        max={10}
-                        step={1}
-                        value={desktopColumns}
-                        onChange={(e) => setDesktopColumns(Number(e.target.value))}
-                        className="w-full h-1.5 appearance-none bg-white/[0.08] rounded-full outline-none cursor-pointer
-                          [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4
-                          [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md
-                          [&::-webkit-slider-thumb]:hover:scale-110 [&::-webkit-slider-thumb]:transition-transform
-                          [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full
-                          [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-md"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Rows */}
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-white/40 text-[11px] font-semibold uppercase tracking-[0.08em]">Rows</span>
-                      <span className="text-white/80 text-[13px] font-bold tabular-nums">
-                        {isFinite(desktopRows) ? desktopRows : '∞'}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 mt-2.5">
-                      <input
-                        type="range"
-                        min={1}
-                        max={10}
-                        step={1}
-                        value={isFinite(desktopRows) ? desktopRows : 10}
-                        onChange={(e) => setDesktopRows(Number(e.target.value))}
-                        className="flex-1 h-1.5 appearance-none bg-white/[0.08] rounded-full outline-none cursor-pointer
-                          [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4
-                          [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md
-                          [&::-webkit-slider-thumb]:hover:scale-110 [&::-webkit-slider-thumb]:transition-transform
-                          [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full
-                          [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-md"
-                      />
-                      <button
-                        onClick={() => setDesktopRows(isFinite(desktopRows) ? Infinity : 2)}
-                        className={`shrink-0 h-8 w-8 rounded-lg text-[14px] font-bold transition-all duration-150 ${
-                          !isFinite(desktopRows)
-                            ? 'bg-white text-black shadow-sm'
-                            : 'bg-white/[0.06] text-white/50 hover:bg-white/[0.12] hover:text-white/90'
-                        }`}
-                        title="Show all rows"
-                      >
-                        ∞
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
-          </div>
-
-          {/* Mobile Sort Dropdown */}
-          <div className="md:hidden relative">
-            <select
-              value={filters.sort_by || 'newest'}
-              onChange={(e) => handleFilterChange({ sort_by: e.target.value as ProductFilters['sort_by'] })}
-              className="w-full h-9 pl-3 pr-9 bg-white/5 border border-white/10 rounded-xl
-                       text-white/80 text-[11px] appearance-none cursor-pointer focus:outline-none
-                       focus:border-white/20 transition-all"
-            >
-              {SORT_OPTIONS.map(opt => (
-                <option key={opt.value} value={opt.value} className="bg-black">
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />
           </div>
         </div>
+      </section>
 
-        {/* Active Filters */}
-        {hasActiveFilters && (
-          <MotionDiv 
-            className="flex flex-wrap items-center gap-2 mb-6"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            {debouncedSearch && (
-              <span className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm flex items-center gap-2">
-                &ldquo;{debouncedSearch}&rdquo;
-                <button onClick={() => { setSearchQuery(''); setDebouncedSearch(''); }}>
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
-            {filters.category && (
-              <span className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm flex items-center gap-2">
-                {CATEGORIES.find(c => c.value === filters.category)?.label}
-                <button onClick={() => handleFilterChange({ category: '' })}>
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
-            {(filters.min_price || filters.max_price) && (
-              <span className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm flex items-center gap-2">
-                ${filters.min_price || 0} - ${filters.max_price || '∞'}
-                <button onClick={() => handleFilterChange({ min_price: undefined, max_price: undefined })}>
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
-            <button
-              onClick={clearFilters}
-              className="px-3 py-1.5 text-white/60 hover:text-white text-sm transition-colors"
-            >
-              Clear all
-            </button>
-          </MotionDiv>
-        )}
+      <section
+        ref={productsSection.ref}
+        data-apple-section
+        data-products-grid
+        style={{
+          backgroundColor: 'rgb(255,255,255)',
+          borderTop: '1px solid rgba(0,0,0,0.04)',
+        }}
+      >
+        <div className="mx-auto w-full max-w-7xl px-5 sm:px-8" style={{ paddingTop: 24, paddingBottom: 56 }}>
+          <div className="flex items-center justify-between">
+            <p className="text-sm" style={{ color: 'rgba(0,0,0,0.5)' }}>
+              {loading ? 'Loading products...' : `${total} ${total === 1 ? 'product' : 'products'}`}
+            </p>
+          </div>
 
-        {/* Results Count */}
-        <div className="flex items-center justify-between mb-2 md:mb-6">
-          <p className="text-white/40 text-sm min-w-0 flex-shrink">
-            {loading ? 'Loading...' : `${total} ${total === 1 ? 'product' : 'products'}`}
-          </p>
-          {/* Mobile Grid Layout Dropdown */}
-          <div className="relative md:hidden" ref={gridLayoutMobileRef}>
-            <button
-              onClick={() => setGridLayoutOpen(!gridLayoutOpen)}
-              className={`h-9 px-3.5 flex items-center gap-2 rounded-full transition-all duration-200 ${
-                gridLayoutOpen
-                  ? 'bg-white text-black shadow-lg shadow-white/10'
-                  : 'bg-white/[0.08] text-white/90 border border-white/[0.08]'
-              }`}
-            >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              <span className="text-[12px] font-semibold tracking-tight">Layout</span>
-              <ChevronDown className={`w-3 h-3 opacity-60 transition-transform duration-200 ${gridLayoutOpen ? 'rotate-180' : ''}`} />
-            </button>
-
-            {gridLayoutOpen && (
-              <div className="absolute right-0 top-full mt-2.5 z-[9999] w-[260px] bg-[#1c1c1e] border border-white/[0.08] rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.7)] p-4 space-y-4">
-                {/* View Mode */}
-                <div>
-                  <span className="text-white/40 text-[10px] font-semibold uppercase tracking-[0.08em]">View</span>
-                  <div className="grid grid-cols-4 gap-1 mt-2">
-                    {[
-                      { mode: 'carousel' as const, icon: Layers, label: 'Carousel' },
-                      { mode: 'circular' as const, icon: Rows3, label: 'Circular' },
-                      { mode: 'animated' as const, icon: Sparkles, label: 'Animated' },
-                      { mode: 'grid' as const, icon: LayoutGrid, label: 'Grid' },
-                    ].map(({ mode, icon: Icon, label }) => (
-                      <button
-                        key={mode}
-                        onClick={() => setViewMode(mode)}
-                        className={`h-11 rounded-xl flex flex-col items-center justify-center gap-0.5 text-[9px] font-semibold transition-all duration-150 ${
-                          viewMode === mode
-                            ? 'bg-white text-black shadow-sm'
-                            : 'bg-white/[0.06] text-white/60 active:bg-white/[0.15]'
-                        }`}
-                      >
-                        <Icon className="w-4 h-4" />
-                        <span>{label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="h-px bg-white/[0.06]" />
-
-                {/* Columns */}
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-white/40 text-[10px] font-semibold uppercase tracking-[0.08em]">Columns</span>
-                    <span className="text-white/80 text-[12px] font-bold tabular-nums">{mobileColumns}</span>
-                  </div>
-                  <div className="mt-2">
-                    <input
-                      type="range"
-                      min={1}
-                      max={6}
-                      step={1}
-                      value={mobileColumns}
-                      onChange={(e) => setMobileColumns(Number(e.target.value))}
-                      className="w-full h-1.5 appearance-none bg-white/[0.08] rounded-full outline-none cursor-pointer
-                        [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5
-                        [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md
-                        [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full
-                        [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-md"
-                    />
-                  </div>
-                </div>
-
-                {/* Rows */}
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-white/40 text-[10px] font-semibold uppercase tracking-[0.08em]">Rows</span>
-                    <span className="text-white/80 text-[12px] font-bold tabular-nums">
-                      {isFinite(mobileRows) ? mobileRows : '∞'}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3 mt-2">
-                    <input
-                      type="range"
-                      min={1}
-                      max={10}
-                      step={1}
-                      value={isFinite(mobileRows) ? mobileRows : 10}
-                      onChange={(e) => setMobileRows(Number(e.target.value))}
-                      className="flex-1 h-1.5 appearance-none bg-white/[0.08] rounded-full outline-none cursor-pointer
-                        [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5
-                        [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md
-                        [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full
-                        [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-md"
-                    />
+          {loading ? (
+            <div className="mt-6 rounded-2xl border border-black/5 bg-white p-10 text-center">
+              <div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-black/10 border-t-black/40" />
+              <p className="mt-4 text-sm" style={{ color: 'rgba(0,0,0,0.5)' }}>
+                Fetching the latest collection...
+              </p>
+            </div>
+          ) : products.length === 0 ? (
+            <div className="mt-8 rounded-2xl border border-black/5 bg-white p-12 text-center">
+              <p className="text-base font-medium">No products found</p>
+              <p className="mt-2 text-sm" style={{ color: 'rgba(0,0,0,0.5)' }}>
+                Adjust your filters or search again.
+              </p>
+              <button
+                onClick={clearFilters}
+                className="mt-6 rounded-full border border-black/10 px-6 py-2 text-sm"
+              >
+                Reset filters
+              </button>
+            </div>
+          ) : useGridLayouts ? (
+            <div className="mt-6">
+              <AnimatedProductGrid products={products} rows={2} columns={4} rowHeight={360} gap={16} />
+            </div>
+          ) : (
+            <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {products.map((product) => (
+                <div key={product.id} className="h-full pb-14 sm:pb-16">
+                  <ProductCard product={product} />
+                  <div className="mt-4 flex items-center justify-end gap-2 relative z-10 pointer-events-auto">
                     <button
-                      onClick={() => setMobileRows(isFinite(mobileRows) ? Infinity : 2)}
-                      className={`shrink-0 h-8 w-8 rounded-lg text-[14px] font-bold transition-all duration-150 ${
-                        !isFinite(mobileRows)
-                          ? 'bg-white text-black shadow-sm'
-                          : 'bg-white/[0.06] text-white/50 active:bg-white/[0.15]'
-                      }`}
-                      title="Show all rows"
+                      type="button"
+                      onClick={() => setViewerProduct(product)}
+                      className="inline-flex rounded-full border border-black/10 px-3 py-2 sm:px-3.5 sm:py-2.5 text-center text-[10px] sm:text-[11px] font-medium min-h-[34px]"
+                      style={{ color: 'rgba(0,0,0,0.7)' }}
                     >
-                      ∞
+                      View
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleAddClick(product)}
+                      disabled={!canAddToCart(product)}
+                      className="inline-flex rounded-full px-4 py-2.5 sm:px-5 sm:py-3 text-[11px] sm:text-xs font-semibold min-h-[40px] whitespace-nowrap"
+                      style={canAddToCart(product)
+                        ? { backgroundColor: '#111111', color: '#ffffff' }
+                        : { backgroundColor: 'rgba(0,0,0,0.12)', color: 'rgba(0,0,0,0.4)' }
+                      }
+                    >
+                      Add to bag
                     </button>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Product Grid / Circular Gallery */}
-        <div
-          ref={productsSection.ref}
-          data-products-grid
-          data-allow-scroll
-          data-content
-          style={{
-            contain: 'layout style',
-            contentVisibility: 'auto',
-            containIntrinsicSize: 'auto 800px',
-          } as React.CSSProperties}
-        >
-        {loading ? (
-          viewMode === 'carousel' ? (
-            <div className="flex gap-4 md:gap-6 overflow-hidden py-6 md:py-10">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="w-[280px] md:w-96 h-[400px] md:h-[500px] shrink-0 bg-white/5 animate-pulse rounded-3xl"
-                />
               ))}
             </div>
-          ) : viewMode === 'circular' ? (
-            <div className="flex flex-col gap-4">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="w-full h-75 md:h-100 bg-white/5 animate-pulse rounded-xl"
-                />
-              ))}
-            </div>
-          ) : viewMode === 'animated' ? (
-          <div className="flex flex-col gap-4">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div
-                key={i}
-                className="w-full h-70 md:h-90 bg-white/5 animate-pulse rounded-2xl"
-              />
-            ))}
-          </div>
-          ) : (
-          <div className={`grid ${getGridClasses(mobileColumns, desktopColumns)} gap-3 gap-y-6 sm:gap-4 sm:gap-y-8 md:gap-5 md:gap-y-10 lg:gap-y-12 pb-8`}>
-            {Array.from({ length: 12 }).map((_, i) => (
-              <div
-                key={i}
-                className="bg-white/5 animate-pulse aspect-3/4 rounded-lg sm:rounded-xl md:rounded-2xl"
-              />
-            ))}
-          </div>
-          )
-        ) : products.length === 0 ? (
-          <MotionDiv 
-            className="text-center py-16 md:py-20"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-white/5 flex items-center justify-center">
-              <Search className="w-8 h-8 text-white/20" />
-            </div>
-            <p className="text-white/60 text-lg mb-2">No products found</p>
-            <p className="text-white/40 text-sm mb-6">Try adjusting your filters or search term</p>
-            <button
-              onClick={clearFilters}
-              className="px-6 py-3 bg-white text-black rounded-xl hover:bg-white/90 active:scale-95 transition-all"
-            >
-              Clear filters
-            </button>
-          </MotionDiv>
-        ) : viewMode === 'carousel' ? (
-          /* Carousel View - Apple Cards Style */
-          <MotionDiv
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="-mx-4 md:-mx-8"
-          >
-            <ProductsCarousel
-              products={products}
-              title="All Products"
-              subtitle={`${total} ${total === 1 ? 'product' : 'products'} available`}
-              infinite={true}
-              onLoadMore={hasMore ? () => fetchProducts(page + 1, true) : undefined}
-              hasMore={hasMore}
-              loading={loadingMore}
-              mobileColumns={mobileColumns}
-              desktopColumns={desktopColumns}
-              mobileRows={mobileRows}
-              desktopRows={desktopRows}
-            />
-          </MotionDiv>
-        ) : viewMode === 'circular' ? (
-          /* Circular Gallery View - Multiple Rows */
-          <MotionDiv
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="pb-8"
-          >
-            <CircularProductGrid
-              products={gridViewProducts}
-              rowHeight={isMobile ? 300 : 450}
-              itemsPerRow={isMobile ? mobileColumns : desktopColumns}
-              bend={1}
-              borderRadius={0.05}
-              scrollSpeed={2}
-              scrollEase={0.05}
-              textColor="#ffffff"
-              gap={isMobile ? 12 : 20}
-            />
-          </MotionDiv>
-        ) : viewMode === 'animated' ? (
-          /* Animated View - Configurable Rows & Columns */
-          <MotionDiv
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="pb-8"
-          >
-            <AnimatedProductGrid
-              products={gridViewProducts}
-              rowHeight={isMobile ? 280 : 360}
-              columns={isMobile ? mobileColumns : desktopColumns}
-              rows={isMobile ? mobileRows : desktopRows}
-              gap={isMobile ? 12 : 18}
-              scrollSpeed={isMobile ? 18 : 26}
-            />
-          </MotionDiv>
-        ) : (
-          /* Standard Grid View */
-          <MotionDiv 
-            className="pb-8 relative"
-            style={{ isolation: 'isolate', zIndex: 10, height: 'auto', overflow: 'visible', minHeight: 'auto', contain: 'layout style' }}
-          >
-            <HoverEffect
-              items={products as ProductWithDetails[]}
-              layout="custom"
-              className={`grid ${getGridClasses(mobileColumns, desktopColumns)} gap-3 gap-y-6 sm:gap-4 sm:gap-y-8 md:gap-5 md:gap-y-10 lg:gap-y-12`}
-              getKey={gridGetKey}
-              getLink={gridGetLink}
-              renderItem={gridRenderItem}
-            />
-          </MotionDiv>
-        )}
-        </div>
+          )}
 
-        {/* Featured Products - Timeline / Grid Toggle - AFTER products section */}
-        {shouldShowFeatured && !loading && focusCards.length > 0 && (
-          <section 
-            ref={(el) => { 
-              if (typeof featured.ref === 'function') featured.ref(el); 
-              if (featuredSectionRef) featuredSectionRef.current = el; 
-            }} 
-            className="-mx-4 md:-mx-8 mb-6 md:mb-8 bg-black rounded-2xl py-6 mt-12"
-            style={{
-              contentVisibility: 'auto',
-              containIntrinsicSize: 'auto 600px',
-            } as React.CSSProperties}
-          >
-            {/* Toggle Header */}
-            <div className="flex flex-col items-center px-4 md:px-8 mb-6">
-              <h2 className="text-sm md:text-lg font-semibold text-white/80 tracking-wide uppercase mb-4">
-                Featured Products
-              </h2>
-              <div className="flex items-center gap-4 md:gap-6 perspective-[800px]">
-                <button
-                  onClick={() => handleFeaturedViewChange('timeline')}
-                  className={`group relative flex items-center gap-2 px-5 py-2.5 md:px-7 md:py-3 rounded-2xl text-xs md:text-sm font-bold tracking-wide uppercase transition-all duration-300 border-2 [transform-style:preserve-3d] ${
-                    featuredViewMode === 'timeline'
-                      ? 'bg-white text-black border-transparent shadow-[0_8px_30px_rgba(255,255,255,0.3),0_0_60px_rgba(255,0,0,0.15),0_0_60px_rgba(0,255,0,0.15),0_0_60px_rgba(0,100,255,0.15)] translate-y-0 [transform:rotateX(0deg)_translateZ(12px)] hover:[transform:rotateX(-5deg)_translateZ(20px)] hover:shadow-[0_12px_40px_rgba(255,255,255,0.4),0_0_80px_rgba(255,0,0,0.2),0_0_80px_rgba(0,255,0,0.2),0_0_80px_rgba(0,100,255,0.2)]'
-                      : 'bg-black text-white/70 border-white/10 shadow-[0_4px_15px_rgba(0,0,0,0.5)] [transform:rotateX(8deg)_translateZ(-4px)] hover:text-white hover:border-white/30 hover:[transform:rotateX(0deg)_translateZ(8px)] hover:shadow-[0_8px_25px_rgba(255,255,255,0.15),0_0_40px_rgba(255,0,0,0.1),0_0_40px_rgba(0,255,0,0.1),0_0_40px_rgba(0,100,255,0.1)]'
-                  }`}
-                >
-                  <Clock className="w-4 h-4 md:w-5 md:h-5" />
-                  <span>Timeline</span>
-                  {featuredViewMode === 'timeline' && (
-                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2/3 h-[3px] rounded-full bg-gradient-to-r from-red-500 via-green-400 to-blue-500 animate-pulse" />
-                  )}
-                </button>
-                <button
-                  onClick={() => handleFeaturedViewChange('grid')}
-                  className={`group relative flex items-center gap-2 px-5 py-2.5 md:px-7 md:py-3 rounded-2xl text-xs md:text-sm font-bold tracking-wide uppercase transition-all duration-300 border-2 [transform-style:preserve-3d] ${
-                    featuredViewMode === 'grid'
-                      ? 'bg-white text-black border-transparent shadow-[0_8px_30px_rgba(255,255,255,0.3),0_0_60px_rgba(255,0,0,0.15),0_0_60px_rgba(0,255,0,0.15),0_0_60px_rgba(0,100,255,0.15)] translate-y-0 [transform:rotateX(0deg)_translateZ(12px)] hover:[transform:rotateX(-5deg)_translateZ(20px)] hover:shadow-[0_12px_40px_rgba(255,255,255,0.4),0_0_80px_rgba(255,0,0,0.2),0_0_80px_rgba(0,255,0,0.2),0_0_80px_rgba(0,100,255,0.2)]'
-                      : 'bg-black text-white/70 border-white/10 shadow-[0_4px_15px_rgba(0,0,0,0.5)] [transform:rotateX(8deg)_translateZ(-4px)] hover:text-white hover:border-white/30 hover:[transform:rotateX(0deg)_translateZ(8px)] hover:shadow-[0_8px_25px_rgba(255,255,255,0.15),0_0_40px_rgba(255,0,0,0.1),0_0_40px_rgba(0,255,0,0.1),0_0_40px_rgba(0,100,255,0.1)]'
-                  }`}
-                >
-                  <LayoutDashboard className="w-4 h-4 md:w-5 md:h-5" />
-                  <span>Grid</span>
-                  {featuredViewMode === 'grid' && (
-                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2/3 h-[3px] rounded-full bg-gradient-to-r from-red-500 via-green-400 to-blue-500 animate-pulse" />
-                  )}
-                </button>
-              </div>
-            </div>
-            {/* Conditional View */}
-            {featuredViewMode === 'timeline' ? (
-              <div
-                className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen transition-all duration-500 ease-in-out"
-                style={{
-                  opacity: timelineVisible ? 1 : 0,
-                  transform: timelineVisible ? 'translateY(0)' : 'translateY(-20px)',
-                  maxHeight: timelineVisible ? '9999px' : '0px',
-                  overflow: 'hidden',
-                }}
+          {hasMore && !loading && (
+            <div className="mt-10 flex justify-center">
+              <button
+                onClick={() => fetchProducts(page + 1, true)}
+                className="h-11 rounded-full border border-black/10 px-6 text-sm"
+                disabled={loadingMore}
+                style={{ backgroundColor: 'rgb(255,255,255)' }}
               >
-                <FeaturedProductsTimeline products={focusCards} />
-              </div>
-            ) : (
-              <div className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen py-6 md:py-10 bg-black">
-                <GlassProductGrid
-                  products={products}
-                  rowHeight={300}
-                  itemsPerRow={999}
-                  gap={14}
-                  scrollSpeed={30}
-                  visibleCount={2}
-                  glassProps={{
-                    borderRadius: 18,
-                    displace: 0.5,
-                    distortionScale: -180,
-                    brightness: 50,
-                    opacity: 0.93,
-                  }}
-                />
-              </div>
-            )}
-          </section>
-        )}
-
-        {/* Load More Trigger */}
-        {hasMore && !loading && (
-          <div ref={loadMoreRef} className="h-20 flex items-center justify-center mt-8">
-            {loadingMore && (
-              <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-            )}
-          </div>
-        )}
+                {loadingMore ? 'Loading more...' : 'Load more'}
+              </button>
+            </div>
+          )}
+        </div>
       </section>
 
-      {/* Fluid Glass 3D Experience Section - stays mounted, CSS hidden off-screen */}
-      <div
-        ref={fluidGlass.ref}
-        className="hidden md:block"
-        style={{
-          minHeight: 400,
-          contain: 'layout style paint',
-          contentVisibility: 'auto',
-          containIntrinsicSize: 'auto 100vh',
-        } as React.CSSProperties}
-        data-allow-scroll
-        data-content
-      >
-        {shouldShowFluidGlass && canRenderHeavyDesktop && (
-          <StoreFluidGlassSection 
-            height="100vh"
-            className="mt-8"
-          />
-        )}
-      </div>
+      {!!featuredProducts.length && (
+        <section
+          ref={featuredSection.ref}
+          data-apple-section
+          style={{ backgroundColor: 'rgb(255,255,255)' }}
+        >
+          <div className="mx-auto w-full max-w-7xl px-5 sm:px-8" style={{ paddingBottom: 64 + paddingBoost }}>
+            <div className="border-t border-black/5 pt-10">
+              <div className="flex items-end justify-between gap-6">
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'rgba(0,0,0,0.45)' }}>
+                    Featured
+                  </p>
+                  <h2 className="mt-3 text-2xl font-semibold tracking-tight">Best sellers this week</h2>
+                </div>
+              </div>
 
-      {/* Store Footer - stays mounted once loaded */}
-      <div
-        ref={footer.ref}
-        style={{
-          contain: 'layout style paint',
-          contentVisibility: 'auto',
-          containIntrinsicSize: 'auto 200px',
-        } as React.CSSProperties}
-        data-allow-scroll
-        data-content
-      >
-        {shouldShowFooter && <StoreFooter />}
-      </div>
-
-      {/* Filter Sheet - Load when interactive */}
-      {showInteractive && (
-        <FilterSheet
-          isOpen={showFilters}
-          onClose={() => setShowFilters(false)}
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          onClear={clearFilters}
-        />
+              {useGridLayouts ? (
+                <div className="mt-6">
+                  <CircularProductGrid products={featuredProducts} itemsPerRow={4} rowHeight={360} bend={1} gap={18} />
+                </div>
+              ) : (
+                <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                  {featuredProducts.map((product) => (
+                    <div key={`featured-${product.id}`} className="h-full pb-14 sm:pb-16">
+                      <ProductCard product={product} />
+                      <div className="mt-4 flex items-center justify-end gap-2 relative z-10 pointer-events-auto">
+                        <button
+                          type="button"
+                          onClick={() => setViewerProduct(product)}
+                          className="inline-flex rounded-full border border-black/10 px-3 py-2 sm:px-3.5 sm:py-2.5 text-center text-[10px] sm:text-[11px] font-medium min-h-[34px]"
+                          style={{ color: 'rgba(0,0,0,0.7)' }}
+                        >
+                          View
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleAddClick(product)}
+                          disabled={!canAddToCart(product)}
+                          className="inline-flex rounded-full px-4 py-2.5 sm:px-5 sm:py-3 text-[11px] sm:text-xs font-semibold min-h-[40px] whitespace-nowrap"
+                          style={canAddToCart(product)
+                            ? { backgroundColor: '#111111', color: '#ffffff' }
+                            : { backgroundColor: 'rgba(0,0,0,0.12)', color: 'rgba(0,0,0,0.4)' }
+                          }
+                        >
+                          Add to bag
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
       )}
 
-      {/* Cookie Consent Banner - Load immediately */}
-      <CookieConsent />
+      {!!timelineProducts.length && (
+        <section data-apple-section style={{ backgroundColor: 'rgb(255,255,255)' }}>
+          <div className="mx-auto w-full max-w-7xl px-5 sm:px-8" style={{ paddingBottom: 80 + paddingBoost }}>
+            <div className="border-t border-black/5 pt-10">
+              {useGridLayouts ? (
+                <ProductsCarousel
+                  products={timelineProducts}
+                  title="Drop highlights"
+                  subtitle="Timeline picks"
+                  mobileRows={1}
+                  desktopRows={1}
+                  scrollSpeed={22}
+                />
+              ) : (
+                <>
+                  <p className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'rgba(0,0,0,0.45)' }}>
+                    Timeline
+                  </p>
+                  <h2 className="mt-3 text-2xl font-semibold tracking-tight">Drop highlights</h2>
+                  <div className="mt-8 space-y-8">
+                    {timelineProducts.map((product, index) => (
+                      <div
+                        key={`timeline-${product.id}`}
+                        className="grid gap-6 border-l border-black/10 pl-6 sm:grid-cols-[200px_1fr]"
+                      >
+                        <div className="text-sm" style={{ color: 'rgba(0,0,0,0.5)' }}>
+                          Drop {index + 1}
+                        </div>
+                        <div className="grid gap-4 sm:grid-cols-[240px_1fr]">
+                          <div className="h-full pb-14 sm:pb-16">
+                            <ProductCard product={product} />
+                            <div className="mt-4 flex items-center justify-end gap-2 relative z-10 pointer-events-auto">
+                              <button
+                                type="button"
+                                onClick={() => setViewerProduct(product)}
+                                className="inline-flex rounded-full border border-black/10 px-3 py-2 sm:px-3.5 sm:py-2.5 text-center text-[10px] sm:text-[11px] font-medium min-h-[34px]"
+                                style={{ color: 'rgba(0,0,0,0.7)' }}
+                              >
+                                View
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleAddClick(product)}
+                                disabled={!canAddToCart(product)}
+                                className="inline-flex rounded-full px-4 py-2.5 sm:px-5 sm:py-3 text-[11px] sm:text-xs font-semibold min-h-[40px] whitespace-nowrap"
+                                style={canAddToCart(product)
+                                  ? { backgroundColor: '#111111', color: '#ffffff' }
+                                  : { backgroundColor: 'rgba(0,0,0,0.12)', color: 'rgba(0,0,0,0.4)' }
+                                }
+                              >
+                                Add to bag
+                              </button>
+                            </div>
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-semibold">{product.name}</h3>
+                            <p className="mt-2 text-sm" style={{ color: 'rgba(0,0,0,0.55)' }}>
+                              {product.description || 'A focused essential designed to keep your trading desk clean, calm, and efficient.'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section
+        data-apple-section
+        style={{ backgroundColor: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.04)' }}
+      >
+        <div className="mx-auto w-full max-w-[90rem] px-4 sm:px-8" style={{ paddingTop: 16, paddingBottom: 32 }}>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="rounded-3xl border border-black/10 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold">Features</h3>
+                <span className="rounded-full border border-black/10 px-2 py-1 text-[10px] uppercase tracking-[0.24em]" style={{ color: 'rgba(0,0,0,0.5)' }}>
+                  Live
+                </span>
+              </div>
+              <div className="mt-4 overflow-hidden rounded-2xl border border-black/5 bg-white">
+                <div className="max-h-[560px] overflow-y-auto" style={{ filter: 'invert(1) hue-rotate(180deg)' }}>
+                  <Features />
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-black/10 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold">Testimonials</h3>
+                <span className="rounded-full border border-black/10 px-2 py-1 text-[10px] uppercase tracking-[0.24em]" style={{ color: 'rgba(0,0,0,0.5)' }}>
+                  Live
+                </span>
+              </div>
+              <div className="mt-4 overflow-hidden rounded-2xl border border-black/5 bg-white">
+                <div className="min-h-[560px] h-full overflow-hidden">
+                  <TestimonialsCarousel tone="light" className="mt-0 max-w-none px-0" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        ref={footerSection.ref}
+        data-apple-section
+        style={{
+          backgroundColor: 'rgb(255,255,255)',
+          borderTop: '1px solid rgba(0,0,0,0.06)',
+        }}
+      >
+        <div
+          className="bg-white"
+          style={{ backgroundColor: 'rgb(255,255,255)', filter: 'invert(1) hue-rotate(180deg)' }}
+        >
+          <FooterComponent />
+        </div>
+      </section>
+
+      {checkoutOpen && (
+        <div
+          className="fixed inset-0 z-[650] flex items-center justify-center bg-black/40 px-4 py-8"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Checkout menu"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setCheckoutOpen(false);
+          }}
+        >
+          <div className="w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-[0_30px_80px_rgba(0,0,0,0.2)]">
+            <div className="flex items-start justify-between border-b border-black/10 px-6 py-5">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'rgba(0,0,0,0.45)' }}>
+                  Checkout menu
+                </p>
+                <h3 className="mt-2 text-xl font-semibold">Choose your payment method</h3>
+                <p className="mt-1 text-sm" style={{ color: 'rgba(0,0,0,0.6)' }}>
+                  {checkoutProduct?.name ? `${checkoutProduct.name} · ${formatPrice(checkoutProduct.base_price)}` : 'Cart ready to check out.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCheckoutOpen(false)}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-black/10"
+                style={{ color: 'rgba(0,0,0,0.6)' }}
+                aria-label="Close checkout menu"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="px-6 py-5">
+              <div className="space-y-5">
+                <div>
+                  <CryptoCheckoutTrigger
+                    productName={checkoutProduct?.name || 'Product'}
+                    productImage={checkoutProduct?.primary_image}
+                    priceUSD={checkoutPrice}
+                    productId={checkoutProduct?.id?.toString() || ''}
+                    variantId={checkoutVariant?.id?.toString()}
+                    quantity={1}
+                    disabled={!checkoutInStock}
+                  />
+                </div>
+
+                <div className="w-full flex flex-col gap-0">
+                  <div className="grid grid-cols-4 w-full rounded-2xl overflow-hidden border border-black/10">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('cart')}
+                      className={`py-3 text-[10px] font-bold transition-all flex flex-col items-center justify-center gap-0.5 ${
+                        paymentMethod === 'cart'
+                          ? 'bg-black text-white'
+                          : 'bg-black/5 text-black/70 hover:bg-black/10'
+                      }`}
+                      aria-pressed={paymentMethod === 'cart'}
+                    >
+                      <ShoppingBag className="h-4 w-4" />
+                      <span>Cart</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('whop')}
+                      className={`py-3 text-[10px] font-bold transition-all border-l border-black/10 flex flex-col items-center justify-center gap-0.5 ${
+                        paymentMethod === 'whop'
+                          ? 'bg-black text-white'
+                          : 'bg-black/5 text-black/70 hover:bg-black/10'
+                      }`}
+                      aria-pressed={paymentMethod === 'whop'}
+                    >
+                      <CreditCard className="h-4 w-4" />
+                      <span>Whop</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('skrill')}
+                      className={`py-3 text-[10px] font-bold transition-all border-l border-black/10 flex flex-col items-center justify-center gap-0.5 ${
+                        paymentMethod === 'skrill'
+                          ? 'bg-black text-white'
+                          : 'bg-black/5 text-black/70 hover:bg-black/10'
+                      }`}
+                      aria-pressed={paymentMethod === 'skrill'}
+                    >
+                      <CreditCard className="h-4 w-4" />
+                      <span>Skrill</span>
+                      <span className="text-[8px] opacity-50 leading-none -mt-0.5">Soon</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('stripe')}
+                      className={`py-3 text-[10px] font-bold transition-all border-l border-black/10 flex flex-col items-center justify-center gap-0.5 ${
+                        paymentMethod === 'stripe'
+                          ? 'bg-black text-white'
+                          : 'bg-black/5 text-black/70 hover:bg-black/10'
+                      }`}
+                      aria-pressed={paymentMethod === 'stripe'}
+                    >
+                      <CreditCard className="h-4 w-4" />
+                      <span>Stripe</span>
+                      <span className="text-[8px] opacity-50 leading-none -mt-0.5">Soon</span>
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleCheckoutAction}
+                    disabled={paymentMethod === 'stripe' || paymentMethod === 'skrill' || !checkoutInStock}
+                    className={`w-full py-3.5 rounded-2xl mt-3 transition-all flex items-center justify-center gap-2 text-sm font-semibold ${
+                      paymentMethod === 'stripe' || paymentMethod === 'skrill'
+                        ? 'bg-black/10 text-black/40 cursor-not-allowed'
+                        : paymentMethod === 'cart'
+                          ? 'bg-black text-white hover:bg-black/90'
+                          : 'bg-white border border-black/10 text-black hover:bg-black/5'
+                    }`}
+                  >
+                    {paymentMethod === 'cart' && (
+                      <>
+                        <ShoppingBag className="h-4 w-4" />
+                        <span>Add to Cart</span>
+                      </>
+                    )}
+                    {paymentMethod === 'whop' && (
+                      <>
+                        <CreditCard className="h-4 w-4" />
+                        <span>Pay with Whop</span>
+                      </>
+                    )}
+                    {paymentMethod === 'skrill' && (
+                      <>
+                        <CreditCard className="h-4 w-4" />
+                        <span>Skrill - Coming Soon</span>
+                      </>
+                    )}
+                    {paymentMethod === 'stripe' && (
+                      <>
+                        <CreditCard className="h-4 w-4" />
+                        <span>Stripe - Coming Soon</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-xs" style={{ color: 'rgba(0,0,0,0.5)' }}>
+                    Secure checkout options match the product quick view.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setCheckoutOpen(false)}
+                    className="rounded-full border border-black/10 px-5 py-2 text-xs font-semibold"
+                  >
+                    Done
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {viewerProduct && viewerMounted && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex h-full w-full items-center justify-center bg-white"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Product media viewer"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setViewerProduct(null);
+          }}
+        >
+          <div className="relative h-full w-full bg-white">
+            <div className="absolute left-0 right-0 top-0 z-10 flex items-center justify-between border-b border-black/10 px-5 py-4">
+              <div className="min-w-0">
+                <p className="text-[11px] uppercase tracking-[0.28em] text-black/60">Preview</p>
+                <h3 className="mt-1 truncate text-lg font-semibold text-black">{viewerProduct.name}</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewerProduct(null)}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-black/15 text-black/70"
+                aria-label="Close viewer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="relative flex h-full w-full items-center justify-center bg-white pt-16">
+              {viewerMedia?.type === 'video' ? (
+                <video
+                  className="relative z-[10000] h-full w-full object-contain"
+                  controls
+                  playsInline
+                >
+                  <source src={viewerMedia.url} type="video/mp4" />
+                </video>
+              ) : viewerMedia?.url ? (
+                <img
+                  src={viewerMedia.url}
+                  alt={viewerProduct.name}
+                  className="relative z-[10000] h-full w-full object-contain"
+                />
+              ) : (
+                <div className="py-16 text-sm text-black/60">No media available.</div>
+              )}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

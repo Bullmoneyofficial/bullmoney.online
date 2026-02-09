@@ -151,8 +151,14 @@ const testimonials = [
   },
 ];
 
-export function TestimonialsCarousel() {
+type TestimonialsCarouselProps = {
+  tone?: 'dark' | 'light';
+  className?: string;
+};
+
+export function TestimonialsCarousel({ tone = 'dark', className }: TestimonialsCarouselProps) {
   const [index, setIndex] = useState(0);
+  const isLight = tone === 'light';
 
   const nextSlide = () => setIndex((index + 1) % testimonials.length);
   const prevSlide = () => setIndex((index - 1 + testimonials.length) % testimonials.length);
@@ -161,22 +167,26 @@ export function TestimonialsCarousel() {
   if (!currentTestimonial) return null;
 
   return (
-    <motion.section
-      {...fade}
-      className="relative mt-8 md:mt-12 w-full max-w-6xl mx-auto px-4 md:px-0"
-    >
+    <motion.section {...fade} className={cn("relative mt-8 md:mt-12 w-full max-w-6xl mx-auto px-4 md:px-0", className)}>
       {/* Minimalist header */}
       <div className="text-center mb-6 md:mb-8">
-        <h2 className="text-sm font-semibold tracking-wider text-white/50 uppercase mb-2">
+        <h2 className={cn("text-sm font-semibold tracking-wider uppercase mb-2", isLight ? "text-black/50" : "text-white/50")}>
           Real Results
         </h2>
-        <p className="text-xl md:text-2xl font-semibold text-white">
+        <p className={cn("text-xl md:text-2xl font-semibold", isLight ? "text-black" : "text-white")}>
           What Our Traders Say About BullMoney
         </p>
       </div>
 
       {/* Clean card design */}
-      <div className="relative h-[320px] md:h-[420px] overflow-hidden rounded-2xl md:rounded-3xl bg-white/[0.02] backdrop-blur-xl border border-white/10">
+      <div
+        className={cn(
+          "relative h-[320px] md:h-[420px] overflow-hidden rounded-2xl md:rounded-3xl",
+          isLight
+            ? "bg-white border border-black/10 shadow-[0_20px_60px_rgba(15,23,42,0.08)]"
+            : "bg-white/[0.02] backdrop-blur-xl border border-white/10"
+        )}
+      >
         <AnimatePresence mode="wait">
           <motion.div
             key={index}
@@ -198,18 +208,28 @@ export function TestimonialsCarousel() {
               alt={currentTestimonial.name}
               fill
               sizes="(min-width: 1024px) 900px, 100vw"
-              className="object-cover opacity-40"
+              className={cn("object-cover", isLight ? "opacity-70" : "opacity-40")}
               priority
             />
-            <div className="absolute inset-0 bg-linear-to-t from-black/95 via-black/70 to-transparent" />
+            <div
+              className={cn(
+                "absolute inset-0 bg-linear-to-t",
+                isLight ? "from-white/90 via-white/70 to-transparent" : "from-black/95 via-black/70 to-transparent"
+              )}
+            />
             
             {/* Content - clean and spacious */}
             <div className="relative text-white max-w-xl space-y-4">
-              <p className="text-base md:text-lg leading-relaxed text-white/90">
+              <p className={cn("text-base md:text-lg leading-relaxed", isLight ? "text-black/80" : "text-white/90")}>
                 &ldquo;{currentTestimonial.text}&rdquo;
               </p>
               <div className="flex items-center gap-3 pt-2">
-                <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden bg-white/5 border border-white/10">
+                <div
+                  className={cn(
+                    "relative w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden",
+                    isLight ? "bg-black/5 border border-black/10" : "bg-white/5 border border-white/10"
+                  )}
+                >
                   <Image
                     src={currentTestimonial.icon}
                     alt={`${currentTestimonial.name} icon`}
@@ -218,8 +238,10 @@ export function TestimonialsCarousel() {
                   />
                 </div>
                 <div>
-                  <p className="text-sm md:text-base font-medium text-white">{currentTestimonial.name}</p>
-                  <p className="text-xs text-white/50">BullMoney Member</p>
+                  <p className={cn("text-sm md:text-base font-medium", isLight ? "text-black" : "text-white")}>
+                    {currentTestimonial.name}
+                  </p>
+                  <p className={cn("text-xs", isLight ? "text-black/50" : "text-white/50")}>BullMoney Member</p>
                 </div>
               </div>
             </div>
@@ -227,20 +249,32 @@ export function TestimonialsCarousel() {
         </AnimatePresence>
 
         {/* Minimal navigation */}
-        <button
-          onClick={prevSlide}
-          className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 backdrop-blur-md hover:bg-white/20 transition-all flex items-center justify-center border border-white/10"
-          aria-label="Previous"
-        >
-          <ChevronLeft size={18} className="text-white" />
-        </button>
-        <button
-          onClick={nextSlide}
-          className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 backdrop-blur-md hover:bg-white/20 transition-all flex items-center justify-center border border-white/10"
-          aria-label="Next"
-        >
-          <ChevronRight size={18} className="text-white" />
-        </button>
+        <div className="pointer-events-none absolute inset-y-0 left-0 right-0 flex items-center justify-between px-3 md:px-4">
+          <button
+            onClick={prevSlide}
+            className={cn(
+              "pointer-events-auto w-8 h-8 md:w-10 md:h-10 rounded-full transition-all flex items-center justify-center border",
+              isLight
+                ? "bg-black/5 hover:bg-black/10 border-black/10"
+                : "bg-white/10 backdrop-blur-md hover:bg-white/20 border-white/10"
+            )}
+            aria-label="Previous"
+          >
+            <ChevronLeft size={18} className={isLight ? "text-black" : "text-white"} />
+          </button>
+          <button
+            onClick={nextSlide}
+            className={cn(
+              "pointer-events-auto w-8 h-8 md:w-10 md:h-10 rounded-full transition-all flex items-center justify-center border",
+              isLight
+                ? "bg-black/5 hover:bg-black/10 border-black/10"
+                : "bg-white/10 backdrop-blur-md hover:bg-white/20 border-white/10"
+            )}
+            aria-label="Next"
+          >
+            <ChevronRight size={18} className={isLight ? "text-black" : "text-white"} />
+          </button>
+        </div>
       </div>
 
       {/* Minimal pagination dots */}
@@ -249,11 +283,16 @@ export function TestimonialsCarousel() {
           <button
             key={i}
             onClick={() => setIndex(i)}
-            className={`h-1.5 rounded-full transition-all ${
+            className={cn(
+              "h-1.5 rounded-full transition-all",
               i === index
-                ? "w-6 bg-white"
-                : "w-1.5 bg-white/30 hover:bg-white/50"
-            }`}
+                ? isLight
+                  ? "w-6 bg-black"
+                  : "w-6 bg-white"
+                : isLight
+                  ? "w-1.5 bg-black/30 hover:bg-black/50"
+                  : "w-1.5 bg-white/30 hover:bg-white/50"
+            )}
             aria-label={`Go to testimonial ${i + 1}`}
           />
         ))}
