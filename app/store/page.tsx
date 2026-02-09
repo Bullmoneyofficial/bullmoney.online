@@ -229,6 +229,8 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
   const [expandedProduct, setExpandedProduct] = useState<ProductWithDetails | null>(null);
   const [viewerProduct, setViewerProduct] = useState<ProductWithDetails | null>(null);
   const [viewerMounted, setViewerMounted] = useState(false);
+  const leftColumnRef = useRef<HTMLDivElement | null>(null);
+  const rightColumnRef = useRef<HTMLDivElement | null>(null);
   const [isDesktop, setIsDesktop] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isUltraWide, setIsUltraWide] = useState(false);
@@ -313,6 +315,55 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
     }
     return normalized.startsWith('/') ? normalized : `/${normalized.replace(/^public\//, '')}`;
   }, []);
+
+  const hasHorizontalScrollableAncestor = useCallback((target: HTMLElement, container: HTMLElement) => {
+    let node: HTMLElement | null = target;
+    while (node && node !== container) {
+      const style = window.getComputedStyle(node);
+      const overflowX = style.overflowX;
+      if ((overflowX === 'auto' || overflowX === 'scroll') && node.scrollWidth > node.clientWidth) {
+        return true;
+      }
+      node = node.parentElement;
+    }
+    return false;
+  }, []);
+
+  const handleColumnWheel = useCallback(
+    (event: WheelEvent, column: HTMLDivElement) => {
+      if (!isDesktop) return;
+
+      const target = event.target as HTMLElement | null;
+      if (target && hasHorizontalScrollableAncestor(target, column)) {
+        if (event.shiftKey || Math.abs(event.deltaX) >= Math.abs(event.deltaY)) return;
+      } else if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+        return;
+      }
+
+      if (event.deltaY === 0) return;
+      event.preventDefault();
+      column.scrollTop += event.deltaY;
+    },
+    [hasHorizontalScrollableAncestor, isDesktop]
+  );
+
+  useEffect(() => {
+    if (!isDesktop) return;
+    const leftColumn = leftColumnRef.current;
+    const rightColumn = rightColumnRef.current;
+    if (!leftColumn || !rightColumn) return;
+
+    const handleLeft = (event: WheelEvent) => handleColumnWheel(event, leftColumn);
+    const handleRight = (event: WheelEvent) => handleColumnWheel(event, rightColumn);
+
+    leftColumn.addEventListener('wheel', handleLeft, { passive: false });
+    rightColumn.addEventListener('wheel', handleRight, { passive: false });
+
+    return () => {
+      leftColumn.removeEventListener('wheel', handleLeft);
+      rightColumn.removeEventListener('wheel', handleRight);
+    };
+  }, [handleColumnWheel, isDesktop]);
 
 
   const handleOpenVip = useCallback(() => {
@@ -2235,7 +2286,10 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
       </section>
 
       <div className="w-full lg:grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-8 lg:items-start lg:h-[calc(100vh-64px)] lg:overflow-hidden">
-        <div className="lg:pr-3 lg:max-h-full lg:overflow-y-auto store-column-scroll">
+        <div
+          ref={leftColumnRef}
+          className="lg:pr-3 lg:min-h-0 lg:h-full lg:max-h-full lg:overflow-y-auto store-column-scroll"
+        >
           {isDesktop && columnHeaderSection}
           {isDesktop && heroMode === 'store' && featuresSection}
           {isDesktop && heroMode === 'store' && productsSectionBlock}
@@ -2243,7 +2297,10 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
           {isDesktop && heroMode === 'trader' && dashboardsSection}
         </div>
 
-        <div className="space-y-0 lg:max-h-full lg:overflow-y-auto lg:pr-2 store-column-scroll">
+        <div
+          ref={rightColumnRef}
+          className="space-y-0 lg:pr-2 lg:min-h-0 lg:h-full lg:max-h-full lg:overflow-y-auto store-column-scroll"
+        >
           {isDesktop && columnHeaderSection}
           {isDesktop && heroMode === 'store' && dashboardsSection}
           {isDesktop && heroMode === 'store' && testimonialsSection}

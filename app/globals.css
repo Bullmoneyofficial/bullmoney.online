@@ -26,6 +26,10 @@
 /* Store desktop column scrollbars */
 @media (min-width: 1024px) {
   .store-column-scroll {
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
     scrollbar-color: rgb(0, 0, 0) transparent;
     scrollbar-width: thin;
   }

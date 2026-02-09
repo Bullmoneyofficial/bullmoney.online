@@ -537,6 +537,17 @@ setTimeout(function(){load('/scene1.splinecode');},100);
           src="/scripts/perf-monitor.js" 
           strategy="afterInteractive"
         />
+
+        {/* BOOST: Device detection runs before first paint for layout decisions */}
+        <Script
+          src="/scripts/device-detect.js"
+          strategy="beforeInteractive"
+        />
+        {/* BOOST: Loader coordinates perf-boost, seo-boost, offline-detect */}
+        <Script
+          src="/scripts/boost-loader.js"
+          strategy="afterInteractive"
+        />
       </head>
       <body
         className={cn("antialiased bg-[#050915] text-white", inter.className)}
