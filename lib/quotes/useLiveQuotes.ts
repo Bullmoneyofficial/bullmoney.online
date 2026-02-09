@@ -91,6 +91,12 @@ export function useLiveQuotes() {
   const isMobile = useRef(isMobileDevice());
   const pollInterval = isMobile.current ? FOREX_POLL_MS_MOBILE : FOREX_POLL_MS_DESKTOP;
 
+  // ── Batched quote updates (RAF coalescing) ───────────────
+  // Collects all quote updates within a single animation frame
+  // and flushes them as ONE state update — avoids N map clones per second
+  const pendingBatch = useRef<Map<string, LiveQuote>>(new Map());
+  const batchScheduled = useRef(false);
+
   // ── Load watchlist from localStorage ─────────────────────
   useEffect(() => {
     mountedRef.current = true;
@@ -168,7 +174,7 @@ export function useLiveQuotes() {
   const cryptoInstruments = resolvedInstruments.filter((i) => i.type === 'crypto');
   const nonCryptoInstruments = resolvedInstruments.filter((i) => i.type !== 'crypto');
 
-  // ── Update a quote ───────────────────────────────────────
+  // ── Update a quote (batched via RAF) ─────────────────────
   const updateQuote = useCallback(
     (
       instrument: Instrument,
@@ -209,11 +215,26 @@ export function useLiveQuotes() {
         displayName: instrument.displayName,
       };
 
-      setQuotes((prev) => {
-        const next = new Map(prev);
-        next.set(instrument.symbol, lq);
-        return next;
-      });
+      // Add to pending batch instead of immediate state update
+      pendingBatch.current.set(instrument.symbol, lq);
+
+      // Schedule a single flush per animation frame
+      if (!batchScheduled.current) {
+        batchScheduled.current = true;
+        requestAnimationFrame(() => {
+          batchScheduled.current = false;
+          if (!mountedRef.current) return;
+          const batch = pendingBatch.current;
+          if (batch.size === 0) return;
+          pendingBatch.current = new Map();
+
+          setQuotes((prev) => {
+            const next = new Map(prev);
+            batch.forEach((lq, sym) => next.set(sym, lq));
+            return next;
+          });
+        });
+      }
     },
     []
   );

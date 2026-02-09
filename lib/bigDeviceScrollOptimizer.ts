@@ -76,8 +76,7 @@ export class BigDeviceScrollOptimizer {
     const html = document.documentElement;
     html.style.setProperty('scroll-snap-type', 'none', 'important');
     
-    // Enable hardware acceleration for smooth scrolling
-    html.style.setProperty('will-change', 'scroll-position');
+    // PERF FIX: Removed will-change: scroll-position (promotes entire page to GPU = massive memory)
     
     // Fix overscroll behavior
     html.style.setProperty('overscroll-behavior-y', 'auto');
@@ -110,20 +109,13 @@ export class BigDeviceScrollOptimizer {
   private enhanceScrollPerformance(): void {
     if (!this.config.enhancePerformance) return;
 
-    // Apply performance optimizations to media elements
-    const mediaElements = document.querySelectorAll('img, video, canvas');
-    mediaElements.forEach((element) => {
-      const el = element as HTMLElement;
-      el.style.willChange = 'transform';
-      el.style.transform = 'translateZ(0)';
-    });
-
-    // Optimize parallax elements
+    // PERF FIX: Removed blanket will-change:transform on ALL img/video/canvas elements.
+    // This was creating hundreds of GPU layers, consuming massive VRAM and causing jank.
+    // Only parallax elements that actually animate need GPU promotion.
     const parallaxElements = document.querySelectorAll('[data-parallax], .hero-parallax-container');
     parallaxElements.forEach((element) => {
       const el = element as HTMLElement;
       el.style.willChange = 'transform';
-      el.style.transform = 'translateZ(0)';
       el.style.overflow = 'visible';
     });
 
@@ -131,33 +123,10 @@ export class BigDeviceScrollOptimizer {
   }
 
   private setupScrollListeners(): void {
-    let ticking = false;
+    // PERF FIX: Removed per-scroll RAF that fixed overlay pointer-events every frame.
+    // Overlays now have pointer-events:none set once via CSS (ThemeOverlay component).
 
-    const optimizeScrollPosition = () => {
-      // Ensure theme overlays don't block scroll
-      const overlays = document.querySelectorAll(
-        '#theme-global-overlay, #theme-edge-glow, #theme-filter-overlay'
-      );
-      overlays.forEach((overlay) => {
-        const el = overlay as HTMLElement;
-        el.style.setProperty('pointer-events', 'none', 'important');
-        el.style.setProperty('z-index', '-1', 'important');
-      });
-
-      ticking = false;
-    };
-
-    const onScroll = () => {
-      if (!ticking) {
-        requestAnimationFrame(optimizeScrollPosition);
-        ticking = true;
-      }
-    };
-
-    // Throttled scroll optimization
-    window.addEventListener('scroll', onScroll, { passive: true });
-
-    // Listen for resize changes
+    // Listen for resize changes only
     window.addEventListener('resize', () => {
       const isBigDevice = window.innerWidth >= 1440;
       const html = document.documentElement;

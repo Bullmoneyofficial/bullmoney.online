@@ -170,10 +170,10 @@ export function TestimonialsCarousel({ tone = 'dark', className }: TestimonialsC
     <motion.section {...fade} className={cn("relative mt-8 md:mt-12 w-full max-w-6xl mx-auto px-4 md:px-0", className)}>
       {/* Minimalist header */}
       <div className="text-center mb-6 md:mb-8">
-        <h2 className={cn("text-sm font-semibold tracking-wider uppercase mb-2", isLight ? "text-black/50" : "text-white/50")}>
+        <h2 className="text-sm font-semibold tracking-wider uppercase mb-2 text-white/70">
           Real Results
         </h2>
-        <p className={cn("text-xl md:text-2xl font-semibold", isLight ? "text-black" : "text-white")}>
+        <p className="text-xl md:text-2xl font-semibold text-white">
           What Our Traders Say About BullMoney
         </p>
       </div>
@@ -211,16 +211,11 @@ export function TestimonialsCarousel({ tone = 'dark', className }: TestimonialsC
               className={cn("object-cover", isLight ? "opacity-70" : "opacity-40")}
               priority
             />
-            <div
-              className={cn(
-                "absolute inset-0 bg-linear-to-t",
-                isLight ? "from-white/90 via-white/70 to-transparent" : "from-black/95 via-black/70 to-transparent"
-              )}
-            />
+            {/* Overlay removed per request */}
             
             {/* Content - clean and spacious */}
             <div className="relative text-white max-w-xl space-y-4">
-              <p className={cn("text-base md:text-lg leading-relaxed", isLight ? "text-black/80" : "text-white/90")}>
+              <p className="text-base md:text-lg leading-relaxed text-white/90">
                 &ldquo;{currentTestimonial.text}&rdquo;
               </p>
               <div className="flex items-center gap-3 pt-2">

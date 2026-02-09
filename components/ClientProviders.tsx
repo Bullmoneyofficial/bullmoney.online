@@ -304,8 +304,11 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
               */}
               {allowMobileComponents && <LazyGlobalModals />}
               
-              <AdminVIPPanelProvider />
-              <AdminButton />
+              {/* Admin components - only mount after idle to avoid blocking main content */}
+              <Suspense fallback={null}>
+                <AdminVIPPanelProvider />
+                <AdminButton />
+              </Suspense>
           </AuthProvider>
         </SoundProvider>
       </MobilePerformanceProvider>

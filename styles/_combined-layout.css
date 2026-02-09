@@ -202,10 +202,10 @@ section,
 video,
 canvas,
 iframe {
-  /* Optimize for high refresh rate displays */
-  will-change: transform;
-  transform: translateZ(0);
-  /* Contain to prevent layout shifts */
+  /* PERF FIX: Removed blanket will-change:transform + translateZ(0)
+     This was creating a GPU layer for EVERY media element on the page,
+     consuming hundreds of MB of VRAM on media-heavy pages.
+     Only elements that are actively animating need GPU promotion. */
   contain: layout paint;
 }
 

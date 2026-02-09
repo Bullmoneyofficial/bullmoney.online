@@ -13,6 +13,8 @@ const LazyMotionButton = dynamic(() => import('framer-motion').then(m => ({ defa
 const LazyMotionSpan = dynamic(() => import('framer-motion').then(m => ({ default: m.motion.span })), { ssr: false });
 const LazyAnimatePresence = dynamic(() => import('framer-motion').then(m => ({ default: m.AnimatePresence })), { ssr: false });
 
+import type { HeroMode } from '@/hooks/useHeroMode';
+
 // ============================================================================
 // STORE PILL NAV - Simple, Reliable Store Navigation
 // Modern store-style header with pill navigation
@@ -39,6 +41,7 @@ export interface StorePillNavProps {
   items: StorePillNavItem[];
   desktopLinks?: StorePillNavLink[];
   className?: string;
+  position?: 'fixed' | 'static';
   cartCount?: number;
   onCartClick?: () => void;
   onSearchClick?: () => void;
@@ -52,6 +55,10 @@ export interface StorePillNavProps {
   onMobileMenuClick?: () => void;
   onDesktopMenuEnter?: () => void;
   onDesktopMenuLeave?: () => void;
+  // Hero mode toggle
+  heroMode?: HeroMode;
+  onHeroModeChange?: (mode: HeroMode) => void;
+  onStoreButtonClick?: () => void;
   // Legacy props (ignored but kept for compatibility)
   ease?: string;
   baseColor?: string;
@@ -66,6 +73,7 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
   logoAlt = 'Bullmoney',
   desktopLinks = [],
   className = '',
+  position = 'fixed',
   cartCount = 0,
   onCartClick,
   onSearchClick,
@@ -78,6 +86,9 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
   onMobileMenuClick,
   onDesktopMenuEnter,
   onDesktopMenuLeave,
+  heroMode,
+  onHeroModeChange,
+  onStoreButtonClick,
 }) => {
   const [mounted, setMounted] = useState(false);
 
@@ -90,17 +101,21 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
     onMobileMenuClick?.();
   }, [onMobileMenuClick]);
 
+  const headerClassName = position === 'fixed'
+    ? `fixed top-0 left-0 right-0 z-500 ${className}`
+    : `relative w-full ${className}`;
+
   // SSR fallback
   if (!mounted) {
     return (
-      <header className="fixed top-0 left-0 right-0 z-500 h-12" style={{ background: 'rgb(255,255,255)' }} />
+      <header className={headerClassName} style={{ background: 'rgb(255,255,255)' }} />
     );
   }
 
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-500 ${className}`}
+        className={headerClassName}
         style={{ background: 'rgb(255,255,255)' }}
         data-apple-section
       >
@@ -132,8 +147,8 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
           {/* Center: Simple Links (Desktop) */}
           <div className="hidden lg:flex items-center gap-3 text-[12px] font-medium tracking-wide" style={{ color: 'rgba(0,0,0,0.85)' }}>
             {desktopLinks.map((link) => {
-              const linkClass = `transition-colors text-black hover:text-white ${link.isActive ? '' : 'hover:opacity-100'}`;
-              const pillClass = 'h-8 px-4 rounded-full bg-white flex items-center gap-2 border border-black/10 transition-colors hover:bg-black hover:border-black';
+              const linkClass = `transition-colors text-black hover:text-white group-hover:text-white ${link.isActive ? '' : 'hover:opacity-100'}`;
+              const pillClass = 'group h-8 px-4 rounded-full bg-white flex items-center gap-2 border border-black/10 transition-colors hover:bg-black hover:border-black';
               if (link.variant === 'toggle') {
                 return (
                   <button
@@ -182,8 +197,36 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
             })}
           </div>
 
-          {/* Right: Actions */}
+          {/* Right: Hero Mode Toggle + Actions */}
           <div className="flex items-center gap-1.5">
+            {/* Hero Mode Toggle - Store / Trader */}
+            {heroMode && onHeroModeChange && (
+              <div className="hidden sm:flex items-center h-8 rounded-full border border-black/10 bg-white overflow-hidden mr-1">
+                <button
+                  type="button"
+                  onClick={() => onStoreButtonClick ? onStoreButtonClick() : onHeroModeChange?.('store')}
+                  className={`px-3 h-full text-[11px] font-semibold uppercase tracking-[0.12em] transition-all ${
+                    heroMode === 'store'
+                      ? 'bg-black text-white'
+                      : 'text-black/60 hover:text-black'
+                  }`}
+                >
+                  Store
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onHeroModeChange('trader')}
+                  className={`px-3 h-full text-[11px] font-semibold uppercase tracking-[0.12em] transition-all ${
+                    heroMode === 'trader'
+                      ? 'bg-black text-white'
+                      : 'text-black/60 hover:text-black'
+                  }`}
+                >
+                  Trader
+                </button>
+              </div>
+            )}
+
             {showSearch && (
               <button
                 className="h-8 w-8 flex items-center justify-center rounded-full transition-colors bg-white border border-black/10"

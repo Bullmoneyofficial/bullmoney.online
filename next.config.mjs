@@ -95,7 +95,7 @@ const nextConfig = {
       },
     ],
     formats: ['image/avif', 'image/webp'],
-    minimumCacheTTL: 60,
+    minimumCacheTTL: 2592000, // 30 days - images rarely change
   },
 
   // Headers - Reduced caching for fresher content
@@ -136,14 +136,11 @@ const nextConfig = {
             key: 'Strict-Transport-Security',
             value: 'max-age=63072000; includeSubDomains; preload',
           },
-          // CACHE FIX: no-cache allows browsers to store cached copies but MUST
-          // revalidate with the server before serving (via ETag/If-Modified-Since).
-          // This ensures every visitor sees the latest version while still getting
-          // fast 304 responses when content hasn't changed.
-          // s-maxage=60 lets Vercel's CDN serve cached copies for 60s.
+          // PERFORMANCE: stale-while-revalidate serves cached version instantly
+          // while revalidating in background. Much better UX than no-cache.
           {
             key: 'Cache-Control',
-            value: 'no-cache, s-maxage=60',
+            value: 'public, s-maxage=60, stale-while-revalidate=300',
           },
         ],
       },

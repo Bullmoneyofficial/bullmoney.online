@@ -25,88 +25,103 @@ interface PerformanceProviderProps {
 }
 
 /**
- * Desktop FPS Optimizer Hook v3 - OPTIMIZED for better performance
- * Uses longer intervals to reduce CPU overhead while still adapting quality
+ * Desktop FPS Optimizer Hook v4 - INTERVAL-BASED (no RAF loop)
+ * Uses Performance API frame timing instead of a continuous RAF loop.
+ * Checks every 5 seconds via setInterval, eliminating the overhead of
+ * running a requestAnimationFrame callback every single frame.
  */
 function useDesktopFPSOptimizer() {
-  const fpsHistoryRef = useRef<number[]>([]);
-  const frameCountRef = useRef(0);
-  const lastTimeRef = useRef(performance.now());
   const shimmerQualityRef = useRef<'high' | 'medium' | 'low' | 'disabled'>('high');
   const lastUpdateTimeRef = useRef(0);
-  const rafIdRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (window.innerWidth < 1024) return; // Desktop only
 
-    const measureAndOptimize = () => {
-      frameCountRef.current++;
-      const now = performance.now();
-      const elapsed = now - lastTimeRef.current;
+    // Use two performance.now() snapshots to estimate FPS without a permanent RAF loop
+    let prevTime = performance.now();
+    let prevFrames = 0;
+    let rafId: number | null = null;
+    let counting = false;
 
-      // OPTIMIZED: Update every 3 seconds instead of 1 second to reduce overhead
-      if (elapsed >= 3000) {
-        const currentFps = Math.round(frameCountRef.current * 1000 / elapsed);
-        fpsHistoryRef.current.push(currentFps);
-
-        if (fpsHistoryRef.current.length > 5) {
-          fpsHistoryRef.current.shift();
-        }
-
-        const avgFps = fpsHistoryRef.current.reduce((a, b) => a + b, 0) / fpsHistoryRef.current.length;
-        const root = document.documentElement;
-
-        // Only update quality if 5 seconds passed - prevents thrashing
-        const timeSinceLastUpdate = now - lastUpdateTimeRef.current;
-        if (timeSinceLastUpdate >= 5000) {
-          // Clear existing classes
-          root.classList.remove('shimmer-quality-high', 'shimmer-quality-medium', 'shimmer-quality-low', 'shimmer-quality-disabled');
-
-          // Adaptive quality based on FPS
-          if (avgFps < 20 && shimmerQualityRef.current !== 'disabled') {
-            shimmerQualityRef.current = 'disabled';
-            root.classList.add('shimmer-quality-disabled', 'reduce-animations', 'reduce-blur', 'reduce-shadows');
-            root.style.setProperty('--animation-duration-multiplier', '0.1');
-            lastUpdateTimeRef.current = now;
-          } else if (avgFps < 35 && shimmerQualityRef.current !== 'low') {
-            shimmerQualityRef.current = 'low';
-            root.classList.add('shimmer-quality-low', 'reduce-animations', 'reduce-blur');
-            root.style.setProperty('--animation-duration-multiplier', '0.3');
-            lastUpdateTimeRef.current = now;
-          } else if (avgFps < 50 && shimmerQualityRef.current !== 'medium') {
-            shimmerQualityRef.current = 'medium';
-            root.classList.add('shimmer-quality-medium');
-            root.classList.remove('reduce-animations', 'reduce-shadows');
-            root.style.setProperty('--animation-duration-multiplier', '0.7');
-            lastUpdateTimeRef.current = now;
-          } else if (avgFps >= 55 && shimmerQualityRef.current !== 'high') {
-            shimmerQualityRef.current = 'high';
-            root.classList.add('shimmer-quality-high');
-            root.classList.remove('reduce-animations', 'reduce-blur', 'reduce-shadows');
-            root.style.setProperty('--animation-duration-multiplier', '1');
-            lastUpdateTimeRef.current = now;
-          }
-        }
-
-        frameCountRef.current = 0;
-        lastTimeRef.current = now;
-      }
-
-      rafIdRef.current = requestAnimationFrame(measureAndOptimize);
+    const startCounting = () => {
+      counting = true;
+      prevFrames = 0;
+      prevTime = performance.now();
+      const countFrame = () => {
+        if (!counting) return;
+        prevFrames++;
+        rafId = requestAnimationFrame(countFrame);
+      };
+      rafId = requestAnimationFrame(countFrame);
     };
 
-    // Wait 8 seconds for page to fully load before monitoring
-    const timeout = setTimeout(() => {
-      rafIdRef.current = requestAnimationFrame(measureAndOptimize);
+    const stopCounting = () => {
+      counting = false;
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+    };
+
+    // Sample FPS for 1 second every 5 seconds (instead of continuous RAF)
+    const interval = setInterval(() => {
+      if (counting) return; // Already sampling
+      
+      startCounting();
+      
+      setTimeout(() => {
+        stopCounting();
+        const elapsed = performance.now() - prevTime;
+        if (elapsed < 500) return; // Too short to be meaningful
+        
+        const avgFps = Math.round(prevFrames * 1000 / elapsed);
+        const root = document.documentElement;
+        const now = performance.now();
+
+        // Only update quality if 5 seconds passed since last change - prevents thrashing
+        if (now - lastUpdateTimeRef.current < 5000) return;
+
+        // Clear existing classes
+        root.classList.remove('shimmer-quality-high', 'shimmer-quality-medium', 'shimmer-quality-low', 'shimmer-quality-disabled');
+
+        if (avgFps < 20 && shimmerQualityRef.current !== 'disabled') {
+          shimmerQualityRef.current = 'disabled';
+          root.classList.add('shimmer-quality-disabled', 'reduce-animations', 'reduce-blur', 'reduce-shadows');
+          root.style.setProperty('--animation-duration-multiplier', '0.1');
+          lastUpdateTimeRef.current = now;
+        } else if (avgFps < 35 && shimmerQualityRef.current !== 'low') {
+          shimmerQualityRef.current = 'low';
+          root.classList.add('shimmer-quality-low', 'reduce-animations', 'reduce-blur');
+          root.style.setProperty('--animation-duration-multiplier', '0.3');
+          lastUpdateTimeRef.current = now;
+        } else if (avgFps < 50 && shimmerQualityRef.current !== 'medium') {
+          shimmerQualityRef.current = 'medium';
+          root.classList.add('shimmer-quality-medium');
+          root.classList.remove('reduce-animations', 'reduce-shadows');
+          root.style.setProperty('--animation-duration-multiplier', '0.7');
+          lastUpdateTimeRef.current = now;
+        } else if (avgFps >= 55 && shimmerQualityRef.current !== 'high') {
+          shimmerQualityRef.current = 'high';
+          root.classList.add('shimmer-quality-high');
+          root.classList.remove('reduce-animations', 'reduce-blur', 'reduce-shadows');
+          root.style.setProperty('--animation-duration-multiplier', '1');
+          lastUpdateTimeRef.current = now;
+        }
+      }, 1000); // Sample for 1 second
+    }, 5000); // Check every 5 seconds
+
+    // Initial delay: wait 8 seconds for page to fully load
+    const startTimeout = setTimeout(() => {
+      // Trigger first sample immediately
+      startCounting();
+      setTimeout(() => stopCounting(), 1000);
     }, 8000);
 
     return () => {
-      clearTimeout(timeout);
-      if (rafIdRef.current !== null) {
-        cancelAnimationFrame(rafIdRef.current);
-        rafIdRef.current = null;
-      }
+      clearTimeout(startTimeout);
+      clearInterval(interval);
+      stopCounting();
     };
   }, []);
 }

@@ -221,8 +221,11 @@ export default function BullMoneyCommunity() {
 
   if (!loading && totalMessages === 0) return null;
 
+  const panelMinHeight = isMobileDevice ? 320 : 'calc(100vh - 220px)';
+  const messageRowHeight = isMobileDevice ? 160 : 260;
+
   return (
-    <div ref={containerRef} className="w-full" style={{ background: "#000", minHeight: 320 }}>
+    <div ref={containerRef} className="w-full" style={{ background: "#000", minHeight: panelMinHeight }}>
       <style dangerouslySetInnerHTML={{ __html: `
         .bmc-glow{box-shadow:0 0 20px rgba(59,130,246,.15),0 0 60px rgba(59,130,246,.05),inset 0 1px 0 rgba(59,130,246,.1)}
         .bmc-border{border:1px solid rgba(59,130,246,.2)}
@@ -345,7 +348,7 @@ export default function BullMoneyCommunity() {
 
       {/* ── SCROLLABLE MESSAGE CARDS ── */}
       {displayPosts.length > 0 && (
-        <div style={{ position: "relative", height: 160, padding: "10px 0 6px" }}>
+        <div style={{ position: "relative", height: messageRowHeight, padding: "10px 0 6px" }}>
           <div
             ref={scrollRef}
             className="bmc-scroll"

@@ -349,26 +349,83 @@ const DailyRangeBar = ({ low, high, current, color }: { low: number; high: numbe
   );
 };
 
-// --- Big Figure Price Display ---
-const PriceDisplay = React.memo(({
+// --- Broker-Style Animated Price Display (RAF-driven, zero React overhead) ---
+const BrokerPriceDisplay = React.memo(function BrokerPriceDisplay({
   price,
   digits,
   pipette,
   color,
   size = 'normal',
+  symbol,
 }: {
   price: number;
   digits: number;
   pipette: boolean;
   color: string;
   size?: 'normal' | 'large';
-}) => {
+  symbol: string;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const realPriceRef = useRef(price);
+  const prevCharsRef = useRef('');
+  const rafIdRef = useRef(0);
+
+  // Always keep latest real price accessible to the RAF loop
+  realPriceRef.current = price;
+
+  const s = size === 'large'
+    ? { small: '19px', big: '30px', sup: '15px' }
+    : { small: '17px', big: '26px', sup: '14px' };
+
+  // RAF-driven micro-tick loop: simulates broker-speed digit flickering
+  // Uses direct DOM manipulation — zero React re-renders in the hot path
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const pipSz = Math.pow(10, -digits);
+    let lastT = 0;
+    // Stagger interval per symbol for natural desync across instruments
+    const INTERVAL = 55 + (symbol.charCodeAt(0) % 35);
+
+    const loop = (now: number) => {
+      if (now - lastT >= INTERVAL) {
+        lastT = now;
+        const real = realPriceRef.current;
+        // Jitter last 1-2 digits ±0-2 pips — mimics real broker tick stream
+        const jitter = (Math.random() - 0.5) * 2.5 * pipSz;
+        const str = (real + jitter).toFixed(digits);
+
+        if (str !== prevCharsRef.current) {
+          const prev = prevCharsRef.current;
+          prevCharsRef.current = str;
+          const spans = container.querySelectorAll<HTMLSpanElement>('.dgt');
+          for (let i = 0; i < spans.length && i < str.length; i++) {
+            if (str[i] !== prev[i]) {
+              spans[i].textContent = str[i];
+              // GPU-composited flash: opacity + transform only (no layout thrash)
+              spans[i].animate(
+                [
+                  { opacity: 0.5, transform: 'scale(1.12)' },
+                  { opacity: 1, transform: 'scale(1)' },
+                ],
+                { duration: 110, easing: 'ease-out' }
+              );
+            }
+          }
+        }
+      }
+      rafIdRef.current = requestAnimationFrame(loop);
+    };
+
+    prevCharsRef.current = realPriceRef.current.toFixed(digits);
+    rafIdRef.current = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(rafIdRef.current);
+  }, [digits, symbol, pipette]);
+
+  // Build initial digit structure — React only renders this once per real data change
   const priceStr = price.toFixed(digits);
-
-  let smallPre = '';
-  let bigMid = '';
-  let superPost = '';
-
+  let smallPre: string, bigMid: string, superPost: string;
   if (pipette) {
     superPost = priceStr.slice(-1);
     bigMid = priceStr.slice(-3, -1);
@@ -376,22 +433,22 @@ const PriceDisplay = React.memo(({
   } else {
     bigMid = priceStr.slice(-2);
     smallPre = priceStr.slice(0, -2);
+    superPost = '';
   }
 
-  const textColor = color === 'blue' ? 'text-[#3b82f6]' : 'text-[#ef4444]';
-
-  const sizes = {
-    normal: { small: 'text-[17px]', big: 'text-[26px]', sup: 'text-[14px]' },
-    large: { small: 'text-[19px]', big: 'text-[30px]', sup: 'text-[15px]' },
-  };
-
-  const s = sizes[size];
+  const hexColor = color === 'blue' ? '#3b82f6' : '#ef4444';
 
   return (
-    <div className={`flex items-baseline font-medium ${textColor} tabular-nums`}>
-      <span className={s.small}>{smallPre}</span>
-      <span className={`${s.big} leading-none mx-[1px] font-semibold`}>{bigMid}</span>
-      {pipette && <span className={`${s.sup} -mt-2`}>{superPost}</span>}
+    <div ref={containerRef} className="flex items-baseline font-medium tabular-nums" style={{ color: hexColor }}>
+      {smallPre.split('').map((ch, i) => (
+        <span key={i} className="dgt" style={{ fontSize: s.small }}>{ch}</span>
+      ))}
+      {bigMid.split('').map((ch, i) => (
+        <span key={`m${i}`} className="dgt" style={{ fontSize: s.big, lineHeight: 1, margin: '0 0.5px', fontWeight: 600 }}>{ch}</span>
+      ))}
+      {superPost && (
+        <span className="dgt" style={{ fontSize: s.sup, marginTop: '-8px' }}>{superPost}</span>
+      )}
     </div>
   );
 });
@@ -440,7 +497,7 @@ const QuoteRowMobile = React.memo(({ data, editMode, onRemove, onTap }: { data: 
       <div className="flex flex-1 justify-end gap-3">
         {/* Bid */}
         <div className="flex flex-col items-end">
-          <PriceDisplay price={data.bid} digits={data.digits} pipette={data.pipette} color={data.color} />
+          <BrokerPriceDisplay price={data.bid} digits={data.digits} pipette={data.pipette} color={data.color} symbol={data.symbol} />
           <div className="text-[#555] text-[10px] tabular-nums mt-0.5">
             L: {data.low.toFixed(data.digits)}
           </div>
@@ -448,7 +505,7 @@ const QuoteRowMobile = React.memo(({ data, editMode, onRemove, onTap }: { data: 
 
         {/* Ask */}
         <div className="flex flex-col items-end">
-          <PriceDisplay price={data.ask} digits={data.digits} pipette={data.pipette} color={data.color} />
+          <BrokerPriceDisplay price={data.ask} digits={data.digits} pipette={data.pipette} color={data.color} symbol={data.symbol} />
           <div className="text-[#555] text-[10px] tabular-nums mt-0.5">
             H: {data.high.toFixed(data.digits)}
           </div>
@@ -502,12 +559,12 @@ const QuoteRowDesktop = React.memo(({ data, isHovered, editMode, onRemove, onTap
 
       {/* Bid */}
       <div className="flex justify-end">
-        <PriceDisplay price={data.bid} digits={data.digits} pipette={data.pipette} color={data.color} size="normal" />
+        <BrokerPriceDisplay price={data.bid} digits={data.digits} pipette={data.pipette} color={data.color} symbol={data.symbol} size="normal" />
       </div>
 
       {/* Ask */}
       <div className="flex justify-end">
-        <PriceDisplay price={data.ask} digits={data.digits} pipette={data.pipette} color={data.color} size="normal" />
+        <BrokerPriceDisplay price={data.ask} digits={data.digits} pipette={data.pipette} color={data.color} symbol={data.symbol} size="normal" />
       </div>
 
       {/* Change */}
@@ -876,7 +933,7 @@ export default function MetaTraderQuotes({ embedded = false }: { embedded?: bool
   // ======================
   if (!isDesktop) {
     return (
-      <div className={`flex flex-col w-full bg-black text-white font-sans select-none ${embedded ? 'max-w-full' : 'h-[100dvh] max-w-md mx-auto overflow-hidden'}`}>
+      <div className={`flex flex-col w-full bg-black text-white font-sans select-none ${embedded ? 'max-w-full min-h-[420px] lg:min-h-[calc(100vh-220px)]' : 'h-[100dvh] max-w-md mx-auto overflow-hidden'}`}>
         {/* iOS Status Bar - only in standalone mode */}
         {!embedded && <IOSStatusBar />}
 
@@ -974,7 +1031,7 @@ export default function MetaTraderQuotes({ embedded = false }: { embedded?: bool
   // DESKTOP LAYOUT
   // ======================
   return (
-    <div className={`flex w-full bg-black text-white font-sans select-none ${embedded ? 'flex-col' : 'h-[100dvh] overflow-hidden'}`}>
+    <div className={`flex w-full bg-black text-white font-sans select-none ${embedded ? 'flex-col min-h-[520px] lg:min-h-[calc(100vh-220px)]' : 'h-[100dvh] overflow-hidden'}`}>
       {/* Sidebar - only in standalone mode */}
       {!embedded && <DesktopSidebar activeTab={activeTab} onTabChange={setActiveTab} />}
 

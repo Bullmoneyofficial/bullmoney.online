@@ -95,9 +95,7 @@ export const ThemeOverlay = memo(function ThemeOverlay({
         // Smooth transitions
         opacity: isVisible ? 0.08 : 0,
         transition: 'opacity 0.5s ease-in-out, filter 0.5s ease-in-out',
-        // GPU acceleration
-        transform: 'translateZ(0)',
-        willChange: 'opacity, filter',
+        // PERF FIX: Removed will-change & translateZ(0) — filter already creates a GPU layer
         // FIXED: Don't use contain:strict - it creates stacking context issues
         contain: 'none',
         overflow: 'visible',

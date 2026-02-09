@@ -16,6 +16,12 @@ const HeroDesktop = dynamic(() => import("@/components/HeroDesktop"), { ssr: fal
 const CTA = dynamic(() => import("@/components/Chartnews"), { ssr: false }) as any;
 import { Features } from "@/components/features";
 
+// Store Header replaces desktop navbar
+const StoreHeader = dynamic(() => import("@/components/store/StoreHeader").then(mod => ({ default: mod.StoreHeader })), { ssr: false }) as any;
+
+// Store page content for store hero mode
+const StorePageContent = dynamic(() => import("@/app/store/page"), { ssr: false }) as any;
+
 // UNIFIED SHIMMER SYSTEM
 import {
   ShimmerBorder,
@@ -36,6 +42,7 @@ import { useBigDeviceScrollOptimizer } from "@/lib/bigDeviceScrollOptimizer";
 const LiveMarketTicker = dynamic(() => import("@/components/LiveMarketTickerOptimized").then(mod => ({ default: mod.LiveMarketTickerOptimized })), { ssr: false }) as any;
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 import { useUIState } from "@/contexts/UIStateContext";
+import { useHeroMode } from "@/hooks/useHeroMode";
 const HiddenYoutubePlayer = dynamic(() => import("@/components/Mainpage/HiddenYoutubePlayer"), { ssr: false }) as any;
 import { ALL_THEMES } from "@/constants/theme-data";
 import { useAudioEngine } from "@/app/hooks/useAudioEngine";
@@ -195,6 +202,7 @@ function DesktopHomeContent() {
   const [isDesktop, setIsDesktop] = useState(true);
   const splinePreloadRanRef = useRef(false);
   const { setLoaderv2Open, setV2Unlocked, devSkipPageModeAndLoader, setDevSkipPageModeAndLoader } = useUIState();
+  const { heroMode: mainHeroMode } = useHeroMode();
 
   // Dev keyboard shortcut to skip pagemode and loader
   useDevSkipShortcut(() => {
@@ -504,12 +512,30 @@ function DesktopHomeContent() {
             Desktop {screenCategory}
           </div>
 
+          {/* Store Header as desktop navigation */}
+          <StoreHeader />
+
           <main className="min-h-screen flex flex-col w-full" data-allow-scroll data-scrollable data-content data-theme-aware data-desktop-only style={{ overflow: 'visible', height: 'auto' }}>
             <div id="top" />
 
-            <section id="hero" className="w-full" data-allow-scroll data-content data-theme-aware>
-              <HeroDesktop />
-            </section>
+            {mainHeroMode === 'trader' && (
+              <section id="hero" className="w-full" data-allow-scroll data-content data-theme-aware>
+                <HeroDesktop />
+              </section>
+            )}
+
+            {/* Store content always rendered, product sections shown only in store mode */}
+            <div data-hero-mode={mainHeroMode}>
+              <StorePageContent routeBase="/desktop" syncUrl={false} showProductSections={mainHeroMode === 'store'} />
+            </div>
+
+            {mainHeroMode === 'trader' && (
+              <style>{`
+                [data-hero-mode="trader"] [data-store-hero] {
+                  display: none !important;
+                }
+              `}</style>
+            )}
 
             <section id="cta" className="w-full" data-allow-scroll data-content data-theme-aware>
               <CTA />

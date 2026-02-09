@@ -6,16 +6,39 @@ import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
 import { useUIState } from "@/contexts/UIStateContext";
+// ✅ LAZY-LOADED: SEO/analytics/audio deferred to avoid blocking first paint
+const ScrollSciFiAudio = dynamic(
+  () => import("@/components/ScrollSciFiAudio").then(mod => ({ default: mod.ScrollSciFiAudio })),
+  { ssr: false }
+);
 
-// ✅ IMPORT CRITICAL SEO/ANALYTICS DIRECTLY - These are lightweight and critical
-import WebVitalsEnhanced from "@/components/WebVitalsEnhanced";
-import AllSEOSchemas from "@/components/SEOSchemas";
-import AdvancedSEO from "@/components/AdvancedSEO";
-import GoogleSEOBoost from "@/components/GoogleSEOBoost";
+const WebVitalsEnhanced = dynamic(
+  () => import("@/components/WebVitalsEnhanced"),
+  { ssr: false }
+);
+
+const AllSEOSchemas = dynamic(
+  () => import("@/components/SEOSchemas"),
+  { ssr: false }
+);
+
+const AdvancedSEO = dynamic(
+  () => import("@/components/AdvancedSEO"),
+  { ssr: false }
+);
+
+const GoogleSEOBoost = dynamic(
+  () => import("@/components/GoogleSEOBoost"),
+  { ssr: false }
+);
+
 import VercelAnalyticsWrapper from "@/components/VercelAnalyticsWrapper";
 
 // ✅ OFF-SCREEN ANIMATION CONTROLLER - Pauses animations we can't see
-import { OffscreenAnimationController } from "@/hooks/useOffscreenAnimationPause";
+const OffscreenAnimationController = dynamic(
+  () => import("@/hooks/useOffscreenAnimationPause").then(mod => ({ default: mod.OffscreenAnimationController })),
+  { ssr: false }
+);
 
 // ✅ LOADING FALLBACKS - Mobile optimized
 import {
@@ -94,9 +117,11 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
   // Only defer navbar/UltimateHub on mobile to avoid blocking first paint
   const { isMobile: isMobileViewport, shouldRender: allowMobileLazy } = useMobileLazyRender(220);
   
-  // Check if we're on store pages - hide navbar and UltimateHub
+  // Check if we're on store pages, desktop page, or app page - hide navbar (replaced with StoreHeader)
   const pathname = usePathname();
   const isStorePage = pathname.startsWith('/store');
+  const isDesktopPage = pathname === '/desktop';
+  const isAppPage = pathname === '/';
   
   // Global Ultimate Hub visibility - controlled by toggle in navbar & store header
   // Default OFF to prevent heavy component from loading and blocking page render
@@ -134,16 +159,8 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
   }, []);
 
   useEffect(() => {
-    setMountStage(0);
-
-    const timers: Array<ReturnType<typeof setTimeout>> = [];
-    timers.push(setTimeout(() => setMountStage(1), 0));
-    timers.push(setTimeout(() => setMountStage(2), 70));
-    timers.push(setTimeout(() => setMountStage(3), 150));
-
-    return () => {
-      timers.forEach(clearTimeout);
-    };
+    // Mount everything immediately - no artificial delays
+    setMountStage(3);
   }, [pathname]);
 
   const canShowNavbar = mountStage >= 1;
@@ -225,13 +242,14 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
           Must be rendered FIRST to appear ABOVE everything including welcome screens */}
         <NotificationPermissionModal />
       
+      <ScrollSciFiAudio />
       {/* Global Shimmer Styles - ensures all shimmers are synchronized */}
       <ShimmerStylesProvider />
       
       {/* Cache Manager - Handles version-based cache invalidation */}
       <CacheManagerProvider>
-        {/* Navbar rendered outside ClientProviders for fixed positioning - HIDDEN on store pages */}
-        {canShowNavbar && !isStorePage && (allowMobileLazy || !isMobileViewport) && <Navbar />}
+        {/* Navbar rendered outside ClientProviders for fixed positioning - HIDDEN on store, desktop & app pages */}
+        {canShowNavbar && !isStorePage && !isDesktopPage && !isAppPage && (allowMobileLazy || !isMobileViewport) && <Navbar />}
         
         {/* ✅ ULTIMATE HUB - All-in-one unified component - Controlled by toggle
             - Left side: Trading pill (prices), Community pill (Telegram), TV pill
@@ -269,16 +287,16 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
 
       {/* ✅ VERCEL TRACKING - Enhanced Analytics & Speed Insights */}
       <VercelAnalyticsWrapper />
-      <WebVitalsEnhanced />
+      <Suspense fallback={null}>
+        <WebVitalsEnhanced />
+      </Suspense>
 
-      {/* ✅ SEO STRUCTURED DATA - JSON-LD Schemas for Rich Search Results */}
-      <AllSEOSchemas />
-
-      {/* ✅ ADVANCED SEO - Additional schemas for Google #1 ranking */}
-      <AdvancedSEO />
-
-      {/* ✅ GOOGLE SEO BOOST - Maximum ranking power */}
-      <GoogleSEOBoost />
+      {/* ✅ SEO STRUCTURED DATA - Deferred for faster first paint */}
+      <Suspense fallback={null}>
+        <AllSEOSchemas />
+        <AdvancedSEO />
+        <GoogleSEOBoost />
+      </Suspense>
       
       {/* ============================================
           ✅ CLIENT CURSOR - MUST BE LAST IN DOM

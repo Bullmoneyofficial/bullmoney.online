@@ -138,6 +138,7 @@ export interface Variant {
 export interface ProductWithDetails extends Product {
   category?: Category | null;
   images: ProductImage[];
+  media?: ProductMedia[];
   variants: Variant[];
   primary_image?: string | null;
   total_inventory?: number;

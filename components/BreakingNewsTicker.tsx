@@ -224,6 +224,14 @@ export default function BreakingNewsTicker() {
   const crit = displayItems.filter(n => n.urgency === "critical").length;
   const urgent = displayItems.filter(n => n.urgency === "high").length;
   const count = displayItems.length;
+  const topStories = displayItems.slice(0, 4);
+  const categoryCounts = displayItems.reduce<Record<string, number>>((acc, item) => {
+    acc[item.category] = (acc[item.category] || 0) + 1;
+    return acc;
+  }, {});
+  const topCategories = Object.entries(categoryCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4);
 
   return (
     <div ref={containerRef} className="w-full bg-black" style={{ minHeight: 190 }}>
@@ -349,6 +357,60 @@ export default function BreakingNewsTicker() {
       )}
 
       <div className="h-px bg-gradient-to-r from-transparent via-zinc-700/50 to-transparent" />
+
+      <div className="px-4 py-4 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-lg border border-zinc-800 bg-zinc-950/60 p-3">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] uppercase tracking-widest text-zinc-500">Top stories</p>
+            <span className="text-[9px] text-zinc-600">Updated {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}</span>
+          </div>
+          <div className="mt-2 space-y-2">
+            {topStories.map((item, index) => (
+              <a
+                key={`${item.link}-${index}`}
+                href={item.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block rounded-md border border-zinc-900 bg-black/40 px-3 py-2 hover:bg-zinc-900/60"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] text-zinc-500 truncate">{item.source}</span>
+                  <span className="text-[9px] text-zinc-600">{item.age}</span>
+                </div>
+                <p className="mt-1 text-[11px] font-semibold text-white/90 line-clamp-2">
+                  {item.title}
+                </p>
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-zinc-800 bg-zinc-950/60 p-3">
+          <p className="text-[10px] uppercase tracking-widest text-zinc-500">Category pulse</p>
+          <div className="mt-3 grid gap-2">
+            {topCategories.map(([category, value]) => (
+              <div key={category} className="flex items-center justify-between rounded-md border border-zinc-900 bg-black/40 px-3 py-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">{ICONS[category] || "📰"}</span>
+                  <span className="text-[11px] text-zinc-300 capitalize">{category}</span>
+                </div>
+                <span className="text-[11px] font-semibold text-white/80">{value}</span>
+              </div>
+            ))}
+            {topCategories.length === 0 && (
+              <div className="rounded-md border border-zinc-900 bg-black/40 px-3 py-2 text-[11px] text-zinc-500">
+                No categories yet.
+              </div>
+            )}
+          </div>
+          <div className="mt-3 rounded-md border border-zinc-900 bg-black/40 px-3 py-2">
+            <p className="text-[10px] uppercase tracking-widest text-zinc-500">Pulse summary</p>
+            <p className="mt-1 text-[11px] text-zinc-300">
+              {crit} breaking, {urgent} urgent, {count} total stories.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

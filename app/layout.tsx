@@ -60,168 +60,23 @@ export const metadata: Metadata = {
     "Join BullMoney - the #1 FREE trading community for Crypto, Gold, Forex & Stocks. Get free trading setups, expert market analysis, live trading mentorship, heavy market news, and connect with 10,000+ traders. Free trading mentor for beginners. Start your trading journey today!",
   
   // ============================================
-  // KEYWORDS - 150+ Primary Keywords for SEO (2026 TRENDING)
+  // KEYWORDS - Top 40 high-value keywords (trimmed for smaller HTML payload)
+  // Google ignores the keywords meta tag, but other engines may use it.
   // ============================================
   keywords: [
-    // Brand Keywords
-    "BullMoney", "Bull Money", "BullMoney trading", "BullMoney community",
-    
-    // Free Trading Mentor Keywords (HIGH PRIORITY)
-    "free trading mentor", "free trading mentor 2026", "free trading mentorship",
-    "trading mentor free", "best free trading mentor", "find free trading mentor",
-    "free mentor for trading", "free forex mentor", "free crypto mentor",
-    "free stock mentor", "free day trading mentor", "online trading mentor free",
-    
-    // Trading Community Keywords (HIGH PRIORITY)
-    "trading community", "free trading community", "best trading community",
-    "online trading community", "trading community 2026", "join trading community",
-    "active trading community", "profitable trading community",
-    "day trading community", "swing trading community", "crypto trading community",
-    "forex trading community", "stock trading community", "gold trading community",
-    
-    // Heavy News & Market News Keywords (HIGH PRIORITY)
-    "heavy news", "heavy market news", "breaking news trading",
-    "market breaking news", "trading news", "trading news today",
-    "financial news", "financial news today", "economic news",
-    "market news", "market news today", "daily market news",
-    
-    // Gold & XAUUSD Keywords (HIGH PRIORITY)
-    "gold trading", "gold price", "gold price today", "gold analysis",
-    "XAUUSD", "XAUUSD trading", "XAUUSD analysis", "XAUUSD price",
-    "gold chart", "gold technical analysis", "how to trade gold",
-    "gold trading strategy", "gold trading for beginners", "gold setup",
-    "gold trade setup", "gold news", "gold news today", "gold forecast",
-    
-    // Cryptocurrency Keywords (HIGH PRIORITY)
-    "bitcoin trading", "bitcoin analysis", "bitcoin price", "BTC trading",
-    "ethereum trading", "ETH trading", "crypto trading", "cryptocurrency trading",
-    "altcoin trading", "crypto market", "crypto news", "crypto analysis",
-    "best crypto to buy", "crypto trading for beginners", "learn crypto trading",
-    
-    // ============================================
-    // 🔥 2026 TRENDING KEYWORDS (HOT SEARCHES)
-    // ============================================
-    
-    // Bitcoin 2026 Trends
-    "bitcoin $100k", "BTC $100K", "bitcoin price prediction 2026",
-    "bitcoin supercycle", "bitcoin mining 2026", "bitcoin halving effect",
-    "bitcoin ETF", "bitcoin institutional adoption", "bitcoin price target",
-    
-    // Ethereum 2026 Trends
-    "ETH $15000", "ethereum 2026 prediction", "ethereum staking",
-    "ETH staking rewards", "ethereum supercycle", "ethereum price target 2026",
-    
-    // Tokenization Trends (HOT in 2026)
-    "tokenized stocks", "tokenized gold", "tokenized assets",
-    "RWA crypto", "real world assets crypto", "tokenization 2026",
-    
-    // Stablecoin Trends
-    "stablecoin news", "stablecoin payments", "USDC", "USDT",
-    "stablecoin regulation 2026", "crypto payments",
-    
-    // Fed & Interest Rate Keywords (HOT)
-    "fed rate cut 2026", "interest rate decision", "FOMC meeting",
-    "fed chair news", "federal reserve 2026", "inflation news 2026",
-    "rate cut prediction", "monetary policy 2026",
-    
-    // AI + Crypto Trends (HOT)
-    "AI crypto", "AI trading", "AI trading bot", "AI crypto coins",
-    "artificial intelligence trading", "machine learning trading",
-    
-    // Prop Trading 2026
-    "prop firm 2026", "funded trader 2026", "FTMO 2026",
-    "best prop firm 2026", "prop firm challenge strategy",
-    
-    // Silver & Precious Metals (TRENDING)
-    "silver price", "silver trading", "silver 2026", "silver analysis",
-    "precious metals trading", "gold vs silver", "silver price prediction",
-    
-    // Solana & Altcoins (HOT)
-    "solana trading", "SOL price", "XRP news", "XRP price",
-    "altcoin season 2026", "best altcoins 2026", "meme coins 2026",
-    
-    // Forex Keywords
-    "forex trading", "forex analysis", "forex for beginners", "how to trade forex",
-    "EURUSD", "GBPUSD", "USDJPY", "forex community", "forex mentor",
-    
-    // Stock Market Keywords (2026)
-    "stock trading", "stock market", "S&P 500", "Nasdaq", "day trading",
-    "swing trading", "stock analysis", "stock trading for beginners",
-    "S&P 500 7000", "Nasdaq 2026", "stock market prediction 2026",
-    "tech stocks 2026", "AI stocks 2026", "Nvidia stock",
-    
-    // Trading Education Keywords
-    "trading for beginners", "trading for beginners 2026", "how to start trading",
-    "learn to trade", "learn trading free", "trading basics",
-    "trading course", "trading course free", "free trading course",
-    "trading education", "trading school", "trading academy",
-    
-    // Prop Firm Keywords
-    "prop firm", "prop trading", "funded trader", "funded account",
-    "prop firm challenge", "FTMO", "FTMO challenge", "pass prop firm",
-    
-    // Technical Analysis Keywords
-    "technical analysis", "chart analysis", "price action",
-    "support and resistance", "candlestick patterns", "chart patterns",
-    
-    // Trading Discord & Telegram
-    "trading discord", "best trading discord", "free trading discord",
-    "trading telegram", "crypto discord", "forex discord",
-    
-    // Trading Tools
-    "TradingView", "trading charts", "economic calendar",
-    
-    // Crypto Regulation & Policy (HOT 2026)
-    "crypto regulation 2026", "crypto bill", "SEC crypto",
-    "crypto tax 2026", "crypto policy", "bitcoin regulation",
-    
-    // 2026 Keywords
-    "trading 2026", "best trading strategy 2026", "crypto 2026", "gold 2026",
-    "market outlook 2026", "investment 2026", "where to invest 2026",
-    
-    // ============================================
-    // 🔥 VIRAL WEALTH & FAMOUS TRADER KEYWORDS (2020-2027)
-    // ============================================
-    
-    // Famous Traders & Success Stories
-    "how traders get rich", "rich trader secrets", "millionaire trader",
-    "how to become rich trading", "trading millionaire", "trading billionaire",
-    "famous traders", "best traders in the world", "top traders 2026",
-    "successful traders", "profitable trader secrets", "trader lifestyle",
-    
-    // Get Rich Trading Keywords (HIGH INTENT)
-    "make money trading", "make money from home trading", "quit job trading",
-    "trading for a living", "full time trader", "trading income",
-    "passive income trading", "trading side hustle", "make $1000 a day trading",
-    "how much can you make trading", "trading profit", "trading gains",
-    "100x crypto", "1000x gains", "turn $100 into $10000",
-    
-    // Viral Trading Trends 2020-2027
-    "GME squeeze", "meme stocks", "wallstreetbets", "WSB",
-    "dogecoin millionaire", "shiba millionaire", "crypto millionaire",
-    "bitcoin millionaire", "NFT millionaire", "trading tiktok",
-    "trading youtube", "trading influencer", "fintwit",
-    
-    // Trading Lifestyle & Motivation
-    "trader motivation", "trading success story", "rags to riches trading",
-    "financial freedom trading", "escape 9 to 5 trading", "work from anywhere trading",
-    "laptop lifestyle trading", "trading from phone", "mobile trading",
-    
-    // Wealth Building Keywords
-    "build wealth trading", "generational wealth", "compound gains",
-    "grow account trading", "small account trading", "$100 to $10000",
-    "flip money", "double your money", "trading challenge",
-    
-    // Year-Specific Viral Keywords
-    "trading 2020", "trading 2021", "trading 2022", "trading 2023",
-    "trading 2024", "trading 2025", "trading 2027",
-    "best trades 2026", "biggest gains 2026", "best investments 2026",
-    "crypto bull run 2024", "crypto bull run 2025", "next bull run",
-    
-    // Beginner Success Keywords
-    "beginner made money trading", "started trading with $100",
-    "first profitable trade", "new trader success", "trading changed my life",
-    "trading transformation", "from broke to rich trading"
+    "BullMoney", "BullMoney trading community",
+    "free trading mentor", "free trading mentorship", "free trading community",
+    "trading community 2026", "best trading community",
+    "gold trading", "XAUUSD", "gold analysis", "gold price today",
+    "bitcoin trading", "crypto trading", "ethereum trading", "altcoin trading",
+    "forex trading", "stock trading", "day trading", "swing trading",
+    "trading for beginners", "learn to trade", "free trading course",
+    "trading setups", "market analysis", "technical analysis", "price action",
+    "prop firm", "funded trader", "FTMO",
+    "trading discord", "crypto discord", "AI trading",
+    "market news", "breaking news trading", "heavy market news",
+    "trading mentor", "crypto news", "bitcoin price",
+    "make money trading", "financial freedom trading",
   ],
   
   // ============================================
@@ -400,151 +255,25 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* CRITICAL: Safari detection and fixes - must run before anything else */}
+        {/* CRITICAL: Minimal blocking script - Safari detection + theme + desktop scroll */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
-(function() {
-  // Safari Detection and Early Fixes
-  var ua = navigator.userAgent;
-  var isSafari = /^((?!chrome|android|crios|fxios|opera|opr|edge|edg).)*safari/i.test(ua);
-  var isIOS = /iphone|ipad|ipod/i.test(ua);
-  var isIOSSafari = isIOS && isSafari;
-  var isMac = /macintosh|mac os x/i.test(ua);
-  var isDesktop = !(/mobi|android|iphone|ipad/i.test(ua));
-  var isWindows = /windows/i.test(ua);
-  var isLinux = /linux/i.test(ua) && !(/android/i.test(ua));
-  var isBigScreen = window.innerWidth >= 769;
-  
-  // CRITICAL: Desktop scroll initialization - MUST run early
-  if (isDesktop && isBigScreen) {
-    var html = document.documentElement;
-    var body = document.body;
-    
-    // Add desktop classes
-    html.classList.add('desktop-optimized', 'mouse-device', 'non-touch-device');
-    
-    // CRITICAL: Force scroll to work on desktop
-    html.style.height = 'auto';
-    html.style.overflowY = 'scroll';
-    html.style.overflowX = 'hidden';
-    html.style.scrollBehavior = 'auto';
-    html.style.scrollSnapType = 'none';
-    html.style.overscrollBehavior = 'auto';
-    
-    var applyBodyScrollFixes = function(targetBody) {
-      if (!targetBody) return false;
-      // Body must not constrain scrolling
-      targetBody.style.height = 'auto';
-      targetBody.style.overflowY = 'visible';
-      targetBody.style.overflowX = 'hidden';
-      targetBody.style.overscrollBehavior = 'auto';
-      return true;
-    };
-
-    if (!applyBodyScrollFixes(body)) {
-      document.addEventListener('DOMContentLoaded', function() {
-        applyBodyScrollFixes(document.body);
-      }, { once: true });
-    }
-    
-    console.log('[DesktopScroll] Desktop scroll fixes applied early');
-    
-    // Enhanced big device detection
-    if (window.innerWidth >= 1440) {
-      html.classList.add('big-display');
-      if (body) {
-        body.classList.add('big-display-body');
-      } else {
-        document.addEventListener('DOMContentLoaded', function() {
-          if (document.body) document.body.classList.add('big-display-body');
-        }, { once: true });
-      }
-      console.log('[DesktopScroll] Big display detected - enhanced scroll mode enabled');
-      
-      // Apply big device scroll optimizations
-      html.style.scrollPaddingTop = '80px'; // Account for sticky navbar
-      body.style.scrollSnapType = 'none';
-    }
-  }
-  
-  if (isSafari || isIOS) {
-    // Add Safari classes immediately for CSS fixes
-    document.documentElement.classList.add('is-safari');
-    if (isIOS) document.documentElement.classList.add('is-ios-safari');
-    
-    // Fix iOS Safari viewport height
-    var setVH = function() {
-      document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px');
-      document.documentElement.style.setProperty('--svh', (window.innerHeight * 0.01) + 'px');
-    };
-    setVH();
-    window.addEventListener('resize', setVH);
-    window.addEventListener('orientationchange', setVH);
-    
-    // Safari-specific font smoothing
-    document.documentElement.style.setProperty('-webkit-font-smoothing', 'antialiased');
-    
-    console.log('[SafariFix] Safari detected, early fixes applied');
-  }
-  
-  // CRITICAL: macOS desktop scroll fixes - applied early
-  if (isMac && isDesktop) {
-    document.documentElement.classList.add('macos', 'desktop-optimized');
-    // Ensure scrolling works with trackpad
-    document.documentElement.style.scrollBehavior = 'auto';
-    document.documentElement.style.overflowY = 'scroll';
-    console.log('[MacFix] macOS desktop detected, trackpad scroll enabled');
-  }
-  
-  // Desktop detection for non-touch devices
-  if (isDesktop) {
-    document.documentElement.classList.add('desktop-optimized');
-    var isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    if (!isTouchDevice) {
-      document.documentElement.classList.add('mouse-device', 'non-touch-device');
-    }
-  }
-  
-  // EARLY THEME APPLICATION - Apply saved theme BEFORE React hydrates
-  // This prevents flash of default blue before theme loads
-  try {
-    var savedTheme = localStorage.getItem('bullmoney-theme-data');
-    if (savedTheme) {
-      var themeData = JSON.parse(savedTheme);
-      if (themeData && themeData.accentColor) {
-        var hex = themeData.accentColor.replace('#', '');
-        var r = parseInt(hex.substring(0, 2), 16) || 59;
-        var g = parseInt(hex.substring(2, 4), 16) || 130;
-        var b = parseInt(hex.substring(4, 6), 16) || 246;
-        
-        // Set CSS variables immediately - comprehensive theme coverage
-        document.documentElement.style.setProperty('--accent-color', themeData.accentColor);
-        document.documentElement.style.setProperty('--accent-rgb', r + ', ' + g + ', ' + b);
-        document.documentElement.style.setProperty('--theme-accent-light', 'rgba(' + r + ', ' + g + ', ' + b + ', 0.25)');
-        document.documentElement.style.setProperty('--theme-accent-dark', 'rgba(' + r + ', ' + g + ', ' + b + ', 0.5)');
-        document.documentElement.style.setProperty('--theme-accent-glow', 'rgba(' + r + ', ' + g + ', ' + b + ', 0.4)');
-        document.documentElement.style.setProperty('--theme-accent-subtle', 'rgba(' + r + ', ' + g + ', ' + b + ', 0.1)');
-        document.documentElement.style.setProperty('--theme-accent-border', 'rgba(' + r + ', ' + g + ', ' + b + ', 0.3)');
-        document.documentElement.setAttribute('data-active-theme', themeData.id || 'bullmoney-blue');
-        document.documentElement.setAttribute('data-theme-category', themeData.category || 'SPECIAL');
-        
-        console.log('[EarlyTheme] Applied:', themeData.id, themeData.accentColor);
-      }
-    } else {
-      // Set default theme attribute so CSS selectors work
-      document.documentElement.setAttribute('data-active-theme', 'bullmoney-blue');
-      // Set default blue theme variables
-      document.documentElement.style.setProperty('--accent-color', '#ffffff');
-      document.documentElement.style.setProperty('--accent-rgb', '255, 255, 255');
-    }
-  } catch (e) {
-    // Set default on error
-    document.documentElement.setAttribute('data-active-theme', 'bullmoney-blue');
-    document.documentElement.style.setProperty('--accent-color', '#ffffff');
-    document.documentElement.style.setProperty('--accent-rgb', '255, 255, 255');
-    console.warn('[EarlyTheme] Error:', e);
-  }
+(function(){var d=document.documentElement,ua=navigator.userAgent,s=d.style;
+var isD=!(/mobi|android|iphone|ipad/i.test(ua)),isB=window.innerWidth>=769;
+if(isD&&isB){d.classList.add('desktop-optimized');s.height='auto';s.overflowY='scroll';s.overflowX='hidden';s.scrollBehavior='auto';s.scrollSnapType='none';s.overscrollBehavior='auto';
+var b=document.body;if(b){b.style.height='auto';b.style.overflowY='visible';b.style.overflowX='hidden';b.style.overscrollBehavior='auto';}
+if(!('ontouchstart' in window)&&!navigator.maxTouchPoints)d.classList.add('mouse-device','non-touch-device');
+if(window.innerWidth>=1440){d.classList.add('big-display');s.scrollPaddingTop='80px';if(b)b.classList.add('big-display-body');}}
+if(/macintosh|mac os x/i.test(ua)&&isD){d.classList.add('macos');}
+var isSaf=/^((?!chrome|android|crios|fxios|opera|opr|edge|edg).)*safari/i.test(ua),iOS=/iphone|ipad|ipod/i.test(ua);
+if(isSaf||iOS){d.classList.add('is-safari');if(iOS)d.classList.add('is-ios-safari');
+var vh=function(){s.setProperty('--vh',(window.innerHeight*0.01)+'px');s.setProperty('--svh',(window.innerHeight*0.01)+'px');};
+vh();window.addEventListener('resize',vh);window.addEventListener('orientationchange',vh);}
+try{var t=localStorage.getItem('bullmoney-theme-data');if(t){var p=JSON.parse(t);if(p&&p.accentColor){var h=p.accentColor.replace('#',''),r=parseInt(h.substring(0,2),16)||59,g=parseInt(h.substring(2,4),16)||130,b2=parseInt(h.substring(4,6),16)||246,rgb=r+', '+g+', '+b2;
+s.setProperty('--accent-color',p.accentColor);s.setProperty('--accent-rgb',rgb);s.setProperty('--theme-accent-light','rgba('+rgb+', 0.25)');s.setProperty('--theme-accent-dark','rgba('+rgb+', 0.5)');s.setProperty('--theme-accent-glow','rgba('+rgb+', 0.4)');s.setProperty('--theme-accent-subtle','rgba('+rgb+', 0.1)');s.setProperty('--theme-accent-border','rgba('+rgb+', 0.3)');
+d.setAttribute('data-active-theme',p.id||'bullmoney-blue');d.setAttribute('data-theme-category',p.category||'SPECIAL');
+}}else{d.setAttribute('data-active-theme','bullmoney-blue');s.setProperty('--accent-color','#ffffff');s.setProperty('--accent-rgb','255, 255, 255');}}catch(e){d.setAttribute('data-active-theme','bullmoney-blue');s.setProperty('--accent-color','#ffffff');s.setProperty('--accent-rgb','255, 255, 255');}
 })();
             `,
           }}
@@ -681,21 +410,14 @@ export default function RootLayout({
         <meta name="format-detection" content="telephone=no" />
         <meta name="HandheldFriendly" content="true" />
 
-        {/* PERFORMANCE: Preconnect to critical origins */}
-        <link rel="preconnect" href="https://www.youtube.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://i.ytimg.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        
-        {/* LCP FIX: Preconnect to CDN for Spline runtime */}
-        <link rel="preconnect" href="https://unpkg.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
-
-        {/* DNS Prefetch for secondary resources */}
+        {/* PERFORMANCE: Preconnect only to origins needed for first paint */}
         <link rel="dns-prefetch" href="https://www.youtube.com" />
         <link rel="dns-prefetch" href="https://i.ytimg.com" />
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://unpkg.com" />
+        <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
 
         {/* PERFORMANCE: Preload critical assets with proper priorities */}
         <link rel="preload" href="/ONcc2l601.svg" as="image" fetchPriority="high" />
@@ -708,101 +430,20 @@ export default function RootLayout({
           via the Cache API system, which already handles caching efficiently.
         */}
         
-        {/* LCP FIX: Critical inline script to start hero scene preload immediately */}
-        <script
+        {/* Spline preloading deferred to afterInteractive to avoid competing with critical JS/CSS */}
+        <Script
+          id="spline-preload"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
-(function() {
-  // ULTRA-FAST SPLINE CACHING: Target <10ms on cached loads
-  var SPLINE_CACHE_NAME = 'spline-scenes-v1';
-  var SPLINE_SCENES = ['/scene1.splinecode', '/scene.splinecode', '/scene2.splinecode', '/scene3.splinecode', '/scene4.splinecode', '/scene5.splinecode', '/scene6.splinecode'];
-  var SPLINE_MEMORY_CACHE = window.__SPLINE_MEMORY_CACHE__ = window.__SPLINE_MEMORY_CACHE__ || {};
-  
-  // Function to cache scene to memory for instant access
-  function cacheToMemory(scene, buffer) {
-    SPLINE_MEMORY_CACHE[scene] = buffer;
-    console.log('[SplinePreload] ⚡ ' + scene + ' cached to memory');
-  }
-  
-  // Function to load and cache a single scene
-  function loadAndCache(scene, isPrimary) {
-    var startTime = performance.now();
-    
-    // Check memory cache first
-    if (SPLINE_MEMORY_CACHE[scene]) {
-      console.log('[SplinePreload] ⚡ ' + scene + ' already in memory (' + (performance.now() - startTime).toFixed(1) + 'ms)');
-      return Promise.resolve();
-    }
-    
-    // Check Cache API
-    var canUseCache = typeof caches !== 'undefined' && 'caches' in window;
-    if (!canUseCache) {
-      return fetch(scene, {
-        method: 'GET',
-        mode: 'cors',
-        credentials: 'omit',
-        cache: 'force-cache',
-        priority: isPrimary ? 'high' : 'low'
-      }).then(function(response) {
-        if (response.ok) {
-          return response.arrayBuffer().then(function(buffer) {
-            cacheToMemory(scene, buffer);
-            console.log('[SplinePreload] Fetched (no Cache API) ' + scene + ' (' + (performance.now() - startTime).toFixed(1) + 'ms)');
-          });
-        }
-      });
-    }
-
-    return caches.open(SPLINE_CACHE_NAME).then(function(cache) {
-      return cache.match(scene).then(function(cachedResponse) {
-        if (cachedResponse) {
-          return cachedResponse.arrayBuffer().then(function(buffer) {
-            cacheToMemory(scene, buffer);
-            console.log('[SplinePreload] Cache hit for ' + scene + ' (' + (performance.now() - startTime).toFixed(1) + 'ms)');
-          });
-        }
-        
-        // Fetch from network
-        return fetch(scene, { 
-          method: 'GET',
-          mode: 'cors',
-          credentials: 'omit',
-          cache: 'force-cache',
-          priority: isPrimary ? 'high' : 'low'
-        }).then(function(response) {
-          if (response.ok) {
-            var responseClone = response.clone();
-            cache.put(scene, responseClone);
-            return response.arrayBuffer().then(function(buffer) {
-              cacheToMemory(scene, buffer);
-              console.log('[SplinePreload] Fetched + cached ' + scene + ' (' + (performance.now() - startTime).toFixed(1) + 'ms)');
-            });
-          }
-        });
-      });
-    }).catch(function(err) {
-      console.warn('[SplinePreload] Failed for ' + scene + ':', err);
-    });
-  }
-
-  // Start loading immediately - ONLY the default scene
-  if (typeof window !== 'undefined') {
-    // Load primary scene only (scene 1 is always available)
-    loadAndCache('/scene1.splinecode', true);
-    
-    // Preload the Spline runtime module
-    if (window.innerWidth >= 768) {
-      var splineRuntime = 'https://unpkg.com/@splinetool/runtime@1.12.35/build/runtime.js';
-      var link = document.createElement('link');
-      link.rel = 'modulepreload';
-      link.href = splineRuntime;
-      link.crossOrigin = 'anonymous';
-      link.onerror = function() {
-        console.warn('[SplinePreload] Spline runtime failed from primary CDN');
-      };
-      document.head.appendChild(link);
-    }
-  }
+(function(){if(window.innerWidth<768)return;
+var C=window.__SPLINE_MEMORY_CACHE__=window.__SPLINE_MEMORY_CACHE__||{};
+var N='spline-scenes-v1';
+function load(s){if(C[s])return;var cc=typeof caches!=='undefined';
+if(!cc){fetch(s,{cache:'force-cache',priority:'low'}).then(function(r){if(r.ok)return r.arrayBuffer()}).then(function(b){if(b)C[s]=b});return;}
+caches.open(N).then(function(c){c.match(s).then(function(r){if(r)return r.arrayBuffer().then(function(b){C[s]=b});
+return fetch(s,{cache:'force-cache',priority:'low'}).then(function(r2){if(r2.ok){c.put(s,r2.clone());return r2.arrayBuffer().then(function(b){C[s]=b})}})})}).catch(function(){});}
+setTimeout(function(){load('/scene1.splinecode');},100);
 })();
             `,
           }}
@@ -818,77 +459,42 @@ export default function RootLayout({
           tags server-side. No need for a separate ServerHreflangMeta component.
         */}
 
-        {/* Apple Touch Icons for various sizes */}
+        {/* Apple Touch Icon - 180x180 is all modern iOS needs */}
         <link rel="apple-touch-icon" sizes="180x180" href="/icon-180x180.png" />
-        <link rel="apple-touch-icon" sizes="152x152" href="/icon-152x152.png" />
-        <link rel="apple-touch-icon" sizes="144x144" href="/icon-144x144.png" />
-        <link rel="apple-touch-icon" sizes="120x120" href="/icon-120x120.png" />
-        <link rel="apple-touch-icon" sizes="114x114" href="/icon-114x114.png" />
-        <link rel="apple-touch-icon" sizes="76x76" href="/icon-76x76.png" />
-        <link rel="apple-touch-icon" sizes="72x72" href="/icon-72x72.png" />
-        <link rel="apple-touch-icon" sizes="60x60" href="/icon-60x60.png" />
-        <link rel="apple-touch-icon" sizes="57x57" href="/icon-57x57.png" />
 
-        {/* Splash Screens for iOS */}
+        {/* Splash Screens for iOS - top 3 most common sizes only */}
         <link rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash-screens/iPhone_15_Pro_Max__iPhone_15_Plus__iPhone_14_Pro_Max_portrait.png" />
         <link rel="apple-touch-startup-image" media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash-screens/iPhone_15_Pro__iPhone_15__iPhone_14_Pro_portrait.png" />
-        <link rel="apple-touch-startup-image" media="screen and (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash-screens/iPhone_14_Plus__iPhone_13_Pro_Max__iPhone_12_Pro_Max_portrait.png" />
         <link rel="apple-touch-startup-image" media="screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash-screens/iPhone_14__iPhone_13_Pro__iPhone_13__iPhone_12_Pro__iPhone_12_portrait.png" />
-        <link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash-screens/iPhone_13_mini__iPhone_12_mini__iPhone_11_Pro__iPhone_XS__iPhone_X_portrait.png" />
-        <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash-screens/iPhone_11_Pro_Max__iPhone_XS_Max_portrait.png" />
-        <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash-screens/iPhone_11__iPhone_XR_portrait.png" />
-        <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash-screens/iPhone_8_Plus__iPhone_7_Plus__iPhone_6s_Plus__iPhone_6_Plus_portrait.png" />
-        <link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash-screens/iPhone_8__iPhone_7__iPhone_6s__iPhone_6__4.7__iPhone_SE_portrait.png" />
-        <link rel="apple-touch-startup-image" media="screen and (device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash-screens/4__iPhone_SE__iPod_touch_5th_generation_and_later_portrait.png" />
 
         {/* Favicon for various platforms */}
         <link rel="icon" type="image/svg+xml" href="/ONcc2l601.svg" />
         <link rel="shortcut icon" href="/ONcc2l601.svg" />
         <link rel="apple-touch-icon" href="/ONcc2l601.svg" />
 
-        {/* Service Worker & Essential Scripts - PERFORMANCE: Only critical viewport/touch fixes inline */}
-        <script
+        {/* Service Worker & Essential Scripts - DEFERRED to afterInteractive */}
+        <Script
+          id="sw-and-touch"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
-              // Service Worker Registration
-              const __BM_SW_ENABLED__ = ${swEnabled ? "true" : "false"};
+              var __BM_SW_ENABLED__ = ${swEnabled ? "true" : "false"};
               if (__BM_SW_ENABLED__ && 'serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                  navigator.serviceWorker.register('/sw.js', { scope: '/' })
-                    .then(reg => console.log('[SW] Registered:', reg.scope))
-                    .catch(e => console.error('[SW] Failed:', e));
-                });
+                navigator.serviceWorker.register('/sw.js', { scope: '/' })
+                  .then(function(reg) { console.log('[SW] Registered:', reg.scope); })
+                  .catch(function(e) { console.error('[SW] Failed:', e); });
               }
 
-              // Viewport Height Fix for Mobile Browsers
-              function setVH() {
-                const vh = window.innerHeight * 0.01;
-                document.documentElement.style.setProperty('--vh', vh + 'px');
-              }
-              setVH();
-              window.addEventListener('resize', setVH);
-              window.addEventListener('orientationchange', setVH);
-
-              // SIMPLIFIED: Only prevent pull-to-refresh at very top of page
-              let touchStartY = 0;
-              
-              document.addEventListener('touchstart', function(e) {
-                touchStartY = e.touches[0].clientY;
-              }, { passive: true });
-
+              // Prevent pull-to-refresh at top of page
+              var touchStartY = 0;
+              document.addEventListener('touchstart', function(e) { touchStartY = e.touches[0].clientY; }, { passive: true });
               document.addEventListener('touchmove', function(e) {
                 if (e.touches.length > 1) return;
-                
-                const touchY = e.touches[0].clientY;
-                const deltaY = touchY - touchStartY;
-                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-                
+                var deltaY = e.touches[0].clientY - touchStartY;
+                var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
                 if (scrollTop <= 0 && deltaY > 10) {
-                  const target = e.target;
-                  const isInModal = target && target.closest && target.closest('.fixed[style*="z-index"]');
-                  if (!isInModal) {
-                    e.preventDefault();
-                  }
+                  var target = e.target;
+                  if (!(target && target.closest && target.closest('.fixed[style*="z-index"]'))) e.preventDefault();
                 }
               }, { passive: false });
             `,
@@ -905,108 +511,23 @@ export default function RootLayout({
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
-              (function detect120Hz() {
-                const root = document.documentElement;
-                let nativeHz = 60;
-                let measured = false;
-                
-                if ('refreshRate' in screen) {
-                  nativeHz = Math.min(screen.refreshRate, 120);
-                  measured = true;
-                }
-                
-                if (!measured) {
-                  const ua = navigator.userAgent.toLowerCase();
-                  const w = screen.width;
-                  const h = screen.height;
-                  const dpr = window.devicePixelRatio;
-                  const cores = navigator.hardwareConcurrency || 4;
-                  const memory = navigator.deviceMemory || 8;
-                  
-                  if (/iphone/.test(ua) && dpr >= 3) {
-                    if (w === 393 || w === 430 || w === 390 || w === 428 || w === 402 || w === 440 || h >= 844) {
-                      nativeHz = 120;
-                    }
-                  } else if (/ipad/.test(ua) && dpr >= 2 && w >= 1024) {
-                    nativeHz = 120;
-                  } else if (/macintosh|mac os x/i.test(ua)) {
-                    let isAppleSilicon = cores >= 8;
-                    try {
-                      const canvas = document.createElement('canvas');
-                      const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
-                      if (gl) {
-                        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-                        if (debugInfo) {
-                          const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL).toLowerCase();
-                          if (renderer.includes('apple') && (renderer.includes('gpu') || /m[1-9]/.test(renderer))) {
-                            isAppleSilicon = true;
-                            root.classList.add('apple-silicon');
-                          }
-                        }
-                      }
-                    } catch (e) {}
-                    if (isAppleSilicon) {
-                      nativeHz = 120;
-                      root.classList.add('desktop-optimized', 'high-performance');
-                    }
-                  } else if (/samsung|sm-g|sm-n|sm-s/i.test(ua) && dpr >= 2.5) {
-                    nativeHz = 120;
-                  } else if (/oneplus|xiaomi|redmi|poco|oppo|realme|vivo/i.test(ua) && dpr >= 2.5) {
-                    nativeHz = 120;
-                  } else if (/pixel.*pro/i.test(ua)) {
-                    nativeHz = 90;
-                  } else if (!(/mobi|android|iphone|ipad/i.test(ua))) {
-                    let hasDiscreteGPU = false;
-                    try {
-                      const canvas = document.createElement('canvas');
-                      const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
-                      if (gl) {
-                        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-                        if (debugInfo) {
-                          const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL).toLowerCase();
-                          hasDiscreteGPU = renderer.includes('nvidia') || renderer.includes('geforce') || 
-                                           renderer.includes('radeon') || renderer.includes('amd') ||
-                                           renderer.includes('rtx') || renderer.includes('gtx');
-                          if (hasDiscreteGPU) root.classList.add('discrete-gpu');
-                        }
-                      }
-                    } catch (e) {}
-                    if (w >= 2560 || (hasDiscreteGPU && memory >= 8) || (memory >= 16 && cores >= 8)) {
-                      nativeHz = 120;
-                      root.classList.add('desktop-optimized', 'high-performance');
-                    }
-                  }
-                }
-                
-                // Measure actual FPS — now runs AFTER page is interactive
-                let frames = 0, startTime = performance.now();
-                function measureFps(timestamp) {
-                  frames++;
-                  if (frames < 20) {
-                    requestAnimationFrame(measureFps);
-                  } else {
-                    const elapsed = timestamp - startTime;
-                    const fps = Math.round((frames / elapsed) * 1000);
-                    const actualHz = fps >= 110 ? 120 : fps >= 80 ? 90 : 60;
-                    const finalHz = Math.min(nativeHz, actualHz);
-                    
-                    root.style.setProperty('--measured-fps', actualHz);
-                    root.style.setProperty('--actual-target-fps', finalHz);
-                    
-                    if (actualHz >= 110) root.classList.add('fps-120');
-                    else if (actualHz >= 80) root.classList.add('fps-90');
-                  }
-                }
-                requestAnimationFrame(measureFps);
-                
-                const targetHz = Math.min(nativeHz, 120);
-                root.style.setProperty('--native-refresh-rate', nativeHz);
-                root.style.setProperty('--target-fps', targetHz);
-                root.style.setProperty('--frame-duration', (1000 / targetHz) + 'ms');
-                root.style.setProperty('--frame-budget', (1000 / targetHz * 0.9) + 'ms');
-                
-                if (nativeHz >= 120) root.classList.add('display-120hz');
-                else if (nativeHz >= 90) root.classList.add('display-90hz');
+              (function(){
+                var r=document.documentElement,hz=60;
+                if('refreshRate' in screen){hz=Math.min(screen.refreshRate,120);}
+                else{var ua=navigator.userAgent.toLowerCase(),dpr=window.devicePixelRatio,w=screen.width,h=screen.height;
+                if(/iphone/.test(ua)&&dpr>=3&&(w>=390||h>=844))hz=120;
+                else if(/ipad/.test(ua)&&dpr>=2&&w>=1024)hz=120;
+                else if(/macintosh/i.test(ua)&&navigator.hardwareConcurrency>=8)hz=120;
+                else if(/samsung|oneplus|xiaomi|oppo|realme|vivo/i.test(ua)&&dpr>=2.5)hz=120;
+                else if(/pixel.*pro/i.test(ua))hz=90;
+                else if(!(/mobi|android|iphone|ipad/i.test(ua))&&((navigator.deviceMemory||8)>=16||screen.width>=2560))hz=120;}
+                var t=Math.min(hz,120);
+                r.style.setProperty('--native-refresh-rate',hz);
+                r.style.setProperty('--target-fps',t);
+                r.style.setProperty('--frame-duration',(1000/t)+'ms');
+                r.style.setProperty('--frame-budget',(1000/t*0.9)+'ms');
+                if(hz>=120)r.classList.add('display-120hz');
+                else if(hz>=90)r.classList.add('display-90hz');
               })();
             `,
           }}

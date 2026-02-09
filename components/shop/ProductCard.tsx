@@ -2,23 +2,19 @@
 
 import { useState, useRef, useEffect, useCallback, memo, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, ShoppingBag, Heart, X, ExternalLink, CreditCard, Smartphone, Wallet } from 'lucide-react';
+import { ShoppingBag, Heart, X, Wallet } from 'lucide-react';
 import CountUp from '@/components/CountUp';
-import TextType from '@/components/TextType';
 import { CryptoPayButton } from '@/components/shop/CryptoPayButton';
 import { CryptoCheckoutTrigger } from '@/components/shop/CryptoCheckoutInline';
 import { ProductMediaCarousel } from '@/components/shop/ProductMediaCarousel';
-import type { ProductWithDetails } from '@/types/store';
+import { StorePillNav } from '@/components/store/StorePillNav';
+import StoreFooter from '@/components/shop/StoreFooter';
+import type { ProductMedia, ProductWithDetails } from '@/types/store';
 import { useCartStore } from '@/stores/cart-store';
 import { useWishlistStore } from '@/stores/wishlist-store';
 import { toast } from 'sonner';
-import { EncryptedText } from '@/components/Mainpage/encrypted-text';
-import { HoverBorderGradient } from '@/components/ui/hover-border-gradient';
-import { PinContainer } from '@/components/ui/3d-pin';
-import { CardBody, CardContainer, CardItem } from '@/components/ui/3d-card';
 import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 
 // ============================================================================
@@ -108,6 +104,151 @@ const heartPulseStyle = `
 `;
 
 // ============================================================================
+// PREMIUM CARD CSS — GPU-accelerated, zero JS overhead
+// ============================================================================
+const premiumCardStyle = `
+/* Premium Product Card — GPU Optimized */
+.product-card-premium {
+  background: linear-gradient(135deg, #0a1628 0%, #0d2147 40%, #102a5a 60%, #0a1628 100%);
+  border: 1px solid rgba(50,117,248,0.18);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+  transition: transform 0.5s cubic-bezier(0.23,1,0.32,1), box-shadow 0.5s cubic-bezier(0.23,1,0.32,1), border-color 0.5s ease;
+  transform: translateY(0) translateZ(0);
+  will-change: transform, box-shadow;
+  isolation: isolate;
+  contain: layout style paint;
+  touch-action: manipulation;
+  position: relative;
+  animation: card-idle-pulse 4s ease-in-out infinite;
+}
+.product-card-premium:hover {
+  transform: translateY(-6px) translateZ(0);
+  border-color: rgba(80,160,255,0.5);
+  box-shadow:
+    0 24px 50px rgba(0,0,0,0.45),
+    0 0 30px rgba(50,117,248,0.5),
+    0 0 60px rgba(50,117,248,0.25),
+    0 0 100px rgba(50,117,248,0.1),
+    inset 0 1px 0 rgba(120,180,255,0.3);
+  animation: none;
+}
+.product-card-premium:active {
+  transform: translateY(-2px) scale(0.98) translateZ(0);
+  transition-duration: 0.15s;
+}
+
+/* Neon top edge */
+.neon-edge-top {
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(50,117,248,0.35), rgba(120,180,255,0.5), rgba(50,117,248,0.35), transparent);
+  z-index: 2; pointer-events: none;
+  transition: all 0.4s ease;
+}
+.product-card-premium:hover .neon-edge-top {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(80,160,255,0.8), rgba(180,220,255,0.95), rgba(80,160,255,0.8), transparent);
+  box-shadow: 0 0 15px rgba(80,160,255,0.7), 0 0 30px rgba(50,117,248,0.3);
+}
+
+/* Neon bottom edge */
+.neon-edge-bottom {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 0; opacity: 0;
+  background: linear-gradient(90deg, transparent, rgba(80,160,255,0.6), rgba(160,210,255,0.7), rgba(80,160,255,0.6), transparent);
+  z-index: 2; pointer-events: none;
+  transition: all 0.4s ease;
+}
+.product-card-premium:hover .neon-edge-bottom {
+  height: 2px; opacity: 1;
+  box-shadow: 0 0 15px rgba(80,160,255,0.5);
+}
+
+/* Card shine sweep on hover */
+@keyframes card-shine-sweep {
+  0%   { left: -75%; }
+  100% { left: 150%; }
+}
+.card-shine-sweep {
+  position: absolute; top: 0; bottom: 0;
+  width: 50%; left: -75%;
+  background: linear-gradient(105deg, transparent 0%, rgba(50,117,248,0.04) 20%, rgba(120,180,255,0.18) 50%, rgba(50,117,248,0.04) 80%, transparent 100%);
+  z-index: 3; pointer-events: none;
+  border-radius: inherit;
+}
+.product-card-premium:hover .card-shine-sweep {
+  animation: card-shine-sweep 0.65s ease-out forwards;
+}
+
+/* Image shine sweep */
+@keyframes card-image-shine-sweep {
+  0%   { left: -60%; }
+  100% { left: 140%; }
+}
+.card-image-shine {
+  position: absolute; top: 0; bottom: 0;
+  width: 45%; left: -60%;
+  background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.02) 25%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.02) 75%, transparent 100%);
+  z-index: 15; pointer-events: none;
+}
+.product-card-premium:hover .card-image-shine {
+  animation: card-image-shine-sweep 0.55s 0.06s ease-out forwards;
+}
+
+/* Image border glow */
+.card-image-border {
+  border: 1px solid rgba(50,117,248,0.1);
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+}
+.product-card-premium:hover .card-image-border {
+  border-color: rgba(80,160,255,0.35);
+  box-shadow: inset 0 0 20px rgba(50,117,248,0.1);
+}
+
+/* Badge entrance */
+@keyframes badge-slide-in {
+  from { opacity: 0; transform: translateX(-10px) translateZ(0); }
+  to   { opacity: 1; transform: translateX(0) translateZ(0); }
+}
+.card-badge { animation: badge-slide-in 0.4s ease-out both; }
+.card-badge:nth-child(2) { animation-delay: 0.1s; }
+.card-badge:nth-child(3) { animation-delay: 0.2s; }
+
+/* Badge shimmer — contained within pill */
+@keyframes badge-shimmer {
+  0%   { left: -60%; }
+  100% { left: 160%; }
+}
+.badge-shimmer-el {
+  animation: badge-shimmer 2.2s linear 0.8s infinite;
+  pointer-events: none;
+}
+
+/* Subtle idle glow */
+@keyframes card-idle-pulse {
+  0%, 100% { border-color: rgba(50,117,248,0.18); }
+  50%      { border-color: rgba(50,117,248,0.32); }
+}
+
+/* Heart button CSS */
+.heart-btn {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.heart-btn:active {
+  transform: scale(0.88);
+}
+.heart-btn:hover {
+  box-shadow: 0 4px 16px rgba(50,117,248,0.4);
+}
+
+/* Wrapper */
+.product-card-wrapper {
+  perspective: 900px;
+  z-index: 50;
+}
+`;
+
+// ============================================================================
 // BRAND LOGO SVG COMPONENTS
 // ============================================================================
 
@@ -138,7 +279,7 @@ const StripeLogo = ({ className = '' }: { className?: string }) => (
 // ============================================================================
 
 interface ProductCardProps {
-  product: ProductWithDetails;
+  product: ProductWithDetails & { media?: ProductMedia[] };
   compact?: boolean;
 }
 
@@ -154,9 +295,10 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
   const touchStartPos = useRef<{ x: number; y: number } | null>(null);
   const isScrolling = useRef(false);
-  const { addItem } = useCartStore();
+  const { addItem, openCart, getItemCount } = useCartStore();
   const { toggleItem, hasItem: isWishlisted } = useWishlistStore();
   const isLiked = isWishlisted(product.id);
+  const itemCount = getItemCount();
 
   const price = product.base_price;
   const comparePrice = product.compare_at_price;
@@ -166,28 +308,57 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
   const isInStock = (product.total_inventory || 0) > 0;
   const defaultVariant = product.variants?.[0];
   
-  // Determine which 3D effect to use based on product ID (50/50 split)
-  const use3DPin = typeof product.id === 'string' 
-    ? product.id.charCodeAt(0) % 2 === 0 
-    : (product.id as number) % 2 === 0;
 
-  // Random neon glow animation delay per card (2-8s range)
-  const neonDelay = useMemo(() => {
-    const hash = typeof product.id === 'string'
-      ? product.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
-      : (product.id as number);
-    return (hash % 7) * 0.9 + 0.5; // 0.5s to 6.8s
-  }, [product.id]);
 
-  const neonDuration = useMemo(() => {
-    const hash = typeof product.id === 'string'
-      ? product.id.split('').reduce((a, c) => a + c.charCodeAt(0) * 3, 0)
-      : (product.id as number) * 3;
-    return 3 + (hash % 4); // 3s to 6s
-  }, [product.id]);
+  const modalNavItems = useMemo(() => ([
+    { label: 'Store', href: '/store' },
+    { label: 'Apparel', href: '/store?category=apparel' },
+    { label: 'Accessories', href: '/store?category=accessories' },
+  ]), []);
+
+  const modalNavLinks = useMemo(() => ([
+    { label: 'All Products', href: '/store' },
+    { label: 'VIP', href: '/VIP' },
+    { label: 'Community', href: '/community' },
+  ]), []);
+
+  const overviewText = product.short_description || product.description || product.seo_description || '';
+  const fullDescription = product.description || product.seo_description || product.short_description || '';
+
+  const detailRows = useMemo(() => {
+    const details = product.details || {};
+    const rows: { label: string; value: string }[] = [];
+
+    if (details.material) rows.push({ label: 'Material', value: String(details.material) });
+    if (details.weight) rows.push({ label: 'Weight', value: String(details.weight) });
+    if (details.dimensions) {
+      const { width, height, depth } = details.dimensions;
+      const parts = [width ? `${width}W` : null, height ? `${height}H` : null, depth ? `${depth}D` : null].filter(Boolean);
+      if (parts.length > 0) rows.push({ label: 'Dimensions', value: parts.join(' x ') });
+    }
+    if (details.care_instructions) rows.push({ label: 'Care', value: String(details.care_instructions) });
+
+    Object.entries(details).forEach(([key, value]) => {
+      if (['material', 'weight', 'dimensions', 'care_instructions', 'rating_stats'].includes(key)) return;
+      if (value === null || value === undefined) return;
+      if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+        rows.push({ label: key.replace(/_/g, ' ').replace(/\b[a-z]/g, (char) => char.toUpperCase()), value: String(value) });
+      }
+    });
+
+    return rows;
+  }, [product.details]);
 
   useEffect(() => {
     setMounted(true);
+    // Inject heart pulse + premium card styles once globally
+    const styleId = 'heart-pulse-global-style';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.textContent = heartPulseStyle + premiumCardStyle;
+      document.head.appendChild(style);
+    }
   }, []);
 
   useEffect(() => {
@@ -200,11 +371,14 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
   useEffect(() => {
     if (showQuickView) {
       document.body.style.overflow = 'hidden';
+      document.body.classList.add('quick-view-open');
     } else {
       document.body.style.overflow = '';
+      document.body.classList.remove('quick-view-open');
     }
     return () => {
       document.body.style.overflow = '';
+      document.body.classList.remove('quick-view-open');
     };
   }, [showQuickView]);
 
@@ -414,72 +588,20 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
 
   const cardContent = (
     <>
-      <motion.article
-        className="group relative h-full w-full flex flex-col cursor-pointer overflow-hidden rounded-xl md:rounded-2xl"
-        style={{
-          isolation: 'isolate',
-          touchAction: 'manipulation',
-          zIndex: 1,
-          contain: 'layout style paint',
-          background: 'linear-gradient(135deg, #0a1628 0%, #0d2147 40%, #102a5a 60%, #0a1628 100%)',
-          border: '1px solid rgba(50,117,248,0.25)',
-          boxShadow: isHovered
-            ? '0 0 20px rgba(50,117,248,0.6), 0 0 40px rgba(50,117,248,0.3), 0 0 80px rgba(50,117,248,0.15), inset 0 1px 0 rgba(120,180,255,0.3)'
-            : undefined,
-          animation: `neon-glow-pulse ${neonDuration}s ease-in-out ${neonDelay}s infinite`,
-          transition: 'box-shadow 0.4s ease',
-        }}
-        onHoverStart={() => setIsHovered(true)}
-        onHoverEnd={() => setIsHovered(false)}
-        whileTap={{ scale: 0.98 }}
-        transition={{ duration: 0.2 }}
+      <article
+        className="group relative h-full w-full flex flex-col cursor-pointer overflow-hidden rounded-xl md:rounded-2xl product-card-premium"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        onClick={(e) => {
-          // Open expanded view on click - don't stopPropagation to allow 
-          // parent wrappers (PinContainer/outer div) to handle it too if needed
-          setShowQuickView(true);
-        }}
+        onClick={() => setShowQuickView(true)}
       >
-      {/* Full-card blue shimmer overlay — intensifies on hover */}
-      <div
-        className="absolute inset-0 store-shimmer-border pointer-events-none rounded-xl md:rounded-2xl"
-        style={{
-          background: isHovered
-            ? 'linear-gradient(90deg, transparent 0%, rgba(50,117,248,0.3) 20%, rgba(100,170,255,0.5) 50%, rgba(50,117,248,0.3) 80%, transparent 100%)'
-            : 'linear-gradient(90deg, transparent 0%, rgba(50,117,248,0.12) 25%, rgba(80,150,255,0.2) 50%, rgba(50,117,248,0.12) 75%, transparent 100%)',
-          width: '200%',
-          left: '-50%',
-          zIndex: 0,
-          transition: 'background 0.4s ease',
-        }}
-      />
-      {/* Animated neon edge glow at top */}
-      <div
-        className="absolute top-0 left-0 right-0 pointer-events-none"
-        style={{
-          height: isHovered ? 2 : 1,
-          background: isHovered
-            ? 'linear-gradient(90deg, transparent, rgba(80,160,255,0.8), rgba(160,210,255,0.9), rgba(80,160,255,0.8), transparent)'
-            : 'linear-gradient(90deg, transparent, rgba(50,117,248,0.5), rgba(120,180,255,0.6), rgba(50,117,248,0.5), transparent)',
-          boxShadow: isHovered ? '0 0 12px rgba(80,160,255,0.6)' : 'none',
-          zIndex: 0,
-          transition: 'all 0.4s ease',
-        }}
-      />
-      {/* Bottom neon edge */}
-      <div
-        className="absolute bottom-0 left-0 right-0 pointer-events-none"
-        style={{
-          height: isHovered ? 2 : 0,
-          background: 'linear-gradient(90deg, transparent, rgba(80,160,255,0.6), rgba(160,210,255,0.7), rgba(80,160,255,0.6), transparent)',
-          boxShadow: isHovered ? '0 0 12px rgba(80,160,255,0.5)' : 'none',
-          zIndex: 0,
-          transition: 'all 0.4s ease',
-          opacity: isHovered ? 1 : 0,
-        }}
-      />
+      {/* Neon edges — pure CSS */}
+      <div className="neon-edge-top" />
+      <div className="neon-edge-bottom" />
+      {/* Premium shine sweep on hover */}
+      <div className="card-shine-sweep" />
       {/* Image Container - Light theme with blue shimmer */}
       <div
         className={`relative overflow-hidden ${
@@ -487,26 +609,10 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
         }`}
         style={{ backgroundColor: 'rgba(10,22,40,0.6)', boxShadow: '0 2px 12px rgba(50,117,248,0.12)' }}
       >
-          {/* Animated Blue Shimmer Border - intensifies on hover */}
-          <div className="absolute inset-0 rounded-xl md:rounded-2xl overflow-hidden z-1">
-            <div
-              className="absolute inset-0 store-shimmer-border"
-              style={{
-                background: isHovered
-                  ? 'linear-gradient(90deg, transparent 0%, rgba(80,160,255,0.5) 25%, rgba(120,190,255,0.9) 50%, rgba(80,160,255,0.5) 75%, transparent 100%)'
-                  : 'linear-gradient(90deg, transparent 0%, rgba(50,117,248,0.3) 30%, rgba(50,117,248,0.7) 50%, rgba(50,117,248,0.3) 70%, transparent 100%)',
-                width: '200%',
-                left: '-50%',
-                transition: 'background 0.4s ease',
-              }}
-            />
-          </div>
-          
-          {/* Static Border — brighter on hover */}
-          <div className="absolute inset-0 rounded-xl md:rounded-2xl pointer-events-none z-2" style={{
-            border: isHovered ? '1px solid rgba(80,160,255,0.35)' : '1px solid rgba(50,117,248,0.12)',
-            transition: 'border-color 0.4s ease',
-          }} />
+          {/* Clean border glow — CSS driven */}
+          <div className="absolute inset-0 rounded-xl md:rounded-2xl pointer-events-none z-2 card-image-border" />
+          {/* Image shine sweep on hover */}
+          <div className="card-image-shine" />
           
           {/* Gradient overlay for depth */}
           <div className="absolute inset-0 bg-linear-to-t from-black/30 via-transparent to-transparent z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -540,46 +646,33 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
           {/* Badges - Black style */}
           <div className="absolute top-2 md:top-3 left-2 md:left-3 flex flex-col gap-1.5" style={{ zIndex: 9990 }}>
             {hasDiscount && (
-              <motion.span 
-                className="relative px-2 md:px-3 py-0.5 md:py-1 bg-black text-white text-[10px] md:text-xs font-bold rounded-full shadow-lg overflow-hidden"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
+              <span 
+                className="relative px-2 md:px-3 py-0.5 md:py-1 bg-black text-white text-[10px] md:text-xs font-bold rounded-full shadow-lg overflow-hidden card-badge"
                 style={{ border: '1px solid rgba(255,255,255,0.15)' }}
               >
-                {/* Blue Shimmer effect - GPU CSS animation */}
                 <div
-                  className="absolute inset-0 store-shimmer-fast"
-                  style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(50,117,248,0.3) 40%, rgba(50,117,248,0.5) 50%, rgba(50,117,248,0.3) 60%, transparent 100%)' }}
+                  className="absolute top-0 bottom-0 badge-shimmer-el"
+                  style={{ width: '60%', left: '-60%', background: 'linear-gradient(90deg, transparent 0%, rgba(50,117,248,0.35) 40%, rgba(80,160,255,0.55) 50%, rgba(50,117,248,0.35) 60%, transparent 100%)' }}
                 />
-                <span className="relative z-10">
-                  -<CountUp to={discount} from={0} duration={1} className="tracking-wide" />%
-                </span>
-              </motion.span>
+                <span className="relative z-10 tracking-wide">-{discount}%</span>
+              </span>
             )}
             {!isInStock && (
-              <span className="px-2 md:px-3 py-0.5 md:py-1 backdrop-blur-sm text-[10px] md:text-xs rounded-full shadow-lg font-semibold" style={{ backgroundColor: 'rgba(0,0,0,0.9)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.2)' }}>
+              <span className="px-2 md:px-3 py-0.5 md:py-1 text-[10px] md:text-xs rounded-full shadow-lg font-semibold" style={{ backgroundColor: 'rgba(0,0,0,0.95)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.2)' }}>
                 Sold out
               </span>
             )}
             {product.featured && isInStock && (
-              <motion.span 
-                className="relative px-2 md:px-3 py-0.5 md:py-1 bg-black text-white text-[10px] md:text-xs font-bold rounded-full overflow-hidden shadow-lg"
+              <span 
+                className="relative px-2 md:px-3 py-0.5 md:py-1 bg-black text-white text-[10px] md:text-xs font-bold rounded-full overflow-hidden shadow-lg card-badge"
                 style={{ border: '1px solid rgba(255,255,255,0.15)' }}
               >
-                {/* Blue Shimmer effect - GPU CSS animation */}
                 <div
-                  className="absolute inset-0 store-shimmer-fast"
-                  style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(50,117,248,0.3) 40%, rgba(50,117,248,0.5) 50%, rgba(50,117,248,0.3) 60%, transparent 100%)' }}
+                  className="absolute top-0 bottom-0 badge-shimmer-el"
+                  style={{ width: '60%', left: '-60%', background: 'linear-gradient(90deg, transparent 0%, rgba(50,117,248,0.35) 40%, rgba(80,160,255,0.55) 50%, rgba(50,117,248,0.35) 60%, transparent 100%)' }}
                 />
-                <span className="relative z-10">
-                  <EncryptedText 
-                    text="Featured"
-                    interval={100}
-                    revealDelayMs={30}
-                    className="tracking-wide"
-                  />
-                </span>
-              </motion.span>
+                <span className="relative z-10 tracking-wide">Featured</span>
+              </span>
             )}
           </div>
 
@@ -590,12 +683,12 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
         <div className={`mt-1.5 flex-1 flex flex-col relative px-2 md:px-3 pb-2 md:pb-3 ${compact ? 'space-y-1' : 'md:mt-4 space-y-1.5 md:space-y-2'}`} style={{ zIndex: 9990 }}>
           {product.category && !compact && (
             <p className="text-[10px] md:text-xs uppercase tracking-wider truncate" style={{ color: 'rgba(120,180,255,0.6)' }}>
-              <TextType text={product.category.name} typingSpeed={Math.max(5, 25 - product.category.name.length)} showCursor={false} loop={false} as="span" />
+              {product.category.name}
             </p>
           )}
           
           <h3 className={`font-medium transition-colors ${compact ? 'text-xs md:text-sm line-clamp-1' : 'text-sm md:text-base line-clamp-2'}`} style={{ color: '#f5f5f7' }}>
-            <TextType text={product.name} typingSpeed={Math.max(5, 25 - product.name.length / 2)} showCursor={false} loop={false} as="span" />
+            {product.name}
           </h3>
 
           <div className="flex items-center gap-1.5 md:gap-2">
@@ -641,7 +734,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
             </p>
           )}
         </div>
-    </motion.article>
+    </article>
 
     {/* Quick View Modal - Rendered via Portal ONLY when opened (lazy mount) */}
     {mounted && showQuickView && createPortal(
@@ -651,7 +744,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-md overflow-y-auto p-4 sm:p-6 md:p-8"
+          className="fixed inset-0 z-9999 flex items-center justify-center bg-black/70 overflow-y-auto p-3 sm:p-6 md:p-8"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -659,134 +752,156 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
           }}
           style={{ pointerEvents: 'all' }}
         >
-          {/* Close Button - Detached from modal, floats above everything */}
-          <motion.button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setShowQuickView(false);
-            }}
-            onTouchEnd={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setShowQuickView(false);
-            }}
-            className="fixed top-3 right-3 md:top-5 md:right-5 w-10 h-10 md:w-11 md:h-11 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-xl border border-white/30 flex items-center justify-center transition-all shadow-2xl z-[10001] cursor-pointer"
-            style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
-            whileHover={{ scale: 1.15 }}
-            whileTap={{ scale: 0.9 }}
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1, transition: { delay: 0.15 } }}
-            exit={{ opacity: 0, scale: 0 }}
-            aria-label="Close"
-          >
-            <X className="w-5 h-5 text-white" strokeWidth={2.5} />
-          </motion.button>
-
           <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
+            initial={{ scale: 0.98, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.95, opacity: 0 }}
+            exit={{ scale: 0.98, opacity: 0 }}
             transition={{ type: "spring", duration: 0.5 }}
-            className="relative w-full max-w-[96vw] sm:max-w-xl md:max-w-3xl lg:max-w-6xl max-h-[90vh] overflow-y-auto my-auto bg-black/95 backdrop-blur-xl rounded-2xl md:rounded-3xl border border-white/20 shadow-2xl"
+            className="relative w-full max-w-[96vw] sm:max-w-5xl lg:max-w-6xl max-h-[92vh] overflow-y-auto my-auto bg-[#f5f5f7] text-black rounded-2xl md:rounded-3xl border border-black/10 shadow-2xl"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
             }}
             style={{ pointerEvents: 'all' }}
           >
-            {/* Scrollable Content */}
-            <div className="w-full px-3 sm:px-4 md:px-8 lg:px-10 py-4 md:py-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 lg:gap-10">
-                {/* Product Media Carousel - Images & Videos */}
-                <div className="relative w-full aspect-square overflow-visible">
-                  {product.media && product.media.length > 0 ? (
-                    <ProductMediaCarousel
-                      media={product.media}
-                      productName={product.name}
-                      autoPlay={false}
-                      showThumbnails={true}
-                      enableZoom={true}
-                      enableFullscreen={true}
-                    />
-                  ) : product.primary_image ? (
-                    // Fallback to single image if no media array
-                    <div className="relative w-full h-full rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-xl">
-                      <Image
-                        src={(() => {
-                          let src = product.primary_image;
-                          // Strip leading slash from absolute URLs
-                          if (src.startsWith('/http://') || src.startsWith('/https://')) {
-                            src = src.substring(1);
-                          }
-                          // Return absolute URLs as-is
-                          if (src.startsWith('http://') || src.startsWith('https://')) {
-                            return src;
-                          }
-                          // Handle relative paths
-                          return src.startsWith('/') ? src : `/${src.replace(/^public\//, '')}`;
-                        })()}
-                        alt={product.name}
-                        fill
-                        className="object-cover"
-                        priority
-                      />
-                      {/* Discount Badge */}
-                      {hasDiscount && (
-                        <div className="absolute top-3 left-3 md:top-4 md:left-4 px-3 py-1.5 md:px-4 md:py-2 bg-black text-white text-xs md:text-sm font-bold rounded-full shadow-lg" style={{ border: '1px solid rgba(255,255,255,0.15)' }}>
-                          -<CountUp to={discount} from={0} duration={1} className="" />% OFF
+            <div className="sticky top-0 z-30 border-b border-black/10 bg-[#f5f5f7]/90 backdrop-blur-md">
+              <div className="relative">
+                <StorePillNav
+                  items={modalNavItems}
+                  desktopLinks={modalNavLinks}
+                  position="static"
+                  showSearch={false}
+                  showUser={false}
+                  showCart={true}
+                  cartCount={itemCount}
+                  onCartClick={openCart}
+                  className="rounded-t-2xl pr-14"
+                />
+                <motion.button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowQuickView(false);
+                  }}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowQuickView(false);
+                  }}
+                  className="absolute top-1/2 right-4 -translate-y-1/2 w-9 h-9 md:w-10 md:h-10 rounded-full bg-white hover:bg-white border border-black/10 flex items-center justify-center transition-all shadow-lg z-40 cursor-pointer"
+                  style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.94 }}
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1, transition: { delay: 0.1 } }}
+                  exit={{ opacity: 0, scale: 0 }}
+                  aria-label="Close"
+                >
+                  <X className="w-4 h-4 text-black" strokeWidth={2.5} />
+                </motion.button>
+              </div>
+            </div>
+
+            <div className="w-full px-4 sm:px-6 md:px-10 py-6 md:py-10">
+              <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] gap-6 lg:gap-10">
+                {/* Product Media Column */}
+                <div className="space-y-4 lg:sticky lg:top-24 self-start">
+                  <div className="rounded-3xl border border-black/10 bg-white shadow-sm p-3">
+                    <div className="aspect-square w-full rounded-2xl overflow-hidden bg-[#f5f5f7]">
+                      {product.media && product.media.length > 0 ? (
+                        <ProductMediaCarousel
+                          media={product.media}
+                          productName={product.name}
+                          autoPlay={false}
+                          showThumbnails={true}
+                          enableZoom={true}
+                          enableFullscreen={true}
+                          className="h-full"
+                        />
+                      ) : product.primary_image ? (
+                        <div className="relative w-full h-full">
+                          <Image
+                            src={(() => {
+                              let src = product.primary_image;
+                              if (src.startsWith('/http://') || src.startsWith('/https://')) {
+                                src = src.substring(1);
+                              }
+                              if (src.startsWith('http://') || src.startsWith('https://')) {
+                                return src;
+                              }
+                              return src.startsWith('/') ? src : `/${src.replace(/^public\//, '')}`;
+                            })()}
+                            alt={product.name}
+                            fill
+                            className="object-cover"
+                            priority
+                          />
+                          {hasDiscount && (
+                            <div className="absolute top-3 left-3 px-3 py-1.5 bg-black text-white text-xs font-semibold rounded-full shadow-md">
+                              -<CountUp to={discount} from={0} duration={1} className="" />% OFF
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="relative w-full h-full flex items-center justify-center">
+                          <span className="text-black/20 text-8xl font-light">B</span>
                         </div>
                       )}
                     </div>
-                  ) : (
-                    <div className="relative w-full h-full rounded-2xl overflow-hidden bg-white/5 border border-white/10 shadow-xl flex items-center justify-center">
-                      <span className="text-white/20 text-8xl font-light">B</span>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-2xl border border-black/10 bg-white p-4 text-sm">
+                      <p className="text-[11px] uppercase tracking-[0.2em] text-black/50">Availability</p>
+                      <p className="mt-1 font-medium text-black">
+                        {isInStock ? 'In stock and ready to ship' : 'Out of stock'}
+                      </p>
                     </div>
-                  )}
+                    <div className="rounded-2xl border border-black/10 bg-white p-4 text-sm">
+                      <p className="text-[11px] uppercase tracking-[0.2em] text-black/50">Delivery</p>
+                      <p className="mt-1 font-medium text-black">Free standard shipping over $150</p>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Product Details */}
-                <div className="flex flex-col space-y-4 md:space-y-6">
-                  <div className="space-y-2 md:space-y-3">
+                <div className="flex flex-col space-y-6 max-h-[calc(92vh-220px)] overflow-y-auto pr-1">
+                  <div className="space-y-2">
                     {product.category && (
-                      <p className="text-xs md:text-sm uppercase tracking-widest font-semibold text-white/50">
-                        <TextType text={product.category.name} typingSpeed={Math.max(5, 25 - product.category.name.length)} showCursor={false} loop={false} as="span" />
+                      <p className="text-[11px] uppercase tracking-[0.2em] text-black/50">
+                        {product.category.name}
                       </p>
                     )}
-                    <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight">
-                      <TextType text={product.name} typingSpeed={Math.max(8, 30 - product.name.length / 2)} showCursor cursorCharacter="_" cursorBlinkDuration={0.5} loop={false} as="span" />
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-black">
+                      {product.name}
                     </h1>
-                    
-                    {/* Subtitle/Short Description */}
-                    {product.description && (
-                      <p className="text-sm md:text-base lg:text-lg text-white/60 leading-relaxed">
-                        <TextType text={product.description} typingSpeed={Math.max(2, 15 - product.description.length / 20)} showCursor={false} loop={false} as="span" />
+                    {overviewText && (
+                      <p className="text-sm md:text-base text-black/60 leading-relaxed">
+                        {overviewText}
                       </p>
                     )}
                   </div>
 
-                  {/* Price - Apple style */}
-                  <div className="flex items-center gap-3 md:gap-4 py-3 md:py-4 border-y border-white/10">
-                    <span className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">
+                  <div className="flex flex-wrap items-center gap-3 py-3 border-y border-black/10">
+                    <span className="text-3xl md:text-4xl font-semibold text-black">
                       {formatPrice(selectedVariant?.price || price)}
                     </span>
                     {hasDiscount && (
                       <>
-                        <span className="text-lg sm:text-xl md:text-2xl text-white/40 line-through">
+                        <span className="text-base md:text-lg text-black/40 line-through">
                           {formatPrice(comparePrice)}
                         </span>
-                        <span className="px-3 py-1 md:px-4 md:py-1.5 bg-black text-white text-xs md:text-sm font-bold rounded-full shadow-lg" style={{ border: '1px solid rgba(255,255,255,0.15)' }}>
+                        <span className="px-3 py-1 bg-black text-white text-xs font-semibold rounded-full">
                           Save <CountUp to={discount} from={0} duration={1} className="" />%
                         </span>
                       </>
                     )}
                   </div>
 
-                  {/* Variants - Apple style */}
                   {product.variants && product.variants.length > 1 && (
                     <div className="w-full">
-                      <p className="text-white text-sm md:text-base font-semibold mb-3 md:mb-4">Select Your Option:</p>
-                      <div className="flex flex-wrap gap-2 md:gap-3">
+                      <p className="text-sm font-semibold text-black mb-3">Choose your option</p>
+                      <div className="flex flex-wrap gap-2">
                         {product.variants.map((variant, index) => (
                           <motion.button
                             key={variant.id}
@@ -800,20 +915,17 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                               e.stopPropagation();
                               setSelectedVariant(variant);
                             }}
-                            style={{
-                              pointerEvents: 'all',
-                              touchAction: 'manipulation'
-                            }}
-                            className={`px-4 py-2.5 md:px-6 md:py-3 rounded-xl transition-all font-medium text-sm md:text-base border-2 ${
+                            style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
+                            className={`px-4 py-2.5 rounded-xl border text-sm font-medium transition-all ${
                               selectedVariant?.id === variant.id
-                                ? 'bg-white text-black border-white shadow-lg'
-                                : 'bg-white/5 text-white border-white/30 hover:bg-white/10 hover:border-white/50'
+                                ? 'bg-black text-white border-black'
+                                : 'bg-white text-black border-black/10 hover:border-black/30'
                             }`}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            initial={{ opacity: 0, y: 10 }}
+                            whileHover={{ scale: 1.03 }}
+                            whileTap={{ scale: 0.97 }}
+                            initial={{ opacity: 0, y: 8 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.05, duration: 0.3 }}
+                            transition={{ delay: index * 0.04, duration: 0.25 }}
                           >
                             {variant.options?.size || variant.options?.color || `Option ${variant.id}`}
                           </motion.button>
@@ -822,20 +934,43 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                     </div>
                   )}
 
-                  {/* Stock Status - Apple style */}
-                  <div className="flex items-center gap-2 md:gap-3 p-3 md:p-4 bg-white/5 rounded-xl border border-white/10">
-                    <div className={`w-2 h-2 md:w-3 md:h-3 rounded-full ${isInStock ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
-                    <span className={`text-xs sm:text-sm md:text-base font-medium ${isInStock ? 'text-green-400' : 'text-red-400'}`}>
-                      {isInStock ? '✓ In Stock - Ready to Ship' : '✗ Out of Stock'}
-                    </span>
+                  <div className="rounded-2xl border border-black/10 bg-white p-4">
+                    <p className="text-[11px] uppercase tracking-[0.2em] text-black/50">Highlights</p>
+                    <div className="mt-3 space-y-2 text-sm text-black/70">
+                      {detailRows.length > 0 ? (
+                        detailRows.slice(0, 6).map((row) => (
+                          <div key={row.label} className="flex items-center justify-between gap-3">
+                            <span className="text-black/60">{row.label}</span>
+                            <span className="font-medium text-black">{row.value}</span>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-black/60">Premium materials, refined fit, and elevated everyday comfort.</p>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Payment Options - Apple style black and white */}
-                  <div className="space-y-3 md:space-y-4 pt-4 md:pt-6">
-                    <p className="text-white text-sm md:text-base font-semibold">Secure Checkout:</p>
-                    
-                    {/* Pay with Crypto - Inline Checkout */}
-                    <div 
+                  {fullDescription && fullDescription !== overviewText && (
+                    <div className="rounded-2xl border border-black/10 bg-white p-4">
+                      <p className="text-[11px] uppercase tracking-[0.2em] text-black/50">Full Description</p>
+                      <p className="mt-3 text-sm text-black/70 leading-relaxed">{fullDescription}</p>
+                    </div>
+                  )}
+
+                  {product.tags && product.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {product.tags.map((tag) => (
+                        <span key={tag} className="px-3 py-1 rounded-full text-xs bg-black/5 text-black/70 border border-black/10">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="space-y-3">
+                    <p className="text-sm font-semibold text-black">Checkout</p>
+
+                    <div
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -853,79 +988,72 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                       />
                     </div>
 
-                    {/* Unified Payment Picker + Action Button */}
                     <div className="w-full flex flex-col gap-0">
-                      {/* Payment Method Picker Tabs */}
-                      <div 
-                        className="grid grid-cols-4 w-full rounded-t-2xl overflow-hidden border border-white/20 border-b-0"
+                      <div
+                        className="grid grid-cols-4 w-full rounded-t-2xl overflow-hidden border border-black/10 border-b-0"
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
                         onTouchEnd={(e) => { e.stopPropagation(); }}
                         style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
                       >
-                        {/* Cart Tab */}
                         <button
                           onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPayMethod('cart'); }}
                           onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setPayMethod('cart'); }}
-                          className={`py-3 md:py-3.5 text-[10px] md:text-xs font-bold transition-all flex flex-col items-center justify-center gap-0.5 ${
+                          className={`py-3 text-[10px] font-semibold transition-all flex flex-col items-center justify-center gap-0.5 ${
                             payMethod === 'cart'
-                              ? 'bg-white text-black shadow-inner'
-                              : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+                              ? 'bg-black text-white'
+                              : 'bg-white text-black/60 hover:text-black'
                           }`}
                           style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
                         >
-                          <ShoppingBag className="w-4 h-4 md:w-[18px] md:h-[18px]" />
+                          <ShoppingBag className="w-4 h-4" />
                           <span>Cart</span>
                         </button>
 
-                        {/* Whop Tab */}
                         <button
                           onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPayMethod('whop'); }}
                           onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setPayMethod('whop'); }}
-                          className={`py-3 md:py-3.5 text-[10px] md:text-xs font-bold transition-all border-l border-white/10 flex flex-col items-center justify-center gap-0.5 ${
+                          className={`py-3 text-[10px] font-semibold transition-all border-l border-black/10 flex flex-col items-center justify-center gap-0.5 ${
                             payMethod === 'whop'
-                              ? 'bg-white text-black shadow-inner'
-                              : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+                              ? 'bg-black text-white'
+                              : 'bg-white text-black/60 hover:text-black'
                           }`}
                           style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
                         >
-                          <WhopLogo className="w-5 h-5 md:w-[22px] md:h-[22px]" />
+                          <WhopLogo className="w-5 h-5" />
                           <span>Whop</span>
                         </button>
 
-                        {/* Skrill Tab */}
                         <button
                           onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPayMethod('skrill'); }}
                           onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setPayMethod('skrill'); }}
-                          className={`py-3 md:py-3.5 text-[10px] md:text-xs font-bold transition-all border-l border-white/10 flex flex-col items-center justify-center gap-0.5 ${
+                          className={`py-3 text-[10px] font-semibold transition-all border-l border-black/10 flex flex-col items-center justify-center gap-0.5 ${
                             payMethod === 'skrill'
-                              ? 'bg-white text-black shadow-inner'
-                              : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+                              ? 'bg-black text-white'
+                              : 'bg-white text-black/50 hover:text-black'
                           }`}
                           style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
                         >
-                          <SkrillLogo className="w-5 h-5 md:w-[22px] md:h-[22px]" />
+                          <SkrillLogo className="w-5 h-5" />
                           <span>Skrill</span>
-                          <span className="text-[7px] md:text-[8px] opacity-50 leading-none -mt-0.5">Soon</span>
+                          <span className="text-[7px] opacity-50 leading-none -mt-0.5">Soon</span>
                         </button>
 
-                        {/* Stripe Tab */}
                         <button
                           onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPayMethod('stripe'); }}
                           onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setPayMethod('stripe'); }}
-                          className={`py-3 md:py-3.5 text-[10px] md:text-xs font-bold transition-all border-l border-white/10 flex flex-col items-center justify-center gap-0.5 ${
+                          className={`py-3 text-[10px] font-semibold transition-all border-l border-black/10 flex flex-col items-center justify-center gap-0.5 ${
                             payMethod === 'stripe'
-                              ? 'bg-white text-black shadow-inner'
-                              : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+                              ? 'bg-black text-white'
+                              : 'bg-white text-black/50 hover:text-black'
                           }`}
                           style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
                         >
-                          <StripeLogo className="w-5 h-5 md:w-[22px] md:h-[22px]" />
+                          <StripeLogo className="w-5 h-5" />
                           <span>Stripe</span>
-                          <span className="text-[7px] md:text-[8px] opacity-50 leading-none -mt-0.5">Soon</span>
+                          <span className="text-[7px] opacity-50 leading-none -mt-0.5">Soon</span>
                         </button>
                       </div>
 
-                      {/* Action Button - changes based on selected method */}
                       <AnimatePresence mode="wait">
                         <motion.button
                           key={payMethod}
@@ -945,16 +1073,13 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                             e.stopPropagation();
                           }}
                           disabled={payMethod === 'stripe' || payMethod === 'skrill' || !isInStock}
-                          style={{
-                            pointerEvents: 'all',
-                            touchAction: 'manipulation'
-                          }}
-                          className={`w-full py-3.5 md:py-4 rounded-b-2xl transition-all flex items-center justify-center gap-2 text-sm md:text-base font-bold border-2 border-t-0 border-white/20 shadow-lg ${
+                          style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
+                          className={`w-full py-3.5 rounded-b-2xl transition-all flex items-center justify-center gap-2 text-sm font-semibold border border-t-0 border-black/10 ${
                             payMethod === 'stripe' || payMethod === 'skrill'
-                              ? 'bg-white/10 text-white/40 cursor-not-allowed'
+                              ? 'bg-black/10 text-black/40 cursor-not-allowed'
                               : payMethod === 'cart'
-                                ? 'bg-white hover:bg-white/90 text-black'
-                                : 'bg-black hover:bg-black/80 text-white disabled:opacity-50 disabled:cursor-not-allowed'
+                                ? 'bg-black text-white hover:bg-black/90'
+                                : 'bg-white text-black hover:bg-black/5'
                           }`}
                           whileHover={payMethod !== 'stripe' && payMethod !== 'skrill' ? { scale: 1.02 } : {}}
                           whileTap={payMethod !== 'stripe' && payMethod !== 'skrill' ? { scale: 0.98 } : {}}
@@ -965,25 +1090,25 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                         >
                           {payMethod === 'whop' && (
                             <>
-                              <WhopLogo className="w-5 h-5 md:w-6 md:h-6" />
+                              <WhopLogo className="w-5 h-5" />
                               <span>Pay with Whop</span>
                             </>
                           )}
                           {payMethod === 'skrill' && (
                             <>
-                              <SkrillLogo className="w-5 h-5 md:w-6 md:h-6" />
+                              <SkrillLogo className="w-5 h-5" />
                               <span>Skrill — Coming Soon</span>
                             </>
                           )}
                           {payMethod === 'cart' && (
                             <>
-                              <ShoppingBag className="w-4 h-4 md:w-5 md:h-5" />
+                              <ShoppingBag className="w-4 h-4" />
                               <span>Add to Cart</span>
                             </>
                           )}
                           {payMethod === 'stripe' && (
                             <>
-                              <StripeLogo className="w-5 h-5 md:w-6 md:h-6" />
+                              <StripeLogo className="w-5 h-5" />
                               <span>Stripe — Coming Soon</span>
                             </>
                           )}
@@ -991,34 +1116,36 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                       </AnimatePresence>
                     </div>
 
-                    {/* Crypto Guide Link */}
                     <motion.a
                       href="/crypto-guide"
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => { e.stopPropagation(); }}
                       onTouchEnd={(e) => { e.stopPropagation(); }}
-                      className="w-full py-2.5 md:py-3 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white text-xs md:text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-2 border border-white/10"
+                      className="w-full py-2.5 bg-white text-black/70 hover:text-black text-xs font-medium rounded-xl transition-all flex items-center justify-center gap-2 border border-black/10"
                       style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <Wallet className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                      <Wallet className="w-3.5 h-3.5" />
                       <span>How to Pay with Crypto</span>
                     </motion.a>
 
-                    {/* Security Badges */}
-                    <div className="flex items-center justify-center gap-2 md:gap-3 text-white/40 text-xs pt-3 flex-wrap">
-                      <span>🔒 Secure</span>
+                    <div className="flex items-center justify-center gap-2 text-black/40 text-xs pt-2 flex-wrap">
+                      <span>Secure</span>
                       <span>•</span>
-                      <span>💳 Cards</span>
+                      <span>Cards</span>
                       <span className="hidden sm:inline">•</span>
-                      <span className="hidden md:inline">📱 Apple Pay</span>
+                      <span className="hidden md:inline">Apple Pay</span>
                       <span className="hidden md:inline">•</span>
-                      <span>₿ Crypto</span>
+                      <span>Crypto</span>
                     </div>
                   </div>
                 </div>
+              </div>
+
+              <div className="mt-12 -mx-4 sm:-mx-6 md:-mx-10">
+                <StoreFooter />
               </div>
             </div>
           </motion.div>
@@ -1030,116 +1157,42 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
     </>
   );
 
-  if (use3DPin) {
-    return (
-      <>
-        <div 
-          data-product-card
-          className="h-full w-full flex items-center justify-center relative cursor-pointer" 
-          style={{ zIndex: 50, contentVisibility: 'auto', containIntrinsicSize: 'auto 400px' } as React.CSSProperties}
-        >
-          <PinContainer
-            title={product.name}
-            containerClassName="w-full h-full"
-            onClick={() => setShowQuickView(true)}
-          >
-            <div className="flex flex-col p-0 tracking-tight w-full h-full">
-              <HoverBorderGradient
-                containerClassName={compact ? 'rounded-lg w-full h-full' : 'rounded-xl md:rounded-2xl w-full h-full'}
-                className="p-0 bg-transparent w-full h-full"
-                as="div"
-                onClick={() => setShowQuickView(true)}
-              >
-                {cardContent}
-              </HoverBorderGradient>
-            </div>
-          </PinContainer>
-          
-          {/* Floating Buttons - Outside all card effects */}
-          <motion.button
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleLike(e); }}
-            className={`absolute top-2 md:top-3 right-2 md:right-3 h-8 w-8 md:h-10 md:w-10 rounded-full 
-                       flex items-center justify-center
-                       transition-all duration-300 pointer-events-auto
-                       ${isLiked ? 'text-sky-400' : ''}`}
-            style={{ 
-              zIndex: 9999,
-              backgroundColor: 'rgba(10,22,40,0.85)',
-              border: '1px solid rgba(50,117,248,0.3)',
-              boxShadow: '0 2px 8px rgba(16,42,90,0.3)',
-              backdropFilter: 'blur(8px)',
-              color: isLiked ? undefined : 'rgba(255,255,255,0.6)'
-            }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <style dangerouslySetInnerHTML={{ __html: heartPulseStyle }} />
-            <svg className="absolute -top-3 left-1/2 -translate-x-1/2" width="30" height="10" viewBox="0 0 30 10" fill="none">
-              <path d="M0 5 L5 5 L7 2 L9 8 L11 1 L13 7 L15 3 L17 6 L19 5 L23 5 L25 3 L27 6 L30 5" 
-                stroke={isLiked ? '#38bdf8' : '#3b82f6'} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"
-                className="heart-ecg-line" fill="none" />
-            </svg>
-            <Heart className={`w-4 h-4 ${isLiked ? 'fill-current text-sky-400' : 'heart-pulse-blue'}`} style={!isLiked ? { fill: 'transparent', stroke: '#3b82f6' } : undefined} />
-          </motion.button>
-          
-
-        </div>
-      </>
-    );
-  }
-
   return (
-    <>
-      <div 
-        data-product-card
-        className="block h-full w-full relative cursor-pointer" 
-        style={{ zIndex: 50, touchAction: 'manipulation', contentVisibility: 'auto', containIntrinsicSize: 'auto 400px' } as React.CSSProperties}
-        onClick={() => setShowQuickView(true)}
+    <div 
+      data-product-card
+      className="block h-full w-full relative cursor-pointer product-card-wrapper" 
+      style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 400px' } as React.CSSProperties}
+    >
+      {cardContent}
+      
+      {/* Floating Heart Button — CSS transitions only */}
+      <button
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleLike(e); }}
+        className={`absolute top-2 md:top-3 right-2 md:right-3 h-8 w-8 md:h-10 md:w-10 rounded-full 
+                   flex items-center justify-center
+                   pointer-events-auto heart-btn
+                   ${isLiked ? 'text-sky-400' : ''}`}
+        style={{ 
+          zIndex: 9999,
+          backgroundColor: 'rgba(10,22,40,0.92)',
+          border: '1px solid rgba(50,117,248,0.3)',
+          boxShadow: '0 2px 8px rgba(16,42,90,0.3)',
+          color: isLiked ? undefined : 'rgba(255,255,255,0.6)'
+        }}
       >
-        <CardContainer className="h-full w-full" containerClassName="py-0 h-full w-full">
-          <CardBody className="h-full w-full p-0">
-            <CardItem translateZ="100" className="h-full w-full" onClick={() => setShowQuickView(true)}>
-              <HoverBorderGradient
-                containerClassName={compact ? 'rounded-lg h-full w-full' : 'rounded-xl md:rounded-2xl h-full w-full'}
-                className="p-0 bg-transparent h-full w-full"
-                as="div"
-                onClick={() => setShowQuickView(true)}
-              >
-                {cardContent}
-              </HoverBorderGradient>
-            </CardItem>
-          </CardBody>
-        </CardContainer>
-        
-        {/* Floating Buttons - Outside all card effects */}
-        <motion.button
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleLike(e); }}
-          className={`absolute top-2 md:top-3 right-2 md:right-3 h-8 w-8 md:h-10 md:w-10 rounded-full 
-                     flex items-center justify-center
-                     transition-all duration-300 pointer-events-auto
-                     ${isLiked ? 'text-sky-400' : ''}`}
-          style={{ 
-            zIndex: 9999,
-            backgroundColor: 'rgba(10,22,40,0.85)',
-            border: '1px solid rgba(50,117,248,0.3)',
-            boxShadow: '0 2px 8px rgba(16,42,90,0.3)',
-            backdropFilter: 'blur(8px)',
-            color: isLiked ? undefined : 'rgba(255,255,255,0.6)'
-          }}
-          whileTap={{ scale: 0.9 }}
-        >
-          <style dangerouslySetInnerHTML={{ __html: heartPulseStyle }} />
-          <svg className="absolute -top-3 left-1/2 -translate-x-1/2" width="30" height="10" viewBox="0 0 30 10" fill="none">
-            <path d="M0 5 L5 5 L7 2 L9 8 L11 1 L13 7 L15 3 L17 6 L19 5 L23 5 L25 3 L27 6 L30 5" 
-              stroke={isLiked ? '#38bdf8' : '#3b82f6'} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"
-              className="heart-ecg-line" fill="none" />
-          </svg>
-          <Heart className={`w-4 h-4 ${isLiked ? 'fill-current text-sky-400' : 'heart-pulse-blue'}`} style={!isLiked ? { fill: 'transparent', stroke: '#3b82f6' } : undefined} />
-        </motion.button>
-        
-
-      </div>
-    </>
+        <svg className="absolute -top-3 left-1/2 -translate-x-1/2" width="30" height="10" viewBox="0 0 30 10" fill="none">
+          <path
+            d="M0 5 L5 5 L7 2 L9 8 L11 1 L13 7 L15 3 L17 6 L19 5 L23 5 L25 3 L27 6 L30 5"
+            stroke={isLiked ? '#38bdf8' : '#3b82f6'}
+            strokeWidth="1.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="heart-ecg-line"
+            fill="none"
+          />
+        </svg>
+        <Heart className={`w-4 h-4 ${isLiked ? 'fill-current text-sky-400' : 'heart-pulse-blue'}`} style={!isLiked ? { fill: 'transparent', stroke: '#3b82f6' } : undefined} />
+      </button>
+    </div>
   );
 });

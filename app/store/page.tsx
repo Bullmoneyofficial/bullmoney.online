@@ -16,7 +16,9 @@ import { CryptoCheckoutTrigger } from '@/components/shop/CryptoCheckoutInline';
 import { WorldMapPlaceholder } from '@/components/ui/world-map-placeholder';
 import { AnimatedProductGrid } from '@/components/shop/AnimatedProductGrid';
 import { CircularProductGrid } from '@/components/shop/CircularProductGrid';
+import { GlassProductGrid } from '@/components/shop/GlassProductGrid';
 import { ProductsCarousel } from '@/components/shop/ProductsCarousel';
+import { StorePillNav } from '@/components/store/StorePillNav';
 import { useStoreSection } from './StoreMemoryContext';
 import { buildUrlParams, hasActiveFilters as checkActiveFilters } from './store.utils';
 import { SORT_OPTIONS, CATEGORIES } from './store.config';
@@ -107,6 +109,46 @@ const HERO_CAROUSEL_SLIDES = [
   { type: 'spline' as const, scene: '/scene3.splinecode' },
 ];
 
+const GRID_VARIANTS = [
+  { value: 'animated', label: 'Animated grid', group: 'Dynamic' },
+  { value: 'circular', label: 'Circular grid', group: 'Dynamic' },
+  { value: 'glass', label: 'Glass grid', group: 'Dynamic' },
+  { value: 'carousel', label: 'Carousel', group: 'Dynamic' },
+  { value: 'compact', label: 'Compact grid', group: 'Classic' },
+  { value: 'masonry', label: 'Masonry columns', group: 'Classic' },
+  { value: 'list', label: 'List stack', group: 'Classic' },
+  { value: 'stacked', label: 'Stacked hero', group: 'Classic' },
+  { value: 'tiles', label: 'Tile wall', group: 'Classic' },
+  { value: 'compact-2', label: 'Compact tight', group: 'Compact' },
+  { value: 'micro', label: 'Micro tiles', group: 'Compact' },
+  { value: 'dense', label: 'Dense grid', group: 'Compact' },
+  { value: 'snug', label: 'Snug grid', group: 'Compact' },
+  { value: 'wide', label: 'Wide cards', group: 'Layout' },
+  { value: 'center', label: 'Centered grid', group: 'Layout' },
+  { value: 'split', label: 'Split layout', group: 'Layout' },
+  { value: 'gallery', label: 'Gallery flow', group: 'Layout' },
+  { value: 'ribbon', label: 'Ribbon row', group: 'Layout' },
+  { value: 'shelves', label: 'Shelves', group: 'Layout' },
+  { value: 'glow', label: 'Glow grid', group: 'Style' },
+  { value: 'stripe', label: 'Striped list', group: 'Style' },
+  { value: 'edge', label: 'Edge borders', group: 'Style' },
+  { value: 'diagonal', label: 'Diagonal tilt', group: 'Style' },
+  { value: 'spotlight', label: 'Spotlight', group: 'Style' },
+  { value: 'panel', label: 'Panel grid', group: 'Style' },
+  { value: 'frame', label: 'Framed cards', group: 'Style' },
+  { value: 'shadow', label: 'Shadow stack', group: 'Style' },
+  { value: 'borderless', label: 'Borderless', group: 'Style' },
+] as const;
+
+const GRID_VARIANT_GROUP_ORDER = ['Dynamic', 'Classic', 'Compact', 'Layout', 'Style'] as const;
+const GRID_VARIANT_GROUPS = GRID_VARIANTS.reduce<Record<string, typeof GRID_VARIANTS[number][]>>((acc, variant) => {
+  if (!acc[variant.group]) acc[variant.group] = [];
+  acc[variant.group].push(variant);
+  return acc;
+}, {});
+
+type GridVariant = typeof GRID_VARIANTS[number]['value'];
+
 const HERO_WORLD_MAP_DOTS = [
   {
     start: { lat: 40.7128, lng: -74.006, label: 'New York' },
@@ -164,15 +206,18 @@ const pickHeroSlideIndex = () => {
 type StorePageProps = {
   routeBase?: string;
   syncUrl?: boolean;
+  showProductSections?: boolean;
 };
 
-export default function StorePage({ routeBase = '/store', syncUrl = true }: StorePageProps) {
+export default function StorePage({ routeBase = '/store', syncUrl = true, showProductSections = true }: StorePageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const hero = useStoreSection('hero');
   const productsSection = useStoreSection('products');
   const featuredSection = useStoreSection('featured');
   const footerSection = useStoreSection('footer');
+  const [heroMode, setHeroMode] = useState<'store' | 'trader'>('store');
+  const showProducts = showProductSections && heroMode === 'store';
 
   const [products, setProducts] = useState<ProductWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
@@ -194,6 +239,9 @@ export default function StorePage({ routeBase = '/store', syncUrl = true }: Stor
     'cart' | 'stripe' | 'whop' | 'skrill'
   >('cart');
   const [useGridLayouts, setUseGridLayouts] = useState(true);
+  const [productsGridVariant, setProductsGridVariant] = useState<GridVariant>('spotlight');
+  const [featuredGridVariant, setFeaturedGridVariant] = useState<GridVariant>('spotlight');
+  const [timelineGridVariant, setTimelineGridVariant] = useState<GridVariant>('spotlight');
   const [heroSlideIndex, setHeroSlideIndex] = useState(() => pickHeroSlideIndex());
   const [showHeroMapOverlay] = useState(() => Math.random() < 0.05);
   const heroCacheLoadedRef = useRef(false);
@@ -243,6 +291,9 @@ export default function StorePage({ routeBase = '/store', syncUrl = true }: Stor
   const [showLoader, setShowLoader] = useState(true);
 
   const addItem = useCartStore((state) => state.addItem);
+  const openCart = useCartStore((state) => state.openCart);
+  const getItemCount = useCartStore((state) => state.getItemCount);
+  const cartCount = getItemCount();
   const paddingBoost = isDesktop ? 60 : 15;
 
   const currencyFormatter = useMemo(() => new Intl.NumberFormat('en-US', {
@@ -263,6 +314,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true }: Stor
     return normalized.startsWith('/') ? normalized : `/${normalized.replace(/^public\//, '')}`;
   }, []);
 
+
   const handleOpenVip = useCallback(() => {
     SoundEffects.click();
     openProductsModal();
@@ -270,11 +322,58 @@ export default function StorePage({ routeBase = '/store', syncUrl = true }: Stor
 
   const handleVisitShop = useCallback(() => {
     SoundEffects.click();
+    if (!showProducts && showProductSections) {
+      setHeroMode('store');
+      setTimeout(() => {
+        const target = document.querySelector('[data-products-grid]');
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 0);
+      return;
+    }
     const target = document.querySelector('[data-products-grid]');
     if (target) {
       target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  }, []);
+  }, [showProducts, showProductSections]);
+
+  const columnNavItems = useMemo(() => ([
+    { label: 'Home', href: '/' },
+    { label: 'Store', href: '/store' },
+    { label: 'Apparel', href: '/store?category=apparel' },
+    { label: 'Accessories', href: '/store?category=accessories' },
+    { label: 'Tech & Gear', href: '/store?category=tech-gear' },
+    { label: 'Drinkware', href: '/store?category=drinkware' },
+  ]), []);
+
+  const columnDesktopLinks = useMemo(() => ([
+    { label: 'Products', onClick: () => openProductsModal(), variant: 'link' as const },
+    { label: 'VIP', href: '/VIP', variant: 'link' as const },
+    { label: 'Community', href: '/community', variant: 'link' as const },
+  ]), [openProductsModal]);
+
+  const columnHeaderSection = (
+    <section
+      data-apple-section
+      style={{ backgroundColor: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.06)' }}
+    >
+      <div className="mx-auto w-full max-w-[90rem] px-4 sm:px-6" style={{ paddingTop: 12, paddingBottom: 12 }}>
+        <StorePillNav
+          items={columnNavItems}
+          desktopLinks={columnDesktopLinks}
+          position="static"
+          showSearch={true}
+          showUser={true}
+          showCart={true}
+          cartCount={cartCount}
+          onCartClick={openCart}
+          onSearchClick={handleVisitShop}
+          onUserClick={() => router.push('/login')}
+        />
+      </div>
+    </section>
+  );
 
   useEffect(() => {
     setHasMounted(true);
@@ -439,11 +538,422 @@ export default function StorePage({ routeBase = '/store', syncUrl = true }: Stor
     }
   }, [filters, debouncedSearch]);
 
+  const renderGridVariant = useCallback((
+    variant: GridVariant,
+    section: 'products' | 'featured' | 'timeline',
+    items: ProductWithDetails[],
+    allowAnimation: boolean,
+  ) => {
+    if (!items.length) return null;
+    const isProducts = section === 'products';
+    const isFeatured = section === 'featured';
+    const isTimeline = section === 'timeline';
+    const estimateVisibleCount = () => {
+      const desktopCols = isUltraWide ? 6 : 4;
+      const compactCols = isUltraWide ? 7 : 5;
+      const denseCols = isUltraWide ? 7 : 5;
+      const tilesCols = isUltraWide ? 6 : 4;
+      const microCols = isUltraWide ? 9 : 7;
+      const gridRows = isProducts ? 2 : 1;
+
+      switch (variant) {
+        case 'animated':
+          return (isTimeline ? 3 : 4) * gridRows;
+        case 'circular':
+        case 'glass':
+          return (isTimeline ? 3 : isFeatured ? 4 : 5) * gridRows;
+        case 'carousel':
+          return (isProducts ? 2 : 1) * (isMobile ? 3 : 4);
+        case 'compact':
+          return (isMobile ? 2 : desktopCols) * 2;
+        case 'compact-2':
+          return (isMobile ? 3 : compactCols) * 2;
+        case 'micro':
+          return (isMobile ? 4 : microCols) * 2;
+        case 'dense':
+          return (isMobile ? 3 : denseCols) * 2;
+        case 'snug':
+        case 'gallery':
+        case 'tiles':
+          return (isMobile ? 2 : tilesCols) * 2;
+        case 'wide':
+        case 'center':
+          return 4;
+        case 'split':
+        case 'stacked':
+        case 'spotlight':
+        case 'glow':
+        case 'edge':
+        case 'frame':
+        case 'shadow':
+        case 'borderless':
+          return 6;
+        case 'list':
+        case 'stripe':
+        case 'shelves':
+          return isMobile ? 3 : 4;
+        case 'ribbon':
+          return isMobile ? 2 : 4;
+        case 'panel':
+          return (isMobile ? 2 : 4) * 2;
+        case 'diagonal':
+          return 6;
+        default:
+          return items.length;
+      }
+    };
+    const visibleEstimate = Math.min(items.length, estimateVisibleCount());
+    const shouldAnimateGrid = allowAnimation && visibleEstimate <= 12;
+    const staggerStyle = (index: number) => ({ animationDelay: `${Math.min(index, 10) * 35}ms` });
+
+    switch (variant) {
+      case 'animated':
+        return (
+          <div className={`grid-perf ${shouldAnimateGrid ? 'grid-float' : ''}`}>
+            <AnimatedProductGrid
+              products={items}
+              rows={isProducts ? 2 : 1}
+              columns={isTimeline ? 3 : 4}
+              rowHeight={isTimeline ? 340 : 360}
+              gap={16}
+            />
+          </div>
+        );
+      case 'circular':
+        return (
+          <div className={`grid-perf ${shouldAnimateGrid ? 'grid-float' : ''}`}>
+            <CircularProductGrid
+              products={items}
+              itemsPerRow={isTimeline ? 3 : isFeatured ? 4 : 5}
+              rowHeight={isTimeline ? 340 : 360}
+              bend={1}
+              gap={18}
+            />
+          </div>
+        );
+      case 'glass':
+        return (
+          <div className={`grid-perf ${shouldAnimateGrid ? 'grid-float' : ''}`}>
+            <GlassProductGrid
+              products={items}
+              itemsPerRow={isTimeline ? 3 : isFeatured ? 4 : 5}
+              rowHeight={isTimeline ? 340 : 360}
+              gap={18}
+              scrollSpeed={22}
+              visibleCount={isTimeline ? 3 : 4}
+            />
+          </div>
+        );
+      case 'carousel':
+        return (
+          <div className={`grid-perf ${shouldAnimateGrid ? 'grid-float' : ''}`}>
+            <ProductsCarousel
+              products={items}
+              title={isProducts ? 'Latest drops' : isFeatured ? 'Best sellers this week' : 'Drop highlights'}
+              subtitle={isProducts ? 'Fresh essentials' : isFeatured ? 'Featured' : 'Timeline picks'}
+              mobileRows={isProducts ? 2 : 1}
+              desktopRows={isProducts ? 2 : 1}
+              scrollSpeed={isProducts ? 24 : 22}
+              onLoadMore={isProducts ? () => fetchProducts(page + 1, true) : undefined}
+              hasMore={isProducts ? hasMore : false}
+              loading={isProducts ? loadingMore : false}
+            />
+          </div>
+        );
+      case 'compact':
+        return (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 grid-perf">
+            {items.map((product, index) => (
+              <div key={product.id} className={`h-full grid-card ${shouldAnimateGrid ? 'stagger-item' : ''}`} style={shouldAnimateGrid ? staggerStyle(index) : undefined}>
+                <ProductCard product={product} compact />
+              </div>
+            ))}
+          </div>
+        );
+      case 'compact-2':
+        return (
+          <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-7 grid-perf">
+            {items.map((product, index) => (
+              <div key={product.id} className={`h-full grid-card ${shouldAnimateGrid ? 'stagger-item' : ''}`} style={shouldAnimateGrid ? staggerStyle(index) : undefined}>
+                <ProductCard product={product} compact />
+              </div>
+            ))}
+          </div>
+        );
+      case 'micro':
+        return (
+          <div className="grid gap-1.5 grid-cols-3 sm:grid-cols-5 lg:grid-cols-7 xl:grid-cols-9 grid-perf">
+            {items.map((product, index) => (
+              <div key={product.id} className={`h-full grid-card ${shouldAnimateGrid ? 'stagger-item' : ''}`} style={shouldAnimateGrid ? staggerStyle(index) : undefined}>
+                <ProductCard product={product} compact />
+              </div>
+            ))}
+          </div>
+        );
+      case 'dense':
+        return (
+          <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-7 grid-perf">
+            {items.map((product, index) => (
+              <div key={product.id} className={`h-full grid-card ${shouldAnimateGrid ? 'stagger-item' : ''}`} style={shouldAnimateGrid ? staggerStyle(index) : undefined}>
+                <ProductCard product={product} compact />
+              </div>
+            ))}
+          </div>
+        );
+      case 'snug':
+        return (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 grid-perf">
+            {items.map((product, index) => (
+              <div key={product.id} className={`h-full grid-card ${shouldAnimateGrid ? 'stagger-item' : ''}`} style={shouldAnimateGrid ? staggerStyle(index) : undefined}>
+                <ProductCard product={product} compact />
+              </div>
+            ))}
+          </div>
+        );
+      case 'masonry':
+        return (
+          <div className="columns-2 gap-4 md:columns-3 xl:columns-4 [column-fill:_balance] grid-perf">
+            {items.map((product, index) => (
+              <div key={product.id} className={`mb-4 break-inside-avoid grid-card ${shouldAnimateGrid ? 'stagger-item' : ''}`} style={shouldAnimateGrid ? staggerStyle(index) : undefined}>
+                <ProductCard product={product} compact />
+              </div>
+            ))}
+          </div>
+        );
+      case 'list':
+        return (
+          <div className="flex flex-col gap-5 grid-perf">
+            {items.map((product, index) => (
+              <div
+                key={product.id}
+                className={`rounded-2xl border border-black/5 bg-white p-3 grid-card ${shouldAnimateGrid ? 'stagger-item' : ''}`}
+                style={shouldAnimateGrid ? staggerStyle(index) : undefined}
+              >
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
+        );
+      case 'stripe':
+        return (
+          <div className="flex flex-col gap-4 grid-perf">
+            {items.map((product, index) => (
+              <div
+                key={product.id}
+                className={`rounded-2xl border border-black/5 p-3 grid-card ${shouldAnimateGrid ? 'stagger-item' : ''}`}
+                style={{ ...(shouldAnimateGrid ? staggerStyle(index) : {}), backgroundColor: index % 2 === 0 ? 'rgba(0,0,0,0.02)' : 'rgba(0,0,0,0.05)' }}
+              >
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
+        );
+      case 'stacked':
+        return (
+          <div className="grid gap-5 md:grid-cols-3 md:auto-rows-fr grid-perf">
+            {items.map((product, index) => (
+              <div
+                key={product.id}
+                className={`grid-card ${shouldAnimateGrid ? 'stagger-item' : ''} ${index === 0 ? 'md:col-span-2 md:row-span-2' : ''}`}
+                style={shouldAnimateGrid ? staggerStyle(index) : undefined}
+              >
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
+        );
+      case 'spotlight':
+        return (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4 grid-perf">
+            {items.map((product, index) => (
+              <div
+                key={product.id}
+                className={`grid-card ${shouldAnimateGrid ? 'stagger-item' : ''} ${index === 0 ? 'lg:col-span-2 ring-1 ring-amber-300/40 shadow-[0_20px_60px_rgba(245,158,11,0.18)] spotlight-card' : ''} ${index === 0 && shouldAnimateGrid ? 'spotlight-active' : ''}`}
+                style={shouldAnimateGrid ? staggerStyle(index) : undefined}
+              >
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
+        );
+      case 'tiles':
+        return (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 grid-perf">
+            {items.map((product, index) => (
+              <div key={product.id} className={`h-full grid-card ${shouldAnimateGrid ? 'stagger-item' : ''}`} style={shouldAnimateGrid ? staggerStyle(index) : undefined}>
+                <ProductCard product={product} compact />
+              </div>
+            ))}
+          </div>
+        );
+      case 'wide':
+        return (
+          <div className="grid gap-6 md:grid-cols-2 grid-perf">
+            {items.map((product, index) => (
+              <div key={product.id} className={`h-full grid-card ${shouldAnimateGrid ? 'stagger-item' : ''}`} style={shouldAnimateGrid ? staggerStyle(index) : undefined}>
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
+        );
+      case 'center':
+        return (
+          <div className="mx-auto grid max-w-4xl gap-5 sm:grid-cols-2 grid-perf">
+            {items.map((product, index) => (
+              <div key={product.id} className={`h-full grid-card ${shouldAnimateGrid ? 'stagger-item' : ''}`} style={shouldAnimateGrid ? staggerStyle(index) : undefined}>
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
+        );
+      case 'split':
+        return (
+          <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr] grid-perf">
+            <div className="flex flex-col gap-5">
+              {items.slice(0, 4).map((product, index) => (
+                <div key={product.id} className={`grid-card ${shouldAnimateGrid ? 'stagger-item' : ''}`} style={shouldAnimateGrid ? staggerStyle(index) : undefined}>
+                  <ProductCard product={product} />
+                </div>
+              ))}
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {items.slice(4).map((product, index) => (
+                <div key={product.id} className={`grid-card ${shouldAnimateGrid ? 'stagger-item' : ''}`} style={shouldAnimateGrid ? staggerStyle(index + 4) : undefined}>
+                  <ProductCard product={product} compact />
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      case 'gallery':
+        return (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-fr [grid-auto-flow:dense] grid-perf">
+            {items.map((product, index) => (
+              <div
+                key={product.id}
+                className={`grid-card ${shouldAnimateGrid ? 'stagger-item' : ''} ${index % 7 === 0 ? 'sm:col-span-2' : index % 9 === 0 ? 'lg:row-span-2' : 'h-full'}`}
+                style={shouldAnimateGrid ? staggerStyle(index) : undefined}
+              >
+                <ProductCard product={product} compact />
+              </div>
+            ))}
+          </div>
+        );
+      case 'ribbon':
+        return (
+          <div className="flex gap-4 overflow-x-auto pb-4 [scrollbar-width:none] snap-x snap-mandatory scroll-smooth grid-perf">
+            {items.map((product, index) => (
+              <div key={product.id} className={`min-w-[220px] snap-start grid-card ${shouldAnimateGrid ? 'stagger-item' : ''}`} style={shouldAnimateGrid ? staggerStyle(index) : undefined}>
+                <ProductCard product={product} compact />
+              </div>
+            ))}
+          </div>
+        );
+      case 'shelves':
+        return (
+          <div className="flex flex-col gap-6 grid-perf">
+            {items.map((product, index) => (
+              <div key={product.id} className={`border-t border-black/5 pt-6 grid-card ${shouldAnimateGrid ? 'stagger-item' : ''}`} style={shouldAnimateGrid ? staggerStyle(index) : undefined}>
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
+        );
+      case 'glow':
+        return (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 grid-perf">
+            {items.map((product, index) => (
+              <div
+                key={product.id}
+                className={`rounded-3xl bg-white p-2 shadow-[0_20px_60px_rgba(59,130,246,0.12)] grid-card ${shouldAnimateGrid ? 'stagger-item' : ''}`}
+                style={shouldAnimateGrid ? staggerStyle(index) : undefined}
+              >
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
+        );
+      case 'edge':
+        return (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 grid-perf">
+            {items.map((product, index) => (
+              <div key={product.id} className={`rounded-2xl border border-black/15 p-2 grid-card ${shouldAnimateGrid ? 'stagger-item' : ''}`} style={shouldAnimateGrid ? staggerStyle(index) : undefined}>
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
+        );
+      case 'diagonal':
+        return (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {items.map((product, index) => (
+              <div
+                key={product.id}
+                className={`h-full transition-transform duration-300 ${shouldAnimateGrid ? 'stagger-item' : ''}`}
+                style={shouldAnimateGrid ? { ...staggerStyle(index), transform: index % 2 === 0 ? 'rotate(-0.8deg)' : 'rotate(0.8deg)' } : { transform: index % 2 === 0 ? 'rotate(-0.8deg)' : 'rotate(0.8deg)' }}
+              >
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
+        );
+      case 'panel':
+        return (
+          <div className="rounded-3xl border border-black/10 bg-white/80 p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] grid-perf">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {items.map((product, index) => (
+                <div key={product.id} className={`grid-card ${shouldAnimateGrid ? 'stagger-item' : ''}`} style={shouldAnimateGrid ? staggerStyle(index) : undefined}>
+                  <ProductCard product={product} compact />
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      case 'frame':
+        return (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 grid-perf">
+            {items.map((product, index) => (
+              <div key={product.id} className={`rounded-3xl border border-black/10 bg-white p-2 grid-card ${shouldAnimateGrid ? 'stagger-item' : ''}`} style={shouldAnimateGrid ? staggerStyle(index) : undefined}>
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
+        );
+      case 'shadow':
+        return (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 grid-perf">
+            {items.map((product, index) => (
+              <div
+                key={product.id}
+                className={`relative rounded-3xl bg-white p-2 shadow-[0_12px_36px_rgba(0,0,0,0.12)] before:absolute before:inset-2 before:-z-10 before:rounded-3xl before:bg-black/5 before:blur-sm grid-card ${shouldAnimateGrid ? 'stagger-item' : ''}`}
+                style={shouldAnimateGrid ? staggerStyle(index) : undefined}
+              >
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
+        );
+      case 'borderless':
+        return (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 grid-perf">
+            {items.map((product, index) => (
+              <div key={product.id} className={`bg-transparent grid-card ${shouldAnimateGrid ? 'stagger-item' : ''}`} style={shouldAnimateGrid ? staggerStyle(index) : undefined}>
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
+        );
+      default:
+        return null;
+    }
+  }, [fetchProducts, hasMore, isMobile, isUltraWide, loadingMore, page]);
+
   useEffect(() => {
+    if (!showProducts) return;
     const controller = new AbortController();
     fetchProducts(1, false, controller.signal);
     return () => controller.abort();
-  }, [fetchProducts]);
+  }, [fetchProducts, showProducts]);
 
   useEffect(() => {
     if (!syncUrl) return;
@@ -590,7 +1100,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true }: Stor
       return (
         <div
           className="absolute inset-0 z-0 h-full w-full"
-          style={{ pointerEvents: 'auto', touchAction: 'pan-x' }}
+          style={{ pointerEvents: 'none', touchAction: 'pan-y' }}
         >
           <div className="absolute inset-0 bg-white">
             <WorldMapPlaceholder className="min-h-0" />
@@ -718,7 +1228,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true }: Stor
     return (
       <div
         className="absolute inset-0 z-0 h-full w-full"
-        style={{ pointerEvents: 'auto', touchAction: 'pan-y' }}
+        style={{ pointerEvents: 'none', touchAction: 'pan-y' }}
       >
         <SplineBackground scene={slide.scene} className="h-full w-full" priority />
       </div>
@@ -762,6 +1272,625 @@ export default function StorePage({ routeBase = '/store', syncUrl = true }: Stor
   const checkoutVariant = checkoutProduct?.variants?.[0];
   const checkoutInStock = Boolean(checkoutVariant && checkoutVariant.inventory_count > 0);
   const checkoutPrice = checkoutVariant?.price || checkoutProduct?.base_price || 0;
+  const dashboardsSection = (
+    <section
+      data-apple-section
+      style={{ backgroundColor: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.04)' }}
+    >
+      <div className="mx-auto w-full max-w-[26rem] sm:max-w-3xl lg:max-w-[90rem] px-4 sm:px-8" style={{ paddingTop: 24, paddingBottom: 32 }}>
+        <div className="flex flex-col gap-3">
+          <p className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'rgba(0,0,0,0.45)' }}>
+            Live dashboards
+          </p>
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">Market intelligence.</h2>
+          <p className="text-sm sm:text-base max-w-2xl" style={{ color: 'rgba(0,0,0,0.6)' }}>
+            A streamlined look at quotes, headlines, and community signals tailored for the store.
+          </p>
+        </div>
+
+        <div className="mt-6 lg:hidden">
+          <ToastProvider>
+            <QuotesSection />
+            <BreakingNewsSection />
+            <TelegramSection />
+          </ToastProvider>
+        </div>
+
+        <div className="mt-6 hidden lg:grid gap-6 lg:grid-cols-1">
+          <div className="w-full rounded-2xl sm:rounded-3xl border border-black/10 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] text-left flex flex-col">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold">Market Quotes</h3>
+              <span className="rounded-full border border-black/10 px-2 py-1 text-[10px] uppercase tracking-[0.24em]" style={{ color: 'rgba(0,0,0,0.5)' }}>
+                Live
+              </span>
+            </div>
+            <div className="mt-4 overflow-hidden rounded-2xl border border-black/5 bg-white min-h-[460px] lg:min-h-[calc(100vh-220px)] flex-1">
+              <div
+                className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain"
+                style={{ filter: 'invert(1) hue-rotate(180deg)' }}
+              >
+                <MetaTraderQuotes embedded />
+              </div>
+            </div>
+          </div>
+
+          <div className="w-full rounded-2xl sm:rounded-3xl border border-black/10 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] text-left flex flex-col">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold">Breaking News</h3>
+              <span className="rounded-full border border-black/10 px-2 py-1 text-[10px] uppercase tracking-[0.24em]" style={{ color: 'rgba(0,0,0,0.5)' }}>
+                Live
+              </span>
+            </div>
+            <div className="mt-4 overflow-hidden rounded-2xl border border-black/5 bg-white min-h-[420px] lg:min-h-[calc(100vh-220px)] flex-1">
+              <div
+                className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain"
+                style={{ filter: 'invert(1) hue-rotate(180deg)' }}
+              >
+                <BreakingNewsTicker />
+              </div>
+            </div>
+          </div>
+
+          <div className="w-full rounded-2xl sm:rounded-3xl border border-black/10 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] text-left flex flex-col">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold">Community Signals</h3>
+              <span className="rounded-full border border-black/10 px-2 py-1 text-[10px] uppercase tracking-[0.24em]" style={{ color: 'rgba(0,0,0,0.5)' }}>
+                Live
+              </span>
+            </div>
+            <div className="mt-4 overflow-hidden rounded-2xl border border-black/5 bg-white min-h-[420px] lg:min-h-[calc(100vh-220px)] flex-1">
+              <div
+                className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain"
+                style={{ filter: 'invert(1) hue-rotate(180deg)' }}
+              >
+                <BullMoneyCommunity />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+  const metaQuotesSection = (
+    <section
+      data-apple-section
+      style={{ backgroundColor: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.04)' }}
+    >
+      <div className="mx-auto w-full max-w-[90rem] px-4 sm:px-8" style={{ paddingTop: 24, paddingBottom: 32 }}>
+        <div className="w-full rounded-2xl sm:rounded-3xl border border-black/10 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] text-left flex flex-col">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold">Market Quotes</h3>
+            <span className="rounded-full border border-black/10 px-2 py-1 text-[10px] uppercase tracking-[0.24em]" style={{ color: 'rgba(0,0,0,0.5)' }}>
+              Live
+            </span>
+          </div>
+          <div className="mt-4 overflow-hidden rounded-2xl border border-black/5 bg-white min-h-[520px] lg:min-h-[calc(100vh-220px)] flex-1">
+            <div
+              className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain"
+              style={{ filter: 'invert(1) hue-rotate(180deg)' }}
+            >
+              <MetaTraderQuotes embedded />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+  const featuresSection = (
+    <section
+      data-apple-section
+      className="lg:min-h-[calc(100vh-64px)]"
+      style={{ backgroundColor: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.04)' }}
+    >
+      <div className="mx-auto w-full max-w-[90rem] px-4 sm:px-8 lg:min-h-[calc(100vh-128px)] lg:flex lg:flex-col" style={{ paddingTop: 16, paddingBottom: 32 }}>
+        <div className="rounded-3xl border border-black/10 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] lg:flex lg:flex-col lg:flex-1">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold">Features</h3>
+            <span className="rounded-full border border-black/10 px-2 py-1 text-[10px] uppercase tracking-[0.24em]" style={{ color: 'rgba(0,0,0,0.5)' }}>
+              Live
+            </span>
+          </div>
+          <div className="mt-4 overflow-hidden rounded-2xl border border-black/5 bg-white lg:flex-1 lg:min-h-0">
+            <div className="max-h-[560px] overflow-y-auto lg:max-h-none lg:min-h-0 lg:h-full" style={{ filter: 'invert(1) hue-rotate(180deg)' }}>
+              <Features />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+  const testimonialsSection = (
+    <section
+      data-apple-section
+      style={{ backgroundColor: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.04)' }}
+    >
+      <div className="mx-auto w-full max-w-[90rem] px-4 sm:px-8" style={{ paddingTop: 16, paddingBottom: 32 }}>
+        <div className="rounded-3xl border border-black/10 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold">Testimonials</h3>
+            <span className="rounded-full border border-black/10 px-2 py-1 text-[10px] uppercase tracking-[0.24em]" style={{ color: 'rgba(0,0,0,0.5)' }}>
+              Live
+            </span>
+          </div>
+          <div className="mt-4 overflow-hidden rounded-2xl border border-black/5 bg-white">
+            <div className="min-h-[560px] h-full overflow-hidden">
+              <TestimonialsCarousel tone="light" className="mt-0 max-w-none px-0" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+  const heroDuplicateSection = (
+    <section
+      data-apple-section
+      style={{ backgroundColor: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.04)' }}
+    >
+      <div className="mx-auto w-full max-w-[90rem] px-4 sm:px-8" style={{ paddingTop: 16, paddingBottom: 32 }}>
+        <div className="relative min-h-[70vh] w-full overflow-hidden rounded-3xl border border-black/10">
+          {heroMedia}
+          {shouldShowHeroMapOverlay && (
+            <div className="absolute inset-0 z-[2] pointer-events-none bg-white/85">
+              <WorldMap dots={HERO_WORLD_MAP_DOTS} lineColor="#00D4FF" forceVisible forceLite showCryptoCoins />
+            </div>
+          )}
+          <div
+            className="absolute inset-0 z-[1]"
+            style={{
+              background: 'rgba(0,0,0,0.35)',
+              mixBlendMode: 'multiply',
+              pointerEvents: 'none',
+            }}
+          />
+          <div
+            className="relative z-10 flex min-h-[70vh] w-full flex-col justify-center px-6 sm:px-10"
+            style={{ color: heroTitleColor, textShadow: heroTextShadow }}
+          >
+            <p className="text-[11px] uppercase tracking-[0.32em]" style={{ color: heroMetaColor }}>
+              Trader mode
+            </p>
+            <h2 className="mt-4 text-2xl sm:text-4xl font-semibold tracking-tight">
+              Market focus, visualized.
+            </h2>
+            <p className="mt-3 max-w-xl text-sm sm:text-base" style={{ color: heroBodyColor, textShadow: heroBodyShadow }}>
+              A second view of the live hero scene to keep context alongside your dashboards.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+  const footerSectionBlock = (
+    <section
+      ref={footerSection.ref}
+      data-apple-section
+      style={{
+        backgroundColor: 'rgb(255,255,255)',
+        borderTop: '1px solid rgba(0,0,0,0.06)',
+      }}
+    >
+      <div
+        className="bg-white"
+        style={{ backgroundColor: 'rgb(255,255,255)', filter: 'invert(1) hue-rotate(180deg)' }}
+      >
+        <FooterComponent />
+      </div>
+    </section>
+  );
+  const productsSectionBlock = showProducts ? (
+    <>
+      <section
+        data-apple-section
+        style={{ backgroundColor: 'rgb(255,255,255)' }}
+      >
+        <div className="mx-auto w-full max-w-7xl px-5 sm:px-8" style={{ paddingTop: 28 + paddingBoost, paddingBottom: 28 + paddingBoost }}>
+          <div className="flex flex-col gap-3">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2" style={{ color: 'rgba(0,0,0,0.35)' }} />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search products"
+                className="h-11 w-full rounded-full border border-black/10 bg-white pl-11 pr-10 text-sm outline-none"
+                style={{
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                }}
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1"
+                  style={{ color: 'rgba(0,0,0,0.5)' }}
+                  aria-label="Clear search"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+              <SearchAutocomplete
+                searchQuery={searchQuery}
+                onSelect={(query) => setSearchQuery(query)}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+              <select
+                value={filters.category || ''}
+                onChange={(e) => handleFilterChange({ category: e.target.value })}
+                className="h-10 rounded-full border border-black/10 bg-white px-4 text-sm outline-none"
+              >
+                {CATEGORIES.map((cat) => (
+                  <option key={cat.value} value={cat.value}>
+                    {cat.label}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={filters.sort_by || 'newest'}
+                onChange={(e) => handleFilterChange({ sort_by: e.target.value as ProductFilters['sort_by'] })}
+                className="h-10 rounded-full border border-black/10 bg-white px-4 text-sm outline-none"
+              >
+                {SORT_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+
+              {useGridLayouts && (
+                <select
+                  value={productsGridVariant}
+                  onChange={(e) => setProductsGridVariant(e.target.value as GridVariant)}
+                  className="h-10 rounded-full border border-black/10 bg-white px-4 text-sm outline-none"
+                  aria-label="Products grid layout"
+                >
+                  {GRID_VARIANT_GROUP_ORDER.map((group) => (
+                    <optgroup key={group} label={group}>
+                      {(GRID_VARIANT_GROUPS[group] || []).map((variant) => (
+                        <option key={variant.value} value={variant.value}>
+                          {variant.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+              )}
+
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="h-10 rounded-full border border-black/10 px-4 text-sm"
+                  style={{ color: 'rgba(0,0,0,0.6)' }}
+                >
+                  Clear filters
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setUseGridLayouts((prev) => !prev)}
+                className="h-10 rounded-full border border-black/10 px-4 text-sm"
+                style={{ color: 'rgba(0,0,0,0.6)' }}
+                aria-pressed={useGridLayouts}
+              >
+                {useGridLayouts ? 'Standard view' : 'Grid view'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        ref={productsSection.ref}
+        data-apple-section
+        data-products-grid
+        style={{
+          backgroundColor: 'rgb(255,255,255)',
+          borderTop: '1px solid rgba(0,0,0,0.04)',
+        }}
+      >
+        <div className="mx-auto w-full max-w-7xl px-5 sm:px-8" style={{ paddingTop: 24, paddingBottom: 56 }}>
+          <div className="flex items-center justify-between">
+            <p className="text-sm" style={{ color: 'rgba(0,0,0,0.5)' }}>
+              {loading ? 'Loading products...' : `${total} ${total === 1 ? 'product' : 'products'}`}
+            </p>
+          </div>
+
+          {loading ? (
+            <div className="mt-6 rounded-2xl border border-black/5 bg-white p-10 text-center">
+              <div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-black/10 border-t-black/40" />
+              <p className="mt-4 text-sm" style={{ color: 'rgba(0,0,0,0.5)' }}>
+                Fetching the latest collection...
+              </p>
+            </div>
+          ) : products.length === 0 ? (
+            <div className="mt-8 rounded-2xl border border-black/5 bg-white p-12 text-center">
+              <p className="text-base font-medium">No products found</p>
+              <p className="mt-2 text-sm" style={{ color: 'rgba(0,0,0,0.5)' }}>
+                Adjust your filters or search again.
+              </p>
+              <button
+                onClick={clearFilters}
+                className="mt-6 rounded-full border border-black/10 px-6 py-2 text-sm"
+              >
+                Reset filters
+              </button>
+            </div>
+          ) : useGridLayouts ? (
+            <div className="mt-6">
+              {renderGridVariant(
+                productsGridVariant,
+                'products',
+                products,
+                productsSection.shouldAnimate && heroMode === 'store'
+              )}
+            </div>
+          ) : (
+            <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {products.map((product) => (
+                <div key={product.id} className="h-full pb-14 sm:pb-16">
+                  <ProductCard product={product} />
+                  <div className="mt-4 flex items-center justify-end gap-2 relative z-10 pointer-events-auto">
+                    <button
+                      type="button"
+                      onClick={() => setViewerProduct(product)}
+                      className="inline-flex rounded-full border border-black/10 px-3 py-2 sm:px-3.5 sm:py-2.5 text-center text-[10px] sm:text-[11px] font-medium min-h-[34px]"
+                      style={{ color: 'rgba(0,0,0,0.7)' }}
+                    >
+                      View
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleAddClick(product)}
+                      disabled={!canAddToCart(product)}
+                      className="inline-flex rounded-full px-4 py-2.5 sm:px-5 sm:py-3 text-[11px] sm:text-xs font-semibold min-h-[40px] whitespace-nowrap"
+                      style={canAddToCart(product)
+                        ? { backgroundColor: '#111111', color: '#ffffff' }
+                        : { backgroundColor: 'rgba(0,0,0,0.12)', color: 'rgba(0,0,0,0.4)' }
+                      }
+                    >
+                      Add to bag
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {hasMore && !loading && (!useGridLayouts || productsGridVariant !== 'carousel') && (
+            <div className="mt-10 flex justify-center">
+              <button
+                onClick={() => fetchProducts(page + 1, true)}
+                className="h-11 rounded-full border border-black/10 px-6 text-sm"
+                disabled={loadingMore}
+                style={{ backgroundColor: 'rgb(255,255,255)' }}
+              >
+                {loadingMore ? 'Loading more...' : 'Load more'}
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {!!featuredProducts.length && (
+        <section
+          ref={featuredSection.ref}
+          data-apple-section
+          style={{ backgroundColor: 'rgb(255,255,255)' }}
+        >
+          <div className="mx-auto w-full max-w-7xl px-5 sm:px-8" style={{ paddingBottom: 64 + paddingBoost }}>
+            <div className="border-t border-black/5 pt-10">
+              {useGridLayouts && featuredGridVariant === 'carousel' ? (
+                <div className="flex items-center justify-end">
+                  <select
+                    value={featuredGridVariant}
+                    onChange={(e) => setFeaturedGridVariant(e.target.value as GridVariant)}
+                    className="h-9 rounded-full border border-black/10 bg-white px-3 text-xs outline-none"
+                    aria-label="Featured grid layout"
+                  >
+                    {GRID_VARIANT_GROUP_ORDER.map((group) => (
+                      <optgroup key={group} label={group}>
+                        {(GRID_VARIANT_GROUPS[group] || []).map((variant) => (
+                          <option key={variant.value} value={variant.value}>
+                            {variant.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="flex items-end justify-between gap-6">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'rgba(0,0,0,0.45)' }}>
+                      Featured
+                    </p>
+                    <h2 className="mt-3 text-2xl font-semibold tracking-tight">Best sellers this week</h2>
+                  </div>
+                  {useGridLayouts && (
+                    <select
+                      value={featuredGridVariant}
+                      onChange={(e) => setFeaturedGridVariant(e.target.value as GridVariant)}
+                      className="h-9 rounded-full border border-black/10 bg-white px-3 text-xs outline-none"
+                      aria-label="Featured grid layout"
+                    >
+                      {GRID_VARIANT_GROUP_ORDER.map((group) => (
+                        <optgroup key={group} label={group}>
+                          {(GRID_VARIANT_GROUPS[group] || []).map((variant) => (
+                            <option key={variant.value} value={variant.value}>
+                              {variant.label}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              )}
+
+              {useGridLayouts ? (
+                <div className="mt-6">
+                  {renderGridVariant(
+                    featuredGridVariant,
+                    'featured',
+                    featuredProducts,
+                    featuredSection.shouldAnimate && heroMode === 'store'
+                  )}
+                </div>
+              ) : (
+                <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                  {featuredProducts.map((product) => (
+                    <div key={`featured-${product.id}`} className="h-full pb-14 sm:pb-16">
+                      <ProductCard product={product} />
+                      <div className="mt-4 flex items-center justify-end gap-2 relative z-10 pointer-events-auto">
+                        <button
+                          type="button"
+                          onClick={() => setViewerProduct(product)}
+                          className="inline-flex rounded-full border border-black/10 px-3 py-2 sm:px-3.5 sm:py-2.5 text-center text-[10px] sm:text-[11px] font-medium min-h-[34px]"
+                          style={{ color: 'rgba(0,0,0,0.7)' }}
+                        >
+                          View
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleAddClick(product)}
+                          disabled={!canAddToCart(product)}
+                          className="inline-flex rounded-full px-4 py-2.5 sm:px-5 sm:py-3 text-[11px] sm:text-xs font-semibold min-h-[40px] whitespace-nowrap"
+                          style={canAddToCart(product)
+                            ? { backgroundColor: '#111111', color: '#ffffff' }
+                            : { backgroundColor: 'rgba(0,0,0,0.12)', color: 'rgba(0,0,0,0.4)' }
+                          }
+                        >
+                          Add to bag
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {!!timelineProducts.length && (
+        <section data-apple-section style={{ backgroundColor: 'rgb(255,255,255)' }}>
+          <div className="mx-auto w-full max-w-7xl px-5 sm:px-8" style={{ paddingBottom: 80 + paddingBoost }}>
+            <div className="border-t border-black/5 pt-10">
+              {useGridLayouts && timelineGridVariant === 'carousel' ? (
+                <div className="flex items-center justify-end">
+                  <select
+                    value={timelineGridVariant}
+                    onChange={(e) => setTimelineGridVariant(e.target.value as GridVariant)}
+                    className="h-9 rounded-full border border-black/10 bg-white px-3 text-xs outline-none"
+                    aria-label="Timeline grid layout"
+                  >
+                    {GRID_VARIANT_GROUP_ORDER.map((group) => (
+                      <optgroup key={group} label={group}>
+                        {(GRID_VARIANT_GROUPS[group] || []).map((variant) => (
+                          <option key={variant.value} value={variant.value}>
+                            {variant.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                </div>
+              ) : useGridLayouts ? (
+                <div className="flex items-end justify-between gap-6">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'rgba(0,0,0,0.45)' }}>
+                      Timeline
+                    </p>
+                    <h2 className="mt-3 text-2xl font-semibold tracking-tight">Drop highlights</h2>
+                  </div>
+                  <select
+                    value={timelineGridVariant}
+                    onChange={(e) => setTimelineGridVariant(e.target.value as GridVariant)}
+                    className="h-9 rounded-full border border-black/10 bg-white px-3 text-xs outline-none"
+                    aria-label="Timeline grid layout"
+                  >
+                    {GRID_VARIANT_GROUP_ORDER.map((group) => (
+                      <optgroup key={group} label={group}>
+                        {(GRID_VARIANT_GROUPS[group] || []).map((variant) => (
+                          <option key={variant.value} value={variant.value}>
+                            {variant.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                </div>
+              ) : null}
+
+              {useGridLayouts ? (
+                <div className="mt-6">
+                  {renderGridVariant(
+                    timelineGridVariant,
+                    'timeline',
+                    timelineProducts,
+                    featuredSection.shouldAnimate && heroMode === 'store'
+                  )}
+                </div>
+              ) : (
+                <>
+                  <p className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'rgba(0,0,0,0.45)' }}>
+                    Timeline
+                  </p>
+                  <h2 className="mt-3 text-2xl font-semibold tracking-tight">Drop highlights</h2>
+                  <div className="mt-8 space-y-8">
+                    {timelineProducts.map((product, index) => (
+                      <div
+                        key={`timeline-${product.id}`}
+                        className="grid gap-6 border-l border-black/10 pl-6 sm:grid-cols-[200px_1fr]"
+                      >
+                        <div className="text-sm" style={{ color: 'rgba(0,0,0,0.5)' }}>
+                          Drop {index + 1}
+                        </div>
+                        <div className="grid gap-4 sm:grid-cols-[240px_1fr]">
+                          <div className="h-full pb-14 sm:pb-16">
+                            <ProductCard product={product} />
+                            <div className="mt-4 flex items-center justify-end gap-2 relative z-10 pointer-events-auto">
+                              <button
+                                type="button"
+                                onClick={() => setViewerProduct(product)}
+                                className="inline-flex rounded-full border border-black/10 px-3 py-2 sm:px-3.5 sm:py-2.5 text-center text-[10px] sm:text-[11px] font-medium min-h-[34px]"
+                                style={{ color: 'rgba(0,0,0,0.7)' }}>
+                                View
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleAddClick(product)}
+                                disabled={!canAddToCart(product)}
+                                className="inline-flex rounded-full px-4 py-2.5 sm:px-5 sm:py-3 text-[11px] sm:text-xs font-semibold min-h-[40px] whitespace-nowrap"
+                                style={canAddToCart(product)
+                                  ? { backgroundColor: '#111111', color: '#ffffff' }
+                                  : { backgroundColor: 'rgba(0,0,0,0.12)', color: 'rgba(0,0,0,0.4)' }
+                                }
+                              >
+                                Add to bag
+                              </button>
+                            </div>
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-semibold">{product.name}</h3>
+                            <p className="mt-2 text-sm" style={{ color: 'rgba(0,0,0,0.55)' }}>
+                              {product.description || 'A focused essential designed to keep your trading desk clean, calm, and efficient.'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+    </>
+  ) : null;
   const handleExpandedBuy = useCallback(async (method: typeof paymentMethod) => {
     if (!expandedProduct) return;
     const variant = expandedProduct.variants?.[0];
@@ -834,6 +1963,54 @@ export default function StorePage({ routeBase = '/store', syncUrl = true }: Stor
         color: '#1d1d1f',
       }}
     >
+      <style jsx>{`
+        @keyframes gridStaggerIn {
+          0% { opacity: 0; transform: translateY(8px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes gridFloat {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-6px); }
+        }
+        @keyframes spotlightPulse {
+          0%, 100% { box-shadow: 0 0 0 rgba(245,158,11,0.12); }
+          50% { box-shadow: 0 22px 60px rgba(245,158,11,0.2); }
+        }
+        .stagger-item {
+          opacity: 0;
+          animation: gridStaggerIn 320ms ease-out forwards;
+        }
+        .grid-float {
+          animation: gridFloat 10s ease-in-out infinite;
+        }
+        .spotlight-card.spotlight-active {
+          animation: spotlightPulse 2.8s ease-in-out infinite;
+        }
+        .grid-perf {
+          content-visibility: auto;
+          contain: layout paint style;
+          contain-intrinsic-size: 900px 1200px;
+        }
+        .grid-card {
+          content-visibility: auto;
+          contain: layout paint style;
+          contain-intrinsic-size: 280px 420px;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .stagger-item,
+          .grid-float {
+            animation: none !important;
+            opacity: 1 !important;
+            transform: none !important;
+          }
+        }
+        :global(body.quick-view-open) .stagger-item,
+        :global(body.quick-view-open) .grid-float,
+        :global(body.quick-view-open) .spotlight-card.spotlight-active {
+          animation: none !important;
+          transform: none !important;
+        }
+      `}</style>
       <div
         className={`fixed left-0 right-0 z-[495] hidden lg:block transition-all duration-200 ease-out ${expandedProduct ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-full pointer-events-none'}`}
         style={{ top: 0 }}
@@ -962,6 +2139,35 @@ export default function StorePage({ routeBase = '/store', syncUrl = true }: Stor
         }}
       >
         <div className="relative min-h-screen w-full overflow-hidden">
+          {showProductSections && (
+            <div className="absolute right-6 top-6 z-20 flex items-center gap-3 rounded-full border border-white/15 bg-black/65 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/80 shadow-[0_14px_40px_rgba(0,0,0,0.35)] backdrop-blur-md">
+              <span className="hidden sm:inline text-white/60">Mode</span>
+              <div className="flex overflow-hidden rounded-full border border-white/20 bg-white/5">
+                <button
+                  type="button"
+                  onClick={() => setHeroMode('store')}
+                  className={`px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] transition-colors ${
+                    heroMode === 'store'
+                      ? 'bg-white text-black'
+                      : 'text-white/70 hover:text-white'
+                  }`}
+                >
+                  Store
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHeroMode('trader')}
+                  className={`px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] transition-colors ${
+                    heroMode === 'trader'
+                      ? 'bg-white text-black'
+                      : 'text-white/70 hover:text-white'
+                  }`}
+                >
+                  Trader
+                </button>
+              </div>
+            </div>
+          )}
           {heroMedia}
           {shouldShowHeroMapOverlay && (
             <div className="absolute inset-0 z-[2] pointer-events-none bg-white/85">
@@ -1028,434 +2234,38 @@ export default function StorePage({ routeBase = '/store', syncUrl = true }: Stor
         </div>
       </section>
 
-      <section
-        data-apple-section
-        style={{ backgroundColor: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.04)' }}
-      >
-        <div className="mx-auto w-full max-w-[26rem] sm:max-w-3xl lg:max-w-[90rem] px-4 sm:px-8" style={{ paddingTop: 24, paddingBottom: 32 }}>
-          <div className="flex flex-col gap-3">
-            <p className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'rgba(0,0,0,0.45)' }}>
-              Live dashboards
-            </p>
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">Market intelligence.</h2>
-            <p className="text-sm sm:text-base max-w-2xl" style={{ color: 'rgba(0,0,0,0.6)' }}>
-              A streamlined look at quotes, headlines, and community signals tailored for the store.
-            </p>
-          </div>
-
-          <div className="mt-6 lg:hidden">
-            <ToastProvider>
-              <QuotesSection />
-              <BreakingNewsSection />
-              <TelegramSection />
-            </ToastProvider>
-          </div>
-
-          <div className="mt-6 hidden lg:grid gap-4 lg:gap-6 lg:grid-cols-3 items-stretch justify-items-stretch">
-            <div className="w-full rounded-2xl sm:rounded-3xl border border-black/10 bg-white p-3 sm:p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] text-left">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold">Market Quotes</h3>
-                <span className="rounded-full border border-black/10 px-2 py-1 text-[10px] uppercase tracking-[0.24em]" style={{ color: 'rgba(0,0,0,0.5)' }}>
-                  Live
-                </span>
-              </div>
-              <div className="mt-3 sm:mt-4 overflow-hidden rounded-2xl border border-black/5 bg-white min-h-[320px] sm:min-h-[420px]">
-                <div
-                  className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain"
-                  style={{ filter: 'invert(1) hue-rotate(180deg)' }}
-                >
-                  <MetaTraderQuotes embedded />
-                </div>
-              </div>
-            </div>
-
-            <div className="w-full rounded-2xl sm:rounded-3xl border border-black/10 bg-white p-3 sm:p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] text-left">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold">Breaking News</h3>
-                <span className="rounded-full border border-black/10 px-2 py-1 text-[10px] uppercase tracking-[0.24em]" style={{ color: 'rgba(0,0,0,0.5)' }}>
-                  Live
-                </span>
-              </div>
-              <div className="mt-3 sm:mt-4 overflow-hidden rounded-2xl border border-black/5 bg-white min-h-[320px] sm:min-h-[420px]">
-                <div
-                  className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain"
-                  style={{ filter: 'invert(1) hue-rotate(180deg)' }}
-                >
-                  <BreakingNewsTicker />
-                </div>
-              </div>
-            </div>
-
-            <div className="w-full rounded-2xl sm:rounded-3xl border border-black/10 bg-white p-3 sm:p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] text-left">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold">Community Signals</h3>
-                <span className="rounded-full border border-black/10 px-2 py-1 text-[10px] uppercase tracking-[0.24em]" style={{ color: 'rgba(0,0,0,0.5)' }}>
-                  Live
-                </span>
-              </div>
-              <div className="mt-3 sm:mt-4 overflow-hidden rounded-2xl border border-black/5 bg-white min-h-[320px] sm:min-h-[420px]">
-                <div
-                  className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain"
-                  style={{ filter: 'invert(1) hue-rotate(180deg)' }}
-                >
-                  <BullMoneyCommunity />
-                </div>
-              </div>
-            </div>
-          </div>
+      <div className="w-full lg:grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-8 lg:items-start lg:h-[calc(100vh-64px)] lg:overflow-hidden">
+        <div className="lg:pr-3 lg:max-h-full lg:overflow-y-auto store-column-scroll">
+          {isDesktop && columnHeaderSection}
+          {isDesktop && heroMode === 'store' && featuresSection}
+          {isDesktop && heroMode === 'store' && productsSectionBlock}
+          {isDesktop && heroMode === 'store' && footerSectionBlock}
+          {isDesktop && heroMode === 'trader' && dashboardsSection}
         </div>
-      </section>
 
-      <section
-        data-apple-section
-        style={{ backgroundColor: 'rgb(255,255,255)' }}
-      >
-        <div className="mx-auto w-full max-w-7xl px-5 sm:px-8" style={{ paddingTop: 28 + paddingBoost, paddingBottom: 28 + paddingBoost }}>
-          <div className="flex flex-col gap-3">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2" style={{ color: 'rgba(0,0,0,0.35)' }} />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search products"
-                className="h-11 w-full rounded-full border border-black/10 bg-white pl-11 pr-10 text-sm outline-none"
-                style={{
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                }}
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1"
-                  style={{ color: 'rgba(0,0,0,0.5)' }}
-                  aria-label="Clear search"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-              <SearchAutocomplete
-                searchQuery={searchQuery}
-                onSelect={(query) => setSearchQuery(query)}
-              />
-            </div>
-
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-              <select
-                value={filters.category || ''}
-                onChange={(e) => handleFilterChange({ category: e.target.value })}
-                className="h-10 rounded-full border border-black/10 bg-white px-4 text-sm outline-none"
-              >
-                {CATEGORIES.map((cat) => (
-                  <option key={cat.value} value={cat.value}>
-                    {cat.label}
-                  </option>
-                ))}
-              </select>
-
-              <select
-                value={filters.sort_by || 'newest'}
-                onChange={(e) => handleFilterChange({ sort_by: e.target.value as ProductFilters['sort_by'] })}
-                className="h-10 rounded-full border border-black/10 bg-white px-4 text-sm outline-none"
-              >
-                {SORT_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-
-              {hasActiveFilters && (
-                <button
-                  onClick={clearFilters}
-                  className="h-10 rounded-full border border-black/10 px-4 text-sm"
-                  style={{ color: 'rgba(0,0,0,0.6)' }}
-                >
-                  Clear filters
-                </button>
-              )}
-
-              <button
-                type="button"
-                onClick={() => setUseGridLayouts((prev) => !prev)}
-                className="h-10 rounded-full border border-black/10 px-4 text-sm"
-                style={{ color: 'rgba(0,0,0,0.6)' }}
-                aria-pressed={useGridLayouts}
-              >
-                {useGridLayouts ? 'Standard view' : 'Grid view'}
-              </button>
-            </div>
-          </div>
+        <div className="space-y-0 lg:max-h-full lg:overflow-y-auto lg:pr-2 store-column-scroll">
+          {isDesktop && columnHeaderSection}
+          {isDesktop && heroMode === 'store' && dashboardsSection}
+          {isDesktop && heroMode === 'store' && testimonialsSection}
+          {isDesktop && heroMode === 'store' && footerSectionBlock}
+          {isDesktop && heroMode === 'trader' && heroDuplicateSection}
+          {isDesktop && heroMode === 'trader' && featuresSection}
+          {isDesktop && heroMode === 'trader' && testimonialsSection}
+          {isDesktop && heroMode === 'trader' && footerSectionBlock}
+          {!isDesktop && dashboardsSection}
         </div>
-      </section>
+      </div>
 
-      <section
-        ref={productsSection.ref}
-        data-apple-section
-        data-products-grid
-        style={{
-          backgroundColor: 'rgb(255,255,255)',
-          borderTop: '1px solid rgba(0,0,0,0.04)',
-        }}
-      >
-        <div className="mx-auto w-full max-w-7xl px-5 sm:px-8" style={{ paddingTop: 24, paddingBottom: 56 }}>
-          <div className="flex items-center justify-between">
-            <p className="text-sm" style={{ color: 'rgba(0,0,0,0.5)' }}>
-              {loading ? 'Loading products...' : `${total} ${total === 1 ? 'product' : 'products'}`}
-            </p>
-          </div>
+      {isDesktop && productsSectionBlock}
+      {isDesktop && featuresSection}
+      {isDesktop && metaQuotesSection}
+      {isDesktop && footerSectionBlock}
 
-          {loading ? (
-            <div className="mt-6 rounded-2xl border border-black/5 bg-white p-10 text-center">
-              <div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-black/10 border-t-black/40" />
-              <p className="mt-4 text-sm" style={{ color: 'rgba(0,0,0,0.5)' }}>
-                Fetching the latest collection...
-              </p>
-            </div>
-          ) : products.length === 0 ? (
-            <div className="mt-8 rounded-2xl border border-black/5 bg-white p-12 text-center">
-              <p className="text-base font-medium">No products found</p>
-              <p className="mt-2 text-sm" style={{ color: 'rgba(0,0,0,0.5)' }}>
-                Adjust your filters or search again.
-              </p>
-              <button
-                onClick={clearFilters}
-                className="mt-6 rounded-full border border-black/10 px-6 py-2 text-sm"
-              >
-                Reset filters
-              </button>
-            </div>
-          ) : useGridLayouts ? (
-            <div className="mt-6">
-              <AnimatedProductGrid products={products} rows={2} columns={4} rowHeight={360} gap={16} />
-            </div>
-          ) : (
-            <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {products.map((product) => (
-                <div key={product.id} className="h-full pb-14 sm:pb-16">
-                  <ProductCard product={product} />
-                  <div className="mt-4 flex items-center justify-end gap-2 relative z-10 pointer-events-auto">
-                    <button
-                      type="button"
-                      onClick={() => setViewerProduct(product)}
-                      className="inline-flex rounded-full border border-black/10 px-3 py-2 sm:px-3.5 sm:py-2.5 text-center text-[10px] sm:text-[11px] font-medium min-h-[34px]"
-                      style={{ color: 'rgba(0,0,0,0.7)' }}
-                    >
-                      View
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleAddClick(product)}
-                      disabled={!canAddToCart(product)}
-                      className="inline-flex rounded-full px-4 py-2.5 sm:px-5 sm:py-3 text-[11px] sm:text-xs font-semibold min-h-[40px] whitespace-nowrap"
-                      style={canAddToCart(product)
-                        ? { backgroundColor: '#111111', color: '#ffffff' }
-                        : { backgroundColor: 'rgba(0,0,0,0.12)', color: 'rgba(0,0,0,0.4)' }
-                      }
-                    >
-                      Add to bag
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+      {(!isDesktop || heroMode !== 'store') && productsSectionBlock}
 
-          {hasMore && !loading && (
-            <div className="mt-10 flex justify-center">
-              <button
-                onClick={() => fetchProducts(page + 1, true)}
-                className="h-11 rounded-full border border-black/10 px-6 text-sm"
-                disabled={loadingMore}
-                style={{ backgroundColor: 'rgb(255,255,255)' }}
-              >
-                {loadingMore ? 'Loading more...' : 'Load more'}
-              </button>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {!!featuredProducts.length && (
-        <section
-          ref={featuredSection.ref}
-          data-apple-section
-          style={{ backgroundColor: 'rgb(255,255,255)' }}
-        >
-          <div className="mx-auto w-full max-w-7xl px-5 sm:px-8" style={{ paddingBottom: 64 + paddingBoost }}>
-            <div className="border-t border-black/5 pt-10">
-              <div className="flex items-end justify-between gap-6">
-                <div>
-                  <p className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'rgba(0,0,0,0.45)' }}>
-                    Featured
-                  </p>
-                  <h2 className="mt-3 text-2xl font-semibold tracking-tight">Best sellers this week</h2>
-                </div>
-              </div>
-
-              {useGridLayouts ? (
-                <div className="mt-6">
-                  <CircularProductGrid products={featuredProducts} itemsPerRow={4} rowHeight={360} bend={1} gap={18} />
-                </div>
-              ) : (
-                <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                  {featuredProducts.map((product) => (
-                    <div key={`featured-${product.id}`} className="h-full pb-14 sm:pb-16">
-                      <ProductCard product={product} />
-                      <div className="mt-4 flex items-center justify-end gap-2 relative z-10 pointer-events-auto">
-                        <button
-                          type="button"
-                          onClick={() => setViewerProduct(product)}
-                          className="inline-flex rounded-full border border-black/10 px-3 py-2 sm:px-3.5 sm:py-2.5 text-center text-[10px] sm:text-[11px] font-medium min-h-[34px]"
-                          style={{ color: 'rgba(0,0,0,0.7)' }}
-                        >
-                          View
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleAddClick(product)}
-                          disabled={!canAddToCart(product)}
-                          className="inline-flex rounded-full px-4 py-2.5 sm:px-5 sm:py-3 text-[11px] sm:text-xs font-semibold min-h-[40px] whitespace-nowrap"
-                          style={canAddToCart(product)
-                            ? { backgroundColor: '#111111', color: '#ffffff' }
-                            : { backgroundColor: 'rgba(0,0,0,0.12)', color: 'rgba(0,0,0,0.4)' }
-                          }
-                        >
-                          Add to bag
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {!!timelineProducts.length && (
-        <section data-apple-section style={{ backgroundColor: 'rgb(255,255,255)' }}>
-          <div className="mx-auto w-full max-w-7xl px-5 sm:px-8" style={{ paddingBottom: 80 + paddingBoost }}>
-            <div className="border-t border-black/5 pt-10">
-              {useGridLayouts ? (
-                <ProductsCarousel
-                  products={timelineProducts}
-                  title="Drop highlights"
-                  subtitle="Timeline picks"
-                  mobileRows={1}
-                  desktopRows={1}
-                  scrollSpeed={22}
-                />
-              ) : (
-                <>
-                  <p className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'rgba(0,0,0,0.45)' }}>
-                    Timeline
-                  </p>
-                  <h2 className="mt-3 text-2xl font-semibold tracking-tight">Drop highlights</h2>
-                  <div className="mt-8 space-y-8">
-                    {timelineProducts.map((product, index) => (
-                      <div
-                        key={`timeline-${product.id}`}
-                        className="grid gap-6 border-l border-black/10 pl-6 sm:grid-cols-[200px_1fr]"
-                      >
-                        <div className="text-sm" style={{ color: 'rgba(0,0,0,0.5)' }}>
-                          Drop {index + 1}
-                        </div>
-                        <div className="grid gap-4 sm:grid-cols-[240px_1fr]">
-                          <div className="h-full pb-14 sm:pb-16">
-                            <ProductCard product={product} />
-                            <div className="mt-4 flex items-center justify-end gap-2 relative z-10 pointer-events-auto">
-                              <button
-                                type="button"
-                                onClick={() => setViewerProduct(product)}
-                                className="inline-flex rounded-full border border-black/10 px-3 py-2 sm:px-3.5 sm:py-2.5 text-center text-[10px] sm:text-[11px] font-medium min-h-[34px]"
-                                style={{ color: 'rgba(0,0,0,0.7)' }}
-                              >
-                                View
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleAddClick(product)}
-                                disabled={!canAddToCart(product)}
-                                className="inline-flex rounded-full px-4 py-2.5 sm:px-5 sm:py-3 text-[11px] sm:text-xs font-semibold min-h-[40px] whitespace-nowrap"
-                                style={canAddToCart(product)
-                                  ? { backgroundColor: '#111111', color: '#ffffff' }
-                                  : { backgroundColor: 'rgba(0,0,0,0.12)', color: 'rgba(0,0,0,0.4)' }
-                                }
-                              >
-                                Add to bag
-                              </button>
-                            </div>
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-semibold">{product.name}</h3>
-                            <p className="mt-2 text-sm" style={{ color: 'rgba(0,0,0,0.55)' }}>
-                              {product.description || 'A focused essential designed to keep your trading desk clean, calm, and efficient.'}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </section>
-      )}
-
-      <section
-        data-apple-section
-        style={{ backgroundColor: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.04)' }}
-      >
-        <div className="mx-auto w-full max-w-[90rem] px-4 sm:px-8" style={{ paddingTop: 16, paddingBottom: 32 }}>
-          <div className="grid gap-6 lg:grid-cols-2">
-            <div className="rounded-3xl border border-black/10 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold">Features</h3>
-                <span className="rounded-full border border-black/10 px-2 py-1 text-[10px] uppercase tracking-[0.24em]" style={{ color: 'rgba(0,0,0,0.5)' }}>
-                  Live
-                </span>
-              </div>
-              <div className="mt-4 overflow-hidden rounded-2xl border border-black/5 bg-white">
-                <div className="max-h-[560px] overflow-y-auto" style={{ filter: 'invert(1) hue-rotate(180deg)' }}>
-                  <Features />
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-3xl border border-black/10 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold">Testimonials</h3>
-                <span className="rounded-full border border-black/10 px-2 py-1 text-[10px] uppercase tracking-[0.24em]" style={{ color: 'rgba(0,0,0,0.5)' }}>
-                  Live
-                </span>
-              </div>
-              <div className="mt-4 overflow-hidden rounded-2xl border border-black/5 bg-white">
-                <div className="min-h-[560px] h-full overflow-hidden">
-                  <TestimonialsCarousel tone="light" className="mt-0 max-w-none px-0" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section
-        ref={footerSection.ref}
-        data-apple-section
-        style={{
-          backgroundColor: 'rgb(255,255,255)',
-          borderTop: '1px solid rgba(0,0,0,0.06)',
-        }}
-      >
-        <div
-          className="bg-white"
-          style={{ backgroundColor: 'rgb(255,255,255)', filter: 'invert(1) hue-rotate(180deg)' }}
-        >
-          <FooterComponent />
-        </div>
-      </section>
+      {!isDesktop && featuresSection}
+      {!isDesktop && testimonialsSection}
+      {!isDesktop && footerSectionBlock}
 
       {checkoutOpen && (
         <div

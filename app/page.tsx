@@ -6,6 +6,9 @@ import { detectBrowser } from "@/lib/browserDetection";
 import { GLASS_STYLES } from "@/styles/glassStyles";
 import { deferAnalytics, smartPrefetch } from "@/lib/prefetchHelper";
 
+// Store Header replaces default navbar on app page
+const StoreHeader = dynamic(() => import("@/components/store/StoreHeader").then(mod => ({ default: mod.StoreHeader })), { ssr: false }) as any;
+
 // ✅ MOBILE DETECTION - Conditional lazy loading for mobile optimization
 import { isMobileDevice } from "@/lib/mobileDetection";
 
@@ -64,6 +67,7 @@ import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
 import { useUIState } from "@/contexts/UIStateContext";
 import { userStorage } from "@/lib/smartStorage";
+import { useHeroMode } from "@/hooks/useHeroMode";
 
 // Features skeleton fallback (inline for faster load)
 const FeaturesSkeleton = () => (
@@ -117,6 +121,9 @@ const safeSetSession = (key: string, value: string) => {
     // Storage may be blocked in in-app/private modes
   }
 };
+
+const PAGEMODE_FORCE_LOGIN_KEY = "bullmoney_pagemode_force_login";
+const PAGEMODE_REDIRECT_PATH_KEY = "bullmoney_pagemode_redirect_path";
 
 function DeferredRender({
   children,
@@ -274,7 +281,7 @@ function HomeContent() {
   const [hasMounted, setHasMounted] = useState(false);
   const [desktopHeroReady, setDesktopHeroReady] = useState(false);
   const [allowHeavyDesktop, setAllowHeavyDesktop] = useState(false);
-  const [mainHeroMode, setMainHeroMode] = useState<'store' | 'trader'>('store');
+  const { heroMode: mainHeroMode, setHeroMode: setMainHeroMode } = useHeroMode();
   // Legacy flag retained for older bundles; default keeps desktop on 3D hero.
   const desktopHeroVariant = 'spline';
   const useDesktopVideoVariant = desktopHeroVariant === 'spline';
@@ -369,18 +376,7 @@ function HomeContent() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const storedMode = userStorage.get<string>(HERO_MODE_CACHE_KEY, null);
-    if (storedMode === 'store' || storedMode === 'trader') {
-      setMainHeroMode(storedMode);
-      userStorage.set(HERO_MODE_CACHE_KEY, storedMode, HERO_MODE_CACHE_TTL);
-    }
-  }, []);
-
-  const handleHeroModeChange = useCallback((mode: 'store' | 'trader') => {
-    setMainHeroMode(mode);
-    if (typeof window !== 'undefined') {
-      userStorage.set(HERO_MODE_CACHE_KEY, mode, HERO_MODE_CACHE_TTL);
-    }
+    // Hero mode is now managed by useHeroMode hook
   }, []);
 
   // Use unified performance for tracking
@@ -443,16 +439,8 @@ function HomeContent() {
       return;
     }
 
-    setSequenceStage(1);
-    const timers: Array<ReturnType<typeof setTimeout>> = [];
-    timers.push(setTimeout(() => setSequenceStage(2), 140));
-    timers.push(setTimeout(() => setSequenceStage(3), 280));
-    timers.push(setTimeout(() => setSequenceStage(4), 420));
-    timers.push(setTimeout(() => setSequenceStage(5), 560));
-
-    return () => {
-      timers.forEach(clearTimeout);
-    };
+    // Mount all stages immediately - no staggered delays
+    setSequenceStage(5);
   }, [currentView]);
   
   // Smart preloading based on usage patterns
@@ -644,6 +632,14 @@ function HomeContent() {
   // Check localStorage on client mount to determine the correct view
   // This runs once on mount and sets the view based on user's previous progress
   useEffect(() => {
+    const forcePagemodeLogin = safeGetLocal(PAGEMODE_FORCE_LOGIN_KEY);
+    if (forcePagemodeLogin === "true") {
+      safeRemoveLocal(PAGEMODE_FORCE_LOGIN_KEY);
+      setCurrentView('pagemode');
+      setIsInitialized(true);
+      return;
+    }
+
     const hasSession = safeGetLocal("bullmoney_session");
     const hasCompletedPagemode = safeGetLocal("bullmoney_pagemode_completed");
     const hasCompletedLoader = safeGetLocal("bullmoney_loader_completed");
@@ -803,6 +799,14 @@ function HomeContent() {
     // Mark pagemode as completed so user skips it on reload
     safeSetLocal("bullmoney_pagemode_completed", "true");
     console.log('[Page] Pagemode completed, checking if should skip to content or show loader');
+
+    const redirectPath = safeGetLocal(PAGEMODE_REDIRECT_PATH_KEY);
+    if (redirectPath) {
+      safeRemoveLocal(PAGEMODE_REDIRECT_PATH_KEY);
+      safeRemoveLocal(PAGEMODE_FORCE_LOGIN_KEY);
+      window.location.assign(redirectPath);
+      return;
+    }
     
     // If loader was already completed, skip directly to content
     const hasCompletedLoader = safeGetLocal("bullmoney_loader_completed");
@@ -903,33 +907,21 @@ function HomeContent() {
 
       {currentView === 'content' && (
         <div className="relative min-h-screen w-full">
-          <div className="fixed right-4 top-24 z-[10000] flex items-center gap-3 rounded-full border border-white/15 bg-black/70 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/80 shadow-[0_14px_40px_rgba(0,0,0,0.35)] backdrop-blur-md">
-            <span className="hidden sm:inline text-white/60">Hero</span>
-            <div className="flex overflow-hidden rounded-full border border-white/20 bg-white/5">
-              <button
-                type="button"
-                onClick={() => handleHeroModeChange('store')}
-                className={`px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] transition-colors ${
-                  mainHeroMode === 'store'
-                    ? 'bg-white text-black'
-                    : 'text-white/70 hover:text-white'
-                }`}
-              >
-                Store
-              </button>
-              <button
-                type="button"
-                onClick={() => handleHeroModeChange('trader')}
-                className={`px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] transition-colors ${
-                  mainHeroMode === 'trader'
-                    ? 'bg-white text-black'
-                    : 'text-white/70 hover:text-white'
-                }`}
-              >
-                Trader
-              </button>
-            </div>
-          </div>
+          {/* Store Header as main navigation (includes unified Store/Trader toggle) */}
+          <StoreHeader />
+
+          {mainHeroMode === 'trader' && (
+            <style>{`
+              #hero .spline-container,
+              #hero [data-spline],
+              #hero canvas,
+              #hero spline-viewer,
+              #hero iframe[src*="spline"] {
+                pointer-events: none !important;
+                touch-action: pan-y !important;
+              }
+            `}</style>
+          )}
 
           {mainHeroMode === 'trader' && (
             <section
@@ -971,7 +963,7 @@ function HomeContent() {
           <div className="mainpage-store-shell" data-hero-mode={mainHeroMode}>
             <StoreMemoryProvider>
               {hasMounted ? (
-                <StorePageContent routeBase="/" syncUrl={false} />
+                <StorePageContent routeBase="/" syncUrl={false} showProductSections={mainHeroMode === 'store'} />
               ) : (
                 <ContentSkeleton lines={6} />
               )}

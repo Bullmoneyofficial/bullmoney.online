@@ -705,6 +705,15 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       setStep(0); // Start directly at step 0 (broker registration)
     }
   }, []);
+
+  useEffect(() => {
+    const shouldStartLogin = localStorage.getItem('bullmoney_pagemode_login_view');
+    if (shouldStartLogin === 'true') {
+      setViewMode('login');
+      setStep(0);
+      localStorage.removeItem('bullmoney_pagemode_login_view');
+    }
+  }, []);
   
   // --- DESKTOP DETECTION FOR WELCOME SCREEN ---
   const isDesktop = useIsDesktop();

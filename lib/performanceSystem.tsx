@@ -518,9 +518,9 @@ export const FPSMonitor = memo(({ enabled = false, position = 'bottom-right' }: 
     <div
       className={`fixed ${positionClasses[position]} z-[99999]`}
       style={{
-        background: 'rgba(0, 0, 0, 0.9)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
+        background: 'rgba(0, 0, 0, 0.92)',
+        /* PERF FIX: Removed backdrop-filter: blur(12px) — this is a debug overlay,
+           no need for expensive GPU blur compositing. Opaque background is sufficient. */
         border: '1px solid rgba(255, 255, 255, 0.15)',
         borderRadius: '8px',
         padding: '8px 12px',
@@ -890,72 +890,70 @@ export const usePerformanceMode = () => {
  * This helps maintain smooth scrolling even with heavy 3D content.
  */
 export const useDesktopFPSOptimizer = (enabled = true) => {
-  const fpsHistoryRef = useRef<number[]>([]);
-  const frameCountRef = useRef(0);
-  const lastTimeRef = useRef(performance.now());
   const qualityLevelRef = useRef<'high' | 'medium' | 'low'>('high');
-  const optimizationAppliedRef = useRef(false);
   
   useEffect(() => {
     if (typeof window === 'undefined' || !enabled) return;
     if (window.innerWidth < 1024) return; // Desktop only
     
-    let animationId: number;
+    // PERF FIX v4: Interval-based sampling instead of continuous RAF loop.
+    // Runs a 1-second RAF burst every 5 seconds to measure FPS, then idles.
+    let rafId: number | null = null;
+    let counting = false;
+    let frameCount = 0;
+    let sampleStart = 0;
     
-    const measureAndOptimize = () => {
-      frameCountRef.current++;
-      const now = performance.now();
-      const elapsed = now - lastTimeRef.current;
-      
-      if (elapsed >= 1000) {
-        const currentFps = Math.round(frameCountRef.current * 1000 / elapsed);
-        fpsHistoryRef.current.push(currentFps);
-        
-        // Keep last 5 seconds of FPS history
-        if (fpsHistoryRef.current.length > 5) {
-          fpsHistoryRef.current.shift();
-        }
-        
-        // Calculate average FPS
-        const avgFps = fpsHistoryRef.current.reduce((a, b) => a + b, 0) / fpsHistoryRef.current.length;
-        
-        // Apply quality adjustments based on FPS
+    const startSample = () => {
+      counting = true;
+      frameCount = 0;
+      sampleStart = performance.now();
+      const countFrame = () => {
+        if (!counting) return;
+        frameCount++;
+        rafId = requestAnimationFrame(countFrame);
+      };
+      rafId = requestAnimationFrame(countFrame);
+    };
+    
+    const stopSample = () => {
+      counting = false;
+      if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
+    };
+    
+    const interval = setInterval(() => {
+      if (counting) return;
+      startSample();
+      setTimeout(() => {
+        stopSample();
+        const elapsed = performance.now() - sampleStart;
+        if (elapsed < 500) return;
+        const avgFps = Math.round(frameCount * 1000 / elapsed);
         const root = document.documentElement;
         
         if (avgFps < 25 && qualityLevelRef.current !== 'low') {
-          // Critical: Drop to low quality
           qualityLevelRef.current = 'low';
           root.classList.add('reduce-animations', 'reduce-shadows');
           root.style.setProperty('--animation-duration-multiplier', '0.15');
-          console.warn(`⚠️ FPS critical (${Math.round(avgFps)}fps) - reducing quality to LOW`);
         } else if (avgFps < 40 && qualityLevelRef.current === 'high') {
-          // Medium: Reduce some effects
           qualityLevelRef.current = 'medium';
           root.style.setProperty('--animation-duration-multiplier', '0.4');
-          console.log(`⚡ FPS dropping (${Math.round(avgFps)}fps) - reducing quality to MEDIUM`);
         } else if (avgFps >= 55 && qualityLevelRef.current !== 'high') {
-          // Good: Restore quality
           qualityLevelRef.current = 'high';
           root.classList.remove('reduce-animations', 'reduce-shadows');
           root.style.setProperty('--animation-duration-multiplier', '0.7');
-          console.log(`✅ FPS recovered (${Math.round(avgFps)}fps) - restoring quality to HIGH`);
         }
-        
-        frameCountRef.current = 0;
-        lastTimeRef.current = now;
-      }
-      
-      animationId = requestAnimationFrame(measureAndOptimize);
-    };
+      }, 1000);
+    }, 5000);
     
-    // Start monitoring after a short delay to let page settle
     const timeout = setTimeout(() => {
-      animationId = requestAnimationFrame(measureAndOptimize);
+      startSample();
+      setTimeout(() => stopSample(), 1000);
     }, 2000);
     
     return () => {
       clearTimeout(timeout);
-      if (animationId) cancelAnimationFrame(animationId);
+      clearInterval(interval);
+      stopSample();
     };
   }, [enabled]);
   

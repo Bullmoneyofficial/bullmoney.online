@@ -399,7 +399,7 @@ export function ProductMediaCarousel({
         <>
           <motion.button
             onClick={(e) => { e.stopPropagation(); goToPrevious(); }}
-            className="hidden md:flex fixed left-[max(1rem,calc(50vw-38rem))] top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-xl border border-white/30 items-center justify-center shadow-2xl z-[10001] cursor-pointer"
+            className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-xl border border-white/30 items-center justify-center shadow-2xl z-[50] cursor-pointer"
             whileHover={{ scale: 1.15 }}
             whileTap={{ scale: 0.9 }}
             initial={{ opacity: 0, x: -20 }}
@@ -412,7 +412,7 @@ export function ProductMediaCarousel({
 
           <motion.button
             onClick={(e) => { e.stopPropagation(); goToNext(); }}
-            className="hidden md:flex fixed right-[max(1rem,calc(50vw-38rem))] top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-xl border border-white/30 items-center justify-center shadow-2xl z-[10001] cursor-pointer"
+            className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-xl border border-white/30 items-center justify-center shadow-2xl z-[50] cursor-pointer"
             whileHover={{ scale: 1.15 }}
             whileTap={{ scale: 0.9 }}
             initial={{ opacity: 0, x: 20 }}

@@ -15,12 +15,14 @@ import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
 import { useCartStore } from '@/stores/cart-store';
 import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { useProductsModalUI, useThemeSelectorModalUI, useAuthModalUI } from '@/contexts/UIStateContext';
+import { useProductsModalUI, useThemeSelectorModalUI } from '@/contexts/UIStateContext';
 import dynamic from 'next/dynamic';
 import { StorePillNav } from './StorePillNav';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import RewardsCardBanner from '@/components/RewardsCardBanner';
+import { useHeroMode } from '@/hooks/useHeroMode';
+import type { HeroMode } from '@/hooks/useHeroMode';
 
 // Lazy-load framer-motion — only needed when mobile menu is opened
 const LazyMotionDiv = dynamic(() => import('framer-motion').then(m => ({ default: m.motion.div })), { ssr: false });
@@ -28,7 +30,6 @@ const LazyAnimatePresence = dynamic(() => import('framer-motion').then(m => ({ d
 
 // Lazy load modals - same as main navbar
 const AdminHubModal = dynamic(() => import('@/components/AdminHubModal'), { ssr: false });
-const AccountManagerModal = dynamic(() => import('@/components/AccountManagerModal').then(mod => ({ default: mod.AccountManagerModal })), { ssr: false });
 
 // Import lazy modal system from navbar (same as main site)
 import { LazyAffiliateModal, LazyFaqModal } from '@/components/navbar/LazyModalSystem';
@@ -76,7 +77,6 @@ export function StoreHeader() {
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [affiliateModalOpen, setAffiliateModalOpen] = useState(false);
   const [faqModalOpen, setFaqModalOpen] = useState(false);
-  const [accountManagerModalOpen, setAccountManagerModalOpen] = useState(false);
   const [showThemePicker, setShowThemePicker] = useState(false);
   const [showUltimateHub, setShowUltimateHub] = useState(false);
   const desktopMenuCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -89,9 +89,27 @@ export function StoreHeader() {
   const effectiveAdmin = isDev && isAdmin && devAdminEnabled;
   const { open: openProductsModal } = useProductsModalUI();
   const { setIsOpen: setThemePickerModalOpen } = useThemeSelectorModalUI();
-  const { setIsOpen: setAuthModalOpen } = useAuthModalUI();
   const itemCount = getItemCount();
   const router = useRouter();
+  const { heroMode, setHeroMode } = useHeroMode();
+
+  const PAGEMODE_FORCE_LOGIN_KEY = 'bullmoney_pagemode_force_login';
+  const PAGEMODE_LOGIN_VIEW_KEY = 'bullmoney_pagemode_login_view';
+  const PAGEMODE_REDIRECT_PATH_KEY = 'bullmoney_pagemode_redirect_path';
+
+  const startPagemodeLogin = useCallback(() => {
+    SoundEffects.click();
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(PAGEMODE_FORCE_LOGIN_KEY, 'true');
+        localStorage.setItem(PAGEMODE_LOGIN_VIEW_KEY, 'true');
+        localStorage.setItem(PAGEMODE_REDIRECT_PATH_KEY, '/store/account');
+      } catch {
+        // Ignore storage errors and still navigate to pagemode.
+      }
+    }
+    router.push('/');
+  }, [router]);
 
   useEffect(() => {
     return () => {
@@ -203,13 +221,13 @@ export function StoreHeader() {
   
   // Handle user click - open auth modal or go to account
   const handleUserClick = useCallback(() => {
-    SoundEffects.click();
     if (isAuthenticated && recruit) {
+      SoundEffects.click();
       router.push('/store/account');
     } else {
-      setAuthModalOpen(true);
+      startPagemodeLogin();
     }
-  }, [isAuthenticated, recruit, router, setAuthModalOpen]);
+  }, [isAuthenticated, recruit, router, startPagemodeLogin]);
   
   // Handle search click - scroll to search on store page
   const handleSearchClick = useCallback(() => {
@@ -218,20 +236,20 @@ export function StoreHeader() {
   }, [router]);
 
   const handleRewardsClick = useCallback(() => {
-    SoundEffects.click();
     if (isAuthenticated && recruit) {
+      SoundEffects.click();
       router.push('/store/account');
     } else {
-      setAuthModalOpen(true);
+      startPagemodeLogin();
     }
-  }, [isAuthenticated, recruit, router, setAuthModalOpen]);
+  }, [isAuthenticated, recruit, router, startPagemodeLogin]);
   
   // Handle category click - navigate and scroll to products (only for store pages)
   const handleCategoryClick = useCallback((href: string) => {
     SoundEffects.tab();
     // Open auth modal for login instead of navigating
     if (href === '/login') {
-      setAuthModalOpen(true);
+      startPagemodeLogin();
       return;
     }
     
@@ -245,7 +263,18 @@ export function StoreHeader() {
         }
       }, 100);
     }
-  }, [router, setAuthModalOpen]);
+  }, [router, startPagemodeLogin]);
+
+  const handleStoreButtonClick = useCallback(() => {
+    SoundEffects.click();
+    setHeroMode('store');
+    setTimeout(() => {
+      const productsGrid = document.querySelector('[data-products-grid]');
+      if (productsGrid) {
+        productsGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  }, [setHeroMode]);
 
   const handleOpenMobileMenu = useCallback(() => {
     SoundEffects.open();
@@ -286,6 +315,10 @@ export function StoreHeader() {
         onMobileMenuClick={handleOpenMobileMenu}
         onDesktopMenuEnter={openDesktopMenu}
         onDesktopMenuLeave={scheduleDesktopMenuClose}
+        // Hero mode toggle
+        heroMode={heroMode}
+        onHeroModeChange={setHeroMode}
+        onStoreButtonClick={handleStoreButtonClick}
       />
 
       <div data-apple-section style={{ background: 'rgb(255,255,255)' }}>
@@ -302,15 +335,20 @@ export function StoreHeader() {
           style={{
             top: '48px',
             zIndex: 480,
-              background: 'rgba(255,255,255,0.7)',
-            backdropFilter: 'blur(18px)',
-            WebkitBackdropFilter: 'blur(18px)',
+            background: 'rgba(255,255,255,0.86)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
           }}
         />
       )}
       <div
         className={`fixed left-0 right-0 z-490 hidden lg:block transition-opacity ${desktopMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
-        style={{ top: '48px' }}
+        style={{
+          top: '48px',
+          transform: desktopMenuOpen ? 'translateY(0)' : 'translateY(-4px)',
+          transition: 'opacity 150ms ease-in-out, transform 180ms ease-in-out',
+          willChange: 'opacity, transform',
+        }}
         onMouseEnter={openDesktopMenu}
         onMouseLeave={scheduleDesktopMenuClose}
         data-apple-section
@@ -371,7 +409,7 @@ export function StoreHeader() {
                   <button
                     onClick={() => {
                       setDesktopMenuOpen(false);
-                      setAccountManagerModalOpen(true);
+                      router.push('/store/account');
                     }}
                     className="block text-left text-2xl font-medium tracking-tight transition-colors"
                     style={{ color: 'rgba(0,0,0,0.9)' }}
@@ -382,7 +420,7 @@ export function StoreHeader() {
                   <button
                     onClick={() => {
                       setDesktopMenuOpen(false);
-                      setAuthModalOpen(true);
+                      startPagemodeLogin();
                     }}
                     className="block text-left text-2xl font-medium tracking-tight transition-colors"
                     style={{ color: 'rgba(0,0,0,0.9)' }}
@@ -462,17 +500,22 @@ export function StoreHeader() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.16, ease: [0.42, 0, 0.58, 1] }}
               onClick={handleCloseMobileMenu}
               className="fixed inset-0 z-600"
-              style={{ background: 'rgba(0,0,0,0.25)' }}
+              style={{ background: 'rgba(0,0,0,0.18)', willChange: 'opacity' }}
             />
             <LazyMotionDiv
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              transition={{ type: 'tween', duration: 0.22, ease: [0.42, 0, 0.58, 1] }}
               className="fixed top-0 right-0 bottom-0 w-72 max-w-[80vw] z-700 p-4 flex flex-col overflow-y-auto"
-              style={{ background: 'rgb(255,255,255)', borderLeft: '1px solid rgba(0,0,0,0.1)' }}
+              style={{
+                background: 'rgb(255,255,255)',
+                borderLeft: '1px solid rgba(0,0,0,0.1)',
+                willChange: 'transform',
+              }}
               data-apple-section
             >
               <div className="flex items-center justify-between mb-4">
@@ -492,7 +535,7 @@ export function StoreHeader() {
                   <button
                     onClick={() => {
                       setMobileMenuOpen(false);
-                      setAccountManagerModalOpen(true);
+                      router.push('/store/account');
                     }}
                     className="block text-left text-2xl font-medium tracking-tight transition-colors"
                     style={{ color: 'rgba(0,0,0,0.95)' }}
@@ -519,7 +562,7 @@ export function StoreHeader() {
                 <button
                   onClick={() => {
                     setMobileMenuOpen(false);
-                    setAuthModalOpen(true);
+                    startPagemodeLogin();
                   }}
                   className="mb-6 w-full text-left text-2xl font-medium tracking-tight transition-colors"
                   style={{ color: 'rgba(0,0,0,0.95)' }}
@@ -671,15 +714,6 @@ export function StoreHeader() {
         onClose={() => setAffiliateModalOpen(false)}
       />
       
-      {/* Account Manager Modal */}
-      {isAuthenticated && recruit && accountManagerModalOpen && (
-        <div style={{ zIndex: 800 }}>
-          <AccountManagerModal
-            isOpen={accountManagerModalOpen}
-            onClose={() => setAccountManagerModalOpen(false)}
-          />
-        </div>
-      )}
       
       {/* FAQ Modal - Using Lazy System */}
       <LazyFaqModal

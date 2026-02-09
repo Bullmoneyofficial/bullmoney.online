@@ -204,17 +204,18 @@ export function StoreHeader() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
+                transition={{ duration: 0.16, ease: [0.42, 0, 0.58, 1] }}
                 onClick={() => setMobileMenuOpen(false)}
                 className="fixed inset-0 bg-black/70"
-                style={{ zIndex: 2147483648 }}
+                style={{ zIndex: 2147483648, willChange: 'opacity' }}
               />
               <motion.div
                 initial={{ x: '100%' }}
                 animate={{ x: 0 }}
                 exit={{ x: '100%' }}
-                transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                transition={{ type: 'tween', duration: 0.22, ease: [0.42, 0, 0.58, 1] }}
                 className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-black border-l border-white/10 p-6 flex flex-col"
-                style={{ zIndex: 2147483649 }}
+                style={{ zIndex: 2147483649, willChange: 'transform' }}
               >
               <div className="flex items-center justify-between mb-6">
                 <span className="text-xl font-light"><TextType text="Menu" typingSpeed={25} showCursor={false} loop={false} as="span" /></span>
