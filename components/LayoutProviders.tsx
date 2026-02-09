@@ -105,10 +105,18 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
   
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('store_show_ultimate_hub');
+      const readLocalFlag = () => {
+        try {
+          return window.localStorage.getItem('store_show_ultimate_hub');
+        } catch {
+          return null;
+        }
+      };
+
+      const stored = readLocalFlag();
       // Default to false (hidden) — only show when user explicitly enabled it
       setShowUltimateHub(stored === 'true');
-      
+
       // Listen for changes
       const handleStorageChange = (event: Event) => {
         // Use event detail when available for immediate sync
@@ -117,8 +125,8 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
           setShowUltimateHub(detailValue);
           return;
         }
-        const stored = localStorage.getItem('store_show_ultimate_hub');
-        setShowUltimateHub(stored === 'true');
+        const nextStored = readLocalFlag();
+        setShowUltimateHub(nextStored === 'true');
       };
       window.addEventListener('store_ultimate_hub_toggle', handleStorageChange);
       return () => window.removeEventListener('store_ultimate_hub_toggle', handleStorageChange);

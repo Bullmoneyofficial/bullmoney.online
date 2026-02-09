@@ -63,11 +63,60 @@ import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
 import { useUIState } from "@/contexts/UIStateContext";
+import { userStorage } from "@/lib/smartStorage";
 
 // Features skeleton fallback (inline for faster load)
 const FeaturesSkeleton = () => (
   <div className="w-full h-100 bg-linear-to-b from-black to-zinc-900/50 animate-pulse rounded-xl" />
 );
+
+const HERO_MODE_CACHE_KEY = "hero_main_mode_v1";
+const HERO_MODE_CACHE_TTL = 1000 * 60 * 60 * 24;
+
+const safeGetLocal = (key: string): string | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+
+const safeSetLocal = (key: string, value: string) => {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // Storage may be blocked in in-app/private modes
+  }
+};
+
+const safeRemoveLocal = (key: string) => {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(key);
+  } catch {
+    // Storage may be blocked in in-app/private modes
+  }
+};
+
+const safeGetSession = (key: string): string | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.sessionStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+
+const safeSetSession = (key: string, value: string) => {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(key, value);
+  } catch {
+    // Storage may be blocked in in-app/private modes
+  }
+};
 
 function DeferredRender({
   children,
@@ -220,6 +269,9 @@ function HomeContent() {
   const [currentView, setCurrentView] = useState<'pagemode' | 'loader' | 'telegram' | 'content'>('pagemode');
   const [isInitialized, setIsInitialized] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [isUltraWide, setIsUltraWide] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
   const [desktopHeroReady, setDesktopHeroReady] = useState(false);
   const [allowHeavyDesktop, setAllowHeavyDesktop] = useState(false);
   const [mainHeroMode, setMainHeroMode] = useState<'store' | 'trader'>('store');
@@ -317,16 +369,17 @@ function HomeContent() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const storedMode = localStorage.getItem('bullmoney_main_hero_mode');
+    const storedMode = userStorage.get<string>(HERO_MODE_CACHE_KEY, null);
     if (storedMode === 'store' || storedMode === 'trader') {
       setMainHeroMode(storedMode);
+      userStorage.set(HERO_MODE_CACHE_KEY, storedMode, HERO_MODE_CACHE_TTL);
     }
   }, []);
 
   const handleHeroModeChange = useCallback((mode: 'store' | 'trader') => {
     setMainHeroMode(mode);
     if (typeof window !== 'undefined') {
-      localStorage.setItem('bullmoney_main_hero_mode', mode);
+      userStorage.set(HERO_MODE_CACHE_KEY, mode, HERO_MODE_CACHE_TTL);
     }
   }, []);
 
@@ -362,7 +415,7 @@ function HomeContent() {
   }, [activeTheme, activeThemeId, theme]);
   useAudioEngine(!isMuted, 'MECHANICAL');
   const canRenderMobileSections = !isMobile || allowMobileLazyRender;
-  const canRenderHeavyDesktop = !isMobile && allowHeavyDesktop;
+  const canRenderHeavyDesktop = !isMobile && allowHeavyDesktop && isDesktop;
   // Use single dynamic Features component for all devices
   const FeaturesComponent = Features;
   const [sequenceStage, setSequenceStage] = useState(0);
@@ -504,7 +557,7 @@ function HomeContent() {
 
   // Load muted preference
   useEffect(() => {
-    const savedMuted = localStorage.getItem('bullmoney_muted');
+    const savedMuted = safeGetLocal('bullmoney_muted');
     if (savedMuted === 'true') setIsMuted(true);
   }, []);
 
@@ -531,11 +584,17 @@ function HomeContent() {
     const preloadSplineEngine = async () => {
       try {
         const browserInfo = detectBrowser();
-        if (browserInfo.isInAppBrowser || !browserInfo.canHandle3D) return;
+        const safeForSplinePreload = !browserInfo.isInAppBrowser
+          && browserInfo.canHandle3D
+          && !browserInfo.shouldReduceAnimations
+          && !browserInfo.isLowMemoryDevice
+          && !browserInfo.isUltraLowMemoryDevice
+          && !browserInfo.shouldDisableSpline;
+        if (!safeForSplinePreload) return;
         if (splinePreloadRanRef.current) return;
 
         if (deviceTier === 'low' || deviceTier === 'minimal') return;
-        if (typeof window !== 'undefined' && window.innerWidth < 768) return;
+        if (typeof window !== 'undefined' && window.innerWidth < 1024) return;
 
         splinePreloadRanRef.current = true;
 
@@ -585,10 +644,10 @@ function HomeContent() {
   // Check localStorage on client mount to determine the correct view
   // This runs once on mount and sets the view based on user's previous progress
   useEffect(() => {
-    const hasSession = localStorage.getItem("bullmoney_session");
-    const hasCompletedPagemode = localStorage.getItem("bullmoney_pagemode_completed");
-    const hasCompletedLoader = localStorage.getItem("bullmoney_loader_completed");
-    const hasCompletedTelegram = localStorage.getItem("bullmoney_telegram_confirmed");
+    const hasSession = safeGetLocal("bullmoney_session");
+    const hasCompletedPagemode = safeGetLocal("bullmoney_pagemode_completed");
+    const hasCompletedLoader = safeGetLocal("bullmoney_loader_completed");
+    const hasCompletedTelegram = safeGetLocal("bullmoney_telegram_confirmed");
 
     const now = Date.now();
     let shouldForceLoader = false;
@@ -613,8 +672,8 @@ function HomeContent() {
       };
 
       // Session refresh counter
-      const sessionCount = Number(sessionStorage.getItem(sessionCountKey) || "0") + 1;
-      sessionStorage.setItem(sessionCountKey, String(sessionCount));
+      const sessionCount = Number(safeGetSession(sessionCountKey) || "0") + 1;
+      safeSetSession(sessionCountKey, String(sessionCount));
 
       // If user refreshes more than 15 times in this session,
       // force the welcome/pagemode screen to show again.
@@ -624,19 +683,19 @@ function HomeContent() {
       }
 
       // Track refresh timestamps for rapid-refresh detection (2-minute window)
-      const rawTimes = sessionStorage.getItem(refreshTimesKey);
+      const rawTimes = safeGetSession(refreshTimesKey);
       const parsedTimes = JSON.parse(rawTimes || "[]");
       const times = Array.isArray(parsedTimes) ? parsedTimes : [];
       const recentTimes = (times as number[]).filter(t => now - t <= 120000);
       recentTimes.push(now);
-      sessionStorage.setItem(refreshTimesKey, JSON.stringify(recentTimes));
+      safeSetSession(refreshTimesKey, JSON.stringify(recentTimes));
 
-      const lastRapidShown = Number(sessionStorage.getItem(rapidShownKey) || "0");
+      const lastRapidShown = Number(safeGetSession(rapidShownKey) || "0");
       const rapidCooldownMs = 120000;
       if (recentTimes.length >= 3 && now - lastRapidShown >= rapidCooldownMs) {
         shouldForceLoader = true;
         forceReasons.push("rapid_refresh_3_in_2min");
-        sessionStorage.setItem(rapidShownKey, String(now));
+        safeSetSession(rapidShownKey, String(now));
       }
 
       // Randomized probability: show 35% of refreshes
@@ -651,7 +710,7 @@ function HomeContent() {
     // ===== Daily 23:59:50 TTL trigger =====
     try {
       const dailyKey = "bullmoney_loader_daily_last";
-      const lastDaily = Number(localStorage.getItem(dailyKey) || "0");
+      const lastDaily = Number(safeGetLocal(dailyKey) || "0");
       const target = new Date(now);
       target.setHours(23, 59, 50, 0);
       const targetTime = target.getTime();
@@ -659,7 +718,7 @@ function HomeContent() {
       if (now >= targetTime && lastDaily < targetTime) {
         shouldForceLoader = true;
         forceReasons.push("daily_23_59_50");
-        localStorage.setItem(dailyKey, String(targetTime));
+        safeSetLocal(dailyKey, String(targetTime));
       }
     } catch (error) {
       console.warn('[Page] Daily trigger check failed', error);
@@ -673,7 +732,7 @@ function HomeContent() {
     // in a single session, re-show the pagemode welcome experience.
     if (shouldResetPagemode) {
       try {
-        localStorage.removeItem("bullmoney_pagemode_completed");
+        safeRemoveLocal("bullmoney_pagemode_completed");
       } catch {
         // Ignore storage errors; still fall back to pagemode view
       }
@@ -710,6 +769,10 @@ function HomeContent() {
     setIsInitialized(true);
   }, []);
 
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
   // Mobile Check
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -718,14 +781,32 @@ function HomeContent() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  useEffect(() => {
+    const desktopMq = window.matchMedia('(min-width: 1024px)');
+    const ultraWideMq = window.matchMedia('(min-width: 1980px)');
+    const updateDesktop = (event: MediaQueryListEvent) => setIsDesktop(event.matches);
+    const updateUltraWide = (event: MediaQueryListEvent) => setIsUltraWide(event.matches);
+
+    setIsDesktop(desktopMq.matches);
+    setIsUltraWide(ultraWideMq.matches);
+
+    desktopMq.addEventListener('change', updateDesktop);
+    ultraWideMq.addEventListener('change', updateUltraWide);
+
+    return () => {
+      desktopMq.removeEventListener('change', updateDesktop);
+      ultraWideMq.removeEventListener('change', updateUltraWide);
+    };
+  }, []);
+
   const handlePageModeUnlock = () => {
     // Mark pagemode as completed so user skips it on reload
-    localStorage.setItem("bullmoney_pagemode_completed", "true");
+    safeSetLocal("bullmoney_pagemode_completed", "true");
     console.log('[Page] Pagemode completed, checking if should skip to content or show loader');
     
     // If loader was already completed, skip directly to content
-    const hasCompletedLoader = localStorage.getItem("bullmoney_loader_completed");
-    const hasCompletedTelegram = localStorage.getItem("bullmoney_telegram_confirmed");
+    const hasCompletedLoader = safeGetLocal("bullmoney_loader_completed");
+    const hasCompletedTelegram = safeGetLocal("bullmoney_telegram_confirmed");
     if (hasCompletedLoader === "true") {
       if (hasCompletedTelegram === "true") {
         console.log('[Page] Loader + telegram already completed, skipping to content');
@@ -745,8 +826,8 @@ function HomeContent() {
   // Called when user completes the vault
   const handleLoaderComplete = useCallback(() => {
     console.log('[Page] V3 completed - moving to telegram confirmation');
-    localStorage.setItem("bullmoney_loader_completed", "true");
-    const hasCompletedTelegram = localStorage.getItem("bullmoney_telegram_confirmed");
+    safeSetLocal("bullmoney_loader_completed", "true");
+    const hasCompletedTelegram = safeGetLocal("bullmoney_telegram_confirmed");
     if (hasCompletedTelegram === "true") {
       setV2Unlocked(true);
       setCurrentView('content');
@@ -756,8 +837,8 @@ function HomeContent() {
   }, [setV2Unlocked]);
 
   const handleTelegramUnlock = useCallback(() => {
-    localStorage.setItem("bullmoney_loader_completed", "true");
-    localStorage.setItem("bullmoney_telegram_confirmed", "true");
+    safeSetLocal("bullmoney_loader_completed", "true");
+    safeSetLocal("bullmoney_telegram_confirmed", "true");
     setV2Unlocked(true);
     setCurrentView('content');
   }, [setV2Unlocked]);
@@ -869,7 +950,9 @@ function HomeContent() {
               data-content
               data-theme-aware
             >
-              {isMobile ? (
+              {!hasMounted ? (
+                <HeroSkeleton />
+              ) : isMobile ? (
                 canRenderMobileSections ? (
                   <DiscordMobileHero
                     sources={featuredVideos}
@@ -887,7 +970,11 @@ function HomeContent() {
 
           <div className="mainpage-store-shell" data-hero-mode={mainHeroMode}>
             <StoreMemoryProvider>
-              <StorePageContent routeBase="/" syncUrl={false} />
+              {hasMounted ? (
+                <StorePageContent routeBase="/" syncUrl={false} />
+              ) : (
+                <ContentSkeleton lines={6} />
+              )}
             </StoreMemoryProvider>
           </div>
 

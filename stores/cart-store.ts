@@ -1,7 +1,8 @@
 'use client';
 
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist } from 'zustand/middleware';
+import { createSafeJSONStorage } from '@/lib/zustandStorage';
 import { supabase } from '@/lib/supabaseClient';
 import { loadSession } from '@/lib/sessionPersistence';
 import type { CartItem, ProductWithDetails, Variant, CartSummary } from '@/types/store';
@@ -273,7 +274,7 @@ export const useCartStore = create<CartStore>()(
     }),
     {
       name: 'bullmoney-cart',
-      storage: createJSONStorage(() => localStorage),
+      storage: createSafeJSONStorage(),
       partialize: (state) => ({
         items: state.items,
         discountCode: state.discountCode,

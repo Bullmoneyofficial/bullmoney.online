@@ -41,7 +41,8 @@ export const ThemeOverlay = memo(function ThemeOverlay({
       const html = document.documentElement;
       const isLow = html.classList.contains('fps-low') || 
                    html.classList.contains('fps-minimal') ||
-                   html.classList.contains('is-ios');
+                   html.classList.contains('is-ios') ||
+                   html.classList.contains('theme-overlays-off');
       // Only update if value actually changed
       setIsLowPerformance(prev => prev !== isLow ? isLow : prev);
     };

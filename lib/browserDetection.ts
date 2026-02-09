@@ -2,18 +2,10 @@
 
 /**
  * Browser Detection Utility
- * 
- * UPDATED 2026.1.17: ALL FEATURES ENABLED FOR ALL DEVICES
- * - All in-app browsers (Instagram, TikTok, Facebook, etc.) now get FULL experience
- * - All Android devices get FULL experience  
- * - All desktop browsers get FULL experience
- * - All iOS/Apple devices get FULL experience
- * - No restrictions based on device memory or browser type
- * 
- * The detection is still performed for analytics/logging purposes,
- * but NO FEATURES ARE DISABLED based on detection results.
- * 
- * @version 2026.1.17 - Universal Full Experience
+ *
+ * UPDATED 2026.2.9: Real in-app detection enabled
+ * - In-app browsers and low-memory devices reduce heavy features
+ * - Desktop/high-end devices keep full experience
  */
 
 export interface BrowserInfo {
@@ -113,11 +105,11 @@ export function detectBrowser(): BrowserInfo {
     isLinkedIn || isSnapchat || isWeChat || isLine || isSafariWebView;
   
   // ============================================================================
-  // ALL CAPABILITIES ENABLED - No restrictions for any device or browser
+  // CAPABILITIES - Reduce heavy features for in-app/low-memory devices
   // ============================================================================
-  
-  // Always report as NOT in-app browser (so nothing gets disabled)
-  const isInAppBrowser = false;
+
+  // Real in-app browser flag
+  const isInAppBrowser = isInAppBrowserRaw;
   
   // Memory flags (for analytics only, no restrictions)
   const isVeryLowMemoryDevice = deviceMemory < 2;
@@ -165,14 +157,13 @@ export function detectBrowser(): BrowserInfo {
   }
   
   // Recommended Spline quality based on device capabilities
-  // UPDATED 2026.1.22: NEVER disable Spline - always render with quality reduction instead
   let recommendedSplineQuality: 'high' | 'medium' | 'low' | 'disabled' = 'medium';
-  let shouldDisableSpline = false; // NEVER disable - always false
+  let shouldDisableSpline = false;
   
   // Quality tiers based on device capability - but NEVER disabled
-  if (gpuTier === 'minimal' || isUltraLowMemoryDevice || isTinyViewport) {
-    recommendedSplineQuality = 'low'; // CHANGED: Use 'low' instead of 'disabled'
-    // shouldDisableSpline stays false - we render with extreme reduction instead
+  if (isInAppBrowser || gpuTier === 'minimal' || isUltraLowMemoryDevice || isTinyViewport) {
+    recommendedSplineQuality = 'low';
+    shouldDisableSpline = isUltraLowMemoryDevice || (isInAppBrowser && isVeryLowMemoryDevice);
   } else if (gpuTier === 'low' || isVeryLowMemoryDevice || isSmallViewport) {
     recommendedSplineQuality = 'low';
   } else if (gpuTier === 'medium' || isLowMemoryDevice) {
@@ -181,15 +172,14 @@ export function detectBrowser(): BrowserInfo {
     recommendedSplineQuality = 'high';
   }
   
-  // ALL FEATURES ENABLED for all devices
-  const canHandleWebGL = true;
-  const canHandle3D = true;
+  const canHandleWebGL = !isInAppBrowser && !isUltraLowMemoryDevice;
+  const canHandle3D = !isInAppBrowser && !isUltraLowMemoryDevice;
   const canHandleWebSocket = true;
   const canHandleAudio = true;
-  
-  // Only respect user's system preference for reduced motion
+
+  // Reduce animations in in-app browsers or low-memory devices
   const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false;
-  const shouldReduceAnimations = prefersReducedMotion;
+  const shouldReduceAnimations = prefersReducedMotion || isInAppBrowser || isLowMemoryDevice;
   
   // Determine browser name for logging
   let browserName = 'Unknown';
@@ -212,7 +202,7 @@ export function detectBrowser(): BrowserInfo {
   else if (/safari/.test(ua)) browserName = 'Safari';
   
   cachedInfo = {
-    isInAppBrowser,           // Always false - no restrictions
+    isInAppBrowser,
     isInstagram,              // Detection for analytics
     isTikTok,
     isFacebook,
@@ -224,13 +214,13 @@ export function detectBrowser(): BrowserInfo {
     isLine,
     isMobileSafari,
     isMobileChrome,
-    isLowMemoryDevice,        // For analytics only
-    isVeryLowMemoryDevice,    // For analytics only
-    canHandle3D: true, // ALWAYS TRUE - render with quality reduction instead of fallback
-    canHandleWebGL: true, // ALWAYS TRUE - attempt WebGL on all devices
-    canHandleWebSocket: true, // ALWAYS TRUE
-    canHandleAudio: true,     // ALWAYS TRUE
-    shouldReduceAnimations,   // Only respects user preference
+    isLowMemoryDevice,
+    isVeryLowMemoryDevice,
+    canHandle3D,
+    canHandleWebGL,
+    canHandleWebSocket,
+    canHandleAudio,
+    shouldReduceAnimations,
     browserName,
     deviceMemory,
     hardwareConcurrency,
@@ -252,7 +242,6 @@ export function detectBrowser(): BrowserInfo {
   // Log detection for debugging
   if (isInAppBrowserRaw) {
     console.log(`[BrowserDetection] In-app browser detected: ${browserName}`);
-    console.log(`[BrowserDetection] ALL FEATURES ENABLED - No restrictions applied`);
   }
   
   return cachedInfo;

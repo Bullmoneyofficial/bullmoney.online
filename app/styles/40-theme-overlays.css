@@ -176,6 +176,17 @@ html.fps-low #theme-edge-glow {
   display: none !important;
 }
 
+/* Disable overlays entirely on constrained devices */
+html.theme-overlays-off #theme-global-overlay,
+html.theme-overlays-off #theme-edge-glow {
+  display: none !important;
+}
+
+html.theme-overlays-off[data-active-theme]::before {
+  opacity: 0 !important;
+  background: transparent !important;
+}
+
 /* ============================================
    CSS FALLBACK OVERLAY (::before pseudo-element)
    Used when DOM overlay isn't available yet

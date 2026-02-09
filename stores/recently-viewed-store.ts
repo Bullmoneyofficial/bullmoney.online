@@ -1,7 +1,8 @@
 'use client';
 
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist } from 'zustand/middleware';
+import { createSafeJSONStorage } from '@/lib/zustandStorage';
 
 // ============================================================================
 // RECENTLY VIEWED STORE - ZUSTAND WITH LOCAL STORAGE PERSISTENCE
@@ -48,7 +49,7 @@ export const useRecentlyViewedStore = create<RecentlyViewedStore>()(
     }),
     {
       name: 'bullmoney-recently-viewed',
-      storage: createJSONStorage(() => localStorage),
+      storage: createSafeJSONStorage(),
     }
   )
 );

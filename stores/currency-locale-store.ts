@@ -1,7 +1,8 @@
 'use client';
 
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist } from 'zustand/middleware';
+import { createSafeJSONStorage } from '@/lib/zustandStorage';
 
 // ============================================================================
 // CURRENCY / LOCALE STORE - ZUSTAND WITH LOCAL STORAGE PERSISTENCE
@@ -275,7 +276,7 @@ export const useCurrencyLocaleStore = create<CurrencyLocaleStore>()(
     }),
     {
       name: 'bullmoney-locale',
-      storage: createJSONStorage(() => localStorage),
+      storage: createSafeJSONStorage(),
       partialize: (state) => ({
         currency: state.currency,
         language: state.language,

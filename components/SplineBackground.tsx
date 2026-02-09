@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, memo } from 'react';
 import dynamic from 'next/dynamic';
 import { detectRefreshRate } from '@/lib/use120Hz';
+import { detectBrowser } from '@/lib/browserDetection';
 
 interface Props {
   scene: string;
@@ -12,12 +13,12 @@ interface Props {
 }
 
 // Lightweight device detection with 120Hz support
-// UPDATED 2026.1.22: Always return true - never block Spline loading
 const shouldLoadSpline = () => {
   if (typeof window === 'undefined') return true;
-  
-  // ALWAYS load Spline - quality will be reduced automatically for low-end devices
-  // The spline-wrapper handles all quality adjustments
+
+  const browserInfo = detectBrowser();
+  if (browserInfo.isInAppBrowser || browserInfo.shouldReduceAnimations) return false;
+  if (browserInfo.shouldDisableSpline || !browserInfo.canHandle3D) return false;
   return true;
 };
 

@@ -149,22 +149,14 @@ function SplineSceneComponent({
     setTimeout(() => setInteractionHint(''), 1000);
   }, [audioHandlers]);
 
-  // HERO MODE: Always render on ALL devices - NO FALLBACKS EVER
-  // Updated 2026.1.22: Removed all fallback conditions
   useEffect(() => {
     const browserInfo = detectBrowser();
-    
-    // FORCE RENDER: Always render Spline on ALL devices
-    // Quality will be automatically reduced for low-end devices
-    console.log('[SplineScene] FORCE RENDER MODE: Spline enabled on ALL devices', {
-      browserName: browserInfo.browserName,
-      gpuTier: browserInfo.gpuTier,
-      recommendedQuality: browserInfo.recommendedSplineQuality,
-      deviceMemory: browserInfo.deviceMemory,
-    });
-    
-    setShouldRender(true); // ALWAYS render - no fallbacks
-    setHasError(false); // Reset any previous error state
+    const canRenderSpline = browserInfo.canHandle3D
+      && !browserInfo.shouldDisableSpline
+      && !browserInfo.isInAppBrowser;
+
+    setShouldRender(canRenderSpline);
+    setHasError(false);
   }, [perf.enable3D, perf.deviceTier]);
 
   const showSparkles =
@@ -188,10 +180,7 @@ function SplineSceneComponent({
     if (onLoad) onLoad();
   };
 
-  // UPDATED 2026.1.22: NEVER show fallback - always attempt to render Spline
-  // Even if error occurs, we retry with reduced quality instead of showing fallback
-  // Only show fallback if we explicitly catch an unrecoverable WebGL error
-  const showFallback = false; // NEVER show fallback
+  const showFallback = !shouldRender || hasError;
   
   if (showFallback) {
     return (

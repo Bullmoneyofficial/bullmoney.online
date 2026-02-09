@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import dynamic from 'next/dynamic';
 import { detectBrowser } from '@/lib/browserDetection';
 
@@ -20,11 +21,15 @@ const TargetCursor = dynamic(() => import('@/components/TargetCursor'), {
 export function ClientCursor() {
   const [shouldShow, setShouldShow] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    // Check for in-app browsers - disable cursor to prevent GSAP crashes
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
     const browserInfo = detectBrowser();
-    if (browserInfo.isInAppBrowser || browserInfo.shouldReduceAnimations) {
+    if (browserInfo.shouldReduceAnimations) {
       console.log('[ClientCursor] Disabled for:', browserInfo.browserName);
       setShouldShow(false);
       return;
@@ -43,28 +48,28 @@ export function ClientCursor() {
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     setIsMobile(isTouchDevice);
     
-    // Only show on desktop - mobile touch cursor can cause performance issues
-    // in limited memory environments
-    if (isTouchDevice && browserInfo.isLowMemoryDevice) {
+    // Skip on very low-memory touch devices
+    if (isTouchDevice && browserInfo.isVeryLowMemoryDevice) {
       setShouldShow(false);
       return;
     }
-    
-    // Show on desktop, optionally on high-end mobile
-    setShouldShow(!isTouchDevice);
+
+    // Show on both desktop and mobile when safe
+    setShouldShow(true);
   }, []);
 
-  if (!shouldShow) return null;
+  if (!shouldShow || !isMounted || typeof document === 'undefined') return null;
 
-  return (
+  return createPortal(
     <TargetCursor 
       targetSelector="a, button, input, .cursor-target, .interactive-object, [role='button']"
       autoMoveSelector="button, a, input, .cursor-target"
       spinDuration={2.5}
       hideDefaultCursor={false} // ALWAYS show real cursor - custom cursor is decorative only
       idleTimeout={5}
-      enableOnMobile={false} // Disable on mobile to prevent memory issues
-    />
+      enableOnMobile={true}
+    />,
+    document.body
   );
 }
 

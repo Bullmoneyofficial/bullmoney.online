@@ -27,6 +27,7 @@ export function GlobalThemeProvider({ children }: { children: React.ReactNode })
   const [isXMUser, setIsXMUserState] = useState(false);
   const [isAppLoading, setAppLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [disableOverlays, setDisableOverlays] = useState(false);
 
   // Track mobile state for responsive theme filters
   useEffect(() => {
@@ -35,6 +36,28 @@ export function GlobalThemeProvider({ children }: { children: React.ReactNode })
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Disable theme overlays on in-app, mobile, or low-memory devices to avoid black/white flashes
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') return;
+    const ua = navigator.userAgent || '';
+    const isInApp = /Instagram|FBAN|FBAV|FB_IAB|FBIOS|FB4A|Line|TikTok|Twitter|Snapchat|LinkedInApp/i.test(ua);
+    const memory = (navigator as any).deviceMemory || 4;
+    const isLowMemory = memory < 4;
+    const shouldDisable = isInApp || isMobile || isLowMemory;
+    setDisableOverlays(shouldDisable);
+
+    const root = document.documentElement;
+    if (shouldDisable) {
+      root.classList.add('theme-overlays-off');
+      if (isInApp) root.classList.add('is-in-app-browser');
+      if (isLowMemory) root.classList.add('is-low-memory');
+    } else {
+      root.classList.remove('theme-overlays-off');
+      root.classList.remove('is-in-app-browser');
+      root.classList.remove('is-low-memory');
+    }
+  }, [isMobile]);
 
   // Load theme and XM status from storage on mount
   useEffect(() => {
@@ -198,6 +221,17 @@ export function GlobalThemeProvider({ children }: { children: React.ReactNode })
       // Uses pointer-events: none to allow all interactions through
       // ═══════════════════════════════════════════════════════════════════════════
       
+      // Skip overlay effects on constrained devices to prevent flashing
+      if (disableOverlays) {
+        const existingOverlay = document.getElementById('theme-global-overlay');
+        const existingEdgeGlow = document.getElementById('theme-edge-glow');
+        const existingTransition = document.getElementById('theme-transition-reveal');
+        if (existingOverlay) existingOverlay.style.opacity = '0';
+        if (existingEdgeGlow) existingEdgeGlow.style.opacity = '0';
+        if (existingTransition) existingTransition.style.opacity = '0';
+        return;
+      }
+
       // Create or get the transition reveal overlay (animates bottom to top)
       let transitionOverlay = document.getElementById('theme-transition-reveal');
       if (!transitionOverlay) {
@@ -205,7 +239,7 @@ export function GlobalThemeProvider({ children }: { children: React.ReactNode })
         transitionOverlay.id = 'theme-transition-reveal';
         document.body.appendChild(transitionOverlay);
       }
-      
+
       // Trigger bottom-to-top transition animation
       Object.assign(transitionOverlay.style, {
         position: 'fixed',
@@ -231,7 +265,7 @@ export function GlobalThemeProvider({ children }: { children: React.ReactNode })
         willChange: 'height',
         transition: 'none', // Will be animated via keyframes
       });
-      
+
       // Trigger the bottom-to-top animation
       transitionOverlay.animate([
         { height: '0%', opacity: 1 },
@@ -316,7 +350,7 @@ export function GlobalThemeProvider({ children }: { children: React.ReactNode })
         contain: 'layout style',
       });
     }
-  }, [activeThemeId, isInitialized, isMobile]);
+  }, [activeThemeId, disableOverlays, isInitialized, isMobile]);
 
   const setTheme = useCallback((themeId: string) => {
     if (ALL_THEMES.find(t => t.id === themeId)) {

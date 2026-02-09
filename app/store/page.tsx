@@ -23,6 +23,8 @@ import { SORT_OPTIONS, CATEGORIES } from './store.config';
 import { useCartStore } from '@/stores/cart-store';
 import { useProductsModalUI } from '@/contexts/UIStateContext';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
+import { isMobileDevice } from '@/lib/mobileDetection';
+import { userStorage } from '@/lib/smartStorage';
 
 const PAGE_SIZE = 12;
 
@@ -90,6 +92,8 @@ const FooterComponent = dynamic(() => import('@/components/Mainpage/footer').the
 });
 
 const HERO_SLIDE_DURATION = 6;
+const HERO_CACHE_KEY = 'hero_store_slide_v1';
+const HERO_CACHE_TTL = 1000 * 60 * 60 * 24;
 
 const HERO_CAROUSEL_SLIDES = [
   { type: 'image' as const, src: '/bullmoney-logo.png', alt: 'BullMoney logo' },
@@ -181,22 +185,48 @@ export default function StorePage({ routeBase = '/store', syncUrl = true }: Stor
   const [viewerProduct, setViewerProduct] = useState<ProductWithDetails | null>(null);
   const [viewerMounted, setViewerMounted] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isUltraWide, setIsUltraWide] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [checkoutProduct, setCheckoutProduct] = useState<ProductWithDetails | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<
     'cart' | 'stripe' | 'whop' | 'skrill'
   >('cart');
   const [useGridLayouts, setUseGridLayouts] = useState(true);
-  const [heroSlideIndex] = useState(() => pickHeroSlideIndex());
+  const [heroSlideIndex, setHeroSlideIndex] = useState(() => pickHeroSlideIndex());
   const [showHeroMapOverlay] = useState(() => Math.random() < 0.05);
-  const heroSlide = HERO_CAROUSEL_SLIDES[heroSlideIndex];
-  const heroIsWorldMap = heroSlide?.type === 'world-map';
+  const heroCacheLoadedRef = useRef(false);
+  const resolvedHeroSlide = useMemo(() => {
+    if (!hasMounted || isMobile) {
+      return HERO_CAROUSEL_SLIDES.find((slide) => slide.type === 'image') || HERO_CAROUSEL_SLIDES[0];
+    }
+    return HERO_CAROUSEL_SLIDES[heroSlideIndex];
+  }, [hasMounted, isMobile, heroSlideIndex]);
+  const heroIsWorldMap = resolvedHeroSlide?.type === 'world-map';
+  const allowHeavyHero = hasMounted;
   const heroTitleColor = 'rgb(255,255,255)';
   const heroMetaColor = 'rgb(255,255,255)';
   const heroBodyColor = 'rgb(255,255,255)';
   const heroTextShadow = heroIsWorldMap ? 'none' : '0 6px 18px rgba(0,0,0,0.45)';
   const heroTitleShadow = heroIsWorldMap ? 'none' : '0 10px 30px rgba(0,0,0,0.5)';
   const heroBodyShadow = heroIsWorldMap ? 'none' : '0 8px 22px rgba(0,0,0,0.4)';
+  const shouldShowHeroMapOverlay = allowHeavyHero && showHeroMapOverlay;
+  useEffect(() => {
+    if (heroCacheLoadedRef.current) return;
+    heroCacheLoadedRef.current = true;
+
+    const cachedIndex = userStorage.get<number>(HERO_CACHE_KEY, null);
+    if (typeof cachedIndex === 'number' && cachedIndex >= 0 && cachedIndex < HERO_CAROUSEL_SLIDES.length) {
+      setHeroSlideIndex(cachedIndex);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!heroCacheLoadedRef.current) return;
+    userStorage.set(HERO_CACHE_KEY, heroSlideIndex, HERO_CACHE_TTL);
+  }, [heroSlideIndex]);
+
 
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
@@ -247,11 +277,32 @@ export default function StorePage({ routeBase = '/store', syncUrl = true }: Stor
   }, []);
 
   useEffect(() => {
-    const mq = window.matchMedia('(min-width: 1024px)');
-    const update = (event: MediaQueryListEvent) => setIsDesktop(event.matches);
-    setIsDesktop(mq.matches);
-    mq.addEventListener('change', update);
-    return () => mq.removeEventListener('change', update);
+    setHasMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const updateMobile = () => setIsMobile(isMobileDevice());
+    updateMobile();
+    window.addEventListener('resize', updateMobile);
+    return () => window.removeEventListener('resize', updateMobile);
+  }, []);
+
+  useEffect(() => {
+    const desktopMq = window.matchMedia('(min-width: 1024px)');
+    const ultraWideMq = window.matchMedia('(min-width: 1980px)');
+    const updateDesktop = (event: MediaQueryListEvent) => setIsDesktop(event.matches);
+    const updateUltraWide = (event: MediaQueryListEvent) => setIsUltraWide(event.matches);
+
+    setIsDesktop(desktopMq.matches);
+    setIsUltraWide(ultraWideMq.matches);
+
+    desktopMq.addEventListener('change', updateDesktop);
+    ultraWideMq.addEventListener('change', updateUltraWide);
+
+    return () => {
+      desktopMq.removeEventListener('change', updateDesktop);
+      ultraWideMq.removeEventListener('change', updateUltraWide);
+    };
   }, []);
 
   useEffect(() => {
@@ -495,7 +546,18 @@ export default function StorePage({ routeBase = '/store', syncUrl = true }: Stor
   const featuredProducts = useMemo(() => products.slice(0, 4), [products]);
   const timelineProducts = useMemo(() => products.slice(4, 8), [products]);
   const heroMedia = useMemo(() => {
-    const slide = HERO_CAROUSEL_SLIDES[heroSlideIndex];
+    const slide = resolvedHeroSlide;
+    if (!allowHeavyHero && (slide.type === 'world-map' || slide.type === 'spline')) {
+      return (
+        <img
+          src="/Img1.jpg"
+          alt="BullMoney hero"
+          className="absolute inset-0 z-0 h-full w-full object-cover"
+          loading="eager"
+          decoding="async"
+        />
+      );
+    }
 
     if (slide.type === 'image') {
       return (
@@ -661,7 +723,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true }: Stor
         <SplineBackground scene={slide.scene} className="h-full w-full" priority />
       </div>
     );
-  }, [heroSlideIndex]);
+  }, [allowHeavyHero, resolvedHeroSlide]);
 
   const expandedPrimaryImage = useMemo(() => {
     if (!expandedProduct) return '';
@@ -901,7 +963,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true }: Stor
       >
         <div className="relative min-h-screen w-full overflow-hidden">
           {heroMedia}
-          {showHeroMapOverlay && (
+          {shouldShowHeroMapOverlay && (
             <div className="absolute inset-0 z-[2] pointer-events-none bg-white/85">
               <WorldMap dots={HERO_WORLD_MAP_DOTS} lineColor="#00D4FF" forceVisible forceLite showCryptoCoins />
             </div>

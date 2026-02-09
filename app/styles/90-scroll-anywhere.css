@@ -11,6 +11,15 @@ html.store-active body * {
   touch-action: pan-y pan-x !important;
 }
 
+@media (hover: hover) and (pointer: fine) {
+  html.home-active body,
+  html.home-active body *,
+  html.store-active body,
+  html.store-active body * {
+    touch-action: auto !important;
+  }
+}
+
 /* Preserve explicit drag behavior when present */
 html.home-active [draggable],
 html.home-active [data-draggable],
