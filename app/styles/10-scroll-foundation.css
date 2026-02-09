@@ -111,6 +111,61 @@ html[data-active-theme]::after {
    For horizontal scroll sections on mobile
    ============================================ */
 
+/* ============================================
+   APPLE-STYLE VISIBLE SCROLLBARS
+   Main + Store pages only
+   ============================================ */
+
+html.home-active,
+html.store-active {
+  scrollbar-width: thin;
+}
+
+html.home-active {
+  scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+}
+
+html.store-active {
+  scrollbar-color: rgba(0, 0, 0, 0.35) transparent;
+}
+
+html.home-active::-webkit-scrollbar,
+html.store-active::-webkit-scrollbar {
+  width: 12px;
+}
+
+html.home-active::-webkit-scrollbar-track,
+html.store-active::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+}
+
+html.home-active::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 12px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+html.store-active::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.65);
+  border-radius: 12px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+
+html.home-active::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.75);
+  background-clip: content-box;
+}
+
+html.store-active::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.85);
+  background-clip: content-box;
+}
+
 /* Hide scrollbar but keep functionality */
 .scrollbar-none {
   -ms-overflow-style: none !important;  /* IE and Edge */

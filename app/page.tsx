@@ -278,6 +278,18 @@ function HomeContent() {
   });
 
   useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const root = document.documentElement;
+    const body = document.body;
+    root.classList.add('home-active');
+    body.classList.add('home-page-body');
+    return () => {
+      root.classList.remove('home-active');
+      body.classList.remove('home-page-body');
+    };
+  }, []);
+
+  useEffect(() => {
     if (typeof window === 'undefined') return;
     const storedMode = localStorage.getItem('bullmoney_main_hero_mode');
     if (storedMode === 'store' || storedMode === 'trader') {
