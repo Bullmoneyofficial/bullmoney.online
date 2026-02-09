@@ -22,7 +22,7 @@ import {
 // ==========================================
 import {
   Hero,
-  HeroDesktop,
+  HeroDesktop as DiscordDesktopHero,
   MetaTraderQuotes,
   BullMoneyPromoScroll,
   Features,
@@ -132,9 +132,10 @@ function DeferredRender({
 import { useAudioEngine } from "@/app/hooks/useAudioEngine";
 import Image from "next/image";
 import Link from "next/link";
+import { StoreMemoryProvider } from "./store/StoreMemoryContext";
 
 // Lazy load heavy components that aren't needed immediately
-const MobileDiscordHero = dynamic(
+const DiscordMobileHero = dynamic(
   () => import("@/components/MobileDiscordHero"),
   { ssr: false, loading: () => <HeroSkeleton /> }
 );
@@ -160,6 +161,18 @@ const QuotesSection = dynamic(
 const BreakingNewsSection = dynamic(
   () => import("./PageSections").then(mod => mod.BreakingNewsSection),
   { ssr: false, loading: () => <MinimalFallback /> }
+);
+
+const TelegramUnlockScreen = dynamic(
+  () => import("@/components/REGISTER USERS/TelegramConfirmationResponsive").then(mod => ({
+    default: mod.TelegramConfirmationResponsive,
+  })),
+  { ssr: false, loading: () => <MinimalFallback /> }
+);
+
+const StorePageContent = dynamic(
+  () => import("./store/page"),
+  { ssr: false, loading: () => <ContentSkeleton lines={6} /> }
 );
 
 // Lazy load Spline modals - only loaded when actually opened
@@ -204,11 +217,12 @@ function HomeContent() {
   
   // Start uninitialized - useEffect will check localStorage on client mount
   // This ensures SSR hydration works correctly in production
-  const [currentView, setCurrentView] = useState<'pagemode' | 'loader' | 'content'>('pagemode');
+  const [currentView, setCurrentView] = useState<'pagemode' | 'loader' | 'telegram' | 'content'>('pagemode');
   const [isInitialized, setIsInitialized] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [desktopHeroReady, setDesktopHeroReady] = useState(false);
   const [allowHeavyDesktop, setAllowHeavyDesktop] = useState(false);
+  const [mainHeroMode, setMainHeroMode] = useState<'store' | 'trader'>('store');
   // Legacy flag retained for older bundles; default keeps desktop on 3D hero.
   const desktopHeroVariant = 'spline';
   const useDesktopVideoVariant = desktopHeroVariant === 'spline';
@@ -262,6 +276,21 @@ function HomeContent() {
     setCurrentView('content');
     setV2Unlocked(true);
   });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const storedMode = localStorage.getItem('bullmoney_main_hero_mode');
+    if (storedMode === 'store' || storedMode === 'trader') {
+      setMainHeroMode(storedMode);
+    }
+  }, []);
+
+  const handleHeroModeChange = useCallback((mode: 'store' | 'trader') => {
+    setMainHeroMode(mode);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('bullmoney_main_hero_mode', mode);
+    }
+  }, []);
 
   // Use unified performance for tracking
   const { 
@@ -521,6 +550,7 @@ function HomeContent() {
     const hasSession = localStorage.getItem("bullmoney_session");
     const hasCompletedPagemode = localStorage.getItem("bullmoney_pagemode_completed");
     const hasCompletedLoader = localStorage.getItem("bullmoney_loader_completed");
+    const hasCompletedTelegram = localStorage.getItem("bullmoney_telegram_confirmed");
 
     const now = Date.now();
     let shouldForceLoader = false;
@@ -618,9 +648,14 @@ function HomeContent() {
     } else if (hasCompletedLoader === "true") {
       // User has completed both pagemode AND loader before
       // Skip directly to content (no loader needed)
-      console.log('[Page] Loader already completed - skipping to content');
-      setV2Unlocked(true);
-      setCurrentView('content');
+      if (hasCompletedTelegram === "true") {
+        console.log('[Page] Loader + telegram already completed - skipping to content');
+        setV2Unlocked(true);
+        setCurrentView('content');
+      } else {
+        console.log('[Page] Loader completed, telegram pending - showing telegram step');
+        setCurrentView('telegram');
+      }
     } else if (shouldForceLoader && (hasSession || hasCompletedPagemode === "true")) {
       // Only force loader if user has already completed pagemode
       console.log('[Page] Forcing loader due to refresh policy (pagemode already completed)');
@@ -652,34 +687,41 @@ function HomeContent() {
     
     // If loader was already completed, skip directly to content
     const hasCompletedLoader = localStorage.getItem("bullmoney_loader_completed");
+    const hasCompletedTelegram = localStorage.getItem("bullmoney_telegram_confirmed");
     if (hasCompletedLoader === "true") {
-      console.log('[Page] Loader already completed, skipping to content');
-      setV2Unlocked(true);
-      setCurrentView('content');
-    } else {
-      console.log('[Page] Moving to V3 loader');
-      setCurrentView('loader');
+      if (hasCompletedTelegram === "true") {
+        console.log('[Page] Loader + telegram already completed, skipping to content');
+        setV2Unlocked(true);
+        setCurrentView('content');
+      } else {
+        console.log('[Page] Loader completed, showing telegram confirmation');
+        setCurrentView('telegram');
+      }
+      return;
     }
+
+    console.log('[Page] Moving to V3 loader');
+    setCurrentView('loader');
   };
 
   // Called when user completes the vault
   const handleLoaderComplete = useCallback(() => {
-    // Check if this is the first time completing V3 loader
-    const hasCompletedV3Before = localStorage.getItem("bullmoney_v3_completed_once");
-    
-    if (!hasCompletedV3Before) {
-      // First time - show pagemode loader celebration before content
-      console.log('[Page] First V3 completion - showing pagemode celebration loader');
-      localStorage.setItem("bullmoney_v3_completed_once", "true");
-      localStorage.setItem("bullmoney_show_celebration_loader", "true");
-      setCurrentView('pagemode');
-    } else {
-      // Not first time - go directly to content
-      console.log('[Page] V3 completed - going to content');
-      localStorage.setItem("bullmoney_loader_completed", "true");
+    console.log('[Page] V3 completed - moving to telegram confirmation');
+    localStorage.setItem("bullmoney_loader_completed", "true");
+    const hasCompletedTelegram = localStorage.getItem("bullmoney_telegram_confirmed");
+    if (hasCompletedTelegram === "true") {
       setV2Unlocked(true);
       setCurrentView('content');
+      return;
     }
+    setCurrentView('telegram');
+  }, [setV2Unlocked]);
+
+  const handleTelegramUnlock = useCallback(() => {
+    localStorage.setItem("bullmoney_loader_completed", "true");
+    localStorage.setItem("bullmoney_telegram_confirmed", "true");
+    setV2Unlocked(true);
+    setCurrentView('content');
   }, [setV2Unlocked]);
 
   // Mobile Loader Deferral
@@ -729,19 +771,54 @@ function HomeContent() {
         </div>
       )}
 
-      {currentView === 'content' && (
-        <>
-          <main className="min-h-screen flex flex-col w-full page-surface px-4 sm:px-6 lg:px-10" data-allow-scroll data-scrollable data-content data-theme-aware style={{ overflow: 'visible', height: 'auto' }}>
-            <div id="top" />
+      {currentView === 'telegram' && (
+        <div className="fixed inset-0 z-99999 bg-black">
+          <TelegramUnlockScreen
+            onUnlock={handleTelegramUnlock}
+            onConfirmationClicked={() => undefined}
+            isXM={false}
+            neonIconClass="neon-blue-icon"
+          />
+        </div>
+      )}
 
+      {currentView === 'content' && (
+        <div className="relative min-h-screen w-full">
+          <div className="fixed right-4 top-24 z-[10000] flex items-center gap-3 rounded-full border border-white/15 bg-black/70 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/80 shadow-[0_14px_40px_rgba(0,0,0,0.35)] backdrop-blur-md">
+            <span className="hidden sm:inline text-white/60">Hero</span>
+            <div className="flex overflow-hidden rounded-full border border-white/20 bg-white/5">
+              <button
+                type="button"
+                onClick={() => handleHeroModeChange('store')}
+                className={`px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] transition-colors ${
+                  mainHeroMode === 'store'
+                    ? 'bg-white text-black'
+                    : 'text-white/70 hover:text-white'
+                }`}
+              >
+                Store
+              </button>
+              <button
+                type="button"
+                onClick={() => handleHeroModeChange('trader')}
+                className={`px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] transition-colors ${
+                  mainHeroMode === 'trader'
+                    ? 'bg-white text-black'
+                    : 'text-white/70 hover:text-white'
+                }`}
+              >
+                Trader
+              </button>
+            </div>
+          </div>
+
+          {mainHeroMode === 'trader' && (
             <section
               id="hero"
               className={isMobile
                 ? "w-full full-bleed flex items-end justify-center overflow-hidden relative px-2 sm:px-4"
                 : "w-full full-bleed viewport-full relative px-2 sm:px-4"}
               style={isMobile ? {
-                // Fill from under navbar+static helper to bottom of viewport
-                // This ensures content stretches to fill on taller screens
                 height: 'calc(100dvh - env(safe-area-inset-bottom, 0px))',
                 paddingTop: 'calc(110px + env(safe-area-inset-top, 0px))',
                 paddingBottom: '12px',
@@ -756,7 +833,7 @@ function HomeContent() {
             >
               {isMobile ? (
                 canRenderMobileSections ? (
-                  <MobileDiscordHero
+                  <DiscordMobileHero
                     sources={featuredVideos}
                     onOpenModal={openDiscordStageModal}
                     variant="mobile"
@@ -765,172 +842,25 @@ function HomeContent() {
                   <HeroSkeleton />
                 )
               ) : (
-                <HeroDesktop />
+                <DiscordDesktopHero />
               )}
             </section>
-
-            {/* Dashboard Sections with Toast Notifications */}
-            {showStage1 ? (
-              <DeferredRender fallback={<MinimalFallback />} rootMargin="320px">
-                <section
-                  id="dashboards"
-                  className="w-full"
-                  style={deferredSectionStyle}
-                  data-allow-scroll
-                  data-content
-                  data-theme-aware
-                >
-                  <ToastProvider>
-                    {/* BullMoney Community — Live Telegram Feed */}
-                    <TelegramSection />
-
-                    {/* MetaTrader Quotes Section */}
-                    <QuotesSection />
-
-                    {/* Breaking News Ticker - Live market/geopolitics headlines */}
-                    <BreakingNewsSection />
-                  </ToastProvider>
-                </section>
-              </DeferredRender>
-            ) : (
-              <MinimalFallback />
-            )}
-
-            {/* BullMoney Promo Scroll Section - Mobile Only */}
-            {isMobile && (
-              <section
-                id="bullmoney-promo"
-                className="w-full full-bleed"
-                style={deferredSectionStyle}
-                data-allow-scroll
-                data-content
-                data-theme-aware
-              >
-                {showStage2 && canRenderMobileSections ? (
-                  <DeferredRender fallback={<MinimalFallback />} rootMargin="360px">
-                    <BullMoneyPromoScroll />
-                  </DeferredRender>
-                ) : (
-                  <MinimalFallback />
-                )}
-              </section>
-            )}
-
-            <section
-              id="features"
-              className="w-full full-bleed viewport-full px-2 sm:px-4"
-              style={isMobile ? { minHeight: '80dvh', ...deferredSectionStyle } : deferredSectionStyle}
-              data-allow-scroll
-              data-content
-              data-theme-aware
-            >
-              {showStage2 && canRenderMobileSections ? (
-                <DeferredRender fallback={<FeaturesSkeleton />} rootMargin="360px">
-                  <FeaturesComponent />
-                </DeferredRender>
-              ) : (
-                <FeaturesSkeleton />
-              )}
-            </section>
-
-            {showStage3 && canRenderHeavyDesktop && (
-              <section 
-                id="experience" 
-                className="w-full full-bleed bg-black" 
-                data-allow-scroll 
-                data-content 
-                data-theme-aware 
-                style={{ backgroundColor: '#000000', ...deferredSectionStyle }}
-              >
-                {/* Orb with Launch Button - Full Screen */}
-                <DeferredRender fallback={<MinimalFallback />} rootMargin="420px" minDelayMs={300}>
-                  <OrbSplineLauncher onOpenScenes={() => setIsAllScenesModalOpen(true)} />
-                </DeferredRender>
-              </section>
-            )}
-
-            {/* Mobile-only Testimonials Section */}
-            {showStage4 && canRenderMobileSections && (
-              <section
-                id="testimonials"
-                className="w-full max-w-5xl mx-auto px-4 py-12 md:hidden"
-                data-allow-scroll
-                data-content
-                data-theme-aware
-                style={{ touchAction: 'pan-y', ...deferredSectionStyle }}
-              >
-                <DeferredRender fallback={<LoadingSkeleton variant="card" height={320} />} rootMargin="420px">
-                <div className="relative text-center mb-6">
-                  <h2 className="text-lg font-bold text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(to right, white, var(--accent-color, #ffffff), white)', filter: 'drop-shadow(0 0 15px rgba(var(--accent-rgb, 255, 255, 255), 0.5))' }}>
-                    What Traders Say
-                  </h2>
-                  <div className="flex justify-center gap-1 mt-3">
-                    <ShimmerDot color="white" delay={0} />
-                    <ShimmerDot color="white" delay={0.2} />
-                    <ShimmerDot color="white" delay={0.4} />
-                  </div>
-                </div>
-                
-                <div className="relative rounded-2xl overflow-hidden">
-                  <ShimmerBorder color="white" intensity="low" speed="slow" />
-                  
-                  <div className="relative z-10 bg-black rounded-2xl overflow-hidden" style={{ borderColor: 'rgba(var(--accent-rgb, 255, 255, 255), 0.2)', borderWidth: '1px', borderStyle: 'solid' }}>
-                    <Suspense fallback={<LoadingSkeleton variant="card" height={320} />}>
-                      <TestimonialsCarousel />
-                    </Suspense>
-                  </div>
-                </div>
-                </DeferredRender>
-              </section>
-            )}
-
-            {showStage4 && canRenderMobileSections && (
-              <section
-                id="ticker"
-                className="w-full px-2 sm:px-4"
-                data-allow-scroll
-                data-footer
-                data-theme-aware
-                style={deferredSectionStyle}
-              >
-                <DeferredRender fallback={<MinimalFallback />} rootMargin="420px">
-                  <LiveMarketTicker />
-                </DeferredRender>
-              </section>
-            )}
-
-            {/* ✅ FOOTER - Only on home page */}
-            {showStage5 && (
-              <DeferredRender fallback={<MinimalFallback />} rootMargin="420px">
-                <div style={deferredSectionStyle}>
-                  <FooterComponent />
-                </div>
-              </DeferredRender>
-            )}
-          </main>
-
-          {showStage5 && canRenderHeavyDesktop && theme?.youtubeId && (
-            <HiddenYoutubePlayer
-              videoId={theme.youtubeId}
-              isPlaying={!isMuted && !masterMuted}
-              volume={!isMuted && !masterMuted ? 15 : 0}
-            />
           )}
 
-          {showStage5 && canRenderHeavyDesktop && (
-            <SplitSceneModal open={isSplitModalOpen} onClose={() => setIsSplitModalOpen(false)} />
+          <div className="mainpage-store-shell" data-hero-mode={mainHeroMode}>
+            <StoreMemoryProvider>
+              <StorePageContent routeBase="/" syncUrl={false} />
+            </StoreMemoryProvider>
+          </div>
+
+          {mainHeroMode === 'trader' && (
+            <style>{`
+              .mainpage-store-shell [data-store-hero] {
+                display: none !important;
+              }
+            `}</style>
           )}
-          {showStage5 && canRenderHeavyDesktop && (
-            <RemoteSceneModal scene={activeRemoteScene} onClose={() => setActiveRemoteScene(null)} />
-          )}
-          {showStage5 && canRenderHeavyDesktop && (
-            <AllScenesModal 
-              open={isAllScenesModalOpen} 
-              onClose={() => setIsAllScenesModalOpen(false)}
-              onSelectScene={setActiveRemoteScene}
-            />
-          )}
-        </>
+        </div>
       )}
     </>
   );

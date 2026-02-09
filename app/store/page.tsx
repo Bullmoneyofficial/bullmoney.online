@@ -157,7 +157,12 @@ const pickHeroSlideIndex = () => {
   return pool[Math.floor(Math.random() * pool.length)];
 };
 
-export default function StorePage() {
+type StorePageProps = {
+  routeBase?: string;
+  syncUrl?: boolean;
+};
+
+export default function StorePage({ routeBase = '/store', syncUrl = true }: StorePageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const hero = useStoreSection('hero');
@@ -390,10 +395,12 @@ export default function StorePage() {
   }, [fetchProducts]);
 
   useEffect(() => {
+    if (!syncUrl) return;
     const params = buildUrlParams(filters, debouncedSearch);
-    const newUrl = params.toString() ? `/store?${params.toString()}` : '/store';
+    const query = params.toString();
+    const newUrl = query ? `${routeBase}?${query}` : routeBase;
     router.replace(newUrl, { scroll: false });
-  }, [filters, debouncedSearch, router]);
+  }, [filters, debouncedSearch, routeBase, router, syncUrl]);
 
   const handleFilterChange = useCallback((next: Partial<ProductFilters>) => {
     setFilters((prev) => ({ ...prev, ...next }));
@@ -886,6 +893,7 @@ export default function StorePage() {
       <section
         ref={hero.ref}
         data-apple-section
+        data-store-hero
         style={{
           backgroundColor: 'rgb(255,255,255)',
           borderBottom: '1px solid rgba(0,0,0,0.06)',
