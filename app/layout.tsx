@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 // Combined 12 CSS files into 1 for faster compilation (fewer modules to resolve)
 import "../styles/_combined-layout.css";
+import "./styles/90-scroll-anywhere.css";
 import { cn } from "@/lib/utils";
 import { Suspense } from "react";
 import { APP_VERSION, PRESERVED_KEYS } from "@/lib/appVersion";

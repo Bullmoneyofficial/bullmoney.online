@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { Suspense, ReactNode, useEffect, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
 import { useUIState } from "@/contexts/UIStateContext";
@@ -47,6 +48,11 @@ const UltimateHub = dynamic(
 
 const AppSupportButton = dynamic(
   () => import("@/components/shop/StoreSupportButton").then(mod => ({ default: mod.AppSupportButton })),
+  { ssr: false }
+);
+
+const StoreSupportButton = dynamic(
+  () => import("@/components/shop/StoreSupportButton").then(mod => ({ default: mod.StoreSupportButton })),
   { ssr: false }
 );
 
@@ -225,8 +231,12 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
             - All real device data from browser APIs */}
         {canShowUltimateHub && showUltimateHub && (allowMobileLazy || !isMobileViewport) && <UltimateHub />}
 
-        {/* ✅ SUPPORT BUTTON - Global floating support widget (hidden on store pages) */}
+        {/* ✅ SUPPORT BUTTON - Global floating support widget */}
         {canShowUltimateHub && !isStorePage && <AppSupportButton />}
+        {canShowUltimateHub && isStorePage && typeof document !== "undefined" && createPortal(
+          <StoreSupportButton />,
+          document.body
+        )}
         
         {/* ✅ LAZY LOADED: All performance providers bundled */}
         {canShowChildren ? (

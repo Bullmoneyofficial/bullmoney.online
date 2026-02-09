@@ -205,6 +205,7 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
           <MobilePerformanceProvider>
             <SoundProvider enabled={!masterMuted} volume={0.4}>
               <AuthProvider>
+                {allowMobileComponents && <AudioWidget />}
                 {modal}
                 <div data-lenis-content>
                   <main

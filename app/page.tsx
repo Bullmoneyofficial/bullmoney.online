@@ -291,6 +291,32 @@ function HomeContent() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    const isSmallDesktop = window.innerWidth <= 1200 && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    if (!isSmallDesktop) return;
+
+    let rafId: number | null = null;
+    const handleWheel = (event: WheelEvent) => {
+      if (Math.abs(event.deltaY) < 1) return;
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      const start = document.scrollingElement?.scrollTop ?? window.scrollY;
+      rafId = requestAnimationFrame(() => {
+        const current = document.scrollingElement?.scrollTop ?? window.scrollY;
+        if (Math.abs(current - start) < 1) {
+          window.scrollBy({ top: event.deltaY, left: 0, behavior: 'auto' });
+        }
+        rafId = null;
+      });
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: true });
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
     const storedMode = localStorage.getItem('bullmoney_main_hero_mode');
     if (storedMode === 'store' || storedMode === 'trader') {
       setMainHeroMode(storedMode);

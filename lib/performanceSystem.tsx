@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState, memo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 
 /**
  * Performance System
@@ -513,8 +514,8 @@ export const FPSMonitor = memo(({ enabled = false, position = 'bottom-right' }: 
     return `${speedMbps}`;
   };
 
-  return (
-    <div 
+  const content = (
+    <div
       className={`fixed ${positionClasses[position]} z-[99999]`}
       style={{
         background: 'rgba(0, 0, 0, 0.9)',
@@ -588,17 +589,17 @@ export const FPSMonitor = memo(({ enabled = false, position = 'bottom-right' }: 
       
       {/* Show all sources when available */}
       {speedSources.length > 0 && !isTesting && (
-        <div style={{ 
-          display: 'flex', 
-          gap: '8px', 
+        <div style={{
+          display: 'flex',
+          gap: '8px',
           flexWrap: 'wrap',
           borderTop: '1px solid rgba(255, 255, 255, 0.1)',
           paddingTop: '4px',
           marginTop: '2px',
         }}>
           {speedSources.map((s, i) => (
-            <span key={i} style={{ 
-              fontSize: '8px', 
+            <span key={i} style={{
+              fontSize: '8px',
               opacity: 0.5,
               fontWeight: '500',
               fontVariantNumeric: 'tabular-nums',
@@ -608,7 +609,7 @@ export const FPSMonitor = memo(({ enabled = false, position = 'bottom-right' }: 
           ))}
         </div>
       )}
-      
+
       {isPoorPerformance && (
         <style dangerouslySetInnerHTML={{ __html: `
           @keyframes fps-pulse-warning {
@@ -619,6 +620,12 @@ export const FPSMonitor = memo(({ enabled = false, position = 'bottom-right' }: 
       )}
     </div>
   );
+
+  if (typeof document !== 'undefined') {
+    return createPortal(content, document.body);
+  }
+
+  return content;
 });
 FPSMonitor.displayName = 'FPSMonitor';
 

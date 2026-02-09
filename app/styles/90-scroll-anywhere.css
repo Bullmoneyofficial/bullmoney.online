@@ -1,0 +1,45 @@
+/* ============================================
+   SCROLL ANYWHERE OVERRIDES (HOME + STORE)
+   Allow pan gestures on any hit target while
+   keeping explicit draggables locked.
+   ============================================ */
+
+html.home-active body,
+html.home-active body *,
+html.store-active body,
+html.store-active body * {
+  touch-action: pan-y pan-x !important;
+}
+
+/* Preserve explicit drag behavior when present */
+html.home-active [draggable],
+html.home-active [data-draggable],
+html.store-active [draggable],
+html.store-active [data-draggable] {
+  touch-action: none !important;
+}
+
+/* Desktop small viewports: let wheel scroll pass through Spline */
+@media (max-width: 1200px) and (hover: hover) and (pointer: fine) {
+  html.home-active .spline-container,
+  html.home-active .spline-page-container,
+  html.home-active .spline-viewport-fill,
+  html.home-active .spline-wrapper,
+  html.home-active [class*="spline"],
+  html.home-active [data-spline],
+  html.home-active iframe[src*="spline"],
+  html.home-active canvas,
+  html.home-active spline-viewer,
+  html.store-active .spline-container,
+  html.store-active .spline-page-container,
+  html.store-active .spline-viewport-fill,
+  html.store-active .spline-wrapper,
+  html.store-active [class*="spline"],
+  html.store-active [data-spline],
+  html.store-active iframe[src*="spline"],
+  html.store-active canvas,
+  html.store-active spline-viewer {
+    pointer-events: none !important;
+    touch-action: pan-y pan-x !important;
+  }
+}

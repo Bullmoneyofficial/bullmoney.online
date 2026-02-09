@@ -64,6 +64,7 @@ const AudioWidget = function AudioWidget() {
   // Determine if MainWidget should be shown
   // Show MainWidget on welcome screen and main content, hide during registration
   const showMainWidget = !shouldHideAudioWidgetCompletely && !shouldHideMainWidget;
+  const isStorePage = typeof window !== "undefined" && window.location.pathname.startsWith('/store');
 
   return (
     <>
@@ -88,8 +89,36 @@ const AudioWidget = function AudioWidget() {
 
       {/* MainWidget (settings panel) - shown on welcome screen and main content, hidden during registration */}
       {showMainWidget && (
-        <MainWidget {...state} {...audioSettings} {...h} setOpen={handleSetOpen} shimmerEnabled={perf.shimmerEnabled} shimmerSettings={perf.shimmerSettings}
-          isWandering={game.isWandering} gameStats={game.gameStats} gameState={game.gameState} setPlayerMinimized={state.setPlayerMinimized} />
+        isStorePage && typeof document !== "undefined"
+          ? createPortal(
+              <MainWidget
+                {...state}
+                {...audioSettings}
+                {...h}
+                setOpen={handleSetOpen}
+                shimmerEnabled={perf.shimmerEnabled}
+                shimmerSettings={perf.shimmerSettings}
+                isWandering={game.isWandering}
+                gameStats={game.gameStats}
+                gameState={game.gameState}
+                setPlayerMinimized={state.setPlayerMinimized}
+              />,
+              document.body
+            )
+          : (
+              <MainWidget
+                {...state}
+                {...audioSettings}
+                {...h}
+                setOpen={handleSetOpen}
+                shimmerEnabled={perf.shimmerEnabled}
+                shimmerSettings={perf.shimmerSettings}
+                isWandering={game.isWandering}
+                gameStats={game.gameStats}
+                gameState={game.gameState}
+                setPlayerMinimized={state.setPlayerMinimized}
+              />
+            )
       )}
 
       {/*
