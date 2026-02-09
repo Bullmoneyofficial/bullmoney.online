@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
-import { createClient } from '@supabase/supabase-js'; 
+import { createClient } from '@supabase/supabase-js';
 import { gsap } from 'gsap';
 import dynamic from 'next/dynamic';
 import {
@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { persistSession } from '@/lib/sessionPersistence';
 
 // --- IMPORT SEPARATE LOADER COMPONENT ---
-import { MultiStepLoader} from "@/components/Mainpage/MultiStepLoader"; 
+import { MultiStepLoader} from "@/components/Mainpage/MultiStepLoader";
 
 // --- 1. SUPABASE SETUP ---
 const TELEGRAM_GROUP_LINK = "https://t.me/addlist/uswKuwT2JUQ4YWI8";
@@ -27,7 +27,7 @@ if (!supabaseUrl || !supabaseKey) {
   console.error("❌ MISSING SUPABASE KEYS in .env.local file");
 }
 
-const supabase = createClient(supabaseUrl!, supabaseKey!);
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // --- UTILS: MOBILE DETECTION HOOK ---
 const useIsMobile = () => {
@@ -86,8 +86,8 @@ const CursorStyles = () => (
     
     /* Input autofill styling override */
     input:-webkit-autofill,
-    input:-webkit-autofill:hover, 
-    input:-webkit-autofill:focus, 
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
     input:-webkit-autofill:active{
         -webkit-box-shadow: 0 0 0 30px #171717 inset !important;
         -webkit-text-fill-color: white !important;
@@ -113,7 +113,7 @@ interface TargetCursorProps {
 }
 
 const TargetCursorComponent = memo(({
-  targetSelector = 'button, a, input, [role="button"], .cursor-target', 
+  targetSelector = 'button, a, input, [role="button"], .cursor-target',
   spinDuration = 2,
   hideDefaultCursor = true,
   hoverDuration = 0.2,
@@ -184,7 +184,7 @@ const TargetCursorComponent = memo(({
             // Magnetic Ticker
             const tickerFn = () => {
                 const state = stateRef.current;
-                if (!state.targetCornerPositions || !cursorRef.current) return;
+                if (!state.targetCornerPositions || cursorRef!.current) return;
                 
                 const strength = state.activeStrength.current;
                 if (strength === 0) {
@@ -225,7 +225,7 @@ const TargetCursorComponent = memo(({
                     stateRef.current.activeTarget = target;
                     stateRef.current.isActive = true;
                     spinTlRef.current?.pause();
-                    gsap.to(cursor, { rotation: 0, duration: 0.3 }); 
+                    gsap.to(cursor, { rotation: 0, duration: 0.3 });
 
                     const rect = target.getBoundingClientRect();
                     const borderWidth = 3; const cornerSize = 12;
@@ -296,14 +296,14 @@ const TargetCursorComponent = memo(({
 });
 TargetCursorComponent.displayName = "TargetCursorComponent";
 
-const TargetCursor = dynamic(() => Promise.resolve(TargetCursorComponent), { 
-  ssr: false 
+const TargetCursor = dynamic(() => Promise.resolve(TargetCursorComponent), {
+  ssr: false
 });
 
 // --- LOADING STATES DATA ---
 const loadingStates = [
   { text: "INITIALIZING..." },
-  { text: "RESTORING SESSION" }, 
+  { text: "RESTORING SESSION" },
   { text: "VERIFYING CREDENTIALS" },
   { text: "UNLOCKING DASHBOARD" },
   { text: "WELCOME BACK" },
@@ -317,12 +317,12 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   // --- STATE ---
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'register' | 'login'>('register');
-  const [step, setStep] = useState(0); 
+  const [step, setStep] = useState(0);
   const [activeBroker, setActiveBroker] = useState<'Vantage' | 'XM'>('Vantage');
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [acceptedTerms, setAcceptedTerms] = useState(false); 
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [savedSessionData, setSavedSessionData] = useState<{id: string; email: string} | null>(null);
   const [isAffiliateFlow, setIsAffiliateFlow] = useState(false); // Track if user is using saved account for affiliate
 
@@ -393,10 +393,10 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
              
              // FORCE LOADER TO PLAY FOR 2.5s EVEN ON SUCCESS
              setTimeout(() => {
-                 onUnlock(); 
-             }, 2500); 
-             return; 
-          } 
+                 onUnlock();
+             }, 2500);
+             return;
+          }
           
           // Session exists but not verified - still store for affiliate pre-fill
           if (session.email && mounted) {
@@ -553,7 +553,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   const toggleViewMode = () => {
     if (viewMode === 'register') {
       setViewMode('login');
-      setStep(0); 
+      setStep(0);
     } else {
       setViewMode('register');
       setStep(0);
@@ -590,7 +590,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       // Update the existing user's MT5 ID
       const { error } = await supabase
         .from("recruits")
-        .update({ 
+        .update({
           mt5_id: formData.mt5Number,
           used_code: true,
           updated_at: new Date().toISOString()
@@ -700,7 +700,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       setTimeout(() => {
         setLoading(false);
         onUnlock();
-      }, 1000); 
+      }, 1000);
 
     } catch (err: any) {
       setLoading(false);
@@ -721,7 +721,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         
         {/* Blue shimmer background like navbar */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <span className="absolute inset-[-100%] animate-[spin_8s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ffffff_50%,#00000000_100%)] opacity-10" />
+          <span className="absolute -inset-full animate-[spin_8s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ffffff_50%,#00000000_100%)] opacity-10" />
         </div>
         
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white/20 via-black to-black gpu-accel" />
@@ -739,19 +739,19 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
             Your free BullMoney access is now active.<br/>
           </p>
           
-          <button 
+          <button
             onClick={onUnlock}
             className="w-full py-4 bg-black border-2 border-white/60 hover:border-white text-white rounded-xl font-bold tracking-wide transition-all shadow-[0_0_25px_rgba(255, 255, 255,0.4)] hover:shadow-[0_0_35px_rgba(255, 255, 255,0.6)] group flex items-center justify-center mb-4 cursor-target relative overflow-hidden"
           >
             {/* Blue shimmer on button */}
-            <span className="absolute inset-[-100%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ffffff_50%,#00000000_100%)] opacity-30 z-0" />
+            <span className="absolute -inset-full animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ffffff_50%,#00000000_100%)] opacity-30 z-0" />
             <span className="relative z-10 flex items-center">
-              Go to Dashboard  
+              Go to Dashboard
               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </span>
           </button>
 
-           <button 
+           <button
             onClick={() => window.open(TELEGRAM_GROUP_LINK, '_blank')}
             className="text-sm text-white/60 hover:text-white transition-colors flex items-center justify-center gap-2 mx-auto cursor-target"
           >
@@ -772,7 +772,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       <div className="min-h-screen bg-black flex flex-col items-center justify-center relative">
         {/* Blue shimmer background */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <span className="absolute inset-[-100%] animate-[spin_6s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ffffff_50%,#00000000_100%)] opacity-10" />
+          <span className="absolute -inset-full animate-[spin_6s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ffffff_50%,#00000000_100%)] opacity-10" />
         </div>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/10 rounded-full blur-[60px] pointer-events-none" />
         <Loader2 className="w-16 h-16 text-white animate-spin mb-4" />
@@ -785,7 +785,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans">
       <CursorStyles />
-      <TargetCursor 
+      <TargetCursor
         targetSelector="button, a, input, [role='button'], .cursor-target"
         hideDefaultCursor={true}
         spinDuration={2}
@@ -794,15 +794,15 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       
       {/* Blue shimmer background like navbar */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <span className="absolute inset-[-100%] animate-[spin_10s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ffffff_50%,#00000000_100%)] opacity-5" />
+        <span className="absolute -inset-full animate-[spin_10s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ffffff_50%,#00000000_100%)] opacity-5" />
       </div>
       
       {/* === FIX: HIGH Z-INDEX WRAPPER FOR LOADER === */}
       {/* This fixed container ensures the loader covers the entire viewport and overlays native browser bars. */}
       {loading && (
-          <div 
+          <div
              // CRITICAL: Fixed, full coverage, max z-index to overlay native browser UI
-             className="fixed inset-0 z-[99999999] w-screen h-screen bg-black"
+             className="fixed inset-0 z-99999999 w-screen h-screen bg-black"
              // We render the loader component inside this wrapper
           >
             <MultiStepLoader loadingStates={loadingStates} loading={loading}  />
@@ -819,7 +819,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
         {/* Existing background elements */}
         <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-white to-transparent opacity-50" />
-        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full blur-[80px] pointer-events-none transition-colors duration-500 gpu-accel bg-white/10" />
+        <div className="absolute bottom-0 right-0 w-125 h-125 rounded-full blur-[80px] pointer-events-none transition-colors duration-500 gpu-accel bg-white/10" />
 
         <div className="mb-6 md:mb-8 text-center">
            <h1 className="text-xl md:text-2xl font-black text-white/50 tracking-tight">
@@ -837,7 +837,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
              <div className="bg-black/80 ring-2 ring-white/30 backdrop-blur-xl p-6 md:p-8 rounded-2xl shadow-[0_0_40px_rgba(255, 255, 255,0.2)] relative overflow-hidden">
                 {/* Blue shimmer overlay */}
                 <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
-                  <span className="absolute inset-[-100%] animate-[spin_6s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ffffff_50%,#00000000_100%)] opacity-10" />
+                  <span className="absolute -inset-full animate-[spin_6s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ffffff_50%,#00000000_100%)] opacity-10" />
                 </div>
                 
                 <div className="absolute top-0 right-0 p-4 opacity-10">
@@ -875,8 +875,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         placeholder="Password"
                         className="w-full bg-black/60 border-2 border-white/30 rounded-xl pl-10 pr-12 py-3.5 md:py-4 text-white placeholder-blue-300/30 focus:outline-none focus:border-white/60 focus:shadow-[0_0_15px_rgba(255, 255, 255,0.3)] transition-all cursor-target text-base"
                       />
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors cursor-target"
                       >
@@ -896,7 +896,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                       className="w-full py-3.5 md:py-4 bg-black border-2 border-white/60 hover:border-white text-white rounded-xl font-bold tracking-wide transition-all shadow-[0_0_20px_rgba(255, 255, 255,0.3)] hover:shadow-[0_0_30px_rgba(255, 255, 255,0.5)] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-target text-base relative overflow-hidden"
                     >
                       {/* Blue shimmer */}
-                      <span className="absolute inset-[-100%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ffffff_50%,#00000000_100%)] opacity-30 z-0" />
+                      <span className="absolute -inset-full animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ffffff_50%,#00000000_100%)] opacity-30 z-0" />
                       <span className="relative z-10 flex items-center gap-2">
                         LOGIN
                         <ArrowRight className="w-4 h-4" />
@@ -911,7 +911,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   
                   {/* CONTINUE AS BUTTON FOR RETURNING USERS */}
                   {savedSessionData && (
-                    <motion.button 
+                    <motion.button
                       onClick={handleSkipWithSavedAccount}
                       whileHover={{ scale: 1.01 }}
                       className="w-full py-3 rounded-lg text-sm font-semibold transition-all border-2 border-white/30 bg-black/60 text-white/80 hover:bg-white/10/30 hover:border-white/50 flex items-center justify-center gap-2"
@@ -967,7 +967,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                    <div className="bg-black/80 ring-2 ring-white/30 backdrop-blur-xl p-6 md:p-8 rounded-2xl shadow-[0_0_40px_rgba(255, 255, 255,0.2)] relative overflow-hidden text-center">
                       {/* Blue shimmer overlay */}
                       <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
-                        <span className="absolute inset-[-100%] animate-[spin_8s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ffffff_50%,#00000000_100%)] opacity-10" />
+                        <span className="absolute -inset-full animate-[spin_8s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ffffff_50%,#00000000_100%)] opacity-10" />
                       </div>
                       
                       <div className="absolute top-0 right-0 p-4 opacity-5">
@@ -986,14 +986,14 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         <span className="text-white/40">No payment. Takes about 2 minutes.</span>
                       </p>
 
-                      <motion.button 
+                      <motion.button
                         onClick={handleNext}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         className="w-full py-3.5 md:py-4 bg-black border-2 border-white/60 hover:border-white text-white rounded-xl font-bold text-base md:text-lg tracking-wide transition-all shadow-[0_0_25px_rgba(255, 255, 255,0.4)] hover:shadow-[0_0_35px_rgba(255, 255, 255,0.6)] flex items-center justify-center cursor-target relative overflow-hidden"
                       >
                         {/* Blue shimmer on button */}
-                        <span className="absolute inset-[-100%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ffffff_50%,#00000000_100%)] opacity-40 z-0" />
+                        <span className="absolute -inset-full animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ffffff_50%,#00000000_100%)] opacity-40 z-0" />
                         <span className="relative z-10 flex items-center">
                           Start Free Access <ArrowRight className="w-5 h-5 ml-2" />
                         </span>
@@ -1005,7 +1005,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                          </div>
 
                          {/* DYNAMIC BUTTON FOR EXISTING USERS */}
-                         <motion.button 
+                         <motion.button
                            onClick={toggleViewMode}
                            whileHover={{ scale: 1.01 }}
                            className="w-full py-3 rounded-lg text-sm font-semibold transition-all border-2 border-white/20 mt-2 bg-black/60 text-white/80 hover:bg-white/10/30 hover:border-white/40"
@@ -1051,7 +1051,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             onClick={handleBrokerClick}
                             className="w-full py-3.5 rounded-xl font-bold text-white shadow transition flex items-center justify-center gap-2 cursor-target text-base bg-black border-2 border-white/60 hover:border-white shadow-[0_0_20px_rgba(255, 255, 255,0.3)] hover:shadow-[0_0_30px_rgba(255, 255, 255,0.5)] relative overflow-hidden"
                           >
-                            <span className="absolute inset-[-100%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ffffff_50%,#00000000_100%)] opacity-30 z-0" />
+                            <span className="absolute -inset-full animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ffffff_50%,#00000000_100%)] opacity-30 z-0" />
                             <span className="relative z-10 flex items-center gap-2">
                               Open Free Account
                               <ExternalLink className="h-4 w-4" />
@@ -1060,7 +1060,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         </div>
                         
                         {/* DYNAMIC SECONDARY BUTTON FOR "ALREADY HAVE ACCOUNT" */}
-                        <button 
+                        <button
                             onClick={handleSkipWithSavedAccount}
                             className="w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 border-2 mt-1 border-white/30 text-white bg-black/60 hover:bg-white/10/30 hover:border-white/50"
                         >
@@ -1075,7 +1075,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     </p>
                     
                     {/* VISUAL ELEMENT (CARD) */}
-                    <div className="relative mx-auto w-full max-w-[280px] h-32 md:h-40 rounded-3xl border border-white/10 overflow-hidden shadow-2xl mb-2 opacity-80 hover:opacity-100 transition-opacity">
+                    <div className="relative mx-auto w-full max-w-70 h-32 md:h-40 rounded-3xl border border-white/10 overflow-hidden shadow-2xl mb-2 opacity-80 hover:opacity-100 transition-opacity">
                       <IconPlusCorners />
                       <div className="absolute inset-0 p-2">
                         {isVantage ? <EvervaultCardRed text="VANTAGE" /> : <EvervaultCard text="X3R7P" />}
@@ -1101,15 +1101,15 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     actions={
                       <button
                         onClick={handleNext}
-                        disabled={!formData.mt5Number}
+                        disabled={!formData?.mt5Number}
                         className={cn(
                           "w-full py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-target text-base relative overflow-hidden",
-                          !formData.mt5Number 
-                            ? "opacity-50 cursor-not-allowed bg-black/60 border-2 border-white/20 text-white/50" 
+                          !formData?.mt5Number
+                            ? "opacity-50 cursor-not-allowed bg-black/60 border-2 border-white/20 text-white/50"
                             : "bg-black border-2 border-white/60 text-white shadow-[0_0_20px_rgba(255, 255, 255,0.3)] hover:border-white hover:shadow-[0_0_30px_rgba(255, 255, 255,0.5)]"
                         )}
                       >
-                        {formData.mt5Number && <span className="absolute inset-[-100%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ffffff_50%,#00000000_100%)] opacity-30 z-0" />}
+                        {formData.mt5Number && <span className="absolute -inset-full animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ffffff_50%,#00000000_100%)] opacity-30 z-0" />}
                         <span className="relative z-10 flex items-center gap-2">
                           Continue <ArrowRight className="w-4 h-4" />
                         </span>
@@ -1157,15 +1157,15 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     actions={
                       <button
                         onClick={handleNext}
-                        disabled={!formData.email || !formData.password || !acceptedTerms}
+                        disabled={!formData?.email || !formData?.password || !acceptedTerms}
                         className={cn(
                           "w-full py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-target text-base relative overflow-hidden",
-                          (!formData.email || !formData.password || !acceptedTerms) 
-                            ? "opacity-50 cursor-not-allowed bg-black/60 border-2 border-white/20 text-white/50" 
+                          (!formData?.email || !formData?.password || !acceptedTerms)
+                            ? "opacity-50 cursor-not-allowed bg-black/60 border-2 border-white/20 text-white/50"
                             : "bg-black border-2 border-white/60 text-white shadow-[0_0_20px_rgba(255, 255, 255,0.3)] hover:border-white hover:shadow-[0_0_30px_rgba(255, 255, 255,0.5)]"
                         )}
                       >
-                        {(formData.email && formData.password && acceptedTerms) && <span className="absolute inset-[-100%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ffffff_50%,#00000000_100%)] opacity-30 z-0" />}
+                        {(formData.email && formData.password && acceptedTerms) && <span className="absolute -inset-full animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ffffff_50%,#00000000_100%)] opacity-30 z-0" />}
                         <span className="relative z-10 flex items-center gap-2">
                           Unlock My Access <ArrowRight className="w-4 h-4" />
                         </span>
@@ -1203,8 +1203,8 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                             placeholder="Create password (min 6 chars)"
                             className="w-full bg-black/60 border-2 border-white/30 rounded-lg pl-10 pr-12 py-3.5 text-white placeholder-blue-300/30 focus:outline-none focus:border-white/60 focus:shadow-[0_0_15px_rgba(255, 255, 255,0.3)] transition-all cursor-target text-base"
                           />
-                          <button 
-                            type="button" 
+                          <button
+                            type="button"
                             onClick={() => setShowPassword(!showPassword)}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors cursor-target"
                           >
@@ -1229,14 +1229,14 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                         <p className="text-[10px] text-white/40 mt-1 ml-1">Leave blank if you don&apos;t have one.</p>
                       </div>
 
-                        <div 
+                        <div
                         onClick={() => setAcceptedTerms(!acceptedTerms)}
                         className="flex items-start gap-3 p-3 rounded-lg border-2 border-white/20 bg-black/60 cursor-pointer hover:bg-white/10/30 hover:border-white/30 transition-colors cursor-target"
                       >
                         <div className={cn(
                           "w-5 h-5 rounded border-2 flex items-center justify-center mt-0.5 transition-colors shrink-0",
-                          acceptedTerms 
-                            ? "bg-white border-white" 
+                          acceptedTerms
+                            ? "bg-white border-white"
                             : "border-white/40"
                         )}>
                           {acceptedTerms && <Check className="w-3.5 h-3.5 text-white" />}
@@ -1284,7 +1284,7 @@ const StepCard = memo(({ number, number2, title, children, actions, className }:
     )}>
       {/* Blue shimmer overlay */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
-        <span className="absolute inset-[-100%] animate-[spin_8s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ffffff_50%,#00000000_100%)] opacity-10" />
+        <span className="absolute -inset-full animate-[spin_8s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_0%,#ffffff_50%,#00000000_100%)] opacity-10" />
       </div>
       
       <div className="pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-linear-to-l blur-2xl from-white/20 via-white/10 to-transparent" />
@@ -1357,7 +1357,7 @@ function CardPattern({ mouseX, mouseY, randomString }: any) {
     <div className="pointer-events-none absolute inset-0">
       <motion.div className="absolute inset-0 bg-linear-to-r from-white to-white opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
       <motion.div className="absolute inset-0 opacity-0 mix-blend-overlay group-hover/card:opacity-100" style={style}>
-        <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-white font-mono font-bold transition duration-500">{randomString}</p>
+        <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap wrap-break-word text-white font-mono font-bold transition duration-500">{randomString}</p>
       </motion.div>
     </div>
   );
@@ -1398,7 +1398,7 @@ function CardPatternRed({ mouseX, mouseY, randomString }: any) {
     <div className="pointer-events-none absolute inset-0">
       <motion.div className="absolute inset-0 bg-linear-to-r from-white to-white opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
       <motion.div className="absolute inset-0 opacity-0 mix-blend-overlay group-hover/card:opacity-100" style={style}>
-        <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-white/90 font-mono font-bold transition duration-500">{randomString}</p>
+        <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap wrap-break-word text-white/90 font-mono font-bold transition duration-500">{randomString}</p>
       </motion.div>
     </div>
   );
