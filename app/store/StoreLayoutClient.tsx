@@ -156,7 +156,6 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
       data-theme-aware
       style={{
         position: 'relative',
-        zIndex: 1,
         paddingTop: `${STORE_HEADER_HEIGHT}px`,
         width: '100%',
         height: 'auto',
@@ -224,9 +223,9 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
           background: #ffffff;
           position: relative !important;
           height: auto !important;
-          /* GPU compositing for the entire store shell */
-          transform: translateZ(0);
-          backface-visibility: hidden;
+          /* NOTE: Do NOT use transform:translateZ(0) here — it creates a
+             containing block that breaks position:fixed on the StoreHeader
+             and traps its z-index inside this stacking context. */
         }
         
         /* Only contain overscroll on actual mobile touch devices */

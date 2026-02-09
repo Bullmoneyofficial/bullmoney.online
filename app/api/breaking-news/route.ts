@@ -10,7 +10,11 @@ import { NextResponse } from "next/server";
 
 // In-memory cache
 let cachedBreaking: { items: BreakingNewsItem[]; timestamp: number } | null = null;
-const CACHE_TTL = 30000; // 30 seconds
+const CACHE_TTL = 60000; // 60 seconds — og:image scraping now runs in background
+
+// Background image scraping cache (link -> og:image URL)
+const ogImageCache = new Map<string, string | null>();
+let bgScrapeInFlight = false;
 
 interface BreakingNewsItem {
   title: string;
@@ -284,20 +288,36 @@ export async function GET() {
       })
       .slice(0, 50);
 
-    // Scrape og:image for items missing images (batch, max 20 at a time)
-    const needsImage = sorted.filter(item => !item.image);
-    if (needsImage.length > 0) {
-      const scrapeResults = await Promise.allSettled(
-        needsImage.slice(0, 20).map(async (item) => {
-          const ogImg = await scrapeOgImage(item.link);
-          if (ogImg) item.image = ogImg;
-        })
-      );
-      console.log(`[Breaking News] Scraped og:image for ${scrapeResults.filter(r => r.status === 'fulfilled').length}/${needsImage.slice(0, 20).length} articles`);
+    // Apply any previously scraped og:images from background cache
+    for (const item of sorted) {
+      if (!item.image && ogImageCache.has(item.link)) {
+        const cached = ogImageCache.get(item.link);
+        if (cached) item.image = cached;
+      }
     }
 
     if (sorted.length > 0) {
       cachedBreaking = { items: sorted, timestamp: Date.now() };
+    }
+
+    // Scrape og:image in the BACKGROUND — don't block the response
+    const needsImage = sorted.filter(item => !item.image && !ogImageCache.has(item.link));
+    if (needsImage.length > 0 && !bgScrapeInFlight) {
+      bgScrapeInFlight = true;
+      Promise.allSettled(
+        needsImage.slice(0, 20).map(async (item) => {
+          const ogImg = await scrapeOgImage(item.link);
+          ogImageCache.set(item.link, ogImg);
+          if (ogImg) item.image = ogImg;
+        })
+      ).then((results) => {
+        const scraped = results.filter(r => r.status === 'fulfilled').length;
+        console.log(`📰  Scraped og:image for ${scraped}/${needsImage.slice(0, 20).length} articles`);
+        // Update the cache with images
+        if (cachedBreaking) {
+          cachedBreaking = { ...cachedBreaking, timestamp: Date.now() };
+        }
+      }).finally(() => { bgScrapeInFlight = false; });
     }
 
     if (sorted.length === 0) {
@@ -314,9 +334,10 @@ export async function GET() {
         timestamp: new Date().toISOString()
       }
     });
-  } catch (e: any) {
-    console.error("[Breaking News API] Error:", e?.message);
-    return NextResponse.json({ items: generateBreakingFallback(), error: e?.message }, { status: 200 });
+  } catch (e) {
+    const err = e as any;
+    console.error("[Breaking News API] Error:", err?.message);
+    return NextResponse.json({ items: generateBreakingFallback(), error: err?.message }, { status: 200 });
   }
 }
 

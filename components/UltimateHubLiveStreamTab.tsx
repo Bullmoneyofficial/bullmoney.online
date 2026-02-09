@@ -172,7 +172,7 @@ export const UltimateHubLiveStreamTab = memo(() => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full bg-black">
+      <div className="flex items-center justify-center h-full bg-[#f5f5f7]">
         <ShimmerSpinner size={48} color="blue" />
       </div>
     );
@@ -181,15 +181,15 @@ export const UltimateHubLiveStreamTab = memo(() => {
   const liveVideos = videos.filter(v => v.is_live);
 
   return (
-    <div className="flex flex-col h-full w-full bg-black overflow-hidden md:flex-row md:gap-0">
+    <div className="flex flex-col h-full w-full bg-[#f5f5f7] overflow-hidden md:flex-row md:gap-0">
       {/* Main Content Container */}
       <div className="flex flex-col flex-1 min-w-0 h-full overflow-hidden">
       {/* Header */}
-      <div className="shrink-0 p-1.5 sm:p-2 md:p-3 border-b border-white/30 bg-black" style={{ boxShadow: '0 2px 8px rgba(255, 255, 255, 0.2)' }}>
+      <div className="shrink-0 p-1.5 sm:p-2 md:p-3 border-b border-black/10 bg-[#f5f5f7]" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
         <div className="flex items-center justify-between mb-1.5 sm:mb-2">
           <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1">
-            <Tv className="w-3 h-3 sm:w-4 sm:h-4 text-white shrink-0" style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }} />
-            <h2 className="text-xs sm:text-sm font-bold text-white truncate" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
+            <Tv className="w-3 h-3 sm:w-4 sm:h-4 text-black shrink-0" style={{ filter: 'none' }} />
+            <h2 className="text-xs sm:text-sm font-bold text-black truncate" style={{ textShadow: 'none' }}>
               Live
             </h2>
             {hasLive && (
@@ -213,10 +213,10 @@ export const UltimateHubLiveStreamTab = memo(() => {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => SoundEffects.click()}
-            className="p-1 sm:p-1.5 rounded-lg bg-white/20 hover:bg-white/30 border border-white/40 transition-colors shrink-0"
+            className="p-1 sm:p-1.5 rounded-lg bg-white hover:bg-black text-white border border-black/15 transition-colors shrink-0"
             title="Open on YouTube"
           >
-            <ExternalLink className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+            <ExternalLink className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-black" />
           </a>
         </div>
 
@@ -226,8 +226,8 @@ export const UltimateHubLiveStreamTab = memo(() => {
             onClick={() => { SoundEffects.click(); setActiveTab('featured'); setPlayerKey(p => p + 1); }}
             className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-2 sm:px-3 rounded text-[8px] sm:text-xs font-semibold transition-all ${
               activeTab === 'featured'
-                ? 'bg-white/30 text-white border border-white/50'
-                : 'bg-zinc-800/50 text-zinc-400 hover:bg-zinc-700/50 border border-white/20'
+                ? 'bg-black text-white text-black border border-white/50'
+                : 'bg-[#f5f5f7]/50 text-black/50 hover:bg-zinc-700/50 border border-black/10'
             }`}
           >
             <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -239,7 +239,7 @@ export const UltimateHubLiveStreamTab = memo(() => {
             className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-[10px] sm:text-xs font-semibold transition-all min-h-[40px] sm:min-h-0 relative ${
               activeTab === 'live'
                 ? 'bg-red-500/30 text-red-300 border border-red-400/50'
-                : 'bg-zinc-800/50 text-zinc-400 hover:bg-zinc-700/50 border border-white/20'
+                : 'bg-[#f5f5f7]/50 text-black/50 hover:bg-zinc-700/50 border border-black/10'
             }`}
           >
             <Radio className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -256,9 +256,9 @@ export const UltimateHubLiveStreamTab = memo(() => {
       </div>
 
       {/* Video Player */}
-      <div className="flex-1 flex flex-col bg-black overflow-hidden min-h-0 md:min-h-[500px]">
+      <div className="flex-1 flex flex-col bg-[#f5f5f7] overflow-hidden min-h-0 md:min-h-[500px]">
         {/* Responsive aspect ratio container with better desktop sizing */}
-        <div className="flex-1 w-full bg-zinc-900 flex items-center justify-center">
+        <div className="flex-1 w-full bg-white flex items-center justify-center">
           <div className="w-full h-full">
             <iframe
               key={playerKey}
@@ -274,17 +274,17 @@ export const UltimateHubLiveStreamTab = memo(() => {
       </div>
 
       {/* Sidebar Playlist Container - Desktop Only */}
-      <div className="hidden md:flex md:flex-col md:w-80 md:border-l md:border-white/20 md:bg-zinc-950 md:overflow-hidden">
+      <div className="hidden md:flex md:flex-col md:w-80 md:border-l md:border-black/10 md:bg-zinc-950 md:overflow-hidden">
         {/* Playlist Header */}
-        <div className="shrink-0 p-3 border-b border-white/20">
+        <div className="shrink-0 p-3 border-b border-black/10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <List className="w-5 h-5 text-white" />
-              <h3 className="text-sm font-semibold text-white">
+              <List className="w-5 h-5 text-black" />
+              <h3 className="text-sm font-semibold text-black">
                 {activeTab === 'featured' ? 'Featured' : 'Live'}
               </h3>
             </div>
-            <span className="text-xs text-white/60">
+            <span className="text-xs text-black/40">
               {activeTab === 'featured'
                 ? `${featuredIndex + 1} / ${videos.length || FEATURED_VIDEOS.length}`
                 : liveVideos.length > 0 ? `${liveIndex + 1} / ${liveVideos.length}` : '0'}
@@ -301,8 +301,8 @@ export const UltimateHubLiveStreamTab = memo(() => {
                   onClick={() => { SoundEffects.click(); setFeaturedIndex(idx); setPlayerKey(p => p + 1); }}
                   className={`w-full flex items-center gap-2 p-2 rounded-lg text-left transition-all group ${
                     idx === featuredIndex
-                      ? 'bg-white/30 border border-white/50'
-                      : 'bg-zinc-800/30 hover:bg-zinc-700/50 border border-transparent'
+                      ? 'bg-black text-white border border-white/50'
+                      : 'bg-[#f5f5f7]/30 hover:bg-zinc-700/50 border border-transparent'
                   }`}
                 >
                   <img
@@ -311,7 +311,7 @@ export const UltimateHubLiveStreamTab = memo(() => {
                     className="w-14 h-10 rounded object-cover shrink-0 group-hover:opacity-80 transition-opacity"
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="text-xs font-semibold text-white truncate">{video.title}</div>
+                    <div className="text-xs font-semibold text-black truncate">{video.title}</div>
                     {video.is_live && (
                       <span className="text-[9px] text-red-400 font-bold uppercase">● Live</span>
                     )}
@@ -325,7 +325,7 @@ export const UltimateHubLiveStreamTab = memo(() => {
                   className={`w-full flex items-center gap-2 p-2 rounded-lg text-left transition-all group ${
                     idx === liveIndex
                       ? 'bg-red-500/30 border border-red-400/50'
-                      : 'bg-zinc-800/30 hover:bg-zinc-700/50 border border-transparent'
+                      : 'bg-[#f5f5f7]/30 hover:bg-zinc-700/50 border border-transparent'
                   }`}
                 >
                   <img
@@ -334,12 +334,12 @@ export const UltimateHubLiveStreamTab = memo(() => {
                     className="w-14 h-10 rounded object-cover shrink-0 group-hover:opacity-80 transition-opacity"
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="text-xs font-semibold text-white truncate">{video.title}</div>
+                    <div className="text-xs font-semibold text-black truncate">{video.title}</div>
                     <span className="text-[9px] text-red-400 font-bold uppercase">● Live</span>
                   </div>
                 </button>
               )) : (
-                <div className="text-center py-8 text-zinc-400 text-xs">
+                <div className="text-center py-8 text-black/50 text-xs">
                   <Loader2 className="w-4 h-4 animate-spin mx-auto mb-2" />
                   Checking for live streams...
                 </div>
@@ -347,15 +347,15 @@ export const UltimateHubLiveStreamTab = memo(() => {
         </div>
       </div>
       {/* Video Info & Controls - Mobile Only / Desktop Bottom */}
-      <div className="p-1.5 sm:p-2 md:p-3 bg-zinc-900/50 border-t border-white/20 md:border-t-0 md:border-b">
+      <div className="p-1.5 sm:p-2 md:p-3 bg-white/50 border-t border-black/10 md:border-t-0 md:border-b">
         {/* Current Video Info */}
         <div className="flex-1 min-w-0 mb-2 md:mb-3 md:hidden">
-          <div className="text-[10px] sm:text-xs md:text-sm font-semibold text-white truncate">
+          <div className="text-[10px] sm:text-xs md:text-sm font-semibold text-black truncate">
             {activeTab === 'featured'
               ? (currentVideo?.title || `Featured Video ${featuredIndex + 1}`)
               : (currentVideo?.title || 'BullMoney Live')}
           </div>
-          <div className="text-[8px] sm:text-[9px] md:text-xs text-white/60">
+          <div className="text-[8px] sm:text-[9px] md:text-xs text-black/40">
             {activeTab === 'featured'
               ? `${featuredIndex + 1} / ${videos.length || FEATURED_VIDEOS.length}`
               : liveVideos.length > 0 ? `${liveIndex + 1} / ${liveVideos.length}` : 'No live streams'}
@@ -368,21 +368,21 @@ export const UltimateHubLiveStreamTab = memo(() => {
               onClick={goPrev}
               whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="p-2 sm:p-2.5 md:p-3 rounded-lg bg-white/20 hover:bg-white/30 border border-white/40 transition-colors"
+              className="p-2 sm:p-2.5 md:p-3 rounded-lg bg-white hover:bg-black text-white border border-black/15 transition-colors"
             >
-              <SkipBack className="w-3.5 h-3.5 sm:w-4 h-4 md:w-5 h-5 text-white" />
+              <SkipBack className="w-3.5 h-3.5 sm:w-4 h-4 md:w-5 h-5 text-black" />
             </motion.button>
             
             <motion.button
               onClick={togglePlayPause}
               whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="p-3 sm:p-3.5 md:p-4 rounded-lg bg-white/30 hover:bg-white/40 border border-white/50 transition-colors"
+              className="p-3 sm:p-3.5 md:p-4 rounded-lg bg-black text-white hover:bg-white/40 border border-white/50 transition-colors"
             >
               {isPlaying ? (
-                <Pause className="w-4.5 h-4.5 sm:w-5 h-5 md:w-6 h-6 text-white" />
+                <Pause className="w-4.5 h-4.5 sm:w-5 h-5 md:w-6 h-6 text-black" />
               ) : (
-                <Play className="w-4.5 h-4.5 sm:w-5 h-5 md:w-6 h-6 text-white" />
+                <Play className="w-4.5 h-4.5 sm:w-5 h-5 md:w-6 h-6 text-black" />
               )}
             </motion.button>
             
@@ -390,9 +390,9 @@ export const UltimateHubLiveStreamTab = memo(() => {
               onClick={goNext}
               whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="p-2 sm:p-2.5 md:p-3 rounded-lg bg-white/20 hover:bg-white/30 border border-white/40 transition-colors"
+              className="p-2 sm:p-2.5 md:p-3 rounded-lg bg-white hover:bg-black text-white border border-black/15 transition-colors"
             >
-              <SkipForward className="w-3.5 h-3.5 sm:w-4 h-4 md:w-5 h-5 text-white" />
+              <SkipForward className="w-3.5 h-3.5 sm:w-4 h-4 md:w-5 h-5 text-black" />
             </motion.button>
             
             <motion.button
@@ -401,17 +401,17 @@ export const UltimateHubLiveStreamTab = memo(() => {
               whileTap={{ scale: 0.95 }}
               className={`p-2 sm:p-2.5 md:p-3 rounded-lg border transition-colors md:hidden ${
                 showPlaylist
-                  ? 'bg-white/30 border-white/50'
-                  : 'bg-white/20 hover:bg-white/30 border-white/40'
+                  ? 'bg-black text-white border-white/50'
+                  : 'bg-white hover:bg-black text-white border-black/15'
               }`}
             >
-              <List className="w-3.5 h-3.5 sm:w-4 h-4 md:w-5 h-5 text-white" />
+              <List className="w-3.5 h-3.5 sm:w-4 h-4 md:w-5 h-5 text-black" />
             </motion.button>
           </div>
 
           {/* Playlist Dropdown - Mobile Only */}
           {showPlaylist && (
-            <div className="mt-2 md:mt-3 max-h-[150px] sm:max-h-[200px] md:max-h-[300px] overflow-y-auto p-2 md:p-3 rounded-lg bg-zinc-900/50 border border-white/20 space-y-1 md:hidden" style={{ touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
+            <div className="mt-2 md:mt-3 max-h-[150px] sm:max-h-[200px] md:max-h-[300px] overflow-y-auto p-2 md:p-3 rounded-lg bg-white/50 border border-black/10 space-y-1 md:hidden" style={{ touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
               {activeTab === 'featured'
                 ? (videos.length > 0 ? videos : FEATURED_VIDEOS.map((id, i) => ({ id: i.toString(), youtube_id: id, title: `Video ${i + 1}`, is_live: false, order_index: i }))).map((video, idx) => (
                     <button
@@ -419,8 +419,8 @@ export const UltimateHubLiveStreamTab = memo(() => {
                       onClick={() => { SoundEffects.click(); setFeaturedIndex(idx); setPlayerKey(p => p + 1); setShowPlaylist(false); }}
                       className={`w-full flex items-center gap-2 p-2 md:p-2.5 rounded-lg text-left transition-all ${
                         idx === featuredIndex
-                          ? 'bg-white/30 border border-white/50'
-                          : 'bg-zinc-800/30 hover:bg-zinc-700/50 border border-transparent'
+                          ? 'bg-black text-white border border-white/50'
+                          : 'bg-[#f5f5f7]/30 hover:bg-zinc-700/50 border border-transparent'
                       }`}
                     >
                       <img
@@ -429,7 +429,7 @@ export const UltimateHubLiveStreamTab = memo(() => {
                         className="w-12 h-9 md:w-14 md:h-10 rounded object-cover shrink-0"
                       />
                       <div className="flex-1 min-w-0">
-                        <div className="text-[10px] md:text-xs font-semibold text-white truncate">{video.title}</div>
+                        <div className="text-[10px] md:text-xs font-semibold text-black truncate">{video.title}</div>
                         {video.is_live && (
                           <span className="text-[8px] md:text-[9px] text-red-400 font-bold uppercase">● Live</span>
                         )}
@@ -443,7 +443,7 @@ export const UltimateHubLiveStreamTab = memo(() => {
                       className={`w-full flex items-center gap-2 p-2 md:p-2.5 rounded-lg text-left transition-all ${
                         idx === liveIndex
                           ? 'bg-red-500/30 border border-red-400/50'
-                          : 'bg-zinc-800/30 hover:bg-zinc-700/50 border border-transparent'
+                          : 'bg-[#f5f5f7]/30 hover:bg-zinc-700/50 border border-transparent'
                       }`}
                     >
                       <img
@@ -452,12 +452,12 @@ export const UltimateHubLiveStreamTab = memo(() => {
                         className="w-12 h-9 md:w-14 md:h-10 rounded object-cover shrink-0"
                       />
                       <div className="flex-1 min-w-0">
-                        <div className="text-[10px] md:text-xs font-semibold text-white truncate">{video.title}</div>
+                        <div className="text-[10px] md:text-xs font-semibold text-black truncate">{video.title}</div>
                         <span className="text-[8px] md:text-[9px] text-red-400 font-bold uppercase">● Live</span>
                       </div>
                     </button>
                   )) : (
-                    <div className="text-center py-4 text-zinc-400 text-xs">
+                    <div className="text-center py-4 text-black/50 text-xs">
                       <Loader2 className="w-4 h-4 animate-spin mx-auto mb-2" />
                       Checking for live streams...
                     </div>

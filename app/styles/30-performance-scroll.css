@@ -4,7 +4,7 @@
    ============================================================================ */
 
 /* CRITICAL: Force GPU compositing for frequently painted elements */
-nav,
+nav:not([data-apple-section]),
 footer,
 .modal,
 dialog,
@@ -403,11 +403,18 @@ canvas {
   pointer-events: none;
 }
 
-/* Allow pointer events on desktop only */
+/* Allow pointer events on desktop only - BUT keep touch-action:pan-y for scroll */
 @media (min-width: 769px) and (hover: hover) {
   canvas {
     pointer-events: auto;
-    touch-action: none;
+    touch-action: pan-y; /* FIXED: was 'none' which blocked scroll on desktop */
+  }
+  /* Hero canvases should never block scroll */
+  #hero canvas,
+  .hero canvas,
+  .hero-wrapper canvas {
+    pointer-events: none !important;
+    touch-action: pan-y !important;
   }
 }
 
@@ -524,31 +531,30 @@ body::after {
   user-select: none !important;
 }
 
-/* Spline container - ensure scroll passthrough while allowing interaction */
+/* Spline container - scroll passthrough by default, opt-in interaction */
 .spline-container {
   height: 100%;
   width: 100%;
   position: relative;
-  touch-action: manipulation !important; /* FIXED: Allow touch interactions */
+  touch-action: pan-y !important; /* FIXED: Always allow scroll */
   -webkit-overflow-scrolling: touch;
-  pointer-events: auto !important; /* FIXED: Enable pointer events on all devices */
+  pointer-events: none; /* FIXED: Default to none - opt in via .spline-interactive */
 }
 
-/* Allow interactions on both desktop and mobile/touch */
-@media (min-width: 769px) and (hover: hover) {
-  .spline-container {
-    pointer-events: auto;
-    cursor: grab;
-  }
+/* Opt-in: explicit interactive spline (e.g. SplinePage, standalone 3D viewer) */
+.spline-container.spline-interactive,
+.spline-page-container .spline-container {
+  pointer-events: auto;
+  touch-action: manipulation;
+  cursor: grab;
 }
 
-/* FIXED: Mobile/touch devices should also have pointer events */
-@media (hover: none) and (pointer: coarse) {
-  .spline-container {
-    pointer-events: auto !important;
-    touch-action: manipulation !important;
-    cursor: pointer;
-  }
+/* Hero spline containers must NEVER capture events */
+#hero .spline-container,
+.hero .spline-container,
+.hero-wrapper .spline-container {
+  pointer-events: none !important;
+  touch-action: pan-y !important;
 }
 
 /* Fixed elements should not block scrolling */

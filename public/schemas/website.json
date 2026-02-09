@@ -1,0 +1,53 @@
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "BullMoney",
+  "url": "https://www.bullmoney.shop",
+  "description": "Free trading community with crypto setups, market analysis & mentorship",
+  "inLanguage": [
+    "en",
+    "es",
+    "fr",
+    "de",
+    "pt",
+    "it",
+    "ja",
+    "ko",
+    "zh",
+    "ar",
+    "hi",
+    "ru",
+    "tr",
+    "nl",
+    "pl",
+    "sv",
+    "no",
+    "da",
+    "fi",
+    "th",
+    "vi",
+    "id",
+    "ms",
+    "tl",
+    "uk",
+    "cs",
+    "ro",
+    "el",
+    "he",
+    "hu",
+    "bg",
+    "sw",
+    "af",
+    "zu",
+    "bn",
+    "ur"
+  ],
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": "https://www.bullmoney.shop/Blogs?search={search_term_string}"
+    },
+    "query-input": "required name=search_term_string"
+  }
+}

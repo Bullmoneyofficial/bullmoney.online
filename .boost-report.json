@@ -1,0 +1,761 @@
+{
+  "device_detection": {
+    "device_detection_script": "public/scripts/device-detect.js",
+    "size_bytes": 4887,
+    "detections": [
+      "device_type",
+      "os",
+      "browser",
+      "screen_tier",
+      "dpr",
+      "connection_speed",
+      "save_data",
+      "cores",
+      "memory",
+      "touch_support",
+      "perf_tier",
+      "webgl",
+      "webp",
+      "avif",
+      "reduce_motion",
+      "dark_mode",
+      "battery",
+      "orientation"
+    ]
+  },
+  "resource_hints": {
+    "resource_hints_file": "public/scripts/resource-hints.html",
+    "preconnect_count": 5,
+    "dns_prefetch_count": 8
+  },
+  "seo": {
+    "schemas_generated": 4,
+    "robots_issues": [],
+    "sitemap_ok": true,
+    "security_headers": 7,
+    "meta_tags_ok": true,
+    "seo_script": "public/scripts/seo-boost.js"
+  },
+  "images": {
+    "oversized": [
+      {
+        "path": "public/IMG_2921.PNG",
+        "size_kb": 3858.0,
+        "format": ".png"
+      },
+      {
+        "path": "public/Fvfront.png",
+        "size_kb": 1399.7,
+        "format": ".png"
+      },
+      {
+        "path": "public/AyaRungqu.png",
+        "size_kb": 699.8,
+        "format": ".png"
+      },
+      {
+        "path": "public/NtlakaniphoBlouw.png",
+        "size_kb": 700.8,
+        "format": ".png"
+      },
+      {
+        "path": "public/LithaSilo.png",
+        "size_kb": 697.7,
+        "format": ".png"
+      },
+      {
+        "path": "public/DamianRudolph.png",
+        "size_kb": 700.0,
+        "format": ".png"
+      },
+      {
+        "path": "public/longbull.jpg",
+        "size_kb": 1074.3,
+        "format": ".jpg"
+      },
+      {
+        "path": "public/bullmoneyvantage.png",
+        "size_kb": 3367.7,
+        "format": ".png"
+      },
+      {
+        "path": "public/bullmoney-logo.png",
+        "size_kb": 812.1,
+        "format": ".png"
+      }
+    ],
+    "total_images": 58,
+    "total_size_mb": 27.52,
+    "format_distribution": {
+      ".png": 20,
+      ".jpg": 10,
+      ".svg": 28
+    },
+    "missing_modern_format": 26,
+    "spline_count": 7,
+    "spline_total_mb": 19.86
+  },
+  "bundle": {
+    "large_components": [
+      {
+        "file": "components/UltimateHub.tsx",
+        "lines": 9576,
+        "imports": 23
+      },
+      {
+        "file": "components/MultiStepLoaderv3.tsx",
+        "lines": 5844,
+        "imports": 6
+      },
+      {
+        "file": "components/MobileDiscordHero.tsx",
+        "lines": 3830,
+        "imports": 18
+      },
+      {
+        "file": "components/HeroDesktop.tsx",
+        "lines": 3341,
+        "imports": 21
+      },
+      {
+        "file": "components/MultiStepLoaderv2.tsx",
+        "lines": 2322,
+        "imports": 6
+      },
+      {
+        "file": "components/hero.tsx",
+        "lines": 2249,
+        "imports": 28
+      },
+      {
+        "file": "components/LiveStreamModal.tsx",
+        "lines": 2234,
+        "imports": 10
+      },
+      {
+        "file": "components/UltimateControlPanel.tsx",
+        "lines": 2171,
+        "imports": 22
+      },
+      {
+        "file": "components/AdminHubModal.tsx",
+        "lines": 2110,
+        "imports": 15
+      },
+      {
+        "file": "components/AffiliateModal.tsx",
+        "lines": 2059,
+        "imports": 12
+      },
+      {
+        "file": "components/AccountManagerModal.tsx",
+        "lines": 2004,
+        "imports": 6
+      },
+      {
+        "file": "components/EmailAdminPanel.tsx",
+        "lines": 1746,
+        "imports": 4
+      },
+      {
+        "file": "components/SolarSystemGame.tsx",
+        "lines": 1600,
+        "imports": 4
+      },
+      {
+        "file": "components/ShopScrollFunnel.tsx",
+        "lines": 1489,
+        "imports": 2
+      },
+      {
+        "file": "components/AudioWidget.old.tsx",
+        "lines": 1485,
+        "imports": 14
+      },
+      {
+        "file": "components/CommunityQuickAccess.tsx",
+        "lines": 1464,
+        "imports": 6
+      },
+      {
+        "file": "components/TradingQuickAccess.tsx",
+        "lines": 1453,
+        "imports": 6
+      },
+      {
+        "file": "components/MultiStepLoaderv3Simple.tsx",
+        "lines": 1400,
+        "imports": 3
+      },
+      {
+        "file": "components/features.tsx",
+        "lines": 1296,
+        "imports": 12
+      },
+      {
+        "file": "components/AdminModal.tsx",
+        "lines": 1289,
+        "imports": 6
+      }
+    ],
+    "heavy_imports": [
+      {
+        "file": "components/StoreAnalyticsPanel.tsx",
+        "imports": 33
+      }
+    ],
+    "missing_lazy": [],
+    "total_components": 198,
+    "top_imports": [
+      {
+        "module": "react",
+        "count": 256
+      },
+      {
+        "module": "framer-motion",
+        "count": 117
+      },
+      {
+        "module": "lucide-react",
+        "count": 107
+      },
+      {
+        "module": "next/dynamic",
+        "count": 37
+      },
+      {
+        "module": "react-dom",
+        "count": 36
+      },
+      {
+        "module": "@/lib/utils",
+        "count": 33
+      },
+      {
+        "module": "@/lib/supabase",
+        "count": 28
+      },
+      {
+        "module": "next/navigation",
+        "count": 27
+      },
+      {
+        "module": "@/app/hooks/useSoundEffects",
+        "count": 26
+      },
+      {
+        "module": "@/hooks/useMobilePerformance",
+        "count": 26
+      },
+      {
+        "module": "next/link",
+        "count": 25
+      },
+      {
+        "module": "@/contexts/UIStateContext",
+        "count": 24
+      },
+      {
+        "module": "next",
+        "count": 23
+      },
+      {
+        "module": "@/stores/currency-locale-store",
+        "count": 23
+      },
+      {
+        "module": "next/image",
+        "count": 21
+      }
+    ],
+    "total_css_files": 77,
+    "large_css": []
+  },
+  "dependencies": {
+    "warnings": [],
+    "total_deps": 106
+  },
+  "nextjs_config": {
+    "issues": [],
+    "optimizations": [
+      "Compression enabled",
+      "Source maps disabled in prod",
+      "Console removal in prod",
+      "Stale-while-revalidate caching",
+      "Parallel compilation",
+      "Package import optimization",
+      "AVIF image format support",
+      "Image cache TTL set",
+      "DNS prefetch control",
+      "HSTS enabled",
+      "TypeScript check skipped (faster build)",
+      "Webpack worker threads",
+      "Server component HMR cache"
+    ]
+  },
+  "perf_monitor": {
+    "perf_script": "public/scripts/perf-boost.js"
+  },
+  "pwa": {
+    "issues": []
+  },
+  "accessibility": {
+    "issues": [],
+    "passed": [
+      "HTML lang attribute set",
+      "Hydration warning suppressed (theme flash fix)",
+      "Viewport configured",
+      "Pinch-to-zoom enabled",
+      "PWA meta tags"
+    ]
+  },
+  "caching": {
+    "build_id": "7e98b35d1aa2",
+    "critical_routes": 12,
+    "offline_script": true
+  },
+  "cleanup": {
+    "cleaned": 0,
+    "freed_mb": 0
+  },
+  "spline_turbo": {
+    "spline_turbo_size_kb": 13.2,
+    "quality_tiers": [
+      "ultra",
+      "high",
+      "medium",
+      "low",
+      "disabled"
+    ]
+  },
+  "memory_guardian": {
+    "memory_guardian_size_kb": 11.3
+  },
+  "crash_prevention": {
+    "crash_prevention_size_kb": 10.4
+  },
+  "gpu_manager": {
+    "gpu_manager_size_kb": 5.7
+  },
+  "inapp_shield": {
+    "inapp_shield_size_kb": 7.2
+  },
+  "build_optimizer": {
+    "optimizations": [
+      "env-hints",
+      "bundle-analyzer-config"
+    ],
+    "barrel_exports": 0,
+    "static_heavy_imports": 0,
+    "dynamic_loaded_components": 291
+  },
+  "fonts": {
+    "fonts_found": [],
+    "preloads_generated": 0,
+    "issues": [],
+    "font_face_count": 3,
+    "missing_display_swap": 0
+  },
+  "security": {
+    "exposed_secrets": [
+      {
+        "file": "app/store/account/page.tsx",
+        "type": "Resend API key"
+      }
+    ],
+    "xss_risks": [
+      {
+        "file": "components/InternalLinkingSEO.tsx",
+        "type": "dangerouslySetInnerHTML usage",
+        "count": 5
+      },
+      {
+        "file": "components/UltimateHub.tsx",
+        "type": "Direct innerHTML assignment",
+        "count": 3
+      },
+      {
+        "file": "components/MultiStepLoader.tsx",
+        "type": "Direct innerHTML assignment",
+        "count": 3
+      },
+      {
+        "file": "components/BreakingNewsTicker.tsx",
+        "type": "dangerouslySetInnerHTML usage",
+        "count": 1
+      },
+      {
+        "file": "components/Testimonial.tsx",
+        "type": "dangerouslySetInnerHTML usage",
+        "count": 1
+      },
+      {
+        "file": "components/TradingCourse.tsx",
+        "type": "dangerouslySetInnerHTML usage",
+        "count": 1
+      },
+      {
+        "file": "components/SEOSchemas.tsx",
+        "type": "dangerouslySetInnerHTML usage",
+        "count": 9
+      },
+      {
+        "file": "components/GoogleSEOBoost.tsx",
+        "type": "dangerouslySetInnerHTML usage",
+        "count": 11
+      },
+      {
+        "file": "components/GridDistortion.tsx",
+        "type": "Direct innerHTML assignment",
+        "count": 1
+      },
+      {
+        "file": "components/footer.tsx",
+        "type": "dangerouslySetInnerHTML usage",
+        "count": 1
+      },
+      {
+        "file": "components/CommunityNotification.tsx",
+        "type": "dangerouslySetInnerHTML usage",
+        "count": 2
+      },
+      {
+        "file": "components/Chartnews.tsx",
+        "type": "Direct innerHTML assignment",
+        "count": 2
+      },
+      {
+        "file": "components/MultiStepLoaderAffiliate.tsx",
+        "type": "Direct innerHTML assignment",
+        "count": 3
+      },
+      {
+        "file": "components/MetaTraderQuotes.tsx",
+        "type": "Direct innerHTML assignment",
+        "count": 2
+      },
+      {
+        "file": "components/SEODomination.tsx",
+        "type": "dangerouslySetInnerHTML usage",
+        "count": 15
+      },
+      {
+        "file": "components/TradingViewDashboard.tsx",
+        "type": "Direct innerHTML assignment",
+        "count": 2
+      },
+      {
+        "file": "components/MultiStepLoaderVip.tsx",
+        "type": "Direct innerHTML assignment",
+        "count": 3
+      },
+      {
+        "file": "components/FallingText.tsx",
+        "type": "Direct innerHTML assignment",
+        "count": 1
+      },
+      {
+        "file": "components/AdvancedSEO.tsx",
+        "type": "dangerouslySetInnerHTML usage",
+        "count": 9
+      },
+      {
+        "file": "components/BullMoneyCommunity.tsx",
+        "type": "dangerouslySetInnerHTML usage",
+        "count": 1
+      },
+      {
+        "file": "components/analysis-enhanced/TradingViewWidget.tsx",
+        "type": "Direct innerHTML assignment",
+        "count": 5
+      },
+      {
+        "file": "components/ui/cta.tsx",
+        "type": "Direct innerHTML assignment",
+        "count": 2
+      },
+      {
+        "file": "components/shop/TimelineProductsSection.tsx",
+        "type": "dangerouslySetInnerHTML usage",
+        "count": 1
+      },
+      {
+        "file": "components/shop/FeaturedProductSpotlight.tsx",
+        "type": "dangerouslySetInnerHTML usage",
+        "count": 1
+      },
+      {
+        "file": "components/Mainpage/cta.tsx",
+        "type": "Direct innerHTML assignment",
+        "count": 2
+      },
+      {
+        "file": "components/Mainpage/footer/EnhancedModal.tsx",
+        "type": "dangerouslySetInnerHTML usage",
+        "count": 1
+      },
+      {
+        "file": "app/Testimonial.tsx",
+        "type": "dangerouslySetInnerHTML usage",
+        "count": 1
+      },
+      {
+        "file": "app/layout.tsx",
+        "type": "dangerouslySetInnerHTML usage",
+        "count": 3
+      },
+      {
+        "file": "app/Blogs/Chart.tsx",
+        "type": "Direct innerHTML assignment",
+        "count": 2
+      },
+      {
+        "file": "app/Blogs/Chartnews.tsx",
+        "type": "Direct innerHTML assignment",
+        "count": 2
+      },
+      {
+        "file": "app/oldstore/pricing.tsx",
+        "type": "dangerouslySetInnerHTML usage",
+        "count": 1
+      },
+      {
+        "file": "app/store/product/[slug]/page.tsx",
+        "type": "dangerouslySetInnerHTML usage",
+        "count": 2
+      }
+    ],
+    "unsafe_patterns": [],
+    "unprotected_api_routes": 36
+  },
+  "dead_code": {
+    "unused_components": [
+      {
+        "file": "components/MultiStepLoaderv3.tsx",
+        "name": "MultiStepLoaderv3",
+        "size_kb": 208.7
+      },
+      {
+        "file": "components/MobileDiscordHero.tsx",
+        "name": "MobileDiscordHero",
+        "size_kb": 126.9
+      },
+      {
+        "file": "components/HeroDesktop.tsx",
+        "name": "HeroDesktop",
+        "size_kb": 110.8
+      },
+      {
+        "file": "components/AccountManagerModal.tsx",
+        "name": "AccountManagerModal",
+        "size_kb": 100.8
+      },
+      {
+        "file": "components/LiveStreamModal.tsx",
+        "name": "LiveStreamModal",
+        "size_kb": 93.9
+      },
+      {
+        "file": "components/hero.tsx",
+        "name": "hero",
+        "size_kb": 91.4
+      },
+      {
+        "file": "components/shop/StoreHero3D.tsx",
+        "name": "StoreHero3D",
+        "size_kb": 80.9
+      },
+      {
+        "file": "components/AdminHubModal.tsx",
+        "name": "AdminHubModal",
+        "size_kb": 79.9
+      },
+      {
+        "file": "components/AudioWidget.old.tsx",
+        "name": "AudioWidget.old",
+        "size_kb": 69.3
+      },
+      {
+        "file": "components/TradingQuickAccess.tsx",
+        "name": "TradingQuickAccess",
+        "size_kb": 68.4
+      },
+      {
+        "file": "components/CommunityQuickAccess.tsx",
+        "name": "CommunityQuickAccess",
+        "size_kb": 62.2
+      },
+      {
+        "file": "components/ShopScrollFunnel.tsx",
+        "name": "ShopScrollFunnel",
+        "size_kb": 62.0
+      },
+      {
+        "file": "components/REGISTER USERS/pageVip.tsx",
+        "name": "pageVip",
+        "size_kb": 60.7
+      },
+      {
+        "file": "components/REGISTER_USERS/pageVip.tsx",
+        "name": "pageVip",
+        "size_kb": 60.6
+      },
+      {
+        "file": "components/ui/world-map.tsx",
+        "name": "world-map",
+        "size_kb": 58.9
+      },
+      {
+        "file": "components/SolarSystemGame.tsx",
+        "name": "SolarSystemGame",
+        "size_kb": 52.1
+      },
+      {
+        "file": "components/shop/AppleProductsSection.tsx",
+        "name": "AppleProductsSection",
+        "size_kb": 51.9
+      },
+      {
+        "file": "components/MultiStepLoaderv3Simple.tsx",
+        "name": "MultiStepLoaderv3Simple",
+        "size_kb": 51.3
+      },
+      {
+        "file": "components/AdminPanelVIP.tsx",
+        "name": "AdminPanelVIP",
+        "size_kb": 49.0
+      },
+      {
+        "file": "components/ShopHero.tsx",
+        "name": "ShopHero",
+        "size_kb": 44.9
+      },
+      {
+        "file": "components/shop/StoreSupportButton.tsx",
+        "name": "StoreSupportButton",
+        "size_kb": 44.1
+      },
+      {
+        "file": "components/shop/CheckoutWizard.tsx",
+        "name": "CheckoutWizard",
+        "size_kb": 37.9
+      },
+      {
+        "file": "components/Mainpage/PageScenes.tsx",
+        "name": "PageScenes",
+        "size_kb": 37.9
+      },
+      {
+        "file": "components/ui/SeviceModal.tsx",
+        "name": "SeviceModal",
+        "size_kb": 37.6
+      },
+      {
+        "file": "components/Hyperspeed.tsx",
+        "name": "Hyperspeed",
+        "size_kb": 37.4
+      }
+    ],
+    "orphan_files": [],
+    "unused_css_modules": [],
+    "backup_files": 7,
+    "empty_files": 0
+  },
+  "env_vars": {
+    "total_vars": 57,
+    "missing": [],
+    "insecure": [
+      "NEXT_PUBLIC_ADMIN_PASSWORD"
+    ],
+    "placeholder": [
+      "SPOTIFY_CLIENT_ID",
+      "SENDGRID_API_KEY",
+      "METAAPI_TOKEN",
+      "STRIPE_WEBHOOK_SECRET"
+    ],
+    "empty_vars": 2
+  },
+  "api_routes": {
+    "total_routes": 122,
+    "issues": [],
+    "well_formed": 115,
+    "no_try_catch": 7,
+    "has_rate_limit": 7,
+    "has_caching": 16
+  },
+  "css_audit": {
+    "total_rules": 3598,
+    "duplicates": 783,
+    "files_scanned": 77,
+    "issues": [],
+    "important_count": 2088,
+    "total_css_kb": 705.3
+  },
+  "third_party": {
+    "scripts_found": [
+      {
+        "name": "Spline Runtime",
+        "category": "3d",
+        "estimated_kb": 300
+      },
+      {
+        "name": "Vimeo Player",
+        "category": "media",
+        "estimated_kb": 45
+      },
+      {
+        "name": "YouTube IFrame API",
+        "category": "media",
+        "estimated_kb": 60
+      }
+    ],
+    "total_estimated_kb": 405,
+    "recommendations": []
+  },
+  "network_optimizer": {
+    "network_optimizer_size_kb": 7.7
+  },
+  "search_index": {
+    "search_index_items": 33,
+    "search_index_size_kb": 8.7
+  },
+  "boost_loader": {
+    "loader_path": "public/scripts/boost-loader.js"
+  },
+  "meta": {
+    "timestamp": "2026-02-09T22:41:30.868515+00:00",
+    "elapsed_seconds": 2.29,
+    "files_generated": 25,
+    "total_size_bytes": 98262,
+    "section_times": {
+      "section_1": 0.001,
+      "section_2": 0.0,
+      "section_3": 0.002,
+      "section_4": 0.009,
+      "section_5": 0.158,
+      "section_12": 0.001,
+      "section_8": 0.002,
+      "section_7": 0.003,
+      "section_13": 0.003,
+      "section_9": 0.005,
+      "section_6": 0.017,
+      "section_11": 0.079,
+      "section_14": 0.002,
+      "section_15": 0.003,
+      "section_17": 0.002,
+      "section_19": 0.002,
+      "section_16": 0.002,
+      "section_18": 0.517,
+      "section_22": 0.405,
+      "section_21": 0.793,
+      "section_20": 0.879,
+      "section_25": 0.002,
+      "section_23": 0.031,
+      "section_26": 0.488,
+      "section_24": 0.635,
+      "section_27": 0.0,
+      "section_28": 0.011,
+      "section_10": 0.0
+    }
+  }
+}

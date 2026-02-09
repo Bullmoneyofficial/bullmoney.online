@@ -200,12 +200,12 @@ const NewsCard = memo(({ item, preview, skipAnimations }: { item: NewsItem; prev
 
   const categoryColors: Record<string, string> = {
     crypto: "from-amber-500/20 to-orange-600/20 border-amber-500/30 text-amber-300",
-    stocks: "from-white/20 to-white/20 border-white/30 text-white",
-    forex: "from-white/20 to-white/20 border-white/30 text-white",
+    stocks: "from-white/20 to-white/20 border-black/10 text-black",
+    forex: "from-white/20 to-white/20 border-black/10 text-black",
     metals: "from-yellow-500/20 to-amber-600/20 border-yellow-500/30 text-yellow-300",
     geopolitics: "from-red-500/20 to-rose-600/20 border-red-500/30 text-red-300",
-    economics: "from-white/20 to-white/20 border-white/30 text-white",
-    tech: "from-white/20 to-white/20 border-white/30 text-white",
+    economics: "from-white/20 to-white/20 border-black/10 text-black",
+    tech: "from-white/20 to-white/20 border-black/10 text-black",
     markets: "from-indigo-500/20 to-white/20 border-indigo-500/30 text-indigo-300",
     trending: "from-orange-500/20 to-red-600/20 border-orange-500/30 text-orange-300",
     other: "from-slate-500/20 to-zinc-600/20 border-slate-500/30 text-slate-300",
@@ -224,8 +224,8 @@ const NewsCard = memo(({ item, preview, skipAnimations }: { item: NewsItem; prev
     <CardWrapper
       {...cardProps}
       onClick={handleClick}
-      className="relative rounded-lg overflow-hidden cursor-pointer group bg-black border border-white/20 hover:border-white/40 transition-all"
-      style={{ boxShadow: '0 0 4px rgba(255, 255, 255, 0.1)' }}
+      className="relative rounded-lg overflow-hidden cursor-pointer group bg-[#f5f5f7] border border-black/10 hover:border-black/15 transition-all"
+      style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
     >
       <div className="flex gap-2 sm:gap-3 p-2 sm:p-3">
         {/* Image Thumbnail */}
@@ -244,23 +244,23 @@ const NewsCard = memo(({ item, preview, skipAnimations }: { item: NewsItem; prev
             <span className={`px-1.5 py-0.5 sm:px-2 rounded-full bg-linear-to-r ${colorClass} text-[8px] sm:text-[9px] font-bold uppercase tracking-wider border shrink-0`}>
               {item.category || "News"}
             </span>
-            <span className="text-[8px] sm:text-[9px] font-mono text-white/70 truncate">
+            <span className="text-[8px] sm:text-[9px] font-mono text-black/50 truncate">
               {item.source || "Unknown"}
             </span>
           </div>
 
           {/* Title */}
-          <h4 className="text-xs sm:text-sm font-semibold text-white line-clamp-2 group-hover:text-white transition-colors leading-tight">
+          <h4 className="text-xs sm:text-sm font-semibold text-black line-clamp-2 group-hover:text-black transition-colors leading-tight">
             {item.title}
           </h4>
 
           {/* Footer - Time and Read More */}
           <div className="flex items-center justify-between gap-2 mt-auto">
-            <div className="flex items-center gap-1 text-[8px] sm:text-[9px] text-white/50">
+            <div className="flex items-center gap-1 text-[8px] sm:text-[9px] text-black/40">
               <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
               <span>{timeAgo(item.published_at)}</span>
             </div>
-            <div className="flex items-center gap-0.5 sm:gap-1 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-white/70 group-hover:text-white transition-colors">
+            <div className="flex items-center gap-0.5 sm:gap-1 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-black/50 group-hover:text-black transition-colors">
               <span className="hidden sm:inline">Read</span>
               <ExternalLink className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
             </div>
@@ -392,19 +392,19 @@ export const UltimateHubNewsTab = memo(() => {
   }, []);
 
   return (
-    <div className="flex flex-col h-full bg-black">
+    <div className="flex flex-col h-full bg-[#f5f5f7]">
       {/* Header with Filters */}
-      <div className="shrink-0 border-b border-white/30 bg-black" style={{ boxShadow: '0 2px 8px rgba(255, 255, 255, 0.2)' }}>
+      <div className="shrink-0 border-b border-black/10 bg-[#f5f5f7]" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
         <div className="p-1.5 sm:p-2 md:p-3 space-y-1.5 sm:space-y-2">
           {/* Top Bar */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1">
-              <Newspaper className="w-3 h-3 sm:w-4 sm:h-4 text-white shrink-0" style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }} />
-              <h2 className="text-xs sm:text-sm font-bold text-white truncate" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
+              <Newspaper className="w-3 h-3 sm:w-4 sm:h-4 text-black shrink-0" style={{ filter: 'none' }} />
+              <h2 className="text-xs sm:text-sm font-bold text-black truncate" style={{ textShadow: 'none' }}>
                 News
               </h2>
               {lastUpdated && !isMobile && (
-                <span className="text-[8px] text-white/50 font-mono">
+                <span className="text-[8px] text-black/40 font-mono">
                   {lastUpdated.toLocaleTimeString()}
                 </span>
               )}
@@ -422,8 +422,8 @@ export const UltimateHubNewsTab = memo(() => {
                   </button>
                   <button
                     onClick={handleRefresh}
-                    className="p-1 sm:p-1.5 rounded-lg bg-white/20 text-white border border-white/30 hover:bg-white/30 transition-all"
-                    style={{ boxShadow: '0 0 4px rgba(255, 255, 255, 0.3)' }}
+                    className="p-1 sm:p-1.5 rounded-lg bg-white text-black border border-black/10 hover:bg-black text-white transition-all"
+                    style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
                   >
                     <RefreshCw className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   </button>
@@ -431,10 +431,10 @@ export const UltimateHubNewsTab = memo(() => {
                     onClick={() => setShowFilters(!showFilters)}
                     className={`p-1 sm:p-1.5 rounded-lg transition-all ${
                       showFilters 
-                        ? 'bg-white/40 text-white border-white/60' 
-                        : 'bg-white/20 text-white border-white/30'
+                        ? 'bg-white/40 text-black border-black/20' 
+                        : 'bg-white text-black border-black/10'
                     } border`}
-                    style={{ boxShadow: showFilters ? '0 0 8px rgba(255, 255, 255, 0.4)' : '0 0 4px rgba(255, 255, 255, 0.3)' }}
+                    style={{ boxShadow: showFilters ? '0 1px 3px rgba(0, 0, 0, 0.1)' : '0 1px 2px rgba(0, 0, 0, 0.06)' }}
                   >
                     <Filter className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   </button>
@@ -455,8 +455,8 @@ export const UltimateHubNewsTab = memo(() => {
                     onClick={handleRefresh}
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9, rotate: 180 }}
-                    className="p-1 sm:p-1.5 rounded-lg bg-white/20 text-white border border-white/30 hover:bg-white/30 transition-all"
-                    style={{ boxShadow: '0 0 4px rgba(255, 255, 255, 0.3)' }}
+                    className="p-1 sm:p-1.5 rounded-lg bg-white text-black border border-black/10 hover:bg-black text-white transition-all"
+                    style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
                   >
                     <RefreshCw className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   </motion.button>
@@ -466,10 +466,10 @@ export const UltimateHubNewsTab = memo(() => {
                     whileTap={{ scale: 0.95 }}
                     className={`p-1 sm:p-1.5 rounded-lg transition-all ${
                       showFilters 
-                        ? 'bg-white/40 text-white border-white/60' 
-                        : 'bg-white/20 text-white border-white/30'
+                        ? 'bg-white/40 text-black border-black/20' 
+                        : 'bg-white text-black border-black/10'
                     } border`}
-                    style={{ boxShadow: showFilters ? '0 0 8px rgba(255, 255, 255, 0.4)' : '0 0 4px rgba(255, 255, 255, 0.3)' }}
+                    style={{ boxShadow: showFilters ? '0 1px 3px rgba(0, 0, 0, 0.1)' : '0 1px 2px rgba(0, 0, 0, 0.06)' }}
                   >
                     <Filter className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   </motion.button>
@@ -502,13 +502,13 @@ export const UltimateHubNewsTab = memo(() => {
                           onClick={() => setActiveMarket(filter.value)}
                           className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-wider border transition-all ${
                             isActive
-                              ? 'bg-white/40 text-white border-white/60'
-                              : 'bg-white/10 text-white/70 border-white/20 hover:bg-white/20'
+                              ? 'bg-white/40 text-black border-black/20'
+                              : 'bg-white text-black/50 border-black/10 hover:bg-white'
                           }`}
                           style={{ 
                             boxShadow: isActive 
-                              ? '0 0 8px rgba(255, 255, 255, 0.4)' 
-                              : '0 0 4px rgba(255, 255, 255, 0.1)' 
+                              ? '0 1px 3px rgba(0, 0, 0, 0.1)' 
+                              : '0 1px 2px rgba(0, 0, 0, 0.04)' 
                           }}
                         >
                           <Icon className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
@@ -552,13 +552,13 @@ export const UltimateHubNewsTab = memo(() => {
                             onClick={() => setActiveMarket(filter.value)}
                             className={`flex items-center gap-0.5 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[8px] sm:text-[9px] font-bold uppercase tracking-wider border transition-all ${
                               isActive
-                                ? 'bg-white/40 text-white border-white/60'
-                                : 'bg-white/10 text-white/70 border-white/20 hover:bg-white/20'
+                                ? 'bg-white/40 text-black border-black/20'
+                                : 'bg-white text-black/50 border-black/10 hover:bg-white'
                             }`}
                             style={{ 
                               boxShadow: isActive 
-                                ? '0 0 8px rgba(255, 255, 255, 0.4)' 
-                                : '0 0 4px rgba(255, 255, 255, 0.1)' 
+                                ? '0 1px 3px rgba(0, 0, 0, 0.1)' 
+                                : '0 1px 2px rgba(0, 0, 0, 0.04)' 
                             }}
                           >
                             <Icon className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
@@ -577,13 +577,13 @@ export const UltimateHubNewsTab = memo(() => {
                           whileTap={{ scale: 0.95 }}
                           className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-wider border transition-all ${
                             isActive
-                              ? 'bg-white/40 text-white border-white/60'
-                              : 'bg-white/10 text-white/70 border-white/20 hover:bg-white/20'
+                              ? 'bg-white/40 text-black border-black/20'
+                              : 'bg-white text-black/50 border-black/10 hover:bg-white'
                           }`}
                           style={{ 
                             boxShadow: isActive 
-                              ? '0 0 8px rgba(255, 255, 255, 0.4)' 
-                              : '0 0 4px rgba(255, 255, 255, 0.1)' 
+                              ? '0 1px 3px rgba(0, 0, 0, 0.1)' 
+                              : '0 1px 2px rgba(0, 0, 0, 0.04)' 
                           }}
                         >
                           <Icon className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
@@ -600,7 +600,7 @@ export const UltimateHubNewsTab = memo(() => {
           )}
 
           {/* Stats Bar */}
-          <div className="flex items-center justify-between text-[8px] sm:text-[9px] text-white/60">
+          <div className="flex items-center justify-between text-[8px] sm:text-[9px] text-black/40">
             <div className="flex items-center gap-1 flex-1 min-w-0">
               <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0" />
               <span className="truncate">{filteredItems.length} {filteredItems.length === 1 ? 'story' : 'stories'}</span>
@@ -623,12 +623,12 @@ export const UltimateHubNewsTab = memo(() => {
                   animate={{ rotate: 360 }}
                   transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                 >
-                  <RefreshCw className="w-6 h-6 sm:w-8 sm:h-8 text-white mx-auto" />
+                  <RefreshCw className="w-6 h-6 sm:w-8 sm:h-8 text-black mx-auto" />
                 </motion.div>
               ) : (
-                <RefreshCw className="w-6 h-6 sm:w-8 sm:h-8 text-white mx-auto" />
+                <RefreshCw className="w-6 h-6 sm:w-8 sm:h-8 text-black mx-auto" />
               )}
-              <p className="text-xs sm:text-sm text-white/70">Loading news...</p>
+              <p className="text-xs sm:text-sm text-black/50">Loading news...</p>
             </div>
           </div>
         ) : error && items.length === 0 ? (
@@ -640,7 +640,7 @@ export const UltimateHubNewsTab = memo(() => {
                 onClick={handleRefresh}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-4 py-2 rounded-lg bg-white/30 text-white text-xs font-semibold border border-white/60"
+                className="px-4 py-2 rounded-lg bg-black text-white text-black text-xs font-semibold border border-black/20"
               >
                 Try Again
               </motion.button>
@@ -649,13 +649,13 @@ export const UltimateHubNewsTab = memo(() => {
         ) : filteredItems.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center space-y-3">
-              <Filter className="w-8 h-8 text-white/50 mx-auto" />
-              <p className="text-sm text-white/70">No news in this category</p>
+              <Filter className="w-8 h-8 text-black/40 mx-auto" />
+              <p className="text-sm text-black/50">No news in this category</p>
               <motion.button
                 onClick={() => setActiveMarket("all")}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-4 py-2 rounded-lg bg-white/30 text-white text-xs font-semibold border border-white/60"
+                className="px-4 py-2 rounded-lg bg-black text-white text-black text-xs font-semibold border border-black/20"
               >
                 Show All News
               </motion.button>
@@ -693,7 +693,7 @@ export const UltimateHubNewsTab = memo(() => {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full h-full sm:h-[85vh] sm:max-w-5xl bg-black border-0 sm:border-2 border-amber-500/40 sm:rounded-2xl overflow-hidden"
+              className="relative w-full h-full sm:h-[85vh] sm:max-w-5xl bg-[#f5f5f7] border-0 sm:border-2 border-amber-500/40 sm:rounded-2xl overflow-hidden"
               style={{ boxShadow: '0 0 40px rgba(251, 191, 36, 0.3)' }}
             >
               {/* Calendar Header */}
@@ -711,7 +711,7 @@ export const UltimateHubNewsTab = memo(() => {
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg bg-red-500/20 text-red-300 border border-red-400/40 hover:bg-red-500/30 transition-all font-semibold text-xs sm:text-sm"
-                    style={{ boxShadow: '0 0 8px rgba(239, 68, 68, 0.3)' }}
+                    style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
                   >
                     <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     <span className="hidden sm:inline">Close</span>
@@ -725,7 +725,7 @@ export const UltimateHubNewsTab = memo(() => {
                   src="https://www.tradingview.com/embed-widget/events/?locale=en#%7B%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Afalse%2C%22importanceFilter%22%3A%22-1%2C0%2C1%22%2C%22currencyFilter%22%3A%22USD%2CEUR%2CGBP%2CJPY%2CAUD%2CCAD%2CCHF%2CNZD%22%7D"
                   className="w-full h-full border-0"
                   title="Economic Calendar"
-                  style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom' }}
+                  style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom' }}
                 />
               </div>
 
@@ -745,7 +745,7 @@ export const UltimateHubNewsTab = memo(() => {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5, duration: 0.3 }}
-                  className="mx-auto w-fit px-3 py-1 bg-black/80 border border-amber-500/30 rounded-full"
+                  className="mx-auto w-fit px-3 py-1 bg-white/90 border border-amber-500/30 rounded-full"
                 >
                   <p className="text-[9px] text-amber-400/60 font-medium">
                     Tap outside to close

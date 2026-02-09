@@ -207,14 +207,14 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
               <AuthProvider>
                 {allowMobileComponents && <AudioWidget />}
                 {modal}
-                <div data-lenis-content>
+                <div data-lenis-content data-store-lenis>
                   <main
                     className="min-h-screen"
                     style={{
                       touchAction: 'auto',
                       overflow: 'visible',
                       position: 'relative',
-                      zIndex: 1,
+                      zIndex: 'auto' as any,
                       height: 'auto',
                       isolation: 'auto',
                       contain: 'none',

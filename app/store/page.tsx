@@ -14,10 +14,14 @@ import { ProductCard } from '@/components/shop/ProductCard';
 import { SearchAutocomplete } from '@/components/shop/SearchAutocomplete';
 import { CryptoCheckoutTrigger } from '@/components/shop/CryptoCheckoutInline';
 import { WorldMapPlaceholder } from '@/components/ui/world-map-placeholder';
-import { AnimatedProductGrid } from '@/components/shop/AnimatedProductGrid';
-import { CircularProductGrid } from '@/components/shop/CircularProductGrid';
-import { GlassProductGrid } from '@/components/shop/GlassProductGrid';
-import { ProductsCarousel } from '@/components/shop/ProductsCarousel';
+import { PrintProductsSection, SAMPLE_PRINT_PRODUCTS } from '@/components/shop/PrintProductsSection';
+import { DigitalArtSection, SAMPLE_DIGITAL_ART } from '@/components/shop/DigitalArtSection';
+
+// Heavy grid components — lazy loaded since user may not use dynamic variants
+const AnimatedProductGrid = dynamic(() => import('@/components/shop/AnimatedProductGrid').then(m => m.AnimatedProductGrid), { ssr: false, loading: () => <div className="h-80 w-full animate-pulse rounded-2xl bg-black/5" /> });
+const CircularProductGrid = dynamic(() => import('@/components/shop/CircularProductGrid').then(m => m.CircularProductGrid), { ssr: false, loading: () => <div className="h-80 w-full animate-pulse rounded-2xl bg-black/5" /> });
+const GlassProductGrid = dynamic(() => import('@/components/shop/GlassProductGrid').then(m => m.GlassProductGrid), { ssr: false, loading: () => <div className="h-80 w-full animate-pulse rounded-2xl bg-black/5" /> });
+const ProductsCarousel = dynamic(() => import('@/components/shop/ProductsCarousel').then(m => m.ProductsCarousel), { ssr: false, loading: () => <div className="h-80 w-full animate-pulse rounded-2xl bg-black/5" /> });
 import { StorePillNav } from '@/components/store/StorePillNav';
 import { useStoreSection } from './StoreMemoryContext';
 import { buildUrlParams, hasActiveFilters as checkActiveFilters } from './store.utils';
@@ -138,6 +142,7 @@ const GRID_VARIANTS = [
   { value: 'frame', label: 'Framed cards', group: 'Style' },
   { value: 'shadow', label: 'Shadow stack', group: 'Style' },
   { value: 'borderless', label: 'Borderless', group: 'Style' },
+  { value: 'mosaic', label: 'Mosaic', group: 'Layout' },
 ] as const;
 
 const GRID_VARIANT_GROUP_ORDER = ['Dynamic', 'Classic', 'Compact', 'Layout', 'Style'] as const;
@@ -235,6 +240,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
   const [isMobile, setIsMobile] = useState(false);
   const [isUltraWide, setIsUltraWide] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
+  const [allowHeavyHero, setAllowHeavyHero] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [checkoutProduct, setCheckoutProduct] = useState<ProductWithDetails | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<
@@ -254,14 +260,14 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
     return HERO_CAROUSEL_SLIDES[heroSlideIndex];
   }, [hasMounted, isMobile, heroSlideIndex]);
   const heroIsWorldMap = resolvedHeroSlide?.type === 'world-map';
-  const allowHeavyHero = hasMounted;
+  const allowHeavyHeroReady = allowHeavyHero && hasMounted;
   const heroTitleColor = 'rgb(255,255,255)';
   const heroMetaColor = 'rgb(255,255,255)';
   const heroBodyColor = 'rgb(255,255,255)';
   const heroTextShadow = heroIsWorldMap ? 'none' : '0 6px 18px rgba(0,0,0,0.45)';
   const heroTitleShadow = heroIsWorldMap ? 'none' : '0 10px 30px rgba(0,0,0,0.5)';
   const heroBodyShadow = heroIsWorldMap ? 'none' : '0 8px 22px rgba(0,0,0,0.4)';
-  const shouldShowHeroMapOverlay = allowHeavyHero && showHeroMapOverlay;
+  const shouldShowHeroMapOverlay = allowHeavyHeroReady && showHeroMapOverlay;
   useEffect(() => {
     if (heroCacheLoadedRef.current) return;
     heroCacheLoadedRef.current = true;
@@ -290,7 +296,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
     sort_by: (searchParams.get('sort_by') as ProductFilters['sort_by']) || 'newest',
   });
 
-  const [showLoader, setShowLoader] = useState(true);
+  const [showLoader, setShowLoader] = useState(false);
 
   const addItem = useCartStore((state) => state.addItem);
   const openCart = useCartStore((state) => state.openCart);
@@ -316,54 +322,39 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
     return normalized.startsWith('/') ? normalized : `/${normalized.replace(/^public\//, '')}`;
   }, []);
 
-  const hasHorizontalScrollableAncestor = useCallback((target: HTMLElement, container: HTMLElement) => {
-    let node: HTMLElement | null = target;
-    while (node && node !== container) {
-      const style = window.getComputedStyle(node);
-      const overflowX = style.overflowX;
-      if ((overflowX === 'auto' || overflowX === 'scroll') && node.scrollWidth > node.clientWidth) {
-        return true;
-      }
-      node = node.parentElement;
-    }
-    return false;
-  }, []);
+  // Column scroll isolation is handled entirely via CSS:
+  // - overflow-y: auto on each column
+  // - overscroll-behavior: contain prevents scroll leaking to the page
+  // - No JS wheel listeners needed — browser compositor handles scrolling
+  //   on the GPU thread, giving 60fps+ with zero main-thread cost.
 
-  const handleColumnWheel = useCallback(
-    (event: WheelEvent, column: HTMLDivElement) => {
-      if (!isDesktop) return;
-
-      const target = event.target as HTMLElement | null;
-      if (target && hasHorizontalScrollableAncestor(target, column)) {
-        if (event.shiftKey || Math.abs(event.deltaX) >= Math.abs(event.deltaY)) return;
-      } else if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
-        return;
-      }
-
-      if (event.deltaY === 0) return;
-      event.preventDefault();
-      column.scrollTop += event.deltaY;
-    },
-    [hasHorizontalScrollableAncestor, isDesktop]
-  );
-
+  // Auto-scroll columns into center of viewport when they enter view
+  const columnsContainerRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (!isDesktop) return;
-    const leftColumn = leftColumnRef.current;
-    const rightColumn = rightColumnRef.current;
-    if (!leftColumn || !rightColumn) return;
+    // Wait for mount then find the columns grid
+    const el = document.querySelector('[data-columns-grid]') as HTMLDivElement | null;
+    if (!el) return;
+    columnsContainerRef.current = el;
 
-    const handleLeft = (event: WheelEvent) => handleColumnWheel(event, leftColumn);
-    const handleRight = (event: WheelEvent) => handleColumnWheel(event, rightColumn);
-
-    leftColumn.addEventListener('wheel', handleLeft, { passive: false });
-    rightColumn.addEventListener('wheel', handleRight, { passive: false });
-
-    return () => {
-      leftColumn.removeEventListener('wheel', handleLeft);
-      rightColumn.removeEventListener('wheel', handleRight);
-    };
-  }, [handleColumnWheel, isDesktop]);
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.15 && entry.intersectionRatio < 0.85) {
+            // Snap columns into full view
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Only snap once per scroll direction
+            io.disconnect();
+            // Re-observe after user might scroll away
+            setTimeout(() => io.observe(el), 2000);
+          }
+        }
+      },
+      { threshold: [0.15, 0.5, 0.85], rootMargin: '-10% 0px' }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [isDesktop]);
 
 
   const handleOpenVip = useCallback(() => {
@@ -431,6 +422,33 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
   }, []);
 
   useEffect(() => {
+    if (!hasMounted || typeof window === 'undefined') return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setAllowHeavyHero(false);
+      return;
+    }
+
+    let idleId: number | null = null;
+    let timeoutId: number | null = null;
+    const activate = () => setAllowHeavyHero(true);
+
+    if ('requestIdleCallback' in window) {
+      idleId = (window as any).requestIdleCallback(activate, { timeout: 900 });
+    } else {
+      timeoutId = window.setTimeout(activate, 250);
+    }
+
+    return () => {
+      if (idleId !== null && 'cancelIdleCallback' in window) {
+        (window as any).cancelIdleCallback(idleId);
+      }
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, [hasMounted]);
+
+  useEffect(() => {
     const updateMobile = () => setIsMobile(isMobileDevice());
     updateMobile();
     window.addEventListener('resize', updateMobile);
@@ -459,10 +477,8 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
     setViewerMounted(true);
   }, []);
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => setShowLoader(false), 1800);
-    return () => window.clearTimeout(timer);
-  }, []);
+  // Loader removed — content renders immediately for faster perceived load
+  // useEffect for loader timer no longer needed
 
   useEffect(() => {
     if (!isDesktop) setExpandedProduct(null);
@@ -649,6 +665,8 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
           return (isMobile ? 2 : 4) * 2;
         case 'diagonal':
           return 6;
+        case 'mosaic':
+          return (isMobile ? 2 : tilesCols) * 2;
         default:
           return items.length;
       }
@@ -994,6 +1012,20 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
             ))}
           </div>
         );
+      case 'mosaic':
+        return (
+          <div className="grid grid-cols-6 gap-2.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 grid-perf">
+            {items.map((product, index) => {
+              // Varied spans: hero → half → third pattern
+              const mosaicSpan = index % 5 === 0 ? 'col-span-6 sm:col-span-2' : index % 5 === 1 ? 'col-span-3 sm:col-span-1' : index % 5 === 2 ? 'col-span-3 sm:col-span-1' : index % 5 === 3 ? 'col-span-4 sm:col-span-1' : 'col-span-2 sm:col-span-1';
+              return (
+                <div key={product.id} className={`${mosaicSpan} h-full grid-card ${shouldAnimateGrid ? 'stagger-item' : ''}`} style={shouldAnimateGrid ? staggerStyle(index) : undefined}>
+                  <ProductCard product={product} compact={index % 5 !== 0} />
+                </div>
+              );
+            })}
+          </div>
+        );
       default:
         return null;
     }
@@ -1108,7 +1140,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
   const timelineProducts = useMemo(() => products.slice(4, 8), [products]);
   const heroMedia = useMemo(() => {
     const slide = resolvedHeroSlide;
-    if (!allowHeavyHero && (slide.type === 'world-map' || slide.type === 'spline')) {
+    if (!allowHeavyHeroReady && (slide.type === 'world-map' || slide.type === 'spline')) {
       return (
         <img
           src="/Img1.jpg"
@@ -1284,7 +1316,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
         <SplineBackground scene={slide.scene} className="h-full w-full" priority />
       </div>
     );
-  }, [allowHeavyHero, resolvedHeroSlide]);
+  }, [allowHeavyHeroReady, resolvedHeroSlide]);
 
   const expandedPrimaryImage = useMemo(() => {
     if (!expandedProduct) return '';
@@ -1326,7 +1358,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
   const dashboardsSection = (
     <section
       data-apple-section
-      style={{ backgroundColor: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.04)' }}
+      style={{ backgroundColor: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.04)', contentVisibility: 'auto', containIntrinsicSize: 'auto 1200px' }}
     >
       <div className="mx-auto w-full max-w-[26rem] sm:max-w-3xl lg:max-w-[90rem] px-4 sm:px-8" style={{ paddingTop: 24, paddingBottom: 32 }}>
         <div className="flex flex-col gap-3">
@@ -1405,7 +1437,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
   const metaQuotesSection = (
     <section
       data-apple-section
-      style={{ backgroundColor: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.04)' }}
+      style={{ backgroundColor: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.04)', contentVisibility: 'auto', containIntrinsicSize: 'auto 800px' }}
     >
       <div className="mx-auto w-full max-w-[90rem] px-4 sm:px-8" style={{ paddingTop: 24, paddingBottom: 32 }}>
         <div className="w-full rounded-2xl sm:rounded-3xl border border-black/10 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] text-left flex flex-col">
@@ -1431,7 +1463,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
     <section
       data-apple-section
       className="lg:min-h-[calc(100vh-64px)]"
-      style={{ backgroundColor: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.04)' }}
+      style={{ backgroundColor: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.04)', contentVisibility: 'auto', containIntrinsicSize: 'auto 800px' }}
     >
       <div className="mx-auto w-full max-w-[90rem] px-4 sm:px-8 lg:min-h-[calc(100vh-128px)] lg:flex lg:flex-col" style={{ paddingTop: 16, paddingBottom: 32 }}>
         <div className="rounded-3xl border border-black/10 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] lg:flex lg:flex-col lg:flex-1">
@@ -1453,7 +1485,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
   const testimonialsSection = (
     <section
       data-apple-section
-      style={{ backgroundColor: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.04)' }}
+      style={{ backgroundColor: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.04)', contentVisibility: 'auto', containIntrinsicSize: 'auto 700px' }}
     >
       <div className="mx-auto w-full max-w-[90rem] px-4 sm:px-8" style={{ paddingTop: 16, paddingBottom: 32 }}>
         <div className="rounded-3xl border border-black/10 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
@@ -1475,7 +1507,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
   const heroDuplicateSection = (
     <section
       data-apple-section
-      style={{ backgroundColor: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.04)' }}
+      style={{ backgroundColor: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.04)', contentVisibility: 'auto', containIntrinsicSize: 'auto 600px' }}
     >
       <div className="mx-auto w-full max-w-[90rem] px-4 sm:px-8" style={{ paddingTop: 16, paddingBottom: 32 }}>
         <div className="relative min-h-[70vh] w-full overflow-hidden rounded-3xl border border-black/10">
@@ -1518,6 +1550,8 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
       style={{
         backgroundColor: 'rgb(255,255,255)',
         borderTop: '1px solid rgba(0,0,0,0.06)',
+        contentVisibility: 'auto',
+        containIntrinsicSize: 'auto 400px',
       }}
     >
       <div
@@ -1669,7 +1703,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
               </button>
             </div>
           ) : useGridLayouts ? (
-            <div className="mt-6">
+            <div className="mt-6 mobile-mosaic-products">
               {renderGridVariant(
                 productsGridVariant,
                 'products',
@@ -1781,7 +1815,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
               )}
 
               {useGridLayouts ? (
-                <div className="mt-6">
+                <div className="mt-6 mobile-mosaic-featured">
                   {renderGridVariant(
                     featuredGridVariant,
                     'featured',
@@ -1876,7 +1910,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
               ) : null}
 
               {useGridLayouts ? (
-                <div className="mt-6">
+                <div className="mt-6 mobile-mosaic-timeline">
                   {renderGridVariant(
                     timelineGridVariant,
                     'timeline',
@@ -1940,8 +1974,39 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
           </div>
         </section>
       )}
+
     </>
   ) : null;
+
+  /* ── Print & Design — full-viewport standalone section (rendered below columns on ALL pages) ── */
+  const printDesignSection = (
+    <section
+      data-apple-section
+      className="relative w-full min-h-screen flex flex-col justify-center bg-gradient-to-b from-white to-gray-50 border-t border-black/5"
+      style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 100vh' }}
+    >
+      <div className="mx-auto w-full max-w-7xl px-5 sm:px-8 py-20 lg:py-28">
+        {/* Section Header */}
+        <div className="mb-16 text-center">
+          <p className="text-[11px] uppercase tracking-[0.28em] text-black/45">Expand Your Collection</p>
+          <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight text-black">Custom Print & Digital Art</h2>
+          <p className="mt-3 text-sm sm:text-base text-black/60 max-w-xl mx-auto">Professional printing services and premium digital artwork</p>
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
+          {/* Left — Print Products */}
+          <div className="border-r-0 lg:border-r border-black/10 pr-0 lg:pr-10">
+            <PrintProductsSection products={SAMPLE_PRINT_PRODUCTS} />
+          </div>
+
+          {/* Right — Digital Art */}
+          <div className="pl-0 lg:pl-6">
+            <DigitalArtSection arts={SAMPLE_DIGITAL_ART} />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
   const handleExpandedBuy = useCallback(async (method: typeof paymentMethod) => {
     if (!expandedProduct) return;
     const variant = expandedProduct.variants?.[0];
@@ -2007,6 +2072,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
   return (
     <div
       data-store-page
+      className="store-snap-scroll"
       style={{
         minHeight: '100vh',
         width: '100%',
@@ -2285,44 +2351,73 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
         </div>
       </section>
 
-      <div className="w-full lg:grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-8 lg:items-start lg:h-[calc(100vh-64px)] lg:overflow-hidden">
+      <div
+        data-columns-grid
+        className="w-full lg:grid lg:grid-cols-[minmax(0,1.05fr)_auto_minmax(0,0.95fr)] lg:items-start lg:h-[100vh] lg:overflow-hidden store-columns-container"
+        style={{ overscrollBehavior: 'contain' }}
+      >
+        {/* LEFT COLUMN — scrollbar on right (default), GPU-accelerated via CSS */}
         <div
           ref={leftColumnRef}
-          className="lg:pr-3 lg:min-h-0 lg:h-full lg:max-h-full lg:overflow-y-auto store-column-scroll"
+          className="lg:pr-1 lg:min-h-0 lg:h-full lg:max-h-full lg:overflow-y-auto store-column-scroll store-col-left"
         >
           {isDesktop && columnHeaderSection}
           {isDesktop && heroMode === 'store' && featuresSection}
-          {isDesktop && heroMode === 'store' && productsSectionBlock}
-          {isDesktop && heroMode === 'store' && footerSectionBlock}
           {isDesktop && heroMode === 'trader' && dashboardsSection}
         </div>
 
+        {/* CENTER SCROLL HINT DIVIDER */}
+        {isDesktop && (
+          <div className="store-scroll-hint hidden lg:flex flex-col items-center justify-center gap-3 h-full select-none pointer-events-none" style={{ width: 32 }}>
+            <div className="flex flex-col items-center gap-1 opacity-40 animate-pulse" style={{ animationDuration: '3s' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/60"><path d="M12 5v14"/><path d="m5 12 7-7 7 7"/></svg>
+              <span className="text-[9px] font-medium tracking-widest uppercase text-white/50" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>scroll</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/60"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+            </div>
+            <div className="w-px flex-1 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
+            <div className="flex flex-col items-center gap-1 opacity-40 animate-pulse" style={{ animationDuration: '3s', animationDelay: '1.5s' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/60"><path d="M12 5v14"/><path d="m5 12 7-7 7 7"/></svg>
+              <span className="text-[9px] font-medium tracking-widest uppercase text-white/50" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>scroll</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/60"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+            </div>
+          </div>
+        )}
+
+        {/* RIGHT COLUMN — scrollbar on left via direction trick */}
         <div
           ref={rightColumnRef}
-          className="space-y-0 lg:pr-2 lg:min-h-0 lg:h-full lg:max-h-full lg:overflow-y-auto store-column-scroll"
+          className="space-y-0 lg:pl-1 lg:min-h-0 lg:h-full lg:max-h-full lg:overflow-y-auto store-column-scroll store-col-right"
         >
-          {isDesktop && columnHeaderSection}
-          {isDesktop && heroMode === 'store' && dashboardsSection}
-          {isDesktop && heroMode === 'store' && testimonialsSection}
-          {isDesktop && heroMode === 'store' && footerSectionBlock}
-          {isDesktop && heroMode === 'trader' && heroDuplicateSection}
-          {isDesktop && heroMode === 'trader' && featuresSection}
-          {isDesktop && heroMode === 'trader' && testimonialsSection}
-          {isDesktop && heroMode === 'trader' && footerSectionBlock}
-          {!isDesktop && dashboardsSection}
+          <div className="store-col-right-inner">
+            {isDesktop && columnHeaderSection}
+            {isDesktop && heroMode === 'store' && dashboardsSection}
+            {isDesktop && heroMode === 'store' && testimonialsSection}
+            {isDesktop && heroMode === 'trader' && heroDuplicateSection}
+            {isDesktop && heroMode === 'trader' && featuresSection}
+            {isDesktop && heroMode === 'trader' && testimonialsSection}
+            {!isDesktop && dashboardsSection}
+          </div>
         </div>
       </div>
 
+      {/* Products section — always below columns on desktop */}
       {isDesktop && productsSectionBlock}
-      {isDesktop && featuresSection}
+      {/* metaQuotesSection only appears below columns (not in either column) */}
       {isDesktop && metaQuotesSection}
-      {isDesktop && footerSectionBlock}
 
-      {(!isDesktop || heroMode !== 'store') && productsSectionBlock}
+      {!isDesktop && productsSectionBlock}
 
       {!isDesktop && featuresSection}
       {!isDesktop && testimonialsSection}
-      {!isDesktop && footerSectionBlock}
+
+      {/* Market Quotes — show on mobile below testimonials */}
+      {!isDesktop && metaQuotesSection}
+
+      {/* Print & Design — full viewport section below columns on ALL pages */}
+      {printDesignSection}
+
+      {/* Store Footer — always at the very bottom */}
+      {footerSectionBlock}
 
       {checkoutOpen && (
         <div

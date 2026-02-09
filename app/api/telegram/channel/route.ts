@@ -39,7 +39,7 @@ const logWarn = (...args: unknown[]) => {
 // In-memory cache for VIP messages (persists during server runtime)
 let vipMessagesCache: TelegramPost[] = [];
 let lastFetchTime = 0;
-const CACHE_DURATION = 2000; // 2 seconds
+const CACHE_DURATION = 15000; // 15 seconds — VIP messages don't change that fast
 let vipFetchInFlight: Promise<TelegramPost[]> | null = null;
 
 // Cache webhook status to avoid repeated network calls
@@ -49,7 +49,7 @@ const WEBHOOK_CACHE_DURATION = 10000; // 10 seconds
 // Cache for public channels
 type PublicCacheEntry = { posts: TelegramPost[]; fetchedAt: number };
 const publicChannelCache: Record<string, PublicCacheEntry> = {};
-const PUBLIC_CACHE_DURATION = 2000; // 2 seconds
+const PUBLIC_CACHE_DURATION = 15000; // 15 seconds — channel posts don't change that fast
 const publicFetchInFlight = new Map<string, Promise<TelegramPost[]>>();
 
 const TELEGRAM_FETCH_TIMEOUT_MS = 4000;

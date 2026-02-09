@@ -105,6 +105,8 @@
   ],
   "related_applications": [],
   "prefer_related_applications": false,
+  "permissions": ["notifications", "push"],
+  "handle_links": "preferred",
   "share_target": {
     "action": "/share",
     "method": "POST",

@@ -92,8 +92,8 @@ type ShopContextValue = {
   deleteCategory: (id: string) => Promise<void>;
 };
 
-const ADMIN_USERNAME = "MR.BULLMONEY";
-const ADMIN_PASSWORD = "9D6W5D6SD6S7DA6D5D5ADS5A6XVXASXR6723RE627EDGED";
+const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
 
 type Action =
   | { type: "LOGIN" }
@@ -138,7 +138,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   // ------------------------------------------------------------------
   const safeFetchJson = async (url: string, fallback: any = []) => {
     try {
-      const res = await fetch(url);
+      const res = await fetch(url, { cache: "force-cache" });
       if (!res.ok) {
         console.warn(`⚠️ ${url} returned ${res.status}`);
         return fallback;
@@ -176,8 +176,9 @@ export function ShopProvider({ children }: { children: ReactNode }) {
             heroFromDb = heroDataRaw;
         }
 
-        // Optional: Log data to console to verify key names (e.g., 'title' vs 'headline')
-        console.log("🛒 Shop Context - Hero Data Found:", heroFromDb);
+        if (process.env.NODE_ENV === "development") {
+          console.log("🛒 Shop Context - Hero Data Found:", heroFromDb);
+        }
 
         dispatch({ type: "SET_PRODUCTS", payload: products || [] });
         
@@ -205,7 +206,14 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     if (!username || !password) {
       return { success: false, message: "Please fill in all fields." };
     }
-    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+    if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
+      return { success: false, message: "Admin credentials are not configured." };
+    }
+
+    const normalizedUsername = username.trim().toLowerCase();
+    const normalizedAdminEmail = ADMIN_EMAIL.trim().toLowerCase();
+
+    if (normalizedUsername === normalizedAdminEmail && password === ADMIN_PASSWORD) {
       dispatch({ type: "LOGIN" });
       return { success: true };
     }

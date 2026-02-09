@@ -11,7 +11,8 @@
   aspect-ratio: 16 / 9;
   min-height: 300px;
   width: 100%;
-  contain: strict;
+  /* FIXED: was contain:strict which created independent formatting context blocking scroll */
+  contain: layout size;
   content-visibility: auto;
   contain-intrinsic-size: auto 500px;
 }
@@ -25,7 +26,10 @@
   height: 100vh;
   height: 100dvh;
   width: 100%;
-  contain: layout size style;
+  contain: layout size;
+  /* CRITICAL: Hero canvas must never block scroll */
+  pointer-events: none !important;
+  touch-action: pan-y !important;
 }
 
 /* Big device hero optimizations */
@@ -163,9 +167,9 @@ section.viewport-full,
 }
 
 /* Canvas elements - prevent resize CLS */
+/* FIXED: was contain:strict which blocked scroll passthrough */
 canvas {
-  contain: strict;
-  /* Canvas should not change size after initial render */
+  contain: layout size;
 }
 
 /* Images with aspect ratio - prevent CLS */

@@ -110,27 +110,24 @@ const premiumCardStyle = `
 /* Premium Product Card — GPU Optimized */
 .product-card-premium {
   background: linear-gradient(135deg, #0a1628 0%, #0d2147 40%, #102a5a 60%, #0a1628 100%);
-  border: 1px solid rgba(50,117,248,0.18);
+  border: 1px solid rgba(50,117,248,0.22);
   box-shadow: 0 4px 24px rgba(0,0,0,0.3);
   transition: transform 0.5s cubic-bezier(0.23,1,0.32,1), box-shadow 0.5s cubic-bezier(0.23,1,0.32,1), border-color 0.5s ease;
-  transform: translateY(0) translateZ(0);
-  will-change: transform, box-shadow;
+  transform: translateZ(0);
+  will-change: transform;
   isolation: isolate;
-  contain: layout style paint;
+  contain: layout style;
   touch-action: manipulation;
   position: relative;
-  animation: card-idle-pulse 4s ease-in-out infinite;
 }
 .product-card-premium:hover {
-  transform: translateY(-6px) translateZ(0);
+  transform: translateY(-4px) translateZ(0);
   border-color: rgba(80,160,255,0.5);
   box-shadow:
-    0 24px 50px rgba(0,0,0,0.45),
-    0 0 30px rgba(50,117,248,0.5),
-    0 0 60px rgba(50,117,248,0.25),
-    0 0 100px rgba(50,117,248,0.1),
+    0 12px 30px rgba(0,0,0,0.35),
+    0 0 20px rgba(50,117,248,0.4),
+    0 0 40px rgba(50,117,248,0.15),
     inset 0 1px 0 rgba(120,180,255,0.3);
-  animation: none;
 }
 .product-card-premium:active {
   transform: translateY(-2px) scale(0.98) translateZ(0);
@@ -164,35 +161,37 @@ const premiumCardStyle = `
   box-shadow: 0 0 15px rgba(80,160,255,0.5);
 }
 
-/* Card shine sweep on hover */
+/* Card shine sweep on hover — uses transform for GPU perf, no layout thrash */
 @keyframes card-shine-sweep {
-  0%   { left: -75%; }
-  100% { left: 150%; }
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
 }
 .card-shine-sweep {
-  position: absolute; top: 0; bottom: 0;
-  width: 50%; left: -75%;
-  background: linear-gradient(105deg, transparent 0%, rgba(50,117,248,0.04) 20%, rgba(120,180,255,0.18) 50%, rgba(50,117,248,0.04) 80%, transparent 100%);
+  position: absolute; top: 0; bottom: 0; left: 0;
+  width: 33%;
+  transform: translateX(-100%);
+  background: linear-gradient(105deg, transparent 0%, rgba(50,117,248,0.04) 20%, rgba(120,180,255,0.15) 50%, rgba(50,117,248,0.04) 80%, transparent 100%);
   z-index: 3; pointer-events: none;
   border-radius: inherit;
 }
 .product-card-premium:hover .card-shine-sweep {
-  animation: card-shine-sweep 0.65s ease-out forwards;
+  animation: card-shine-sweep 0.7s ease-out forwards;
 }
 
-/* Image shine sweep */
+/* Image shine sweep — transform-based */
 @keyframes card-image-shine-sweep {
-  0%   { left: -60%; }
-  100% { left: 140%; }
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
 }
 .card-image-shine {
-  position: absolute; top: 0; bottom: 0;
-  width: 45%; left: -60%;
-  background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.02) 25%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.02) 75%, transparent 100%);
+  position: absolute; top: 0; bottom: 0; left: 0;
+  width: 30%;
+  transform: translateX(-100%);
+  background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.02) 25%, rgba(255,255,255,0.10) 50%, rgba(255,255,255,0.02) 75%, transparent 100%);
   z-index: 15; pointer-events: none;
 }
 .product-card-premium:hover .card-image-shine {
-  animation: card-image-shine-sweep 0.55s 0.06s ease-out forwards;
+  animation: card-image-shine-sweep 0.6s 0.06s ease-out forwards;
 }
 
 /* Image border glow */
@@ -214,20 +213,16 @@ const premiumCardStyle = `
 .card-badge:nth-child(2) { animation-delay: 0.1s; }
 .card-badge:nth-child(3) { animation-delay: 0.2s; }
 
-/* Badge shimmer — contained within pill */
+/* Badge shimmer — transform-based, stays inside pill */
 @keyframes badge-shimmer {
-  0%   { left: -60%; }
-  100% { left: 160%; }
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(360%); }
 }
 .badge-shimmer-el {
-  animation: badge-shimmer 2.2s linear 0.8s infinite;
+  animation: badge-shimmer 2.4s linear 0.8s infinite;
   pointer-events: none;
-}
-
-/* Subtle idle glow */
-@keyframes card-idle-pulse {
-  0%, 100% { border-color: rgba(50,117,248,0.18); }
-  50%      { border-color: rgba(50,117,248,0.32); }
+  left: 0 !important;
+  width: 28%;
 }
 
 /* Heart button CSS */
@@ -244,7 +239,11 @@ const premiumCardStyle = `
 /* Wrapper */
 .product-card-wrapper {
   perspective: 900px;
-  z-index: 50;
+  z-index: 1;
+  position: relative;
+}
+.product-card-wrapper:hover {
+  z-index: 10;
 }
 `;
 
@@ -652,7 +651,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
               >
                 <div
                   className="absolute top-0 bottom-0 badge-shimmer-el"
-                  style={{ width: '60%', left: '-60%', background: 'linear-gradient(90deg, transparent 0%, rgba(50,117,248,0.35) 40%, rgba(80,160,255,0.55) 50%, rgba(50,117,248,0.35) 60%, transparent 100%)' }}
+                  style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(50,117,248,0.35) 40%, rgba(80,160,255,0.55) 50%, rgba(50,117,248,0.35) 60%, transparent 100%)' }}
                 />
                 <span className="relative z-10 tracking-wide">-{discount}%</span>
               </span>
@@ -669,7 +668,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
               >
                 <div
                   className="absolute top-0 bottom-0 badge-shimmer-el"
-                  style={{ width: '60%', left: '-60%', background: 'linear-gradient(90deg, transparent 0%, rgba(50,117,248,0.35) 40%, rgba(80,160,255,0.55) 50%, rgba(50,117,248,0.35) 60%, transparent 100%)' }}
+                  style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(50,117,248,0.35) 40%, rgba(80,160,255,0.55) 50%, rgba(50,117,248,0.35) 60%, transparent 100%)' }}
                 />
                 <span className="relative z-10 tracking-wide">Featured</span>
               </span>
@@ -1161,7 +1160,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
     <div 
       data-product-card
       className="block h-full w-full relative cursor-pointer product-card-wrapper" 
-      style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 400px' } as React.CSSProperties}
+      style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 320px' } as React.CSSProperties}
     >
       {cardContent}
       

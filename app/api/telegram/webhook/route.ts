@@ -27,8 +27,16 @@ function configureVapid() {
 const CHANNEL_INFO: Record<string, { name: string; channel: string; priority: 'high' | 'normal' }> = {
   'bullmoneywebsite': { name: 'FREE TRADES', channel: 'trades', priority: 'high' },
   'bullmoneyfx': { name: 'LIVESTREAMS', channel: 'main', priority: 'normal' },
-  'bullmoneyshop': { name: 'NEWS', channel: 'shop', priority: 'normal' },
+  'bullmoneyshop': { name: 'BULLMONEY NEWS', channel: 'shop', priority: 'normal' },
+  '-1003442830926': { name: 'VIP TRADES', channel: 'trades', priority: 'high' },
 };
+
+function resolveChannel(chatUsername: string, chatId: string | number | undefined) {
+  if (chatUsername && CHANNEL_INFO[chatUsername]) return CHANNEL_INFO[chatUsername];
+  const idStr = chatId?.toString() || '';
+  if (idStr && CHANNEL_INFO[idStr]) return CHANNEL_INFO[idStr];
+  return { name: 'BullMoney', channel: 'trades', priority: 'high' as const };
+}
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
@@ -42,6 +50,7 @@ export async function POST(request: NextRequest) {
     }
     
     const chatUsername = (message.chat?.username || '').toLowerCase();
+    const chatId = message.chat?.id;
     const messageText = message.text || message.caption || '';
     const hasMedia = !!(message.photo || message.video || message.document || message.animation);
     
@@ -49,11 +58,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true });
     }
     
-    let channelInfo = CHANNEL_INFO[chatUsername] || { 
-      name: 'BullMoney', 
-      channel: 'trades', 
-      priority: 'high' as const 
-    };
+    let channelInfo = resolveChannel(chatUsername, chatId);
+    console.log(`[Webhook] Message from ${chatUsername || chatId}: "${messageText?.substring(0,50)}..." → ${channelInfo.name}`);
     
     if (!supabaseUrl || !supabaseServiceKey) {
       return NextResponse.json({ ok: false, error: 'DB not configured' });
@@ -72,7 +78,10 @@ export async function POST(request: NextRequest) {
           views: 0,
           created_at: new Date(message.date * 1000).toISOString(),
           telegram_message_id: message.message_id,
-          notification_sent: false, // Will be marked true after notifications sent
+          chat_id: chatId?.toString(),
+          chat_title: channelInfo.name,
+          chat_username: chatUsername || undefined,
+          notification_sent: false,
         })
         .select('id')
         .single();
@@ -148,14 +157,14 @@ export async function POST(request: NextRequest) {
             );
 
             if (expired.length > 0) {
-              console.log(`[Webhook] Marking ${expired.length} expired subscriptions as inactive`);
+              console.log(`[Webhook] Deleting ${expired.length} expired subscriptions`);
               try {
                 await supabase
                   .from('push_subscriptions')
-                  .update({ is_active: false })
+                  .delete()
                   .in('endpoint', expired);
               } catch (error) {
-                console.error('[Webhook] Failed to update expired subscriptions');
+                console.error('[Webhook] Failed to delete expired subscriptions');
               }
             }
 

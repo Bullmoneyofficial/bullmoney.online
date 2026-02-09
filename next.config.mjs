@@ -48,7 +48,6 @@ const nextConfig = {
       'lucide-react',
       'react-youtube',
       'framer-motion',
-      'motion',
       '@tabler/icons-react',
       'react-icons',
       '@react-three/drei',
@@ -84,6 +83,27 @@ const nextConfig = {
       'tailwind-merge',
       'clsx',
       'postprocessing',
+      // Additional optimizations for faster page loads
+      '@radix-ui/react-accordion',
+      '@radix-ui/react-avatar',
+      '@radix-ui/react-checkbox',
+      '@radix-ui/react-collapsible',
+      '@radix-ui/react-context-menu',
+      '@radix-ui/react-label',
+      '@radix-ui/react-navigation-menu',
+      '@radix-ui/react-progress',
+      '@radix-ui/react-radio-group',
+      '@radix-ui/react-scroll-area',
+      '@radix-ui/react-separator',
+      '@radix-ui/react-slider',
+      '@radix-ui/react-switch',
+      '@radix-ui/react-toggle',
+      '@radix-ui/react-toggle-group',
+      'react-resizable-panels',
+      'embla-carousel-react',
+      'input-otp',
+      'cmdk',
+      'vaul',
     ],
   },
 
@@ -123,6 +143,25 @@ const nextConfig = {
           {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=(), payment=()',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://unpkg.com https://cdn.jsdelivr.net https://prod.spline.design",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "img-src 'self' data: blob: https: http:",
+              "font-src 'self' https://fonts.gstatic.com",
+              "connect-src 'self' https: wss:",
+              "media-src 'self' https: blob:",
+              "frame-src 'self' https://www.youtube.com https://youtube.com https://player.vimeo.com https://prod.spline.design https://my.spline.design https://discord.com https://www.tradingview.com https://s.tradingview.com",
+              "worker-src 'self' blob:",
+              "child-src 'self' blob:",
+              "object-src 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+              "frame-ancestors 'self'",
+            ].join('; '),
           },
           {
             key: 'Cross-Origin-Opener-Policy',
@@ -202,6 +241,15 @@ const nextConfig = {
   turbopack: {
     // Reduce file resolution attempts - only look for these extensions
     resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.mjs', '.json', '.css'],
+    // Module aliases — avoids repeated node_modules traversals for hot-path deps
+    resolveAlias: {
+      // Pin heavy packages so Turbopack doesn't search multiple node_modules dirs
+      'framer-motion': 'framer-motion',
+      'three': 'three',
+      'gsap': 'gsap',
+      'recharts': 'recharts',
+      'mongoose': 'mongoose',
+    },
   },
 };
 

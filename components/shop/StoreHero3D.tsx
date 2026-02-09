@@ -32,33 +32,49 @@ const SPLINE_SCENE = '/scene1.splinecode';
 
 // ---- ALWAYS preload scene file (works in dev AND production) ----
 if (typeof window !== 'undefined') {
-  // 1. <link rel="preload"> for highest browser-level priority
-  const existingLink = document.querySelector(`link[rel="preload"][href="${SPLINE_SCENE}"]`);
-  if (!existingLink) {
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.href = SPLINE_SCENE;
-    link.as = 'fetch';
-    link.crossOrigin = 'anonymous';
-    // @ts-ignore - fetchpriority is valid but not in all TS defs
-    link.fetchPriority = 'high';
-    document.head.appendChild(link);
+  const connection = (navigator as any).connection;
+  const saveData = Boolean(connection?.saveData);
+  const isSlow = typeof connection?.effectiveType === 'string'
+    ? /(^|-)2g$/.test(connection.effectiveType)
+    : false;
+
+  const runPreload = () => {
+    if (saveData) return;
+
+    // 1. <link rel="preload"> for highest browser-level priority
+    const existingLink = document.querySelector(`link[rel="preload"][href="${SPLINE_SCENE}"]`);
+    if (!existingLink) {
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.href = SPLINE_SCENE;
+      link.as = 'fetch';
+      link.crossOrigin = 'anonymous';
+      // @ts-ignore - fetchpriority is valid but not in all TS defs
+      link.fetchPriority = 'high';
+      document.head.appendChild(link);
+    }
+
+    // 2. Background fetch to warm HTTP cache + Cache API
+    fetch(SPLINE_SCENE, { priority: 'high', cache: 'force-cache' } as RequestInit)
+      .then(async (res) => {
+        if (res.ok && 'caches' in window) {
+          try {
+            const cache = await caches.open('bullmoney-spline-hero-v4');
+            await cache.put(SPLINE_SCENE, res.clone());
+          } catch {}
+        }
+      })
+      .catch(() => {});
+
+    // 3. Preload the Spline runtime module (shares cache with home page's spline-wrapper)
+    import('@splinetool/runtime').catch(() => {});
+  };
+
+  if ("requestIdleCallback" in window) {
+    (window as any).requestIdleCallback(runPreload, { timeout: isSlow ? 2500 : 1200 });
+  } else {
+    setTimeout(runPreload, isSlow ? 1200 : 0);
   }
-
-  // 2. Background fetch to warm HTTP cache + Cache API
-  fetch(SPLINE_SCENE, { priority: 'high', cache: 'force-cache' } as RequestInit)
-    .then(async (res) => {
-      if (res.ok && 'caches' in window) {
-        try {
-          const cache = await caches.open('bullmoney-spline-hero-v4');
-          await cache.put(SPLINE_SCENE, res.clone());
-        } catch {}
-      }
-    })
-    .catch(() => {});
-
-  // 3. Preload the Spline runtime module (shares cache with home page's spline-wrapper)
-  import('@splinetool/runtime').catch(() => {});
 }
 
 // ✅ Use the home page's optimized spline-wrapper instead of raw @splinetool/react-spline

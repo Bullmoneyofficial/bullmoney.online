@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect, useRef, useCallback, type CSSProperties, type ReactNode } from "react";
+import { useState, useEffect, useRef, useCallback, type CSSProperties, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import { detectBrowser } from "@/lib/browserDetection";
 import { GLASS_STYLES } from "@/styles/glassStyles";
@@ -8,9 +8,6 @@ import { deferAnalytics, smartPrefetch } from "@/lib/prefetchHelper";
 
 // Store Header replaces default navbar on app page
 const StoreHeader = dynamic(() => import("@/components/store/StoreHeader").then(mod => ({ default: mod.StoreHeader })), { ssr: false }) as any;
-
-// ✅ MOBILE DETECTION - Conditional lazy loading for mobile optimization
-import { isMobileDevice } from "@/lib/mobileDetection";
 
 // ✅ LOADING FALLBACKS - Mobile-optimized loading states
 import {
@@ -57,16 +54,13 @@ import {
   ShimmerContainer
 } from "@/components/ui/UnifiedShimmer";
 
-import { useCacheContext } from "@/components/CacheManagerProvider";
-import { useUnifiedPerformance, useVisibility, useObserver, useComponentLifecycle } from "@/lib/UnifiedPerformanceSystem";
+import { useUnifiedPerformance } from "@/lib/UnifiedPerformanceSystem";
 import { useComponentTracking, useCrashTracker } from "@/lib/CrashTracker";
-import { useScrollOptimization } from "@/hooks/useScrollOptimization";
 import { useBigDeviceScrollOptimizer } from "@/lib/bigDeviceScrollOptimizer";
 import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
 import { useUIState } from "@/contexts/UIStateContext";
-import { userStorage } from "@/lib/smartStorage";
 import { useHeroMode } from "@/hooks/useHeroMode";
 
 // Features skeleton fallback (inline for faster load)
@@ -144,50 +138,35 @@ function DeferredRender({
   useEffect(() => {
     if (shouldRender) return;
     let cancelled = false;
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-    let idleId: number | null = null;
-    let observer: IntersectionObserver | null = null;
 
     const activate = () => {
       if (!cancelled) setShouldRender(true);
     };
 
-    if (minDelayMs > 0) {
-      timeoutId = setTimeout(activate, minDelayMs);
-    }
-
-    if (idle && typeof window !== "undefined" && "requestIdleCallback" in window) {
-      idleId = (window as any).requestIdleCallback(activate, { timeout: 2000 });
-    }
-
+    // Use only IntersectionObserver — simpler, fewer timers, less GC
     if (typeof IntersectionObserver !== "undefined" && hostRef.current) {
-      observer = new IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting) activate();
-        },
+      const observer = new IntersectionObserver(
+        ([entry]) => { if (entry.isIntersecting) { activate(); observer.disconnect(); } },
         { rootMargin }
       );
       observer.observe(hostRef.current);
-    } else if (!idle) {
-      activate();
+      // Fallback: activate via idle callback if observer hasn't fired
+      let idleId: number | null = null;
+      if (idle && "requestIdleCallback" in window) {
+        idleId = (window as any).requestIdleCallback(activate, { timeout: 3000 });
+      }
+      return () => { cancelled = true; observer.disconnect(); if (idleId) (window as any).cancelIdleCallback(idleId); };
     }
 
-    return () => {
-      cancelled = true;
-      if (timeoutId) clearTimeout(timeoutId);
-      if (idleId && typeof window !== "undefined" && "cancelIdleCallback" in window) {
-        (window as any).cancelIdleCallback(idleId);
-      }
-      if (observer) observer.disconnect();
-    };
+    // No IntersectionObserver — use timeout
+    const tid = setTimeout(activate, minDelayMs || 200);
+    return () => { cancelled = true; clearTimeout(tid); };
   }, [shouldRender, rootMargin, minDelayMs, idle]);
 
-  return <div ref={hostRef}>{shouldRender ? children : fallback ?? null}</div>;
+  return <div ref={hostRef} style={{ contentVisibility: shouldRender ? 'visible' : 'auto', containIntrinsicSize: '0 600px' }}>{shouldRender ? children : fallback ?? null}</div>;
 }
 
 import { useAudioEngine } from "@/app/hooks/useAudioEngine";
-import Image from "next/image";
-import Link from "next/link";
 import { StoreMemoryProvider } from "./store/StoreMemoryContext";
 
 // Lazy load heavy components that aren't needed immediately
@@ -262,11 +241,8 @@ const OrbSplineLauncher = dynamic(
   { ssr: false }
 );
 
-// Import Spline utility components
-import { DesktopHeroFallback, LazySplineContainer } from "@/components/home/SplineComponents";
 
 // Legacy flag placeholder to satisfy stale client bundles that may reference it during Fast Refresh.
-const desktopHeroVariant = "spline";
 
 function HomeContent() {
   const { optimizeSection } = useBigDeviceScrollOptimizer();
@@ -374,11 +350,6 @@ function HomeContent() {
     };
   }, []);
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    // Hero mode is now managed by useHeroMode hook
-  }, []);
-
   // Use unified performance for tracking
   const { 
     deviceTier, 
@@ -409,7 +380,7 @@ function HomeContent() {
       setTheme(activeTheme);
     }
   }, [activeTheme, activeThemeId, theme]);
-  useAudioEngine(!isMuted, 'MECHANICAL');
+  useAudioEngine(hasMounted && !isMuted, 'MECHANICAL');
   const canRenderMobileSections = !isMobile || allowMobileLazyRender;
   const canRenderHeavyDesktop = !isMobile && allowHeavyDesktop && isDesktop;
   // Use single dynamic Features component for all devices
@@ -422,8 +393,8 @@ function HomeContent() {
   const showStage5 = currentView === 'content' && sequenceStage >= 5;
   const deferredSectionStyle: CSSProperties = {
     contentVisibility: 'auto',
-    containIntrinsicSize: '900px',
-    contain: 'layout paint',
+    containIntrinsicSize: 'auto 900px',
+    contain: 'layout paint style',
   };
   
   // Track FPS drops
@@ -442,16 +413,6 @@ function HomeContent() {
     // Mount all stages immediately - no staggered delays
     setSequenceStage(5);
   }, [currentView]);
-  
-  // Smart preloading based on usage patterns
-  useEffect(() => {
-    if (preloadQueue.length > 0) {
-      console.log('[Page] Preload suggestions:', preloadQueue);
-    }
-    if (unloadQueue.length > 0) {
-      console.log('[Page] Unload suggestions:', unloadQueue);
-    }
-  }, [preloadQueue, unloadQueue]);
   
   const componentsRegisteredRef = useRef(false);
   // Store callback refs to avoid dependency changes triggering cleanup
@@ -767,29 +728,25 @@ function HomeContent() {
 
   useEffect(() => {
     setHasMounted(true);
-  }, []);
 
-  // Mobile Check
-  useEffect(() => {
+    // --- Consolidated viewport listeners (was 2 separate effects) ---
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
-  useEffect(() => {
     const desktopMq = window.matchMedia('(min-width: 1024px)');
     const ultraWideMq = window.matchMedia('(min-width: 1980px)');
-    const updateDesktop = (event: MediaQueryListEvent) => setIsDesktop(event.matches);
-    const updateUltraWide = (event: MediaQueryListEvent) => setIsUltraWide(event.matches);
-
     setIsDesktop(desktopMq.matches);
     setIsUltraWide(ultraWideMq.matches);
 
+    const updateDesktop = (event: MediaQueryListEvent) => setIsDesktop(event.matches);
+    const updateUltraWide = (event: MediaQueryListEvent) => setIsUltraWide(event.matches);
+
+    window.addEventListener('resize', checkMobile);
     desktopMq.addEventListener('change', updateDesktop);
     ultraWideMq.addEventListener('change', updateUltraWide);
 
     return () => {
+      window.removeEventListener('resize', checkMobile);
       desktopMq.removeEventListener('change', updateDesktop);
       ultraWideMq.removeEventListener('change', updateUltraWide);
     };
@@ -846,18 +803,6 @@ function HomeContent() {
     setV2Unlocked(true);
     setCurrentView('content');
   }, [setV2Unlocked]);
-
-  // Mobile Loader Deferral
-  useEffect(() => {
-    if (isMobile && currentView === 'loader' && typeof window !== 'undefined') {
-      if ('requestIdleCallback' in window) {
-        const id = (window as any).requestIdleCallback(() => {
-          console.log('[Page] Mobile loader deferred with requestIdleCallback');
-        }, { timeout: 1000 });
-        return () => (window as any).cancelIdleCallback(id);
-      }
-    }
-  }, [isMobile, currentView]);
 
   if (!isInitialized) {
     return (
@@ -916,9 +861,24 @@ function HomeContent() {
               #hero [data-spline],
               #hero canvas,
               #hero spline-viewer,
-              #hero iframe[src*="spline"] {
+              #hero iframe[src*="spline"],
+              #hero .cycling-bg-layer,
+              #hero .cycling-bg-item,
+              #hero .cycling-bg-item.active {
                 pointer-events: none !important;
                 touch-action: pan-y !important;
+              }
+              #hero .hero-wrapper {
+                overflow: visible !important;
+                overflow-x: hidden !important;
+                touch-action: pan-y !important;
+              }
+              #hero .hero-content-overlay {
+                pointer-events: none;
+                touch-action: pan-y !important;
+              }
+              #hero .hero-content-overlay > * {
+                pointer-events: auto;
               }
             `}</style>
           )}
@@ -927,8 +887,8 @@ function HomeContent() {
             <section
               id="hero"
               className={isMobile
-                ? "w-full full-bleed flex items-end justify-center overflow-hidden relative px-2 sm:px-4"
-                : "w-full full-bleed viewport-full relative px-2 sm:px-4"}
+                ? "w-full full-bleed flex items-end justify-center overflow-x-hidden overflow-y-visible relative px-2 sm:px-4"
+                : "w-full full-bleed viewport-full overflow-x-hidden overflow-y-visible relative px-2 sm:px-4"}
               style={isMobile ? {
                 height: 'calc(100dvh - env(safe-area-inset-bottom, 0px))',
                 paddingTop: 'calc(110px + env(safe-area-inset-top, 0px))',
@@ -963,7 +923,9 @@ function HomeContent() {
           <div className="mainpage-store-shell" data-hero-mode={mainHeroMode}>
             <StoreMemoryProvider>
               {hasMounted ? (
-                <StorePageContent routeBase="/" syncUrl={false} showProductSections={mainHeroMode === 'store'} />
+                <DeferredRender rootMargin="600px" fallback={<ContentSkeleton lines={6} />}>
+                  <StorePageContent routeBase="/" syncUrl={false} showProductSections={mainHeroMode === 'store'} />
+                </DeferredRender>
               ) : (
                 <ContentSkeleton lines={6} />
               )}

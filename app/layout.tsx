@@ -1,35 +1,21 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
-import localFont from "next/font/local";
 import "./globals.css";
 // Combined 12 CSS files into 1 for faster compilation (fewer modules to resolve)
 import "../styles/_combined-layout.css";
 import "./styles/90-scroll-anywhere.css";
 import { cn } from "@/lib/utils";
-import { Suspense } from "react";
 import { APP_VERSION, PRESERVED_KEYS } from "@/lib/appVersion";
 
 // ✅ CUSTOM EVENT TRACKING - Removed from layout (static import pulled analytics into every page)
 // Import trackEvent in individual client components that need it instead.
 
-// ✅ PROVIDERS - Context providers for root layout
-import { ThemeProvider } from "@/context/providers";
-import { StudioProvider } from "@/context/StudioContext";
-import { GlobalThemeProvider } from "@/contexts/GlobalThemeProvider";
-import { AudioSettingsProvider } from "@/contexts/AudioSettingsProvider";
-import { MobileMenuProvider } from "@/contexts/MobileMenuContext";
-import { RecruitAuthProvider } from "@/contexts/RecruitAuthContext";
-import { ViewportStateProvider } from "@/contexts/ViewportStateContext";
-import { ShopProvider } from "@/components/ShopContext";
-import { ThemesProvider, ThemesPanel } from "@/contexts/ThemesContext";
-
-// ✅ SMART SCREENSAVER - Idle detection, cleanup, and battery saver
-import { SmartScreensaverProvider } from "@/components/SmartScreensaver";
+// ✅ PROVIDERS — single consolidated wrapper (reduces Turbopack module graph)
+import { AppProviders } from "@/components/AppProviders";
 
 // ✅ LAYOUT PROVIDERS - Client component wrapper for dynamic imports
 import { LayoutProviders } from "@/components/LayoutProviders";
 import { HreflangMeta } from "@/components/HreflangMeta";
-import { ServerHreflangMeta } from "@/components/ServerHreflangMeta";
 
 
 
@@ -255,29 +241,20 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* CRITICAL: Minimal blocking script - Safari detection + theme + desktop scroll */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-(function(){var d=document.documentElement,ua=navigator.userAgent,s=d.style;
-var isD=!(/mobi|android|iphone|ipad/i.test(ua)),isB=window.innerWidth>=769;
-if(isD&&isB){d.classList.add('desktop-optimized');s.height='auto';s.overflowY='scroll';s.overflowX='hidden';s.scrollBehavior='auto';s.scrollSnapType='none';s.overscrollBehavior='auto';
-var b=document.body;if(b){b.style.height='auto';b.style.overflowY='visible';b.style.overflowX='hidden';b.style.overscrollBehavior='auto';}
-if(!('ontouchstart' in window)&&!navigator.maxTouchPoints)d.classList.add('mouse-device','non-touch-device');
-if(window.innerWidth>=1440){d.classList.add('big-display');s.scrollPaddingTop='80px';if(b)b.classList.add('big-display-body');}}
-if(/macintosh|mac os x/i.test(ua)&&isD){d.classList.add('macos');}
-var isSaf=/^((?!chrome|android|crios|fxios|opera|opr|edge|edg).)*safari/i.test(ua),iOS=/iphone|ipad|ipod/i.test(ua);
-if(isSaf||iOS){d.classList.add('is-safari');if(iOS)d.classList.add('is-ios-safari');
-var vh=function(){s.setProperty('--vh',(window.innerHeight*0.01)+'px');s.setProperty('--svh',(window.innerHeight*0.01)+'px');};
-vh();window.addEventListener('resize',vh);window.addEventListener('orientationchange',vh);}
-try{var t=localStorage.getItem('bullmoney-theme-data');if(t){var p=JSON.parse(t);if(p&&p.accentColor){var h=p.accentColor.replace('#',''),r=parseInt(h.substring(0,2),16)||59,g=parseInt(h.substring(2,4),16)||130,b2=parseInt(h.substring(4,6),16)||246,rgb=r+', '+g+', '+b2;
-s.setProperty('--accent-color',p.accentColor);s.setProperty('--accent-rgb',rgb);s.setProperty('--theme-accent-light','rgba('+rgb+', 0.25)');s.setProperty('--theme-accent-dark','rgba('+rgb+', 0.5)');s.setProperty('--theme-accent-glow','rgba('+rgb+', 0.4)');s.setProperty('--theme-accent-subtle','rgba('+rgb+', 0.1)');s.setProperty('--theme-accent-border','rgba('+rgb+', 0.3)');
-d.setAttribute('data-active-theme',p.id||'bullmoney-blue');d.setAttribute('data-theme-category',p.category||'SPECIAL');
-}}else{d.setAttribute('data-active-theme','bullmoney-blue');s.setProperty('--accent-color','#ffffff');s.setProperty('--accent-rgb','255, 255, 255');}}catch(e){d.setAttribute('data-active-theme','bullmoney-blue');s.setProperty('--accent-color','#ffffff');s.setProperty('--accent-rgb','255, 255, 255');}
-})();
-            `,
-          }}
-        />
+        {/* INSTANT SPLASH: Prevents white/black flash before React hydrates */}
+        <style dangerouslySetInnerHTML={{ __html: `
+html,body{background:#050915!important;}
+#bm-splash{position:fixed;inset:0;z-index:99999;background:#050915;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;opacity:1;transition:opacity .35s ease-out,visibility .35s ease-out;}
+#bm-splash.hide{opacity:0;visibility:hidden;pointer-events:none;}
+#bm-splash img{width:64px;height:64px;animation:bm-pulse 1.6s ease-in-out infinite;}
+#bm-splash .bm-name{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:22px;font-weight:700;letter-spacing:.04em;color:#fff;opacity:.92;}
+#bm-splash .bm-bar{width:120px;height:3px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:4px;}
+#bm-splash .bm-bar::after{content:"";display:block;width:40%;height:100%;border-radius:3px;background:linear-gradient(90deg,#ffd700,#f59e0b);animation:bm-slide 1s ease-in-out infinite alternate;}
+@keyframes bm-pulse{0%,100%{opacity:.85;transform:scale(1)}50%{opacity:1;transform:scale(1.04)}}
+@keyframes bm-slide{0%{transform:translateX(0)}100%{transform:translateX(200%)}}
+        ` }} />
+        {/* CRITICAL: Blocking init — served as static file (no Turbopack compilation cost) */}
+        <script src="/scripts/splash-init.js" />
         {/* Cache validation (deferred to avoid blocking first paint) */}
         <Script
           id="cache-buster"
@@ -410,14 +387,9 @@ d.setAttribute('data-active-theme',p.id||'bullmoney-blue');d.setAttribute('data-
         <meta name="format-detection" content="telephone=no" />
         <meta name="HandheldFriendly" content="true" />
 
-        {/* PERFORMANCE: Preconnect only to origins needed for first paint */}
-        <link rel="dns-prefetch" href="https://www.youtube.com" />
-        <link rel="dns-prefetch" href="https://i.ytimg.com" />
+        {/* PERFORMANCE: dns-prefetch only origins actually used during page load */}
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
         <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
-        <link rel="dns-prefetch" href="https://unpkg.com" />
-        <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
 
         {/* PERFORMANCE: Preload critical assets with proper priorities */}
         <link rel="preload" href="/ONcc2l601.svg" as="image" fetchPriority="high" />
@@ -430,27 +402,11 @@ d.setAttribute('data-active-theme',p.id||'bullmoney-blue');d.setAttribute('data-
           via the Cache API system, which already handles caching efficiently.
         */}
         
-        {/* Spline preloading deferred to afterInteractive to avoid competing with critical JS/CSS */}
-        <Script
-          id="spline-preload"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-(function(){if(window.innerWidth<768)return;
-var C=window.__SPLINE_MEMORY_CACHE__=window.__SPLINE_MEMORY_CACHE__||{};
-var N='spline-scenes-v1';
-function load(s){if(C[s])return;var cc=typeof caches!=='undefined';
-if(!cc){fetch(s,{cache:'force-cache',priority:'low'}).then(function(r){if(r.ok)return r.arrayBuffer()}).then(function(b){if(b)C[s]=b});return;}
-caches.open(N).then(function(c){c.match(s).then(function(r){if(r)return r.arrayBuffer().then(function(b){C[s]=b});
-return fetch(s,{cache:'force-cache',priority:'low'}).then(function(r2){if(r2.ok){c.put(s,r2.clone());return r2.arrayBuffer().then(function(b){C[s]=b})}})})}).catch(function(){});}
-setTimeout(function(){load('/scene1.splinecode');},100);
-})();
-            `,
-          }}
-        />
+        {/* Spline preloading deferred to lazyOnload — static file avoids Turbopack compile cost */}
+        <Script id="spline-preload" src="/scripts/spline-preload.js" strategy="lazyOnload" />
 
         {/* PWA Manifest */}
-        <link rel="manifest" href="/manifest.json" crossOrigin="use-credentials" />
+        <link rel="manifest" href="/manifest.json" />
 
         {/* 
           HREFLANG: Handled by Next.js Metadata API `alternates` in each layout.
@@ -472,122 +428,58 @@ setTimeout(function(){load('/scene1.splinecode');},100);
         <link rel="shortcut icon" href="/ONcc2l601.svg" />
         <link rel="apple-touch-icon" href="/ONcc2l601.svg" />
 
-        {/* Service Worker & Essential Scripts - DEFERRED to afterInteractive */}
+        {/* Service Worker & Touch — tiny inline shim sets globals, bulk logic in static file */}
         <Script
-          id="sw-and-touch"
+          id="sw-init"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
-            __html: `
-              var __BM_SW_ENABLED__ = ${swEnabled ? "true" : "false"};
-              if (__BM_SW_ENABLED__ && 'serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/sw.js', { scope: '/' })
-                  .then(function(reg) { console.log('[SW] Registered:', reg.scope); })
-                  .catch(function(e) { console.error('[SW] Failed:', e); });
-              }
-
-              // Prevent pull-to-refresh at top of page
-              var touchStartY = 0;
-              document.addEventListener('touchstart', function(e) { touchStartY = e.touches[0].clientY; }, { passive: true });
-              document.addEventListener('touchmove', function(e) {
-                if (e.touches.length > 1) return;
-                var deltaY = e.touches[0].clientY - touchStartY;
-                var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-                if (scrollTop <= 0 && deltaY > 10) {
-                  var target = e.target;
-                  if (!(target && target.closest && target.closest('.fixed[style*="z-index"]'))) e.preventDefault();
-                }
-              }, { passive: false });
-            `,
+            __html: `window.__BM_SW_ENABLED__=${swEnabled};window.__BM_VAPID_KEY__='${process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ""}';`
           }}
         />
+        <Script id="sw-and-touch" src="/scripts/sw-touch.js" strategy="afterInteractive" />
         {/* 
           PERFORMANCE FIX: 120Hz detection moved to afterInteractive.
           Was previously running synchronously in <head> — creating WebGL canvas,
           reading GPU info, and running 20 RAF frames BEFORE React hydration.
           This alone was adding 300-500ms to First Contentful Paint.
         */}
-        <Script
-          id="detect-120hz"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function(){
-                var r=document.documentElement,hz=60;
-                if('refreshRate' in screen){hz=Math.min(screen.refreshRate,120);}
-                else{var ua=navigator.userAgent.toLowerCase(),dpr=window.devicePixelRatio,w=screen.width,h=screen.height;
-                if(/iphone/.test(ua)&&dpr>=3&&(w>=390||h>=844))hz=120;
-                else if(/ipad/.test(ua)&&dpr>=2&&w>=1024)hz=120;
-                else if(/macintosh/i.test(ua)&&navigator.hardwareConcurrency>=8)hz=120;
-                else if(/samsung|oneplus|xiaomi|oppo|realme|vivo/i.test(ua)&&dpr>=2.5)hz=120;
-                else if(/pixel.*pro/i.test(ua))hz=90;
-                else if(!(/mobi|android|iphone|ipad/i.test(ua))&&((navigator.deviceMemory||8)>=16||screen.width>=2560))hz=120;}
-                var t=Math.min(hz,120);
-                r.style.setProperty('--native-refresh-rate',hz);
-                r.style.setProperty('--target-fps',t);
-                r.style.setProperty('--frame-duration',(1000/t)+'ms');
-                r.style.setProperty('--frame-budget',(1000/t*0.9)+'ms');
-                if(hz>=120)r.classList.add('display-120hz');
-                else if(hz>=90)r.classList.add('display-90hz');
-              })();
-            `,
-          }}
-        />
-        {/* External performance monitoring script - loaded after page is interactive */}
+        <Script id="detect-120hz" src="/scripts/detect-120hz.js" strategy="afterInteractive" />
+        {/* External performance monitoring script - loaded after everything else */}
         <Script 
           src="/scripts/perf-monitor.js" 
-          strategy="afterInteractive"
+          strategy="lazyOnload"
         />
 
-        {/* BOOST: Device detection runs before first paint for layout decisions */}
+        {/* BOOST: Device detection — afterInteractive is fine; no CSS depends on
+             data-device/data-perf above the fold. Avoids blocking first paint. */}
         <Script
           src="/scripts/device-detect.js"
-          strategy="beforeInteractive"
+          strategy="afterInteractive"
         />
         {/* BOOST: Loader coordinates perf-boost, seo-boost, offline-detect */}
         <Script
           src="/scripts/boost-loader.js"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
         />
       </head>
       <body
         className={cn("antialiased bg-[#050915] text-white", inter.className)}
         suppressHydrationWarning
       >
-        {/* Global Shimmer Styles - ensures all shimmers are synchronized */}
-        {/* Cache Manager - Handles version-based cache invalidation */}
-        {/* All providers and lazy-loaded components are in LayoutProviders */}
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <ThemesProvider>
-            <GlobalThemeProvider>
-              <ViewportStateProvider>
-                <MobileMenuProvider>
-                  <RecruitAuthProvider>
-                    <AudioSettingsProvider>
-                      <StudioProvider>
-                        {/* ✅ ShopProvider with LayoutProviders wrapper */}
-                        <ShopProvider>
-                          <SmartScreensaverProvider>
-                            <LayoutProviders modal={modal}>
-                              <HreflangMeta />
-                              {children}
-                            </LayoutProviders>
-                            {/* Unified Themes Panel (Colors + Effects) */}
-                            <ThemesPanel />
-                          </SmartScreensaverProvider>
-                        </ShopProvider>
-                      </StudioProvider>
-                    </AudioSettingsProvider>
-                  </RecruitAuthProvider>
-                </MobileMenuProvider>
-              </ViewportStateProvider>
-            </GlobalThemeProvider>
-          </ThemesProvider>
-        </ThemeProvider>
+        {/* INSTANT SPLASH: Shows BullMoney logo + name before React hydrates */}
+        <div id="bm-splash" aria-hidden="true" suppressHydrationWarning>
+          <img src="/ONcc2l601.svg" alt="" width={64} height={64} />
+          <span className="bm-name">BullMoney</span>
+          <div className="bm-bar" />
+        </div>
+        <script src="/scripts/splash-hide.js" />
+        {/* All providers consolidated into AppProviders (heavy ones dynamically imported) */}
+        <AppProviders>
+          <LayoutProviders modal={modal}>
+            <HreflangMeta />
+            {children}
+          </LayoutProviders>
+        </AppProviders>
 
       </body>
     </html>

@@ -225,10 +225,12 @@ self.addEventListener('sync', (event) => {
 // ============================================================================
 
 // Push event - this is where notifications are received (works even when app is closed!)
-// Compatible with all browsers: Chrome, Firefox, Safari, Edge, Opera, Samsung Internet
+// Compatible with: Chrome, Firefox, Safari 16.4+, Edge, Opera, Samsung Internet
+// Works on: Android lock screen, iOS lock screen (PWA), macOS/Windows notification center
 self.addEventListener('push', (event) => {
-  console.log('[SW v4] Push event received');
+  console.log('[SW v5] 🔔 Push event received!');
 
+  // Default notification content
   let data = {
     title: 'BullMoney Trade Alert',
     body: 'New trade signal available!',
@@ -239,82 +241,76 @@ self.addEventListener('push', (event) => {
     channel: 'trades',
   };
 
-  try {
-    if (event.data) {
+  // Parse the push payload
+  if (event.data) {
+    try {
       const payload = event.data.json();
       data = { ...data, ...payload };
-    }
-  } catch (e) {
-    console.error('[SW v4] Error parsing push data:', e);
-    if (event.data) {
+      console.log('[SW v5] Push payload parsed:', data.title);
+    } catch (jsonErr) {
+      // Try plain text fallback
       try {
-        data.body = event.data.text();
+        const text = event.data.text();
+        if (text) data.body = text;
+        console.log('[SW v5] Push payload as text:', text.substring(0, 50));
       } catch (textErr) {
-        console.error('[SW v4] Could not get text from push data');
+        console.error('[SW v5] Could not parse push data');
       }
     }
   }
 
-  // Build notification options with cross-browser compatibility
+  // CRITICAL: Use unique tag per message so multiple notifications show
+  // Using same tag collapses notifications into one
+  const uniqueTag = data.tag || ('trade-alert-' + Date.now());
+
+  // Build notification options — KEEP IT SIMPLE for max cross-browser compat
   const options = {
-    body: data.body,
+    body: data.body || 'Tap to view',
     icon: data.icon || '/bullmoney-logo.png',
     badge: data.badge || '/B.png',
-    tag: data.tag || 'trade-alert-' + Date.now(),
-    renotify: true,
-    requireInteraction: data.requireInteraction || false,
+    tag: uniqueTag,
+    renotify: true,  // Re-alert even if same tag
+    requireInteraction: !!data.requireInteraction,
+    silent: false,    // ALWAYS play sound — critical for lock screen visibility
     data: {
       url: data.url || '/',
       channel: data.channel || 'trades',
       timestamp: Date.now(),
+      messageId: data.tag,
     },
   };
 
-  // Vibration pattern - supported on Android, some desktop browsers
-  // Wrapped in try-catch for Safari compatibility
-  try {
-    options.vibrate = [200, 100, 200, 100, 200];
-  } catch (e) {
-    // Vibration not supported
-  }
+  // Add vibration on Android (safe to include, ignored on unsupported)
+  try { options.vibrate = [200, 100, 200, 100, 200]; } catch (e) {}
 
-  // Actions - supported on Chrome/Edge, not Safari
-  // Check if actions are supported before adding
+  // Add action buttons (Chrome/Edge only, ignored by Safari/Firefox)
   try {
     if ('actions' in Notification.prototype) {
       options.actions = [
-        { action: 'view', title: 'View Trade' },
+        { action: 'view', title: '📈 View Trade' },
         { action: 'dismiss', title: 'Dismiss' },
       ];
     }
-  } catch (e) {
-    // Actions not supported
-  }
+  } catch (e) {}
 
-  // Add image if provided (for trade screenshots, charts, etc.)
-  // Supported on Chrome/Edge Android, not iOS Safari
+  // Add image if provided
   if (data.image) {
-    try {
-      options.image = data.image;
-    } catch (e) {
-      // Image not supported
-    }
+    try { options.image = data.image; } catch (e) {}
   }
 
-  // Silent option for iOS - prevents sound when app is in foreground
-  if (data.silent) {
-    options.silent = true;
-  }
-
+  // CRITICAL: Must call showNotification inside waitUntil
+  // Without this, the browser may kill the SW before the notification shows
   event.waitUntil(
     self.registration.showNotification(data.title, options)
+      .then(() => {
+        console.log('[SW v5] ✅ Notification displayed:', data.title);
+      })
       .catch((err) => {
-        console.error('[SW v4] showNotification error:', err);
-        // Fallback: try with minimal options for maximum compatibility
-        return self.registration.showNotification(data.title, {
-          body: data.body,
+        console.error('[SW v5] showNotification failed, trying minimal:', err);
+        // Absolute minimal fallback — works on ALL browsers
+        return self.registration.showNotification(data.title || 'BullMoney', {
+          body: data.body || 'New alert',
           icon: '/bullmoney-logo.png',
-          tag: data.tag || 'trade-alert',
         });
       })
   );
@@ -323,7 +319,7 @@ self.addEventListener('push', (event) => {
 // Notification click event - opens the app when user taps notification
 // Compatible with all browsers including iOS Safari PWA
 self.addEventListener('notificationclick', (event) => {
-  console.log('[SW v4] Notification clicked:', event.action);
+  console.log('[SW v5] Notification clicked:', event.action);
 
   // Always close the notification first
   event.notification.close();
@@ -353,7 +349,6 @@ self.addEventListener('notificationclick', (event) => {
   event.waitUntil(
     (async () => {
       try {
-        // Get all open windows/tabs for this app
         const clientList = await self.clients.matchAll({
           type: 'window',
           includeUncontrolled: true
@@ -361,12 +356,9 @@ self.addEventListener('notificationclick', (event) => {
 
         // Try to find an existing window to focus
         for (const client of clientList) {
-          // Check if this client is from our origin
           if (client.url && client.url.startsWith(self.location.origin)) {
-            // Try to focus and navigate
             try {
               await client.focus();
-              // Send message to navigate
               client.postMessage({
                 type: 'NOTIFICATION_CLICK',
                 url: fullUrl,
@@ -374,18 +366,17 @@ self.addEventListener('notificationclick', (event) => {
               });
               return;
             } catch (focusErr) {
-              console.log('[SW v4] Could not focus client, will open new window');
+              // Can't focus, will open new window
             }
           }
         }
 
-        // No existing window found or couldn't focus, open new one
+        // No existing window found, open new one
         if (self.clients.openWindow) {
           return self.clients.openWindow(fullUrl);
         }
       } catch (err) {
-        console.error('[SW v4] Notification click error:', err);
-        // Last resort fallback
+        console.error('[SW v5] Notification click error:', err);
         if (self.clients.openWindow) {
           return self.clients.openWindow(fullUrl);
         }
@@ -394,11 +385,9 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// Notification close event (for analytics)
+// Notification close event (analytics)
 self.addEventListener('notificationclose', (event) => {
-  console.log('[SW v4] Notification closed without action');
-
-  // Track notification dismissal (fire and forget)
+  // Fire-and-forget analytics
   fetch('/api/notifications/track', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -410,23 +399,26 @@ self.addEventListener('notificationclose', (event) => {
   }).catch(() => {});
 });
 
-// Push subscription change event - handles token refresh
-// This is important for long-lived subscriptions
+// Push subscription change event - CRITICAL: handles token refresh
+// When a subscription expires, the browser fires this event
+// We must re-subscribe and update the server immediately
 self.addEventListener('pushsubscriptionchange', (event) => {
-  console.log('[SW v4] Push subscription changed');
+  console.log('[SW v5] ⚠️ Push subscription changed — re-subscribing...');
 
   event.waitUntil(
     (async () => {
       try {
-        // Get the new subscription
+        // Re-subscribe with the same options
         const newSubscription = await self.registration.pushManager.subscribe(
           event.oldSubscription?.options || {
             userVisibleOnly: true,
           }
         );
 
+        console.log('[SW v5] Got new subscription, sending to server...');
+
         // Send the new subscription to the server
-        await fetch('/api/notifications/subscribe', {
+        const response = await fetch('/api/notifications/subscribe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -436,9 +428,13 @@ self.addEventListener('pushsubscriptionchange', (event) => {
           }),
         });
 
-        console.log('[SW v4] Subscription refreshed successfully');
+        if (response.ok) {
+          console.log('[SW v5] ✅ Subscription refreshed successfully');
+        } else {
+          console.error('[SW v5] ❌ Server rejected new subscription:', response.status);
+        }
       } catch (err) {
-        console.error('[SW v4] Failed to refresh subscription:', err);
+        console.error('[SW v5] ❌ Failed to refresh subscription:', err);
       }
     })()
   );

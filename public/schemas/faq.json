@@ -1,0 +1,38 @@
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Is BullMoney free to join?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes! BullMoney is a completely free trading community. You can access trading setups, market analysis, and mentorship at no cost."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What markets does BullMoney cover?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "BullMoney covers Cryptocurrency (Bitcoin, Ethereum, Altcoins), Gold (XAUUSD), Forex, and Stock markets with daily analysis and trading setups."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I get free trading setups?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Join BullMoney's free community to receive daily trading setups, market analysis, and live mentorship from experienced traders."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does BullMoney offer prop firm support?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, BullMoney provides prop firm trading guidance, FTMO preparation, and funded trading account support."
+      }
+    }
+  ]
+}

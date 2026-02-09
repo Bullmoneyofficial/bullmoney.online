@@ -1,0 +1,22 @@
+{
+  "@context": "https://schema.org",
+  "@type": "EducationalOrganization",
+  "name": "BullMoney Trading Academy",
+  "url": "https://www.bullmoney.shop/course",
+  "description": "Free trading education and mentorship for beginners to advanced traders",
+  "teaches": [
+    "Cryptocurrency Trading",
+    "Gold/XAUUSD Trading",
+    "Forex Trading",
+    "Technical Analysis",
+    "Price Action",
+    "Risk Management",
+    "Prop Firm Trading"
+  ],
+  "isAccessibleForFree": true,
+  "parentOrganization": {
+    "@type": "Organization",
+    "name": "BullMoney",
+    "url": "https://www.bullmoney.shop"
+  }
+}

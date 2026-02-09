@@ -1,0 +1,427 @@
+{
+  "version": 1,
+  "generated": "2026-02-09T22:41:30.865869+00:00",
+  "items": [
+    {
+      "title": "Home",
+      "href": "/",
+      "description": "BullMoney main page",
+      "category": "page",
+      "keywords": [
+        "home",
+        "main",
+        "landing",
+        "bull money"
+      ]
+    },
+    {
+      "title": "About",
+      "href": "/about",
+      "description": "Learn about BullMoney",
+      "category": "page",
+      "keywords": [
+        "about",
+        "who",
+        "team",
+        "story",
+        "mission"
+      ]
+    },
+    {
+      "title": "VIP Membership",
+      "href": "/VIP",
+      "description": "Exclusive VIP trading community",
+      "category": "page",
+      "keywords": [
+        "vip",
+        "premium",
+        "membership",
+        "exclusive",
+        "signals",
+        "subscribe"
+      ]
+    },
+    {
+      "title": "Affiliates",
+      "href": "/recruit",
+      "description": "Join the affiliate program",
+      "category": "page",
+      "keywords": [
+        "affiliate",
+        "recruit",
+        "referral",
+        "earn",
+        "commission",
+        "partner"
+      ]
+    },
+    {
+      "title": "Social Media",
+      "href": "/socials",
+      "description": "Follow us on social platforms",
+      "category": "page",
+      "keywords": [
+        "social",
+        "instagram",
+        "twitter",
+        "tiktok",
+        "youtube",
+        "discord",
+        "telegram"
+      ]
+    },
+    {
+      "title": "Blog & News",
+      "href": "/Blogs",
+      "description": "Trading insights, analysis, and news",
+      "category": "blog",
+      "keywords": [
+        "blog",
+        "news",
+        "article",
+        "post",
+        "analysis",
+        "insights",
+        "updates"
+      ]
+    },
+    {
+      "title": "Prop Trading",
+      "href": "/Prop",
+      "description": "BullMoney prop firm challenge",
+      "category": "trading",
+      "keywords": [
+        "prop",
+        "trading",
+        "firm",
+        "challenge",
+        "funded",
+        "account",
+        "evaluation"
+      ]
+    },
+    {
+      "title": "Trading Journal",
+      "href": "/journal",
+      "description": "Track and analyze your trades",
+      "category": "trading",
+      "keywords": [
+        "journal",
+        "diary",
+        "trades",
+        "track",
+        "log",
+        "performance",
+        "pnl"
+      ]
+    },
+    {
+      "title": "Live Quotes",
+      "href": "/quotes",
+      "description": "Real-time forex & crypto prices",
+      "category": "trading",
+      "keywords": [
+        "quotes",
+        "prices",
+        "live",
+        "forex",
+        "crypto",
+        "bitcoin",
+        "gold",
+        "market",
+        "ticker"
+      ]
+    },
+    {
+      "title": "Crypto Guide",
+      "href": "/crypto-guide",
+      "description": "Learn about cryptocurrency",
+      "category": "trading",
+      "keywords": [
+        "crypto",
+        "guide",
+        "bitcoin",
+        "ethereum",
+        "learn",
+        "blockchain",
+        "defi"
+      ]
+    },
+    {
+      "title": "Community",
+      "href": "/community",
+      "description": "Join the BullMoney community",
+      "category": "community",
+      "keywords": [
+        "community",
+        "chat",
+        "discuss",
+        "feed",
+        "members",
+        "post"
+      ]
+    },
+    {
+      "title": "Trading Course",
+      "href": "/course",
+      "description": "Free trading education",
+      "category": "education",
+      "keywords": [
+        "course",
+        "learn",
+        "education",
+        "tutorial",
+        "lesson",
+        "beginner",
+        "forex",
+        "trading course"
+      ]
+    },
+    {
+      "title": "Crypto Game",
+      "href": "/crypto-game",
+      "description": "Play the crypto trading game",
+      "category": "education",
+      "keywords": [
+        "game",
+        "play",
+        "crypto",
+        "simulation",
+        "practice",
+        "fun"
+      ]
+    },
+    {
+      "title": "Store - All Products",
+      "href": "/store",
+      "description": "Browse the BullMoney store",
+      "category": "store",
+      "keywords": [
+        "store",
+        "shop",
+        "products",
+        "merch",
+        "buy",
+        "merchandise"
+      ]
+    },
+    {
+      "title": "Apparel",
+      "href": "/store?category=apparel",
+      "description": "T-shirts, hoodies, and clothing",
+      "category": "store",
+      "keywords": [
+        "apparel",
+        "clothing",
+        "shirt",
+        "hoodie",
+        "tshirt",
+        "t-shirt",
+        "wear",
+        "jacket"
+      ]
+    },
+    {
+      "title": "Accessories",
+      "href": "/store?category=accessories",
+      "description": "Hats, bags, phone cases and more",
+      "category": "store",
+      "keywords": [
+        "accessories",
+        "hat",
+        "cap",
+        "bag",
+        "phone case",
+        "sticker",
+        "keychain"
+      ]
+    },
+    {
+      "title": "Tech & Gear",
+      "href": "/store?category=tech-gear",
+      "description": "Tech gadgets and trading gear",
+      "category": "store",
+      "keywords": [
+        "tech",
+        "gear",
+        "gadget",
+        "mouse pad",
+        "setup",
+        "desk"
+      ]
+    },
+    {
+      "title": "Home & Office",
+      "href": "/store?category=home-office",
+      "description": "Home and office trading setup",
+      "category": "store",
+      "keywords": [
+        "home",
+        "office",
+        "desk",
+        "decoration",
+        "poster",
+        "wall art",
+        "candle"
+      ]
+    },
+    {
+      "title": "Drinkware",
+      "href": "/store?category=drinkware",
+      "description": "Mugs, bottles and drinkware",
+      "category": "store",
+      "keywords": [
+        "drinkware",
+        "mug",
+        "bottle",
+        "cup",
+        "water bottle",
+        "coffee"
+      ]
+    },
+    {
+      "title": "Limited Edition",
+      "href": "/store?category=limited-edition",
+      "description": "Exclusive limited edition drops",
+      "category": "store",
+      "keywords": [
+        "limited",
+        "edition",
+        "exclusive",
+        "rare",
+        "drop",
+        "special"
+      ]
+    },
+    {
+      "title": "My Account",
+      "href": "/store/account",
+      "description": "View orders and account settings",
+      "category": "store",
+      "keywords": [
+        "account",
+        "orders",
+        "profile",
+        "settings",
+        "my orders",
+        "login"
+      ]
+    },
+    {
+      "title": "Desktop",
+      "href": "/desktop",
+      "description": "BullMoney Desktop page",
+      "category": "page",
+      "keywords": [
+        "desktop"
+      ]
+    },
+    {
+      "title": "Resubscribe",
+      "href": "/email/resubscribe",
+      "description": "BullMoney Resubscribe page",
+      "category": "page",
+      "keywords": [
+        "email",
+        "resubscribe"
+      ]
+    },
+    {
+      "title": "Unsubscribe",
+      "href": "/email/unsubscribe",
+      "description": "BullMoney Unsubscribe page",
+      "category": "page",
+      "keywords": [
+        "email",
+        "unsubscribe"
+      ]
+    },
+    {
+      "title": "Login",
+      "href": "/login",
+      "description": "BullMoney Login page",
+      "category": "page",
+      "keywords": [
+        "login"
+      ]
+    },
+    {
+      "title": "Products",
+      "href": "/products",
+      "description": "BullMoney Products page",
+      "category": "page",
+      "keywords": [
+        "products"
+      ]
+    },
+    {
+      "title": "Resubscribe",
+      "href": "/resubscribe",
+      "description": "BullMoney Resubscribe page",
+      "category": "page",
+      "keywords": [
+        "resubscribe"
+      ]
+    },
+    {
+      "title": "Checkout",
+      "href": "/store/checkout",
+      "description": "BullMoney Checkout page",
+      "category": "page",
+      "keywords": [
+        "store",
+        "checkout"
+      ]
+    },
+    {
+      "title": "Gift Cards",
+      "href": "/store/gift-cards",
+      "description": "BullMoney Gift Cards page",
+      "category": "page",
+      "keywords": [
+        "store",
+        "gift-cards"
+      ]
+    },
+    {
+      "title": "[Slug]",
+      "href": "/store/product/[slug]",
+      "description": "BullMoney [Slug] page",
+      "category": "page",
+      "keywords": [
+        "store",
+        "product",
+        "[slug]"
+      ]
+    },
+    {
+      "title": "Success",
+      "href": "/store/success",
+      "description": "BullMoney Success page",
+      "category": "page",
+      "keywords": [
+        "store",
+        "success"
+      ]
+    },
+    {
+      "title": "Trading Showcase",
+      "href": "/trading-showcase",
+      "description": "BullMoney Trading Showcase page",
+      "category": "page",
+      "keywords": [
+        "trading-showcase"
+      ]
+    },
+    {
+      "title": "Unsubscribe",
+      "href": "/unsubscribe",
+      "description": "BullMoney Unsubscribe page",
+      "category": "page",
+      "keywords": [
+        "unsubscribe"
+      ]
+    }
+  ],
+  "total": 33
+}

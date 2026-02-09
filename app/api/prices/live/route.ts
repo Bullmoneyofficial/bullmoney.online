@@ -37,7 +37,7 @@ type PricesCache = {
 
 let lastGoodPrices: PricesCache | null = null;
 let pricesInFlight: Promise<PricesCache> | null = null;
-const PRICE_CACHE_TTL = 2500; // 2.5s, matches 3s UI polling without hammering providers
+const PRICE_CACHE_TTL = 5000; // 5s — serves cached for most 3s polls, fetches fresh every other cycle
 
 const isValidBtc = (price: number | null) => typeof price === 'number' && price > 10000 && price < 500000;
 const isValidGold = (price: number | null) => typeof price === 'number' && price > 1200 && price < 10000;
@@ -260,7 +260,7 @@ export async function GET() {
       xauusd: latest.gold ? latest.gold.toFixed(2) : '--',
       btcusd: latest.btc ? Math.round(latest.btc).toString() : '--',
       timestamp: new Date(latest.fetchedAt).toISOString(),
-      updateFrequency: '3s',
+      updateFrequency: '6s',
       sources: latest.sources
     };
 
@@ -280,7 +280,7 @@ export async function GET() {
         xauusd: lastGoodPrices.gold ? lastGoodPrices.gold.toFixed(2) : '--',
         btcusd: lastGoodPrices.btc ? Math.round(lastGoodPrices.btc).toString() : '--',
         timestamp: new Date(lastGoodPrices.fetchedAt).toISOString(),
-        updateFrequency: '3s',
+        updateFrequency: '6s',
         sources: lastGoodPrices.sources,
         cached: true,
         error: true
@@ -295,7 +295,7 @@ export async function GET() {
       xauusd: '--',
       btcusd: '--',
       timestamp: new Date().toISOString(),
-      updateFrequency: '3s',
+      updateFrequency: '6s',
       sources: {
         btc: 'error-fallback',
         gold: 'error-fallback'

@@ -23,15 +23,37 @@
   height: 0;
 }
 
-/* Store desktop column scrollbars */
+/* Store desktop column scrollbars — GPU-accelerated, zero JS overhead */
 @media (min-width: 1024px) {
+  /* Page-level snap container so columns lock to viewport center */
+  .store-snap-scroll {
+    scroll-snap-type: y proximity;
+    scroll-behavior: smooth;
+  }
+
+  /* Columns container: sticky so it locks full-screen when scrolled into view */
+  .store-columns-container {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    /* Snap target: page-level snap will center this */
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
   .store-column-scroll {
     overscroll-behavior: contain;
     scrollbar-gutter: stable;
-    -webkit-overflow-scrolling: touch;
     touch-action: pan-y;
     scrollbar-color: rgb(0, 0, 0) transparent;
     scrollbar-width: thin;
+    /* GPU-accelerate scroll container */
+    will-change: scroll-position;
+    contain: layout style paint;
+    /* Promote to own compositing layer for off-main-thread scrolling */
+    transform: translateZ(0);
+    /* Smooth scroll for programmatic calls, but native for wheel/touch */
+    scroll-behavior: auto;
   }
 
   .store-column-scroll::-webkit-scrollbar {
@@ -47,6 +69,35 @@
     border-radius: 999px;
     border: 2px solid transparent;
     background-clip: content-box;
+  }
+
+  /* RIGHT COLUMN: scrollbar on the left side via direction trick */
+  .store-col-right {
+    direction: rtl;
+  }
+  .store-col-right > .store-col-right-inner {
+    direction: ltr;
+  }
+
+  /* Column container — prevent scroll leaking from divider gap */
+  .store-column-scroll:not(:hover) {
+    pointer-events: auto;
+  }
+
+  /* Hover highlight on columns to show they're independently scrollable */
+  .store-col-left,
+  .store-col-right {
+    transition: box-shadow 0.3s ease;
+  }
+  .store-col-left:hover,
+  .store-col-right:hover {
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+  }
+
+  /* Scroll hint divider animation */
+  .store-scroll-hint {
+    opacity: 1;
+    transition: opacity 0.8s ease;
   }
 }
 
@@ -590,4 +641,135 @@ body[data-modal-open="true"] button[title*="Close" i]:hover {
 .tl-delay-3    { animation-delay: 300ms; }
 .tl-delay-4    { animation-delay: 400ms; }
 
+/* ============================================================================
+   MOBILE MOSAIC GRID — 30 varied card sizes across 3 product sections
+   Simple 2-col base that fills the screen. Cards get span-2 (full), span-1
+   (half), or grid-row:span 2 (tall) for variety. No fragile deep selectors.
+   ============================================================================ */
+@media (max-width: 639px) {
+  /* Force all child grids/flex/columns into a 2-col grid */
+  [class*="mobile-mosaic-"] .grid,
+  [class*="mobile-mosaic-"] .flex:not(.flex-col),
+  [class*="mobile-mosaic-"] [class*="columns-"],
+  [class*="mobile-mosaic-"] .grid-perf,
+  [class*="mobile-mosaic-"] .grid-float,
+  [class*="mobile-mosaic-"] .snap-x {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    grid-auto-flow: dense !important;
+    gap: 8px !important;
+    column-count: unset !important;
+    overflow-x: visible !important;
+  }
 
+  /* Every card fills its cell fully */
+  [class*="mobile-mosaic-"] .grid-card,
+  [class*="mobile-mosaic-"] .snap-start,
+  [class*="mobile-mosaic-"] .break-inside-avoid,
+  [class*="mobile-mosaic-"] article {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    min-height: 0;
+    overflow: hidden;
+    break-inside: avoid;
+  }
+
+  /* ── Section 1: All Products — 10 unique sizes ─────────────── */
+  .mobile-mosaic-products .grid-card:nth-child(1)  { grid-column: span 2; }                    /* full */
+  .mobile-mosaic-products .grid-card:nth-child(2)  { grid-column: span 1; }                    /* half */
+  .mobile-mosaic-products .grid-card:nth-child(3)  { grid-column: span 1; }                    /* half */
+  .mobile-mosaic-products .grid-card:nth-child(4)  { grid-column: span 2; }                    /* full */
+  .mobile-mosaic-products .grid-card:nth-child(5)  { grid-column: span 1; grid-row: span 2; }  /* half tall */
+  .mobile-mosaic-products .grid-card:nth-child(6)  { grid-column: span 1; }                    /* half */
+  .mobile-mosaic-products .grid-card:nth-child(7)  { grid-column: span 1; }                    /* half */
+  .mobile-mosaic-products .grid-card:nth-child(8)  { grid-column: span 2; }                    /* full */
+  .mobile-mosaic-products .grid-card:nth-child(9)  { grid-column: span 1; }                    /* half */
+  .mobile-mosaic-products .grid-card:nth-child(10) { grid-column: span 1; }                    /* half */
+  /* overflow cycles */
+  .mobile-mosaic-products .grid-card:nth-child(10n+11) { grid-column: span 2; }
+  .mobile-mosaic-products .grid-card:nth-child(10n+12) { grid-column: span 1; }
+  .mobile-mosaic-products .grid-card:nth-child(10n+13) { grid-column: span 1; }
+  .mobile-mosaic-products .grid-card:nth-child(10n+14) { grid-column: span 2; }
+  .mobile-mosaic-products .grid-card:nth-child(10n+15) { grid-column: span 1; grid-row: span 2; }
+  .mobile-mosaic-products .grid-card:nth-child(10n+16) { grid-column: span 1; }
+  .mobile-mosaic-products .grid-card:nth-child(10n+17) { grid-column: span 1; }
+  .mobile-mosaic-products .grid-card:nth-child(10n+18) { grid-column: span 2; }
+  .mobile-mosaic-products .grid-card:nth-child(10n+19) { grid-column: span 1; }
+  .mobile-mosaic-products .grid-card:nth-child(10n+20) { grid-column: span 1; }
+
+  /* ── Section 2: Featured — 10 unique sizes ─────────────────── */
+  .mobile-mosaic-featured .grid-card:nth-child(1)  { grid-column: span 1; grid-row: span 2; }  /* half tall */
+  .mobile-mosaic-featured .grid-card:nth-child(2)  { grid-column: span 1; }                    /* half */
+  .mobile-mosaic-featured .grid-card:nth-child(3)  { grid-column: span 1; }                    /* half */
+  .mobile-mosaic-featured .grid-card:nth-child(4)  { grid-column: span 2; }                    /* full */
+  .mobile-mosaic-featured .grid-card:nth-child(5)  { grid-column: span 1; }                    /* half */
+  .mobile-mosaic-featured .grid-card:nth-child(6)  { grid-column: span 1; }                    /* half */
+  .mobile-mosaic-featured .grid-card:nth-child(7)  { grid-column: span 2; }                    /* full */
+  .mobile-mosaic-featured .grid-card:nth-child(8)  { grid-column: span 1; grid-row: span 2; }  /* half tall */
+  .mobile-mosaic-featured .grid-card:nth-child(9)  { grid-column: span 1; }                    /* half */
+  .mobile-mosaic-featured .grid-card:nth-child(10) { grid-column: span 1; }                    /* half */
+  /* overflow cycles */
+  .mobile-mosaic-featured .grid-card:nth-child(10n+11) { grid-column: span 1; grid-row: span 2; }
+  .mobile-mosaic-featured .grid-card:nth-child(10n+12) { grid-column: span 1; }
+  .mobile-mosaic-featured .grid-card:nth-child(10n+13) { grid-column: span 1; }
+  .mobile-mosaic-featured .grid-card:nth-child(10n+14) { grid-column: span 2; }
+  .mobile-mosaic-featured .grid-card:nth-child(10n+15) { grid-column: span 1; }
+
+  /* ── Section 3: Timeline — 10 unique sizes ─────────────────── */
+  .mobile-mosaic-timeline .grid-card:nth-child(1)  { grid-column: span 2; }                    /* full */
+  .mobile-mosaic-timeline .grid-card:nth-child(2)  { grid-column: span 1; }                    /* half */
+  .mobile-mosaic-timeline .grid-card:nth-child(3)  { grid-column: span 1; grid-row: span 2; }  /* half tall */
+  .mobile-mosaic-timeline .grid-card:nth-child(4)  { grid-column: span 1; }                    /* half */
+  .mobile-mosaic-timeline .grid-card:nth-child(5)  { grid-column: span 2; }                    /* full */
+  .mobile-mosaic-timeline .grid-card:nth-child(6)  { grid-column: span 1; }                    /* half */
+  .mobile-mosaic-timeline .grid-card:nth-child(7)  { grid-column: span 1; }                    /* half */
+  .mobile-mosaic-timeline .grid-card:nth-child(8)  { grid-column: span 2; }                    /* full */
+  .mobile-mosaic-timeline .grid-card:nth-child(9)  { grid-column: span 1; grid-row: span 2; }  /* half tall */
+  .mobile-mosaic-timeline .grid-card:nth-child(10) { grid-column: span 1; }                    /* half */
+  /* overflow cycles */
+  .mobile-mosaic-timeline .grid-card:nth-child(10n+11) { grid-column: span 2; }
+  .mobile-mosaic-timeline .grid-card:nth-child(10n+12) { grid-column: span 1; }
+  .mobile-mosaic-timeline .grid-card:nth-child(10n+13) { grid-column: span 1; grid-row: span 2; }
+  .mobile-mosaic-timeline .grid-card:nth-child(10n+14) { grid-column: span 1; }
+  .mobile-mosaic-timeline .grid-card:nth-child(10n+15) { grid-column: span 2; }
+
+  /* Tall cards need explicit min-height for their row-span */
+  [class*="mobile-mosaic-"] .grid-card[style*="grid-row"],
+  [class*="mobile-mosaic-"] .grid-card:is(
+    .mobile-mosaic-products .grid-card:nth-child(5),
+    .mobile-mosaic-products .grid-card:nth-child(10n+15),
+    .mobile-mosaic-featured .grid-card:nth-child(1),
+    .mobile-mosaic-featured .grid-card:nth-child(8),
+    .mobile-mosaic-featured .grid-card:nth-child(10n+11),
+    .mobile-mosaic-timeline .grid-card:nth-child(3),
+    .mobile-mosaic-timeline .grid-card:nth-child(9),
+    .mobile-mosaic-timeline .grid-card:nth-child(10n+13)
+  ) {
+    min-height: 300px;
+  }
+
+  /* Fill all cards edge-to-edge, compress padding for mobile */
+  [class*="mobile-mosaic-"] .product-card-premium {
+    border-radius: 12px !important;
+  }
+
+  /* Fix carousel / ribbon overrides */
+  [class*="mobile-mosaic-"] .snap-start {
+    min-width: 0 !important;
+  }
+}
+
+/* ============================================================================
+   PRODUCT CARD SHIMMER — Boost.py compatible
+   Use data-shimmer attribute so boost.py can whitelist these animations
+   ============================================================================ */
+.product-card-premium .neon-edge-top,
+.product-card-premium .neon-edge-bottom,
+.product-card-premium .card-shine-sweep,
+.product-card-premium .card-image-shine,
+.product-card-premium .badge-shimmer-el,
+.product-card-premium .card-image-border {
+  /* Mark as essential UI animation for boost.py compatibility */
+  --boost-protected: 1;
+}

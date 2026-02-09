@@ -6,12 +6,7 @@ import ShoppingBag from 'lucide-react/dist/esm/icons/shopping-bag';
 import Search from 'lucide-react/dist/esm/icons/search';
 import User from 'lucide-react/dist/esm/icons/user';
 import Menu from 'lucide-react/dist/esm/icons/menu';
-import dynamic from 'next/dynamic';
-
-// Lazy-load framer-motion — only needed for cart badge animation
-const LazyMotionButton = dynamic(() => import('framer-motion').then(m => ({ default: m.motion.button })), { ssr: false });
-const LazyMotionSpan = dynamic(() => import('framer-motion').then(m => ({ default: m.motion.span })), { ssr: false });
-const LazyAnimatePresence = dynamic(() => import('framer-motion').then(m => ({ default: m.AnimatePresence })), { ssr: false });
+// No lazy framer-motion — buttons must respond instantly
 
 import type { HeroMode } from '@/hooks/useHeroMode';
 
@@ -55,6 +50,8 @@ export interface StorePillNavProps {
   onMobileMenuClick?: () => void;
   onDesktopMenuEnter?: () => void;
   onDesktopMenuLeave?: () => void;
+  onDesktopMenuToggle?: () => void;
+  desktopMenuOpen?: boolean;
   // Hero mode toggle
   heroMode?: HeroMode;
   onHeroModeChange?: (mode: HeroMode) => void;
@@ -86,6 +83,8 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
   onMobileMenuClick,
   onDesktopMenuEnter,
   onDesktopMenuLeave,
+  onDesktopMenuToggle,
+  desktopMenuOpen = false,
   heroMode,
   onHeroModeChange,
   onStoreButtonClick,
@@ -102,7 +101,7 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
   }, [onMobileMenuClick]);
 
   const headerClassName = position === 'fixed'
-    ? `fixed top-0 left-0 right-0 z-500 ${className}`
+    ? `fixed top-0 left-0 right-0 z-[1000] ${className}`
     : `relative w-full ${className}`;
 
   // SSR fallback
@@ -229,9 +228,20 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
 
             {showSearch && (
               <button
+                type="button"
                 className="h-8 w-8 flex items-center justify-center rounded-full transition-colors bg-white border border-black/10"
                 style={{ color: 'rgba(0,0,0,0.85)' }}
                 onClick={onSearchClick}
+                onPointerDown={(event) => {
+                  if (event.pointerType === 'touch') {
+                    event.preventDefault();
+                    onSearchClick?.();
+                  }
+                }}
+                  onTouchStart={(event) => {
+                    event.preventDefault();
+                    onSearchClick?.();
+                  }}
                 aria-label="Search"
               >
                 <Search className="w-4 h-4" />
@@ -240,9 +250,20 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
 
             {showUser && (
               <button
+                type="button"
                 className="h-8 w-8 flex items-center justify-center rounded-full transition-colors bg-white border border-black/10"
                 style={{ color: 'rgba(0,0,0,0.85)' }}
                 onClick={onUserClick}
+                onPointerDown={(event) => {
+                  if (event.pointerType === 'touch') {
+                    event.preventDefault();
+                    onUserClick?.();
+                  }
+                }}
+                  onTouchStart={(event) => {
+                    event.preventDefault();
+                    onUserClick?.();
+                  }}
                 aria-label="Account"
               >
                 {isAuthenticated ? (
@@ -254,36 +275,65 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
             )}
 
             {showCart && (
-              <LazyMotionButton
-                className="h-8 px-2.5 flex items-center gap-1.5 rounded-full transition-colors bg-white border border-black/10"
+              <button
+                type="button"
+                className="h-8 px-2.5 flex items-center gap-1.5 rounded-full bg-white border border-black/10 active:scale-95 transition-transform duration-100"
                 style={{ color: 'rgba(0,0,0,0.85)' }}
                 onClick={onCartClick}
-                whileTap={{ scale: 0.95 }}
+                onPointerDown={(event) => {
+                  if (event.pointerType === 'touch') {
+                    event.preventDefault();
+                    onCartClick?.();
+                  }
+                }}
+                  onTouchStart={(event) => {
+                    event.preventDefault();
+                    onCartClick?.();
+                  }}
                 aria-label="Shopping Cart"
               >
                 <ShoppingBag className="w-4 h-4" />
-                <LazyAnimatePresence mode="wait">
-                  {cartCount > 0 && (
-                    <LazyMotionSpan
-                      key={cartCount}
-                      initial={{ opacity: 0, scale: 0.6 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.6 }}
-                      className="text-[11px] font-semibold"
-                      style={{ color: '#111111' }}
-                    >
-                      {cartCount}
-                    </LazyMotionSpan>
-                  )}
-                </LazyAnimatePresence>
-              </LazyMotionButton>
+                {cartCount > 0 && (
+                  <span
+                    className="text-[11px] font-semibold"
+                    style={{ color: '#111111' }}
+                  >
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+            )}
+
+            {/* Desktop Menu Toggle */}
+            {onDesktopMenuToggle && (
+              <button
+                type="button"
+                className={`hidden lg:flex h-8 w-8 items-center justify-center rounded-full transition-colors border border-black/10 ${
+                  desktopMenuOpen ? 'bg-black text-white border-black' : 'bg-white text-black/85'
+                }`}
+                onClick={onDesktopMenuToggle}
+                aria-label="Toggle menu"
+              >
+                <Menu className="w-4 h-4" />
+              </button>
             )}
 
             {/* Mobile Menu Toggle */}
             <button
+              type="button"
               className="lg:hidden h-8 w-8 flex items-center justify-center rounded-full transition-colors bg-white border border-black/10"
               style={{ color: 'rgba(0,0,0,0.85)' }}
               onClick={handleMobileMenuClick}
+              onPointerDown={(event) => {
+                if (event.pointerType === 'touch') {
+                  event.preventDefault();
+                  handleMobileMenuClick();
+                }
+              }}
+              onTouchStart={(event) => {
+                event.preventDefault();
+                handleMobileMenuClick();
+              }}
               aria-label="Toggle menu"
             >
               <Menu className="w-4 h-4" />

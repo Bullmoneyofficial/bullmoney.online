@@ -411,8 +411,8 @@ export function TradingQuickAccess() {
     // Initial fetch with small delay
     const initialTimeout = setTimeout(fetchPrices, 500);
     
-    // Update every 3 seconds instead of 2 for better performance (reduced API pressure)
-    const interval = setInterval(fetchPrices, 3000);
+    // Update every 6 seconds — server caches for 5s so most hits are instant
+    const interval = setInterval(fetchPrices, 6000);
     
     return () => {
       isMounted = false;

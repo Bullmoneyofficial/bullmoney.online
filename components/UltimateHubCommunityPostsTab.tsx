@@ -220,14 +220,14 @@ export const UltimateHubCommunityPostsTab = memo(() => {
   ]), []);
 
   return (
-    <div className="flex flex-col h-full bg-black overflow-hidden">
+    <div className="flex flex-col h-full bg-[#f5f5f7] overflow-hidden">
       {/* Header - Responsive & Compact */}
-      <div className="shrink-0 bg-black/95 sticky top-0 z-10 border-b border-white/20">
+      <div className="shrink-0 bg-black/95 sticky top-0 z-10 border-b border-black/10">
         {/* Title + Search + Actions */}
         <div className="px-1.5 sm:px-2 py-1 flex items-center gap-1 sm:gap-2">
           {/* Title */}
-          <span className="text-[8px] sm:text-[9px] font-bold text-white shrink-0">Feed</span>
-          <span className="text-[7px] sm:text-[8px] text-white/50 shrink-0">({filteredAnalyses.length})</span>
+          <span className="text-[8px] sm:text-[9px] font-bold text-black shrink-0">Feed</span>
+          <span className="text-[7px] sm:text-[8px] text-black/40 shrink-0">({filteredAnalyses.length})</span>
           
           {/* Search - inline on desktop, togglable on mobile */}
           {!isMobile && (
@@ -239,7 +239,7 @@ export const UltimateHubCommunityPostsTab = memo(() => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search..."
-                  className="w-full pl-5 pr-2 py-0.5 bg-zinc-900/50 border border-zinc-700/50 rounded text-[8px] text-white placeholder:text-neutral-600 focus:outline-none focus:border-white/50"
+                  className="w-full pl-5 pr-2 py-0.5 bg-white/50 border border-zinc-700/50 rounded text-[8px] text-black placeholder:text-neutral-600 focus:outline-none focus:border-white/50"
                 />
               </div>
             </div>
@@ -250,7 +250,7 @@ export const UltimateHubCommunityPostsTab = memo(() => {
             {isMobile && (
               <button
                 onClick={() => { SoundEffects.click(); setSearchQuery(''); }}
-                className="p-1 rounded text-zinc-500 hover:text-zinc-300"
+                className="p-1 rounded text-black/40 hover:text-zinc-300"
                 aria-label="Search"
               >
                 <Search className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
@@ -258,14 +258,14 @@ export const UltimateHubCommunityPostsTab = memo(() => {
             )}
             <button
               onClick={() => { SoundEffects.click(); setShowFilters((v) => !v); }}
-              className={`p-1 rounded transition-colors ${showFilters ? 'text-white' : 'text-zinc-500'}`}
+              className={`p-1 rounded transition-colors ${showFilters ? 'text-black' : 'text-black/40'}`}
               aria-label="Filters"
             >
               <Filter className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
             </button>
             <button
               onClick={handleCreatePost}
-              className="p-1 rounded text-white hover:text-white"
+              className="p-1 rounded text-black hover:text-black"
               aria-label="New post"
             >
               <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
@@ -275,7 +275,7 @@ export const UltimateHubCommunityPostsTab = memo(() => {
 
         {/* Filters - Single scrollable row when open */}
         {showFilters && (
-          <div className="px-1.5 sm:px-2 pb-1 overflow-x-auto scrollbar-hide border-t border-white/10">
+          <div className="px-1.5 sm:px-2 pb-1 overflow-x-auto scrollbar-hide border-t border-black/[0.06]">
             <div className="flex items-center gap-0.5 sm:gap-1 min-w-min">
               {/* Sort tabs */}
               {tabOptions.map(({ id, label, icon: Icon }) => (
@@ -283,7 +283,7 @@ export const UltimateHubCommunityPostsTab = memo(() => {
                   key={id}
                   onClick={() => { SoundEffects.click(); setActiveTab(id); }}
                   className={`flex items-center gap-0.5 px-1 py-0.5 rounded text-[7px] sm:text-[8px] font-medium whitespace-nowrap transition-colors ${
-                    activeTab === id ? 'bg-white text-black' : 'text-zinc-500 hover:text-zinc-300'
+                    activeTab === id ? 'bg-white text-black' : 'text-black/40 hover:text-zinc-300'
                   }`}
                 >
                   <Icon className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
@@ -302,7 +302,7 @@ export const UltimateHubCommunityPostsTab = memo(() => {
                     key={id}
                     onClick={() => { SoundEffects.click(); toggleType(id); }}
                     className={`flex items-center gap-0.5 px-1 py-0.5 rounded text-[7px] sm:text-[8px] font-medium whitespace-nowrap transition-colors ${
-                      isActive ? 'bg-white/70 text-white' : 'text-zinc-500 hover:text-zinc-300'
+                      isActive ? 'bg-white/70 text-black' : 'text-black/40 hover:text-zinc-300'
                     }`}
                   >
                     <Icon className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
@@ -332,16 +332,16 @@ export const UltimateHubCommunityPostsTab = memo(() => {
 
       {/* Comments Panel - Mobile optimized */}
       {selectedAnalysis && (
-        <div className={`shrink-0 border-t border-white/20 bg-black/95 flex flex-col ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-sm'}`}>
+        <div className={`shrink-0 border-t border-black/10 bg-black/95 flex flex-col ${shouldSkipHeavyEffects ? '' : 'backdrop-blur-sm'}`}>
           {/* Header */}
-          <div className="flex items-center justify-between px-3 py-2.5 sm:py-2 border-b border-white/10 shrink-0">
-            <div className="text-sm sm:text-sm text-white truncate flex-1 min-w-0 font-medium">
+          <div className="flex items-center justify-between px-3 py-2.5 sm:py-2 border-b border-black/[0.06] shrink-0">
+            <div className="text-sm sm:text-sm text-black truncate flex-1 min-w-0 font-medium">
               <span className="hidden sm:inline">Comments · </span>
               <span className="truncate">{selectedAnalysis.title}</span>
             </div>
             <button
               onClick={() => setSelectedAnalysis(null)}
-              className="ml-2 p-2.5 rounded-xl bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-700 shrink-0 transition-all active:scale-95"
+              className="ml-2 p-2.5 rounded-xl bg-[#f5f5f7]/50 text-black/50 hover:text-black hover:bg-zinc-700 shrink-0 transition-all active:scale-95"
               aria-label="Close comments"
             >
               <X className="w-5 h-5" />

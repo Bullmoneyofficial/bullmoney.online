@@ -500,9 +500,12 @@ html.is-mobile.is-scrolling .shimmer-border {
 
 html.is-mobile canvas,
 html.is-mobile [data-spline] canvas {
-  /* Hint to browser about rendering priority */
-  contain: strict;
+  /* FIXED: was contain:strict which blocked scroll on mobile */
+  contain: layout size;
   content-visibility: auto;
+  /* Ensure canvas never blocks scroll on mobile */
+  pointer-events: none !important;
+  touch-action: pan-y !important;
 }
 
 /* Reduce canvas quality on low-end */

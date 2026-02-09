@@ -30,55 +30,60 @@ import { useDesktopPerformance, useUnifiedPerformance } from '@/hooks/useDesktop
 import { initializeFpsMeasurement } from '@/lib/FpsMeasurement';
 import { detectBrowserCapabilities, selectOptimalMeasurementConfig } from '@/lib/FpsCompatibility';
 
-// --- GLOBAL GLASS STYLES (iPhone-style black/white) ---
+// --- GLOBAL GLASS STYLES (Apple-style light theme) ---
 const GLOBAL_NEON_STYLES = `
   .neon-blue-text,
   .neon-white-text {
-    color: rgba(255, 255, 255, 0.92);
+    color: rgba(0, 0, 0, 0.85);
     text-shadow: none !important;
   }
 
   .neon-white-icon,
   .neon-blue-icon {
     filter: none !important;
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(0, 0, 0, 0.7);
   }
 
   .neon-blue-border,
   .neon-subtle-border {
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 18px 40px rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   }
 
   .neon-blue-bg {
-    background: rgba(255, 255, 255, 0.08);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   }
 
   .glass-panel {
-    background: linear-gradient(135deg, rgba(8, 8, 10, 0.92), rgba(20, 20, 24, 0.82));
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+    background: #f5f5f7;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
     backdrop-filter: blur(20px) saturate(140%);
   }
 
   .glass-surface {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.6);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: none;
     backdrop-filter: blur(16px) saturate(130%);
   }
 
   .glass-chip {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   }
 
   .glass-button {
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 1);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: rgba(0, 0, 0, 0.85);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .glass-button:hover {
+    background: rgba(245, 245, 247, 1);
   }
 
   .animate-neon-pulse-optimized,
@@ -557,8 +562,10 @@ const ChannelCarousel = memo(({
   const hasFavorite = favoriteChannel !== null;
 
   return (
-    <div className="w-full max-w-[1100px] mx-auto flex flex-col gap-1 p-1 sm:p-2 border-b border-blue-500/30 flex-shrink-0 bg-black/95 backdrop-blur-2xl relative"
-      style={{ boxShadow: '0 0 12px rgba(59, 130, 246, 0.3), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
+    <div
+      className="w-full max-w-[1100px] mx-auto flex flex-col gap-1 p-1 sm:p-2 border-b border-black/10 flex-shrink-0 bg-[rgb(255,255,255)] sm:bg-[#f5f5f7]/95 relative"
+      style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
+    >
       {/* Main Carousel Row */}
       <div className="flex items-center gap-1 sm:gap-1.5 justify-center">
         {/* Favorite Button - Blue, goes to saved favorite */}
@@ -568,13 +575,13 @@ const ChannelCarousel = memo(({
           whileTap={{ scale: hasFavorite ? 0.95 : 1 }}
           className={`flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl border transition-all flex-shrink-0 ${
             hasFavorite
-              ? 'bg-blue-500/30 border-blue-400/70 text-blue-400 cursor-pointer'
-              : 'bg-blue-500/10 border-blue-400/30 text-blue-400/40 cursor-default'
+              ? 'bg-white border-black/15 text-amber-500 cursor-pointer shadow-sm'
+              : 'bg-white/60 border-black/5 text-black/25 cursor-default'
           }`}
-          style={hasFavorite ? { boxShadow: '0 0 14px rgba(59, 130, 246, 0.6)' } : {}}
+          style={hasFavorite ? { boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' } : {}}
           title={hasFavorite ? `Go to favorite: ${EXTENDED_CHANNELS[favoriteChannel!]?.name || 'Unknown'}` : 'No favorite set'}
         >
-          <Star className={`w-3.5 h-3.5 sm:w-6 sm:h-6 ${hasFavorite ? 'fill-blue-400' : ''}`} />
+          <Star className={`w-3.5 h-3.5 sm:w-6 sm:h-6 ${hasFavorite ? 'fill-amber-500' : ''}`} />
         </motion.button>
         
         {/* Left Arrow */}
@@ -582,8 +589,7 @@ const ChannelCarousel = memo(({
           onClick={goToPrev}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          className="flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-blue-500/20 border border-blue-400/50 text-blue-400 hover:bg-blue-500/30 transition-all flex-shrink-0"
-          style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)' }}
+          className="flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-white border border-black/10 text-black/60 active:bg-black/5 transition-all flex-shrink-0 shadow-sm"
         >
           <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
         </motion.button>
@@ -606,18 +612,18 @@ const ChannelCarousel = memo(({
           onClick={handleAdminClick}
           style={{ touchAction: 'pan-y' }}
         >
-          <div 
-            className={`flex items-center gap-2 sm:gap-3 px-2 sm:px-4 py-1 sm:py-2 rounded-lg sm:rounded-xl border backdrop-blur-xl transition-all ${
-              isAdminTab 
-                ? 'bg-blue-500/30 border-blue-400/70' 
-                : 'bg-blue-500/20 border-blue-400/50'
+          <div
+            className={`flex items-center gap-2 sm:gap-3 px-2 sm:px-4 py-1 sm:py-2 rounded-lg sm:rounded-xl border transition-all ${
+              isAdminTab
+                ? 'bg-white border-black/15'
+                : 'bg-white border-black/10'
             }`}
-            style={{ boxShadow: '0 0 16px rgba(59, 130, 246, 0.5)' }}
+            style={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)' }}
           >
-            <Icon className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-blue-400" style={{ filter: 'drop-shadow(0 0 6px rgba(59, 130, 246, 0.8))' }} />
-            <span className="text-[11px] sm:text-base font-bold text-blue-400 whitespace-nowrap" style={{ textShadow: '0 0 8px rgba(59, 130, 246, 0.8)' }}>{ch.name}</span>
-            {isLocked && <Lock className="w-3 h-3 sm:w-4 sm:h-4 text-blue-400/60" />}
-            {isAdminTab && <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 text-blue-400/80" />}
+            <Icon className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-black/70" style={{ filter: 'none' }} />
+            <span className="text-[11px] sm:text-base font-bold text-black whitespace-nowrap">{ch.name}</span>
+            {isLocked && <Lock className="w-3 h-3 sm:w-4 sm:h-4 text-black/40" />}
+            {isAdminTab && <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 text-black/50" />}
             
             {/* Set as Favorite Button */}
             <motion.button
@@ -628,13 +634,13 @@ const ChannelCarousel = memo(({
               whileHover={{ scale: 1.2 }}
               whileTap={{ scale: 0.9 }}
               className={`ml-0.5 sm:ml-1 p-1 sm:p-1.5 rounded-full transition-all ${
-                isFavorite 
-                  ? 'text-blue-400 bg-blue-500/30' 
-                  : 'text-blue-400/40 hover:text-blue-400 hover:bg-blue-500/20'
+                isFavorite
+                  ? 'text-amber-500 bg-amber-500/10'
+                  : 'text-black/25 hover:text-black hover:bg-black/5'
               }`}
               title={isFavorite ? 'Remove from favorites' : 'Set as favorite'}
             >
-              <Star className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isFavorite ? 'fill-blue-400' : ''}`} />
+              <Star className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isFavorite ? 'fill-amber-500' : ''}`} />
             </motion.button>
           </div>
         </motion.div>
@@ -644,8 +650,7 @@ const ChannelCarousel = memo(({
           onClick={goToNext}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          className="flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-blue-500/20 border border-blue-400/50 text-blue-400 hover:bg-blue-500/30 transition-all flex-shrink-0"
-          style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)' }}
+          className="flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-white border border-black/10 text-black/60 active:bg-black/5 transition-all flex-shrink-0 shadow-sm"
         >
           <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
         </motion.button>
@@ -666,12 +671,12 @@ const ChannelCarousel = memo(({
             whileTap={{ scale: 0.9 }}
             className={`rounded-full transition-all ${
               idx === currentIndex 
-                ? 'w-3.5 sm:w-5 h-1.5 sm:h-2 bg-blue-400' 
+                ? 'w-3.5 sm:w-5 h-1.5 sm:h-2 bg-black/70' 
                 : key === favoriteChannel 
-                  ? 'w-2 h-2 sm:w-2.5 sm:h-2.5 bg-blue-400/60' 
-                  : 'w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-400/30 hover:bg-blue-400/50'
+                  ? 'w-2 h-2 sm:w-2.5 sm:h-2.5 bg-amber-500/50' 
+                  : 'w-1.5 h-1.5 sm:w-2 sm:h-2 bg-black/20 hover:bg-black/35'
             }`}
-            style={idx === currentIndex ? { boxShadow: '0 0 8px rgba(59, 130, 246, 0.8)' } : {}}
+            style={idx === currentIndex ? { boxShadow: '0 2px 6px rgba(0, 0, 0, 0.18)' } : {}}
           />
         ))}
       </div>
@@ -796,8 +801,8 @@ const NEON_STYLES = {
   blueText: 'text-white drop-shadow-[0_0_8px_rgba(255, 255, 255,0.9)]',
   blueTextBright: 'text-white drop-shadow-[0_0_12px_rgba(255, 255, 255,1)]',
   cyanText: 'text-white drop-shadow-[0_0_8px_rgba(255, 255, 255,0.9)]',
-  amberText: 'text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.9)]',
-  orangeText: 'text-orange-400 drop-shadow-[0_0_8px_rgba(251,146,60,0.9)]',
+  amberText: 'text-amber-600',
+  orangeText: 'text-orange-600',
   purpleText: 'text-white drop-shadow-[0_0_8px_rgba(255, 255, 255,0.9)]',
   emeraldText: 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.9)]',
   whiteGlow: 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]',
@@ -810,13 +815,13 @@ const NEON_STYLES = {
   blueBg: 'bg-linear-to-br from-white/40 via-white/25 to-white/30 shadow-[0_0_20px_rgba(255, 255, 255,0.4)]',
   cyanBg: 'bg-linear-to-br from-white/40 via-white/25 to-white/30 shadow-[0_0_20px_rgba(255, 255, 255,0.4)]',
   purpleBg: 'bg-linear-to-br from-white/40 via-white/25 to-fuchsia-600/30 shadow-[0_0_20px_rgba(255, 255, 255,0.4)]',
-  darkBg: 'bg-linear-to-br from-zinc-900/98 via-zinc-800/95 to-black/98 backdrop-blur-3xl',
+  darkBg: 'bg-[#f5f5f7]/98 backdrop-blur-xl',
   
   iconGlow: 'drop-shadow-[0_0_8px_rgba(255, 255, 255,0.8)]',
   iconGlowCyan: 'drop-shadow-[0_0_8px_rgba(255, 255, 255,0.8)]',
   iconGlowPurple: 'drop-shadow-[0_0_8px_rgba(255, 255, 255,0.8)]',
-  iconGlowAmber: 'drop-shadow-[0_0_8px_rgba(251,191,36,0.8)]',
-  iconGlowOrange: 'drop-shadow-[0_0_8px_rgba(251,146,60,0.8)]',
+  iconGlowAmber: 'drop-shadow-sm',
+  iconGlowOrange: 'drop-shadow-sm',
   iconGlowEmerald: 'drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]',
 };
 
@@ -2110,6 +2115,10 @@ function useConsoleLogs(maxLogs: number = 100): { logs: ConsoleEntry[]; clearLog
         'contentWindow is not available',
         'ResizeObserver loop',
         'Script error.',
+        'CacheBuster',
+        'Asset failed to load',
+        'tradingview.com',
+        'embed-widget',
       ];
       
       const shouldIgnore = ignoredErrors.some(ignored => 
@@ -2370,11 +2379,11 @@ function calculate3DPerformanceScore(fps: number, memoryPercentage: number, gpuS
  * Get Performance Grade from Score
  */
 function getPerformanceGrade(score: number): { grade: string; color: string; label: string } {
-  if (score >= 90) return { grade: 'S', color: '#ffffff', label: 'Excellent' };
-  if (score >= 80) return { grade: 'A', color: '#ffffff', label: 'Great' };
-  if (score >= 70) return { grade: 'B', color: '#ffffff', label: 'Good' };
+  if (score >= 90) return { grade: 'S', color: '#000000', label: 'Excellent' };
+  if (score >= 80) return { grade: 'A', color: '#000000', label: 'Great' };
+  if (score >= 70) return { grade: 'B', color: '#000000', label: 'Good' };
   if (score >= 60) return { grade: 'C', color: '#f59e0b', label: 'Fair' };
-  if (score >= 50) return { grade: 'D', color: '#ef4444', label: 'Poor' };
+  if (score >= 50) return { grade: 'D', color: '#dc2626', label: 'Poor' };
   return { grade: 'F', color: '#dc2626', label: 'Critical' };
 }
 
@@ -2513,7 +2522,7 @@ export function useLivePrices() {
     };
 
     const timeout = setTimeout(fetchPrices, 500);
-    const interval = setInterval(fetchPrices, 3000);
+    const interval = setInterval(fetchPrices, 6000);
     
     return () => { mounted = false; clearTimeout(timeout); clearInterval(interval); };
   }, []);
@@ -2631,7 +2640,7 @@ const FpsCandlestickChart = memo(({ fps, width = 80, height = 48, candleCount = 
 
   return (
     <div className="relative overflow-hidden rounded-lg" style={{ width, height }}>
-      <div className="absolute inset-0 bg-linear-to-br from-white/15 via-white/5 to-slate-900/25 border border-white/20" />
+      <div className="absolute inset-0 bg-linear-to-br from-white/15 via-white/5 to-slate-900/25 border border-black/10" />
       <svg width={width} height={height} className="relative z-10">
         {/* Grid lines */}
         {[0.25, 0.5, 0.75].map(pct => (
@@ -2675,12 +2684,12 @@ const FpsDisplay = memo(({ fps, deviceTier, jankScore }: { fps: number; deviceTi
   
   return (
     <div className="relative">
-      <div className="absolute inset-0 rounded-lg bg-linear-to-br from-white/30 via-white/15 to-slate-900/40 border border-white/40" />
+      <div className="absolute inset-0 rounded-lg bg-linear-to-br from-white/90 via-white/70 to-white/60 border border-black/15" />
       <div className="relative px-2 py-1.5 flex items-center gap-2">
         <FpsCandlestickChart fps={fps} />
         <div className="flex flex-col gap-0.5 min-w-[40px]">
           <div className="flex items-center gap-1">
-            <Activity size={10} className="text-white neon-blue-icon" />
+            <Activity size={10} className="text-black neon-blue-icon" />
             <span className="text-sm font-black neon-blue-text" style={{ color: colors.text }}>{fps}</span>
           </div>
           <div className="text-[8px] font-mono font-bold uppercase neon-blue-text tracking-wide">
@@ -2706,7 +2715,7 @@ const MinimizedFpsDisplay = memo(({ fps }: { fps: number }) => {
         animate={{ scale: [1, 1.2, 1], opacity: [0.7, 1, 0.7] }}
         transition={{ duration: 1.5, repeat: Infinity }}
       >
-        <Activity size={11} className="text-white neon-blue-icon drop-shadow-[0_0_8px_rgba(255, 255, 255,0.9)]" />
+        <Activity size={11} className="text-black neon-blue-icon drop-shadow-sm" />
       </motion.div>
       <div className="flex overflow-hidden rounded" style={{ background: colors.bg }}>
         {digits.map((digit, idx) => (
@@ -2748,12 +2757,12 @@ const StatCard = memo(({
   dataSource?: 'device' | 'browser' | 'estimated';
 }) => {
   const colorClasses = {
-    blue: 'from-white/20 to-white/10 border-white/30 text-white',
-    green: 'from-white/20 to-white/10 border-white/30 text-white',
+    blue: 'from-white/20 to-white/10 border-black/10 text-black',
+    green: 'from-white/20 to-white/10 border-black/10 text-black',
     amber: 'from-amber-500/20 to-amber-600/10 border-amber-500/30 text-amber-400',
     red: 'from-red-500/20 to-red-600/10 border-red-500/30 text-red-400',
-    cyan: 'from-white/20 to-white/10 border-white/30 text-white',
-    purple: 'from-white/20 to-white/10 border-white/30 text-white',
+    cyan: 'from-white/20 to-white/10 border-black/10 text-black',
+    purple: 'from-white/20 to-white/10 border-black/10 text-black',
   };
   
   const sourceLabels = {
@@ -2763,9 +2772,9 @@ const StatCard = memo(({
   };
   
   const sourceColors = {
-    device: 'text-white',
-    browser: 'text-white',
-    estimated: 'text-white'
+    device: 'text-black',
+    browser: 'text-black',
+    estimated: 'text-black'
   };
   
   const sourceGlow = '0 0 6px #ffffff';
@@ -2777,14 +2786,14 @@ const StatCard = memo(({
       className={`relative p-2.5 rounded-xl bg-linear-to-br ${colorClasses[color]} border backdrop-blur-sm overflow-hidden`}
     >
       <div className="flex items-center justify-between mb-1">
-        <span className="text-[9px] font-medium text-zinc-400 uppercase tracking-wide truncate">{label}</span>
+        <span className="text-[9px] font-medium text-black/50 uppercase tracking-wide truncate">{label}</span>
         <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${colorClasses[color].split(' ').pop()}`} style={{ filter: `drop-shadow(${sourceGlow})` }} />
       </div>
       <div className="flex items-baseline gap-1">
-        <span className="text-lg font-black text-white tabular-nums">{value}</span>
-        {unit && <span className="text-[9px] text-zinc-500 font-medium">{unit}</span>}
+        <span className="text-lg font-black text-black tabular-nums">{value}</span>
+        {unit && <span className="text-[9px] text-black/40 font-medium">{unit}</span>}
       </div>
-      {subValue && <div className="text-[8px] text-zinc-500 mt-0.5 truncate">{subValue}</div>}
+      {subValue && <div className="text-[8px] text-black/40 mt-0.5 truncate">{subValue}</div>}
       {dataSource && (
         <div className={`text-[7px] font-medium mt-1 truncate ${sourceColors[dataSource]}`} style={{ textShadow: sourceGlow }}>
           {sourceLabels[dataSource]}
@@ -2815,11 +2824,11 @@ const PerformanceRing = memo(({
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   const colors = {
-    blue: { stroke: '#ffffff', glow: 'rgba(255, 255, 255, 0.5)' },
-    green: { stroke: '#ffffff', glow: 'rgba(255, 255, 255, 0.5)' },
+    blue: { stroke: '#1d4ed8', glow: 'rgba(29, 78, 216, 0.3)' },
+    green: { stroke: '#15803d', glow: 'rgba(21, 128, 61, 0.3)' },
     amber: { stroke: '#f59e0b', glow: 'rgba(245, 158, 11, 0.5)' },
     red: { stroke: '#ef4444', glow: 'rgba(239, 68, 68, 0.5)' },
-    cyan: { stroke: '#ffffff', glow: 'rgba(255, 255, 255, 0.5)' },
+    cyan: { stroke: '#0e7490', glow: 'rgba(14, 116, 144, 0.3)' },
   };
 
   return (
@@ -2852,10 +2861,10 @@ const PerformanceRing = memo(({
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-xs font-black text-white tabular-nums">{Math.round(percentage)}%</span>
+          <span className="text-xs font-black text-black tabular-nums">{Math.round(percentage)}%</span>
         </div>
       </div>
-      <span className="text-[8px] text-zinc-400 mt-1 font-medium">{label}</span>
+      <span className="text-[8px] text-black/50 mt-1 font-medium">{label}</span>
     </div>
   );
 });
@@ -2871,7 +2880,7 @@ const ConnectionStatusBadge = memo(({ isOnline, effectiveType }: { isOnline: boo
 
   const color = getSpeedColor();
   const colorClasses = {
-    green: 'bg-white/20 text-white border-white/40',
+    green: 'bg-white text-black border-black/15',
     amber: 'bg-amber-500/20 text-amber-400 border-amber-500/40',
     red: 'bg-red-500/20 text-red-400 border-red-500/40',
   };
@@ -2959,24 +2968,24 @@ const DeviceCenterPanel = memo(({
           dragElastic={0.2}
           onDragStart={() => setIsDragging(true)}
           onDragEnd={handleDragEnd}
-          className="fixed right-0 top-0 bottom-0 z-[2147483646] w-[320px] max-w-[90vw] bg-linear-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl border-l border-white/30 shadow-2xl shadow-white/30 flex flex-col"
+          className="fixed right-0 top-0 bottom-0 z-[10002] w-[320px] max-w-[90vw] bg-[#f5f5f7] backdrop-blur-xl border-l border-black/10 shadow-2xl flex flex-col"
           style={{ paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
         >
           {/* Drag Handle */}
           <div className="flex justify-center pt-2 pb-1">
-            <div className="w-10 h-1 rounded-full bg-zinc-600" />
+            <div className="w-10 h-1 rounded-full bg-black/20" />
           </div>
 
           {/* Header */}
-          <div className="px-4 pb-3 border-b border-white/20">
+          <div className="px-4 pb-3 border-b border-black/10">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-linear-to-br from-white to-white flex items-center justify-center">
-                  <Smartphone className="w-4 h-4 text-white neon-white-icon" />
+                  <Smartphone className="w-4 h-4 text-black neon-white-icon" />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold neon-white-text">Device Center</h3>
-                  <p className="text-[9px] text-zinc-400">Real-time system info</p>
+                  <p className="text-[9px] text-black/50">Real-time system info</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -2988,7 +2997,7 @@ const DeviceCenterPanel = memo(({
                   whileHover={{ scale: 1.1, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => { SoundEffects.close(); onClose(); }}
-                  className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/40 border border-white/30 flex items-center justify-center neon-blue-border"
+                  className="w-8 h-8 rounded-lg bg-white hover:bg-black/5 border border-black/10 flex items-center justify-center neon-blue-border"
                 >
                   <X className="w-4 h-4 neon-blue-icon" />
                 </motion.button>
@@ -3006,7 +3015,7 @@ const DeviceCenterPanel = memo(({
           </div>
 
           {/* Tabs */}
-          <div className="flex border-b border-white/20 overflow-x-auto overflow-y-hidden scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ touchAction: 'pan-x pinch-zoom' }}>
+          <div className="flex border-b border-black/10 overflow-x-auto overflow-y-hidden scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ touchAction: 'pan-x pinch-zoom' }}>
             {DEVICE_PANEL_TABS.map(tab => {
               const Icon = tab.icon;
               return (
@@ -3015,8 +3024,8 @@ const DeviceCenterPanel = memo(({
                   onClick={() => { SoundEffects.tab(); setActiveTab(tab.id); }}
                   className={`flex-1 min-w-[70px] flex items-center justify-center gap-1.5 py-5 sm:py-3 px-2 sm:px-3 text-[10px] sm:text-[11px] font-semibold transition-all whitespace-nowrap min-h-[48px] sm:min-h-0 ${
                     activeTab === tab.id
-                      ? 'text-white border-b-2 border-white bg-white/10'
-                      : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5'
+                      ? 'text-black border-b-2 border-white bg-white'
+                      : 'text-black/40 hover:text-black hover:bg-black/5'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -3039,39 +3048,39 @@ const DeviceCenterPanel = memo(({
                   className="space-y-3"
                 >
                   {/* Device Info */}
-                  <div className="p-3 rounded-xl bg-linear-to-br from-white/10 to-white/5 border border-white/20">
-                    <h4 className="text-[10px] font-bold text-white uppercase tracking-wider mb-2">Device</h4>
+                  <div className="p-3 rounded-xl bg-linear-to-br from-white/10 to-white/5 border border-black/10">
+                    <h4 className="text-[10px] font-bold text-black uppercase tracking-wider mb-2">Device</h4>
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">Platform</span>
-                        <span className="text-white font-semibold">{browserInfo.platform}</span>
+                        <span className="text-black/50">Platform</span>
+                        <span className="text-black font-semibold">{browserInfo.platform}</span>
                       </div>
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">Browser</span>
-                        <span className="text-white font-semibold">{browserInfo.name} {browserInfo.version.split('.')[0]}</span>
+                        <span className="text-black/50">Browser</span>
+                        <span className="text-black font-semibold">{browserInfo.name} {browserInfo.version.split('.')[0]}</span>
                       </div>
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">Engine</span>
-                        <span className="text-white font-semibold">{browserInfo.engine}</span>
+                        <span className="text-black/50">Engine</span>
+                        <span className="text-black font-semibold">{browserInfo.engine}</span>
                       </div>
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">CPU Cores</span>
-                        <span className="text-white font-semibold">{browserInfo.cores}</span>
+                        <span className="text-black/50">CPU Cores</span>
+                        <span className="text-black font-semibold">{browserInfo.cores}</span>
                       </div>
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">Device RAM</span>
-                        <span className="text-white font-semibold">{browserInfo.deviceMemory} GB</span>
+                        <span className="text-black/50">Device RAM</span>
+                        <span className="text-black font-semibold">{browserInfo.deviceMemory} GB</span>
                       </div>
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">Locale</span>
-                        <span className="text-white font-semibold">{browserInfo.locale}</span>
+                        <span className="text-black/50">Locale</span>
+                        <span className="text-black font-semibold">{browserInfo.locale}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* 3D Performance Grade */}
-                  <div className="p-3 rounded-xl bg-linear-to-br from-zinc-800/50 to-zinc-900/50 border border-zinc-700/30">
-                    <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-3">3D Performance Score</h4>
+                  <div className="p-3 rounded-xl bg-white border border-black/10 shadow-sm">
+                    <h4 className="text-[10px] font-bold text-black/50 uppercase tracking-wider mb-3">3D Performance Score</h4>
                     <div className="flex items-center justify-center">
                       <div className="relative w-[100px] h-[100px]">
                         <svg className="w-full h-full transform -rotate-90">
@@ -3091,90 +3100,90 @@ const DeviceCenterPanel = memo(({
                           <span className="text-3xl font-black" style={{ color: performanceGrade.color, textShadow: `0 0 15px ${performanceGrade.color}50` }}>
                             {performanceGrade.grade}
                           </span>
-                          <span className="text-[9px] text-zinc-400">{performanceGrade.label}</span>
-                          <span className="text-[8px] text-zinc-500">{performanceScore}/100</span>
+                          <span className="text-[9px] text-black/50">{performanceGrade.label}</span>
+                          <span className="text-[8px] text-black/40">{performanceScore}/100</span>
                         </div>
                       </div>
                     </div>
                   </div>
 
                   {/* GPU Info */}
-                  <div className="p-3 rounded-xl bg-linear-to-br from-white/10 to-fuchsia-500/5 border border-white/20">
-                    <h4 className="text-[10px] font-bold text-white uppercase tracking-wider mb-2">Graphics</h4>
+                  <div className="p-3 rounded-xl bg-linear-to-br from-white/10 to-fuchsia-500/5 border border-black/10">
+                    <h4 className="text-[10px] font-bold text-black uppercase tracking-wider mb-2">Graphics</h4>
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">GPU</span>
-                        <span className="text-white font-semibold truncate max-w-[160px]" title={gpuInfo.renderer}>
+                        <span className="text-black/50">GPU</span>
+                        <span className="text-black font-semibold truncate max-w-[160px]" title={gpuInfo.renderer}>
                           {gpuInfo.renderer.length > 25 ? gpuInfo.renderer.slice(0, 25) + '...' : gpuInfo.renderer}
                         </span>
                       </div>
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">Vendor</span>
-                        <span className="text-white font-semibold">{gpuInfo.vendor}</span>
+                        <span className="text-black/50">Vendor</span>
+                        <span className="text-black font-semibold">{gpuInfo.vendor}</span>
                       </div>
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">WebGL</span>
-                        <span className="text-white font-semibold">{gpuInfo.webglVersion}</span>
+                        <span className="text-black/50">WebGL</span>
+                        <span className="text-black font-semibold">{gpuInfo.webglVersion}</span>
                       </div>
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">GPU Tier</span>
+                        <span className="text-black/50">GPU Tier</span>
                         <span className={`font-semibold uppercase ${
-                          gpuInfo.tier === 'ultra' ? 'text-white' :
-                          gpuInfo.tier === 'high' ? 'text-white' :
+                          gpuInfo.tier === 'ultra' ? 'text-black' :
+                          gpuInfo.tier === 'high' ? 'text-black' :
                           gpuInfo.tier === 'medium' ? 'text-amber-400' : 'text-red-400'
                         }`}>
                           {gpuInfo.tier}
                         </span>
                       </div>
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">Max Texture</span>
-                        <span className="text-white font-semibold">{gpuInfo.maxTextureSize}px</span>
+                        <span className="text-black/50">Max Texture</span>
+                        <span className="text-black font-semibold">{gpuInfo.maxTextureSize}px</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Screen Info */}
-                  <div className="p-3 rounded-xl bg-linear-to-br from-white/10 to-white/5 border border-white/20">
-                    <h4 className="text-[10px] font-bold text-white uppercase tracking-wider mb-2">Display</h4>
+                  <div className="p-3 rounded-xl bg-linear-to-br from-white/10 to-white/5 border border-black/10">
+                    <h4 className="text-[10px] font-bold text-black uppercase tracking-wider mb-2">Display</h4>
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">Resolution</span>
-                        <span className="text-white font-semibold">{screenInfo.width} × {screenInfo.height}</span>
+                        <span className="text-black/50">Resolution</span>
+                        <span className="text-black font-semibold">{screenInfo.width} × {screenInfo.height}</span>
                       </div>
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">Pixel Ratio</span>
-                        <span className="text-white font-semibold">{screenInfo.pixelRatio}x</span>
+                        <span className="text-black/50">Pixel Ratio</span>
+                        <span className="text-black font-semibold">{screenInfo.pixelRatio}x</span>
                       </div>
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">Refresh Rate</span>
-                        <span className="text-white font-semibold">{screenInfo.refreshRate} Hz</span>
+                        <span className="text-black/50">Refresh Rate</span>
+                        <span className="text-black font-semibold">{screenInfo.refreshRate} Hz</span>
                       </div>
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">Color Depth</span>
-                        <span className="text-white font-semibold">{screenInfo.colorDepth}-bit</span>
+                        <span className="text-black/50">Color Depth</span>
+                        <span className="text-black font-semibold">{screenInfo.colorDepth}-bit</span>
                       </div>
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">HDR</span>
-                        <span className={`font-semibold ${screenInfo.hdr ? 'text-white' : 'text-zinc-500'}`}>
+                        <span className="text-black/50">HDR</span>
+                        <span className={`font-semibold ${screenInfo.hdr ? 'text-black' : 'text-black/40'}`}>
                           {screenInfo.hdr ? 'Supported' : 'Not supported'}
                         </span>
                       </div>
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">Touch Points</span>
-                        <span className="text-white font-semibold">{screenInfo.touchPoints}</span>
+                        <span className="text-black/50">Touch Points</span>
+                        <span className="text-black font-semibold">{screenInfo.touchPoints}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Battery Info (if supported) */}
                   {batteryInfo.supported && (
-                    <div className="p-3 rounded-xl bg-linear-to-br from-white/10 to-white/5 border border-white/20">
-                      <h4 className="text-[10px] font-bold text-white uppercase tracking-wider mb-2">Battery</h4>
+                    <div className="p-3 rounded-xl bg-linear-to-br from-white/10 to-white/5 border border-black/10">
+                      <h4 className="text-[10px] font-bold text-black uppercase tracking-wider mb-2">Battery</h4>
                       <div className="space-y-1.5">
                         <div className="flex justify-between text-[10px]">
-                          <span className="text-zinc-400">Level</span>
+                          <span className="text-black/50">Level</span>
                           <div className="flex items-center gap-1.5">
-                            <div className="w-16 h-2 bg-zinc-700 rounded-full overflow-hidden">
+                            <div className="w-16 h-2 bg-black/10 rounded-full overflow-hidden">
                               <motion.div
                                 className={`h-full rounded-full ${
                                   batteryInfo.level > 50 ? 'bg-white' :
@@ -3185,12 +3194,12 @@ const DeviceCenterPanel = memo(({
                                 transition={{ duration: 0.5 }}
                               />
                             </div>
-                            <span className="text-white font-semibold">{batteryInfo.level}%</span>
+                            <span className="text-black font-semibold">{batteryInfo.level}%</span>
                           </div>
                         </div>
                         <div className="flex justify-between text-[10px]">
-                          <span className="text-zinc-400">Status</span>
-                          <span className={`font-semibold flex items-center gap-1 ${batteryInfo.charging ? 'text-white' : 'text-zinc-400'}`}>
+                          <span className="text-black/50">Status</span>
+                          <span className={`font-semibold flex items-center gap-1 ${batteryInfo.charging ? 'text-black' : 'text-black/50'}`}>
                             {batteryInfo.charging ? (
                               <>
                                 <Zap className="w-3 h-3" />
@@ -3206,16 +3215,16 @@ const DeviceCenterPanel = memo(({
                         </div>
                         {batteryInfo.charging && batteryInfo.chargingTime !== Infinity && (
                           <div className="flex justify-between text-[10px]">
-                            <span className="text-zinc-400">Full in</span>
-                            <span className="text-white font-semibold">
+                            <span className="text-black/50">Full in</span>
+                            <span className="text-black font-semibold">
                               {Math.round(batteryInfo.chargingTime / 60)} min
                             </span>
                           </div>
                         )}
                         {!batteryInfo.charging && batteryInfo.dischargingTime !== Infinity && (
                           <div className="flex justify-between text-[10px]">
-                            <span className="text-zinc-400">Time Left</span>
-                            <span className="text-white font-semibold">
+                            <span className="text-black/50">Time Left</span>
+                            <span className="text-black font-semibold">
                               {Math.round(batteryInfo.dischargingTime / 60)} min
                             </span>
                           </div>
@@ -3262,8 +3271,8 @@ const DeviceCenterPanel = memo(({
                   </div>
 
                   {/* Performance Rings */}
-                  <div className="p-3 rounded-xl bg-linear-to-br from-zinc-800/50 to-zinc-900/50 border border-zinc-700/30">
-                    <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-3">Real-Time Metrics</h4>
+                  <div className="p-3 rounded-xl bg-white border border-black/10 shadow-sm">
+                    <h4 className="text-[10px] font-bold text-black/50 uppercase tracking-wider mb-3">Real-Time Metrics</h4>
                     <div className="flex justify-around">
                       <PerformanceRing
                         value={fps}
@@ -3298,9 +3307,9 @@ const DeviceCenterPanel = memo(({
                   className="space-y-3"
                 >
                   {/* Connection Status */}
-                  <div className="p-3 rounded-xl bg-linear-to-br from-white/10 to-white/5 border border-white/20">
+                  <div className="p-3 rounded-xl bg-linear-to-br from-white/10 to-white/5 border border-black/10">
                     <div className="flex items-center justify-between mb-3">
-                      <h4 className="text-[10px] font-bold text-white uppercase tracking-wider">Connection</h4>
+                      <h4 className="text-[10px] font-bold text-black uppercase tracking-wider">Connection</h4>
                       <ConnectionStatusBadge 
                         isOnline={networkStats.isOnline} 
                         effectiveType={networkStats.effectiveType} 
@@ -3308,20 +3317,20 @@ const DeviceCenterPanel = memo(({
                     </div>
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">Type</span>
-                        <span className="text-white font-semibold">{networkStats.connectionType || 'Unknown'}</span>
+                        <span className="text-black/50">Type</span>
+                        <span className="text-black font-semibold">{networkStats.connectionType || 'Unknown'}</span>
                       </div>
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">Downlink</span>
-                        <span className="text-white font-semibold">{networkStats.downlink} Mbps</span>
+                        <span className="text-black/50">Downlink</span>
+                        <span className="text-black font-semibold">{networkStats.downlink} Mbps</span>
                       </div>
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">RTT (Latency)</span>
-                        <span className="text-white font-semibold">{networkStats.rtt} ms</span>
+                        <span className="text-black/50">RTT (Latency)</span>
+                        <span className="text-black font-semibold">{networkStats.rtt} ms</span>
                       </div>
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">Data Saver</span>
-                        <span className={`font-semibold ${networkStats.saveData ? 'text-amber-400' : 'text-white'}`}>
+                        <span className="text-black/50">Data Saver</span>
+                        <span className={`font-semibold ${networkStats.saveData ? 'text-amber-400' : 'text-black'}`}>
                           {networkStats.saveData ? 'Enabled' : 'Disabled'}
                         </span>
                       </div>
@@ -3329,15 +3338,15 @@ const DeviceCenterPanel = memo(({
                   </div>
 
                   {/* Speed Test */}
-                  <div className="p-3 rounded-xl bg-linear-to-br from-zinc-800/50 to-zinc-900/50 border border-zinc-700/30">
+                  <div className="p-3 rounded-xl bg-white border border-black/10 shadow-sm">
                     <div className="flex items-center justify-between mb-3">
-                      <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Speed Test</h4>
+                      <h4 className="text-[10px] font-bold text-black/50 uppercase tracking-wider">Speed Test</h4>
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={networkStats.runSpeedTest}
                         disabled={networkStats.testing}
-                        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/20 hover:bg-white/30 border border-white/30 text-[9px] font-semibold text-white disabled:opacity-50"
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white hover:bg-black border border-black/10 text-[9px] font-semibold text-black disabled:opacity-50"
                       >
                         {networkStats.testing ? (
                           <Loader className="w-3 h-3 animate-spin" />
@@ -3368,15 +3377,15 @@ const DeviceCenterPanel = memo(({
                     </div>
 
                     {networkStats.lastTest > 0 && (
-                      <div className="mt-2 text-[8px] text-zinc-500 text-center">
+                      <div className="mt-2 text-[8px] text-black/40 text-center">
                         Last test: {new Date(networkStats.lastTest).toLocaleTimeString()}
                       </div>
                     )}
                   </div>
 
                   {/* Network Quality */}
-                  <div className="p-3 rounded-xl bg-linear-to-br from-zinc-800/50 to-zinc-900/50 border border-zinc-700/30">
-                    <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-3">Quality Assessment</h4>
+                  <div className="p-3 rounded-xl bg-white border border-black/10 shadow-sm">
+                    <h4 className="text-[10px] font-bold text-black/50 uppercase tracking-wider mb-3">Quality Assessment</h4>
                     <div className="flex justify-around">
                       <PerformanceRing
                         value={networkStats.isOnline ? (networkStats.effectiveType === '4g' ? 90 : networkStats.effectiveType === '3g' ? 60 : 30) : 0}
@@ -3411,24 +3420,24 @@ const DeviceCenterPanel = memo(({
                   className="space-y-3"
                 >
                   {/* Core Web Vitals */}
-                  <div className="p-3 rounded-xl bg-linear-to-br from-white/10 to-white/5 border border-white/20">
-                    <h4 className="text-[10px] font-bold text-white uppercase tracking-wider mb-2">Core Web Vitals</h4>
+                  <div className="p-3 rounded-xl bg-linear-to-br from-white/10 to-white/5 border border-black/10">
+                    <h4 className="text-[10px] font-bold text-black uppercase tracking-wider mb-2">Core Web Vitals</h4>
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">First Contentful Paint</span>
-                        <span className={`font-semibold ${perfStats.firstContentfulPaint < 1800 ? 'text-white' : perfStats.firstContentfulPaint < 3000 ? 'text-amber-400' : 'text-red-400'}`}>
+                        <span className="text-black/50">First Contentful Paint</span>
+                        <span className={`font-semibold ${perfStats.firstContentfulPaint < 1800 ? 'text-black' : perfStats.firstContentfulPaint < 3000 ? 'text-amber-400' : 'text-red-400'}`}>
                           {perfStats.firstContentfulPaint}ms
                         </span>
                       </div>
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">Largest Contentful Paint</span>
-                        <span className={`font-semibold ${perfStats.largestContentfulPaint < 2500 ? 'text-white' : perfStats.largestContentfulPaint < 4000 ? 'text-amber-400' : 'text-red-400'}`}>
+                        <span className="text-black/50">Largest Contentful Paint</span>
+                        <span className={`font-semibold ${perfStats.largestContentfulPaint < 2500 ? 'text-black' : perfStats.largestContentfulPaint < 4000 ? 'text-amber-400' : 'text-red-400'}`}>
                           {perfStats.largestContentfulPaint || 'Measuring...'}ms
                         </span>
                       </div>
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">Cumulative Layout Shift</span>
-                        <span className={`font-semibold ${perfStats.cumulativeLayoutShift < 0.1 ? 'text-white' : perfStats.cumulativeLayoutShift < 0.25 ? 'text-amber-400' : 'text-red-400'}`}>
+                        <span className="text-black/50">Cumulative Layout Shift</span>
+                        <span className={`font-semibold ${perfStats.cumulativeLayoutShift < 0.1 ? 'text-black' : perfStats.cumulativeLayoutShift < 0.25 ? 'text-amber-400' : 'text-red-400'}`}>
                           {perfStats.cumulativeLayoutShift.toFixed(3)}
                         </span>
                       </div>
@@ -3471,8 +3480,8 @@ const DeviceCenterPanel = memo(({
                   </div>
 
                   {/* Real-Time Performance */}
-                  <div className="p-3 rounded-xl bg-linear-to-br from-zinc-800/50 to-zinc-900/50 border border-zinc-700/30">
-                    <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-3">Runtime Performance</h4>
+                  <div className="p-3 rounded-xl bg-white border border-black/10 shadow-sm">
+                    <h4 className="text-[10px] font-bold text-black/50 uppercase tracking-wider mb-3">Runtime Performance</h4>
                     <div className="flex justify-around">
                       <PerformanceRing
                         value={fps}
@@ -3496,8 +3505,8 @@ const DeviceCenterPanel = memo(({
                   </div>
 
                   {/* FPS Candlestick Chart */}
-                  <div className="p-3 rounded-xl bg-linear-to-br from-zinc-800/50 to-zinc-900/50 border border-zinc-700/30">
-                    <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">FPS History</h4>
+                  <div className="p-3 rounded-xl bg-white border border-black/10 shadow-sm">
+                    <h4 className="text-[10px] font-bold text-black/50 uppercase tracking-wider mb-2">FPS History</h4>
                     <div className="flex justify-center">
                       <FpsCandlestickChart fps={fps} width={260} height={80} candleCount={15} />
                     </div>
@@ -3515,31 +3524,31 @@ const DeviceCenterPanel = memo(({
                   className="space-y-3"
                 >
                   {/* User Info */}
-                  <div className="p-3 rounded-xl bg-linear-to-br from-white/10 to-white/5 border border-white/20">
-                    <h4 className="text-[10px] font-bold text-white uppercase tracking-wider mb-2">Account Status</h4>
+                  <div className="p-3 rounded-xl bg-linear-to-br from-white/10 to-white/5 border border-black/10">
+                    <h4 className="text-[10px] font-bold text-black uppercase tracking-wider mb-2">Account Status</h4>
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">Status</span>
-                        <span className={`font-semibold ${userId ? 'text-white' : 'text-zinc-500'}`}>
+                        <span className="text-black/50">Status</span>
+                        <span className={`font-semibold ${userId ? 'text-black' : 'text-black/40'}`}>
                           {userId ? 'Signed In' : 'Guest'}
                         </span>
                       </div>
                       {userEmail && (
                         <div className="flex justify-between text-[10px]">
-                          <span className="text-zinc-400">Email</span>
-                          <span className="text-white font-semibold truncate max-w-[150px]">{userEmail}</span>
+                          <span className="text-black/50">Email</span>
+                          <span className="text-black font-semibold truncate max-w-[150px]">{userEmail}</span>
                         </div>
                       )}
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">VIP Status</span>
-                        <span className={`font-semibold flex items-center gap-1 ${isVip ? 'text-amber-400' : 'text-zinc-500'}`}>
+                        <span className="text-black/50">VIP Status</span>
+                        <span className={`font-semibold flex items-center gap-1 ${isVip ? 'text-amber-400' : 'text-black/40'}`}>
                           {isVip ? <Crown className="w-3 h-3" /> : null}
                           {isVip ? 'VIP Member' : 'Standard'}
                         </span>
                       </div>
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">Role</span>
-                        <span className={`font-semibold flex items-center gap-1 ${isAdmin ? 'text-white' : 'text-zinc-400'}`}>
+                        <span className="text-black/50">Role</span>
+                        <span className={`font-semibold flex items-center gap-1 ${isAdmin ? 'text-black' : 'text-black/50'}`}>
                           {isAdmin ? <Shield className="w-3 h-3" /> : null}
                           {isAdmin ? 'Admin' : 'User'}
                         </span>
@@ -3554,7 +3563,7 @@ const DeviceCenterPanel = memo(({
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => window.location.href = '/login'}
-                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-linear-to-r from-white to-white text-white font-bold text-xs"
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-linear-to-r from-white to-white text-black font-bold text-xs"
                       >
                         <User className="w-4 h-4" />
                         Sign In / Register
@@ -3567,7 +3576,7 @@ const DeviceCenterPanel = memo(({
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => window.dispatchEvent(new CustomEvent('openAdminVIPPanel'))}
-                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-linear-to-r from-white to-white text-white font-bold text-xs"
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-linear-to-r from-white to-white text-black font-bold text-xs"
                       >
                         <Shield className="w-4 h-4" />
                         Admin Panel
@@ -3576,28 +3585,28 @@ const DeviceCenterPanel = memo(({
                   </div>
 
                   {/* Session Info */}
-                  <div className="p-3 rounded-xl bg-linear-to-br from-zinc-800/50 to-zinc-900/50 border border-zinc-700/30">
-                    <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">Session Info</h4>
+                  <div className="p-3 rounded-xl bg-white border border-black/10 shadow-sm">
+                    <h4 className="text-[10px] font-bold text-black/50 uppercase tracking-wider mb-2">Session Info</h4>
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">Device Tier</span>
+                        <span className="text-black/50">Device Tier</span>
                         <span className={`font-semibold uppercase ${
-                          deviceTier === 'ultra' ? 'text-white' :
-                          deviceTier === 'high' ? 'text-white' :
+                          deviceTier === 'ultra' ? 'text-black' :
+                          deviceTier === 'high' ? 'text-black' :
                           deviceTier === 'medium' ? 'text-amber-400' : 'text-red-400'
                         }`}>
                           {deviceTier}
                         </span>
                       </div>
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">Session Start</span>
-                        <span className="text-white font-semibold">
+                        <span className="text-black/50">Session Start</span>
+                        <span className="text-black font-semibold">
                           {new Date().toLocaleTimeString()}
                         </span>
                       </div>
                       <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-400">Page Loads</span>
-                        <span className="text-white font-semibold">
+                        <span className="text-black/50">Page Loads</span>
+                        <span className="text-black font-semibold">
                           {typeof window !== 'undefined' ? (performance.getEntriesByType('navigation').length || 1) : 1}
                         </span>
                       </div>
@@ -3609,8 +3618,8 @@ const DeviceCenterPanel = memo(({
           </div>
 
           {/* Footer */}
-          <div className="p-3 border-t border-white/20 bg-linear-to-r from-white/5 to-white/5">
-            <div className="text-[8px] text-zinc-500 text-center">
+          <div className="p-3 border-t border-black/10 bg-linear-to-r from-white/5 to-white/5">
+            <div className="text-[8px] text-black/40 text-center">
               All data from real device APIs • Auto-refreshing
             </div>
           </div>
@@ -3713,11 +3722,11 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false, onNewMessa
   if (requiresVip) {
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-        <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center mb-4">
-          <Lock className="w-8 h-8 text-blue-400" />
+        <div className="w-16 h-16 rounded-full bg-black/5 flex items-center justify-center mb-4">
+          <Lock className="w-8 h-8 text-black/40" />
         </div>
-        <h4 className="text-sm font-bold text-white mb-2">VIP Content</h4>
-        <p className="text-[10px] text-zinc-400 mb-4 max-w-[200px]">
+        <h4 className="text-sm font-bold text-black mb-2">VIP Content</h4>
+        <p className="text-[10px] text-black/50 mb-4 max-w-[200px]">
           Upgrade to VIP to access exclusive signals and premium content.
         </p>
       </div>
@@ -3727,8 +3736,8 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false, onNewMessa
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <Loader className="w-5 h-5 text-white animate-spin mb-2" />
-        <span className="text-[10px] text-zinc-400">Loading live feed...</span>
+        <Loader className="w-5 h-5 text-black animate-spin mb-2" />
+        <span className="text-[10px] text-black/50">Loading live feed...</span>
       </div>
     );
   }
@@ -3744,28 +3753,28 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false, onNewMessa
     return (
       <div className="flex flex-col items-center justify-center py-8 px-4">
         <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${
-          isVipChannel ? 'bg-linear-to-r from-blue-500 to-cyan-500' : 'bg-white/20'
+          isVipChannel ? 'bg-linear-to-r from-blue-500 to-cyan-500' : 'bg-white'
         }`}>
           {isVipChannel ? (
-            <Crown className="w-6 h-6 text-white" />
+            <Crown className="w-6 h-6 text-black" />
           ) : (
-            <MessageCircle className="w-6 h-6 text-white" />
+            <MessageCircle className="w-6 h-6 text-black" />
           )}
         </div>
         {isVipChannel && effectiveIsVip && (
-          <div className="flex items-center gap-1 mb-2 px-2 py-1 bg-white/20 rounded-full">
-            <CheckCircle className="w-3 h-3 text-white" />
-            <span className="text-[9px] text-white font-bold">VIP ACCESS UNLOCKED</span>
+          <div className="flex items-center gap-1 mb-2 px-2 py-1 bg-white rounded-full">
+            <CheckCircle className="w-3 h-3 text-black" />
+            <span className="text-[9px] text-black font-bold">VIP ACCESS UNLOCKED</span>
           </div>
         )}
-        <p className="text-[11px] text-zinc-400 mb-1 text-center">
+        <p className="text-[11px] text-black/50 mb-1 text-center">
           {isVipChannel && effectiveIsVip 
             ? 'VIP signals syncing from Telegram...' 
             : isVipChannel 
               ? 'VIP signals available in Telegram' 
               : 'No messages yet'}
         </p>
-        <p className="text-[9px] text-zinc-500 mb-3 text-center max-w-[200px]">
+        <p className="text-[9px] text-black/40 mb-3 text-center max-w-[200px]">
           {isVipChannel && effectiveIsVip
             ? statusMessage || 'Post a message in the VIP channel to see it here. Make sure @MrBullmoneybot is admin.'
             : isVipChannel 
@@ -3779,7 +3788,7 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false, onNewMessa
             rel="noopener noreferrer"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 bg-white/20 text-white border border-white/40"
+            className="px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 bg-white text-black border border-black/15"
           >
             <ExternalLink className="w-3.5 h-3.5" />
             Open in Telegram
@@ -3810,30 +3819,30 @@ const TelegramChannelEmbed = memo(({ channel = 'main', isVip = false, onNewMessa
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: idx * 0.05 }}
-          className="block bg-white/5 hover:bg-white/10 rounded-lg p-3 border border-white/10 hover:border-white/40 transition-all group"
+          className="block bg-white hover:bg-white/80 rounded-lg p-3 border border-black/8 hover:border-black/15 transition-all group"
         >
           <div className="flex items-start gap-2">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 bg-linear-to-br ${
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-black text-xs font-bold flex-shrink-0 bg-linear-to-br ${
               channel === 'vip' ? 'from-blue-500 to-cyan-500' :
               channel === 'shop' ? 'from-white to-teal-500' :
-              channel === 'trades' ? 'from-white to-white' :
-              'from-white to-white'
+              channel === 'trades' ? 'from-sky-400 to-sky-300' :
+              'from-sky-400 to-sky-300'
             }`}>
-              {channel === 'vip' ? <Star className="w-4 h-4 text-blue-400" /> : 
+              {channel === 'vip' ? <Star className="w-4 h-4 text-black/70" /> : 
                channel === 'shop' ? <ShoppingBag className="w-4 h-4" /> : 
                channel === 'trades' ? <TrendingUp className="w-4 h-4" /> : 'B'}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2 mb-1">
-                <span className="text-[10px] font-semibold text-white">{channelConfig.name}</span>
-                <span className="text-[8px] text-zinc-500">{post.date}</span>
+                <span className="text-[10px] font-semibold text-black">{channelConfig.name}</span>
+                <span className="text-[8px] text-black/40">{post.date}</span>
               </div>
-              <p className="text-[10px] text-zinc-300 line-clamp-3 leading-relaxed">{post.text}</p>
+              <p className="text-[10px] text-black/60 line-clamp-3 leading-relaxed">{post.text}</p>
               {post.hasMedia && (
-                <span className="inline-block mt-1.5 text-[8px] bg-white/20 text-white px-1.5 py-0.5 rounded">📷 Media</span>
+                <span className="inline-block mt-1.5 text-[8px] bg-white text-black px-1.5 py-0.5 rounded">📷 Media</span>
               )}
             </div>
-            <ExternalLink className="w-3 h-3 text-zinc-600 group-hover:text-white transition-colors flex-shrink-0" />
+            <ExternalLink className="w-3 h-3 text-black/40 group-hover:text-black transition-colors flex-shrink-0" />
           </div>
         </motion.a>
       ))}
@@ -3872,10 +3881,10 @@ const LiveTradesTicker = memo(() => {
   
   if (loading || !currentMessage) {
     return (
-      <div className="mt-0 -translate-y-0.5 px-1 py-0.5 bg-zinc-900/80 rounded-b-lg border-x border-b border-white/20">
+      <div className="mt-0 -translate-y-0.5 px-1 py-0.5 bg-[#f5f5f7]/80 rounded-b-lg border-x border-b border-black/10">
         <div className="flex items-center gap-1">
-          <Loader className="w-2 h-2 text-white animate-spin" />
-          <span className="text-[5px] text-zinc-500">Loading...</span>
+          <Loader className="w-2 h-2 text-black animate-spin" />
+          <span className="text-[5px] text-black/40">Loading...</span>
         </div>
       </div>
     );
@@ -3891,15 +3900,15 @@ const LiveTradesTicker = memo(() => {
       rel="noopener noreferrer"
       className="block mt-0 -translate-y-0.5"
     >
-      <div className="px-1 py-0.5 bg-linear-to-br from-zinc-900/95 via-zinc-800/95 to-zinc-900/90 backdrop-blur-xl rounded-b-lg border-x border-b border-white/30 hover:border-white/50 transition-all overflow-hidden">
+      <div className="px-1 py-0.5 bg-white/95 backdrop-blur-xl rounded-b-lg border-x border-b border-black/10 hover:border-black/20 transition-all overflow-hidden">
         <div className="flex items-center justify-between mb-0.5">
           <div className="flex items-center gap-0.5">
-            <motion.div className="w-1 h-1 bg-white rounded-full"
+            <motion.div className="w-1 h-1 bg-emerald-500 rounded-full"
               animate={{ opacity: [1, 0.3, 1], boxShadow: ['0 0 0px rgba(255,255,255,0.8)', '0 0 6px rgba(255,255,255,0.8)', '0 0 0px rgba(255,255,255,0.8)'] }}
               transition={{ duration: 1, repeat: Infinity }} />
-            <span className="text-[4px] font-bold text-white/80 uppercase tracking-wider">Live</span>
+            <span className="text-[4px] font-bold text-black/60 uppercase tracking-wider">Live</span>
           </div>
-          <span className="text-[5px] text-zinc-500">{currentIndex + 1}/{messages.length}</span>
+          <span className="text-[5px] text-black/40">{currentIndex + 1}/{messages.length}</span>
         </div>
         
         <AnimatePresence mode="wait">
@@ -3908,13 +3917,13 @@ const LiveTradesTicker = memo(() => {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            className="text-[6px] text-white font-semibold leading-tight truncate"
+            className="text-[6px] text-black font-semibold leading-tight truncate"
           >
             {line1}
           </motion.p>
         </AnimatePresence>
         
-        <div className="mt-0.5 h-[1px] bg-zinc-700/40 rounded-full overflow-hidden">
+        <div className="mt-0.5 h-[1px] bg-black/10 rounded-full overflow-hidden">
           <motion.div className="h-full bg-linear-to-r from-white via-white to-white"
             initial={{ width: '0%' }}
             animate={{ width: '100%' }}
@@ -3947,10 +3956,10 @@ const TradingTipPill = memo(() => {
   }, []);
 
   return (
-    <div className="relative rounded-r-full bg-linear-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl px-1.5 py-1 overflow-hidden max-w-[180px]">
+    <div className="relative rounded-r-full bg-white/90 backdrop-blur-xl border-y border-r border-black/10 shadow-sm px-1.5 py-1 overflow-hidden max-w-[180px]">
       <div className="flex items-center gap-1.5 relative z-10">
         <motion.div animate={isSpinning ? { rotate: 360, scale: [1, 1.2, 1] } : {}} transition={{ duration: 0.5 }}>
-          <Sparkles className="w-2.5 h-2.5 text-white" />
+          <Sparkles className="w-2.5 h-2.5 text-black" />
         </motion.div>
         <div className="h-3 flex-1 overflow-hidden relative">
           <AnimatePresence mode="wait">
@@ -3959,7 +3968,7 @@ const TradingTipPill = memo(() => {
               initial={{ x: 20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -20, opacity: 0 }}
-              className="absolute inset-0 flex items-center text-[7px] text-white/90 font-medium whitespace-nowrap truncate"
+              className="absolute inset-0 flex items-center text-[7px] text-black/80 font-medium whitespace-nowrap truncate"
             >
               {TRADING_TIPS[tipIndex]}
             </motion.span>
@@ -3991,9 +4000,9 @@ const ModalWrapper = memo(({
   const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects } = useMobilePerformance();
   
   const colorClasses = {
-    blue: 'border-white/30 shadow-white/20',
-    purple: 'border-white/50 shadow-white/50',
-    cyan: 'border-white/30 shadow-white/20'
+    blue: 'border-black/10 shadow-lg',
+    purple: 'border-black/10 shadow-lg',
+    cyan: 'border-black/10 shadow-lg'
   };
 
   return (
@@ -4003,7 +4012,7 @@ const ModalWrapper = memo(({
           initial={animations.modalBackdrop.initial as TargetAndTransition}
           animate={animations.modalBackdrop.animate as TargetAndTransition}
           exit={animations.modalBackdrop.exit as TargetAndTransition}
-          className={`fixed inset-0 z-[2147483645] flex items-center justify-center p-3 sm:p-6 bg-black/95 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'}`}
+          className={`fixed inset-0 z-[10001] flex items-center justify-center p-3 sm:p-6 bg-black/60 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'}`}
           onClick={onClose}
         >
           {/* Tap hints - Skip on mobile for performance */}
@@ -4034,7 +4043,7 @@ const ModalWrapper = memo(({
             exit={animations.modalContent.exit as TargetAndTransition}
             transition={animations.modalContent.transition}
             onClick={e => e.stopPropagation()}
-            className={`relative w-full max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-linear-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 border ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl'} ${colorClasses[color]}`}
+            className={`relative w-full max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-[#f5f5f7] border ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl'} ${colorClasses[color]}`}
             style={{ maxWidth }}
           >
             {children}
@@ -4071,25 +4080,25 @@ const TradingModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () =
   return (
     <ModalWrapper isOpen={isOpen} onClose={onClose}>
       {/* Header */}
-      <div className="p-3 border-b border-white/20 bg-linear-to-r from-white/10 to-white/10">
+      <div className="p-3 border-b border-black/10 bg-[#f5f5f7]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-white" />
-            <h3 className="text-sm font-bold text-white">Trading Quick Access</h3>
+            <BarChart3 className="w-4 h-4 text-black" />
+            <h3 className="text-sm font-bold text-black">Trading Quick Access</h3>
           </div>
           <motion.button
             whileHover={{ scale: 1.1, rotate: 90 }}
             whileTap={{ scale: 0.9 }}
             onClick={onClose}
-            className="p-2 rounded-lg bg-white/20 hover:bg-white/40 border border-white/30"
+            className="p-2 rounded-lg bg-white hover:bg-black/5 border border-black/10"
           >
-            <X className="w-4 h-4 text-white" />
+            <X className="w-4 h-4 text-black" />
           </motion.button>
         </div>
       </div>
 
       {/* Chart Tabs */}
-      <div className="p-3 border-b border-white/20">
+      <div className="p-3 border-b border-black/10">
         <div className="flex gap-2">
           {TRADING_SYMBOLS.map(sym => {
             const Icon = sym.icon;
@@ -4099,12 +4108,12 @@ const TradingModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                 onClick={() => { setActiveChart(sym.id); setShowCalendar(false); }}
                 className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
                   activeChart === sym.id && !showCalendar
-                    ? 'bg-white/30 border border-white/50'
-                    : 'bg-zinc-800/50 border border-white/20 hover:border-white/40'
+                    ? 'bg-white border border-black/15 shadow-sm'
+                    : 'bg-white/60 border border-black/5 hover:border-black/10'
                 }`}
               >
-                <Icon className="w-4 h-4 text-white" />
-                <span className="text-white">{sym.displayName}</span>
+                <Icon className="w-4 h-4 text-black" />
+                <span className="text-black">{sym.displayName}</span>
               </button>
             );
           })}
@@ -4112,7 +4121,7 @@ const TradingModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () =
       </div>
 
       {/* Chart */}
-      <div className="relative bg-zinc-950 flex-1 min-h-0">
+      <div className="relative bg-[#f5f5f7] flex-1 min-h-0">
         <div className="w-full h-[300px]" style={{ touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
           {!showCalendar ? (
             <iframe
@@ -4132,18 +4141,18 @@ const TradingModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () =
       </div>
 
       {/* Calendar Toggle & Filters */}
-      <div className="p-3 border-t border-white/20 space-y-2">
+      <div className="p-3 border-t border-black/10 space-y-2">
         <div className="flex gap-2">
           <motion.button
             onClick={() => setShowCalendar(!showCalendar)}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
-              showCalendar ? 'bg-white/30 border border-white/50' : 'bg-zinc-700 hover:bg-zinc-600 border border-white/20'
+              showCalendar ? 'bg-white border border-black/15 shadow-sm' : 'bg-white/60 hover:bg-white border border-black/5'
             }`}
           >
-            <Calendar className="w-4 h-4 text-white" />
-            <span className="text-white">{showCalendar ? 'Show Charts' : 'Economic Calendar'}</span>
+            <Calendar className="w-4 h-4 text-black" />
+            <span className="text-black">{showCalendar ? 'Show Charts' : 'Economic Calendar'}</span>
           </motion.button>
           
           {showCalendar && (
@@ -4154,11 +4163,11 @@ const TradingModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () =
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
-                showFilters ? 'bg-white/30 border border-white/50' : 'bg-zinc-700 hover:bg-zinc-600 border border-zinc-500/20'
+                showFilters ? 'bg-white border border-black/15 shadow-sm' : 'bg-white/60 hover:bg-white border border-black/5'
               }`}
             >
-              <Filter className="w-3.5 h-3.5 text-white" />
-              <span className="text-white">Filters</span>
+              <Filter className="w-3.5 h-3.5 text-black" />
+              <span className="text-black">Filters</span>
             </motion.button>
           )}
         </div>
@@ -4174,7 +4183,7 @@ const TradingModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () =
             >
               {/* Impact Filter */}
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-zinc-400 w-14">Impact:</span>
+                <span className="text-[10px] text-black/50 w-14">Impact:</span>
                 <div className="flex gap-1 flex-1">
                   {(['all', 'high', 'medium', 'low'] as CalendarImpact[]).map(impact => (
                     <button
@@ -4184,9 +4193,9 @@ const TradingModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                         calendarImpact === impact
                           ? impact === 'high' ? 'bg-red-500/30 text-red-300 border border-red-500/40'
                           : impact === 'medium' ? 'bg-amber-500/30 text-amber-300 border border-amber-500/40'
-                          : impact === 'low' ? 'bg-white/30 text-white border border-white/40'
-                          : 'bg-white/30 text-white border border-white/40'
-                          : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/40 hover:bg-zinc-700/50'
+                          : impact === 'low' ? 'bg-green-500/15 text-green-700 border border-green-500/30'
+                          : 'bg-white text-black border border-black/15 shadow-sm'
+                          : 'bg-white/60 text-black/50 border border-black/5 hover:bg-white'
                       }`}
                     >
                       {impact === 'all' ? 'All' : impact.charAt(0).toUpperCase() + impact.slice(1)}
@@ -4197,7 +4206,7 @@ const TradingModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () =
 
               {/* Country Filter */}
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-zinc-400 w-14">Currency:</span>
+                <span className="text-[10px] text-black/50 w-14">Currency:</span>
                 <div className="flex gap-1 flex-1 overflow-x-auto overflow-y-hidden pb-1 scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ touchAction: 'pan-x pinch-zoom' }}>
                   {CALENDAR_COUNTRIES.map(country => (
                     <button
@@ -4205,8 +4214,8 @@ const TradingModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                       onClick={() => setCalendarCountry(country.id)}
                       className={`flex items-center gap-0.5 py-1 px-1.5 rounded text-[9px] font-semibold transition-all whitespace-nowrap ${
                         calendarCountry === country.id
-                          ? 'bg-white/30 text-white border border-white/40'
-                          : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/40 hover:bg-zinc-700/50'
+                          ? 'bg-white text-black border border-black/15 shadow-sm'
+                          : 'bg-white/60 text-black/50 border border-black/5 hover:bg-white'
                       }`}
                     >
                       <span>{country.flag}</span>
@@ -4248,20 +4257,20 @@ const CommunityModal = memo(({ isOpen, onClose, isVip, isAdmin }: {
   };
 
   const socialLinks = [
-    { name: 'Discord', icon: MessageSquare, url: 'https://discord.com/invite/9vVB44ZrNA', color: 'from-white to-white' },
-    { name: 'Telegram', icon: MessageCircle, url: 'https://t.me/bullmoneywebsite', color: 'from-white to-white' },
-    { name: 'Instagram', icon: Instagram, url: 'https://www.instagram.com/bullmoney.online/', color: 'from-white to-white' },
-    { name: 'YouTube', icon: Youtube, url: 'https://youtube.com/@bullmoney.online', color: 'from-white to-white' },
+    { name: 'Discord', icon: MessageSquare, url: 'https://discord.com/invite/9vVB44ZrNA', color: 'from-sky-400 to-sky-300' },
+    { name: 'Telegram', icon: MessageCircle, url: 'https://t.me/bullmoneywebsite', color: 'from-sky-400 to-sky-300' },
+    { name: 'Instagram', icon: Instagram, url: 'https://www.instagram.com/bullmoney.online/', color: 'from-sky-400 to-sky-300' },
+    { name: 'YouTube', icon: Youtube, url: 'https://youtube.com/@bullmoney.online', color: 'from-sky-400 to-sky-300' },
   ];
 
   return (
     <ModalWrapper isOpen={isOpen} onClose={onClose} color="cyan">
       {/* Header */}
-      <div className="p-3 border-b border-white/20 bg-linear-to-r from-white/10 to-white/10">
+      <div className="p-3 border-b border-black/10 bg-[#f5f5f7]">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <MessageSquare className="w-4 h-4 text-white" />
-            <h3 className="text-sm font-bold text-white">Live Community</h3>
+            <MessageSquare className="w-4 h-4 text-black" />
+            <h3 className="text-sm font-bold text-black">Live Community</h3>
           </div>
           <div className="flex items-center gap-1.5">
             {/* 🔔 Notification Bell - Compact Icon */}
@@ -4271,14 +4280,14 @@ const CommunityModal = memo(({ isOpen, onClose, isVip, isAdmin }: {
             <motion.div className="w-1.5 h-1.5 bg-white rounded-full"
               animate={{ opacity: [1, 0.4, 1] }}
               transition={{ duration: 1.5, repeat: Infinity }} />
-            <span className="text-[8px] text-white font-medium">LIVE</span>
+            <span className="text-[8px] text-black font-medium">LIVE</span>
             <motion.button
               whileHover={{ scale: 1.1, rotate: 90 }}
               whileTap={{ scale: 0.9 }}
               onClick={onClose}
-              className="ml-1 w-6 h-6 rounded-full bg-white/30 hover:bg-white/50 border border-white/40 flex items-center justify-center"
+              className="ml-1 w-6 h-6 rounded-full bg-white hover:bg-black/5 border border-black/10 shadow-sm flex items-center justify-center"
             >
-              <span className="text-white text-sm font-bold">×</span>
+              <span className="text-black text-sm font-bold">×</span>
             </motion.button>
           </div>
         </div>
@@ -4300,14 +4309,14 @@ const CommunityModal = memo(({ isOpen, onClose, isVip, isAdmin }: {
 
       {/* View All Link */}
       {activeChannel !== 'vip' && (
-        <div className="flex-shrink-0 px-2 sm:px-3 py-1 sm:py-1.5 border-t border-white/10 relative z-50">
+        <div className="flex-shrink-0 px-2 sm:px-3 py-1 sm:py-1.5 border-t border-black/10 relative z-50">
           <motion.a 
             href={`https://t.me/${TELEGRAM_CHANNELS[activeChannel].handle}`}
             target="_blank" 
             rel="noopener noreferrer"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="inline-flex items-center justify-center gap-1 text-[8px] sm:text-[9px] text-white hover:text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-md bg-white/10 hover:bg-white/20 border border-white/20 relative z-50"
+            className="inline-flex items-center justify-center gap-1 text-[8px] sm:text-[9px] text-black hover:text-black px-2 py-1 sm:px-3 sm:py-1.5 rounded-md bg-white hover:bg-white border border-black/10 relative z-50"
           >
             <ExternalLink className="w-2 h-2 sm:w-2.5 sm:h-2.5" /> Open in Browser
           </motion.a>
@@ -4315,13 +4324,13 @@ const CommunityModal = memo(({ isOpen, onClose, isVip, isAdmin }: {
       )}
 
       {/* Social Links */}
-      <div className="flex-shrink-0 p-2 sm:p-3 space-y-1 sm:space-y-1.5 border-t border-white/20">
+      <div className="flex-shrink-0 p-2 sm:p-3 space-y-1 sm:space-y-1.5 border-t border-black/10">
         <div className="flex gap-1.5 sm:gap-2">
           <motion.button
             onClick={handleCopyLink}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 sm:py-2 px-2 sm:px-3 rounded-md sm:rounded-lg bg-linear-to-r from-white to-white text-white font-semibold text-[10px] sm:text-xs"
+            className="flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 sm:py-2 px-2 sm:px-3 rounded-md sm:rounded-lg bg-linear-to-r from-white to-white text-black font-semibold text-[10px] sm:text-xs"
           >
             {copied ? <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> : <Copy className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
             {copied ? 'Copied!' : 'Copy Link'}
@@ -4341,7 +4350,7 @@ const CommunityModal = memo(({ isOpen, onClose, isVip, isAdmin }: {
                 onTouchStart={(e) => e.stopPropagation()}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className={`flex items-center justify-center gap-0.5 sm:gap-1 py-1 sm:py-1 px-1.5 sm:px-2 rounded-md bg-linear-to-r ${link.color} text-white font-semibold text-[10px] sm:text-xs`}
+                className={`flex items-center justify-center gap-0.5 sm:gap-1 py-1 sm:py-1 px-1.5 sm:px-2 rounded-md bg-linear-to-r ${link.color} text-black font-semibold text-[10px] sm:text-xs`}
               >
                 <Icon className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" />
                 {link.name}
@@ -4385,13 +4394,13 @@ const BullMoneyTVModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: 
   return (
     <ModalWrapper isOpen={isOpen} onClose={onClose} maxWidth="500px" color="purple">
       {/* Header */}
-      <div className="p-3 border-b border-white/30 bg-white/40">
+      <div className="p-3 border-b border-black/10 bg-white border border-black/10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+            <svg className="w-5 h-5 text-black" viewBox="0 0 24 24" fill="currentColor">
               <path d="M8 5v14l11-7z"/>
             </svg>
-            <h3 className="text-sm font-bold text-white">BullMoney TV</h3>
+            <h3 className="text-sm font-bold text-black">BullMoney TV</h3>
             {isLive && (
               <motion.div
                 className="flex items-center gap-1 px-1.5 py-0.5 bg-red-500/20 rounded-full"
@@ -4399,7 +4408,7 @@ const BullMoneyTVModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: 
                 transition={{ duration: 1, repeat: Infinity }}
               >
                 <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />
-                <span className="text-[8px] font-bold text-red-400">LIVE NOW</span>
+                <span className="text-[8px] font-bold text-red-500 font-bold">LIVE NOW</span>
               </motion.div>
             )}
           </div>
@@ -4407,9 +4416,9 @@ const BullMoneyTVModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: 
             whileHover={{ scale: 1.1, rotate: 90 }}
             whileTap={{ scale: 0.9 }}
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/30 hover:bg-white/50 border border-white/40 flex items-center justify-center"
+            className="w-8 h-8 rounded-full bg-white hover:bg-black/5 border border-black/10 shadow-sm flex items-center justify-center"
           >
-            <span className="text-white font-bold">×</span>
+            <span className="text-black font-bold">×</span>
           </motion.button>
         </div>
         
@@ -4422,7 +4431,7 @@ const BullMoneyTVModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: 
             className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold ${
               activeTab === 'featured'
                 ? 'bg-yellow-400 text-black'
-                : 'bg-white/10 text-white/70 hover:bg-white/20'
+                : 'bg-white text-black/50 hover:bg-white'
             }`}
           >
             Featured ({featuredIndex + 1}/{FEATURED_VIDEOS.length})
@@ -4439,7 +4448,7 @@ const BullMoneyTVModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: 
             className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold ${
               activeTab === 'live'
                 ? isLive ? 'bg-red-500 text-white' : 'bg-white text-black'
-                : 'bg-white/10 text-white/70 hover:bg-white/20'
+                : 'bg-white text-black/50 hover:bg-white'
             }`}
           >
             <motion.div
@@ -4453,7 +4462,7 @@ const BullMoneyTVModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: 
       </div>
 
       {/* Video Player */}
-      <div className="relative w-full bg-black" style={{ minHeight: '280px' }}>
+      <div className="relative w-full bg-[#f5f5f7]" style={{ minHeight: '280px' }}>
         {isOpen && (
           <iframe
             key={`player-${playerKey}-${activeTab}-${featuredIndex}`}
@@ -4474,18 +4483,18 @@ const BullMoneyTVModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: 
               onClick={() => { setFeaturedIndex(p => (p - 1 + FEATURED_VIDEOS.length) % FEATURED_VIDEOS.length); setPlayerKey(p => p + 1); }}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              className="w-8 h-8 bg-black/70 hover:bg-black/90 rounded-full flex items-center justify-center text-white"
+              className="w-8 h-8 bg-white hover:bg-black/5 rounded-full flex items-center justify-center text-black"
             >
               ◀
             </motion.button>
-            <span className="text-white/70 text-xs font-semibold bg-black/50 px-2 py-1 rounded">
+            <span className="text-black/50 text-xs font-semibold bg-white/50 px-2 py-1 rounded">
               {featuredIndex + 1} / {FEATURED_VIDEOS.length}
             </span>
             <motion.button
               onClick={() => { setFeaturedIndex(p => (p + 1) % FEATURED_VIDEOS.length); setPlayerKey(p => p + 1); }}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              className="w-8 h-8 bg-black/70 hover:bg-black/90 rounded-full flex items-center justify-center text-white"
+              className="w-8 h-8 bg-white hover:bg-black/5 rounded-full flex items-center justify-center text-black"
             >
               ▶
             </motion.button>
@@ -4499,7 +4508,7 @@ const BullMoneyTVModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: 
               onClick={() => { setTradingChannelIndex(p => (p + 1) % TRADING_LIVE_CHANNELS.length); setPlayerKey(p => p + 1); }}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/90 hover:bg-white rounded text-[10px] font-bold text-white"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/90 hover:bg-white rounded text-[10px] font-bold text-black"
             >
               Next Channel ▶
             </motion.button>
@@ -4508,13 +4517,13 @@ const BullMoneyTVModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: 
       </div>
 
       {/* Platform Links */}
-      <div className="flex bg-[#1a1a1a] border-t border-white/10">
+      <div className="flex bg-[#f5f5f7] border-t border-black/10">
         <a href="https://youtube.com/@bullmoney.streams" target="_blank" rel="noopener noreferrer"
-          className="flex-1 py-2 px-3 flex items-center justify-center gap-2 text-xs font-semibold text-white/80 hover:text-white hover:bg-red-600/20">
+          className="flex-1 py-2 px-3 flex items-center justify-center gap-2 text-xs font-semibold text-black/60 hover:text-black hover:bg-red-600/20">
           <Youtube className="w-4 h-4 text-red-500" /> YouTube
         </a>
         <a href="https://discord.gg/vfxHPpCeQ" target="_blank" rel="noopener noreferrer"
-          className="flex-1 py-2 px-3 flex items-center justify-center gap-2 text-xs font-semibold text-white/80 hover:text-white hover:bg-[#5865F2]/20">
+          className="flex-1 py-2 px-3 flex items-center justify-center gap-2 text-xs font-semibold text-black/60 hover:text-black hover:bg-[#5865F2]/20">
           <MessageSquare className="w-4 h-4 text-[#5865F2]" /> Discord
         </a>
       </div>
@@ -4568,7 +4577,7 @@ const BrowserModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () =
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[2147483647] flex items-center justify-center p-5 sm:p-6 bg-black/60"
+          className="fixed inset-0 z-[10003] flex items-center justify-center p-5 sm:p-6 bg-black/60"
           onClick={onClose}
         >
           <motion.div
@@ -4576,18 +4585,18 @@ const BrowserModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () =
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             onClick={e => e.stopPropagation()}
-            className="w-[90vw] max-w-[320px] bg-linear-to-br from-zinc-900/98 via-zinc-800/98 to-zinc-900/98 backdrop-blur-2xl rounded-2xl border border-white/40 shadow-2xl overflow-hidden"
+            className="w-[90vw] max-w-[320px] bg-[#f5f5f7] backdrop-blur-xl rounded-2xl border border-black/15 shadow-2xl overflow-hidden"
           >
-            <div className="p-4 border-b border-white/20 bg-linear-to-r from-white/10 to-white/10">
+            <div className="p-4 border-b border-black/10 bg-[#f5f5f7]">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Monitor className="w-5 h-5 text-white" />
-                  <h3 className="text-sm font-bold text-white">Open in Browser</h3>
+                  <Monitor className="w-5 h-5 text-black" />
+                  <h3 className="text-sm font-bold text-black">Open in Browser</h3>
                 </div>
                 <motion.button
                   onClick={onClose}
                   whileHover={{ scale: 1.1, rotate: 90 }}
-                  className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 text-white"
+                  className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg bg-white hover:bg-white text-black"
                 >
                   ✕
                 </motion.button>
@@ -4609,11 +4618,11 @@ const BrowserModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                     whileHover={{ scale: 1.02, x: 4 }}
                     whileTap={{ scale: 0.98 }}
                     disabled={isLoading}
-                    className="w-full flex items-center justify-between p-3 rounded-lg bg-linear-to-r from-white/10 to-white/10 hover:from-white/20 hover:to-white/20 text-white font-medium text-xs border border-white/30 hover:border-white/50 disabled:opacity-50"
+                    className="w-full flex items-center justify-between p-3 rounded-lg bg-[#f5f5f7] hover:from-white/20 hover:to-white/20 text-black font-medium text-xs border border-black/10 hover:border-black/15 disabled:opacity-50"
                   >
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-lg bg-white/20 border border-white/30 flex items-center justify-center">
-                        <Icon className="w-4 h-4 text-white" />
+                      <div className="w-8 h-8 rounded-lg bg-white border border-black/10 flex items-center justify-center">
+                        <Icon className="w-4 h-4 text-black" />
                       </div>
                       <span>{browser.fullName}</span>
                     </div>
@@ -4622,10 +4631,10 @@ const BrowserModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                       <motion.div
                         animate={{ rotate: 360 }}
                         transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                        className="w-4 h-4 border-2 border-t-transparent border-white rounded-full"
+                        className="w-4 h-4 border-2 border-t-transparent border-black rounded-full"
                       />
                     ) : (
-                      <ExternalLink className="w-4 h-4 text-white opacity-50" />
+                      <ExternalLink className="w-4 h-4 text-black opacity-50" />
                     )}
                   </motion.button>
                 );
@@ -4922,28 +4931,28 @@ const HubTabCarousel = memo(({ activeTab, setActiveTab, isDesktopFloating = fals
               }}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              className={`group relative flex-1 flex items-center justify-center gap-2 px-2 py-2.5 rounded-xl border transition-all outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
+              className={`group relative flex-1 flex items-center justify-center gap-2 px-2 py-2.5 rounded-xl border transition-all outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
                 isActive
-                  ? 'bg-blue-500/30 border-blue-400/70 text-blue-400'
-                  : 'bg-blue-500/10 border-blue-400/30 text-blue-400/60 hover:bg-blue-500/20 hover:border-blue-400/50 hover:text-blue-400'
+                  ? 'bg-black border-black text-white shadow-md'
+                  : 'bg-white/60 border-black/5 text-black/50 hover:bg-white hover:border-black/10 hover:text-black/70'
               }`}
-              style={isActive ? { boxShadow: '0 0 12px rgba(59, 130, 246, 0.5)' } : {}}
+              style={isActive ? { boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)' } : {}}
             >
               <span className={`flex items-center justify-center w-7 h-7 rounded-lg shrink-0 ${
-                isActive ? 'bg-blue-500/40 border border-blue-400/50' : 'bg-blue-500/20'
+                isActive ? 'bg-white/15 border border-white/20' : 'bg-black/5'
               }`}>
-                <TabIcon className="w-4 h-4" style={isActive ? { filter: 'drop-shadow(0 0 3px rgba(59, 130, 246, 0.7))' } : {}} />
+                <TabIcon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-black/70'}`} />
               </span>
-              <span className={`text-xs font-semibold uppercase tracking-wide whitespace-nowrap hidden xl:block`} style={isActive ? { textShadow: '0 0 6px rgba(59, 130, 246, 0.7)' } : {}}>
+              <span className={`text-xs font-semibold uppercase tracking-wide whitespace-nowrap hidden xl:block ${isActive ? 'text-white' : 'text-black/60'}`}>
                 {tab.label}
               </span>
               {isFav && (
-                <Star className="w-3 h-3 text-blue-400 fill-blue-400 shrink-0" />
+                <Star className="w-3 h-3 text-amber-500 fill-amber-500 shrink-0" />
               )}
               {/* Hover tooltip */}
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-blue-900/95 border border-blue-400/50 rounded-lg text-[10px] text-blue-300 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-[2147483649]">
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-white border border-black/10 rounded-lg shadow-lg text-[10px] text-black/70 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-[10004]">
                 {tab.label} {isFav && '⭐'}
-                <div className="text-[9px] text-blue-400/60">Double-click to {isFav ? 'unset' : 'set'} favorite</div>
+                <div className="text-[9px] text-black/40">Double-click to {isFav ? 'unset' : 'set'} favorite</div>
               </div>
             </motion.button>
           );
@@ -4954,7 +4963,7 @@ const HubTabCarousel = memo(({ activeTab, setActiveTab, isDesktopFloating = fals
 
   // Mobile/tablet: Keep the carousel navigation
   return (
-    <div className="flex flex-col gap-1 p-1 sm:p-2 border-b border-blue-500/30 shrink-0 bg-black/95 backdrop-blur-2xl relative" style={{ boxShadow: '0 0 12px rgba(59, 130, 246, 0.3), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
+    <div className="flex flex-col gap-1 p-1 sm:p-2 border-b border-black/10 shrink-0 bg-[rgb(255,255,255)] sm:bg-[#f5f5f7]/95 relative mt-2 sm:mt-0 w-full max-w-[1100px] mx-auto" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
       {/* Main Carousel Row */}
       <div className="flex items-center gap-1 sm:gap-1.5">
         {/* Favorite Button */}
@@ -4963,15 +4972,15 @@ const HubTabCarousel = memo(({ activeTab, setActiveTab, isDesktopFloating = fals
           whileTap={{ scale: hasFavorite ? 0.9 : 1 }}
           className={`group relative flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl border transition-all shrink-0 ${
             hasFavorite
-              ? 'bg-blue-500/30 border-blue-400/70 text-blue-400 cursor-pointer'
-              : 'bg-blue-500/10 border-blue-400/30 text-blue-400/40 cursor-default'
+              ? 'bg-white border-black/15 text-amber-500 cursor-pointer shadow-sm'
+              : 'bg-white/60 border-black/5 text-black/20 cursor-default'
           }`}
-          style={hasFavorite ? { boxShadow: '0 0 8px rgba(59, 130, 246, 0.5)' } : {}}
+          style={hasFavorite ? { boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' } : {}}
         >
-          <Star className={`w-3.5 h-3.5 sm:w-5 sm:h-5 ${hasFavorite ? 'fill-blue-400' : ''}`} />
+          <Star className={`w-3.5 h-3.5 sm:w-5 sm:h-5 ${hasFavorite ? 'fill-amber-500' : ''}`} />
           {/* Hover tooltip - desktop only */}
           {hasFavorite && (
-            <div className="hidden sm:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-blue-900/95 border border-blue-400/50 rounded-lg text-[10px] text-blue-300 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
+            <div className="hidden sm:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-white border border-black/10 rounded-lg shadow-lg text-[10px] text-black/70 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
               ⭐ {favoriteTabData?.label}
             </div>
           )}
@@ -4985,12 +4994,12 @@ const HubTabCarousel = memo(({ activeTab, setActiveTab, isDesktopFloating = fals
           onTouchStart={() => startHold('left')}
           onTouchEnd={stopHold}
           animate={{ scale: isHoldingLeft ? 0.85 : 1 }}
-          className="group relative flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-blue-500/20 border border-blue-400/50 text-blue-400 active:bg-blue-500/40 transition-all shrink-0"
-          style={{ boxShadow: isHoldingLeft ? '0 0 12px rgba(59, 130, 246, 0.7)' : '0 0 6px rgba(59, 130, 246, 0.3)' }}
+          className="group relative flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-white border border-black/10 text-black/60 active:bg-black/5 transition-all shrink-0 shadow-sm"
+          style={{ boxShadow: isHoldingLeft ? '0 2px 8px rgba(0, 0, 0, 0.15)' : '0 1px 3px rgba(0, 0, 0, 0.08)' }}
         >
           <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           {/* Hover tooltip - desktop only */}
-          <div className="hidden sm:flex absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-blue-900/95 border border-blue-400/50 rounded-lg text-[10px] text-blue-300 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 items-center gap-1">
+          <div className="hidden sm:flex absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-white border border-black/10 rounded-lg shadow-lg text-[10px] text-black/70 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 items-center gap-1">
             <PrevIcon className="w-3 h-3" />
             {prevTab?.label}
           </div>
@@ -4998,7 +5007,7 @@ const HubTabCarousel = memo(({ activeTab, setActiveTab, isDesktopFloating = fals
             <motion.div 
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              className="absolute inset-0 rounded-lg sm:rounded-xl border-2 border-blue-400 pointer-events-none"
+              className="absolute inset-0 rounded-lg sm:rounded-xl border-2 border-black/20 pointer-events-none"
             />
           )}
         </motion.button>
@@ -5020,13 +5029,13 @@ const HubTabCarousel = memo(({ activeTab, setActiveTab, isDesktopFloating = fals
           style={{ touchAction: 'pan-y' }}
         >
           <div 
-            className="group relative flex items-center gap-2 sm:gap-3 px-2 sm:px-4 py-1 sm:py-2 rounded-lg sm:rounded-xl bg-blue-500/25 border border-blue-400/60 backdrop-blur-xl active:bg-blue-500/35 transition-all max-w-full"
-            style={{ boxShadow: '0 0 10px rgba(59, 130, 246, 0.4)' }}
+            className="group relative flex items-center gap-2 sm:gap-3 px-2 sm:px-4 py-1 sm:py-2 rounded-lg sm:rounded-xl bg-white border border-black/10 active:bg-black/5 shadow-sm transition-all max-w-full"
+            style={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)' }}
           >
-            <span className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-blue-500/30 border border-blue-400/50 shrink-0">
-              <Icon className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-blue-400" style={{ filter: 'drop-shadow(0 0 3px rgba(59, 130, 246, 0.7))' }} />
+            <span className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-black/5 border border-black/8 shrink-0">
+              <Icon className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-black/70" style={{ filter: 'none' }} />
             </span>
-            <span className="text-[11px] sm:text-sm font-bold text-blue-400 whitespace-nowrap uppercase tracking-wide sm:tracking-wider truncate" style={{ textShadow: '0 0 6px rgba(59, 130, 246, 0.7)' }}>
+            <span className="text-[11px] sm:text-sm font-bold text-black whitespace-nowrap uppercase tracking-wide sm:tracking-wider truncate" style={{}}>
               {currentTab?.label}
             </span>
             
@@ -5039,11 +5048,11 @@ const HubTabCarousel = memo(({ activeTab, setActiveTab, isDesktopFloating = fals
               whileTap={{ scale: 0.85 }}
               className={`p-1 sm:p-1.5 rounded-full transition-all shrink-0 ${
                 isFavorite 
-                  ? 'text-blue-400 bg-blue-500/30' 
-                  : 'text-blue-400/40 active:text-blue-400 active:bg-blue-500/20'
+                  ? 'text-amber-500 bg-amber-500/10' 
+                  : 'text-black/25 active:text-amber-500 active:bg-amber-500/10'
               }`}
             >
-              <Star className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isFavorite ? 'fill-blue-400' : ''}`} />
+              <Star className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isFavorite ? 'fill-amber-500' : ''}`} />
             </motion.button>
           </div>
         </motion.div>
@@ -5056,12 +5065,12 @@ const HubTabCarousel = memo(({ activeTab, setActiveTab, isDesktopFloating = fals
           onTouchStart={() => startHold('right')}
           onTouchEnd={stopHold}
           animate={{ scale: isHoldingRight ? 0.85 : 1 }}
-          className="group relative flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-blue-500/20 border border-blue-400/50 text-blue-400 active:bg-blue-500/40 transition-all shrink-0"
-          style={{ boxShadow: isHoldingRight ? '0 0 12px rgba(59, 130, 246, 0.7)' : '0 0 6px rgba(59, 130, 246, 0.3)' }}
+          className="group relative flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-white border border-black/10 text-black/60 active:bg-black/5 transition-all shrink-0 shadow-sm"
+          style={{ boxShadow: isHoldingRight ? '0 2px 8px rgba(0, 0, 0, 0.15)' : '0 1px 3px rgba(0, 0, 0, 0.08)' }}
         >
           <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
           {/* Hover tooltip - desktop only */}
-          <div className="hidden sm:flex absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-blue-900/95 border border-blue-400/50 rounded-lg text-[10px] text-blue-300 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 items-center gap-1">
+          <div className="hidden sm:flex absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-white border border-black/10 rounded-lg shadow-lg text-[10px] text-black/70 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 items-center gap-1">
             {nextTab?.label}
             <NextIcon className="w-3 h-3" />
           </div>
@@ -5069,7 +5078,7 @@ const HubTabCarousel = memo(({ activeTab, setActiveTab, isDesktopFloating = fals
             <motion.div 
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              className="absolute inset-0 rounded-lg sm:rounded-xl border-2 border-blue-400 pointer-events-none"
+              className="absolute inset-0 rounded-lg sm:rounded-xl border-2 border-black/20 pointer-events-none"
             />
           )}
         </motion.button>
@@ -5081,8 +5090,8 @@ const HubTabCarousel = memo(({ activeTab, setActiveTab, isDesktopFloating = fals
             whileTap={{ scale: 0.95 }}
             className={`flex items-center justify-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-1 rounded-md sm:rounded-lg border text-[9px] sm:text-[10px] font-bold shrink-0 transition-all ${
               showQuickJump 
-                ? 'bg-blue-500/40 border-blue-400/70 text-blue-300' 
-                : 'bg-blue-500/20 border-blue-400/40 text-blue-400 active:bg-blue-500/30'
+                ? 'bg-black/10 border-black/15 text-black/70' 
+                : 'bg-white border-black/8 text-black/50 active:bg-black/5'
             }`}
           >
             <span>{currentIndex + 1}/{UNIFIED_HUB_TABS.length}</span>
@@ -5097,11 +5106,11 @@ const HubTabCarousel = memo(({ activeTab, setActiveTab, isDesktopFloating = fals
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -10, scale: 0.95 }}
                 transition={{ duration: 0.15 }}
-                className="fixed sm:absolute inset-x-2 sm:inset-x-auto top-auto sm:top-full right-auto sm:right-0 bottom-auto mt-2 w-auto sm:w-44 max-h-[60vh] sm:max-h-72 overflow-y-auto bg-zinc-900/98 border border-blue-400/50 rounded-xl shadow-2xl z-[100] backdrop-blur-2xl"
-                style={{ boxShadow: '0 0 20px rgba(59, 130, 246, 0.4)' }}
+                className="fixed sm:absolute inset-x-2 sm:inset-x-auto top-auto sm:top-full right-auto sm:right-0 bottom-auto mt-2 w-auto sm:w-44 max-h-[60vh] sm:max-h-72 overflow-y-auto bg-white border border-black/10 rounded-xl shadow-2xl z-[100]"
+                style={{ boxShadow: '0 8px 30px rgba(0, 0, 0, 0.12)' }}
               >
                 <div className="p-1.5 grid grid-cols-2 sm:grid-cols-1 gap-1">
-                  <div className="col-span-2 sm:col-span-1 text-[9px] text-blue-400/60 uppercase tracking-wider px-2 py-1">Quick Jump</div>
+                  <div className="col-span-2 sm:col-span-1 text-[9px] text-black/40 uppercase tracking-wider px-2 py-1">Quick Jump</div>
                   {UNIFIED_HUB_TABS.map((tab, idx) => {
                     const TabIcon = tab.icon;
                     const isActive = idx === currentIndex;
@@ -5113,17 +5122,17 @@ const HubTabCarousel = memo(({ activeTab, setActiveTab, isDesktopFloating = fals
                         whileTap={{ scale: 0.97 }}
                         className={`w-full flex items-center gap-1.5 sm:gap-2 px-2 py-2 sm:py-1.5 rounded-lg text-left transition-all ${
                           isActive 
-                            ? 'bg-blue-500/30 text-blue-300' 
-                            : 'text-zinc-400 active:bg-blue-500/20'
+                            ? 'bg-blue-500/15 text-blue-600' 
+                            : 'text-black/60 active:bg-black/5'
                         }`}
                       >
                         <span className={`flex items-center justify-center w-6 h-6 sm:w-5 sm:h-5 rounded-md ${
-                          isActive ? 'bg-blue-500/40' : 'bg-zinc-800/50'
+                          isActive ? 'bg-blue-500/20' : 'bg-black/5'
                         }`}>
                           <TabIcon className="w-3.5 h-3.5 sm:w-3 sm:h-3" />
                         </span>
                         <span className="text-[11px] sm:text-xs font-medium flex-1 truncate">{tab.label}</span>
-                        {isFav && <Star className="w-2.5 h-2.5 text-blue-400 fill-blue-400 shrink-0" />}
+                        {isFav && <Star className="w-2.5 h-2.5 text-amber-500 fill-amber-500 shrink-0" />}
                       </motion.button>
                     );
                   })}
@@ -5150,12 +5159,12 @@ const HubTabCarousel = memo(({ activeTab, setActiveTab, isDesktopFloating = fals
                 whileTap={{ scale: 0.85 }}
                 className={`rounded-full transition-all ${
                   idx === currentIndex 
-                    ? 'w-3.5 sm:w-5 h-1.5 sm:h-2 bg-blue-400' 
+                    ? 'w-3.5 sm:w-5 h-1.5 sm:h-2 bg-black/70' 
                     : tab.id === favoriteTab 
-                      ? 'w-2 h-2 sm:w-2.5 sm:h-2.5 bg-blue-400/60 ring-1 ring-blue-400/40' 
-                      : 'w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-400/25 active:bg-blue-400/50'
+                      ? 'w-2 h-2 sm:w-2.5 sm:h-2.5 bg-amber-400/60 ring-1 ring-amber-400/40' 
+                      : 'w-1.5 h-1.5 sm:w-2 sm:h-2 bg-black/15 active:bg-black/30'
                 }`}
-                style={idx === currentIndex ? { boxShadow: '0 0 6px rgba(59, 130, 246, 0.7)' } : {}}
+                style={idx === currentIndex ? { boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)' } : {}}
               />
               {/* Hover label popup - desktop only */}
               <AnimatePresence>
@@ -5164,12 +5173,12 @@ const HubTabCarousel = memo(({ activeTab, setActiveTab, isDesktopFloating = fals
                     initial={{ opacity: 0, y: 5, scale: 0.9 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 5, scale: 0.9 }}
-                    className="hidden sm:flex absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-blue-900/95 border border-blue-400/50 rounded-lg whitespace-nowrap z-50 items-center gap-1.5"
-                    style={{ boxShadow: '0 0 12px rgba(59, 130, 246, 0.5)' }}
+                    className="hidden sm:flex absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-white border border-black/10 rounded-lg shadow-lg whitespace-nowrap z-50 items-center gap-1.5"
+                    style={{ boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)' }}
                   >
-                    <DotIcon className="w-3 h-3 text-blue-400" />
-                    <span className="text-[10px] text-blue-300 font-medium">{tab.label}</span>
-                    {tab.id === favoriteTab && <Star className="w-2.5 h-2.5 text-blue-400 fill-blue-400" />}
+                    <DotIcon className="w-3 h-3 text-black/60" />
+                    <span className="text-[10px] text-black/70 font-medium">{tab.label}</span>
+                    {tab.id === favoriteTab && <Star className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -5260,6 +5269,7 @@ export const UnifiedHubPanel = memo(({
   // Community tab state
   const [activeChannel, setActiveChannel] = useState<ChannelKey>('trades');
   const [copied, setCopied] = useState(false);
+  const [showCommunityMenu, setShowCommunityMenu] = useState(false);
   
   // Indicators tab state
   const [indicatorCategory, setIndicatorCategory] = useState<'crypto' | 'stocks' | 'sentiment'>('crypto');
@@ -5542,9 +5552,9 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
   };
 
   const socialLinks = [
-    { name: 'Discord', icon: MessageSquare, url: 'https://discord.com/invite/9vVB44ZrNA', color: 'from-indigo-600 to-white' },
-    { name: 'Telegram', icon: MessageCircle, url: 'https://t.me/bullmoneywebsite', color: 'from-white to-white' },
-    { name: 'Instagram', icon: Instagram, url: 'https://www.instagram.com/bullmoney.online/', color: 'from-pink-500 to-white' },
+    { name: 'Discord', icon: MessageSquare, url: 'https://discord.com/invite/9vVB44ZrNA', color: 'from-indigo-600 to-indigo-400' },
+    { name: 'Telegram', icon: MessageCircle, url: 'https://t.me/bullmoneywebsite', color: 'from-sky-400 to-sky-300' },
+    { name: 'Instagram', icon: Instagram, url: 'https://www.instagram.com/bullmoney.online/', color: 'from-pink-500 to-pink-300' },
     { name: 'YouTube', icon: Youtube, url: 'https://youtube.com/@bullmoney.online', color: 'from-red-600 to-red-500' },
   ];
 
@@ -5695,22 +5705,23 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
     };
   }, [isOpen]);
 
-  return (
+  const portalContent = (
     <AnimatePresence>
       {isOpen && (
         <>
           {/* Backdrop */}
           <motion.div
-            initial={{ opacity: 1 }}
+            initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[2147483640] bg-transparent"
+            className="fixed inset-0 z-[2147483640] flex items-center justify-center bg-black/70"
             onClick={onClose}
+            style={{ pointerEvents: 'all' }}
           />
 
           {/* Floating Tab Control (Outside Modal) */}
-          <div className="fixed inset-0 z-[2147483644] pointer-events-none">
+          <div className="fixed inset-0 z-[2147483645] pointer-events-none">
             {/* Mobile: Floating tab switch button */}
             <motion.button
               onClick={goToNextTab}
@@ -5719,24 +5730,13 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
               whileHover={{ scale: 1.06 }}
               whileTap={{ scale: 0.96 }}
               aria-label="Switch tab"
-              className="lg:hidden pointer-events-auto absolute right-3 top-1/2 -translate-y-1/2 w-[88px] h-10 rounded-full glass-button backdrop-blur-xl text-white flex items-center justify-between px-3"
+              className="lg:hidden pointer-events-auto absolute right-3 top-1/2 -translate-y-1/2 w-[88px] h-10 rounded-full bg-white border border-black/10 shadow-lg text-black flex items-center justify-between px-3"
             >
               <ChevronLeft className="w-4 h-4 opacity-80" />
               <span className="text-[9px] font-bold uppercase tracking-[0.2em]">Tabs</span>
               <ChevronRight className="w-4 h-4 opacity-80" />
             </motion.button>
             
-            {/* Desktop: Floating tab carousel above modal - Match modal width */}
-            <div className="hidden lg:block pointer-events-auto absolute left-1/2 -translate-x-1/2 w-[1160px] max-w-[calc(100vw-80px)] z-[2147483648]" style={{ top: 'calc(50% - 350px - 70px)' }}>
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                transition={{ delay: 0.1 }}
-              >
-                <HubTabCarousel activeTab={activeTab} setActiveTab={setActiveTab} isDesktopFloating />
-              </motion.div>
-            </div>
           </div>
           
           {/* Panel - Centered Modal */}
@@ -5744,65 +5744,64 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
             ref={panelRef}
             data-ultimate-hub
             data-panel
-            initial={isMobile ? { opacity: 0, y: 30 } : { scale: 0.95, opacity: 0, y: 20 }}
-            animate={isMobile ? { opacity: 1, y: 0 } : { scale: 1, opacity: 1, y: 0 }}
-            exit={isMobile ? { opacity: 0, y: 30 } : { scale: 0.95, opacity: 0, y: 20 }}
-            transition={isMobile 
-              ? { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] } 
-              : { type: 'spring', damping: 25, stiffness: 300, duration: 0.3 }
-            }
-            drag={enableDrag ? 'y' : false}
-            dragConstraints={enableDrag ? { top: 0, bottom: 0 } : undefined}
-            dragElastic={enableDrag ? { top: 0.2, bottom: 0.2 } : undefined}
-            onDragStart={enableDrag ? () => setIsDragging(true) : undefined}
-            onDragEnd={enableDrag ? handleDragEnd : undefined}
-            className="fixed left-1/2 top-1/2 z-[2147483647] -translate-x-1/2 -translate-y-1/2 w-[94vw] h-[90vh] max-h-[90vh] sm:w-[88vw] sm:h-[86vh] sm:max-h-[86vh] md:w-[82vw] md:h-[82vh] md:max-h-[82vh] lg:w-[1200px] lg:h-[720px] lg:max-h-[90vh] max-w-[1200px] flex flex-col glass-panel overflow-hidden rounded-2xl md:rounded-3xl [overscroll-behavior:contain] [-webkit-overflow-scrolling:touch]"
-            style={{ touchAction: 'pan-y pan-x', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            initial={{ scale: 0.98, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.98, opacity: 0 }}
+            transition={{ type: "spring", duration: 0.5 }}
+            className="fixed inset-0 z-[2147483647] w-[100vw] max-w-[100vw] h-[100dvh] max-h-[100dvh] overflow-y-auto bg-[#f5f5f7] text-black rounded-2xl md:rounded-3xl border border-black/10 shadow-2xl"
+            style={{ pointerEvents: 'all' }}
           >
             {/* Header with FPS Display */}
-            <div className="relative flex-shrink-0 p-3 sm:p-4 pr-24 sm:pr-24 lg:pr-28 border-b border-white/15 glass-surface">
+            <div className="sticky top-0 z-30 p-3 sm:p-4 pr-14 border-b border-black/10 bg-[#f5f5f7]/90">
+              <div className="relative">
               <div className="flex items-center justify-between gap-3">
-                {/* FPS Badge */}
-                <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <FpsCandlestickChart fps={fps} width={60} height={36} candleCount={6} />
-                  </div>
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-1">
-                      <Activity size={12} className="text-white" />
-                      <span className="text-lg font-black tabular-nums text-white neon-blue-text">{fps}</span>
-                      <span className="text-[8px] text-white font-bold neon-blue-text">FPS</span>
+                <div className="flex items-center gap-2 sm:gap-3">
+                  {/* FPS Badge */}
+                  <div className="flex items-center gap-2">
+                    <div className="relative">
+                      <FpsCandlestickChart fps={fps} width={60} height={36} candleCount={6} />
                     </div>
-                    <div className="text-[9px] font-mono font-bold uppercase text-white neon-blue-text tracking-wide">{deviceTier}</div>
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-1">
+                        <Activity size={12} className="text-black/70" />
+                        <span className="text-lg font-black tabular-nums text-black">{fps}</span>
+                        <span className="text-[8px] text-black/50 font-bold">FPS</span>
+                      </div>
+                      <div className="text-[9px] font-mono font-bold uppercase text-black/50 tracking-wide">{deviceTier}</div>
+                    </div>
+                  </div>
+
+                  {/* Live Prices */}
+                  <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white border border-black/10 shadow-sm">
+                    <div className="flex items-center gap-1">
+                      <Coins className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-black/60" />
+                      <span className="text-[9px] sm:text-[10px] font-bold text-black">{formatPrice(parseFloat(prices.xauusd) || 0)}</span>
+                    </div>
+                    <div className="w-px h-3 bg-black/10" />
+                    <div className="flex items-center gap-1">
+                      <Bitcoin className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-black/60" />
+                      <span className="text-[9px] sm:text-[10px] font-bold text-black">{formatPrice(parseFloat(prices.btcusd) || 0)}</span>
+                    </div>
                   </div>
                 </div>
                 
-                {/* Live Prices */}
-                <div className="flex items-center gap-2 px-2 py-1 rounded-lg glass-chip">
-                  <div className="flex items-center gap-1">
-                    <Coins className="w-3 h-3 text-white" />
-                    <span className="text-[10px] font-bold text-white neon-blue-text">{formatPrice(parseFloat(prices.xauusd) || 0)}</span>
-                  </div>
-                  <div className="w-px h-3 bg-white/30" />
-                  <div className="flex items-center gap-1">
-                    <Bitcoin className="w-3 h-3 text-white" />
-                    <span className="text-[10px] font-bold text-white neon-blue-text">{formatPrice(parseFloat(prices.btcusd) || 0)}</span>
-                  </div>
-                </div>
-                
-                {/* Close Button (absolute to header to avoid overflow on small screens) */}
+                {/* Close Button - Apple style white circle with black X */}
                 <motion.button
-                  whileHover={{ scale: 1.06, rotate: 90 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.94 }}
                   onClick={onClose}
                   aria-label="Close ultimate hub"
-                  className="absolute right-3 sm:right-4 top-2 sm:top-3 w-10 h-10 sm:w-12 sm:h-12 aspect-square rounded-full glass-button flex items-center justify-center pointer-events-auto"
+                  className="absolute top-1/2 right-2 sm:right-5 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-black hover:bg-black border border-black/10 flex items-center justify-center transition-all shadow-lg z-[60] cursor-pointer"
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1, transition: { delay: 0.1 } }}
+                  exit={{ opacity: 0, scale: 0 }}
                 >
-                  <X className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                  <X className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" strokeWidth={2.5} />
                 </motion.button>
                 
                 {/* Notification Toggle Bell - Below Close Button */}
-                <div className="absolute right-3 sm:right-4 top-[58px] sm:top-[64px] z-50">
+                <div className="hidden">
                   <NotificationToggle compact />
                 </div>
                 
@@ -5818,33 +5817,37 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                   />
                 )}
               </div>
+              </div>
               
               {/* Mobile Swipe Hint - Above Tab Buttons */}
               {isMobile && showSwipeHint && (
                 <motion.div
-                  className="flex-shrink-0 px-3 sm:px-4 py-2 border-b border-white/15 glass-surface flex items-center justify-center gap-1.5"
+                  className="px-3 py-1.5 border-b border-black/10 bg-[#f5f5f7]/90 flex items-center justify-center gap-1.5"
                   animate={{ x: [-14, 0, 14, 0] }}
                   transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
                 >
-                  <ChevronLeft className="w-3 h-3 text-white/70" />
-                  <span className="text-[9px] font-semibold uppercase tracking-wider text-white/70">Swipe to change tabs</span>
-                  <ChevronRight className="w-3 h-3 text-white/70" />
+                  <ChevronLeft className="w-3 h-3 text-black/40" />
+                  <span className="text-[9px] font-semibold uppercase tracking-wider text-black/40">Swipe to change tabs</span>
+                  <ChevronRight className="w-3 h-3 text-black/40" />
                 </motion.div>
               )}
             </div>
             
-            {/* Body: Content area
-                IMPORTANT: the outer content wrapper is NOT scrollable to prevent nested scroll/overlap;
-                each tab is responsible for its own scroll areas via flex + overflow-y-auto. */}
-            <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-              {/* Tab Carousel - Mobile/Tablet only (desktop has floating version above modal) */}
+            {/* Body: Content flows inside scrollable panel */}
+            <div className="w-full">
+              {/* Tab Carousel - Desktop (below header) */}
+              <div className="hidden lg:block px-3 pb-2">
+                <HubTabCarousel activeTab={activeTab} setActiveTab={setActiveTab} isDesktopFloating />
+              </div>
+
+              {/* Tab Carousel - Mobile/Tablet */}
               <div className="lg:hidden">
                 <HubTabCarousel activeTab={activeTab} setActiveTab={setActiveTab} />
               </div>
 
-              {/* Tab Content (not scrollable; tab internals handle scrolling) */}
+              {/* Tab Content */}
               <div
-                className="flex-1 min-h-0 overflow-hidden"
+                className="min-h-[60vh]"
                 data-ultimate-hub-content
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
@@ -5854,13 +5857,14 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                 {activeTab === 'trading' && (
                   <motion.div
                     key="trading"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="h-full min-h-0 flex flex-col"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="h-[calc(100dvh-220px)] min-h-[calc(100dvh-220px)] flex flex-col overflow-hidden"
                   >
                     {/* Symbol Selector */}
-                    <div className="flex-shrink-0 flex gap-1.5 sm:gap-2 p-2 sm:p-3 overflow-x-auto overflow-y-hidden border-b border-white/15 glass-surface scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ touchAction: 'pan-x pinch-zoom' }}>
+                    <div className="flex-shrink-0 flex gap-1.5 sm:gap-2 p-2 sm:p-3 overflow-x-auto overflow-y-hidden border-b border-black/10 glass-surface scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ touchAction: 'pan-x pinch-zoom' }}>
                       {TRADING_SYMBOLS.map(symbol => {
                         const Icon = symbol.icon;
                         const isActive = selectedSymbol.id === symbol.id;
@@ -5872,8 +5876,8 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                             whileTap={{ scale: 0.95 }}
                             className={`flex items-center gap-1.5 min-w-[70px] px-3 py-2 rounded-xl text-[10px] sm:text-[11px] font-semibold whitespace-nowrap transition-all border backdrop-blur-xl ${
                               isActive
-                                ? 'bg-white/20 text-white border-white/40 neon-blue-text'
-                                : 'bg-white/10 text-white/70 border-white/20 hover:bg-white/15 hover:text-white'
+                                ? 'bg-white text-black border-black/15 neon-blue-text'
+                                : 'bg-white text-black/50 border-black/10 hover:bg-black/5 hover:text-black'
                             }`}
                           >
                             <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -5904,14 +5908,14 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     </div>
                     
                     {/* Toggle & Filters */}
-                    <div className="flex-shrink-0 p-3 space-y-2 border-t border-white/15 glass-surface">
+                    <div className="flex-shrink-0 p-3 space-y-2 border-t border-black/10 glass-surface">
                       <div className="flex gap-2">
                         <motion.button
                           onClick={() => setShowCalendar(!showCalendar)}
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
                           className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all border backdrop-blur-xl ${
-                            showCalendar ? 'bg-white/20 border-white/40 text-white neon-blue-text' : 'bg-white/10 hover:bg-white/15 border-white/20 text-white/80 hover:text-white'
+                            showCalendar ? 'bg-white border-black/15 text-black neon-blue-text' : 'bg-white hover:bg-black/5 border-black/10 text-black/60 hover:text-black'
                           }`}
                         >
                           <Calendar className="w-4 h-4" />
@@ -5926,7 +5930,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
                             className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all border backdrop-blur-xl ${
-                              showFilters ? 'bg-white/20 border-white/40 text-white neon-blue-text' : 'bg-white/10 hover:bg-white/15 border-white/20 text-white/80 hover:text-white'
+                              showFilters ? 'bg-white border-black/15 text-black neon-blue-text' : 'bg-white hover:bg-black/5 border-black/10 text-black/60 hover:text-black'
                             }`}
                           >
                             <Filter className="w-3.5 h-3.5" />
@@ -5946,7 +5950,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                           >
                             {/* Impact Filter */}
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] text-zinc-400 w-14 flex-shrink-0">Impact:</span>
+                              <span className="text-[10px] text-black/50 w-14 flex-shrink-0">Impact:</span>
                               <div className="flex gap-1.5 flex-1">
                                 {(['all', 'high', 'medium', 'low'] as CalendarImpact[]).map(impact => (
                                   <button
@@ -5954,8 +5958,8 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                                     onClick={() => setCalendarImpact(impact)}
                                     className={`flex-1 min-w-[56px] py-1.5 px-2 rounded-lg text-[10px] font-semibold transition-all whitespace-nowrap border backdrop-blur-xl ${
                                       calendarImpact === impact
-                                        ? 'bg-white/20 text-white border-white/40 neon-blue-text'
-                                        : 'bg-white/10 text-white/70 border-white/20 hover:bg-white/15 hover:text-white'
+                                        ? 'bg-white text-black border-black/15 neon-blue-text'
+                                        : 'bg-white text-black/50 border-black/10 hover:bg-black/5 hover:text-black'
                                     }`}
                                   >
                                     {impact === 'all' ? 'All' : impact.charAt(0).toUpperCase() + impact.slice(1)}
@@ -5966,7 +5970,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                             
                             {/* Country Filter */}
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] text-zinc-400 w-14 flex-shrink-0">Currency:</span>
+                              <span className="text-[10px] text-black/50 w-14 flex-shrink-0">Currency:</span>
                               <div className="flex gap-1.5 flex-1 overflow-x-auto overflow-y-hidden pb-1 scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ touchAction: 'pan-x pinch-zoom' }}>
                                 {CALENDAR_COUNTRIES.map(country => (
                                   <button
@@ -5974,8 +5978,8 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                                     onClick={() => setCalendarCountry(country.id)}
                                     className={`flex items-center gap-1 py-1.5 px-2.5 rounded-lg text-[10px] font-semibold transition-all whitespace-nowrap flex-shrink-0 border backdrop-blur-xl ${
                                       calendarCountry === country.id
-                                        ? 'bg-white/20 text-white border-white/40 neon-blue-text'
-                                        : 'bg-white/10 text-white/70 border-white/20 hover:bg-white/15 hover:text-white'
+                                        ? 'bg-white text-black border-black/15 neon-blue-text'
+                                        : 'bg-white text-black/50 border-black/10 hover:bg-black/5 hover:text-black'
                                     }`}
                                   >
                                     <span>{country.flag}</span>
@@ -5998,34 +6002,79 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                 {activeTab === 'community' && (
                   <motion.div
                     key="community"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="h-full min-h-0 flex flex-col"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="min-h-[60vh] flex flex-col"
                   >
-                    {/* Channel Carousel - Swipeable single button with left/right nav and favorites */}
-                    <ChannelCarousel
-                      activeChannel={activeChannel}
-                      setActiveChannel={setActiveChannel}
-                      isVip={isVip}
-                      isAdmin={isAdmin}
-                      onClose={onClose}
-                    />
-                    
                     {/* Feed */}
-                    <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 bg-black/70 [-webkit-overflow-scrolling:touch] [overscroll-behavior:contain]" 
+                    <div className="flex-1 min-h-0 bg-white" 
                       style={{ touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
                       data-scrollable
                     >
                       <TelegramChannelEmbed channel={activeChannel} isVip={isVip} onNewMessage={onNewMessage} />
                     </div>
+
+                    {/* Social tabs toggle (bottom of Telegram feed) */}
+                    <div className="flex-shrink-0 mt-2 sm:mt-0 px-3 py-2 border-t border-black/10 glass-surface bg-white sm:bg-transparent relative z-40">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <span className="text-[11px] font-bold text-black uppercase tracking-[0.2em] sm:text-black/70">Social tabs</span>
+                        <motion.button
+                          onClick={() => setShowCommunityMenu((prev) => !prev)}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.97 }}
+                          className="order-2 sm:order-none px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-black/10 bg-white text-black text-[11px] font-bold shadow-sm sm:bg-black sm:text-white sm:shadow-lg sm:shadow-black/20 inline-flex items-center justify-center gap-2"
+                        >
+                          {showCommunityMenu ? 'Hide' : 'Show'}
+                          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showCommunityMenu ? 'rotate-180' : ''}`} />
+                        </motion.button>
+                      </div>
+
+                      {showCommunityMenu && (
+                        <div className="mt-2">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            {EXTENDED_CHANNEL_KEYS.map((key) => {
+                              const channelMeta = EXTENDED_CHANNELS[key];
+                              if (!channelMeta) return null;
+                              const isSelected = key === activeChannel;
+                              const isAdminTab = key === 'admin';
+                              const isLocked = channelMeta.requiresVip && !isVip;
+                              const isDisabled = isAdminTab && !isAdmin;
+
+                              return (
+                                <button
+                                  key={key}
+                                  onClick={() => {
+                                    if (isDisabled) return;
+                                    if (isAdminTab) {
+                                      window.dispatchEvent(new CustomEvent('openAdminVIPPanel'));
+                                      return;
+                                    }
+                                    setActiveChannel(key as ChannelKey);
+                                  }}
+                                  className={`flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-[11px] font-semibold border transition-all ${
+                                    isSelected
+                                      ? 'bg-black text-white border-black'
+                                      : 'bg-white text-black/70 border-black/10 hover:border-black/20'
+                                  } ${isDisabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+                                >
+                                  <span className="truncate">{channelMeta.name}</span>
+                                  {isLocked && <Lock className="w-3.5 h-3.5" />}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                     
                     {/* View All Link (mobile footer only) */}
                     {activeChannel !== 'vip' && (
-                      <div className="flex-shrink-0 px-3 py-2 border-t border-white/15 glass-surface sm:hidden relative z-50">
+                      <div className="flex-shrink-0 px-3 py-2 border-t border-black/10 glass-surface sm:hidden relative z-50">
                         <a href={`https://t.me/${TELEGRAM_CHANNELS[activeChannel].handle}`}
                           target="_blank" rel="noopener noreferrer"
-                          className="flex items-center justify-center gap-1 text-[10px] text-white/90 hover:text-white transition-all relative z-50">
+                          className="flex items-center justify-center gap-1 text-[10px] text-black/80 hover:text-black transition-all relative z-50">
                           <ExternalLink className="w-2.5 h-2.5" /> View all on Telegram
                         </a>
                       </div>
@@ -6037,13 +6086,14 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                 {activeTab === 'indicators' && (
                   <motion.div
                     key="indicators"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="h-full min-h-0 flex flex-col bg-black"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="min-h-[60vh] flex flex-col bg-[#f5f5f7]"
                   >
                     {/* Category Tabs */}
-                    <div className="flex-shrink-0 flex gap-2 p-2 sm:p-3 border-b border-white/30 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)' }}>
+                    <div className="flex-shrink-0 flex gap-2 p-2 sm:p-3 border-b border-black/10 bg-[#f5f5f7]" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
                       {(['crypto', 'stocks', 'sentiment'] as const).map(category => (
                         <motion.button
                           key={category}
@@ -6052,14 +6102,14 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                           whileTap={{ scale: 0.98 }}
                           className={`flex-1 min-w-[90px] flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap border backdrop-blur-xl ${
                             indicatorCategory === category
-                              ? 'bg-white/30 text-white border-white/70 neon-blue-text shadow-[0_8px_18px_rgba(255,255,255,0.25)]'
-                              : 'bg-white/10 text-white/70 border-white/25 hover:bg-white/15 hover:text-white'
+                              ? 'bg-white text-black border-black/15 shadow-sm'
+                              : 'bg-white/60 text-black/50 border-black/8 hover:bg-white hover:text-black'
                           }`}
-                          style={indicatorCategory === category ? { boxShadow: '0 0 8px rgba(255, 255, 255, 0.4)', textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' } : {}}
+                          style={indicatorCategory === category ? { boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)', textShadow: 'none' } : {}}
                         >
-                          {category === 'crypto' && <Bitcoin className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />}
-                          {category === 'stocks' && <TrendingUp className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />}
-                          {category === 'sentiment' && <Target className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />}
+                          {category === 'crypto' && <Bitcoin className="w-4 h-4" style={{ filter: 'none' }} />}
+                          {category === 'stocks' && <TrendingUp className="w-4 h-4" style={{ filter: 'none' }} />}
+                          {category === 'sentiment' && <Target className="w-4 h-4" style={{ filter: 'none' }} />}
                           <span className="neon-blue-text">{category === 'crypto' ? 'Crypto' : category === 'stocks' ? 'Stocks & Gold' : 'Sentiment'}</span>
                         </motion.button>
                       ))}
@@ -6069,96 +6119,96 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     {indicatorCategory === 'crypto' && (
                       <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3" style={{ touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }} data-scrollable>
                         {/* Bitcoin Live Chart */}
-                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
-                            <Globe className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
+                        <div className="border border-black/10 rounded-lg p-2 sm:p-3 bg-[#f5f5f7]" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: 'none' }}>
+                            <Globe className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'none' }} />
                             Bitcoin Live Chart
                           </h3>
-                          <div className="w-full h-[200px] sm:h-[250px] md:h-[300px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
+                          <div className="w-full h-[200px] sm:h-[250px] md:h-[300px] bg-[#f5f5f7] rounded" style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
                             <iframe
                               src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=en#%7B%22symbol%22%3A%22BINANCE%3ABTCUSDT%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22locale%22%3A%22en%22%2C%22dateRange%22%3A%221D%22%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Afalse%2C%22autosize%22%3Afalse%2C%22largeChartUrl%22%3A%22%22%7D"
                               className="w-full h-full border-0 rounded"
-                              style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom' }}
+                              style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom' }}
                               title="Bitcoin Chart"
                             />
                           </div>
                         </div>
 
                         {/* Top Crypto & Markets */}
-                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
-                            <Activity className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
+                        <div className="border border-black/10 rounded-lg p-2 sm:p-3 bg-[#f5f5f7]" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: 'none' }}>
+                            <Activity className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'none' }} />
                             Top Markets Overview
                           </h3>
-                          <div className="w-full h-[300px] sm:h-[400px] md:h-[500px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
+                          <div className="w-full h-[300px] sm:h-[400px] md:h-[500px] bg-[#f5f5f7] rounded" style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
                             <iframe
                               src="https://s.tradingview.com/embed-widget/market-quotes/?locale=en#%7B%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22symbolsGroups%22%3A%5B%7B%22name%22%3A%22Crypto%22%2C%22symbols%22%3A%5B%7B%22name%22%3A%22BINANCE%3ABTCUSDT%22%2C%22displayName%22%3A%22Bitcoin%22%7D%2C%7B%22name%22%3A%22BINANCE%3AETHUSDT%22%2C%22displayName%22%3A%22Ethereum%22%7D%2C%7B%22name%22%3A%22BINANCE%3ABNBUSDT%22%2C%22displayName%22%3A%22BNB%22%7D%2C%7B%22name%22%3A%22BINANCE%3ASOLUSDT%22%2C%22displayName%22%3A%22Solana%22%7D%5D%7D%2C%7B%22name%22%3A%22Indices%22%2C%22symbols%22%3A%5B%7B%22name%22%3A%22FOREXCOM%3ASPX500%22%2C%22displayName%22%3A%22S%26P%20500%22%7D%2C%7B%22name%22%3A%22FOREXCOM%3ANSXUSD%22%2C%22displayName%22%3A%22Nasdaq%22%7D%5D%7D%2C%7B%22name%22%3A%22Commodities%22%2C%22symbols%22%3A%5B%7B%22name%22%3A%22OANDA%3AXAUUSD%22%2C%22displayName%22%3A%22Gold%22%7D%2C%7B%22name%22%3A%22OANDA%3AXAGUSD%22%2C%22displayName%22%3A%22Silver%22%7D%5D%7D%5D%2C%22showSymbolLogo%22%3Atrue%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Afalse%2C%22locale%22%3A%22en%22%7D"
                               className="w-full h-full border-0 rounded"
-                              style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom' }}
+                              style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom' }}
                               title="Top Markets"
                             />
                           </div>
                         </div>
 
                         {/* Crypto Ticker */}
-                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
-                            <Bitcoin className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
+                        <div className="border border-black/10 rounded-lg p-2 sm:p-3 bg-[#f5f5f7]" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: 'none' }}>
+                            <Bitcoin className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'none' }} />
                             Live Crypto Prices
                           </h3>
-                          <div className="w-full h-[50px] sm:h-[60px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
+                          <div className="w-full h-[50px] sm:h-[60px] bg-[#f5f5f7] rounded" style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
                             <iframe
                               src="https://s.tradingview.com/embed-widget/ticker-tape/?locale=en#%7B%22symbols%22%3A%5B%7B%22proName%22%3A%22BITSTAMP%3ABTCUSD%22%2C%22title%22%3A%22Bitcoin%22%7D%2C%7B%22proName%22%3A%22BITSTAMP%3AETHUSD%22%2C%22title%22%3A%22Ethereum%22%7D%2C%7B%22description%22%3A%22BNB%22%2C%22proName%22%3A%22BINANCE%3ABNBUSDT%22%7D%2C%7B%22description%22%3A%22Solana%22%2C%22proName%22%3A%22BINANCE%3ASOLUSDT%22%7D%2C%7B%22description%22%3A%22XRP%22%2C%22proName%22%3A%22BINANCE%3AXRPUSDT%22%7D%2C%7B%22description%22%3A%22Cardano%22%2C%22proName%22%3A%22BINANCE%3AADAUSDT%22%7D%2C%7B%22description%22%3A%22Dogecoin%22%2C%22proName%22%3A%22BINANCE%3ADOGEUSDT%22%7D%5D%2C%22showSymbolLogo%22%3Atrue%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Afalse%2C%22displayMode%22%3A%22adaptive%22%2C%22locale%22%3A%22en%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%7D"
                               className="w-full h-full border-0 rounded"
-                              style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom' }}
+                              style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom' }}
                               title="Crypto Ticker"
                             />
                           </div>
                         </div>
 
                         {/* Crypto Heat Map */}
-                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
-                            <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
+                        <div className="border border-black/10 rounded-lg p-2 sm:p-3 bg-[#f5f5f7]" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: 'none' }}>
+                            <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'none' }} />
                             Crypto Heat Map
                           </h3>
-                          <div className="w-full h-[250px] sm:h-[350px] md:h-[400px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
+                          <div className="w-full h-[250px] sm:h-[350px] md:h-[400px] bg-[#f5f5f7] rounded" style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
                             <iframe
                               src="https://s.tradingview.com/embed-widget/crypto-coins-heatmap/?locale=en#%7B%22dataSource%22%3A%22Crypto%22%2C%22blockSize%22%3A%22market_cap_calc%22%2C%22blockColor%22%3A%22change%22%2C%22locale%22%3A%22en%22%2C%22symbolUrl%22%3A%22%22%2C%22colorTheme%22%3A%22dark%22%2C%22hasTopBar%22%3Afalse%2C%22isDataSetEnabled%22%3Afalse%2C%22isZoomEnabled%22%3Atrue%2C%22hasSymbolTooltip%22%3Atrue%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22isTransparent%22%3Afalse%7D"
                               className="w-full h-full border-0 rounded"
-                              style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom' }}
+                              style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom' }}
                               title="Crypto Heat Map"
                             />
                           </div>
                         </div>
 
                         {/* Crypto Hot Lists */}
-                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
-                            <Flame className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
+                        <div className="border border-black/10 rounded-lg p-2 sm:p-3 bg-[#f5f5f7]" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: 'none' }}>
+                            <Flame className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'none' }} />
                             Top Gainers & Losers
                           </h3>
-                          <div className="w-full h-[250px] sm:h-[350px] md:h-[400px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
+                          <div className="w-full h-[250px] sm:h-[350px] md:h-[400px] bg-[#f5f5f7] rounded" style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
                             <iframe
                               src="https://s.tradingview.com/embed-widget/hotlists/?locale=en#%7B%22colorTheme%22%3A%22dark%22%2C%22dateRange%22%3A%221D%22%2C%22exchange%22%3A%22BINANCE%22%2C%22showChart%22%3Atrue%2C%22locale%22%3A%22en%22%2C%22largeChartUrl%22%3A%22%22%2C%22isTransparent%22%3Afalse%2C%22showSymbolLogo%22%3Afalse%2C%22showFloatingTooltip%22%3Afalse%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%7D"
                               className="w-full h-full border-0 rounded"
-                              style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom' }}
+                              style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom' }}
                               title="Hot Lists"
                             />
                           </div>
                         </div>
 
                         {/* Market Data */}
-                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
-                            <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
+                        <div className="border border-black/10 rounded-lg p-2 sm:p-3 bg-[#f5f5f7]" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: 'none' }}>
+                            <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'none' }} />
                             Market Data
                           </h3>
-                          <div className="w-full h-[250px] sm:h-[350px] md:h-[400px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
+                          <div className="w-full h-[250px] sm:h-[350px] md:h-[400px] bg-[#f5f5f7] rounded" style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
                             <iframe
                               src="https://s.tradingview.com/embed-widget/market-quotes/?locale=en#%7B%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22symbolsGroups%22%3A%5B%7B%22name%22%3A%22Crypto%22%2C%22symbols%22%3A%5B%7B%22name%22%3A%22BINANCE%3ABTCUSDT%22%7D%2C%7B%22name%22%3A%22BINANCE%3AETHUSDT%22%7D%2C%7B%22name%22%3A%22BINANCE%3ABNBUSDT%22%7D%2C%7B%22name%22%3A%22BINANCE%3ASOLUSDT%22%7D%2C%7B%22name%22%3A%22BINANCE%3AXRPUSDT%22%7D%2C%7B%22name%22%3A%22BINANCE%3AADAUSDT%22%7D%5D%7D%5D%2C%22showSymbolLogo%22%3Atrue%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Afalse%2C%22locale%22%3A%22en%22%7D"
                               className="w-full h-full border-0 rounded"
-                              style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom' }}
+                              style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom' }}
                               title="Market Data"
                             />
                           </div>
@@ -6170,64 +6220,64 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     {indicatorCategory === 'stocks' && (
                       <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3" style={{ touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }} data-scrollable>
                         {/* Gold & Commodities */}
-                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
-                            <Coins className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
+                        <div className="border border-black/10 rounded-lg p-2 sm:p-3 bg-[#f5f5f7]" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: 'none' }}>
+                            <Coins className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'none' }} />
                             Gold & Commodities
                           </h3>
-                          <div className="w-full h-[200px] sm:h-[250px] md:h-[300px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
+                          <div className="w-full h-[200px] sm:h-[250px] md:h-[300px] bg-[#f5f5f7] rounded" style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
                             <iframe
                               src="https://s.tradingview.com/embed-widget/symbol-overview/?locale=en#%7B%22symbols%22%3A%5B%5B%22OANDA%3AXAUUSD%7C1D%22%5D%2C%5B%22OANDA%3AXAGUSD%7C1D%22%5D%2C%5B%22TVC%3AUSOIL%7C1D%22%5D%5D%2C%22chartOnly%22%3Afalse%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22locale%22%3A%22en%22%2C%22colorTheme%22%3A%22dark%22%2C%22autosize%22%3Afalse%2C%22showVolume%22%3Afalse%2C%22showMA%22%3Afalse%2C%22hideDateRanges%22%3Afalse%2C%22hideMarketStatus%22%3Afalse%2C%22hideSymbolLogo%22%3Afalse%2C%22scalePosition%22%3A%22right%22%2C%22scaleMode%22%3A%22Normal%22%2C%22fontFamily%22%3A%22-apple-system%2C%20BlinkMacSystemFont%2C%20Trebuchet%20MS%2C%20Roboto%2C%20Ubuntu%2C%20sans-serif%22%2C%22fontSize%22%3A%2210%22%2C%22noTimeScale%22%3Afalse%2C%22valuesTracking%22%3A%221%22%2C%22changeMode%22%3A%22price-and-percent%22%2C%22chartType%22%3A%22area%22%2C%22lineWidth%22%3A2%2C%22lineType%22%3A0%2C%22dateRanges%22%3A%5B%221d%7C1%22%2C%221m%7C30%22%2C%223m%7C60%22%2C%2212m%7C1D%22%2C%2260m%7C1W%22%2C%22all%7C1M%22%5D%2C%22isTransparent%22%3Afalse%7D"
                               className="w-full h-full border-0 rounded"
-                              style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom' }}
+                              style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom' }}
                               title="Gold & Commodities"
                             />
                           </div>
                         </div>
 
                         {/* Market Overview */}
-                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
-                            <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
+                        <div className="border border-black/10 rounded-lg p-2 sm:p-3 bg-[#f5f5f7]" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: 'none' }}>
+                            <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'none' }} />
                             Market Overview
                           </h3>
-                          <div className="w-full h-[250px] sm:h-[350px] md:h-[400px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
+                          <div className="w-full h-[250px] sm:h-[350px] md:h-[400px] bg-[#f5f5f7] rounded" style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
                             <iframe
                               src="https://s.tradingview.com/embed-widget/market-overview/?locale=en#%7B%22colorTheme%22%3A%22dark%22%2C%22dateRange%22%3A%2212M%22%2C%22showChart%22%3Atrue%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22largeChartUrl%22%3A%22%22%2C%22isTransparent%22%3Afalse%2C%22showSymbolLogo%22%3Atrue%2C%22plotLineColorGrowing%22%3A%22rgba(59%2C130%2C246%2C1)%22%2C%22plotLineColorFalling%22%3A%22rgba(59%2C130%2C246%2C1)%22%2C%22gridLineColor%22%3A%22rgba(59%2C130%2C246%2C0.1)%22%2C%22scaleFontColor%22%3A%22rgba(59%2C130%2C246%2C1)%22%2C%22belowLineFillColorGrowing%22%3A%22rgba(59%2C130%2C246%2C0.12)%22%2C%22belowLineFillColorFalling%22%3A%22rgba(59%2C130%2C246%2C0.12)%22%2C%22symbolActiveColor%22%3A%22rgba(59%2C130%2C246%2C0.12)%22%2C%22tabs%22%3A%5B%7B%22title%22%3A%22Indices%22%2C%22symbols%22%3A%5B%7B%22s%22%3A%22FOREXCOM%3ASPX500%22%2C%22d%22%3A%22S%26P%20500%22%7D%2C%7B%22s%22%3A%22FOREXCOM%3ANSXUSD%22%2C%22d%22%3A%22Nasdaq%20100%22%7D%2C%7B%22s%22%3A%22FOREXCOM%3ADJI%22%2C%22d%22%3A%22Dow%2030%22%7D%5D%2C%22originalTitle%22%3A%22Indices%22%7D%2C%7B%22title%22%3A%22Commodities%22%2C%22symbols%22%3A%5B%7B%22s%22%3A%22OANDA%3AXAUUSD%22%2C%22d%22%3A%22Gold%22%7D%2C%7B%22s%22%3A%22OANDA%3AXAGUSD%22%2C%22d%22%3A%22Silver%22%7D%2C%7B%22s%22%3A%22TVC%3AUSOIL%22%2C%22d%22%3A%22WTI%20Crude%20Oil%22%7D%5D%2C%22originalTitle%22%3A%22Commodities%22%7D%5D%7D"
                               className="w-full h-full border-0 rounded"
-                              style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom' }}
+                              style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom' }}
                               title="Market Overview"
                             />
                           </div>
                         </div>
 
                         {/* Screener */}
-                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
-                            <Eye className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
+                        <div className="border border-black/10 rounded-lg p-2 sm:p-3 bg-[#f5f5f7]" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: 'none' }}>
+                            <Eye className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'none' }} />
                             Stock Screener
                           </h3>
-                          <div className="w-full h-[300px] sm:h-[400px] md:h-[500px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
+                          <div className="w-full h-[300px] sm:h-[400px] md:h-[500px] bg-[#f5f5f7] rounded" style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
                             <iframe
                               src="https://s.tradingview.com/embed-widget/screener/?locale=en#%7B%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22defaultColumn%22%3A%22overview%22%2C%22defaultScreen%22%3A%22general%22%2C%22market%22%3A%22america%22%2C%22showToolbar%22%3Atrue%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Afalse%7D"
                               className="w-full h-full border-0 rounded"
-                              style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom' }}
+                              style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom' }}
                               title="Stock Screener"
                             />
                           </div>
                         </div>
 
                         {/* Heat Map */}
-                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
-                            <LineChart className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
+                        <div className="border border-black/10 rounded-lg p-2 sm:p-3 bg-[#f5f5f7]" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: 'none' }}>
+                            <LineChart className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'none' }} />
                             Market Heat Map
                           </h3>
-                          <div className="w-full h-[250px] sm:h-[350px] md:h-[400px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
+                          <div className="w-full h-[250px] sm:h-[350px] md:h-[400px] bg-[#f5f5f7] rounded" style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
                             <iframe
                               src="https://s.tradingview.com/embed-widget/stock-heatmap/?locale=en#%7B%22exchanges%22%3A%5B%5D%2C%22dataSource%22%3A%22SPX500%22%2C%22grouping%22%3A%22sector%22%2C%22blockSize%22%3A%22market_cap_basic%22%2C%22blockColor%22%3A%22change%22%2C%22hasTopBar%22%3Atrue%2C%22isDataSetEnabled%22%3Atrue%2C%22isZoomEnabled%22%3Atrue%2C%22hasSymbolTooltip%22%3Atrue%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Afalse%7D"
                               className="w-full h-full border-0 rounded"
-                              style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom' }}
+                              style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom' }}
                               title="Heat Map"
                             />
                           </div>
@@ -6239,80 +6289,80 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     {indicatorCategory === 'sentiment' && (
                       <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3" style={{ touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }} data-scrollable>
                         {/* Economic Calendar */}
-                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
-                            <Calendar className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
+                        <div className="border border-black/10 rounded-lg p-2 sm:p-3 bg-[#f5f5f7]" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: 'none' }}>
+                            <Calendar className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'none' }} />
                             Economic Calendar
                           </h3>
-                          <div className="w-full h-[250px] sm:h-[350px] md:h-[400px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
+                          <div className="w-full h-[250px] sm:h-[350px] md:h-[400px] bg-[#f5f5f7] rounded" style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch' }}>
                             <iframe
                               src="https://www.tradingview.com/embed-widget/events/?locale=en#%7B%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Afalse%2C%22importanceFilter%22%3A%22-1%2C0%2C1%2C2%22%7D"
                               className="w-full h-full border-0 rounded"
-                              style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom' }}
+                              style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom' }}
                               title="Economic Calendar"
                             />
                           </div>
                         </div>
 
                         {/* Crypto Timeline */}
-                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
-                            <Target className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
+                        <div className="border border-black/10 rounded-lg p-2 sm:p-3 bg-[#f5f5f7]" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: 'none' }}>
+                            <Target className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'none' }} />
                             Latest Crypto News
                           </h3>
-                          <div className="w-full h-[300px] sm:h-[400px] md:h-[450px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch', overflowY: 'auto' }}>
+                          <div className="w-full h-[300px] sm:h-[400px] md:h-[450px] bg-[#f5f5f7] rounded" style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch', overflowY: 'auto' }}>
                             <iframe
                               src="https://s.tradingview.com/embed-widget/timeline/?locale=en#%7B%22feedMode%22%3A%22all_symbols%22%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Afalse%2C%22displayMode%22%3A%22regular%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22locale%22%3A%22en%22%7D"
                               className="w-full h-full border-0 rounded"
-                              style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom' }}
+                              style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom' }}
                               title="Crypto News Timeline"
                             />
                           </div>
                         </div>
 
                         {/* Technical Analysis Summary */}
-                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
-                            <Activity className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
+                        <div className="border border-black/10 rounded-lg p-2 sm:p-3 bg-[#f5f5f7]" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: 'none' }}>
+                            <Activity className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'none' }} />
                             Technical Analysis
                           </h3>
-                          <div className="w-full h-[250px] sm:h-[350px] md:h-[400px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch', overflowY: 'auto' }}>
+                          <div className="w-full h-[250px] sm:h-[350px] md:h-[400px] bg-[#f5f5f7] rounded" style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch', overflowY: 'auto' }}>
                             <iframe
                               src="https://s.tradingview.com/embed-widget/technical-analysis/?locale=en#%7B%22interval%22%3A%221m%22%2C%22width%22%3A%22100%25%22%2C%22isTransparent%22%3Afalse%2C%22height%22%3A%22100%25%22%2C%22symbol%22%3A%22BINANCE%3ABTCUSDT%22%2C%22showIntervalTabs%22%3Atrue%2C%22colorTheme%22%3A%22dark%22%7D"
                               className="w-full h-full border-0 rounded"
-                              style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom' }}
+                              style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom' }}
                               title="Technical Analysis"
                             />
                           </div>
                         </div>
 
                         {/* Forex Cross Rates */}
-                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
-                            <Globe className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
+                        <div className="border border-black/10 rounded-lg p-2 sm:p-3 bg-[#f5f5f7]" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: 'none' }}>
+                            <Globe className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'none' }} />
                             Forex Cross Rates
                           </h3>
-                          <div className="w-full h-[250px] sm:h-[350px] md:h-[400px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch', overflowY: 'auto' }}>
+                          <div className="w-full h-[250px] sm:h-[350px] md:h-[400px] bg-[#f5f5f7] rounded" style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch', overflowY: 'auto' }}>
                             <iframe
                               src="https://s.tradingview.com/embed-widget/forex-cross-rates/?locale=en#%7B%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22currencies%22%3A%5B%22EUR%22%2C%22USD%22%2C%22JPY%22%2C%22GBP%22%2C%22CHF%22%2C%22AUD%22%2C%22CAD%22%2C%22NZD%22%5D%2C%22isTransparent%22%3Afalse%2C%22colorTheme%22%3A%22dark%22%2C%22locale%22%3A%22en%22%7D"
                               className="w-full h-full border-0 rounded"
-                              style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom' }}
+                              style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom' }}
                               title="Forex Cross Rates"
                             />
                           </div>
                         </div>
 
                         {/* Market Movers */}
-                        <div className="border border-white/30 rounded-lg p-2 sm:p-3 bg-black" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
-                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
-                            <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
+                        <div className="border border-black/10 rounded-lg p-2 sm:p-3 bg-[#f5f5f7]" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+                          <h3 className="text-xs sm:text-sm font-bold neon-blue-text mb-2 flex items-center gap-2" style={{ textShadow: 'none' }}>
+                            <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" style={{ filter: 'none' }} />
                             Market Movers
                           </h3>
-                          <div className="w-full h-[250px] sm:h-[350px] md:h-[400px] bg-black rounded" style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch', overflowY: 'auto' }}>
+                          <div className="w-full h-[250px] sm:h-[350px] md:h-[400px] bg-[#f5f5f7] rounded" style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom', WebkitOverflowScrolling: 'touch', overflowY: 'auto' }}>
                             <iframe
                               src="https://s.tradingview.com/embed-widget/market-quotes/?locale=en#%7B%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22symbolsGroups%22%3A%5B%7B%22name%22%3A%22Indices%22%2C%22symbols%22%3A%5B%7B%22name%22%3A%22FOREXCOM%3ASPX500%22%7D%2C%7B%22name%22%3A%22FOREXCOM%3ANSXUSD%22%7D%2C%7B%22name%22%3A%22FOREXCOM%3ADJI%22%7D%5D%7D%2C%7B%22name%22%3A%22Commodities%22%2C%22symbols%22%3A%5B%7B%22name%22%3A%22OANDA%3AXAUUSD%22%7D%2C%7B%22name%22%3A%22TVC%3AUSOIL%22%7D%5D%7D%5D%2C%22showSymbolLogo%22%3Atrue%2C%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Afalse%2C%22locale%22%3A%22en%22%7D"
                               className="w-full h-full border-0 rounded"
-                              style={{ backgroundColor: '#000000', touchAction: 'pan-y pinch-zoom' }}
+                              style={{ backgroundColor: '#f5f5f7', touchAction: 'pan-y pinch-zoom' }}
                               title="Market Movers"
                             />
                           </div>
@@ -6326,11 +6376,12 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                 {activeTab === 'news' && (
                   <motion.div
                     key="news"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="h-full overflow-hidden bg-black"
-                    style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)' }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="h-full overflow-hidden bg-[#f5f5f7]"
+                    style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
                   >
                     <UltimateHubNewsTab />
                   </motion.div>
@@ -6340,11 +6391,12 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                 {activeTab === 'livestream' && (
                   <motion.div
                     key="livestream"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="h-full overflow-hidden bg-black"
-                    style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)' }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="h-full overflow-hidden bg-[#f5f5f7]"
+                    style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
                   >
                     <UltimateHubLiveStreamTab />
                   </motion.div>
@@ -6354,11 +6406,12 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                 {activeTab === 'analysis' && (
                   <motion.div
                     key="analysis"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="h-full overflow-hidden bg-black"
-                    style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)' }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="h-full overflow-hidden bg-[#f5f5f7]"
+                    style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
                   >
                     <UltimateHubAnalysisTab />
                   </motion.div>
@@ -6368,11 +6421,12 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                 {activeTab === 'posts' && (
                   <motion.div
                     key="posts"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="h-full overflow-hidden bg-black"
-                    style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)' }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="h-full overflow-hidden bg-[#f5f5f7]"
+                    style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
                   >
                     <UltimateHubCommunityPostsTab />
                   </motion.div>
@@ -6382,11 +6436,12 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                 {activeTab === 'journal' && (
                   <motion.div
                     key="journal"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="h-full overflow-hidden bg-black"
-                    style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)' }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="h-full overflow-hidden bg-[#f5f5f7]"
+                    style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
                   >
                     <TradingJournal isEmbedded onClose={onClose} />
                   </motion.div>
@@ -6396,11 +6451,12 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                 {activeTab === 'course' && (
                   <motion.div
                     key="course"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="h-full bg-black overflow-hidden"
-                    style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)' }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="h-full bg-[#f5f5f7] overflow-hidden"
+                    style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
                   >
                     <TradingCourse />
                   </motion.div>
@@ -6410,24 +6466,25 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                 {activeTab === 'broker' && (
                   <motion.div
                     key="broker"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="p-3 space-y-3 bg-black flex flex-col h-full min-h-0 overflow-y-auto [-webkit-overflow-scrolling:touch]"
-                    style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)', touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="p-3 space-y-3 bg-[#f5f5f7] flex flex-col h-full min-h-0 overflow-y-auto [-webkit-overflow-scrolling:touch]"
+                    style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)', touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
                   >
                     {/* Connection Status */}
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-black border border-white/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}>
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-[#f5f5f7] border border-black/10 neon-blue-border" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
                       <div className="flex items-center gap-3">
                         <div className={`w-3 h-3 rounded-full animate-pulse`} style={{ 
                           backgroundColor: brokerConnected ? '#ffffff' : '#ef4444',
                           boxShadow: brokerConnected ? '0 0 12px #ffffff' : '0 0 12px #ef4444'
                         }} />
                         <div>
-                          <div className="text-sm font-bold text-white">
+                          <div className="text-sm font-bold text-black">
                             {brokerConnected ? `Connected to ${brokerType?.toUpperCase()}` : 'Not Connected'}
                           </div>
-                          <div className="text-[10px] text-zinc-400">
+                          <div className="text-[10px] text-black/50">
                             {brokerConnected ? `Account: ${brokerAccount?.accountNumber || 'N/A'}` : 'Connect your broker to trade'}
                           </div>
                         </div>
@@ -6438,7 +6495,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           className="px-3 py-1.5 rounded-lg bg-red-500/30 text-red-300 text-xs font-semibold border border-red-400/60"
-                          style={{ boxShadow: '0 0 8px rgba(239, 68, 68, 0.3)' }}
+                          style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
                         >
                           Disconnect
                         </motion.button>
@@ -6447,8 +6504,8 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                           onClick={() => setShowBrokerSetup(true)}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
-                          className="px-3 py-1.5 rounded-lg bg-white/30 text-white text-xs font-semibold border border-white/60 neon-blue-text"
-                          style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}
+                          className="px-3 py-1.5 rounded-lg bg-black text-white text-xs font-semibold border border-black/20"
+                          style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
                         >
                           <Zap className="w-3 h-3 inline mr-1" />Connect
                         </motion.button>
@@ -6467,12 +6524,12 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         >
                           <motion.div
                             onClick={(e) => e.stopPropagation()}
-                            className="bg-linear-to-br from-zinc-900 via-zinc-800 to-zinc-900 border border-white/30 rounded-2xl p-6 max-w-md w-full mx-4 space-y-4"
-                            style={{ boxShadow: '0 0 20px rgba(255, 255, 255, 0.4)' }}
+                            className="bg-[#f5f5f7] border border-black/10 rounded-2xl p-6 max-w-md w-full mx-4 space-y-4"
+                            style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
                           >
                             <div className="flex items-center justify-between">
-                              <h3 className="text-lg font-bold text-white neon-blue-text" style={{ textShadow: '0 0 8px #ffffff' }}>Connect Broker</h3>
-                              <button onClick={() => setShowBrokerSetup(false)} className="text-zinc-400 hover:text-white">
+                              <h3 className="text-lg font-bold text-black neon-blue-text" style={{ textShadow: 'none' }}>Connect Broker</h3>
+                              <button onClick={() => setShowBrokerSetup(false)} className="text-black/50 hover:text-black">
                                 <X className="w-5 h-5" />
                               </button>
                             </div>
@@ -6480,7 +6537,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                             <div className="space-y-3">
                               {/* Broker Type Selection */}
                               <div>
-                                <label className="text-xs text-zinc-400 mb-1 block">Broker Platform</label>
+                                <label className="text-xs text-black/50 mb-1 block">Broker Platform</label>
                                 <div className="grid grid-cols-2 gap-2">
                                   <motion.button
                                     onClick={() => {
@@ -6493,7 +6550,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                     disabled={connectingBroker}
-                                    className="p-3 rounded-lg bg-white/20 border border-white/40 text-white font-semibold text-sm hover:bg-white/30 disabled:opacity-50"
+                                    className="p-3 rounded-lg bg-white border border-black/15 text-black font-semibold text-sm hover:bg-black/5 disabled:opacity-50"
                                   >
                                     {connectingBroker ? 'Connecting...' : 'MetaTrader 4'}
                                   </motion.button>
@@ -6508,7 +6565,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                     disabled={connectingBroker}
-                                    className="p-3 rounded-lg bg-white/20 border border-white/40 text-white font-semibold text-sm hover:bg-white/30 disabled:opacity-50"
+                                    className="p-3 rounded-lg bg-white border border-black/15 text-black font-semibold text-sm hover:bg-black/5 disabled:opacity-50"
                                   >
                                     {connectingBroker ? 'Connecting...' : 'MetaTrader 5'}
                                   </motion.button>
@@ -6516,12 +6573,12 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                               </div>
 
                               {/* Info */}
-                              <div className="p-3 rounded-lg bg-white/10 border border-white/30">
-                                <div className="flex gap-2 text-xs text-white">
+                              <div className="p-3 rounded-lg bg-white border border-black/10">
+                                <div className="flex gap-2 text-xs text-black">
                                   <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
                                   <div>
                                     <p className="font-semibold mb-1">Demo Mode Active</p>
-                                    <p className="text-white/70">Click a platform to connect with demo credentials. For live trading, configure your MT4/MT5 API credentials in settings.</p>
+                                    <p className="text-black/50">Click a platform to connect with demo credentials. For live trading, configure your MT4/MT5 API credentials in settings.</p>
                                   </div>
                                 </div>
                               </div>
@@ -6535,48 +6592,48 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                       <>
                         {/* Account Overview */}
                         <div className="grid grid-cols-2 gap-2">
-                          <div className="p-3 rounded-xl bg-black border border-white/30" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2)' }}>
-                            <div className="text-[10px] text-zinc-400 mb-1">Balance</div>
-                            <div className="text-lg font-bold text-white neon-blue-text" style={{ textShadow: '0 0 4px #ffffff' }}>
+                          <div className="p-3 rounded-xl bg-[#f5f5f7] border border-black/10" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+                            <div className="text-[10px] text-black/50 mb-1">Balance</div>
+                            <div className="text-lg font-bold text-black neon-blue-text" style={{ textShadow: 'none' }}>
                               ${brokerAccount?.balance?.toLocaleString() || '10,000.00'}
                             </div>
                           </div>
-                          <div className="p-3 rounded-xl bg-black border border-white/30" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2)' }}>
-                            <div className="text-[10px] text-zinc-400 mb-1">Equity</div>
-                            <div className="text-lg font-bold text-white neon-blue-text" style={{ textShadow: '0 0 4px #ffffff' }}>
+                          <div className="p-3 rounded-xl bg-[#f5f5f7] border border-black/10" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+                            <div className="text-[10px] text-black/50 mb-1">Equity</div>
+                            <div className="text-lg font-bold text-black neon-blue-text" style={{ textShadow: 'none' }}>
                               ${brokerAccount?.equity?.toLocaleString() || '10,245.50'}
                             </div>
                           </div>
-                          <div className="p-3 rounded-xl bg-black border border-white/30" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2)' }}>
-                            <div className="text-[10px] text-zinc-400 mb-1">Margin</div>
-                            <div className="text-sm font-bold text-white">
+                          <div className="p-3 rounded-xl bg-[#f5f5f7] border border-black/10" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+                            <div className="text-[10px] text-black/50 mb-1">Margin</div>
+                            <div className="text-sm font-bold text-black">
                               ${brokerAccount?.margin?.toLocaleString() || '245.50'}
                             </div>
                           </div>
-                          <div className="p-3 rounded-xl bg-black border border-white/30" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2)' }}>
-                            <div className="text-[10px] text-zinc-400 mb-1">Free Margin</div>
-                            <div className="text-sm font-bold text-white">
+                          <div className="p-3 rounded-xl bg-[#f5f5f7] border border-black/10" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+                            <div className="text-[10px] text-black/50 mb-1">Free Margin</div>
+                            <div className="text-sm font-bold text-black">
                               ${brokerAccount?.freeMargin?.toLocaleString() || '9,754.50'}
                             </div>
                           </div>
                         </div>
 
                         {/* One-Click Trading */}
-                        <div className="p-3 rounded-xl bg-linear-to-br from-white/20 to-white/20 border border-white/40" style={{ boxShadow: '0 0 12px rgba(255, 255, 255, 0.4)' }}>
+                        <div className="p-3 rounded-xl bg-linear-to-br from-white/20 to-white/20 border border-black/15" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
                           <div className="flex items-center justify-between mb-3">
-                            <h4 className="text-sm font-bold text-white neon-blue-text flex items-center gap-2" style={{ textShadow: '0 0 4px #ffffff' }}>
-                              <Zap className="w-4 h-4" style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }} />
+                            <h4 className="text-sm font-bold text-black neon-blue-text flex items-center gap-2" style={{ textShadow: 'none' }}>
+                              <Zap className="w-4 h-4" style={{ filter: 'none' }} />
                               One-Click Trading
                             </h4>
                             <div className="flex items-center gap-2">
-                              <span className="text-xs text-zinc-400">Lots:</span>
+                              <span className="text-xs text-black/50">Lots:</span>
                               <input
                                 type="number"
                                 value={tradeAmount}
                                 onChange={(e) => setTradeAmount(e.target.value)}
                                 step="0.01"
                                 min="0.01"
-                                className="w-16 px-2 py-1 text-xs bg-black border border-white/30 rounded text-white font-mono"
+                                className="w-16 px-2 py-1 text-xs bg-[#f5f5f7] border border-black/10 rounded text-black font-mono"
                               />
                             </div>
                           </div>
@@ -6587,8 +6644,8 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                               onClick={() => executeTrade(selectedSymbol.id.toUpperCase(), 'buy', tradeAmount)}
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
-                              className="p-3 rounded-lg bg-white/30 border border-white/60 text-white font-bold text-sm flex items-center justify-center gap-2"
-                              style={{ boxShadow: '0 0 12px rgba(255, 255, 255, 0.4)' }}
+                              className="p-3 rounded-lg bg-emerald-500 border border-emerald-600/30 text-white font-bold text-sm flex items-center justify-center gap-2"
+                              style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
                             >
                               <TrendingUp className="w-4 h-4" />
                               BUY {selectedSymbol.abbr}
@@ -6597,8 +6654,8 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                               onClick={() => executeTrade(selectedSymbol.id.toUpperCase(), 'sell', tradeAmount)}
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
-                              className="p-3 rounded-lg bg-red-500/30 border border-red-400/60 text-red-300 font-bold text-sm flex items-center justify-center gap-2"
-                              style={{ boxShadow: '0 0 12px rgba(239, 68, 68, 0.4)' }}
+                              className="p-3 rounded-lg bg-red-500 border border-red-600/30 text-white font-bold text-sm flex items-center justify-center gap-2"
+                              style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
                             >
                               <TrendingDown className="w-4 h-4" />
                               SELL {selectedSymbol.abbr}
@@ -6613,8 +6670,8 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                                 onClick={() => setSelectedSymbol(sym)}
                                 className={`flex-shrink-0 px-2 py-1 rounded text-xs font-semibold transition-all ${
                                   selectedSymbol.id === sym.id
-                                    ? 'bg-white/40 text-white border border-white/60'
-                                    : 'bg-black/40 text-white/60 border border-white/20 hover:bg-white/20'
+                                    ? 'bg-black text-white border border-black/20'
+                                    : 'bg-white text-black/40 border border-black/10 hover:bg-black/5'
                                 }`}
                               >
                                 {sym.abbr}
@@ -6625,12 +6682,12 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
 
                         {/* Open Positions */}
                         <div className="space-y-2">
-                          <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                          <h4 className="text-sm font-bold text-black flex items-center gap-2">
                             <Activity className="w-4 h-4" />
                             Open Positions ({brokerPositions.length})
                           </h4>
                           {brokerPositions.length === 0 ? (
-                            <div className="p-4 text-center text-zinc-500 text-xs border border-white/20 rounded-lg bg-black/40">
+                            <div className="p-4 text-center text-black/40 text-xs border border-black/10 rounded-lg bg-white border border-black/10">
                               No open positions
                             </div>
                           ) : (
@@ -6640,17 +6697,17 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                                   key={idx}
                                   initial={{ opacity: 0, y: 10 }}
                                   animate={{ opacity: 1, y: 0 }}
-                                  className="p-3 rounded-lg bg-black border border-white/30" 
-                                  style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2)' }}
+                                  className="p-3 rounded-lg bg-[#f5f5f7] border border-black/10" 
+                                  style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
                                 >
                                   <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2">
                                       <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                                        pos.type === 'buy' ? 'bg-white/20 text-white' : 'bg-red-500/20 text-red-400'
+                                        pos.type === 'buy' ? 'bg-white text-black' : 'bg-red-500/20 text-red-400'
                                       }`}>
                                         {pos.type?.toUpperCase() || 'BUY'}
                                       </span>
-                                      <span className="font-bold text-white">{pos.symbol || 'XAUUSD'}</span>
+                                      <span className="font-bold text-black">{pos.symbol || 'XAUUSD'}</span>
                                     </div>
                                     <motion.button
                                       onClick={() => closePosition(pos.id || idx.toString())}
@@ -6663,17 +6720,17 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                                   </div>
                                   <div className="grid grid-cols-3 gap-2 text-xs">
                                     <div>
-                                      <div className="text-zinc-500">Volume</div>
-                                      <div className="text-white font-semibold">{pos.volume || '0.01'}</div>
+                                      <div className="text-black/40">Volume</div>
+                                      <div className="text-black font-semibold">{pos.volume || '0.01'}</div>
                                     </div>
                                     <div>
-                                      <div className="text-zinc-500">Entry</div>
-                                      <div className="text-white font-semibold">{pos.entryPrice || '2650.50'}</div>
+                                      <div className="text-black/40">Entry</div>
+                                      <div className="text-black font-semibold">{pos.entryPrice || '2650.50'}</div>
                                     </div>
                                     <div>
-                                      <div className="text-zinc-500">P/L</div>
+                                      <div className="text-black/40">P/L</div>
                                       <div className={`font-bold ${
-                                        (pos.profit || 24.50) >= 0 ? 'text-white' : 'text-red-400'
+                                        (pos.profit || 24.50) >= 0 ? 'text-black' : 'text-red-400'
                                       }`}>
                                         ${(pos.profit || 24.50).toFixed(2)}
                                       </div>
@@ -6687,12 +6744,12 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
 
                         {/* Pending Orders */}
                         <div className="space-y-2">
-                          <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                          <h4 className="text-sm font-bold text-black flex items-center gap-2">
                             <Clock className="w-4 h-4" />
                             Pending Orders ({brokerOrders.length})
                           </h4>
                           {brokerOrders.length === 0 ? (
-                            <div className="p-4 text-center text-zinc-500 text-xs border border-white/20 rounded-lg bg-black/40">
+                            <div className="p-4 text-center text-black/40 text-xs border border-black/10 rounded-lg bg-white border border-black/10">
                               No pending orders
                             </div>
                           ) : (
@@ -6700,13 +6757,13 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                               {brokerOrders.map((order, idx) => (
                                 <div
                                   key={idx}
-                                  className="p-3 rounded-lg bg-black border border-white/30" 
-                                  style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2)' }}
+                                  className="p-3 rounded-lg bg-[#f5f5f7] border border-black/10" 
+                                  style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
                                 >
                                   <div className="flex items-center justify-between">
                                     <div>
-                                      <span className="font-bold text-white">{order.symbol}</span>
-                                      <span className="ml-2 text-xs text-zinc-400">{order.type}</span>
+                                      <span className="font-bold text-black">{order.symbol}</span>
+                                      <span className="ml-2 text-xs text-black/50">{order.type}</span>
                                     </div>
                                     <button className="text-xs text-red-400 hover:text-red-300">Cancel</button>
                                   </div>
@@ -6717,12 +6774,12 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         </div>
 
                         {/* Trading Tips */}
-                        <div className="p-3 rounded-lg bg-white/10 border border-white/30">
-                          <div className="flex gap-2 text-xs text-white">
+                        <div className="p-3 rounded-lg bg-white border border-black/10">
+                          <div className="flex gap-2 text-xs text-black">
                             <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
                             <div>
                               <p className="font-semibold mb-1">Risk Management</p>
-                              <p className="text-white/70">Always use stop-loss orders. Never risk more than 1-2% of your account on a single trade.</p>
+                              <p className="text-black/50">Always use stop-loss orders. Never risk more than 1-2% of your account on a single trade.</p>
                             </div>
                           </div>
                         </div>
@@ -6732,22 +6789,22 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     {/* Not Connected State */}
                     {!brokerConnected && (
                       <div className="flex-1 flex flex-col items-center justify-center py-12 px-4 text-center">
-                        <div className="w-20 h-20 rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center mb-4"
-                          style={{ boxShadow: '0 0 20px rgba(255, 255, 255, 0.3)' }}>
-                          <Zap className="w-10 h-10 text-white" style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }} />
+                        <div className="w-20 h-20 rounded-full bg-white border-2 border-black/15 flex items-center justify-center mb-4"
+                          style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+                          <Zap className="w-10 h-10 text-black" style={{ filter: 'none' }} />
                         </div>
-                        <h3 className="text-lg font-bold text-white mb-2 neon-blue-text" style={{ textShadow: '0 0 8px #ffffff' }}>
+                        <h3 className="text-lg font-bold text-black mb-2 neon-blue-text" style={{ textShadow: 'none' }}>
                           Connect Your Broker
                         </h3>
-                        <p className="text-sm text-zinc-400 mb-6 max-w-sm">
+                        <p className="text-sm text-black/50 mb-6 max-w-sm">
                           Link your MetaTrader 4 or MetaTrader 5 account for seamless one-click trading directly from the hub.
                         </p>
                         <motion.button
                           onClick={() => setShowBrokerSetup(true)}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
-                          className="px-6 py-3 rounded-lg bg-linear-to-r from-white/30 to-white/30 text-white font-bold border border-white/60 neon-blue-text flex items-center gap-2"
-                          style={{ boxShadow: '0 0 16px rgba(255, 255, 255, 0.4)' }}
+                          className="px-6 py-3 rounded-lg bg-black text-white font-bold border border-black/20 flex items-center gap-2"
+                          style={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)' }}
                         >
                           <Zap className="w-5 h-5" />
                           Get Started
@@ -6756,24 +6813,24 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         {/* Features List */}
                         <div className="mt-8 space-y-3 text-left max-w-md w-full">
                           <div className="flex items-start gap-3">
-                            <CheckCircle className="w-5 h-5 text-white flex-shrink-0 mt-0.5" />
+                            <CheckCircle className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
                             <div>
-                              <div className="text-sm font-semibold text-white">Instant Execution</div>
-                              <div className="text-xs text-zinc-500">Execute trades in milliseconds with one click</div>
+                              <div className="text-sm font-semibold text-black">Instant Execution</div>
+                              <div className="text-xs text-black/40">Execute trades in milliseconds with one click</div>
                             </div>
                           </div>
                           <div className="flex items-start gap-3">
-                            <CheckCircle className="w-5 h-5 text-white flex-shrink-0 mt-0.5" />
+                            <CheckCircle className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
                             <div>
-                              <div className="text-sm font-semibold text-white">Live Account Sync</div>
-                              <div className="text-xs text-zinc-500">Real-time balance, positions, and orders</div>
+                              <div className="text-sm font-semibold text-black">Live Account Sync</div>
+                              <div className="text-xs text-black/40">Real-time balance, positions, and orders</div>
                             </div>
                           </div>
                           <div className="flex items-start gap-3">
-                            <CheckCircle className="w-5 h-5 text-white flex-shrink-0 mt-0.5" />
+                            <CheckCircle className="w-5 h-5 text-black flex-shrink-0 mt-0.5" />
                             <div>
-                              <div className="text-sm font-semibold text-white">Multi-Platform Support</div>
-                              <div className="text-xs text-zinc-500">Works with MT4 and MT5 brokers</div>
+                              <div className="text-sm font-semibold text-black">Multi-Platform Support</div>
+                              <div className="text-xs text-black/40">Works with MT4 and MT5 brokers</div>
                             </div>
                           </div>
                         </div>
@@ -6786,36 +6843,37 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                 {activeTab === 'device' && (
                   <motion.div
                     key="device"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="p-3 space-y-3 bg-black flex flex-col h-full min-h-0"
-                    style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)' }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="p-3 space-y-3 bg-[#f5f5f7] flex flex-col h-full min-h-0"
+                    style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
                   >
                     {/* Copy Button */}
                     <motion.button
                       onClick={handleCopyDeviceSnapshot}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-white/30 text-white font-semibold text-xs border border-white/60 neon-blue-text w-full"
-                      style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}
+                      className="flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-black text-white font-semibold text-xs border border-black/20 w-full"
+                      style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
                     >
-                      <Copy className="w-3.5 h-3.5" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
+                      <Copy className="w-3.5 h-3.5" style={{ filter: 'none' }} />
                       Copy Snapshot
                     </motion.button>
 
                     {/* Scrollable Content */}
                     <div className="flex-1 overflow-y-auto min-h-0 space-y-3 pr-1 [-webkit-overflow-scrolling:touch]" style={{ touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
                     {/* Performance Grade */}
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-black border border-white/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3), inset 0 0 8px rgba(255, 255, 255, 0.1)' }}>
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-[#f5f5f7] border border-black/10 neon-blue-border" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
                       <div className="flex items-center gap-3">
                         <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl font-black"
                           style={{ backgroundColor: `${performanceGrade.color}20`, color: performanceGrade.color, border: `2px solid ${performanceGrade.color}40` }}>
                           {performanceGrade.grade}
                         </div>
                         <div>
-                          <div className="text-sm font-bold text-white">Performance Grade</div>
-                          <div className="text-[10px] text-zinc-400">{performanceGrade.label} • Score: {performanceScore}/100</div>
+                          <div className="text-sm font-bold text-black">Performance Grade</div>
+                          <div className="text-[10px] text-black/50">{performanceGrade.label} • Score: {performanceScore}/100</div>
                         </div>
                       </div>
                       <PerformanceRing value={performanceScore} label="" color={performanceScore >= 70 ? 'green' : performanceScore >= 50 ? 'amber' : 'red'} size={50} />
@@ -6836,88 +6894,88 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     {/* Network & Battery Row */}
                     <div className="grid grid-cols-2 gap-2">
                       {/* Network */}
-                      <div className="p-2.5 rounded-xl bg-black border border-white/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.1)' }}>
+                      <div className="p-2.5 rounded-xl bg-[#f5f5f7] border border-black/10 neon-blue-border" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] font-medium text-zinc-400">Network</span>
-                            <span className="text-[7px] font-medium text-white" style={{ textShadow: '0 0 4px #ffffff' }}>Browser API</span>
+                            <span className="text-[10px] font-medium text-black/50">Network</span>
+                            <span className="text-[7px] font-medium text-black" style={{ textShadow: 'none' }}>Browser API</span>
                           </div>
                           {networkStats.connectionType === 'wifi' ? (
-                            <Wifi className="w-3 h-3 text-white" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
+                            <Wifi className="w-3 h-3 text-black" style={{ filter: 'none' }} />
                           ) : !networkStats.isOnline ? (
                             <WifiOff className="w-3 h-3 text-red-400" />
                           ) : (
-                            <Signal className="w-3 h-3 text-white" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
+                            <Signal className="w-3 h-3 text-black" style={{ filter: 'none' }} />
                           )}
                         </div>
-                        <div className="text-sm font-bold text-white">
+                        <div className="text-sm font-bold text-black">
                           {networkStats.connectionType === 'wifi' ? 'WiFi' : networkStats.connectionType === 'cellular' || networkStats.connectionType === '4g' || networkStats.connectionType === '3g' ? 'Cellular' : networkStats.effectiveType.toUpperCase()}
                         </div>
-                        <div className="text-[9px] text-white/70">{networkStats.downlink} Mbps • {networkStats.rtt}ms</div>
+                        <div className="text-[9px] text-black/50">{networkStats.downlink} Mbps • {networkStats.rtt}ms</div>
                       </div>
                       
                       {/* Battery */}
-                      <div className="p-2.5 rounded-xl bg-black border border-white/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.1)' }}>
+                      <div className="p-2.5 rounded-xl bg-[#f5f5f7] border border-black/10 neon-blue-border" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] font-medium text-zinc-400">Battery</span>
-                            {batteryInfo.supported && <span className="text-[7px] font-medium text-white" style={{ textShadow: '0 0 4px #ffffff' }}>Device API</span>}
+                            <span className="text-[10px] font-medium text-black/50">Battery</span>
+                            {batteryInfo.supported && <span className="text-[7px] font-medium text-black" style={{ textShadow: 'none' }}>Device API</span>}
                           </div>
-                          {batteryInfo.charging ? <Zap className="w-3 h-3 text-white" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} /> : <Battery className="w-3 h-3 text-white" />}
+                          {batteryInfo.charging ? <Zap className="w-3 h-3 text-black" style={{ filter: 'none' }} /> : <Battery className="w-3 h-3 text-black" />}
                         </div>
                         {batteryInfo.supported && batteryInfo.level >= 0 ? (
                           <>
-                            <div className="text-sm font-bold text-white">{Math.round(batteryInfo.level)}%</div>
-                            <div className="text-[9px] text-white/70">{batteryInfo.charging ? 'Charging' : 'On Battery'}</div>
+                            <div className="text-sm font-bold text-black">{Math.round(batteryInfo.level)}%</div>
+                            <div className="text-[9px] text-black/50">{batteryInfo.charging ? 'Charging' : 'On Battery'}</div>
                           </>
                         ) : (
-                          <div className="text-xs text-white/70">Not available</div>
+                          <div className="text-xs text-black/50">Not available</div>
                         )}
                       </div>
                     </div>
                     
                     {/* Screen Info */}
-                    <div className="p-2.5 rounded-xl bg-black border border-white/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.1)' }}>
+                    <div className="p-2.5 rounded-xl bg-[#f5f5f7] border border-black/10 neon-blue-border" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wide">Display</span>
-                        <Monitor className="w-3.5 h-3.5 text-white" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
+                        <span className="text-[10px] font-medium text-black/50 uppercase tracking-wide">Display</span>
+                        <Monitor className="w-3.5 h-3.5 text-black" style={{ filter: 'none' }} />
                       </div>
-                      <div className="text-xs font-semibold text-white">{screenInfo.width} × {screenInfo.height}</div>
-                      <div className="text-[9px] text-white/70">
+                      <div className="text-xs font-semibold text-black">{screenInfo.width} × {screenInfo.height}</div>
+                      <div className="text-[9px] text-black/50">
                         {screenInfo.pixelRatio}x DPR • {screenInfo.refreshRate}Hz • {screenInfo.colorDepth}-bit
-                        {screenInfo.hdr && <span className="ml-1 text-white">HDR</span>}
+                        {screenInfo.hdr && <span className="ml-1 text-black">HDR</span>}
                       </div>
                     </div>
                     
                     {/* Browser Info */}
-                    <div className="p-2.5 rounded-xl bg-black border border-white/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.1)' }}>
+                    <div className="p-2.5 rounded-xl bg-[#f5f5f7] border border-black/10 neon-blue-border" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wide">Browser</span>
-                        <Globe className="w-3.5 h-3.5 text-white" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
+                        <span className="text-[10px] font-medium text-black/50 uppercase tracking-wide">Browser</span>
+                        <Globe className="w-3.5 h-3.5 text-black" style={{ filter: 'none' }} />
                       </div>
-                      <div className="text-xs font-semibold text-white">{browserInfo.name} {browserInfo.version.split('.')[0]}</div>
-                      <div className="text-[9px] text-white/70">{browserInfo.engine} • {browserInfo.platform}</div>
+                      <div className="text-xs font-semibold text-black">{browserInfo.name} {browserInfo.version.split('.')[0]}</div>
+                      <div className="text-[9px] text-black/50">{browserInfo.engine} • {browserInfo.platform}</div>
                     </div>
                     
                     {/* Lite Mode Toggle - Performance Settings */}
-                    <div className="p-2.5 rounded-xl bg-black border border-white/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.1)' }}>
+                    <div className="p-2.5 rounded-xl bg-[#f5f5f7] border border-black/10 neon-blue-border" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wide">Performance Mode</span>
-                        <Zap className="w-3.5 h-3.5 text-white" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
+                        <span className="text-[10px] font-medium text-black/50 uppercase tracking-wide">Performance Mode</span>
+                        <Zap className="w-3.5 h-3.5 text-black" style={{ filter: 'none' }} />
                       </div>
                       <button
                         onClick={toggleLiteMode}
                         className="w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all"
                         style={{
-                          background: liteMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                          border: liteMode ? '1px solid rgba(255, 255, 255, 0.5)' : '1px solid rgba(255, 255, 255, 0.1)',
+                          background: 'rgba(0, 0, 0, 0.04)',
+                          border: liteMode ? '1px solid rgba(0, 0, 0, 0.15)' : '1px solid rgba(0, 0, 0, 0.1)',
                         }}
                       >
                         <div className="flex items-center gap-2">
                           <span className="text-lg">{liteMode ? '🌙' : '✨'}</span>
                           <div className="text-left">
-                            <div className="text-xs font-semibold text-white">Lite Mode</div>
-                            <div className="text-[9px] text-white/60">
+                            <div className="text-xs font-semibold text-black">Lite Mode</div>
+                            <div className="text-[9px] text-black/40">
                               {liteMode ? 'Heavy effects disabled' : 'Full effects enabled'}
                             </div>
                           </div>
@@ -6925,7 +6983,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         {/* Toggle Switch */}
                         <div 
                           className={`w-9 h-5 rounded-full relative transition-colors ${
-                            liteMode ? 'bg-white' : 'bg-zinc-700'
+                            liteMode ? 'bg-black' : 'bg-black/20'
                           }`}
                         >
                           <motion.div
@@ -6935,7 +6993,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                           />
                         </div>
                       </button>
-                      <div className="text-[8px] text-zinc-500 mt-2">
+                      <div className="text-[8px] text-black/40 mt-2">
                         Disables blur, shadows & glow while keeping animations smooth.
                         {desktopGpuTier && (
                           <span className="block mt-0.5">GPU: {desktopGpuTier === 'discrete' ? '🎮 Discrete' : desktopGpuTier === 'integrated' ? '💻 Integrated' : '❓ Unknown'}</span>
@@ -6945,20 +7003,20 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     
                     {/* Account Info */}
                     {userId && (
-                      <div className="p-2.5 rounded-xl bg-black border border-white/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.1)' }}>
+                      <div className="p-2.5 rounded-xl bg-[#f5f5f7] border border-black/10 neon-blue-border" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wide">Account</span>
-                          <User className="w-3.5 h-3.5 text-white" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
+                          <span className="text-[10px] font-medium text-black/50 uppercase tracking-wide">Account</span>
+                          <User className="w-3.5 h-3.5 text-black" style={{ filter: 'none' }} />
                         </div>
-                        <div className="text-xs font-semibold text-white truncate">{userEmail || 'Signed In'}</div>
+                        <div className="text-xs font-semibold text-black truncate">{userEmail || 'Signed In'}</div>
                         <div className="flex items-center gap-2 mt-1">
                           {isVip && (
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-white/20 text-white border border-white/30">
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-white text-black border border-black/10">
                               <Crown className="w-2.5 h-2.5 inline mr-0.5" />VIP
                             </span>
                           )}
                           {isAdmin && (
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-white/20 text-white border border-white/30">
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-white text-black border border-black/10">
                               <Shield className="w-2.5 h-2.5 inline mr-0.5" />Admin
                             </span>
                           )}
@@ -6967,63 +7025,63 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     )}
 
                     {/* Browser Capabilities */}
-                    <div className="p-2.5 rounded-xl bg-black border border-white/30 neon-blue-border" style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.1)' }}>
+                    <div className="p-2.5 rounded-xl bg-[#f5f5f7] border border-black/10 neon-blue-border" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wide">Browser Features</span>
+                        <span className="text-[10px] font-medium text-black/50 uppercase tracking-wide">Browser Features</span>
                       </div>
                       <div className="grid grid-cols-2 gap-1.5">
                         {/* Graphics */}
                         <div className="text-[9px]">
-                          <div className="font-bold text-white mb-1">Graphics</div>
-                          <div className="space-y-0.5 text-white/70">
+                          <div className="font-bold text-black mb-1">Graphics</div>
+                          <div className="space-y-0.5 text-black/50">
                             <div>✓ WebGL 2: {browserCapabilities.webgl2 ? '✓' : '✗'}</div>
                             <div>✓ WebGPU: {browserCapabilities.webgpu ? '✓' : '✗'}</div>
                           </div>
                         </div>
                         {/* Storage */}
                         <div className="text-[9px]">
-                          <div className="font-bold text-white mb-1">Storage</div>
-                          <div className="space-y-0.5 text-white/70">
+                          <div className="font-bold text-black mb-1">Storage</div>
+                          <div className="space-y-0.5 text-black/50">
                             <div>✓ IndexedDB: {browserCapabilities.indexedDb ? '✓' : '✗'}</div>
                             <div>✓ LocalStorage: {browserCapabilities.localStorage ? '✓' : '✗'}</div>
                           </div>
                         </div>
                         {/* Workers & APIs */}
                         <div className="text-[9px]">
-                          <div className="font-bold text-white mb-1">Workers</div>
-                          <div className="space-y-0.5 text-white/70">
+                          <div className="font-bold text-black mb-1">Workers</div>
+                          <div className="space-y-0.5 text-black/50">
                             <div>✓ WebWorker: {browserCapabilities.webWorker ? '✓' : '✗'}</div>
                             <div>✓ SharedArrayBuffer: {browserCapabilities.sharedArrayBuffer ? '✓' : '✗'}</div>
                           </div>
                         </div>
                         {/* Media */}
                         <div className="text-[9px]">
-                          <div className="font-bold text-white mb-1">Media</div>
-                          <div className="space-y-0.5 text-white/70">
+                          <div className="font-bold text-black mb-1">Media</div>
+                          <div className="space-y-0.5 text-black/50">
                             <div>✓ AudioContext: {browserCapabilities.audioContext ? '✓' : '✗'}</div>
                             <div>✓ MediaRecorder: {browserCapabilities.mediaRecorder ? '✓' : '✗'}</div>
                           </div>
                         </div>
                         {/* Sensors */}
                         <div className="text-[9px]">
-                          <div className="font-bold text-white mb-1">Sensors</div>
-                          <div className="space-y-0.5 text-white/70">
+                          <div className="font-bold text-black mb-1">Sensors</div>
+                          <div className="space-y-0.5 text-black/50">
                             <div>✓ Accel: {browserCapabilities.accelerometer ? '✓' : '✗'}</div>
                             <div>✓ Gyro: {browserCapabilities.gyroscope ? '✓' : '✗'}</div>
                           </div>
                         </div>
                         {/* Hardware */}
                         <div className="text-[9px]">
-                          <div className="font-bold text-white mb-1">Hardware</div>
-                          <div className="space-y-0.5 text-white/70">
+                          <div className="font-bold text-black mb-1">Hardware</div>
+                          <div className="space-y-0.5 text-black/50">
                             <div>✓ Bluetooth: {browserCapabilities.bluetooth ? '✓' : '✗'}</div>
                             <div>✓ USB: {browserCapabilities.usb ? '✓' : '✗'}</div>
                           </div>
                         </div>
                         {/* XR */}
                         <div className="text-[9px]">
-                          <div className="font-bold text-white mb-1">XR</div>
-                          <div className="space-y-0.5 text-white/70">
+                          <div className="font-bold text-black mb-1">XR</div>
+                          <div className="space-y-0.5 text-black/50">
                             <div>✓ VR: {browserCapabilities.vr ? '✓' : '✗'}</div>
                             <div>✓ AR: {browserCapabilities.ar ? '✓' : '✗'}</div>
                           </div>
@@ -7032,18 +7090,18 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
 
                       {/* Codecs */}
                       {(browserCapabilities.videoCodecs.length > 0 || browserCapabilities.audioCodecs.length > 0) && (
-                        <div className="mt-2 pt-2 border-t border-white/30">
+                        <div className="mt-2 pt-2 border-t border-black/10">
                           <div className="text-[9px]">
                             {browserCapabilities.videoCodecs.length > 0 && (
                               <div className="mb-1">
-                                <span className="font-bold text-white">Video: </span>
-                                <span className="text-white/70">{browserCapabilities.videoCodecs.join(', ')}</span>
+                                <span className="font-bold text-black">Video: </span>
+                                <span className="text-black/50">{browserCapabilities.videoCodecs.join(', ')}</span>
                               </div>
                             )}
                             {browserCapabilities.audioCodecs.length > 0 && (
                               <div>
-                                <span className="font-bold text-white">Audio: </span>
-                                <span className="text-white/70">{browserCapabilities.audioCodecs.join(', ')}</span>
+                                <span className="font-bold text-black">Audio: </span>
+                                <span className="text-black/50">{browserCapabilities.audioCodecs.join(', ')}</span>
                               </div>
                             )}
                           </div>
@@ -7058,11 +7116,12 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                 {activeTab === 'logs' && (
                   <motion.div
                     key="logs"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="p-3 space-y-3 bg-black flex flex-col h-full min-h-0"
-                    style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.2), inset 0 0 8px rgba(255, 255, 255, 0.05)' }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="p-3 space-y-3 bg-[#f5f5f7] flex flex-col h-full min-h-0"
+                    style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
                   >
                     {/* Controls */}
                     <div className="flex gap-2">
@@ -7071,9 +7130,9 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         className="flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-red-500/30 text-red-300 font-semibold text-xs border border-red-400/60"
-                        style={{ boxShadow: '0 0 8px rgba(239, 68, 68, 0.3)' }}
+                        style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
                       >
-                        <RefreshCw className="w-3.5 h-3.5" style={{ filter: 'drop-shadow(0 0 2px #ef4444)' }} />
+                        <RefreshCw className="w-3.5 h-3.5" style={{ filter: 'none' }} />
                         Clear Logs
                       </motion.button>
                       <motion.button
@@ -7091,33 +7150,33 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                         }}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-white/30 text-white font-semibold text-xs border border-white/60"
-                        style={{ boxShadow: '0 0 8px rgba(255, 255, 255, 0.3)' }}
+                        className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-black text-white font-semibold text-xs border border-black/20"
+                        style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
                       >
-                        <Copy className="w-3.5 h-3.5" style={{ filter: 'drop-shadow(0 0 2px #ffffff)' }} />
+                        <Copy className="w-3.5 h-3.5" style={{ filter: 'none' }} />
                         Copy Logs
                       </motion.button>
                     </div>
 
                     {/* Log Count */}
-                    <div className="text-[9px] text-white/70 px-1">
+                    <div className="text-[9px] text-black/50 px-1">
                       Total Logs: {consoleLogs.length}
                     </div>
 
                     {/* Logs Container */}
-                    <div className="flex-1 overflow-y-auto min-h-0 bg-black/50 rounded-lg border border-white/20 p-2 font-mono text-[8px] space-y-1 [-webkit-overflow-scrolling:touch]" style={{ touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
+                    <div className="flex-1 overflow-y-auto min-h-0 bg-white/50 rounded-lg border border-black/10 p-2 font-mono text-[8px] space-y-1 [-webkit-overflow-scrolling:touch]" style={{ touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
                       {consoleLogs.length === 0 ? (
-                        <div className="text-white/50 text-center py-4">No logs captured yet</div>
+                        <div className="text-black/40 text-center py-4">No logs captured yet</div>
                       ) : (
                         consoleLogs.map(log => (
-                          <div key={log.id} className={`flex gap-2 pb-1 border-b border-white/10 ${
+                          <div key={log.id} className={`flex gap-2 pb-1 border-b border-black/10 ${
                             log.level === 'error' ? 'text-red-400' :
                             log.level === 'warn' ? 'text-yellow-400' :
-                            log.level === 'info' ? 'text-white' :
-                            log.level === 'debug' ? 'text-white' :
-                            'text-white'
+                            log.level === 'info' ? 'text-black' :
+                            log.level === 'debug' ? 'text-black' :
+                            'text-black'
                           }`}>
-                            <span className="text-white/70 flex-shrink-0 w-16">
+                            <span className="text-black/50 flex-shrink-0 w-16">
                               {new Date(log.timestamp).toLocaleTimeString()}
                             </span>
                             <span className="font-bold flex-shrink-0 w-12 uppercase">
@@ -7140,6 +7199,12 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
       )}
     </AnimatePresence>
   );
+
+  if (typeof document === 'undefined') {
+    return null;
+  }
+
+  return createPortal(portalContent, document.body);
 });
 UnifiedHubPanel.displayName = 'UnifiedHubPanel';
 
@@ -7245,9 +7310,9 @@ const LiveSignalsViewer = memo(() => {
       }));
     }
     return [
-      { id: 1, pair: '🟡 GOLD/USD', action: 'BUY', entry: '@2,650', type: 'signal', time: '2m ago' },
-      { id: 2, pair: '₿ BTC/USD', action: 'SELL', entry: '@98,500', type: 'signal', time: '5m ago' },
-      { id: 3, pair: '📊 EUR/USD', action: 'BUY', entry: '@1.0850', type: 'signal', time: '8m ago' },
+      { id: 1, pair: '🟢 EUR/USD', action: 'BUY', entry: '@1.0912', type: 'signal', time: '2m ago' },
+      { id: 2, pair: '🔴 BTC/USD', action: 'SELL', entry: '@46,120', type: 'signal', time: '5m ago' },
+      { id: 3, pair: '🟡 XAU/USD', action: 'BUY', entry: '@2024.50', type: 'signal', time: '8m ago' },
       { id: 4, pair: '🟢 GBP/USD', action: 'BUY', entry: '@1.2720', type: 'signal', time: '12m ago' },
       { id: 5, pair: '🔴 OIL/USD', action: 'SELL', entry: '@82.40', type: 'signal', time: '15m ago' },
     ];
@@ -7278,7 +7343,7 @@ const LiveSignalsViewer = memo(() => {
       <motion.div 
         className="px-3 py-2.5 rounded-md overflow-hidden transition-all"
         style={{
-          background: 'linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(255, 255, 255,0.05) 100%)',
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(245,245,247,1) 100%)',
           backdropFilter: 'blur(8px)',
           WebkitBackdropFilter: 'blur(8px)',
           border: '1px solid #ffffff',
@@ -7291,13 +7356,13 @@ const LiveSignalsViewer = memo(() => {
         <div className="flex items-center justify-between mb-2.5">
           <div className="flex items-center gap-2">
             <div className="animate-spin-slow" style={{ willChange: 'transform' }}>
-              <Send className="w-4 h-4 text-white" style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }} />
+              <Send className="w-4 h-4 text-black" style={{ filter: 'none' }} />
             </div>
             <span 
               className="text-sm font-bold uppercase tracking-wider animate-neon-pulse-optimized"
               style={{ 
-                color: '#ffffff',
-                textShadow: '0 0 4px #ffffff',
+                color: '#000000',
+                textShadow: 'none',
                 willChange: 'text-shadow'
               }}
             >
@@ -7307,13 +7372,13 @@ const LiveSignalsViewer = memo(() => {
           <div className="flex items-center gap-1.5">
             <div
               className="w-2 h-2 rounded-full animate-pulse-glow-green"
-              style={{ background: '#ffffff', willChange: 'opacity' }}
+              style={{ background: '#000000', willChange: 'opacity' }}
             />
             <span 
               className="text-[8px] font-semibold uppercase tracking-wider"
               style={{ 
-                color: '#ffffff',
-                textShadow: '0 0 4px #ffffff'
+                color: '#000000',
+                textShadow: 'none'
               }}
             >
               LIVE
@@ -7337,31 +7402,29 @@ const LiveSignalsViewer = memo(() => {
               <div 
                 className="p-2 rounded"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255,0.1) 0%, rgba(0,0,0,0.8) 100%)',
-                  border: '1px solid #ffffff',
-                  boxShadow: '0 0 2px #ffffff, inset 0 0 2px #ffffff'
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  border: '1px solid rgba(0, 0, 0, 0.1)',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)'
                 }}
               >
                 <div className="flex items-center justify-between mb-1.5">
                   <span 
                     className="text-xs font-bold"
                     style={{ 
-                      color: '#ffffff',
-                      textShadow: '0 0 4px #ffffff'
+                      color: '#000000',
+                      textShadow: 'none'
                     }}
                   >
                     {currentSignal.pair}
                   </span>
                   <span 
                     className={`text-[10px] font-black px-1.5 py-0.5 rounded animate-pulse-scale ${
-                      currentSignal.action === 'BUY' ? 'bg-white/20' : 'bg-red-500/20'
+                      currentSignal.action === 'BUY' ? 'bg-emerald-500/15' : 'bg-red-500/15'
                     }`}
                     style={{ 
-                      color: currentSignal.action === 'BUY' ? '#ffffff' : '#ef4444',
-                      textShadow: currentSignal.action === 'BUY' 
-                        ? '0 0 4px #ffffff' 
-                        : '0 0 4px #ef4444',
-                      border: `1px solid ${currentSignal.action === 'BUY' ? '#ffffff' : '#ef4444'}`,
+                      color: currentSignal.action === 'BUY' ? '#059669' : '#ef4444',
+                      textShadow: 'none',
+                      border: `1px solid ${currentSignal.action === 'BUY' ? '#05966940' : '#ef444440'}`,
                       willChange: 'transform'
                     }}
                   >
@@ -7373,8 +7436,8 @@ const LiveSignalsViewer = memo(() => {
                   <span 
                     className="text-[11px] font-semibold"
                     style={{ 
-                      color: '#ffffff',
-                      textShadow: '0 0 2px #ffffff'
+                      color: '#000000',
+                      textShadow: 'none'
                     }}
                   >
                     Entry {currentSignal.entry}
@@ -7382,8 +7445,8 @@ const LiveSignalsViewer = memo(() => {
                   <span 
                     className="text-[9px]"
                     style={{ 
-                      color: '#ffffff',
-                      textShadow: '0 0 2px #ffffff'
+                      color: '#000000',
+                      textShadow: 'none'
                     }}
                   >
                     {currentSignal.time}
@@ -7394,14 +7457,14 @@ const LiveSignalsViewer = memo(() => {
               {/* Typing Indicator */}
               {isTyping && (
                 <div className="flex items-center gap-1.5 px-2 animate-fade-in">
-                  <MessageCircle className="w-3 h-3 text-white" />
+                  <MessageCircle className="w-3 h-3 text-black" />
                   <div className="flex gap-1">
                     {[0, 1, 2].map((i) => (
                       <div
                         key={i}
                         className="w-1 h-1 rounded-full animate-bounce-dot"
                         style={{ 
-                          background: '#ffffff',
+                          background: '#000000',
                           animationDelay: `${i * 150}ms`,
                           willChange: 'transform'
                         }}
@@ -7411,8 +7474,8 @@ const LiveSignalsViewer = memo(() => {
                   <span 
                     className="text-[9px]"
                     style={{ 
-                      color: '#ffffff',
-                      textShadow: '0 0 2px #ffffff'
+                      color: '#000000',
+                      textShadow: 'none'
                     }}
                   >
                     New signal incoming...
@@ -7424,19 +7487,19 @@ const LiveSignalsViewer = memo(() => {
         </div>
         
         {/* Footer */}
-        <div className="flex items-center justify-between pt-2 mt-2 border-t border-white/20">
+        <div className="flex items-center justify-between pt-2 mt-2 border-t border-black/10">
           <span 
             className="text-[9px] font-medium flex items-center gap-1"
             style={{ 
-              color: '#ffffff',
-              textShadow: '0 0 2px #ffffff'
+              color: '#000000',
+              textShadow: 'none'
             }}
           >
             <Radio className="w-3 h-3" />
             @bullmoneywebsite
           </span>
           <div className="animate-nudge-x">
-            <ExternalLink className="w-3 h-3 text-white group-hover:text-white" />
+            <ExternalLink className="w-3 h-3 text-black group-hover:text-black" />
           </div>
         </div>
       </motion.div>
@@ -7493,7 +7556,7 @@ const BreakingNewsViewer = memo(() => {
       >
         <span 
           className="text-[9px] font-semibold"
-          style={{ color: '#ef4444', textShadow: '0 0 4px #ef4444' }}
+          style={{ color: '#dc2626', textShadow: '0 0 4px #ef4444' }}
         >
           Loading Breaking News...
         </span>
@@ -7526,12 +7589,12 @@ const BreakingNewsViewer = memo(() => {
         <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-1.5">
             <div className="animate-alert-pulse" style={{ willChange: 'transform' }}>
-              <AlertTriangle className="w-3.5 h-3.5 text-white" style={{ filter: 'drop-shadow(0 0 3px #ffffff)' }} />
+              <AlertTriangle className="w-3.5 h-3.5 text-black" style={{ filter: 'none' }} />
             </div>
             <span 
               className="text-xs font-bold uppercase tracking-wider animate-neon-pulse-red"
               style={{ 
-                color: '#ef4444',
+                color: '#dc2626',
                 textShadow: '0 0 3px #ef4444',
                 willChange: 'text-shadow'
               }}
@@ -7569,7 +7632,7 @@ const BreakingNewsViewer = memo(() => {
               <span 
                 className="text-[8px]"
                 style={{ 
-                  color: '#ef4444',
+                  color: '#dc2626',
                   textShadow: '0 0 2px #ef4444'
                 }}
               >
@@ -7584,7 +7647,7 @@ const BreakingNewsViewer = memo(() => {
           <span 
             className="text-[8px] font-medium flex items-center gap-1"
             style={{ 
-              color: '#ef4444',
+              color: '#dc2626',
               textShadow: '0 0 2px #ef4444'
             }}
           >
@@ -7592,7 +7655,7 @@ const BreakingNewsViewer = memo(() => {
             @Bullmoneyshop
           </span>
           <div className="animate-nudge-x-sm">
-            <ExternalLink className="w-2.5 h-2.5 text-white group-hover:text-red-400" />
+            <ExternalLink className="w-2.5 h-2.5 text-black group-hover:text-red-400" />
           </div>
         </div>
       </motion.div>
@@ -8375,7 +8438,7 @@ export const UnifiedFpsPill = memo(({
                 {/* Logo Mode: Just the trading icon with notification badge */}
                 <div className="flex items-center justify-center relative">
                   <TrendingUp 
-                    className="w-5 h-5 text-white neon-white-icon" 
+                    className="w-5 h-5 text-black neon-white-icon" 
                     style={{ 
                       filter: 'drop-shadow(0 0 6px #ffffff) drop-shadow(0 0 12px #ffffff)'
                     }} 
@@ -8390,7 +8453,7 @@ export const UnifiedFpsPill = memo(({
                       <div 
                         className="w-2.5 h-2.5 rounded-full"
                         style={{
-                          background: '#ffffff',
+                          background: '#000000',
                           boxShadow: '0 0 6px #ffffff, 0 0 12px #ffffff',
                         }}
                       />
@@ -8410,7 +8473,7 @@ export const UnifiedFpsPill = memo(({
                 {/* Minimized: White neon icon with glow */}
                 <div className="flex items-center gap-1 relative">
                   <TrendingUp 
-                    className="w-4 h-4 text-white neon-white-icon" 
+                    className="w-4 h-4 text-black neon-white-icon" 
                     style={{ 
                       filter: 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff)'
                     }} 
@@ -8437,7 +8500,7 @@ export const UnifiedFpsPill = memo(({
                     style={{
                       background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.9) 100%)',
                       color: '#fff',
-                      boxShadow: '0 0 8px rgba(255, 255, 255, 0.6)',
+                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
                       border: '1px solid rgba(255, 255, 255, 0.2)',
                     }}
                   >
@@ -8510,26 +8573,26 @@ export const UnifiedFpsPill = memo(({
                         transition={{ duration: 0.22, ease: 'easeOut' }}
                         className={`rounded-xl border px-3 py-2.5 shadow-sm ${
                           activeTicker.type === 'vip'
-                            ? 'bg-blue-600/50 border-blue-300/60 shadow-[0_0_20px_rgba(59,130,246,0.35)]'
-                            : 'bg-white/10 border-white/20'
+                            ? 'bg-blue-50 border-blue-200 shadow-sm'
+                            : 'bg-white border-black/10'
                         }`}
                       >
                         <div className="flex items-center justify-between gap-2 mb-1.5">
                           <div className="flex items-center gap-2">
                             {activeTicker.type === 'vip' ? (
-                              <Crown className="w-5 h-5 text-white" />
+                              <Crown className="w-5 h-5 text-black" />
                             ) : (
-                              <LineChart className="w-5 h-5 text-white" />
+                              <LineChart className="w-5 h-5 text-black" />
                             )}
-                            <span className="text-sm font-bold uppercase tracking-wide text-white/90">
+                            <span className="text-sm font-bold uppercase tracking-wide text-black/80">
                               {activeTicker.label}
                             </span>
                           </div>
                           {activeTicker.type === 'vip' && (
-                            <span className="text-xs font-semibold text-blue-100">VIP</span>
+                            <span className="text-xs font-semibold text-blue-600 font-bold">VIP</span>
                           )}
                         </div>
-                        <p className="text-sm leading-snug text-white/90 line-clamp-2">
+                        <p className="text-sm leading-snug text-black/80 line-clamp-2">
                           {activeTicker.text}
                         </p>
                       </motion.div>
@@ -8543,14 +8606,14 @@ export const UnifiedFpsPill = memo(({
                     {/* Left: Icon + Title + Live indicator */}
                     <div className="flex items-center gap-2">
                       <TrendingUp 
-                        className="w-5 h-5 text-white" 
+                        className="w-5 h-5 text-black" 
                         style={{ filter: 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff)' }} 
                       />
                       <span 
                         className="text-sm font-black tracking-wider uppercase"
                         style={{ 
-                          color: '#ffffff',
-                          textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff',
+                          color: '#000000',
+                          textShadow: 'none',
                           letterSpacing: '0.08em'
                         }}
                       >
@@ -8560,7 +8623,7 @@ export const UnifiedFpsPill = memo(({
                     </div>
                     
                     {/* Right: Tap indicator */}
-                    <div className="flex items-center gap-2 text-white/60">
+                    <div className="flex items-center gap-2 text-black/40">
                       <span className="text-[10px] font-medium">Tap to open</span>
                       <ChevronRight className="w-4 h-4" />
                     </div>
@@ -8569,7 +8632,7 @@ export const UnifiedFpsPill = memo(({
                   /* Mobile: Compact view without duplicate price rows (prices rotate in ticker) */
                   <div className="flex md:hidden flex-col items-center justify-center gap-0.5 min-w-[36px] relative">
                     <TrendingUp 
-                      className="w-2.5 h-2.5 text-white neon-white-icon" 
+                      className="w-2.5 h-2.5 text-black neon-white-icon" 
                       style={{ filter: dynamicStyles.iconFilter }} 
                     />
                   </div>
@@ -8601,12 +8664,12 @@ export const UnifiedFpsPill = memo(({
                         <div className="flex flex-col items-center justify-center gap-2">
                           <div className="flex items-center gap-3">
                             <div>
-                              <TrendingUp className="w-7 h-7 text-white neon-white-icon" style={{ filter: dynamicStyles.iconFilter }} />
+                              <TrendingUp className="w-7 h-7 text-black neon-white-icon" style={{ filter: dynamicStyles.iconFilter }} />
                             </div>
                             <span 
                               className="text-2xl font-black tracking-widest uppercase neon-blue-text"
                               style={{ 
-                                color: '#ffffff',
+                                color: '#000000',
                                 textShadow: dynamicStyles.textShadow,
                                 letterSpacing: '0.15em'
                               }}
@@ -8623,7 +8686,7 @@ export const UnifiedFpsPill = memo(({
                         <div 
                           className="w-full h-[120px] rounded-lg overflow-hidden relative"
                           style={{
-                            background: 'linear-gradient(135deg, rgba(0,0,0,0.98) 0%, rgba(255, 255, 255,0.15) 100%)',
+                            background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(245,245,247,1) 100%)',
                             border: '2px solid #ffffff',
                             boxShadow: '0 0 8px #ffffff, 0 0 16px rgba(255, 255, 255,0.5), inset 0 0 8px rgba(255, 255, 255,0.3)'
                           }}
@@ -8636,26 +8699,26 @@ export const UnifiedFpsPill = memo(({
                         <div 
                           className="flex items-center justify-around gap-4 px-4 py-3 rounded-lg neon-subtle-border"
                           style={{
-                            background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(255, 255, 255,0.12) 100%)',
+                            background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(245,245,247,1) 100%)',
                             border: '1px solid rgba(255, 255, 255, 0.8)',
                             boxShadow: '0 0 4px #ffffff, inset 0 0 4px #ffffff'
                           }}
                         >
                           <div className="flex flex-col items-center gap-1">
-                            <Coins className="w-6 h-6 text-white neon-blue-icon" style={{ filter: 'drop-shadow(0 0 6px #ffffff)' }} />
+                            <Coins className="w-6 h-6 text-black neon-blue-icon" style={{ filter: 'none' }} />
                             <div className="flex flex-col items-center">
-                              <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Gold</span>
-                              <span className="text-lg font-black tabular-nums neon-blue-text" style={{ color: '#ffffff', textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
+                              <span className="text-[10px] font-semibold text-black/50 uppercase tracking-wider">Gold</span>
+                              <span className="text-lg font-black tabular-nums neon-blue-text" style={{ color: '#000000', textShadow: 'none' }}>
                                 {formatPrice(parseFloat(prices.xauusd) || 0)}
                               </span>
                             </div>
                           </div>
                           <div className="h-12 w-px bg-linear-to-b from-transparent via-white to-transparent" style={{ boxShadow: '0 0 6px #ffffff' }} />
                           <div className="flex flex-col items-center gap-1">
-                            <Bitcoin className="w-6 h-6 text-white neon-blue-icon" style={{ filter: 'drop-shadow(0 0 6px #ffffff)' }} />
+                            <Bitcoin className="w-6 h-6 text-black neon-blue-icon" style={{ filter: 'none' }} />
                             <div className="flex flex-col items-center">
-                              <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Bitcoin</span>
-                              <span className="text-lg font-black tabular-nums neon-blue-text" style={{ color: '#ffffff', textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
+                              <span className="text-[10px] font-semibold text-black/50 uppercase tracking-wider">Bitcoin</span>
+                              <span className="text-lg font-black tabular-nums neon-blue-text" style={{ color: '#000000', textShadow: 'none' }}>
                                 {formatPrice(parseFloat(prices.btcusd) || 0)}
                               </span>
                             </div>
@@ -8677,12 +8740,12 @@ export const UnifiedFpsPill = memo(({
                         className="flex flex-col items-center justify-center gap-2 py-2"
                         style={{ willChange: 'transform, opacity' }}
                       >
-                        <TrendingUp className="w-6 h-6 text-white neon-white-icon" style={{ filter: dynamicStyles.iconFilter }} />
+                        <TrendingUp className="w-6 h-6 text-black neon-white-icon" style={{ filter: dynamicStyles.iconFilter }} />
                         <span 
                           className="text-[10px] font-bold uppercase tracking-wider mt-1 neon-blue-text"
                           style={{ 
                             color: 'rgba(255, 255, 255, 0.85)',
-                            textShadow: '0 0 4px #ffffff'
+                            textShadow: 'none'
                           }}
                         >
                           Hub
@@ -8796,7 +8859,7 @@ export const UnifiedFpsPill = memo(({
                 <span 
                   className="relative text-5xl sm:text-7xl md:text-8xl font-black tracking-widest"
                   style={{
-                    color: '#ffffff',
+                    color: '#000000',
                     textShadow: `
                       0 0 10px #ffffff,
                       0 0 20px #ffffff,
@@ -8817,8 +8880,8 @@ export const UnifiedFpsPill = memo(({
               <span 
                 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-[0.3em] uppercase"
                 style={{
-                  color: '#ffffff',
-                  textShadow: '0 0 10px #ffffff, 0 0 20px #ffffff, 0 0 40px #ffffff',
+                  color: '#000000',
+                  textShadow: 'none',
                   animation: isFlickeringOut ? undefined : 'bullmoney-neon-flicker 0.15s ease-in-out infinite alternate',
                 }}
               >
@@ -8840,7 +8903,7 @@ export const UnifiedFpsPill = memo(({
                 }}
                 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-[0.2em] uppercase mt-4 sm:mt-6"
                 style={{
-                  color: '#ffffff',
+                  color: '#000000',
                   textShadow: `
                     0 0 ${15 + scrollIntensity * 20}px #ffffff,
                     0 0 ${30 + scrollIntensity * 30}px #ffffff,
@@ -8898,14 +8961,14 @@ const FpsPill = memo(({
           className="text-left"
         >
           <div 
-            className="text-base font-bold text-white whitespace-nowrap mb-1"
-            style={{ textShadow: '0 0 10px #ffffff, 0 0 20px #ffffff, 0 0 30px #ffffff' }}
+            className="text-base font-bold text-black whitespace-nowrap mb-1"
+            style={{ textShadow: 'none' }}
           >
             📊 Click for Device Info
           </div>
           <div 
-            className="text-sm text-white whitespace-nowrap font-medium"
-            style={{ textShadow: '0 0 8px #ffffff, 0 0 16px #ffffff' }}
+            className="text-sm text-black whitespace-nowrap font-medium"
+            style={{ textShadow: 'none' }}
           >
             Trades • Live Streams • Performance
           </div>
@@ -8923,7 +8986,7 @@ const FpsPill = memo(({
             hover: { x: -8, scale: 1.02 },
             minimized: { x: 2, scale: 0.95 }
           }}
-          className="relative rounded-l-3xl bg-linear-to-br from-white/30 via-white/15 to-slate-900/40 backdrop-blur-2xl border-y border-l border-white/50 shadow-2xl hover:border-white/70 hover:shadow-white/40"
+          className="relative rounded-l-3xl bg-linear-to-br from-white/90 via-white/70 to-white/60 backdrop-blur-2xl border-y border-l border-black/10 shadow-2xl hover:border-black/15 hover:shadow-sm"
           onClick={(e) => {
             e.preventDefault();
             SoundEffects.click();
@@ -8955,7 +9018,7 @@ const FpsPill = memo(({
                 className="px-2 py-2"
               >
                 <div className="flex items-center gap-1">
-                  <ChevronRight size={14} className="text-white rotate-180" />
+                  <ChevronRight size={14} className="text-black rotate-180" />
                   <FpsDisplay fps={fps} deviceTier={deviceTier} jankScore={jankScore} />
                 </div>
               </motion.div>
@@ -8984,13 +9047,13 @@ const TradingPill = memo(({ prices, isExpanded, onToggle }: {
       style={{ top: 'calc(5rem + env(safe-area-inset-top, 0px) + 28px)', paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 2px)' }}
     >
       <motion.div
-        whileHover={{ x: 12, scale: 1.05, boxShadow: '0 0 30px rgba(255, 255, 255, 0.6)' }}
+        whileHover={{ x: 12, scale: 1.05, boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
         className="relative pointer-events-auto cursor-pointer"
         onClick={onToggle}
         animate={{ x: [0, 8, 0, 6, 0] }}
         transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3, ease: 'easeInOut' }}
       >
-        <div className="relative rounded-r-full bg-linear-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl hover:border-white/70">
+        <div className="relative rounded-r-full bg-white/90 backdrop-blur-xl border-y border-r border-black/10 shadow-sm hover:border-black/15">
           <motion.div
             className="absolute inset-0 rounded-r-full bg-linear-to-r from-white/20 via-white/10 to-transparent"
             animate={{ opacity: [0.3, 0.8, 0.3], scale: [1, 1.05, 1] }}
@@ -9007,18 +9070,18 @@ const TradingPill = memo(({ prices, isExpanded, onToggle }: {
 
             <div className="flex items-center gap-1.5">
               <div className="flex items-center gap-0.5">
-                <Coins className="w-3 h-3 text-white" />
-                <span className="text-[9px] font-bold text-white">{formatPrice(parseFloat(prices.xauusd) || 0)}</span>
+                <Coins className="w-3 h-3 text-black" />
+                <span className="text-[9px] font-bold text-black">{formatPrice(parseFloat(prices.xauusd) || 0)}</span>
               </div>
-              <div className="w-px h-2.5 bg-white/30" />
+              <div className="w-px h-2.5 bg-black" />
               <div className="flex items-center gap-0.5">
-                <Bitcoin className="w-3 h-3 text-white" />
-                <span className="text-[9px] font-bold text-white">{formatPrice(parseFloat(prices.btcusd) || 0)}</span>
+                <Bitcoin className="w-3 h-3 text-black" />
+                <span className="text-[9px] font-bold text-black">{formatPrice(parseFloat(prices.btcusd) || 0)}</span>
               </div>
             </div>
 
             <motion.div animate={{ rotate: isExpanded ? 180 : 0 }}>
-              <ChevronRight className="w-3 h-3 text-white/70" />
+              <ChevronRight className="w-3 h-3 text-black/50" />
             </motion.div>
           </div>
         </div>
@@ -9048,13 +9111,13 @@ const CommunityPill = memo(({ isExpanded, onToggle }: { isExpanded: boolean; onT
       style={{ top: 'calc(5rem + env(safe-area-inset-top, 0px) + 126px)', paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 2px)' }}
     >
       <motion.div
-        whileHover={{ x: 12, scale: 1.05, boxShadow: '0 0 30px rgba(255, 255, 255, 0.6)' }}
+        whileHover={{ x: 12, scale: 1.05, boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
         className="relative pointer-events-auto cursor-pointer"
         onClick={onToggle}
         animate={{ x: [0, 8, 0, 6, 0] }}
         transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3, ease: 'easeInOut' }}
       >
-        <div className="relative rounded-r-2xl bg-linear-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl hover:border-white/70 min-w-[150px]">
+        <div className="relative rounded-r-2xl bg-white/90 backdrop-blur-xl border-y border-r border-black/10 shadow-sm hover:border-black/15 min-w-[150px]">
           <motion.div
             className="absolute inset-0 rounded-r-2xl bg-linear-to-r from-white/20 via-white/10 to-transparent"
             animate={{ opacity: [0.3, 0.8, 0.3], scale: [1, 1.05, 1] }}
@@ -9070,12 +9133,12 @@ const CommunityPill = memo(({ isExpanded, onToggle }: { isExpanded: boolean; onT
             />
 
             <div className="flex items-center gap-1">
-              <TrendingUp className="w-3 h-3 text-white" />
-              <span className="text-[9px] font-bold text-white">Live Trades</span>
+              <TrendingUp className="w-3 h-3 text-black" />
+              <span className="text-[9px] font-bold text-black">Live Trades</span>
             </div>
 
             <motion.div animate={{ rotate: isExpanded ? 180 : 0 }}>
-              <ChevronRight className="w-3 h-3 text-white/70" />
+              <ChevronRight className="w-3 h-3 text-black/50" />
             </motion.div>
           </div>
           
@@ -9097,13 +9160,13 @@ const BullMoneyTVPill = memo(({ isExpanded, onToggle }: { isExpanded: boolean; o
       style={{ top: 'calc(5rem + env(safe-area-inset-top, 0px) + 238px)', paddingLeft: 'calc(env(safe-area-inset-left, 0px) + 8px)' }}
     >
       <motion.div
-        whileHover={{ x: 12, scale: 1.05, boxShadow: '0 0 30px rgba(255, 255, 255, 0.6)' }}
+        whileHover={{ x: 12, scale: 1.05, boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
         className="relative pointer-events-auto cursor-pointer"
         onClick={onToggle}
         animate={{ x: [0, 8, 0, 6, 0] }}
         transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3, ease: 'easeInOut' }}
       >
-        <div className="relative rounded-r-full bg-linear-to-br from-white/30 via-white/15 to-zinc-900/40 backdrop-blur-2xl border-y border-r border-white/50 shadow-2xl hover:border-white/70">
+        <div className="relative rounded-r-full bg-white/90 backdrop-blur-xl border-y border-r border-black/10 shadow-sm hover:border-black/15">
           <motion.div
             className="absolute inset-0 rounded-r-full bg-linear-to-r from-white/20 via-fuchsia-500/10 to-transparent"
             animate={{ opacity: [0.3, 0.8, 0.3], scale: [1, 1.05, 1] }}
@@ -9119,12 +9182,12 @@ const BullMoneyTVPill = memo(({ isExpanded, onToggle }: { isExpanded: boolean; o
             />
 
             <div className="flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-white" />
-              <span className="text-[9px] font-bold text-white">LIVE STAGE</span>
+              <Sparkles className="w-3 h-3 text-black" />
+              <span className="text-[9px] font-bold text-black">LIVE STAGE</span>
             </div>
 
             <motion.div animate={{ rotate: isExpanded ? 180 : 0 }}>
-              <ChevronRight className="w-3 h-3 text-white/70" />
+              <ChevronRight className="w-3 h-3 text-black/50" />
             </motion.div>
           </div>
         </div>

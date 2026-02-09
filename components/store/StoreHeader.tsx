@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import X from 'lucide-react/dist/esm/icons/x';
 import User from 'lucide-react/dist/esm/icons/user';
 import Home from 'lucide-react/dist/esm/icons/home';
@@ -30,6 +30,7 @@ const LazyAnimatePresence = dynamic(() => import('framer-motion').then(m => ({ d
 
 // Lazy load modals - same as main navbar
 const AdminHubModal = dynamic(() => import('@/components/AdminHubModal'), { ssr: false });
+const SiteSearchOverlay = dynamic(() => import('@/components/SiteSearchOverlay'), { ssr: false });
 
 // Import lazy modal system from navbar (same as main site)
 import { LazyAffiliateModal, LazyFaqModal } from '@/components/navbar/LazyModalSystem';
@@ -79,6 +80,7 @@ export function StoreHeader() {
   const [faqModalOpen, setFaqModalOpen] = useState(false);
   const [showThemePicker, setShowThemePicker] = useState(false);
   const [showUltimateHub, setShowUltimateHub] = useState(false);
+  const [siteSearchOpen, setSiteSearchOpen] = useState(false);
   const desktopMenuCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hubToggleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { openCart, getItemCount } = useCartStore();
@@ -91,7 +93,9 @@ export function StoreHeader() {
   const { setIsOpen: setThemePickerModalOpen } = useThemeSelectorModalUI();
   const itemCount = getItemCount();
   const router = useRouter();
+  const pathname = usePathname();
   const { heroMode, setHeroMode } = useHeroMode();
+  const isAccountPage = pathname?.startsWith('/store/account');
 
   const PAGEMODE_FORCE_LOGIN_KEY = 'bullmoney_pagemode_force_login';
   const PAGEMODE_LOGIN_VIEW_KEY = 'bullmoney_pagemode_login_view';
@@ -210,7 +214,12 @@ export function StoreHeader() {
     }
     desktopMenuCloseTimer.current = setTimeout(() => {
       setDesktopMenuOpen(false);
-    }, 140);
+    }, 250);
+  }, []);
+
+  const toggleDesktopMenu = useCallback(() => {
+    SoundEffects.click();
+    setDesktopMenuOpen(prev => !prev);
   }, []);
 
   const handleLogout = useCallback(() => {
@@ -219,21 +228,33 @@ export function StoreHeader() {
     setMobileMenuOpen(false);
   }, [signOut]);
   
-  // Handle user click - open auth modal or go to account
+  // Handle user click - always open pagemode login first, then redirect to /store/account
   const handleUserClick = useCallback(() => {
-    if (isAuthenticated && recruit) {
-      SoundEffects.click();
-      router.push('/store/account');
-    } else {
-      startPagemodeLogin();
-    }
-  }, [isAuthenticated, recruit, router, startPagemodeLogin]);
-  
-  // Handle search click - scroll to search on store page
-  const handleSearchClick = useCallback(() => {
     SoundEffects.click();
-    router.push('/store');
-  }, [router]);
+    if (isAuthenticated) {
+      router.push('/store/account');
+      return;
+    }
+    startPagemodeLogin();
+  }, [isAuthenticated, router, startPagemodeLogin]);
+  
+  // Handle search click - open site-wide search overlay
+  const handleSearchClick = useCallback(() => {
+    requestAnimationFrame(() => SoundEffects.click());
+    setSiteSearchOpen(true);
+  }, []);
+
+  // Global Cmd+K / Ctrl+K shortcut to open search
+  useEffect(() => {
+    const handleCmdK = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setSiteSearchOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleCmdK);
+    return () => window.removeEventListener('keydown', handleCmdK);
+  }, []);
 
   const handleRewardsClick = useCallback(() => {
     if (isAuthenticated && recruit) {
@@ -277,13 +298,13 @@ export function StoreHeader() {
   }, [setHeroMode]);
 
   const handleOpenMobileMenu = useCallback(() => {
-    SoundEffects.open();
     setMobileMenuOpen(true);
+    requestAnimationFrame(() => SoundEffects.open());
   }, []);
 
   const handleCloseMobileMenu = useCallback(() => {
-    SoundEffects.close();
     setMobileMenuOpen(false);
+    requestAnimationFrame(() => SoundEffects.close());
   }, []);
 
   return (
@@ -313,8 +334,10 @@ export function StoreHeader() {
         isAuthenticated={isAuthenticated}
         userInitial={recruit?.email?.charAt(0) || 'U'}
         onMobileMenuClick={handleOpenMobileMenu}
-        onDesktopMenuEnter={openDesktopMenu}
-        onDesktopMenuLeave={scheduleDesktopMenuClose}
+        onDesktopMenuEnter={isAccountPage ? undefined : openDesktopMenu}
+        onDesktopMenuLeave={isAccountPage ? undefined : scheduleDesktopMenuClose}
+        onDesktopMenuToggle={toggleDesktopMenu}
+        desktopMenuOpen={desktopMenuOpen}
         // Hero mode toggle
         heroMode={heroMode}
         onHeroModeChange={setHeroMode}
@@ -330,19 +353,25 @@ export function StoreHeader() {
 
       {/* Desktop Dropdown Menu - Apple-style */}
       {desktopMenuOpen && (
-        <div
-          className="fixed left-0 right-0 bottom-0 hidden lg:block pointer-events-none"
-          style={{
-            top: '48px',
-            zIndex: 480,
-            background: 'rgba(255,255,255,0.86)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-          }}
-        />
+        <>
+          {/* Backdrop - click to close */}
+          <div
+            className="fixed inset-0 hidden lg:block z-[899]"
+            onClick={() => setDesktopMenuOpen(false)}
+          />
+          <div
+            className="fixed left-0 right-0 bottom-0 hidden lg:block pointer-events-none z-[900]"
+            style={{
+              top: '48px',
+              background: 'rgba(255,255,255,0.86)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+            }}
+          />
+        </>
       )}
       <div
-        className={`fixed left-0 right-0 z-490 hidden lg:block transition-opacity ${desktopMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+        className={`fixed left-0 right-0 z-[950] hidden lg:block transition-opacity ${desktopMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
         style={{
           top: '48px',
           transform: desktopMenuOpen ? 'translateY(0)' : 'translateY(-4px)',
@@ -500,17 +529,17 @@ export function StoreHeader() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.16, ease: [0.42, 0, 0.58, 1] }}
+              transition={{ duration: 0.1 }}
               onClick={handleCloseMobileMenu}
-              className="fixed inset-0 z-600"
+              className="fixed inset-0 z-[1200]"
               style={{ background: 'rgba(0,0,0,0.18)', willChange: 'opacity' }}
             />
             <LazyMotionDiv
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              transition={{ type: 'tween', duration: 0.22, ease: [0.42, 0, 0.58, 1] }}
-              className="fixed top-0 right-0 bottom-0 w-72 max-w-[80vw] z-700 p-4 flex flex-col overflow-y-auto"
+              transition={{ type: 'tween', duration: 0.14, ease: [0.25, 1, 0.5, 1] }}
+              className="fixed top-0 right-0 bottom-0 w-72 max-w-[80vw] z-[1300] p-4 flex flex-col overflow-y-auto"
               style={{
                 background: 'rgb(255,255,255)',
                 borderLeft: '1px solid rgba(0,0,0,0.1)',
@@ -719,6 +748,12 @@ export function StoreHeader() {
       <LazyFaqModal
         isOpen={faqModalOpen}
         onClose={() => setFaqModalOpen(false)}
+      />
+
+      {/* Site-Wide Search Overlay */}
+      <SiteSearchOverlay
+        isOpen={siteSearchOpen}
+        onClose={() => setSiteSearchOpen(false)}
       />
 
       {/* DEV ONLY: Admin visibility toggle */}

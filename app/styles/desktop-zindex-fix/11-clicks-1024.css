@@ -148,13 +148,29 @@ textarea,
   select,
   textarea,
   .cursor-pointer,
-  [data-interactive],
-  .spline-container,
-  [data-spline-scene] {
+  [data-interactive] {
     pointer-events: auto !important;
     touch-action: manipulation !important;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* FIXED: Spline containers in hero must NOT get pointer-events:auto on mobile
+     Only standalone spline viewers (SplinePage) should be interactive */
+  .spline-container.spline-interactive,
+  .spline-page-container [data-spline-scene] {
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+  }
+
+  /* Hero spline containers must stay non-interactive on mobile */
+  #hero .spline-container,
+  .hero .spline-container,
+  .hero-wrapper .spline-container,
+  #hero [data-spline-scene],
+  .hero [data-spline-scene] {
+    pointer-events: none !important;
+    touch-action: pan-y !important;
   }
   
   /* Ensure modal interactions work */

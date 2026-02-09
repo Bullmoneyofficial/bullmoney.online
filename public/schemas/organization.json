@@ -1,0 +1,47 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "BullMoney",
+  "alternateName": [
+    "BullMoney Trading",
+    "BullMoney Community"
+  ],
+  "url": "https://www.bullmoney.shop",
+  "logo": "https://www.bullmoney.shop/ONcc2l601.svg",
+  "description": "The #1 FREE trading community for Crypto, Gold, Forex & Stocks. Free trading setups, expert market analysis, live trading mentorship.",
+  "foundingDate": "2024",
+  "sameAs": [
+    "https://discord.gg/bullmoney",
+    "https://t.me/bullmoney",
+    "https://www.youtube.com/@BullMoney",
+    "https://www.instagram.com/bullmoney",
+    "https://x.com/BullMoney"
+  ],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "contactType": "customer support",
+    "availableLanguage": [
+      "en",
+      "es",
+      "fr",
+      "de",
+      "pt",
+      "it",
+      "ja",
+      "ko",
+      "zh",
+      "ar"
+    ]
+  },
+  "areaServed": "Worldwide",
+  "knowsAbout": [
+    "Cryptocurrency Trading",
+    "Gold Trading",
+    "Forex Trading",
+    "Stock Trading",
+    "Technical Analysis",
+    "Market Analysis",
+    "Trading Education",
+    "Prop Firm Trading"
+  ]
+}

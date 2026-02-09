@@ -22,6 +22,7 @@ export interface MobilePerformanceProfile {
   isMobile: boolean;
   isTablet: boolean;
   isDesktop: boolean;
+  forceDesktopViewport: boolean;
   
   // Touch/interaction
   isTouch: boolean;
@@ -86,6 +87,7 @@ const DEFAULT_PROFILE: MobilePerformanceProfile = {
   isMobile: false,
   isTablet: false,
   isDesktop: true,
+  forceDesktopViewport: false,
   isTouch: false,
   isLowEnd: false,
   isHighEnd: true,
@@ -300,6 +302,7 @@ function buildProfile(): MobilePerformanceProfile {
   const isAndroid = /Android/.test(ua);
   const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
   const isInAppBrowser = IN_APP_BROWSER_REGEX.test(ua);
+  const forceDesktopViewport = (window as any).__BM_FORCE_DESKTOP_VIEWPORT__ === true;
   
   // Reduced motion preference
   const prefersReducedMotion = window.matchMedia && 
@@ -310,6 +313,28 @@ function buildProfile(): MobilePerformanceProfile {
   const connectionType = (['slow-2g', '2g', '3g', '4g'].includes(effectiveType) 
     ? effectiveType 
     : (connection?.type === 'wifi' ? 'wifi' : 'unknown')) as MobilePerformanceProfile['connectionType'];
+
+  if (forceDesktopViewport && !isInAppBrowser) {
+    return {
+      isMobile: false,
+      isTablet: false,
+      isDesktop: true,
+      forceDesktopViewport: true,
+      isTouch,
+      isLowEnd: false,
+      isHighEnd: true,
+      prefersReducedMotion,
+      isSlowConnection,
+      connectionType,
+      deviceMemory: Math.max(memory, 4),
+      hardwareConcurrency: Math.max(cores, 4),
+      isIOS,
+      isAndroid,
+      isSafari,
+      isInAppBrowser,
+      performanceTier: prefersReducedMotion ? 'minimal' : 'high',
+    };
+  }
   
   // UPDATED 2026.1: Detect mainstream mobile browsers for premium experience
   const isSafariMobile = isSafari && (isIOS || isMobile);
@@ -358,6 +383,7 @@ function buildProfile(): MobilePerformanceProfile {
     isMobile,
     isTablet,
     isDesktop,
+    forceDesktopViewport,
     isTouch,
     isLowEnd,
     isHighEnd,
@@ -401,6 +427,12 @@ export function useMobilePerformance() {
       html.classList.add('is-desktop');
       html.classList.remove('is-mobile', 'is-tablet');
     }
+
+    if (newProfile.forceDesktopViewport) {
+      html.classList.add('desktop-viewport');
+    } else {
+      html.classList.remove('desktop-viewport');
+    }
     
     if (newProfile.isLowEnd) {
       html.classList.add('is-low-end');
@@ -424,13 +456,20 @@ export function useMobilePerformance() {
       const updated = buildProfile();
       setProfile(updated);
     };
+
+    const handleForceDesktop = () => {
+      const updated = buildProfile();
+      setProfile(updated);
+    };
     
     window.addEventListener('resize', handleResize);
     window.addEventListener('orientationchange', handleResize);
+    window.addEventListener('bullmoney-force-desktop-viewport', handleForceDesktop as EventListener);
     
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('orientationchange', handleResize);
+      window.removeEventListener('bullmoney-force-desktop-viewport', handleForceDesktop as EventListener);
     };
   }, []);
 

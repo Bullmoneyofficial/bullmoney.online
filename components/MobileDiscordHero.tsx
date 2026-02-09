@@ -631,7 +631,8 @@ const Styles = () => (
       align-items: center;
       justify-content: center;
       padding: 20px;
-      overflow: hidden; /* Contain background elements */
+      overflow: visible; /* FIXED: Allow scroll to propagate through hero */
+      overflow-x: hidden; /* Prevent horizontal overflow only */
       touch-action: pan-y; /* Allow vertical scrolling on mobile */
     }
 

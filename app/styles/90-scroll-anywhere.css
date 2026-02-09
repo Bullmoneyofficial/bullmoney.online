@@ -28,27 +28,53 @@ html.store-active [data-draggable] {
   touch-action: none !important;
 }
 
-/* Desktop small viewports: let wheel scroll pass through Spline */
-@media (max-width: 1200px) and (hover: hover) and (pointer: fine) {
-  html.home-active .spline-container,
-  html.home-active .spline-page-container,
-  html.home-active .spline-viewport-fill,
-  html.home-active .spline-wrapper,
-  html.home-active [class*="spline"],
-  html.home-active [data-spline],
-  html.home-active iframe[src*="spline"],
-  html.home-active canvas,
-  html.home-active spline-viewer,
-  html.store-active .spline-container,
-  html.store-active .spline-page-container,
-  html.store-active .spline-viewport-fill,
-  html.store-active .spline-wrapper,
-  html.store-active [class*="spline"],
-  html.store-active [data-spline],
-  html.store-active iframe[src*="spline"],
-  html.store-active canvas,
-  html.store-active spline-viewer {
-    pointer-events: none !important;
-    touch-action: pan-y pan-x !important;
-  }
+/* ALL viewports: let scroll pass through Spline on home + store pages */
+/* FIXED: Was limited to <=1200px - now covers ALL screen sizes */
+html.home-active .spline-container,
+html.home-active .spline-viewport-fill,
+html.home-active .spline-wrapper,
+html.home-active [data-spline],
+html.home-active iframe[src*="spline"],
+html.home-active canvas,
+html.home-active spline-viewer,
+html.store-active .spline-container,
+html.store-active .spline-viewport-fill,
+html.store-active .spline-wrapper,
+html.store-active [data-spline],
+html.store-active iframe[src*="spline"],
+html.store-active canvas,
+html.store-active spline-viewer {
+  pointer-events: none !important;
+  touch-action: pan-y pan-x !important;
+}
+
+/* Hero section elements must NEVER block scroll on ANY device or viewport */
+#hero canvas,
+#hero [data-spline],
+#hero .spline-container,
+#hero spline-viewer,
+#hero iframe[src*="spline"],
+#hero .cycling-bg-layer,
+#hero .cycling-bg-item,
+#hero .cycling-bg-item.active,
+#hero .hero-wrapper {
+  pointer-events: none !important;
+  touch-action: pan-y !important;
+}
+
+/* Hero wrapper special: allow overflow Y for scroll passthrough */
+#hero .hero-wrapper {
+  overflow: visible !important;
+  overflow-x: hidden !important;
+}
+
+/* Re-enable pointer-events only on interactive hero children (buttons, links) */
+#hero .hero-content-overlay > *,
+#hero a,
+#hero button,
+#hero [role="button"],
+#hero input,
+#hero select,
+#hero textarea {
+  pointer-events: auto !important;
 }

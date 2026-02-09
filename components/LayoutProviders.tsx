@@ -104,6 +104,12 @@ const CookieConsent = dynamic(
   { ssr: false, loading: () => null }
 );
 
+// ThemesPanel needs both ThemesProvider (from AppProviders) AND UIStateProvider (from ClientProviders)
+const ThemesPanel = dynamic(
+  () => import("@/contexts/ThemesContext").then(m => ({ default: m.ThemesPanel })),
+  { ssr: false }
+);
+
 interface LayoutProvidersProps {
   children: ReactNode;
   modal?: ReactNode;
@@ -159,8 +165,14 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
   }, []);
 
   useEffect(() => {
-    // Mount everything immediately - no artificial delays
-    setMountStage(3);
+    // Stage 1: Show navbar + children immediately
+    setMountStage(2);
+    // Stage 3: Cursor + extras after a short delay to not block first paint
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(() => setMountStage(3), { timeout: 1500 });
+    } else {
+      setTimeout(() => setMountStage(3), 300);
+    }
   }, [pathname]);
 
   const canShowNavbar = mountStage >= 1;
@@ -291,12 +303,17 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
         <WebVitalsEnhanced />
       </Suspense>
 
-      {/* ✅ SEO STRUCTURED DATA - Deferred for faster first paint */}
-      <Suspense fallback={null}>
-        <AllSEOSchemas />
-        <AdvancedSEO />
-        <GoogleSEOBoost />
-      </Suspense>
+      {/* ✅ SEO STRUCTURED DATA - Deferred to idle for faster first paint */}
+      {canShowCursor && (
+        <Suspense fallback={null}>
+          <AllSEOSchemas />
+          <AdvancedSEO />
+          <GoogleSEOBoost />
+        </Suspense>
+      )}
+
+      {/* Unified Themes Panel (Colors + Effects) — needs UIStateProvider from ClientProviders */}
+      {canShowCursor && <ThemesPanel />}
       
       {/* ============================================
           ✅ CLIENT CURSOR - MUST BE LAST IN DOM

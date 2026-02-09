@@ -5,6 +5,12 @@ import { lenientRateLimit, standardRateLimit } from "@/lib/rateLimit";
 import { ProductSchema, formatValidationError } from "@/lib/validation";
 import { logger } from "@/lib/logger";
 
+export const revalidate = 60;
+
+const CACHE_HEADERS = {
+  "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+};
+
 // GET: Fetch all products
 export async function GET(request: NextRequest) {
   try {
@@ -32,7 +38,7 @@ export async function GET(request: NextRequest) {
       buyUrl: p.buy_url,
     }));
 
-    return NextResponse.json(formatted);
+    return NextResponse.json(formatted, { headers: CACHE_HEADERS });
   } catch (error: any) {
     logger.error("Error in GET /api/products:", error);
     return NextResponse.json(

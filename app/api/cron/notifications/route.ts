@@ -33,8 +33,15 @@ function configureVapid() {
 const CHANNEL_INFO: Record<string, { name: string; channel: string; priority: 'high' | 'normal' }> = {
   'bullmoneywebsite': { name: 'FREE TRADES', channel: 'trades', priority: 'high' },
   'bullmoneyfx': { name: 'LIVESTREAMS', channel: 'main', priority: 'normal' },
-  'bullmoneyshop': { name: 'NEWS', channel: 'shop', priority: 'normal' },
+  'bullmoneyshop': { name: 'BULLMONEY NEWS', channel: 'shop', priority: 'normal' },
+  '-1003442830926': { name: 'VIP TRADES', channel: 'trades', priority: 'high' },
 };
+
+function getChannelInfo(chatUsername: string | undefined, chatId: string | undefined) {
+  if (chatUsername && CHANNEL_INFO[chatUsername]) return CHANNEL_INFO[chatUsername];
+  if (chatId && CHANNEL_INFO[chatId]) return CHANNEL_INFO[chatId];
+  return { name: 'BullMoney', channel: 'trades', priority: 'high' as const };
+}
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
@@ -62,58 +69,11 @@ export async function GET(request: NextRequest) {
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
-    // Step 1: Try to fetch new messages from Telegram (if no webhook is set)
+    // Step 1: Skip Telegram polling — webhook handles real-time delivery.
+    // This cron is a FALLBACK that catches any messages missed by the webhook.
     let newMessagesFromTelegram = 0;
-    try {
-      const updatesUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates?allowed_updates=["channel_post","edited_channel_post"]&limit=100`;
-      const response = await fetch(updatesUrl);
-      const data = await response.json();
-
-      if (data.ok && data.result && data.result.length > 0) {
-        const channelPosts = data.result.filter((u: any) => u.channel_post || u.edited_channel_post);
-        let lastUpdateId = 0;
-
-        for (const update of channelPosts) {
-          const post = update.channel_post || update.edited_channel_post;
-          lastUpdateId = Math.max(lastUpdateId, update.update_id);
-
-          const messageText = post.text || post.caption || '';
-          const hasMedia = !!(post.photo || post.video || post.document || post.animation);
-          const messageId = post.message_id;
-          const chatId = post.chat?.id;
-          const chatTitle = post.chat?.title || 'VIP Channel';
-          const messageDate = post.date ? new Date(post.date * 1000).toISOString() : new Date().toISOString();
-
-          if (!messageText && !hasMedia) continue;
-
-          const { error } = await supabase
-            .from('vip_messages')
-            .upsert({
-              telegram_message_id: messageId,
-              message: messageText || (hasMedia ? '📷 Media post' : ''),
-              has_media: hasMedia,
-              chat_id: chatId?.toString(),
-              chat_title: chatTitle,
-              created_at: messageDate,
-              updated_at: new Date().toISOString(),
-              notification_sent: false, // Mark as not notified yet
-            }, {
-              onConflict: 'telegram_message_id',
-              ignoreDuplicates: true, // Don't update if exists (preserve notification_sent status)
-            });
-
-          if (!error) newMessagesFromTelegram++;
-        }
-
-        // Confirm updates to clear queue
-        if (lastUpdateId > 0) {
-          await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates?offset=${lastUpdateId + 1}&limit=1`);
-        }
-      }
-    } catch (telegramErr) {
-      // getUpdates might fail if webhook is set - that's okay
-      console.log('[Cron] getUpdates skipped (webhook may be set)');
-    }
+    // getUpdates is disabled when webhook is active, so we skip it.
+    // If webhook fails, messages still land in DB via other paths.
 
     // Step 2: Find messages that haven't had notifications sent yet
     // Look for messages from the last 10 minutes without notification_sent flag
@@ -168,7 +128,13 @@ export async function GET(request: NextRequest) {
     const notifiedMessageIds: string[] = [];
 
     for (const msg of unnotifiedMessages) {
-      const channelInfo = CHANNEL_INFO['bullmoneywebsite'] || { name: 'BullMoney', channel: 'trades', priority: 'high' as const };
+      // Determine channel from the message's chat_title or fallback to trades
+      const msgChatTitle = msg.chat_title || '';
+      const msgChatId = msg.chat_id || '';
+      const channelInfo = getChannelInfo(
+        Object.keys(CHANNEL_INFO).find(k => CHANNEL_INFO[k].name === msgChatTitle),
+        msgChatId
+      );
       const channelColumn = `channel_${channelInfo.channel}`;
       const targets = subscriptions.filter((sub: any) => sub[channelColumn] !== false);
 

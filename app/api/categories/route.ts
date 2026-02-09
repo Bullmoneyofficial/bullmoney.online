@@ -5,6 +5,12 @@ import { lenientRateLimit, standardRateLimit } from "@/lib/rateLimit";
 import { CategorySchema, formatValidationError } from "@/lib/validation";
 import { logger } from "@/lib/logger";
 
+export const revalidate = 60;
+
+const CACHE_HEADERS = {
+  "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+};
+
 export async function GET(request: NextRequest) {
   try {
     // Apply lenient rate limiting for public endpoint
@@ -29,7 +35,7 @@ export async function GET(request: NextRequest) {
       _id: c.id,
     }));
 
-    return NextResponse.json(formatted);
+    return NextResponse.json(formatted, { headers: CACHE_HEADERS });
   } catch (error: any) {
     logger.error("Error in GET /api/categories:", error);
     return NextResponse.json(

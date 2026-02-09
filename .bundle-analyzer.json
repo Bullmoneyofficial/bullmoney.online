@@ -1,0 +1,7 @@
+{
+  "analyzerMode": "static",
+  "reportFilename": ".next/analyze/bundle-report.html",
+  "openAnalyzer": false,
+  "generateStatsFile": true,
+  "statsFilename": ".next/analyze/bundle-stats.json"
+}

@@ -276,6 +276,12 @@
     contain: none !important;
     isolation: auto !important;
   }
+
+  /* Store lenis wrapper: z-index auto so the fixed StoreHeader escapes */
+  [data-store-lenis] {
+    z-index: auto !important;
+    isolation: auto !important;
+  }
   
   /* ============================================
      NAVBAR - Fixed navigation layer
@@ -284,7 +290,7 @@
   [data-navbar-container],
   .navbar-themed,
   nav[role="navigation"],
-  header.fixed,
+  header.fixed:not(.store-main-nav),
   .navbar {
     position: fixed !important;
     z-index: 9999 !important;

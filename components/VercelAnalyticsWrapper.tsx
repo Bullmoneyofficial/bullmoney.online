@@ -14,12 +14,17 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 // Bot patterns to filter out
 const BOT_PATTERNS = /bot|crawler|spider|scraper|headless|puppeteer|lighthouse|pagespeed|gtmetrix/i;
 
+// Only render on Vercel (VERCEL env var is set automatically on Vercel deployments)
+const IS_VERCEL = process.env.NEXT_PUBLIC_VERCEL_ENV || process.env.VERCEL;
+
 export function VercelAnalyticsWrapper() {
+  // Skip entirely in local dev — the CDN scripts aren't reachable off-platform
+  if (!IS_VERCEL) return null;
+
   return (
     <>
       <Analytics 
         mode="production"
-        debug={process.env.NODE_ENV === 'development'}
         beforeSend={(event) => {
           // Filter out bot traffic and internal paths
           if (typeof window !== 'undefined') {
@@ -37,7 +42,6 @@ export function VercelAnalyticsWrapper() {
         }}
       />
       <SpeedInsights 
-        debug={process.env.NODE_ENV === 'development'}
         sampleRate={1}
         beforeSend={(data) => {
           // Filter bot traffic from Speed Insights

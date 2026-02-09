@@ -20,7 +20,6 @@ import { CryptoCheckoutTrigger } from '@/components/shop/CryptoCheckoutInline';
 
 export function CartDrawer() {
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const { 
     items, 
@@ -45,11 +44,6 @@ export function CartDrawer() {
   const [couponInput, setCouponInput] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
   const [showCoupon, setShowCoupon] = useState(false);
-
-  // Mount check for portal
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(min-width: 768px)');
@@ -111,6 +105,7 @@ export function CartDrawer() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.12 }}
             onClick={closeCart}
             className="fixed inset-0"
             style={{ zIndex: 2147483648, background: 'rgba(0,0,0,0.2)' }}
@@ -121,7 +116,7 @@ export function CartDrawer() {
             initial={isDesktop ? { y: '-100%' } : { x: '100%' }}
             animate={isDesktop ? { y: 0 } : { x: 0 }}
             exit={isDesktop ? { y: '-100%' } : { x: '100%' }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
             className={
               isDesktop
                 ? 'fixed top-0 left-0 right-0 w-full bg-white border-b border-black/10 flex flex-col safe-area-inset-bottom max-h-[90vh]'
@@ -195,10 +190,11 @@ export function CartDrawer() {
                     return (
                       <motion.div
                         key={item.id}
-                        layout
-                        initial={{ opacity: 0, y: 20 }}
+                        layout="position"
+                        initial={{ opacity: 1, y: 0 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, x: -100 }}
+                        exit={{ opacity: 0, x: -60 }}
+                        transition={{ duration: 0.1 }}
                         className="flex gap-3 md:gap-4"
                       >
                         {/* Product Image */}
@@ -325,7 +321,7 @@ export function CartDrawer() {
                         style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.45), rgba(0,0,0,0.15))' }}
                         initial={{ width: 0 }}
                         animate={{ width: `${Math.min(100, (summary.subtotal / 150) * 100)}%` }}
-                        transition={{ duration: 0.5, ease: 'easeOut' }}
+                        transition={{ duration: 0.2, ease: 'easeOut' }}
                       />
                     </div>
                   </div>
@@ -446,7 +442,7 @@ export function CartDrawer() {
   );
 
   // Use portal to render at document.body level, escaping stacking context
-  if (!mounted) return null;
-  
+  if (typeof document === 'undefined') return null;
+
   return createPortal(drawerContent, document.body);
 }

@@ -1,0 +1,27 @@
+{
+  "version": "7e98b35d1aa2",
+  "routes": [
+    "/",
+    "/about",
+    "/shop",
+    "/Blogs",
+    "/Prop",
+    "/socials",
+    "/course",
+    "/community",
+    "/store",
+    "/products",
+    "/recruit",
+    "/trading-showcase"
+  ],
+  "preloadAssets": [
+    "/ONcc2l601.svg",
+    "/manifest.json"
+  ],
+  "cacheStrategy": {
+    "pages": "stale-while-revalidate",
+    "static": "cache-first",
+    "api": "network-first",
+    "images": "cache-first"
+  }
+}

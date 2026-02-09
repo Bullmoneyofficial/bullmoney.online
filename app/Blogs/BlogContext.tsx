@@ -141,7 +141,7 @@ export function BlogProvider({ children }: { children: React.ReactNode }) {
 
   const safeFetchJson = async (url: string, fallback: any = []) => {
     try {
-      const res = await fetch(url);
+      const res = await fetch(url, { cache: "force-cache" });
       if (!res.ok) {
         console.warn(`⚠️ ${url} returned ${res.status}`);
         return fallback;

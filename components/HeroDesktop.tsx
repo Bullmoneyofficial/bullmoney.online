@@ -214,7 +214,9 @@ const Styles = () => (
       align-items: center;
       justify-content: center;
       padding: 20px;
-      overflow: hidden; /* Contain background elements */
+      overflow: visible; /* FIXED: Allow scroll to propagate through hero */
+      overflow-x: hidden; /* Prevent horizontal overflow only */
+      touch-action: pan-y; /* FIXED: Allow vertical scroll passthrough */
     }
 
     /* BACKGROUND LAYER */
@@ -254,7 +256,8 @@ const Styles = () => (
       width: 100%;
       height: 100%;
       z-index: 1;
-      pointer-events: auto; /* Allow Spline interactions */
+      pointer-events: none; /* FIXED: Don't block page scroll - Spline interactions via play mode only */
+      touch-action: pan-y; /* FIXED: Allow scroll passthrough */
       overflow: hidden;
     }
 
@@ -274,7 +277,8 @@ const Styles = () => (
 
     .cycling-bg-item.active {
       opacity: 1;
-      pointer-events: auto; /* Enable interactions when active */
+      pointer-events: none; /* FIXED: Don't block scroll - use play mode for interactions */
+      touch-action: pan-y;
     }
 
     .cycling-bg-item.fading-out {

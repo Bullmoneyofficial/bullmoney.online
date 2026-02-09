@@ -232,7 +232,7 @@ html.fps-medium .animated {
   animation: none;
 }
 
-/* Low tier - minimal animations */
+/* Low tier - minimal animations but ALL content visible */
 html.fps-low {
   --animation-duration-multiplier: 0.3;
 }
@@ -242,7 +242,7 @@ html.fps-low [data-animated] {
   animation: none !important;
 }
 
-/* Minimal tier - no effects */
+/* Minimal tier - no decorative effects but ALL content visible */
 html.fps-minimal {
   --animation-duration-multiplier: 0.1;
 }
@@ -254,7 +254,8 @@ html.fps-minimal .shimmer-animated {
 }
 
 html.fps-minimal [data-shimmer] {
-  display: none !important;
+  animation: none !important;
+  opacity: 0.5 !important;
 }
 
 /* ========================================
@@ -510,22 +511,23 @@ html.is-scrolling [style*="will-change"] {
   will-change: auto !important;
 }
 
-/* Aggressive shimmer disable at low FPS */
+/* Aggressive shimmer disable at low FPS - keep visible but stop animation */
 html.shimmer-quality-low [data-shimmer],
 html.shimmer-quality-low .shimmer-line,
 html.shimmer-quality-low .shimmer-border,
 html.fps-low [data-shimmer],
 html.fps-minimal [data-shimmer] {
-  display: none !important;
   animation: none !important;
+  opacity: 0.5 !important;
 }
 
-/* Disable particle effects */
+/* Reduce particle effects instead of hiding */
 html.fps-low [class*="particle"],
 html.fps-low [class*="tsparticles"],
 html.fps-minimal [class*="particle"],
 html.fps-minimal [class*="tsparticles"] {
-  display: none !important;
+  opacity: 0.3 !important;
+  animation: none !important;
 }
 
 /* ========================================
@@ -638,14 +640,14 @@ canvas {
   }
 }
 
-/* Reduce canvas quality at low FPS */
+/* Keep canvas visible at low FPS, just optimize rendering */
 html.fps-low canvas,
 html.fps-minimal canvas {
-  image-rendering: pixelated;
+  image-rendering: optimizeSpeed;
   filter: none !important;
 }
 
-/* CRITICAL: Video optimization */
+/* CRITICAL: Video stays visible at all FPS tiers */
 video {
   contain: strict;
   object-fit: cover;
@@ -653,7 +655,8 @@ video {
 
 html.fps-low video,
 html.fps-minimal video {
-  display: none !important;
+  animation: none !important;
+  filter: none !important;
 }
 
 /* ULTRA: Aggressive touch scrolling optimization */
@@ -750,4 +753,90 @@ html.fps-minimal {
 .shimmer-line,
 .shimmer-border {
   animation-duration: var(--shimmer-duration, 2s) !important;
+}
+
+/* ========================================
+   LOW-MEMORY FULL EXPERIENCE MODE
+   Shows ALL content, reduces render cost only
+   ======================================== */
+
+/* Low memory adapt: everything visible, lightweight rendering */
+html.low-memory-adapt * {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html.low-memory-adapt .glass-effect,
+html.low-memory-adapt .glassmorphism {
+  background: rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: none !important;
+}
+
+html.low-memory-adapt video {
+  object-fit: cover;
+}
+
+html.low-memory-adapt canvas {
+  image-rendering: optimizeSpeed;
+}
+
+html.low-memory-adapt img {
+  image-rendering: auto;
+}
+
+/* Low-mem paused videos show poster frame */
+video[data-low-mem-paused] {
+  cursor: pointer;
+}
+
+video[data-low-mem-paused]::after {
+  content: "▶";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 3rem;
+  color: rgba(255, 255, 255, 0.8);
+  pointer-events: none;
+}
+
+/* ========================================
+   MOBILE FULL EXPERIENCE (<1024px)
+   Show everything desktop shows
+   ======================================== */
+
+html.mobile-full-experience [data-desktop-only],
+html.mobile-full-experience [data-hide-mobile],
+html.mobile-full-experience .desktop-only,
+html.mobile-full-experience .hidden-mobile,
+html.mobile-full-experience .hide-on-mobile,
+html.mobile-full-experience .md\\:block,
+html.mobile-full-experience .lg\\:block {
+  display: block !important;
+  visibility: visible !important;
+}
+
+/* Ensure all sections render on mobile */
+html.mobile-full-experience section,
+html.mobile-full-experience article,
+html.mobile-full-experience .content-section,
+html.mobile-full-experience [data-section] {
+  content-visibility: visible !important;
+  display: block !important;
+}
+
+/* Keep scrolling fast on low-memory mobile */
+html.low-memory-adapt.mobile-full-experience * {
+  scroll-behavior: auto !important;
+}
+
+/* FPS boost mode: fast transitions, everything still visible */
+html.fps-boost * {
+  transition-duration: var(--transition-speed, 0.12s) !important;
+  animation-duration: var(--animation-duration, 0.2s) !important;
+}
+
+html.fps-boost .glass-effect,
+html.fps-boost .glassmorphism {
+  backdrop-filter: blur(var(--blur-amount, 6px)) !important;
 }

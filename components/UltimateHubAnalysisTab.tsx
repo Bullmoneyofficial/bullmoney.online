@@ -90,9 +90,9 @@ const marketColors: Record<MarketType, string> = {
 
 // Direction colors
 const directionColors: Record<Direction, string> = {
-  bullish: 'text-white',
+  bullish: 'text-black',
   bearish: 'text-red-400',
-  neutral: 'text-white',
+  neutral: 'text-black',
 };
 
 // Get TradingView symbol from analysis
@@ -117,7 +117,7 @@ const ConfidenceMeter = memo(({ score }: { score: number }) => {
   
   return (
     <div className="flex items-center gap-2">
-      <div className="flex-1 h-2 bg-zinc-800 rounded-full overflow-hidden">
+      <div className="flex-1 h-2 bg-[#f5f5f7] rounded-full overflow-hidden">
         <motion.div
           className="h-full rounded-full"
           initial={{ width: 0 }}
@@ -126,7 +126,7 @@ const ConfidenceMeter = memo(({ score }: { score: number }) => {
           style={{ backgroundColor: color, boxShadow: `0 0 8px ${color}40` }}
         />
       </div>
-      <span className="text-[10px] font-bold text-white" style={{ color }}>
+      <span className="text-[10px] font-bold text-black" style={{ color }}>
         {score}/10
       </span>
     </div>
@@ -315,7 +315,7 @@ export const UltimateHubAnalysisTab = memo(() => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full bg-black">
+      <div className="flex items-center justify-center h-full bg-[#f5f5f7]">
         <ShimmerSpinner size={48} color="blue" />
       </div>
     );
@@ -323,25 +323,25 @@ export const UltimateHubAnalysisTab = memo(() => {
 
   if (!currentAnalysis) {
     return (
-      <div className="flex flex-col items-center justify-center h-full bg-black p-4">
+      <div className="flex flex-col items-center justify-center h-full bg-[#f5f5f7] p-4">
         <PenSquare className="w-12 h-12 text-white/30 mb-4" />
-        <p className="text-sm text-zinc-400 text-center">No analyses available</p>
+        <p className="text-sm text-black/50 text-center">No analyses available</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full bg-black overflow-hidden">
+    <div className="flex flex-col h-full bg-[#f5f5f7] overflow-hidden">
       {/* Header */}
-      <div className="shrink-0 p-1.5 sm:p-2 md:p-3 border-b border-white/30 bg-black" style={{ boxShadow: '0 2px 8px rgba(255, 255, 255, 0.2)' }}>
+      <div className="shrink-0 p-1.5 sm:p-2 md:p-3 border-b border-black/10 bg-[#f5f5f7]" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
         {/* Title Row */}
         <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-1 sm:gap-2 flex-1 min-w-0">
-            <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4 text-white shrink-0" style={{ filter: 'drop-shadow(0 0 4px #ffffff)' }} />
-            <h2 className="text-xs sm:text-sm font-bold text-white truncate" style={{ textShadow: '0 0 4px #ffffff, 0 0 8px #ffffff' }}>
+            <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4 text-black shrink-0" style={{ filter: 'none' }} />
+            <h2 className="text-xs sm:text-sm font-bold text-black truncate" style={{ textShadow: 'none' }}>
               Analysis
             </h2>
-            <span className="text-[8px] sm:text-[9px] text-white/60 shrink-0">
+            <span className="text-[8px] sm:text-[9px] text-black/40 shrink-0">
               {currentIndex + 1}/{analyses.length}
             </span>
           </div>
@@ -354,10 +354,10 @@ export const UltimateHubAnalysisTab = memo(() => {
                   onClick={handleCreate}
                   whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="p-1 sm:p-1.5 rounded-lg bg-white/20 hover:bg-white/30 border border-white/40"
+                  className="p-1 sm:p-1.5 rounded-lg bg-white hover:bg-black text-white border border-black/15"
                   title="Create"
                 >
-                  <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
+                  <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-black" />
                 </motion.button>
                 {!isEditing ? (
                   <>
@@ -386,10 +386,10 @@ export const UltimateHubAnalysisTab = memo(() => {
                       onClick={handleSaveEdit}
                       whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="p-1 sm:p-1.5 rounded-lg bg-white/20 hover:bg-white/30 border border-white/40"
+                      className="p-1 sm:p-1.5 rounded-lg bg-white hover:bg-black text-white border border-black/15"
                       title="Save"
                     >
-                      <Save className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
+                      <Save className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-black" />
                     </motion.button>
                     <motion.button
                       onClick={() => { setIsEditing(false); setEditForm(null); }}
@@ -398,7 +398,7 @@ export const UltimateHubAnalysisTab = memo(() => {
                       className="p-1 sm:p-1.5 rounded-lg bg-zinc-500/20 hover:bg-zinc-500/30 border border-zinc-500/40"
                       title="Cancel"
                     >
-                      <X className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-zinc-400" />
+                      <X className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-black/50" />
                     </motion.button>
                   </>
                 )}
@@ -409,17 +409,17 @@ export const UltimateHubAnalysisTab = memo(() => {
               onClick={goPrev}
               whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="p-1 sm:p-1.5 rounded-lg bg-white/20 hover:bg-white/30 border border-white/40"
+              className="p-1 sm:p-1.5 rounded-lg bg-white hover:bg-black text-white border border-black/15"
             >
-              <ChevronLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
+              <ChevronLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-black" />
             </motion.button>
             <motion.button
               onClick={goNext}
               whileHover={shouldSkipHeavyEffects ? {} : { scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="p-1 sm:p-1.5 rounded-lg bg-white/20 hover:bg-white/30 border border-white/40"
+              className="p-1 sm:p-1.5 rounded-lg bg-white hover:bg-black text-white border border-black/15"
             >
-              <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
+              <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-black" />
             </motion.button>
           </div>
         </div>
@@ -427,7 +427,7 @@ export const UltimateHubAnalysisTab = memo(() => {
         {/* Market Badge & Direction - Collapse on mobile */}
         {!isMobile && (
           <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto text-nowrap scrollbar-hide">
-            <span className={`px-2 py-0.5 rounded-full bg-linear-to-r ${marketColors[currentAnalysis.market]} text-[9px] font-bold uppercase text-white shrink-0`}>
+            <span className={`px-2 py-0.5 rounded-full bg-linear-to-r ${marketColors[currentAnalysis.market]} text-[9px] font-bold uppercase text-black shrink-0`}>
               {currentAnalysis.market}
             </span>
             <span className={`flex items-center gap-1 text-[10px] font-bold shrink-0 ${directionColors[currentAnalysis.direction]}`}>
@@ -436,18 +436,18 @@ export const UltimateHubAnalysisTab = memo(() => {
               {currentAnalysis.direction === 'neutral' && <BarChart3 className="w-2.5 h-2.5" />}
               {currentAnalysis.direction.toUpperCase()}
             </span>
-            <span className="text-[10px] font-semibold text-white shrink-0">{currentAnalysis.pair}</span>
+            <span className="text-[10px] font-semibold text-black shrink-0">{currentAnalysis.pair}</span>
           </div>
         )}
         {isMobile && (
           <div className="flex items-center gap-1 flex-wrap">
-            <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase text-white bg-linear-to-r ${marketColors[currentAnalysis.market]}`}>
+            <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase text-black bg-linear-to-r ${marketColors[currentAnalysis.market]}`}>
               {currentAnalysis.market.charAt(0).toUpperCase()}
             </span>
             <span className={`text-[8px] font-bold ${directionColors[currentAnalysis.direction]}`}>
               {currentAnalysis.direction === 'bullish' && '↑'} {currentAnalysis.direction === 'bearish' && '↓'}
             </span>
-            <span className="text-[8px] text-white">{currentAnalysis.pair}</span>
+            <span className="text-[8px] text-black">{currentAnalysis.pair}</span>
           </div>
         )}
       </div>
@@ -462,20 +462,20 @@ export const UltimateHubAnalysisTab = memo(() => {
               value={editForm.title || ''}
               onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
               placeholder="Title"
-              className="w-full px-3 py-2 bg-zinc-900/50 border border-white/30 rounded-lg text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-white"
+              className="w-full px-3 py-2 bg-white/50 border border-black/10 rounded-lg text-sm text-black placeholder-zinc-500 focus:outline-none focus:border-white"
             />
             <textarea
               value={editForm.content || ''}
               onChange={(e) => setEditForm({ ...editForm, content: e.target.value })}
               placeholder="Content"
               rows={4}
-              className="w-full px-3 py-2 bg-zinc-900/50 border border-white/30 rounded-lg text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white resize-none"
+              className="w-full px-3 py-2 bg-white/50 border border-black/10 rounded-lg text-xs text-black placeholder-zinc-500 focus:outline-none focus:border-white resize-none"
             />
             <div className="grid grid-cols-2 gap-2">
               <select
                 value={editForm.market || 'forex'}
                 onChange={(e) => setEditForm({ ...editForm, market: e.target.value as MarketType })}
-                className="px-3 py-2 bg-zinc-900/50 border border-white/30 rounded-lg text-xs text-white focus:outline-none focus:border-white"
+                className="px-3 py-2 bg-white/50 border border-black/10 rounded-lg text-xs text-black focus:outline-none focus:border-white"
               >
                 <option value="forex">Forex</option>
                 <option value="crypto">Crypto</option>
@@ -485,7 +485,7 @@ export const UltimateHubAnalysisTab = memo(() => {
               <select
                 value={editForm.direction || 'neutral'}
                 onChange={(e) => setEditForm({ ...editForm, direction: e.target.value as Direction })}
-                className="px-3 py-2 bg-zinc-900/50 border border-white/30 rounded-lg text-xs text-white focus:outline-none focus:border-white"
+                className="px-3 py-2 bg-white/50 border border-black/10 rounded-lg text-xs text-black focus:outline-none focus:border-white"
               >
                 <option value="bullish">Bullish</option>
                 <option value="bearish">Bearish</option>
@@ -497,7 +497,7 @@ export const UltimateHubAnalysisTab = memo(() => {
               value={editForm.pair || ''}
               onChange={(e) => setEditForm({ ...editForm, pair: e.target.value })}
               placeholder="Pair (e.g., EUR/USD)"
-              className="w-full px-3 py-2 bg-zinc-900/50 border border-white/30 rounded-lg text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white"
+              className="w-full px-3 py-2 bg-white/50 border border-black/10 rounded-lg text-xs text-black placeholder-zinc-500 focus:outline-none focus:border-white"
             />
             <div className="grid grid-cols-3 gap-2">
               <input
@@ -506,7 +506,7 @@ export const UltimateHubAnalysisTab = memo(() => {
                 value={editForm.entry_price || ''}
                 onChange={(e) => setEditForm({ ...editForm, entry_price: parseFloat(e.target.value) })}
                 placeholder="Entry"
-                className="px-2 py-1.5 bg-zinc-900/50 border border-white/30 rounded-lg text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white"
+                className="px-2 py-1.5 bg-white/50 border border-black/10 rounded-lg text-xs text-black placeholder-zinc-500 focus:outline-none focus:border-white"
               />
               <input
                 type="number"
@@ -514,7 +514,7 @@ export const UltimateHubAnalysisTab = memo(() => {
                 value={editForm.target_price || ''}
                 onChange={(e) => setEditForm({ ...editForm, target_price: parseFloat(e.target.value) })}
                 placeholder="Target"
-                className="px-2 py-1.5 bg-zinc-900/50 border border-white/30 rounded-lg text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white"
+                className="px-2 py-1.5 bg-white/50 border border-black/10 rounded-lg text-xs text-black placeholder-zinc-500 focus:outline-none focus:border-white"
               />
               <input
                 type="number"
@@ -522,7 +522,7 @@ export const UltimateHubAnalysisTab = memo(() => {
                 value={editForm.stop_loss || ''}
                 onChange={(e) => setEditForm({ ...editForm, stop_loss: parseFloat(e.target.value) })}
                 placeholder="Stop"
-                className="px-2 py-1.5 bg-zinc-900/50 border border-white/30 rounded-lg text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white"
+                className="px-2 py-1.5 bg-white/50 border border-black/10 rounded-lg text-xs text-black placeholder-zinc-500 focus:outline-none focus:border-white"
               />
             </div>
             <input
@@ -533,13 +533,13 @@ export const UltimateHubAnalysisTab = memo(() => {
               onChange={(e) => setEditForm({ ...editForm, confidence_score: parseInt(e.target.value) })}
               className="w-full"
             />
-            <div className="text-xs text-zinc-400 text-center">Confidence: {editForm.confidence_score}/10</div>
-            <label className="flex items-center gap-2 text-xs text-white">
+            <div className="text-xs text-black/50 text-center">Confidence: {editForm.confidence_score}/10</div>
+            <label className="flex items-center gap-2 text-xs text-black">
               <input
                 type="checkbox"
                 checked={editForm.is_published || false}
                 onChange={(e) => setEditForm({ ...editForm, is_published: e.target.checked })}
-                className="rounded border-white/30"
+                className="rounded border-black/10"
               />
               Published
             </label>
@@ -549,8 +549,8 @@ export const UltimateHubAnalysisTab = memo(() => {
           <>
         {/* Title */}
         <div>
-          <h3 className="text-sm sm:text-base font-bold text-white mb-1">{currentAnalysis.title}</h3>
-          <div className="flex items-center gap-2 text-[9px] text-white/60">
+          <h3 className="text-sm sm:text-base font-bold text-black mb-1">{currentAnalysis.title}</h3>
+          <div className="flex items-center gap-2 text-[9px] text-black/40">
             <span>{formatDate(currentAnalysis.created_at)}</span>
             <span>•</span>
             <div className="flex items-center gap-1">
@@ -566,8 +566,8 @@ export const UltimateHubAnalysisTab = memo(() => {
         </div>
 
         {/* Confidence Score */}
-        <div className="p-2 rounded-lg bg-zinc-900/50 border border-white/20">
-          <div className="text-[9px] text-white uppercase font-bold mb-1">Confidence</div>
+        <div className="p-2 rounded-lg bg-white/50 border border-black/10">
+          <div className="text-[9px] text-black uppercase font-bold mb-1">Confidence</div>
           <ConfidenceMeter score={currentAnalysis.confidence_score} />
         </div>
 
@@ -575,21 +575,21 @@ export const UltimateHubAnalysisTab = memo(() => {
         {(currentAnalysis.entry_price || currentAnalysis.target_price || currentAnalysis.stop_loss) && (
           <div className="grid grid-cols-3 gap-2">
             {currentAnalysis.entry_price && (
-              <div className="p-2 rounded-lg bg-white/10 border border-white/30">
-                <div className="text-[8px] text-white/70 uppercase mb-0.5">Entry</div>
-                <div className="text-[11px] font-bold text-white">{currentAnalysis.entry_price}</div>
+              <div className="p-2 rounded-lg bg-white border border-black/10">
+                <div className="text-[8px] text-black/50 uppercase mb-0.5">Entry</div>
+                <div className="text-[11px] font-bold text-black">{currentAnalysis.entry_price}</div>
               </div>
             )}
             {currentAnalysis.target_price && (
-              <div className="p-2 rounded-lg bg-white/10 border border-white/30">
-                <div className="text-[8px] text-white/70 uppercase mb-0.5">Target</div>
-                <div className="text-[11px] font-bold text-white">{currentAnalysis.target_price}</div>
+              <div className="p-2 rounded-lg bg-white border border-black/10">
+                <div className="text-[8px] text-black/50 uppercase mb-0.5">Target</div>
+                <div className="text-[11px] font-bold text-black">{currentAnalysis.target_price}</div>
               </div>
             )}
             {currentAnalysis.stop_loss && (
               <div className="p-2 rounded-lg bg-red-500/10 border border-red-500/30">
                 <div className="text-[8px] text-red-400/70 uppercase mb-0.5">Stop</div>
-                <div className="text-[11px] font-bold text-white">{currentAnalysis.stop_loss}</div>
+                <div className="text-[11px] font-bold text-black">{currentAnalysis.stop_loss}</div>
               </div>
             )}
           </div>
@@ -598,7 +598,7 @@ export const UltimateHubAnalysisTab = memo(() => {
         {/* Chart Toggle */}
         <button
           onClick={() => { SoundEffects.click(); setShowChart(p => !p); }}
-          className="w-full p-2 rounded-lg bg-white/20 hover:bg-white/30 border border-white/40 transition-colors text-[10px] font-semibold text-white"
+          className="w-full p-2 rounded-lg bg-white hover:bg-black text-white border border-black/15 transition-colors text-[10px] font-semibold text-black"
         >
           {showChart ? 'Hide Chart' : 'Show Chart'}
         </button>
@@ -611,9 +611,9 @@ export const UltimateHubAnalysisTab = memo(() => {
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={shouldSkipHeavyEffects ? { duration: 0 } : { duration: 0.3 }}
-              className="overflow-hidden rounded-lg border border-white/30"
+              className="overflow-hidden rounded-lg border border-black/10"
             >
-              <div className="w-full h-[200px] sm:h-[250px] md:h-[300px] lg:h-[350px] xl:h-[400px] bg-black">
+              <div className="w-full h-[200px] sm:h-[250px] md:h-[300px] lg:h-[350px] xl:h-[400px] bg-[#f5f5f7]">
                 <iframe
                   src={`https://www.tradingview.com/widgetembed/?frameElementId=tradingview_chart&symbol=${getChartSymbol(currentAnalysis)}&interval=15&hidesidetoolbar=0&theme=dark&style=1&timezone=Etc%2FUTC`}
                   className="w-full h-full border-0"
@@ -627,7 +627,7 @@ export const UltimateHubAnalysisTab = memo(() => {
         </AnimatePresence>
 
         {/* Content */}
-        <div className="p-3 rounded-lg bg-zinc-900/50 border border-white/20">
+        <div className="p-3 rounded-lg bg-white/50 border border-black/10">
           <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">
             {currentAnalysis.content}
           </p>
@@ -635,7 +635,7 @@ export const UltimateHubAnalysisTab = memo(() => {
 
         {/* Image if available */}
         {currentAnalysis.image_url && (
-          <div className="rounded-lg overflow-hidden border border-white/30">
+          <div className="rounded-lg overflow-hidden border border-black/10">
             <img
               src={currentAnalysis.image_url}
               alt={currentAnalysis.title}
@@ -649,7 +649,7 @@ export const UltimateHubAnalysisTab = memo(() => {
       </div>
 
       {/* Footer Actions */}
-      <div className="shrink-0 p-1.5 sm:p-2 md:p-3 border-t border-white/30 bg-black" style={{ boxShadow: '0 -2px 8px rgba(255, 255, 255, 0.2)' }}>
+      <div className="shrink-0 p-1.5 sm:p-2 md:p-3 border-t border-black/10 bg-[#f5f5f7]" style={{ boxShadow: '0 -1px 3px rgba(0, 0, 0, 0.08)' }}>
         <div className="flex items-center justify-around gap-1 sm:gap-2">
           {/* Bullish */}
           <motion.button
@@ -657,12 +657,12 @@ export const UltimateHubAnalysisTab = memo(() => {
             whileTap={{ scale: 0.95 }}
             className={`flex-1 flex flex-col items-center gap-0.5 p-1.5 sm:p-2 rounded-lg transition-all ${
               userReaction === 'bull'
-                ? 'bg-white/30 border border-white/50'
-                : 'bg-zinc-800/50 hover:bg-zinc-700/50 border border-transparent'
+                ? 'bg-black text-white border border-white/50'
+                : 'bg-[#f5f5f7]/50 hover:bg-zinc-700/50 border border-transparent'
             }`}
           >
-            <TrendingUp className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${userReaction === 'bull' ? 'text-white' : 'text-zinc-400'}`} />
-            <span className="text-[7px] sm:text-[8px] font-bold text-zinc-400">Bull</span>
+            <TrendingUp className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${userReaction === 'bull' ? 'text-black' : 'text-black/50'}`} />
+            <span className="text-[7px] sm:text-[8px] font-bold text-black/50">Bull</span>
           </motion.button>
 
           {/* Bearish */}
@@ -672,11 +672,11 @@ export const UltimateHubAnalysisTab = memo(() => {
             className={`flex-1 flex flex-col items-center gap-0.5 p-1.5 sm:p-2 rounded-lg transition-all ${
               userReaction === 'bear'
                 ? 'bg-red-500/30 border border-red-500/50'
-                : 'bg-zinc-800/50 hover:bg-zinc-700/50 border border-transparent'
+                : 'bg-[#f5f5f7]/50 hover:bg-zinc-700/50 border border-transparent'
             }`}
           >
-            <TrendingDown className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${userReaction === 'bear' ? 'text-red-400' : 'text-zinc-400'}`} />
-            <span className="text-[7px] sm:text-[8px] font-bold text-zinc-400">Bear</span>
+            <TrendingDown className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${userReaction === 'bear' ? 'text-red-400' : 'text-black/50'}`} />
+            <span className="text-[7px] sm:text-[8px] font-bold text-black/50">Bear</span>
           </motion.button>
 
           {/* Save */}
@@ -685,22 +685,22 @@ export const UltimateHubAnalysisTab = memo(() => {
             whileTap={{ scale: 0.95 }}
             className={`flex-1 flex flex-col items-center gap-0.5 p-1.5 sm:p-2 rounded-lg transition-all ${
               userReaction === 'save'
-                ? 'bg-white/30 border border-white/50'
-                : 'bg-zinc-800/50 hover:bg-zinc-700/50 border border-transparent'
+                ? 'bg-black text-white border border-white/50'
+                : 'bg-[#f5f5f7]/50 hover:bg-zinc-700/50 border border-transparent'
             }`}
           >
-            <Copy className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${userReaction === 'save' ? 'text-white' : 'text-zinc-400'}`} />
-            <span className="text-[7px] sm:text-[8px] font-bold text-zinc-400">Save</span>
+            <Copy className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${userReaction === 'save' ? 'text-black' : 'text-black/50'}`} />
+            <span className="text-[7px] sm:text-[8px] font-bold text-black/50">Save</span>
           </motion.button>
 
           {/* Share */}
           <motion.button
             onClick={handleShare}
             whileTap={{ scale: 0.95 }}
-            className="flex-1 flex flex-col items-center gap-0.5 p-1.5 sm:p-2 rounded-lg bg-zinc-800/50 hover:bg-zinc-700/50 transition-all"
+            className="flex-1 flex flex-col items-center gap-0.5 p-1.5 sm:p-2 rounded-lg bg-[#f5f5f7]/50 hover:bg-zinc-700/50 transition-all"
           >
-            <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-zinc-400" />
-            <span className="text-[7px] sm:text-[8px] font-bold text-zinc-400">Share</span>
+            <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-black/50" />
+            <span className="text-[7px] sm:text-[8px] font-bold text-black/50">Share</span>
           </motion.button>
         </div>
       </div>
