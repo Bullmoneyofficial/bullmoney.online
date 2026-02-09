@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { StoreHeader } from '@/components/store/StoreHeader';
 import { CartDrawer } from '@/components/shop/CartDrawer';
 import dynamic from 'next/dynamic';
@@ -22,6 +22,7 @@ const STORE_HEADER_HEIGHT = 48;
 export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
   const { isAuthenticated } = useRecruitAuth();
+  const overlayOpacityRef = useRef<{ overlay?: string; edge?: string }>({});
 
   // Mark as mounted for client-side rendering
   useEffect(() => {
@@ -42,45 +43,6 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
       console.log('[Store] No active session');
     }
   }, [mounted, isAuthenticated]);
-
-  // Apply store-specific styles on mount
-  useEffect(() => {
-    if (!mounted) return;
-    
-    // Hide theme overlays and blurs when store is active
-    const hideOverlays = () => {
-      // Hide theme overlays — ONE-SHOT (no MutationObserver needed).
-      // The CSS rules below already handle any dynamically-added overlays via
-      // :global selectors. Previously a MutationObserver watched the entire
-      // document.body with subtree:true which caused a mutation storm:
-      //   GlobalThemeProvider creates overlay → observer fires → hides it →
-      //   OffscreenAnimationController observer fires → etc.
-      const overlays = document.querySelectorAll('[data-theme-overlay], #theme-filter-overlay, #theme-global-overlay, #theme-edge-glow');
-      overlays.forEach(el => {
-        (el as HTMLElement).style.display = 'none';
-        (el as HTMLElement).style.opacity = '0';
-        (el as HTMLElement).style.pointerEvents = 'none';
-        (el as HTMLElement).style.zIndex = '-1';
-      });
-    };
-    
-    hideOverlays();
-    
-    // Re-run once after a short delay to catch any overlays created during hydration
-    const timer = setTimeout(hideOverlays, 1500);
-    
-    return () => {
-      clearTimeout(timer);
-      // Restore overlays when leaving store
-      const overlays = document.querySelectorAll('[data-theme-overlay], #theme-filter-overlay, #theme-global-overlay, #theme-edge-glow');
-      overlays.forEach(el => {
-        (el as HTMLElement).style.display = '';
-        (el as HTMLElement).style.opacity = '';
-        (el as HTMLElement).style.pointerEvents = '';
-        (el as HTMLElement).style.zIndex = '';
-      });
-    };
-  }, [mounted]);
 
   // Fix scroll issues - ensure store page can scroll properly
   useEffect(() => {
@@ -118,10 +80,53 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
     };
   }, [mounted]);
 
+  // Boost theme overlay intensity on store pages for stronger color on whites
+  useEffect(() => {
+    if (!mounted) return;
+
+    const applyOverlayBoost = () => {
+      const overlay = document.getElementById('theme-global-overlay');
+      const edgeGlow = document.getElementById('theme-edge-glow');
+      const isLightTheme = document.documentElement.getAttribute('data-theme-light') === 'true';
+
+      if (overlay) {
+        if (overlayOpacityRef.current.overlay === undefined) {
+          overlayOpacityRef.current.overlay = overlay.style.opacity;
+        }
+        overlay.style.opacity = isLightTheme ? '0.55' : '0.8';
+      }
+
+      if (edgeGlow) {
+        if (overlayOpacityRef.current.edge === undefined) {
+          overlayOpacityRef.current.edge = edgeGlow.style.opacity;
+        }
+        edgeGlow.style.opacity = isLightTheme ? '0.4' : '0.65';
+      }
+    };
+
+    applyOverlayBoost();
+    window.addEventListener('bullmoney-theme-change', applyOverlayBoost as EventListener);
+
+    return () => {
+      window.removeEventListener('bullmoney-theme-change', applyOverlayBoost as EventListener);
+      const overlay = document.getElementById('theme-global-overlay');
+      const edgeGlow = document.getElementById('theme-edge-glow');
+
+      if (overlay) {
+        overlay.style.opacity = overlayOpacityRef.current.overlay ?? '';
+      }
+      if (edgeGlow) {
+        edgeGlow.style.opacity = overlayOpacityRef.current.edge ?? '';
+      }
+      overlayOpacityRef.current = {};
+    };
+  }, [mounted]);
+
   return (
     <div 
       className="store-layout bg-white text-black"
       data-store-page
+      data-theme-aware
       style={{
         position: 'relative',
         zIndex: 1,
@@ -163,29 +168,7 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
           }
         }
         
-        /* Hide all blurs and backdrops when store is active */
-        :global([data-theme-overlay]),
-        :global(#theme-filter-overlay),
-        :global(#theme-global-overlay),
-        :global(#theme-edge-glow),
-        :global(.theme-backdrop),
-        :global(.theme-lens),
-        :global([id*="theme-overlay"]),
-        :global([class*="theme-overlay"]) {
-          display: none !important;
-          opacity: 0 !important;
-          pointer-events: none !important;
-          z-index: -1 !important;
-        }
-
-        /* Kill theme overlay pseudo-elements on store pages */
-        :global(html.store-active::before),
-        :global(html.store-active::after) {
-          content: none !important;
-          display: none !important;
-          opacity: 0 !important;
-          pointer-events: none !important;
-        }
+        /* Allow global theme overlays to render on store pages */
         
         /* Disable pointer events on any canvas elements while on store */
         :global(html.store-active canvas),
