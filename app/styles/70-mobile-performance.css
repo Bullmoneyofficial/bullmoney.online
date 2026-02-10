@@ -225,6 +225,21 @@ html.is-in-app-browser .spline-container {
    These override the restrictive in-app-browser rules above
    ============================================================================ */
 
+/* Compact desktop density for mobile viewports >= 380px */
+@media (min-width: 380px) and (max-width: 1023px) {
+  html.is-mobile,
+  html.is-in-app-browser {
+    font-size: 14px;
+    text-size-adjust: 100%;
+  }
+
+  html.is-mobile body,
+  html.is-in-app-browser body {
+    font-size: 0.95rem;
+    line-height: 1.3;
+  }
+}
+
 /* Re-enable animations for premium mobile browsers */
 html.mobile-premium *,
 html.mobile-premium *::before,
