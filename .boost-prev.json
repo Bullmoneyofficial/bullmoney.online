@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-10T17:04:57.316479+00:00",
+  "timestamp": "2026-02-10T19:04:03.219198+00:00",
   "files_generated": 25,
   "warnings": [],
   "errors": [],
@@ -14,8 +14,8 @@
     "pwa",
     "nextjs_config",
     "cleanup",
-    "gpu_manager",
     "spline_turbo",
+    "gpu_manager",
     "inapp_shield",
     "crash_prevention",
     "memory_guardian",

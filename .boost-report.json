@@ -54,7 +54,7 @@
     ]
   },
   "caching": {
-    "build_id": "bb2fe614bbff",
+    "build_id": "49323222bfd4",
     "critical_routes": 12,
     "offline_script": true
   },
@@ -83,9 +83,6 @@
     "cleaned": 0,
     "freed_mb": 0
   },
-  "gpu_manager": {
-    "gpu_manager_size_kb": 7.4
-  },
   "spline_turbo": {
     "spline_turbo_size_kb": 13.5,
     "quality_tiers": [
@@ -96,8 +93,11 @@
       "disabled"
     ]
   },
+  "gpu_manager": {
+    "gpu_manager_size_kb": 7.4
+  },
   "inapp_shield": {
-    "inapp_shield_size_kb": 8.5
+    "inapp_shield_size_kb": 11.4
   },
   "crash_prevention": {
     "crash_prevention_size_kb": 10.4
@@ -308,7 +308,7 @@
       {
         "file": "components/shop/PrintDesignStudio.tsx",
         "name": "PrintDesignStudio",
-        "size_kb": 153.8
+        "size_kb": 154.4
       },
       {
         "file": "components/MobileDiscordHero.tsx",
@@ -452,12 +452,12 @@
     "has_caching": 16
   },
   "css_audit": {
-    "total_rules": 3730,
+    "total_rules": 3739,
     "duplicates": 787,
     "files_scanned": 78,
     "issues": [],
-    "important_count": 2113,
-    "total_css_kb": 726.6
+    "important_count": 2124,
+    "total_css_kb": 728.9
   },
   "third_party": {
     "scripts_found": [
@@ -491,36 +491,36 @@
     "loader_path": "public/scripts/boost-loader.js"
   },
   "meta": {
-    "timestamp": "2026-02-10T17:04:57.316479+00:00",
-    "elapsed_seconds": 2.74,
+    "timestamp": "2026-02-10T19:04:03.219198+00:00",
+    "elapsed_seconds": 3.07,
     "files_generated": 25,
-    "total_size_bytes": 123079,
+    "total_size_bytes": 126189,
     "section_times": {
-      "section_1": 0.032,
+      "section_1": 0.031,
       "section_2": 0.026,
-      "section_3": 0.112,
-      "section_7": 0.027,
-      "section_12": 0.041,
-      "section_9": 0.048,
-      "section_6": 0.054,
-      "section_13": 0.071,
-      "section_8": 0.086,
-      "section_11": 0.185,
-      "section_19": 0.041,
-      "section_14": 0.043,
-      "section_16": 0.043,
-      "section_17": 0.047,
-      "section_15": 0.097,
-      "section_18": 0.37,
-      "section_22": 0.239,
-      "section_21": 0.779,
-      "section_20": 0.826,
-      "section_25": 0.114,
-      "section_23": 0.163,
-      "section_26": 0.431,
-      "section_24": 0.532,
+      "section_3": 0.122,
+      "section_7": 0.028,
+      "section_12": 0.035,
+      "section_9": 0.05,
+      "section_6": 0.058,
+      "section_13": 0.078,
+      "section_8": 0.104,
+      "section_11": 0.32,
+      "section_14": 0.25,
+      "section_19": 0.253,
+      "section_16": 0.255,
+      "section_17": 0.263,
+      "section_15": 0.33,
+      "section_18": 0.396,
+      "section_22": 0.616,
+      "section_21": 0.723,
+      "section_20": 0.757,
+      "section_25": 0.131,
+      "section_23": 0.189,
+      "section_26": 0.438,
+      "section_24": 0.523,
       "section_27": 0.046,
-      "section_28": 0.055,
+      "section_28": 0.057,
       "section_10": 0.026
     }
   }

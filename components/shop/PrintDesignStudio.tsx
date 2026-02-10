@@ -14,8 +14,8 @@
 
 import { useState, useEffect, useCallback, useRef, type ReactNode, type CSSProperties, Component } from 'react';
 import { createPortal } from 'react-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { createClient } from '@supabase/supabase-js';
-import dynamic from 'next/dynamic';
 import {
   X, Download, Upload, Eye, Sparkles, ShoppingCart, Printer, Image,
   Package, Check, ChevronRight, ChevronLeft, Plus, Trash2, Edit3,
@@ -25,7 +25,6 @@ import {
   Copy, ExternalLink, Info, AlertCircle, CheckCircle, Loader2, Coffee, Layout, Image as ImageIcon
 } from 'lucide-react';
 
-const FooterComponent = dynamic(() => import('@/components/Mainpage/footer').then((mod) => ({ default: mod.Footer })), { ssr: false });
 
 // ============================================
 // TYPES
@@ -2338,11 +2337,16 @@ export function PrintDesignStudio({
     setMounted(true);
     const prev = document.body.style.overflow;
     const prevHtml = document.documentElement.style.overflow;
+    const prevHtmlOverscroll = document.documentElement.style.overscrollBehavior;
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden';
+    document.documentElement.style.overscrollBehavior = 'none';
+    document.body.classList.add('quick-view-open');
     return () => {
       document.body.style.overflow = prev;
       document.documentElement.style.overflow = prevHtml;
+      document.documentElement.style.overscrollBehavior = prevHtmlOverscroll;
+      document.body.classList.remove('quick-view-open');
     };
   }, []);
 
@@ -2606,48 +2610,56 @@ export function PrintDesignStudio({
   };
 
   return createPortal(
-    <>
-      {/* Backdrop */}
-      <div className="fixed inset-0 z-[2147483640] bg-black/70" onClick={onClose} style={{ pointerEvents: 'all' }} />
-
-      {/* Main panel */}
-      <div
-        data-no-theme
-        className="fixed inset-0 z-[2147483647] w-[100vw] max-w-[100vw] h-[100dvh] max-h-[100dvh] flex flex-col bg-[#f5f5f7] text-black overflow-hidden"
-        style={{ pointerEvents: 'all' }}
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.12 }}
+        className="fixed inset-0 z-[2147483640] bg-black/70"
+        onClick={onClose}
+        style={{ pointerEvents: 'all', overscrollBehavior: 'none', touchAction: 'none' }}
       >
-        {/* Sticky header */}
-        <div className="sticky top-0 z-50 flex items-center justify-between border-b border-white/10 bg-black/90 backdrop-blur-lg px-4 sm:px-8 py-3 sm:py-4 shrink-0">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-white to-white/60 flex items-center justify-center shrink-0">
-              <img src="/bullmoney-logo.png" alt="BullMoney" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
+        <motion.div
+          data-no-theme
+          initial={{ x: '100%' }}
+          animate={{ x: 0 }}
+          exit={{ x: '100%' }}
+          transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
+          className="fixed top-0 right-0 bottom-0 w-full max-w-sm sm:max-w-xl md:max-w-2xl lg:max-w-3xl flex flex-col bg-[#f5f5f7] text-black border-l border-black/10 safe-area-inset-bottom overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+          style={{ pointerEvents: 'all' }}
+        >
+          {/* Sticky header */}
+          <div className="sticky top-0 z-50 flex items-center justify-between border-b border-black/10 bg-white px-2 sm:px-8 py-2 sm:py-4 shrink-0">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-black/5 flex items-center justify-center shrink-0">
+                <img src="/bullmoney-logo.png" alt="BullMoney" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-black/50 font-medium">Print &amp; Design</p>
+                <h1 className="text-sm sm:text-base font-bold text-black truncate">Studio</h1>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-white/50 font-medium">Print &amp; Design</p>
-              <h1 className="text-sm sm:text-base font-bold text-white truncate">Studio</h1>
-            </div>
+
+            <button
+              onClick={onClose}
+              className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full bg-black/5 hover:bg-black/10 text-black shadow-lg transition-all ml-3"
+            >
+              <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2.5} />
+            </button>
           </div>
 
-          <button
-            onClick={onClose}
-            className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white shadow-lg transition-all ml-3"
-          >
-            <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2.5} />
-          </button>
-        </div>
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto overscroll-contain overflow-x-hidden">
+            {renderContent()}
+          </div>
 
-        {/* Content */}
-        {renderContent()}
-
-        {/* Store Footer */}
-        <div className="bg-white" style={{ backgroundColor: 'rgb(255,255,255)', filter: 'invert(1) hue-rotate(180deg)' }}>
-          <FooterComponent />
-        </div>
-
-        {/* Toast */}
-        {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-      </div>
-    </>,
+          {/* Toast */}
+          {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>,
     document.body
   );
 }

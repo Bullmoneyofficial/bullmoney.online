@@ -10,7 +10,6 @@ import CountUp from '@/components/CountUp';
 import { CryptoPayButton } from '@/components/shop/CryptoPayButton';
 import { CryptoCheckoutTrigger } from '@/components/shop/CryptoCheckoutInline';
 import { ProductMediaCarousel } from '@/components/shop/ProductMediaCarousel';
-import { StorePillNav } from '@/components/store/StorePillNav';
 import dynamic from 'next/dynamic';
 const FooterComponent = dynamic(() => import('@/components/Mainpage/footer').then((mod) => ({ default: mod.Footer })), { ssr: false });
 import type { ProductMedia, ProductWithDetails } from '@/types/store';
@@ -366,18 +365,6 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
   
 
 
-  const modalNavItems = useMemo(() => ([
-    { label: 'Store', href: '/store' },
-    { label: 'Apparel', href: '/store?category=apparel' },
-    { label: 'Accessories', href: '/store?category=accessories' },
-  ]), []);
-
-  const modalNavLinks = useMemo(() => ([
-    { label: 'All Products', href: '/store' },
-    { label: 'VIP', href: '/VIP' },
-    { label: 'Community', href: '/community' },
-  ]), []);
-
   const overviewText = product.short_description || product.description || product.seo_description || '';
   const fullDescription = product.description || product.seo_description || product.short_description || '';
 
@@ -426,14 +413,23 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
   // Lock body scroll when modal is open
   useEffect(() => {
     if (showQuickView) {
+      const prevHtmlOverflow = document.documentElement.style.overflow;
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
       document.body.classList.add('quick-view-open');
+      return () => {
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = prevHtmlOverflow;
+        document.body.classList.remove('quick-view-open');
+      };
     } else {
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
       document.body.classList.remove('quick-view-open');
     }
     return () => {
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
       document.body.classList.remove('quick-view-open');
     };
   }, [showQuickView]);
@@ -796,17 +792,18 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
     {mounted && showQuickView && createPortal(
       <AnimatePresence>
         {showQuickView && (
-        <motion.div
-          initial={animations.modalBackdrop.initial as TargetAndTransition}
-          animate={animations.modalBackdrop.animate as TargetAndTransition}
-          exit={animations.modalBackdrop.exit as TargetAndTransition}
-          className={`fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6 md:p-8 bg-black/60 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'}`}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.12 }}
+            className={`fixed inset-0 z-[2147483647] flex items-stretch justify-end bg-black/60 ${shouldDisableBackdropBlur ? '' : 'sm:backdrop-blur-md'}`}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
             setShowQuickView(false);
           }}
-          style={{ pointerEvents: 'all' }}
+            style={{ pointerEvents: 'all', overscrollBehavior: 'none', touchAction: 'none' }}
         >
           {/* Tap hints - Skip on mobile for performance */}
           {!shouldSkipHeavyEffects && ['top', 'bottom', 'left', 'right'].map(pos => (
@@ -831,57 +828,50 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
           ))}
 
           <motion.div
-            initial={animations.modalContent.initial as TargetAndTransition}
-            animate={animations.modalContent.animate as TargetAndTransition}
-            exit={animations.modalContent.exit as TargetAndTransition}
-            transition={animations.modalContent.transition}
-            className={`relative w-full max-w-[96vw] sm:max-w-5xl lg:max-w-6xl max-h-[92vh] overflow-y-auto my-auto bg-[#f5f5f7] text-black rounded-2xl md:rounded-3xl border border-black/10 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl'}`}
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
+            className={`relative w-full h-[100dvh] max-w-sm sm:max-w-xl md:max-w-2xl lg:max-w-3xl bg-white text-black border-l border-black/10 flex flex-col safe-area-inset-bottom overflow-hidden ${shouldDisableBackdropBlur ? '' : 'sm:backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl'}`}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
             }}
             style={{ pointerEvents: 'all' }}
           >
-            <div className="sticky top-0 z-30 border-b border-black/10 bg-[#f5f5f7]/90 backdrop-blur-md">
-              <div className="relative">
-                <StorePillNav
-                  items={modalNavItems}
-                  desktopLinks={modalNavLinks}
-                  position="static"
-                  showSearch={false}
-                  showUser={false}
-                  showCart={true}
-                  cartCount={itemCount}
-                  onCartClick={openCart}
-                  className="rounded-t-2xl pr-14"
-                />
-                <motion.button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setShowQuickView(false);
-                  }}
-                  onTouchEnd={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setShowQuickView(false);
-                  }}
-                  className="absolute top-1/2 right-4 -translate-y-1/2 w-9 h-9 md:w-10 md:h-10 rounded-full bg-white hover:bg-white border border-black/10 flex items-center justify-center transition-all shadow-lg z-40 cursor-pointer"
-                  style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
-                  whileHover={{ scale: 1.08 }}
-                  whileTap={{ scale: 0.94 }}
-                  initial={{ opacity: 0, scale: 0 }}
-                  animate={{ opacity: 1, scale: 1, transition: { delay: 0.1 } }}
-                  exit={{ opacity: 0, scale: 0 }}
-                  aria-label="Close"
-                >
-                  <X className="w-4 h-4 text-black" strokeWidth={2.5} />
-                </motion.button>
+            <div className="flex items-center justify-between p-1.5 sm:p-4 md:p-5 border-b border-black/10 bg-white">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="h-10 w-10 rounded-xl bg-black/5 flex items-center justify-center shrink-0">
+                  <ShoppingBag className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-black/50">Quick View</p>
+                  <p className="text-sm font-medium text-black truncate">{product.name}</p>
+                </div>
               </div>
+              <motion.button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowQuickView(false);
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowQuickView(false);
+                }}
+                className="h-10 w-10 rounded-xl bg-black/5 flex items-center justify-center hover:bg-black/10 active:scale-95 transition-all"
+                style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </motion.button>
             </div>
 
-            <div className="w-full px-4 sm:px-6 md:px-10 py-6 md:py-10">
-              <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] gap-6 lg:gap-10">
+            <div className="w-full flex-1 overflow-y-auto overscroll-contain overflow-x-hidden px-1.5 sm:px-6 md:px-8 py-2 sm:py-6 md:py-8">
+              <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] gap-2 sm:gap-6 lg:gap-10">
                 {/* Product Media Column */}
                 <div className="space-y-4 lg:sticky lg:top-24 self-start">
                   <div className="rounded-3xl border border-black/10 bg-white shadow-sm p-3">
@@ -943,7 +933,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                 </div>
 
                 {/* Product Details */}
-                <div className="flex flex-col space-y-6 max-h-[calc(92vh-220px)] overflow-y-auto pr-1">
+                <div className="flex flex-col space-y-6 pr-1">
                   <div className="space-y-2">
                     {product.category && (
                       <p className="text-[11px] uppercase tracking-[0.2em] text-black/50">
@@ -1222,11 +1212,6 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                 </div>
               </div>
 
-              <div className="mt-12 -mx-4 sm:-mx-6 md:-mx-10">
-                <div className="bg-white" style={{ backgroundColor: 'rgb(255,255,255)', filter: 'invert(1) hue-rotate(180deg)' }}>
-                  <FooterComponent />
-                </div>
-              </div>
             </div>
           </motion.div>
         </motion.div>

@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Edit3, Maximize2, Ruler, Image as ImageIcon, ShoppingCart, Check } from 'lucide-react';
+import { motion, AnimatePresence, type TargetAndTransition } from 'framer-motion';
+import { X, Edit3, Maximize2, Ruler, Image as ImageIcon, ShoppingBag, ShoppingCart, Check } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import dynamic from 'next/dynamic';
 import { useCartStore } from '@/stores/cart-store';
 import type { ProductWithDetails, Variant } from '@/types/store';
+import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 
 const FooterComponent = dynamic(() => import('@/components/Mainpage/footer').then((mod) => ({ default: mod.Footer })), { ssr: false });
 
@@ -77,7 +79,10 @@ function PrintProductCard({ product, onQuickView, onCustomize }: PrintProductCar
   };
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-black/10 bg-white transition-all hover:shadow-lg">
+    <div
+      className="group relative overflow-hidden rounded-2xl border border-black/10 bg-white transition-all hover:shadow-lg cursor-pointer"
+      onClick={() => onQuickView(product)}
+    >
       <div className="aspect-[4/5] relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
         <img
           src={product.image}
@@ -93,7 +98,10 @@ function PrintProductCard({ product, onQuickView, onCustomize }: PrintProductCar
         {/* Quick action buttons - shown on hover */}
         <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/0 opacity-0 transition-all duration-300 group-hover:bg-black/40 group-hover:opacity-100">
           <button
-            onClick={() => onQuickView(product)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onQuickView(product);
+            }}
             className="flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-xs font-semibold text-black transition-transform hover:scale-105"
           >
             <Maximize2 className="h-3.5 w-3.5" />
@@ -101,7 +109,10 @@ function PrintProductCard({ product, onQuickView, onCustomize }: PrintProductCar
           </button>
           {product.customizable && (
             <button
-              onClick={() => onCustomize(product)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onCustomize(product);
+              }}
               className="flex items-center gap-2 rounded-full bg-black px-4 py-2.5 text-xs font-semibold text-white transition-transform hover:scale-105"
             >
               <Edit3 className="h-3.5 w-3.5" />
@@ -109,6 +120,15 @@ function PrintProductCard({ product, onQuickView, onCustomize }: PrintProductCar
             </button>
           )}
         </div>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onQuickView(product);
+          }}
+          className="absolute inset-0 z-[5] md:hidden"
+          aria-label={`Quick view ${product.name}`}
+        />
       </div>
 
       <div className="p-4">
@@ -160,7 +180,8 @@ function PrintProductsViewer({ product, onClose, onCustomize }: PrintProductsVie
   const [selectedSize, setSelectedSize] = useState(product.sizes[0]);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
-  const { addItem, openCart } = useCartStore();
+  const { addItem } = useCartStore();
+  const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects } = useMobilePerformance();
 
   const totalPrice = selectedSize.price * quantity;
 
@@ -214,151 +235,211 @@ function PrintProductsViewer({ product, onClose, onCustomize }: PrintProductsVie
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
 
+  // Lock body scroll when drawer is open
+  useEffect(() => {
+    const prevBody = document.body.style.overflow;
+    const prevHtml = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevBody;
+      document.documentElement.style.overflow = prevHtml;
+    };
+  }, []);
+
   return createPortal(
-    <div
-      className="fixed inset-0 z-[2147483647] flex items-center justify-center bg-black/70 overflow-y-auto p-3 sm:p-6 md:p-8"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-      style={{ pointerEvents: 'all' }}
-    >
-      <div
-        data-no-theme
-        className="relative w-full max-w-[96vw] sm:max-w-5xl lg:max-w-6xl max-h-[92vh] overflow-y-auto my-auto bg-[#f5f5f7] text-black rounded-2xl md:rounded-3xl border border-black/10 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-        style={{ pointerEvents: 'all' }}
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.12 }}
+        className={`fixed inset-0 z-[2147483647] flex items-stretch justify-end bg-black/60 ${shouldDisableBackdropBlur ? '' : 'sm:backdrop-blur-md'}`}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onClose();
+        }}
+        style={{ pointerEvents: 'all', overscrollBehavior: 'none', touchAction: 'none' }}
       >
-        {/* Header - Store style with logo */}
-        <div className="sticky top-0 z-30 border-b border-white/10 bg-black/95 backdrop-blur-lg">
-          <div className="relative flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 pr-14">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-white to-white/60 flex items-center justify-center shrink-0">
-                <img src="/bullmoney-logo.png" alt="BullMoney" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-wider text-white/50">{product.type}</p>
-                <h2 className="text-base sm:text-xl font-semibold text-white truncate max-w-[50vw] sm:max-w-none">{product.name}</h2>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className="absolute top-1/2 right-4 -translate-y-1/2 flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-full bg-white/10 text-white transition-all hover:bg-white/20 shadow-lg z-40"
-            >
-              <X className="h-4 w-4" strokeWidth={2.5} />
-            </button>
-          </div>
-        </div>
-
-        <div className="w-full px-4 sm:px-6 md:px-10 py-6 md:py-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
-          {/* Image Preview */}
-          <div className="relative aspect-square rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden md:sticky md:top-24 self-start">
-            <img
-              src={product.image}
-              alt={product.name}
-              className="h-full w-full object-cover"
-            />
-            <div className="absolute bottom-4 right-4">
-              <button
-                onClick={onCustomize}
-                className="flex items-center gap-2 rounded-full bg-black px-4 py-2.5 text-xs font-semibold text-white shadow-lg transition-transform hover:scale-105"
-              >
-                <Edit3 className="h-3.5 w-3.5" />
-                Customize Design
-              </button>
-            </div>
-          </div>
-
-          {/* Product Details */}
-          <div className="flex flex-col">
-            {product.description && (
-              <p className="text-sm text-black/70 mb-6">{product.description}</p>
+        {!shouldSkipHeavyEffects && ['top', 'bottom', 'left', 'right'].map((pos) => (
+          <motion.div
+            key={pos}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.4, 0.7, 0.4] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className={`absolute text-blue-300/50 text-xs pointer-events-none ${
+              pos === 'top' ? 'top-4 left-1/2 -translate-x-1/2' :
+              pos === 'bottom' ? 'bottom-4 left-1/2 -translate-x-1/2' :
+              pos === 'left' ? 'left-2 top-1/2 -translate-y-1/2' :
+              'right-2 top-1/2 -translate-y-1/2'
+            }`}
+          >
+            {pos === 'top' || pos === 'bottom' ? (
+              <span>↑ Tap anywhere to close ↑</span>
+            ) : (
+              <span style={{ writingMode: 'vertical-rl' }}>Tap to close</span>
             )}
+          </motion.div>
+        ))}
 
-            {/* Size Selection */}
-            <div className="mb-6">
-              <label className="flex items-center gap-2 mb-3 text-sm font-semibold text-black">
-                <Ruler className="h-4 w-4" />
-                Select Size
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {product.sizes.map((size) => (
+        <motion.div
+          data-no-theme
+          initial={{ x: '100%' }}
+          animate={{ x: 0 }}
+          exit={{ x: '100%' }}
+          transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
+          className={`relative w-full h-[100dvh] max-w-sm sm:max-w-xl md:max-w-2xl lg:max-w-3xl bg-white text-black border-l border-black/10 flex flex-col safe-area-inset-bottom overflow-hidden ${shouldDisableBackdropBlur ? '' : 'sm:backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl'}`}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+          style={{ pointerEvents: 'all' }}
+        >
+          <div className="flex items-center justify-between p-1.5 sm:p-4 md:p-5 border-b border-black/10 bg-white">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="h-10 w-10 rounded-xl bg-black/5 flex items-center justify-center shrink-0">
+                <ShoppingBag className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-black/50">Quick View</p>
+                <p className="text-sm font-medium text-black truncate">{product.name}</p>
+              </div>
+            </div>
+            <motion.button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onClose();
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onClose();
+              }}
+              className="h-10 w-10 rounded-xl bg-black/5 flex items-center justify-center hover:bg-black/10 active:scale-95 transition-all"
+              style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              aria-label="Close"
+            >
+              <X className="w-4 h-4" />
+            </motion.button>
+          </div>
+
+          <div className="w-full flex-1 overflow-y-auto overscroll-contain overflow-x-hidden px-1.5 sm:px-6 md:px-8 py-2 sm:py-6 md:py-8">
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] gap-2 sm:gap-6 lg:gap-10">
+              {/* Image Preview */}
+              <div className="space-y-4 lg:sticky lg:top-24 self-start">
+                <div className="relative aspect-square rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div className="flex items-center justify-end">
                   <button
-                    key={size.label}
-                    onClick={() => setSelectedSize(size)}
-                    className={`rounded-xl border-2 p-3 text-left transition-all ${
-                      selectedSize.label === size.label
-                        ? 'border-black bg-black text-white'
-                        : 'border-black/10 bg-white text-black hover:border-black/30'
-                    }`}
+                    onClick={onCustomize}
+                    className="flex items-center gap-2 rounded-full bg-black px-4 py-2.5 text-xs font-semibold text-white shadow-lg transition-transform hover:scale-105"
                   >
-                    <div className="font-semibold text-sm">{size.label}</div>
-                    {size.width && size.height && (
-                      <div className="text-[10px] mt-0.5 opacity-70">
-                        {size.width}" × {size.height}"
-                      </div>
-                    )}
-                    <div className="text-xs mt-1 font-medium">${size.price.toFixed(2)}</div>
+                    <Edit3 className="h-3.5 w-3.5" />
+                    Customize Design
                   </button>
-                ))}
+                </div>
               </div>
-            </div>
 
-            {/* Quantity */}
-            <div className="mb-6">
-              <label className="block mb-3 text-sm font-semibold text-black">Quantity</label>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 text-black transition-colors hover:bg-black/5"
-                >
-                  -
-                </button>
-                <span className="text-lg font-semibold text-black w-12 text-center">{quantity}</span>
-                <button
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 text-black transition-colors hover:bg-black/5"
-                >
-                  +
-                </button>
-              </div>
-            </div>
+              {/* Product Details */}
+              <div className="flex flex-col space-y-6 pr-1">
+                {product.description && (
+                  <p className="text-sm text-black/70">{product.description}</p>
+                )}
 
-            {/* Printer Info */}
-            {product.printerCompatible.length > 0 && (
-              <div className="mb-6 rounded-xl bg-black/5 p-4">
-                <p className="text-xs font-semibold text-black mb-2">Printed Using:</p>
-                <div className="flex flex-wrap gap-2">
-                  {product.printerCompatible.map((printer) => (
-                    <span
-                      key={printer}
-                      className="px-3 py-1.5 rounded-full bg-white text-xs font-medium text-black border border-black/10"
+              {/* Size Selection */}
+              <div>
+                <label className="flex items-center gap-2 mb-3 text-sm font-semibold text-black">
+                  <Ruler className="h-4 w-4" />
+                  Select Size
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {product.sizes.map((size) => (
+                    <button
+                      key={size.label}
+                      onClick={() => setSelectedSize(size)}
+                      className={`rounded-xl border-2 p-3 text-left transition-all ${
+                        selectedSize.label === size.label
+                          ? 'border-black bg-black text-white'
+                          : 'border-black/10 bg-white text-black hover:border-black/30'
+                      }`}
                     >
-                      {printer}
-                    </span>
+                      <div className="font-semibold text-sm">{size.label}</div>
+                      {size.width && size.height && (
+                        <div className="text-[10px] mt-0.5 opacity-70">
+                          {size.width}" × {size.height}"
+                        </div>
+                      )}
+                      <div className="text-xs mt-1 font-medium">${size.price.toFixed(2)}</div>
+                    </button>
                   ))}
                 </div>
               </div>
-            )}
 
-            {/* Price & Add to Cart */}
-            <div className="mt-auto">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-sm text-black/60">Total Price:</span>
-                <span className="text-2xl font-bold text-black">${totalPrice.toFixed(2)}</span>
+              {/* Quantity */}
+              <div>
+                <label className="block mb-3 text-sm font-semibold text-black">Quantity</label>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 text-black transition-colors hover:bg-black/5"
+                  >
+                    -
+                  </button>
+                  <span className="text-lg font-semibold text-black w-12 text-center">{quantity}</span>
+                  <button
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 text-black transition-colors hover:bg-black/5"
+                  >
+                    +
+                  </button>
+                </div>
               </div>
-              <button 
-                onClick={handleAddToCart}
-                className={`w-full rounded-full px-6 py-4 text-sm font-semibold text-white transition-all hover:scale-[1.02] flex items-center justify-center gap-2 ${added ? 'bg-green-600' : 'bg-black'}`}
-              >
-                {added ? <><Check className="h-4 w-4" />Added to Cart!</> : <><ShoppingCart className="h-4 w-4" />Add to Cart</>}
-              </button>
+
+              {/* Printer Info */}
+              {product.printerCompatible.length > 0 && (
+                <div className="rounded-xl bg-black/5 p-4">
+                  <p className="text-xs font-semibold text-black mb-2">Printed Using:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {product.printerCompatible.map((printer) => (
+                      <span
+                        key={printer}
+                        className="px-3 py-1.5 rounded-full bg-white text-xs font-medium text-black border border-black/10"
+                      >
+                        {printer}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Price & Add to Cart */}
+              <div className="mt-auto">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-sm text-black/60">Total Price:</span>
+                  <span className="text-2xl font-bold text-black">${totalPrice.toFixed(2)}</span>
+                </div>
+                <button 
+                  onClick={handleAddToCart}
+                  className={`w-full rounded-full px-6 py-4 text-sm font-semibold text-white transition-all hover:scale-[1.02] flex items-center justify-center gap-2 ${added ? 'bg-green-600' : 'bg-black'}`}
+                >
+                  {added ? <><Check className="h-4 w-4" />Added to Cart!</> : <><ShoppingCart className="h-4 w-4" />Add to Cart</>}
+                </button>
+              </div>
+            </div>
             </div>
           </div>
-          </div>
-        </div>
-      </div>
-    </div>,
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>,
     document.body
   );
 }
