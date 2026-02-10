@@ -48,27 +48,27 @@ const AFFILIATE_ADMIN_EMAILS = (process.env.NEXT_PUBLIC_AFFILIATE_ADMIN_EMAILS |
 
 // --- APPLE MINIMALIST THEME COLORS ---
 const NEON_BLUE = {
-  // Primary - Pure white for key elements
-  primary: '#ffffff',
-  primaryLight: 'rgba(255, 255, 255, 0.9)',
-  primaryDark: '#ffffff',
-  // Accent - Clean white
-  cyan: '#ffffff',
-  cyanLight: '#ffffff',
+  // Primary - Pure black for key elements
+  primary: '#000000',
+  primaryLight: 'rgba(0, 0, 0, 0.9)',
+  primaryDark: '#000000',
+  // Accent - Clean black
+  cyan: '#000000',
+  cyanLight: '#000000',
   // Borders - Subtle grays
-  border: 'rgba(255, 255, 255, 0.15)',
-  borderHover: 'rgba(255, 255, 255, 0.3)',
+  border: 'rgba(0, 0, 0, 0.10)',
+  borderHover: 'rgba(0, 0, 0, 0.20)',
   glow: 'none',
   glowStrong: 'none',
   glowIntense: 'none',
-  // Background - Deep black
-  bgDark: '#000000',
-  bgCard: 'rgba(28, 28, 30, 0.95)',
+  // Background - Light white
+  bgDark: '#ffffff',
+  bgCard: 'rgba(255, 255, 255, 1)',
   // Text - Apple-style hierarchy
-  textPrimary: '#ffffff',
-  textSecondary: 'rgba(255, 255, 255, 0.7)',
-  textMuted: 'rgba(255, 255, 255, 0.45)',
-  textWhite: '#ffffff',
+  textPrimary: '#000000',
+  textSecondary: 'rgba(0, 0, 0, 0.7)',
+  textMuted: 'rgba(0, 0, 0, 0.45)',
+  textWhite: '#000000',
 };
 
 // --- FORM DATA INTERFACES ---
@@ -128,7 +128,7 @@ const AFFILIATE_TIERS = [
     commissionPercent: 25, 
     xmRate: 11, 
     vantageRate: 5.50,
-    color: '#ffffff',
+    color: '#000000',
     icon: Sparkles 
   },
 ];
@@ -198,13 +198,13 @@ const NeonCard = memo(({
     <div 
       className={cn(
         "relative rounded-3xl overflow-hidden",
-        "backdrop-blur-xl border",
+        "border",
         paddingClasses[padding],
         className
       )}
       style={{
-        background: 'rgba(28, 28, 30, 0.85)',
-        borderColor: 'rgba(255, 255, 255, 0.08)',
+        background: 'rgba(255, 255, 255, 1)',
+        borderColor: 'rgba(0, 0, 0, 0.08)',
       }}
     >
       {children}
@@ -239,19 +239,19 @@ const NeonButton = memo(({
   
   const variantStyles = {
     primary: {
-      background: disabled ? 'rgba(255, 255, 255, 0.1)' : '#ffffff',
+      background: disabled ? 'rgba(0, 0, 0, 0.1)' : '#000000',
       border: 'none',
-      color: disabled ? 'rgba(255, 255, 255, 0.4)' : '#000000',
+      color: disabled ? 'rgba(0, 0, 0, 0.4)' : '#ffffff',
     },
     secondary: {
-      background: 'rgba(255, 255, 255, 0.08)',
-      border: '1px solid rgba(255, 255, 255, 0.15)',
-      color: disabled ? 'rgba(255, 255, 255, 0.4)' : '#ffffff',
+      background: 'rgba(0, 0, 0, 0.05)',
+      border: '1px solid rgba(0, 0, 0, 0.10)',
+      color: disabled ? 'rgba(0, 0, 0, 0.4)' : '#000000',
     },
     ghost: {
       background: 'transparent',
       border: 'none',
-      color: disabled ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.7)',
+      color: disabled ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.7)',
     }
   };
   
@@ -305,7 +305,7 @@ const NeonInput = memo(({
       {Icon && (
         <Icon 
           className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors"
-          style={{ color: 'rgba(255, 255, 255, 0.35)' }}
+          style={{ color: 'rgba(0, 0, 0, 0.35)' }}
         />
       )}
       <input
@@ -318,15 +318,15 @@ const NeonInput = memo(({
         disabled={disabled}
         autoFocus={autoFocus}
         className={cn(
-          "w-full rounded-xl py-4 text-white text-[15px] placeholder-white/25",
-          "focus:outline-none focus:ring-2 focus:ring-white/20 transition-all duration-200",
+          "w-full rounded-xl py-4 text-black text-[15px] placeholder-black/25",
+          "focus:outline-none focus:ring-2 focus:ring-black/20 transition-all duration-200",
           "border",
           Icon ? "pl-12 pr-4" : "px-4",
           disabled && "opacity-50 cursor-not-allowed"
         )}
         style={{
-          background: 'rgba(255, 255, 255, 0.06)',
-          borderColor: 'rgba(255, 255, 255, 0.08)',
+          background: 'rgba(0, 0, 0, 0.03)',
+          borderColor: 'rgba(0, 0, 0, 0.08)',
         }}
       />
     </div>
@@ -351,10 +351,10 @@ const StatCard = memo(({
   <div 
     className={cn(
       "flex flex-col items-center p-3 sm:p-4 rounded-xl border-2 transition-all",
-      "bg-black/40"
+      "bg-white"
     )}
     style={{
-      borderColor: highlight ? NEON_BLUE.primary : 'rgba(255, 255, 255, 0.3)',
+      borderColor: highlight ? NEON_BLUE.primary : 'rgba(0, 0, 0, 0.10)',
       boxShadow: highlight ? NEON_BLUE.glow : 'none',
     }}
   >
@@ -402,11 +402,11 @@ const TierBadge = memo(({ tier, size = 'default' }: { tier: typeof AFFILIATE_TIE
         sizeClasses[size]
       )}
       style={{
-        color: '#ffffff',
-        background: 'rgba(255, 255, 255, 0.1)',
+        color: '#000000',
+        background: 'rgba(0, 0, 0, 0.08)',
       }}
     >
-      <Icon className="w-3.5 h-3.5" style={{ color: 'rgba(255, 255, 255, 0.6)' }} />
+      <Icon className="w-3.5 h-3.5" style={{ color: 'rgba(0, 0, 0, 0.60)' }} />
       {tier.name}
     </span>
   );
@@ -423,23 +423,23 @@ const CollapsibleSection = memo(({ title, subtitle, icon: Icon, children, defaul
 }) => (
   <details
     className="group rounded-2xl"
-    style={{ background: 'rgba(255, 255, 255, 0.04)' }}
+    style={{ background: 'rgba(0, 0, 0, 0.03)' }}
     open={defaultOpen}
   >
     <summary className="flex items-center justify-between gap-3 cursor-pointer list-none p-4">
       <div className="flex items-center gap-3">
         <div
           className="w-9 h-9 rounded-xl flex items-center justify-center"
-          style={{ background: 'rgba(255, 255, 255, 0.08)' }}
+          style={{ background: 'rgba(0, 0, 0, 0.05)' }}
         >
-          <Icon className="w-4 h-4" style={{ color: 'rgba(255, 255, 255, 0.6)' }} />
+          <Icon className="w-4 h-4" style={{ color: 'rgba(0, 0, 0, 0.60)' }} />
         </div>
         <div>
-          <p className="text-sm font-medium" style={{ color: '#ffffff' }}>{title}</p>
-          {subtitle && <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>{subtitle}</p>}
+          <p className="text-sm font-medium" style={{ color: '#000000' }}>{title}</p>
+          {subtitle && <p className="text-xs" style={{ color: 'rgba(0, 0, 0, 0.35)' }}>{subtitle}</p>}
         </div>
       </div>
-      <ChevronDown className="w-4 h-4 transition-transform duration-200 group-open:rotate-180" style={{ color: 'rgba(255, 255, 255, 0.4)' }} />
+      <ChevronDown className="w-4 h-4 transition-transform duration-200 group-open:rotate-180" style={{ color: 'rgba(0, 0, 0, 0.35)' }} />
     </summary>
     <div className="px-4 pb-4 pt-1">
       {children}
@@ -457,24 +457,24 @@ const CodeVaultCard = memo(({ label, code, onCopy, copied }: {
 }) => (
   <div
     className="relative overflow-hidden rounded-2xl p-5"
-    style={{ background: 'rgba(255, 255, 255, 0.06)' }}
+    style={{ background: 'rgba(0, 0, 0, 0.04)' }}
   >
     <div className="relative z-10">
-      <p className="text-xs mb-3" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>{label}</p>
+      <p className="text-xs mb-3" style={{ color: 'rgba(0, 0, 0, 0.35)' }}>{label}</p>
       <div className="flex items-center justify-between gap-3">
-        <span className="text-2xl sm:text-3xl font-semibold tracking-tight" style={{ color: '#ffffff' }}>{code}</span>
+        <span className="text-2xl sm:text-3xl font-semibold tracking-tight" style={{ color: '#000000' }}>{code}</span>
         <button
           onClick={onCopy}
           className="px-4 py-2 rounded-xl text-sm font-medium transition-all"
           style={{
-            background: copied ? 'rgba(255, 255, 255, 0.15)' : '#ffffff',
+            background: copied ? '#000000' : 'rgba(0, 0, 0, 0.05)',
             color: copied ? '#ffffff' : '#000000',
           }}
         >
           {copied ? 'Copied!' : 'Copy'}
         </button>
       </div>
-      <p className="text-xs mt-3" style={{ color: 'rgba(255, 255, 255, 0.35)' }}>
+      <p className="text-xs mt-3" style={{ color: 'rgba(0, 0, 0, 0.35)' }}>
         Clients must use this code when signing up with the broker
       </p>
     </div>
@@ -912,49 +912,49 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
         <div 
           className="w-20 h-20 mx-auto mb-8 rounded-full flex items-center justify-center"
           style={{ 
-            background: 'rgba(255, 255, 255, 0.08)',
+            background: 'rgba(0, 0, 0, 0.05)',
           }}
         >
-          <DollarSign className="w-10 h-10" style={{ color: '#ffffff' }} />
+          <DollarSign className="w-10 h-10" style={{ color: '#000000' }} />
         </div>
         
         <h1 
           className="text-2xl sm:text-3xl font-semibold mb-4 tracking-tight"
-          style={{ color: '#ffffff' }}
+          style={{ color: '#000000' }}
         >
           Affiliate Program
         </h1>
         
         <p 
           className="text-[15px] sm:text-base mb-6 leading-relaxed"
-          style={{ color: 'rgba(255, 255, 255, 0.6)' }}
+          style={{ color: 'rgba(0, 0, 0, 0.85)' }}
         >
-          Earn <span style={{ color: '#ffffff', fontWeight: 600 }}>5-25% commission</span> every time your traders place real trades.
+          Earn <span style={{ color: '#000000', fontWeight: 600 }}>5-25% commission</span> every time your traders place real trades.
           More traders means higher tiers and bigger payouts.
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
-          <span className="text-xs px-3 py-1.5 rounded-full" style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'rgba(255, 255, 255, 0.7)' }}>Fast payouts</span>
-          <span className="text-xs px-3 py-1.5 rounded-full" style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'rgba(255, 255, 255, 0.7)' }}>Unlimited earnings</span>
-          <span className="text-xs px-3 py-1.5 rounded-full" style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'rgba(255, 255, 255, 0.7)' }}>Bonus rewards</span>
+          <span className="text-xs px-3 py-1.5 rounded-full" style={{ background: 'rgba(0, 0, 0, 0.05)', color: 'rgba(0, 0, 0, 0.70)' }}>Fast payouts</span>
+          <span className="text-xs px-3 py-1.5 rounded-full" style={{ background: 'rgba(0, 0, 0, 0.05)', color: 'rgba(0, 0, 0, 0.70)' }}>Unlimited earnings</span>
+          <span className="text-xs px-3 py-1.5 rounded-full" style={{ background: 'rgba(0, 0, 0, 0.05)', color: 'rgba(0, 0, 0, 0.70)' }}>Bonus rewards</span>
         </div>
         
         {/* Quick Stats - Apple clean grid */}
         <div className="grid grid-cols-3 gap-3 mb-8">
-          <div className="p-4 rounded-2xl" style={{ background: 'rgba(255, 255, 255, 0.06)' }}>
-            <Percent className="w-5 h-5 mx-auto mb-2" style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
-            <p className="text-lg font-semibold text-white">5-25%</p>
-            <p className="text-[11px]" style={{ color: 'rgba(255, 255, 255, 0.45)' }}>Commission</p>
+          <div className="p-4 rounded-2xl" style={{ background: 'rgba(0, 0, 0, 0.04)' }}>
+            <Percent className="w-5 h-5 mx-auto mb-2" style={{ color: 'rgba(0, 0, 0, 0.50)' }} />
+            <p className="text-lg font-semibold text-black">5-25%</p>
+            <p className="text-[11px]" style={{ color: 'rgba(0, 0, 0, 0.45)' }}>Commission</p>
           </div>
-          <div className="p-4 rounded-2xl" style={{ background: 'rgba(255, 255, 255, 0.06)' }}>
-            <Users className="w-5 h-5 mx-auto mb-2" style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
-            <p className="text-lg font-semibold text-white">∞</p>
-            <p className="text-[11px]" style={{ color: 'rgba(255, 255, 255, 0.45)' }}>No Limit</p>
+          <div className="p-4 rounded-2xl" style={{ background: 'rgba(0, 0, 0, 0.04)' }}>
+            <Users className="w-5 h-5 mx-auto mb-2" style={{ color: 'rgba(0, 0, 0, 0.50)' }} />
+            <p className="text-lg font-semibold text-black">∞</p>
+            <p className="text-[11px]" style={{ color: 'rgba(0, 0, 0, 0.45)' }}>No Limit</p>
           </div>
-          <div className="p-4 rounded-2xl" style={{ background: 'rgba(255, 255, 255, 0.06)' }}>
-            <Gift className="w-5 h-5 mx-auto mb-2" style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
-            <p className="text-lg font-semibold text-white">2x</p>
-            <p className="text-[11px]" style={{ color: 'rgba(255, 255, 255, 0.45)' }}>Social Bonus</p>
+          <div className="p-4 rounded-2xl" style={{ background: 'rgba(0, 0, 0, 0.04)' }}>
+            <Gift className="w-5 h-5 mx-auto mb-2" style={{ color: 'rgba(0, 0, 0, 0.50)' }} />
+            <p className="text-lg font-semibold text-black">2x</p>
+            <p className="text-[11px]" style={{ color: 'rgba(0, 0, 0, 0.45)' }}>Social Bonus</p>
           </div>
         </div>
         
@@ -983,7 +983,7 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
         
         <p 
           className="text-xs mt-5 flex items-center justify-center gap-1.5"
-          style={{ color: 'rgba(255, 255, 255, 0.35)' }}
+          style={{ color: 'rgba(0, 0, 0, 0.35)' }}
         >
           <Lock className="w-3 h-3" /> Free to join • No hidden fees
         </p>
@@ -1010,29 +1010,29 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
           defaultOpen
         >
           <div className="space-y-3">
-            <div className="flex gap-3 p-4 rounded-xl" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 font-medium text-xs" style={{ background: 'rgba(255, 255, 255, 0.1)', color: '#ffffff' }}>1</div>
+            <div className="flex gap-3 p-4 rounded-xl" style={{ background: 'rgba(0, 0, 0, 0.03)' }}>
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 font-medium text-xs" style={{ background: 'rgba(0, 0, 0, 0.08)', color: '#000000' }}>1</div>
               <div>
-                <h3 className="font-medium mb-1" style={{ color: '#ffffff' }}>Recruit Traders</h3>
-                <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                <h3 className="font-medium mb-1" style={{ color: '#000000' }}>Recruit Traders</h3>
+                <p className="text-sm" style={{ color: 'rgba(0, 0, 0, 0.50)' }}>
                   Share your affiliate code. Traders sign up and get verified under you.
                 </p>
               </div>
             </div>
-            <div className="flex gap-3 p-4 rounded-xl" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 font-medium text-xs" style={{ background: 'rgba(255, 255, 255, 0.1)', color: '#ffffff' }}>2</div>
+            <div className="flex gap-3 p-4 rounded-xl" style={{ background: 'rgba(0, 0, 0, 0.03)' }}>
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 font-medium text-xs" style={{ background: 'rgba(0, 0, 0, 0.08)', color: '#000000' }}>2</div>
               <div>
-                <h3 className="font-medium mb-1" style={{ color: '#ffffff' }}>They Trade, You Earn</h3>
-                <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                <h3 className="font-medium mb-1" style={{ color: '#000000' }}>They Trade, You Earn</h3>
+                <p className="text-sm" style={{ color: 'rgba(0, 0, 0, 0.50)' }}>
                   XM: $11/lot × your tier %. Vantage: $5.50/lot × your tier %.
                 </p>
               </div>
             </div>
-            <div className="flex gap-3 p-4 rounded-xl" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 font-medium text-xs" style={{ background: 'rgba(255, 255, 255, 0.1)', color: '#ffffff' }}>3</div>
+            <div className="flex gap-3 p-4 rounded-xl" style={{ background: 'rgba(0, 0, 0, 0.03)' }}>
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 font-medium text-xs" style={{ background: 'rgba(0, 0, 0, 0.08)', color: '#000000' }}>3</div>
               <div>
-                <h3 className="font-medium mb-1" style={{ color: '#ffffff' }}>Get Paid via Skrill</h3>
-                <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                <h3 className="font-medium mb-1" style={{ color: '#000000' }}>Get Paid via Skrill</h3>
+                <p className="text-sm" style={{ color: 'rgba(0, 0, 0, 0.50)' }}>
                   Monthly payouts sent directly to your Skrill account.
                 </p>
               </div>
@@ -1050,12 +1050,12 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
               <div 
                 key={tier.name}
                 className="flex flex-col items-center p-3 rounded-xl text-center"
-                style={{ background: 'rgba(255, 255, 255, 0.04)' }}
+                style={{ background: 'rgba(0, 0, 0, 0.03)' }}
               >
-                <tier.icon className="w-5 h-5 mb-1" style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
-                <span className="text-xs font-medium" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>{tier.name}</span>
-                <span className="text-lg font-semibold" style={{ color: '#ffffff' }}>{tier.commissionPercent}%</span>
-                <span className="text-[10px]" style={{ color: 'rgba(255, 255, 255, 0.35)' }}>
+                <tier.icon className="w-5 h-5 mb-1" style={{ color: 'rgba(0, 0, 0, 0.50)' }} />
+                <span className="text-xs font-medium" style={{ color: 'rgba(0, 0, 0, 0.60)' }}>{tier.name}</span>
+                <span className="text-lg font-semibold" style={{ color: '#000000' }}>{tier.commissionPercent}%</span>
+                <span className="text-[10px]" style={{ color: 'rgba(0, 0, 0, 0.35)' }}>
                   {tier.minTraders}-{tier.maxTraders === Infinity ? '∞' : tier.maxTraders} traders
                 </span>
               </div>
@@ -1069,15 +1069,15 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
           icon={BarChart3}
         >
           <div>
-            <div className="flex justify-center gap-2 mb-4 p-1 rounded-xl" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
+            <div className="flex justify-center gap-2 mb-4 p-1 rounded-xl" style={{ background: 'rgba(0, 0, 0, 0.03)' }}>
               {(['Vantage', 'XM'] as const).map((broker) => (
                 <button
                   key={broker}
                   onClick={() => setActiveBroker(broker)}
                   className="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all"
                   style={{
-                    background: activeBroker === broker ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                    color: activeBroker === broker ? '#ffffff' : 'rgba(255, 255, 255, 0.5)',
+                    background: activeBroker === broker ? 'rgba(0, 0, 0, 0.08)' : 'transparent',
+                    color: activeBroker === broker ? '#ffffff' : 'rgba(0, 0, 0, 0.50)',
                   }}
                 >
                   {broker}
@@ -1088,8 +1088,8 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
             <div className="space-y-4 mb-6">
               <div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Traders Referred</span>
-                  <span className="font-medium" style={{ color: '#ffffff' }}>{calcTraders}</span>
+                  <span style={{ color: 'rgba(0, 0, 0, 0.60)' }}>Traders Referred</span>
+                  <span className="font-medium" style={{ color: '#000000' }}>{calcTraders}</span>
                 </div>
                 <input
                   type="range"
@@ -1099,15 +1099,15 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
                   onChange={(e) => setCalcTraders(Number(e.target.value))}
                   className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
                   style={{ 
-                    background: `linear-gradient(to right, #ffffff ${calcTraders}%, rgba(255, 255, 255, 0.15) ${calcTraders}%)` 
+                    background: `linear-gradient(to right, #000000 ${calcTraders}%, rgba(0, 0, 0, 0.10) ${calcTraders}%)` 
                   }}
                 />
               </div>
 
               <div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Avg Lots/Trader/Month</span>
-                  <span className="font-medium" style={{ color: '#ffffff' }}>{calcLots}</span>
+                  <span style={{ color: 'rgba(0, 0, 0, 0.60)' }}>Avg Lots/Trader/Month</span>
+                  <span className="font-medium" style={{ color: '#000000' }}>{calcLots}</span>
                 </div>
                 <input
                   type="range"
@@ -1117,15 +1117,15 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
                   onChange={(e) => setCalcLots(Number(e.target.value))}
                   className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
                   style={{ 
-                    background: `linear-gradient(to right, #ffffff ${calcLots * 2}%, rgba(255, 255, 255, 0.15) ${calcLots * 2}%)` 
+                    background: `linear-gradient(to right, #000000 ${calcLots * 2}%, rgba(0, 0, 0, 0.10) ${calcLots * 2}%)` 
                   }}
                 />
               </div>
 
               <div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Social Posts/Week</span>
-                  <span className="font-medium" style={{ color: '#ffffff' }}>{calcPosts}</span>
+                  <span style={{ color: 'rgba(0, 0, 0, 0.60)' }}>Social Posts/Week</span>
+                  <span className="font-medium" style={{ color: '#000000' }}>{calcPosts}</span>
                 </div>
                 <input
                   type="range"
@@ -1135,7 +1135,7 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
                   onChange={(e) => setCalcPosts(Number(e.target.value))}
                   className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
                   style={{ 
-                    background: `linear-gradient(to right, #ffffff ${(calcPosts / 7) * 100}%, rgba(255, 255, 255, 0.15) ${(calcPosts / 7) * 100}%)` 
+                    background: `linear-gradient(to right, #000000 ${(calcPosts / 7) * 100}%, rgba(0, 0, 0, 0.10) ${(calcPosts / 7) * 100}%)` 
                   }}
                 />
               </div>
@@ -1143,24 +1143,24 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
 
             <div 
               className="p-4 rounded-xl"
-              style={{ background: 'rgba(255, 255, 255, 0.06)' }}
+              style={{ background: 'rgba(0, 0, 0, 0.04)' }}
             >
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Your Tier</span>
+                <span className="text-sm" style={{ color: 'rgba(0, 0, 0, 0.60)' }}>Your Tier</span>
                 <TierBadge tier={earnings.tier} size="small" />
               </div>
               <div className="grid grid-cols-3 gap-3 text-center">
                 <div>
-                  <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>Base Commission</p>
-                  <p className="text-lg font-semibold" style={{ color: '#ffffff' }}>${earnings.commission}</p>
+                  <p className="text-xs" style={{ color: 'rgba(0, 0, 0, 0.35)' }}>Base Commission</p>
+                  <p className="text-lg font-semibold" style={{ color: '#000000' }}>${earnings.commission}</p>
                 </div>
                 <div>
-                  <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>Social Bonus</p>
-                  <p className="text-lg font-semibold" style={{ color: '#ffffff' }}>+${earnings.bonus}</p>
+                  <p className="text-xs" style={{ color: 'rgba(0, 0, 0, 0.35)' }}>Social Bonus</p>
+                  <p className="text-lg font-semibold" style={{ color: '#000000' }}>+${earnings.bonus}</p>
                 </div>
                 <div>
-                  <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>Total/Month</p>
-                  <p className="text-xl font-semibold" style={{ color: '#ffffff' }}>
+                  <p className="text-xs" style={{ color: 'rgba(0, 0, 0, 0.35)' }}>Total/Month</p>
+                  <p className="text-xl font-semibold" style={{ color: '#000000' }}>
                     ${earnings.total}
                   </p>
                 </div>
@@ -1174,7 +1174,7 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
           subtitle="When you get paid"
           icon={Calendar}
         >
-          <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+          <p className="text-sm" style={{ color: 'rgba(0, 0, 0, 0.60)' }}>
             Paid monthly via Skrill in the first week (latest Friday). Most payments arrive in 1–15 minutes. Some take 1–7 days. New accounts may take up to 30 days for international processing.
           </p>
         </CollapsibleSection>
@@ -1209,31 +1209,31 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
         <div className="flex items-center justify-between mb-6">
           <span 
             className="text-xs px-3 py-1.5 rounded-full"
-            style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'rgba(255, 255, 255, 0.6)' }}
+            style={{ background: 'rgba(0, 0, 0, 0.05)', color: 'rgba(0, 0, 0, 0.60)' }}
           >
             Step 1 of 5
           </span>
         </div>
         
-        <h2 className="text-xl sm:text-2xl font-semibold mb-3 tracking-tight" style={{ color: '#ffffff' }}>
+        <h2 className="text-xl sm:text-2xl font-semibold mb-3 tracking-tight" style={{ color: '#000000' }}>
           Open a Broker Account
         </h2>
-        <p className="text-[15px] mb-6" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+        <p className="text-[15px] mb-6" style={{ color: 'rgba(0, 0, 0, 0.60)' }}>
           Choose your preferred broker and create a free trading account.
         </p>
         
         {/* Important Notice - Apple Alert Style */}
         <div 
           className="mb-6 p-4 rounded-2xl border"
-          style={{ background: 'rgba(255, 255, 255, 0.04)', borderColor: 'rgba(255, 255, 255, 0.1)' }}
+          style={{ background: 'rgba(0, 0, 0, 0.03)', borderColor: 'rgba(0, 0, 0, 0.08)' }}
         >
           <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: '#ffffff' }} />
+            <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: '#000000' }} />
             <div>
-              <p className="text-sm font-medium mb-1" style={{ color: '#ffffff' }}>
+              <p className="text-sm font-medium mb-1" style={{ color: '#000000' }}>
                 Broker codes are #1 priority
               </p>
-              <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+              <p className="text-xs" style={{ color: 'rgba(0, 0, 0, 0.50)' }}>
                 Without clients using your broker code, you cannot earn commissions. Make sure every client signs up with your code.
               </p>
             </div>
@@ -1241,15 +1241,15 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
         </div>
         
         {/* Broker Toggle - Apple Segmented Control */}
-        <div className="flex justify-center gap-2 mb-6 p-1 rounded-xl" style={{ background: 'rgba(255, 255, 255, 0.06)' }}>
+        <div className="flex justify-center gap-2 mb-6 p-1 rounded-xl" style={{ background: 'rgba(0, 0, 0, 0.04)' }}>
           {(['Vantage', 'XM'] as const).map((broker) => (
             <button
               key={broker}
               onClick={() => setActiveBroker(broker)}
               className="flex-1 px-6 py-3 rounded-lg text-[15px] font-medium transition-all"
               style={{
-                background: activeBroker === broker ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
-                color: activeBroker === broker ? '#ffffff' : 'rgba(255, 255, 255, 0.5)',
+                background: activeBroker === broker ? 'rgba(0, 0, 0, 0.08)' : 'transparent',
+                color: activeBroker === broker ? '#ffffff' : 'rgba(0, 0, 0, 0.50)',
               }}
             >
               {broker}
@@ -1264,17 +1264,17 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
 
         {/* Steps - Apple minimalist */}
         <div className="grid grid-cols-3 gap-2 mb-6">
-          <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
-            <p className="text-[10px] mb-1" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>Step A</p>
-            <p className="text-xs font-medium" style={{ color: '#ffffff' }}>Open account</p>
+          <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(0, 0, 0, 0.03)' }}>
+            <p className="text-[10px] mb-1" style={{ color: 'rgba(0, 0, 0, 0.35)' }}>Step A</p>
+            <p className="text-xs font-medium" style={{ color: '#000000' }}>Open account</p>
           </div>
-          <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
-            <p className="text-[10px] mb-1" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>Step B</p>
-            <p className="text-xs font-medium" style={{ color: '#ffffff' }}>Paste code</p>
+          <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(0, 0, 0, 0.03)' }}>
+            <p className="text-[10px] mb-1" style={{ color: 'rgba(0, 0, 0, 0.35)' }}>Step B</p>
+            <p className="text-xs font-medium" style={{ color: '#000000' }}>Paste code</p>
           </div>
-          <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
-            <p className="text-[10px] mb-1" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>Step C</p>
-            <p className="text-xs font-medium" style={{ color: '#ffffff' }}>Get MT5 ID</p>
+          <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(0, 0, 0, 0.03)' }}>
+            <p className="text-[10px] mb-1" style={{ color: 'rgba(0, 0, 0, 0.35)' }}>Step C</p>
+            <p className="text-xs font-medium" style={{ color: '#000000' }}>Get MT5 ID</p>
           </div>
         </div>
         
@@ -1291,7 +1291,7 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
         
         <p 
           className="text-xs mt-4 flex items-center justify-center gap-1.5"
-          style={{ color: 'rgba(255, 255, 255, 0.35)' }}
+          style={{ color: 'rgba(0, 0, 0, 0.35)' }}
         >
           <Clock className="w-3 h-3" /> Takes about 1 minute • No deposit required
         </p>
@@ -1300,7 +1300,7 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
       <button 
         onClick={handleBack} 
         className="mt-4 flex items-center text-sm mx-auto transition-colors"
-        style={{ color: 'rgba(255, 255, 255, 0.4)' }}
+        style={{ color: 'rgba(0, 0, 0, 0.35)' }}
       >
         <ChevronLeft className="w-4 h-4 mr-1" /> Back
       </button>
@@ -1323,54 +1323,54 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
         <div className="flex items-center justify-between mb-6">
           <span 
             className="text-xs px-3 py-1.5 rounded-full"
-            style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'rgba(255, 255, 255, 0.6)' }}
+            style={{ background: 'rgba(0, 0, 0, 0.05)', color: 'rgba(0, 0, 0, 0.60)' }}
           >
             Step 2 of 5
           </span>
         </div>
         
-        <h2 className="text-xl sm:text-2xl font-semibold mb-3 tracking-tight" style={{ color: '#ffffff' }}>
+        <h2 className="text-xl sm:text-2xl font-semibold mb-3 tracking-tight" style={{ color: '#000000' }}>
           Verify Your Setup
         </h2>
-        <p className="text-[15px] mb-6" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+        <p className="text-[15px] mb-6" style={{ color: 'rgba(0, 0, 0, 0.60)' }}>
           Please confirm you&apos;ve completed the broker registration properly.
         </p>
         
         {/* Critical Reminder */}
         <div 
           className="mb-6 p-5 rounded-2xl"
-          style={{ background: 'rgba(255, 255, 255, 0.04)' }}
+          style={{ background: 'rgba(0, 0, 0, 0.03)' }}
         >
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(255, 255, 255, 0.08)' }}>
-              <AlertCircle className="w-5 h-5" style={{ color: '#ffffff' }} />
+            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(0, 0, 0, 0.05)' }}>
+              <AlertCircle className="w-5 h-5" style={{ color: '#000000' }} />
             </div>
             <div>
-              <p className="text-sm font-semibold" style={{ color: '#ffffff' }}>
+              <p className="text-sm font-semibold" style={{ color: '#000000' }}>
                 Important Checklist
               </p>
-              <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+              <p className="text-xs" style={{ color: 'rgba(0, 0, 0, 0.50)' }}>
                 Your earnings depend on this
               </p>
             </div>
           </div>
           
           <div className="space-y-3">
-            <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
-              <Check className="w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.6)' }} />
-              <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+            <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(0, 0, 0, 0.03)' }}>
+              <Check className="w-5 h-5" style={{ color: 'rgba(0, 0, 0, 0.60)' }} />
+              <p className="text-sm" style={{ color: 'rgba(0, 0, 0, 0.80)' }}>
                 I opened a {activeBroker} trading account
               </p>
             </div>
-            <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
-              <Check className="w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.6)' }} />
-              <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+            <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(0, 0, 0, 0.03)' }}>
+              <Check className="w-5 h-5" style={{ color: 'rgba(0, 0, 0, 0.60)' }} />
+              <p className="text-sm" style={{ color: 'rgba(0, 0, 0, 0.80)' }}>
                 I used the affiliate code: <span className="font-mono font-bold">{brokerCode}</span>
               </p>
             </div>
-            <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
-              <Check className="w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.6)' }} />
-              <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+            <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(0, 0, 0, 0.03)' }}>
+              <Check className="w-5 h-5" style={{ color: 'rgba(0, 0, 0, 0.60)' }} />
+              <p className="text-sm" style={{ color: 'rgba(0, 0, 0, 0.80)' }}>
                 I received my MT5 trading ID via email
               </p>
             </div>
@@ -1380,12 +1380,12 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
         {/* Warning Box */}
         <div 
           className="mb-6 p-4 rounded-xl border"
-          style={{ background: 'rgba(255, 200, 100, 0.05)', borderColor: 'rgba(255, 200, 100, 0.2)' }}
+          style={{ background: 'rgba(180, 120, 0, 0.08)', borderColor: 'rgba(180, 120, 0, 0.25)' }}
         >
-          <p className="text-sm font-medium mb-1" style={{ color: 'rgba(255, 220, 150, 0.9)' }}>
+          <p className="text-sm font-medium mb-1" style={{ color: '#92600a' }}>
             ⚠️ No code = No earnings
           </p>
-          <p className="text-xs" style={{ color: 'rgba(255, 220, 150, 0.6)' }}>
+          <p className="text-xs" style={{ color: 'rgba(120, 80, 0, 0.8)' }}>
             If your clients don&apos;t use your broker code when signing up, you will not receive any commission from their trades.
           </p>
         </div>
@@ -1400,7 +1400,7 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
       <button 
         onClick={handleBack} 
         className="mt-4 flex items-center text-sm mx-auto transition-colors"
-        style={{ color: 'rgba(255, 255, 255, 0.4)' }}
+        style={{ color: 'rgba(0, 0, 0, 0.35)' }}
       >
         <ChevronLeft className="w-4 h-4 mr-1" /> Back
       </button>
@@ -1423,46 +1423,46 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
         <div className="flex items-center justify-between mb-6">
           <span 
             className="text-xs px-3 py-1.5 rounded-full"
-            style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'rgba(255, 255, 255, 0.6)' }}
+            style={{ background: 'rgba(0, 0, 0, 0.05)', color: 'rgba(0, 0, 0, 0.60)' }}
           >
             Step 3 of 5
           </span>
         </div>
         
-        <h2 className="text-xl sm:text-2xl font-semibold mb-3 tracking-tight" style={{ color: '#ffffff' }}>
+        <h2 className="text-xl sm:text-2xl font-semibold mb-3 tracking-tight" style={{ color: '#000000' }}>
           Set Up Skrill for Payouts
         </h2>
-        <p className="text-[15px] mb-6" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+        <p className="text-[15px] mb-6" style={{ color: 'rgba(0, 0, 0, 0.60)' }}>
           We use Skrill to send your affiliate commissions. Create a free account to receive payments.
         </p>
         
         {/* Skrill Info Card */}
         <div 
           className="mb-6 p-5 rounded-2xl text-center"
-          style={{ background: 'rgba(255, 255, 255, 0.04)' }}
+          style={{ background: 'rgba(0, 0, 0, 0.03)' }}
         >
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(255, 255, 255, 0.08)' }}>
-            <Coins className="w-8 h-8" style={{ color: '#ffffff' }} />
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(0, 0, 0, 0.05)' }}>
+            <Coins className="w-8 h-8" style={{ color: '#000000' }} />
           </div>
-          <h3 className="text-lg font-semibold mb-2" style={{ color: '#ffffff' }}>
+          <h3 className="text-lg font-semibold mb-2" style={{ color: '#000000' }}>
             Why Skrill?
           </h3>
           <div className="space-y-2 text-left max-w-xs mx-auto">
             <div className="flex items-center gap-2">
-              <Check className="w-4 h-4" style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
-              <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Fast international transfers</p>
+              <Check className="w-4 h-4" style={{ color: 'rgba(0, 0, 0, 0.50)' }} />
+              <p className="text-sm" style={{ color: 'rgba(0, 0, 0, 0.70)' }}>Fast international transfers</p>
             </div>
             <div className="flex items-center gap-2">
-              <Check className="w-4 h-4" style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
-              <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Low fees compared to banks</p>
+              <Check className="w-4 h-4" style={{ color: 'rgba(0, 0, 0, 0.50)' }} />
+              <p className="text-sm" style={{ color: 'rgba(0, 0, 0, 0.70)' }}>Low fees compared to banks</p>
             </div>
             <div className="flex items-center gap-2">
-              <Check className="w-4 h-4" style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
-              <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Secure and trusted worldwide</p>
+              <Check className="w-4 h-4" style={{ color: 'rgba(0, 0, 0, 0.50)' }} />
+              <p className="text-sm" style={{ color: 'rgba(0, 0, 0, 0.70)' }}>Secure and trusted worldwide</p>
             </div>
             <div className="flex items-center gap-2">
-              <Check className="w-4 h-4" style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
-              <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Most payments arrive in minutes</p>
+              <Check className="w-4 h-4" style={{ color: 'rgba(0, 0, 0, 0.50)' }} />
+              <p className="text-sm" style={{ color: 'rgba(0, 0, 0, 0.70)' }}>Most payments arrive in minutes</p>
             </div>
           </div>
         </div>
@@ -1470,13 +1470,13 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
         {/* Payment Schedule */}
         <div 
           className="mb-6 p-4 rounded-xl"
-          style={{ background: 'rgba(255, 255, 255, 0.04)' }}
+          style={{ background: 'rgba(0, 0, 0, 0.03)' }}
         >
           <div className="flex items-center gap-3">
-            <Calendar className="w-5 h-5" style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
+            <Calendar className="w-5 h-5" style={{ color: 'rgba(0, 0, 0, 0.50)' }} />
             <div>
-              <p className="text-sm font-medium" style={{ color: '#ffffff' }}>Paid Monthly</p>
-              <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+              <p className="text-sm font-medium" style={{ color: '#000000' }}>Paid Monthly</p>
+              <p className="text-xs" style={{ color: 'rgba(0, 0, 0, 0.50)' }}>
                 First week of each month (latest Friday)
               </p>
             </div>
@@ -1501,7 +1501,7 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
         
         <p 
           className="text-xs mt-4 text-center"
-          style={{ color: 'rgba(255, 255, 255, 0.35)' }}
+          style={{ color: 'rgba(0, 0, 0, 0.35)' }}
         >
           You&apos;ll enter your Skrill email in your dashboard later
         </p>
@@ -1510,7 +1510,7 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
       <button 
         onClick={handleBack} 
         className="mt-4 flex items-center text-sm mx-auto transition-colors"
-        style={{ color: 'rgba(255, 255, 255, 0.4)' }}
+        style={{ color: 'rgba(0, 0, 0, 0.35)' }}
       >
         <ChevronLeft className="w-4 h-4 mr-1" /> Back
       </button>
@@ -1533,16 +1533,16 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
         <div className="flex items-center justify-between mb-6">
           <span 
             className="text-xs px-3 py-1.5 rounded-full"
-            style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'rgba(255, 255, 255, 0.6)' }}
+            style={{ background: 'rgba(0, 0, 0, 0.05)', color: 'rgba(0, 0, 0, 0.60)' }}
           >
             Step 4 of 5
           </span>
         </div>
         
-        <h2 className="text-xl sm:text-2xl font-semibold mb-3 tracking-tight" style={{ color: '#ffffff' }}>
+        <h2 className="text-xl sm:text-2xl font-semibold mb-3 tracking-tight" style={{ color: '#000000' }}>
           {isReturningUser ? "Verify Your MT5 ID" : "Enter Your Trading ID"}
         </h2>
-        <p className="text-[15px] mb-6" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+        <p className="text-[15px] mb-6" style={{ color: 'rgba(0, 0, 0, 0.60)' }}>
           {isReturningUser 
             ? "Enter your MetaTrader 5 ID to verify your account." 
             : "After opening your account, you'll receive an email with your MT5 trading ID."}
@@ -1552,10 +1552,10 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
         {isReturningUser && savedSession && (
           <div 
             className="p-4 rounded-xl mb-5"
-            style={{ background: 'rgba(255, 255, 255, 0.04)' }}
+            style={{ background: 'rgba(0, 0, 0, 0.03)' }}
           >
-            <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-              Welcome back, <span style={{ color: '#ffffff', fontWeight: 500 }}>{savedSession.email}</span>
+            <p className="text-sm" style={{ color: 'rgba(0, 0, 0, 0.60)' }}>
+              Welcome back, <span style={{ color: '#000000', fontWeight: 500 }}>{savedSession.email}</span>
             </p>
           </div>
         )}
@@ -1574,7 +1574,7 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
             autoFocus
           />
           
-          <p className="text-xs flex items-center gap-1.5" style={{ color: 'rgba(255, 255, 255, 0.35)' }}>
+          <p className="text-xs flex items-center gap-1.5" style={{ color: 'rgba(0, 0, 0, 0.35)' }}>
             <Lock className="w-3 h-3" /> Used only to verify your access
           </p>
           
@@ -1636,16 +1636,16 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
         <div className="flex items-center justify-between mb-6">
           <span 
             className="text-xs px-3 py-1.5 rounded-full"
-            style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'rgba(255, 255, 255, 0.6)' }}
+            style={{ background: 'rgba(0, 0, 0, 0.05)', color: 'rgba(0, 0, 0, 0.60)' }}
           >
             Step 5 of 5
           </span>
         </div>
         
-        <h2 className="text-xl sm:text-2xl font-semibold mb-3 tracking-tight" style={{ color: '#ffffff' }}>
+        <h2 className="text-xl sm:text-2xl font-semibold mb-3 tracking-tight" style={{ color: '#000000' }}>
           Create Your Account
         </h2>
-        <p className="text-[15px] mb-6" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+        <p className="text-[15px] mb-6" style={{ color: 'rgba(0, 0, 0, 0.60)' }}>
           Set up your login to access your affiliate dashboard and track earnings.
         </p>
         
@@ -1664,7 +1664,7 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
               disabled={isReturningUser}
               autoFocus={!isReturningUser}
             />
-            <p className="text-xs mt-2 ml-1" style={{ color: 'rgba(255, 255, 255, 0.35)' }}>
+            <p className="text-xs mt-2 ml-1" style={{ color: 'rgba(0, 0, 0, 0.35)' }}>
               {isReturningUser ? "Using your saved email." : "We'll send your login details here."}
             </p>
           </div>
@@ -1685,11 +1685,11 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
               type="button" 
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors"
-              style={{ color: 'rgba(255, 255, 255, 0.4)' }}
+              style={{ color: 'rgba(0, 0, 0, 0.35)' }}
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
-            <p className="text-xs mt-2 ml-1" style={{ color: 'rgba(255, 255, 255, 0.35)' }}>
+            <p className="text-xs mt-2 ml-1" style={{ color: 'rgba(0, 0, 0, 0.35)' }}>
               Must be at least 6 characters.
             </p>
           </div>
@@ -1705,7 +1705,7 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
                 placeholder="Referral Code (Optional)"
                 icon={User}
               />
-              <p className="text-xs mt-2 ml-1" style={{ color: 'rgba(255, 255, 255, 0.35)' }}>
+              <p className="text-xs mt-2 ml-1" style={{ color: 'rgba(0, 0, 0, 0.35)' }}>
                 Leave blank if you don&apos;t have one.
               </p>
             </div>
@@ -1716,19 +1716,19 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
             onClick={() => setAcceptedTerms(!acceptedTerms)}
             className="flex items-start gap-3 p-4 rounded-xl cursor-pointer transition-all"
             style={{ 
-              background: acceptedTerms ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.04)',
+              background: acceptedTerms ? 'rgba(0, 0, 0, 0.05)' : 'rgba(0, 0, 0, 0.03)',
             }}
           >
             <div 
               className="w-5 h-5 rounded-md flex items-center justify-center mt-0.5 shrink-0 transition-all"
               style={{ 
                 background: acceptedTerms ? '#ffffff' : 'transparent',
-                border: acceptedTerms ? 'none' : '1.5px solid rgba(255, 255, 255, 0.25)'
+                border: acceptedTerms ? 'none' : '1.5px solid rgba(0, 0, 0, 0.15)'
               }}
             >
               {acceptedTerms && <Check className="w-3.5 h-3.5 text-black" />}
             </div>
-            <p className="text-sm leading-relaxed" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+            <p className="text-sm leading-relaxed" style={{ color: 'rgba(0, 0, 0, 0.60)' }}>
               I agree to the Terms of Service and understand this is educational content.
             </p>
           </div>
@@ -1780,9 +1780,9 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
     >
       <Loader2 
         className="w-12 h-12 animate-spin mb-5" 
-        style={{ color: '#ffffff' }} 
+        style={{ color: '#000000' }} 
       />
-      <h2 className="text-lg font-medium" style={{ color: '#ffffff' }}>
+      <h2 className="text-lg font-medium" style={{ color: '#000000' }}>
         Creating Your Account...
       </h2>
     </motion.div>
@@ -1803,15 +1803,15 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
         {/* Success Icon - Apple minimal */}
         <div 
           className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center"
-          style={{ background: 'rgba(255, 255, 255, 0.08)' }}
+          style={{ background: 'rgba(0, 0, 0, 0.05)' }}
         >
-          <Check className="w-10 h-10" style={{ color: '#ffffff' }} />
+          <Check className="w-10 h-10" style={{ color: '#000000' }} />
         </div>
         
-        <h2 className="text-2xl sm:text-3xl font-semibold mb-3 tracking-tight" style={{ color: '#ffffff' }}>
+        <h2 className="text-2xl sm:text-3xl font-semibold mb-3 tracking-tight" style={{ color: '#000000' }}>
           You&apos;re In!
         </h2>
-        <p className="text-[15px] mb-8" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+        <p className="text-[15px] mb-8" style={{ color: 'rgba(0, 0, 0, 0.60)' }}>
           Your affiliate account is now active. Start recruiting traders and earning commissions.
         </p>
         
@@ -1828,7 +1828,7 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
         <button 
           onClick={() => window.open(TELEGRAM_GROUP_LINK, '_blank')}
           className="flex items-center justify-center gap-2 text-sm mx-auto transition-colors"
-          style={{ color: 'rgba(255, 255, 255, 0.4)' }}
+          style={{ color: 'rgba(0, 0, 0, 0.35)' }}
         >
           <MessageCircle className="w-4 h-4" /> Join Free Telegram
         </button>
@@ -1843,10 +1843,10 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
     // Mobile view - Keep existing compact modal layout
     if (isMobileView) {
       return (
-        <div className="fixed inset-0 z-[2147483647] flex flex-col bg-black/80 backdrop-blur-xl">
+        <div className="fixed inset-0 z-[2147483647] flex flex-col bg-white">
           {/* Header */}
           <div 
-            className="flex items-center justify-between p-4 border-b border-white/30 bg-black/80"
+            className="flex items-center justify-between p-4 border-b border-white/10 bg-black backdrop-blur-md"
           >
             <div className="flex items-center gap-2">
               <h1 className="text-lg font-bold text-white">
@@ -1858,15 +1858,15 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
                 onClick={() => setStep('success')}
                 variant="ghost"
                 size="small"
-                className="text-xs"
+                className="text-xs text-white"
               >
                 <ChevronLeft className="w-4 h-4" />
               </NeonButton>
               <button 
                 onClick={handleClose}
-                className="p-2 rounded-full transition-all border-2 border-white/30 text-white/45"
+                className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-all shadow-lg cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4 text-white" strokeWidth={2.5} />
               </button>
             </div>
           </div>
@@ -1886,10 +1886,10 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
 
     // Desktop view - Full layout from AffiliateRecruitsDashboard
     return (
-      <div className="fixed inset-0 z-[2147483647] flex flex-col bg-black/80 backdrop-blur-xl">
+      <div className="fixed inset-0 z-[2147483647] flex flex-col bg-white">
         {/* Header */}
         <div 
-          className="flex items-center justify-between p-4 border-b border-white/30 bg-black/80"
+          className="flex items-center justify-between p-4 border-b border-white/10 bg-black backdrop-blur-md"
         >
           <div className="flex items-center gap-4">
             <h1 className="text-lg font-bold text-white">
@@ -1899,8 +1899,8 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
               <button
                 onClick={() => setDashboardTab('dashboard')}
                 className={cn(
-                  "px-3 py-1.5 rounded-full text-xs font-bold border-2 border-white/30 text-white transition-all",
-                  dashboardTab === 'dashboard' ? "bg-white/10" : "bg-transparent"
+                  "px-3 py-1.5 rounded-full text-xs font-bold border border-white/20 transition-all",
+                  dashboardTab === 'dashboard' ? "bg-white text-black" : "bg-white/10 text-white"
                 )}
               >
                 Dashboard
@@ -1909,8 +1909,8 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
                 <button
                   onClick={() => setDashboardTab('admin')}
                   className={cn(
-                    "px-3 py-1.5 rounded-full text-xs font-bold border-2 border-white/30 text-white transition-all flex items-center gap-1",
-                    dashboardTab === 'admin' ? "bg-white/10" : "bg-transparent"
+                    "px-3 py-1.5 rounded-full text-xs font-bold border border-white/20 transition-all flex items-center gap-1",
+                    dashboardTab === 'admin' ? "bg-white text-black" : "bg-white/10 text-white"
                   )}
                 >
                   <Shield className="w-3 h-3" /> Admin Panel
@@ -1918,7 +1918,7 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
               )}
             </div>
             {savedSession && (
-              <span className="text-xs text-white/45">
+              <span className="text-xs text-white/70">
                 {savedSession.email}
               </span>
             )}
@@ -1928,14 +1928,15 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
               onClick={() => setStep('success')}
               variant="ghost"
               size="small"
+              className="text-white"
             >
               <ChevronLeft className="w-4 h-4 mr-1" /> Back
             </NeonButton>
             <button 
               onClick={handleClose}
-              className="p-2 rounded-full transition-all border-2 border-white/30 text-white/45"
+              className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-all shadow-lg cursor-pointer"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 text-white" strokeWidth={2.5} />
             </button>
           </div>
         </div>
@@ -1955,7 +1956,7 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
 
   // OLD renderDashboard for reference - replaced above
   const renderDashboard_OLD = () => (
-    <div className="fixed inset-0 z-[2147483647] flex flex-col bg-black/95">
+    <div className="fixed inset-0 z-[2147483647] flex flex-col bg-white">
       {/* This old implementation is kept for reference but not used */}
     </div>
   );
@@ -1976,30 +1977,30 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
-      className="fixed inset-0 z-[2147483647] bg-black/80 backdrop-blur-xl"
+      className="fixed inset-0 z-[2147483647] bg-black/60 backdrop-blur-md"
       onClick={handleClose}
     >
-      {/* Tap to close hints - skip on mobile */}
-      {!isMobile && (
-        <motion.div 
+      {/* Tap to close hints */}
+      {!isMobile && ['top', 'bottom', 'left', 'right'].map(pos => (
+        <motion.div
+          key={pos}
           initial={{ opacity: 0 }}
-          animate={{ opacity: [0.4, 0.8, 0.4] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
+          animate={{ opacity: [0.4, 0.7, 0.4] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className={`absolute text-blue-300/50 text-xs pointer-events-none ${
+            pos === 'top' ? 'top-4 left-1/2 -translate-x-1/2' :
+            pos === 'bottom' ? 'bottom-4 left-1/2 -translate-x-1/2' :
+            pos === 'left' ? 'left-2 top-1/2 -translate-y-1/2' :
+            'right-2 top-1/2 -translate-y-1/2'
+          }`}
         >
-          <span>↑</span> Tap anywhere to close <span>↑</span>
+          {pos === 'top' || pos === 'bottom' ? (
+            <span>↑ Tap anywhere to close ↑</span>
+          ) : (
+            <span style={{ writingMode: 'vertical-rl' }}>Tap to close</span>
+          )}
         </motion.div>
-      )}
-      {!isMobile && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0.4, 0.8, 0.4] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs font-medium pointer-events-none flex items-center gap-1"
-        >
-          <span>↓</span> Tap anywhere to close <span>↓</span>
-        </motion.div>
-      )}
+      ))}
       
       {/* Modal */}
       <motion.div
@@ -2008,29 +2009,28 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.2 }}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-6xl h-[92vh] overflow-hidden rounded-2xl"
+        className="relative w-full max-w-[96vw] sm:max-w-5xl lg:max-w-6xl max-h-[92vh] overflow-hidden my-auto mx-auto rounded-2xl md:rounded-3xl"
       >
         {/* Inner Container */}
-        <div className="relative z-10 bg-linear-to-b from-neutral-900 to-black rounded-2xl border border-white/20 overflow-hidden h-full flex flex-col">
+        <div className="relative z-10 bg-white rounded-2xl md:rounded-3xl border border-black/10 overflow-hidden h-full flex flex-col shadow-2xl">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-white/10 flex-shrink-0">
+          <div className="sticky top-0 z-30 flex items-center justify-between p-4 border-b border-white/10 flex-shrink-0 bg-black backdrop-blur-md">
             <div className="flex items-center gap-3">
               <DollarSign className="w-6 h-6 text-white" />
               <div>
                 <h2 className="text-lg sm:text-xl font-bold text-white">Affiliate Program</h2>
-                <p className="text-xs text-white/60">Earn commissions with BullMoney</p>
+                <p className="text-xs text-white/70">Earn commissions with BullMoney</p>
               </div>
             </div>
             
             <motion.button
-              whileHover={isMobile ? {} : { scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={isMobile ? {} : { scale: 1.08 }}
+              whileTap={{ scale: 0.94 }}
               onClick={handleClose}
-              className="p-2.5 min-w-[44px] min-h-[44px] rounded-full bg-neutral-800 text-white hover:bg-neutral-700 transition-colors group relative flex items-center justify-center"
+              className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-all shadow-lg cursor-pointer"
               title="Close (ESC)"
             >
-              <X className="w-5 h-5" />
-              <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-white/50 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">ESC</span>
+              <X className="w-4 h-4 text-white" strokeWidth={2.5} />
             </motion.button>
           </div>
           

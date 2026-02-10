@@ -5,10 +5,7 @@ import dynamic from 'next/dynamic';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Search from 'lucide-react/dist/esm/icons/search';
-import ShoppingBag from 'lucide-react/dist/esm/icons/shopping-bag';
-import CreditCard from 'lucide-react/dist/esm/icons/credit-card';
-import X from 'lucide-react/dist/esm/icons/x';
+import { Search, ShoppingBag, CreditCard, X } from 'lucide-react';
 import type { ProductWithDetails, PaginatedResponse, ProductFilters } from '@/types/store';
 import { ProductCard } from '@/components/shop/ProductCard';
 import { SearchAutocomplete } from '@/components/shop/SearchAutocomplete';
@@ -16,6 +13,7 @@ import { CryptoCheckoutTrigger } from '@/components/shop/CryptoCheckoutInline';
 import { WorldMapPlaceholder } from '@/components/ui/world-map-placeholder';
 import { PrintProductsSection, SAMPLE_PRINT_PRODUCTS } from '@/components/shop/PrintProductsSection';
 import { DigitalArtSection, SAMPLE_DIGITAL_ART } from '@/components/shop/DigitalArtSection';
+import DrawingCanvas from '@/components/studio/DrawingCanvas';
 const PrintDesignStudio = dynamic(() => import('@/components/shop/PrintDesignStudio').then(m => ({ default: m.PrintDesignStudio })), { ssr: false });
 
 const PrintDesignPromoGrid = dynamic(() => import('@/components/shop/PrintDesignPromoGrid'), {
@@ -35,6 +33,8 @@ import { SORT_OPTIONS, CATEGORIES } from './store.config';
 import { useCartStore } from '@/stores/cart-store';
 import { useProductsModalUI } from '@/contexts/UIStateContext';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
+import { useHeroMode } from '@/hooks/useHeroMode';
+import type { HeroMode } from '@/hooks/useHeroMode';
 import { isMobileDevice } from '@/lib/mobileDetection';
 import { userStorage } from '@/lib/smartStorage';
 
@@ -239,7 +239,7 @@ function HeroModeToggle({
   onModeChange: (mode: HeroModeType) => void;
 }) {
   return (
-    <div className="absolute right-4 top-4 z-20 flex items-center gap-0.5 rounded-full border border-white/15 bg-black/70 p-1 text-[9px] font-semibold uppercase tracking-[0.18em] shadow-[0_8px_24px_rgba(0,0,0,0.4)] backdrop-blur-md">
+    <div className="absolute right-4 top-4 z-20 hidden md:flex items-center gap-0.5 rounded-full border border-white/15 bg-black/70 p-1 text-[9px] font-semibold uppercase tracking-[0.18em] shadow-[0_8px_24px_rgba(0,0,0,0.4)] backdrop-blur-md">
       {HERO_MODE_CONFIG.map(({ mode, label, color, glow }) => {
         const isActive = heroMode === mode;
         return (
@@ -269,14 +269,14 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
   const productsSection = useStoreSection('products');
   const featuredSection = useStoreSection('featured');
   const footerSection = useStoreSection('footer');
-  const [heroMode, setHeroMode] = useState<'store' | 'trader' | 'design'>('store');
+  const { heroMode, setHeroMode: setSharedHeroMode } = useHeroMode();
   const showProducts = showProductSections && heroMode === 'store';
 
   // Handle mode toggle with sound effect
   const handleModeChange = useCallback((mode: 'store' | 'trader' | 'design') => {
     SoundEffects.play('click');
-    setHeroMode(mode);
-  }, []);
+    setSharedHeroMode(mode);
+  }, [setSharedHeroMode]);
 
   const [products, setProducts] = useState<ProductWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
@@ -319,11 +319,12 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
   }, []);
   const heroCacheLoadedRef = useRef(false);
   const resolvedHeroSlide = useMemo(() => {
-    if (!hasMounted || isMobile) {
+    if (!hasMounted) {
       return HERO_CAROUSEL_SLIDES.find((slide) => slide.type === 'image') || HERO_CAROUSEL_SLIDES[0];
     }
+    // Mobile gets the same hero types as desktop (videos, splines, world-map)
     return HERO_CAROUSEL_SLIDES[heroSlideIndex];
-  }, [hasMounted, isMobile, heroSlideIndex]);
+  }, [hasMounted, heroSlideIndex]);
   const heroIsWorldMap = resolvedHeroSlide?.type === 'world-map';
   const allowHeavyHeroReady = allowHeavyHero && hasMounted;
   const heroTitleColor = 'rgb(255,255,255)';
@@ -337,7 +338,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
     if (heroCacheLoadedRef.current) return;
     heroCacheLoadedRef.current = true;
 
-    const cachedIndex = userStorage.get<number>(HERO_CACHE_KEY, null);
+    const cachedIndex = userStorage.get<number>(HERO_CACHE_KEY);
     if (typeof cachedIndex === 'number' && cachedIndex >= 0 && cachedIndex < HERO_CAROUSEL_SLIDES.length) {
       setHeroSlideIndex(cachedIndex);
     }
@@ -347,6 +348,15 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
     if (!heroCacheLoadedRef.current) return;
     userStorage.set(HERO_CACHE_KEY, heroSlideIndex, HERO_CACHE_TTL);
   }, [heroSlideIndex]);
+
+  // Auto-cycle hero slides every HERO_SLIDE_DURATION seconds
+  useEffect(() => {
+    if (!hasMounted) return;
+    const interval = setInterval(() => {
+      setHeroSlideIndex((prev) => (prev + 1) % HERO_CAROUSEL_SLIDES.length);
+    }, HERO_SLIDE_DURATION * 1000);
+    return () => clearInterval(interval);
+  }, [hasMounted]);
 
 
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
@@ -430,7 +440,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
   const handleVisitShop = useCallback(() => {
     SoundEffects.click();
     if (!showProducts && showProductSections) {
-      setHeroMode('store');
+      setSharedHeroMode('store');
       setTimeout(() => {
         const target = document.querySelector('[data-products-grid]');
         if (target) {
@@ -494,13 +504,13 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
     }
 
     let idleId: number | null = null;
-    let timeoutId: number | null = null;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
     const activate = () => setAllowHeavyHero(true);
 
     if ('requestIdleCallback' in window) {
       idleId = (window as any).requestIdleCallback(activate, { timeout: 900 });
     } else {
-      timeoutId = window.setTimeout(activate, 250);
+      timeoutId = setTimeout(activate, 250);
     }
 
     return () => {
@@ -508,7 +518,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
         (window as any).cancelIdleCallback(idleId);
       }
       if (timeoutId !== null) {
-        window.clearTimeout(timeoutId);
+        clearTimeout(timeoutId);
       }
     };
   }, [hasMounted]);
@@ -1184,7 +1194,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
             variantId: variant.id,
             name: checkoutProduct.name,
             description: checkoutProduct.description,
-            price: variant.price || checkoutProduct.base_price,
+            price: checkoutProduct.base_price + variant.price_adjustment,
             quantity: 1,
             image: checkoutProduct.primary_image,
           }),
@@ -1205,18 +1215,6 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
   const timelineProducts = useMemo(() => products.slice(4, 8), [products]);
   const heroMedia = useMemo(() => {
     const slide = resolvedHeroSlide;
-    if (!allowHeavyHeroReady && (slide.type === 'world-map' || slide.type === 'spline')) {
-      return (
-        <img
-          src="/Img1.jpg"
-          alt="BullMoney hero"
-          className="absolute inset-0 z-0 h-full w-full object-cover pointer-events-none"
-          style={{ touchAction: 'pan-y' }}
-          loading="eager"
-          decoding="async"
-        />
-      );
-    }
 
     if (slide.type === 'image') {
       return (
@@ -1384,7 +1382,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
         <SplineBackground scene={slide.scene} className="h-full w-full" priority />
       </div>
     );
-  }, [allowHeavyHeroReady, resolvedHeroSlide]);
+  }, [resolvedHeroSlide]);
 
   const expandedPrimaryImage = useMemo(() => {
     if (!expandedProduct) return '';
@@ -1422,7 +1420,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
   const expandedDetailsHref = expandedBuyUrl || '/VIP';
   const checkoutVariant = checkoutProduct?.variants?.[0];
   const checkoutInStock = Boolean(checkoutVariant && checkoutVariant.inventory_count > 0);
-  const checkoutPrice = checkoutVariant?.price || checkoutProduct?.base_price || 0;
+  const checkoutPrice = checkoutProduct ? checkoutProduct.base_price + (checkoutVariant?.price_adjustment || 0) : 0;
   const dashboardsSection = (
     <section
       data-apple-section
@@ -1569,6 +1567,32 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
     </section>
   );
 
+  const traderWhiteboardSection = (
+    <section
+      data-apple-section
+      data-trader-whiteboard
+      className="w-full"
+      style={{ backgroundColor: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.04)', contentVisibility: 'auto', containIntrinsicSize: 'auto 100vh' }}
+    >
+      <div className="mx-auto w-full max-w-[90rem] px-4 sm:px-8" style={{ paddingTop: 32, paddingBottom: 32 }}>
+        <div className="flex flex-col gap-3 mb-6">
+          <p className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'rgba(0,0,0,0.45)' }}>
+            Teaching Mode
+          </p>
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">Live Whiteboard</h2>
+          <p className="text-sm sm:text-base max-w-2xl" style={{ color: 'rgba(0,0,0,0.6)' }}>
+            Full-screen drawing board for lessons, annotations, and trade breakdowns.
+          </p>
+        </div>
+        <div className="w-full rounded-3xl border border-black/10 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
+          <div className="w-full min-h-[calc(100vh-260px)]">
+            <DrawingCanvas fitContainer canvasWidth={1920} canvasHeight={1080} showFooter={false} />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+
   const traderNewsSection = (
     <section
       data-apple-section
@@ -1683,7 +1707,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
       style={{ backgroundColor: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.04)', contentVisibility: 'auto', containIntrinsicSize: 'auto 600px' }}
     >
       <div className="mx-auto w-full max-w-[90rem] px-4 sm:px-8" style={{ paddingTop: 16, paddingBottom: 32 }}>
-        <div className="relative min-h-[70vh] w-full overflow-x-hidden overflow-y-visible md:overflow-hidden rounded-3xl border border-black/10">
+        <div className="relative min-h-[70vh] w-full overflow-x-hidden overflow-y-visible rounded-3xl border border-black/10">
           {heroMedia}
           {shouldShowHeroMapOverlay && (
             <div className="absolute inset-0 z-[2] pointer-events-none bg-white/85">
@@ -2209,7 +2233,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
             variantId: variant.id,
             name: expandedProduct.name,
             description: expandedProduct.description,
-            price: variant.price || expandedProduct.base_price,
+            price: expandedProduct.base_price + variant.price_adjustment,
             quantity: 1,
             image: expandedProduct.primary_image,
           }),
@@ -2437,7 +2461,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
             borderBottom: '1px solid rgba(0,0,0,0.06)',
           }}
         >
-          <div className="relative min-h-screen w-full overflow-x-hidden overflow-y-visible md:overflow-hidden">
+          <div className="relative min-h-screen w-full overflow-x-hidden overflow-y-visible">
             {showProductSections && (
               <HeroModeToggle heroMode={heroMode} onModeChange={handleModeChange} />
             )}
@@ -2551,7 +2575,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
               </p>
               <button
                 type="button"
-                onClick={openStudio}
+                onClick={() => openStudio()}
                 className="inline-flex items-center gap-2 rounded-full px-8 py-3.5 text-sm font-semibold uppercase tracking-[0.12em] text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(168,85,247,0.3)]"
                 style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.8), rgba(139,92,246,0.8))' }}
               >
@@ -2611,6 +2635,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
       {/* Trader View Sections — News and Telegram after hero when in trader mode */}
       {heroMode === 'trader' && (
         <>
+          {traderWhiteboardSection}
           {traderNewsSection}
           {traderTelegramSection}
         </>
@@ -2631,7 +2656,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
           ref={leftColumnRef}
           className="lg:pr-1 lg:min-h-0 lg:h-full lg:max-h-full lg:overflow-y-auto store-column-scroll store-col-left"
         >
-          {isDesktop && heroMode !== 'design' && columnHeaderSection}
+          {isDesktop && columnHeaderSection}
           {isDesktop && heroMode === 'store' && featuresSection}
           {isDesktop && heroMode === 'trader' && dashboardsSection}
         </div>
@@ -2659,13 +2684,13 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
           className="space-y-0 lg:pl-1 lg:min-h-0 lg:h-full lg:max-h-full lg:overflow-y-auto store-column-scroll store-col-right"
         >
           <div className="store-col-right-inner">
-            {isDesktop && heroMode !== 'design' && columnHeaderSection}
+            {isDesktop && columnHeaderSection}
             {isDesktop && heroMode === 'store' && dashboardsSection}
             {isDesktop && heroMode === 'store' && testimonialsSection}
             {isDesktop && heroMode === 'trader' && heroDuplicateSection}
             {isDesktop && heroMode === 'trader' && featuresSection}
             {isDesktop && heroMode === 'trader' && testimonialsSection}
-            {!isDesktop && heroMode !== 'design' && dashboardsSection}
+            {!isDesktop && dashboardsSection}
           </div>
         </div>
       </div>

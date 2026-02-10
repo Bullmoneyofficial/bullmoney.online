@@ -325,6 +325,13 @@ html,body{background:#050915!important;}
         return; // Silently ignore - expected in development
       }
 
+      // Skip external third-party scripts (Cal.com, analytics, etc.)
+      if (src && (src.includes('cal.com') || src.includes('plausible.io') || 
+          src.includes('google-analytics') || src.includes('googletagmanager') ||
+          src.includes('cdn.') || (!src.includes(window.location.hostname) && src.startsWith('http')))) {
+        return; // Silently ignore external scripts
+      }
+
       // Check if it's a Next.js chunk or CSS file that failed to load
       if ((tag === 'script' || tag === 'link') &&
           (src.includes('/_next/static/') || src.includes('.js') || src.includes('.css'))) {

@@ -7,7 +7,7 @@ import dynamic from 'next/dynamic';
 import { useCartStore } from '@/stores/cart-store';
 import type { ProductWithDetails, Variant } from '@/types/store';
 
-const StoreFooter = dynamic(() => import('@/components/shop/StoreFooter'), { ssr: false });
+const FooterComponent = dynamic(() => import('@/components/Mainpage/footer').then((mod) => ({ default: mod.Footer })), { ssr: false });
 
 export interface DigitalArt {
   id: string;
@@ -574,7 +574,9 @@ function DigitalArtViewer({ art, onClose }: { art: DigitalArt; onClose: () => vo
       {serviceModal && <ServiceModal preset={serviceModal} art={art} onClose={() => setServiceModal(null)} />}
 
       {/* Store Footer */}
-      <StoreFooter />
+      <div className="bg-white" style={{ backgroundColor: 'rgb(255,255,255)', filter: 'invert(1) hue-rotate(180deg)' }}>
+        <FooterComponent />
+      </div>
     </div>,
     document.body
   );

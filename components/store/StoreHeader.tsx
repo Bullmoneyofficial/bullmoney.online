@@ -32,6 +32,7 @@ const LazyAnimatePresence = dynamic(() => import('framer-motion').then(m => ({ d
 // Lazy load modals - same as main navbar
 const AdminHubModal = dynamic(() => import('@/components/AdminHubModal'), { ssr: false });
 const SiteSearchOverlay = dynamic(() => import('@/components/SiteSearchOverlay'), { ssr: false });
+const GamesManualModal = dynamic(() => import('@/components/GamesManualModal').then(m => ({ default: m.GamesManualModal })), { ssr: false });
 
 // Import lazy modal system from navbar (same as main site)
 import { LazyAffiliateModal, LazyFaqModal } from '@/components/navbar/LazyModalSystem';
@@ -43,8 +44,14 @@ import { ProductsModal } from '@/components/ProductsModal';
 // ============================================================================
 
 // Pill nav items for the store - including scroll-to functionality
+// Items with action: 'modal-*' are intercepted by handleCategoryClick to open modals instead of navigating
 const STORE_NAV_ITEMS = [
   { href: '/', label: 'Home', category: '' },
+  { href: '/games', label: 'Games', category: '' },
+  { href: '#action:products', label: 'Products', category: '' },
+  { href: '#action:faq', label: 'FAQ', category: '' },
+  { href: '#action:themes', label: 'Themes', category: '' },
+  { href: '#action:hub', label: 'Hub', category: '' },
   { href: '/store', label: 'All Products', category: '' },
   { href: '/store?category=apparel', label: 'Apparel', category: 'apparel' },
   { href: '/store?category=accessories', label: 'Accessories', category: 'accessories' },
@@ -81,6 +88,8 @@ export function StoreHeader() {
   const [faqModalOpen, setFaqModalOpen] = useState(false);
   const [showThemePicker, setShowThemePicker] = useState(false);
   const [showUltimateHub, setShowUltimateHub] = useState(false);
+  const [gamesManualOpen, setGamesManualOpen] = useState(false);
+  const [manualDropdownOpen, setManualDropdownOpen] = useState(false);
   const [siteSearchOpen, setSiteSearchOpen] = useState(false);
   const desktopMenuCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hubToggleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -97,6 +106,10 @@ export function StoreHeader() {
   const pathname = usePathname();
   const { heroMode, setHeroMode } = useHeroMode();
   const isAccountPage = pathname?.startsWith('/store/account');
+  const isCasinoPage = pathname?.startsWith('/games');
+  const isHomePage = pathname === '/';
+  // Show home button on non-home pages (store, games, etc.) so users can navigate back
+  const showHomeButton = !isHomePage;
 
   const PAGEMODE_FORCE_LOGIN_KEY = 'bullmoney_pagemode_force_login';
   const PAGEMODE_LOGIN_VIEW_KEY = 'bullmoney_pagemode_login_view';
@@ -132,14 +145,10 @@ export function StoreHeader() {
     };
   }, []);
   
-  // Load Theme Picker preference
+  // Sync theme picker local state → UIState context (avoids setState-during-render)
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // Always start OFF on page load
-      setShowThemePicker(false);
-      setThemePickerModalOpen(false);
-    }
-  }, [setThemePickerModalOpen]);
+    setThemePickerModalOpen(showThemePicker);
+  }, [showThemePicker, setThemePickerModalOpen]);
 
   // Load Ultimate Hub preference
   useEffect(() => {
@@ -158,14 +167,13 @@ export function StoreHeader() {
     SoundEffects.click();
     setShowThemePicker(prev => {
       const newValue = !prev;
-      setThemePickerModalOpen(newValue);
       if (typeof window !== 'undefined') {
         localStorage.setItem('store_show_theme_picker', String(newValue));
         window.dispatchEvent(new Event('store_theme_picker_toggle'));
       }
       return newValue;
     });
-  }, [setThemePickerModalOpen]);
+  }, []);
 
   const applyUltimateHubToggle = useCallback((nextValue?: boolean) => {
     setShowUltimateHub(prev => {
@@ -196,6 +204,7 @@ export function StoreHeader() {
 
   const desktopLinks = useMemo(() => {
     const links = [
+      { label: 'Games', href: '/games', variant: 'link' as const },
       { label: 'Affiliates', onClick: () => setAffiliateModalOpen(true), variant: 'link' as const },
       { label: 'Products', onClick: () => openProductsModal(), variant: 'link' as const },
       { label: 'FAQ', onClick: () => setFaqModalOpen(true), variant: 'link' as const },
@@ -207,12 +216,13 @@ export function StoreHeader() {
   }, [openProductsModal, setAffiliateModalOpen, setFaqModalOpen, showThemePicker, showUltimateHub, toggleThemePicker, toggleUltimateHub]);
 
   const openDesktopMenu = useCallback(() => {
+    if (isCasinoPage) return; // Disable hover menu on games pages
     if (desktopMenuCloseTimer.current) {
       clearTimeout(desktopMenuCloseTimer.current);
       desktopMenuCloseTimer.current = null;
     }
     setDesktopMenuOpen(true);
-  }, []);
+  }, [isCasinoPage]);
 
   const scheduleDesktopMenuClose = useCallback(() => {
     if (desktopMenuCloseTimer.current) {
@@ -224,9 +234,17 @@ export function StoreHeader() {
   }, []);
 
   const toggleDesktopMenu = useCallback(() => {
+    if (isCasinoPage) return; // Ignore toggle on games pages
     SoundEffects.click();
     setDesktopMenuOpen(prev => !prev);
-  }, []);
+  }, [isCasinoPage]);
+
+  // Ensure desktop menu stays closed while on games pages
+  useEffect(() => {
+    if (isCasinoPage && desktopMenuOpen) {
+      setDesktopMenuOpen(false);
+    }
+  }, [isCasinoPage, desktopMenuOpen]);
 
   const handleLogout = useCallback(() => {
     SoundEffects.close();
@@ -279,6 +297,24 @@ export function StoreHeader() {
       startPagemodeLogin();
       return;
     }
+
+    // Intercept action hrefs for modals/toggles
+    if (href === '#action:products') {
+      openProductsModal();
+      return;
+    }
+    if (href === '#action:faq') {
+      setFaqModalOpen(true);
+      return;
+    }
+    if (href === '#action:themes') {
+      toggleThemePicker();
+      return;
+    }
+    if (href === '#action:hub') {
+      toggleUltimateHub();
+      return;
+    }
     
     router.push(href);
     // Only scroll to products grid for store category links
@@ -290,7 +326,7 @@ export function StoreHeader() {
         }
       }, 100);
     }
-  }, [router, startPagemodeLogin]);
+  }, [router, startPagemodeLogin, openProductsModal, setFaqModalOpen, toggleThemePicker, toggleUltimateHub]);
 
   const handleStoreButtonClick = useCallback(() => {
     SoundEffects.click();
@@ -312,6 +348,19 @@ export function StoreHeader() {
     setMobileMenuOpen(false);
     requestAnimationFrame(() => SoundEffects.close());
   }, []);
+
+  const handleManualClick = useCallback(() => {
+    SoundEffects.click();
+    if (isCasinoPage) {
+      // On games pages, manual button toggles inline dropdown
+      setManualDropdownOpen(prev => !prev);
+    }
+  }, [isCasinoPage]);
+
+  const handleHomeClick = useCallback(() => {
+    SoundEffects.click();
+    router.push('/');
+  }, [router]);
 
   return (
     <>
@@ -337,28 +386,37 @@ export function StoreHeader() {
         showSearch={true}
         showUser={true}
         showCart={true}
+        // Games page specific props
+        hideNavigation={isCasinoPage}
+        showManualButton={isCasinoPage}
+        onManualClick={handleManualClick}
         isAuthenticated={isAuthenticated}
         userInitial={recruit?.email?.charAt(0) || 'U'}
+        // Home button for app navigation
+        showHomeButton={showHomeButton}
+        onHomeClick={handleHomeClick}
         onMobileMenuClick={handleOpenMobileMenu}
-        onDesktopMenuEnter={isAccountPage ? undefined : openDesktopMenu}
-        onDesktopMenuLeave={isAccountPage ? undefined : scheduleDesktopMenuClose}
-        onDesktopMenuToggle={toggleDesktopMenu}
-        desktopMenuOpen={desktopMenuOpen}
+        onDesktopMenuEnter={isAccountPage || isCasinoPage ? undefined : openDesktopMenu}
+        onDesktopMenuLeave={isAccountPage || isCasinoPage ? undefined : scheduleDesktopMenuClose}
+        onDesktopMenuToggle={isCasinoPage ? undefined : toggleDesktopMenu}
+        desktopMenuOpen={isCasinoPage ? false : desktopMenuOpen}
         // Hero mode toggle
         heroMode={heroMode}
         onHeroModeChange={setHeroMode}
         onStoreButtonClick={handleStoreButtonClick}
       />
 
-      <div data-apple-section style={{ background: 'rgb(255,255,255)' }}>
-        <RewardsCardBanner
-          userEmail={recruit?.email || null}
-          onOpenRewardsCard={handleRewardsClick}
-        />
-      </div>
+      {!isCasinoPage && (
+        <div data-apple-section style={{ background: 'rgb(255,255,255)' }}>
+          <RewardsCardBanner
+            userEmail={recruit?.email || null}
+            onOpenRewardsCard={handleRewardsClick}
+          />
+        </div>
+      )}
 
-      {/* Desktop Dropdown Menu - Apple-style */}
-      {desktopMenuOpen && (
+      {/* Desktop Dropdown Menu - Apple-style (disabled on games pages) */}
+      {!isCasinoPage && desktopMenuOpen && (
         <>
           {/* Backdrop - click to close */}
           <div
@@ -369,9 +427,9 @@ export function StoreHeader() {
             className="fixed left-0 right-0 bottom-0 hidden lg:block pointer-events-none z-[900]"
             style={{
               top: '48px',
-              background: 'rgba(255,255,255,0.86)',
-              backdropFilter: 'blur(8px)',
-              WebkitBackdropFilter: 'blur(8px)',
+              background: 'rgba(255,255,255,0.95)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
             }}
           />
         </>
@@ -388,18 +446,18 @@ export function StoreHeader() {
         onMouseLeave={scheduleDesktopMenuClose}
         data-apple-section
       >
-        <div style={{ background: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
+        <div style={{ background: '#ffffff', borderBottom: '1px solid #000000' }}>
           <div className="max-w-[1200px] mx-auto px-10 py-10 grid grid-cols-3 gap-10">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: 'rgba(0,0,0,0.5)' }}>Shop</p>
+              <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: '#666666' }}>Shop</p>
               <div className="mt-5 space-y-3">
                 {STORE_CATEGORIES.map(cat => (
                   <Link
                     key={cat.value}
                     href={cat.href}
                     onClick={() => setDesktopMenuOpen(false)}
-                    className="block text-2xl font-medium tracking-tight transition-colors"
-                    style={{ color: 'rgba(0,0,0,0.9)' }}
+                    className="block text-2xl font-medium tracking-tight transition-colors hover:bg-neutral-100 px-2 py-1 rounded"
+                    style={{ color: '#000000' }}
                   >
                     {cat.label}
                   </Link>
@@ -408,15 +466,15 @@ export function StoreHeader() {
             </div>
 
             <div>
-              <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: 'rgba(0,0,0,0.5)' }}>Quick Links</p>
+              <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: '#666666' }}>Quick Links</p>
               <div className="mt-5 space-y-3">
                 <button
                   onClick={() => {
                     setDesktopMenuOpen(false);
                     setAffiliateModalOpen(true);
                   }}
-                  className="block text-left text-2xl font-medium tracking-tight transition-colors"
-                  style={{ color: 'rgba(0,0,0,0.9)' }}
+                  className="block text-left text-2xl font-medium tracking-tight transition-colors hover:bg-neutral-100 px-2 py-1 rounded w-full"
+                  style={{ color: '#000000' }}
                 >
                   Affiliates
                 </button>
@@ -425,18 +483,26 @@ export function StoreHeader() {
                     setDesktopMenuOpen(false);
                     openProductsModal();
                   }}
-                  className="block text-left text-2xl font-medium tracking-tight transition-colors"
-                  style={{ color: 'rgba(0,0,0,0.9)' }}
+                  className="block text-left text-2xl font-medium tracking-tight transition-colors hover:bg-neutral-100 px-2 py-1 rounded w-full"
+                  style={{ color: '#000000' }}
                 >
                   Products
                 </button>
+                <Link
+                  href="/games"
+                  onClick={() => setDesktopMenuOpen(false)}
+                  className="block text-left text-2xl font-medium tracking-tight transition-colors hover:bg-neutral-100 px-2 py-1 rounded"
+                  style={{ color: '#000000' }}
+                >
+                  Games
+                </Link>
                 <button
                   onClick={() => {
                     setDesktopMenuOpen(false);
                     setFaqModalOpen(true);
                   }}
-                  className="block text-left text-2xl font-medium tracking-tight transition-colors"
-                  style={{ color: 'rgba(0,0,0,0.9)' }}
+                  className="block text-left text-2xl font-medium tracking-tight transition-colors hover:bg-neutral-100 px-2 py-1 rounded w-full"
+                  style={{ color: '#000000' }}
                 >
                   FAQ
                 </button>
@@ -446,8 +512,8 @@ export function StoreHeader() {
                       setDesktopMenuOpen(false);
                       router.push('/store/account');
                     }}
-                    className="block text-left text-2xl font-medium tracking-tight transition-colors"
-                    style={{ color: 'rgba(0,0,0,0.9)' }}
+                    className="block text-left text-2xl font-medium tracking-tight transition-colors hover:bg-neutral-100 px-2 py-1 rounded w-full"
+                    style={{ color: '#000000' }}
                   >
                     Account
                   </button>
@@ -457,8 +523,8 @@ export function StoreHeader() {
                       setDesktopMenuOpen(false);
                       startPagemodeLogin();
                     }}
-                    className="block text-left text-2xl font-medium tracking-tight transition-colors"
-                    style={{ color: 'rgba(0,0,0,0.9)' }}
+                    className="block text-left text-2xl font-medium tracking-tight transition-colors hover:bg-neutral-100 px-2 py-1 rounded w-full"
+                    style={{ color: '#000000' }}
                   >
                     Sign In
                   </button>
@@ -466,8 +532,8 @@ export function StoreHeader() {
                 <Link
                   href="/"
                   onClick={() => setDesktopMenuOpen(false)}
-                  className="block text-left text-2xl font-medium tracking-tight transition-colors"
-                  style={{ color: 'rgba(0,0,0,0.9)' }}
+                  className="block text-left text-2xl font-medium tracking-tight transition-colors hover:bg-neutral-100 px-2 py-1 rounded"
+                  style={{ color: '#000000' }}
                 >
                   Back to Home
                 </Link>
@@ -475,7 +541,7 @@ export function StoreHeader() {
             </div>
 
             <div>
-              <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: 'rgba(0,0,0,0.5)' }}>Preferences</p>
+              <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: '#666666' }}>Preferences</p>
               <div className="mt-5 space-y-3">
                 <div className="max-w-[260px]">
                   <LanguageToggle
@@ -493,8 +559,8 @@ export function StoreHeader() {
                       toggleThemePicker();
                       setDesktopMenuOpen(false);
                     }}
-                    className="block text-left text-lg font-medium tracking-tight transition-colors"
-                    style={{ color: 'rgba(0,0,0,0.85)' }}
+                    className="block text-left text-lg font-medium tracking-tight transition-colors hover:bg-neutral-100 px-2 py-1 rounded w-full"
+                    style={{ color: '#000000' }}
                   >
                     Theme Picker
                   </button>
@@ -504,8 +570,8 @@ export function StoreHeader() {
                     toggleUltimateHub();
                     setDesktopMenuOpen(false);
                   }}
-                  className="block text-left text-lg font-medium tracking-tight transition-colors"
-                  style={{ color: showUltimateHub ? 'rgb(0,0,0)' : 'rgba(0,0,0,0.85)' }}
+                  className="block text-left text-lg font-medium tracking-tight transition-colors hover:bg-neutral-100 px-2 py-1 rounded w-full"
+                  style={{ color: '#000000', fontWeight: showUltimateHub ? 600 : 500 }}
                 >
                   Ultimate Hub {showUltimateHub ? 'On' : 'Off'}
                 </button>
@@ -515,8 +581,8 @@ export function StoreHeader() {
                       setDesktopMenuOpen(false);
                       setAdminModalOpen(true);
                     }}
-                    className="block text-left text-lg font-medium tracking-tight transition-colors"
-                    style={{ color: 'rgba(0,0,0,0.85)' }}
+                    className="block text-left text-lg font-medium tracking-tight transition-colors hover:bg-neutral-100 px-2 py-1 rounded w-full"
+                    style={{ color: '#000000' }}
                   >
                     Admin Panel
                   </button>
@@ -526,6 +592,203 @@ export function StoreHeader() {
           </div>
         </div>
       </div>
+
+      {/* Manual Dropdown - Inline on Games Pages */}
+      {isCasinoPage && manualDropdownOpen && (
+        <>
+          {/* Backdrop - click to close */}
+          <div
+            className="fixed inset-0 hidden lg:block z-[899]"
+            onClick={() => setManualDropdownOpen(false)}
+          />
+          <div
+            className="fixed left-0 right-0 bottom-0 hidden lg:block pointer-events-none z-[900]"
+            style={{
+              top: '48px',
+              background: 'rgba(255,255,255,0.95)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+            }}
+          />
+        </>
+      )}
+
+      {isCasinoPage && (
+        <>
+          {/* Desktop Manual Dropdown */}
+          <div
+            className={`fixed left-0 right-0 z-[950] hidden lg:block transition-opacity ${manualDropdownOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+            style={{
+              top: '48px',
+              transform: manualDropdownOpen ? 'translateY(0)' : 'translateY(-4px)',
+              transition: 'opacity 150ms ease-in-out, transform 180ms ease-in-out',
+              willChange: 'opacity, transform',
+            }}
+            data-apple-section
+          >
+            <div style={{ background: '#ffffff', borderBottom: '1px solid #000000' }}>
+              <div className="max-w-[1200px] mx-auto px-10 py-10 grid grid-cols-3 gap-10">
+                {/* How to Play */}
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: '#666666' }}>How to Play</p>
+                  <div className="mt-5 space-y-2 text-sm" style={{ color: '#000000' }}>
+                    <p className="flex items-start gap-2">
+                      <span className="font-bold">•</span>
+                      <span>Browse available demo games</span>
+                    </p>
+                    <p className="flex items-start gap-2">
+                      <span className="font-bold">•</span>
+                      <span>Click any game to launch</span>
+                    </p>
+                    <p className="flex items-start gap-2">
+                      <span className="font-bold">•</span>
+                      <span>Start with virtual play money</span>
+                    </p>
+                    <p className="flex items-start gap-2">
+                      <span className="font-bold">•</span>
+                      <span>No account required to play</span>
+                    </p>
+                    <p className="flex items-start gap-2">
+                      <span className="font-bold">•</span>
+                      <span>Use browser back to exit</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Important Notice */}
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: '#666666' }}>Important Notice</p>
+                  <div className="mt-5 space-y-3">
+                    <div className="p-3 border border-black rounded-lg">
+                      <p className="font-bold text-sm mb-1" style={{ color: '#000000' }}>Demo Only</p>
+                      <p className="text-xs" style={{ color: '#666666' }}>Virtual play money with no real value. This is NOT real gambling.</p>
+                    </div>
+                    <div className="p-3 border border-black rounded-lg">
+                      <p className="font-bold text-sm mb-1" style={{ color: '#000000' }}>18+ Only</p>
+                      <p className="text-xs" style={{ color: '#666666' }}>Must be 18+ years old to access these entertainment games.</p>
+                    </div>
+                    <div className="p-3 border border-black rounded-lg">
+                      <p className="font-bold text-sm mb-1" style={{ color: '#000000' }}>Play Responsibly</p>
+                      <p className="text-xs" style={{ color: '#666666' }}>Take breaks and remember this is just entertainment.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick Links */}
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: '#666666' }}>Support & Links</p>
+                  <div className="mt-5 space-y-3">
+                    <p className="text-sm" style={{ color: '#000000' }}>Your donations help us obtain gaming licenses and keep games free.</p>
+                    <Link
+                      href="/community"
+                      onClick={() => setManualDropdownOpen(false)}
+                      className="block text-lg font-medium tracking-tight transition-colors hover:text-white hover:bg-black px-2 py-1 rounded"
+                      style={{ color: '#000000' }}
+                    >
+                      → Community Page
+                    </Link>
+                    <Link
+                      href="/"
+                      onClick={() => setManualDropdownOpen(false)}
+                      className="block text-lg font-medium tracking-tight transition-colors hover:text-white hover:bg-black px-2 py-1 rounded"
+                      style={{ color: '#000000' }}
+                    >
+                      → Back to Main Site
+                    </Link>
+                    <button
+                      onClick={() => setManualDropdownOpen(false)}
+                      className="block text-left text-lg font-medium tracking-tight transition-colors hover:text-white hover:bg-black px-2 py-1 rounded w-full"
+                      style={{ color: '#000000' }}
+                    >
+                      Close Manual
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Manual Dropdown */}
+          <div
+            className={`fixed left-0 right-0 z-[950] lg:hidden transition-all ${manualDropdownOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+            style={{
+              top: '48px',
+              transform: manualDropdownOpen ? 'translateY(0)' : 'translateY(-8px)',
+              transition: 'opacity 150ms ease-in-out, transform 180ms ease-in-out',
+              willChange: 'opacity, transform',
+            }}
+          >
+            <div style={{ background: '#ffffff', borderBottom: '1px solid #000000' }}>
+              <div className="px-6 py-6 space-y-6">
+                {/* How to Play */}
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.2em] mb-3" style={{ color: '#666666' }}>How to Play</p>
+                  <div className="space-y-2 text-sm" style={{ color: '#000000' }}>
+                    <p className="flex items-start gap-2">
+                      <span className="font-bold">•</span>
+                      <span>Browse available demo games</span>
+                    </p>
+                    <p className="flex items-start gap-2">
+                      <span className="font-bold">•</span>
+                      <span>Click any game to launch</span>
+                    </p>
+                    <p className="flex items-start gap-2">
+                      <span className="font-bold">•</span>
+                      <span>Start with virtual play money</span>
+                    </p>
+                    <p className="flex items-start gap-2">
+                      <span className="font-bold">•</span>
+                      <span>No account required</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Important Notice */}
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.2em] mb-3" style={{ color: '#666666' }}>Important</p>
+                  <div className="space-y-2">
+                    <div className="p-3 border border-black rounded-lg">
+                      <p className="font-bold text-sm mb-1" style={{ color: '#000000' }}>Demo Only</p>
+                      <p className="text-xs" style={{ color: '#666666' }}>Virtual play money with no real value.</p>
+                    </div>
+                    <div className="p-3 border border-black rounded-lg">
+                      <p className="font-bold text-sm mb-1" style={{ color: '#000000' }}>18+ Only</p>
+                      <p className="text-xs" style={{ color: '#666666' }}>Must be 18+ to access.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick Links */}
+                <div>
+                  <Link
+                    href="/community"
+                    onClick={() => setManualDropdownOpen(false)}
+                    className="block text-base font-medium tracking-tight transition-colors hover:text-white hover:bg-black px-3 py-2 rounded mb-2"
+                    style={{ color: '#000000' }}
+                  >
+                    → Community Page
+                  </Link>
+                  <Link
+                    href="/"
+                    onClick={() => setManualDropdownOpen(false)}
+                    className="block text-base font-medium tracking-tight transition-colors hover:text-white hover:bg-black px-3 py-2 rounded mb-2"
+                    style={{ color: '#000000' }}
+                  >
+                    → Back to Main Site
+                  </Link>
+                  <button
+                    onClick={() => setManualDropdownOpen(false)}
+                    className="block text-left w-full text-base font-medium tracking-tight transition-colors hover:text-white hover:bg-black px-3 py-2 rounded"
+                    style={{ color: '#000000' }}
+                  >
+                    Close Manual
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Mobile Menu */}
       <LazyAnimatePresence>
@@ -692,6 +955,14 @@ export function StoreHeader() {
                 >
                   Products
                 </button>
+                <Link
+                  href="/games"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block text-left text-2xl font-medium tracking-tight transition-colors"
+                  style={{ color: 'rgba(0,0,0,0.95)' }}
+                >
+                  Games
+                </Link>
                 <button
                   onClick={() => {
                     setMobileMenuOpen(false);
@@ -728,27 +999,16 @@ export function StoreHeader() {
         )}
       </LazyAnimatePresence>
       
-      {/* All Modals - Same as Main Site Navigation */}
+      {/* All Modals - Rendered globally so they work on every page */}
       
       {/* Products Modal - Rendered once, controlled by context */}
       <ProductsModal />
-      
-      {/* Admin Hub Modal - dev only */}
-      {effectiveAdmin && adminModalOpen && (
-        <div style={{ zIndex: 800 }}>
-          <AdminHubModal
-            isOpen={adminModalOpen}
-            onClose={() => setAdminModalOpen(false)}
-          />
-        </div>
-      )}
       
       {/* Affiliate Modal - Using Lazy System */}
       <LazyAffiliateModal
         isOpen={affiliateModalOpen}
         onClose={() => setAffiliateModalOpen(false)}
       />
-      
       
       {/* FAQ Modal - Using Lazy System */}
       <LazyFaqModal
@@ -765,35 +1025,58 @@ export function StoreHeader() {
       {/* Cart Drawer - Always available wherever StoreHeader is rendered */}
       <CartDrawer />
 
-      {/* DEV ONLY: Admin visibility toggle */}
-      {isDev && isAdmin && (
-        <button
-          onClick={() => setDevAdminEnabled(prev => !prev)}
-          style={{
-            position: 'fixed',
-            bottom: 12,
-            left: 12,
-            zIndex: 9999,
-            padding: '6px 12px',
-            borderRadius: 8,
-            border: '1px solid',
-            borderColor: devAdminEnabled ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.15)',
-            background: devAdminEnabled ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.75)',
-            color: devAdminEnabled ? '#111111' : 'rgba(0,0,0,0.6)',
-            fontSize: 11,
-            fontWeight: 600,
-            cursor: 'pointer',
-            backdropFilter: 'blur(8px)',
-            transition: 'all 0.2s',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-          }}
-          title={devAdminEnabled ? 'Click to view as non-admin' : 'Click to restore admin view'}
-        >
-          <span style={{ fontSize: 13 }}>{devAdminEnabled ? '\ud83d\udee1\ufe0f' : '\ud83d\udc64'}</span>
-          {devAdminEnabled ? 'Admin ON' : 'Admin OFF'}
-        </button>
+      {/* Admin Hub Modal - dev only, store/home pages only */}
+      {!isCasinoPage && effectiveAdmin && adminModalOpen && (
+        <div style={{ zIndex: 800 }}>
+          <AdminHubModal
+            isOpen={adminModalOpen}
+            onClose={() => setAdminModalOpen(false)}
+          />
+        </div>
+      )}
+
+      {/* Games Manual Modal - Only for casino pages */}
+      {isCasinoPage && (
+        <GamesManualModal
+          isOpen={gamesManualOpen}
+          onClose={() => setGamesManualOpen(false)}
+        />
+      )}
+
+      {/* Modals available everywhere */}
+      {!isCasinoPage && (
+        <>
+          {/* DEV ONLY: Admin visibility toggle */}
+          {isDev && isAdmin && (
+            <button
+              onClick={() => setDevAdminEnabled(prev => !prev)}
+              style={{
+                position: 'fixed',
+                bottom: 12,
+                left: 12,
+                zIndex: 9999,
+                padding: '6px 12px',
+                borderRadius: 8,
+                border: '1px solid',
+                borderColor: devAdminEnabled ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.15)',
+                background: devAdminEnabled ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.75)',
+                color: devAdminEnabled ? '#111111' : 'rgba(0,0,0,0.6)',
+                fontSize: 11,
+                fontWeight: 600,
+                cursor: 'pointer',
+                backdropFilter: 'blur(8px)',
+                transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+              title={devAdminEnabled ? 'Click to view as non-admin' : 'Click to restore admin view'}
+            >
+              <span style={{ fontSize: 13 }}>{devAdminEnabled ? '\ud83d\udee1\ufe0f' : '\ud83d\udc64'}</span>
+              {devAdminEnabled ? 'Admin ON' : 'Admin OFF'}
+            </button>
+          )}
+        </>
       )}
     </>
   );

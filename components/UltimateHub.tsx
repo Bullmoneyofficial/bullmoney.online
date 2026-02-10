@@ -7730,11 +7730,24 @@ export const UnifiedFpsPill = memo(({
     document.head.appendChild(styleEl);
     
     // Remove the style after overlay fades (restore animations)
-    setTimeout(() => {
+    // FIXED: Added cleanup safety — if setTimeout fails (unmount/navigation),
+    // a MutationObserver catches it so the dark perf-boost style never persists
+    const cleanupTimeout = setTimeout(() => {
       const el = document.getElementById('bullmoney-perf-boost');
       if (el) el.remove();
       console.log('[BULLMONEY] ✅ Animations restored');
     }, 3000);
+    
+    // Safety: also clean up on any navigation or visibility change
+    const safetyCleanup = () => {
+      clearTimeout(cleanupTimeout);
+      const el = document.getElementById('bullmoney-perf-boost');
+      if (el) el.remove();
+      document.removeEventListener('visibilitychange', safetyCleanup);
+      window.removeEventListener('beforeunload', safetyCleanup);
+    };
+    document.addEventListener('visibilitychange', safetyCleanup);
+    window.addEventListener('beforeunload', safetyCleanup);
     
     // ========================================
     // 2. FORCE GPU MEMORY RELEASE

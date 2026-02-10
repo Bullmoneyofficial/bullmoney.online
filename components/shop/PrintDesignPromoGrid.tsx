@@ -13,7 +13,7 @@ import { SAMPLE_PRINT_PRODUCTS, type PrintProduct } from './PrintProductsSection
 import { useCartStore } from '@/stores/cart-store';
 import type { ProductWithDetails, Variant } from '@/types/store';
 
-const StoreFooter = dynamic(() => import('@/components/shop/StoreFooter'), { ssr: false });
+const FooterComponent = dynamic(() => import('@/components/Mainpage/footer').then((mod) => ({ default: mod.Footer })), { ssr: false });
 
 /* ─────── Animation Type System ─────── */
 type GridAnimation =
@@ -370,7 +370,9 @@ function PromoQuickView({ product, onClose }: PromoQuickViewProps) {
       </div>
 
       {/* Store Footer */}
-      <StoreFooter />
+      <div className="bg-white" style={{ backgroundColor: 'rgb(255,255,255)', filter: 'invert(1) hue-rotate(180deg)' }}>
+        <FooterComponent />
+      </div>
     </div>,
     document.body
   );

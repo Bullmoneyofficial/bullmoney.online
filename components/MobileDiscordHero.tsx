@@ -134,7 +134,7 @@ function getCachedSplineScene(scene: string): string {
     const blob = new Blob([buffer], { type: 'application/octet-stream' });
     return URL.createObjectURL(blob);
   }
-  return ''; // Not cached — must be downloaded first
+  return scene; // Not cached — fall back to direct URL so Spline still loads
 }
 
 // Check if scene is cached (for instant load detection)
@@ -2025,7 +2025,7 @@ const SplineBackground = memo(function SplineBackground({ grayscale = true, scen
         zIndex: 0,
         touchAction: 'pan-y', // Allow vertical scrolling
         backgroundColor: '#000',
-        pointerEvents: 'none', // Don't block scroll on mobile
+        pointerEvents: 'auto', // Allow Spline to initialize — canvas needs events
         WebkitOverflowScrolling: 'touch', // Smooth scroll on iOS
       }}
     >
@@ -2079,10 +2079,9 @@ const SplineBackground = memo(function SplineBackground({ grayscale = true, scen
                 height: '100%',
                 display: 'block',
                 opacity: isLoaded ? 1 : 0.6,
-                transition: 'opacity 400ms ease-out',
                 filter: grayscale ? 'grayscale(100%) saturate(0) contrast(1.1)' : 'none',
                 WebkitFilter: grayscale ? 'grayscale(100%) saturate(0) contrast(1.1)' : 'none',
-                pointerEvents: 'none', // Don't block touch scroll on mobile
+                pointerEvents: 'auto', // Spline needs canvas events to initialize WebGL
                 zIndex: 1,
                 touchAction: 'pan-y',
                 transition: 'opacity 400ms ease-out, filter 300ms ease-out',

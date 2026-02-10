@@ -956,9 +956,6 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
                 </motion.div>
               )}
             </motion.div>
-            
-            {/* Dev FPS Counter in screensaver */}
-            <FPSCounter show={process.env.NODE_ENV === 'development'} />
           </motion.div>
         )}
       </AnimatePresence>

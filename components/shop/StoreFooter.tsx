@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { ChevronUp, ChevronDown } from 'lucide-react';
-import { useFaqModalUI, useDisclaimerModalUI } from '@/contexts/UIStateContext';
+import { useFaqModalUI, useDisclaimerModalUI, useProductsModalUI, useThemeSelectorModalUI } from '@/contexts/UIStateContext';
 
 // Lazy load modals
 const LazyFaqModal = dynamic(() => import('@/components/navbar/LazyModalSystem').then(mod => ({ default: mod.LazyFaqModal })), { ssr: false });
@@ -20,10 +20,12 @@ const FOOTER_GROUPS = [
     title: 'Shop and Learn',
     links: [
       { label: 'Store', href: '/store' },
+      { label: 'Games', href: '/games' },
       { label: 'Apparel', href: '/store?category=apparel' },
       { label: 'Accessories', href: '/store?category=accessories' },
       { label: 'Tech and Gear', href: '/store?category=tech-gear' },
       { label: 'Drinkware', href: '/store?category=drinkware' },
+      { label: 'Limited Edition', href: '/store?category=limited-edition' },
     ],
   },
   {
@@ -31,16 +33,17 @@ const FOOTER_GROUPS = [
     links: [
       { label: 'Manage Your Account', href: '/store/account' },
       { label: 'Order Status', href: '/store/account' },
-      { label: 'Saved Items', href: '/store' },
+      { label: 'Gift Cards', href: '/store/gift-cards' },
     ],
   },
   {
-    title: 'Store Services',
+    title: 'Quick Links',
     links: [
-      { label: 'Shipping and Delivery', href: '/store' },
-      { label: 'Returns and Refunds', href: '/store' },
-      { label: 'Gift Cards', href: '/store/gift-cards' },
+      { label: 'Products', modal: 'products', href: '#' },
       { label: 'FAQ', modal: 'faq', href: '#' },
+      { label: 'Affiliates', href: '/recruit' },
+      { label: 'Themes', modal: 'themes', href: '#' },
+      { label: 'Hub', modal: 'hub', href: '#' },
     ],
   },
   {
@@ -48,6 +51,7 @@ const FOOTER_GROUPS = [
     links: [
       { label: 'Affiliate Program', href: '/recruit' },
       { label: 'Partnerships', href: '/community' },
+      { label: 'VIP', href: '/VIP' },
     ],
   },
   {
@@ -55,7 +59,7 @@ const FOOTER_GROUPS = [
     links: [
       { label: 'Community', href: '/community' },
       { label: 'About Us', href: '/about' },
-      { label: 'Contact', href: '/community' },
+      { label: 'Trading Showcase', href: '/trading-showcase' },
       { label: 'Legal', modal: 'legal', href: '#' },
     ],
   },
@@ -69,6 +73,8 @@ export function StoreFooter({ collapsed: initialCollapsed = true }: { collapsed?
   
   const { setIsOpen: setFaqOpen } = useFaqModalUI();
   const { setIsOpen: setDisclaimerOpen } = useDisclaimerModalUI();
+  const { open: openProductsModal } = useProductsModalUI();
+  const { setIsOpen: setThemePickerModalOpen } = useThemeSelectorModalUI();
 
   const handleLinkClick = (link: { label: string; href?: string; modal?: string }) => {
     if (link.modal === 'faq') {
@@ -77,6 +83,20 @@ export function StoreFooter({ collapsed: initialCollapsed = true }: { collapsed?
     } else if (link.modal === 'legal') {
       setLegalModalOpen(true);
       setDisclaimerOpen(true);
+    } else if (link.modal === 'products') {
+      openProductsModal();
+    } else if (link.modal === 'themes') {
+      const current = localStorage.getItem('store_show_theme_picker') === 'true';
+      const newValue = !current;
+      localStorage.setItem('store_show_theme_picker', String(newValue));
+      setThemePickerModalOpen(newValue);
+      window.dispatchEvent(new Event('store_theme_picker_toggle'));
+    } else if (link.modal === 'hub') {
+      const current = localStorage.getItem('store_show_ultimate_hub') === 'true';
+      const newValue = !current;
+      localStorage.setItem('store_show_ultimate_hub', String(newValue));
+      window.dispatchEvent(new CustomEvent('store_ultimate_hub_toggle', { detail: newValue }));
+      window.dispatchEvent(new Event('store_ultimate_hub_toggle'));
     }
   };
 

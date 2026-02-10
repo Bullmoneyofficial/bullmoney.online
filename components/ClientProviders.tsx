@@ -200,7 +200,7 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
   // ==================================================================
   if (isStorePage) {
     return (
-      <PerformanceProvider showFPS={true}>
+      <PerformanceProvider showFPS={false}>
         <ErrorBoundary>
           <MobilePerformanceProvider>
             <SoundProvider enabled={!masterMuted} volume={0.4}>
@@ -234,7 +234,7 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
   }
 
   return (
-    <PerformanceProvider showFPS={true}>
+    <PerformanceProvider showFPS={false}>
       <ErrorBoundary>
         <MobilePerformanceProvider>
           <SoundProvider enabled={!masterMuted} volume={0.4}>

@@ -73,7 +73,7 @@ type LoginResult = { success: boolean; message?: string };
 type ShopContextValue = {
   state: ShopState;
 
-  login: (username: string, password: string) => LoginResult;
+  login: (username: string, password: string) => Promise<LoginResult>;
   logout: () => void;
 
   refreshAll: () => Promise<void>;
@@ -92,8 +92,9 @@ type ShopContextValue = {
   deleteCategory: (id: string) => Promise<void>;
 };
 
+// Admin credentials are validated server-side via /api/admin/login
+// ADMIN_EMAIL is still public (used for UI checks like showing admin buttons)
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
-const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
 
 type Action =
   | { type: "LOGIN" }
@@ -202,22 +203,25 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     refreshAll();
   }, []);
 
-  const login = (username: string, password: string): LoginResult => {
+  const login = async (username: string, password: string): Promise<LoginResult> => {
     if (!username || !password) {
       return { success: false, message: "Please fill in all fields." };
     }
-    if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
-      return { success: false, message: "Admin credentials are not configured." };
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: username, password }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        dispatch({ type: "LOGIN" });
+        return { success: true };
+      }
+      return { success: false, message: data.message || "Invalid credentials." };
+    } catch {
+      return { success: false, message: "Login request failed." };
     }
-
-    const normalizedUsername = username.trim().toLowerCase();
-    const normalizedAdminEmail = ADMIN_EMAIL.trim().toLowerCase();
-
-    if (normalizedUsername === normalizedAdminEmail && password === ADMIN_PASSWORD) {
-      dispatch({ type: "LOGIN" });
-      return { success: true };
-    }
-    return { success: false, message: "Invalid credentials." };
   };
 
   const logout = () => dispatch({ type: "LOGOUT" });

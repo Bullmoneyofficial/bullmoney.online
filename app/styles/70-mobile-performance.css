@@ -116,6 +116,28 @@ html.is-low-end [class*="backdrop-blur"] {
   background-color: rgba(0, 0, 0, 0.85) !important;
 }
 
+/* Ensure text stays white on low-end devices (prevent black-on-black) */
+html.is-low-end nav,
+html.is-low-end header,
+html.is-low-end footer,
+html.is-low-end .navbar,
+html.is-low-end .nav,
+html.is-low-end .hub,
+html.is-low-end .ultimate-hub,
+html.is-low-end .store-layout header,
+html.is-low-end .modal,
+html.is-low-end [role="dialog"] {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+html.is-low-end nav a,
+html.is-low-end header a,
+html.is-low-end footer a,
+html.is-low-end .navbar a,
+html.is-low-end .hub a,
+html.is-low-end .ultimate-hub a {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
 /* Disable all animations on low-end devices */
 html.is-low-end *,
 html.is-low-end *::before,
@@ -160,6 +182,28 @@ html.is-in-app-browser [class*="backdrop-blur"] {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   background-color: rgba(0, 0, 0, 0.9) !important;
+}
+
+/* Ensure text stays white in in-app browsers (prevent black-on-black) */
+html.is-in-app-browser nav,
+html.is-in-app-browser header,
+html.is-in-app-browser footer,
+html.is-in-app-browser .navbar,
+html.is-in-app-browser .nav,
+html.is-in-app-browser .hub,
+html.is-in-app-browser .ultimate-hub,
+html.is-in-app-browser .store-layout header,
+html.is-in-app-browser .modal,
+html.is-in-app-browser [role="dialog"] {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+html.is-in-app-browser nav a,
+html.is-in-app-browser header a,
+html.is-in-app-browser footer a,
+html.is-in-app-browser .navbar a,
+html.is-in-app-browser .hub a,
+html.is-in-app-browser .ultimate-hub a {
+  color: rgba(255, 255, 255, 0.85) !important;
 }
 
 html.is-in-app-browser *,
@@ -312,6 +356,34 @@ html[data-performance-tier="medium"] * {
 /* ============================================================================
    MODAL-SPECIFIC OPTIMIZATIONS
    ============================================================================ */
+
+/* Mobile & in-app browsers: force portal modals above all UI */
+html.is-mobile body > .fixed.inset-0[class*="bg-black"],
+html.is-mobile body > .fixed.inset-0[class*="backdrop"],
+html.is-in-app-browser body > .fixed.inset-0[class*="bg-black"],
+html.is-in-app-browser body > .fixed.inset-0[class*="backdrop"] {
+  z-index: 2147483639 !important;
+}
+
+html.is-mobile body > .fixed.inset-0.flex.items-center.justify-center:not([class*="bg-black"]):not([class*="backdrop"]),
+html.is-in-app-browser body > .fixed.inset-0.flex.items-center.justify-center:not([class*="bg-black"]):not([class*="backdrop"]) {
+  z-index: 2147483645 !important;
+}
+
+html.is-mobile [data-radix-portal],
+html.is-in-app-browser [data-radix-portal] {
+  z-index: 2147483645 !important;
+}
+
+html.is-mobile [data-radix-portal] [data-radix-dialog-overlay],
+html.is-in-app-browser [data-radix-portal] [data-radix-dialog-overlay] {
+  z-index: 2147483639 !important;
+}
+
+html.is-mobile [data-radix-portal] [data-radix-dialog-content],
+html.is-in-app-browser [data-radix-portal] [data-radix-dialog-content] {
+  z-index: 2147483645 !important;
+}
 
 /* Modal backdrop - use opacity only, no blur on mobile */
 html.is-mobile .modal-backdrop,

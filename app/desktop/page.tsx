@@ -481,6 +481,7 @@ function DesktopHomeContent() {
           nav, footer, header {
             opacity: 0 !important;
             pointer-events: none !important;
+            position: fixed !important;
           }
         `}</style>
         <div className="fixed inset-0 z-[99999] bg-black flex items-center justify-center">

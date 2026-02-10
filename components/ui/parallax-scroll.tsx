@@ -1,7 +1,7 @@
 "use client";
-import { useScroll, useTransform } from "motion/react";
+import { useScroll, useTransform } from 'framer-motion';
 import { useRef } from "react";
-import { motion } from "motion/react";
+import { motion } from 'framer-motion';
 import { cn } from "@/lib/utils";
 
 export const ParallaxScroll = ({

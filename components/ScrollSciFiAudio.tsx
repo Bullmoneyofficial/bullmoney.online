@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
 
-const SCROLL_IDLE_MS = 140;
+const SCROLL_IDLE_MS = 150;
 const BASE_GAIN = 0.06;
 const MIN_SCROLL_DELTA = 4;
 const SPEED_SMOOTHING = 0.2;
@@ -22,11 +22,9 @@ const createNoiseBuffer = (ctx: AudioContext) => {
   const length = Math.floor(ctx.sampleRate * duration);
   const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
   const data = buffer.getChannelData(0);
-
   for (let i = 0; i < length; i += 1) {
     data[i] = (Math.random() * 2 - 1) * 0.35;
   }
-
   return buffer;
 };
 
@@ -66,6 +64,13 @@ const buildNodes = (ctx: AudioContext): ScrollNodes => {
 
 export function ScrollSciFiAudio() {
   const { sfxVolume, masterMuted } = useAudioSettings();
+
+  // Keep reactive values in refs so the main effect never re-runs
+  const sfxRef = useRef(sfxVolume);
+  const mutedRef = useRef(masterMuted);
+  sfxRef.current = sfxVolume;
+  mutedRef.current = masterMuted;
+
   const contextRef = useRef<AudioContext | null>(null);
   const nodesRef = useRef<ScrollNodes | null>(null);
   const stopTimerRef = useRef<number | null>(null);
@@ -74,92 +79,8 @@ export function ScrollSciFiAudio() {
   const rafIdRef = useRef<number | null>(null);
   const lastScrollTimeRef = useRef<number>(0);
   const unlockedRef = useRef(false);
-  const isActiveRef = useRef(false);
 
-  const stopSound = useCallback(() => {
-    const ctx = contextRef.current;
-    const nodes = nodesRef.current;
-    if (!ctx || !nodes) return;
-
-    const now = ctx.currentTime;
-    nodes.gain.gain.cancelScheduledValues(now);
-    nodes.gain.gain.linearRampToValueAtTime(0, now + 0.08);
-
-    const stopAt = now + 0.12;
-    try {
-      nodes.osc.stop(stopAt);
-      nodes.noise.stop(stopAt);
-    } catch {
-      // ignore
-    }
-
-    nodesRef.current = null;
-    isActiveRef.current = false;
-  }, []);
-
-  const ensureAudio = useCallback(async () => {
-    if (typeof window === "undefined") return null;
-
-    if (!contextRef.current) {
-      const Ctx = window.AudioContext || (window as any).webkitAudioContext;
-      if (!Ctx) return null;
-      contextRef.current = new Ctx();
-    }
-
-    const ctx = contextRef.current;
-    if (ctx.state === "suspended") {
-      try {
-        await ctx.resume();
-      } catch {
-        return null;
-      }
-    }
-
-    return ctx;
-  }, []);
-
-  const unlockAudio = useCallback(() => {
-    if (unlockedRef.current) return;
-    ensureAudio().then((ctx) => {
-      if (ctx) unlockedRef.current = true;
-    });
-  }, [ensureAudio]);
-
-  const startSound = useCallback(async () => {
-    const ctx = await ensureAudio();
-    if (!ctx) return null;
-
-    if (!nodesRef.current) {
-      nodesRef.current = buildNodes(ctx);
-      nodesRef.current.osc.start();
-      nodesRef.current.noise.start();
-    }
-
-    isActiveRef.current = true;
-    return nodesRef.current;
-  }, [ensureAudio]);
-
-  const updateSound = useCallback(async (speed: number) => {
-    if (masterMuted || sfxVolume <= 0) return;
-
-    const ctx = await ensureAudio();
-    if (!ctx) return;
-
-    const nodes = (await startSound()) ?? nodesRef.current;
-    if (!nodes) return;
-
-    const now = ctx.currentTime;
-    const base = BASE_GAIN * Math.min(1, Math.max(0, sfxVolume));
-    const targetGain = Math.min(0.12, base * (0.25 + speed * 0.85));
-
-    nodes.gain.gain.cancelScheduledValues(now);
-    nodes.gain.gain.linearRampToValueAtTime(targetGain, now + 0.05);
-
-    nodes.osc.frequency.setTargetAtTime(140 + speed * 220, now, 0.03);
-    nodes.filter.frequency.setTargetAtTime(620 + speed * 1200, now, 0.04);
-    nodes.noiseGain.gain.setTargetAtTime(0.08 + speed * 0.14, now, 0.06);
-  }, [masterMuted, sfxVolume, ensureAudio, startSound]);
-
+  // Stable effect — runs once, reads refs for reactive values
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
 
@@ -168,6 +89,76 @@ export function ScrollSciFiAudio() {
 
     lastScrollYRef.current = window.scrollY;
     lastScrollTimeRef.current = performance.now();
+
+    const ensureCtx = (): AudioContext | null => {
+      if (!contextRef.current) {
+        const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+        if (!Ctx) return null;
+        contextRef.current = new Ctx();
+      }
+      const ctx = contextRef.current;
+      if (ctx.state === "suspended") {
+        ctx.resume().catch(() => {});
+      }
+      return ctx;
+    };
+
+    const stopSound = () => {
+      const ctx = contextRef.current;
+      const nodes = nodesRef.current;
+      if (!ctx || !nodes) return;
+
+      const now = ctx.currentTime;
+      try {
+        nodes.gain.gain.cancelScheduledValues(now);
+        nodes.gain.gain.setValueAtTime(nodes.gain.gain.value, now);
+        nodes.gain.gain.linearRampToValueAtTime(0, now + 0.08);
+      } catch { /* ignore */ }
+
+      setTimeout(() => {
+        try { nodes.osc.stop(); } catch { /* */ }
+        try { nodes.noise.stop(); } catch { /* */ }
+        try { nodes.gain.disconnect(); } catch { /* */ }
+      }, 120);
+
+      nodesRef.current = null;
+    };
+
+    const startSound = (): ScrollNodes | null => {
+      const ctx = ensureCtx();
+      if (!ctx) return null;
+
+      if (!nodesRef.current) {
+        const nodes = buildNodes(ctx);
+        nodes.osc.start();
+        nodes.noise.start();
+        nodesRef.current = nodes;
+      }
+
+      return nodesRef.current;
+    };
+
+    const updateSound = (speed: number) => {
+      if (mutedRef.current || sfxRef.current <= 0) return;
+
+      const nodes = startSound();
+      if (!nodes) return;
+      const ctx = contextRef.current;
+      if (!ctx) return;
+
+      const now = ctx.currentTime;
+      const base = BASE_GAIN * Math.min(1, Math.max(0, sfxRef.current));
+      const targetGain = Math.min(0.12, base * (0.25 + speed * 0.85));
+
+      try {
+        nodes.gain.gain.cancelScheduledValues(now);
+        nodes.gain.gain.setValueAtTime(nodes.gain.gain.value, now);
+        nodes.gain.gain.linearRampToValueAtTime(targetGain, now + 0.05);
+        nodes.osc.frequency.setTargetAtTime(140 + speed * 220, now, 0.03);
+        nodes.filter.frequency.setTargetAtTime(620 + speed * 1200, now, 0.04);
+        nodes.noiseGain.gain.setTargetAtTime(0.08 + speed * 0.14, now, 0.06);
+      } catch { /* node disconnected */ }
+    };
 
     const tick = () => {
       rafIdRef.current = null;
@@ -179,16 +170,14 @@ export function ScrollSciFiAudio() {
       lastScrollTimeRef.current = now;
 
       if (delta < MIN_SCROLL_DELTA) return;
-      if (masterMuted || sfxVolume <= 0) return;
+      if (mutedRef.current || sfxRef.current <= 0) return;
 
       const rawSpeed = Math.min(1, (delta / elapsed) * 18);
       const speed = lastSpeedRef.current + (rawSpeed - lastSpeedRef.current) * SPEED_SMOOTHING;
       lastSpeedRef.current = speed;
       updateSound(speed);
 
-      if (stopTimerRef.current) {
-        window.clearTimeout(stopTimerRef.current);
-      }
+      if (stopTimerRef.current) window.clearTimeout(stopTimerRef.current);
       stopTimerRef.current = window.setTimeout(stopSound, SCROLL_IDLE_MS);
     };
 
@@ -201,40 +190,49 @@ export function ScrollSciFiAudio() {
       if (document.hidden) stopSound();
     };
 
-    const unlockEvents: Array<keyof WindowEventMap> = ["pointerdown", "touchstart", "keydown"];
-    unlockEvents.forEach((event) => window.addEventListener(event, unlockAudio, { passive: true }));
+    const unlockAudio = () => {
+      if (unlockedRef.current) return;
+      const ctx = ensureCtx();
+      if (ctx) unlockedRef.current = true;
+    };
 
+    const unlockEvents: Array<keyof WindowEventMap> = ["pointerdown", "touchstart", "keydown"];
+    unlockEvents.forEach((e) => window.addEventListener(e, unlockAudio, { passive: true }));
     window.addEventListener("scroll", handleScroll, { passive: true });
     document.addEventListener("visibilitychange", handleVisibility);
 
     return () => {
-      unlockEvents.forEach((event) => window.removeEventListener(event, unlockAudio));
+      unlockEvents.forEach((e) => window.removeEventListener(e, unlockAudio));
       window.removeEventListener("scroll", handleScroll);
       document.removeEventListener("visibilitychange", handleVisibility);
-      if (stopTimerRef.current) {
-        window.clearTimeout(stopTimerRef.current);
-      }
-      if (rafIdRef.current !== null) {
-        window.cancelAnimationFrame(rafIdRef.current);
-      }
+      if (stopTimerRef.current) window.clearTimeout(stopTimerRef.current);
+      if (rafIdRef.current !== null) window.cancelAnimationFrame(rafIdRef.current);
       stopSound();
       if (contextRef.current && contextRef.current.state !== "closed") {
         contextRef.current.close().catch(() => {});
       }
       contextRef.current = null;
     };
-  }, [masterMuted, sfxVolume, stopSound, updateSound, unlockAudio]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // When muted/volume changes to 0, kill active sound immediately
   useEffect(() => {
     if (masterMuted || sfxVolume <= 0) {
-      stopSound();
-      return;
+      const ctx = contextRef.current;
+      const nodes = nodesRef.current;
+      if (ctx && nodes) {
+        const now = ctx.currentTime;
+        try {
+          nodes.gain.gain.cancelScheduledValues(now);
+          nodes.gain.gain.setValueAtTime(0, now);
+        } catch { /* */ }
+        try { nodes.osc.stop(); } catch { /* */ }
+        try { nodes.noise.stop(); } catch { /* */ }
+        try { nodes.gain.disconnect(); } catch { /* */ }
+        nodesRef.current = null;
+      }
     }
-
-    if (isActiveRef.current) {
-      updateSound(lastSpeedRef.current);
-    }
-  }, [masterMuted, sfxVolume, stopSound, updateSound]);
+  }, [masterMuted, sfxVolume]);
 
   return null;
 }

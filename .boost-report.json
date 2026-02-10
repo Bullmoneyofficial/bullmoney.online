@@ -41,12 +41,7 @@
   },
   "dependencies": {
     "warnings": [],
-    "total_deps": 108
-  },
-  "caching": {
-    "build_id": "3d1c5579e223",
-    "critical_routes": 12,
-    "offline_script": true
+    "total_deps": 132
   },
   "accessibility": {
     "issues": [],
@@ -58,12 +53,13 @@
       "PWA meta tags"
     ]
   },
+  "caching": {
+    "build_id": "bb2fe614bbff",
+    "critical_routes": 12,
+    "offline_script": true
+  },
   "pwa": {
     "issues": []
-  },
-  "cleanup": {
-    "cleaned": 0,
-    "freed_mb": 0
   },
   "nextjs_config": {
     "issues": [],
@@ -83,6 +79,13 @@
       "Server component HMR cache"
     ]
   },
+  "cleanup": {
+    "cleaned": 0,
+    "freed_mb": 0
+  },
+  "gpu_manager": {
+    "gpu_manager_size_kb": 7.4
+  },
   "spline_turbo": {
     "spline_turbo_size_kb": 13.5,
     "quality_tiers": [
@@ -96,14 +99,11 @@
   "inapp_shield": {
     "inapp_shield_size_kb": 8.5
   },
-  "gpu_manager": {
-    "gpu_manager_size_kb": 7.4
-  },
   "crash_prevention": {
     "crash_prevention_size_kb": 10.4
   },
   "memory_guardian": {
-    "memory_guardian_size_kb": 30.4
+    "memory_guardian_size_kb": 32.0
   },
   "build_optimizer": {
     "optimizations": [
@@ -112,7 +112,7 @@
     ],
     "barrel_exports": 0,
     "static_heavy_imports": 0,
-    "dynamic_loaded_components": 295
+    "dynamic_loaded_components": 307
   },
   "fonts": {
     "fonts_found": [],
@@ -240,6 +240,11 @@
         "count": 2
       },
       {
+        "file": "components/studio/ThreeEditor.tsx",
+        "type": "Direct innerHTML assignment",
+        "count": 1
+      },
+      {
         "file": "components/shop/TimelineProductsSection.tsx",
         "type": "dangerouslySetInnerHTML usage",
         "count": 1
@@ -291,7 +296,7 @@
       }
     ],
     "unsafe_patterns": [],
-    "unprotected_api_routes": 40
+    "unprotected_api_routes": 41
   },
   "dead_code": {
     "unused_components": [
@@ -303,7 +308,7 @@
       {
         "file": "components/shop/PrintDesignStudio.tsx",
         "name": "PrintDesignStudio",
-        "size_kb": 153.6
+        "size_kb": 153.8
       },
       {
         "file": "components/MobileDiscordHero.tsx",
@@ -371,6 +376,11 @@
         "size_kb": 60.6
       },
       {
+        "file": "components/studio/DesignStudio.tsx",
+        "name": "DesignStudio",
+        "size_kb": 60.3
+      },
+      {
         "file": "components/ui/world-map.tsx",
         "name": "world-map",
         "size_kb": 58.9
@@ -414,24 +424,17 @@
         "file": "components/Mainpage/PageScenes.tsx",
         "name": "PageScenes",
         "size_kb": 37.9
-      },
-      {
-        "file": "components/ui/SeviceModal.tsx",
-        "name": "SeviceModal",
-        "size_kb": 37.6
       }
     ],
     "orphan_files": [],
     "unused_css_modules": [],
-    "backup_files": 7,
+    "backup_files": 0,
     "empty_files": 0
   },
   "env_vars": {
     "total_vars": 57,
     "missing": [],
-    "insecure": [
-      "NEXT_PUBLIC_ADMIN_PASSWORD"
-    ],
+    "insecure": [],
     "placeholder": [
       "SPOTIFY_CLIENT_ID",
       "SENDGRID_API_KEY",
@@ -441,20 +444,20 @@
     "empty_vars": 2
   },
   "api_routes": {
-    "total_routes": 128,
+    "total_routes": 142,
     "issues": [],
-    "well_formed": 121,
-    "no_try_catch": 7,
+    "well_formed": 124,
+    "no_try_catch": 18,
     "has_rate_limit": 7,
     "has_caching": 16
   },
   "css_audit": {
-    "total_rules": 3643,
-    "duplicates": 782,
+    "total_rules": 3730,
+    "duplicates": 787,
     "files_scanned": 78,
     "issues": [],
-    "important_count": 2098,
-    "total_css_kb": 714.8
+    "important_count": 2113,
+    "total_css_kb": 726.6
   },
   "third_party": {
     "scripts_found": [
@@ -481,43 +484,43 @@
     "network_optimizer_size_kb": 7.7
   },
   "search_index": {
-    "search_index_items": 34,
-    "search_index_size_kb": 8.9
+    "search_index_items": 37,
+    "search_index_size_kb": 9.5
   },
   "boost_loader": {
     "loader_path": "public/scripts/boost-loader.js"
   },
   "meta": {
-    "timestamp": "2026-02-10T03:07:20.609645+00:00",
-    "elapsed_seconds": 3.08,
+    "timestamp": "2026-02-10T17:04:57.316479+00:00",
+    "elapsed_seconds": 2.74,
     "files_generated": 25,
-    "total_size_bytes": 121307,
+    "total_size_bytes": 123079,
     "section_times": {
       "section_1": 0.032,
-      "section_2": 0.025,
-      "section_3": 0.113,
-      "section_7": 0.028,
-      "section_12": 0.043,
-      "section_6": 0.048,
-      "section_9": 0.049,
-      "section_13": 0.067,
-      "section_11": 0.076,
-      "section_8": 0.088,
-      "section_14": 0.041,
-      "section_16": 0.041,
+      "section_2": 0.026,
+      "section_3": 0.112,
+      "section_7": 0.027,
+      "section_12": 0.041,
+      "section_9": 0.048,
+      "section_6": 0.054,
+      "section_13": 0.071,
+      "section_8": 0.086,
+      "section_11": 0.185,
       "section_19": 0.041,
-      "section_17": 0.044,
-      "section_15": 0.094,
-      "section_18": 0.384,
-      "section_22": 0.646,
-      "section_21": 0.76,
-      "section_20": 1.204,
-      "section_25": 0.139,
-      "section_23": 0.192,
-      "section_26": 0.484,
-      "section_24": 0.584,
-      "section_27": 0.045,
-      "section_28": 0.056,
+      "section_14": 0.043,
+      "section_16": 0.043,
+      "section_17": 0.047,
+      "section_15": 0.097,
+      "section_18": 0.37,
+      "section_22": 0.239,
+      "section_21": 0.779,
+      "section_20": 0.826,
+      "section_25": 0.114,
+      "section_23": 0.163,
+      "section_26": 0.431,
+      "section_24": 0.532,
+      "section_27": 0.046,
+      "section_28": 0.055,
       "section_10": 0.026
     }
   }

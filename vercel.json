@@ -1,4 +1,16 @@
 {
+  "rewrites": [
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "bullmoney.shop" }],
+      "destination": "/store"
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "www.bullmoney.shop" }],
+      "destination": "/store"
+    }
+  ],
   "crons": [
     {
       "path": "/api/cron/notifications",

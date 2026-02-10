@@ -192,46 +192,31 @@ html.is-ios.fps-minimal .shimmer-float {
    Forces all expensive effects off to prevent lag
    ================================================================= */
 
-/* FORCE DISABLE ALL BACKDROP BLUR only when explicitly reducing blur */
-html.reduce-blur *,
-html.fps-low *,
-html.fps-minimal *,
-html.low-fps * {
+/* FIXED: Removed global wildcard backdrop-filter:none rules.
+   These were stripping blur from ALL elements (including glass cards/surfaces)
+   without providing fallback backgrounds, causing transparent elements to
+   show the dark body (#050915) underneath — making the UI progressively turn black.
+   Now only targets specific blur utility classes and provides opaque fallbacks. */
+html.reduce-blur [class*="backdrop-blur"],
+html.reduce-blur [class*="backdrop-filter"] {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
 
-/* Remove blur without forcing black backgrounds */
-html.reduce-blur .backdrop-blur,
-html.reduce-blur .backdrop-blur-sm,
-html.reduce-blur .backdrop-blur-md,
-html.reduce-blur .backdrop-blur-lg,
-html.reduce-blur .backdrop-blur-xl,
-html.reduce-blur .backdrop-blur-2xl,
-html.reduce-blur .backdrop-blur-3xl,
-html.fps-low .backdrop-blur,
-html.fps-low .backdrop-blur-sm,
-html.fps-low .backdrop-blur-md,
-html.fps-low .backdrop-blur-lg,
-html.fps-low .backdrop-blur-xl,
-html.fps-low .backdrop-blur-2xl,
-html.fps-low .backdrop-blur-3xl,
-html.fps-minimal .backdrop-blur,
-html.fps-minimal .backdrop-blur-sm,
-html.fps-minimal .backdrop-blur-md,
-html.fps-minimal .backdrop-blur-lg,
-html.fps-minimal .backdrop-blur-xl,
-html.fps-minimal .backdrop-blur-2xl,
-html.fps-minimal .backdrop-blur-3xl,
-html.low-fps .backdrop-blur,
-html.low-fps .backdrop-blur-sm,
-html.low-fps .backdrop-blur-md,
-html.low-fps .backdrop-blur-lg,
-html.low-fps .backdrop-blur-xl,
-html.low-fps .backdrop-blur-2xl,
-html.low-fps .backdrop-blur-3xl {
+/* Remove blur WITH proper opaque fallback backgrounds so glass doesn't turn black */
+html.reduce-blur .glass-effect,
+html.reduce-blur .glassmorphism,
+html.reduce-blur .glass-surface,
+html.reduce-blur .glass-card,
+html.reduce-blur .glass-dark,
+html.reduce-blur .glass-frosted,
+html.reduce-blur .glass-clear,
+html.reduce-blur .glass-premium,
+html.reduce-blur .glass-light {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+  background: rgba(5, 9, 21, 0.85) !important; /* Match body bg instead of pure black */
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 /* DISABLE SPINNING ANIMATIONS - Major GPU hog */
@@ -281,10 +266,17 @@ html.low-fps .backdrop-blur-3xl {
   will-change: auto !important;
 }
 
-/* Pause animations during scroll - CRITICAL for smoothness */
-html.is-scrolling * {
+/* Pause animations during scroll - CRITICAL for smoothness
+   FIXED: Only target known animation classes instead of * wildcard.
+   The wildcard was killing ALL transitions (including layout recalcs)
+   and causing visual jarring when scrolling stops. */
+html.is-scrolling [class*="shimmer"],
+html.is-scrolling [class*="pulse"],
+html.is-scrolling [class*="glow"],
+html.is-scrolling [class*="animate-"],
+html.is-scrolling .aurora,
+html.is-scrolling .particle-container {
   animation-play-state: paused !important;
-  transition: none !important;
 }
 
 /* EXCEPTION: Keep FPS chart animating during scroll */
@@ -307,10 +299,10 @@ canvas {
   contain: layout style paint;
 }
 
-/* Disable Framer Motion hover effects during scroll */
-html.is-scrolling [data-framer-component-type],
-html.is-scrolling [style*="transform"] {
-  transform: none !important;
+/* Disable Framer Motion hover effects during scroll
+   FIXED: Removed transform:none — it was destroying positioned layouts.
+   Only pause transitions to reduce GPU load during scroll. */
+html.is-scrolling [data-framer-component-type] {
   transition: none !important;
 }
 
@@ -324,10 +316,20 @@ html.is-scrolling [data-fps-chart] [style*="transform"] {
    MOBILE PERFORMANCE - Extra aggressive
    ================================================================= */
 @media (max-width: 768px) {
-  /* No blur on mobile ever */
-  * {
+  /* FIXED: Removed wildcard * backdrop-filter:none that was stripping blur
+     from ALL elements on mobile. Now only targets specific blur utilities. */
+  [class*="backdrop-blur"],
+  [class*="backdrop-filter"] {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+  }
+  
+  /* Provide fallback bg for glass elements that lost their blur */
+  .glass-effect,
+  .glassmorphism,
+  .glass-surface,
+  .glass-card {
+    background: rgba(5, 9, 21, 0.88) !important;
   }
   
   /* EXCEPTION: Allow FPS chart on mobile */

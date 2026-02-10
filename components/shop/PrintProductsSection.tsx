@@ -7,7 +7,7 @@ import dynamic from 'next/dynamic';
 import { useCartStore } from '@/stores/cart-store';
 import type { ProductWithDetails, Variant } from '@/types/store';
 
-const StoreFooter = dynamic(() => import('@/components/shop/StoreFooter'), { ssr: false });
+const FooterComponent = dynamic(() => import('@/components/Mainpage/footer').then((mod) => ({ default: mod.Footer })), { ssr: false });
 
 export type PrintProductType = 'poster' | 'banner' | 'wallpaper' | 'canvas' | 'tshirt' | 'cap' | 'hoodie' | 'pants' | 'sticker' | 'business-card' | 'window-design';
 
@@ -216,7 +216,7 @@ function PrintProductsViewer({ product, onClose, onCustomize }: PrintProductsVie
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/70 overflow-y-auto p-3 sm:p-6 md:p-8"
+      className="fixed inset-0 z-[2147483647] flex items-center justify-center bg-black/70 overflow-y-auto p-3 sm:p-6 md:p-8"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -367,12 +367,14 @@ interface PrintProductsSectionProps {
   products: PrintProduct[];
   title?: string;
   subtitle?: string;
+  onOpenStudio?: (opts?: { tab?: 'browse' | 'product' | 'upload' | 'create' | 'orders' | 'designs'; productId?: string; productType?: string }) => void;
 }
 
 export function PrintProductsSection({ 
   products, 
   title = "Custom Print Products",
-  subtitle = "Professional printing with Roland & Mimaki"
+  subtitle = "Professional printing with Roland & Mimaki",
+  onOpenStudio,
 }: PrintProductsSectionProps) {
   const [viewerProduct, setViewerProduct] = useState<PrintProduct | null>(null);
   const [customizeProduct, setCustomizeProduct] = useState<PrintProduct | null>(null);
@@ -383,6 +385,10 @@ export function PrintProductsSection({
   }, []);
 
   const handleCustomize = (product: PrintProduct) => {
+    if (onOpenStudio) {
+      onOpenStudio({ tab: 'product', productId: product.id, productType: product.type });
+      return;
+    }
     setCustomizeProduct(product);
     setViewerProduct(null);
   };
@@ -424,7 +430,7 @@ export function PrintProductsSection({
       {/* Customization Modal - Placeholder for now */}
       {mounted && customizeProduct && createPortal(
         <div
-          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/70 overflow-y-auto p-3 sm:p-6 md:p-8"
+          className="fixed inset-0 z-[2147483647] flex items-center justify-center bg-black/70 overflow-y-auto p-3 sm:p-6 md:p-8"
           onClick={(e) => {
             if (e.target === e.currentTarget) setCustomizeProduct(null);
           }}

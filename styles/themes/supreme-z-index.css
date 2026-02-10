@@ -30,6 +30,15 @@
   --neon-blue-glow-strong: 0 0 30px rgba(var(--accent-rgb, 255, 255, 255), 0.6);
   --neon-blue-glow-intense: 0 0 40px rgba(var(--accent-rgb, 255, 255, 255), 0.8);
   --neon-blue-border: rgba(var(--accent-rgb, 255, 255, 255), 0.6);
+
+  /* ── Global --neon-accent-* aliases (consumed by globals.css header/footer/nav) ──
+     Maps to the --accent-rgb theme system. Without these, header/footer/menu text
+     goes invisible (black-on-black) on low-memory and in-app browsers. */
+  --neon-accent: var(--accent-color, #ffffff);
+  --neon-accent-rgb: var(--accent-rgb, 255, 255, 255);
+  --neon-border: 1px solid rgba(var(--accent-rgb, 255, 255, 255), 0.6);
+  --neon-border-soft: rgba(var(--accent-rgb, 255, 255, 255), 0.3);
+  --neon-glow: 0 0 20px rgba(var(--accent-rgb, 255, 255, 255), 0.4);
 }
 
 /* Theme Selector Modal - Absolute Top Layer */

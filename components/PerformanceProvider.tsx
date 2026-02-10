@@ -128,34 +128,11 @@ function useDesktopFPSOptimizer() {
 
 /**
  * Scroll-aware animation pauser
- * Pauses heavy animations during scroll for better performance
+ * DISABLED: is-scrolling is now managed exclusively by UnifiedPerformanceSystem
+ * to prevent 3 competing togglers from thrashing the class on/off
  */
 function useScrollAwareAnimations() {
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (window.innerWidth < 1024) return; // Desktop only
-    
-    const handleScroll = () => {
-      document.documentElement.classList.add('is-scrolling');
-      
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      
-      timeoutRef.current = setTimeout(() => {
-        document.documentElement.classList.remove('is-scrolling');
-      }, 150);
-    };
-    
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-  }, []);
+  // No-op — UnifiedPerformanceSystem handles is-scrolling
 }
 
 /**

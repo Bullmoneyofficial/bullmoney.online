@@ -22,14 +22,14 @@ const TelegramFeed = dynamic(
 
 export default function CommunityContent() {
   return (
-    <main className="min-h-screen bg-linear-to-b from-zinc-950 via-zinc-900 to-zinc-950 pt-32 pb-20">
+    <main className="min-h-screen bg-black pt-32 pb-20">
       <div className="container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-16">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4">
             Join Our Community
           </h1>
-          <p className="text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto">
+          <p className="text-lg sm:text-xl text-neutral-400 max-w-2xl mx-auto">
             Connect with 10,000+ traders, get real-time market updates, and share trading strategies
           </p>
         </div>
@@ -38,15 +38,15 @@ export default function CommunityContent() {
         <div className="grid grid-cols-3 gap-4 mb-16">
           <div className="bg-white/5 backdrop-blur border border-white/10 rounded-lg p-6 text-center">
             <div className="text-2xl sm:text-3xl font-bold text-white mb-2">10K+</div>
-            <div className="text-sm text-gray-400">Active Members</div>
+            <div className="text-sm text-neutral-400">Active Members</div>
           </div>
           <div className="bg-white/5 backdrop-blur border border-white/10 rounded-lg p-6 text-center">
             <div className="text-2xl sm:text-3xl font-bold text-white mb-2">24/7</div>
-            <div className="text-sm text-gray-400">Live Updates</div>
+            <div className="text-sm text-neutral-400">Live Updates</div>
           </div>
           <div className="bg-white/5 backdrop-blur border border-white/10 rounded-lg p-6 text-center">
             <div className="text-2xl sm:text-3xl font-bold text-white mb-2">4+</div>
-            <div className="text-sm text-gray-400">Platforms</div>
+            <div className="text-sm text-neutral-400">Platforms</div>
           </div>
         </div>
 
@@ -56,12 +56,12 @@ export default function CommunityContent() {
             href="https://discord.com/invite/9vVB44ZrNA"
             target="_blank"
             rel="noopener noreferrer"
-            className="group bg-linear-to-br from-white to-white hover:from-white hover:to-white rounded-lg p-6 text-center transition-all hover:scale-105"
+            className="group bg-neutral-900 hover:bg-neutral-800 border border-white/10 rounded-lg p-6 text-center transition-all hover:scale-105"
           >
             <div className="text-3xl mb-2">💬</div>
             <h3 className="text-white font-bold mb-1">Discord Server</h3>
-            <p className="text-white text-sm mb-4">Join 8K+ traders</p>
-            <button className="w-full bg-white/20 hover:bg-white/30 text-white rounded py-2 transition-colors">
+            <p className="text-neutral-400 text-sm mb-4">Join 8K+ traders</p>
+            <button className="w-full bg-white text-black hover:bg-neutral-200 font-medium rounded py-2 transition-colors">
               Join Now
             </button>
           </a>
@@ -70,12 +70,12 @@ export default function CommunityContent() {
             href="https://t.me/bullmoneyfx"
             target="_blank"
             rel="noopener noreferrer"
-            className="group bg-linear-to-br from-white to-white hover:from-white hover:to-white rounded-lg p-6 text-center transition-all hover:scale-105"
+            className="group bg-neutral-900 hover:bg-neutral-800 border border-white/10 rounded-lg p-6 text-center transition-all hover:scale-105"
           >
             <div className="text-3xl mb-2">✈️</div>
             <h3 className="text-white font-bold mb-1">Telegram Channel</h3>
-            <p className="text-white text-sm mb-4">Real-time alerts</p>
-            <button className="w-full bg-white/20 hover:bg-white/30 text-white rounded py-2 transition-colors">
+            <p className="text-neutral-400 text-sm mb-4">Real-time alerts</p>
+            <button className="w-full bg-white text-black hover:bg-neutral-200 font-medium rounded py-2 transition-colors">
               Join Now
             </button>
           </a>
@@ -84,12 +84,12 @@ export default function CommunityContent() {
             href="https://www.instagram.com/bullmoney.online/"
             target="_blank"
             rel="noopener noreferrer"
-            className="group bg-linear-to-br from-white to-pink-600 hover:from-white hover:to-pink-500 rounded-lg p-6 text-center transition-all hover:scale-105"
+            className="group bg-neutral-900 hover:bg-neutral-800 border border-white/10 rounded-lg p-6 text-center transition-all hover:scale-105"
           >
             <div className="text-3xl mb-2">📸</div>
             <h3 className="text-white font-bold mb-1">Instagram</h3>
-            <p className="text-pink-200 text-sm mb-4">Daily content</p>
-            <button className="w-full bg-white/20 hover:bg-white/30 text-white rounded py-2 transition-colors">
+            <p className="text-neutral-400 text-sm mb-4">Daily content</p>
+            <button className="w-full bg-white text-black hover:bg-neutral-200 font-medium rounded py-2 transition-colors">
               Follow
             </button>
           </a>
@@ -98,12 +98,12 @@ export default function CommunityContent() {
             href="https://youtube.com/@bullmoney.online"
             target="_blank"
             rel="noopener noreferrer"
-            className="group bg-linear-to-br from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 rounded-lg p-6 text-center transition-all hover:scale-105"
+            className="group bg-neutral-900 hover:bg-neutral-800 border border-white/10 rounded-lg p-6 text-center transition-all hover:scale-105"
           >
             <div className="text-3xl mb-2">🎬</div>
             <h3 className="text-white font-bold mb-1">YouTube Channel</h3>
-            <p className="text-orange-200 text-sm mb-4">Tutorials & guides</p>
-            <button className="w-full bg-white/20 hover:bg-white/30 text-white rounded py-2 transition-colors">
+            <p className="text-neutral-400 text-sm mb-4">Tutorials & guides</p>
+            <button className="w-full bg-white text-black hover:bg-neutral-200 font-medium rounded py-2 transition-colors">
               Subscribe
             </button>
           </a>
@@ -111,7 +111,7 @@ export default function CommunityContent() {
 
         {/* Telegram Feed Section */}
         <div className="relative">
-          <div className="absolute inset-0 bg-linear-to-r from-white/10 via-white/5 to-transparent rounded-2xl blur-3xl -z-10" />
+          <div className="absolute inset-0 bg-white/5 rounded-2xl blur-3xl -z-10" />
           
           <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-8">
             <TelegramFeed limit={15} refreshInterval={300000} />
@@ -123,7 +123,7 @@ export default function CommunityContent() {
           <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
             Ready to join the community?
           </h2>
-          <p className="text-gray-400 mb-8">
+          <p className="text-neutral-400 mb-8">
             Choose your preferred platform and start connecting with traders worldwide
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -131,7 +131,7 @@ export default function CommunityContent() {
               href="https://discord.com/invite/9vVB44ZrNA"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-8 py-3 bg-white hover:bg-white/90 text-black font-semibold rounded-lg transition-colors"
+              className="px-8 py-3 bg-white hover:bg-neutral-200 text-black font-semibold rounded-lg transition-colors"
             >
               Join Discord
             </a>
@@ -139,7 +139,7 @@ export default function CommunityContent() {
               href="https://t.me/bullmoneyfx"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-8 py-3 bg-white hover:bg-white/90 text-black font-semibold rounded-lg transition-colors"
+              className="px-8 py-3 border border-white/20 hover:bg-white/10 text-white font-semibold rounded-lg transition-colors"
             >
               Join Telegram
             </a>

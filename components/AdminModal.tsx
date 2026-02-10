@@ -1125,16 +1125,12 @@ function AdminLogin({ onLogin }: { onLogin: () => void }) {
     setLoading(true);
     setError('');
     
-    // Check credentials from environment variables
-    const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
-    const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
-    
-    if (email.toLowerCase().trim() === adminEmail?.toLowerCase() && password === adminPassword) {
-      // Use the login function from ShopContext (pass any values, we already validated)
-      login(email, password);
+    // Validate credentials server-side (password never sent to browser)
+    const result = await login(email, password);
+    if (result.success) {
       onLogin();
     } else {
-      setError('Invalid email or password');
+      setError(result.message || 'Invalid email or password');
     }
     setLoading(false);
   };

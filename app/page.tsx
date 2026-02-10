@@ -826,6 +826,7 @@ function HomeContent() {
           nav, footer, header {
             opacity: 0 !important;
             pointer-events: none !important;
+            position: fixed !important;
           }
         `}</style>
         <div className="fixed inset-0 z-99999 bg-black flex items-center justify-center">
@@ -872,16 +873,15 @@ function HomeContent() {
 
           {mainHeroMode === 'trader' && (
             <style>{`
-              #hero .spline-container,
-              #hero [data-spline],
-              #hero canvas,
-              #hero spline-viewer,
-              #hero iframe[src*="spline"],
               #hero .cycling-bg-layer,
               #hero .cycling-bg-item,
               #hero .cycling-bg-item.active {
                 pointer-events: none !important;
                 touch-action: pan-y !important;
+              }
+              #hero .cycling-bg-layer canvas,
+              #hero .cycling-bg-item canvas {
+                pointer-events: auto !important;
               }
               #hero .hero-wrapper {
                 overflow: visible !important;

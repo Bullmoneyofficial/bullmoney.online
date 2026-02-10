@@ -139,7 +139,7 @@ function getCachedSplineScene(scene: string): string {
     const blob = new Blob([buffer], { type: 'application/octet-stream' });
     return URL.createObjectURL(blob);
   }
-  return ''; // Not cached — must be downloaded first
+  return scene; // Not cached — fall back to direct URL so Spline still loads
 }
 
 // Check if scene is cached (for instant load detection)
@@ -1657,7 +1657,6 @@ const SplineBackground = memo(function SplineBackground({ grayscale = true, scen
             height: '100%',
             display: 'block',
             opacity: isLoaded ? 1 : 0.6,
-            transition: 'opacity 400ms ease-out',
             filter: grayscale ? 'grayscale(100%) saturate(0) contrast(1.1)' : 'none',
             WebkitFilter: grayscale ? 'grayscale(100%) saturate(0) contrast(1.1)' : 'none',
             pointerEvents: 'auto',

@@ -11,6 +11,25 @@ html.store-active body * {
   touch-action: pan-y pan-x !important;
 }
 
+/* Game iframes must handle ALL touch gestures internally (tap, swipe, pinch etc.)
+   Specificity must beat html.store-active body * (0,1,2) — prefix with html.store-active
+   ALSO must break the ancestor touch-action chain (browsers intersect ancestor values)
+   so we override body & all intermediate ancestors when a game iframe is present */
+html.store-active body:has([data-game-iframe]),
+html.store-active [data-store-page]:has([data-game-iframe]),
+html.store-active [data-store-page]:has([data-game-iframe]) > main,
+html.store-active [data-game-iframe],
+html.store-active [data-game-iframe] iframe,
+html.store-active [data-game-iframe] *,
+html.store-active iframe[data-game-frame],
+[data-game-iframe],
+[data-game-iframe] iframe,
+iframe[data-game-frame] {
+  touch-action: auto !important;
+  pointer-events: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
 @media (hover: hover) and (pointer: fine) {
   html.home-active body,
   html.home-active body *,
@@ -78,6 +97,24 @@ html.store-active spline-viewer {
 /* Store hero inner wrapper: allow scroll passthrough on mobile */
 [data-store-hero] > div {
   touch-action: pan-y !important;
+}
+
+/* Games page hero must NEVER block scroll */
+.store-layout section > .absolute,
+.store-layout section img[class*="object-cover"],
+.store-layout section video[class*="object-cover"] {
+  pointer-events: none !important;
+  touch-action: pan-y !important;
+}
+
+/* Re-enable pointer events on interactive elements within heroes */
+[data-store-hero] a,
+[data-store-hero] button,
+[data-store-hero] [role="button"],
+.store-layout section a,
+.store-layout section button,
+.store-layout section [role="button"] {
+  pointer-events: auto !important;
 }
 
 /* Hero wrapper special: allow overflow Y for scroll passthrough */

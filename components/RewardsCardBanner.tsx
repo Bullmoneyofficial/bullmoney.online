@@ -7,11 +7,20 @@ import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
 import CreditCard from 'lucide-react/dist/esm/icons/credit-card';
 import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 import { useUnifiedPerformance } from '@/hooks/useDesktopPerformance';
+import { useHeroMode } from '@/hooks/useHeroMode';
+import type { HeroMode } from '@/hooks/useHeroMode';
+import { SoundEffects } from '@/app/hooks/useSoundEffects';
 
 // ============================================================================
 // REWARDS CARD BANNER — Premium banner with LogoLoop + Punch Card
 // Shown above hero section on store page
 // ============================================================================
+
+const HERO_MODE_CONFIG: { mode: HeroMode; label: string; color: string; glow: string }[] = [
+  { mode: 'store', label: 'Store', color: 'rgb(16,185,129)', glow: 'rgba(16,185,129,0.5)' },
+  { mode: 'trader', label: 'Trader', color: 'rgb(59,130,246)', glow: 'rgba(59,130,246,0.5)' },
+  { mode: 'design', label: 'Design', color: 'rgb(168,85,247)', glow: 'rgba(168,85,247,0.5)' },
+];
 
 
 interface RewardsData {
@@ -31,6 +40,7 @@ interface RewardsCardBannerProps {
 export default function RewardsCardBanner({ userEmail, onOpenRewardsCard }: RewardsCardBannerProps) {
   const { formatPrice } = useCurrencyLocaleStore();
   const { shouldSkipHeavyEffects } = useUnifiedPerformance();
+  const { heroMode, setHeroMode } = useHeroMode();
   const [rewards, setRewards] = useState<RewardsData | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -59,6 +69,31 @@ export default function RewardsCardBanner({ userEmail, onOpenRewardsCard }: Rewa
 
       {/* Main Content */}
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5 sm:py-2">
+        {/* Mobile Hero Mode Toggle — only visible on mobile */}
+        <div className="flex md:hidden items-center justify-center gap-0.5 rounded-full border border-black/10 bg-black/5 p-0.5 mb-1.5 mx-auto w-fit text-[9px] font-semibold uppercase tracking-[0.18em]">
+          {HERO_MODE_CONFIG.map(({ mode, label, color, glow }) => {
+            const isActive = heroMode === mode;
+            return (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => {
+                  SoundEffects.play('click');
+                  setHeroMode(mode);
+                }}
+                className="relative px-2.5 py-1 rounded-full transition-all duration-200 whitespace-nowrap"
+                style={{
+                  background: isActive ? color : 'transparent',
+                  color: isActive ? '#fff' : 'rgba(0,0,0,0.4)',
+                  boxShadow: isActive ? `0 0 8px ${glow}` : 'none',
+                }}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+
         <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4">
           {/* Left: Branding + Info */}
           <div className="flex items-center gap-2.5">

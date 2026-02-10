@@ -8,16 +8,18 @@ import { useState, useEffect, useCallback } from 'react';
 // Uses localStorage + custom events for cross-component sync
 // ============================================================================
 
-export type HeroMode = 'store' | 'trader';
+export type HeroMode = 'store' | 'trader' | 'design';
 
 const HERO_MODE_KEY = 'hero_main_mode_v1';
 const HERO_MODE_EVENT = 'hero_mode_change';
+
+const VALID_MODES: HeroMode[] = ['store', 'trader', 'design'];
 
 function readMode(): HeroMode {
   if (typeof window === 'undefined') return 'store';
   try {
     const stored = window.localStorage.getItem(HERO_MODE_KEY);
-    if (stored === 'store' || stored === 'trader') return stored;
+    if (stored && VALID_MODES.includes(stored as HeroMode)) return stored as HeroMode;
   } catch {}
   return 'store';
 }
@@ -41,7 +43,7 @@ export function useHeroMode() {
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<HeroMode>).detail;
-      if (detail === 'store' || detail === 'trader') {
+      if (detail && VALID_MODES.includes(detail)) {
         setMode(detail);
       } else {
         setMode(readMode());
@@ -60,7 +62,8 @@ export function useHeroMode() {
 
   const toggle = useCallback(() => {
     setMode(prev => {
-      const next: HeroMode = prev === 'store' ? 'trader' : 'store';
+      const idx = VALID_MODES.indexOf(prev);
+      const next = VALID_MODES[(idx + 1) % VALID_MODES.length];
       writeMode(next);
       window.dispatchEvent(new CustomEvent(HERO_MODE_EVENT, { detail: next }));
       return next;

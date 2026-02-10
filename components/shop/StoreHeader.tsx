@@ -8,22 +8,36 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, Search, Menu, X, User, ChevronLeft, Home, LogOut } from 'lucide-react';
 import { useCartStore } from '@/stores/cart-store';
 import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
+import { useProductsModalUI, useThemeSelectorModalUI } from '@/contexts/UIStateContext';
 import TextType from '@/components/TextType';
 import CountUp from '@/components/CountUp';
+
+import dynamic from 'next/dynamic';
+import { SoundEffects } from '@/app/hooks/useSoundEffects';
+
+const LazyFaqModal = dynamic(() => import('@/components/navbar/LazyModalSystem').then(mod => ({ default: mod.LazyFaqModal })), { ssr: false });
 
 // ============================================================================
 // STORE HEADER - NAVIGATION WITH PORTAL MOBILE MENU
 // Uses React Portal to escape stacking context for mobile menu
 // ============================================================================
 
-const NAV_LINKS = [
-  { href: '/store/account', label: 'Account' },
+// Core nav items shown in desktop and mobile menus
+// Items with action property use button handlers instead of Link navigation
+const NAV_LINKS: Array<{ href: string; label: string; action?: string }> = [
+  { href: '/games', label: 'Games' },
   { href: '/store', label: 'Shop' },
+  { href: '/store/account', label: 'Account' },
   { href: '/store?category=apparel', label: 'Apparel' },
   { href: '/store?category=accessories', label: 'Accessories' },
   { href: '/store?category=tech', label: 'Tech' },
   { href: '/store#print-design', label: 'Print & Design' },
   { href: '/store#digital-art', label: 'Digital Art' },
+  // Main site utilities - these open modals/toggles
+  { href: '#', label: 'Products', action: 'products' },
+  { href: '#', label: 'FAQ', action: 'faq' },
+  { href: '#', label: 'Themes', action: 'themes' },
+  { href: '#', label: 'Hub', action: 'hub' },
 ];
 
 export function StoreHeader() {
@@ -34,10 +48,45 @@ export function StoreHeader() {
   const itemCount = getItemCount();
   const router = useRouter();
   const pathname = usePathname();
+  const { open: openProductsModal } = useProductsModalUI();
+  const { setIsOpen: setThemePickerModalOpen } = useThemeSelectorModalUI();
+  const [faqModalOpen, setFaqModalOpen] = useState(false);
+  const [showUltimateHub, setShowUltimateHub] = useState(false);
+  const [showThemePicker, setShowThemePicker] = useState(false);
   
   useEffect(() => {
     setMounted(true);
+    if (typeof window !== 'undefined') {
+      setShowUltimateHub(localStorage.getItem('store_show_ultimate_hub') === 'true');
+      setShowThemePicker(localStorage.getItem('store_show_theme_picker') === 'true');
+    }
   }, []);
+
+  const handleNavAction = (action: string) => {
+    SoundEffects.click();
+    if (action === 'products') {
+      openProductsModal();
+    } else if (action === 'faq') {
+      setFaqModalOpen(true);
+    } else if (action === 'themes') {
+      const newValue = !showThemePicker;
+      setShowThemePicker(newValue);
+      setThemePickerModalOpen(newValue);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('store_show_theme_picker', String(newValue));
+        window.dispatchEvent(new Event('store_theme_picker_toggle'));
+      }
+    } else if (action === 'hub') {
+      const newValue = !showUltimateHub;
+      setShowUltimateHub(newValue);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('store_show_ultimate_hub', String(newValue));
+        window.dispatchEvent(new CustomEvent('store_ultimate_hub_toggle', { detail: newValue }));
+        window.dispatchEvent(new Event('store_ultimate_hub_toggle'));
+      }
+    }
+    setMobileMenuOpen(false);
+  };
   
   // Determine if we're on a nested page (product detail, checkout, etc.)
   const isNestedPage = pathname !== '/store' && pathname.startsWith('/store');
@@ -117,13 +166,23 @@ export function StoreHeader() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
             {NAV_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-white/60 hover:text-white transition-colors text-sm tracking-wide"
-              >
-                <TextType text={link.label} typingSpeed={Math.max(10, 30 - link.label.length)} showCursor={false} loop={false} as="span" />
-              </Link>
+              link.action ? (
+                <button
+                  key={link.label}
+                  onClick={() => handleNavAction(link.action!)}
+                  className="text-white/60 hover:text-white transition-colors text-sm tracking-wide bg-transparent border-none cursor-pointer"
+                >
+                  <TextType text={link.label} typingSpeed={Math.max(10, 30 - link.label.length)} showCursor={false} loop={false} as="span" />
+                </button>
+              ) : (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="text-white/60 hover:text-white transition-colors text-sm tracking-wide"
+                >
+                  <TextType text={link.label} typingSpeed={Math.max(10, 30 - link.label.length)} showCursor={false} loop={false} as="span" />
+                </Link>
+              )
             ))}
             <Link
               href="/store"
@@ -274,14 +333,24 @@ export function StoreHeader() {
               
               <div className="space-y-1 flex-1">
                 {NAV_LINKS.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block py-3 px-4 rounded-xl text-white/80 hover:bg-white/5 hover:text-white active:bg-white/10 transition-colors"
-                  >
-                    <TextType text={link.label} typingSpeed={Math.max(10, 25 - link.label.length)} showCursor={false} loop={false} as="span" />
-                  </Link>
+                  link.action ? (
+                    <button
+                      key={link.label}
+                      onClick={() => handleNavAction(link.action!)}
+                      className="block w-full text-left py-3 px-4 rounded-xl text-white/80 hover:bg-white/5 hover:text-white active:bg-white/10 transition-colors"
+                    >
+                      <TextType text={link.label} typingSpeed={Math.max(10, 25 - link.label.length)} showCursor={false} loop={false} as="span" />
+                    </button>
+                  ) : (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block py-3 px-4 rounded-xl text-white/80 hover:bg-white/5 hover:text-white active:bg-white/10 transition-colors"
+                    >
+                      <TextType text={link.label} typingSpeed={Math.max(10, 25 - link.label.length)} showCursor={false} loop={false} as="span" />
+                    </Link>
+                  )
                 ))}
               </div>
 
@@ -308,6 +377,11 @@ export function StoreHeader() {
           )}
         </AnimatePresence>,
         document.body
+      )}
+
+      {/* FAQ Modal */}
+      {faqModalOpen && (
+        <LazyFaqModal isOpen={faqModalOpen} onClose={() => setFaqModalOpen(false)} />
       )}
     </>
   );

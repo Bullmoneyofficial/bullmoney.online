@@ -123,9 +123,9 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
   // Only defer navbar/UltimateHub on mobile to avoid blocking first paint
   const { isMobile: isMobileViewport, shouldRender: allowMobileLazy } = useMobileLazyRender(220);
   
-  // Check if we're on store pages, desktop page, or app page - hide navbar (replaced with StoreHeader)
+  // Check if we're on store pages, casino pages, desktop page, or app page - hide navbar (replaced with StoreHeader)
   const pathname = usePathname();
-  const isStorePage = pathname.startsWith('/store');
+  const isStorePage = pathname.startsWith('/store') || pathname.startsWith('/games');
   const isDesktopPage = pathname === '/desktop';
   const isAppPage = pathname === '/';
   
@@ -299,9 +299,10 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
 
       {/* ✅ VERCEL TRACKING - Enhanced Analytics & Speed Insights */}
       <VercelAnalyticsWrapper />
-      <Suspense fallback={null}>
+      {/* Temporarily disabled due to WeakMap error - TODO: Fix useSearchParams issue */}
+      {/* <Suspense fallback={null}>
         <WebVitalsEnhanced />
-      </Suspense>
+      </Suspense> */}
 
       {/* ✅ SEO STRUCTURED DATA - Deferred to idle for faster first paint */}
       {canShowCursor && (

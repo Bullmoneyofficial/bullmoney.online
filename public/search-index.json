@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-02-10T03:07:20.567145+00:00",
+  "generated": "2026-02-10T17:04:57.274688+00:00",
   "items": [
     {
       "title": "Home",
@@ -346,6 +346,35 @@
       ]
     },
     {
+      "title": "[Game]",
+      "href": "/games/[game]",
+      "description": "BullMoney [Game] page",
+      "category": "page",
+      "keywords": [
+        "games",
+        "[game]"
+      ]
+    },
+    {
+      "title": "Games",
+      "href": "/games",
+      "description": "BullMoney Games page",
+      "category": "page",
+      "keywords": [
+        "games"
+      ]
+    },
+    {
+      "title": "Terms",
+      "href": "/games/terms",
+      "description": "BullMoney Terms page",
+      "category": "page",
+      "keywords": [
+        "games",
+        "terms"
+      ]
+    },
+    {
       "title": "Login",
       "href": "/login",
       "description": "BullMoney Login page",
@@ -432,5 +461,5 @@
       ]
     }
   ],
-  "total": 34
+  "total": 37
 }

@@ -6,6 +6,7 @@ import ShoppingBag from 'lucide-react/dist/esm/icons/shopping-bag';
 import Search from 'lucide-react/dist/esm/icons/search';
 import User from 'lucide-react/dist/esm/icons/user';
 import Menu from 'lucide-react/dist/esm/icons/menu';
+import Home from 'lucide-react/dist/esm/icons/home';
 // No lazy framer-motion — buttons must respond instantly
 
 import type { HeroMode } from '@/hooks/useHeroMode';
@@ -56,6 +57,13 @@ export interface StorePillNavProps {
   heroMode?: HeroMode;
   onHeroModeChange?: (mode: HeroMode) => void;
   onStoreButtonClick?: () => void;
+  // Games page props
+  hideNavigation?: boolean;
+  showManualButton?: boolean;
+  onManualClick?: () => void;
+  // Home button (shown on app page / main page)
+  showHomeButton?: boolean;
+  onHomeClick?: () => void;
   // Legacy props (ignored but kept for compatibility)
   ease?: string;
   baseColor?: string;
@@ -88,6 +96,11 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
   heroMode,
   onHeroModeChange,
   onStoreButtonClick,
+  hideNavigation = false,
+  showManualButton = false,
+  onManualClick,
+  showHomeButton = false,
+  onHomeClick,
 }) => {
   const [mounted, setMounted] = useState(false);
 
@@ -122,8 +135,6 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
           className="w-full px-6 md:px-10 h-12 flex items-center justify-between gap-6"
           style={{ background: 'rgb(255,255,255)' }}
           data-apple-section
-          onMouseEnter={onDesktopMenuEnter}
-          onMouseLeave={onDesktopMenuLeave}
         >
           {/* Left: Logo & Title */}
           <div className="flex items-center gap-3">
@@ -146,8 +157,11 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
           {/* Center: Simple Links (Desktop) */}
           <div className="hidden lg:flex items-center gap-3 text-[12px] font-medium tracking-wide" style={{ color: 'rgba(0,0,0,0.85)' }}>
             {desktopLinks.map((link) => {
-              const linkClass = `transition-colors text-black hover:text-white group-hover:text-white ${link.isActive ? '' : 'hover:opacity-100'}`;
-              const pillClass = 'group h-8 px-4 rounded-full bg-white flex items-center gap-2 border border-black/10 transition-colors hover:bg-black hover:border-black';
+              const isGames = link.label === 'Games';
+              const linkClass = `transition-colors ${isGames ? 'text-white !text-white !hover:text-white !group-hover:text-white font-bold leading-tight' : 'text-black'} hover:text-white group-hover:text-white ${link.isActive ? '' : 'hover:opacity-100'}`;
+              const pillClass = isGames
+                ? 'group relative h-9 px-5 rounded-full flex items-center gap-2 border border-[#0a1a3a] bg-gradient-to-br from-[#6dc7ff] via-[#3a7bd5] to-[#004cbf] text-white transition-all transform-gpu shadow-[0_10px_0_#0a1a3a,0_18px_30px_rgba(0,50,120,0.28)] hover:shadow-[0_6px_0_#0a1a3a,0_12px_24px_rgba(0,50,120,0.24)] hover:-translate-y-[1px] active:translate-y-[2px] active:shadow-[0_2px_0_#0a1a3a,0_6px_12px_rgba(0,50,120,0.22)]'
+                : 'group h-8 px-4 rounded-full bg-white flex items-center gap-2 border border-black/10 transition-colors hover:bg-black hover:border-black';
               if (link.variant === 'toggle') {
                 return (
                   <button
@@ -179,7 +193,10 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
                     className={`${pillClass} ${linkClass}`}
                     aria-label={link.ariaLabel || link.label}
                   >
-                    {link.label}
+                    {isGames && (
+                      <span className="absolute inset-[-2px] rounded-full pointer-events-none games-border" aria-hidden />
+                    )}
+                    <span className="relative z-10">{link.label}</span>
                   </Link>
                 );
               }
@@ -198,6 +215,21 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
 
           {/* Right: Hero Mode Toggle + Actions */}
           <div className="flex items-center gap-1.5">
+            {/* Manual Button - Opens menu on games pages */}
+            {showManualButton && (
+              <button
+                type="button"
+                className="relative h-9 px-4 flex items-center gap-1.5 rounded-full transition-all bg-gradient-to-br from-[#6dc7ff] via-[#3a7bd5] to-[#004cbf] text-white border border-[#0a1a3a] transform-gpu shadow-[0_8px_0_#0a1a3a,0_14px_24px_rgba(0,50,120,0.22)] hover:-translate-y-[1px] hover:shadow-[0_6px_0_#0a1a3a,0_10px_18px_rgba(0,50,120,0.2)] active:translate-y-[2px] active:shadow-[0_2px_0_#0a1a3a,0_6px_12px_rgba(0,50,120,0.18)]"
+                onClick={onManualClick}
+                aria-label="Manual"
+              >
+                <span className="absolute inset-[-2px] rounded-full pointer-events-none games-border" aria-hidden />
+                <svg className="w-4 h-4 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-[12px] font-semibold hidden sm:inline relative z-10">Manual</span>
+              </button>
+            )}
             {/* Hero Mode Toggle - Store / Trader */}
             {heroMode && onHeroModeChange && (
               <div className="hidden sm:flex items-center h-8 rounded-full border border-black/10 bg-white overflow-hidden mr-1">
@@ -226,22 +258,25 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
               </div>
             )}
 
+            {/* Home Button */}
+            {showHomeButton && (
+              <button
+                type="button"
+                className="h-8 w-8 flex items-center justify-center rounded-full transition-colors bg-white border border-black/10 active:scale-95"
+                style={{ color: 'rgba(0,0,0,0.85)' }}
+                onClick={onHomeClick}
+                aria-label="Home"
+              >
+                <Home className="w-4 h-4" />
+              </button>
+            )}
+
             {showSearch && (
               <button
                 type="button"
-                className="h-8 w-8 flex items-center justify-center rounded-full transition-colors bg-white border border-black/10"
+                className="h-8 w-8 flex items-center justify-center rounded-full transition-colors bg-white border border-black/10 active:scale-95"
                 style={{ color: 'rgba(0,0,0,0.85)' }}
                 onClick={onSearchClick}
-                onPointerDown={(event) => {
-                  if (event.pointerType === 'touch') {
-                    event.preventDefault();
-                    onSearchClick?.();
-                  }
-                }}
-                  onTouchStart={(event) => {
-                    event.preventDefault();
-                    onSearchClick?.();
-                  }}
                 aria-label="Search"
               >
                 <Search className="w-4 h-4" />
@@ -251,19 +286,9 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
             {showUser && (
               <button
                 type="button"
-                className="h-8 w-8 flex items-center justify-center rounded-full transition-colors bg-white border border-black/10"
+                className="h-8 w-8 flex items-center justify-center rounded-full transition-colors bg-white border border-black/10 active:scale-95"
                 style={{ color: 'rgba(0,0,0,0.85)' }}
                 onClick={onUserClick}
-                onPointerDown={(event) => {
-                  if (event.pointerType === 'touch') {
-                    event.preventDefault();
-                    onUserClick?.();
-                  }
-                }}
-                  onTouchStart={(event) => {
-                    event.preventDefault();
-                    onUserClick?.();
-                  }}
                 aria-label="Account"
               >
                 {isAuthenticated ? (
@@ -280,16 +305,6 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
                 className="h-8 px-2.5 flex items-center gap-1.5 rounded-full bg-white border border-black/10 active:scale-95 transition-transform duration-100"
                 style={{ color: 'rgba(0,0,0,0.85)' }}
                 onClick={onCartClick}
-                onPointerDown={(event) => {
-                  if (event.pointerType === 'touch') {
-                    event.preventDefault();
-                    onCartClick?.();
-                  }
-                }}
-                  onTouchStart={(event) => {
-                    event.preventDefault();
-                    onCartClick?.();
-                  }}
                 aria-label="Shopping Cart"
               >
                 <ShoppingBag className="w-4 h-4" />
@@ -312,6 +327,8 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
                   desktopMenuOpen ? 'bg-black text-white border-black' : 'bg-white text-black/85'
                 }`}
                 onClick={onDesktopMenuToggle}
+                onMouseEnter={onDesktopMenuEnter}
+                onMouseLeave={onDesktopMenuLeave}
                 aria-label="Toggle menu"
               >
                 <Menu className="w-4 h-4" />
@@ -321,19 +338,9 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
             {/* Mobile Menu Toggle */}
             <button
               type="button"
-              className="lg:hidden h-8 w-8 flex items-center justify-center rounded-full transition-colors bg-white border border-black/10"
+              className="lg:hidden h-8 w-8 flex items-center justify-center rounded-full transition-colors bg-white border border-black/10 active:scale-95"
               style={{ color: 'rgba(0,0,0,0.85)' }}
               onClick={handleMobileMenuClick}
-              onPointerDown={(event) => {
-                if (event.pointerType === 'touch') {
-                  event.preventDefault();
-                  handleMobileMenuClick();
-                }
-              }}
-              onTouchStart={(event) => {
-                event.preventDefault();
-                handleMobileMenuClick();
-              }}
               aria-label="Toggle menu"
             >
               <Menu className="w-4 h-4" />
@@ -341,6 +348,23 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
           </div>
         </nav>
       </header>
+
+      <style jsx global>{`
+        @keyframes games-border-shimmer {
+          0% { background-position: 0% 50%; }
+          100% { background-position: 200% 50%; }
+        }
+        .games-border {
+          background: linear-gradient(120deg, #6dc7ff, #3a7bd5, #004cbf, #3a7bd5, #6dc7ff);
+          background-size: 200% 200%;
+          animation: games-border-shimmer 3s linear infinite;
+          padding: 2px;
+          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          opacity: 0.9;
+        }
+      `}</style>
     </>
   );
 });

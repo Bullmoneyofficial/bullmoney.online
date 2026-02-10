@@ -25,7 +25,7 @@ import {
   Copy, ExternalLink, Info, AlertCircle, CheckCircle, Loader2, Coffee, Layout, Image as ImageIcon
 } from 'lucide-react';
 
-const StoreFooter = dynamic(() => import('@/components/shop/StoreFooter'), { ssr: false });
+const FooterComponent = dynamic(() => import('@/components/Mainpage/footer').then((mod) => ({ default: mod.Footer })), { ssr: false });
 
 // ============================================
 // TYPES
@@ -2640,7 +2640,9 @@ export function PrintDesignStudio({
         {renderContent()}
 
         {/* Store Footer */}
-        <StoreFooter />
+        <div className="bg-white" style={{ backgroundColor: 'rgb(255,255,255)', filter: 'invert(1) hue-rotate(180deg)' }}>
+          <FooterComponent />
+        </div>
 
         {/* Toast */}
         {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}

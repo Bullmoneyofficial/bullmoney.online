@@ -47,6 +47,8 @@
     var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
     if (scrollTop <= 0 && deltaY > 10) {
       var target = e.target;
+      // Never block touches inside game iframes or their containers
+      if (target && target.closest && target.closest('[data-game-iframe],[data-game-frame]')) return;
       if (!(target && target.closest && target.closest('.fixed[style*="z-index"]'))) e.preventDefault();
     }
   }, { passive: false });

@@ -2955,14 +2955,22 @@ memStyle.textContent=[
   '[data-memory-level="emergency"] *:not(.product-card-premium):not(input):not(button):not(a){box-shadow:none!important;}',
   // Emergency glass: remove blur only, preserve original colors
   '[data-memory-level="emergency"] .glass-effect,[data-memory-level="emergency"] .glassmorphism,[data-memory-level="emergency"] .glass-surface,[data-memory-level="emergency"] .glass-card,[data-memory-level="emergency"] .glass-dark,[data-memory-level="emergency"] .glass-frosted,[data-memory-level="emergency"] .glass-clear,[data-memory-level="emergency"] .glass-premium,[data-memory-level="emergency"] .glass-light,[data-memory-level="emergency"] .glass-modal-backdrop{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}',
+  // Emergency: ensure text stays visible (white on dark) in critical UI elements
+  '[data-memory-level="emergency"] nav,[data-memory-level="emergency"] header,[data-memory-level="emergency"] footer,[data-memory-level="emergency"] .navbar,[data-memory-level="emergency"] .hub,[data-memory-level="emergency"] .ultimate-hub{color:rgba(255,255,255,0.9)!important;background-color:rgba(0,0,0,0.92)!important;}',
+  '[data-memory-level="emergency"] nav a,[data-memory-level="emergency"] header a,[data-memory-level="emergency"] footer a,[data-memory-level="emergency"] .navbar a,[data-memory-level="emergency"] .hub a{color:rgba(255,255,255,0.85)!important;}',
+  '[data-memory-level="emergency"] .modal,[data-memory-level="emergency"] [role="dialog"],.modal-content{background:rgba(0,0,0,0.95)!important;color:rgba(255,255,255,0.9)!important;}',
   // Emergency media: only strip animation, preserve filter for theming
   '[data-memory-level="emergency"] video{animation:none!important;}',
   '[data-memory-level="emergency"] canvas{image-rendering:optimizeSpeed!important;}',
   '[data-memory-level="emergency"] img{image-rendering:auto!important;}',
   // === LOW-MEMORY-ADAPT class: same approach — opaque bg fallback, keep filter ===
   '.low-memory-adapt *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}',
-  '.low-memory-adapt .glass-effect,.low-memory-adapt .glassmorphism,.low-memory-adapt .glass-surface,.low-memory-adapt .glass-card{background:inherit!important;border-color:inherit!important;}',
+  '.low-memory-adapt .glass-effect,.low-memory-adapt .glassmorphism,.low-memory-adapt .glass-surface,.low-memory-adapt .glass-card{background:rgba(0,0,0,0.85)!important;border-color:rgba(255,255,255,0.15)!important;}',
   '.low-memory-adapt video{object-fit:cover;}',
+  // FIX: Ensure text stays white on low-memory devices (prevent black-on-black)
+  '.low-memory-adapt nav,.low-memory-adapt header,.low-memory-adapt footer,.low-memory-adapt .navbar,.low-memory-adapt .nav,.low-memory-adapt .store-layout header,.low-memory-adapt .hub,.low-memory-adapt .ultimate-hub{color:rgba(255,255,255,0.9)!important;background-color:rgba(0,0,0,0.92)!important;}',
+  '.low-memory-adapt nav a,.low-memory-adapt header a,.low-memory-adapt footer a,.low-memory-adapt .navbar a,.low-memory-adapt .hub a{color:rgba(255,255,255,0.85)!important;}',
+  '.low-memory-adapt .modal,.low-memory-adapt [role="dialog"],.low-memory-adapt .modal-content{background:rgba(0,0,0,0.95)!important;color:rgba(255,255,255,0.9)!important;}',
   // NOTE: Removed forced bg-white → black conversion that was causing UI color glitches
   // Glass glow optimization only
   '[data-memory-level] .glass-glow::before,[data-memory-level] .glass-glow-strong::before,[data-memory-level] .glass-glow-pulse::before{display:none!important;}',
@@ -3080,6 +3088,7 @@ w.clearTimeout=function(id){
 };
 
 function pruneStaleTimers(killRatio){
+  if(!activeIntervals||typeof activeIntervals.forEach!=='function')return;
   killRatio=killRatio||0.5;
   var list=[];
   activeIntervals.forEach(function(v,k){list.push({id:k,created:v.created,ms:v.ms});});
@@ -4192,7 +4201,7 @@ def generate_gpu_manager() -> dict:
 var w=window,d=document,n=navigator;
 var GM=w.__BM_GPU_MANAGER__={contexts:[],maxContexts:8,activeContexts:0,contextPool:[],gpuInfo:{}};
 var isMobile=/mobi|android|iphone|ipad|ipod/i.test(n.userAgent||'');
-var isInApp=/instagram|fban|fbav|tiktok|snapchat|twitter|linkedin|wechat|line\/|telegram|pinterest|reddit/i.test(n.userAgent||'');
+var isInApp=/instagram|fban|fbav|tiktok|snapchat|twitter|linkedin|wechat|line\\/|telegram|pinterest|reddit/i.test(n.userAgent||'');
 GM.isMobile=isMobile;GM.isInApp=isInApp;
 d.documentElement.setAttribute('data-effects',(isMobile||isInApp)?'lite':'full');
 

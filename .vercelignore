@@ -1,5 +1,15 @@
 # Vercel Ignore - Reduce deployment size
 
+# Casino backends (separate servers, not deployed to Vercel)
+# The Next.js app connects via NEXT_PUBLIC_CASINO_URL env var
+Bullcasino/
+casino-backend/
+
+# Non-Next.js sub-projects
+static-app/
+my-app/
+portfolio-overlay/
+
 # Documentation
 *.md
 MOBILE_FIXES_SUMMARY.md
@@ -13,6 +23,9 @@ app/page-mobile-fixes.tsx
 *.test.tsx
 *.spec.ts
 *.spec.tsx
+
+# Python venv (not needed on Vercel)
+.venv/
 
 # Cache directories
 .next/cache

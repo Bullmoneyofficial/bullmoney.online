@@ -202,7 +202,7 @@ function SplinePageComponent({
                                (navigator as any).deviceMemory >= 4;
         
         if (hasEnoughMemory) {
-          // Delay Spline load by 15 seconds on mobile
+          // Delay Spline load by 2 seconds on mobile (enough for initial paint)
           const mobileLoadTimer = setTimeout(() => {
             // Use requestIdleCallback to load only when browser is idle
             if ('requestIdleCallback' in window) {
@@ -214,7 +214,7 @@ function SplinePageComponent({
                     setMobileScene(scene);
                   }
                 },
-                { timeout: 5000 } // Max wait 5 seconds for idle
+                { timeout: 3000 } // Max wait 3 seconds for idle
               );
             } else {
               // Fallback for browsers without requestIdleCallback
@@ -223,7 +223,7 @@ function SplinePageComponent({
                 setMobileScene(scene);
               }
             }
-          }, 15000); // 15 seconds delay
+          }, 2000); // 2 seconds delay — was 15s which prevented loading
           
           return () => {
             clearTimeout(mobileLoadTimer);

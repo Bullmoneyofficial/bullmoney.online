@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Wallet,
@@ -378,6 +379,9 @@ export function CryptoCheckoutInline({
         if (res.ok && !cancelled) {
           const data = await res.json();
           setPaymentStatus(data);
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('crypto-payment-status', { detail: data }));
+          }
           // Stop polling on terminal status
           if (data.isTerminal) return;
         }
@@ -446,6 +450,11 @@ export function CryptoCheckoutInline({
         toast.success(`Payment submitted! Order: ${data.orderNumber || 'Processing'}`);
         setStep('confirm');
         onPaymentSubmitted?.(cleanHash, selectedCoin, selectedWallet.network);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('crypto-payment-submitted', {
+            detail: { orderNumber: data.orderNumber, coin: selectedCoin, network: selectedWallet.network }
+          }));
+        }
       } else {
         toast.error(data.error || 'Failed to record payment. Please contact support.');
       }
@@ -1540,60 +1549,107 @@ export function CryptoCheckoutTrigger({
   theme?: 'dark' | 'light';
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  if (isOpen) {
-    return (
-      <CryptoCheckoutInline
-        productName={productName}
-        productImage={productImage}
-        priceUSD={priceUSD}
-        productId={productId}
-        variantId={variantId}
-        quantity={quantity}
-        inline
-        theme={theme}
-        onClose={() => setIsOpen(false)}
-        onPaymentSubmitted={(txHash, coin, network) => {
-          onPaymentSubmitted?.(txHash, coin, network);
-          // Don't close - show confirmation
-        }}
-      />
-    );
-  }
+  // Ensure portal only renders client-side
+  useEffect(() => { setMounted(true); }, []);
+
+  // Lock body scroll when portal is open
+  useEffect(() => {
+    if (isOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = prev; };
+    }
+  }, [isOpen]);
 
   return (
-    <motion.button
-      onClick={(e) => {
-        e.stopPropagation();
-        setIsOpen(true);
-      }}
-      onTouchEnd={(e) => e.stopPropagation()}
-      disabled={disabled}
-      style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
-      className={compact
-        ? 'w-full py-2.5 md:py-3 rounded-xl font-semibold text-xs md:text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 bg-black text-white hover:bg-black/90 shadow-md'
-        : 'w-full py-4 md:py-5 rounded-2xl font-bold text-sm md:text-base transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 bg-white text-black hover:bg-white/90 shadow-lg'
-      }
-      whileHover={disabled ? {} : { scale: 1.02 }}
-      whileTap={disabled ? {} : { scale: 0.98 }}
-    >
-      <svg className={compact ? 'w-4 h-4 md:w-5 md:h-5' : 'w-5 h-5 md:w-6 md:h-6'} viewBox="0 0 24 24" fill="none">
-        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
-        <path d="M8 12.5L12 7L16 12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        <line x1="12" y1="7" x2="12" y2="17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-      </svg>
-      <span>Pay with Crypto</span>
-      {!compact && (
-        <div className="flex items-center gap-1 ml-1 opacity-50">
-          <span className="text-[10px] md:text-xs font-medium">BTC</span>
-          <span className="text-[8px]">•</span>
-          <span className="text-[10px] md:text-xs font-medium">ETH</span>
-          <span className="text-[8px]">•</span>
-          <span className="text-[10px] md:text-xs font-medium">SOL</span>
-          <span className="text-[8px]">•</span>
-          <span className="text-[10px] md:text-xs font-medium">+4</span>
-        </div>
+    <>
+      <motion.button
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen(true);
+        }}
+        onTouchEnd={(e) => e.stopPropagation()}
+        disabled={disabled}
+        style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
+        className={compact
+          ? 'w-full py-2.5 md:py-3 rounded-xl font-semibold text-xs md:text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 bg-black text-white hover:bg-black/90 shadow-md'
+          : 'w-full py-4 md:py-5 rounded-2xl font-bold text-sm md:text-base transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 bg-white text-black hover:bg-white/90 shadow-lg'
+        }
+        whileHover={disabled ? {} : { scale: 1.02 }}
+        whileTap={disabled ? {} : { scale: 0.98 }}
+      >
+        <svg className={compact ? 'w-4 h-4 md:w-5 md:h-5' : 'w-5 h-5 md:w-6 md:h-6'} viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
+          <path d="M8 12.5L12 7L16 12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <line x1="12" y1="7" x2="12" y2="17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+        </svg>
+        <span>Pay with Crypto</span>
+        {!compact && (
+          <div className="flex items-center gap-1 ml-1 opacity-50">
+            <span className="text-[10px] md:text-xs font-medium">BTC</span>
+            <span className="text-[8px]">•</span>
+            <span className="text-[10px] md:text-xs font-medium">ETH</span>
+            <span className="text-[8px]">•</span>
+            <span className="text-[10px] md:text-xs font-medium">SOL</span>
+            <span className="text-[8px]">•</span>
+            <span className="text-[10px] md:text-xs font-medium">+4</span>
+          </div>
+        )}
+      </motion.button>
+
+      {/* Full-screen portal overlay */}
+      {mounted && isOpen && createPortal(
+        <AnimatePresence>
+          <motion.div
+            key="crypto-checkout-portal"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[99999] flex flex-col bg-black/80 backdrop-blur-sm"
+            onClick={() => setIsOpen(false)}
+          >
+            {/* Close bar */}
+            <div className="flex items-center justify-between px-4 py-3 shrink-0">
+              <span className="text-white/60 text-sm font-medium truncate max-w-[60%]">{productName}</span>
+              <button
+                onClick={(e) => { e.stopPropagation(); setIsOpen(false); }}
+                className="text-white/80 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
+                aria-label="Close checkout"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+
+            {/* Checkout content - full remaining space */}
+            <div
+              className="flex-1 overflow-y-auto overscroll-contain px-2 pb-4 sm:px-4 md:px-8 lg:px-16 xl:px-32"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-full max-w-2xl mx-auto">
+                <CryptoCheckoutInline
+                  productName={productName}
+                  productImage={productImage}
+                  priceUSD={priceUSD}
+                  productId={productId}
+                  variantId={variantId}
+                  quantity={quantity}
+                  inline
+                  theme={theme}
+                  onClose={() => setIsOpen(false)}
+                  onPaymentSubmitted={(txHash, coin, network) => {
+                    onPaymentSubmitted?.(txHash, coin, network);
+                    // Don't close - show confirmation
+                  }}
+                />
+              </div>
+            </div>
+          </motion.div>
+        </AnimatePresence>,
+        document.body
       )}
-    </motion.button>
+    </>
   );
 }

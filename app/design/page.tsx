@@ -3,8 +3,8 @@ import DesignStudioPage from "@/components/studio/DesignStudioPage";
 import "./design.css";
 
 export const metadata: Metadata = {
-  title: "Design Studio",
-  description: "Create, edit, and export designs with BullMoney Studio.",
+  title: "Design Studio | BullMoney",
+  description: "Professional design studio for creating stunning graphics, illustrations, and digital art with ease.",
 };
 
 export default function DesignPage() {

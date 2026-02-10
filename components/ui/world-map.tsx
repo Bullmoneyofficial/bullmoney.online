@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useMemo, useState, useEffect, useCallback } from "react";
-import { motion } from "motion/react";
+import { motion } from 'framer-motion';
 import DottedMap from "dotted-map";
 import { useUnifiedPerformance } from "@/hooks/useDesktopPerformance";
 

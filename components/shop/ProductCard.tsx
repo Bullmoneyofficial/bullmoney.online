@@ -11,7 +11,8 @@ import { CryptoPayButton } from '@/components/shop/CryptoPayButton';
 import { CryptoCheckoutTrigger } from '@/components/shop/CryptoCheckoutInline';
 import { ProductMediaCarousel } from '@/components/shop/ProductMediaCarousel';
 import { StorePillNav } from '@/components/store/StorePillNav';
-import StoreFooter from '@/components/shop/StoreFooter';
+import dynamic from 'next/dynamic';
+const FooterComponent = dynamic(() => import('@/components/Mainpage/footer').then((mod) => ({ default: mod.Footer })), { ssr: false });
 import type { ProductMedia, ProductWithDetails } from '@/types/store';
 import { useCartStore } from '@/stores/cart-store';
 import { useWishlistStore } from '@/stores/wishlist-store';
@@ -1222,7 +1223,9 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
               </div>
 
               <div className="mt-12 -mx-4 sm:-mx-6 md:-mx-10">
-                <StoreFooter />
+                <div className="bg-white" style={{ backgroundColor: 'rgb(255,255,255)', filter: 'invert(1) hue-rotate(180deg)' }}>
+                  <FooterComponent />
+                </div>
               </div>
             </div>
           </motion.div>

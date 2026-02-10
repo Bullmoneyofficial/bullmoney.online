@@ -43,8 +43,8 @@ const nextConfig = {
     serverComponentsHmrCache: true,
     // Package import optimizations - tree shake these heavy packages
     optimizePackageImports: [
-      '@splinetool/react-spline',
-      '@splinetool/runtime',
+      // NOTE: @splinetool packages removed — they use dynamic WASM/worker
+      // loading internally that breaks with tree-shaking optimization
       'lucide-react',
       'react-youtube',
       'framer-motion',
@@ -133,6 +133,10 @@ const nextConfig = {
             value: 'SAMEORIGIN',
           },
           {
+            key: 'Cross-Origin-Embedder-Policy',
+            value: 'unsafe-none',
+          },
+          {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
           },
@@ -148,28 +152,28 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://unpkg.com https://cdn.jsdelivr.net https://prod.spline.design",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://www.googletagmanager.com https://www.google-analytics.com https://unpkg.com https://cdn.jsdelivr.net https://prod.spline.design",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: blob: https: http:",
               "font-src 'self' https://fonts.gstatic.com",
-              "connect-src 'self' https: wss:",
+              "connect-src 'self' https: wss: https://www.bullmoney.shop https://www.bullmoney.online",
               "media-src 'self' https: blob:",
-              "frame-src 'self' https://www.youtube.com https://youtube.com https://player.vimeo.com https://prod.spline.design https://my.spline.design https://discord.com https://www.tradingview.com https://s.tradingview.com",
+              "frame-src 'self' blob: https: http:",
               "worker-src 'self' blob:",
               "child-src 'self' blob:",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",
-              "frame-ancestors 'self'",
+              "frame-ancestors 'self' https: http:",
             ].join('; '),
           },
           {
             key: 'Cross-Origin-Opener-Policy',
-            value: 'same-origin',
+            value: 'same-origin-allow-popups',
           },
           {
             key: 'Cross-Origin-Resource-Policy',
-            value: 'same-origin',
+            value: 'cross-origin',
           },
           {
             key: 'Strict-Transport-Security',
@@ -198,6 +202,50 @@ const nextConfig = {
           {
             key: 'Content-Type',
             value: 'application/javascript; charset=utf-8',
+          },
+        ],
+      },
+      // Games / casino iframe routes — maximally permissive for embedding
+      {
+        source: '/demogames/:path*',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'ALLOWALL',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: "frame-ancestors *",
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'cross-origin',
+          },
+          {
+            key: 'Cross-Origin-Embedder-Policy',
+            value: 'unsafe-none',
+          },
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*',
+          },
+        ],
+      },
+      // Games pages — same permissive policy
+      {
+        source: '/games/:path*',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'ALLOWALL',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: "frame-ancestors *",
+          },
+          {
+            key: 'Cross-Origin-Embedder-Policy',
+            value: 'unsafe-none',
           },
         ],
       },

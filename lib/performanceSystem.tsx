@@ -961,46 +961,12 @@ export const useDesktopFPSOptimizer = (enabled = true) => {
 
 /**
  * Scroll-aware animation pauser
- * 
- * Pauses heavy animations during scroll for better performance
+ * DISABLED: is-scrolling is now managed exclusively by UnifiedPerformanceSystem
+ * to prevent 3 competing togglers from thrashing the class on/off
  */
 export const useScrollAwareAnimations = () => {
-  const [isScrolling, setIsScrolling] = useState(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    const handleScroll = () => {
-      setIsScrolling(true);
-      
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      
-      timeoutRef.current = setTimeout(() => {
-        setIsScrolling(false);
-      }, 150);
-    };
-    
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-  }, []);
-  
-  useEffect(() => {
-    const root = document.documentElement;
-    
-    if (isScrolling) {
-      root.classList.add('is-scrolling');
-    } else {
-      root.classList.remove('is-scrolling');
-    }
-  }, [isScrolling]);
-  
+  const [isScrolling] = useState(false);
+  // No-op — UnifiedPerformanceSystem handles is-scrolling class
   return isScrolling;
 };
 
