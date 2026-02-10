@@ -53,7 +53,7 @@ export default function BreakingNewsTicker() {
   
   // Mobile-optimized settings
   const scrollSpeed = isMobileDevice ? 0.5 : 1;
-  const fetchInterval = isMobileDevice ? 15000 : 10000; // 15s on mobile, 10s on desktop
+  const fetchInterval = isMobileDevice ? 45000 : 30000; // 45s on mobile, 30s on desktop
   const duplicateCount = isMobileDevice ? 2 : 3; // Less duplication on mobile
 
   const fetchNews = useCallback(async () => {

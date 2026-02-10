@@ -537,7 +537,7 @@ function AdminDashboard({ onClose }: { onClose: () => void }) {
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, y: 20 }}
       transition={{ type: "spring", damping: 25, stiffness: 300 }}
-      className="w-full max-w-4xl max-h-[90vh] bg-neutral-950 border border-neutral-800 rounded-2xl shadow-2xl flex flex-col"
+      className="w-[100vw] max-w-[100vw] h-[100dvh] max-h-[100dvh] bg-neutral-950 border border-neutral-800 shadow-2xl flex flex-col overflow-y-auto"
       onClick={(e) => e.stopPropagation()}
       onPointerDownCapture={(e) => e.stopPropagation()}
     >
@@ -1225,9 +1225,7 @@ export default function AdminModal({ isOpen, onClose }: { isOpen: boolean; onClo
           animate={animations.modalBackdrop.animate as TargetAndTransition}
           exit={animations.modalBackdrop.exit}
           transition={animations.modalBackdrop.transition}
-          className={`fixed inset-0 z-[2147483647] flex items-center justify-center p-5 sm:p-6 bg-black/95 ${
-            shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'
-          }`}
+          className={`fixed inset-0 z-[2147483647] bg-black/80 backdrop-blur-xl`}
           onClick={onClose}
         >
           {/* Animated tap to close hints - skip on mobile */}

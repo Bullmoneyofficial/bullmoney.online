@@ -399,11 +399,11 @@ const ProductsContent = memo(() => {
       animate={animations.modalBackdrop.animate as TargetAndTransition}
       exit={animations.modalBackdrop.exit}
       transition={animations.modalBackdrop.transition}
-      className="fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6"
+      className="fixed inset-0 z-[2147483647]"
       style={{
-        background: 'rgba(0, 0, 0, 0.95)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)'
+        background: 'rgba(0, 0, 0, 0.80)',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)'
       }}
       onClick={handleClose}
       onTouchEnd={handleBackdropTouch}
@@ -427,7 +427,7 @@ const ProductsContent = memo(() => {
         transition={animations.modalContent.transition}
         onClick={(e) => e.stopPropagation()}
         onTouchEnd={(e) => e.stopPropagation()}
-        className="relative w-full max-w-5xl max-h-[85vh] sm:max-h-[90vh] overflow-hidden rounded-3xl"
+        className="relative w-[100vw] max-w-[100vw] h-[100dvh] max-h-[100dvh] overflow-hidden"
         style={{
           background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.05))',
           backdropFilter: 'blur(40px) saturate(180%)',
@@ -444,7 +444,7 @@ const ProductsContent = memo(() => {
         )}
         
         {/* Inner Container */}
-        <div className="relative z-10 rounded-3xl overflow-hidden max-h-[85vh] sm:max-h-[90vh] flex flex-col">
+        <div className="relative z-10 overflow-hidden max-h-[100dvh] flex flex-col">
           {!shouldSkipHeavyEffects && <ShimmerLine color="white" />}
           
           {/* Header */}

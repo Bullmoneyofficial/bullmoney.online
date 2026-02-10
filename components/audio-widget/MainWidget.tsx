@@ -163,9 +163,9 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
   // Get UI state to hide widget when modals/menus are open
   const { shouldMinimizeAudioWidget, isWelcomeScreenActive } = useAudioWidgetUI();
   
-  // Z-index: Must be above welcome screen (z-99999999) but below max safe integer
-  // Use 11 digits to ensure visibility above all other elements
-  const MAIN_WIDGET_Z_INDEX = isWelcomeScreenActive ? 99999999999 : 99999999999;
+  // Z-index: Use max 32-bit int (2147483647) — browsers clamp higher values
+  // This ensures visibility above ALL other elements on the page
+  const MAIN_WIDGET_Z_INDEX = 2147483647;
   const ACCENT_COLOR = '#ffffff';
   const SURFACE_BG = 'rgba(0, 0, 0, 0.9)';
   const SURFACE_BORDER = 'rgba(255, 255, 255, 0.14)';
@@ -318,7 +318,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.9 }}
               transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-              className="fixed top-20 left-1/2 -translate-x-1/2 z-[999999999999] pointer-events-auto"
+              className="fixed top-20 left-1/2 -translate-x-1/2 z-[2147483647] pointer-events-auto"
             >
               <div className="relative px-4 py-3 rounded-2xl backdrop-blur-xl border shadow-2xl overflow-hidden"
                 style={{

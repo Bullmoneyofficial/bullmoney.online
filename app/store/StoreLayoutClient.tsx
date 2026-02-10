@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { StoreHeader } from '@/components/store/StoreHeader';
-import { CartDrawer } from '@/components/shop/CartDrawer';
+// CartDrawer is now rendered inside StoreHeader for global availability
 import dynamic from 'next/dynamic';
 
 const StoreSupportButton = dynamic(() => import('@/components/shop/StoreSupportButton'), { ssr: false });
@@ -120,14 +120,16 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
         if (overlayOpacityRef.current.overlay === undefined) {
           overlayOpacityRef.current.overlay = overlay.style.opacity;
         }
-        overlay.style.opacity = isLightTheme ? '0.55' : '0.8';
+        // Reduced opacity to prevent glitching on white backgrounds
+        overlay.style.opacity = isLightTheme ? '0.15' : '0.35';
       }
 
       if (edgeGlow) {
         if (overlayOpacityRef.current.edge === undefined) {
           overlayOpacityRef.current.edge = edgeGlow.style.opacity;
         }
-        edgeGlow.style.opacity = isLightTheme ? '0.4' : '0.65';
+        // Reduced opacity to prevent glitching on white backgrounds
+        edgeGlow.style.opacity = isLightTheme ? '0.12' : '0.25';
       }
     };
 
@@ -413,8 +415,7 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
         {children}
       </main>
       
-      {/* Cart Drawer */}
-      <CartDrawer />
+      {/* Cart Drawer is now rendered inside StoreHeader */}
       
       
       {/* Toast Notifications - Top Center */}

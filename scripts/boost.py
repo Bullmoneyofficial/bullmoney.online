@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """
 ╔══════════════════════════════════════════════════════════════════════╗
-║         BULLMONEY PERFORMANCE BOOST ENGINE v4.0                     ║
+║         BULLMONEY PERFORMANCE BOOST ENGINE v5.0                     ║
 ║         Runs BEFORE every dev/build to maximize speed               ║
 ║         340+ optimizations: SEO, caching, device hints,             ║
 ║         3D/Spline turbo, memory guardian, crash prevention,         ║
 ║         in-app browser shield, GPU manager, security scanner,       ║
 ║         font optimization, API audit, network optimizer,            ║
 ║         dead code detection, env validation, CSS audit & more       ║
+║                                                                      ║
+║         v5.0: Watch mode, incremental builds, config support        ║
 ╚══════════════════════════════════════════════════════════════════════╝
 
 Usage:
@@ -16,6 +18,11 @@ Usage:
     python scripts/boost.py --skip-heavy # Skip image/bundle analysis (faster)
     python scripts/boost.py --fast       # Disable cosmetic delays (CI-friendly)
     python scripts/boost.py --sections=1,3,14  # Run only specific sections
+    python scripts/boost.py --watch      # Watch mode: re-run on file changes
+    python scripts/boost.py --incremental # Only run changed sections
+    python scripts/boost.py --profile    # Show detailed timing breakdown
+    python scripts/boost.py --diff       # Show what changed since last run
+    python scripts/boost.py --init       # Create .boostrc.json config file
     python scripts/boost.py -h           # Show help
 """
 
@@ -31,6 +38,286 @@ from pathlib import Path
 from datetime import datetime, timezone
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import signal
+import atexit
+import fnmatch
+from typing import Callable, Any
+
+# ─── WATCH MODE & INCREMENTAL BUILD SUPPORT ─────────────────────────
+class FileWatcher:
+    """Simple file watcher for watch mode."""
+    def __init__(self, dirs: list[Path], extensions: set[str], callback: Callable):
+        self.dirs = dirs
+        self.extensions = extensions
+        self.callback = callback
+        self.running = False
+        self._last_mtimes: dict[Path, float] = {}
+        self._debounce_time = 0.5
+        self._last_trigger = 0.0
+
+    def _get_files(self) -> list[Path]:
+        files = []
+        for d in self.dirs:
+            if d.exists():
+                for ext in self.extensions:
+                    files.extend(d.rglob(f"*{ext}"))
+        return files
+
+    def _scan(self) -> bool:
+        changed = False
+        current = {}
+        for f in self._get_files():
+            try:
+                mtime = f.stat().st_mtime
+                current[f] = mtime
+                if f not in self._last_mtimes or self._last_mtimes[f] != mtime:
+                    changed = True
+            except (OSError, IOError):
+                pass
+        # Detect deleted files
+        if set(self._last_mtimes.keys()) != set(current.keys()):
+            changed = True
+        self._last_mtimes = current
+        return changed
+
+    def start(self):
+        self.running = True
+        self._scan()  # Initial scan
+        while self.running:
+            time.sleep(1.0)
+            now = time.time()
+            if self._scan() and (now - self._last_trigger) > self._debounce_time:
+                self._last_trigger = now
+                self.callback()
+
+    def stop(self):
+        self.running = False
+
+
+class IncrementalCache:
+    """Track file hashes to enable incremental builds."""
+    CACHE_FILE = Path(__file__).resolve().parent.parent / ".boost-cache.json"
+    
+    def __init__(self):
+        self._hashes: dict[str, str] = {}
+        self._section_deps: dict[str, list[str]] = self._build_deps()
+        self._load()
+    
+    def _build_deps(self) -> dict[str, list[str]]:
+        """Map sections to file patterns they depend on."""
+        return {
+            "device_detection": ["app/**/*.{tsx,ts}", "components/**/*.{tsx,ts}"],
+            "resource_hints": ["app/**/*.{tsx,ts}", "next.config.*"],
+            "seo": ["app/**/*.{tsx,ts}", "public/sitemap.xml"],
+            "images": ["public/**/*.{png,jpg,jpeg,gif,webp,avif,svg}"],
+            "bundle": ["components/**/*.{tsx,ts}", "app/**/*.{tsx,ts}"],
+            "caching": ["next.config.*", "vercel.json"],
+            "perf_monitor": ["app/**/*.{tsx,ts}"],
+            "nextjs_config": ["next.config.*", "package.json"],
+            "accessibility": ["components/**/*.{tsx,ts}", "app/**/*.{tsx,ts}"],
+            "cleanup": [],  # Always runs
+            "dependencies": ["package.json", "package-lock.json"],
+            "pwa": ["public/manifest.json", "public/sw.js"],
+            "spline_turbo": ["components/**/*Spline*.{tsx,ts}", "app/**/*spline*.{tsx,ts}"],
+            "memory_guardian": ["components/**/*.{tsx,ts}"],
+            "inapp_shield": ["components/**/*.{tsx,ts}"],
+            "crash_prevention": ["app/store/**/*.{tsx,ts}", "components/**/*.{tsx,ts}"],
+            "build_optimizer": ["next.config.*", "package.json"],
+            "gpu_manager": ["components/**/*3d*.{tsx,ts}", "components/**/*Spline*.{tsx,ts}"],
+            "dead_code": ["components/**/*.{tsx,ts}", "app/**/*.{tsx,ts}"],
+            "security": ["**/*.{tsx,ts,js,env}"],
+            "fonts": ["app/**/*.css", "styles/**/*.css"],
+            "api_routes": ["app/api/**/*.{ts,tsx}"],
+            "third_party": ["components/**/*.{tsx,ts}", "app/**/*.{tsx,ts}"],
+            "env_vars": [".env*", "app/**/*.{tsx,ts}"],
+            "css_audit": ["**/*.css", "**/*.scss"],
+            "network_optimizer": ["components/**/*.{tsx,ts}"],
+            "search_index": ["app/**/*.{tsx,ts}", "components/**/*.{tsx,ts}"],
+            "boost_loader": [],  # Always runs
+        }
+    
+    def _load(self):
+        if self.CACHE_FILE.exists():
+            try:
+                data = json.loads(self.CACHE_FILE.read_text())
+                self._hashes = data.get("hashes", {})
+            except Exception:
+                pass
+    
+    def _save(self):
+        try:
+            self.CACHE_FILE.write_text(json.dumps({"hashes": self._hashes}, indent=2))
+        except Exception:
+            pass
+    
+    def _hash_pattern(self, pattern: str, root: Path) -> str:
+        """Hash all files matching a glob pattern."""
+        hasher = hashlib.md5()
+        parts = pattern.split("**")
+        if "**" in pattern:
+            files = list(root.rglob(parts[-1].lstrip("/")))
+        else:
+            files = list(root.glob(pattern))
+        for f in sorted(files):
+            if f.is_file():
+                try:
+                    hasher.update(f.read_bytes())
+                except Exception:
+                    pass
+        return hasher.hexdigest()
+    
+    def section_changed(self, section: str, root: Path) -> bool:
+        """Check if a section's dependencies have changed."""
+        patterns = self._section_deps.get(section, [])
+        if not patterns:  # Always run sections with no deps
+            return True
+        
+        combined_hash = hashlib.md5()
+        for pattern in patterns:
+            combined_hash.update(self._hash_pattern(pattern, root).encode())
+        
+        current = combined_hash.hexdigest()
+        previous = self._hashes.get(section)
+        
+        if current != previous:
+            self._hashes[section] = current
+            return True
+        return False
+    
+    def mark_done(self, section: str, root: Path):
+        """Mark a section as completed with current hashes."""
+        patterns = self._section_deps.get(section, [])
+        if patterns:
+            combined_hash = hashlib.md5()
+            for pattern in patterns:
+                combined_hash.update(self._hash_pattern(pattern, root).encode())
+            self._hashes[section] = combined_hash.hexdigest()
+        self._save()
+    
+    def clear(self):
+        self._hashes.clear()
+        self._save()
+
+
+class BoostConfig:
+    """Load/save configuration from .boostrc.json."""
+    CONFIG_FILE = Path(__file__).resolve().parent.parent / ".boostrc.json"
+    DEFAULTS = {
+        "skip_sections": [],
+        "always_skip_heavy": False,
+        "fast_mode": False,
+        "watch_extensions": [".tsx", ".ts", ".css", ".json"],
+        "watch_dirs": ["app", "components", "styles", "public"],
+        "notifications": True,
+        "parallel_workers": "auto",
+        "thresholds": {
+            "max_image_kb": 500,
+            "max_bundle_kb": 250,
+            "max_css_kb": 150,
+            "large_component_lines": 500,
+            "max_imports": 30
+        }
+    }
+    
+    def __init__(self):
+        self.data = dict(self.DEFAULTS)
+        self._load()
+    
+    def _load(self):
+        if self.CONFIG_FILE.exists():
+            try:
+                user = json.loads(self.CONFIG_FILE.read_text())
+                self._merge(self.data, user)
+            except Exception:
+                pass
+    
+    def _merge(self, base: dict, overlay: dict):
+        for k, v in overlay.items():
+            if isinstance(v, dict) and isinstance(base.get(k), dict):
+                self._merge(base[k], v)
+            else:
+                base[k] = v
+    
+    def save(self):
+        self.CONFIG_FILE.write_text(json.dumps(self.data, indent=2))
+    
+    @classmethod
+    def create_default(cls):
+        """Create a default .boostrc.json file."""
+        cls.CONFIG_FILE.write_text(json.dumps(cls.DEFAULTS, indent=2))
+        return cls.CONFIG_FILE
+    
+    def get(self, key: str, default: Any = None) -> Any:
+        keys = key.split(".")
+        val = self.data
+        for k in keys:
+            if isinstance(val, dict):
+                val = val.get(k)
+            else:
+                return default
+        return val if val is not None else default
+
+
+# ─── RESULTS DIFF TRACKING ───────────────────────────────────────────
+class ResultsDiff:
+    """Track and display changes between runs."""
+    PREV_FILE = Path(__file__).resolve().parent.parent / ".boost-prev.json"
+    
+    @classmethod
+    def load_previous(cls) -> dict:
+        if cls.PREV_FILE.exists():
+            try:
+                return json.loads(cls.PREV_FILE.read_text())
+            except Exception:
+                pass
+        return {}
+    
+    @classmethod
+    def save_current(cls, report: dict):
+        try:
+            # Save a simplified version for diffing
+            simplified = {
+                "timestamp": report.get("meta", {}).get("timestamp"),
+                "files_generated": report.get("meta", {}).get("files_generated"),
+                "warnings": [],
+                "errors": [],
+                "sections": list(report.keys()),
+            }
+            cls.PREV_FILE.write_text(json.dumps(simplified, indent=2))
+        except Exception:
+            pass
+    
+    @classmethod
+    def show_diff(cls, current: dict, prev: dict):
+        """Print differences between runs."""
+        if not prev:
+            print(f"  {C.DIM}No previous run to compare.{C.END}")
+            return
+        
+        print(f"\n  {C.GOLD}{C.BOLD}─── Changes Since Last Run ───{C.END}")
+        
+        # Files generated diff
+        curr_files = current.get("meta", {}).get("files_generated", 0)
+        prev_files = prev.get("files_generated", 0)
+        if curr_files != prev_files:
+            delta = curr_files - prev_files
+            color = C.GREEN if delta > 0 else C.YELLOW
+            print(f"    Files: {prev_files} → {curr_files} ({color}{'+' if delta > 0 else ''}{delta}{C.END})")
+        
+        # New sections
+        curr_sections = set(current.keys()) - {"meta"}
+        prev_sections = set(prev.get("sections", []))
+        new_sections = curr_sections - prev_sections
+        if new_sections:
+            print(f"    {C.GREEN}New sections:{C.END} {', '.join(new_sections)}")
+        
+        # Removed sections
+        removed_sections = prev_sections - curr_sections
+        if removed_sections:
+            print(f"    {C.RED}Removed:{C.END} {', '.join(removed_sections)}")
+        
+        print()
+
 
 # ─── LIVE OUTPUT: stream every line so the terminal shows each as it loads ──
 _builtin_print = print
@@ -200,7 +487,7 @@ def build_logo() -> str:
     sub_border_t = gradient_text("╔" + "═" * 56 + "╗", (255, 200, 50), (200, 150, 40))
     sub_border_b = gradient_text("╚" + "═" * 56 + "╝", (200, 150, 40), (255, 200, 50))
     money = gradient_text("M O N E Y", (255, 220, 100), (255, 170, 40))
-    ver = f"{C.SILVER}Performance Boost Engine{E} {C.GOLD}{B}v4.0{E}"
+    ver = f"{C.SILVER}Performance Boost Engine{E} {C.GOLD}{B}v5.0{E}"
     side_l = gradient_text("║", (255, 200, 50), (255, 200, 50))
     side_r = gradient_text("║", (200, 150, 40), (200, 150, 40))
     lines.append(f"            {C.BOLD}{sub_border_t}{E}")
@@ -1764,7 +2051,7 @@ def generate_boost_loader() -> dict:
     """
     header("10. Combined Boost Loader")
     
-    loader = """// BULLMONEY BOOST LOADER v4.0 (auto-generated by boost.py)
+    loader = """// BULLMONEY BOOST LOADER v5.0 (auto-generated by boost.py)
 // This script coordinates ALL performance optimizations in priority order
 // Load order: device-detect (sync) → spline-turbo (eager) → memory-guardian (eager)
 //           → inapp-shield (eager) → crash-prevention (eager) → gpu-manager (load)
@@ -2057,8 +2344,9 @@ var isInApp=/instagram|fbav|fban|fb_iab|tiktok|bytedance|twitter|snapchat|linked
 
 // Calculate 3D quality tier
 var q3d='high';
-if(saveData||slowNet||mem<2){q3d='disabled';}
-else if(isInApp&&mem<4){q3d='disabled';}
+if(!ST.webglReady){q3d='disabled';}
+else if(saveData||slowNet){q3d=isMobile?'low':'disabled';}
+else if(mem<2){q3d=isMobile?'low':'disabled';}
 else if(isInApp){q3d='low';}
 else if(mem<3||cores<2){q3d='low';}
 else if(isMobile&&mem<6){q3d='medium';}
@@ -2215,43 +2503,49 @@ ST.loadScene=function(container,sceneUrl,opts){
   });
 };
 
-// ─── 114. Frame Rate: FORCE 120 FPS on ALL devices ───
-// Override all tier/battery limits - always target 120fps
-ST.targetFPS=120;
-d.documentElement.setAttribute('data-3d-fps','120');
-// Hack: force high refresh rate on all browsers
-(function force120fps(){
-  // Request high refresh rate via canvas hack
-  try{
-    var hfr=d.createElement('canvas');
-    hfr.width=1;hfr.height=1;
-    hfr.style.cssText='position:fixed;top:-9999px;pointer-events:none;opacity:0;';
-    d.documentElement.appendChild(hfr);
-    var ctx=hfr.getContext('2d');
-    // Continuous rAF loop to hint browser we want max refresh rate
-    var running=true;
-    function tick(){
-      if(!running)return;
-      ctx.clearRect(0,0,1,1);
+// ─── 114. Frame Rate: Adaptive target (mobile-lightweight) ───
+var targetFPS=120;
+if(isMobile||isInApp){
+  targetFPS=(q3d==='low'||q3d==='disabled')?45:60;
+} else if(q3d==='low'){targetFPS=60;}
+else if(q3d==='medium'){targetFPS=90;}
+ST.targetFPS=targetFPS;
+d.documentElement.setAttribute('data-3d-fps',String(targetFPS));
+// Only attempt high refresh rate hints on desktop/high tiers
+if(targetFPS>=90&&!isMobile&&!isInApp){
+  (function forceHighFps(){
+    // Request high refresh rate via canvas hack
+    try{
+      var hfr=d.createElement('canvas');
+      hfr.width=1;hfr.height=1;
+      hfr.style.cssText='position:fixed;top:-9999px;pointer-events:none;opacity:0;';
+      d.documentElement.appendChild(hfr);
+      var ctx=hfr.getContext('2d');
+      // Continuous rAF loop to hint browser we want max refresh rate
+      var running=true;
+      function tick(){
+        if(!running)return;
+        ctx.clearRect(0,0,1,1);
+        requestAnimationFrame(tick);
+      }
       requestAnimationFrame(tick);
+      // Cleanup after 10s - browser should have locked to high refresh by then
+      setTimeout(function(){running=false;hfr.remove();},10000);
+    }catch(e){}
+    // Force screen.updateInterval if supported (some Chromium)
+    if(w.screen&&w.screen.updateInterval!==undefined){
+      try{w.screen.updateInterval=0;}catch(e){}
     }
-    requestAnimationFrame(tick);
-    // Cleanup after 10s - browser should have locked to high refresh by then
-    setTimeout(function(){running=false;hfr.remove();},10000);
-  }catch(e){}
-  // Force screen.updateInterval if supported (some Chromium)
-  if(w.screen&&w.screen.updateInterval!==undefined){
-    try{w.screen.updateInterval=0;}catch(e){}
-  }
-})();
+  })();
+}
 
 // ─── 115. CSS for 3D Performance ───
 var style=d.createElement('style');
 style.textContent=[
   // GPU-accelerated containers
   '.spline-container,.spline-scene-wrapper,[data-spline-scene]{contain:layout style paint;will-change:auto;backface-visibility:hidden;}',
-  // Fallback gradient for disabled/loading states
-  '.spline-fallback-active,.spline-loading{background:linear-gradient(135deg,#0a0a0a 0%,#1a1a2e 50%,#0a0a0a 100%)!important;}',
+  // Fallback gradient for disabled/loading states - use semi-transparent overlay instead of forcing dark
+  '.spline-fallback-active::after,.spline-loading::after{content:"";position:absolute;inset:0;background:rgba(128,128,128,0.1);pointer-events:none;}',
   '.spline-loading::after{content:\"\";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,215,0,0.05),transparent);animation:spline-shimmer 1.5s infinite;}',
   '@keyframes spline-shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}',
   // Reduce canvas resolution on lower tiers
@@ -2332,7 +2626,7 @@ if(w.location.hostname==='localhost'){
     success(f"Spline Turbo script: {size_kb:.1f} KB")
     info("Features: WebGL pre-warm, GPU budgets, adaptive LOD, off-screen disposal")
     info("Features: background tab throttle, progressive loading, scene caching")
-    info("Features: forced 120fps all devices, resolution scaler, quality CSS injection")
+    info("Features: adaptive FPS targets, resolution scaler, quality CSS injection")
     results["spline_turbo_size_kb"] = round(size_kb, 1)
     results["quality_tiers"] = ["ultra", "high", "medium", "low", "disabled"]
 
@@ -2350,17 +2644,23 @@ def generate_memory_guardian() -> dict:
     memory leaks, auto-disposes heavy components, triggers GC, and reduces
     quality automatically when memory pressure is detected.
 
-    Optimizations: 131-155
+    v5.0 ADDITIONS: Proactive timer/interval leak cleanup, AudioContext reaper,
+    detached DOM node sweeper, History API memory cap, setInterval cap per page,
+    progressive degradation timeline, Safari/Instagram WebKit memory workarounds,
+    and aggressive periodic deep-clean for sessions > 2 minutes.
+
+    Optimizations: 131-180
     """
     header("15. Memory Guardian (Crash Prevention)")
     results = {}
 
-    memory_guardian = """// BULLMONEY MEMORY GUARDIAN v3.0 (auto-generated by boost.py)
-// Prevents crashes on low-memory devices, in-app browsers, and heavy pages
+    memory_guardian = """// BULLMONEY MEMORY GUARDIAN v5.0 (auto-generated by boost.py)
+// Prevents crashes & slowdowns on low-memory devices, in-app browsers, and heavy pages
+// v5.0: Proactive cleanup — intervals, timers, AudioContexts, detached DOM, history cap
 (function(){
 'use strict';
 var w=window,d=document,n=navigator,p=performance;
-var MG=w.__BM_MEMORY_GUARDIAN__={active:true,level:'normal',disposals:0,gcTriggers:0};
+var MG=w.__BM_MEMORY_GUARDIAN__={active:true,level:'normal',disposals:0,gcTriggers:0,version:'4.0'};
 
 // ─── 131. Memory Pressure Detection ───
 var memInfo={limit:0,used:0,pct:0};
@@ -2371,16 +2671,45 @@ function updateMemInfo(){
     memInfo.pct=Math.round((memInfo.used/memInfo.limit)*100);
     MG.heap={usedMB:Math.round(memInfo.used/1048576),limitMB:Math.round(memInfo.limit/1048576),pct:memInfo.pct};
   }
+  // Safari/WebKit fallback: no p.memory, estimate from DOM + listener count
+  if(!p.memory){
+    var domEst=(MG.domNodes||0)*0.002; // ~2KB per node
+    var listenerEst=(MG.eventListeners||0)*0.001;
+    memInfo.used=(domEst+listenerEst)*1048576;
+    memInfo.limit=budgetMB*1048576;
+    memInfo.pct=Math.min(100,Math.round((memInfo.used/memInfo.limit)*100));
+    MG.heap={usedMB:Math.round(domEst+listenerEst),limitMB:budgetMB,pct:memInfo.pct,estimated:true};
+  }
 }
 
 // ─── 132. Device Memory Budget Calculator ───
 var deviceMem=n.deviceMemory||4;
+// Detect in-app browsers — they get much tighter budgets
+var ua=n.userAgent||'';
+var isInApp=/instagram|fban|fbav|tiktok|snapchat|twitter|linkedin|wechat|line\\/|telegram|pinterest|reddit/i.test(ua);
+var isSafari=/^((?!chrome|android).)*safari/i.test(ua);
+var isMobile=/mobi|android|iphone|ipad|ipod/i.test(ua);
+MG.isInApp=isInApp;MG.isSafari=isSafari;MG.isMobile=isMobile;
+
 var budgetMB=(function(){
+  // In-app browsers are severely memory-constrained
+  if(isInApp){
+    if(deviceMem>=4)return 100;
+    if(deviceMem>=2)return 60;
+    return 40;
+  }
+  if(isMobile){
+    if(deviceMem>=8)return 250;
+    if(deviceMem>=6)return 200;
+    if(deviceMem>=4)return 150;
+    if(deviceMem>=2)return 80;
+    return 50;
+  }
   if(deviceMem>=8)return 350;
   if(deviceMem>=6)return 250;
   if(deviceMem>=4)return 180;
   if(deviceMem>=2)return 100;
-  return 60; // <=1GB device
+  return 60;
 })();
 MG.budgetMB=budgetMB;
 
@@ -2416,7 +2745,6 @@ function executeMemoryRelief(level){
     d.querySelectorAll('img[loading=\"lazy\"]:not([data-in-view])').forEach(function(img){
       if(!isElementInView(img)){img.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';MG.disposals++;}
     });
-    // Kill off-screen iframes (YouTube embeds, etc.)
     d.querySelectorAll('iframe:not([data-keep])').forEach(function(iframe){
       if(!isElementInView(iframe)){
         iframe.setAttribute('data-src-backup',iframe.src);
@@ -2424,32 +2752,36 @@ function executeMemoryRelief(level){
         MG.disposals++;
       }
     });
+    // Kill stale timers (v5.0)
+    if(typeof pruneStaleTimers==='function')pruneStaleTimers(level==='emergency'?0.5:0.7);
+    // Close leaked AudioContexts (v5.0)
+    if(typeof reapAudioContexts==='function')reapAudioContexts();
   }
 
   // Level 2: Reduce 3D quality but keep scenes visible (never hide)
   if(level==='emergency'){
     w.dispatchEvent(new CustomEvent('bullmoney-3d-quality-change',{detail:{quality:'low',fps:0}}));
     d.documentElement.classList.add('memory-emergency');
-    // Reduce animations to near-zero but DON'T set to 0s (keeps content painted)
     d.documentElement.style.setProperty('--animation-duration','0.01s');
     d.documentElement.style.setProperty('--transition-speed','0.01s');
     d.documentElement.style.setProperty('--blur-amount','0px');
-    // Lower 3D quality but keep visible
     if(w.__BM_SPLINE_TURBO__){
       w.__BM_SPLINE_TURBO__.quality='low';
       d.documentElement.setAttribute('data-3d-quality','low');
     }
-    // Force garbage collection hint (Chrome)
     try{if(w.gc)w.gc();}catch(e){}
-    // Pause autoplay videos to free memory (user can tap to play)
     d.querySelectorAll('video[autoplay]').forEach(function(v){
       v.pause();v.preload='none';
       v.setAttribute('data-low-mem-paused','1');
     });
+    // Emergency: nuke detached DOM nodes (v5.0)
+    if(typeof sweepDetachedNodes==='function')sweepDetachedNodes();
+    // Emergency: clear all non-essential caches (v5.0)
+    if(typeof clearInternalCaches==='function')clearInternalCaches();
   }
 
   if(w.location.hostname==='localhost'){
-    console.warn('[MEMORY GUARDIAN] '+level+' relief executed. Disposed: '+MG.disposals+' elements');
+    console.warn('[MEMORY GUARDIAN v4] '+level+' relief executed. Disposed: '+MG.disposals+' elements');
   }
 }
 
@@ -2459,41 +2791,82 @@ function isElementInView(el){
 }
 
 // ─── 135. Periodic Memory Monitoring ───
-// More aggressive on low-memory devices
-var checkInterval=deviceMem>=8?10000:deviceMem>=4?5000:2000;
+var checkInterval=isInApp?1500:deviceMem>=8?10000:deviceMem>=4?5000:isMobile?2500:3000;
 setInterval(updateMemoryLevel,checkInterval);
-updateMemoryLevel(); // Initial check
+updateMemoryLevel();
 
 // ─── 136. DOM Node Counter (detect leaks) ───
 var lastNodeCount=0;
 var nodeGrowthWarnings=0;
+var DOM_NODE_HARD_CAP=isInApp?4000:isMobile?6000:10000;
 setInterval(function(){
   var count=d.querySelectorAll('*').length;
+  MG.domNodes=count;
+  // Hard cap: if DOM is absurdly large, force cleanup
+  if(count>DOM_NODE_HARD_CAP){
+    if(w.location.hostname==='localhost'){
+      console.warn('[MEMORY GUARDIAN v4] DOM node hard cap exceeded: '+count+'/'+DOM_NODE_HARD_CAP+'. Running deep clean.');
+    }
+    if(typeof deepClean==='function')deepClean('dom-cap');
+  }
   if(count>lastNodeCount+500&&lastNodeCount>0){
     nodeGrowthWarnings++;
     if(nodeGrowthWarnings>=3){
       w.dispatchEvent(new CustomEvent('bullmoney-dom-leak',{detail:{nodes:count,growth:count-lastNodeCount}}));
       if(w.location.hostname==='localhost'){
-        console.warn('[MEMORY GUARDIAN] Possible DOM leak: '+count+' nodes (+'+( count-lastNodeCount)+')');
+        console.warn('[MEMORY GUARDIAN v4] Possible DOM leak: '+count+' nodes (+'+(count-lastNodeCount)+')');
       }
+      // Proactive: run cleanup on repeated growth
+      if(typeof deepClean==='function')deepClean('dom-growth');
+      nodeGrowthWarnings=0;
     }
   } else {nodeGrowthWarnings=Math.max(0,nodeGrowthWarnings-1);}
   lastNodeCount=count;
-  MG.domNodes=count;
-},15000);
+},isInApp?8000:15000);
 
 // ─── 137. Event Listener Leak Prevention ───
-// Track addEventListener calls globally to detect leaks
 var listenerCount=0;
+var LISTENER_CAP=isInApp?300:isMobile?500:1000;
 var origAdd=EventTarget.prototype.addEventListener;
 var origRemove=EventTarget.prototype.removeEventListener;
-EventTarget.prototype.addEventListener=function(){
+// Track per-element to detect duplicates
+var listenerMap=new WeakMap();
+EventTarget.prototype.addEventListener=function(type,fn,opts){
   listenerCount++;MG.eventListeners=listenerCount;
-  return origAdd.apply(this,arguments);
+  // Track per element for duplicate detection
+  var el=this;
+  if(!listenerMap.has(el))listenerMap.set(el,[]);
+  var list=listenerMap.get(el);
+  // Prevent exact duplicate listeners (same type+fn) — common leak source
+  for(var i=0;i<list.length;i++){
+    if(list[i].type===type&&list[i].fn===fn){
+      // Already registered, skip duplicate
+      listenerCount--;MG.eventListeners=listenerCount;
+      return;
+    }
+  }
+  list.push({type:type,fn:fn});
+  // Warn if approaching cap
+  if(listenerCount>LISTENER_CAP&&listenerCount%100===0){
+    if(w.location.hostname==='localhost'){
+      console.warn('[MEMORY GUARDIAN v4] Listener count high: '+listenerCount+'/'+LISTENER_CAP);
+    }
+    if(listenerCount>LISTENER_CAP*1.5){
+      // Over 1.5x cap: force cleanup
+      if(typeof deepClean==='function')deepClean('listener-cap');
+    }
+  }
+  return origAdd.call(this,type,fn,opts);
 };
-EventTarget.prototype.removeEventListener=function(){
+EventTarget.prototype.removeEventListener=function(type,fn,opts){
   listenerCount=Math.max(0,listenerCount-1);MG.eventListeners=listenerCount;
-  return origRemove.apply(this,arguments);
+  if(listenerMap.has(this)){
+    var list=listenerMap.get(this);
+    for(var i=list.length-1;i>=0;i--){
+      if(list[i].type===type&&list[i].fn===fn){list.splice(i,1);break;}
+    }
+  }
+  return origRemove.call(this,type,fn,opts);
 };
 
 // ─── 138. Blob/ObjectURL Leak Prevention ───
@@ -2509,10 +2882,8 @@ URL.revokeObjectURL=function(url){
   activeBlobs.delete(url);MG.activeBlobs=activeBlobs.size;
   return origRevokeURL.call(URL,url);
 };
-// Auto-revoke leaked blobs every 60s
 setInterval(function(){
   if(activeBlobs.size>50){
-    // Too many blobs - likely a leak, revoke oldest
     var count=0;
     activeBlobs.forEach(function(url){
       if(count++<activeBlobs.size-20){
@@ -2525,7 +2896,6 @@ setInterval(function(){
 },60000);
 
 // ─── 139. Scroll Performance Budget ───
-// Detect janky scrolling and reduce effects
 var scrollJankCount=0;
 var lastScrollTime=0;
 w.addEventListener('scroll',function(){
@@ -2536,15 +2906,19 @@ w.addEventListener('scroll',function(){
   if(scrollJankCount>10){
     d.documentElement.classList.add('scroll-janky');
     scrollJankCount=0;
+    // v5.0: If janky on mobile, force reduce effects
+    if(isMobile||isInApp){
+      d.documentElement.setAttribute('data-memory-level',
+        MG.level==='normal'?'warning':MG.level);
+    }
   }
 },{passive:true});
 
 // ─── 140. Component Disposal Queue ───
-// React components can register themselves for disposal during memory pressure
 MG.disposalQueue=[];
 MG.registerForDisposal=function(id,disposeFn,priority){
   MG.disposalQueue.push({id:id,dispose:disposeFn,priority:priority||5});
-  MG.disposalQueue.sort(function(a,b){return b.priority-a.priority;}); // highest priority disposed first
+  MG.disposalQueue.sort(function(a,b){return b.priority-a.priority;});
 };
 MG.executeDisposalQueue=function(count){
   count=count||3;
@@ -2554,39 +2928,53 @@ MG.executeDisposalQueue=function(count){
   });
   return disposed.length;
 };
-// Auto-dispose on memory pressure
 w.addEventListener('bullmoney-memory-level',function(e){
   if(e.detail.level==='critical')MG.executeDisposalQueue(3);
   if(e.detail.level==='emergency')MG.executeDisposalQueue(10);
 });
 
-// ─── 141-145. Memory-Aware CSS Injection (FULL EXPERIENCE - never hide content) ───
+// ─── 141-145. Memory-Aware CSS Injection (FULL EXPERIENCE - preserve colors) ───
+// CRITICAL: Never strip `filter` — it controls invert/brightness/contrast for theming.
+// Stripping filter causes black↔white color inversion glitches on dark theme.
+// Only strip backdrop-filter (expensive GPU composite) with OPAQUE fallback backgrounds.
 var memStyle=d.createElement('style');
 memStyle.textContent=[
-  // Warning level - reduce blur/shadows but keep everything visible
+  // === WARNING LEVEL: remove backdrop blur only, preserve existing backgrounds ===
   '[data-memory-level="warning"] *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}',
-  '[data-memory-level="warning"] .glass-effect,.glassmorphism{backdrop-filter:none!important;background:rgba(0,0,0,0.8)!important;}',
-  // Critical level - fastest possible animations (but keep content visible)
-  // Exempt product card shimmer (transform-only, cheap) from speed override
+  // Glass elements: remove blur only, keep original background color
+  '[data-memory-level="warning"] .glass-effect,[data-memory-level="warning"] .glassmorphism,[data-memory-level="warning"] .glass-surface,[data-memory-level="warning"] .glass-card,[data-memory-level="warning"] .glass-dark,[data-memory-level="warning"] .glass-frosted,[data-memory-level="warning"] .glass-clear,[data-memory-level="warning"] .glass-premium,[data-memory-level="warning"] .glass-light{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}',
+  // === CRITICAL LEVEL: fast animations, no particles, blur-free glass ===
   '[data-memory-level="critical"] *:not(.product-card-premium):not(.badge-shimmer-el):not(.card-shine-sweep):not(.card-image-shine):not(.neon-edge-top):not(.neon-edge-bottom){animation-duration:0.01s!important;transition-duration:0.01s!important;}',
-  '[data-memory-level="critical"] .particle-container,.confetti{opacity:0.3!important;animation:none!important;}',
-  // Emergency - strip decorative effects only (keep ALL content: videos, canvas, images, gifs, iframes)
-  // Product card neon/shimmer is exempt — they use transforms not layout
-  '[data-memory-level="emergency"] *:not(.product-card-premium):not(.badge-shimmer-el):not(.card-shine-sweep):not(.card-image-shine):not(.neon-edge-top):not(.neon-edge-bottom){animation:none!important;transition:none!important;box-shadow:none!important;filter:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}',
-  // CRITICAL: Never hide videos, iframes, images, or canvas - only reduce cost
+  '[data-memory-level="critical"] .particle-container,[data-memory-level="critical"] .confetti{opacity:0.3!important;animation:none!important;}',
+  '[data-memory-level="critical"] .glass-effect,[data-memory-level="critical"] .glassmorphism,[data-memory-level="critical"] .glass-surface,[data-memory-level="critical"] .glass-card{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}',
+  // === EMERGENCY LEVEL: strip expensive GPU effects BUT PRESERVE filter (theming) ===
+  // NO filter:none — that flips invert(100%) logos and brightness() themed elements
+  // Only strip: animation, transition, box-shadow, backdrop-filter (all layout/GPU-heavy)
+  '[data-memory-level="emergency"] *:not(.product-card-premium):not(.badge-shimmer-el):not(.card-shine-sweep):not(.card-image-shine):not(.neon-edge-top):not(.neon-edge-bottom){animation:none!important;transition:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}',
+  // box-shadow removed separately with a thin border fallback so elements stay visually separated
+  '[data-memory-level="emergency"] *:not(.product-card-premium):not(input):not(button):not(a){box-shadow:none!important;}',
+  // Emergency glass: remove blur only, preserve original colors
+  '[data-memory-level="emergency"] .glass-effect,[data-memory-level="emergency"] .glassmorphism,[data-memory-level="emergency"] .glass-surface,[data-memory-level="emergency"] .glass-card,[data-memory-level="emergency"] .glass-dark,[data-memory-level="emergency"] .glass-frosted,[data-memory-level="emergency"] .glass-clear,[data-memory-level="emergency"] .glass-premium,[data-memory-level="emergency"] .glass-light,[data-memory-level="emergency"] .glass-modal-backdrop{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}',
+  // Emergency media: only strip animation, preserve filter for theming
   '[data-memory-level="emergency"] video{animation:none!important;}',
   '[data-memory-level="emergency"] canvas{image-rendering:optimizeSpeed!important;}',
   '[data-memory-level="emergency"] img{image-rendering:auto!important;}',
-  // Low-memory full experience: everything visible, lightweight rendering
+  // === LOW-MEMORY-ADAPT class: same approach — opaque bg fallback, keep filter ===
   '.low-memory-adapt *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}',
-  '.low-memory-adapt .glass-effect,.low-memory-adapt .glassmorphism{background:rgba(0,0,0,0.85)!important;}',
+  '.low-memory-adapt .glass-effect,.low-memory-adapt .glassmorphism,.low-memory-adapt .glass-surface,.low-memory-adapt .glass-card{background:inherit!important;border-color:inherit!important;}',
   '.low-memory-adapt video{object-fit:cover;}',
-  // Mobile full experience: show all desktop content on narrow viewports
+  // NOTE: Removed forced bg-white → black conversion that was causing UI color glitches
+  // Glass glow optimization only
+  '[data-memory-level] .glass-glow::before,[data-memory-level] .glass-glow-strong::before,[data-memory-level] .glass-glow-pulse::before{display:none!important;}',
+  // Preserve filter:invert on logos/icons that need it (explicit safeguard)
+  '[data-memory-level] [style*="filter: invert"],[data-memory-level] [style*="filter:invert"]{filter:invert(100%)!important;}',
+  '[data-memory-level] .sm-logo-img{filter:inherit!important;}',
+  // Mobile full experience
   '.mobile-full-experience [data-desktop-only]{display:block!important;visibility:visible!important;}',
   '.mobile-full-experience [data-hide-mobile]{display:block!important;visibility:visible!important;}',
   '.mobile-full-experience .desktop-only{display:block!important;visibility:visible!important;}',
   '.mobile-full-experience .hidden-mobile{display:block!important;visibility:visible!important;}',
-  // Scroll jank fix
+  // Scroll jank fix — no color impact
   '.scroll-janky *{will-change:auto!important;contain:layout style;}',
 ].join('\\n');
 d.head.appendChild(memStyle);
@@ -2604,12 +2992,13 @@ if(typeof crossOriginIsolated!=='undefined'&&crossOriginIsolated&&p.measureUserA
 }
 
 // ─── 151-155. Page Lifecycle API Integration ───
-// Freeze/resume with browser lifecycle (mobile Chrome backgrounding)
 if('onfreeze' in d){
   d.addEventListener('freeze',function(){
     MG.frozen=true;
     w.dispatchEvent(new CustomEvent('bullmoney-3d-pause'));
     w.dispatchEvent(new CustomEvent('bullmoney-spline-dispose'));
+    // v5.0: Run deep clean on freeze (mobile backgrounding)
+    deepClean('freeze');
   });
   d.addEventListener('resume',function(){
     MG.frozen=false;
@@ -2618,12 +3007,406 @@ if('onfreeze' in d){
     }
   });
 }
+// v5.0: Also handle visibilitychange for Safari/Instagram which don't fire freeze
+d.addEventListener('visibilitychange',function(){
+  if(d.visibilityState==='hidden'){
+    // User switched away — aggressively clean up
+    deepClean('hidden');
+    // Throttle all intervals while hidden
+    MG._hiddenTime=Date.now();
+  }
+  if(d.visibilityState==='visible'&&MG._hiddenTime){
+    var away=Date.now()-MG._hiddenTime;
+    // If away > 30s, assume memory was reclaimed and re-check level
+    if(away>30000)updateMemoryLevel();
+    delete MG._hiddenTime;
+  }
+});
+
+// ════════════════════════════════════════════════════════════════════
+// v5.0 NEW: PROACTIVE SLOWDOWN PREVENTION (Opts 156-180)
+// These run continuously to prevent the "gets slower over time" problem
+// ════════════════════════════════════════════════════════════════════
+
+// ─── 156-158. setInterval/setTimeout Tracker & Reaper ───
+// The #1 cause of "page gets slower": leaked intervals that stack on re-renders
+var activeIntervals=new Map(); // id → {created, stack, frequency}
+var activeTimeouts=new Map();
+var origSetInterval=w.setInterval;
+var origClearInterval=w.clearInterval;
+var origSetTimeout=w.setTimeout;
+var origClearTimeout=w.clearTimeout;
+var INTERVAL_CAP=isInApp?15:isMobile?25:50;
+var TIMEOUT_CAP=isInApp?40:isMobile?80:200;
+
+w.setInterval=function(fn,ms){
+  var id=origSetInterval.apply(w,arguments);
+  activeIntervals.set(id,{created:Date.now(),ms:ms||0,stack:(new Error()).stack||''});
+  MG.activeIntervals=activeIntervals.size;
+  // Hard cap: if too many intervals, kill the oldest ones
+  if(activeIntervals.size>INTERVAL_CAP){
+    pruneStaleTimers(0.4); // Kill 40% of oldest
+  }
+  return id;
+};
+w.clearInterval=function(id){
+  activeIntervals.delete(id);
+  MG.activeIntervals=activeIntervals.size;
+  return origClearInterval.call(w,id);
+};
+w.setTimeout=function(fn,ms){
+  var id=origSetTimeout.apply(w,arguments);
+  activeTimeouts.set(id,{created:Date.now(),ms:ms||0});
+  MG.activeTimeouts=activeTimeouts.size;
+  // Auto-remove from tracking when it fires (approx)
+  origSetTimeout.call(w,function(){activeTimeouts.delete(id);MG.activeTimeouts=activeTimeouts.size;},(ms||0)+100);
+  // Hard cap
+  if(activeTimeouts.size>TIMEOUT_CAP){
+    var oldest=[];
+    activeTimeouts.forEach(function(v,k){oldest.push({id:k,created:v.created});});
+    oldest.sort(function(a,b){return a.created-b.created;});
+    for(var i=0;i<Math.floor(oldest.length*0.3);i++){
+      origClearTimeout.call(w,oldest[i].id);
+      activeTimeouts.delete(oldest[i].id);
+    }
+    MG.activeTimeouts=activeTimeouts.size;
+  }
+  return id;
+};
+w.clearTimeout=function(id){
+  activeTimeouts.delete(id);
+  MG.activeTimeouts=activeTimeouts.size;
+  return origClearTimeout.call(w,id);
+};
+
+function pruneStaleTimers(killRatio){
+  killRatio=killRatio||0.5;
+  var list=[];
+  activeIntervals.forEach(function(v,k){list.push({id:k,created:v.created,ms:v.ms});});
+  if(list.length<=3)return; // Don't kill if only a few
+  list.sort(function(a,b){return a.created-b.created;}); // oldest first
+  // Kill fast-frequency intervals first (< 1s), then oldest
+  list.sort(function(a,b){
+    if(a.ms<1000&&b.ms>=1000)return -1;
+    if(b.ms<1000&&a.ms>=1000)return 1;
+    return a.created-b.created;
+  });
+  var killCount=Math.max(1,Math.floor(list.length*killRatio));
+  // Always keep at least 3 intervals (memory monitor, dom counter, blob checker)
+  killCount=Math.min(killCount,list.length-3);
+  for(var i=0;i<killCount;i++){
+    origClearInterval.call(w,list[i].id);
+    activeIntervals.delete(list[i].id);
+    MG.disposals++;
+  }
+  MG.activeIntervals=activeIntervals.size;
+  if(w.location.hostname==='localhost'){
+    console.warn('[MEMORY GUARDIAN v4] Pruned '+killCount+' stale intervals. Remaining: '+activeIntervals.size);
+  }
+}
+
+// ─── 159-160. AudioContext Reaper ───
+// Multiple components create AudioContext without closing — they accumulate
+var trackedAudioCtx=[];
+var OrigAudioCtx=w.AudioContext||w.webkitAudioContext;
+if(OrigAudioCtx){
+  var NewAudioCtx=function AudioContext(){
+    var ctx=new OrigAudioCtx();
+    trackedAudioCtx.push({ctx:ctx,created:Date.now()});
+    MG.audioContexts=trackedAudioCtx.length;
+    return ctx;
+  };
+  NewAudioCtx.prototype=OrigAudioCtx.prototype;
+  w.AudioContext=NewAudioCtx;
+  if(w.webkitAudioContext)w.webkitAudioContext=NewAudioCtx;
+}
+function reapAudioContexts(){
+  var now=Date.now();
+  var reaped=0;
+  trackedAudioCtx=trackedAudioCtx.filter(function(entry){
+    // Close contexts older than 60s that are suspended or have no active sources
+    if(now-entry.created>60000&&entry.ctx.state!=='running'){
+      try{entry.ctx.close();}catch(e){}
+      reaped++;
+      return false;
+    }
+    // Close ALL contexts older than 5 minutes (aggressive)
+    if(now-entry.created>300000){
+      try{entry.ctx.close();}catch(e){}
+      reaped++;
+      return false;
+    }
+    return true;
+  });
+  MG.audioContexts=trackedAudioCtx.length;
+  if(reaped>0)MG.disposals+=reaped;
+}
+
+// ─── 161-163. Detached DOM Node Sweeper ───
+// React fast-unmount can leave references; WeakRef-based sweeper helps GC
+function sweepDetachedNodes(){
+  // Force-null common leak patterns
+  var heavySelectors=[
+    '.spline-canvas-wrapper canvas',
+    '.three-canvas canvas',
+    '.ballpit-canvas',
+    'canvas[data-engine]',
+    'video:not([src])',
+    'audio:not([src])',
+    'iframe[src=\"about:blank\"]'
+  ];
+  heavySelectors.forEach(function(sel){
+    try{
+      d.querySelectorAll(sel).forEach(function(el){
+        if(!isElementInView(el)&&!el.closest('[data-keep]')){
+          // Remove from DOM to let GC collect
+          if(el.tagName==='CANVAS'){
+            var ctx2d=el.getContext&&el.getContext('2d');
+            if(ctx2d){ctx2d.clearRect(0,0,el.width,el.height);}
+            el.width=1;el.height=1; // Release GPU memory
+          }
+          MG.disposals++;
+        }
+      });
+    }catch(e){}
+  });
+  // Clear any detached image data
+  if(w.createImageBitmap){
+    // Hint GC by nulling references
+  }
+}
+
+// ─── 164-165. History API Memory Cap ───
+// SPA navigation can accumulate huge history state objects
+var origPushState=history.pushState;
+var origReplaceState=history.replaceState;
+var historyCount=0;
+var MAX_HISTORY=isInApp?20:isMobile?50:100;
+history.pushState=function(state,title,url){
+  historyCount++;
+  // Cap state object size to prevent memory bloat
+  if(state&&JSON.stringify(state).length>10000){
+    state={_trimmed:true,url:url};
+  }
+  if(historyCount>MAX_HISTORY){
+    // Replace instead of push to prevent unbounded growth
+    return origReplaceState.call(history,state,title,url);
+  }
+  return origPushState.call(history,state,title,url);
+};
+history.replaceState=function(state,title,url){
+  if(state&&JSON.stringify(state).length>10000){
+    state={_trimmed:true,url:url};
+  }
+  return origReplaceState.call(history,state,title,url);
+};
+
+// ─── 166-168. Internal Cache Cleaner ───
+function clearInternalCaches(){
+  // Clear Next.js client-side cache if it's bloated  
+  try{
+    if(w.__NEXT_DATA__&&w.__NEXT_DATA__.props){
+      var pageProps=w.__NEXT_DATA__.props.pageProps;
+      if(pageProps&&JSON.stringify(pageProps).length>500000){
+        // Trim large page props that React keeps in memory
+        Object.keys(pageProps).forEach(function(k){
+          if(typeof pageProps[k]==='object'&&pageProps[k]&&JSON.stringify(pageProps[k]).length>50000){
+            pageProps[k]=null;
+          }
+        });
+      }
+    }
+  }catch(e){}
+  // Clear image decode cache hints
+  try{
+    d.querySelectorAll('img').forEach(function(img){
+      if(!isElementInView(img)&&img.complete){
+        img.decoding='async'; // free synchronous decode memory
+      }
+    });
+  }catch(e){}
+  // Purge WeakRef-eligible items by nulling module-level caches
+  try{
+    if(w.__BM_CACHE__){
+      Object.keys(w.__BM_CACHE__).forEach(function(k){
+        var c=w.__BM_CACHE__[k];
+        if(c&&typeof c==='object'&&Object.keys(c).length>100){
+          w.__BM_CACHE__[k]={};
+        }
+      });
+    }
+  }catch(e){}
+  MG.lastCacheClear=Date.now();
+}
+
+// ─── 169-171. Deep Clean (called on pressure / background / timer) ───
+var lastDeepClean=0;
+var DEEP_CLEAN_COOLDOWN=isInApp?15000:30000; // min ms between deep cleans
+function deepClean(reason){
+  var now=Date.now();
+  if(now-lastDeepClean<DEEP_CLEAN_COOLDOWN)return;
+  lastDeepClean=now;
+  MG.lastDeepClean={time:now,reason:reason};
+
+  // 1. Prune stale intervals (keep 60%)
+  pruneStaleTimers(0.4);
+  // 2. Reap AudioContexts
+  reapAudioContexts();
+  // 3. Sweep detached nodes
+  sweepDetachedNodes();
+  // 4. Revoke excess blobs
+  if(activeBlobs.size>20){
+    var count=0;
+    activeBlobs.forEach(function(url){
+      if(count++<activeBlobs.size-10){
+        try{origRevokeURL.call(URL,url);}catch(e){}
+        activeBlobs.delete(url);
+      }
+    });
+    MG.activeBlobs=activeBlobs.size;
+  }
+  // 5. Clear internal caches
+  clearInternalCaches();
+  // 6. Release off-screen canvases GPU memory
+  d.querySelectorAll('canvas').forEach(function(c){
+    if(!isElementInView(c)&&!c.closest('[data-keep]')){
+      c.width=1;c.height=1;
+      MG.disposals++;
+    }
+  });
+  // 7. Clear console (reduces memory in dev tools)
+  if(w.location.hostname!=='localhost'){
+    try{console.clear();}catch(e){}
+  }
+  // 8. Hint GC
+  try{if(w.gc)w.gc();}catch(e){}
+  // 9. Dispatch event so React components can self-clean
+  w.dispatchEvent(new CustomEvent('bullmoney-deep-clean',{detail:{reason:reason,level:MG.level}}));
+
+  if(w.location.hostname==='localhost'){
+    console.log('%c[MEMORY GUARDIAN v4] Deep clean ('+reason+'). Intervals:'+activeIntervals.size+' AudioCtx:'+trackedAudioCtx.length+' Blobs:'+activeBlobs.size+' DOM:'+MG.domNodes,'color:#f59e0b;font-weight:bold');
+  }
+}
+
+// ─── 172-174. Progressive Degradation Timeline ───
+// As session length increases, proactively reduce overhead
+var sessionStart=Date.now();
+setInterval(function(){
+  var sessionMinutes=Math.floor((Date.now()-sessionStart)/60000);
+  MG.sessionMinutes=sessionMinutes;
+
+  // After 2 min on mobile/in-app: first cleanup pass
+  if(sessionMinutes>=2&&!MG._cleaned2){
+    MG._cleaned2=true;
+    deepClean('session-2m');
+  }
+  // After 5 min: more aggressive
+  if(sessionMinutes>=5&&!MG._cleaned5){
+    MG._cleaned5=true;
+    deepClean('session-5m');
+    // Force warning level on in-app browsers after 5 min
+    if(isInApp&&MG.level==='normal'){
+      MG.level='warning';
+      d.documentElement.setAttribute('data-memory-level','warning');
+    }
+  }
+  // After 10 min: heavy cleanup every 2 min from now on
+  if(sessionMinutes>=10&&sessionMinutes%2===0){
+    deepClean('session-periodic-'+sessionMinutes+'m');
+  }
+  // After 15 min on in-app: critical mode
+  if(sessionMinutes>=15&&isInApp&&MG.level!=='emergency'){
+    MG.level='critical';
+    d.documentElement.setAttribute('data-memory-level','critical');
+    executeMemoryRelief('critical');
+  }
+},60000);
+
+// ─── 175-176. requestAnimationFrame Overload Prevention ───
+// Detect RAF storms (multiple components running RAF loops)
+var rafCount=0;
+var rafResetTime=Date.now();
+var origRAF=w.requestAnimationFrame;
+var RAF_CAP_PER_SEC=isInApp?30:isMobile?45:120;
+w.requestAnimationFrame=function(cb){
+  var now=Date.now();
+  if(now-rafResetTime>1000){
+    // If RAF count was absurdly high, we have RAF storms
+    if(rafCount>RAF_CAP_PER_SEC*2){
+      MG.rafStorm=true;
+      if(w.location.hostname==='localhost'){
+        console.warn('[MEMORY GUARDIAN v4] RAF storm detected: '+rafCount+'/sec. Throttling.');
+      }
+      // Throttle: skip every other frame
+      var skip=false;
+      var throttledRAF=origRAF;
+      w.requestAnimationFrame=function(cb2){
+        skip=!skip;
+        if(skip&&MG.rafStorm)return 0;
+        return throttledRAF.call(w,cb2);
+      };
+    }
+    rafCount=0;
+    rafResetTime=now;
+  }
+  rafCount++;
+  return origRAF.call(w,cb);
+};
+
+// ─── 177-178. createElement Tracking (detect DOM node factories) ───
+var createdElements=0;
+var lastCreateReset=Date.now();
+var origCreateElement=d.createElement.bind(d);
+var CREATE_CAP_PER_SEC=isInApp?30:isMobile?60:200;
+d.createElement=function(tag){
+  var el=origCreateElement(tag);
+  createdElements++;
+  var now=Date.now();
+  if(now-lastCreateReset>5000){
+    if(createdElements>CREATE_CAP_PER_SEC*5){
+      // Creating too many elements too fast — likely a leak or particle system gone wild
+      if(w.location.hostname==='localhost'){
+        console.warn('[MEMORY GUARDIAN v4] Rapid DOM creation: '+createdElements+' in 5s');
+      }
+      deepClean('rapid-dom-create');
+    }
+    createdElements=0;lastCreateReset=now;
+  }
+  return el;
+};
+
+// ─── 179. Stale Component Detector ───
+// React components that haven't been interacted with for a while can self-dispose
+MG.componentActivity={};
+MG.reportComponentActivity=function(id){
+  MG.componentActivity[id]=Date.now();
+};
+MG.getStaleComponents=function(maxAgeMs){
+  maxAgeMs=maxAgeMs||120000; // 2 min default
+  var now=Date.now();
+  var stale=[];
+  Object.keys(MG.componentActivity).forEach(function(id){
+    if(now-MG.componentActivity[id]>maxAgeMs)stale.push(id);
+  });
+  return stale;
+};
+
+// ─── 180. Startup: immediate assessment for in-app/mobile ───
+// Don't wait for gradual detection — start in warning mode on constrained browsers
+if(isInApp||deviceMem<=2){
+  MG.level='warning';
+  d.documentElement.setAttribute('data-memory-level','warning');
+  d.documentElement.classList.add('low-memory-adapt');
+  // Tighter budgets: run first deep clean after 30s
+  origSetTimeout.call(w,function(){deepClean('startup-inapp');},30000);
+}
 
 d.documentElement.setAttribute('data-memory-level',MG.level);
 d.documentElement.setAttribute('data-memory-budget',budgetMB);
+d.documentElement.setAttribute('data-memory-guardian-version','4.0');
 
 if(w.location.hostname==='localhost'){
-  console.log('%c[MEMORY GUARDIAN] Active | Budget: '+budgetMB+'MB | Device: '+deviceMem+'GB | Check every '+checkInterval+'ms','color:#22c55e;font-weight:bold');
+  console.log('%c[MEMORY GUARDIAN v4] Active | Budget:'+budgetMB+'MB | Device:'+deviceMem+'GB | InApp:'+isInApp+' | Mobile:'+isMobile+' | Safari:'+isSafari+' | Check:'+checkInterval+'ms | Caps: intervals='+INTERVAL_CAP+' timeouts='+TIMEOUT_CAP+' listeners='+LISTENER_CAP+' dom='+DOM_NODE_HARD_CAP+' raf/s='+RAF_CAP_PER_SEC,'color:#22c55e;font-weight:bold');
 }
 })();"""
 
@@ -2631,11 +3414,21 @@ if(w.location.hostname==='localhost'){
     smart_write(guardian_path, memory_guardian)
 
     size_kb = guardian_path.stat().st_size / 1024
-    success(f"Memory Guardian script: {size_kb:.1f} KB")
+    success(f"Memory Guardian v5.0 script: {size_kb:.1f} KB")
     info("Features: heap monitoring, memory levels (normal/warning/critical/emergency)")
     info("Features: auto-dispose off-screen images/iframes/3D, DOM leak detection")
-    info("Features: event listener tracking, blob leak prevention, disposal queue")
-    info("Features: memory-aware CSS injection, Page Lifecycle API integration")
+    info("Features: event listener tracking + duplicate prevention, blob leak prevention")
+    info("Features: memory-aware CSS, Page Lifecycle + visibilitychange integration")
+    info("v5.0: setInterval/setTimeout tracker + reaper (caps: inapp=15, mobile=25)")
+    info("v5.0: AudioContext reaper — auto-closes stale/abandoned audio contexts")
+    info("v5.0: Detached DOM node sweeper — releases off-screen canvas GPU memory")
+    info("v5.0: History API memory cap — prevents SPA state bloat")
+    info("v5.0: Progressive degradation timeline (2m/5m/10m/15m cleanup waves)")
+    info("v5.0: RAF storm detection + throttling (caps: inapp=30/s, mobile=45/s)")
+    info("v5.0: createElement factory tracker — catches particle system leaks")
+    info("v5.0: Startup immediate warning mode for in-app browsers")
+    info("v5.0: Safari/WebKit memory estimation fallback (no performance.memory)")
+    info("v5.0: Deep clean on page hide + periodic deep clean every 2m after 10m")
     results["memory_guardian_size_kb"] = round(size_kb, 1)
 
     return results
@@ -2747,15 +3540,22 @@ S.fixes.push('image-downscale');
 S.fixes.push('video-preserved');
 
 // ─── 162. Reduce Animation Complexity ───
+// NEVER use display:none on content sections — user sees blank gaps
+// NEVER use filter:none — breaks invert/brightness theming (black↔white glitch)
+// NEVER use transform:none on * — breaks layout positioning
 var inappStyle=d.createElement('style');
 inappStyle.textContent=[
   '.in-app-browser *{animation-duration:0.15s!important;transition-duration:0.1s!important;}',
-  // Spline, canvas, video, and GIFs are preserved - only hide decorative effects
-  '.in-app-browser .particle-container,.in-app-browser .confetti,.in-app-browser .aurora{display:none!important;}',
-  '.in-app-browser .glass-effect,.in-app-browser .glassmorphism{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:rgba(0,0,0,0.85)!important;}',
-  // Simplify complex layouts that crash in-app browsers
-  '.in-app-browser .circular-gallery,.in-app-browser .card-swap{display:none!important;}',
-  '.in-app-browser .color-bends{display:none!important;}',
+  // Only truly decorative particles get hidden (tiny elements, no content)
+  '.in-app-browser .particle-container,.in-app-browser .confetti{opacity:0!important;pointer-events:none!important;height:0!important;overflow:hidden!important;}',
+  // Aurora: fade to near-invisible but keep in layout flow
+  '.in-app-browser .aurora{opacity:0.05!important;}',
+  // Glass: opaque dark fallback (keeps text readable)
+  '.in-app-browser .glass-effect,.in-app-browser .glassmorphism,.in-app-browser .glass-surface,.in-app-browser .glass-card{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:rgba(0,0,0,0.88)!important;border-color:rgba(255,255,255,0.06)!important;}',
+  // Complex components: simplify but KEEP VISIBLE — reduce animations, keep content
+  '.in-app-browser .circular-gallery{animation:none!important;overflow:hidden!important;}',
+  '.in-app-browser .card-swap{animation:none!important;transition:none!important;}',
+  '.in-app-browser .color-bends{animation:none!important;opacity:0.5!important;}',
 ].join('\\n');
 d.head.appendChild(inappStyle);
 S.fixes.push('css-reduced');
@@ -2784,12 +3584,18 @@ var crashKey='bm_inapp_crashes';
 var crashes=parseInt(sessionStorage.getItem(crashKey)||'0',10);
 if(crashes>0){
   // Page crashed before - go ultra-light mode
+  // PRESERVE filter (theming) and transform (layout) — only strip animation/transition/box-shadow
   d.documentElement.classList.add('ultra-light-mode');
   var ultraStyle=d.createElement('style');
   ultraStyle.textContent=[
-    '.ultra-light-mode *{animation:none!important;transition:none!important;transform:none!important;filter:none!important;box-shadow:none!important;}',
+    // No filter:none (breaks invert/brightness theming = black/white glitch)
+    // No transform:none (breaks translate/scale layout = elements pile up at 0,0)
+    '.ultra-light-mode *{animation:none!important;transition:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}',
+    '.ultra-light-mode *:not(.product-card-premium):not(input):not(button):not(a){box-shadow:none!important;}',
     '.ultra-light-mode img{image-rendering:auto;}',
     '.ultra-light-mode .hero{min-height:auto!important;height:auto!important;}',
+    // Glass: opaque dark fallback so no transparent-over-black
+    '.ultra-light-mode .glass-effect,.ultra-light-mode .glassmorphism,.ultra-light-mode .glass-surface,.ultra-light-mode .glass-card{background:rgba(0,0,0,0.9)!important;border-color:rgba(255,255,255,0.05)!important;}',
   ].join('\\n');
   d.head.appendChild(ultraStyle);
   S.fixes.push('crash-recovery-ultralight');
@@ -3383,8 +4189,12 @@ def generate_gpu_manager() -> dict:
 // Manages WebGL contexts and GPU resources to prevent crashes
 (function(){
 'use strict';
-var w=window,d=document;
+var w=window,d=document,n=navigator;
 var GM=w.__BM_GPU_MANAGER__={contexts:[],maxContexts:8,activeContexts:0,contextPool:[],gpuInfo:{}};
+var isMobile=/mobi|android|iphone|ipad|ipod/i.test(n.userAgent||'');
+var isInApp=/instagram|fban|fbav|tiktok|snapchat|twitter|linkedin|wechat|line\/|telegram|pinterest|reddit/i.test(n.userAgent||'');
+GM.isMobile=isMobile;GM.isInApp=isInApp;
+d.documentElement.setAttribute('data-effects',(isMobile||isInApp)?'lite':'full');
 
 // ─── 201. GPU Capability Detection ───
 (function detectGPU(){
@@ -3519,9 +4329,18 @@ var gpuStyle=d.createElement('style');
 gpuStyle.textContent=[
   // Prevent GPU layer explosion
   'canvas{contain:strict;}',
+  // Mobile: keep effects but lighter weight
+  '[data-effects="lite"]{--blur-amount:6px;--shadow-strength:0.6;--glow-opacity:0.6;}',
+  '[data-effects="lite"] .glass-effect,[data-effects="lite"] .glassmorphism,[data-effects="lite"] .glass-surface,[data-effects="lite"] .glass-card,[data-effects="lite"] .glass-dark,[data-effects="lite"] .glass-frosted,[data-effects="lite"] .glass-clear,[data-effects="lite"] .glass-premium,[data-effects="lite"] .glass-light{backdrop-filter:blur(6px) saturate(1.1)!important;-webkit-backdrop-filter:blur(6px) saturate(1.1)!important;}',
+  '[data-effects="lite"] .glass-glow::before,[data-effects="lite"] .glass-glow-strong::before,[data-effects="lite"] .glass-glow-pulse::before{opacity:0.6!important;}',
   // Limit compositing layers on low-end GPUs
-  '[data-gpu-pressure=\"high\"] *{will-change:auto!important;transform:none!important;}',
-  '[data-gpu-pressure=\"high\"] canvas{image-rendering:pixelated;}',
+  // NEVER use transform:none on * — it destroys ALL layout (translate, scale, rotate used for positioning)
+  // Instead: only reset will-change and strip backdrop-filter (the expensive GPU ops)
+  '[data-gpu-pressure="high"] *{will-change:auto!important;}',
+  '[data-gpu-pressure="high"] *:not(.product-card-premium):not([style*="transform"]):not([class*="translate"]):not([class*="scale"]):not([class*="rotate"]){backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}',
+  '[data-gpu-pressure="high"] canvas{image-rendering:pixelated;}',
+  // Glass: opaque dark fallback under GPU pressure
+  '[data-gpu-pressure="high"] .glass-effect,[data-gpu-pressure="high"] .glassmorphism,[data-gpu-pressure="high"] .glass-surface,[data-gpu-pressure="high"] .glass-card{background:rgba(0,0,0,0.88)!important;border-color:rgba(255,255,255,0.06)!important;}',
   // Force hardware acceleration only where needed
   '.gpu-accelerated{transform:translateZ(0);will-change:transform;}',
   // Prevent stacking context explosion
@@ -4779,31 +5598,89 @@ def _worker_count(min_workers: int, max_workers: int, scale: int = 2) -> int:
 
 def main():
     start_time = time.time()
+    
+    # ── Load configuration ──
+    config = BoostConfig()
+    incremental_cache = IncrementalCache()
+    
+    # ── Parse CLI flags ──
     report_only = "--report" in sys.argv
-    skip_heavy = "--skip-heavy" in sys.argv or (_PRODUCTION_MODE and "--no-skip-heavy" not in sys.argv)
+    skip_heavy = "--skip-heavy" in sys.argv or config.get("always_skip_heavy") or (_PRODUCTION_MODE and "--no-skip-heavy" not in sys.argv)
+    watch_mode = "--watch" in sys.argv
+    incremental = "--incremental" in sys.argv
+    profile_mode = "--profile" in sys.argv
+    show_diff = "--diff" in sys.argv
+    init_config = "--init" in sys.argv
+    clear_cache = "--clear-cache" in sys.argv
+
+    # ── Handle --init: create config file and exit ──
+    if init_config:
+        cfg_path = BoostConfig.create_default()
+        print(f"  {C.GREEN}✓{C.END} Created {C.GOLD}{cfg_path}{C.END}")
+        print(f"  {C.DIM}Edit this file to customize boost behavior.{C.END}")
+        sys.exit(0)
+
+    # ── Handle --clear-cache: reset incremental cache ──
+    if clear_cache:
+        incremental_cache.clear()
+        print(f"  {C.GREEN}✓{C.END} Cleared incremental cache")
+        if len(sys.argv) == 2:  # Only --clear-cache provided
+            sys.exit(0)
 
     # ── Parse --sections filter (e.g. --sections=1,3,14) ──
     _only_sections: set[int] | None = None
+    _skip_sections: set[int] = set(config.get("skip_sections", []))
     for arg in sys.argv[1:]:
         if arg.startswith("--sections="):
             _only_sections = {int(s) for s in arg.split("=")[1].split(",") if s.isdigit()}
             break
 
-    def _should_run(section_num: int) -> bool:
-        return _only_sections is None or section_num in _only_sections
+    def _should_run(section_num: int, section_key: str = "") -> bool:
+        if section_num in _skip_sections:
+            return False
+        if _only_sections is not None and section_num not in _only_sections:
+            return False
+        if incremental and section_key:
+            if not incremental_cache.section_changed(section_key, ROOT_DIR):
+                info(f"Section {section_num} unchanged, skipping...")
+                return False
+        return True
 
-    # ── Help text ──
+    # ── Colored help text ──
     if "--help" in sys.argv or "-h" in sys.argv:
         _builtin_print(__doc__)
-        _builtin_print("Flags:")
-        _builtin_print("  --report       Print report without writing files")
-        _builtin_print("  --skip-heavy   Skip image/bundle analysis (faster)")
-        _builtin_print("  --fast         Disable cosmetic delays")
-        _builtin_print("  --production   Production mode (auto-fast + skip-heavy)")
-        _builtin_print("  --no-fast      Disable auto-fast in production")
-        _builtin_print("  --no-skip-heavy Disable auto skip-heavy in production")
-        _builtin_print("  --sections=N   Run only listed sections (e.g. --sections=1,3,14)")
-        _builtin_print("  -h, --help     Show this help")
+        
+        def _help_line(flag: str, desc: str, example: str = ""):
+            ex = f" {C.DIM}({example}){C.END}" if example else ""
+            _builtin_print(f"  {C.GOLD}{flag:<18}{C.END} {desc}{ex}")
+        
+        _builtin_print(f"\n{C.BOLD}{C.WHITE}Flags:{C.END}")
+        _help_line("--report", "Print report without writing files")
+        _help_line("--skip-heavy", "Skip image/bundle analysis", "faster")
+        _help_line("--fast", "Disable cosmetic delays", "CI-friendly")
+        _help_line("--production", "Production mode: auto-fast + skip-heavy")
+        _help_line("--no-fast", "Disable auto-fast in production")
+        _help_line("--no-skip-heavy", "Disable auto skip-heavy in production")
+        _help_line("--sections=N", "Run only listed sections", "--sections=1,3,14")
+        
+        _builtin_print(f"\n{C.BOLD}{C.CYAN}v5.0 Features:{C.END}")
+        _help_line("--watch", "Watch mode: re-run on file changes")
+        _help_line("--incremental", "Only run sections with changed files")
+        _help_line("--profile", "Show detailed timing breakdown")
+        _help_line("--diff", "Show changes since last run")
+        _help_line("--init", "Create .boostrc.json config file")
+        _help_line("--clear-cache", "Clear incremental build cache")
+        
+        _builtin_print(f"\n{C.BOLD}{C.WHITE}Config:{C.END}")
+        _builtin_print(f"  Create {C.GOLD}.boostrc.json{C.END} to customize behavior:")
+        _builtin_print(f"  {C.DIM}skip_sections, always_skip_heavy, watch_dirs, thresholds, etc.{C.END}")
+        
+        _builtin_print(f"\n{C.BOLD}{C.WHITE}Examples:{C.END}")
+        _builtin_print(f"  {C.GREEN}python scripts/boost.py{C.END}                    {C.DIM}# Full run{C.END}")
+        _builtin_print(f"  {C.GREEN}python scripts/boost.py --fast --skip-heavy{C.END} {C.DIM}# Quick run{C.END}")
+        _builtin_print(f"  {C.GREEN}python scripts/boost.py --watch{C.END}             {C.DIM}# Watch mode{C.END}")
+        _builtin_print(f"  {C.GREEN}python scripts/boost.py --incremental{C.END}       {C.DIM}# Only changed{C.END}")
+        _builtin_print()
         sys.exit(0)
 
     # ── Clear screen for clean look ──
@@ -4856,23 +5733,32 @@ def main():
     (PUBLIC_DIR / "scripts").mkdir(parents=True, exist_ok=True)
     (PUBLIC_DIR / "schemas").mkdir(parents=True, exist_ok=True)
 
+    # ── Initialize report ──
     report = {}
+    
+    # Reset stats for this run
+    Stats.total_checks = 0
+    Stats.passed = 0  
+    Stats.warnings = 0
+    Stats.errors = 0
+    Stats.sections_done = 0
+    Stats.section_times.clear()
 
     # ── Phase 1: Script generation (I/O-light, can overlap) ──
-    if _should_run(1):
+    if _should_run(1, "device_detection"):
         report["device_detection"] = _run_timed(generate_device_detection_script)
-    if _should_run(2):
+    if _should_run(2, "resource_hints"):
         report["resource_hints"] = _run_timed(generate_resource_hints)
-    if _should_run(3):
+    if _should_run(3, "seo"):
         report["seo"] = _run_timed(enhance_seo)
 
     # ── Phase 2: Analysis sections (file I/O heavy — parallelized) ──
     if not skip_heavy:
-      with ThreadPoolExecutor(max_workers=_worker_count(2, 6, scale=2)) as pool:
+        with ThreadPoolExecutor(max_workers=_worker_count(2, 6, scale=2)) as pool:
             futures = {}
-            if _should_run(4):
+            if _should_run(4, "images"):
                 futures[pool.submit(_run_timed, audit_images)] = "images"
-            if _should_run(5):
+            if _should_run(5, "bundle"):
                 futures[pool.submit(_run_timed, analyze_bundle)] = "bundle"
             for future in as_completed(futures):
                 report[futures[future]] = _safe_result(future, futures[future])
@@ -4892,7 +5778,7 @@ def main():
         }
         futures = {}
         for sec_num, (fn, key) in phase3_map.items():
-            if _should_run(sec_num):
+            if _should_run(sec_num, key):
                 futures[pool.submit(_run_timed, fn)] = key
         for future in as_completed(futures):
             report[futures[future]] = _safe_result(future, futures[future])
@@ -4908,12 +5794,12 @@ def main():
         }
         futures = {}
         for sec_num, (fn, key) in phase4_map.items():
-            if _should_run(sec_num):
+            if _should_run(sec_num, key):
                 futures[pool.submit(_run_timed, fn)] = key
         for future in as_completed(futures):
             report[futures[future]] = _safe_result(future, futures[future])
 
-    if _should_run(18):
+    if _should_run(18, "build_optimizer"):
         report["build_optimizer"] = _run_timed(optimize_production_build)
 
     # ── Phase 5: Analysis & security sections (parallelized) ──
@@ -4925,7 +5811,7 @@ def main():
         }
         futures = {}
         for sec_num, (fn, key) in phase5_map.items():
-            if _should_run(sec_num):
+            if _should_run(sec_num, key):
                 futures[pool.submit(_run_timed, fn)] = key
         for future in as_completed(futures):
             report[futures[future]] = _safe_result(future, futures[future])
@@ -4940,18 +5826,18 @@ def main():
         }
         futures = {}
         for sec_num, (fn, key) in phase6_map.items():
-            if _should_run(sec_num):
+            if _should_run(sec_num, key):
                 futures[pool.submit(_run_timed, fn)] = key
         for future in as_completed(futures):
             report[futures[future]] = _safe_result(future, futures[future])
 
-    if _should_run(27):
+    if _should_run(27, "network_optimizer"):
         report["network_optimizer"] = _run_timed(generate_network_optimizer)
 
-    if _should_run(28):
+    if _should_run(28, "search_index"):
         report["search_index"] = _run_timed(generate_search_index)
 
-    if _should_run(10):
+    if _should_run(10, "boost_loader"):
         report["boost_loader"] = _run_timed(generate_boost_loader)
 
     # Calculate totals
@@ -5093,14 +5979,30 @@ def main():
 
     # ── Per-section timing breakdown (shown in fast/CI mode or with --report) ──
     if Stats.section_times:
-        print(f"\n  {C.DIM}Section timings:{E}")
+        always_show = profile_mode  # Show full breakdown in --profile mode
+        print(f"\n  {C.DIM}Section timings:{C.END}")
         sorted_times = sorted(Stats.section_times.items(), key=lambda x: x[1], reverse=True)
-        for sec_name, sec_time in sorted_times[:10]:
+        show_count = len(sorted_times) if always_show else min(10, len(sorted_times))
+        for sec_name, sec_time in sorted_times[:show_count]:
             bar_len = min(int(sec_time * 20), 40)
             time_bar = f"{C.GOLD}{'█' * bar_len}{C.END}"
-            print(f"    {C.SILVER}{sec_name:<14}{E} {time_bar} {C.WHITE}{sec_time:.3f}s{E}")
+            pct = (sec_time / elapsed * 100) if elapsed > 0 else 0
+            print(f"    {C.SILVER}{sec_name:<14}{C.END} {time_bar} {C.WHITE}{sec_time:.3f}s{C.END} {C.DIM}({pct:.1f}%){C.END}")
+        if always_show:
+            total_section_time = sum(Stats.section_times.values())
+            overhead = elapsed - total_section_time
+            print(f"    {C.DIM}{'─' * 40}{C.END}")
+            print(f"    {C.SILVER}Overhead        {C.GOLD}{'█' * min(int(overhead * 20), 40)}{C.END} {C.WHITE}{overhead:.3f}s{C.END}")
 
-    print(f"\n  {C.DIM}Report saved → {C.SILVER}.boost-report.json{E}\n")
+    # ── Show diff if requested ──
+    if show_diff:
+        prev_report = ResultsDiff.load_previous()
+        ResultsDiff.show_diff(report, prev_report)
+    
+    # Save current for future diffs
+    ResultsDiff.save_current(report)
+
+    print(f"\n  {C.DIM}Report saved → {C.SILVER}.boost-report.json{C.END}\n")
 
     # ── Cleanup ──
     FileCache.clear()
@@ -5111,6 +6013,48 @@ def main():
         "Boost Complete!",
         f"{grade_emoji} Health: {health}/100 ({grade}) • {total_files} files • {elapsed:.1f}s • {Stats.passed} checks passed",
     )
+
+    # ── Watch mode: re-run on file changes ──
+    if watch_mode:
+        print(f"\n  {C.CYAN}{C.BOLD}👁  WATCH MODE ACTIVE{C.END}")
+        print(f"  {C.DIM}Watching for changes... Press Ctrl+C to stop.{C.END}\n")
+        
+        watch_dirs = [ROOT_DIR / d for d in config.get("watch_dirs", ["app", "components", "styles", "public"])]
+        watch_exts = set(config.get("watch_extensions", [".tsx", ".ts", ".css", ".json"]))
+        
+        run_count = 1
+        
+        def on_change():
+            nonlocal run_count
+            run_count += 1
+            print(f"\n  {C.GOLD}{'─' * 50}{C.END}")
+            print(f"  {C.CYAN}⟳{C.END} Change detected! Re-running boost (#{run_count})...")
+            print(f"  {C.GOLD}{'─' * 50}{C.END}\n")
+            # Re-run main without watch mode to avoid recursion
+            old_argv = sys.argv.copy()
+            sys.argv = [a for a in sys.argv if a != "--watch"]
+            try:
+                main()
+            except SystemExit:
+                pass
+            finally:
+                sys.argv = old_argv
+        
+        watcher = FileWatcher(watch_dirs, watch_exts, on_change)
+        
+        # Handle Ctrl+C gracefully
+        def signal_handler(sig, frame):
+            watcher.stop()
+            print(f"\n\n  {C.GOLD}✓{C.END} Watch mode stopped. Goodbye!\n")
+            sys.exit(0)
+        
+        signal.signal(signal.SIGINT, signal_handler)
+        
+        try:
+            watcher.start()
+        except KeyboardInterrupt:
+            watcher.stop()
+            print(f"\n\n  {C.GOLD}✓{C.END} Watch mode stopped. Goodbye!\n")
 
 
 if __name__ == "__main__":

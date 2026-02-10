@@ -95,9 +95,7 @@ const ChartNewsContent = memo(() => {
       animate={animations.modalBackdrop.animate as TargetAndTransition}
       exit={animations.modalBackdrop.exit}
       transition={animations.modalBackdrop.transition}
-      className={`fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-5 bg-black/95 ${
-        shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'
-      }`}
+      className={`fixed inset-0 z-[2147483647] bg-black/80 backdrop-blur-xl`}
       onClick={handleClose}
     >
       {/* Animated tap to close hints - skip on mobile */}
@@ -129,7 +127,7 @@ const ChartNewsContent = memo(() => {
         exit={animations.modalContent.exit}
         transition={animations.modalContent.transition}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-6xl max-h-[92vh] overflow-hidden rounded-2xl"
+        className="relative w-[100vw] max-w-[100vw] h-[100dvh] max-h-[100dvh] overflow-hidden"
       >
         {/* Shimmer Border - skip on mobile */}
         {!shouldSkipHeavyEffects && (
@@ -139,7 +137,7 @@ const ChartNewsContent = memo(() => {
         )}
         
         {/* Inner Container */}
-        <div className="relative z-10 bg-linear-to-b from-neutral-900 to-black rounded-2xl border border-white/20 overflow-hidden max-h-[92vh] flex flex-col">
+        <div className="relative z-10 bg-linear-to-b from-neutral-900 to-black border border-white/20 overflow-hidden max-h-[100dvh] flex flex-col">
           {!shouldSkipHeavyEffects && <ShimmerLine color="white" />}
           
           {/* Header */}

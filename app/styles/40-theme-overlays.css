@@ -846,3 +846,92 @@ html[data-active-theme] {
 }
 
 /* Text shimmer now uses unified-shimmer-ltr from UnifiedShimmer.tsx */
+
+/* ============================================
+   LIGHT-THEMED SECTION ISOLATION v4.0
+   Ensures sections with data-no-theme and light backgrounds
+   are completely isolated from dark mode theme overrides.
+   Prevents white↔black color glitches.
+   ============================================ */
+
+/* Full isolation for data-no-theme sections */
+[data-no-theme],
+[data-no-theme] * {
+  /* Prevent theme color inheritance */
+  color: inherit;
+  /* Prevent theme filter effects */
+  filter: none !important;
+  -webkit-filter: none !important;
+  /* Exclude from theme overlays */
+}
+
+/* Light-background sections always use dark text */
+[data-no-theme].bg-white,
+[data-no-theme][class*="bg-white"],
+[data-no-theme][class*="from-white"],
+[data-no-theme][class*="bg-gray-50"],
+[data-no-theme][class*="bg-\\[\\#f5f5f7\\]"],
+section[data-no-theme][class*="bg-gradient-to-b"] {
+  --text-primary: rgba(0, 0, 0, 0.88);
+  --text-secondary: rgba(0, 0, 0, 0.62);
+  color: rgba(0, 0, 0, 0.88);
+}
+
+/* Ensure black text on light backgrounds stays black */
+[data-no-theme] .text-black,
+[data-no-theme] [class*="text-black"] {
+  color: rgba(0, 0, 0, 1) !important;
+  -webkit-text-fill-color: rgba(0, 0, 0, 1) !important;
+}
+
+[data-no-theme] [class*="text-black\\/"] {
+  -webkit-text-fill-color: inherit !important;
+}
+
+/* Ensure white text on dark elements within light sections */
+[data-no-theme] .text-white,
+[data-no-theme] [class*="text-white"] {
+  color: rgba(255, 255, 255, 1) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 1) !important;
+}
+
+/* Protect backgrounds within no-theme sections */
+[data-no-theme] .bg-white,
+[data-no-theme] [class*="bg-white"] {
+  background-color: rgb(255, 255, 255) !important;
+}
+
+[data-no-theme] .bg-black,
+[data-no-theme] [class*="bg-black"] {
+  background-color: rgb(0, 0, 0) !important;
+}
+
+/* Reset any theme accent colors within isolated sections */
+[data-no-theme] .theme-accent,
+[data-no-theme] .theme-text-accent {
+  color: inherit;
+  text-shadow: none;
+}
+
+/* Exclude isolated sections from theme overlay effects */
+html[data-active-theme] [data-no-theme]::before,
+html[data-active-theme] [data-no-theme]::after {
+  display: none !important;
+}
+
+/* Store page specific isolation */
+[data-store-page] section[data-no-theme] {
+  isolation: isolate;
+  z-index: 1;
+}
+
+/* Print & Digital Art section specific protection */
+[data-no-theme][class*="bg-gradient-to-b"][class*="from-white"] * {
+  --theme-overlay-opacity: 0;
+}
+
+/* Prevent theme hover effects on isolated section links */
+html[data-active-theme] [data-no-theme] a:hover {
+  color: inherit;
+  text-shadow: none;
+}

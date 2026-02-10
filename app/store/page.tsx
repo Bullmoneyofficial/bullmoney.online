@@ -16,6 +16,12 @@ import { CryptoCheckoutTrigger } from '@/components/shop/CryptoCheckoutInline';
 import { WorldMapPlaceholder } from '@/components/ui/world-map-placeholder';
 import { PrintProductsSection, SAMPLE_PRINT_PRODUCTS } from '@/components/shop/PrintProductsSection';
 import { DigitalArtSection, SAMPLE_DIGITAL_ART } from '@/components/shop/DigitalArtSection';
+const PrintDesignStudio = dynamic(() => import('@/components/shop/PrintDesignStudio').then(m => ({ default: m.PrintDesignStudio })), { ssr: false });
+
+const PrintDesignPromoGrid = dynamic(() => import('@/components/shop/PrintDesignPromoGrid'), {
+  ssr: false,
+  loading: () => <div className="h-[70vh] w-full animate-pulse bg-[#fafafa]" />,
+});
 
 // Heavy grid components — lazy loaded since user may not use dynamic variants
 const AnimatedProductGrid = dynamic(() => import('@/components/shop/AnimatedProductGrid').then(m => m.AnimatedProductGrid), { ssr: false, loading: () => <div className="h-80 w-full animate-pulse rounded-2xl bg-black/5" /> });
@@ -114,7 +120,10 @@ const HERO_CAROUSEL_SLIDES = [
 ];
 
 const GRID_VARIANTS = [
-  { value: 'animated', label: 'Animated grid', group: 'Dynamic' },
+  { value: 'spotlight', label: 'Spotlight', group: 'Featured' },
+  { value: 'animated', label: 'Animated grid', group: 'Featured' },
+  { value: 'snug', label: 'Snug grid', group: 'Featured' },
+  { value: 'compact-2', label: 'Compact tight', group: 'Featured' },
   { value: 'circular', label: 'Circular grid', group: 'Dynamic' },
   { value: 'glass', label: 'Glass grid', group: 'Dynamic' },
   { value: 'carousel', label: 'Carousel', group: 'Dynamic' },
@@ -123,10 +132,8 @@ const GRID_VARIANTS = [
   { value: 'list', label: 'List stack', group: 'Classic' },
   { value: 'stacked', label: 'Stacked hero', group: 'Classic' },
   { value: 'tiles', label: 'Tile wall', group: 'Classic' },
-  { value: 'compact-2', label: 'Compact tight', group: 'Compact' },
   { value: 'micro', label: 'Micro tiles', group: 'Compact' },
   { value: 'dense', label: 'Dense grid', group: 'Compact' },
-  { value: 'snug', label: 'Snug grid', group: 'Compact' },
   { value: 'wide', label: 'Wide cards', group: 'Layout' },
   { value: 'center', label: 'Centered grid', group: 'Layout' },
   { value: 'split', label: 'Split layout', group: 'Layout' },
@@ -137,7 +144,6 @@ const GRID_VARIANTS = [
   { value: 'stripe', label: 'Striped list', group: 'Style' },
   { value: 'edge', label: 'Edge borders', group: 'Style' },
   { value: 'diagonal', label: 'Diagonal tilt', group: 'Style' },
-  { value: 'spotlight', label: 'Spotlight', group: 'Style' },
   { value: 'panel', label: 'Panel grid', group: 'Style' },
   { value: 'frame', label: 'Framed cards', group: 'Style' },
   { value: 'shadow', label: 'Shadow stack', group: 'Style' },
@@ -145,7 +151,7 @@ const GRID_VARIANTS = [
   { value: 'mosaic', label: 'Mosaic', group: 'Layout' },
 ] as const;
 
-const GRID_VARIANT_GROUP_ORDER = ['Dynamic', 'Classic', 'Compact', 'Layout', 'Style'] as const;
+const GRID_VARIANT_GROUP_ORDER = ['Featured', 'Dynamic', 'Classic', 'Compact', 'Layout', 'Style'] as const;
 const GRID_VARIANT_GROUPS = GRID_VARIANTS.reduce<Record<string, typeof GRID_VARIANTS[number][]>>((acc, variant) => {
   if (!acc[variant.group]) acc[variant.group] = [];
   acc[variant.group].push(variant);
@@ -214,6 +220,48 @@ type StorePageProps = {
   showProductSections?: boolean;
 };
 
+// ─────────────────────────────────────────────────────────────────────
+// Compact Hero Mode Toggle — 3 modes in 1 horizontal row
+// ─────────────────────────────────────────────────────────────────────
+type HeroModeType = 'store' | 'trader' | 'design';
+
+const HERO_MODE_CONFIG: { mode: HeroModeType; label: string; color: string; glow: string }[] = [
+  { mode: 'store', label: 'Store', color: 'rgb(16,185,129)', glow: 'rgba(16,185,129,0.5)' },
+  { mode: 'trader', label: 'Trader', color: 'rgb(59,130,246)', glow: 'rgba(59,130,246,0.5)' },
+  { mode: 'design', label: 'Design', color: 'rgb(168,85,247)', glow: 'rgba(168,85,247,0.5)' },
+];
+
+function HeroModeToggle({
+  heroMode,
+  onModeChange,
+}: {
+  heroMode: HeroModeType;
+  onModeChange: (mode: HeroModeType) => void;
+}) {
+  return (
+    <div className="absolute right-4 top-4 z-20 flex items-center gap-0.5 rounded-full border border-white/15 bg-black/70 p-1 text-[9px] font-semibold uppercase tracking-[0.18em] shadow-[0_8px_24px_rgba(0,0,0,0.4)] backdrop-blur-md">
+      {HERO_MODE_CONFIG.map(({ mode, label, color, glow }) => {
+        const isActive = heroMode === mode;
+        return (
+          <button
+            key={mode}
+            type="button"
+            onClick={() => onModeChange(mode)}
+            className="relative px-2.5 py-1.5 rounded-full transition-all duration-200 whitespace-nowrap"
+            style={{
+              background: isActive ? color : 'transparent',
+              color: isActive ? '#fff' : 'rgba(255,255,255,0.5)',
+              boxShadow: isActive ? `0 0 10px ${glow}` : 'none',
+            }}
+          >
+            {label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function StorePage({ routeBase = '/store', syncUrl = true, showProductSections = true }: StorePageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -221,8 +269,14 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
   const productsSection = useStoreSection('products');
   const featuredSection = useStoreSection('featured');
   const footerSection = useStoreSection('footer');
-  const [heroMode, setHeroMode] = useState<'store' | 'trader'>('store');
+  const [heroMode, setHeroMode] = useState<'store' | 'trader' | 'design'>('store');
   const showProducts = showProductSections && heroMode === 'store';
+
+  // Handle mode toggle with sound effect
+  const handleModeChange = useCallback((mode: 'store' | 'trader' | 'design') => {
+    SoundEffects.play('click');
+    setHeroMode(mode);
+  }, []);
 
   const [products, setProducts] = useState<ProductWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
@@ -242,16 +296,27 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
   const [hasMounted, setHasMounted] = useState(false);
   const [allowHeavyHero, setAllowHeavyHero] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [studioState, setStudioState] = useState<{
+    open: boolean;
+    tab?: 'browse' | 'product' | 'upload' | 'create' | 'orders' | 'designs';
+    productId?: string;
+    artId?: string;
+    productType?: string;
+  }>({ open: false });
   const [checkoutProduct, setCheckoutProduct] = useState<ProductWithDetails | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<
     'cart' | 'stripe' | 'whop' | 'skrill'
   >('cart');
   const [useGridLayouts, setUseGridLayouts] = useState(true);
   const [productsGridVariant, setProductsGridVariant] = useState<GridVariant>('spotlight');
-  const [featuredGridVariant, setFeaturedGridVariant] = useState<GridVariant>('spotlight');
-  const [timelineGridVariant, setTimelineGridVariant] = useState<GridVariant>('spotlight');
+  const [featuredGridVariant, setFeaturedGridVariant] = useState<GridVariant>('animated');
+  const [timelineGridVariant, setTimelineGridVariant] = useState<GridVariant>('snug');
   const [heroSlideIndex, setHeroSlideIndex] = useState(() => pickHeroSlideIndex());
   const [showHeroMapOverlay] = useState(() => Math.random() < 0.05);
+
+  const openStudio = useCallback((opts?: { tab?: 'browse' | 'product' | 'upload' | 'create' | 'orders' | 'designs'; productId?: string; artId?: string; productType?: string }) => {
+    setStudioState({ open: true, ...opts });
+  }, []);
   const heroCacheLoadedRef = useRef(false);
   const resolvedHeroSlide = useMemo(() => {
     if (!hasMounted || isMobile) {
@@ -1145,7 +1210,8 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
         <img
           src="/Img1.jpg"
           alt="BullMoney hero"
-          className="absolute inset-0 z-0 h-full w-full object-cover"
+          className="absolute inset-0 z-0 h-full w-full object-cover pointer-events-none"
+          style={{ touchAction: 'pan-y' }}
           loading="eager"
           decoding="async"
         />
@@ -1157,7 +1223,8 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
         <img
           src={slide.src}
           alt={slide.alt}
-          className="absolute inset-0 z-0 h-full w-full object-cover"
+          className="absolute inset-0 z-0 h-full w-full object-cover pointer-events-none"
+          style={{ touchAction: 'pan-y' }}
           loading="eager"
           decoding="async"
         />
@@ -1167,7 +1234,8 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
     if (slide.type === 'video') {
       return (
         <video
-          className="absolute inset-0 z-0 h-full w-full object-cover"
+          className="absolute inset-0 z-0 h-full w-full object-cover pointer-events-none"
+          style={{ touchAction: 'pan-y' }}
           autoPlay
           muted
           loop
@@ -1459,6 +1527,111 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
       </div>
     </section>
   );
+
+  {/* ── TRADER VIEW SECTIONS ── */}
+  const metaQuotesHeroSection = (
+    <section
+      data-apple-section
+      data-trader-hero
+      className="relative min-h-screen w-full"
+      style={{ backgroundColor: 'rgb(0,0,0)', borderBottom: '1px solid rgba(255,255,255,0.1)', contentVisibility: 'auto', containIntrinsicSize: 'auto 100vh' }}
+    >
+      {/* Hero overlay with gradient */}
+      <div
+        className="absolute inset-0 z-[1] pointer-events-none"
+        style={{
+          background: 'linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.7) 100%)',
+        }}
+      />
+      {/* Header */}
+      <div className="relative z-10 mx-auto w-full max-w-[90rem] px-4 sm:px-8" style={{ paddingTop: 32 }}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img src="/IMG_2921.PNG" alt="BullMoney" className="h-12 w-auto sm:h-14" loading="eager" />
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.32em] text-white/60">Trader View</p>
+              <h2 className="text-lg sm:text-xl font-semibold text-white tracking-tight">Live Market Quotes</h2>
+            </div>
+          </div>
+          <span className="rounded-full border border-emerald-400/40 bg-emerald-500/20 px-3 py-1.5 text-[10px] uppercase tracking-[0.24em] text-emerald-300 animate-pulse">
+            Live
+          </span>
+        </div>
+      </div>
+      {/* Full-screen MetaTrader Quotes */}
+      <div className="relative z-10 mx-auto w-full max-w-[90rem] px-4 sm:px-8" style={{ paddingTop: 16, paddingBottom: 32 }}>
+        <div className="w-full overflow-hidden rounded-3xl border border-white/10 bg-black/40 backdrop-blur-md shadow-[0_40px_100px_rgba(0,0,0,0.5)]" style={{ minHeight: 'calc(100vh - 180px)' }}>
+          <div className="h-full w-full min-h-[calc(100vh-180px)]">
+            <MetaTraderQuotes embedded />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+
+  const traderNewsSection = (
+    <section
+      data-apple-section
+      style={{ backgroundColor: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.04)', contentVisibility: 'auto', containIntrinsicSize: 'auto 600px' }}
+    >
+      <div className="mx-auto w-full max-w-[90rem] px-4 sm:px-8" style={{ paddingTop: 32, paddingBottom: 32 }}>
+        <div className="flex flex-col gap-3 mb-6">
+          <p className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'rgba(0,0,0,0.45)' }}>
+            Market Intelligence
+          </p>
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">Breaking News</h2>
+          <p className="text-sm sm:text-base max-w-2xl" style={{ color: 'rgba(0,0,0,0.6)' }}>
+            Real-time market news and headlines to stay ahead of the curve.
+          </p>
+        </div>
+        <div className="w-full rounded-2xl sm:rounded-3xl border border-black/10 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold">Breaking News</h3>
+            <span className="rounded-full border border-black/10 px-2 py-1 text-[10px] uppercase tracking-[0.24em]" style={{ color: 'rgba(0,0,0,0.5)' }}>
+              Live
+            </span>
+          </div>
+          <div className="overflow-hidden rounded-2xl border border-black/5 bg-white min-h-[400px] lg:min-h-[500px]">
+            <div className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain" style={{ filter: 'invert(1) hue-rotate(180deg)' }}>
+              <BreakingNewsTicker />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+
+  const traderTelegramSection = (
+    <section
+      data-apple-section
+      style={{ backgroundColor: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.04)', contentVisibility: 'auto', containIntrinsicSize: 'auto 600px' }}
+    >
+      <div className="mx-auto w-full max-w-[90rem] px-4 sm:px-8" style={{ paddingTop: 16, paddingBottom: 32 }}>
+        <div className="flex flex-col gap-3 mb-6">
+          <p className="text-[11px] uppercase tracking-[0.28em]" style={{ color: 'rgba(0,0,0,0.45)' }}>
+            Community Signals
+          </p>
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">Telegram Channel</h2>
+          <p className="text-sm sm:text-base max-w-2xl" style={{ color: 'rgba(0,0,0,0.6)' }}>
+            Join our community for trade signals and market updates.
+          </p>
+        </div>
+        <div className="w-full rounded-2xl sm:rounded-3xl border border-black/10 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold">Community Signals</h3>
+            <span className="rounded-full border border-black/10 px-2 py-1 text-[10px] uppercase tracking-[0.24em]" style={{ color: 'rgba(0,0,0,0.5)' }}>
+              Live
+            </span>
+          </div>
+          <div className="overflow-hidden rounded-2xl border border-black/5 bg-white min-h-[400px] lg:min-h-[500px]">
+            <div className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain" style={{ filter: 'invert(1) hue-rotate(180deg)' }}>
+              <BullMoneyCommunity />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
   const featuresSection = (
     <section
       data-apple-section
@@ -1510,7 +1683,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
       style={{ backgroundColor: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.04)', contentVisibility: 'auto', containIntrinsicSize: 'auto 600px' }}
     >
       <div className="mx-auto w-full max-w-[90rem] px-4 sm:px-8" style={{ paddingTop: 16, paddingBottom: 32 }}>
-        <div className="relative min-h-[70vh] w-full overflow-hidden rounded-3xl border border-black/10">
+        <div className="relative min-h-[70vh] w-full overflow-x-hidden overflow-y-visible md:overflow-hidden rounded-3xl border border-black/10">
           {heroMedia}
           {shouldShowHeroMapOverlay && (
             <div className="absolute inset-0 z-[2] pointer-events-none bg-white/85">
@@ -1981,8 +2154,9 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
   /* ── Print & Design — full-viewport standalone section (rendered below columns on ALL pages) ── */
   const printDesignSection = (
     <section
-      data-apple-section
-      className="relative w-full min-h-screen flex flex-col justify-center bg-gradient-to-b from-white to-gray-50 border-t border-black/5"
+      id="print-design"
+      data-no-theme
+      className="relative z-20 w-full min-h-screen flex flex-col justify-center bg-gradient-to-b from-white to-gray-50 border-t border-black/5"
       style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 100vh' }}
     >
       <div className="mx-auto w-full max-w-7xl px-5 sm:px-8 py-20 lg:py-28">
@@ -1995,13 +2169,13 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
 
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
           {/* Left — Print Products */}
-          <div className="border-r-0 lg:border-r border-black/10 pr-0 lg:pr-10">
-            <PrintProductsSection products={SAMPLE_PRINT_PRODUCTS} />
+          <div id="print-products" className="border-r-0 lg:border-r border-black/10 pr-0 lg:pr-10">
+            <PrintProductsSection products={SAMPLE_PRINT_PRODUCTS} onOpenStudio={openStudio} />
           </div>
 
           {/* Right — Digital Art */}
-          <div className="pl-0 lg:pl-6">
-            <DigitalArtSection arts={SAMPLE_DIGITAL_ART} />
+          <div id="digital-art" className="pl-0 lg:pl-6">
+            <DigitalArtSection arts={SAMPLE_DIGITAL_ART} onOpenStudio={openStudio} />
           </div>
         </div>
       </div>
@@ -2112,6 +2286,12 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
           content-visibility: auto;
           contain: layout paint style;
           contain-intrinsic-size: 280px 420px;
+        }
+        /* Mobile: keep layout containment, drop paint so card float/glow renders */
+        @media (max-width: 767px) {
+          .grid-card {
+            contain: layout style;
+          }
         }
         @media (prefers-reduced-motion: reduce) {
           .stagger-item,
@@ -2246,85 +2426,61 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
         </div>
       </div>
 
-      <section
-        ref={hero.ref}
-        data-apple-section
-        data-store-hero
-        style={{
-          backgroundColor: 'rgb(255,255,255)',
-          borderBottom: '1px solid rgba(0,0,0,0.06)',
-        }}
-      >
-        <div className="relative min-h-screen w-full overflow-hidden">
-          {showProductSections && (
-            <div className="absolute right-6 top-6 z-20 flex items-center gap-3 rounded-full border border-white/15 bg-black/65 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/80 shadow-[0_14px_40px_rgba(0,0,0,0.35)] backdrop-blur-md">
-              <span className="hidden sm:inline text-white/60">Mode</span>
-              <div className="flex overflow-hidden rounded-full border border-white/20 bg-white/5">
-                <button
-                  type="button"
-                  onClick={() => setHeroMode('store')}
-                  className={`px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] transition-colors ${
-                    heroMode === 'store'
-                      ? 'bg-white text-black'
-                      : 'text-white/70 hover:text-white'
-                  }`}
-                >
-                  Store
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setHeroMode('trader')}
-                  className={`px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] transition-colors ${
-                    heroMode === 'trader'
-                      ? 'bg-white text-black'
-                      : 'text-white/70 hover:text-white'
-                  }`}
-                >
-                  Trader
-                </button>
+      {/* HERO SECTION — Store mode shows regular hero, Trader mode shows MetaQuotes hero */}
+      {heroMode === 'store' && (
+        <section
+          ref={hero.ref}
+          data-apple-section
+          data-store-hero
+          style={{
+            backgroundColor: 'rgb(255,255,255)',
+            borderBottom: '1px solid rgba(0,0,0,0.06)',
+          }}
+        >
+          <div className="relative min-h-screen w-full overflow-x-hidden overflow-y-visible md:overflow-hidden">
+            {showProductSections && (
+              <HeroModeToggle heroMode={heroMode} onModeChange={handleModeChange} />
+            )}
+            {heroMedia}
+            {shouldShowHeroMapOverlay && (
+              <div className="absolute inset-0 z-[2] pointer-events-none bg-white/85">
+                <WorldMap dots={HERO_WORLD_MAP_DOTS} lineColor="#00D4FF" forceVisible forceLite showCryptoCoins />
               </div>
-            </div>
-          )}
-          {heroMedia}
-          {shouldShowHeroMapOverlay && (
-            <div className="absolute inset-0 z-[2] pointer-events-none bg-white/85">
-              <WorldMap dots={HERO_WORLD_MAP_DOTS} lineColor="#00D4FF" forceVisible forceLite showCryptoCoins />
-            </div>
-          )}
-          <div
-            className="absolute inset-0 z-[1]"
-            style={{
-              background: 'rgba(0,0,0,0.35)',
-              mixBlendMode: 'multiply',
-              pointerEvents: 'none',
-            }}
-          />
-          <div
-            className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl flex-col justify-center px-6 sm:px-10 pointer-events-none"
-            style={{ paddingTop: 48 + paddingBoost, paddingBottom: 40 + paddingBoost }}
-          >
-            <div className="flex items-center gap-3" style={{ color: heroTitleColor, textShadow: heroTextShadow }}>
-              <img
-                src="/IMG_2921.PNG"
-                alt="BullMoney"
-                className="h-16 w-auto sm:h-18"
-                loading="eager"
-                decoding="async"
-              />
-              <p className="text-[11px] uppercase tracking-[0.32em]" style={{ color: heroMetaColor }}>
-                BullMoney Store
-              </p>
-            </div>
-            <h1
-              className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight"
-              style={{ color: heroTitleColor, textShadow: heroTitleShadow }}
+            )}
+            <div
+              className="absolute inset-0 z-[1]"
+              style={{
+                background: 'rgba(0,0,0,0.35)',
+                mixBlendMode: 'multiply',
+                pointerEvents: 'none',
+              }}
+            />
+            <div
+              className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl flex-col justify-center px-6 sm:px-10 pointer-events-none"
+              style={{ paddingTop: 48 + paddingBoost, paddingBottom: 40 + paddingBoost, touchAction: 'pan-y' }}
             >
-              Premium trading essentials, built for focus.
-            </h1>
-            <p
-              className="mt-4 max-w-2xl text-sm sm:text-base"
-              style={{ color: heroBodyColor, textShadow: heroBodyShadow }}
-            >
+              <div className="flex items-center gap-3" style={{ color: heroTitleColor, textShadow: heroTextShadow }}>
+                <img
+                  src="/IMG_2921.PNG"
+                  alt="BullMoney"
+                  className="h-16 w-auto sm:h-18"
+                  loading="eager"
+                  decoding="async"
+                />
+                <p className="text-[11px] uppercase tracking-[0.32em]" style={{ color: heroMetaColor }}>
+                  BullMoney Store
+                </p>
+              </div>
+              <h1
+                className="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight"
+                style={{ color: heroTitleColor, textShadow: heroTitleShadow }}
+              >
+                Premium trading essentials, built for focus.
+              </h1>
+              <p
+                className="mt-4 max-w-2xl text-sm sm:text-base"
+                style={{ color: heroBodyColor, textShadow: heroBodyShadow }}
+              >
               Clean materials, calm layouts, and purposeful gear for traders who value clarity.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3 pointer-events-auto sm:flex-row lg:flex-col lg:items-start lg:w-full">
@@ -2350,7 +2506,121 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
           </div>
         </div>
       </section>
+      )}
 
+      {/* DESIGN MODE — Print & Design Hero */}
+      {heroMode === 'design' && (
+        <section
+          ref={hero.ref}
+          data-apple-section
+          data-design-hero
+          className="relative min-h-screen w-full"
+          style={{ backgroundColor: 'rgb(12,12,12)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}
+        >
+          {/* Mode Toggle */}
+          {showProductSections && (
+            <HeroModeToggle heroMode={heroMode} onModeChange={handleModeChange} />
+          )}
+          {/* Hero overlay */}
+          <div className="absolute inset-0 z-[1] pointer-events-none" style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.1) 0%, rgba(0,0,0,0.9) 50%, rgba(168,85,247,0.05) 100%)' }} />
+          {/* Header */}
+          <div className="relative z-10 mx-auto w-full max-w-[90rem] px-4 sm:px-8" style={{ paddingTop: 32 }}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <img src="/IMG_2921.PNG" alt="BullMoney" className="h-12 w-auto sm:h-14" loading="eager" />
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.32em] text-purple-400/80">Design Studio</p>
+                  <h2 className="text-lg sm:text-xl font-semibold text-white tracking-tight">Print & Digital Art</h2>
+                </div>
+              </div>
+              <span className="rounded-full border border-purple-400/40 bg-purple-500/20 px-3 py-1.5 text-[10px] uppercase tracking-[0.24em] text-purple-300">
+                Studio
+              </span>
+            </div>
+          </div>
+          {/* Hero content */}
+          <div className="relative z-10 mx-auto w-full max-w-6xl px-6 sm:px-10 flex flex-col items-center justify-center" style={{ paddingTop: 80, paddingBottom: 100, minHeight: 'calc(100vh - 100px)' }}>
+            <div className="text-center">
+              <p className="text-[11px] uppercase tracking-[0.35em] text-purple-400/70 mb-4">Premium Design Collection</p>
+              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold text-white mb-6 tracking-tight">
+                Print & Design<br />
+                <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">Studio</span>
+              </h1>
+              <p className="text-base sm:text-lg text-white/60 max-w-2xl mx-auto mb-10">
+                Explore our collection of print products, digital art, and custom designs. From posters to apparel, bring the Bull Money aesthetic to life.
+              </p>
+              <button
+                type="button"
+                onClick={openStudio}
+                className="inline-flex items-center gap-2 rounded-full px-8 py-3.5 text-sm font-semibold uppercase tracking-[0.12em] text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(168,85,247,0.3)]"
+                style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.8), rgba(139,92,246,0.8))' }}
+              >
+                Open Design Studio
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* TRADER MODE — Full-screen MetaQuotes Hero with toggle */}
+      {heroMode === 'trader' && (
+        <section
+          ref={hero.ref}
+          data-apple-section
+          data-trader-hero
+          className="relative min-h-screen w-full"
+          style={{ backgroundColor: 'rgb(0,0,0)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}
+        >
+          {/* Mode Toggle — positioned same as store mode */}
+          {showProductSections && (
+            <HeroModeToggle heroMode={heroMode} onModeChange={handleModeChange} />
+          )}
+          {/* Hero overlay with gradient */}
+          <div
+            className="absolute inset-0 z-[1] pointer-events-none"
+            style={{
+              background: 'linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.7) 100%)',
+            }}
+          />
+          {/* Header */}
+          <div className="relative z-10 mx-auto w-full max-w-[90rem] px-4 sm:px-8" style={{ paddingTop: 32 }}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <img src="/IMG_2921.PNG" alt="BullMoney" className="h-12 w-auto sm:h-14" loading="eager" />
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.32em] text-white/60">Trader View</p>
+                  <h2 className="text-lg sm:text-xl font-semibold text-white tracking-tight">Live Market Quotes</h2>
+                </div>
+              </div>
+              <span className="rounded-full border border-emerald-400/40 bg-emerald-500/20 px-3 py-1.5 text-[10px] uppercase tracking-[0.24em] text-emerald-300 animate-pulse">
+                Live
+              </span>
+            </div>
+          </div>
+          {/* Full-screen MetaTrader Quotes */}
+          <div className="relative z-10 mx-auto w-full max-w-[90rem] px-4 sm:px-8" style={{ paddingTop: 16, paddingBottom: 32 }}>
+            <div className="w-full overflow-hidden rounded-3xl border border-white/10 bg-black/40 backdrop-blur-md shadow-[0_40px_100px_rgba(0,0,0,0.5)]" style={{ minHeight: 'calc(100vh - 180px)' }}>
+              <div className="h-full w-full min-h-[calc(100vh-180px)]">
+                <MetaTraderQuotes embedded />
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Trader View Sections — News and Telegram after hero when in trader mode */}
+      {heroMode === 'trader' && (
+        <>
+          {traderNewsSection}
+          {traderTelegramSection}
+        </>
+      )}
+
+      {/* Print & Design Promo — only in design mode */}
+      {heroMode === 'design' && <PrintDesignPromoGrid onOpenStudio={openStudio} />}
+
+      {/* Columns grid — hide in design mode */}
+      {heroMode !== 'design' && (
       <div
         data-columns-grid
         className="w-full lg:grid lg:grid-cols-[minmax(0,1.05fr)_auto_minmax(0,0.95fr)] lg:items-start lg:h-[100vh] lg:overflow-hidden store-columns-container"
@@ -2361,12 +2631,12 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
           ref={leftColumnRef}
           className="lg:pr-1 lg:min-h-0 lg:h-full lg:max-h-full lg:overflow-y-auto store-column-scroll store-col-left"
         >
-          {isDesktop && columnHeaderSection}
+          {isDesktop && heroMode !== 'design' && columnHeaderSection}
           {isDesktop && heroMode === 'store' && featuresSection}
           {isDesktop && heroMode === 'trader' && dashboardsSection}
         </div>
 
-        {/* CENTER SCROLL HINT DIVIDER */}
+        {/* CENTER SCROLL HINT DIVIDER — hide in design mode */}
         {isDesktop && (
           <div className="store-scroll-hint hidden lg:flex flex-col items-center justify-center gap-3 h-full select-none pointer-events-none" style={{ width: 32 }}>
             <div className="flex flex-col items-center gap-1 opacity-40 animate-pulse" style={{ animationDuration: '3s' }}>
@@ -2389,32 +2659,33 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
           className="space-y-0 lg:pl-1 lg:min-h-0 lg:h-full lg:max-h-full lg:overflow-y-auto store-column-scroll store-col-right"
         >
           <div className="store-col-right-inner">
-            {isDesktop && columnHeaderSection}
+            {isDesktop && heroMode !== 'design' && columnHeaderSection}
             {isDesktop && heroMode === 'store' && dashboardsSection}
             {isDesktop && heroMode === 'store' && testimonialsSection}
             {isDesktop && heroMode === 'trader' && heroDuplicateSection}
             {isDesktop && heroMode === 'trader' && featuresSection}
             {isDesktop && heroMode === 'trader' && testimonialsSection}
-            {!isDesktop && dashboardsSection}
+            {!isDesktop && heroMode !== 'design' && dashboardsSection}
           </div>
         </div>
       </div>
+      )}
 
       {/* Products section — always below columns on desktop */}
-      {isDesktop && productsSectionBlock}
-      {/* metaQuotesSection only appears below columns (not in either column) */}
-      {isDesktop && metaQuotesSection}
+      {isDesktop && heroMode !== 'design' && productsSectionBlock}
+      {/* metaQuotesSection only appears below columns (not in either column) — trader mode only */}
+      {isDesktop && heroMode === 'trader' && metaQuotesSection}
 
-      {!isDesktop && productsSectionBlock}
+      {!isDesktop && heroMode !== 'design' && productsSectionBlock}
 
-      {!isDesktop && featuresSection}
-      {!isDesktop && testimonialsSection}
+      {!isDesktop && heroMode !== 'design' && featuresSection}
+      {!isDesktop && heroMode !== 'design' && testimonialsSection}
 
-      {/* Market Quotes — show on mobile below testimonials */}
-      {!isDesktop && metaQuotesSection}
+      {/* Market Quotes — show on mobile below testimonials (trader mode only) */}
+      {!isDesktop && heroMode === 'trader' && metaQuotesSection}
 
-      {/* Print & Design — full viewport section below columns on ALL pages */}
-      {printDesignSection}
+      {/* Print & Design — full viewport section only in design mode */}
+      {heroMode === 'design' && printDesignSection}
 
       {/* Store Footer — always at the very bottom */}
       {footerSectionBlock}
@@ -2628,6 +2899,16 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
           </div>
         </div>,
         document.body
+      )}
+      {studioState.open && (
+        <PrintDesignStudio
+          onClose={() => setStudioState({ open: false })}
+          userEmail="bullmoneytraders@gmail.com"
+          initialTab={studioState.tab}
+          initialProductId={studioState.productId}
+          initialArtId={studioState.artId}
+          initialProductType={studioState.productType}
+        />
       )}
     </div>
   );

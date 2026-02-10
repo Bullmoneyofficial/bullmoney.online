@@ -62,6 +62,24 @@ html.store-active spline-viewer {
   touch-action: pan-y !important;
 }
 
+/* Store hero elements must NEVER block scroll either */
+[data-store-hero] img,
+[data-store-hero] video,
+[data-store-hero] canvas,
+[data-store-hero] [data-spline],
+[data-store-hero] .spline-container,
+[data-store-hero] spline-viewer,
+[data-store-hero] iframe[src*="spline"],
+[data-store-hero] svg {
+  pointer-events: none !important;
+  touch-action: pan-y !important;
+}
+
+/* Store hero inner wrapper: allow scroll passthrough on mobile */
+[data-store-hero] > div {
+  touch-action: pan-y !important;
+}
+
 /* Hero wrapper special: allow overflow Y for scroll passthrough */
 #hero .hero-wrapper {
   overflow: visible !important;

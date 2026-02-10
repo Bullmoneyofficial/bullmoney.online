@@ -468,6 +468,8 @@ const Styles = () => (
       inset: 0;
       overflow: hidden;
       background: #000;
+      pointer-events: none;
+      touch-action: pan-y;
     }
     .aesthetic-hero-grain {
       position: absolute;

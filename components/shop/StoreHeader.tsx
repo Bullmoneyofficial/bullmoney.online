@@ -22,6 +22,8 @@ const NAV_LINKS = [
   { href: '/store?category=apparel', label: 'Apparel' },
   { href: '/store?category=accessories', label: 'Accessories' },
   { href: '/store?category=tech', label: 'Tech' },
+  { href: '/store#print-design', label: 'Print & Design' },
+  { href: '/store#digital-art', label: 'Digital Art' },
 ];
 
 export function StoreHeader() {
@@ -102,7 +104,7 @@ export function StoreHeader() {
           {/* Logo - Centered on mobile */}
           <Link href="/store" className="flex items-center gap-3 md:flex-none">
             <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-linear-to-br from-white to-white/60 flex items-center justify-center">
-              <span className="text-black font-bold text-base md:text-lg">B</span>
+              <img src="/bullmoney-logo.png" alt="BullMoney" className="w-6 h-6 md:w-7 md:h-7 object-contain" />
             </div>
             <span className="text-lg md:text-xl font-light tracking-tight hidden sm:block">
               <TextType text="Store" typingSpeed={25} showCursor={false} loop={false} as="span" />

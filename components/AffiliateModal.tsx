@@ -1843,7 +1843,7 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
     // Mobile view - Keep existing compact modal layout
     if (isMobileView) {
       return (
-        <div className="fixed inset-0 z-[2147483647] flex flex-col bg-black/95">
+        <div className="fixed inset-0 z-[2147483647] flex flex-col bg-black/80 backdrop-blur-xl">
           {/* Header */}
           <div 
             className="flex items-center justify-between p-4 border-b border-white/30 bg-black/80"
@@ -1886,7 +1886,7 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
 
     // Desktop view - Full layout from AffiliateRecruitsDashboard
     return (
-      <div className="fixed inset-0 z-[2147483647] flex flex-col bg-black/95">
+      <div className="fixed inset-0 z-[2147483647] flex flex-col bg-black/80 backdrop-blur-xl">
         {/* Header */}
         <div 
           className="flex items-center justify-between p-4 border-b border-white/30 bg-black/80"
@@ -1976,7 +1976,7 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
-      className="fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-5 bg-black/95"
+      className="fixed inset-0 z-[2147483647] bg-black/80 backdrop-blur-xl"
       onClick={handleClose}
     >
       {/* Tap to close hints - skip on mobile */}

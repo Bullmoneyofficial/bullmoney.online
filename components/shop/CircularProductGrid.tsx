@@ -402,7 +402,7 @@ function CircularProductRow({ products, rowHeight, itemsPerRow, bend, gap, rowIn
   return (
     <div
       ref={rowRef}
-      className="circular-product-row relative w-full overflow-x-auto overflow-y-visible scrollbar-hide select-none"
+      className="circular-product-row relative w-full overflow-x-auto overflow-y-hidden scrollbar-hide select-none"
       style={{ height: `${rowHeight}px`, contain: 'layout style', willChange: 'auto', cursor: isDraggingRef.current ? 'grabbing' : 'grab' }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}

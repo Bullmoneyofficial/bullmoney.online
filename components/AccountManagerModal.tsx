@@ -813,16 +813,16 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-4 bg-black/95 backdrop-blur-md"
+          className="fixed inset-0 z-[2147483647] bg-black/80 backdrop-blur-xl"
           onClick={onClose}
         >
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
+            initial={{ scale: 0.97, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
+            exit={{ scale: 0.97, opacity: 0 }}
             transition={{ type: "spring", damping: 25 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-4xl max-h-[92vh] sm:max-h-[90vh] overflow-hidden rounded-2xl bg-linear-to-b from-slate-950 via-slate-900 to-black shadow-2xl shadow-white/40 border border-white/40"
+            className="relative w-[100vw] max-w-[100vw] h-[100dvh] max-h-[100dvh] overflow-y-auto bg-linear-to-b from-slate-950 via-slate-900 to-black shadow-2xl border border-white/10"
           >
             {/* Header */}
             <div className="sticky top-0 z-10 bg-white/10 px-4 sm:px-6 py-3 sm:py-4 border-b border-white/30">

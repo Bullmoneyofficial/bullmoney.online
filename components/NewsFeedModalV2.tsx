@@ -521,9 +521,7 @@ const NewsFeedContent = memo(() => {
       animate={animations.modalBackdrop.animate as TargetAndTransition}
       exit={animations.modalBackdrop.exit}
       transition={animations.modalBackdrop.transition}
-      className={`fixed inset-0 z-[2147483647] flex items-center justify-center p-5 sm:p-6 bg-black/95 ${
-        shouldDisableBackdropBlur ? "" : "backdrop-blur-md"
-      }`}
+      className={`fixed inset-0 z-[2147483647] bg-black/80 backdrop-blur-xl`}
       onClick={handleClose}
     >
       {/* Tap to close hints */}
@@ -555,7 +553,7 @@ const NewsFeedContent = memo(() => {
         exit={animations.modalContent.exit}
         transition={animations.modalContent.transition}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-6xl max-h-[90vh] overflow-hidden rounded-2xl"
+        className="relative w-[100vw] max-w-[100vw] h-[100dvh] max-h-[100dvh] overflow-hidden"
       >
         {/* Shimmer Border */}
         {!shouldSkipHeavyEffects && (
@@ -565,7 +563,7 @@ const NewsFeedContent = memo(() => {
         )}
 
         {/* Inner Container */}
-        <div className="relative z-10 bg-linear-to-b from-neutral-900 to-black rounded-2xl border border-white/30 overflow-hidden max-h-[90vh] flex flex-col">
+        <div className="relative z-10 bg-linear-to-b from-neutral-900 to-black border border-white/30 overflow-hidden max-h-[100dvh] flex flex-col">
           {!shouldSkipHeavyEffects && <ShimmerLine color="blue" />}
 
           {/* Header */}

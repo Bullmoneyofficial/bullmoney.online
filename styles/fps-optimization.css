@@ -339,7 +339,7 @@ html.shimmer-quality-disabled [data-shimmer] {
   position: fixed;
   top: 1rem;
   right: 1rem;
-  z-index: 10000;
+  z-index: 2147483647;
   font-family: 'Monaco', 'Menlo', monospace;
   font-size: 11px;
   pointer-events: none;

@@ -10,7 +10,7 @@ import { NextResponse } from "next/server";
 
 // In-memory cache
 let cachedBreaking: { items: BreakingNewsItem[]; timestamp: number } | null = null;
-const CACHE_TTL = 60000; // 60 seconds — og:image scraping now runs in background
+const CACHE_TTL = 120_000; // 120 seconds — feeds don't refresh faster than this
 
 // Background image scraping cache (link -> og:image URL)
 const ogImageCache = new Map<string, string | null>();
@@ -30,39 +30,26 @@ interface BreakingNewsItem {
 
 // Google News RSS feeds + major financial/geopolitical sources
 const BREAKING_FEEDS: { url: string; source: string; category: string; priority: number }[] = [
-  // === GOOGLE NEWS - Broad coverage from ALL websites ===
+  // === GOOGLE NEWS - Broad coverage (top 3 only) ===
   { url: "https://news.google.com/rss/search?q=breaking+news+stock+market&hl=en&gl=US&ceid=US:en", source: "Google News", category: "markets", priority: 10 },
-  { url: "https://news.google.com/rss/search?q=breaking+news+trading+forex&hl=en&gl=US&ceid=US:en", source: "Google News", category: "forex", priority: 10 },
   { url: "https://news.google.com/rss/search?q=breaking+news+geopolitics+war+economy&hl=en&gl=US&ceid=US:en", source: "Google News", category: "geopolitics", priority: 10 },
-  { url: "https://news.google.com/rss/search?q=breaking+news+cryptocurrency+bitcoin&hl=en&gl=US&ceid=US:en", source: "Google News", category: "crypto", priority: 9 },
-  { url: "https://news.google.com/rss/search?q=breaking+news+oil+gold+commodities&hl=en&gl=US&ceid=US:en", source: "Google News", category: "commodities", priority: 9 },
-  { url: "https://news.google.com/rss/search?q=federal+reserve+interest+rate+inflation&hl=en&gl=US&ceid=US:en", source: "Google News", category: "economics", priority: 9 },
-  { url: "https://news.google.com/rss/search?q=sanctions+trade+war+tariffs&hl=en&gl=US&ceid=US:en", source: "Google News", category: "geopolitics", priority: 8 },
   { url: "https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx1YlY4U0FtVnVHZ0pWVXlnQVAB?hl=en-US&gl=US&ceid=US:en", source: "Google News Business", category: "markets", priority: 10 },
 
-  // === DIRECT FINANCIAL SOURCES ===
+  // === DIRECT FINANCIAL SOURCES (top 4) ===
   { url: "https://www.cnbc.com/id/100003114/device/rss/rss.html", source: "CNBC", category: "markets", priority: 9 },
-  { url: "https://www.cnbc.com/id/100727362/device/rss/rss.html", source: "CNBC Markets", category: "markets", priority: 9 },
-  { url: "https://feeds.finance.yahoo.com/rss/2.0/headline?s=^GSPC&region=US&lang=en-US", source: "Yahoo Finance", category: "stocks", priority: 8 },
   { url: "https://www.marketwatch.com/rss/topstories", source: "MarketWatch", category: "markets", priority: 8 },
-  { url: "https://seekingalpha.com/market_currents.xml", source: "Seeking Alpha", category: "stocks", priority: 7 },
-  { url: "https://www.investing.com/rss/news.rss", source: "Investing.com", category: "markets", priority: 8 },
-  { url: "https://www.forexlive.com/feed/news", source: "ForexLive", category: "forex", priority: 7 },
-
-  // === GEOPOLITICS & WORLD (affects markets) ===
-  { url: "https://feeds.bbci.co.uk/news/world/rss.xml", source: "BBC World", category: "geopolitics", priority: 8 },
-  { url: "https://rss.nytimes.com/services/xml/rss/nyt/World.xml", source: "NY Times", category: "geopolitics", priority: 7 },
-  { url: "https://www.theguardian.com/world/rss", source: "The Guardian", category: "geopolitics", priority: 7 },
-  { url: "https://feeds.reuters.com/reuters/topNews", source: "Reuters", category: "geopolitics", priority: 9 },
+  { url: "https://feeds.finance.yahoo.com/rss/2.0/headline?s=^GSPC&region=US&lang=en-US", source: "Yahoo Finance", category: "stocks", priority: 8 },
   { url: "https://feeds.reuters.com/reuters/businessNews", source: "Reuters Business", category: "markets", priority: 9 },
 
-  // === CRYPTO ===
-  { url: "https://cointelegraph.com/rss", source: "Cointelegraph", category: "crypto", priority: 7 },
-  { url: "https://www.coindesk.com/arc/outboundfeeds/rss/", source: "CoinDesk", category: "crypto", priority: 7 },
+  // === GEOPOLITICS (top 2) ===
+  { url: "https://feeds.bbci.co.uk/news/world/rss.xml", source: "BBC World", category: "geopolitics", priority: 8 },
+  { url: "https://feeds.reuters.com/reuters/topNews", source: "Reuters", category: "geopolitics", priority: 9 },
 
-  // === COMMODITIES ===
+  // === CRYPTO (1) ===
+  { url: "https://cointelegraph.com/rss", source: "Cointelegraph", category: "crypto", priority: 7 },
+
+  // === COMMODITIES (1) ===
   { url: "https://www.kitco.com/rss/gold.xml", source: "Kitco Gold", category: "commodities", priority: 7 },
-  { url: "https://oilprice.com/rss/main", source: "OilPrice", category: "commodities", priority: 7 },
 ];
 
 // Keywords that indicate urgency levels
@@ -241,7 +228,7 @@ export async function GET() {
     const results = await Promise.allSettled(
       BREAKING_FEEDS.map(async (f) => {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 4000);
+        const timeoutId = setTimeout(() => controller.abort(), 2500);
 
         try {
           const res = await fetch(f.url, {

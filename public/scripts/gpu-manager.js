@@ -2,8 +2,12 @@
 // Manages WebGL contexts and GPU resources to prevent crashes
 (function(){
 'use strict';
-var w=window,d=document;
+var w=window,d=document,n=navigator;
 var GM=w.__BM_GPU_MANAGER__={contexts:[],maxContexts:8,activeContexts:0,contextPool:[],gpuInfo:{}};
+var isMobile=/mobi|android|iphone|ipad|ipod/i.test(n.userAgent||'');
+var isInApp=/instagram|fban|fbav|tiktok|snapchat|twitter|linkedin|wechat|line\/|telegram|pinterest|reddit/i.test(n.userAgent||'');
+GM.isMobile=isMobile;GM.isInApp=isInApp;
+d.documentElement.setAttribute('data-effects',(isMobile||isInApp)?'lite':'full');
 
 // ─── 201. GPU Capability Detection ───
 (function detectGPU(){
@@ -138,9 +142,18 @@ var gpuStyle=d.createElement('style');
 gpuStyle.textContent=[
   // Prevent GPU layer explosion
   'canvas{contain:strict;}',
+  // Mobile: keep effects but lighter weight
+  '[data-effects="lite"]{--blur-amount:6px;--shadow-strength:0.6;--glow-opacity:0.6;}',
+  '[data-effects="lite"] .glass-effect,[data-effects="lite"] .glassmorphism,[data-effects="lite"] .glass-surface,[data-effects="lite"] .glass-card,[data-effects="lite"] .glass-dark,[data-effects="lite"] .glass-frosted,[data-effects="lite"] .glass-clear,[data-effects="lite"] .glass-premium,[data-effects="lite"] .glass-light{backdrop-filter:blur(6px) saturate(1.1)!important;-webkit-backdrop-filter:blur(6px) saturate(1.1)!important;}',
+  '[data-effects="lite"] .glass-glow::before,[data-effects="lite"] .glass-glow-strong::before,[data-effects="lite"] .glass-glow-pulse::before{opacity:0.6!important;}',
   // Limit compositing layers on low-end GPUs
-  '[data-gpu-pressure="high"] *{will-change:auto!important;transform:none!important;}',
+  // NEVER use transform:none on * — it destroys ALL layout (translate, scale, rotate used for positioning)
+  // Instead: only reset will-change and strip backdrop-filter (the expensive GPU ops)
+  '[data-gpu-pressure="high"] *{will-change:auto!important;}',
+  '[data-gpu-pressure="high"] *:not(.product-card-premium):not([style*="transform"]):not([class*="translate"]):not([class*="scale"]):not([class*="rotate"]){backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}',
   '[data-gpu-pressure="high"] canvas{image-rendering:pixelated;}',
+  // Glass: opaque dark fallback under GPU pressure
+  '[data-gpu-pressure="high"] .glass-effect,[data-gpu-pressure="high"] .glassmorphism,[data-gpu-pressure="high"] .glass-surface,[data-gpu-pressure="high"] .glass-card{background:rgba(0,0,0,0.88)!important;border-color:rgba(255,255,255,0.06)!important;}',
   // Force hardware acceleration only where needed
   '.gpu-accelerated{transform:translateZ(0);will-change:transform;}',
   // Prevent stacking context explosion

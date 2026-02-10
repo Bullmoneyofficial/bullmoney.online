@@ -301,10 +301,10 @@ export function SupportButton({ position = 'right' }: SupportButtonProps) {
 
   return (
     <>
-      {/* Floating Button */}
+      {/* Floating Button — compact on mobile */}
       <motion.button
         onClick={isOpen ? () => { SoundEffects.close(); setIsOpen(false); } : handleOpen}
-        className={`fixed bottom-6 md:bottom-24 ${side} z-[9999] flex items-center justify-center w-12 h-12 rounded-full`}
+        className={`fixed bottom-6 md:bottom-24 ${side} z-[2147483647] flex items-center justify-center w-9 h-9 md:w-12 md:h-12 rounded-full`}
         style={{
           position: 'fixed',
           background: isOpen ? 'rgba(255,255,255,0.06)' : 'rgb(0, 0, 0)',
@@ -321,17 +321,17 @@ export function SupportButton({ position = 'right' }: SupportButtonProps) {
         <AnimatePresence mode="wait">
           {isOpen ? (
             <motion.div key="x" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.15 }}>
-              <X className="w-5 h-5 text-white/70" />
+              <X className="w-4 h-4 md:w-5 md:h-5 text-white/70" />
             </motion.div>
           ) : (
             <motion.div key="h" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.15 }}>
-              <Headphones className="w-5 h-5 text-white" />
+              <Headphones className="w-4 h-4 md:w-5 md:h-5 text-white" />
             </motion.div>
           )}
         </AnimatePresence>
         {hasUnread && !isOpen && (
           <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }}
-            className={`absolute -top-0.5 ${isLeft ? '-left-0.5' : '-right-0.5'} w-2.5 h-2.5 rounded-full`}
+            className={`absolute -top-0.5 ${isLeft ? '-left-0.5' : '-right-0.5'} w-2 h-2 md:w-2.5 md:h-2.5 rounded-full`}
             style={{ background: 'rgb(255, 255, 255)', boxShadow: '0 0 8px rgba(255,255,255,0.5)' }} />
         )}
       </motion.button>
@@ -346,18 +346,18 @@ export function SupportButton({ position = 'right' }: SupportButtonProps) {
             exit={{ opacity: 0, y: -4, scale: 0.95 }}
             transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
             onClick={handleOpen}
-            className={`fixed bottom-20 md:bottom-40 ${side} z-[9999] cursor-pointer max-w-55`}
+            className={`fixed bottom-16 md:bottom-40 ${side} z-[2147483647] cursor-pointer max-w-48 md:max-w-55`}
             style={{
               background: 'rgba(0, 0, 0, 0.92)',
               backdropFilter: 'blur(24px) saturate(180%)',
               WebkitBackdropFilter: 'blur(24px) saturate(180%)',
               border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: '14px',
-              padding: '8px 14px',
+              borderRadius: '12px',
+              padding: '6px 10px',
               boxShadow: '0 8px 32px rgba(0,0,0,0.4), 0 0 0 0.5px rgba(255,255,255,0.06)',
             }}
           >
-            <p className="text-white/80 text-[12px] leading-snug font-medium">{toastMsg}</p>
+            <p className="text-white/80 text-[10px] md:text-[12px] leading-snug font-medium">{toastMsg}</p>
             <div
               className={`absolute -bottom-1.5 ${isLeft ? 'left-4 md:right-4 md:left-auto' : 'right-4'}`}
               style={{ width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '6px solid rgba(0, 0, 0, 0.92)' }}
@@ -374,8 +374,8 @@ export function SupportButton({ position = 'right' }: SupportButtonProps) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 14, scale: 0.97 }}
             transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
-            className={`fixed bottom-20 md:bottom-30 ${side} z-[9998] w-85 max-w-[calc(100vw-40px)] rounded-2xl overflow-hidden flex flex-col`}
-            style={{ height: 'min(560px, calc(100vh - 120px))', ...glass.panel }}
+            className={`fixed inset-x-0 bottom-0 md:bottom-30 md:inset-x-auto ${side} z-[2147483646] w-full md:w-85 md:max-w-[calc(100vw-40px)] rounded-t-2xl md:rounded-2xl overflow-hidden flex flex-col`}
+            style={{ height: 'calc(100dvh - 60px)', ...glass.panel }}
           >
             {/* Header */}
             <div className="flex items-center gap-3 px-4 py-3 shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>

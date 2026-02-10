@@ -1846,12 +1846,12 @@ export function AdminHubModal({
   // -----------------------------------------------------------------------
   return isOpen ? (
         <div
-          className="fixed inset-0 z-2147483647 flex items-center justify-center p-2 sm:p-4 bg-black/95"
+          className="fixed inset-0 z-[2147483647] bg-black/80 backdrop-blur-xl"
           onClick={onClose}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-6xl sm:max-w-5xl md:max-w-6xl max-h-[92vh] overflow-hidden rounded-2xl border border-white/40 bg-linear-to-b from-slate-950 via-slate-900 to-black flex flex-col"
+            className="w-[100vw] max-w-[100vw] h-[100dvh] max-h-[100dvh] overflow-y-auto border border-white/10 bg-linear-to-b from-slate-950 via-slate-900 to-black flex flex-col"
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/30 bg-white/10">
               <div className="flex items-center gap-2 text-white font-bold">

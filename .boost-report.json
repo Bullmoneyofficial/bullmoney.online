@@ -36,244 +36,34 @@
     "meta_tags_ok": true,
     "seo_script": "public/scripts/seo-boost.js"
   },
-  "images": {
-    "oversized": [
-      {
-        "path": "public/IMG_2921.PNG",
-        "size_kb": 3858.0,
-        "format": ".png"
-      },
-      {
-        "path": "public/Fvfront.png",
-        "size_kb": 1399.7,
-        "format": ".png"
-      },
-      {
-        "path": "public/AyaRungqu.png",
-        "size_kb": 699.8,
-        "format": ".png"
-      },
-      {
-        "path": "public/NtlakaniphoBlouw.png",
-        "size_kb": 700.8,
-        "format": ".png"
-      },
-      {
-        "path": "public/LithaSilo.png",
-        "size_kb": 697.7,
-        "format": ".png"
-      },
-      {
-        "path": "public/DamianRudolph.png",
-        "size_kb": 700.0,
-        "format": ".png"
-      },
-      {
-        "path": "public/longbull.jpg",
-        "size_kb": 1074.3,
-        "format": ".jpg"
-      },
-      {
-        "path": "public/bullmoneyvantage.png",
-        "size_kb": 3367.7,
-        "format": ".png"
-      },
-      {
-        "path": "public/bullmoney-logo.png",
-        "size_kb": 812.1,
-        "format": ".png"
-      }
-    ],
-    "total_images": 58,
-    "total_size_mb": 27.52,
-    "format_distribution": {
-      ".png": 20,
-      ".jpg": 10,
-      ".svg": 28
-    },
-    "missing_modern_format": 26,
-    "spline_count": 7,
-    "spline_total_mb": 19.86
-  },
-  "bundle": {
-    "large_components": [
-      {
-        "file": "components/UltimateHub.tsx",
-        "lines": 9576,
-        "imports": 23
-      },
-      {
-        "file": "components/MultiStepLoaderv3.tsx",
-        "lines": 5844,
-        "imports": 6
-      },
-      {
-        "file": "components/MobileDiscordHero.tsx",
-        "lines": 3830,
-        "imports": 18
-      },
-      {
-        "file": "components/HeroDesktop.tsx",
-        "lines": 3341,
-        "imports": 21
-      },
-      {
-        "file": "components/MultiStepLoaderv2.tsx",
-        "lines": 2322,
-        "imports": 6
-      },
-      {
-        "file": "components/hero.tsx",
-        "lines": 2249,
-        "imports": 28
-      },
-      {
-        "file": "components/LiveStreamModal.tsx",
-        "lines": 2234,
-        "imports": 10
-      },
-      {
-        "file": "components/UltimateControlPanel.tsx",
-        "lines": 2171,
-        "imports": 22
-      },
-      {
-        "file": "components/AdminHubModal.tsx",
-        "lines": 2110,
-        "imports": 15
-      },
-      {
-        "file": "components/AffiliateModal.tsx",
-        "lines": 2059,
-        "imports": 12
-      },
-      {
-        "file": "components/AccountManagerModal.tsx",
-        "lines": 2004,
-        "imports": 6
-      },
-      {
-        "file": "components/EmailAdminPanel.tsx",
-        "lines": 1746,
-        "imports": 4
-      },
-      {
-        "file": "components/SolarSystemGame.tsx",
-        "lines": 1600,
-        "imports": 4
-      },
-      {
-        "file": "components/ShopScrollFunnel.tsx",
-        "lines": 1489,
-        "imports": 2
-      },
-      {
-        "file": "components/AudioWidget.old.tsx",
-        "lines": 1485,
-        "imports": 14
-      },
-      {
-        "file": "components/CommunityQuickAccess.tsx",
-        "lines": 1464,
-        "imports": 6
-      },
-      {
-        "file": "components/TradingQuickAccess.tsx",
-        "lines": 1453,
-        "imports": 6
-      },
-      {
-        "file": "components/MultiStepLoaderv3Simple.tsx",
-        "lines": 1400,
-        "imports": 3
-      },
-      {
-        "file": "components/features.tsx",
-        "lines": 1296,
-        "imports": 12
-      },
-      {
-        "file": "components/AdminModal.tsx",
-        "lines": 1289,
-        "imports": 6
-      }
-    ],
-    "heavy_imports": [
-      {
-        "file": "components/StoreAnalyticsPanel.tsx",
-        "imports": 33
-      }
-    ],
-    "missing_lazy": [],
-    "total_components": 198,
-    "top_imports": [
-      {
-        "module": "react",
-        "count": 256
-      },
-      {
-        "module": "framer-motion",
-        "count": 117
-      },
-      {
-        "module": "lucide-react",
-        "count": 107
-      },
-      {
-        "module": "next/dynamic",
-        "count": 37
-      },
-      {
-        "module": "react-dom",
-        "count": 36
-      },
-      {
-        "module": "@/lib/utils",
-        "count": 33
-      },
-      {
-        "module": "@/lib/supabase",
-        "count": 28
-      },
-      {
-        "module": "next/navigation",
-        "count": 27
-      },
-      {
-        "module": "@/app/hooks/useSoundEffects",
-        "count": 26
-      },
-      {
-        "module": "@/hooks/useMobilePerformance",
-        "count": 26
-      },
-      {
-        "module": "next/link",
-        "count": 25
-      },
-      {
-        "module": "@/contexts/UIStateContext",
-        "count": 24
-      },
-      {
-        "module": "next",
-        "count": 23
-      },
-      {
-        "module": "@/stores/currency-locale-store",
-        "count": 23
-      },
-      {
-        "module": "next/image",
-        "count": 21
-      }
-    ],
-    "total_css_files": 77,
-    "large_css": []
+  "perf_monitor": {
+    "perf_script": "public/scripts/perf-boost.js"
   },
   "dependencies": {
     "warnings": [],
-    "total_deps": 106
+    "total_deps": 108
+  },
+  "caching": {
+    "build_id": "3d1c5579e223",
+    "critical_routes": 12,
+    "offline_script": true
+  },
+  "accessibility": {
+    "issues": [],
+    "passed": [
+      "HTML lang attribute set",
+      "Hydration warning suppressed (theme flash fix)",
+      "Viewport configured",
+      "Pinch-to-zoom enabled",
+      "PWA meta tags"
+    ]
+  },
+  "pwa": {
+    "issues": []
+  },
+  "cleanup": {
+    "cleaned": 0,
+    "freed_mb": 0
   },
   "nextjs_config": {
     "issues": [],
@@ -293,33 +83,8 @@
       "Server component HMR cache"
     ]
   },
-  "perf_monitor": {
-    "perf_script": "public/scripts/perf-boost.js"
-  },
-  "pwa": {
-    "issues": []
-  },
-  "accessibility": {
-    "issues": [],
-    "passed": [
-      "HTML lang attribute set",
-      "Hydration warning suppressed (theme flash fix)",
-      "Viewport configured",
-      "Pinch-to-zoom enabled",
-      "PWA meta tags"
-    ]
-  },
-  "caching": {
-    "build_id": "7e98b35d1aa2",
-    "critical_routes": 12,
-    "offline_script": true
-  },
-  "cleanup": {
-    "cleaned": 0,
-    "freed_mb": 0
-  },
   "spline_turbo": {
-    "spline_turbo_size_kb": 13.2,
+    "spline_turbo_size_kb": 13.5,
     "quality_tiers": [
       "ultra",
       "high",
@@ -328,17 +93,17 @@
       "disabled"
     ]
   },
-  "memory_guardian": {
-    "memory_guardian_size_kb": 11.3
+  "inapp_shield": {
+    "inapp_shield_size_kb": 8.5
+  },
+  "gpu_manager": {
+    "gpu_manager_size_kb": 7.4
   },
   "crash_prevention": {
     "crash_prevention_size_kb": 10.4
   },
-  "gpu_manager": {
-    "gpu_manager_size_kb": 5.7
-  },
-  "inapp_shield": {
-    "inapp_shield_size_kb": 7.2
+  "memory_guardian": {
+    "memory_guardian_size_kb": 30.4
   },
   "build_optimizer": {
     "optimizations": [
@@ -347,7 +112,7 @@
     ],
     "barrel_exports": 0,
     "static_heavy_imports": 0,
-    "dynamic_loaded_components": 291
+    "dynamic_loaded_components": 295
   },
   "fonts": {
     "fonts_found": [],
@@ -526,7 +291,7 @@
       }
     ],
     "unsafe_patterns": [],
-    "unprotected_api_routes": 36
+    "unprotected_api_routes": 40
   },
   "dead_code": {
     "unused_components": [
@@ -534,6 +299,11 @@
         "file": "components/MultiStepLoaderv3.tsx",
         "name": "MultiStepLoaderv3",
         "size_kb": 208.7
+      },
+      {
+        "file": "components/shop/PrintDesignStudio.tsx",
+        "name": "PrintDesignStudio",
+        "size_kb": 153.6
       },
       {
         "file": "components/MobileDiscordHero.tsx",
@@ -548,7 +318,7 @@
       {
         "file": "components/AccountManagerModal.tsx",
         "name": "AccountManagerModal",
-        "size_kb": 100.8
+        "size_kb": 100.7
       },
       {
         "file": "components/LiveStreamModal.tsx",
@@ -568,7 +338,7 @@
       {
         "file": "components/AdminHubModal.tsx",
         "name": "AdminHubModal",
-        "size_kb": 79.9
+        "size_kb": 79.8
       },
       {
         "file": "components/AudioWidget.old.tsx",
@@ -633,7 +403,7 @@
       {
         "file": "components/shop/StoreSupportButton.tsx",
         "name": "StoreSupportButton",
-        "size_kb": 44.1
+        "size_kb": 44.2
       },
       {
         "file": "components/shop/CheckoutWizard.tsx",
@@ -649,11 +419,6 @@
         "file": "components/ui/SeviceModal.tsx",
         "name": "SeviceModal",
         "size_kb": 37.6
-      },
-      {
-        "file": "components/Hyperspeed.tsx",
-        "name": "Hyperspeed",
-        "size_kb": 37.4
       }
     ],
     "orphan_files": [],
@@ -676,20 +441,20 @@
     "empty_vars": 2
   },
   "api_routes": {
-    "total_routes": 122,
+    "total_routes": 128,
     "issues": [],
-    "well_formed": 115,
+    "well_formed": 121,
     "no_try_catch": 7,
     "has_rate_limit": 7,
     "has_caching": 16
   },
   "css_audit": {
-    "total_rules": 3598,
-    "duplicates": 783,
-    "files_scanned": 77,
+    "total_rules": 3643,
+    "duplicates": 782,
+    "files_scanned": 78,
     "issues": [],
-    "important_count": 2088,
-    "total_css_kb": 705.3
+    "important_count": 2098,
+    "total_css_kb": 714.8
   },
   "third_party": {
     "scripts_found": [
@@ -716,46 +481,44 @@
     "network_optimizer_size_kb": 7.7
   },
   "search_index": {
-    "search_index_items": 33,
-    "search_index_size_kb": 8.7
+    "search_index_items": 34,
+    "search_index_size_kb": 8.9
   },
   "boost_loader": {
     "loader_path": "public/scripts/boost-loader.js"
   },
   "meta": {
-    "timestamp": "2026-02-09T22:41:30.868515+00:00",
-    "elapsed_seconds": 2.29,
+    "timestamp": "2026-02-10T03:07:20.609645+00:00",
+    "elapsed_seconds": 3.08,
     "files_generated": 25,
-    "total_size_bytes": 98262,
+    "total_size_bytes": 121307,
     "section_times": {
-      "section_1": 0.001,
-      "section_2": 0.0,
-      "section_3": 0.002,
-      "section_4": 0.009,
-      "section_5": 0.158,
-      "section_12": 0.001,
-      "section_8": 0.002,
-      "section_7": 0.003,
-      "section_13": 0.003,
-      "section_9": 0.005,
-      "section_6": 0.017,
-      "section_11": 0.079,
-      "section_14": 0.002,
-      "section_15": 0.003,
-      "section_17": 0.002,
-      "section_19": 0.002,
-      "section_16": 0.002,
-      "section_18": 0.517,
-      "section_22": 0.405,
-      "section_21": 0.793,
-      "section_20": 0.879,
-      "section_25": 0.002,
-      "section_23": 0.031,
-      "section_26": 0.488,
-      "section_24": 0.635,
-      "section_27": 0.0,
-      "section_28": 0.011,
-      "section_10": 0.0
+      "section_1": 0.032,
+      "section_2": 0.025,
+      "section_3": 0.113,
+      "section_7": 0.028,
+      "section_12": 0.043,
+      "section_6": 0.048,
+      "section_9": 0.049,
+      "section_13": 0.067,
+      "section_11": 0.076,
+      "section_8": 0.088,
+      "section_14": 0.041,
+      "section_16": 0.041,
+      "section_19": 0.041,
+      "section_17": 0.044,
+      "section_15": 0.094,
+      "section_18": 0.384,
+      "section_22": 0.646,
+      "section_21": 0.76,
+      "section_20": 1.204,
+      "section_25": 0.139,
+      "section_23": 0.192,
+      "section_26": 0.484,
+      "section_24": 0.584,
+      "section_27": 0.045,
+      "section_28": 0.056,
+      "section_10": 0.026
     }
   }
 }

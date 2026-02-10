@@ -1153,7 +1153,7 @@ const LiveStreamContent = memo(() => {
       animate={animations.modalBackdrop.animate as TargetAndTransition}
       exit={animations.modalBackdrop.exit as TargetAndTransition}
       transition={animations.modalBackdrop.transition}
-      className={`fixed inset-0 z-[2147483647] flex items-center justify-center p-5 sm:p-6 ${shouldDisableBackdropBlur ? 'bg-black/95' : 'bg-black/90'} mobile-no-blur`}
+      className={`fixed inset-0 z-[2147483647] bg-black/80 backdrop-blur-xl mobile-no-blur`}
       onClick={handleClose}
       data-performance-tier={performanceTier}
     >
@@ -1211,7 +1211,7 @@ const LiveStreamContent = memo(() => {
         exit={animations.modalContent.exit as TargetAndTransition}
         transition={animations.modalContent.transition}
         onClick={(e) => e.stopPropagation()}
-        className={`relative w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-neutral-900 border border-white/10 ${isMobile ? '' : 'shadow-2xl shadow-black/50'} gpu-accelerated`}
+        className={`relative w-[100vw] max-w-[100vw] h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden bg-neutral-900 border border-white/10 ${isMobile ? '' : 'shadow-2xl shadow-black/50'} gpu-accelerated`}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-white/10 flex-shrink-0 bg-black/40">

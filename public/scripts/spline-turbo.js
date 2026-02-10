@@ -45,8 +45,9 @@ var isInApp=/instagram|fbav|fban|fb_iab|tiktok|bytedance|twitter|snapchat|linked
 
 // Calculate 3D quality tier
 var q3d='high';
-if(saveData||slowNet||mem<2){q3d='disabled';}
-else if(isInApp&&mem<4){q3d='disabled';}
+if(!ST.webglReady){q3d='disabled';}
+else if(saveData||slowNet){q3d=isMobile?'low':'disabled';}
+else if(mem<2){q3d=isMobile?'low':'disabled';}
 else if(isInApp){q3d='low';}
 else if(mem<3||cores<2){q3d='low';}
 else if(isMobile&&mem<6){q3d='medium';}
@@ -203,43 +204,49 @@ ST.loadScene=function(container,sceneUrl,opts){
   });
 };
 
-// ─── 114. Frame Rate: FORCE 120 FPS on ALL devices ───
-// Override all tier/battery limits - always target 120fps
-ST.targetFPS=120;
-d.documentElement.setAttribute('data-3d-fps','120');
-// Hack: force high refresh rate on all browsers
-(function force120fps(){
-  // Request high refresh rate via canvas hack
-  try{
-    var hfr=d.createElement('canvas');
-    hfr.width=1;hfr.height=1;
-    hfr.style.cssText='position:fixed;top:-9999px;pointer-events:none;opacity:0;';
-    d.documentElement.appendChild(hfr);
-    var ctx=hfr.getContext('2d');
-    // Continuous rAF loop to hint browser we want max refresh rate
-    var running=true;
-    function tick(){
-      if(!running)return;
-      ctx.clearRect(0,0,1,1);
+// ─── 114. Frame Rate: Adaptive target (mobile-lightweight) ───
+var targetFPS=120;
+if(isMobile||isInApp){
+  targetFPS=(q3d==='low'||q3d==='disabled')?45:60;
+} else if(q3d==='low'){targetFPS=60;}
+else if(q3d==='medium'){targetFPS=90;}
+ST.targetFPS=targetFPS;
+d.documentElement.setAttribute('data-3d-fps',String(targetFPS));
+// Only attempt high refresh rate hints on desktop/high tiers
+if(targetFPS>=90&&!isMobile&&!isInApp){
+  (function forceHighFps(){
+    // Request high refresh rate via canvas hack
+    try{
+      var hfr=d.createElement('canvas');
+      hfr.width=1;hfr.height=1;
+      hfr.style.cssText='position:fixed;top:-9999px;pointer-events:none;opacity:0;';
+      d.documentElement.appendChild(hfr);
+      var ctx=hfr.getContext('2d');
+      // Continuous rAF loop to hint browser we want max refresh rate
+      var running=true;
+      function tick(){
+        if(!running)return;
+        ctx.clearRect(0,0,1,1);
+        requestAnimationFrame(tick);
+      }
       requestAnimationFrame(tick);
+      // Cleanup after 10s - browser should have locked to high refresh by then
+      setTimeout(function(){running=false;hfr.remove();},10000);
+    }catch(e){}
+    // Force screen.updateInterval if supported (some Chromium)
+    if(w.screen&&w.screen.updateInterval!==undefined){
+      try{w.screen.updateInterval=0;}catch(e){}
     }
-    requestAnimationFrame(tick);
-    // Cleanup after 10s - browser should have locked to high refresh by then
-    setTimeout(function(){running=false;hfr.remove();},10000);
-  }catch(e){}
-  // Force screen.updateInterval if supported (some Chromium)
-  if(w.screen&&w.screen.updateInterval!==undefined){
-    try{w.screen.updateInterval=0;}catch(e){}
-  }
-})();
+  })();
+}
 
 // ─── 115. CSS for 3D Performance ───
 var style=d.createElement('style');
 style.textContent=[
   // GPU-accelerated containers
   '.spline-container,.spline-scene-wrapper,[data-spline-scene]{contain:layout style paint;will-change:auto;backface-visibility:hidden;}',
-  // Fallback gradient for disabled/loading states
-  '.spline-fallback-active,.spline-loading{background:linear-gradient(135deg,#0a0a0a 0%,#1a1a2e 50%,#0a0a0a 100%)!important;}',
+  // Fallback gradient for disabled/loading states - use semi-transparent overlay instead of forcing dark
+  '.spline-fallback-active::after,.spline-loading::after{content:"";position:absolute;inset:0;background:rgba(128,128,128,0.1);pointer-events:none;}',
   '.spline-loading::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,215,0,0.05),transparent);animation:spline-shimmer 1.5s infinite;}',
   '@keyframes spline-shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}',
   // Reduce canvas resolution on lower tiers

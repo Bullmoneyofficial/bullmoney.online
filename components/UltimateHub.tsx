@@ -30,60 +30,55 @@ import { useDesktopPerformance, useUnifiedPerformance } from '@/hooks/useDesktop
 import { initializeFpsMeasurement } from '@/lib/FpsMeasurement';
 import { detectBrowserCapabilities, selectOptimalMeasurementConfig } from '@/lib/FpsCompatibility';
 
-// --- GLOBAL GLASS STYLES (Apple-style light theme) ---
+// --- GLOBAL GLASS STYLES (iPhone-style black/white) ---
 const GLOBAL_NEON_STYLES = `
   .neon-blue-text,
   .neon-white-text {
-    color: rgba(0, 0, 0, 0.85);
+    color: rgba(255, 255, 255, 0.92);
     text-shadow: none !important;
   }
 
   .neon-white-icon,
   .neon-blue-icon {
     filter: none !important;
-    color: rgba(0, 0, 0, 0.7);
+    color: rgba(255, 255, 255, 0.9);
   }
 
   .neon-blue-border,
   .neon-subtle-border {
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 18px 40px rgba(0, 0, 0, 0.45);
   }
 
   .neon-blue-bg {
-    background: rgba(255, 255, 255, 0.8);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
   }
 
   .glass-panel {
-    background: #f5f5f7;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+    background: linear-gradient(135deg, rgba(8, 8, 10, 0.92), rgba(20, 20, 24, 0.82));
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(20px) saturate(140%);
   }
 
   .glass-surface {
-    background: rgba(255, 255, 255, 0.6);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    box-shadow: none;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
     backdrop-filter: blur(16px) saturate(130%);
   }
 
   .glass-chip {
-    background: rgba(255, 255, 255, 0.8);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
 
   .glass-button {
-    background: rgba(255, 255, 255, 1);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    color: rgba(0, 0, 0, 0.85);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  }
-
-  .glass-button:hover {
-    background: rgba(245, 245, 247, 1);
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.95);
   }
 
   .animate-neon-pulse-optimized,
@@ -562,10 +557,8 @@ const ChannelCarousel = memo(({
   const hasFavorite = favoriteChannel !== null;
 
   return (
-    <div
-      className="w-full max-w-[1100px] mx-auto flex flex-col gap-1 p-1 sm:p-2 border-b border-black/10 flex-shrink-0 bg-[rgb(255,255,255)] sm:bg-[#f5f5f7]/95 relative"
-      style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
-    >
+    <div className="w-full max-w-[1100px] mx-auto flex flex-col gap-1 p-1 sm:p-2 border-b border-blue-500/30 flex-shrink-0 bg-black/95 backdrop-blur-2xl relative"
+      style={{ boxShadow: '0 0 12px rgba(59, 130, 246, 0.3), inset 0 0 8px rgba(59, 130, 246, 0.1)' }}>
       {/* Main Carousel Row */}
       <div className="flex items-center gap-1 sm:gap-1.5 justify-center">
         {/* Favorite Button - Blue, goes to saved favorite */}
@@ -575,13 +568,13 @@ const ChannelCarousel = memo(({
           whileTap={{ scale: hasFavorite ? 0.95 : 1 }}
           className={`flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl border transition-all flex-shrink-0 ${
             hasFavorite
-              ? 'bg-white border-black/15 text-amber-500 cursor-pointer shadow-sm'
-              : 'bg-white/60 border-black/5 text-black/25 cursor-default'
+              ? 'bg-blue-500/30 border-blue-400/70 text-blue-400 cursor-pointer'
+              : 'bg-blue-500/10 border-blue-400/30 text-blue-400/40 cursor-default'
           }`}
-          style={hasFavorite ? { boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' } : {}}
+          style={hasFavorite ? { boxShadow: '0 0 14px rgba(59, 130, 246, 0.6)' } : {}}
           title={hasFavorite ? `Go to favorite: ${EXTENDED_CHANNELS[favoriteChannel!]?.name || 'Unknown'}` : 'No favorite set'}
         >
-          <Star className={`w-3.5 h-3.5 sm:w-6 sm:h-6 ${hasFavorite ? 'fill-amber-500' : ''}`} />
+          <Star className={`w-3.5 h-3.5 sm:w-6 sm:h-6 ${hasFavorite ? 'fill-blue-400' : ''}`} />
         </motion.button>
         
         {/* Left Arrow */}
@@ -589,7 +582,8 @@ const ChannelCarousel = memo(({
           onClick={goToPrev}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          className="flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-white border border-black/10 text-black/60 active:bg-black/5 transition-all flex-shrink-0 shadow-sm"
+          className="flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-blue-500/20 border border-blue-400/50 text-blue-400 hover:bg-blue-500/30 transition-all flex-shrink-0"
+          style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)' }}
         >
           <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
         </motion.button>
@@ -612,18 +606,18 @@ const ChannelCarousel = memo(({
           onClick={handleAdminClick}
           style={{ touchAction: 'pan-y' }}
         >
-          <div
-            className={`flex items-center gap-2 sm:gap-3 px-2 sm:px-4 py-1 sm:py-2 rounded-lg sm:rounded-xl border transition-all ${
-              isAdminTab
-                ? 'bg-white border-black/15'
-                : 'bg-white border-black/10'
+          <div 
+            className={`flex items-center gap-2 sm:gap-3 px-2 sm:px-4 py-1 sm:py-2 rounded-lg sm:rounded-xl border backdrop-blur-xl transition-all ${
+              isAdminTab 
+                ? 'bg-blue-500/30 border-blue-400/70' 
+                : 'bg-blue-500/20 border-blue-400/50'
             }`}
-            style={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)' }}
+            style={{ boxShadow: '0 0 16px rgba(59, 130, 246, 0.5)' }}
           >
-            <Icon className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-black/70" style={{ filter: 'none' }} />
-            <span className="text-[11px] sm:text-base font-bold text-black whitespace-nowrap">{ch.name}</span>
-            {isLocked && <Lock className="w-3 h-3 sm:w-4 sm:h-4 text-black/40" />}
-            {isAdminTab && <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 text-black/50" />}
+            <Icon className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-blue-400" style={{ filter: 'drop-shadow(0 0 6px rgba(59, 130, 246, 0.8))' }} />
+            <span className="text-[11px] sm:text-base font-bold text-blue-400 whitespace-nowrap" style={{ textShadow: '0 0 8px rgba(59, 130, 246, 0.8)' }}>{ch.name}</span>
+            {isLocked && <Lock className="w-3 h-3 sm:w-4 sm:h-4 text-blue-400/60" />}
+            {isAdminTab && <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 text-blue-400/80" />}
             
             {/* Set as Favorite Button */}
             <motion.button
@@ -634,13 +628,13 @@ const ChannelCarousel = memo(({
               whileHover={{ scale: 1.2 }}
               whileTap={{ scale: 0.9 }}
               className={`ml-0.5 sm:ml-1 p-1 sm:p-1.5 rounded-full transition-all ${
-                isFavorite
-                  ? 'text-amber-500 bg-amber-500/10'
-                  : 'text-black/25 hover:text-black hover:bg-black/5'
+                isFavorite 
+                  ? 'text-blue-400 bg-blue-500/30' 
+                  : 'text-blue-400/40 hover:text-blue-400 hover:bg-blue-500/20'
               }`}
               title={isFavorite ? 'Remove from favorites' : 'Set as favorite'}
             >
-              <Star className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isFavorite ? 'fill-amber-500' : ''}`} />
+              <Star className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isFavorite ? 'fill-blue-400' : ''}`} />
             </motion.button>
           </div>
         </motion.div>
@@ -650,7 +644,8 @@ const ChannelCarousel = memo(({
           onClick={goToNext}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          className="flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-white border border-black/10 text-black/60 active:bg-black/5 transition-all flex-shrink-0 shadow-sm"
+          className="flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-blue-500/20 border border-blue-400/50 text-blue-400 hover:bg-blue-500/30 transition-all flex-shrink-0"
+          style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.4)' }}
         >
           <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
         </motion.button>
@@ -671,12 +666,12 @@ const ChannelCarousel = memo(({
             whileTap={{ scale: 0.9 }}
             className={`rounded-full transition-all ${
               idx === currentIndex 
-                ? 'w-3.5 sm:w-5 h-1.5 sm:h-2 bg-black/70' 
+                ? 'w-3.5 sm:w-5 h-1.5 sm:h-2 bg-blue-400' 
                 : key === favoriteChannel 
-                  ? 'w-2 h-2 sm:w-2.5 sm:h-2.5 bg-amber-500/50' 
-                  : 'w-1.5 h-1.5 sm:w-2 sm:h-2 bg-black/20 hover:bg-black/35'
+                  ? 'w-2 h-2 sm:w-2.5 sm:h-2.5 bg-blue-400/60' 
+                  : 'w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-400/30 hover:bg-blue-400/50'
             }`}
-            style={idx === currentIndex ? { boxShadow: '0 2px 6px rgba(0, 0, 0, 0.18)' } : {}}
+            style={idx === currentIndex ? { boxShadow: '0 0 8px rgba(59, 130, 246, 0.8)' } : {}}
           />
         ))}
       </div>
@@ -4933,17 +4928,17 @@ const HubTabCarousel = memo(({ activeTab, setActiveTab, isDesktopFloating = fals
               whileTap={{ scale: 0.97 }}
               className={`group relative flex-1 flex items-center justify-center gap-2 px-2 py-2.5 rounded-xl border transition-all outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
                 isActive
-                  ? 'bg-black border-black text-white shadow-md'
+                  ? 'bg-white border-black/15 text-black shadow-md'
                   : 'bg-white/60 border-black/5 text-black/50 hover:bg-white hover:border-black/10 hover:text-black/70'
               }`}
               style={isActive ? { boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)' } : {}}
             >
               <span className={`flex items-center justify-center w-7 h-7 rounded-lg shrink-0 ${
-                isActive ? 'bg-white/15 border border-white/20' : 'bg-black/5'
+                isActive ? 'bg-black/8 border border-black/10' : 'bg-black/5'
               }`}>
-                <TabIcon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-black/70'}`} />
+                <TabIcon className="w-4 h-4" style={{}} />
               </span>
-              <span className={`text-xs font-semibold uppercase tracking-wide whitespace-nowrap hidden xl:block ${isActive ? 'text-white' : 'text-black/60'}`}>
+              <span className={`text-xs font-semibold uppercase tracking-wide whitespace-nowrap hidden xl:block`} style={{}}>
                 {tab.label}
               </span>
               {isFav && (
@@ -4963,7 +4958,7 @@ const HubTabCarousel = memo(({ activeTab, setActiveTab, isDesktopFloating = fals
 
   // Mobile/tablet: Keep the carousel navigation
   return (
-    <div className="flex flex-col gap-1 p-1 sm:p-2 border-b border-black/10 shrink-0 bg-[rgb(255,255,255)] sm:bg-[#f5f5f7]/95 relative mt-2 sm:mt-0 w-full max-w-[1100px] mx-auto" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+    <div className="flex flex-col gap-1 p-1 sm:p-2 border-b border-black/10 shrink-0 bg-[#f5f5f7]/95 backdrop-blur-md relative" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
       {/* Main Carousel Row */}
       <div className="flex items-center gap-1 sm:gap-1.5">
         {/* Favorite Button */}
@@ -5029,7 +5024,7 @@ const HubTabCarousel = memo(({ activeTab, setActiveTab, isDesktopFloating = fals
           style={{ touchAction: 'pan-y' }}
         >
           <div 
-            className="group relative flex items-center gap-2 sm:gap-3 px-2 sm:px-4 py-1 sm:py-2 rounded-lg sm:rounded-xl bg-white border border-black/10 active:bg-black/5 shadow-sm transition-all max-w-full"
+            className="group relative flex items-center gap-2 sm:gap-3 px-2 sm:px-4 py-1 sm:py-2 rounded-lg sm:rounded-xl bg-white border border-black/10 backdrop-blur-md active:bg-black/5 shadow-sm transition-all max-w-full"
             style={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)' }}
           >
             <span className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-black/5 border border-black/8 shrink-0">
@@ -5106,7 +5101,7 @@ const HubTabCarousel = memo(({ activeTab, setActiveTab, isDesktopFloating = fals
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -10, scale: 0.95 }}
                 transition={{ duration: 0.15 }}
-                className="fixed sm:absolute inset-x-2 sm:inset-x-auto top-auto sm:top-full right-auto sm:right-0 bottom-auto mt-2 w-auto sm:w-44 max-h-[60vh] sm:max-h-72 overflow-y-auto bg-white border border-black/10 rounded-xl shadow-2xl z-[100]"
+                className="fixed sm:absolute inset-x-2 sm:inset-x-auto top-auto sm:top-full right-auto sm:right-0 bottom-auto mt-2 w-auto sm:w-44 max-h-[60vh] sm:max-h-72 overflow-y-auto bg-white border border-black/10 rounded-xl shadow-2xl z-[100] backdrop-blur-md"
                 style={{ boxShadow: '0 8px 30px rgba(0, 0, 0, 0.12)' }}
               >
                 <div className="p-1.5 grid grid-cols-2 sm:grid-cols-1 gap-1">
@@ -5269,7 +5264,6 @@ export const UnifiedHubPanel = memo(({
   // Community tab state
   const [activeChannel, setActiveChannel] = useState<ChannelKey>('trades');
   const [copied, setCopied] = useState(false);
-  const [showCommunityMenu, setShowCommunityMenu] = useState(false);
   
   // Indicators tab state
   const [indicatorCategory, setIndicatorCategory] = useState<'crypto' | 'stocks' | 'sentiment'>('crypto');
@@ -5715,13 +5709,13 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[2147483640] flex items-center justify-center bg-black/70"
+            className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/70"
             onClick={onClose}
             style={{ pointerEvents: 'all' }}
           />
 
           {/* Floating Tab Control (Outside Modal) */}
-          <div className="fixed inset-0 z-[2147483645] pointer-events-none">
+          <div className="fixed inset-0 z-[10001] pointer-events-none">
             {/* Mobile: Floating tab switch button */}
             <motion.button
               onClick={goToNextTab}
@@ -5737,6 +5731,17 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
               <ChevronRight className="w-4 h-4 opacity-80" />
             </motion.button>
             
+            {/* Desktop: Floating tab carousel above modal - Match modal width */}
+            <div className="hidden lg:block pointer-events-auto absolute left-1/2 -translate-x-1/2 w-[1160px] max-w-[calc(100vw-80px)] z-[10002]" style={{ top: 'calc(50% - 350px - 70px)' }}>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                transition={{ delay: 0.1 }}
+              >
+                <HubTabCarousel activeTab={activeTab} setActiveTab={setActiveTab} isDesktopFloating />
+              </motion.div>
+            </div>
           </div>
           
           {/* Panel - Centered Modal */}
@@ -5749,40 +5754,38 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.98, opacity: 0 }}
             transition={{ type: "spring", duration: 0.5 }}
-            className="fixed inset-0 z-[2147483647] w-[100vw] max-w-[100vw] h-[100dvh] max-h-[100dvh] overflow-y-auto bg-[#f5f5f7] text-black rounded-2xl md:rounded-3xl border border-black/10 shadow-2xl"
+            className="relative z-[10003] w-full max-w-[96vw] sm:max-w-5xl lg:max-w-6xl h-[100dvh] max-h-[100dvh] overflow-y-auto bg-[#f5f5f7] text-black rounded-2xl md:rounded-3xl border border-black/10 shadow-2xl"
             style={{ pointerEvents: 'all' }}
           >
             {/* Header with FPS Display */}
             <div className="sticky top-0 z-30 p-3 sm:p-4 pr-14 border-b border-black/10 bg-[#f5f5f7]/90">
               <div className="relative">
               <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  {/* FPS Badge */}
-                  <div className="flex items-center gap-2">
-                    <div className="relative">
-                      <FpsCandlestickChart fps={fps} width={60} height={36} candleCount={6} />
-                    </div>
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-1">
-                        <Activity size={12} className="text-black/70" />
-                        <span className="text-lg font-black tabular-nums text-black">{fps}</span>
-                        <span className="text-[8px] text-black/50 font-bold">FPS</span>
-                      </div>
-                      <div className="text-[9px] font-mono font-bold uppercase text-black/50 tracking-wide">{deviceTier}</div>
-                    </div>
+                {/* FPS Badge */}
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <FpsCandlestickChart fps={fps} width={60} height={36} candleCount={6} />
                   </div>
-
-                  {/* Live Prices */}
-                  <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white border border-black/10 shadow-sm">
+                  <div className="flex flex-col">
                     <div className="flex items-center gap-1">
-                      <Coins className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-black/60" />
-                      <span className="text-[9px] sm:text-[10px] font-bold text-black">{formatPrice(parseFloat(prices.xauusd) || 0)}</span>
+                      <Activity size={12} className="text-black/70" />
+                      <span className="text-lg font-black tabular-nums text-black">{fps}</span>
+                      <span className="text-[8px] text-black/50 font-bold">FPS</span>
                     </div>
-                    <div className="w-px h-3 bg-black/10" />
-                    <div className="flex items-center gap-1">
-                      <Bitcoin className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-black/60" />
-                      <span className="text-[9px] sm:text-[10px] font-bold text-black">{formatPrice(parseFloat(prices.btcusd) || 0)}</span>
-                    </div>
+                    <div className="text-[9px] font-mono font-bold uppercase text-black/50 tracking-wide">{deviceTier}</div>
+                  </div>
+                </div>
+                
+                {/* Live Prices */}
+                <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-white border border-black/10 shadow-sm">
+                  <div className="flex items-center gap-1">
+                    <Coins className="w-3 h-3 text-black/60" />
+                    <span className="text-[10px] font-bold text-black">{formatPrice(parseFloat(prices.xauusd) || 0)}</span>
+                  </div>
+                  <div className="w-px h-3 bg-black/10" />
+                  <div className="flex items-center gap-1">
+                    <Bitcoin className="w-3 h-3 text-black/60" />
+                    <span className="text-[10px] font-bold text-black">{formatPrice(parseFloat(prices.btcusd) || 0)}</span>
                   </div>
                 </div>
                 
@@ -5792,12 +5795,12 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                   whileTap={{ scale: 0.94 }}
                   onClick={onClose}
                   aria-label="Close ultimate hub"
-                  className="absolute top-1/2 right-2 sm:right-5 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-black hover:bg-black border border-black/10 flex items-center justify-center transition-all shadow-lg z-[60] cursor-pointer"
+                  className="absolute top-1/2 right-4 -translate-y-1/2 w-9 h-9 md:w-10 md:h-10 rounded-full bg-white hover:bg-white border border-black/10 flex items-center justify-center transition-all shadow-lg z-[60] cursor-pointer"
                   initial={{ opacity: 0, scale: 0 }}
                   animate={{ opacity: 1, scale: 1, transition: { delay: 0.1 } }}
                   exit={{ opacity: 0, scale: 0 }}
                 >
-                  <X className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" strokeWidth={2.5} />
+                  <X className="w-4 h-4 text-black" strokeWidth={2.5} />
                 </motion.button>
                 
                 {/* Notification Toggle Bell - Below Close Button */}
@@ -5835,12 +5838,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
             
             {/* Body: Content flows inside scrollable panel */}
             <div className="w-full">
-              {/* Tab Carousel - Desktop (below header) */}
-              <div className="hidden lg:block px-3 pb-2">
-                <HubTabCarousel activeTab={activeTab} setActiveTab={setActiveTab} isDesktopFloating />
-              </div>
-
-              {/* Tab Carousel - Mobile/Tablet */}
+              {/* Tab Carousel - Mobile/Tablet only (desktop has floating version above modal) */}
               <div className="lg:hidden">
                 <HubTabCarousel activeTab={activeTab} setActiveTab={setActiveTab} />
               </div>
@@ -5861,7 +5859,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.15 }}
-                    className="h-[calc(100dvh-220px)] min-h-[calc(100dvh-220px)] flex flex-col overflow-hidden"
+                    className="min-h-[60vh] flex flex-col"
                   >
                     {/* Symbol Selector */}
                     <div className="flex-shrink-0 flex gap-1.5 sm:gap-2 p-2 sm:p-3 overflow-x-auto overflow-y-hidden border-b border-black/10 glass-surface scrollbar-none [-webkit-overflow-scrolling:touch] [overscroll-behavior-x:contain]" style={{ touchAction: 'pan-x pinch-zoom' }}>
@@ -6008,65 +6006,21 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
                     transition={{ duration: 0.15 }}
                     className="min-h-[60vh] flex flex-col"
                   >
+                    {/* Channel Carousel - Swipeable single button with left/right nav and favorites */}
+                    <ChannelCarousel
+                      activeChannel={activeChannel}
+                      setActiveChannel={setActiveChannel}
+                      isVip={isVip}
+                      isAdmin={isAdmin}
+                      onClose={onClose}
+                    />
+                    
                     {/* Feed */}
                     <div className="flex-1 min-h-0 bg-white" 
                       style={{ touchAction: 'pan-y pan-x', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
                       data-scrollable
                     >
                       <TelegramChannelEmbed channel={activeChannel} isVip={isVip} onNewMessage={onNewMessage} />
-                    </div>
-
-                    {/* Social tabs toggle (bottom of Telegram feed) */}
-                    <div className="flex-shrink-0 mt-2 sm:mt-0 px-3 py-2 border-t border-black/10 glass-surface bg-white sm:bg-transparent relative z-40">
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                        <span className="text-[11px] font-bold text-black uppercase tracking-[0.2em] sm:text-black/70">Social tabs</span>
-                        <motion.button
-                          onClick={() => setShowCommunityMenu((prev) => !prev)}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.97 }}
-                          className="order-2 sm:order-none px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-black/10 bg-white text-black text-[11px] font-bold shadow-sm sm:bg-black sm:text-white sm:shadow-lg sm:shadow-black/20 inline-flex items-center justify-center gap-2"
-                        >
-                          {showCommunityMenu ? 'Hide' : 'Show'}
-                          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showCommunityMenu ? 'rotate-180' : ''}`} />
-                        </motion.button>
-                      </div>
-
-                      {showCommunityMenu && (
-                        <div className="mt-2">
-                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                            {EXTENDED_CHANNEL_KEYS.map((key) => {
-                              const channelMeta = EXTENDED_CHANNELS[key];
-                              if (!channelMeta) return null;
-                              const isSelected = key === activeChannel;
-                              const isAdminTab = key === 'admin';
-                              const isLocked = channelMeta.requiresVip && !isVip;
-                              const isDisabled = isAdminTab && !isAdmin;
-
-                              return (
-                                <button
-                                  key={key}
-                                  onClick={() => {
-                                    if (isDisabled) return;
-                                    if (isAdminTab) {
-                                      window.dispatchEvent(new CustomEvent('openAdminVIPPanel'));
-                                      return;
-                                    }
-                                    setActiveChannel(key as ChannelKey);
-                                  }}
-                                  className={`flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-[11px] font-semibold border transition-all ${
-                                    isSelected
-                                      ? 'bg-black text-white border-black'
-                                      : 'bg-white text-black/70 border-black/10 hover:border-black/20'
-                                  } ${isDisabled ? 'opacity-40 cursor-not-allowed' : ''}`}
-                                >
-                                  <span className="truncate">{channelMeta.name}</span>
-                                  {isLocked && <Lock className="w-3.5 h-3.5" />}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
                     </div>
                     
                     {/* View All Link (mobile footer only) */}

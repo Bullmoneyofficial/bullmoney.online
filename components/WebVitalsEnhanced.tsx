@@ -16,8 +16,7 @@
  * - Debug mode for development
  */
 
-import { useEffect, useCallback, useRef, Suspense } from 'react';
-import { useReportWebVitals } from 'next/web-vitals';
+import { useEffect, useCallback, useRef, Suspense, Component, type ReactNode } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 
 // ============================================
@@ -228,8 +227,8 @@ function WebVitalsInner() {
     }
   }, [pathname, searchParams]);
 
-  // Report Web Vitals to Vercel
-  useReportWebVitals((metric) => {
+  // Report Web Vitals to Vercel — wrapped in useCallback for stable reference
+  const reportVitals = useCallback((metric: any) => {
     // Skip bot traffic entirely
     if (isBot()) {
       if (process.env.NODE_ENV === 'development') {
@@ -261,7 +260,44 @@ function WebVitalsInner() {
     
     // Note: Vercel's Speed Insights automatically captures Web Vitals
     // No need to manually send - it's handled by the SpeedInsights component
-  });
+  }, []);
+
+  // Report web vitals with stable callback using bundled web-vitals (lazy + guarded)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (typeof PerformanceObserver === 'undefined') return;
+    if (!PerformanceObserver.supportedEntryTypes?.length) return;
+
+    let cancelled = false;
+    import('next/dist/compiled/web-vitals')
+      .then((mod) => {
+        if (cancelled) return;
+        const { onCLS, onFCP, onINP, onLCP, onTTFB } = mod as {
+          onCLS?: (cb: (metric: any) => void) => void;
+          onFCP?: (cb: (metric: any) => void) => void;
+          onINP?: (cb: (metric: any) => void) => void;
+          onLCP?: (cb: (metric: any) => void) => void;
+          onTTFB?: (cb: (metric: any) => void) => void;
+        };
+
+        try {
+          onCLS?.(reportVitals);
+          onFCP?.(reportVitals);
+          onINP?.(reportVitals);
+          onLCP?.(reportVitals);
+          onTTFB?.(reportVitals);
+        } catch {
+          // Ignore: some runtimes throw for unsupported PerformanceObserver usage
+        }
+      })
+      .catch(() => {
+        // Ignore: web-vitals bundle unavailable in this runtime
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [reportVitals]);
 
   // Track errors (optional - uses custom events quota sparingly)
   useEffect(() => {
@@ -319,12 +355,34 @@ function WebVitalsInner() {
   return null;
 }
 
-// Wrapper component with Suspense boundary
+// Error boundary so WebVitals crash never takes down the app
+class WebVitalsErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: Error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('[WebVitals] Error boundary caught:', error.message);
+    }
+  }
+  render() {
+    if (this.state.hasError) return null;
+    return this.props.children;
+  }
+}
+
+// Wrapper component with Suspense + Error boundary
 export function WebVitalsEnhanced() {
   return (
-    <Suspense fallback={null}>
-      <WebVitalsInner />
-    </Suspense>
+    <WebVitalsErrorBoundary>
+      <Suspense fallback={null}>
+        <WebVitalsInner />
+      </Suspense>
+    </WebVitalsErrorBoundary>
   );
 }
 

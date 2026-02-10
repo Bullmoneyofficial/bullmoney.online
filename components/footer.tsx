@@ -101,48 +101,42 @@ const FooterModal = memo(({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-[2147483647] flex items-center justify-center p-2 sm:p-4 bg-black/95 backdrop-blur-sm"
-          onClick={onClose}
+          className="fixed inset-0 flex flex-col bg-black"
+          style={{ zIndex: 2147483647 }}
         >
-          {/* Modal - Static Neon Border */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.2 }}
-            onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-lg max-h-[90vh] overflow-hidden rounded-2xl neon-blue-border"
+          {/* Header */}
+          <div 
+            className="flex items-center justify-between p-4 shrink-0"
+            style={{
+              borderBottom: '2px solid #ffffff',
+              boxShadow: '0 2px 8px #ffffff, 0 4px 16px rgba(255, 255, 255, 0.4)'
+            }}
           >
-            {/* Inner Container */}
-            <div className="relative z-10 bg-black rounded-2xl overflow-hidden">
-              
-              {/* Header */}
-              <div 
-                className="flex items-center justify-between p-4"
-                style={{
-                  borderBottom: '2px solid #ffffff',
-                  boxShadow: '0 2px 8px #ffffff, 0 4px 16px rgba(255, 255, 255, 0.4)'
-                }}
-              >
-                <h2 className="text-lg font-bold neon-blue-text">
-                  {title}
-                </h2>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => { SoundEffects.click(); onClose(); }}
-                  className="p-2 rounded-full bg-black transition-all neon-blue-border"
-                >
-                  <X className="w-5 h-5 neon-white-icon" style={{ color: '#ffffff' }} />
-                </motion.button>
-              </div>
-              
-              {/* Content */}
-              <div className="p-4 max-h-[70vh] overflow-y-auto">
-                {children}
-              </div>
-            </div>
-          </motion.div>
+            <h2 className="text-lg font-bold neon-blue-text">
+              {title}
+            </h2>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => { SoundEffects.click(); onClose(); }}
+              className="p-2 rounded-full bg-black transition-all neon-blue-border"
+              style={{ zIndex: 2147483647 }}
+            >
+              <X className="w-5 h-5 neon-white-icon" style={{ color: '#ffffff' }} />
+            </motion.button>
+          </div>
+          
+          {/* Content - full remaining height, scrollable */}
+          <div 
+            className="flex-1 min-h-0 overflow-y-auto p-4"
+            style={{ 
+              WebkitOverflowScrolling: 'touch',
+              overscrollBehavior: 'contain',
+              touchAction: 'pan-y'
+            }}
+          >
+            {children}
+          </div>
         </motion.div>
       )}
     </AnimatePresence>,

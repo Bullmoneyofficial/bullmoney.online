@@ -274,7 +274,7 @@ function GlassProductRow({ products, rowHeight, gap, scrollSpeed, direction, gla
   return (
     <div
       ref={rowRef}
-      className="relative w-full overflow-x-auto overflow-y-visible scrollbar-hide select-none"
+      className="relative w-full overflow-x-auto overflow-y-hidden scrollbar-hide select-none"
       style={{ height: `${cardHeight + 70}px`, paddingBottom: '70px', willChange: 'auto', contain: 'layout style', cursor: isDraggingRef.current ? 'grabbing' : 'grab' } as React.CSSProperties}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}

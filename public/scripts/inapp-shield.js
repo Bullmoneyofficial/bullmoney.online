@@ -88,15 +88,22 @@ S.fixes.push('image-downscale');
 S.fixes.push('video-preserved');
 
 // ─── 162. Reduce Animation Complexity ───
+// NEVER use display:none on content sections — user sees blank gaps
+// NEVER use filter:none — breaks invert/brightness theming (black↔white glitch)
+// NEVER use transform:none on * — breaks layout positioning
 var inappStyle=d.createElement('style');
 inappStyle.textContent=[
   '.in-app-browser *{animation-duration:0.15s!important;transition-duration:0.1s!important;}',
-  // Spline, canvas, video, and GIFs are preserved - only hide decorative effects
-  '.in-app-browser .particle-container,.in-app-browser .confetti,.in-app-browser .aurora{display:none!important;}',
-  '.in-app-browser .glass-effect,.in-app-browser .glassmorphism{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:rgba(0,0,0,0.85)!important;}',
-  // Simplify complex layouts that crash in-app browsers
-  '.in-app-browser .circular-gallery,.in-app-browser .card-swap{display:none!important;}',
-  '.in-app-browser .color-bends{display:none!important;}',
+  // Only truly decorative particles get hidden (tiny elements, no content)
+  '.in-app-browser .particle-container,.in-app-browser .confetti{opacity:0!important;pointer-events:none!important;height:0!important;overflow:hidden!important;}',
+  // Aurora: fade to near-invisible but keep in layout flow
+  '.in-app-browser .aurora{opacity:0.05!important;}',
+  // Glass: opaque dark fallback (keeps text readable)
+  '.in-app-browser .glass-effect,.in-app-browser .glassmorphism,.in-app-browser .glass-surface,.in-app-browser .glass-card{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:rgba(0,0,0,0.88)!important;border-color:rgba(255,255,255,0.06)!important;}',
+  // Complex components: simplify but KEEP VISIBLE — reduce animations, keep content
+  '.in-app-browser .circular-gallery{animation:none!important;overflow:hidden!important;}',
+  '.in-app-browser .card-swap{animation:none!important;transition:none!important;}',
+  '.in-app-browser .color-bends{animation:none!important;opacity:0.5!important;}',
 ].join('\n');
 d.head.appendChild(inappStyle);
 S.fixes.push('css-reduced');
@@ -125,12 +132,18 @@ var crashKey='bm_inapp_crashes';
 var crashes=parseInt(sessionStorage.getItem(crashKey)||'0',10);
 if(crashes>0){
   // Page crashed before - go ultra-light mode
+  // PRESERVE filter (theming) and transform (layout) — only strip animation/transition/box-shadow
   d.documentElement.classList.add('ultra-light-mode');
   var ultraStyle=d.createElement('style');
   ultraStyle.textContent=[
-    '.ultra-light-mode *{animation:none!important;transition:none!important;transform:none!important;filter:none!important;box-shadow:none!important;}',
+    // No filter:none (breaks invert/brightness theming = black/white glitch)
+    // No transform:none (breaks translate/scale layout = elements pile up at 0,0)
+    '.ultra-light-mode *{animation:none!important;transition:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}',
+    '.ultra-light-mode *:not(.product-card-premium):not(input):not(button):not(a){box-shadow:none!important;}',
     '.ultra-light-mode img{image-rendering:auto;}',
     '.ultra-light-mode .hero{min-height:auto!important;height:auto!important;}',
+    // Glass: opaque dark fallback so no transparent-over-black
+    '.ultra-light-mode .glass-effect,.ultra-light-mode .glassmorphism,.ultra-light-mode .glass-surface,.ultra-light-mode .glass-card{background:rgba(0,0,0,0.9)!important;border-color:rgba(255,255,255,0.05)!important;}',
   ].join('\n');
   d.head.appendChild(ultraStyle);
   S.fixes.push('crash-recovery-ultralight');

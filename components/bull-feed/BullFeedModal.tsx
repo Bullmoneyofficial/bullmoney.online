@@ -308,9 +308,7 @@ const BullFeedContent = memo(() => {
       animate={animations.modalBackdrop.animate as TargetAndTransition}
       exit={animations.modalBackdrop.exit}
       transition={animations.modalBackdrop.transition}
-      className={`fixed inset-0 z-[2147483647] flex items-center justify-center bg-black/95 ${
-        shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'
-      }`}
+      className={`fixed inset-0 z-[2147483647] bg-black/80 backdrop-blur-xl`}
     >
       {/* Click overlay - transparent, just for click handling */}
       <div className="absolute inset-0 bg-transparent" onClick={handleClose} />
@@ -322,7 +320,7 @@ const BullFeedContent = memo(() => {
         exit={animations.modalContent.exit}
         transition={animations.modalContent.transition}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full h-full max-w-6xl max-h-[95vh] m-2 sm:m-4 overflow-hidden rounded-2xl"
+        className="relative w-[100vw] h-[100dvh] max-w-[100vw] max-h-[100dvh] overflow-hidden"
       >
         {/* Shimmer Border - skip on mobile */}
         {!shouldSkipHeavyEffects && (
@@ -332,7 +330,7 @@ const BullFeedContent = memo(() => {
         )}
         
         {/* Inner Container */}
-        <div className="relative z-10 h-full bg-linear-to-b from-neutral-900 to-black rounded-2xl border border-white/30 overflow-hidden flex flex-col">
+        <div className="relative z-10 h-full bg-linear-to-b from-neutral-900 to-black border border-white/30 overflow-hidden flex flex-col">
           {!shouldSkipHeavyEffects && <ShimmerLine color="blue" />}
           
           {/* Header */}

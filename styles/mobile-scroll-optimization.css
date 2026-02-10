@@ -373,9 +373,10 @@ html:not(.is-scrolling) {
    ============================================================ */
 
 /* Prevent CLS (Cumulative Layout Shift) */
-section,
-article,
-main {
+/* NOTE: contain:layout on main/section can break fixed-position children.
+   Only apply to elements that don't contain portaled fixed overlays. */
+section:not(:has(> [style*="position: fixed"])),
+article {
   contain: layout;
 }
 

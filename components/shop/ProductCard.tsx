@@ -3,8 +3,9 @@
 import { useState, useRef, useEffect, useCallback, memo, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type TargetAndTransition } from 'framer-motion';
 import { ShoppingBag, Heart, X, Wallet } from 'lucide-react';
+import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 import CountUp from '@/components/CountUp';
 import { CryptoPayButton } from '@/components/shop/CryptoPayButton';
 import { CryptoCheckoutTrigger } from '@/components/shop/CryptoCheckoutInline';
@@ -245,6 +246,52 @@ const premiumCardStyle = `
 .product-card-wrapper:hover {
   z-index: 10;
 }
+/* Desktop: clip glow to card boundary */
+@media (min-width: 768px) {
+  .product-card-wrapper {
+    overflow: clip;
+  }
+}
+
+/* ── Mobile floating card + neon glow (JS sets --f-dur, --f-del, --f-y, --f-rot) ── */
+@keyframes mobile-card-float {
+  0%, 100% { transform: translateY(0) rotate(0deg) translateZ(0); }
+  50%      { transform: translateY(var(--f-y, -7px)) rotate(var(--f-rot, 0.4deg)) translateZ(0); }
+}
+@keyframes mobile-neon-pulse {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(0.92) translateZ(0);
+    filter: blur(28px);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.05) translateZ(0);
+    filter: blur(38px);
+  }
+}
+.mobile-neon-glow {
+  display: none;
+}
+@media (max-width: 767px) {
+  .product-card-wrapper {
+    animation: mobile-card-float var(--f-dur, 4.5s) ease-in-out var(--f-del, 0s) infinite;
+    will-change: transform;
+    backface-visibility: hidden;
+  }
+  .mobile-neon-glow {
+    display: block;
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+    background: radial-gradient(ellipse at 50% 50%, rgba(50,117,248,0.6) 0%, rgba(30,80,220,0.4) 30%, rgba(20,60,180,0.18) 60%, transparent 100%);
+    z-index: 0;
+    pointer-events: none;
+    animation: mobile-neon-pulse 3s ease-in-out infinite;
+    will-change: transform, opacity, filter;
+    backface-visibility: hidden;
+  }
+}
 `;
 
 // ============================================================================
@@ -284,7 +331,16 @@ interface ProductCardProps {
 
 export const ProductCard = memo(function ProductCard({ product, compact = false }: ProductCardProps) {
   const formatPrice = useCurrencyLocaleStore((s) => s.formatPrice);
+  const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects } = useMobilePerformance();
   const [isHovered, setIsHovered] = useState(false);
+
+  // Per-instance random float params (stable across renders)
+  const floatVars = useMemo(() => ({
+    '--f-dur': `${3.8 + Math.random() * 2.4}s`,
+    '--f-del': `${Math.random() * 2}s`,
+    '--f-y':   `${-(5 + Math.random() * 6)}px`,
+    '--f-rot': `${(Math.random() - 0.5) * 1.2}deg`,
+  } as React.CSSProperties), []);
   const [isAdding, setIsAdding] = useState(false);
   const [showQuickView, setShowQuickView] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
@@ -740,10 +796,10 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
       <AnimatePresence>
         {showQuickView && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-9999 flex items-center justify-center bg-black/70 overflow-y-auto p-3 sm:p-6 md:p-8"
+          initial={animations.modalBackdrop.initial as TargetAndTransition}
+          animate={animations.modalBackdrop.animate as TargetAndTransition}
+          exit={animations.modalBackdrop.exit as TargetAndTransition}
+          className={`fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6 md:p-8 bg-black/60 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'}`}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -751,12 +807,34 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
           }}
           style={{ pointerEvents: 'all' }}
         >
+          {/* Tap hints - Skip on mobile for performance */}
+          {!shouldSkipHeavyEffects && ['top', 'bottom', 'left', 'right'].map(pos => (
+            <motion.div
+              key={pos}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0.4, 0.7, 0.4] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className={`absolute text-blue-300/50 text-xs pointer-events-none ${
+                pos === 'top' ? 'top-4 left-1/2 -translate-x-1/2' :
+                pos === 'bottom' ? 'bottom-4 left-1/2 -translate-x-1/2' :
+                pos === 'left' ? 'left-2 top-1/2 -translate-y-1/2' :
+                'right-2 top-1/2 -translate-y-1/2'
+              }`}
+            >
+              {pos === 'top' || pos === 'bottom' ? (
+                <span>↑ Tap anywhere to close ↑</span>
+              ) : (
+                <span style={{ writingMode: 'vertical-rl' }}>Tap to close</span>
+              )}
+            </motion.div>
+          ))}
+
           <motion.div
-            initial={{ scale: 0.98, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.98, opacity: 0 }}
-            transition={{ type: "spring", duration: 0.5 }}
-            className="relative w-full max-w-[96vw] sm:max-w-5xl lg:max-w-6xl max-h-[92vh] overflow-y-auto my-auto bg-[#f5f5f7] text-black rounded-2xl md:rounded-3xl border border-black/10 shadow-2xl"
+            initial={animations.modalContent.initial as TargetAndTransition}
+            animate={animations.modalContent.animate as TargetAndTransition}
+            exit={animations.modalContent.exit as TargetAndTransition}
+            transition={animations.modalContent.transition}
+            className={`relative w-full max-w-[96vw] sm:max-w-5xl lg:max-w-6xl max-h-[92vh] overflow-y-auto my-auto bg-[#f5f5f7] text-black rounded-2xl md:rounded-3xl border border-black/10 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl'}`}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -1160,8 +1238,10 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
     <div 
       data-product-card
       className="block h-full w-full relative cursor-pointer product-card-wrapper" 
-      style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 320px' } as React.CSSProperties}
+      style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 320px', ...floatVars } as React.CSSProperties}
     >
+      {/* Mobile neon glow behind card — GPU animated, hidden on desktop */}
+      <div className="mobile-neon-glow" aria-hidden />
       {cardContent}
       
       {/* Floating Heart Button — CSS transitions only */}

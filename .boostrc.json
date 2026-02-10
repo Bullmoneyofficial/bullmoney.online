@@ -1,0 +1,26 @@
+{
+  "skip_sections": [],
+  "always_skip_heavy": false,
+  "fast_mode": false,
+  "watch_extensions": [
+    ".tsx",
+    ".ts",
+    ".css",
+    ".json"
+  ],
+  "watch_dirs": [
+    "app",
+    "components",
+    "styles",
+    "public"
+  ],
+  "notifications": true,
+  "parallel_workers": "auto",
+  "thresholds": {
+    "max_image_kb": 500,
+    "max_bundle_kb": 250,
+    "max_css_kb": 150,
+    "large_component_lines": 500,
+    "max_imports": 30
+  }
+}

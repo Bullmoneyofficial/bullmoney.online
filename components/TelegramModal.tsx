@@ -41,9 +41,7 @@ export function TelegramModal({ isOpen, onClose }: TelegramModalProps) {
           animate={animations.modalBackdrop.animate as TargetAndTransition}
           exit={animations.modalBackdrop.exit}
           transition={animations.modalBackdrop.transition}
-          className={`fixed inset-0 z-[2147483647] flex items-center justify-center p-5 sm:p-6 bg-black/95 ${
-            shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'
-          }`}
+          className={`fixed inset-0 z-[2147483647] bg-black/80 backdrop-blur-xl`}
           onClick={onClose}
         >
           {/* Tap to close hints - Top - Skip on mobile for performance */}
@@ -107,7 +105,7 @@ export function TelegramModal({ isOpen, onClose }: TelegramModalProps) {
             exit={animations.modalContent.exit}
             transition={animations.modalContent.transition}
             onClick={(e) => e.stopPropagation()}
-            className={`relative w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-linear-to-br from-zinc-900 via-zinc-800 to-zinc-900 border border-white/10 ${
+            className={`relative w-[100vw] max-w-[100vw] h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden bg-linear-to-br from-zinc-900 via-zinc-800 to-zinc-900 border border-white/10 ${
               isMobile ? '' : 'shadow-2xl shadow-black/50'
             }`}
           >

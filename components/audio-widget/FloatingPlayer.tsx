@@ -511,7 +511,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               key="compact-pill-div"
               className="fixed bottom-[70px] pointer-events-none"
               style={{ 
-                zIndex: 100201,
+                zIndex: Z_INDEX.CAMERA_MODAL,
                 ...(playerSide === 'right'
                   ? { right: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
                   : { left: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
@@ -597,7 +597,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               key="scroll-compact-pill-div"
               className="fixed bottom-[70px] pointer-events-none"
               style={{ 
-                zIndex: 100201,
+                zIndex: Z_INDEX.CAMERA_MODAL,
                 ...(playerSide === 'right'
                   ? { right: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
                   : { left: 'clamp(12px, calc((100vw - 1600px) / 2 + 12px), 112px)' }
@@ -711,7 +711,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               "pointer-events-auto"
             )}
             style={{
-              zIndex: 100201,
+              zIndex: Z_INDEX.CAMERA_MODAL,
               background: 'radial-gradient(circle, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.5) 100%)',
               boxShadow: '0 0 15px rgba(255, 255, 255, 0.4), 0 0 30px rgba(255, 255, 255, 0.2), 0 0 45px rgba(255, 255, 255, 0.1)',
               ...(playerSide === 'right'

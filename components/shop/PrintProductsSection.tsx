@@ -1,10 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Edit3, Maximize2, Ruler, Image as ImageIcon } from 'lucide-react';
+import { X, Edit3, Maximize2, Ruler, Image as ImageIcon, ShoppingCart, Check } from 'lucide-react';
 import { createPortal } from 'react-dom';
+import dynamic from 'next/dynamic';
+import { useCartStore } from '@/stores/cart-store';
+import type { ProductWithDetails, Variant } from '@/types/store';
 
-export type PrintProductType = 'poster' | 'banner' | 'wallpaper' | 'canvas' | 'tshirt' | 'cap';
+const StoreFooter = dynamic(() => import('@/components/shop/StoreFooter'), { ssr: false });
+
+export type PrintProductType = 'poster' | 'banner' | 'wallpaper' | 'canvas' | 'tshirt' | 'cap' | 'hoodie' | 'pants' | 'sticker' | 'business-card' | 'window-design';
 
 export interface PrintProduct {
   id: string;
@@ -56,6 +61,16 @@ function PrintProductCard({ product, onQuickView, onCustomize }: PrintProductCar
         return 'bg-pink-500';
       case 'cap':
         return 'bg-indigo-500';
+      case 'hoodie':
+        return 'bg-rose-500';
+      case 'pants':
+        return 'bg-amber-500';
+      case 'sticker':
+        return 'bg-lime-600';
+      case 'business-card':
+        return 'bg-cyan-500';
+      case 'window-design':
+        return 'bg-teal-600';
       default:
         return 'bg-gray-500';
     }
@@ -101,7 +116,7 @@ function PrintProductCard({ product, onQuickView, onCustomize }: PrintProductCar
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-sm truncate text-black">{product.name}</h3>
             {product.description && (
-              <p className="mt-1 text-xs text-black/60 line-clamp-2">{product.description}</p>
+              <p className="mt-1 text-xs text-black/70 line-clamp-2">{product.description}</p>
             )}
           </div>
           <div className="flex items-center gap-1">
@@ -113,7 +128,7 @@ function PrintProductCard({ product, onQuickView, onCustomize }: PrintProductCar
           <span className="text-sm font-semibold text-black">
             From ${product.basePrice.toFixed(2)}
           </span>
-          <span className="text-[10px] text-black/50">
+          <span className="text-[10px] text-black/60">
             {product.sizes.length} sizes
           </span>
         </div>
@@ -123,7 +138,7 @@ function PrintProductCard({ product, onQuickView, onCustomize }: PrintProductCar
             {product.printerCompatible.map((printer) => (
               <span
                 key={printer}
-                className="text-[9px] px-2 py-0.5 rounded-full bg-black/5 text-black/60"
+                className="text-[9px] px-2 py-0.5 rounded-full bg-black/5 text-black/70"
               >
                 {printer}
               </span>
@@ -144,8 +159,60 @@ interface PrintProductsViewerProps {
 function PrintProductsViewer({ product, onClose, onCustomize }: PrintProductsViewerProps) {
   const [selectedSize, setSelectedSize] = useState(product.sizes[0]);
   const [quantity, setQuantity] = useState(1);
+  const [added, setAdded] = useState(false);
+  const { addItem, openCart } = useCartStore();
 
   const totalPrice = selectedSize.price * quantity;
+
+  // Convert print product to cart-compatible format
+  const handleAddToCart = () => {
+    const cartProduct: ProductWithDetails = {
+      id: `print-${product.id}`,
+      name: product.name,
+      slug: product.id,
+      description: product.description || null,
+      short_description: `${product.type} - ${selectedSize.label}`,
+      base_price: selectedSize.price,
+      compare_at_price: null,
+      category_id: null,
+      status: 'ACTIVE',
+      featured: false,
+      tags: [product.type, 'print'],
+      details: { material: 'Premium Print', dimensions: { width: selectedSize.width, height: selectedSize.height } },
+      seo_title: null,
+      seo_description: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      images: [{ id: '1', product_id: `print-${product.id}`, url: product.image, alt_text: product.name, sort_order: 0, is_primary: true, created_at: new Date().toISOString() }],
+      variants: [],
+      primary_image: product.image,
+    };
+
+    const variant: Variant = {
+      id: `${product.id}-${selectedSize.label}`,
+      product_id: `print-${product.id}`,
+      sku: `PRINT-${product.id}-${selectedSize.label}`.toUpperCase(),
+      name: selectedSize.label,
+      options: { size: selectedSize.label, type: product.type },
+      price_adjustment: 0,
+      inventory_count: 999,
+      low_stock_threshold: 5,
+      weight_grams: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    addItem(cartProduct, variant, quantity);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
+  };
+
+  // ESC key to close
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
 
   return createPortal(
     <div
@@ -156,20 +223,26 @@ function PrintProductsViewer({ product, onClose, onCustomize }: PrintProductsVie
       style={{ pointerEvents: 'all' }}
     >
       <div
+        data-no-theme
         className="relative w-full max-w-[96vw] sm:max-w-5xl lg:max-w-6xl max-h-[92vh] overflow-y-auto my-auto bg-[#f5f5f7] text-black rounded-2xl md:rounded-3xl border border-black/10 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
         style={{ pointerEvents: 'all' }}
       >
-        {/* Header */}
-        <div className="sticky top-0 z-30 border-b border-black/10 bg-[#f5f5f7]/90 backdrop-blur-md">
-          <div className="relative flex items-center justify-between px-6 py-4 pr-14">
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-black/50">{product.type}</p>
-              <h2 className="mt-1 text-xl font-semibold text-black">{product.name}</h2>
+        {/* Header - Store style with logo */}
+        <div className="sticky top-0 z-30 border-b border-white/10 bg-black/95 backdrop-blur-lg">
+          <div className="relative flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 pr-14">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-white to-white/60 flex items-center justify-center shrink-0">
+                <img src="/bullmoney-logo.png" alt="BullMoney" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-white/50">{product.type}</p>
+                <h2 className="text-base sm:text-xl font-semibold text-white truncate max-w-[50vw] sm:max-w-none">{product.name}</h2>
+              </div>
             </div>
             <button
               onClick={onClose}
-              className="absolute top-1/2 right-4 -translate-y-1/2 flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-full bg-white border border-black/10 text-black/70 transition-all hover:bg-black/5 shadow-lg z-40"
+              className="absolute top-1/2 right-4 -translate-y-1/2 flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-full bg-white/10 text-white transition-all hover:bg-white/20 shadow-lg z-40"
             >
               <X className="h-4 w-4" strokeWidth={2.5} />
             </button>
@@ -274,8 +347,11 @@ function PrintProductsViewer({ product, onClose, onCustomize }: PrintProductsVie
                 <span className="text-sm text-black/60">Total Price:</span>
                 <span className="text-2xl font-bold text-black">${totalPrice.toFixed(2)}</span>
               </div>
-              <button className="w-full rounded-full bg-black px-6 py-4 text-sm font-semibold text-white transition-transform hover:scale-[1.02]">
-                Add to Cart
+              <button 
+                onClick={handleAddToCart}
+                className={`w-full rounded-full px-6 py-4 text-sm font-semibold text-white transition-all hover:scale-[1.02] flex items-center justify-center gap-2 ${added ? 'bg-green-600' : 'bg-black'}`}
+              >
+                {added ? <><Check className="h-4 w-4" />Added to Cart!</> : <><ShoppingCart className="h-4 w-4" />Add to Cart</>}
               </button>
             </div>
           </div>
@@ -388,15 +464,15 @@ export function PrintProductsSection({
   );
 }
 
-// Sample print products data
+// Sample print products data (all 11 product types with category-accurate images)
 export const SAMPLE_PRINT_PRODUCTS: PrintProduct[] = [
   {
     id: 'poster-1',
     name: 'Premium Poster Print',
     type: 'poster',
     basePrice: 19.99,
-    image: 'https://images.unsplash.com/photo-1513519245088-0e12902e35ca?w=800',
-    description: 'High-quality poster prints on premium paper',
+    image: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800&q=80',
+    description: 'High-quality poster prints on premium 200gsm matte paper with vivid color reproduction.',
     sizes: [
       { label: 'Small', width: 12, height: 18, price: 19.99 },
       { label: 'Medium', width: 18, height: 24, price: 29.99 },
@@ -411,8 +487,8 @@ export const SAMPLE_PRINT_PRODUCTS: PrintProduct[] = [
     name: 'Vinyl Banner',
     type: 'banner',
     basePrice: 49.99,
-    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800',
-    description: 'Durable vinyl banners for indoor and outdoor use',
+    image: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&q=80',
+    description: 'Durable heavy-duty vinyl banners for indoor and outdoor display. UV & weather resistant.',
     sizes: [
       { label: 'Small', width: 24, height: 36, price: 49.99 },
       { label: 'Medium', width: 36, height: 60, price: 89.99 },
@@ -426,8 +502,8 @@ export const SAMPLE_PRINT_PRODUCTS: PrintProduct[] = [
     name: 'Stretched Canvas',
     type: 'canvas',
     basePrice: 59.99,
-    image: 'https://images.unsplash.com/photo-1579762593131-8c4e8d5b7e7d?w=800',
-    description: 'Museum-quality canvas prints stretched on wooden frames',
+    image: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800&q=80',
+    description: 'Museum-quality canvas prints hand-stretched on 1.5" solid pine frames with gallery wrap.',
     sizes: [
       { label: 'Small', width: 12, height: 16, price: 59.99 },
       { label: 'Medium', width: 18, height: 24, price: 89.99 },
@@ -441,8 +517,8 @@ export const SAMPLE_PRINT_PRODUCTS: PrintProduct[] = [
     name: 'Custom Wallpaper',
     type: 'wallpaper',
     basePrice: 99.99,
-    image: 'https://images.unsplash.com/photo-1615529162924-f8605388461d?w=800',
-    description: 'Removable wallpaper panels for easy installation',
+    image: 'https://images.unsplash.com/photo-1509347528160-9a9e33742cdb?w=800&q=80',
+    description: 'Peel-and-stick removable wallpaper panels. Repositionable and residue-free.',
     sizes: [
       { label: 'Single Panel', width: 24, height: 96, price: 99.99 },
       { label: 'Double Panel', width: 48, height: 96, price: 179.99 },
@@ -456,8 +532,8 @@ export const SAMPLE_PRINT_PRODUCTS: PrintProduct[] = [
     name: 'Custom T-Shirt',
     type: 'tshirt',
     basePrice: 24.99,
-    image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800',
-    description: 'Premium cotton t-shirts with custom prints',
+    image: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&q=80',
+    description: 'Premium ring-spun cotton tees with DTG full-color printing. Pre-shrunk and soft-washed.',
     sizes: [
       { label: 'S', price: 24.99 },
       { label: 'M', price: 24.99 },
@@ -473,13 +549,90 @@ export const SAMPLE_PRINT_PRODUCTS: PrintProduct[] = [
     name: 'Embroidered Cap',
     type: 'cap',
     basePrice: 19.99,
-    image: 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=800',
-    description: 'High-quality caps with custom embroidery',
+    image: 'https://images.unsplash.com/photo-1556306535-0f09a537f0a3?w=800&q=80',
+    description: 'Structured cotton twill caps with precision multi-thread embroidery. Adjustable strap.',
     sizes: [
       { label: 'One Size', price: 19.99 },
       { label: 'Adjustable', price: 22.99 },
     ],
     customizable: true,
     printerCompatible: ['Embroidery Machine'],
+  },
+  {
+    id: 'hoodie-1',
+    name: 'Custom Hoodie',
+    type: 'hoodie',
+    basePrice: 44.99,
+    image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&q=80',
+    description: 'Heavyweight fleece hoodie with premium prints and soft interior lining.',
+    sizes: [
+      { label: 'S', price: 44.99 },
+      { label: 'M', price: 44.99 },
+      { label: 'L', price: 44.99 },
+      { label: 'XL', price: 49.99 },
+      { label: '2XL', price: 54.99 },
+    ],
+    customizable: true,
+    printerCompatible: ['Heat Press'],
+  },
+  {
+    id: 'joggers-1',
+    name: 'Custom Joggers',
+    type: 'pants',
+    basePrice: 39.99,
+    image: 'https://images.unsplash.com/photo-1552902865-b72c031ac5ea?w=800&q=80',
+    description: 'Soft joggers with precise print placement and tapered fit.',
+    sizes: [
+      { label: 'S', price: 39.99 },
+      { label: 'M', price: 39.99 },
+      { label: 'L', price: 39.99 },
+      { label: 'XL', price: 44.99 },
+    ],
+    customizable: true,
+    printerCompatible: ['Heat Press'],
+  },
+  {
+    id: 'sticker-1',
+    name: 'Sticker Pack',
+    type: 'sticker',
+    basePrice: 9.99,
+    image: 'https://images.unsplash.com/photo-1521540216272-a50305cd4421?w=800&q=80',
+    description: 'Matte vinyl stickers with weatherproof laminate finish.',
+    sizes: [
+      { label: 'Small', width: 3, height: 3, price: 9.99 },
+      { label: 'Medium', width: 5, height: 5, price: 14.99 },
+      { label: 'Large', width: 7, height: 7, price: 19.99 },
+    ],
+    customizable: true,
+    printerCompatible: ['Roland'],
+  },
+  {
+    id: 'business-card-1',
+    name: 'Business Cards',
+    type: 'business-card',
+    basePrice: 24.99,
+    image: 'https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?w=800&q=80',
+    description: 'Premium 16pt matte business cards with smooth edges.',
+    sizes: [
+      { label: 'Standard', width: 3.5, height: 2, price: 24.99 },
+      { label: 'Square', width: 2.5, height: 2.5, price: 29.99 },
+    ],
+    customizable: true,
+    printerCompatible: ['Roland'],
+  },
+  {
+    id: 'window-1',
+    name: 'Window Graphics',
+    type: 'window-design',
+    basePrice: 79.99,
+    image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80',
+    description: 'Perforated window graphics for storefronts and studios.',
+    sizes: [
+      { label: 'Small', width: 24, height: 36, price: 79.99 },
+      { label: 'Medium', width: 36, height: 60, price: 129.99 },
+      { label: 'Large', width: 48, height: 96, price: 199.99 },
+    ],
+    customizable: true,
+    printerCompatible: ['Mimaki'],
   },
 ];

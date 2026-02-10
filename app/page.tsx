@@ -590,6 +590,21 @@ function HomeContent() {
     }
   }, [deviceTier, currentView, canRenderHeavyDesktop, isMobile, allRemoteSplines, sequenceStage]);
 
+  // Listen for forced pagemode event (dispatched when user clicks sign-in on StoreHeader while already on '/')
+  useEffect(() => {
+    const handler = () => {
+      const loginViewFlag = safeGetLocal('bullmoney_pagemode_login_view');
+      // Ensure pagemode login view flag is set if it was stored before dispatch
+      if (loginViewFlag !== 'true') {
+        try { localStorage.setItem('bullmoney_pagemode_login_view', 'true'); } catch {}
+      }
+      setCurrentView('pagemode');
+      setIsInitialized(true);
+    };
+    window.addEventListener('bullmoney_force_pagemode', handler);
+    return () => window.removeEventListener('bullmoney_force_pagemode', handler);
+  }, []);
+
   // Check localStorage on client mount to determine the correct view
   // This runs once on mount and sets the view based on user's previous progress
   useEffect(() => {

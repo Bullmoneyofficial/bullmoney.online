@@ -302,9 +302,9 @@ export function ProductsCarousel({
       </div>
 
       {/* Carousel */}
-      <div className="relative w-full overflow-visible">
+      <div className="relative w-full overflow-hidden">
         <div
-          className="flex w-full overflow-x-scroll overflow-y-visible overscroll-x-auto pt-6 pb-28 md:pt-10 md:pb-40 [scrollbar-width:none] cursor-grab active:cursor-grabbing"
+          className="flex w-full overflow-x-scroll overflow-y-hidden overscroll-x-auto pt-6 pb-28 md:pt-10 md:pb-40 [scrollbar-width:none] cursor-grab active:cursor-grabbing"
           ref={carouselRef}
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', willChange: 'scroll-position', contain: 'layout style' } as React.CSSProperties}
           onMouseDown={onMouseDown}

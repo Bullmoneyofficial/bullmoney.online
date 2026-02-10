@@ -40,8 +40,8 @@ export interface LiveQuote {
 
 // ─── Constants ──────────────────────────────────────────────
 const WATCHLIST_KEY = 'mt5-watchlist';
-const FOREX_POLL_MS_DESKTOP = 5_000;
-const FOREX_POLL_MS_MOBILE = 8_000; // Slower on mobile to save battery
+const FOREX_POLL_MS_DESKTOP = 10_000; // 10s — cache TTL is 30s, no need to poll faster
+const FOREX_POLL_MS_MOBILE = 15_000; // 15s on mobile to save battery
 const BINANCE_WS_URL = 'wss://stream.binance.com:9443/stream';
 
 // ─── Helpers ────────────────────────────────────────────────

@@ -516,7 +516,7 @@ export const FPSMonitor = memo(({ enabled = false, position = 'bottom-right' }: 
 
   const content = (
     <div
-      className={`fixed ${positionClasses[position]} z-[99999]`}
+      className={`fixed ${positionClasses[position]} z-[2147483647]`}
       style={{
         background: 'rgba(0, 0, 0, 0.92)',
         /* PERF FIX: Removed backdrop-filter: blur(12px) — this is a debug overlay,
@@ -775,9 +775,8 @@ export const PerformanceProvider = memo(({ children, showFPS = false }: Performa
         animation: none !important;
       }
       
-      /* NO BLUR - all blur effects globally disabled */
-      html.reduce-blur *, 
-      * {
+      /* NO BLUR - only disable when reduce-blur is active */
+      html.reduce-blur * {
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
       }

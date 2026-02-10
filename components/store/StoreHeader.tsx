@@ -23,6 +23,7 @@ import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import RewardsCardBanner from '@/components/RewardsCardBanner';
 import { useHeroMode } from '@/hooks/useHeroMode';
 import type { HeroMode } from '@/hooks/useHeroMode';
+import { CartDrawer } from '@/components/shop/CartDrawer';
 
 // Lazy-load framer-motion — only needed when mobile menu is opened
 const LazyMotionDiv = dynamic(() => import('framer-motion').then(m => ({ default: m.motion.div })), { ssr: false });
@@ -112,8 +113,13 @@ export function StoreHeader() {
         // Ignore storage errors and still navigate to pagemode.
       }
     }
-    router.push('/');
-  }, [router]);
+    // If already on home page, dispatch event to trigger pagemode without navigation
+    if (pathname === '/') {
+      window.dispatchEvent(new Event('bullmoney_force_pagemode'));
+    } else {
+      router.push('/');
+    }
+  }, [router, pathname]);
 
   useEffect(() => {
     return () => {
@@ -755,6 +761,9 @@ export function StoreHeader() {
         isOpen={siteSearchOpen}
         onClose={() => setSiteSearchOpen(false)}
       />
+
+      {/* Cart Drawer - Always available wherever StoreHeader is rendered */}
+      <CartDrawer />
 
       {/* DEV ONLY: Admin visibility toggle */}
       {isDev && isAdmin && (

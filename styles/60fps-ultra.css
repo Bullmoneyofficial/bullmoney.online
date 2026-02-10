@@ -30,8 +30,8 @@ html {
   /* Disable smooth scroll - use RAF-based JS scroll instead */
   scroll-behavior: auto;
   
-  /* Enable GPU rasterization */
-  transform: translateZ(0);
+  /* DO NOT use transform on html — breaks position:fixed z-index stacking */
+  /* transform: translateZ(0); — REMOVED */
   
   /* Hint to browser for high refresh rate */
   font-feature-settings: "kern" 1;
@@ -44,8 +44,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   
-  /* Create stacking context for better GPU usage */
-  transform: translateZ(0);
+  /* DO NOT use transform on body — breaks position:fixed z-index stacking */
+  /* transform: translateZ(0); — REMOVED */
   
   /* Prevent overscroll bounce that causes repaints */
   overscroll-behavior: none;

@@ -724,7 +724,7 @@ export default function BullMoneyModal({ isOpen, onClose }: { isOpen: boolean, o
           initial={animations.modalBackdrop.initial as TargetAndTransition}
           animate={animations.modalBackdrop.animate as TargetAndTransition}
           exit={animations.modalBackdrop.exit as TargetAndTransition}
-          className="fixed inset-0 z-[2147483647] flex items-center justify-center p-5 sm:p-6 bg-black/95"
+          className="fixed inset-0 z-[2147483647] bg-black/80 backdrop-blur-xl"
           onClick={onClose}
         >
           {/* Animated tap to close hints - Skip on mobile for performance */}
@@ -775,7 +775,7 @@ export default function BullMoneyModal({ isOpen, onClose }: { isOpen: boolean, o
             exit={animations.modalContent.exit as TargetAndTransition}
             transition={animations.modalContent.transition}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-[98%] md:w-[90%] max-w-6xl max-h-[90vh] bg-black rounded-2xl overflow-hidden flex flex-col"
+            className="relative w-[100vw] max-w-[100vw] h-[100dvh] max-h-[100dvh] bg-black overflow-y-auto flex flex-col"
             style={{
               border: '2px solid #ffffff',
               boxShadow: isMobile ? 'none' : '0 0 20px rgba(255, 255, 255, 0.5), 0 0 40px rgba(255, 255, 255, 0.3)'
