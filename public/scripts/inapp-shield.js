@@ -99,7 +99,12 @@ inappStyle.textContent=[
   // Aurora: fade to near-invisible but keep in layout flow
   '.in-app-browser .aurora{opacity:0.05!important;}',
   // Glass: opaque dark fallback (keeps text readable)
-  '.in-app-browser .glass-effect,.in-app-browser .glassmorphism,.in-app-browser .glass-surface,.in-app-browser .glass-card{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:rgba(0,0,0,0.88)!important;border-color:rgba(255,255,255,0.06)!important;}',
+  '.in-app-browser .glass-effect,.in-app-browser .glassmorphism,.in-app-browser .glass-surface,.in-app-browser .glass-card{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:rgba(5,9,21,0.85)!important;border-color:rgba(255,255,255,0.06)!important;}',
+  '.in-app-browser [data-apple-section] .glass-effect,.in-app-browser [data-apple-section] .glassmorphism,.in-app-browser [data-apple-section] .glass-surface,.in-app-browser [data-apple-section] .glass-card{background:rgba(255,255,255,0.92)!important;border-color:rgba(0,0,0,0.08)!important;color:#0f172a!important;}',
+  '.in-app-browser [data-products-section] .glass-effect,.in-app-browser [data-products-section] .glassmorphism,.in-app-browser [data-products-section] .glass-surface,.in-app-browser [data-products-section] .glass-card{background:rgba(255,255,255,0.92)!important;border-color:rgba(0,0,0,0.08)!important;color:#0f172a!important;}',
+  '.in-app-browser .glass-effect.bg-white,.in-app-browser .glassmorphism.bg-white,.in-app-browser .glass-surface.bg-white,.in-app-browser .glass-card.bg-white{background:rgba(255,255,255,0.92)!important;border-color:rgba(0,0,0,0.08)!important;color:#0f172a!important;}',
+  '.in-app-browser .glass-effect.bg-gray-50,.in-app-browser .glassmorphism.bg-gray-50,.in-app-browser .glass-surface.bg-gray-50,.in-app-browser .glass-card.bg-gray-50{background:rgba(255,255,255,0.92)!important;border-color:rgba(0,0,0,0.08)!important;color:#0f172a!important;}',
+  '.in-app-browser .glass-effect.bg-neutral-50,.in-app-browser .glassmorphism.bg-neutral-50,.in-app-browser .glass-surface.bg-neutral-50,.in-app-browser .glass-card.bg-neutral-50{background:rgba(255,255,255,0.92)!important;border-color:rgba(0,0,0,0.08)!important;color:#0f172a!important;}',
   // Complex components: simplify but KEEP VISIBLE — reduce animations, keep content
   '.in-app-browser .circular-gallery{animation:none!important;overflow:hidden!important;}',
   '.in-app-browser .card-swap{animation:none!important;transition:none!important;}',
@@ -143,7 +148,12 @@ if(crashes>0){
     '.ultra-light-mode img{image-rendering:auto;}',
     '.ultra-light-mode .hero{min-height:auto!important;height:auto!important;}',
     // Glass: opaque dark fallback so no transparent-over-black
-    '.ultra-light-mode .glass-effect,.ultra-light-mode .glassmorphism,.ultra-light-mode .glass-surface,.ultra-light-mode .glass-card{background:rgba(0,0,0,0.9)!important;border-color:rgba(255,255,255,0.05)!important;}',
+    '.ultra-light-mode .glass-effect,.ultra-light-mode .glassmorphism,.ultra-light-mode .glass-surface,.ultra-light-mode .glass-card{background:rgba(5,9,21,0.88)!important;border-color:rgba(255,255,255,0.05)!important;}',
+    '.ultra-light-mode [data-apple-section] .glass-effect,.ultra-light-mode [data-apple-section] .glassmorphism,.ultra-light-mode [data-apple-section] .glass-surface,.ultra-light-mode [data-apple-section] .glass-card{background:rgba(255,255,255,0.92)!important;border-color:rgba(0,0,0,0.08)!important;color:#0f172a!important;}',
+    '.ultra-light-mode [data-products-section] .glass-effect,.ultra-light-mode [data-products-section] .glassmorphism,.ultra-light-mode [data-products-section] .glass-surface,.ultra-light-mode [data-products-section] .glass-card{background:rgba(255,255,255,0.92)!important;border-color:rgba(0,0,0,0.08)!important;color:#0f172a!important;}',
+    '.ultra-light-mode .glass-effect.bg-white,.ultra-light-mode .glassmorphism.bg-white,.ultra-light-mode .glass-surface.bg-white,.ultra-light-mode .glass-card.bg-white{background:rgba(255,255,255,0.92)!important;border-color:rgba(0,0,0,0.08)!important;color:#0f172a!important;}',
+    '.ultra-light-mode .glass-effect.bg-gray-50,.ultra-light-mode .glassmorphism.bg-gray-50,.ultra-light-mode .glass-surface.bg-gray-50,.ultra-light-mode .glass-card.bg-gray-50{background:rgba(255,255,255,0.92)!important;border-color:rgba(0,0,0,0.08)!important;color:#0f172a!important;}',
+    '.ultra-light-mode .glass-effect.bg-neutral-50,.ultra-light-mode .glassmorphism.bg-neutral-50,.ultra-light-mode .glass-surface.bg-neutral-50,.ultra-light-mode .glass-card.bg-neutral-50{background:rgba(255,255,255,0.92)!important;border-color:rgba(0,0,0,0.08)!important;color:#0f172a!important;}',
   ].join('\n');
   d.head.appendChild(ultraStyle);
   S.fixes.push('crash-recovery-ultralight');

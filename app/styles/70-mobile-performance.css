@@ -113,7 +113,18 @@ html.is-low-end {
 html.is-low-end [class*="backdrop-blur"] {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  background-color: rgba(0, 0, 0, 0.85) !important;
+  background-color: rgba(5, 9, 21, 0.85) !important;
+}
+
+/* Keep light surfaces light on low-end devices */
+html.is-low-end [data-apple-section] [class*="backdrop-blur"],
+html.is-low-end [data-products-section] [class*="backdrop-blur"],
+html.is-low-end .bg-white[class*="backdrop-blur"],
+html.is-low-end .bg-gray-50[class*="backdrop-blur"],
+html.is-low-end .bg-neutral-50[class*="backdrop-blur"] {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  color: #0f172a !important;
 }
 
 /* Ensure text stays white on low-end devices (prevent black-on-black) */
@@ -181,7 +192,18 @@ html.is-in-app-browser {
 html.is-in-app-browser [class*="backdrop-blur"] {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  background-color: rgba(0, 0, 0, 0.9) !important;
+  background-color: rgba(5, 9, 21, 0.88) !important;
+}
+
+/* Keep light surfaces light in in-app browsers */
+html.is-in-app-browser [data-apple-section] [class*="backdrop-blur"],
+html.is-in-app-browser [data-products-section] [class*="backdrop-blur"],
+html.is-in-app-browser .bg-white[class*="backdrop-blur"],
+html.is-in-app-browser .bg-gray-50[class*="backdrop-blur"],
+html.is-in-app-browser .bg-neutral-50[class*="backdrop-blur"] {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  color: #0f172a !important;
 }
 
 /* Ensure text stays white in in-app browsers (prevent black-on-black) */
