@@ -27,6 +27,8 @@ class AllowIframeEmbedding
         $allowedOrigins = array_filter([
             'https://www.bullmoney.online',
             'https://bullmoney.online',
+            'https://www.bullmoney.shop',
+            'https://bullmoney.shop',
             env('IFRAME_ALLOWED_ORIGIN'),
         ]);
 
