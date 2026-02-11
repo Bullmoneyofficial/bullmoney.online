@@ -1,19 +1,4 @@
 services:
-  # Next.js Frontend Application
-  - type: web
-    name: bullmoney-app
-    runtime: node
-    plan: free
-    rootDir: .
-    buildCommand: npm install && npm run build
-    startCommand: npm run start
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: NEXT_PUBLIC_API_URL
-        value: https://bullmoney-casino.onrender.com
-    autoDeploy: false
-
   # Laravel Backend (Bullcasino)
   - type: web
     name: bullmoney-casino
