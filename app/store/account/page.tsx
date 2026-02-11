@@ -438,8 +438,8 @@ export default function AccountPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-black/20 border-t-white rounded-full animate-spin" />
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-black/20 border-t-black rounded-full animate-spin" />
       </div>
     );
   }
@@ -489,8 +489,8 @@ export default function AccountPage() {
         .account-page-form select,
         .account-page-form textarea,
         .account-page-form option {
-          color: rgb(255, 255, 255) !important;
-          -webkit-text-fill-color: rgb(255, 255, 255);
+          color: rgb(0, 0, 0) !important;
+          -webkit-text-fill-color: rgb(0, 0, 0);
         }
         .account-page-form input::placeholder,
         .account-page-form textarea::placeholder {
@@ -515,7 +515,7 @@ export default function AccountPage() {
         {/* Back to Store */}
         <Link
           href="/store"
-          className="inline-flex items-center gap-2 text-black/50 hover:text-black transition-colors mb-8"
+          className="inline-flex items-center gap-2 text-black/50 hover:text-black/80 transition-colors mb-8"
         >
           <ArrowLeft className="w-4 h-4" />
           <span className="text-sm">Back to Store</span>
@@ -732,7 +732,7 @@ export default function AccountPage() {
                                           value={trackingInputs[order.id] || ''}
                                           onChange={(e) => setTrackingInputs(prev => ({ ...prev, [order.id]: e.target.value }))}
                                           onKeyDown={(e) => { if (e.key === 'Enter') handleSaveTracking(order); }}
-                                          className="w-full h-9 pl-9 pr-3 bg-black/5 border border-black/10 rounded-lg text-xs text-white font-mono placeholder:text-black/30 focus:outline-none focus:border-blue-500/50 transition-colors"
+                                          className="w-full h-9 pl-9 pr-3 bg-black/5 border border-black/10 rounded-lg text-xs text-black font-mono placeholder:text-black/30 focus:outline-none focus:border-blue-500/50 transition-colors"
                                         />
                                       </div>
                                       <button
@@ -805,15 +805,15 @@ export default function AccountPage() {
                             <div className="flex gap-2 mt-3">
                               <Link
                                 href={`/store/product/${item.slug}`}
-                                className="relative flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-black border border-black/30 rounded-lg text-xs text-white overflow-hidden group/btn hover:border-black/50 transition-colors"
+                                className="relative flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-black/30 rounded-lg text-xs text-black overflow-hidden group/btn hover:border-black/50 transition-colors"
                               >
-                                <span className="pointer-events-none absolute inset-0 rounded-lg bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
+                                <span className="pointer-events-none absolute inset-0 rounded-lg bg-gradient-to-r from-transparent via-black/10 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
                                 <Eye className="w-3 h-3 relative z-10" />
                                 <span className="relative z-10">View</span>
                               </Link>
                               <Link
                                 href={`/store/product/${item.slug}?addToCart=true`}
-                                className="relative flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-black border border-white rounded-lg text-xs font-medium text-white overflow-hidden group/buy hover:bg-black/10 transition-colors"
+                                className="relative flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-black rounded-lg text-xs font-medium text-black overflow-hidden group/buy hover:bg-black/10 transition-colors"
                               >
                                 <span 
                                   className="pointer-events-none absolute inset-0 rounded-lg" 
@@ -909,7 +909,7 @@ export default function AccountPage() {
                               name="display_name"
                               defaultValue={user?.display_name || ''}
                               className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl placeholder:text-black/30 focus:outline-none focus:border-black/20 transition-colors"
-                              style={{ color: 'rgb(255, 255, 255)' }}
+                              style={{ color: 'rgb(0, 0, 0)' }}
                               placeholder="Your display name"
                             />
                           </div>
@@ -919,7 +919,7 @@ export default function AccountPage() {
                               name="full_name"
                               defaultValue={user?.full_name || ''}
                               className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl placeholder:text-black/30 focus:outline-none focus:border-black/20 transition-colors"
-                              style={{ color: 'rgb(255, 255, 255)' }}
+                              style={{ color: 'rgb(0, 0, 0)' }}
                               placeholder="Your full name"
                             />
                           </div>
@@ -930,7 +930,7 @@ export default function AccountPage() {
                             value={user?.email || ''}
                             disabled
                             className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl cursor-not-allowed"
-                            style={{ color: 'rgba(255, 255, 255, 0.4)' }}
+                            style={{ color: 'rgba(0, 0, 0, 0.4)' }}
                           />
                           <p className="text-xs text-black/30 mt-1">Email cannot be changed here</p>
                         </div>
@@ -941,7 +941,7 @@ export default function AccountPage() {
                               name="phone"
                               defaultValue={user?.phone || ''}
                               className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl placeholder:text-black/30 focus:outline-none focus:border-black/20 transition-colors"
-                              style={{ color: 'rgb(255, 255, 255)' }}
+                              style={{ color: 'rgb(0, 0, 0)' }}
                               placeholder="+1 (555) 000-0000"
                             />
                           </div>
@@ -952,7 +952,7 @@ export default function AccountPage() {
                               type="date"
                               defaultValue={user?.birth_date || ''}
                               className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl placeholder:text-black/30 focus:outline-none focus:border-black/20 transition-colors scheme-dark"
-                              style={{ color: 'rgb(255, 255, 255)', colorScheme: 'dark' }}
+                              style={{ color: 'rgb(0, 0, 0)', colorScheme: 'light' }}
                             />
                           </div>
                         </div>
@@ -963,7 +963,7 @@ export default function AccountPage() {
                               name="country"
                               defaultValue={user?.country || ''}
                               className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl placeholder:text-black/30 focus:outline-none focus:border-black/20 transition-colors"
-                              style={{ color: 'rgb(255, 255, 255)' }}
+                              style={{ color: 'rgb(0, 0, 0)' }}
                               placeholder="United States"
                             />
                           </div>
@@ -973,7 +973,7 @@ export default function AccountPage() {
                               name="city"
                               defaultValue={user?.city || ''}
                               className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl placeholder:text-black/30 focus:outline-none focus:border-black/20 transition-colors"
-                              style={{ color: 'rgb(255, 255, 255)' }}
+                              style={{ color: 'rgb(0, 0, 0)' }}
                               placeholder="New York"
                             />
                           </div>
@@ -983,7 +983,7 @@ export default function AccountPage() {
                               name="timezone"
                               defaultValue={user?.timezone || ''}
                               className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl focus:outline-none focus:border-black/20 transition-colors appearance-none"
-                              style={{ color: 'rgb(255, 255, 255)' }}
+                              style={{ color: 'rgb(0, 0, 0)' }}
                             >
                               <option value="">Select timezone</option>
                               <option value="America/New_York">Eastern (ET)</option>
@@ -1007,7 +1007,7 @@ export default function AccountPage() {
                             defaultValue={user?.bio || ''}
                             rows={3}
                             className="w-full px-4 py-3 bg-black/5 border border-black/10 rounded-xl placeholder:text-black/30 focus:outline-none focus:border-black/20 transition-colors resize-none"
-                            style={{ color: 'rgb(255, 255, 255)' }}
+                            style={{ color: 'rgb(0, 0, 0)' }}
                             placeholder="Tell us about yourself..."
                           />
                         </div>
@@ -1023,7 +1023,7 @@ export default function AccountPage() {
                               name="telegram_username"
                               defaultValue={user?.telegram_username || ''}
                               className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl placeholder:text-black/30 focus:outline-none focus:border-black/20 transition-colors"
-                              style={{ color: 'rgb(255, 255, 255)' }}
+                              style={{ color: 'rgb(0, 0, 0)' }}
                               placeholder="@username"
                             />
                           </div>
@@ -1033,7 +1033,7 @@ export default function AccountPage() {
                               name="discord_username"
                               defaultValue={user?.discord_username || ''}
                               className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl placeholder:text-black/30 focus:outline-none focus:border-black/20 transition-colors"
-                              style={{ color: 'rgb(255, 255, 255)' }}
+                              style={{ color: 'rgb(0, 0, 0)' }}
                               placeholder="User#0000"
                             />
                           </div>
@@ -1043,7 +1043,7 @@ export default function AccountPage() {
                               name="instagram_username"
                               defaultValue={user?.instagram_username || ''}
                               className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl placeholder:text-black/30 focus:outline-none focus:border-black/20 transition-colors"
-                              style={{ color: 'rgb(255, 255, 255)' }}
+                              style={{ color: 'rgb(0, 0, 0)' }}
                               placeholder="@handle"
                             />
                           </div>
@@ -1053,7 +1053,7 @@ export default function AccountPage() {
                               name="twitter_username"
                               defaultValue={user?.twitter_username || ''}
                               className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl placeholder:text-black/30 focus:outline-none focus:border-black/20 transition-colors"
-                              style={{ color: 'rgb(255, 255, 255)' }}
+                              style={{ color: 'rgb(0, 0, 0)' }}
                               placeholder="@handle"
                             />
                           </div>
@@ -1070,7 +1070,7 @@ export default function AccountPage() {
                               name="preferred_currency"
                               defaultValue={user?.preferred_currency || 'USD'}
                               className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl focus:outline-none focus:border-black/20 transition-colors appearance-none"
-                              style={{ color: 'rgb(255, 255, 255)' }}
+                              style={{ color: 'rgb(0, 0, 0)' }}
                             >
                               <option value="USD">USD ($)</option>
                               <option value="EUR">EUR (€)</option>
@@ -1087,7 +1087,7 @@ export default function AccountPage() {
                               name="preferred_language"
                               defaultValue={user?.preferred_language || 'en'}
                               className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl focus:outline-none focus:border-black/20 transition-colors appearance-none"
-                              style={{ color: 'rgb(255, 255, 255)' }}
+                              style={{ color: 'rgb(0, 0, 0)' }}
                             >
                               <option value="en">English</option>
                               <option value="es">Spanish</option>
@@ -1106,7 +1106,7 @@ export default function AccountPage() {
                               name="preferred_contact_method"
                               defaultValue={user?.preferred_contact_method || 'email'}
                               className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl focus:outline-none focus:border-black/20 transition-colors appearance-none"
-                              style={{ color: 'rgb(255, 255, 255)' }}
+                              style={{ color: 'rgb(0, 0, 0)' }}
                             >
                               <option value="email">Email</option>
                               <option value="phone">Phone</option>
@@ -1121,7 +1121,7 @@ export default function AccountPage() {
                             type="checkbox"
                             name="store_newsletter_subscribed"
                             defaultChecked={user?.store_newsletter_subscribed}
-                            className="w-5 h-5 rounded border-black/20 bg-black/5 text-white accent-white"
+                            className="w-5 h-5 rounded border-black/20 bg-black/5 text-black accent-black"
                           />
                           <span className="text-sm text-black/70">Subscribe to store newsletter & promotions</span>
                         </label>
@@ -1137,7 +1137,7 @@ export default function AccountPage() {
                               type="checkbox"
                               name="notifications_enabled"
                               defaultChecked={user?.notifications_enabled}
-                              className="w-5 h-5 rounded border-black/20 bg-black/5 text-white accent-white"
+                              className="w-5 h-5 rounded border-black/20 bg-black/5 text-black accent-black"
                             />
                           </label>
                           <label className="flex items-center justify-between cursor-pointer">
@@ -1146,7 +1146,7 @@ export default function AccountPage() {
                               type="checkbox"
                               name="notify_trades"
                               defaultChecked={user?.notify_trades}
-                              className="w-5 h-5 rounded border-black/20 bg-black/5 text-white accent-white"
+                              className="w-5 h-5 rounded border-black/20 bg-black/5 text-black accent-black"
                             />
                           </label>
                           <label className="flex items-center justify-between cursor-pointer">
@@ -1155,7 +1155,7 @@ export default function AccountPage() {
                               type="checkbox"
                               name="notify_livestreams"
                               defaultChecked={user?.notify_livestreams}
-                              className="w-5 h-5 rounded border-black/20 bg-black/5 text-white accent-white"
+                              className="w-5 h-5 rounded border-black/20 bg-black/5 text-black accent-black"
                             />
                           </label>
                           <label className="flex items-center justify-between cursor-pointer">
@@ -1164,7 +1164,7 @@ export default function AccountPage() {
                               type="checkbox"
                               name="notify_news"
                               defaultChecked={user?.notify_news}
-                              className="w-5 h-5 rounded border-black/20 bg-black/5 text-white accent-white"
+                              className="w-5 h-5 rounded border-black/20 bg-black/5 text-black accent-black"
                             />
                           </label>
                           <label className="flex items-center justify-between cursor-pointer">
@@ -1173,7 +1173,7 @@ export default function AccountPage() {
                               type="checkbox"
                               name="notify_vip"
                               defaultChecked={user?.notify_vip}
-                              className="w-5 h-5 rounded border-black/20 bg-black/5 text-white accent-white"
+                              className="w-5 h-5 rounded border-black/20 bg-black/5 text-black accent-black"
                             />
                           </label>
                           <label className="flex items-center justify-between cursor-pointer">
@@ -1182,7 +1182,7 @@ export default function AccountPage() {
                               type="checkbox"
                               name="notification_sound"
                               defaultChecked={user?.notification_sound}
-                              className="w-5 h-5 rounded border-black/20 bg-black/5 text-white accent-white"
+                              className="w-5 h-5 rounded border-black/20 bg-black/5 text-black accent-black"
                             />
                           </label>
                         </div>
@@ -1246,7 +1246,7 @@ export default function AccountPage() {
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.25, ease: 'easeOut' }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-lg bg-neutral-950 border border-black/10 rounded-2xl overflow-hidden"
+            className="relative w-full max-w-lg bg-white border border-black/10 rounded-2xl overflow-hidden"
           >
             {/* Header */}
             <div className="p-5 border-b border-black/10">
@@ -1256,13 +1256,13 @@ export default function AccountPage() {
                     <Truck className={`w-5 h-5 ${getCarrierColor(trackingOrder.carrier)}`} />
                   </div>
                   <div>
-                    <h3 className="font-medium text-white">Package Tracking</h3>
+                    <h3 className="font-medium text-black">Package Tracking</h3>
                     <p className="text-xs text-black/40">Order #{trackingOrder.id.slice(0, 8)}</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setTrackingOrder(null)}
-                  className="w-8 h-8 rounded-lg bg-black/5 flex items-center justify-center text-black/40 hover:text-white hover:bg-black/10 transition-colors"
+                  className="w-8 h-8 rounded-lg bg-black/5 flex items-center justify-center text-black/40 hover:text-black hover:bg-black/10 transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -1280,7 +1280,7 @@ export default function AccountPage() {
               <div className="mt-4 p-3 rounded-xl bg-black/5 border border-black/10 space-y-1.5">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-black/50">Status</span>
-                  <span className={`font-medium ${STATUS_CONFIG[trackingOrder.status]?.color || 'text-white'}`}>
+                  <span className={`font-medium ${STATUS_CONFIG[trackingOrder.status]?.color || 'text-black'}`}>
                     {STATUS_CONFIG[trackingOrder.status]?.label || trackingOrder.status}
                   </span>
                 </div>
@@ -1331,7 +1331,7 @@ export default function AccountPage() {
                         </div>
                       </div>
                       <div className={`pb-6 ${event.completed || event.current ? 'opacity-100' : 'opacity-40'}`}>
-                        <p className={`text-sm font-medium ${event.current ? 'text-green-400' : 'text-white'}`}>
+                        <p className={`text-sm font-medium ${event.current ? 'text-green-400' : 'text-black'}`}>
                           {event.status}
                         </p>
                         <p className="text-xs text-black/50 mt-0.5 flex items-center gap-1">
@@ -1356,7 +1356,7 @@ export default function AccountPage() {
                   href={liveUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-black/5 border border-black/10 rounded-lg text-xs text-black/50 hover:text-white hover:bg-black/10 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-black/5 border border-black/10 rounded-lg text-xs text-black/50 hover:text-black/80 hover:bg-black/10 transition-colors"
                 >
                   <ExternalLink className="w-3 h-3" />
                   Track on {carrierInfo?.name || 'carrier website'}

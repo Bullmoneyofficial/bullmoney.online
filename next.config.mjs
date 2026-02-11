@@ -12,10 +12,9 @@ const isWindows = platform === 'win32';
 const isMac = platform === 'darwin';
 const isLinux = platform === 'linux';
 
-// Casino backend URL for proxy - use env var or fallback to localhost
-// In production, this won't be used - iframe will use NEXT_PUBLIC_CASINO_URL directly
-const CASINO_BACKEND_URL = process.env.CASINO_BACKEND_URL || 'http://localhost:8000';
+// Casino backend URL for proxy
 const isDev = process.env.NODE_ENV !== 'production';
+const CASINO_BACKEND_URL = process.env.CASINO_BACKEND_URL || (isDev ? 'http://localhost:8000' : 'https://bullmoney-casino.onrender.com');
 
 // Auto-applied optimizations
 const optimizationsApplied = [];
@@ -440,61 +439,41 @@ const nextConfig = {
     },
   },
 
-  // Proxy casino backend through Next.js - DEV ONLY
-  // In production, iframe uses NEXT_PUBLIC_CASINO_URL directly (no proxy needed)
+  // Proxy casino backend through Next.js
   async rewrites() {
-    // Only proxy in development
-    if (!isDev) {
-      return [];
-    }
-
-    return [
-      // Proxy all /casino-games requests to Laravel backend
-      {
-        source: '/casino-games/:path*',
-        destination: `${CASINO_BACKEND_URL}/:path*`,
-      },
-      // Proxy casino root to backend root
-      {
-        source: '/casino-games',
-        destination: `${CASINO_BACKEND_URL}/`,
-      },
-      // Proxy all casino assets (CSS, JS, images)
-      {
-        source: '/assets/:path*',
-        destination: `${CASINO_BACKEND_URL}/assets/:path*`,
-      },
-      // Proxy casino API requests
-      {
-        source: '/casino-api/:path*',
-        destination: `${CASINO_BACKEND_URL}/api/:path*`,
-      },
-      // Proxy specific game routes to backend
-      {
-        source: '/slots/:path*',
-        destination: `${CASINO_BACKEND_URL}/slots/:path*`,
-      },
-      {
-        source: '/dice/:path*',
-        destination: `${CASINO_BACKEND_URL}/dice/:path*`,
-      },
-      {
-        source: '/mines/:path*',
-        destination: `${CASINO_BACKEND_URL}/mines/:path*`,
-      },
-      {
-        source: '/wheel/:path*',
-        destination: `${CASINO_BACKEND_URL}/wheel/:path*`,
-      },
-      {
-        source: '/crash/:path*',
-        destination: `${CASINO_BACKEND_URL}/crash/:path*`,
-      },
-      {
-        source: '/jackpot/:path*',
-        destination: `${CASINO_BACKEND_URL}/jackpot/:path*`,
-      },
+    const casinoProxyRewrites = [
+      { source: '/user/:path*', destination: `${CASINO_BACKEND_URL}/user/:path*` },
+      { source: '/wallet/:path*', destination: `${CASINO_BACKEND_URL}/wallet/:path*` },
+      { source: '/payment/:path*', destination: `${CASINO_BACKEND_URL}/payment/:path*` },
+      { source: '/withdraw/:path*', destination: `${CASINO_BACKEND_URL}/withdraw/:path*` },
+      { source: '/load/:path*', destination: `${CASINO_BACKEND_URL}/load/:path*` },
+      { source: '/bonus', destination: `${CASINO_BACKEND_URL}/bonus` },
+      { source: '/profile', destination: `${CASINO_BACKEND_URL}/profile` },
+      { source: '/referrals', destination: `${CASINO_BACKEND_URL}/referrals` },
+      { source: '/rules', destination: `${CASINO_BACKEND_URL}/rules` },
+      { source: '/privacy', destination: `${CASINO_BACKEND_URL}/privacy` },
+      { source: '/parther/:path*', destination: `${CASINO_BACKEND_URL}/parther/:path*` },
+      { source: '/auth/:path*', destination: `${CASINO_BACKEND_URL}/auth/:path*` },
+      { source: '/dice/:path*', destination: `${CASINO_BACKEND_URL}/dice/:path*` },
+      { source: '/mines/:path*', destination: `${CASINO_BACKEND_URL}/mines/:path*` },
+      { source: '/wheel/:path*', destination: `${CASINO_BACKEND_URL}/wheel/:path*` },
+      { source: '/jackpot/:path*', destination: `${CASINO_BACKEND_URL}/jackpot/:path*` },
+      { source: '/crash/:path*', destination: `${CASINO_BACKEND_URL}/crash/:path*` },
+      { source: '/slots/:path*', destination: `${CASINO_BACKEND_URL}/slots/:path*` },
+      { source: '/api/wheel/:path*', destination: `${CASINO_BACKEND_URL}/api/wheel/:path*` },
+      { source: '/api/jackpot/:path*', destination: `${CASINO_BACKEND_URL}/api/jackpot/:path*` },
+      { source: '/api/crash/:path*', destination: `${CASINO_BACKEND_URL}/api/crash/:path*` },
     ];
+
+    const devOnlyRewrites = isDev
+      ? [
+          { source: '/casino-games/:path*', destination: `${CASINO_BACKEND_URL}/:path*` },
+          { source: '/casino-games', destination: `${CASINO_BACKEND_URL}/` },
+          { source: '/casino-api/:path*', destination: `${CASINO_BACKEND_URL}/api/:path*` },
+        ]
+      : [];
+
+    return [...casinoProxyRewrites, ...devOnlyRewrites];
   },
 };
 
