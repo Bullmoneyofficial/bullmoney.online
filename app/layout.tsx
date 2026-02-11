@@ -324,6 +324,11 @@ html,body{background:#050915!important;}
       var tag = target.tagName.toLowerCase();
       var src = target.src || target.href || '';
 
+      // Ignore static public assets (non-critical cache-buster scope)
+      if (src && src.includes('/assets/')) {
+        return;
+      }
+
       // Skip Vercel-specific URLs in development (they only exist in production)
       if (isDev && (src.includes('/_vercel/') || src.includes('vercel-insights') || src.includes('vercel-analytics'))) {
         return; // Silently ignore - expected in development
@@ -463,31 +468,19 @@ html,body{background:#050915!important;}
           }}
         />
         <Script id="sw-and-touch" src="/scripts/sw-touch.js" strategy="afterInteractive" />
-        <Script id="ui-debug" src="/scripts/ui-debug.js" strategy="afterInteractive" />
-        {/* 
-          PERFORMANCE FIX: 120Hz detection moved to afterInteractive.
-          Was previously running synchronously in <head> — creating WebGL canvas,
-          reading GPU info, and running 20 RAF frames BEFORE React hydration.
-          This alone was adding 300-500ms to First Contentful Paint.
-        */}
-        <Script id="detect-120hz" src="/scripts/detect-120hz.js" strategy="afterInteractive" />
-        {/* External performance monitoring script - loaded after everything else */}
-        <Script 
-          src="/scripts/perf-monitor.js" 
-          strategy="lazyOnload"
-        />
 
-        {/* MOBILE CRASH SHIELD: Smart memory management and lazy loading for mobile devices */}
-        <Script
-          src="/scripts/mobile-crash-shield.js"
-          strategy="afterInteractive"
-        />
+        {/* CRITICAL SCRIPTS - afterInteractive (run after page is interactive) */}
+        <Script id="mobile-crash-shield" src="/scripts/mobile-crash-shield.js" strategy="afterInteractive" />
+        <Script id="inapp-shield" src="/scripts/inapp-shield.js" strategy="afterInteractive" />
 
-        {/* Device detection for device-specific optimizations */}
-        <Script
-          src="/scripts/device-detect.js"
-          strategy="afterInteractive"
-        />
+        {/* NON-CRITICAL SCRIPTS - lazyOnload (defer until after everything else) */}
+        <Script id="ui-debug" src="/scripts/ui-debug.js" strategy="lazyOnload" />
+        <Script id="detect-120hz" src="/scripts/detect-120hz.js" strategy="lazyOnload" />
+        <Script id="perf-monitor" src="/scripts/perf-monitor.js" strategy="lazyOnload" />
+        <Script id="device-detect" src="/scripts/device-detect.js" strategy="lazyOnload" />
+        <Script id="network-optimizer" src="/scripts/network-optimizer.js" strategy="lazyOnload" />
+        <Script id="spline-universal" src="/scripts/spline-universal.js" strategy="lazyOnload" />
+        <Script id="offline-detect" src="/scripts/offline-detect.js" strategy="lazyOnload" />
       </head>
       <body
         className={cn("antialiased bg-[#050915] text-white", inter.className)}

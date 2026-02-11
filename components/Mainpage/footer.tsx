@@ -8,8 +8,9 @@ import { Logo } from "./logo";
 import FooterStyles from "./footer/FooterStyles";
 import { SocialsRow } from "./footer/Socials";
 import { FooterButton } from "./footer/FooterButton";
-import { AppsModal } from "./footer/AppsModal";
-import { LegalDisclaimerModal } from "./footer/LegalDisclaimerModal";
+import dynamic from "next/dynamic";
+const AppsModal = dynamic(() => import("./footer/AppsModal").then((m) => ({ default: m.AppsModal })), { ssr: false, loading: () => null });
+const LegalDisclaimerModal = dynamic(() => import("./footer/LegalDisclaimerModal").then((m) => ({ default: m.LegalDisclaimerModal })), { ssr: false, loading: () => null });
 import { useFooterModalsUI } from "@/contexts/UIStateContext";
 
 // Footer styles matching store header (white bg, black text)
@@ -112,8 +113,10 @@ export function Footer() {
         </div>
       </footer>
 
-      <AppsModal isOpen={isAppsOpen} onClose={() => setAppsOpen(false)} />
-      <LegalDisclaimerModal isOpen={isDisclaimerOpen} onClose={() => setDisclaimerOpen(false)} />
+      {isAppsOpen && <AppsModal isOpen={isAppsOpen} onClose={() => setAppsOpen(false)} />}
+      {isDisclaimerOpen && (
+        <LegalDisclaimerModal isOpen={isDisclaimerOpen} onClose={() => setDisclaimerOpen(false)} />
+      )}
     </>
   );
 }

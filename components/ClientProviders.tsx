@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { ReactNode, Suspense, memo, useEffect } from "react";
+import { ReactNode, Suspense, memo, useEffect, useState } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useUIState } from "@/contexts/UIStateContext";
@@ -162,6 +162,13 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
   const { isMobile: isMobileViewport, shouldRender: allowMobileLazy } = useMobileLazyRender(240);
   const allowMobileComponents = allowMobileLazy || !isMobileViewport;
   const { masterMuted } = useAudioSettings();
+  const { isAudioWidgetOpen } = useUIState();
+  const [audioWidgetReady, setAudioWidgetReady] = useState(false);
+
+  useEffect(() => {
+    if (!isAudioWidgetOpen) return;
+    if (!audioWidgetReady) setAudioWidgetReady(true);
+  }, [isAudioWidgetOpen, audioWidgetReady]);
 
   // ====================================================================
   // STORE PAGE FAST PATH — Skip ALL heavy performance providers.
@@ -205,7 +212,7 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
           <MobilePerformanceProvider>
             <SoundProvider enabled={!masterMuted} volume={0.4}>
               <AuthProvider>
-                {allowMobileComponents && <AudioWidget />}
+                {allowMobileComponents && audioWidgetReady && <AudioWidget />}
                 {modal}
                 <div data-lenis-content data-store-lenis>
                   <main
@@ -256,7 +263,7 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
           */}
               {/* NOTE: ClientCursor moved to LayoutProviders - rendered LAST in DOM */}
               {/* AudioWidget stays mounted - NOT lazy unmounted - for audio persistence */}
-              {allowMobileComponents && <AudioWidget />}
+              {allowMobileComponents && audioWidgetReady && <AudioWidget />}
               {allowMobileComponents && <AutoRefreshPrompt />}
               {modal}
               

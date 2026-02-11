@@ -78,8 +78,9 @@ export default function BullMoneyCommunity() {
   
   // Mobile-optimized settings
   const scrollSpeed = isMobileDevice ? 0.5 : 0.8;
-  const fetchInterval = isMobileDevice ? 5000 : 3000; // 5s on mobile, 3s on desktop
+  const fetchInterval = isMobileDevice ? 12000 : 8000; // Reduce polling for better perf
   const duplicateCount = isMobileDevice ? 2 : 3; // Less duplication on mobile
+  const lastFetchRef = useRef(0);
 
   // Check VIP status from localStorage
   useEffect(() => {
@@ -94,6 +95,10 @@ export default function BullMoneyCommunity() {
 
   // Fetch all channel messages
   const fetchAll = useCallback(async () => {
+    if (document.visibilityState !== 'visible') return;
+    const now = Date.now();
+    if (now - lastFetchRef.current < fetchInterval - 1000) return;
+    lastFetchRef.current = now;
     const channelKeys = ["trades", "shop", "main"];
     // Add VIP channels if user is VIP
     if (isVip) {

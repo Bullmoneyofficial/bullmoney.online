@@ -24,11 +24,27 @@ export default function BullcasinoShell({ children }: { children: ReactNode }) {
       style={{
         background: 'radial-gradient(circle at top, rgba(15, 23, 42, 0.7), rgba(2, 6, 23, 0.95)), #0b1120',
         minHeight: '100vh',
+        overflow: 'visible',
       }}
     >
       <link rel="stylesheet" href={`${ASSET_BASE}/css/style.css`} />
       <link rel="stylesheet" href={`${ASSET_BASE}/css/notifyme.css`} />
       <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" />
+      <style>{`
+        /* Fix scrolling issues - override external CSS */
+        html, body {
+          height: auto !important;
+          min-height: 100% !important;
+          overflow-y: auto !important;
+          overflow-x: hidden !important;
+        }
+        .bullcasino-page {
+          overflow: visible !important;
+        }
+        .main__content {
+          overflow: visible !important;
+        }
+      `}</style>
 
       <div style={{ background: '#111827', color: '#f9fafb', padding: '10px 16px', textAlign: 'center', fontSize: 14, lineHeight: 1.5, borderBottom: '1px solid #1f2937' }}>
         Demo mode only. We do not process deposits or withdrawals, and all balances are virtual for entertainment only.

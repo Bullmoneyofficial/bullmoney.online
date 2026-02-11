@@ -28,6 +28,17 @@
     min-height: -webkit-fill-available;
   }
 
+  html.in-app-browser {
+    height: var(--app-height, calc(var(--vh, 1vh) * 100));
+    min-height: var(--app-height, calc(var(--vh, 1vh) * 100));
+    width: var(--app-width, 100%);
+  }
+
+  html.in-app-browser body {
+    min-height: var(--app-height, calc(var(--vh, 1vh) * 100));
+    width: var(--app-width, 100%);
+  }
+
   /* Reduce animation complexity */
   .mobile-simple * {
     animation-duration: 0.3s !important;
@@ -95,6 +106,10 @@
   /* Page sections - fixed height on mobile */
   .page-section {
     height: 100dvh;
+  }
+
+  .in-app-browser .page-section {
+    height: var(--app-height, 100dvh);
   }
 }
 

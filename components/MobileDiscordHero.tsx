@@ -3,8 +3,8 @@
 import React, { useEffect, useRef, useMemo, useCallback, useState, memo } from 'react';
 import { Renderer, Program, Mesh, Color as OglColor, Triangle } from 'ogl';
 import { createSupabaseClient } from '@/lib/supabase';
-import UltimateHub from './UltimateHub';
-import ProductsSection from './ProductsSection';
+const UltimateHub = dynamic(() => import('./UltimateHub').then(m => ({ default: m.default })), { ssr: false, loading: () => null });
+const ProductsSection = dynamic(() => import('./ProductsSection').then(m => ({ default: m.default })), { ssr: false, loading: () => null });
 import { useUltimateHubUI, useProductsModalUI, useBgPickerModalUI, useColorPickerModalUI, useSplinePanelModalUI } from '@/contexts/UIStateContext';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import dynamic from 'next/dynamic';

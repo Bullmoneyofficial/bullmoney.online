@@ -7,11 +7,20 @@ import { motion } from "framer-motion";
 import { ArrowRight, User } from 'lucide-react';
 import { UI_Z_INDEX } from "@/contexts/UIStateContext";
 
-// Import the actual UnifiedFpsPill and UnifiedHubPanel from UltimateHub
-import { UnifiedFpsPill, UnifiedHubPanel, useLivePrices } from '@/components/UltimateHub';
+const UnifiedFpsPill = dynamic(
+  () => import('@/components/ultimate-hub/pills/UnifiedFpsPill').then(m => ({ default: m.UnifiedFpsPill })),
+  { ssr: false, loading: () => null }
+);
+const UnifiedHubPanel = dynamic(
+  () => import('@/components/ultimate-hub/panel/UnifiedHubPanel').then(m => ({ default: m.UnifiedHubPanel })),
+  { ssr: false, loading: () => null }
+);
+import { useLivePrices } from '@/components/ultimate-hub/hooks/useAccess';
 
-// Import Legal Disclaimer Modal
-import { LegalDisclaimerModal } from "@/components/Mainpage/footer/LegalDisclaimerModal";
+const LegalDisclaimerModal = dynamic(
+  () => import("@/components/Mainpage/footer/LegalDisclaimerModal").then(m => ({ default: m.LegalDisclaimerModal })),
+  { ssr: false, loading: () => null }
+);
 
 // --- DYNAMIC SPLINE IMPORT ---
 const Spline = dynamic(() => import('@splinetool/react-spline'), {

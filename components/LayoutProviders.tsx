@@ -5,6 +5,7 @@ import { Suspense, ReactNode, useEffect, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
+import { useThemeSelectorModalUI } from "@/contexts/UIStateContext";
 import { useUIState } from "@/contexts/UIStateContext";
 // ✅ LAZY-LOADED: SEO/analytics/audio deferred to avoid blocking first paint
 const ScrollSciFiAudio = dynamic(
@@ -116,6 +117,9 @@ interface LayoutProvidersProps {
 export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
   // Only defer navbar/UltimateHub on mobile to avoid blocking first paint
   const { isMobile: isMobileViewport, shouldRender: allowMobileLazy } = useMobileLazyRender(220);
+  const { isOpen: isThemeSelectorOpen } = useThemeSelectorModalUI();
+  const [themePanelReady, setThemePanelReady] = useState(false);
+  const [supportReady, setSupportReady] = useState(false);
   
   // Check if we're on store pages, casino pages, desktop page, or app page - hide navbar (replaced with StoreHeader)
   const pathname = usePathname();
@@ -169,10 +173,35 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
     }
   }, [pathname]);
 
+  useEffect(() => {
+    if (isThemeSelectorOpen) {
+      setThemePanelReady(true);
+    }
+  }, [isThemeSelectorOpen]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let idleId: number | null = null;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const activate = () => setSupportReady(true);
+    if ("requestIdleCallback" in window) {
+      idleId = (window as any).requestIdleCallback(activate, { timeout: 1200 });
+    } else {
+      timeoutId = setTimeout(activate, 350);
+    }
+    return () => {
+      if (idleId !== null && "cancelIdleCallback" in window) {
+        (window as any).cancelIdleCallback(idleId);
+      }
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [pathname]);
+
   const canShowNavbar = mountStage >= 1;
   const canShowChildren = mountStage >= 2;
   const canShowUltimateHub = mountStage >= 2;
   const canShowCursor = mountStage >= 3;
+  const canShowSupport = canShowUltimateHub && supportReady;
 
   // ============================================
   // ADMIN PANEL KEYBOARD SHORTCUT: Ctrl+A+P
@@ -264,8 +293,8 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
         {canShowUltimateHub && showUltimateHub && (allowMobileLazy || !isMobileViewport) && <UltimateHub />}
 
         {/* ✅ SUPPORT BUTTON - Global floating support widget */}
-        {canShowUltimateHub && !isStorePage && <AppSupportButton />}
-        {canShowUltimateHub && isStorePage && typeof document !== "undefined" && createPortal(
+        {canShowSupport && !isStorePage && <AppSupportButton />}
+        {canShowSupport && isStorePage && typeof document !== "undefined" && createPortal(
           <StoreSupportButton />,
           document.body
         )}
@@ -308,7 +337,7 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
       )}
 
       {/* Unified Themes Panel (Colors + Effects) — needs UIStateProvider from ClientProviders */}
-      {canShowCursor && <ThemesPanel />}
+      {canShowCursor && themePanelReady && isThemeSelectorOpen && <ThemesPanel />}
       
     </>
   );

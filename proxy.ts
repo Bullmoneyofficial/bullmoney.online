@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 /**
- * Domain-specific routing proxy
+ * Domain-specific routing proxy (Next.js 16)
  * Routes www.bullmoney.shop to /store page only
- * Avoids middleware conflicts by handling rewrite at edge
+ * Avoids conflicts by handling rewrite at edge
  */
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const hostname = request.headers.get('host') || '';
   
   // Check if request is from bullmoney.shop domain (with or without www)
@@ -38,7 +38,7 @@ export function middleware(request: NextRequest) {
 }
 
 /**
- * Middleware matcher configuration
+ * Proxy matcher configuration
  * Only run on routes that need domain checking
  * Exclude static files, API routes, and _next internal routes
  */
@@ -50,8 +50,9 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public files (images, etc)
+     * - public files (images, CSS, JS, etc)
+     * - assets directory (CSS, images, fonts)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|assets|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff|woff2|ttf|eot)$).*)',
   ],
 };

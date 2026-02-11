@@ -11,10 +11,10 @@ import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useUnifiedPerformance } from '@/hooks/useDesktopPerformance';
 
-import TextType from '@/components/TextType';
-import CountUp from '@/components/CountUp';
 import dynamic from 'next/dynamic';
-import FlyingPosters from '@/components/FlyingPosters';
+const TextType = dynamic(() => import('@/components/TextType'), { ssr: false, loading: () => null });
+const CountUp = dynamic(() => import('@/components/CountUp'), { ssr: false, loading: () => null });
+const FlyingPosters = dynamic(() => import('@/components/FlyingPosters'), { ssr: false, loading: () => null });
 
 // Spline scene URL
 const SPLINE_SCENE = '/scene1.splinecode';

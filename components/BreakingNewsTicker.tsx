@@ -53,10 +53,15 @@ export default function BreakingNewsTicker() {
   
   // Mobile-optimized settings
   const scrollSpeed = isMobileDevice ? 0.5 : 1;
-  const fetchInterval = isMobileDevice ? 45000 : 30000; // 45s on mobile, 30s on desktop
+  const fetchInterval = isMobileDevice ? 60000 : 45000; // Reduce polling
   const duplicateCount = isMobileDevice ? 2 : 3; // Less duplication on mobile
+  const lastFetchRef = useRef(0);
 
   const fetchNews = useCallback(async () => {
+    if (document.visibilityState !== 'visible') return;
+    const now = Date.now();
+    if (now - lastFetchRef.current < fetchInterval - 2000) return;
+    lastFetchRef.current = now;
     try {
       const res = await fetch("/api/breaking-news", { cache: "no-store" });
       if (!res.ok) return;

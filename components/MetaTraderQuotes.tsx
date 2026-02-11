@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { memo, useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useUnifiedPerformance } from '@/hooks/useDesktopPerformance';
 import {
@@ -877,7 +877,7 @@ function InstrumentPicker({
 // ============================================================
 // MAIN COMPONENT
 // ============================================================
-export default function MetaTraderQuotes({ embedded = false }: { embedded?: boolean }) {
+function MetaTraderQuotes({ embedded = false }: { embedded?: boolean }) {
   const [isDesktop, setIsDesktop] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [activeTab, setActiveTab] = useState('quotes');
@@ -1134,3 +1134,5 @@ export default function MetaTraderQuotes({ embedded = false }: { embedded?: bool
     </div>
   );
 }
+
+export default memo(MetaTraderQuotes);

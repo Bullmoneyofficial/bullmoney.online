@@ -550,26 +550,28 @@ export const Navbar = memo(() => {
         />
 
         {/* DESKTOP LAYOUT */}
-        <DesktopNavbar
-          ref={dockRef}
-          isXMUser={isXMUser}
-          isAdmin={effectiveAdmin}
-          hasReward={hasReward}
-          dockRef={dockRef}
-          buttonRefs={buttonRefs}
-          onHoverChange={handleDockHoverChange}
-          onAffiliateClick={openAffiliateModal}
-          onFaqClick={openFaqModal}
-          onAdminClick={handleAdminClick}
-          onAccountManagerClick={() => {
-            trackClick('account_manager_nav', { source: 'desktop_dock' });
-            openAccountManagerModal();
-          }}
-          showAccountManager={hasAccountManagerAccess}
-          mounted={mounted}
-          isScrollMinimized={isDesktopScrollMinimized}
-          onExpandClick={() => setIsDesktopScrollMinimized(false)}
-        />
+        {!isMobile && (
+          <DesktopNavbar
+            ref={dockRef}
+            isXMUser={isXMUser}
+            isAdmin={effectiveAdmin}
+            hasReward={hasReward}
+            dockRef={dockRef}
+            buttonRefs={buttonRefs}
+            onHoverChange={handleDockHoverChange}
+            onAffiliateClick={openAffiliateModal}
+            onFaqClick={openFaqModal}
+            onAdminClick={handleAdminClick}
+            onAccountManagerClick={() => {
+              trackClick('account_manager_nav', { source: 'desktop_dock' });
+              openAccountManagerModal();
+            }}
+            showAccountManager={hasAccountManagerAccess}
+            mounted={mounted}
+            isScrollMinimized={isDesktopScrollMinimized}
+            onExpandClick={() => setIsDesktopScrollMinimized(false)}
+          />
+        )}
 
         {/* MOBILE NAVBAR - CSS-based hide on scroll for smooth 60fps animation */}
         <div 
@@ -647,7 +649,7 @@ export const Navbar = memo(() => {
         </button>
       )}
 
-      {isMobile && allowMobileLazy && (
+      {isMobile && allowMobileLazy && open && (
         <MobileDropdownMenu
           open={open}
           onClose={() => setOpen(false)}

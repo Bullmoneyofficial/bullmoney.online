@@ -17,13 +17,9 @@ import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { useProductsModalUI, useThemeSelectorModalUI } from '@/contexts/UIStateContext';
 import dynamic from 'next/dynamic';
-import { StorePillNav } from './StorePillNav';
-import { LanguageToggle } from '@/components/LanguageToggle';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
-import RewardsCardBanner from '@/components/RewardsCardBanner';
 import { useHeroMode } from '@/hooks/useHeroMode';
 import type { HeroMode } from '@/hooks/useHeroMode';
-import { CartDrawer } from '@/components/shop/CartDrawer';
 
 // Lazy-load framer-motion — only needed when mobile menu is opened
 const LazyMotionDiv = dynamic(() => import('framer-motion').then(m => ({ default: m.motion.div })), { ssr: false });
@@ -36,7 +32,12 @@ const GamesManualModal = dynamic(() => import('@/components/GamesManualModal').t
 
 // Import lazy modal system from navbar (same as main site)
 import { LazyAffiliateModal, LazyFaqModal } from '@/components/navbar/LazyModalSystem';
-import { ProductsModal } from '@/components/ProductsModal';
+// Heavy UI chunks — dynamic to keep StoreHeader light
+const StorePillNav = dynamic(() => import('./StorePillNav').then(m => ({ default: m.StorePillNav })), { ssr: false, loading: () => null });
+const LanguageToggle = dynamic(() => import('@/components/LanguageToggle').then(m => ({ default: m.LanguageToggle })), { ssr: false, loading: () => null });
+const RewardsCardBanner = dynamic(() => import('@/components/RewardsCardBanner'), { ssr: false, loading: () => null });
+const ProductsModal = dynamic(() => import('@/components/ProductsModal').then(m => ({ default: m.ProductsModal })), { ssr: false, loading: () => null });
+const CartDrawer = dynamic(() => import('@/components/shop/CartDrawer').then(m => ({ default: m.CartDrawer })), { ssr: false, loading: () => null });
 
 // ============================================================================
 // STORE HEADER - MODERN PILL NAVIGATION 
@@ -104,7 +105,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   const isDev = process.env.NODE_ENV === 'development';
   const [devAdminEnabled, setDevAdminEnabled] = useState(true);
   const effectiveAdmin = isDev && isAdmin && devAdminEnabled;
-  const { open: openProductsModal } = useProductsModalUI();
+  const { open: openProductsModal, isOpen: isProductsModalOpen } = useProductsModalUI();
   const { setIsOpen: setThemePickerModalOpen } = useThemeSelectorModalUI();
   const itemCount = getItemCount();
   const router = useRouter();
@@ -1011,7 +1012,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       {/* All Modals - Rendered globally so they work on every page */}
       
       {/* Products Modal - Rendered once, controlled by context */}
-      <ProductsModal />
+      {isProductsModalOpen && <ProductsModal />}
       
       {/* Affiliate Modal - Using Lazy System */}
       <LazyAffiliateModal

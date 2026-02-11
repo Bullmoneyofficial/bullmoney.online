@@ -7,6 +7,15 @@
 'use strict';
 
 var w=window,d=document,n=navigator,p=performance;
+var DEBUG=(w.location&&w.location.hostname==='localhost')||/[?&]bm_debug=1/.test(w.location.search||'');
+function log(){
+  if(!DEBUG)return;
+  try{console.log.apply(console,arguments);}catch(e){}
+}
+function warn(){
+  if(!DEBUG)return;
+  try{console.warn.apply(console,arguments);}catch(e){}
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. DEVICE DETECTION & MEMORY BUDGET (iOS/Android Enhanced)
@@ -69,7 +78,7 @@ var Shield={
 };
 w.__BM_CRASH_SHIELD__=Shield;
 
-console.log('[Mobile Crash Shield v1.1] Active | Budget: '+memoryBudgetMB+'MB | Device: '+deviceMem+'GB | iOS: '+isIOS+' | Android: '+isAndroid+' | iPad: '+isIPad+' | InApp: '+isInApp);
+log('[Mobile Crash Shield v1.1] Active | Budget: '+memoryBudgetMB+'MB | Device: '+deviceMem+'GB | iOS: '+isIOS+' | Android: '+isAndroid+' | iPad: '+isIPad+' | InApp: '+isInApp);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 2. SMART CACHE MANAGEMENT
@@ -117,14 +126,14 @@ function smartCacheCleanup(){
       });
     }));
   }).catch(function(err){
-    console.warn('[Mobile Crash Shield] Cache cleanup failed:',err);
+    warn('[Mobile Crash Shield] Cache cleanup failed:',err);
   });
 }
 
 // Run cache cleanup on startup (after 5s) and periodically
 setTimeout(function(){
   smartCacheCleanup().then(function(){
-    console.log('[Mobile Crash Shield] Cache cleanup complete');
+    log('[Mobile Crash Shield] Cache cleanup complete');
   });
 },5000);
 
@@ -157,7 +166,7 @@ function monitorMemory(){
   var state=checkMemoryPressure();
   
   if(state.pressureLevel==='critical'){
-    console.warn('[Mobile Crash Shield] Critical memory pressure:',state.memoryMB+'MB /'+memoryBudgetMB+'MB');
+    warn('[Mobile Crash Shield] Critical memory pressure:',state.memoryMB+'MB /'+memoryBudgetMB+'MB');
     triggerMemoryCleanup('critical');
   }else if(state.pressureLevel==='warning'){
     triggerMemoryCleanup('warning');
@@ -240,7 +249,7 @@ function triggerMemoryCleanup(level){
     try{if(w.gc)w.gc();}catch(e){}
   }
   
-  console.log('[Mobile Crash Shield] Cleanup complete ('+level+') - Count: '+Shield.cleanupCount);
+  log('[Mobile Crash Shield] Cleanup complete ('+level+') - Count: '+Shield.cleanupCount);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -338,7 +347,7 @@ function processSplineQueue(){
   }).then(function(){
     next.callback();
   }).catch(function(err){
-    console.warn('[Mobile Crash Shield] Spline preload failed:',err);
+    warn('[Mobile Crash Shield] Spline preload failed:',err);
     next.callback(); // Load anyway
   }).finally(function(){
     activeSplineLoads--;
@@ -433,7 +442,7 @@ setTimeout(monitorMemory,2000);
 // In-app browsers start with warning level
 if(isInApp){
   d.documentElement.setAttribute('data-memory-constrained','true');
-  console.warn('[Mobile Crash Shield] In-app browser detected - memory constrained mode');
+  warn('[Mobile Crash Shield] In-app browser detected - memory constrained mode');
 }
 
 // Low memory devices get early cleanup
@@ -465,11 +474,11 @@ Shield.getStats=function(){
 // Log stats on localhost
 if(w.location.hostname==='localhost'){
   setTimeout(function(){
-    console.log('[Mobile Crash Shield] Stats:',Shield.getStats());
+    log('[Mobile Crash Shield] Stats:',Shield.getStats());
   },10000);
 }
 
 d.documentElement.setAttribute('data-crash-shield','active');
-console.log('[Mobile Crash Shield] Initialized successfully');
+log('[Mobile Crash Shield] Initialized successfully');
 
 })();

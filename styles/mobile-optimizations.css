@@ -9,6 +9,8 @@
 :root {
   /* Viewport height fix for mobile browsers */
   --vh: 1vh;
+  --app-height: 100vh;
+  --app-width: 100vw;
 
   /* Safe area insets for notched devices (iPhone X+) */
   --safe-area-inset-top: env(safe-area-inset-top, 0px);
@@ -57,6 +59,13 @@ html {
   scroll-behavior: auto;
 }
 
+/* In-app browsers: use visible viewport height/width */
+html.in-app-browser {
+  height: var(--app-height, calc(var(--vh, 1vh) * 100));
+  min-height: var(--app-height, calc(var(--vh, 1vh) * 100));
+  width: var(--app-width, 100%);
+}
+
 /* Mobile can use smooth scroll */
 @media (max-width: 768px) {
   html {
@@ -92,6 +101,11 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+html.in-app-browser body {
+  min-height: var(--app-height, calc(var(--vh, 1vh) * 100));
+  width: var(--app-width, 100%);
 }
 
 /* Desktop body must have overflow:visible */

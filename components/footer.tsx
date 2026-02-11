@@ -1,15 +1,17 @@
 "use client";
-import React, { useState, useEffect, memo, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { createPortal } from "react-dom";
-import { X, ExternalLink, MessageCircle, Smartphone, Globe } from "lucide-react";
+import React, { useEffect, useCallback } from "react";
 import { Logo } from "./logo";
 import { DesktopFooter } from "./footer/DesktopFooter";
 import { SocialsRow } from "./footer/SocialsRow";
-import AdminModal from "@/components/AdminModal";
-import { LegalDisclaimerModal } from "@/components/Mainpage/footer/LegalDisclaimerModal";
-import AffiliateModal from "@/components/AffiliateModal";
-import { ShimmerLine, ShimmerBorder, useOptimizedShimmer } from "@/components/ui/UnifiedShimmer";
+import dynamic from "next/dynamic";
+const LegalDisclaimerModal = dynamic(
+  () => import("@/components/Mainpage/footer/LegalDisclaimerModal").then((m) => ({ default: m.LegalDisclaimerModal })),
+  { ssr: false, loading: () => null }
+);
+const AppsToolsModal = dynamic(
+  () => import("@/components/footer/AppsToolsModal").then((m) => ({ default: m.AppsToolsModal })),
+  { ssr: false, loading: () => null }
+);
 import { useFpsOptimizer } from "@/lib/FpsOptimizer";
 import { SoundEffects } from "@/app/hooks/useSoundEffects";
 import { useFooterModalsUI } from "@/contexts/UIStateContext";
@@ -52,146 +54,14 @@ const NEON_STYLES = `
   }
 `;
 
-// Unified Modal Wrapper for Footer - Static Neon Style
-const FooterModal = memo(({ 
-  isOpen, 
-  onClose, 
-  title, 
-  children 
-}: { 
-  isOpen: boolean; 
-  onClose: () => void; 
-  title: string;
-  children: React.ReactNode;
-}) => {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
-    }
-    return () => {
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    };
-  }, [isOpen]);
-
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, [isOpen, onClose]);
-
-  if (!mounted) return null;
-
-  return createPortal(
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="fixed inset-0 flex flex-col bg-black"
-          style={{ zIndex: 2147483647 }}
-        >
-          {/* Header */}
-          <div 
-            className="flex items-center justify-between p-4 shrink-0"
-            style={{
-              borderBottom: '2px solid #ffffff',
-              boxShadow: '0 2px 8px #ffffff, 0 4px 16px rgba(255, 255, 255, 0.4)'
-            }}
-          >
-            <h2 className="text-lg font-bold neon-blue-text">
-              {title}
-            </h2>
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => { SoundEffects.click(); onClose(); }}
-              className="p-2 rounded-full bg-black transition-all neon-blue-border"
-              style={{ zIndex: 2147483647 }}
-            >
-              <X className="w-5 h-5 neon-white-icon" style={{ color: '#ffffff' }} />
-            </motion.button>
-          </div>
-          
-          {/* Content - full remaining height, scrollable */}
-          <div 
-            className="flex-1 min-h-0 overflow-y-auto p-4"
-            style={{ 
-              WebkitOverflowScrolling: 'touch',
-              overscrollBehavior: 'contain',
-              touchAction: 'pan-y'
-            }}
-          >
-            {children}
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>,
-    document.body
-  );
-});
-FooterModal.displayName = 'FooterModal';
-
-// Apps & Tools Modal Content - Static Neon Style
-const AppsToolsContent = memo(() => {
-  const apps = [
-    { name: "TradingView", icon: "📊", url: "https://tradingview.com", desc: "Advanced charting platform" },
-    { name: "MetaTrader 4", icon: "📈", url: "https://metatrader4.com", desc: "Forex trading platform" },
-    { name: "MetaTrader 5", icon: "📉", url: "https://metatrader5.com", desc: "Multi-asset platform" },
-    { name: "Discord", icon: "💬", url: "https://discord.gg/bullmoney", desc: "Community chat" },
-    { name: "Telegram", icon: "✈️", url: "https://t.me/bullmoneyonline", desc: "Updates & setups" },
-  ];
-
-  return (
-    <div className="space-y-3">
-      {apps.map((app) => (
-        <a
-          key={app.name}
-          href={app.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() => SoundEffects.click()}
-          className="flex items-center gap-4 p-4 bg-black rounded-xl transition-all hover:brightness-110 group neon-blue-border"
-        >
-          <span className="text-2xl">{app.icon}</span>
-          <div className="flex-1">
-            <p className="font-medium transition-all neon-blue-text">
-              {app.name}
-            </p>
-            <p className="text-xs text-gray-400">
-              {app.desc}
-            </p>
-          </div>
-          <ExternalLink className="w-4 h-4 neon-blue-icon" style={{ color: '#ffffff' }} />
-        </a>
-      ))}
-    </div>
-  );
-});
-AppsToolsContent.displayName = 'AppsToolsContent';
-
 export function Footer() {
   const currentYear = new Date().getFullYear();
 
   // Unified performance (Mobile + Desktop Lite Mode)
-  const { isMobile, shouldSkipHeavyEffects, shouldDisableBackdropBlur, animations } = useUnifiedPerformance();
+  const { shouldSkipHeavyEffects } = useUnifiedPerformance();
 
   // FPS Optimizer integration for component lifecycle tracking
-  const { registerComponent, unregisterComponent, shouldEnableShimmer } = useFpsOptimizer();
-  const shimmerSettings = useOptimizedShimmer();
+  const { registerComponent, unregisterComponent } = useFpsOptimizer();
   
   // Register component with FPS optimizer on mount
   useEffect(() => {
@@ -217,15 +87,16 @@ export function Footer() {
       {/* Only inject neon styles on desktop for performance */}
       {!shouldSkipHeavyEffects && <style dangerouslySetInnerHTML={{ __html: NEON_STYLES }} />}
       {/* Legal Disclaimer Modal - Comprehensive Terms, Privacy & Disclaimer */}
-      <LegalDisclaimerModal isOpen={isDisclaimerOpen} onClose={() => setDisclaimerOpen(false)} />
+      {isDisclaimerOpen && (
+        <LegalDisclaimerModal isOpen={isDisclaimerOpen} onClose={() => setDisclaimerOpen(false)} />
+      )}
 
-      <FooterModal
-        isOpen={isAppsOpen}
-        onClose={() => setAppsOpen(false)}
-        title="Apps & Tools"
-      >
-        <AppsToolsContent />
-      </FooterModal>
+      {isAppsOpen && (
+        <AppsToolsModal
+          isOpen={isAppsOpen}
+          onClose={() => setAppsOpen(false)}
+        />
+      )}
 
       <div
         className="relative w-full px-4 sm:px-8 py-8 sm:py-10 overflow-hidden"

@@ -42,6 +42,9 @@
   var touchStartY = 0;
   document.addEventListener('touchstart', function(e) { touchStartY = e.touches[0].clientY; }, { passive: true });
   document.addEventListener('touchmove', function(e) {
+    // Skip pull-to-refresh prevention on games page
+    if (document.documentElement.hasAttribute('data-games-page')) return;
+
     if (e.touches.length > 1) return;
     var deltaY = e.touches[0].clientY - touchStartY;
     var scrollTop = window.pageYOffset || document.documentElement.scrollTop;

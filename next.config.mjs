@@ -31,6 +31,20 @@ console.log(`[Next.js Config] ${platform} ${arch} | ${cpus} cores | Optimization
 // Auto-generate build timestamp for cache versioning
 const BUILD_TIMESTAMP = new Date().toISOString();
 
+const optimizePackageImports = isDev
+  ? []
+  : [
+      'lucide-react',
+      'framer-motion',
+      '@tabler/icons-react',
+      'react-icons',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-select',
+      'date-fns',
+      'recharts',
+    ];
+
 const nextConfig = {
   reactStrictMode: false, // Disable StrictMode in prod - reduces double renders
   compress: true,
@@ -99,70 +113,10 @@ const nextConfig = {
     webpackBuildWorker: isAppleSilicon ? true : true,
     // Cache server component HMR responses - huge dev speed win
     serverComponentsHmrCache: true,
-    // Package import optimizations - tree shake these heavy packages
-    optimizePackageImports: [
-      // NOTE: @splinetool packages removed — they use dynamic WASM/worker
-      // loading internally that breaks with tree-shaking optimization
-      'lucide-react',
-      'react-youtube',
-      'framer-motion',
-      '@tabler/icons-react',
-      'react-icons',
-      '@react-three/drei',
-      '@react-three/fiber',
-      'three',
-      'gsap',
-      'cobe',
-      '@supabase/supabase-js',
-      '@tsparticles/react',
-      '@tsparticles/slim',
-      'zod',
-      'zustand',
-      'swr',
-      'date-fns',
-      'recharts',
-      '@radix-ui/react-dialog',
-      '@radix-ui/react-dropdown-menu',
-      '@radix-ui/react-popover',
-      '@radix-ui/react-select',
-      '@radix-ui/react-tabs',
-      '@radix-ui/react-tooltip',
-      '@tiptap/react',
-      '@tiptap/starter-kit',
-      'react-icons',
-      'react-hook-form',
-      '@hookform/resolvers',
-      'mongoose',
-      'i18next',
-      'react-i18next',
-      'dayjs',
-      'sonner',
-      'class-variance-authority',
-      'tailwind-merge',
-      'clsx',
-      'postprocessing',
-      // Additional optimizations for faster page loads
-      '@radix-ui/react-accordion',
-      '@radix-ui/react-avatar',
-      '@radix-ui/react-checkbox',
-      '@radix-ui/react-collapsible',
-      '@radix-ui/react-context-menu',
-      '@radix-ui/react-label',
-      '@radix-ui/react-navigation-menu',
-      '@radix-ui/react-progress',
-      '@radix-ui/react-radio-group',
-      '@radix-ui/react-scroll-area',
-      '@radix-ui/react-separator',
-      '@radix-ui/react-slider',
-      '@radix-ui/react-switch',
-      '@radix-ui/react-toggle',
-      '@radix-ui/react-toggle-group',
-      'react-resizable-panels',
-      'embla-carousel-react',
-      'input-otp',
-      'cmdk',
-      'vaul',
-    ],
+    // Package import optimizations - tree shake only the most critical heavy packages
+    // NOTE: Too many entries (165) can slow down Turbopack compilation
+    // Only optimize packages that are actually imported frequently and have large bundle impact
+    optimizePackageImports,
   },
 
   images: {

@@ -30,17 +30,19 @@ import { useUIState, UI_Z_INDEX } from "@/contexts/UIStateContext";
 import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 
 // --- IMPORT SEPARATE LOADER COMPONENT ---
-import { MultiStepLoader} from "@/components/Mainpage/MultiStepLoader";
-import { TelegramConfirmationResponsive } from "./TelegramConfirmationResponsive";
+const MultiStepLoader = dynamic(() => import("@/components/Mainpage/MultiStepLoader").then(m => ({ default: m.MultiStepLoader })), { ssr: false, loading: () => null });
+const TelegramConfirmationResponsive = dynamic(() => import("./TelegramConfirmationResponsive").then(m => ({ default: m.TelegramConfirmationResponsive })), { ssr: false, loading: () => null });
 
 // --- IMPORT LEGAL DISCLAIMER MODAL ---
-import { LegalDisclaimerModal } from "@/components/Mainpage/footer/LegalDisclaimerModal";
+const LegalDisclaimerModal = dynamic(() => import("@/components/Mainpage/footer/LegalDisclaimerModal").then(m => ({ default: m.LegalDisclaimerModal })), { ssr: false, loading: () => null });
 
 // --- DESKTOP WELCOME SCREEN (separate layout for larger screens) ---
-import { WelcomeScreenDesktop } from "./WelcomeScreenDesktop";
+const WelcomeScreenDesktop = dynamic(() => import("./WelcomeScreenDesktop").then(m => ({ default: m.WelcomeScreenDesktop })), { ssr: false, loading: () => null });
 
 // --- ULTIMATE HUB COMPONENTS (for mobile welcome screen to match desktop) ---
-import { UnifiedFpsPill, UnifiedHubPanel, useLivePrices } from '@/components/UltimateHub';
+const UnifiedFpsPill = dynamic(() => import('@/components/ultimate-hub/pills/UnifiedFpsPill').then(m => ({ default: m.UnifiedFpsPill })), { ssr: false, loading: () => null });
+const UnifiedHubPanel = dynamic(() => import('@/components/ultimate-hub/panel/UnifiedHubPanel').then(m => ({ default: m.UnifiedHubPanel })), { ssr: false, loading: () => null });
+import { useLivePrices } from '@/components/ultimate-hub/hooks/useAccess';
 import { createPortal } from 'react-dom';
 
 // Available Spline scenes - scene1 is preloaded in layout.tsx for fastest first load

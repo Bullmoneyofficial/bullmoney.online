@@ -5,6 +5,10 @@
 var w=window,d=document,n=navigator;
 var ua=n.userAgent||'';
 var S=w.__BM_INAPP_SHIELD__={active:false,browser:null,fixes:[]};
+function onReady(fn){
+  if(d.readyState==='loading')d.addEventListener('DOMContentLoaded',fn,{once:true});
+  else fn();
+}
 
 // ─── 156. Detect Specific In-App Browser ───
 var detections=[
@@ -46,40 +50,69 @@ S.fixes.push('keep-3d');
 // ─── 158. Fix Viewport Issues ───
 // In-app browsers often have wrong viewport height (address bar confusion)
 function fixViewport(){
-  var vh=w.innerHeight*0.01;
-  d.documentElement.style.setProperty('--vh',vh+'px');
-  d.documentElement.style.setProperty('--app-height',w.innerHeight+'px');
-  d.documentElement.style.setProperty('--safe-bottom','env(safe-area-inset-bottom,0px)');
+  var h=(w.visualViewport&&w.visualViewport.height)||w.innerHeight;
+  var ww=(w.visualViewport&&w.visualViewport.width)||w.innerWidth;
+  var vh=h*0.01;
+  var rootStyle=d.documentElement.style;
+  rootStyle.setProperty('--vh',vh+'px');
+  rootStyle.setProperty('--app-height',h+'px');
+  rootStyle.setProperty('--app-width',ww+'px');
+  if(!rootStyle.getPropertyValue('--safe-bottom'))rootStyle.setProperty('--safe-bottom','env(safe-area-inset-bottom,0px)');
 }
 fixViewport();
 w.addEventListener('resize',fixViewport);
+if('visualViewport' in w&&w.visualViewport){
+  w.visualViewport.addEventListener('resize',fixViewport);
+}
 // Instagram iOS needs extra resize detection
 var lastH=w.innerHeight;
-setInterval(function(){
+var viewportInterval=setInterval(function(){
   if(w.innerHeight!==lastH){lastH=w.innerHeight;fixViewport();}
 },500);
 S.fixes.push('viewport-fix');
+w.addEventListener('pagehide',function(){clearInterval(viewportInterval);});
 
 // ─── 159. Prevent Scroll Locking ───
 // In-app browsers often get stuck on overscroll
-d.body.style.overscrollBehavior='none';
-d.documentElement.style.overscrollBehavior='none';
-// Prevent pull-to-refresh in in-app
-d.body.style.touchAction='pan-x pan-y';
-S.fixes.push('scroll-fix');
+// Skip restrictive touch settings on games page
+function applyScrollFix(){
+  var isGamesPage=d.documentElement.hasAttribute('data-games-page')||d.body.hasAttribute('data-games-page')||w.location.pathname.startsWith('/games');
+  if(!d.body)return;
+  if(!isGamesPage){
+    d.body.style.overscrollBehavior='none';
+    d.documentElement.style.overscrollBehavior='none';
+    // Prevent pull-to-refresh in in-app
+    d.body.style.touchAction='pan-x pan-y';
+    S.fixes.push('scroll-fix');
+  }else{
+    // Games page: allow free scrolling
+    d.body.style.overscrollBehavior='auto';
+    d.documentElement.style.overscrollBehavior='auto';
+    d.body.style.touchAction='auto';
+    if(S.fixes.indexOf('scroll-fix-games')===-1)S.fixes.push('scroll-fix-games');
+  }
+}
+onReady(function(){
+  applyScrollFix();
+  // Re-check after React hydration (when data attribute is set)
+  setTimeout(applyScrollFix,500);
+  setTimeout(applyScrollFix,1500);
+});
 
 // ─── 160. Memory-Safe Image Loading ───
 // Load smaller images in in-app browsers
-d.querySelectorAll('img[srcset]').forEach(function(img){
-  // Force smallest srcset option
-  var srcset=img.getAttribute('srcset');
-  if(srcset){
-    var srcs=srcset.split(',').map(function(s){return s.trim().split(/\s+/);});
-    if(srcs.length>0){
-      img.src=srcs[0][0]; // Use smallest image
-      img.removeAttribute('srcset');
+onReady(function(){
+  d.querySelectorAll('img[srcset]').forEach(function(img){
+    // Force smallest srcset option
+    var srcset=img.getAttribute('srcset');
+    if(srcset){
+      var srcs=srcset.split(',').map(function(s){return s.trim().split(/\s+/);});
+      if(srcs.length>0){
+        img.src=srcs[0][0]; // Use smallest image
+        img.removeAttribute('srcset');
+      }
     }
-  }
+  });
 });
 S.fixes.push('image-downscale');
 
@@ -171,6 +204,7 @@ if(S.browser==='instagram'||S.browser==='tiktok'||S.browser==='facebook'){
   w.addEventListener('load',function(){
     setTimeout(function(){
       if(d.getElementById('bm-open-browser'))return;
+      if(!d.body)return;
       var bar=d.createElement('div');
       bar.id='bm-open-browser';
       bar.style.cssText='position:fixed;bottom:0;left:0;right:0;padding:10px 16px;background:linear-gradient(135deg,#1a1a2e,#0a0a0a);border-top:1px solid rgba(255,215,0,0.3);z-index:99999;display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:system-ui,-apple-system,sans-serif;';

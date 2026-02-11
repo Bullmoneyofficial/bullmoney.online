@@ -4,6 +4,16 @@
 'use strict';
 var w=window,d=document,n=navigator;
 var NW=w.__BM_NETWORK__={strategy:'normal',prefetched:new Set(),priorities:{}};
+var docEl=d.documentElement;
+function onReady(fn){
+  if(d.readyState==='loading')d.addEventListener('DOMContentLoaded',fn,{once:true});
+  else fn();
+}
+function ric(cb,opts){
+  if('requestIdleCallback' in w)return w.requestIdleCallback(cb,opts||{});
+  var timeout=(opts&&opts.timeout)||1000;
+  return setTimeout(function(){cb({didTimeout:true,timeRemaining:function(){return 0;}});},timeout);
+}
 
 // ─── 321. Network Condition Monitor ───
 var conn=n.connection||n.mozConnection||n.webkitConnection||{};
@@ -18,13 +28,14 @@ function updateStrategy(){
   else if(type==='4g'&&downlink>=5){NW.strategy='aggressive';}
   else{NW.strategy='normal';}
 
-  d.documentElement.setAttribute('data-network-strategy',NW.strategy);
+  if(docEl)docEl.setAttribute('data-network-strategy',NW.strategy);
   NW.effectiveType=type;
   NW.downlinkMbps=downlink;
   NW.saveData=saveData;
 }
 updateStrategy();
 if(conn.addEventListener)conn.addEventListener('change',updateStrategy);
+else if('onchange' in conn)conn.onchange=updateStrategy;
 
 // ─── 322. Priority-Based Resource Loader ───
 NW.loadResource=function(url,type,priority){
@@ -35,7 +46,7 @@ NW.loadResource=function(url,type,priority){
   if(NW.strategy==='conservative'&&priority==='low'){
     // Defer low-priority in conservative mode
     return new Promise(function(resolve){
-      requestIdleCallback(function(){
+      ric(function(){
         resolve(NW._doLoad(url,type));
       },{timeout:5000});
     });
@@ -44,6 +55,7 @@ NW.loadResource=function(url,type,priority){
 };
 
 NW._doLoad=function(url,type){
+  if(d.querySelector('link[href="'+url+'"]'))return Promise.resolve(url);
   var link=d.createElement('link');
   if(type==='style'){link.rel='preload';link.as='style';}
   else if(type==='script'){link.rel='preload';link.as='script';}
@@ -51,7 +63,8 @@ NW._doLoad=function(url,type){
   else if(type==='font'){link.rel='preload';link.as='font';link.crossOrigin='anonymous';}
   else{link.rel='prefetch';}
   link.href=url;
-  d.head.appendChild(link);
+  if(d.head)d.head.appendChild(link);
+  else onReady(function(){if(d.head)d.head.appendChild(link);});
   return Promise.resolve(url);
 };
 
@@ -72,14 +85,14 @@ var predicted=predictions[currentPath]||[];
 
 if(NW.strategy!=='minimal'){
   // Prefetch predicted routes after idle
-  requestIdleCallback(function(){
+  ric(function(){
     var limit=NW.strategy==='aggressive'?4:NW.strategy==='normal'?2:1;
     predicted.slice(0,limit).forEach(function(route){
       if(!NW.prefetched.has(route)){
         NW.prefetched.add(route);
         var link=d.createElement('link');
         link.rel='prefetch';link.href=route;
-        d.head.appendChild(link);
+        if(d.head)d.head.appendChild(link);
       }
     });
   },{timeout:3000});
@@ -102,7 +115,7 @@ if('IntersectionObserver' in w){
   },{rootMargin:'0px',threshold:[0]});
 
   // Observe hero and first-screen images
-  d.addEventListener('DOMContentLoaded',function(){
+  onReady(function(){
     d.querySelectorAll('.hero img, section:first-of-type img, [data-hero] img').forEach(function(img){
       imgPrioIO.observe(img);
     });
@@ -116,12 +129,16 @@ NW.fetch=function(url,opts){
   var timeout=opts.timeout||10000;
 
   function attempt(n){
-    var controller=new AbortController();
-    var timer=setTimeout(function(){controller.abort();},timeout);
-    return fetch(url,Object.assign({},opts,{signal:controller.signal}))
-      .then(function(r){clearTimeout(timer);return r;})
+    var controller,signal,timer;
+    if('AbortController' in w){
+      controller=new AbortController();
+      signal=controller.signal;
+      timer=setTimeout(function(){controller.abort();},timeout);
+    }
+    return fetch(url,Object.assign({},opts,signal?{signal:signal}:{}))
+      .then(function(r){if(timer)clearTimeout(timer);return r;})
       .catch(function(e){
-        clearTimeout(timer);
+        if(timer)clearTimeout(timer);
         if(n>0){
           // Exponential backoff
           return new Promise(function(resolve){
@@ -193,7 +210,8 @@ nwStyle.textContent=[
   // Aggressive: enable all prefetch animations
   '[data-network-strategy="aggressive"] a[href]:hover{cursor:pointer;}',
 ].join('\n');
-d.head.appendChild(nwStyle);
+if(d.head)d.head.appendChild(nwStyle);
+else onReady(function(){if(d.head)d.head.appendChild(nwStyle);});
 
 // ─── 336-340. Connection Quality Badge (dev only) ───
 if(w.location.hostname==='localhost'){

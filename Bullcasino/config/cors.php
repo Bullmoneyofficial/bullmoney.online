@@ -19,7 +19,11 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'],
+    // In production, use CORS_ALLOWED_ORIGINS from .env
+    // In development, allow all for easier testing
+    'allowed_origins' => env('CORS_ALLOWED_ORIGINS')
+        ? explode(',', env('CORS_ALLOWED_ORIGINS'))
+        : ['*'],
 
     'allowed_origins_patterns' => [],
 

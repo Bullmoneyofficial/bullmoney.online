@@ -1,6 +1,6 @@
 // app/about/AboutContent.tsx
 "use client";
-import { useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence  } from "framer-motion";
@@ -156,14 +156,14 @@ type TestimonialsCarouselProps = {
   className?: string;
 };
 
-export function TestimonialsCarousel({ tone = 'dark', className }: TestimonialsCarouselProps) {
+export const TestimonialsCarousel = memo(({ tone = 'dark', className }: TestimonialsCarouselProps) => {
   const [index, setIndex] = useState(0);
   const isLight = tone === 'light';
 
   const nextSlide = () => setIndex((index + 1) % testimonials.length);
   const prevSlide = () => setIndex((index - 1 + testimonials.length) % testimonials.length);
 
-  const currentTestimonial = testimonials[index];
+  const currentTestimonial = useMemo(() => testimonials[index], [index]);
   if (!currentTestimonial) return null;
 
   return (
@@ -294,4 +294,4 @@ export function TestimonialsCarousel({ tone = 'dark', className }: TestimonialsC
       </div>
     </motion.section>
   );
-}
+});

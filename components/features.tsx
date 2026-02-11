@@ -2,17 +2,21 @@
 
 import { cn } from "@/lib/utils";
 import React, { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 // cobe globe is dynamically imported inside the Globe component to reduce initial chunk size
 import { detectBrowser } from "@/lib/browserDetection";
 import { useUnifiedPerformance } from "@/hooks/useDesktopPerformance";
-import { StickyScroll } from "@/components/ui/sticky-scroll-reveal";
-import ShinyText from "@/components/ShinyText";
-import ScrollReveal from "@/components/ScrollReveal";
-import TrueFocus from "@/components/TrueFocus";
-import TextType from "@/components/TextType";
+const StickyScroll = dynamic(
+  () => import("@/components/ui/sticky-scroll-reveal").then((m) => ({ default: m.StickyScroll })),
+  { ssr: false, loading: () => null }
+);
+const ShinyText = dynamic(() => import("@/components/ShinyText"), { ssr: false, loading: () => null });
+const ScrollReveal = dynamic(() => import("@/components/ScrollReveal"), { ssr: false, loading: () => null });
+const TrueFocus = dynamic(() => import("@/components/TrueFocus"), { ssr: false, loading: () => null });
+const TextType = dynamic(() => import("@/components/TextType"), { ssr: false, loading: () => null });
 
 // Minimalist Apple-inspired design system
 const APPLE_STYLES = `
