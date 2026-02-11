@@ -2,7 +2,7 @@ services:
   # Laravel Backend (Bullcasino)
   - type: web
     name: bullmoney-casino
-    runtime: php
+    env: php
     plan: free
     rootDir: Bullcasino
     buildCommand: |
@@ -28,8 +28,4 @@ services:
         value: sync
       - key: CACHE_DRIVER
         value: file
-    disk:
-      name: casino-storage
-      mountPath: /opt/render/project/src/storage
-      sizeGB: 1
     autoDeploy: false
