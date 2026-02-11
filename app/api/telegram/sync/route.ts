@@ -14,14 +14,18 @@ let vapidConfigured = false;
 function configureVapid() {
   if (vapidConfigured) return true;
   
-  const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
-  const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
+  const VAPID_PUBLIC_KEY = (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '').replace(/=+$/, '');
+  const VAPID_PRIVATE_KEY = (process.env.VAPID_PRIVATE_KEY || '').replace(/=+$/, '');
   const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@bullmoney.com';
 
-  if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
-    webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
-    vapidConfigured = true;
-    return true;
+  try {
+    if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+      webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+      vapidConfigured = true;
+      return true;
+    }
+  } catch (e) {
+    console.warn('VAPID setup skipped:', (e as Error).message);
   }
   return false;
 }
