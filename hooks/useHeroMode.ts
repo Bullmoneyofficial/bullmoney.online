@@ -10,10 +10,15 @@ import { useState, useEffect, useCallback } from 'react';
 
 export type HeroMode = 'store' | 'trader' | 'design';
 
-const HERO_MODE_KEY = 'hero_main_mode_v1';
+const HERO_MODE_KEY = 'hero_main_mode_v2';
 const HERO_MODE_EVENT = 'hero_mode_change';
 
 const VALID_MODES: HeroMode[] = ['store', 'trader', 'design'];
+
+function isMobileViewport(): boolean {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(max-width: 768px)').matches;
+}
 
 function readMode(): HeroMode {
   if (typeof window === 'undefined') return 'store';

@@ -1751,10 +1751,7 @@ export default function StorePage({ routeBase = '/store', syncUrl = true, showPr
         containIntrinsicSize: 'auto 400px',
       }}
     >
-      <div
-        className="bg-white"
-        style={{ backgroundColor: 'rgb(255,255,255)', filter: 'invert(1) hue-rotate(180deg)' }}
-      >
+      <div className="bg-white">
         <FooterComponent />
       </div>
     </section>

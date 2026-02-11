@@ -27,7 +27,7 @@ if (!supabaseUrl || !supabaseKey) {
   console.error("❌ MISSING SUPABASE KEYS in .env.local file");
 }
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(supabaseUrl || '', supabaseKey || '');
 
 // --- UTILS: MOBILE DETECTION HOOK ---
 const useIsMobile = () => {

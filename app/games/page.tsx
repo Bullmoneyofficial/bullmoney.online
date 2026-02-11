@@ -13,7 +13,7 @@ const CryptoCheckoutTrigger = dynamic(
 const ElectricBorder = dynamic(() => import('@/components/ElectricBorder'), { ssr: false });
 // Custom bullcasino footer for games page
 
-const GAMES_URL = process.env.NEXT_PUBLIC_CASINO_URL || 'https://www.bullmoney.online/demogames';
+const GAMES_URL = process.env.NEXT_PUBLIC_CASINO_URL || '/casino-games';
 
 const donationGoalUsd = 50000;
 const fallbackContributions = [
@@ -313,6 +313,13 @@ export default function BullcasinoLayout() {
   const [liveEvents, setLiveEvents] = useState<{ status: string; orderNumber?: string; coin?: string } | null>(null);
   const [activeGameCategory, setActiveGameCategory] = useState('all');
   const [iframeSrc, setIframeSrc] = useState(GAMES_URL);
+  const [iframeError, setIframeError] = useState(false);
+
+  // Debug iframe loading
+  useEffect(() => {
+    console.log('[Games] Iframe source:', iframeSrc);
+    console.log('[Games] GAMES_URL:', GAMES_URL);
+  }, [iframeSrc]);
 
 
   useEffect(() => {
@@ -854,11 +861,33 @@ export default function BullcasinoLayout() {
           zIndex: 5,
         }}
       >
-        {loading && (
+        {loading && !iframeError && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-50 z-10">
             <div className="text-center">
               <Loader2 className="w-8 h-8 text-yellow-500 animate-spin mx-auto mb-2" />
               <p className="text-sm text-gray-600">Loading demo games...</p>
+              <p className="text-xs text-gray-400 mt-2">Source: {iframeSrc}</p>
+            </div>
+          </div>
+        )}
+        {iframeError && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-50 z-10">
+            <div className="text-center max-w-md px-4">
+              <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Failed to Load Games</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                The casino backend couldn't be reached. Make sure it's running on port 8000.
+              </p>
+              <button
+                onClick={() => {
+                  setIframeError(false);
+                  setLoading(true);
+                  setIframeSrc(GAMES_URL + '?retry=' + Date.now());
+                }}
+                className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+              >
+                Retry
+              </button>
             </div>
           </div>
         )}
@@ -866,13 +895,17 @@ export default function BullcasinoLayout() {
           data-game-frame
           src={iframeSrc}
           title="BullMoney Demo Games - Entertainment Only"
-          onLoad={() => setLoading(false)}
-          allow="fullscreen; autoplay; clipboard-write; encrypted-media; payment; camera; microphone; display-capture; web-share"
-          referrerPolicy="origin"
-          loading="lazy"
+          onLoad={() => { console.log('[Games] Iframe loaded successfully'); setLoading(false); }}
+          onError={() => { 
+            console.error('[Games] Iframe failed to load'); 
+            setLoading(false); 
+            setIframeError(true);
+          }}
+          allow="*"
+          referrerPolicy="no-referrer-when-downgrade"
           className="w-full h-full border-0"
           style={{
-            display: loading ? 'none' : 'block',
+            display: (loading || iframeError) ? 'none' : 'block',
             pointerEvents: 'auto',
             touchAction: 'auto',
             WebkitOverflowScrolling: 'touch',

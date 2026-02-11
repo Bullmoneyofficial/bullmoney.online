@@ -1,16 +1,4 @@
 {
-  "rewrites": [
-    {
-      "source": "/",
-      "has": [{ "type": "host", "value": "bullmoney.shop" }],
-      "destination": "/store"
-    },
-    {
-      "source": "/",
-      "has": [{ "type": "host", "value": "www.bullmoney.shop" }],
-      "destination": "/store"
-    }
-  ],
   "crons": [
     {
       "path": "/api/cron/notifications",
@@ -19,6 +7,29 @@
     {
       "path": "/api/crypto-payment/verify",
       "schedule": "*/5 * * * *"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/store",
+      "has": [
+        {
+          "type": "host",
+          "value": "(?:www\\.)?bullmoney\\.shop"
+        }
+      ]
+    }
+  ],
+  "headers": [
+    {
+      "source": "/casino-games",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
     }
   ]
 }

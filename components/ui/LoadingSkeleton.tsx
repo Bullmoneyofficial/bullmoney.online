@@ -145,7 +145,7 @@ function LoadingSkeletonComponent({
   showGlow,
   showSpinner,
   spinnerSize,
-  color = 'blue',
+  color = 'white',
   intensity = 'medium',
   animated = true,
   children,
@@ -186,7 +186,7 @@ function LoadingSkeletonComponent({
 
   // Base classes
   const baseClasses = cn(
-    'relative rounded-xl overflow-hidden bg-black/50',
+    'relative rounded-xl overflow-hidden bg-white',
     'flex items-center justify-center',
     className
   );
@@ -199,7 +199,7 @@ function LoadingSkeletonComponent({
       )}
 
       {/* Inner Container */}
-      <div className="relative z-10 w-full h-full bg-black rounded-xl border border-white/20 overflow-hidden flex items-center justify-center">
+      <div className="relative z-10 w-full h-full bg-white rounded-xl border border-black/10 overflow-hidden flex items-center justify-center">
         {/* Top Shimmer Line */}
         {animated && <ShimmerLine color={color} intensity={intensity} />}
 

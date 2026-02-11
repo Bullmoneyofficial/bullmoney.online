@@ -2342,6 +2342,7 @@ export function PrintDesignStudio({
     document.documentElement.style.overflow = 'hidden';
     document.documentElement.style.overscrollBehavior = 'none';
     document.body.classList.add('quick-view-open');
+    requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0, behavior: 'auto' }));
     return () => {
       document.body.style.overflow = prev;
       document.documentElement.style.overflow = prevHtml;
@@ -2616,7 +2617,7 @@ export function PrintDesignStudio({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.12 }}
-        className="fixed inset-0 z-[2147483640] bg-black/70"
+        className="fixed inset-0 z-[2147483640] bg-white/80"
         onClick={onClose}
         style={{ pointerEvents: 'all', overscrollBehavior: 'none', touchAction: 'none' }}
       >
@@ -2626,14 +2627,14 @@ export function PrintDesignStudio({
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
-          className="fixed top-0 right-0 bottom-0 w-full max-w-sm sm:max-w-xl md:max-w-2xl lg:max-w-3xl flex flex-col bg-[#f5f5f7] text-black border-l border-black/10 safe-area-inset-bottom overflow-hidden"
+          className="fixed top-0 right-0 bottom-0 w-full max-w-[320px] sm:max-w-xl md:max-w-2xl lg:max-w-3xl flex flex-col bg-white text-black border-l border-black/10 safe-area-inset-bottom overflow-hidden"
           onClick={(e) => e.stopPropagation()}
-          style={{ pointerEvents: 'all' }}
+          style={{ pointerEvents: 'all', backgroundColor: '#ffffff' }}
         >
           {/* Sticky header */}
-          <div className="sticky top-0 z-50 flex items-center justify-between border-b border-black/10 bg-white px-2 sm:px-8 py-2 sm:py-4 shrink-0">
+          <div className="sticky top-0 z-50 flex items-center justify-between border-b border-black/10 bg-white px-1.5 sm:px-8 py-1.5 sm:py-4 shrink-0">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-black/5 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white border border-black/10 flex items-center justify-center shrink-0">
                 <img src="/bullmoney-logo.png" alt="BullMoney" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
               </div>
               <div className="min-w-0">
@@ -2644,14 +2645,14 @@ export function PrintDesignStudio({
 
             <button
               onClick={onClose}
-              className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full bg-black/5 hover:bg-black/10 text-black shadow-lg transition-all ml-3"
+              className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full bg-white border border-black/10 hover:border-black/20 text-black shadow-sm transition-all ml-3"
             >
               <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2.5} />
             </button>
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto overscroll-contain overflow-x-hidden">
+          <div className="flex-1 overflow-y-auto overscroll-contain overflow-x-hidden" style={{ WebkitOverflowScrolling: 'touch' }}>
             {renderContent()}
           </div>
 

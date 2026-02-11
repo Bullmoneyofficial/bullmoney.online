@@ -218,6 +218,8 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
   // Aggressive Spline/WebGL disposal for battery saving
   const disposeSplineContexts = useCallback(() => {
     if (typeof window === 'undefined') return;
+
+    return;
     
     console.log('[BULLMONEY] 🔋 Disposing ALL Spline/WebGL contexts for battery saving...');
     
@@ -331,6 +333,8 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
   // Restore Spline contexts
   const restoreSplineContexts = useCallback(() => {
     if (typeof window === 'undefined') return;
+
+    return;
     
     console.log('[BULLMONEY] ⚡ Signaling Spline components to remount...');
     
@@ -363,15 +367,13 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
   useEffect(() => {
     if (!isScreensaverActive) return;
     
-    console.log('[BULLMONEY] ❄️ FREEZE MODE - Pausing site and disposing Spline');
+    console.log('[BULLMONEY] ❄️ FREEZE MODE - Pausing UI only');
     
     // Add frozen class to body
     document.body.classList.add('bullmoney-frozen');
     document.documentElement.classList.add('bullmoney-frozen');
     
-    // IMMEDIATELY dispose Spline/WebGL when screensaver shows (not just when permanent)
-    // This is the key fix - dispose right away for battery saving
-    disposeSplineContexts();
+    // Keep splines running during freeze mode
     
     // Dispatch global freeze event
     window.dispatchEvent(new CustomEvent('bullmoney-freeze'));
@@ -390,23 +392,12 @@ export const SmartScreensaverProvider: React.FC<{ children: React.ReactNode }> =
         transition: none !important;
       }
       
-      /* HIDE Spline and heavy elements - will be fully unmounted when permanent */
+      /* HIDE heavy elements (non-spline) */
       .bullmoney-frozen video:not([data-bullmoney-overlay] video),
-      .bullmoney-frozen canvas:not([data-bullmoney-overlay] canvas),
-      .bullmoney-frozen .spline-container,
-      .bullmoney-frozen [data-heavy],
-      .bullmoney-frozen [data-spline],
-      .bullmoney-frozen spline-viewer {
+      .bullmoney-frozen [data-heavy] {
         opacity: 0 !important;
         pointer-events: none !important;
         visibility: hidden !important;
-      }
-      
-      /* Signal to unmount Spline in permanent mode */
-      .bullmoney-frozen.bullmoney-permanent .spline-container,
-      .bullmoney-frozen.bullmoney-permanent [data-spline],
-      .bullmoney-frozen.bullmoney-permanent spline-viewer {
-        display: none !important;
       }
       
       /* HIDE TARGET CURSOR during screensaver */

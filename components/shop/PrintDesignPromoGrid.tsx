@@ -256,6 +256,7 @@ function PromoQuickView({ product, onClose }: PromoQuickViewProps) {
     document.documentElement.style.overflow = 'hidden';
     document.documentElement.style.overscrollBehavior = 'none';
     document.body.classList.add('quick-view-open');
+    requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0, behavior: 'auto' }));
     return () => {
       document.body.style.overflow = prevBody;
       document.documentElement.style.overflow = prevHtml;
@@ -278,7 +279,7 @@ function PromoQuickView({ product, onClose }: PromoQuickViewProps) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.12 }}
-        className={`fixed inset-0 z-[2147483647] flex items-stretch justify-end bg-black/60 ${shouldDisableBackdropBlur ? '' : 'sm:backdrop-blur-md'}`}
+        className={`fixed inset-0 z-[2147483647] flex items-stretch justify-end bg-white/80 ${shouldDisableBackdropBlur ? '' : 'sm:backdrop-blur-md'}`}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -312,16 +313,16 @@ function PromoQuickView({ product, onClose }: PromoQuickViewProps) {
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
-          className={`relative w-full h-[100dvh] max-w-sm sm:max-w-xl md:max-w-2xl lg:max-w-3xl bg-white text-black border-l border-black/10 flex flex-col safe-area-inset-bottom overflow-hidden ${shouldDisableBackdropBlur ? '' : 'sm:backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl'}`}
+          className={`relative w-full h-[100dvh] max-w-[320px] sm:max-w-xl md:max-w-2xl lg:max-w-3xl bg-white text-black border-l border-black/10 flex flex-col safe-area-inset-bottom overflow-hidden ${shouldDisableBackdropBlur ? '' : 'sm:backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl'}`}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
           }}
-          style={{ pointerEvents: 'all' }}
+          style={{ pointerEvents: 'all', backgroundColor: '#ffffff' }}
         >
-          <div className="flex items-center justify-between p-1.5 sm:p-4 md:p-5 border-b border-black/10 bg-white">
+          <div className="flex items-center justify-between p-1 sm:p-4 md:p-5 border-b border-black/10 bg-white">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="h-10 w-10 rounded-xl bg-black/5 flex items-center justify-center shrink-0">
+              <div className="h-10 w-10 rounded-xl bg-white border border-black/10 flex items-center justify-center shrink-0">
                 <ShoppingBag className="w-4 h-4" />
               </div>
               <div className="min-w-0">
@@ -340,7 +341,7 @@ function PromoQuickView({ product, onClose }: PromoQuickViewProps) {
                 e.stopPropagation();
                 onClose();
               }}
-              className="h-10 w-10 rounded-xl bg-black/5 flex items-center justify-center hover:bg-black/10 active:scale-95 transition-all"
+              className="h-10 w-10 rounded-xl bg-white border border-black/10 flex items-center justify-center hover:border-black/20 active:scale-95 transition-all"
               style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -350,8 +351,8 @@ function PromoQuickView({ product, onClose }: PromoQuickViewProps) {
             </motion.button>
           </div>
 
-          <div className="w-full flex-1 overflow-y-auto overscroll-contain overflow-x-hidden px-1.5 sm:px-6 md:px-8 py-2 sm:py-6 md:py-8">
-            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] gap-2 sm:gap-6 lg:gap-10">
+          <div className="w-full flex-1 overflow-y-auto overscroll-contain overflow-x-hidden px-1 sm:px-6 md:px-8 py-1.5 sm:py-6 md:py-8" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] gap-1.5 sm:gap-6 lg:gap-10">
             {/* Image */}
             <div className="space-y-4 lg:sticky lg:top-24 self-start">
               <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200">
@@ -359,7 +360,7 @@ function PromoQuickView({ product, onClose }: PromoQuickViewProps) {
                   <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
                 </div>
                 <div className="absolute top-4 left-4">
-                  <span className={`${getTypeBadgeColor(product.type)} px-3 py-1 rounded-full text-[9px] font-bold text-white uppercase tracking-widest shadow-lg`}>
+                  <span className="px-3 py-1 rounded-full text-[9px] font-bold text-black uppercase tracking-widest border border-black/10 bg-white shadow-sm">
                     {product.type}
                   </span>
                 </div>
@@ -384,7 +385,7 @@ function PromoQuickView({ product, onClose }: PromoQuickViewProps) {
                       onClick={() => setSelectedSize(size)}
                       className={`rounded-xl border-2 px-3 py-2.5 text-left transition-all text-xs ${
                         selectedSize.label === size.label
-                          ? 'border-black bg-black text-white'
+                          ? 'border-black bg-white text-black'
                           : 'border-black/8 bg-white text-black hover:border-black/20'
                       }`}
                     >
@@ -410,7 +411,7 @@ function PromoQuickView({ product, onClose }: PromoQuickViewProps) {
 
               {/* Printer compatibility */}
               {product.printerCompatible.length > 0 && (
-                <div className="mb-6 p-3.5 rounded-xl bg-black/[0.03] border border-black/5">
+                <div className="mb-6 p-3.5 rounded-xl bg-white border border-black/5">
                   <p className="text-[10px] font-semibold text-black/60 mb-1.5">Printed With</p>
                   <div className="flex flex-wrap gap-1.5">
                     {product.printerCompatible.map((p) => (
@@ -428,7 +429,7 @@ function PromoQuickView({ product, onClose }: PromoQuickViewProps) {
                 </div>
                 <button 
                   onClick={handleAddToCart}
-                  className={`w-full rounded-full px-6 py-4 text-sm font-semibold text-white transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 ${added ? 'bg-green-600' : 'bg-black'}`}
+                  className={`w-full rounded-full px-6 py-4 text-sm font-semibold text-black transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 border border-black/20 bg-white`}
                 >
                   {added ? <><Check className="h-4 w-4" />Added to Cart!</> : <><ShoppingCart className="h-4 w-4" />Add to Cart</>}
                 </button>

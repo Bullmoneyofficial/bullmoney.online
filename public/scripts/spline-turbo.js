@@ -85,71 +85,7 @@ ST.trackGPUAlloc=function(sceneName,sizeMB){
   }
 };
 
-// ─── 110. Automatic Off-Screen 3D Disposal ───
-// IntersectionObserver that auto-disposes Spline scenes when not visible
-if('IntersectionObserver' in w&&q3d!=='disabled'){
-  var splineIO=new IntersectionObserver(function(entries){
-    entries.forEach(function(entry){
-      var el=entry.target;
-      var scene=el.getAttribute('data-spline-scene')||el.getAttribute('data-scene');
-      if(!scene)return;
-      if(!entry.isIntersecting){
-        // Off screen → signal dispose to free GPU memory
-        el.classList.add('spline-offscreen');
-        el.dispatchEvent(new CustomEvent('spline-dispose'));
-        if(ST.scenes[scene]){
-          ST.scenes[scene].visible=false;
-          ST.disposed.push(scene);
-        }
-      } else {
-        // Back in view → signal restore
-        el.classList.remove('spline-offscreen');
-        el.dispatchEvent(new CustomEvent('spline-restore'));
-        if(ST.scenes[scene])ST.scenes[scene].visible=true;
-        ST.disposed=ST.disposed.filter(function(s){return s!==scene});
-      }
-    });
-  },{rootMargin:'200px 0px 200px 0px',threshold:[0]});
-
-  // Observe all spline containers once DOM is ready
-  function observeSplines(){
-    d.querySelectorAll('.spline-container,[data-spline-scene],[data-scene],spline-viewer').forEach(function(el){
-      splineIO.observe(el);
-    });
-  }
-  if(d.readyState==='loading')d.addEventListener('DOMContentLoaded',observeSplines);
-  else observeSplines();
-  // Re-observe on dynamic additions
-  new MutationObserver(function(muts){
-    muts.forEach(function(m){
-      m.addedNodes.forEach(function(node){
-        if(node.nodeType===1){
-          var el=node;
-          if(el.matches&&(el.matches('.spline-container,[data-spline-scene],spline-viewer')))splineIO.observe(el);
-          if(el.querySelectorAll){
-            el.querySelectorAll('.spline-container,[data-spline-scene],spline-viewer').forEach(function(c){splineIO.observe(c)});
-          }
-        }
-      });
-    });
-  }).observe(d.body||d.documentElement,{childList:true,subtree:true});
-}
-
-// ─── 111. Background Tab Throttling ───
-// Pause all 3D rendering when tab is hidden to save battery + memory
-var tabHidden=false;
-d.addEventListener('visibilitychange',function(){
-  tabHidden=d.hidden;
-  if(d.hidden){
-    d.documentElement.classList.add('tab-hidden');
-    w.dispatchEvent(new CustomEvent('bullmoney-3d-pause'));
-  } else {
-    d.documentElement.classList.remove('tab-hidden');
-    w.dispatchEvent(new CustomEvent('bullmoney-3d-resume'));
-  }
-});
-
-// ─── 112. Spline Runtime Preload via Service Worker ───
+// ─── 110. Spline Runtime Preload via Service Worker ───
 if('serviceWorker' in n&&q3d!=='disabled'){
   n.serviceWorker.ready.then(function(reg){
     if(reg.active){
@@ -255,11 +191,11 @@ style.textContent=[
   // Disabled tier - reduce quality but keep visible (fallback shown on top)
   '[data-3d-quality="disabled"] .spline-container,[data-3d-quality="disabled"] spline-viewer,[data-3d-quality="disabled"] [data-spline-scene]{opacity:0.7;pointer-events:none;}',
   '[data-3d-quality="disabled"] .spline-fallback{display:block!important;}',
-  // Off-screen - pause animations but keep visible
-  '.spline-offscreen canvas{animation-play-state:paused!important;}',
-  // Tab hidden - pause transforms but keep rendered
-  '.tab-hidden .spline-container,.tab-hidden [data-spline-scene]{animation-play-state:paused!important;transition:none!important;}',
-  '.tab-hidden canvas{animation-play-state:paused!important;}',
+  // Off-screen - keep animations running
+  '.spline-offscreen canvas{animation-play-state:running!important;}',
+  // Tab hidden - keep animations running
+  '.tab-hidden .spline-container,.tab-hidden [data-spline-scene]{animation-play-state:running!important;transition:none!important;}',
+  '.tab-hidden canvas{animation-play-state:running!important;}',
   // Reduce motion preference
   '@media(prefers-reduced-motion:reduce){.spline-container,.spline-scene-wrapper{animation:none!important;transition:none!important;}}',
 ].join('\n');

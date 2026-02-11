@@ -56,7 +56,6 @@ export interface StorePillNavProps {
   // Hero mode toggle
   heroMode?: HeroMode;
   onHeroModeChange?: (mode: HeroMode) => void;
-  onStoreButtonClick?: () => void;
   // Games page props
   hideNavigation?: boolean;
   showManualButton?: boolean;
@@ -95,7 +94,6 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
   desktopMenuOpen = false,
   heroMode,
   onHeroModeChange,
-  onStoreButtonClick,
   hideNavigation = false,
   showManualButton = false,
   onManualClick,
@@ -230,19 +228,19 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
                 <span className="text-[12px] font-semibold hidden sm:inline relative z-10">Manual</span>
               </button>
             )}
-            {/* Hero Mode Toggle - Store / Trader */}
+            {/* Hero Mode Toggle - Design / Trader */}
             {heroMode && onHeroModeChange && (
               <div className="hidden sm:flex items-center h-8 rounded-full border border-black/10 bg-white overflow-hidden mr-1">
                 <button
                   type="button"
-                  onClick={() => onStoreButtonClick ? onStoreButtonClick() : onHeroModeChange?.('store')}
+                  onClick={() => onHeroModeChange('design')}
                   className={`px-3 h-full text-[11px] font-semibold uppercase tracking-[0.12em] transition-all ${
-                    heroMode === 'store'
+                    heroMode === 'design'
                       ? 'bg-black text-white'
                       : 'text-black/60 hover:text-black'
                   }`}
                 >
-                  Store
+                  Design
                 </button>
                 <button
                   type="button"

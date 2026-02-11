@@ -22,10 +22,18 @@ export default function DrawingCanvas({
   className,
 }: DrawingCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
+  const isDrawingRef = useRef(false);
   const [color, setColor] = useState('#007aff');
   const [lineWidth, setLineWidth] = useState(5);
   const [tool, setTool] = useState<'pen' | 'eraser'>('pen');
+  const toolRef = useRef(tool);
+  const colorRef = useRef(color);
+  const lineWidthRef = useRef(lineWidth);
+
+  // Keep refs in sync
+  useEffect(() => { toolRef.current = tool; }, [tool]);
+  useEffect(() => { colorRef.current = color; }, [color]);
+  useEffect(() => { lineWidthRef.current = lineWidth; }, [lineWidth]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -51,58 +59,66 @@ export default function DrawingCanvas({
     ctx.font = '400 24px -apple-system, system-ui, sans-serif';
     ctx.fillStyle = 'rgba(29, 29, 31, 0.1)';
     ctx.fillText('Click and drag to draw • No dependencies required', canvas.width / 2, canvas.height / 2 + 20);
+  }, [canvasWidth, canvasHeight]);
 
-  }, []);
-
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    setIsDrawing(true);
-    draw(e);
-  };
-
-  const stopDrawing = () => {
-    setIsDrawing(false);
+  const getPos = (clientX: number, clientY: number) => {
     const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    if (ctx) {
-      ctx.beginPath();
-    }
-  };
-
-  const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDrawing && e.type !== 'mousedown') return;
-
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
+    if (!canvas) return null;
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
+    return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+  };
 
-    const x = (e.clientX - rect.left) * scaleX;
-    const y = (e.clientY - rect.top) * scaleY;
+  const stroke = (x: number, y: number, isStart: boolean) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-    if (tool === 'eraser') {
+    if (toolRef.current === 'eraser') {
       ctx.globalCompositeOperation = 'destination-out';
-      ctx.lineWidth = lineWidth * 3;
+      ctx.lineWidth = lineWidthRef.current * 3;
     } else {
       ctx.globalCompositeOperation = 'source-over';
-      ctx.strokeStyle = color;
-      ctx.lineWidth = lineWidth;
+      ctx.strokeStyle = colorRef.current;
+      ctx.lineWidth = lineWidthRef.current;
     }
 
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
-    if (e.type === 'mousedown') {
+    if (isStart) {
       ctx.beginPath();
       ctx.moveTo(x, y);
     } else {
       ctx.lineTo(x, y);
       ctx.stroke();
     }
+  };
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    const pos = getPos(e.clientX, e.clientY);
+    if (!pos) return;
+    isDrawingRef.current = true;
+    canvasRef.current?.setPointerCapture(e.pointerId);
+    stroke(pos.x, pos.y, true);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!isDrawingRef.current) return;
+    e.preventDefault();
+    const pos = getPos(e.clientX, e.clientY);
+    if (!pos) return;
+    stroke(pos.x, pos.y, false);
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    isDrawingRef.current = false;
+    canvasRef.current?.releasePointerCapture(e.pointerId);
+    const ctx = canvasRef.current?.getContext('2d');
+    if (ctx) ctx.beginPath();
   };
 
   const clearCanvas = () => {
@@ -211,10 +227,11 @@ export default function DrawingCanvas({
 
       <canvas
         ref={canvasRef}
-        onMouseDown={startDrawing}
-        onMouseMove={draw}
-        onMouseUp={stopDrawing}
-        onMouseLeave={stopDrawing}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerUp}
+        onPointerCancel={handlePointerUp}
         style={{
           maxWidth: fitContainer ? 'none' : '100%',
           width: fitContainer ? '100%' : undefined,

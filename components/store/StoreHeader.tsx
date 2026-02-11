@@ -80,7 +80,12 @@ const MAIN_NAV_BUTTONS = [
   { href: '/community', label: 'Community', icon: Calendar },
 ];
 
-export function StoreHeader() {
+type StoreHeaderProps = {
+  heroModeOverride?: HeroMode;
+  onHeroModeChangeOverride?: (mode: HeroMode) => void;
+};
+
+export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: StoreHeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
   const [adminModalOpen, setAdminModalOpen] = useState(false);
@@ -104,7 +109,9 @@ export function StoreHeader() {
   const itemCount = getItemCount();
   const router = useRouter();
   const pathname = usePathname();
-  const { heroMode, setHeroMode } = useHeroMode();
+  const { heroMode: hookHeroMode, setHeroMode: setHookHeroMode } = useHeroMode();
+  const heroMode = heroModeOverride ?? hookHeroMode;
+  const setHeroMode = onHeroModeChangeOverride ?? setHookHeroMode;
   const isAccountPage = pathname?.startsWith('/store/account');
   const isCasinoPage = pathname?.startsWith('/games');
   const isHomePage = pathname === '/';
@@ -328,16 +335,6 @@ export function StoreHeader() {
     }
   }, [router, startPagemodeLogin, openProductsModal, setFaqModalOpen, toggleThemePicker, toggleUltimateHub]);
 
-  const handleStoreButtonClick = useCallback(() => {
-    SoundEffects.click();
-    setHeroMode('store');
-    setTimeout(() => {
-      const productsGrid = document.querySelector('[data-products-grid]');
-      if (productsGrid) {
-        productsGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 100);
-  }, [setHeroMode]);
 
   const handleOpenMobileMenu = useCallback(() => {
     setMobileMenuOpen(true);
@@ -403,16 +400,28 @@ export function StoreHeader() {
         // Hero mode toggle
         heroMode={heroMode}
         onHeroModeChange={setHeroMode}
-        onStoreButtonClick={handleStoreButtonClick}
       />
 
       {!isCasinoPage && (
-        <div data-apple-section style={{ background: 'rgb(255,255,255)' }}>
+        <div data-apple-section className="hidden md:block" style={{ background: 'rgb(255,255,255)' }}>
           <RewardsCardBanner
             userEmail={recruit?.email || null}
             onOpenRewardsCard={handleRewardsClick}
           />
         </div>
+      )}
+
+      {/* Invisible Hover Trigger Strip - Top 15% of viewport for easy menu access on desktop */}
+      {!isCasinoPage && !isAccountPage && (
+        <div
+          className="fixed left-0 right-0 hidden lg:block pointer-events-auto z-[895]"
+          style={{
+            top: '48px',
+            height: '15vh',
+          }}
+          onMouseEnter={openDesktopMenu}
+          onMouseLeave={scheduleDesktopMenuClose}
+        />
       )}
 
       {/* Desktop Dropdown Menu - Apple-style (disabled on games pages) */}

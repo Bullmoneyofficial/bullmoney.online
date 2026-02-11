@@ -29,8 +29,8 @@ export function ClientCursor() {
 
   useEffect(() => {
     const browserInfo = detectBrowser();
-    if (browserInfo.shouldReduceAnimations) {
-      console.log('[ClientCursor] Disabled for:', browserInfo.browserName);
+    if (browserInfo.isInAppBrowser) {
+      console.log('[ClientCursor] Disabled for in-app browser:', browserInfo.browserName);
       setShouldShow(false);
       return;
     }
@@ -47,12 +47,6 @@ export function ClientCursor() {
     // Check if mobile/touch device
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     setIsMobile(isTouchDevice);
-    
-    // Skip on very low-memory touch devices
-    if (isTouchDevice && browserInfo.isVeryLowMemoryDevice) {
-      setShouldShow(false);
-      return;
-    }
 
     // Show on both desktop and mobile when safe
     setShouldShow(true);

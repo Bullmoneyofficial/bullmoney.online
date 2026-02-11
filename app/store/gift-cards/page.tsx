@@ -2,12 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import Gift from 'lucide-react/dist/esm/icons/gift';
-import Send from 'lucide-react/dist/esm/icons/send';
-import CreditCard from 'lucide-react/dist/esm/icons/credit-card';
-import Check from 'lucide-react/dist/esm/icons/check';
-import Copy from 'lucide-react/dist/esm/icons/copy';
-import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left';
+import { Gift, Send, CreditCard, Check, Copy, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';

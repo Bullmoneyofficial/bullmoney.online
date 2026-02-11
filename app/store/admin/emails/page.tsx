@@ -2,21 +2,23 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Mail from 'lucide-react/dist/esm/icons/mail';
-import Save from 'lucide-react/dist/esm/icons/save';
-import Eye from 'lucide-react/dist/esm/icons/eye';
-import EyeOff from 'lucide-react/dist/esm/icons/eye-off';
-import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
-import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left';
-import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
-import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
-import Code from 'lucide-react/dist/esm/icons/code';
-import Palette from 'lucide-react/dist/esm/icons/palette';
-import X from 'lucide-react/dist/esm/icons/x';
-import Send from 'lucide-react/dist/esm/icons/send';
-import FileText from 'lucide-react/dist/esm/icons/file-text';
-import Copy from 'lucide-react/dist/esm/icons/copy';
-import Check from 'lucide-react/dist/esm/icons/check';
+import { 
+  Mail, 
+  Save, 
+  Eye, 
+  EyeOff, 
+  RefreshCw, 
+  ArrowLeft, 
+  CheckCircle, 
+  AlertCircle, 
+  Code, 
+  Palette, 
+  X, 
+  Send, 
+  FileText, 
+  Copy, 
+  Check 
+} from 'lucide-react';
 import Link from 'next/link';
 import { AdminSidebar } from '@/components/shop/admin/AdminSidebar';
 import { supabase } from '@/lib/supabase';

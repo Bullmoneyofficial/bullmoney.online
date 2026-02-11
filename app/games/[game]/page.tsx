@@ -3,7 +3,7 @@
 import { use, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 
-const CASINO_URL = process.env.NEXT_PUBLIC_CASINO_URL || 'https://www.bullmoney.online/demogames';
+const CASINO_URL = process.env.NEXT_PUBLIC_CASINO_URL || '/casino-games';
 
 export default function CasinoGamePage({ params }: { params: Promise<{ game: string }> }) {
   const { game } = use(params);
@@ -32,9 +32,9 @@ export default function CasinoGamePage({ params }: { params: Promise<{ game: str
         src={`${CASINO_URL}/${game}`}
         title={`BullMoney Casino - ${game}`}
         onLoad={() => setLoading(false)}
-        allow="fullscreen; autoplay; clipboard-write; encrypted-media; payment; camera; microphone; display-capture; web-share"
-        referrerPolicy="origin"
-        loading="lazy"
+        onError={() => { console.error('Iframe failed to load game'); setLoading(false); }}
+        allow="*"
+        referrerPolicy="no-referrer-when-downgrade"
         className="w-full h-full border-0"
         style={{
           display: loading ? 'none' : 'block',

@@ -61,7 +61,7 @@ import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
 import { useGlobalTheme } from "@/contexts/GlobalThemeProvider";
 import { useAudioSettings } from "@/contexts/AudioSettingsProvider";
 import { useUIState } from "@/contexts/UIStateContext";
-import { useHeroMode } from "@/hooks/useHeroMode";
+import type { HeroMode } from "@/hooks/useHeroMode";
 
 // Features skeleton fallback (inline for faster load)
 const FeaturesSkeleton = () => (
@@ -257,7 +257,7 @@ function HomeContent() {
   const [hasMounted, setHasMounted] = useState(false);
   const [desktopHeroReady, setDesktopHeroReady] = useState(false);
   const [allowHeavyDesktop, setAllowHeavyDesktop] = useState(false);
-  const { heroMode: mainHeroMode, setHeroMode: setMainHeroMode } = useHeroMode();
+  const [appHeroMode, setAppHeroMode] = useState<HeroMode>('trader');
   // Legacy flag retained for older bundles; default keeps desktop on 3D hero.
   const desktopHeroVariant = 'spline';
   const useDesktopVideoVariant = desktopHeroVariant === 'spline';
@@ -498,9 +498,15 @@ function HomeContent() {
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
-    document.body.style.overflow = activeRemoteScene || isSplitModalOpen || isAllScenesModalOpen ? 'hidden' : 'auto';
+    // CRITICAL FIX: Only apply overflow hidden on desktop to prevent mobile scroll issues
+    // Mobile devices handle modal scrolling differently and overflow hidden breaks page scroll
+    const isCurrentlyMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    if (!isCurrentlyMobile) {
+      document.body.style.overflow = activeRemoteScene || isSplitModalOpen || isAllScenesModalOpen ? 'hidden' : '';
+    }
     return () => {
-      document.body.style.overflow = 'auto';
+      // Always reset on cleanup - use empty string to remove inline style completely
+      document.body.style.overflow = '';
     };
   }, [activeRemoteScene, isSplitModalOpen, isAllScenesModalOpen]);
 
@@ -868,16 +874,25 @@ function HomeContent() {
 
       {currentView === 'content' && (
         <div className="relative min-h-screen w-full">
-          {/* Store Header as main navigation (includes unified Store/Trader toggle) */}
-          <StoreHeader />
+          {/* Store Header as main navigation (Design/Trader toggle on app page) */}
+          <StoreHeader heroModeOverride={appHeroMode} onHeroModeChangeOverride={setAppHeroMode} />
 
-          {mainHeroMode === 'trader' && (
+          {appHeroMode === 'trader' && (
             <style>{`
+              /* MOBILE FIX: Ensure scrolling works on mobile */
+              @media (max-width: 767px) {
+                body, html {
+                  overflow-y: auto !important;
+                  overflow-x: hidden !important;
+                  -webkit-overflow-scrolling: touch !important;
+                  touch-action: pan-y pan-x !important;
+                }
+              }
               #hero .cycling-bg-layer,
               #hero .cycling-bg-item,
               #hero .cycling-bg-item.active {
                 pointer-events: none !important;
-                touch-action: pan-y !important;
+                touch-action: pan-y pan-x !important;
               }
               #hero .cycling-bg-layer canvas,
               #hero .cycling-bg-item canvas {
@@ -886,11 +901,11 @@ function HomeContent() {
               #hero .hero-wrapper {
                 overflow: visible !important;
                 overflow-x: hidden !important;
-                touch-action: pan-y !important;
+                touch-action: pan-y pan-x !important;
               }
               #hero .hero-content-overlay {
                 pointer-events: none;
-                touch-action: pan-y !important;
+                touch-action: pan-y pan-x !important;
               }
               #hero .hero-content-overlay > * {
                 pointer-events: auto;
@@ -898,7 +913,7 @@ function HomeContent() {
             `}</style>
           )}
 
-          {mainHeroMode === 'trader' && (
+          {appHeroMode === 'trader' && (
             <section
               id="hero"
               className={isMobile
@@ -935,11 +950,11 @@ function HomeContent() {
             </section>
           )}
 
-          <div className="mainpage-store-shell" data-hero-mode={mainHeroMode}>
+          <div className="mainpage-store-shell" data-hero-mode={appHeroMode}>
             <StoreMemoryProvider>
               {hasMounted ? (
                 <DeferredRender rootMargin="600px" fallback={<ContentSkeleton lines={6} />}>
-                  <StorePageContent routeBase="/" syncUrl={false} showProductSections={mainHeroMode === 'store'} />
+                  <StorePageContent routeBase="/" syncUrl={false} showProductSections={false} />
                 </DeferredRender>
               ) : (
                 <ContentSkeleton lines={6} />
@@ -947,7 +962,7 @@ function HomeContent() {
             </StoreMemoryProvider>
           </div>
 
-          {mainHeroMode === 'trader' && (
+          {appHeroMode === 'trader' && (
             <style>{`
               .mainpage-store-shell [data-store-hero] {
                 display: none !important;

@@ -1,0 +1,228 @@
+
+> nextjs@0.1.0 build
+> node scripts/platform-check.mjs && cross-env NEXT_TELEMETRY_DISABLED=1 NODE_OPTIONS=--max-old-space-size=8192 next build
+
+
+═══════════════════════════════════════════════════════
+🍎 Apple Silicon Detected | ARM64 Native | 8 cores | 16GB RAM
+⚡ Performance Mode: Maximum (3x faster compilation)
+═══════════════════════════════════════════════════════
+
+💡 Tip: Try "npm run dev:silicon" for 20GB memory allocation
+
+[Next.js Config] darwin arm64 | 8 cores | Optimizations: ARM64 Native, Unified Memory (16GB), Multi-core
+▲ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+- Experiments (use with caution):
+  · optimizePackageImports
+  ✓ parallelServerBuildTraces
+  ✓ parallelServerCompiles
+  · staleTimes
+  ✓ webpackBuildWorker
+
+  Creating an optimized production build ...
+[Next.js Config] darwin arm64 | 8 cores | Optimizations: ARM64 Native, Unified Memory (16GB), Multi-core
+✓ Compiled successfully in 37.4s
+  Skipping validation of types
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/166) ...
+  Generating static pages using 7 workers (41/166) 
+  Generating static pages using 7 workers (82/166) 
+  Generating static pages using 7 workers (124/166) 
+✓ Generating static pages using 7 workers (166/166) in 2.6s
+  Finalizing page optimization ...
+
+Route (app)                              Revalidate  Expire
+┌ ○ /
+├ ○ /_not-found
+├ ○ /(.)recruit
+├ ○ /about
+├ ○ /admin/drip-campaigns
+├ ○ /admin/emails
+├ ○ /admin/notifications
+├ ƒ /api/account/crypto-payments
+├ ƒ /api/account/update
+├ ƒ /api/admin
+├ ƒ /api/admin/login
+├ ƒ /api/admin/recruits
+├ ƒ /api/affiliate
+├ ƒ /api/affiliate-admin/update
+├ ƒ /api/analyses
+├ ƒ /api/analyses/[id]
+├ ƒ /api/analyses/[id]/comments
+├ ƒ /api/analyses/[id]/reactions
+├ ƒ /api/analytics
+├ ƒ /api/auth/session
+├ ƒ /api/auth/youtube
+├ ƒ /api/auth/youtube/refresh
+├ ƒ /api/blogs
+├ ƒ /api/blogs/[id]
+├ ƒ /api/blogs/hero
+├ ƒ /api/breaking-news
+├ ƒ /api/breaking-news/search
+├ ƒ /api/broker/accounts
+├ ƒ /api/broker/close
+├ ƒ /api/broker/connect
+├ ƒ /api/broker/trade
+├ ƒ /api/casino/auth/login
+├ ƒ /api/casino/auth/logout
+├ ƒ /api/casino/auth/me
+├ ƒ /api/casino/auth/register
+├ ƒ /api/casino/crash
+├ ƒ /api/casino/dice/bet
+├ ƒ /api/casino/history
+├ ƒ /api/casino/jackpot
+├ ƒ /api/casino/mines
+├ ƒ /api/casino/telegram/webhook
+├ ƒ /api/casino/user
+├ ƒ /api/casino/wheel
+├ ƒ /api/categories
+├ ƒ /api/categories/[id]
+├ ƒ /api/checkout
+├ ƒ /api/cmc/global
+├ ƒ /api/crash-log
+├ ƒ /api/cron/email-drip
+├ ƒ /api/cron/notifications
+├ ƒ /api/crypto-news
+├ ƒ /api/crypto-payment
+├ ƒ /api/crypto-payment/admin
+├ ƒ /api/crypto-payment/admin/recruits
+├ ƒ /api/crypto-payment/dev-test
+├ ƒ /api/crypto-payment/metrics
+├ ƒ /api/crypto-payment/refund
+├ ƒ /api/crypto-payment/refund/admin
+├ ƒ /api/crypto-payment/status
+├ ƒ /api/crypto-payment/verify
+├ ƒ /api/dashboard/preferences
+├ ƒ /api/email-templates
+├ ƒ /api/email/blast
+├ ƒ /api/email/resubscribe
+├ ƒ /api/email/test
+├ ƒ /api/email/unsubscribe
+├ ƒ /api/exchange-rates
+├ ƒ /api/feed
+├ ƒ /api/geo-detect
+├ ƒ /api/hero
+├ ƒ /api/i18n/[lang]
+├ ƒ /api/image-proxy
+├ ƒ /api/link-preview
+├ ƒ /api/live-quotes
+├ ƒ /api/market-data
+├ ƒ /api/market-prices
+├ ƒ /api/notifications/send
+├ ƒ /api/notifications/subscribe
+├ ƒ /api/notifications/test
+├ ƒ /api/notifications/track
+├ ƒ /api/notifications/unsubscribe
+├ ƒ /api/prices/live
+├ ƒ /api/products
+├ ƒ /api/products/[id]
+├ ƒ /api/products/slug/[slug]
+├ ƒ /api/profile
+├ ƒ /api/profile/[username]
+├ ƒ /api/projects
+├ ƒ /api/recruit-auth/login
+├ ƒ /api/recruit-auth/register
+├ ƒ /api/register
+├ ƒ /api/rewards
+├ ƒ /api/skrill/create-checkout
+├ ƒ /api/skrill/webhook
+├ ƒ /api/speedtest
+├ ƒ /api/spotify/callback
+├ ƒ /api/spotify/login
+├ ƒ /api/spotify/logout
+├ ƒ /api/spotify/status
+├ ƒ /api/store/account
+├ ƒ /api/store/admin/analytics
+├ ƒ /api/store/admin/orders
+├ ƒ /api/store/admin/orders/[id]
+├ ƒ /api/store/admin/products
+├ ƒ /api/store/admin/products/images
+├ ƒ /api/store/admin/promos
+├ ƒ /api/store/admin/revenue
+├ ƒ /api/store/admin/stats
+├ ƒ /api/store/coupon
+├ ƒ /api/store/digital-art
+├ ƒ /api/store/digital-art-purchases
+├ ƒ /api/store/email
+├ ƒ /api/store/gift-cards
+├ ƒ /api/store/newsletter/subscribe
+├ ƒ /api/store/order-email
+├ ƒ /api/store/order-email/test
+├ ƒ /api/store/orders/auto-create
+├ ƒ /api/store/print-designs
+├ ƒ /api/store/print-orders
+├ ƒ /api/store/print-products
+├ ƒ /api/store/print-uploads
+├ ƒ /api/store/products
+├ ƒ /api/store/products/[slug]
+├ ƒ /api/store/subscribe
+├ ƒ /api/store/tracking
+├ ƒ /api/store/vip
+├ ƒ /api/stripe/create-checkout-session
+├ ƒ /api/stripe/create-portal-session
+├ ƒ /api/stripe/create-subscription
+├ ƒ /api/stripe/session/[sessionId]
+├ ƒ /api/stripe/test
+├ ƒ /api/stripe/webhook
+├ ƒ /api/support-chat
+├ ƒ /api/telegram/bot
+├ ƒ /api/telegram/channel
+├ ƒ /api/telegram/delete-webhook
+├ ƒ /api/telegram/messages
+├ ƒ /api/telegram/sync
+├ ƒ /api/telegram/test
+├ ƒ /api/telegram/webhook
+├ ƒ /api/trading-stats
+├ ƒ /api/translate
+├ ƒ /api/upload/presign
+├ ○ /api/version
+├ ƒ /api/vip/messages
+├ ƒ /api/vip/status
+├ ƒ /api/vip/sync
+├ ƒ /api/webhooks/stripe
+├ ƒ /api/youtube/channel-videos
+├ ○ /auth/youtube/callback
+├ ○ /Blogs
+├ ○ /community
+├ ○ /course
+├ ○ /crypto-game
+├ ○ /crypto-guide
+├ ○ /design
+├ ○ /desktop
+├ ○ /email/resubscribe
+├ ○ /email/unsubscribe
+├ ○ /games
+├ ƒ /games/[game]
+├ ○ /games/terms
+├ ○ /journal
+├ ○ /login
+├ ○ /oldstore
+├ ○ /products
+├ ○ /Prop
+├ ○ /quotes
+├ ○ /recruit
+├ ○ /resubscribe
+├ ○ /sitemap.xml
+├ ○ /socials
+├ ○ /store
+├ ○ /store/account
+├ ○ /store/admin
+├ ○ /store/admin/emails
+├ ○ /store/admin/newsletter
+├ ○ /store/admin/orders
+├ ƒ /store/admin/orders/[id]
+├ ○ /store/admin/products
+├ ○ /store/admin/products/new
+├ ○ /store/checkout
+├ ○ /store/gift-cards
+├ ƒ /store/product/[slug]
+├ ○ /store/sitemap.xml                           1h      1y
+├ ○ /store/success
+├ ○ /trading-showcase
+└ ○ /unsubscribe
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

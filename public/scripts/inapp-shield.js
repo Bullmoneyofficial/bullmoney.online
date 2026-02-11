@@ -37,11 +37,11 @@ if(!S.active)return; // Not an in-app browser, exit early
 d.documentElement.setAttribute('data-inapp',S.browser);
 d.documentElement.classList.add('in-app-browser');
 
-// ─── 157. Disable Heavy Features for In-App ───
+// ─── 157. Reduce Heavy Features for In-App ───
 // In-app browsers typically have 1-2GB memory limit and no WebGL2
-d.documentElement.setAttribute('data-3d-quality','disabled');
+// Keep 3D visible with no forced quality restriction
 d.documentElement.classList.add('reduce-effects');
-S.fixes.push('disabled-3d');
+S.fixes.push('keep-3d');
 
 // ─── 158. Fix Viewport Issues ───
 // In-app browsers often have wrong viewport height (address bar confusion)

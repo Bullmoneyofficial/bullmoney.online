@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect, useRef, memo } from 'react';
 import dynamic from 'next/dynamic';
-import { detectRefreshRate } from '@/lib/use120Hz';
-import { detectBrowser } from '@/lib/browserDetection';
 
 interface Props {
   scene: string;
@@ -12,15 +10,32 @@ interface Props {
   priority?: boolean; // Load immediately without intersection observer
 }
 
-// Lightweight device detection with 120Hz support
-const shouldLoadSpline = () => {
-  if (typeof window === 'undefined') return true;
+// Spline is allowed on all devices/browsers
+const shouldLoadSpline = () => true;
 
-  const browserInfo = detectBrowser();
-  if (browserInfo.isInAppBrowser || browserInfo.shouldReduceAnimations) return false;
-  if (browserInfo.shouldDisableSpline || !browserInfo.canHandle3D) return false;
-  return true;
-};
+function getSplineLoadLock() {
+  const w = window as typeof window & { __BM_SPLINE_LOAD_LOCK__?: { active: boolean; queue: Array<() => void> } };
+  if (!w.__BM_SPLINE_LOAD_LOCK__) {
+    w.__BM_SPLINE_LOAD_LOCK__ = { active: false, queue: [] };
+  }
+  return w.__BM_SPLINE_LOAD_LOCK__;
+}
+
+function waitForSplineSlot(): Promise<() => void> {
+  return new Promise((resolve) => {
+    const lock = getSplineLoadLock();
+    const grant = () => {
+      lock.active = true;
+      resolve(() => {
+        lock.active = false;
+        const next = lock.queue.shift();
+        if (next) next();
+      });
+    };
+    if (!lock.active) grant();
+    else lock.queue.push(grant);
+  });
+}
 
 // Dynamic import - only load when needed
 const Spline = dynamic(() => import('@splinetool/react-spline'), {
@@ -32,12 +47,48 @@ function LazySplineSection({ scene, className = "", children, priority = false }
   const [isVisible, setIsVisible] = useState(priority);
   const [isLoaded, setIsLoaded] = useState(false);
   const [canRender, setCanRender] = useState(true);
+  const [allowLoad, setAllowLoad] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const releaseRef = useRef<null | (() => void)>(null);
 
   // Check device capability on mount
   useEffect(() => {
     setCanRender(shouldLoadSpline());
   }, []);
+
+  useEffect(() => {
+    if (!canRender || !isVisible) return;
+    let cancelled = false;
+
+    waitForSplineSlot().then((release) => {
+      if (cancelled) {
+        release();
+        return;
+      }
+      releaseRef.current = release;
+      setAllowLoad(true);
+    });
+
+    return () => {
+      cancelled = true;
+      if (releaseRef.current) {
+        releaseRef.current();
+        releaseRef.current = null;
+      }
+      setAllowLoad(false);
+    };
+  }, [canRender, isVisible]);
+
+  useEffect(() => {
+    if (!allowLoad || !releaseRef.current) return;
+    const timeout = setTimeout(() => {
+      if (releaseRef.current) {
+        releaseRef.current();
+        releaseRef.current = null;
+      }
+    }, 15000);
+    return () => clearTimeout(timeout);
+  }, [allowLoad]);
 
   // Intersection observer for lazy loading
   useEffect(() => {
@@ -67,12 +118,18 @@ function LazySplineSection({ scene, className = "", children, priority = false }
     <div ref={containerRef} className={`relative w-full ${className}`}>
       {/* BACKGROUND: The 3D Scene or Fallback */}
       <div className="absolute inset-0 w-full h-full -z-10 overflow-hidden">
-        {canRender && isVisible ? (
+        {canRender && isVisible && allowLoad ? (
           <div className={`w-full h-full transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
             <Spline 
               className="w-full h-full object-cover" 
               scene={scene}
-              onLoad={() => setIsLoaded(true)}
+              onLoad={() => {
+                setIsLoaded(true);
+                if (releaseRef.current) {
+                  releaseRef.current();
+                  releaseRef.current = null;
+                }
+              }}
             />
           </div>
         ) : null}

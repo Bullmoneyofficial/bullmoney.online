@@ -28,25 +28,23 @@ export const FooterButton = ({ onClick, children, variant = "secondary", icon }:
         "relative group h-10 sm:h-11 inline-flex items-center justify-center rounded-xl px-4 sm:px-5 text-xs sm:text-sm font-semibold transition-all duration-300 overflow-hidden min-w-[44px]"
       )}
       style={{
-        background: 'black',
-        border: isPrimary ? '2px solid #ffffff' : '1px solid #ffffff',
-        boxShadow: isPrimary 
-          ? '0 0 8px #ffffff, 0 0 16px rgba(255, 255, 255, 0.5)' 
-          : '0 0 4px rgba(255, 255, 255, 0.5)'
+        background: 'white',
+        border: isPrimary ? '2px solid rgba(0, 0, 0, 0.18)' : '1px solid rgba(0, 0, 0, 0.12)',
+        boxShadow: isPrimary
+          ? '0 2px 8px rgba(0, 0, 0, 0.12)'
+          : '0 1px 4px rgba(0, 0, 0, 0.08)'
       }}
     >
       <span 
         className="relative z-10 flex items-center gap-2"
         style={{
-          color: '#ffffff',
-          textShadow: '0 0 4px #ffffff, 0 0 8px rgba(255, 255, 255, 0.5)'
+          color: '#111111'
         }}
       >
         {icon && (
           <span 
             style={{ 
-              color: '#ffffff',
-              filter: 'drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ffffff)'
+              color: '#111111'
             }}
           >
             {icon}

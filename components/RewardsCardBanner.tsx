@@ -71,7 +71,7 @@ export default function RewardsCardBanner({ userEmail, onOpenRewardsCard }: Rewa
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5 sm:py-2">
         {/* Mobile Hero Mode Toggle — only visible on mobile */}
         <div className="flex md:hidden items-center justify-center gap-0.5 rounded-full border border-black/10 bg-black/5 p-0.5 mb-1.5 mx-auto w-fit text-[9px] font-semibold uppercase tracking-[0.18em]">
-          {HERO_MODE_CONFIG.map(({ mode, label, color, glow }) => {
+          {HERO_MODE_CONFIG.filter(({ mode }) => mode !== 'store').map(({ mode, label, color, glow }) => {
             const isActive = heroMode === mode;
             return (
               <button

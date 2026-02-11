@@ -4,31 +4,33 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import User from 'lucide-react/dist/esm/icons/user';
-import Package from 'lucide-react/dist/esm/icons/package';
-import Heart from 'lucide-react/dist/esm/icons/heart';
-import MapPin from 'lucide-react/dist/esm/icons/map-pin';
-import CreditCard from 'lucide-react/dist/esm/icons/credit-card';
-import Settings from 'lucide-react/dist/esm/icons/settings';
-import LogOut from 'lucide-react/dist/esm/icons/log-out';
-import ChevronRight from 'lucide-react/dist/esm/icons/chevron-right';
-import Truck from 'lucide-react/dist/esm/icons/truck';
-import Check from 'lucide-react/dist/esm/icons/check';
-import Clock from 'lucide-react/dist/esm/icons/clock';
-import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left';
-import Edit2 from 'lucide-react/dist/esm/icons/edit-2';
-import Plus from 'lucide-react/dist/esm/icons/plus';
-import Trash2 from 'lucide-react/dist/esm/icons/trash-2';
-import ShoppingBag from 'lucide-react/dist/esm/icons/shopping-bag';
-import Eye from 'lucide-react/dist/esm/icons/eye';
-import ExternalLink from 'lucide-react/dist/esm/icons/external-link';
-import X from 'lucide-react/dist/esm/icons/x';
-import MapPinned from 'lucide-react/dist/esm/icons/map-pinned';
-import PackageCheck from 'lucide-react/dist/esm/icons/package-check';
-import CircleDot from 'lucide-react/dist/esm/icons/circle-dot';
-import Save from 'lucide-react/dist/esm/icons/save';
-import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
-import Search from 'lucide-react/dist/esm/icons/search';
+import { 
+  User, 
+  Package, 
+  Heart, 
+  MapPin, 
+  CreditCard, 
+  Settings, 
+  LogOut, 
+  ChevronRight, 
+  Truck, 
+  Check, 
+  Clock, 
+  ArrowLeft, 
+  Edit2, 
+  Plus, 
+  Trash2, 
+  ShoppingBag, 
+  Eye, 
+  ExternalLink, 
+  X, 
+  MapPinned, 
+  PackageCheck, 
+  CircleDot, 
+  Save, 
+  Loader2, 
+  Search 
+} from 'lucide-react';
 import { useWishlistStore } from '@/stores/wishlist-store';
 import { useCartStore } from '@/stores/cart-store';
 import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
@@ -496,24 +498,24 @@ export default function AccountPage() {
           -webkit-text-fill-color: rgba(255, 255, 255, 0.3);
         }
         .account-page-form input:disabled {
-          color: rgba(255, 255, 255, 0.4) !important;
-          -webkit-text-fill-color: rgba(255, 255, 255, 0.4);
+          color: rgba(0, 0, 0, 0.4) !important;
+          -webkit-text-fill-color: rgba(0, 0, 0, 0.4);
         }
         .account-page-form select option {
-          background: rgb(10, 10, 10);
-          color: rgb(255, 255, 255) !important;
+          background: rgb(255, 255, 255);
+          color: rgb(0, 0, 0) !important;
         }
         /* Date input calendar icon */
         .account-page-form input[type="date"]::-webkit-calendar-picker-indicator {
-          filter: invert(1);
+          filter: invert(0);
         }
       `}</style>
-    <div className="min-h-screen bg-black" style={{ color: 'rgb(255, 255, 255)' }}>
+    <div className="min-h-screen bg-white" style={{ color: 'rgb(0, 0, 0)' }}>
       <div className="max-w-350 mx-auto px-4 md:px-8 py-8 md:py-16">
         {/* Back to Store */}
         <Link
           href="/store"
-          className="inline-flex items-center gap-2 text-white/50 hover:text-white transition-colors mb-8"
+          className="inline-flex items-center gap-2 text-black/50 hover:text-black transition-colors mb-8"
         >
           <ArrowLeft className="w-4 h-4" />
           <span className="text-sm">Back to Store</span>
@@ -521,15 +523,15 @@ export default function AccountPage() {
 
         {/* Header */}
         <div className="flex items-center gap-4 mb-10">
-          <div className="w-16 h-16 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center">
-            <User className="w-7 h-7 text-white/60" />
+          <div className="w-16 h-16 rounded-2xl bg-black/10 border border-black/10 flex items-center justify-center">
+            <User className="w-7 h-7 text-black/60" />
           </div>
           <div>
             <h1 className="text-2xl md:text-3xl font-light">
               {user?.display_name || user?.email || 'My Account'}
             </h1>
             {user?.email && (
-              <p className="text-white/40 text-sm mt-1">{user.email}</p>
+              <p className="text-black/40 text-sm mt-1">{user.email}</p>
             )}
           </div>
         </div>
@@ -543,19 +545,19 @@ export default function AccountPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium whitespace-nowrap transition-all
                   ${activeTab === tab.id 
-                    ? 'bg-white/10 text-white border border-white/10' 
-                    : 'text-white/50 hover:text-white/70 hover:bg-white/5'
+                    ? 'bg-black/10 text-black border border-black/10' 
+                    : 'text-black/50 hover:text-black/70 hover:bg-black/5'
                   }`}
               >
                 <tab.icon className="w-4 h-4" />
                 {tab.label}
                 {tab.id === 'wishlist' && wishlistItems.length > 0 && (
-                  <span className="ml-auto bg-white/10 text-white/60 text-xs px-2 py-0.5 rounded-full">
+                  <span className="ml-auto bg-black/10 text-black/60 text-xs px-2 py-0.5 rounded-full">
                     {wishlistItems.length}
                   </span>
                 )}
                 {tab.id === 'orders' && getItemCount() > 0 && (
-                  <span className="ml-auto bg-white/10 text-white/60 text-xs px-2 py-0.5 rounded-full">
+                  <span className="ml-auto bg-black/10 text-black/60 text-xs px-2 py-0.5 rounded-full">
                     {getItemCount()} in cart
                   </span>
                 )}
@@ -595,10 +597,10 @@ export default function AccountPage() {
                         { label: 'Orders', value: orders.length, icon: Package },
                         { label: 'Addresses', value: addresses.length, icon: MapPin },
                       ].map((stat) => (
-                        <div key={stat.label} className="p-4 bg-white/5 border border-white/10 rounded-xl">
-                          <stat.icon className="w-5 h-5 text-white/40 mb-2" />
+                        <div key={stat.label} className="p-4 bg-black/5 border border-black/10 rounded-xl">
+                          <stat.icon className="w-5 h-5 text-black/40 mb-2" />
                           <p className="text-2xl font-light">{stat.value}</p>
-                          <p className="text-white/40 text-xs mt-1">{stat.label}</p>
+                          <p className="text-black/40 text-xs mt-1">{stat.label}</p>
                         </div>
                       ))}
                     </div>
@@ -606,16 +608,16 @@ export default function AccountPage() {
                     {/* Recent Orders */}
                     <div>
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-sm font-medium text-white/60 uppercase tracking-wider">Recent Orders</h3>
-                        <button onClick={() => setActiveTab('orders')} className="text-xs text-white/40 hover:text-white/60">
+                        <h3 className="text-sm font-medium text-black/60 uppercase tracking-wider">Recent Orders</h3>
+                        <button onClick={() => setActiveTab('orders')} className="text-xs text-black/40 hover:text-black/60">
                           View All <ChevronRight className="w-3 h-3 inline" />
                         </button>
                       </div>
                       {orders.length === 0 ? (
-                        <div className="p-8 bg-white/5 border border-white/10 rounded-xl text-center">
-                          <ShoppingBag className="w-8 h-8 text-white/20 mx-auto mb-3" />
-                          <p className="text-white/40 text-sm">No orders yet</p>
-                          <Link href="/store" className="text-xs text-white/50 hover:text-white/70 mt-2 inline-block">
+                        <div className="p-8 bg-black/5 border border-black/10 rounded-xl text-center">
+                          <ShoppingBag className="w-8 h-8 text-black/20 mx-auto mb-3" />
+                          <p className="text-black/40 text-sm">No orders yet</p>
+                          <Link href="/store" className="text-xs text-black/50 hover:text-black/70 mt-2 inline-block">
                             Start Shopping
                           </Link>
                         </div>
@@ -624,13 +626,13 @@ export default function AccountPage() {
                           {orders.slice(0, 3).map((order) => {
                             const config = STATUS_CONFIG[order.status];
                             return (
-                              <div key={order.id} className="p-4 bg-white/5 border border-white/10 rounded-xl flex items-center gap-4">
+                              <div key={order.id} className="p-4 bg-black/5 border border-black/10 rounded-xl flex items-center gap-4">
                                 <div className={`w-10 h-10 rounded-lg ${config.bg} flex items-center justify-center`}>
                                   <config.icon className={`w-5 h-5 ${config.color}`} />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm font-medium">Order #{order.id.slice(0, 8)}</p>
-                                  <p className="text-xs text-white/40">{new Date(order.date).toLocaleDateString()}</p>
+                                  <p className="text-xs text-black/40">{new Date(order.date).toLocaleDateString()}</p>
                                 </div>
                                 <div className="text-right">
                                   <p className="text-sm font-medium">${order.total.toFixed(2)}</p>
@@ -650,10 +652,10 @@ export default function AccountPage() {
                   <div className="space-y-6">
                     <h2 className="text-lg font-medium">Order History</h2>
                     {orders.length === 0 ? (
-                      <div className="p-16 bg-white/5 border border-white/10 rounded-xl text-center">
-                        <Package className="w-12 h-12 text-white/20 mx-auto mb-4" />
-                        <p className="text-white/40">No orders yet</p>
-                        <Link href="/store" className="mt-4 inline-flex px-6 py-2 bg-white/10 border border-white/10 rounded-xl text-sm hover:bg-white/20 transition-all">
+                      <div className="p-16 bg-black/5 border border-black/10 rounded-xl text-center">
+                        <Package className="w-12 h-12 text-black/20 mx-auto mb-4" />
+                        <p className="text-black/40">No orders yet</p>
+                        <Link href="/store" className="mt-4 inline-flex px-6 py-2 bg-black/10 border border-black/10 rounded-xl text-sm hover:bg-black/20 transition-all">
                           Browse Products
                         </Link>
                       </div>
@@ -662,11 +664,11 @@ export default function AccountPage() {
                         {orders.map((order) => {
                           const config = STATUS_CONFIG[order.status];
                           return (
-                            <div key={order.id} className="p-6 bg-white/5 border border-white/10 rounded-xl">
+                            <div key={order.id} className="p-6 bg-black/5 border border-black/10 rounded-xl">
                               <div className="flex items-center justify-between mb-4">
                                 <div>
                                   <p className="font-medium">Order #{order.id.slice(0, 8)}</p>
-                                  <p className="text-xs text-white/40 mt-0.5">
+                                  <p className="text-xs text-black/40 mt-0.5">
                                     {new Date(order.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                                   </p>
                                 </div>
@@ -677,17 +679,17 @@ export default function AccountPage() {
                               <div className="space-y-2 mb-4">
                                 {order.items.map((item, i) => (
                                   <div key={i} className="flex items-center justify-between text-sm">
-                                    <span className="text-white/70">{item.name} × {item.quantity}</span>
-                                    <span className="text-white/50">${(item.price * item.quantity).toFixed(2)}</span>
+                                    <span className="text-black/70">{item.name} × {item.quantity}</span>
+                                    <span className="text-black/50">${(item.price * item.quantity).toFixed(2)}</span>
                                   </div>
                                 ))}
                               </div>
                               {/* Tracking section */}
-                              <div className="pt-4 border-t border-white/10 space-y-3">
+                              <div className="pt-4 border-t border-black/10 space-y-3">
                                 {order.trackingNumber ? (
                                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                                     <div className="flex items-center gap-2 flex-wrap">
-                                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${getCarrierColor(order.carrier)} bg-white/5 border border-white/10`}>
+                                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${getCarrierColor(order.carrier)} bg-black/5 border border-white/10`}>
                                         {getCarrierName(order.carrier)}
                                       </span>
                                       <span className="font-mono text-xs text-white/60">{order.trackingNumber}</span>
@@ -710,7 +712,7 @@ export default function AccountPage() {
                                             href={info.trackUrl(order.trackingNumber!)}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="flex items-center gap-1 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-white/50 hover:text-white/80 hover:bg-white/10 transition-colors"
+                                            className="flex items-center gap-1 px-3 py-1.5 bg-black/5 border border-white/10 rounded-lg text-xs text-white/50 hover:text-white/80 hover:bg-black/10 transition-colors"
                                           >
                                             <ExternalLink className="w-3 h-3" />
                                             {info.name}
@@ -730,7 +732,7 @@ export default function AccountPage() {
                                           value={trackingInputs[order.id] || ''}
                                           onChange={(e) => setTrackingInputs(prev => ({ ...prev, [order.id]: e.target.value }))}
                                           onKeyDown={(e) => { if (e.key === 'Enter') handleSaveTracking(order); }}
-                                          className="w-full h-9 pl-9 pr-3 bg-white/5 border border-white/10 rounded-lg text-xs text-white font-mono placeholder:text-white/30 focus:outline-none focus:border-blue-500/50 transition-colors"
+                                          className="w-full h-9 pl-9 pr-3 bg-black/5 border border-white/10 rounded-lg text-xs text-white font-mono placeholder:text-white/30 focus:outline-none focus:border-blue-500/50 transition-colors"
                                         />
                                       </div>
                                       <button
@@ -768,19 +770,19 @@ export default function AccountPage() {
                   <div className="space-y-6">
                     <h2 className="text-lg font-medium">My Wishlist ({wishlistItems.length})</h2>
                     {wishlistItems.length === 0 ? (
-                      <div className="p-16 bg-white/5 border border-white/10 rounded-xl text-center">
+                      <div className="p-16 bg-black/5 border border-white/10 rounded-xl text-center">
                         <Heart className="w-12 h-12 text-white/20 mx-auto mb-4" />
                         <p className="text-white/40">Your wishlist is empty</p>
-                        <Link href="/store" className="mt-4 inline-flex px-6 py-2 bg-white/10 border border-white/10 rounded-xl text-sm hover:bg-white/20 transition-all">
+                        <Link href="/store" className="mt-4 inline-flex px-6 py-2 bg-black/10 border border-white/10 rounded-xl text-sm hover:bg-black/20 transition-all">
                           Discover Products
                         </Link>
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         {wishlistItems.map((item) => (
-                          <div key={item.productId} className="group p-4 bg-white/5 border border-white/10 rounded-xl hover:border-white/20 transition-all">
+                          <div key={item.productId} className="group p-4 bg-black/5 border border-white/10 rounded-xl hover:border-white/20 transition-all">
                             <div className="flex items-start gap-3">
-                              <div className="w-16 h-16 rounded-lg bg-white/10 overflow-hidden shrink-0">
+                              <div className="w-16 h-16 rounded-lg bg-black/10 overflow-hidden shrink-0">
                                 {item.image ? (
                                   <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                                 ) : (
@@ -803,7 +805,7 @@ export default function AccountPage() {
                             <div className="flex gap-2 mt-3">
                               <Link
                                 href={`/store/product/${item.slug}`}
-                                className="relative flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-black border border-white/30 rounded-lg text-xs text-white overflow-hidden group/btn hover:border-white/50 transition-colors"
+                                className="relative flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-black border border-white/30 rounded-lg text-xs text-white overflow-hidden group/btn hover:border-black/50 transition-colors"
                               >
                                 <span className="pointer-events-none absolute inset-0 rounded-lg bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
                                 <Eye className="w-3 h-3 relative z-10" />
@@ -811,7 +813,7 @@ export default function AccountPage() {
                               </Link>
                               <Link
                                 href={`/store/product/${item.slug}?addToCart=true`}
-                                className="relative flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-black border border-white rounded-lg text-xs font-medium text-white overflow-hidden group/buy hover:bg-white/10 transition-colors"
+                                className="relative flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-black border border-white rounded-lg text-xs font-medium text-white overflow-hidden group/buy hover:bg-black/10 transition-colors"
                               >
                                 <span 
                                   className="pointer-events-none absolute inset-0 rounded-lg" 
@@ -839,19 +841,19 @@ export default function AccountPage() {
                       <h2 className="text-lg font-medium">Saved Addresses</h2>
                       <button
                         onClick={() => setShowAddressForm(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/10 rounded-xl text-sm hover:bg-white/20 transition-all"
+                        className="flex items-center gap-2 px-4 py-2 bg-black/10 border border-white/10 rounded-xl text-sm hover:bg-black/20 transition-all"
                       >
                         <Plus className="w-4 h-4" />
                         Add Address
                       </button>
                     </div>
                     {addresses.length === 0 && !showAddressForm ? (
-                      <div className="p-16 bg-white/5 border border-white/10 rounded-xl text-center">
+                      <div className="p-16 bg-black/5 border border-white/10 rounded-xl text-center">
                         <MapPin className="w-12 h-12 text-white/20 mx-auto mb-4" />
                         <p className="text-white/40">No saved addresses</p>
                         <button
                           onClick={() => setShowAddressForm(true)}
-                          className="mt-4 inline-flex px-6 py-2 bg-white/10 border border-white/10 rounded-xl text-sm hover:bg-white/20 transition-all"
+                          className="mt-4 inline-flex px-6 py-2 bg-black/10 border border-white/10 rounded-xl text-sm hover:bg-black/20 transition-all"
                         >
                           Add Your First Address
                         </button>
@@ -859,11 +861,11 @@ export default function AccountPage() {
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {addresses.map((addr) => (
-                          <div key={addr.id} className={`p-5 bg-white/5 border rounded-xl ${addr.isDefault ? 'border-white/20' : 'border-white/10'}`}>
+                          <div key={addr.id} className={`p-5 bg-black/5 border rounded-xl ${addr.isDefault ? 'border-white/20' : 'border-white/10'}`}>
                             <div className="flex items-center justify-between mb-2">
                               <span className="text-sm font-medium">{addr.label}</span>
                               {addr.isDefault && (
-                                <span className="text-[10px] px-2 py-0.5 bg-white/10 text-white/60 rounded-full">Default</span>
+                                <span className="text-[10px] px-2 py-0.5 bg-black/10 text-white/60 rounded-full">Default</span>
                               )}
                             </div>
                             <p className="text-sm text-white/70">{addr.name}</p>
@@ -906,7 +908,7 @@ export default function AccountPage() {
                             <input
                               name="display_name"
                               defaultValue={user?.display_name || ''}
-                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
                               style={{ color: 'rgb(255, 255, 255)' }}
                               placeholder="Your display name"
                             />
@@ -916,7 +918,7 @@ export default function AccountPage() {
                             <input
                               name="full_name"
                               defaultValue={user?.full_name || ''}
-                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
                               style={{ color: 'rgb(255, 255, 255)' }}
                               placeholder="Your full name"
                             />
@@ -927,7 +929,7 @@ export default function AccountPage() {
                           <input
                             value={user?.email || ''}
                             disabled
-                            className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl cursor-not-allowed"
+                            className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl cursor-not-allowed"
                             style={{ color: 'rgba(255, 255, 255, 0.4)' }}
                           />
                           <p className="text-xs text-white/30 mt-1">Email cannot be changed here</p>
@@ -938,7 +940,7 @@ export default function AccountPage() {
                             <input
                               name="phone"
                               defaultValue={user?.phone || ''}
-                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
                               style={{ color: 'rgb(255, 255, 255)' }}
                               placeholder="+1 (555) 000-0000"
                             />
@@ -949,7 +951,7 @@ export default function AccountPage() {
                               name="birth_date"
                               type="date"
                               defaultValue={user?.birth_date || ''}
-                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors scheme-dark"
+                              className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors scheme-dark"
                               style={{ color: 'rgb(255, 255, 255)', colorScheme: 'dark' }}
                             />
                           </div>
@@ -960,7 +962,7 @@ export default function AccountPage() {
                             <input
                               name="country"
                               defaultValue={user?.country || ''}
-                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
                               style={{ color: 'rgb(255, 255, 255)' }}
                               placeholder="United States"
                             />
@@ -970,7 +972,7 @@ export default function AccountPage() {
                             <input
                               name="city"
                               defaultValue={user?.city || ''}
-                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
                               style={{ color: 'rgb(255, 255, 255)' }}
                               placeholder="New York"
                             />
@@ -980,7 +982,7 @@ export default function AccountPage() {
                             <select
                               name="timezone"
                               defaultValue={user?.timezone || ''}
-                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-white/20 transition-colors appearance-none"
+                              className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl focus:outline-none focus:border-white/20 transition-colors appearance-none"
                               style={{ color: 'rgb(255, 255, 255)' }}
                             >
                               <option value="">Select timezone</option>
@@ -1004,7 +1006,7 @@ export default function AccountPage() {
                             name="bio"
                             defaultValue={user?.bio || ''}
                             rows={3}
-                            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors resize-none"
+                            className="w-full px-4 py-3 bg-black/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors resize-none"
                             style={{ color: 'rgb(255, 255, 255)' }}
                             placeholder="Tell us about yourself..."
                           />
@@ -1020,7 +1022,7 @@ export default function AccountPage() {
                             <input
                               name="telegram_username"
                               defaultValue={user?.telegram_username || ''}
-                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
                               style={{ color: 'rgb(255, 255, 255)' }}
                               placeholder="@username"
                             />
@@ -1030,7 +1032,7 @@ export default function AccountPage() {
                             <input
                               name="discord_username"
                               defaultValue={user?.discord_username || ''}
-                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
                               style={{ color: 'rgb(255, 255, 255)' }}
                               placeholder="User#0000"
                             />
@@ -1040,7 +1042,7 @@ export default function AccountPage() {
                             <input
                               name="instagram_username"
                               defaultValue={user?.instagram_username || ''}
-                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
                               style={{ color: 'rgb(255, 255, 255)' }}
                               placeholder="@handle"
                             />
@@ -1050,7 +1052,7 @@ export default function AccountPage() {
                             <input
                               name="twitter_username"
                               defaultValue={user?.twitter_username || ''}
-                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
                               style={{ color: 'rgb(255, 255, 255)' }}
                               placeholder="@handle"
                             />
@@ -1067,7 +1069,7 @@ export default function AccountPage() {
                             <select
                               name="preferred_currency"
                               defaultValue={user?.preferred_currency || 'USD'}
-                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-white/20 transition-colors appearance-none"
+                              className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl focus:outline-none focus:border-white/20 transition-colors appearance-none"
                               style={{ color: 'rgb(255, 255, 255)' }}
                             >
                               <option value="USD">USD ($)</option>
@@ -1084,7 +1086,7 @@ export default function AccountPage() {
                             <select
                               name="preferred_language"
                               defaultValue={user?.preferred_language || 'en'}
-                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-white/20 transition-colors appearance-none"
+                              className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl focus:outline-none focus:border-white/20 transition-colors appearance-none"
                               style={{ color: 'rgb(255, 255, 255)' }}
                             >
                               <option value="en">English</option>
@@ -1103,7 +1105,7 @@ export default function AccountPage() {
                             <select
                               name="preferred_contact_method"
                               defaultValue={user?.preferred_contact_method || 'email'}
-                              className="w-full h-12 px-4 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-white/20 transition-colors appearance-none"
+                              className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl focus:outline-none focus:border-white/20 transition-colors appearance-none"
                               style={{ color: 'rgb(255, 255, 255)' }}
                             >
                               <option value="email">Email</option>
@@ -1119,7 +1121,7 @@ export default function AccountPage() {
                             type="checkbox"
                             name="store_newsletter_subscribed"
                             defaultChecked={user?.store_newsletter_subscribed}
-                            className="w-5 h-5 rounded border-white/20 bg-white/5 text-white accent-white"
+                            className="w-5 h-5 rounded border-white/20 bg-black/5 text-white accent-white"
                           />
                           <span className="text-sm text-white/70">Subscribe to store newsletter & promotions</span>
                         </label>
@@ -1135,7 +1137,7 @@ export default function AccountPage() {
                               type="checkbox"
                               name="notifications_enabled"
                               defaultChecked={user?.notifications_enabled}
-                              className="w-5 h-5 rounded border-white/20 bg-white/5 text-white accent-white"
+                              className="w-5 h-5 rounded border-white/20 bg-black/5 text-white accent-white"
                             />
                           </label>
                           <label className="flex items-center justify-between cursor-pointer">
@@ -1144,7 +1146,7 @@ export default function AccountPage() {
                               type="checkbox"
                               name="notify_trades"
                               defaultChecked={user?.notify_trades}
-                              className="w-5 h-5 rounded border-white/20 bg-white/5 text-white accent-white"
+                              className="w-5 h-5 rounded border-white/20 bg-black/5 text-white accent-white"
                             />
                           </label>
                           <label className="flex items-center justify-between cursor-pointer">
@@ -1153,7 +1155,7 @@ export default function AccountPage() {
                               type="checkbox"
                               name="notify_livestreams"
                               defaultChecked={user?.notify_livestreams}
-                              className="w-5 h-5 rounded border-white/20 bg-white/5 text-white accent-white"
+                              className="w-5 h-5 rounded border-white/20 bg-black/5 text-white accent-white"
                             />
                           </label>
                           <label className="flex items-center justify-between cursor-pointer">
@@ -1162,7 +1164,7 @@ export default function AccountPage() {
                               type="checkbox"
                               name="notify_news"
                               defaultChecked={user?.notify_news}
-                              className="w-5 h-5 rounded border-white/20 bg-white/5 text-white accent-white"
+                              className="w-5 h-5 rounded border-white/20 bg-black/5 text-white accent-white"
                             />
                           </label>
                           <label className="flex items-center justify-between cursor-pointer">
@@ -1171,7 +1173,7 @@ export default function AccountPage() {
                               type="checkbox"
                               name="notify_vip"
                               defaultChecked={user?.notify_vip}
-                              className="w-5 h-5 rounded border-white/20 bg-white/5 text-white accent-white"
+                              className="w-5 h-5 rounded border-white/20 bg-black/5 text-white accent-white"
                             />
                           </label>
                           <label className="flex items-center justify-between cursor-pointer">
@@ -1180,7 +1182,7 @@ export default function AccountPage() {
                               type="checkbox"
                               name="notification_sound"
                               defaultChecked={user?.notification_sound}
-                              className="w-5 h-5 rounded border-white/20 bg-white/5 text-white accent-white"
+                              className="w-5 h-5 rounded border-white/20 bg-black/5 text-white accent-white"
                             />
                           </label>
                         </div>
@@ -1193,7 +1195,7 @@ export default function AccountPage() {
                           settingsSaved
                             ? 'bg-green-500 text-white scale-105'
                             : savingSettings
-                            ? 'bg-white/50 text-black/50 cursor-wait'
+                            ? 'bg-black/50 text-black/50 cursor-wait'
                             : 'bg-white text-black hover:bg-white/90'
                         }`}
                       >
@@ -1250,7 +1252,7 @@ export default function AccountPage() {
             <div className="p-5 border-b border-white/10">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl ${STATUS_CONFIG[trackingOrder.status]?.bg || 'bg-white/10'} flex items-center justify-center`}>
+                  <div className={`w-10 h-10 rounded-xl ${STATUS_CONFIG[trackingOrder.status]?.bg || 'bg-black/10'} flex items-center justify-center`}>
                     <Truck className={`w-5 h-5 ${getCarrierColor(trackingOrder.carrier)}`} />
                   </div>
                   <div>
@@ -1260,7 +1262,7 @@ export default function AccountPage() {
                 </div>
                 <button
                   onClick={() => setTrackingOrder(null)}
-                  className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+                  className="w-8 h-8 rounded-lg bg-black/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-black/10 transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -1268,14 +1270,14 @@ export default function AccountPage() {
 
               {/* Carrier badge + tracking number */}
               <div className="flex items-center gap-2">
-                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${getCarrierColor(trackingOrder.carrier)} bg-white/5 border border-white/10`}>
+                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${getCarrierColor(trackingOrder.carrier)} bg-black/5 border border-white/10`}>
                   {getCarrierName(trackingOrder.carrier)}
                 </span>
                 <span className="font-mono text-xs text-white/50">{trackingOrder.trackingNumber}</span>
               </div>
 
               {/* Status summary */}
-              <div className="mt-4 p-3 rounded-xl bg-white/5 border border-white/10 space-y-1.5">
+              <div className="mt-4 p-3 rounded-xl bg-black/5 border border-white/10 space-y-1.5">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-white/50">Status</span>
                   <span className={`font-medium ${STATUS_CONFIG[trackingOrder.status]?.color || 'text-white'}`}>
@@ -1305,7 +1307,7 @@ export default function AccountPage() {
                       {!isLast && (
                         <div
                           className={`absolute left-3.75 top-8 w-0.5 h-[calc(100%-8px)] ${
-                            event.completed ? 'bg-green-500/50' : 'bg-white/10'
+                            event.completed ? 'bg-green-500/50' : 'bg-black/10'
                           }`}
                         />
                       )}
@@ -1316,7 +1318,7 @@ export default function AccountPage() {
                               ? 'bg-green-500/20 border-green-500 shadow-[0_0_12px_rgba(34,197,94,0.3)]'
                               : event.completed
                               ? 'bg-green-500/20 border-green-500/50'
-                              : 'bg-white/5 border-white/10'
+                              : 'bg-black/5 border-white/10'
                           }`}
                         >
                           {event.current ? (
@@ -1354,7 +1356,7 @@ export default function AccountPage() {
                   href={liveUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-black/5 border border-white/10 rounded-lg text-xs text-white/50 hover:text-white hover:bg-black/10 transition-colors"
                 >
                   <ExternalLink className="w-3 h-3" />
                   Track on {carrierInfo?.name || 'carrier website'}

@@ -1,10 +1,18 @@
 // Service Worker for Offline Support + Push Notifications + Spline Caching
-// Version 5.0.0 - Network-first approach + Push notification support + Spline scene caching
+// Version 6.0.0 - iOS & Android Optimized
+// iOS Safari: Respects cache limits, handles backgrounding gracefully
+// Android Chrome: Aggressive caching, background sync support
 // Spline scenes are aggressively cached for instant loading
 
-const CACHE_NAME = 'bullmoney-v5-spline';
-const OFFLINE_CACHE = 'bullmoney-offline-v5';
-const SPLINE_CACHE = 'spline-scenes-v1';
+const CACHE_VERSION = '6.0.0';
+const CACHE_NAME = 'bullmoney-v6-mobile';
+const OFFLINE_CACHE = 'bullmoney-offline-v6';
+const SPLINE_CACHE = 'spline-scenes-v2';
+
+// iOS Safari cache limit: ~50MB per origin
+// Android Chrome: ~200MB+ (more generous)
+const MAX_CACHE_SIZE_MB = 45; // Stay under iOS limit
+const MAX_CACHE_ENTRIES = 150; // Prevent iOS cache eviction
 
 // MINIMAL cache - only offline fallback essentials
 const PRECACHE_ASSETS = [
@@ -25,60 +33,99 @@ const SPLINE_SCENES = [
   '/scene6.splinecode',
 ];
 
-// Detect browser type for logging only
+// Detect browser type and OS for optimizations
 function getBrowserType(request) {
   const ua = request.headers.get('user-agent') || '';
   const isWebView = /Instagram|FBAN|FBAV|FB_IAB|FBIOS|FB4A|Line|TikTok|Twitter|Snapchat|LinkedInApp/i.test(ua);
   const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
   const isMobile = /mobile|android|iphone|ipad|ipod/i.test(ua);
-  return { isWebView, isSafari, isMobile };
+  const isIOS = /iphone|ipad|ipod/i.test(ua);
+  const isAndroid = /android/i.test(ua);
+  return { isWebView, isSafari, isMobile, isIOS, isAndroid };
 }
 
-// Install event - cache offline fallback + preload Spline scenes
+// iOS-specific: Trim cache to stay under 50MB limit
+async function trimCacheForIOS() {
+  const cache = await caches.open(CACHE_NAME);
+  const keys = await cache.keys();
+  
+  if (keys.length > MAX_CACHE_ENTRIES) {
+    // Remove oldest 25% when limit reached
+    const toRemove = keys.slice(0, Math.floor(keys.length * 0.25));
+    await Promise.all(toRemove.map(key => cache.delete(key)));
+    console.log(`[SW iOS] Trimmed ${toRemove.length} cache entries`);
+  }
+}
+
+// Android-specific: Check if we should use background sync
+function supportsBackgroundSync() {
+  return 'sync' in self.registration;
+}
+
+// Install event - cache offline fallback + preload Spline scenes (iOS/Android optimized)
 self.addEventListener('install', (event) => {
-  console.log('[SW v5] Installing with Spline scene caching...');
+  console.log('[SW v6 Mobile] Installing with iOS/Android optimizations...');
   event.waitUntil(
     Promise.all([
       // Cache offline essentials
       caches.open(OFFLINE_CACHE).then((cache) => {
         return cache.addAll(PRECACHE_ASSETS).catch(err => {
-          console.warn('[SW v5] Offline assets failed to cache:', err);
+          console.warn('[SW v6] Offline assets failed to cache (non-critical):', err);
         });
       }),
-      // Aggressively cache Spline scenes for instant loading
+      // Spline scenes: More conservative on iOS (respects memory limits)
       caches.open(SPLINE_CACHE).then((cache) => {
-        console.log('[SW v5] Pre-caching Spline scenes...');
+        console.log('[SW v6] Pre-caching Spline scenes (mobile-optimized)...');
         return Promise.all(
           SPLINE_SCENES.map(scene => 
-            fetch(scene, { cache: 'force-cache' })
+            fetch(scene, { 
+              cache: 'force-cache',
+              // iOS Safari: Add timeout to prevent hanging
+              signal: AbortSignal.timeout ? AbortSignal.timeout(10000) : undefined
+            })
               .then(response => {
                 if (response.ok) {
                   cache.put(scene, response);
-                  console.log(`[SW v5] Cached: ${scene}`);
+                  console.log(`[SW v6] Cached: ${scene}`);
                 }
               })
-              .catch(err => console.warn(`[SW v5] Failed to cache ${scene}:`, err))
+              .catch(err => {
+                // iOS: Non-critical, continue install
+                console.warn(`[SW v6] Failed to cache ${scene} (non-critical):`, err);
+              })
           )
         );
       })
-    ]).then(() => self.skipWaiting())
+    ]).then(() => {
+      console.log('[SW v6] Installation complete - iOS/Android ready');
+      return self.skipWaiting();
+    })
   );
 });
 
-// Activate event - CLEAR old caches, keep Spline cache
+// Activate event - CLEAR old caches, keep Spline cache, trim for iOS
 self.addEventListener('activate', (event) => {
-  console.log('[SW v5] Activating - clearing old caches, keeping Spline cache...');
+  console.log('[SW v6] Activating - clearing old caches (iOS/Android optimized)...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((name) => name !== OFFLINE_CACHE && name !== SPLINE_CACHE) // Keep offline + spline
+          .filter((name) => 
+            name !== CACHE_NAME && 
+            name !== OFFLINE_CACHE && 
+            name !== SPLINE_CACHE
+          )
           .map((name) => {
-            console.log('[SW v5] Deleting cache:', name);
+            console.log('[SW v6] Deleting old cache:', name);
             return caches.delete(name);
           })
       );
-    }).then(() => self.clients.claim())
+    })
+    .then(() => trimCacheForIOS()) // iOS: Ensure we're under cache limit
+    .then(() => {
+      console.log('[SW v6] Activation complete - taking control');
+      return self.clients.claim();
+    })
   );
 });
 

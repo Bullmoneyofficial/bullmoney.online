@@ -28,6 +28,31 @@
 }
 
 /* ============================================================================
+   CRITICAL MOBILE SCROLL FIX
+   Ensures scrolling always works on mobile devices - NEVER DISABLE
+   ============================================================================ */
+
+@media (max-width: 767px) {
+  html, body {
+    /* CRITICAL: Force scrolling to work on mobile - override any inline styles */
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y pan-x !important;
+    /* Prevent height constraints from blocking scroll */
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+  }
+  
+  /* Ensure main content wrapper is scrollable */
+  body > div,
+  #__next {
+    overflow-y: visible !important;
+    min-height: initial !important;
+  }
+}
+
+/* ============================================================================
    MOBILE DEVICE OPTIMIZATIONS
    Applied when html.is-mobile class is present
    ============================================================================ */

@@ -241,6 +241,7 @@ function PrintProductsViewer({ product, onClose, onCustomize }: PrintProductsVie
     const prevHtml = document.documentElement.style.overflow;
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden';
+    requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0, behavior: 'auto' }));
     return () => {
       document.body.style.overflow = prevBody;
       document.documentElement.style.overflow = prevHtml;
@@ -254,7 +255,7 @@ function PrintProductsViewer({ product, onClose, onCustomize }: PrintProductsVie
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.12 }}
-        className={`fixed inset-0 z-[2147483647] flex items-stretch justify-end bg-black/60 ${shouldDisableBackdropBlur ? '' : 'sm:backdrop-blur-md'}`}
+        className={`fixed inset-0 z-[2147483647] flex items-stretch justify-end bg-white/80 ${shouldDisableBackdropBlur ? '' : 'sm:backdrop-blur-md'}`}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -289,16 +290,16 @@ function PrintProductsViewer({ product, onClose, onCustomize }: PrintProductsVie
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
-          className={`relative w-full h-[100dvh] max-w-sm sm:max-w-xl md:max-w-2xl lg:max-w-3xl bg-white text-black border-l border-black/10 flex flex-col safe-area-inset-bottom overflow-hidden ${shouldDisableBackdropBlur ? '' : 'sm:backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl'}`}
+          className={`relative w-full h-[100dvh] max-w-[320px] sm:max-w-xl md:max-w-2xl lg:max-w-3xl bg-white text-black border-l border-black/10 flex flex-col safe-area-inset-bottom overflow-hidden ${shouldDisableBackdropBlur ? '' : 'sm:backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl'}`}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
           }}
-          style={{ pointerEvents: 'all' }}
+          style={{ pointerEvents: 'all', backgroundColor: '#ffffff' }}
         >
-          <div className="flex items-center justify-between p-1.5 sm:p-4 md:p-5 border-b border-black/10 bg-white">
+          <div className="flex items-center justify-between p-1 sm:p-4 md:p-5 border-b border-black/10 bg-white">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="h-10 w-10 rounded-xl bg-black/5 flex items-center justify-center shrink-0">
+              <div className="h-10 w-10 rounded-xl bg-white border border-black/10 flex items-center justify-center shrink-0">
                 <ShoppingBag className="w-4 h-4" />
               </div>
               <div className="min-w-0">
@@ -317,7 +318,7 @@ function PrintProductsViewer({ product, onClose, onCustomize }: PrintProductsVie
                 e.stopPropagation();
                 onClose();
               }}
-              className="h-10 w-10 rounded-xl bg-black/5 flex items-center justify-center hover:bg-black/10 active:scale-95 transition-all"
+              className="h-10 w-10 rounded-xl bg-white border border-black/10 flex items-center justify-center hover:border-black/20 active:scale-95 transition-all"
               style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -327,8 +328,8 @@ function PrintProductsViewer({ product, onClose, onCustomize }: PrintProductsVie
             </motion.button>
           </div>
 
-          <div className="w-full flex-1 overflow-y-auto overscroll-contain overflow-x-hidden px-1.5 sm:px-6 md:px-8 py-2 sm:py-6 md:py-8">
-            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] gap-2 sm:gap-6 lg:gap-10">
+          <div className="w-full flex-1 overflow-y-auto overscroll-contain overflow-x-hidden px-1 sm:px-6 md:px-8 py-1.5 sm:py-6 md:py-8" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] gap-1.5 sm:gap-6 lg:gap-10">
               {/* Image Preview */}
               <div className="space-y-4 lg:sticky lg:top-24 self-start">
                 <div className="relative aspect-square rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
@@ -341,7 +342,7 @@ function PrintProductsViewer({ product, onClose, onCustomize }: PrintProductsVie
                 <div className="flex items-center justify-end">
                   <button
                     onClick={onCustomize}
-                    className="flex items-center gap-2 rounded-full bg-black px-4 py-2.5 text-xs font-semibold text-white shadow-lg transition-transform hover:scale-105"
+                    className="flex items-center gap-2 rounded-full bg-white border border-black/20 px-4 py-2.5 text-xs font-semibold text-black shadow-sm transition-transform hover:scale-105"
                   >
                     <Edit3 className="h-3.5 w-3.5" />
                     Customize Design
@@ -368,7 +369,7 @@ function PrintProductsViewer({ product, onClose, onCustomize }: PrintProductsVie
                       onClick={() => setSelectedSize(size)}
                       className={`rounded-xl border-2 p-3 text-left transition-all ${
                         selectedSize.label === size.label
-                          ? 'border-black bg-black text-white'
+                          ? 'border-black bg-white text-black'
                           : 'border-black/10 bg-white text-black hover:border-black/30'
                       }`}
                     >
@@ -406,7 +407,7 @@ function PrintProductsViewer({ product, onClose, onCustomize }: PrintProductsVie
 
               {/* Printer Info */}
               {product.printerCompatible.length > 0 && (
-                <div className="rounded-xl bg-black/5 p-4">
+                <div className="rounded-xl bg-white border border-black/5 p-4">
                   <p className="text-xs font-semibold text-black mb-2">Printed Using:</p>
                   <div className="flex flex-wrap gap-2">
                     {product.printerCompatible.map((printer) => (
@@ -429,7 +430,7 @@ function PrintProductsViewer({ product, onClose, onCustomize }: PrintProductsVie
                 </div>
                 <button 
                   onClick={handleAddToCart}
-                  className={`w-full rounded-full px-6 py-4 text-sm font-semibold text-white transition-all hover:scale-[1.02] flex items-center justify-center gap-2 ${added ? 'bg-green-600' : 'bg-black'}`}
+                  className="w-full rounded-full px-6 py-4 text-sm font-semibold text-black transition-all hover:scale-[1.02] flex items-center justify-center gap-2 border border-black/20 bg-white"
                 >
                   {added ? <><Check className="h-4 w-4" />Added to Cart!</> : <><ShoppingCart className="h-4 w-4" />Add to Cart</>}
                 </button>

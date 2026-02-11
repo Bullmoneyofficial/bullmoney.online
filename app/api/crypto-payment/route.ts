@@ -246,6 +246,9 @@ export async function POST(request: NextRequest) {
       );
     }
     const orderNumber = generateOrderNumber();
+    
+    const emailPlain = customerEmail.trim().toLowerCase();
+    const walletKey = walletAddress.trim().toLowerCase();
 
     const txHashHash = hashValue(cleanHash);
     const emailHash = hashValue(emailPlain);
@@ -284,9 +287,6 @@ export async function POST(request: NextRequest) {
     const requiredConfirmations = knownWallet?.minConfirmations 
       || confirmationsMap[coin.toUpperCase()] 
       || 12;
-
-    const emailPlain = customerEmail.trim().toLowerCase();
-    const walletKey = walletAddress.trim().toLowerCase();
 
     if (!checkAbuseLimit(emailLimitMap, emailPlain)) {
       return NextResponse.json(

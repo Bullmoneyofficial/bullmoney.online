@@ -417,6 +417,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
       document.body.style.overflow = 'hidden';
       document.documentElement.style.overflow = 'hidden';
       document.body.classList.add('quick-view-open');
+      requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0, behavior: 'auto' }));
       return () => {
         document.body.style.overflow = '';
         document.documentElement.style.overflow = prevHtmlOverflow;
@@ -797,7 +798,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.12 }}
-            className={`fixed inset-0 z-[2147483647] flex items-stretch justify-end bg-black/60 ${shouldDisableBackdropBlur ? '' : 'sm:backdrop-blur-md'}`}
+            className={`fixed inset-0 z-[2147483647] flex items-stretch justify-end bg-white/80 ${shouldDisableBackdropBlur ? '' : 'sm:backdrop-blur-md'}`}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -832,16 +833,16 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
-            className={`relative w-full h-[100dvh] max-w-sm sm:max-w-xl md:max-w-2xl lg:max-w-3xl bg-white text-black border-l border-black/10 flex flex-col safe-area-inset-bottom overflow-hidden ${shouldDisableBackdropBlur ? '' : 'sm:backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl'}`}
+            className={`relative w-full h-[100dvh] max-w-[320px] sm:max-w-xl md:max-w-2xl lg:max-w-3xl bg-white text-black border-l border-black/10 flex flex-col safe-area-inset-bottom overflow-hidden ${shouldDisableBackdropBlur ? '' : 'sm:backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl'}`}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
             }}
-            style={{ pointerEvents: 'all' }}
+            style={{ pointerEvents: 'all', backgroundColor: '#ffffff' }}
           >
-            <div className="flex items-center justify-between p-1.5 sm:p-4 md:p-5 border-b border-black/10 bg-white">
+            <div className="flex items-center justify-between p-1 sm:p-4 md:p-5 border-b border-black/10 bg-white">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="h-10 w-10 rounded-xl bg-black/5 flex items-center justify-center shrink-0">
+                <div className="h-10 w-10 rounded-xl bg-white border border-black/10 flex items-center justify-center shrink-0">
                   <ShoppingBag className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
@@ -860,7 +861,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                   e.stopPropagation();
                   setShowQuickView(false);
                 }}
-                className="h-10 w-10 rounded-xl bg-black/5 flex items-center justify-center hover:bg-black/10 active:scale-95 transition-all"
+                className="h-10 w-10 rounded-xl bg-white border border-black/10 flex items-center justify-center hover:border-black/20 active:scale-95 transition-all"
                 style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -870,8 +871,8 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
               </motion.button>
             </div>
 
-            <div className="w-full flex-1 overflow-y-auto overscroll-contain overflow-x-hidden px-1.5 sm:px-6 md:px-8 py-2 sm:py-6 md:py-8">
-              <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] gap-2 sm:gap-6 lg:gap-10">
+            <div className="w-full flex-1 overflow-y-auto overscroll-contain overflow-x-hidden px-1 sm:px-6 md:px-8 py-1.5 sm:py-6 md:py-8" style={{ WebkitOverflowScrolling: 'touch' }}>
+              <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] gap-1.5 sm:gap-6 lg:gap-10">
                 {/* Product Media Column */}
                 <div className="space-y-4 lg:sticky lg:top-24 self-start">
                   <div className="rounded-3xl border border-black/10 bg-white shadow-sm p-3">
@@ -905,7 +906,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                             priority
                           />
                           {hasDiscount && (
-                            <div className="absolute top-3 left-3 px-3 py-1.5 bg-black text-white text-xs font-semibold rounded-full shadow-md">
+                            <div className="absolute top-3 left-3 px-3 py-1.5 bg-white text-black text-xs font-semibold rounded-full border border-black/10 shadow-md">
                               -<CountUp to={discount} from={0} duration={1} className="" />% OFF
                             </div>
                           )}
@@ -959,7 +960,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                         <span className="text-base md:text-lg text-black/40 line-through">
                           {formatPrice(comparePrice)}
                         </span>
-                        <span className="px-3 py-1 bg-black text-white text-xs font-semibold rounded-full">
+                        <span className="px-3 py-1 bg-white text-black text-xs font-semibold rounded-full border border-black/10">
                           Save <CountUp to={discount} from={0} duration={1} className="" />%
                         </span>
                       </>
@@ -986,7 +987,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                             style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
                             className={`px-4 py-2.5 rounded-xl border text-sm font-medium transition-all ${
                               selectedVariant?.id === variant.id
-                                ? 'bg-black text-white border-black'
+                                ? 'bg-white text-black border-black'
                                 : 'bg-white text-black border-black/10 hover:border-black/30'
                             }`}
                             whileHover={{ scale: 1.03 }}
@@ -1028,7 +1029,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                   {product.tags && product.tags.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {product.tags.map((tag) => (
-                        <span key={tag} className="px-3 py-1 rounded-full text-xs bg-black/5 text-black/70 border border-black/10">
+                        <span key={tag} className="px-3 py-1 rounded-full text-xs bg-white text-black/70 border border-black/10">
                           {tag}
                         </span>
                       ))}
@@ -1068,7 +1069,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                           onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setPayMethod('cart'); }}
                           className={`py-3 text-[10px] font-semibold transition-all flex flex-col items-center justify-center gap-0.5 ${
                             payMethod === 'cart'
-                              ? 'bg-black text-white'
+                              ? 'bg-white text-black border border-black/20'
                               : 'bg-white text-black/60 hover:text-black'
                           }`}
                           style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
@@ -1082,7 +1083,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                           onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setPayMethod('whop'); }}
                           className={`py-3 text-[10px] font-semibold transition-all border-l border-black/10 flex flex-col items-center justify-center gap-0.5 ${
                             payMethod === 'whop'
-                              ? 'bg-black text-white'
+                              ? 'bg-white text-black border border-black/20'
                               : 'bg-white text-black/60 hover:text-black'
                           }`}
                           style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
@@ -1096,7 +1097,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                           onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setPayMethod('skrill'); }}
                           className={`py-3 text-[10px] font-semibold transition-all border-l border-black/10 flex flex-col items-center justify-center gap-0.5 ${
                             payMethod === 'skrill'
-                              ? 'bg-black text-white'
+                              ? 'bg-white text-black border border-black/20'
                               : 'bg-white text-black/50 hover:text-black'
                           }`}
                           style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
@@ -1111,7 +1112,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                           onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setPayMethod('stripe'); }}
                           className={`py-3 text-[10px] font-semibold transition-all border-l border-black/10 flex flex-col items-center justify-center gap-0.5 ${
                             payMethod === 'stripe'
-                              ? 'bg-black text-white'
+                              ? 'bg-white text-black border border-black/20'
                               : 'bg-white text-black/50 hover:text-black'
                           }`}
                           style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
@@ -1144,10 +1145,10 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                           style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
                           className={`w-full py-3.5 rounded-b-2xl transition-all flex items-center justify-center gap-2 text-sm font-semibold border border-t-0 border-black/10 ${
                             payMethod === 'stripe' || payMethod === 'skrill'
-                              ? 'bg-black/10 text-black/40 cursor-not-allowed'
+                              ? 'bg-white text-black/40 border border-black/10 cursor-not-allowed'
                               : payMethod === 'cart'
-                                ? 'bg-black text-white hover:bg-black/90'
-                                : 'bg-white text-black hover:bg-black/5'
+                                ? 'bg-white text-black border border-black/20 hover:border-black/40'
+                                : 'bg-white text-black hover:border-black/30'
                           }`}
                           whileHover={payMethod !== 'stripe' && payMethod !== 'skrill' ? { scale: 1.02 } : {}}
                           whileTap={payMethod !== 'stripe' && payMethod !== 'skrill' ? { scale: 0.98 } : {}}

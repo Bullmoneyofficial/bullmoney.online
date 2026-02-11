@@ -19,23 +19,21 @@ const SocialIcon = ({ href, icon, alt: _alt }: { href: string; icon: React.React
       whileTap={{ scale: 0.95 }}
       className="relative flex h-12 w-16 sm:h-14 sm:w-20 md:h-16 md:w-24 shrink-0 items-center justify-center rounded-xl overflow-hidden"
       style={{
-        background: 'black',
-        border: '1px solid #ffffff',
-        boxShadow: '0 0 4px rgba(255, 255, 255, 0.5)'
+        background: 'white',
+        border: '1px solid rgba(0, 0, 0, 0.12)',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)'
       }}
     >
-      {/* Hover state with stronger neon glow */}
-      <motion.div 
+      <motion.div
         className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
         style={{
-          boxShadow: '0 0 8px #ffffff, 0 0 16px rgba(255, 255, 255, 0.5), inset 0 0 8px rgba(255, 255, 255, 0.2)'
+          background: 'rgba(0, 0, 0, 0.04)'
         }}
       />
-      <div 
+      <div
         className="relative z-10 transition-colors duration-300"
-        style={{ 
-          color: '#ffffff',
-          filter: 'drop-shadow(0 0 4px #ffffff)'
+        style={{
+          color: '#111111'
         }}
       >
         {icon}

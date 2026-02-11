@@ -221,14 +221,18 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
+  minimumScale: 1,
   userScalable: true,
-  viewportFit: "cover",
+  viewportFit: "cover", // iOS: Extend into notch/safe area
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
     { media: "(prefers-color-scheme: dark)", color: "#000000" }
   ],
   colorScheme: "dark light",
+  // iOS-specific: Improve rendering performance
+  interactiveWidget: "resizes-content", // iOS 15+: Better keyboard handling
 };
+
 
 export default function RootLayout({
   children,
@@ -414,6 +418,21 @@ html,body{background:#050915!important;}
 
         {/* PWA Manifest */}
         <link rel="manifest" href="/manifest.json" />
+        
+        {/* iOS PWA - Standalone App Mode */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="BullMoney" />
+        
+        {/* Android PWA - Chrome Add to Home Screen */}
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="application-name" content="BullMoney" />
+        
+        {/* iOS Safari - Prevent auto-zoom on input focus */}
+        <meta name="format-detection" content="telephone=no" />
+        
+        {/* Android Chrome - Disable link preview on long press */}
+        <meta name="mobile-web-app-status-bar-style" content="black-translucent" />
 
         {/* 
           HREFLANG: Handled by Next.js Metadata API `alternates` in each layout.
@@ -444,6 +463,7 @@ html,body{background:#050915!important;}
           }}
         />
         <Script id="sw-and-touch" src="/scripts/sw-touch.js" strategy="afterInteractive" />
+        <Script id="ui-debug" src="/scripts/ui-debug.js" strategy="afterInteractive" />
         {/* 
           PERFORMANCE FIX: 120Hz detection moved to afterInteractive.
           Was previously running synchronously in <head> — creating WebGL canvas,
@@ -457,16 +477,16 @@ html,body{background:#050915!important;}
           strategy="lazyOnload"
         />
 
-        {/* BOOST: Device detection — afterInteractive is fine; no CSS depends on
-             data-device/data-perf above the fold. Avoids blocking first paint. */}
+        {/* MOBILE CRASH SHIELD: Smart memory management and lazy loading for mobile devices */}
+        <Script
+          src="/scripts/mobile-crash-shield.js"
+          strategy="afterInteractive"
+        />
+
+        {/* Device detection for device-specific optimizations */}
         <Script
           src="/scripts/device-detect.js"
           strategy="afterInteractive"
-        />
-        {/* BOOST: Loader coordinates perf-boost, seo-boost, offline-detect */}
-        <Script
-          src="/scripts/boost-loader.js"
-          strategy="lazyOnload"
         />
       </head>
       <body

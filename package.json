@@ -3,24 +3,27 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "boost": "python3 scripts/boost.py",
-    "boost:fast": "python3 scripts/boost.py --skip-heavy",
-    "boost:report": "python3 scripts/boost.py --report",
-    "dev": "python3 scripts/boost.py --skip-heavy && concurrently -n \"NEXT,CASINO-PHP,CASINO-NODE\" -c \"cyan,yellow,green\" \"node scripts/dev-logger.mjs --turbo\" \"cd Bullcasino && php artisan serve --host=0.0.0.0 --port=8000\" \"cd Bullcasino/server && node app.js\"",
-    "dev:no-casino": "python3 scripts/boost.py --skip-heavy && node scripts/dev-logger.mjs --turbo",
-    "dev:standard": "python3 scripts/boost.py --skip-heavy && node scripts/dev-logger.mjs",
-    "dev:fast": "python3 scripts/boost.py --skip-heavy && NODE_OPTIONS='--max-old-space-size=8192' node scripts/dev-logger.mjs --turbo",
-    "dev:webpack": "python3 scripts/boost.py --skip-heavy && node scripts/dev-logger.mjs --webpack",
-    "dev:plain": "python3 scripts/boost.py --skip-heavy && NEXT_TELEMETRY_DISABLED=1 next dev --turbo",
-    "build": "python3 scripts/boost.py && NEXT_TELEMETRY_DISABLED=1 NODE_OPTIONS='--max-old-space-size=8192' next build",
-    "build:fast": "python3 scripts/boost.py && NEXT_TELEMETRY_DISABLED=1 NODE_OPTIONS='--max-old-space-size=8192' next build",
-    "start": "next start -p $PORT",
-    "start:fast": "NODE_OPTIONS='--max-old-space-size=4096' next start -p ${PORT:-3000}",
+    "dev": "node scripts/platform-check.mjs && cross-env NODE_OPTIONS=--max-old-space-size=12288 concurrently -n \"NEXT,CASINO-PHP,CASINO-NODE\" -c \"cyan,yellow,green\" \"node scripts/dev-logger.mjs --turbo\" \"cd Bullcasino && php artisan serve --host=127.0.0.1 --port=8000\" \"cd Bullcasino/server && node app.js\"",
+    "dev:with-casino": "node scripts/platform-check.mjs && cross-env NODE_OPTIONS=--max-old-space-size=12288 concurrently -n \"NEXT,CASINO-PHP,CASINO-NODE\" -c \"cyan,yellow,green\" \"node scripts/dev-logger.mjs --turbo\" \"cd Bullcasino && php artisan serve --host=127.0.0.1 --port=8000\" \"cd Bullcasino/server && node app.js\"",
+    "dev:no-casino": "node scripts/platform-check.mjs && cross-env NODE_OPTIONS=--max-old-space-size=12288 node scripts/dev-logger.mjs --turbo",
+    "dev:standard": "node scripts/platform-check.mjs && cross-env NODE_OPTIONS=--max-old-space-size=8192 node scripts/dev-logger.mjs",
+    "dev:fast": "node scripts/platform-check.mjs && cross-env NODE_OPTIONS=--max-old-space-size=16384 node scripts/dev-logger.mjs --turbo",
+    "dev:silicon": "node scripts/platform-check.mjs && cross-env NODE_OPTIONS=--max-old-space-size=20480 node scripts/dev-logger.mjs --turbo",
+    "dev:windows": "node scripts/platform-check.mjs && cross-env NODE_OPTIONS=--max-old-space-size=12288 node scripts/dev-logger.mjs --turbo",
+    "dev:webpack": "node scripts/platform-check.mjs && node scripts/dev-logger.mjs --webpack",
+    "dev:plain": "cross-env NEXT_TELEMETRY_DISABLED=1 next dev --turbo",
+    "build": "node scripts/platform-check.mjs && cross-env NEXT_TELEMETRY_DISABLED=1 NODE_OPTIONS=--max-old-space-size=8192 next build",
+    "build:fast": "node scripts/platform-check.mjs && cross-env NEXT_TELEMETRY_DISABLED=1 NODE_OPTIONS=--max-old-space-size=8192 next build",
+    "build:silicon": "node scripts/platform-check.mjs && cross-env NEXT_TELEMETRY_DISABLED=1 NODE_OPTIONS=--max-old-space-size=16384 next build",
+    "build:windows": "node scripts/platform-check.mjs && cross-env NEXT_TELEMETRY_DISABLED=1 NODE_OPTIONS=--max-old-space-size=12288 next build",
+    "start": "node scripts/platform-check.mjs && cross-env next start -p $PORT",
+    "start:fast": "node scripts/platform-check.mjs && cross-env NODE_OPTIONS=--max-old-space-size=4096 next start -p ${PORT:-3000}",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "echo 'Running production readiness checks...' && npm run lint && npm run build",
     "type-check": "tsc --noEmit",
     "validate": "npm run type-check && npm run lint",
+    "platform-info": "node scripts/platform-detect.mjs",
     "check-deps": "node scripts/dependency-checker.mjs",
     "check-deps:update": "node scripts/dependency-checker.mjs --update --fix",
     "check-deps:report": "node scripts/dependency-checker.mjs --report",
@@ -98,9 +101,7 @@
     "i18next": "^25.5.3",
     "i18next-browser-languagedetector": "^8.2.0",
     "i18next-http-backend": "^3.0.2",
-
     "js-cookie": "^3.0.5",
-
     "konva": "^9.3.22",
     "lenis": "^1.3.17",
     "lucide-react": "^0.451.0",
@@ -111,7 +112,6 @@
     "metaapi.cloud-sdk": "^29.3.3",
     "mongodb": "^7.0.0",
     "mongoose": "^9.1.3",
-
     "next": "^16.1.1",
     "next-themes": "^0.4.6",
     "next-view-transitions": "^0.3.0",
@@ -159,6 +159,7 @@
     "zustand": "^5.0.10"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/js-cookie": "^3.0.6",
     "@types/node": "^22",
     "@types/nodemailer": "^7.0.5",
@@ -167,6 +168,7 @@
     "@types/three": "^0.182.0",
     "@types/web-push": "^3.6.4",
     "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
     "eslint": "^9.39.2",
     "eslint-config-next": "^16.1.1",
     "postcss": "^8.5.3",
@@ -175,7 +177,7 @@
     "typescript": "^5.8"
   },
   "engines": {
-    "node": "22.x"
+    "node": ">=22.x"
   },
   "overrides": {
     "node-fetch": "2.6.7",

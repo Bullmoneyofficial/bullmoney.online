@@ -26,7 +26,11 @@
         "./*"
       ]
     },
-    "target": "ES2020"
+    "target": "ES2022",
+    // COMPILATION SPEED: Skip type checking for faster dev builds
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": false
   },
   "include": [
     "next-env.d.ts",

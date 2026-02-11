@@ -180,6 +180,46 @@
 }
 
 /* ============================================================================
+   APPLE SECTION TEXT FIX
+   White-background sections (inline style) inherit white body text.
+   Force dark text on [data-apple-section] so content is readable.
+   Dark-bg sections already set text-white explicitly, which overrides
+   inherited color. Only set on the container — no element selectors to
+   avoid specificity conflicts with Tailwind utility classes.
+   Product cards have their own dark bg with light text — exempt them.
+   ============================================================================ */
+[data-apple-section] {
+  color: #0f172a;
+}
+
+/* Product cards use dark backgrounds with light text — reinforce here so
+   the background is set BEFORE the dynamic JS style injection arrives.
+   Without this, white section backgrounds bleed through on lazy-loaded pages. */
+.product-card-premium {
+  background: linear-gradient(135deg, #0a1628 0%, #0d2147 40%, #102a5a 60%, #0a1628 100%);
+  color: #f5f5f7;
+}
+
+/* Wrapper also needs a dark fallback so contentVisibility: auto
+   doesn't flash white before the inner card paints */
+.product-card-wrapper {
+  background-color: #0a1628;
+  border-radius: 0.75rem;
+}
+
+[data-apple-section] .product-card-premium,
+[data-apple-section] .product-card-wrapper {
+  color: #f5f5f7;
+}
+
+/* Select/input text should also be dark on white sections */
+[data-apple-section] select,
+[data-apple-section] input,
+[data-apple-section] textarea {
+  color: #0f172a;
+}
+
+/* ============================================================================
    UTILITY CLASSES
    ============================================================================ */
 
