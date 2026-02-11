@@ -2,17 +2,11 @@ services:
   # Laravel Backend (Bullcasino)
   - type: web
     name: bullmoney-casino
-    env: php
+    env: docker
     plan: free
     rootDir: Bullcasino
-    buildCommand: |
-      curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-      composer install --no-dev --optimize-autoloader
-      php artisan key:generate --force
-      php artisan config:cache
-      php artisan route:cache
-      php artisan view:cache
-    startCommand: php artisan serve --host=0.0.0.0 --port=$PORT
+    dockerfilePath: Dockerfile
+    dockerContext: .
     envVars:
       - key: APP_ENV
         value: production
