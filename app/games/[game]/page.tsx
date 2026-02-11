@@ -3,7 +3,7 @@
 import { use, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 
-const CASINO_URL = process.env.NEXT_PUBLIC_CASINO_URL || '/casino-games';
+const CASINO_URL = process.env.NEXT_PUBLIC_CASINO_URL || 'https://bullmoney-games.onrender.com';
 
 export default function CasinoGamePage({ params }: { params: Promise<{ game: string }> }) {
   const { game } = use(params);

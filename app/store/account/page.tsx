@@ -439,7 +439,7 @@ export default function AccountPage() {
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-black/20 border-t-white rounded-full animate-spin" />
       </div>
     );
   }
@@ -689,10 +689,10 @@ export default function AccountPage() {
                                 {order.trackingNumber ? (
                                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                                     <div className="flex items-center gap-2 flex-wrap">
-                                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${getCarrierColor(order.carrier)} bg-black/5 border border-white/10`}>
+                                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${getCarrierColor(order.carrier)} bg-black/5 border border-black/10`}>
                                         {getCarrierName(order.carrier)}
                                       </span>
-                                      <span className="font-mono text-xs text-white/60">{order.trackingNumber}</span>
+                                      <span className="font-mono text-xs text-black/60">{order.trackingNumber}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                       <p className="font-medium text-sm">${order.total.toFixed(2)}</p>
@@ -712,7 +712,7 @@ export default function AccountPage() {
                                             href={info.trackUrl(order.trackingNumber!)}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="flex items-center gap-1 px-3 py-1.5 bg-black/5 border border-white/10 rounded-lg text-xs text-white/50 hover:text-white/80 hover:bg-black/10 transition-colors"
+                                            className="flex items-center gap-1 px-3 py-1.5 bg-black/5 border border-black/10 rounded-lg text-xs text-black/50 hover:text-black/80 hover:bg-black/10 transition-colors"
                                           >
                                             <ExternalLink className="w-3 h-3" />
                                             {info.name}
@@ -725,14 +725,14 @@ export default function AccountPage() {
                                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                                     <div className="flex items-center gap-2 flex-1 w-full sm:w-auto">
                                       <div className="relative flex-1">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-black/30" />
                                         <input
                                           type="text"
                                           placeholder="Enter tracking number..."
                                           value={trackingInputs[order.id] || ''}
                                           onChange={(e) => setTrackingInputs(prev => ({ ...prev, [order.id]: e.target.value }))}
                                           onKeyDown={(e) => { if (e.key === 'Enter') handleSaveTracking(order); }}
-                                          className="w-full h-9 pl-9 pr-3 bg-black/5 border border-white/10 rounded-lg text-xs text-white font-mono placeholder:text-white/30 focus:outline-none focus:border-blue-500/50 transition-colors"
+                                          className="w-full h-9 pl-9 pr-3 bg-black/5 border border-black/10 rounded-lg text-xs text-white font-mono placeholder:text-black/30 focus:outline-none focus:border-blue-500/50 transition-colors"
                                         />
                                       </div>
                                       <button
@@ -770,17 +770,17 @@ export default function AccountPage() {
                   <div className="space-y-6">
                     <h2 className="text-lg font-medium">My Wishlist ({wishlistItems.length})</h2>
                     {wishlistItems.length === 0 ? (
-                      <div className="p-16 bg-black/5 border border-white/10 rounded-xl text-center">
+                      <div className="p-16 bg-black/5 border border-black/10 rounded-xl text-center">
                         <Heart className="w-12 h-12 text-white/20 mx-auto mb-4" />
-                        <p className="text-white/40">Your wishlist is empty</p>
-                        <Link href="/store" className="mt-4 inline-flex px-6 py-2 bg-black/10 border border-white/10 rounded-xl text-sm hover:bg-black/20 transition-all">
+                        <p className="text-black/40">Your wishlist is empty</p>
+                        <Link href="/store" className="mt-4 inline-flex px-6 py-2 bg-black/10 border border-black/10 rounded-xl text-sm hover:bg-black/20 transition-all">
                           Discover Products
                         </Link>
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         {wishlistItems.map((item) => (
-                          <div key={item.productId} className="group p-4 bg-black/5 border border-white/10 rounded-xl hover:border-white/20 transition-all">
+                          <div key={item.productId} className="group p-4 bg-black/5 border border-black/10 rounded-xl hover:border-black/20 transition-all">
                             <div className="flex items-start gap-3">
                               <div className="w-16 h-16 rounded-lg bg-black/10 overflow-hidden shrink-0">
                                 {item.image ? (
@@ -793,11 +793,11 @@ export default function AccountPage() {
                                 <Link href={`/store/product/${item.slug}`} className="text-sm font-medium hover:underline line-clamp-2">
                                   {item.name}
                                 </Link>
-                                <p className="text-white/50 text-sm mt-1">${item.price.toFixed(2)}</p>
+                                <p className="text-black/50 text-sm mt-1">${item.price.toFixed(2)}</p>
                               </div>
                               <button
                                 onClick={() => { removeFromWishlist(item.productId); toast.success('Removed from wishlist'); }}
-                                className="text-white/30 hover:text-red-400 transition-colors"
+                                className="text-black/30 hover:text-red-400 transition-colors"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -805,7 +805,7 @@ export default function AccountPage() {
                             <div className="flex gap-2 mt-3">
                               <Link
                                 href={`/store/product/${item.slug}`}
-                                className="relative flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-black border border-white/30 rounded-lg text-xs text-white overflow-hidden group/btn hover:border-black/50 transition-colors"
+                                className="relative flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-black border border-black/30 rounded-lg text-xs text-white overflow-hidden group/btn hover:border-black/50 transition-colors"
                               >
                                 <span className="pointer-events-none absolute inset-0 rounded-lg bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
                                 <Eye className="w-3 h-3 relative z-10" />
@@ -841,19 +841,19 @@ export default function AccountPage() {
                       <h2 className="text-lg font-medium">Saved Addresses</h2>
                       <button
                         onClick={() => setShowAddressForm(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-black/10 border border-white/10 rounded-xl text-sm hover:bg-black/20 transition-all"
+                        className="flex items-center gap-2 px-4 py-2 bg-black/10 border border-black/10 rounded-xl text-sm hover:bg-black/20 transition-all"
                       >
                         <Plus className="w-4 h-4" />
                         Add Address
                       </button>
                     </div>
                     {addresses.length === 0 && !showAddressForm ? (
-                      <div className="p-16 bg-black/5 border border-white/10 rounded-xl text-center">
+                      <div className="p-16 bg-black/5 border border-black/10 rounded-xl text-center">
                         <MapPin className="w-12 h-12 text-white/20 mx-auto mb-4" />
-                        <p className="text-white/40">No saved addresses</p>
+                        <p className="text-black/40">No saved addresses</p>
                         <button
                           onClick={() => setShowAddressForm(true)}
-                          className="mt-4 inline-flex px-6 py-2 bg-black/10 border border-white/10 rounded-xl text-sm hover:bg-black/20 transition-all"
+                          className="mt-4 inline-flex px-6 py-2 bg-black/10 border border-black/10 rounded-xl text-sm hover:bg-black/20 transition-all"
                         >
                           Add Your First Address
                         </button>
@@ -861,23 +861,23 @@ export default function AccountPage() {
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {addresses.map((addr) => (
-                          <div key={addr.id} className={`p-5 bg-black/5 border rounded-xl ${addr.isDefault ? 'border-white/20' : 'border-white/10'}`}>
+                          <div key={addr.id} className={`p-5 bg-black/5 border rounded-xl ${addr.isDefault ? 'border-black/20' : 'border-black/10'}`}>
                             <div className="flex items-center justify-between mb-2">
                               <span className="text-sm font-medium">{addr.label}</span>
                               {addr.isDefault && (
-                                <span className="text-[10px] px-2 py-0.5 bg-black/10 text-white/60 rounded-full">Default</span>
+                                <span className="text-[10px] px-2 py-0.5 bg-black/10 text-black/60 rounded-full">Default</span>
                               )}
                             </div>
-                            <p className="text-sm text-white/70">{addr.name}</p>
-                            <p className="text-sm text-white/50">{addr.street}</p>
-                            <p className="text-sm text-white/50">{addr.city}, {addr.state} {addr.zip}</p>
-                            <p className="text-sm text-white/50">{addr.country}</p>
-                            {addr.phone && <p className="text-sm text-white/40 mt-1">{addr.phone}</p>}
+                            <p className="text-sm text-black/70">{addr.name}</p>
+                            <p className="text-sm text-black/50">{addr.street}</p>
+                            <p className="text-sm text-black/50">{addr.city}, {addr.state} {addr.zip}</p>
+                            <p className="text-sm text-black/50">{addr.country}</p>
+                            {addr.phone && <p className="text-sm text-black/40 mt-1">{addr.phone}</p>}
                             <div className="flex gap-2 mt-3">
-                              <button className="text-xs text-white/40 hover:text-white/70 transition-colors">
+                              <button className="text-xs text-black/40 hover:text-black/70 transition-colors">
                                 <Edit2 className="w-3.5 h-3.5" />
                               </button>
-                              <button className="text-xs text-white/40 hover:text-red-400 transition-colors">
+                              <button className="text-xs text-black/40 hover:text-red-400 transition-colors">
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
                             </div>
@@ -901,88 +901,88 @@ export default function AccountPage() {
                     >
                       {/* Personal Information */}
                       <div className="space-y-4">
-                        <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider">Personal Information</h3>
+                        <h3 className="text-sm font-semibold text-black/80 uppercase tracking-wider">Personal Information</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-sm text-white/60 mb-1.5">Display Name</label>
+                            <label className="block text-sm text-black/60 mb-1.5">Display Name</label>
                             <input
                               name="display_name"
                               defaultValue={user?.display_name || ''}
-                              className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl placeholder:text-black/30 focus:outline-none focus:border-black/20 transition-colors"
                               style={{ color: 'rgb(255, 255, 255)' }}
                               placeholder="Your display name"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm text-white/60 mb-1.5">Full Name</label>
+                            <label className="block text-sm text-black/60 mb-1.5">Full Name</label>
                             <input
                               name="full_name"
                               defaultValue={user?.full_name || ''}
-                              className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl placeholder:text-black/30 focus:outline-none focus:border-black/20 transition-colors"
                               style={{ color: 'rgb(255, 255, 255)' }}
                               placeholder="Your full name"
                             />
                           </div>
                         </div>
                         <div>
-                          <label className="block text-sm text-white/60 mb-1.5">Email</label>
+                          <label className="block text-sm text-black/60 mb-1.5">Email</label>
                           <input
                             value={user?.email || ''}
                             disabled
-                            className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl cursor-not-allowed"
+                            className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl cursor-not-allowed"
                             style={{ color: 'rgba(255, 255, 255, 0.4)' }}
                           />
-                          <p className="text-xs text-white/30 mt-1">Email cannot be changed here</p>
+                          <p className="text-xs text-black/30 mt-1">Email cannot be changed here</p>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-sm text-white/60 mb-1.5">Phone Number</label>
+                            <label className="block text-sm text-black/60 mb-1.5">Phone Number</label>
                             <input
                               name="phone"
                               defaultValue={user?.phone || ''}
-                              className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl placeholder:text-black/30 focus:outline-none focus:border-black/20 transition-colors"
                               style={{ color: 'rgb(255, 255, 255)' }}
                               placeholder="+1 (555) 000-0000"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm text-white/60 mb-1.5">Date of Birth</label>
+                            <label className="block text-sm text-black/60 mb-1.5">Date of Birth</label>
                             <input
                               name="birth_date"
                               type="date"
                               defaultValue={user?.birth_date || ''}
-                              className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors scheme-dark"
+                              className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl placeholder:text-black/30 focus:outline-none focus:border-black/20 transition-colors scheme-dark"
                               style={{ color: 'rgb(255, 255, 255)', colorScheme: 'dark' }}
                             />
                           </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div>
-                            <label className="block text-sm text-white/60 mb-1.5">Country</label>
+                            <label className="block text-sm text-black/60 mb-1.5">Country</label>
                             <input
                               name="country"
                               defaultValue={user?.country || ''}
-                              className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl placeholder:text-black/30 focus:outline-none focus:border-black/20 transition-colors"
                               style={{ color: 'rgb(255, 255, 255)' }}
                               placeholder="United States"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm text-white/60 mb-1.5">City</label>
+                            <label className="block text-sm text-black/60 mb-1.5">City</label>
                             <input
                               name="city"
                               defaultValue={user?.city || ''}
-                              className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl placeholder:text-black/30 focus:outline-none focus:border-black/20 transition-colors"
                               style={{ color: 'rgb(255, 255, 255)' }}
                               placeholder="New York"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm text-white/60 mb-1.5">Timezone</label>
+                            <label className="block text-sm text-black/60 mb-1.5">Timezone</label>
                             <select
                               name="timezone"
                               defaultValue={user?.timezone || ''}
-                              className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl focus:outline-none focus:border-white/20 transition-colors appearance-none"
+                              className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl focus:outline-none focus:border-black/20 transition-colors appearance-none"
                               style={{ color: 'rgb(255, 255, 255)' }}
                             >
                               <option value="">Select timezone</option>
@@ -1001,12 +1001,12 @@ export default function AccountPage() {
                           </div>
                         </div>
                         <div>
-                          <label className="block text-sm text-white/60 mb-1.5">Bio</label>
+                          <label className="block text-sm text-black/60 mb-1.5">Bio</label>
                           <textarea
                             name="bio"
                             defaultValue={user?.bio || ''}
                             rows={3}
-                            className="w-full px-4 py-3 bg-black/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors resize-none"
+                            className="w-full px-4 py-3 bg-black/5 border border-black/10 rounded-xl placeholder:text-black/30 focus:outline-none focus:border-black/20 transition-colors resize-none"
                             style={{ color: 'rgb(255, 255, 255)' }}
                             placeholder="Tell us about yourself..."
                           />
@@ -1015,44 +1015,44 @@ export default function AccountPage() {
 
                       {/* Social Handles */}
                       <div className="space-y-4">
-                        <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider">Social Accounts</h3>
+                        <h3 className="text-sm font-semibold text-black/80 uppercase tracking-wider">Social Accounts</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-sm text-white/60 mb-1.5">Telegram</label>
+                            <label className="block text-sm text-black/60 mb-1.5">Telegram</label>
                             <input
                               name="telegram_username"
                               defaultValue={user?.telegram_username || ''}
-                              className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl placeholder:text-black/30 focus:outline-none focus:border-black/20 transition-colors"
                               style={{ color: 'rgb(255, 255, 255)' }}
                               placeholder="@username"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm text-white/60 mb-1.5">Discord</label>
+                            <label className="block text-sm text-black/60 mb-1.5">Discord</label>
                             <input
                               name="discord_username"
                               defaultValue={user?.discord_username || ''}
-                              className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl placeholder:text-black/30 focus:outline-none focus:border-black/20 transition-colors"
                               style={{ color: 'rgb(255, 255, 255)' }}
                               placeholder="User#0000"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm text-white/60 mb-1.5">Instagram</label>
+                            <label className="block text-sm text-black/60 mb-1.5">Instagram</label>
                             <input
                               name="instagram_username"
                               defaultValue={user?.instagram_username || ''}
-                              className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl placeholder:text-black/30 focus:outline-none focus:border-black/20 transition-colors"
                               style={{ color: 'rgb(255, 255, 255)' }}
                               placeholder="@handle"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm text-white/60 mb-1.5">Twitter / X</label>
+                            <label className="block text-sm text-black/60 mb-1.5">Twitter / X</label>
                             <input
                               name="twitter_username"
                               defaultValue={user?.twitter_username || ''}
-                              className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                              className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl placeholder:text-black/30 focus:outline-none focus:border-black/20 transition-colors"
                               style={{ color: 'rgb(255, 255, 255)' }}
                               placeholder="@handle"
                             />
@@ -1062,14 +1062,14 @@ export default function AccountPage() {
 
                       {/* Preferences */}
                       <div className="space-y-4">
-                        <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider">Preferences</h3>
+                        <h3 className="text-sm font-semibold text-black/80 uppercase tracking-wider">Preferences</h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div>
-                            <label className="block text-sm text-white/60 mb-1.5">Currency</label>
+                            <label className="block text-sm text-black/60 mb-1.5">Currency</label>
                             <select
                               name="preferred_currency"
                               defaultValue={user?.preferred_currency || 'USD'}
-                              className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl focus:outline-none focus:border-white/20 transition-colors appearance-none"
+                              className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl focus:outline-none focus:border-black/20 transition-colors appearance-none"
                               style={{ color: 'rgb(255, 255, 255)' }}
                             >
                               <option value="USD">USD ($)</option>
@@ -1082,11 +1082,11 @@ export default function AccountPage() {
                             </select>
                           </div>
                           <div>
-                            <label className="block text-sm text-white/60 mb-1.5">Language</label>
+                            <label className="block text-sm text-black/60 mb-1.5">Language</label>
                             <select
                               name="preferred_language"
                               defaultValue={user?.preferred_language || 'en'}
-                              className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl focus:outline-none focus:border-white/20 transition-colors appearance-none"
+                              className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl focus:outline-none focus:border-black/20 transition-colors appearance-none"
                               style={{ color: 'rgb(255, 255, 255)' }}
                             >
                               <option value="en">English</option>
@@ -1101,11 +1101,11 @@ export default function AccountPage() {
                             </select>
                           </div>
                           <div>
-                            <label className="block text-sm text-white/60 mb-1.5">Contact Method</label>
+                            <label className="block text-sm text-black/60 mb-1.5">Contact Method</label>
                             <select
                               name="preferred_contact_method"
                               defaultValue={user?.preferred_contact_method || 'email'}
-                              className="w-full h-12 px-4 bg-black/5 border border-white/10 rounded-xl focus:outline-none focus:border-white/20 transition-colors appearance-none"
+                              className="w-full h-12 px-4 bg-black/5 border border-black/10 rounded-xl focus:outline-none focus:border-black/20 transition-colors appearance-none"
                               style={{ color: 'rgb(255, 255, 255)' }}
                             >
                               <option value="email">Email</option>
@@ -1121,68 +1121,68 @@ export default function AccountPage() {
                             type="checkbox"
                             name="store_newsletter_subscribed"
                             defaultChecked={user?.store_newsletter_subscribed}
-                            className="w-5 h-5 rounded border-white/20 bg-black/5 text-white accent-white"
+                            className="w-5 h-5 rounded border-black/20 bg-black/5 text-white accent-white"
                           />
-                          <span className="text-sm text-white/70">Subscribe to store newsletter & promotions</span>
+                          <span className="text-sm text-black/70">Subscribe to store newsletter & promotions</span>
                         </label>
                       </div>
 
                       {/* Notification Preferences */}
                       <div className="space-y-4">
-                        <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider">Notifications</h3>
+                        <h3 className="text-sm font-semibold text-black/80 uppercase tracking-wider">Notifications</h3>
                         <div className="space-y-3">
                           <label className="flex items-center justify-between cursor-pointer">
-                            <span className="text-sm text-white/70">Enable push notifications</span>
+                            <span className="text-sm text-black/70">Enable push notifications</span>
                             <input
                               type="checkbox"
                               name="notifications_enabled"
                               defaultChecked={user?.notifications_enabled}
-                              className="w-5 h-5 rounded border-white/20 bg-black/5 text-white accent-white"
+                              className="w-5 h-5 rounded border-black/20 bg-black/5 text-white accent-white"
                             />
                           </label>
                           <label className="flex items-center justify-between cursor-pointer">
-                            <span className="text-sm text-white/70">Trade alerts</span>
+                            <span className="text-sm text-black/70">Trade alerts</span>
                             <input
                               type="checkbox"
                               name="notify_trades"
                               defaultChecked={user?.notify_trades}
-                              className="w-5 h-5 rounded border-white/20 bg-black/5 text-white accent-white"
+                              className="w-5 h-5 rounded border-black/20 bg-black/5 text-white accent-white"
                             />
                           </label>
                           <label className="flex items-center justify-between cursor-pointer">
-                            <span className="text-sm text-white/70">Livestream notifications</span>
+                            <span className="text-sm text-black/70">Livestream notifications</span>
                             <input
                               type="checkbox"
                               name="notify_livestreams"
                               defaultChecked={user?.notify_livestreams}
-                              className="w-5 h-5 rounded border-white/20 bg-black/5 text-white accent-white"
+                              className="w-5 h-5 rounded border-black/20 bg-black/5 text-white accent-white"
                             />
                           </label>
                           <label className="flex items-center justify-between cursor-pointer">
-                            <span className="text-sm text-white/70">News & updates</span>
+                            <span className="text-sm text-black/70">News & updates</span>
                             <input
                               type="checkbox"
                               name="notify_news"
                               defaultChecked={user?.notify_news}
-                              className="w-5 h-5 rounded border-white/20 bg-black/5 text-white accent-white"
+                              className="w-5 h-5 rounded border-black/20 bg-black/5 text-white accent-white"
                             />
                           </label>
                           <label className="flex items-center justify-between cursor-pointer">
-                            <span className="text-sm text-white/70">VIP content alerts</span>
+                            <span className="text-sm text-black/70">VIP content alerts</span>
                             <input
                               type="checkbox"
                               name="notify_vip"
                               defaultChecked={user?.notify_vip}
-                              className="w-5 h-5 rounded border-white/20 bg-black/5 text-white accent-white"
+                              className="w-5 h-5 rounded border-black/20 bg-black/5 text-white accent-white"
                             />
                           </label>
                           <label className="flex items-center justify-between cursor-pointer">
-                            <span className="text-sm text-white/70">Notification sound</span>
+                            <span className="text-sm text-black/70">Notification sound</span>
                             <input
                               type="checkbox"
                               name="notification_sound"
                               defaultChecked={user?.notification_sound}
-                              className="w-5 h-5 rounded border-white/20 bg-black/5 text-white accent-white"
+                              className="w-5 h-5 rounded border-black/20 bg-black/5 text-white accent-white"
                             />
                           </label>
                         </div>
@@ -1246,10 +1246,10 @@ export default function AccountPage() {
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.25, ease: 'easeOut' }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-lg bg-neutral-950 border border-white/10 rounded-2xl overflow-hidden"
+            className="relative w-full max-w-lg bg-neutral-950 border border-black/10 rounded-2xl overflow-hidden"
           >
             {/* Header */}
-            <div className="p-5 border-b border-white/10">
+            <div className="p-5 border-b border-black/10">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-xl ${STATUS_CONFIG[trackingOrder.status]?.bg || 'bg-black/10'} flex items-center justify-center`}>
@@ -1257,12 +1257,12 @@ export default function AccountPage() {
                   </div>
                   <div>
                     <h3 className="font-medium text-white">Package Tracking</h3>
-                    <p className="text-xs text-white/40">Order #{trackingOrder.id.slice(0, 8)}</p>
+                    <p className="text-xs text-black/40">Order #{trackingOrder.id.slice(0, 8)}</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setTrackingOrder(null)}
-                  className="w-8 h-8 rounded-lg bg-black/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-black/10 transition-colors"
+                  className="w-8 h-8 rounded-lg bg-black/5 flex items-center justify-center text-black/40 hover:text-white hover:bg-black/10 transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -1270,27 +1270,27 @@ export default function AccountPage() {
 
               {/* Carrier badge + tracking number */}
               <div className="flex items-center gap-2">
-                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${getCarrierColor(trackingOrder.carrier)} bg-black/5 border border-white/10`}>
+                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${getCarrierColor(trackingOrder.carrier)} bg-black/5 border border-black/10`}>
                   {getCarrierName(trackingOrder.carrier)}
                 </span>
-                <span className="font-mono text-xs text-white/50">{trackingOrder.trackingNumber}</span>
+                <span className="font-mono text-xs text-black/50">{trackingOrder.trackingNumber}</span>
               </div>
 
               {/* Status summary */}
-              <div className="mt-4 p-3 rounded-xl bg-black/5 border border-white/10 space-y-1.5">
+              <div className="mt-4 p-3 rounded-xl bg-black/5 border border-black/10 space-y-1.5">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-white/50">Status</span>
+                  <span className="text-black/50">Status</span>
                   <span className={`font-medium ${STATUS_CONFIG[trackingOrder.status]?.color || 'text-white'}`}>
                     {STATUS_CONFIG[trackingOrder.status]?.label || trackingOrder.status}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-white/50">Carrier</span>
-                  <span className="text-white/80">{getCarrierName(trackingOrder.carrier)}</span>
+                  <span className="text-black/50">Carrier</span>
+                  <span className="text-black/80">{getCarrierName(trackingOrder.carrier)}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-white/50">Estimated</span>
-                  <span className="text-white/80">
+                  <span className="text-black/50">Estimated</span>
+                  <span className="text-black/80">
                     {trackingOrder.status === 'delivered' ? 'Delivered' : '2–5 business days'}
                   </span>
                 </div>
@@ -1318,7 +1318,7 @@ export default function AccountPage() {
                               ? 'bg-green-500/20 border-green-500 shadow-[0_0_12px_rgba(34,197,94,0.3)]'
                               : event.completed
                               ? 'bg-green-500/20 border-green-500/50'
-                              : 'bg-black/5 border-white/10'
+                              : 'bg-black/5 border-black/10'
                           }`}
                         >
                           {event.current ? (
@@ -1326,7 +1326,7 @@ export default function AccountPage() {
                           ) : event.completed ? (
                             <Check className="w-3.5 h-3.5 text-green-400" />
                           ) : (
-                            <event.icon className="w-3.5 h-3.5 text-white/30" />
+                            <event.icon className="w-3.5 h-3.5 text-black/30" />
                           )}
                         </div>
                       </div>
@@ -1334,11 +1334,11 @@ export default function AccountPage() {
                         <p className={`text-sm font-medium ${event.current ? 'text-green-400' : 'text-white'}`}>
                           {event.status}
                         </p>
-                        <p className="text-xs text-white/50 mt-0.5 flex items-center gap-1">
+                        <p className="text-xs text-black/50 mt-0.5 flex items-center gap-1">
                           <MapPin className="w-3 h-3" />
                           {event.location}
                         </p>
-                        <p className="text-[10px] text-white/30 mt-0.5">
+                        <p className="text-[10px] text-black/30 mt-0.5">
                           {event.date} · {event.time}
                         </p>
                       </div>
@@ -1349,14 +1349,14 @@ export default function AccountPage() {
             </div>
 
             {/* Footer with carrier link */}
-            <div className="px-5 py-3 border-t border-white/10 flex items-center justify-between">
-              <p className="text-[10px] text-white/30">Tracking data from order · Auto-detected carrier</p>
+            <div className="px-5 py-3 border-t border-black/10 flex items-center justify-between">
+              <p className="text-[10px] text-black/30">Tracking data from order · Auto-detected carrier</p>
               {liveUrl && (
                 <a
                   href={liveUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-black/5 border border-white/10 rounded-lg text-xs text-white/50 hover:text-white hover:bg-black/10 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-black/5 border border-black/10 rounded-lg text-xs text-black/50 hover:text-white hover:bg-black/10 transition-colors"
                 >
                   <ExternalLink className="w-3 h-3" />
                   Track on {carrierInfo?.name || 'carrier website'}

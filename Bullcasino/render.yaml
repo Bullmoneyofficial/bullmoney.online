@@ -3,7 +3,7 @@ services:
     name: bullmoney-casino
     runtime: php
     plan: free
-    buildCommand: composer install --no-dev --optimize-autoloader && php artisan key:generate && php artisan config:cache && php artisan route:cache && php artisan view:cache
+    buildCommand: curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && composer install --no-dev --optimize-autoloader && php artisan key:generate && php artisan config:cache && php artisan route:cache && php artisan view:cache
     startCommand: php artisan serve --host=0.0.0.0 --port=$PORT
     envVars:
       - key: APP_ENV

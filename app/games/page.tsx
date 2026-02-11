@@ -13,7 +13,7 @@ const CryptoCheckoutTrigger = dynamic(
 const ElectricBorder = dynamic(() => import('@/components/ElectricBorder'), { ssr: false });
 // Custom bullcasino footer for games page
 
-const GAMES_URL = process.env.NEXT_PUBLIC_CASINO_URL || '/casino-games';
+const GAMES_URL = process.env.NEXT_PUBLIC_CASINO_URL || 'https://bullmoney-games.onrender.com';
 
 const donationGoalUsd = 50000;
 const fallbackContributions = [
