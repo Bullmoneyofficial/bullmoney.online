@@ -25,6 +25,7 @@ class AllowIframeEmbedding
 
         // Production: allow only specific origins
         $allowedOrigins = array_filter([
+            "'self'",
             'https://www.bullmoney.online',
             'https://bullmoney.online',
             'https://www.bullmoney.shop',
@@ -32,22 +33,23 @@ class AllowIframeEmbedding
             env('IFRAME_ALLOWED_ORIGIN'),
         ]);
 
+        $extraOrigins = array_filter(array_map('trim', explode(',', (string) env('IFRAME_ALLOWED_ORIGINS'))));
+        $allowedOrigins = array_values(array_unique(array_merge($allowedOrigins, $extraOrigins)));
+        $cspValue = 'frame-ancestors ' . implode(' ', $allowedOrigins);
+
         $origin = $request->header('Origin') ?? $request->header('Referer');
 
         if ($origin) {
             foreach ($allowedOrigins as $allowed) {
                 if (str_starts_with($origin, $allowed)) {
-                    $response->headers->set('Content-Security-Policy', "frame-ancestors {$allowed}");
+                    $response->headers->set('Content-Security-Policy', $cspValue);
                     $response->headers->set('Access-Control-Allow-Origin', $allowed);
                     $response->headers->set('Access-Control-Allow-Credentials', 'true');
                     break;
                 }
             }
         } else {
-            $response->headers->set(
-                'Content-Security-Policy',
-                'frame-ancestors ' . implode(' ', $allowedOrigins)
-            );
+            $response->headers->set('Content-Security-Policy', $cspValue);
         }
 
         return $response;
