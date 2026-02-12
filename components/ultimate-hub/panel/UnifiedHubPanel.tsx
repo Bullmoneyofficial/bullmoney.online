@@ -665,7 +665,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className={`fixed inset-0 z-[10000] flex items-stretch justify-end bg-white/80 ${isMobile ? '' : 'backdrop-blur-md'} ultimate-hub-backdrop`}
+            className={`fixed inset-0 z-[10000] flex items-stretch justify-end ${isMobile ? 'bg-black/70' : 'bg-white/80 backdrop-blur-md'} ultimate-hub-backdrop`}
             onClick={onClose}
             style={{ pointerEvents: 'all' }}
           />
@@ -710,7 +710,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
-            className="fixed right-0 top-0 z-[10003] w-full max-w-[88vw] sm:max-w-3xl lg:max-w-4xl h-[100dvh] max-h-[100dvh] overflow-y-auto bg-white text-black border-l border-black/10 shadow-2xl [&_button]:bg-black [&_button]:text-white [&_button]:border-black/90 [&_button]:hover:bg-black/90 [&_button_svg]:text-white"
+            className="fixed right-0 top-0 z-[10003] w-full max-w-[100vw] sm:max-w-[88vw] md:max-w-3xl lg:max-w-4xl h-[100dvh] max-h-[100dvh] overflow-y-auto bg-white text-black border-l border-black/10 shadow-2xl [&_button]:bg-black [&_button]:text-white [&_button]:border-black/90 [&_button]:hover:bg-black/90 [&_button_svg]:text-white"
             style={{ pointerEvents: 'all' }}
           >
             {/* Header with FPS Display */}
