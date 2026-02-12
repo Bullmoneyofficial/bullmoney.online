@@ -32,7 +32,7 @@ export const ModalWrapper = memo(({
           initial={animations.modalBackdrop.initial as TargetAndTransition}
           animate={animations.modalBackdrop.animate as TargetAndTransition}
           exit={animations.modalBackdrop.exit as TargetAndTransition}
-          className={`fixed inset-0 z-[10001] flex items-center justify-center p-3 sm:p-6 bg-black/60 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'}`}
+          className={`fixed inset-0 z-[2147483647] flex items-center justify-center p-3 sm:p-6 bg-black/60 ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-md'}`}
           onClick={onClose}
         >
           {/* Tap hints - Skip on mobile for performance */}

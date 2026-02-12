@@ -130,6 +130,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   const [showThemePicker, setShowThemePicker] = useState(false);
   const [showUltimateHub, setShowUltimateHub] = useState(false);
   const [showAudioWidget, setShowAudioWidget] = useState(true);
+  const [audioWidgetPrefLoaded, setAudioWidgetPrefLoaded] = useState(false);
   const [gamesManualOpen, setGamesManualOpen] = useState(false);
   const [siteSearchOpen, setSiteSearchOpen] = useState(false);
   const [showDesignSections, setShowDesignSections] = useState(true);
@@ -259,16 +260,18 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       const stored = localStorage.getItem('store_show_audio_widget');
       // Default to true (visible) unless explicitly disabled
       setShowAudioWidget(stored !== 'false');
+      setAudioWidgetPrefLoaded(true);
     }
   }, []);
 
   // Persist and broadcast Audio Widget changes after render
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    if (!audioWidgetPrefLoaded) return;
     localStorage.setItem('store_show_audio_widget', String(showAudioWidget));
     window.dispatchEvent(new CustomEvent('store_audio_widget_toggle', { detail: showAudioWidget }));
     window.dispatchEvent(new Event('store_audio_widget_toggle'));
-  }, [showAudioWidget]);
+  }, [showAudioWidget, audioWidgetPrefLoaded]);
 
   // Sync Audio button state with external toggles
   useEffect(() => {

@@ -101,7 +101,7 @@ export const DeviceCenterPanel = memo(({
           dragElastic={0.2}
           onDragStart={() => setIsDragging(true)}
           onDragEnd={handleDragEnd}
-          className="fixed right-0 top-0 bottom-0 z-[10002] w-[320px] max-w-[90vw] bg-white backdrop-blur-xl border-l border-black/10 shadow-2xl flex flex-col"
+          className="fixed right-0 top-0 bottom-0 z-[2147483647] w-[320px] max-w-[90vw] bg-white backdrop-blur-xl border-l border-black/10 shadow-2xl flex flex-col"
           style={{ paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
         >
           {/* Drag Handle */}

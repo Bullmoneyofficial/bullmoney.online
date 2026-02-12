@@ -677,7 +677,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-[10000] flex items-stretch justify-end bg-transparent lg:bg-white/80 lg:backdrop-blur-md ultimate-hub-backdrop"
+            className="fixed inset-0 z-[2147483643] flex items-stretch justify-end bg-transparent lg:bg-white/80 lg:backdrop-blur-md ultimate-hub-backdrop"
             onClick={onClose}
             onPointerDown={(event) => {
               event.preventDefault();
@@ -690,7 +690,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
             style={{ pointerEvents: 'all' }}
           />
 
-          <div className="fixed left-2 top-1/2 -translate-y-1/2 z-[10004] flex items-center gap-2">
+          <div className="fixed left-2 top-1/2 -translate-y-1/2 z-[2147483647] flex items-center gap-2">
             <button
               type="button"
               onClick={onClose}
@@ -710,7 +710,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
           </div>
 
           {/* Floating Tab Control (Outside Modal) */}
-          <div className="fixed inset-0 z-[10001] pointer-events-none">
+          <div className="fixed inset-0 z-[2147483644] pointer-events-none">
             {/* Mobile: Floating tab switch button */}
             <motion.button
               onClick={goToNextTab}
@@ -727,7 +727,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
             </motion.button>
             
             {/* Desktop: Floating tab carousel aligned to drawer width */}
-            <div className="hidden lg:block pointer-events-auto absolute right-0 w-full max-w-[88vw] sm:max-w-4xl lg:max-w-5xl z-[10002]" style={{ top: '80px' }}>
+            <div className="hidden lg:block pointer-events-auto absolute right-0 w-full max-w-[88vw] sm:max-w-4xl lg:max-w-5xl z-[2147483645]" style={{ top: '80px' }}>
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -749,7 +749,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
-            className="fixed right-0 top-0 z-[10003] w-full max-w-[320px] sm:max-w-xl md:max-w-2xl lg:max-w-3xl h-[100dvh] max-h-[100dvh] overflow-y-auto bg-white text-black border-l border-black/10 shadow-2xl [&_button]:bg-black [&_button]:text-white [&_button]:border-black/90 [&_button]:hover:bg-black/90 [&_button_svg]:text-white"
+            className="fixed right-0 top-0 z-[2147483646] w-full max-w-[320px] sm:max-w-xl md:max-w-2xl lg:max-w-3xl h-[100dvh] max-h-[100dvh] overflow-y-auto bg-white text-black border-l border-black/10 shadow-2xl [&_button]:bg-black [&_button]:text-white [&_button]:border-black/90 [&_button]:hover:bg-black/90 [&_button_svg]:text-white"
             style={{ pointerEvents: 'all' }}
           >
             {/* Header with FPS Display */}

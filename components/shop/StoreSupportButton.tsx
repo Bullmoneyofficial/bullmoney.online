@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
-  Headphones,
+  Heart,
 } from 'lucide-react';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useSupportDrawerUI, useStoreMenuUI, useUIState } from '@/contexts/UIStateContext';
@@ -114,7 +114,7 @@ export function SupportButton({ position = 'right' }: SupportButtonProps) {
             </motion.div>
           ) : (
             <motion.div key="h" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.15 }}>
-              <Headphones className="w-4 h-4 md:w-5 md:h-5 text-white" />
+              <Heart className="w-4 h-4 md:w-5 md:h-5 text-white" />
             </motion.div>
           )}
         </AnimatePresence>

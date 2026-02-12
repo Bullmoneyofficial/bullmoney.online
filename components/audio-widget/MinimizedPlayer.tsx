@@ -90,10 +90,10 @@ export function MinimizedPlayer({
               opacity: 1, 
               x: 0, 
               scale: 1,
-              width: isScrolling ? 44 : 'auto',
-              height: isScrolling ? 44 : 'auto',
+              width: isScrolling ? 36 : 'auto',
+              height: isScrolling ? 36 : 'auto',
               padding: isScrolling ? 6 : undefined,
-              borderRadius: isScrolling ? 22 : (playerSide === 'left' ? '0 1.5rem 1.5rem 0' : '1.5rem 0 0 1.5rem'),
+              borderRadius: isScrolling ? 18 : (playerSide === 'left' ? '0 1.5rem 1.5rem 0' : '1.5rem 0 0 1.5rem'),
             }}
             exit={{ opacity: 0, x: playerSide === 'left' ? -100 : 100, scale: 0.8 }}
             transition={{ 
@@ -125,7 +125,7 @@ export function MinimizedPlayer({
                 : "border-r-0"),
             )}
             style={{ 
-              bottom: 70, 
+              bottom: 78, 
               zIndex: Z_INDEX.PULL_TAB,
               right: playerSide === 'right' ? 'clamp(0px, calc((100vw - 1600px) / 2), 100px)' : undefined,
               boxShadow: shouldSkipHeavyEffects 

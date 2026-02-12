@@ -509,7 +509,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
             /* Compact circular wave button when modals/UI is open */
             <motion.div
               key="compact-pill-div"
-              className="fixed bottom-[70px] pointer-events-none"
+              className="fixed bottom-[78px] md:bottom-[70px] pointer-events-none"
               style={{ 
                 zIndex: Z_INDEX.CAMERA_MODAL,
                 ...(playerSide === 'right'
@@ -550,7 +550,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                 }}
                 onTap={handlePulltabInteraction}
                 onMouseLeave={() => setHoveredButton(null)}
-                className="relative flex items-center justify-center h-11 w-11 min-w-[44px] min-h-[44px] rounded-full transition-all pointer-events-auto bg-black/80 backdrop-blur-xl border-2 border-white"
+                className="relative flex items-center justify-center h-9 w-9 md:h-12 md:w-12 min-w-[36px] min-h-[36px] md:min-w-[48px] md:min-h-[48px] rounded-full transition-all pointer-events-auto bg-black/80 backdrop-blur-xl border-2 border-white"
                 data-theme-aware
                 style={{
                   boxShadow: '0 0 8px #ffffff, 0 0 16px #ffffff, 0 0 24px rgba(255, 255, 255, 0.5), inset 0 0 8px rgba(255, 255, 255, 0.3)',
@@ -595,7 +595,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
             /* Compact circular wave version when scrolling while minimized */
             <motion.div
               key="scroll-compact-pill-div"
-              className="fixed bottom-[70px] pointer-events-none"
+              className="fixed bottom-[78px] md:bottom-[70px] pointer-events-none"
               style={{ 
                 zIndex: Z_INDEX.CAMERA_MODAL,
                 ...(playerSide === 'right'
@@ -639,7 +639,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
                 }}
                 onTap={handlePulltabInteraction}
                 onMouseLeave={() => setHoveredButton(null)}
-                className="relative flex items-center justify-center h-11 w-11 min-w-[44px] min-h-[44px] rounded-full transition-all pointer-events-auto bg-black/80 backdrop-blur-xl border-2 border-white"
+                className="relative flex items-center justify-center h-9 w-9 md:h-12 md:w-12 min-w-[36px] min-h-[36px] md:min-w-[48px] md:min-h-[48px] rounded-full transition-all pointer-events-auto bg-black/80 backdrop-blur-xl border-2 border-white"
                 data-theme-aware
                 style={{
                   boxShadow: '0 0 8px #ffffff, 0 0 16px #ffffff, 0 0 24px rgba(255, 255, 255, 0.5), inset 0 0 8px rgba(255, 255, 255, 0.3)',
@@ -704,8 +704,8 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               }
             }}
             className={cn(
-              "fixed bottom-[70px] flex items-center justify-center",
-              "w-11 h-11 min-w-[44px] min-h-[44px] rounded-full",
+              "fixed bottom-[78px] md:bottom-[70px] flex items-center justify-center",
+              "w-9 h-9 md:w-12 md:h-12 min-w-[36px] min-h-[36px] md:min-w-[48px] md:min-h-[48px] rounded-full",
               "border border-white/40",
               "transition-all duration-200",
               "pointer-events-auto"

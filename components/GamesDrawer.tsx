@@ -9,7 +9,7 @@ import { useGamesDrawerUI } from '@/contexts/UIStateContext';
 
 const GamesPageClient = dynamic(
   () => import('@/app/games/GamesPageClient').then(mod => ({ default: mod.GamesPageClient })),
-  { ssr: false, loading: () => <div className="min-h-[40vh] w-full" /> }
+  { ssr: false, loading: () => <div className="min-h-[40vh] w-full bg-[#0a0a0c]" /> }
 );
 
 export function GamesDrawer() {
@@ -41,7 +41,7 @@ export function GamesDrawer() {
             transition={{ duration: 0.12 }}
             onClick={closeDrawer}
             className="fixed inset-0"
-            style={{ zIndex: 2147483646, background: 'rgba(0,0,0,0.3)' }}
+            style={{ zIndex: 2147483648, background: 'rgba(0,0,0,0.3)' }}
           />
 
           {/* Drawer Panel - 75% width on desktop, full width on mobile */}
@@ -54,13 +54,16 @@ export function GamesDrawer() {
             className={`fixed top-0 right-0 bottom-0 bg-white border-l border-black/10 flex flex-col safe-area-inset-bottom ${
               isDesktop 
                 ? 'w-[75vw] max-w-none' // 75% width on desktop
-                : 'w-full max-w-md'     // Full width (max medium) on mobile
+                : 'w-full max-w-full'   // Full width on mobile
             }`}
             style={{
-              zIndex: 2147483647, // Highest z-index
+              zIndex: 2147483649,
               color: '#1d1d1f',
               height: '100dvh',
               maxHeight: '100dvh',
+              width: isDesktop ? undefined : '100vw',
+              maxWidth: isDesktop ? undefined : '100vw',
+              minWidth: 0,
               overscrollBehavior: 'contain', // Prevent page scroll when drawer scrolls
               pointerEvents: 'auto', // Ensure interactions work
               isolation: 'isolate', // Create new stacking context
@@ -101,6 +104,7 @@ export function GamesDrawer() {
                 background: '#0a0a0c',
                 WebkitOverflowScrolling: 'touch',
                 touchAction: 'pan-y',
+                minWidth: 0,
                 // Enhanced desktop scrolling
                 scrollbarWidth: isDesktop ? 'thin' : 'none',
                 scrollbarColor: isDesktop ? 'rgba(255,255,255,0.3) transparent' : 'transparent',
@@ -113,6 +117,7 @@ export function GamesDrawer() {
               <div 
                 style={{
                   minHeight: '100%',
+                  minWidth: 0,
                   position: 'relative',
                   zIndex: 1,
                   pointerEvents: 'auto',

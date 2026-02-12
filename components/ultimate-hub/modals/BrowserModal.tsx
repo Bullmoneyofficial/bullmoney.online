@@ -50,7 +50,7 @@ export const BrowserModal = memo(({ isOpen, onClose }: { isOpen: boolean; onClos
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[10003] flex items-center justify-center p-5 sm:p-6 bg-black/60"
+          className="fixed inset-0 z-[2147483647] flex items-center justify-center p-5 sm:p-6 bg-black/60"
           onClick={onClose}
         >
           <motion.div

@@ -677,7 +677,7 @@ export const UnifiedFpsPill = memo(({
           }
         : { y: { duration: 0.2, ease: "easeOut" } }
       }
-      className={`fixed z-[999999999] pointer-events-none ${
+      className={`fixed z-[2147483647] pointer-events-none ${
         isMobile 
           ? mobileFullWidthMode 
             ? 'left-4 right-4 translate-x-0' // Full width with padding
@@ -1151,7 +1151,7 @@ export const UnifiedFpsPill = memo(({
                 ? [0, 0.1, 0.2, 0.35, 0.5, 0.65, 0.75, 0.85, 0.92, 1]
                 : [0, 0.2, 0.5, 0.8, 1]
             }}
-            className="fixed inset-0 z-[9999999999] flex items-center justify-center pointer-events-none"
+            className="fixed inset-0 z-[2147483647] flex items-center justify-center pointer-events-none"
             style={{
               background: `rgba(0, 0, 0, ${0.9 + scrollIntensity * 0.08})`,
             }}

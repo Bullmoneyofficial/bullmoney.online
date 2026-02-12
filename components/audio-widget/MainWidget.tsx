@@ -418,7 +418,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
         <AnimatePresence mode="wait">
         {widgetHidden && !isScrollMinimized && (
           <motion.div
-            className="fixed bottom-[70px] pointer-events-none"
+            className="fixed bottom-[78px] md:bottom-[70px] pointer-events-none"
             style={{
               zIndex: MAIN_WIDGET_Z_INDEX,
               // Mobile: RIGHT, Desktop: LEFT
@@ -459,7 +459,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
               }}
               onHoverStart={handlePulltabInteraction}
               onTap={handlePulltabInteraction}
-              className="relative flex items-center justify-center h-11 w-11 min-w-[44px] min-h-[44px] rounded-l-full transition-all pointer-events-auto"
+              className="relative flex items-center justify-center h-9 w-9 md:h-12 md:w-12 min-w-[36px] min-h-[36px] md:min-w-[48px] md:min-h-[48px] rounded-l-full transition-all pointer-events-auto"
               data-theme-aware
               style={{
                 background: SURFACE_BG,
@@ -479,7 +479,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
         {/* Minimized circular wave icon on scroll when widget is hidden */}
         {widgetHidden && isScrollMinimized && (
           <motion.div
-            className="fixed bottom-[70px] pointer-events-none"
+            className="fixed bottom-[78px] md:bottom-[70px] pointer-events-none"
             style={{
               zIndex: MAIN_WIDGET_Z_INDEX,
               ...(isMobileDevice
@@ -502,7 +502,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
               }}
               onHoverStart={handlePulltabInteraction}
               onTap={handlePulltabInteraction}
-              className="relative flex items-center justify-center h-14 w-14 min-w-[56px] min-h-[56px] rounded-full transition-all pointer-events-auto border"
+              className="relative flex items-center justify-center h-9 w-9 md:h-12 md:w-12 min-w-[36px] min-h-[36px] md:min-w-[48px] md:min-h-[48px] rounded-full transition-all pointer-events-auto border"
               data-theme-aware
               style={{
                 background: '#0c0c0c',
@@ -554,7 +554,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
             {/* MINIMIZED CIRCULAR ICON - White glow circle with animated waves */}
             {isScrollMinimized && !open && (
               <motion.div
-                className="fixed bottom-[70px] pointer-events-none"
+                className="fixed bottom-[78px] md:bottom-[70px] pointer-events-none"
                 style={{
                   zIndex: MAIN_WIDGET_Z_INDEX,
                   // Mobile: RIGHT, Desktop: LEFT
@@ -577,7 +577,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                   }}
                   onHoverStart={handlePulltabInteraction}
                   onTap={handlePulltabInteraction}
-                className="relative flex items-center justify-center h-14 w-14 min-w-[56px] min-h-[56px] rounded-full transition-all pointer-events-auto border"
+                className="relative flex items-center justify-center h-9 w-9 md:h-12 md:w-12 min-w-[36px] min-h-[36px] md:min-w-[48px] md:min-h-[48px] rounded-full transition-all pointer-events-auto border"
                 data-theme-aware
                 style={{
                   background: '#0c0c0c',
@@ -631,7 +631,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.25 }}
-                className="fixed bottom-[70px] pointer-events-auto"
+                className="fixed bottom-[78px] md:bottom-[70px] pointer-events-auto"
                 drag="x"
                 dragConstraints={{ left: 0, right: 150 }}
                 dragElastic={0.1}
@@ -683,9 +683,10 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
               data-audio-widget
               data-theme-aware
               className={cn(
-                "relative rounded-3xl shadow-2xl",
-                "text-white overflow-hidden",
-                open ? "w-[280px] sm:w-[320px]" : "w-auto"
+                "relative text-white overflow-hidden shadow-2xl",
+                open
+                  ? "rounded-3xl w-[280px] sm:w-[320px]"
+                  : "rounded-full w-9 h-9 md:w-12 md:h-12"
               )}
               style={{
                 background: 'rgba(0, 0, 0, 0.6)',
@@ -700,24 +701,31 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
               }}
             >
               {/* Subtle top highlight */}
-              <div 
-                className="absolute top-0 left-0 right-0 h-px"
-                style={{
-                  background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent)',
-                }}
-              />
+              {open && (
+                <div 
+                  className="absolute top-0 left-0 right-0 h-px"
+                  style={{
+                    background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent)',
+                  }}
+                />
+              )}
 
               {/* Minimalistic Header Button - Apple Style */}
-              <div className="relative p-3">
+              <div className={cn("relative", open ? "p-3" : "p-0")}>
                 <motion.button
                   onClick={() => {
                     SoundEffects.click();
                     if (!open) trackEvent('feature_used', { component: 'audio_widget', action: 'expand' });
                     setOpen(!open);
                   }}
-                  whileHover={{ scale: 1.01 }}
+                  whileHover={{ scale: open ? 1.01 : 1.06 }}
                   whileTap={{ scale: 0.98 }}
-                  className="relative w-full px-4 py-2.5 rounded-2xl flex items-center justify-between gap-3 transition-all"
+                  className={cn(
+                    "relative transition-all",
+                    open
+                      ? "w-full px-4 py-2.5 rounded-2xl flex items-center justify-between gap-3"
+                      : "w-9 h-9 md:w-12 md:h-12 rounded-full flex items-center justify-center"
+                  )}
                   style={{
                     background: 'rgba(255, 255, 255, 0.05)',
                     border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -725,20 +733,22 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                 >
                   <div className="flex items-center justify-center">
                     <IconMusic 
-                      className="w-5 h-5"
+                      className={open ? "w-5 h-5" : "w-4 h-4 md:w-5 md:h-5"}
                       strokeWidth={2}
                       style={{ 
                         color: '#ffffff',
                       }}
                     />
                   </div>
-                  <motion.div 
-                    animate={{ rotate: open ? 180 : 0 }} 
-                    transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-                    style={{ color: '#ffffff' }}
-                  >
-                    <IconChevronUp className="h-5 w-5" strokeWidth={2} />
-                  </motion.div>
+                  {open && (
+                    <motion.div 
+                      animate={{ rotate: open ? 180 : 0 }} 
+                      transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                      style={{ color: '#ffffff' }}
+                    >
+                      <IconChevronUp className="h-5 w-5" strokeWidth={2} />
+                    </motion.div>
+                  )}
                 </motion.button>
               </div>
 
