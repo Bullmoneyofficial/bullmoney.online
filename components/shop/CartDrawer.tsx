@@ -12,7 +12,7 @@ import { useCartStore } from '@/stores/cart-store';
 import { toast } from 'sonner';
 import TextType from '@/components/TextType';
 import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
-import { CryptoCheckoutTrigger } from '@/components/shop/CryptoCheckoutInline';
+import { CryptoCheckoutInline } from '@/components/shop/CryptoCheckoutInline';
 
 // ============================================================================
 // CART DRAWER - SLIDE-OUT PANEL WITH PORTAL
@@ -21,6 +21,8 @@ import { CryptoCheckoutTrigger } from '@/components/shop/CryptoCheckoutInline';
 
 export function CartDrawer() {
   const router = useRouter();
+  const CART_DRAWER_BACKDROP_Z_INDEX = 2147483600;
+  const CART_DRAWER_PANEL_Z_INDEX = 2147483601;
   const [isDesktop, setIsDesktop] = useState(false);
   const { 
     items, 
@@ -45,6 +47,7 @@ export function CartDrawer() {
   const [couponInput, setCouponInput] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
   const [showCoupon, setShowCoupon] = useState(false);
+  const [showCryptoCheckout, setShowCryptoCheckout] = useState(false);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(min-width: 768px)');
@@ -83,6 +86,12 @@ export function CartDrawer() {
     html.removeAttribute('data-cart-open');
     body.removeAttribute('data-cart-open');
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || items.length === 0) {
+      setShowCryptoCheckout(false);
+    }
+  }, [isOpen, items.length]);
 
   const handleApplyCoupon = async () => {
     if (!couponInput.trim() || couponLoading) return;
@@ -127,7 +136,7 @@ export function CartDrawer() {
             transition={{ duration: 0.12 }}
             onClick={closeCart}
             className="fixed inset-0"
-            style={{ zIndex: 2147483648, background: 'rgba(0,0,0,0.2)' }}
+            style={{ zIndex: CART_DRAWER_BACKDROP_Z_INDEX, background: 'rgba(0,0,0,0.2)' }}
           />
 
           {/* Drawer Panel - Full height on mobile */}
@@ -141,7 +150,7 @@ export function CartDrawer() {
                 ? 'fixed top-0 left-0 right-0 w-full bg-white border-b border-black/10 flex flex-col safe-area-inset-bottom max-h-[90vh]'
                 : 'fixed top-0 right-0 bottom-0 w-full max-w-md bg-white border-l border-black/10 flex flex-col safe-area-inset-bottom'
             }
-            style={{ zIndex: 2147483649, color: '#1d1d1f' }}
+            style={{ zIndex: CART_DRAWER_PANEL_Z_INDEX, color: '#1d1d1f' }}
             data-apple-section
           >
             {/* Header with Back Button */}
@@ -400,18 +409,42 @@ export function CartDrawer() {
                 {/* Actions */}
                 <div className="space-y-2 md:space-y-3 pt-1">
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="col-span-2">
-                      <CryptoCheckoutTrigger
-                        productName={cryptoProductName}
-                        productImage={cryptoProductImage}
-                        priceUSD={summary.total}
-                        productId={cryptoProductId}
-                        variantId={cryptoVariantId}
-                        quantity={1}
-                        compact
-                        theme="light"
+                    <div className="col-span-2 space-y-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (items.length === 0) return;
+                          setShowCryptoCheckout((prev) => !prev);
+                        }}
                         disabled={items.length === 0}
-                      />
+                        className="w-full h-12 md:h-14 rounded-xl font-medium flex items-center justify-center gap-2 transition-all border border-black/10 bg-black text-white disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        <CreditCard className="w-4 h-4 md:w-5 md:h-5" />
+                        {showCryptoCheckout ? 'Hide Crypto Checkout' : 'Pay with Crypto'}
+                      </button>
+
+                      <AnimatePresence initial={false}>
+                        {showCryptoCheckout && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="rounded-xl border border-black/10 bg-white p-2 overflow-hidden max-h-[52vh] overflow-y-auto"
+                          >
+                            <CryptoCheckoutInline
+                              productName={cryptoProductName}
+                              productImage={cryptoProductImage}
+                              priceUSD={summary.total}
+                              productId={cryptoProductId}
+                              variantId={cryptoVariantId}
+                              quantity={1}
+                              inline
+                              onClose={() => setShowCryptoCheckout(false)}
+                            />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                     <button
                       type="button"

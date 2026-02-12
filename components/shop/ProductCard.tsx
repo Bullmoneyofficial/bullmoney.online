@@ -9,7 +9,7 @@ import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 import dynamic from 'next/dynamic';
 const CountUp = dynamic(() => import('@/components/CountUp'), { ssr: false, loading: () => null });
 const CryptoPayButton = dynamic(() => import('@/components/shop/CryptoPayButton').then(m => ({ default: m.CryptoPayButton })), { ssr: false, loading: () => null });
-const CryptoCheckoutTrigger = dynamic(() => import('@/components/shop/CryptoCheckoutInline').then(m => ({ default: m.CryptoCheckoutTrigger })), { ssr: false, loading: () => null });
+const CryptoCheckoutInline = dynamic(() => import('@/components/shop/CryptoCheckoutInline').then(m => ({ default: m.CryptoCheckoutInline })), { ssr: false, loading: () => null });
 const ProductMediaCarousel = dynamic(() => import('@/components/shop/ProductMediaCarousel').then(m => ({ default: m.ProductMediaCarousel })), { ssr: false, loading: () => null });
 import type { ProductMedia, ProductWithDetails } from '@/types/store';
 import { useCartStore } from '@/stores/cart-store';
@@ -346,6 +346,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
   const [isLongPress, setIsLongPress] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [payMethod, setPayMethod] = useState<'whop' | 'skrill' | 'cart' | 'stripe'>('cart');
+  const [showCryptoCheckout, setShowCryptoCheckout] = useState(false);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
   const touchStartPos = useRef<{ x: number; y: number } | null>(null);
   const isScrolling = useRef(false);
@@ -447,6 +448,12 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
     
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
+  }, [showQuickView]);
+
+  useEffect(() => {
+    if (!showQuickView) {
+      setShowCryptoCheckout(false);
+    }
   }, [showQuickView]);
 
   // Long press handlers with scroll detection
@@ -801,9 +808,10 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
+            setShowCryptoCheckout(false);
             setShowQuickView(false);
           }}
-            style={{ pointerEvents: 'all', overscrollBehavior: 'none', touchAction: 'none' }}
+            style={{ pointerEvents: 'all', overscrollBehavior: 'none', touchAction: 'manipulation' }}
         >
           {/* Tap hints - Skip on mobile for performance */}
           {!shouldSkipHeavyEffects && ['top', 'bottom', 'left', 'right'].map(pos => (
@@ -853,11 +861,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  setShowQuickView(false);
-                }}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
+                  setShowCryptoCheckout(false);
                   setShowQuickView(false);
                 }}
                 className="h-10 w-10 rounded-xl bg-white border border-black/10 flex items-center justify-center hover:border-black/20 active:scale-95 transition-all"
@@ -978,11 +982,6 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                               e.stopPropagation();
                               setSelectedVariant(variant);
                             }}
-                            onTouchEnd={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setSelectedVariant(variant);
-                            }}
                             style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
                             className={`px-4 py-2.5 rounded-xl border text-sm font-medium transition-all ${
                               selectedVariant?.id === variant.id
@@ -1038,34 +1037,57 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                   <div className="space-y-3">
                     <p className="text-sm font-semibold text-black">Checkout</p>
 
-                    <div
+                    <button
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
+                        if (!isInStock) return;
+                        setShowCryptoCheckout((prev) => !prev);
                       }}
+                      disabled={!isInStock}
+                      className="w-full py-3.5 rounded-2xl transition-all flex items-center justify-center gap-2 text-sm font-semibold border border-black/10 bg-white text-black disabled:opacity-40 disabled:cursor-not-allowed"
                       style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
                     >
-                      <CryptoCheckoutTrigger
-                        productName={product.name}
-                        productImage={product.primary_image}
-                        priceUSD={selectedVariant?.price || price}
-                        productId={product.id.toString()}
-                        variantId={selectedVariant?.id?.toString()}
-                        quantity={1}
-                        disabled={!isInStock}
-                      />
-                    </div>
+                      <Wallet className="w-4 h-4" />
+                      <span>{showCryptoCheckout ? 'Hide Crypto Checkout' : 'Pay with Crypto'}</span>
+                    </button>
+
+                    <AnimatePresence initial={false}>
+                      {showCryptoCheckout && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="rounded-2xl border border-black/10 p-2 bg-white overflow-hidden"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
+                          style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
+                        >
+                          <CryptoCheckoutInline
+                            productName={product.name}
+                            productImage={product.primary_image}
+                            priceUSD={selectedVariant?.price || price}
+                            productId={product.id.toString()}
+                            variantId={selectedVariant?.id?.toString()}
+                            quantity={1}
+                            inline
+                            onClose={() => setShowCryptoCheckout(false)}
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
                     <div className="w-full flex flex-col gap-0">
                       <div
                         className="grid grid-cols-4 w-full rounded-t-2xl overflow-hidden border border-black/10 border-b-0"
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                        onTouchEnd={(e) => { e.stopPropagation(); }}
                         style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
                       >
                         <button
-                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPayMethod('cart'); }}
-                          onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setPayMethod('cart'); }}
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowCryptoCheckout(false); setPayMethod('cart'); }}
                           className={`py-3 text-[10px] font-semibold transition-all flex flex-col items-center justify-center gap-0.5 ${
                             payMethod === 'cart'
                               ? 'bg-white text-black border border-black/20'
@@ -1078,8 +1100,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                         </button>
 
                         <button
-                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPayMethod('whop'); }}
-                          onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setPayMethod('whop'); }}
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowCryptoCheckout(false); setPayMethod('whop'); }}
                           className={`py-3 text-[10px] font-semibold transition-all border-l border-black/10 flex flex-col items-center justify-center gap-0.5 ${
                             payMethod === 'whop'
                               ? 'bg-white text-black border border-black/20'
@@ -1092,8 +1113,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                         </button>
 
                         <button
-                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPayMethod('skrill'); }}
-                          onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setPayMethod('skrill'); }}
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowCryptoCheckout(false); setPayMethod('skrill'); }}
                           className={`py-3 text-[10px] font-semibold transition-all border-l border-black/10 flex flex-col items-center justify-center gap-0.5 ${
                             payMethod === 'skrill'
                               ? 'bg-white text-black border border-black/20'
@@ -1107,8 +1127,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                         </button>
 
                         <button
-                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPayMethod('stripe'); }}
-                          onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setPayMethod('stripe'); }}
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowCryptoCheckout(false); setPayMethod('stripe'); }}
                           className={`py-3 text-[10px] font-semibold transition-all border-l border-black/10 flex flex-col items-center justify-center gap-0.5 ${
                             payMethod === 'stripe'
                               ? 'bg-white text-black border border-black/20'
@@ -1135,10 +1154,6 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                             } else {
                               handleDirectCheckout(payMethod === 'whop' ? 'Whop' : 'Skrill');
                             }
-                          }}
-                          onTouchEnd={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
                           }}
                           disabled={payMethod === 'stripe' || payMethod === 'skrill' || !isInStock}
                           style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
@@ -1189,7 +1204,6 @@ export const ProductCard = memo(function ProductCard({ product, compact = false 
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => { e.stopPropagation(); }}
-                      onTouchEnd={(e) => { e.stopPropagation(); }}
                       className="w-full py-2.5 bg-white text-black/70 hover:text-black text-xs font-medium rounded-xl transition-all flex items-center justify-center gap-2 border border-black/10"
                       style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
                       whileHover={{ scale: 1.02 }}

@@ -23,8 +23,27 @@ export function DonationHero() {
     setDonationBalance(0);
   }, []);
 
-  const copyAddress = () => {
-    navigator.clipboard.writeText(DONATION_ADDRESSES[selectedCrypto]);
+  const copyAddress = async () => {
+    const textToCopy = DONATION_ADDRESSES[selectedCrypto];
+
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(textToCopy);
+      } else {
+        throw new Error('Clipboard API unavailable');
+      }
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = textToCopy;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
+
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

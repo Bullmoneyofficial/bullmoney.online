@@ -7,6 +7,7 @@ import Search from 'lucide-react/dist/esm/icons/search';
 import User from 'lucide-react/dist/esm/icons/user';
 import Menu from 'lucide-react/dist/esm/icons/menu';
 import Home from 'lucide-react/dist/esm/icons/home';
+import Palette from 'lucide-react/dist/esm/icons/palette';
 // No lazy framer-motion — buttons must respond instantly
 
 import type { HeroMode } from '@/hooks/useHeroMode';
@@ -63,6 +64,8 @@ export interface StorePillNavProps {
   // Home button (shown on app page / main page)
   showHomeButton?: boolean;
   onHomeClick?: () => void;
+  showThemeButton?: boolean;
+  onThemeClick?: () => void;
   // Legacy props (ignored but kept for compatibility)
   ease?: string;
   baseColor?: string;
@@ -99,6 +102,8 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
   onManualClick,
   showHomeButton = false,
   onHomeClick,
+  showThemeButton = false,
+  onThemeClick,
 }) => {
   const [mounted, setMounted] = useState(false);
 
@@ -277,6 +282,20 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
                 aria-label="Home"
               >
                 <Home className="w-4 h-4" />
+              </button>
+            )}
+
+            {/* Themes Button */}
+            {showThemeButton && (
+              <button
+                type="button"
+                className="h-8 px-2.5 flex items-center gap-1.5 rounded-full transition-colors bg-white border border-black/10 active:scale-95"
+                style={{ color: 'rgba(0,0,0,0.85)' }}
+                onClick={onThemeClick}
+                aria-label="Themes"
+              >
+                <Palette className="w-4 h-4" />
+                <span className="hidden sm:inline text-[11px] font-semibold" style={{ color: '#111111' }}>Themes</span>
               </button>
             )}
 

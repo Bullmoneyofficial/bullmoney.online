@@ -527,7 +527,6 @@ export default function RootLayout({
         <Script id="inapp-shield" src="/scripts/BMBRAIN/inapp-shield.js" strategy="afterInteractive" />
 
         {/* NON-CRITICAL SCRIPTS - lazyOnload (defer until after everything else) */}
-        <Script id="ui-debug" src="/scripts/ui-debug.js" strategy="lazyOnload" />
         <Script id="detect-120hz" src="/scripts/detect-120hz.js" strategy="lazyOnload" />
         <Script id="perf-monitor" src="/scripts/perf-monitor.js" strategy="lazyOnload" />
         <Script id="device-detect" src="/scripts/device-detect.js" strategy="lazyOnload" />

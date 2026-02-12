@@ -1571,7 +1571,6 @@ export function CryptoCheckoutTrigger({
           e.stopPropagation();
           setIsOpen(true);
         }}
-        onTouchEnd={(e) => e.stopPropagation()}
         disabled={disabled}
         style={{ pointerEvents: 'all', touchAction: 'manipulation' }}
         className={compact

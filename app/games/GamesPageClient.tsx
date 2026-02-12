@@ -432,6 +432,7 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
           }
         `}</style>
       )}
+      {!embedMode && (
       <main
         className="w-full bg-black text-white pb-0"
         style={{
@@ -582,8 +583,8 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
             loading="lazy"
             decoding="async"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/40" />
+          <div className="absolute inset-0 bg-linear-to-b from-black/80 via-black/60 to-black" />
+          <div className="absolute inset-0 bg-linear-to-r from-black/40 via-transparent to-black/40" />
         </div>
 
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
@@ -629,7 +630,7 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
                   className="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 hover:border-white/30 active:border-white/40 transition-all duration-200 text-left w-full active:scale-[0.97] cursor-pointer select-none"
                   style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                 >
-                  <div className="relative w-full aspect-[4/3]">
+                  <div className="relative w-full aspect-4/3">
                     <img
                       src={game.img}
                       alt={game.name}
@@ -637,7 +638,7 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
                       loading="lazy"
                       decoding="async"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
+                    <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
                     <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-white/15 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-white/90 pointer-events-none">
                       {game.tag}
                     </div>
@@ -670,10 +671,12 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
         </section>
           </div>
       </main>
+      )}
 
       {embedMode ? (
         <BullcasinoShell>
-          <section className="games__container" style={{ padding: 'clamp(24px, 4vw, 48px) clamp(16px, 3vw, 24px) clamp(16px, 2vw, 24px)' }}>
+          <div style={{ position: 'relative', zIndex: 2, isolation: 'isolate' }}>
+          <section className="games__container" style={{ padding: 'clamp(24px, 4vw, 48px) clamp(16px, 3vw, 24px) clamp(16px, 2vw, 24px)', position: 'relative', zIndex: 2 }}>
           <div
             style={{
               background: 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)',
@@ -761,7 +764,7 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
           </div>
           </section>
 
-          <section className="games__container" style={{ padding: 'clamp(8px, 2vw, 16px) clamp(12px, 3vw, 32px) clamp(24px, 4vw, 48px)', position: 'relative', zIndex: 1 }}>
+          <section className="games__container" style={{ padding: 'clamp(8px, 2vw, 16px) clamp(12px, 3vw, 32px) clamp(24px, 4vw, 48px)', position: 'relative', zIndex: 2 }}>
           <div
             className="shell-games-grid"
             style={{
@@ -818,6 +821,7 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
             ))}
           </div>
           </section>
+          </div>
         </BullcasinoShell>
       ) : (
         <DeferredMount fallback={<div className="min-h-[40vh] w-full bg-[#0b1120]" />}>

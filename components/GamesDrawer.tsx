@@ -51,14 +51,14 @@ export function GamesDrawer() {
             exit={{ x: '100%' }}
             transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className={`fixed top-0 right-0 bottom-0 bg-white border-l border-black/10 flex flex-col safe-area-inset-bottom ${
+            className={`fixed top-0 right-0 bottom-0 bg-[#0a0a0c] border-l border-white/10 flex flex-col safe-area-inset-bottom ${
               isDesktop 
                 ? 'w-[75vw] max-w-none' // 75% width on desktop
                 : 'w-full max-w-full'   // Full width on mobile
             }`}
             style={{
               zIndex: 2147483647,
-              color: '#1d1d1f',
+              color: '#f5f5f7',
               height: '100vh',
               maxHeight: '100vh',
               minHeight: '100vh',
@@ -76,10 +76,10 @@ export function GamesDrawer() {
             aria-modal="true"
             aria-label="Games drawer"
           >
-            <div className="flex-none flex items-center justify-between p-4 md:p-6 border-b border-black/10 bg-white">
+            <div className="flex-none flex items-center justify-between p-4 md:p-6 border-b border-white/10 bg-[#0f0f12] text-white">
               <button
                 onClick={closeDrawer}
-                className="h-10 w-10 rounded-xl bg-black/5 flex items-center justify-center hover:bg-black/10 active:scale-95 transition-all"
+                className="h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center hover:bg-white/15 active:scale-95 transition-all"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
@@ -91,7 +91,7 @@ export function GamesDrawer() {
 
               <button
                 onClick={closeDrawer}
-                className="h-9 w-9 md:h-10 md:w-10 rounded-xl bg-black/5 flex items-center justify-center hover:bg-black/10 active:scale-95 transition-all"
+                className="h-9 w-9 md:h-10 md:w-10 rounded-xl bg-white/10 flex items-center justify-center hover:bg-white/15 active:scale-95 transition-all"
               >
                 <X className="w-4 h-4 md:w-5 md:h-5" />
               </button>

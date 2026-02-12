@@ -17,7 +17,7 @@ import ChevronDown from 'lucide-react/dist/esm/icons/chevron-down';
 import { useCartStore } from '@/stores/cart-store';
 import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { useProductsModalUI, useThemeSelectorModalUI, useStoreMenuUI, useGamesDrawerUI, useUIState, useAudioWidgetUI } from '@/contexts/UIStateContext';
+import { useProductsModalUI, useThemeSelectorModalUI, useStoreMenuUI, useUIState, useAudioWidgetUI } from '@/contexts/UIStateContext';
 import dynamic from 'next/dynamic';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useHeroMode } from '@/hooks/useHeroMode';
@@ -42,7 +42,6 @@ const StorePillNav = dynamic(() => import('./StorePillNav').then(m => ({ default
 const LanguageToggle = dynamic(() => import('@/components/LanguageToggle').then(m => ({ default: m.LanguageToggle })), { ssr: false, loading: () => null });
 const RewardsCardBanner = dynamic(() => import('@/components/RewardsCardBanner'), { ssr: false, loading: () => null });
 const ProductsModal = dynamic(() => import('@/components/ProductsModal').then(m => ({ default: m.ProductsModal })), { ssr: false, loading: () => null });
-const GamesDrawer = dynamic(() => import('@/components/GamesDrawer').then(m => ({ default: m.GamesDrawer })), { ssr: false, loading: () => null });
 const CartDrawer = dynamic(() => import('@/components/shop/CartDrawer').then(m => ({ default: m.CartDrawer })), { ssr: false, loading: () => null });
 
 // ============================================================================
@@ -144,7 +143,6 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   const [devAdminEnabled, setDevAdminEnabled] = useState(true);
   const effectiveAdmin = isDev && isAdmin && devAdminEnabled;
   const { open: openProductsModal, isOpen: isProductsModalOpen } = useProductsModalUI();
-  const { open: openGamesDrawer, isOpen: isGamesDrawerOpen } = useGamesDrawerUI();
   const { setIsOpen: setThemePickerModalOpen } = useThemeSelectorModalUI();
   const { setAudioWidgetOpen } = useAudioWidgetUI();
   const itemCount = getItemCount();
@@ -383,9 +381,20 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     });
   }, []);
 
+  const navigateToGames = useCallback(() => {
+    if (pathname?.startsWith('/games')) return;
+    setMobileMenuOpen(false);
+    setDesktopMenuOpen(false);
+    setManualDropdownOpen(false);
+    setSiteSearchOpen(false);
+    requestAnimationFrame(() => {
+      window.location.assign('/games');
+    });
+  }, [pathname, setDesktopMenuOpen, setManualDropdownOpen, setMobileMenuOpen]);
+
   const desktopLinks = useMemo(() => {
     const links = [
-      { label: 'Games', onClick: () => router.push('/games'), variant: 'link' as const },
+      { label: 'Games', onClick: navigateToGames, variant: 'link' as const },
       { label: 'Affiliates', onClick: () => setAffiliateModalOpen(true), variant: 'link' as const },
       { label: 'Products', onClick: () => openProductsModal(), variant: 'link' as const },
       { label: 'FAQ', onClick: () => setFaqModalOpen(true), variant: 'link' as const },
@@ -396,7 +405,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     ];
 
     return links;
-  }, [router, openProductsModal, setAffiliateModalOpen, setFaqModalOpen, showThemePicker, showUltimateHub, showAudioWidget, toggleThemePicker, toggleUltimateHub, toggleAudioWidget, isDesignPage, showDesignSections, toggleDesignSections]);
+  }, [navigateToGames, openProductsModal, setAffiliateModalOpen, setFaqModalOpen, showThemePicker, showUltimateHub, showAudioWidget, toggleThemePicker, toggleUltimateHub, toggleAudioWidget, isDesignPage, showDesignSections, toggleDesignSections]);
 
   // Check if there's a canvas section in the viewport (below header)
   const isOverCanvasSection = useCallback(() => {
@@ -513,11 +522,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       return;
     }
     if (href === '#action:games' || href === '/games') {
-      if (typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches) {
-        router.push('/games');
-      } else {
-        openGamesDrawer();
-      }
+      navigateToGames();
       return;
     }
     if (href === '#action:faq') {
@@ -543,7 +548,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
         }
       }, 100);
     }
-  }, [router, startPagemodeLogin, openGamesDrawer, openProductsModal, setFaqModalOpen, toggleThemePicker, toggleUltimateHub]);
+  }, [router, startPagemodeLogin, navigateToGames, openProductsModal, setFaqModalOpen, toggleThemePicker, toggleUltimateHub]);
 
 
   const handleOpenMobileMenu = useCallback(() => {
@@ -570,6 +575,11 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     SoundEffects.click();
     router.push('/');
   }, [router]);
+
+  const handleThemeButtonClick = useCallback(() => {
+    SoundEffects.click();
+    setThemePickerModalOpen(true);
+  }, [setThemePickerModalOpen]);
 
   const handleHeroModeChange = useCallback((mode: HeroMode) => {
     setHeroMode(mode);
@@ -615,6 +625,8 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
         // Home button for app navigation
         showHomeButton={showHomeButton}
         onHomeClick={handleHomeClick}
+        showThemeButton={showThemePicker}
+        onThemeClick={handleThemeButtonClick}
         onMobileMenuClick={handleOpenMobileMenu}
         onDesktopMenuEnter={isAccountPage || isCasinoPage ? undefined : openDesktopMenu}
         onDesktopMenuLeave={isAccountPage || isCasinoPage ? undefined : scheduleDesktopMenuClose}
@@ -727,7 +739,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                 <button
                   onClick={() => {
                     setDesktopMenuOpen(false);
-                    router.push('/games');
+                    navigateToGames();
                   }}
                   className="block text-left text-2xl font-medium tracking-tight transition-colors hover:bg-neutral-100 px-2 py-1 rounded w-full"
                   style={{ color: '#000000' }}
@@ -1342,8 +1354,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                   <LazyMotionLi variants={MOBILE_MENU_ITEM_VARIANTS}>
                     <LazyMotionButton
                       onClick={() => {
-                        setMobileMenuOpen(false);
-                        openGamesDrawer();
+                        navigateToGames();
                       }}
                       className="block w-full rounded-md px-3 py-2 text-left text-sm font-semibold tracking-tight text-white"
                       style={{
@@ -1386,9 +1397,6 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       {/* Products Modal - Rendered once, controlled by context */}
       {isProductsModalOpen && <ProductsModal />}
 
-      {/* Games Drawer - Rendered once, controlled by context */}
-      {isGamesDrawerOpen && <GamesDrawer />}
-      
       {/* Affiliate Modal - Using Lazy System */}
       <LazyAffiliateModal
         isOpen={affiliateModalOpen}

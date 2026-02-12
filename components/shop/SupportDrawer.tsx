@@ -123,6 +123,8 @@ type View = 'home' | 'faq' | 'faq-category' | 'social' | 'chat' | 'telegram' | '
 
 export function SupportDrawer() {
   const { isOpen, setIsOpen } = useSupportDrawerUI();
+  const SUPPORT_DRAWER_BACKDROP_Z_INDEX = 2147483602;
+  const SUPPORT_DRAWER_PANEL_Z_INDEX = 2147483603;
   const [isDesktop, setIsDesktop] = useState(false);
   const [view, setView] = useState<View>('home');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -292,7 +294,7 @@ export function SupportDrawer() {
             transition={{ duration: 0.12 }}
             onClick={closeDrawer}
             className="fixed inset-0"
-            style={{ zIndex: 2147483648, background: 'rgba(0,0,0,0.2)' }}
+            style={{ zIndex: SUPPORT_DRAWER_BACKDROP_Z_INDEX, background: 'rgba(0,0,0,0.2)' }}
           />
 
           {/* Drawer Panel — same dimensions/animation as CartDrawer */}
@@ -306,7 +308,7 @@ export function SupportDrawer() {
                 ? 'fixed top-0 left-0 right-0 w-full bg-white border-b border-black/10 flex flex-col safe-area-inset-bottom max-h-[90vh]'
                 : 'fixed top-0 right-0 bottom-0 w-full max-w-md bg-white border-l border-black/10 flex flex-col safe-area-inset-bottom'
             }
-            style={{ zIndex: 2147483649, color: '#1d1d1f' }}
+            style={{ zIndex: SUPPORT_DRAWER_PANEL_Z_INDEX, color: '#1d1d1f' }}
             data-apple-section
           >
             {/* Header — same as CartDrawer */}

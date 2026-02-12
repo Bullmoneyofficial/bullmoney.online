@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, Heart, Loader2, Target, Trophy } from 'lucide-react';
 import { toast } from 'sonner';
-import { CryptoCheckoutTrigger } from '@/components/shop/CryptoCheckoutInline';
+import { CryptoCheckoutInline } from '@/components/shop/CryptoCheckoutInline';
 
 type DonationTier = {
   id: string;
@@ -58,6 +58,7 @@ function clampAmount(input: string): number {
 export function DonationFundSection() {
   const [selectedAmount, setSelectedAmount] = useState<number>(100);
   const [customAmount, setCustomAmount] = useState<string>('100');
+  const [showCryptoCheckout, setShowCryptoCheckout] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [stats, setStats] = useState<DonationResponse | null>(null);
@@ -242,18 +243,31 @@ export function DonationFundSection() {
               </div>
 
               <div className="mt-4">
-                <CryptoCheckoutTrigger
-                  productName="Gaming License Donation"
-                  productImage={null}
-                  priceUSD={selectedAmount}
-                  productId={DONATION_PRODUCT_ID}
-                  quantity={1}
-                  compact
-                  onPaymentSubmitted={() => {
-                    toast.success('Donation submitted. It will update after blockchain confirmation.');
-                    setTimeout(() => fetchStats('refresh'), 1200);
-                  }}
-                />
+                <button
+                  type="button"
+                  onClick={() => setShowCryptoCheckout((prev) => !prev)}
+                  className="w-full rounded-xl bg-white text-black px-4 py-2.5 text-sm font-semibold transition hover:opacity-90"
+                >
+                  {showCryptoCheckout ? 'Hide Crypto Checkout' : 'Donate with Crypto'}
+                </button>
+
+                {showCryptoCheckout && (
+                  <div className="mt-2 rounded-xl border border-white/10 bg-black/60 p-2 max-h-[50vh] overflow-y-auto">
+                    <CryptoCheckoutInline
+                      productName="Gaming License Donation"
+                      productImage={null}
+                      priceUSD={selectedAmount}
+                      productId={DONATION_PRODUCT_ID}
+                      quantity={1}
+                      inline
+                      onClose={() => setShowCryptoCheckout(false)}
+                      onPaymentSubmitted={() => {
+                        toast.success('Donation submitted. It will update after blockchain confirmation.');
+                        setTimeout(() => fetchStats('refresh'), 1200);
+                      }}
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="mt-3 flex items-start gap-2 rounded-xl border border-white/10 bg-black/40 p-3 text-[11px] text-white/55">

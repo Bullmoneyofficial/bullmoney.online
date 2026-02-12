@@ -120,11 +120,11 @@ if(S.browser==='instagram'||S.browser==='tiktok'||S.browser==='facebook'){
       if(d.getElementById('bm-open-browser')||!d.body)return;
       var bar=d.createElement('div');
       bar.id='bm-open-browser';
-      bar.style.cssText='position:fixed;bottom:0;left:0;right:0;padding:10px 16px;background:linear-gradient(135deg,#1a1a2e,#0a0a0a);border-top:1px solid rgba(255,215,0,.3);z-index:99999;display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:system-ui,-apple-system,sans-serif;';
-      bar.innerHTML='<span style="color:#ffd700;font-size:13px;">⚡ Open in browser for best performance</span>'+
+      bar.style.cssText='position:fixed;top:0;left:0;right:0;padding:12px 16px;background:#000;border-bottom:1px solid rgba(255,255,255,.18);z-index:99999;display:flex;align-items:center;justify-content:space-between;gap:10px;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;color:#fff;';
+      bar.innerHTML='<span style="color:#fff;font-size:13px;font-weight:500;letter-spacing:.01em;">Open in browser for best performance</span>'+
         '<div style="display:flex;gap:6px;">'+
-        '<button onclick="this.parentElement.parentElement.remove()" style="background:none;border:1px solid rgba(255,255,255,.2);color:#999;padding:4px 10px;border-radius:6px;font-size:12px;cursor:pointer;">Dismiss</button>'+
-        '<a href="'+w.location.href+'" target="_blank" style="background:linear-gradient(135deg,#ffd700,#f59e0b);color:#000;padding:4px 12px;border-radius:6px;font-size:12px;text-decoration:none;font-weight:600;">Open</a>'+
+        '<button onclick="this.parentElement.parentElement.remove()" style="background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;padding:5px 11px;border-radius:9999px;font-size:12px;line-height:1;cursor:pointer;">Dismiss</button>'+
+        '<a href="'+w.location.href+'" target="_blank" style="background:#fff;color:#000;padding:5px 12px;border-radius:9999px;font-size:12px;line-height:1;text-decoration:none;font-weight:600;">Open</a>'+
         '</div>';
       d.body.appendChild(bar);
     },1800);

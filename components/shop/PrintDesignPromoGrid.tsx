@@ -16,6 +16,7 @@ import type { ProductWithDetails, Variant } from '@/types/store';
 import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 
 const FooterComponent = dynamic(() => import('@/components/Mainpage/footer').then((mod) => ({ default: mod.Footer })), { ssr: false });
+const CryptoCheckoutInline = dynamic(() => import('@/components/shop/CryptoCheckoutInline').then(m => ({ default: m.CryptoCheckoutInline })), { ssr: false, loading: () => null });
 
 /* ─────── Animation Type System ─────── */
 type GridAnimation =
@@ -200,6 +201,7 @@ function PromoQuickView({ product, onClose }: PromoQuickViewProps) {
   const [selectedSize, setSelectedSize] = useState(product.sizes[0]);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+  const [showCryptoCheckout, setShowCryptoCheckout] = useState(false);
   const { addItem } = useCartStore();
   const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects } = useMobilePerformance();
   const totalPrice = selectedSize.price * quantity;
@@ -285,7 +287,7 @@ function PromoQuickView({ product, onClose }: PromoQuickViewProps) {
           e.stopPropagation();
           onClose();
         }}
-        style={{ pointerEvents: 'all', overscrollBehavior: 'none', touchAction: 'none' }}
+        style={{ pointerEvents: 'all', overscrollBehavior: 'none', touchAction: 'manipulation' }}
       >
         {!shouldSkipHeavyEffects && ['top', 'bottom', 'left', 'right'].map((pos) => (
           <motion.div
@@ -332,11 +334,6 @@ function PromoQuickView({ product, onClose }: PromoQuickViewProps) {
             </div>
             <motion.button
               onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onClose();
-              }}
-              onTouchEnd={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 onClose();
@@ -427,6 +424,29 @@ function PromoQuickView({ product, onClose }: PromoQuickViewProps) {
                   <span className="text-sm text-black/50">Total</span>
                   <span className="text-3xl font-bold text-black">${totalPrice.toFixed(2)}</span>
                 </div>
+
+                <button
+                  onClick={() => setShowCryptoCheckout((prev) => !prev)}
+                  className="w-full rounded-full px-6 py-3 text-sm font-semibold text-black transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 border border-black/20 bg-white"
+                >
+                  {showCryptoCheckout ? 'Hide Crypto Checkout' : 'Pay with Crypto'}
+                </button>
+
+                {showCryptoCheckout && (
+                  <div className="rounded-2xl border border-black/10 bg-white p-2 max-h-[50vh] overflow-y-auto">
+                    <CryptoCheckoutInline
+                      productName={product.name}
+                      productImage={product.image}
+                      priceUSD={totalPrice}
+                      productId={`print-${product.id}`}
+                      variantId={`${product.id}-${selectedSize.label}`}
+                      quantity={1}
+                      inline
+                      onClose={() => setShowCryptoCheckout(false)}
+                    />
+                  </div>
+                )}
+
                 <button 
                   onClick={handleAddToCart}
                   className={`w-full rounded-full px-6 py-4 text-sm font-semibold text-black transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 border border-black/20 bg-white`}
