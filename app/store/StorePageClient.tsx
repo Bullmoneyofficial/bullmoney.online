@@ -28,6 +28,10 @@ const DigitalArtSection = dynamic(
   () => import('@/components/shop/DigitalArtSection').then(m => ({ default: m.DigitalArtSection })),
   { ssr: false, loading: () => <div className="h-80 w-full rounded-2xl bg-black/5 animate-pulse" /> }
 );
+const PrintDesignStudio = dynamic(
+  () => import('@/components/shop/PrintDesignStudio').then(m => ({ default: m.PrintDesignStudio })),
+  { ssr: false }
+);
 
 import { SAMPLE_PRINT_PRODUCTS } from '@/components/shop/PrintProductsSection';
 import { SAMPLE_DIGITAL_ART } from '@/components/shop/DigitalArtSection';
@@ -274,6 +278,13 @@ type StorePageProps = {
   showProductSections?: boolean;
 };
 
+type StudioOpts = {
+  tab?: 'browse' | 'product' | 'upload' | 'create' | 'orders' | 'designs';
+  productId?: string;
+  artId?: string;
+  productType?: string;
+};
+
 
 
 
@@ -317,6 +328,7 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
   const [hasMounted, setHasMounted] = useState(false);
   const [allowHeavyHero, setAllowHeavyHero] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [studioState, setStudioState] = useState<{ open: boolean } & StudioOpts>({ open: false });
 
   const [checkoutProduct, setCheckoutProduct] = useState<ProductWithDetails | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<
@@ -328,6 +340,10 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
   const [timelineGridVariant, setTimelineGridVariant] = useState<GridVariant>('snug');
   const [heroSlideIndex, setHeroSlideIndex] = useState(() => pickHeroSlideIndex());
   const [showHeroMapOverlay] = useState(() => Math.random() < 0.05);
+
+  const openStudio = useCallback((opts?: StudioOpts) => {
+    setStudioState({ open: true, ...opts });
+  }, []);
 
 
   const heroCacheLoadedRef = useRef(false);
@@ -2649,6 +2665,17 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
 
       {/* Store Footer — always at the very bottom */}
       {footerSectionBlock}
+
+      {studioState.open && (
+        <PrintDesignStudio
+          onClose={() => setStudioState({ open: false })}
+          userEmail="bullmoneytraders@gmail.com"
+          initialTab={studioState.tab}
+          initialProductId={studioState.productId}
+          initialArtId={studioState.artId}
+          initialProductType={studioState.productType}
+        />
+      )}
 
       {checkoutOpen && (
         <div
