@@ -12,10 +12,11 @@ import HelpCircle from 'lucide-react/dist/esm/icons/help-circle';
 import Calendar from 'lucide-react/dist/esm/icons/calendar';
 import Settings from 'lucide-react/dist/esm/icons/settings';
 import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
+import ChevronDown from 'lucide-react/dist/esm/icons/chevron-down';
 import { useCartStore } from '@/stores/cart-store';
 import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { useProductsModalUI, useThemeSelectorModalUI, useStoreMenuUI, useGamesDrawerUI, useUIState } from '@/contexts/UIStateContext';
+import { useProductsModalUI, useThemeSelectorModalUI, useStoreMenuUI, useGamesDrawerUI, useUIState, useAudioWidgetUI } from '@/contexts/UIStateContext';
 import dynamic from 'next/dynamic';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useHeroMode } from '@/hooks/useHeroMode';
@@ -24,6 +25,9 @@ import type { HeroMode } from '@/hooks/useHeroMode';
 // Lazy-load framer-motion — only needed when mobile menu is opened
 const LazyMotionDiv = dynamic(() => import('framer-motion').then(m => ({ default: m.motion.div })), { ssr: false });
 const LazyAnimatePresence = dynamic(() => import('framer-motion').then(m => ({ default: m.AnimatePresence })), { ssr: false });
+const LazyMotionUl = dynamic(() => import('framer-motion').then(m => ({ default: m.motion.ul })), { ssr: false });
+const LazyMotionLi = dynamic(() => import('framer-motion').then(m => ({ default: m.motion.li })), { ssr: false });
+const LazyMotionButton = dynamic(() => import('framer-motion').then(m => ({ default: m.motion.button })), { ssr: false });
 
 // Lazy load modals - same as main navbar
 const AdminHubModal = dynamic(() => import('@/components/AdminHubModal'), { ssr: false });
@@ -83,6 +87,27 @@ const MAIN_NAV_BUTTONS = [
   { href: '/community', label: 'Community', icon: Calendar },
 ];
 
+const MOBILE_MENU_LIST_VARIANTS = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.04,
+    },
+  },
+};
+
+const MOBILE_MENU_ITEM_VARIANTS = {
+  hidden: { opacity: 0, y: 10, filter: 'blur(4px)' },
+  show: {
+    opacity: 1,
+    y: 0,
+    filter: 'blur(0px)',
+    transition: { duration: 0.28, ease: [0.22, 1, 0.36, 1] },
+  },
+};
+
 type StoreHeaderProps = {
   heroModeOverride?: HeroMode;
   onHeroModeChangeOverride?: (mode: HeroMode) => void;
@@ -104,11 +129,12 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   const [faqModalOpen, setFaqModalOpen] = useState(false);
   const [showThemePicker, setShowThemePicker] = useState(false);
   const [showUltimateHub, setShowUltimateHub] = useState(false);
+  const [showAudioWidget, setShowAudioWidget] = useState(true);
   const [gamesManualOpen, setGamesManualOpen] = useState(false);
   const [siteSearchOpen, setSiteSearchOpen] = useState(false);
   const [showDesignSections, setShowDesignSections] = useState(true);
   const desktopMenuCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const hubToggleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const menuToggleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { openCart, getItemCount } = useCartStore();
   const { isAuthenticated, recruit, signOut } = useRecruitAuth();
   const { isAdmin } = useAdminAuth();
@@ -118,6 +144,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   const { open: openProductsModal, isOpen: isProductsModalOpen } = useProductsModalUI();
   const { open: openGamesDrawer, isOpen: isGamesDrawerOpen } = useGamesDrawerUI();
   const { setIsOpen: setThemePickerModalOpen } = useThemeSelectorModalUI();
+  const { setAudioWidgetOpen } = useAudioWidgetUI();
   const itemCount = getItemCount();
   const router = useRouter();
   const pathname = usePathname();
@@ -159,8 +186,8 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       if (desktopMenuCloseTimer.current) {
         clearTimeout(desktopMenuCloseTimer.current);
       }
-      if (hubToggleTimer.current) {
-        clearTimeout(hubToggleTimer.current);
+      if (menuToggleTimer.current) {
+        clearTimeout(menuToggleTimer.current);
       }
     };
   }, []);
@@ -176,17 +203,20 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     setSiteSearchOpen(false);
   }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
   
-  // Sync theme picker local state → UIState context (avoids setState-during-render)
-  useEffect(() => {
-    setThemePickerModalOpen(showThemePicker);
-  }, [showThemePicker, setThemePickerModalOpen]);
-
   // Load Ultimate Hub preference
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('store_show_ultimate_hub');
       // Default to false (hide) unless explicitly enabled
       setShowUltimateHub(stored === 'true');
+    }
+  }, []);
+
+  // Load Theme Picker preference
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('store_show_theme_picker');
+      setShowThemePicker(stored === 'true');
     }
   }, []);
 
@@ -197,6 +227,66 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     window.dispatchEvent(new CustomEvent('store_ultimate_hub_toggle', { detail: showUltimateHub }));
     window.dispatchEvent(new Event('store_ultimate_hub_toggle'));
   }, [showUltimateHub]);
+
+  // Persist and broadcast Theme Picker changes after render
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem('store_show_theme_picker', String(showThemePicker));
+    window.dispatchEvent(new Event('store_theme_picker_toggle'));
+  }, [showThemePicker]);
+
+  // Sync Theme Picker button state with external toggles (e.g. main navbar)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleThemeToggle = (event: Event) => {
+      const detailValue = (event as CustomEvent<boolean>).detail;
+      if (typeof detailValue === 'boolean') {
+        setShowThemePicker(detailValue);
+        return;
+      }
+      const stored = localStorage.getItem('store_show_theme_picker');
+      setShowThemePicker(stored === 'true');
+    };
+
+    window.addEventListener('store_theme_picker_toggle', handleThemeToggle);
+    return () => window.removeEventListener('store_theme_picker_toggle', handleThemeToggle);
+  }, []);
+
+  // Load Audio Widget preference
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('store_show_audio_widget');
+      // Default to true (visible) unless explicitly disabled
+      setShowAudioWidget(stored !== 'false');
+    }
+  }, []);
+
+  // Persist and broadcast Audio Widget changes after render
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem('store_show_audio_widget', String(showAudioWidget));
+    window.dispatchEvent(new CustomEvent('store_audio_widget_toggle', { detail: showAudioWidget }));
+    window.dispatchEvent(new Event('store_audio_widget_toggle'));
+  }, [showAudioWidget]);
+
+  // Sync Audio button state with external toggles
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleAudioToggle = (event: Event) => {
+      const detailValue = (event as CustomEvent<boolean>).detail;
+      if (typeof detailValue === 'boolean') {
+        setShowAudioWidget(detailValue);
+        return;
+      }
+      const stored = localStorage.getItem('store_show_audio_widget');
+      setShowAudioWidget(stored !== 'false');
+    };
+
+    window.addEventListener('store_audio_widget_toggle', handleAudioToggle);
+    return () => window.removeEventListener('store_audio_widget_toggle', handleAudioToggle);
+  }, []);
 
   // Load Design Sections preference
   useEffect(() => {
@@ -209,17 +299,28 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     }
   }, []);
   
-  const toggleThemePicker = useCallback(() => {
-    SoundEffects.click();
+  const applyThemePickerToggle = useCallback((nextValue?: boolean) => {
     setShowThemePicker(prev => {
-      const newValue = !prev;
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('store_show_theme_picker', String(newValue));
-        window.dispatchEvent(new Event('store_theme_picker_toggle'));
-      }
+      const newValue = typeof nextValue === 'boolean' ? nextValue : !prev;
+      setThemePickerModalOpen(newValue);
       return newValue;
     });
-  }, []);
+  }, [setThemePickerModalOpen]);
+
+  const toggleThemePicker = useCallback(() => {
+    SoundEffects.click();
+    if (desktopMenuOpen) {
+      setDesktopMenuOpen(false);
+      if (menuToggleTimer.current) {
+        clearTimeout(menuToggleTimer.current);
+      }
+      menuToggleTimer.current = setTimeout(() => {
+        applyThemePickerToggle();
+      }, 180);
+      return;
+    }
+    applyThemePickerToggle();
+  }, [applyThemePickerToggle, desktopMenuOpen]);
 
   const applyUltimateHubToggle = useCallback((nextValue?: boolean) => {
     setShowUltimateHub(prev => {
@@ -232,16 +333,39 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     SoundEffects.click();
     if (desktopMenuOpen) {
       setDesktopMenuOpen(false);
-      if (hubToggleTimer.current) {
-        clearTimeout(hubToggleTimer.current);
+      if (menuToggleTimer.current) {
+        clearTimeout(menuToggleTimer.current);
       }
-      hubToggleTimer.current = setTimeout(() => {
+      menuToggleTimer.current = setTimeout(() => {
         applyUltimateHubToggle();
       }, 180);
       return;
     }
     applyUltimateHubToggle();
   }, [applyUltimateHubToggle, desktopMenuOpen]);
+
+  const applyAudioWidgetToggle = useCallback((nextValue?: boolean) => {
+    setShowAudioWidget(prev => {
+      const newValue = typeof nextValue === 'boolean' ? nextValue : !prev;
+      setAudioWidgetOpen(newValue);
+      return newValue;
+    });
+  }, [setAudioWidgetOpen]);
+
+  const toggleAudioWidget = useCallback(() => {
+    SoundEffects.click();
+    if (desktopMenuOpen) {
+      setDesktopMenuOpen(false);
+      if (menuToggleTimer.current) {
+        clearTimeout(menuToggleTimer.current);
+      }
+      menuToggleTimer.current = setTimeout(() => {
+        applyAudioWidgetToggle();
+      }, 180);
+      return;
+    }
+    applyAudioWidgetToggle();
+  }, [applyAudioWidgetToggle, desktopMenuOpen]);
 
   const toggleDesignSections = useCallback(() => {
     SoundEffects.click();
@@ -263,11 +387,12 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       { label: 'FAQ', onClick: () => setFaqModalOpen(true), variant: 'link' as const },
       { label: 'Themes', onClick: toggleThemePicker, isActive: showThemePicker, variant: 'toggle' as const },
       { label: 'Hub', onClick: toggleUltimateHub, isActive: showUltimateHub, variant: 'toggle' as const },
+      { label: 'Audio', onClick: toggleAudioWidget, isActive: showAudioWidget, variant: 'toggle' as const },
       ...(isDesignPage ? [{ label: 'Sections', onClick: toggleDesignSections, isActive: showDesignSections, variant: 'toggle' as const }] : []),
     ];
 
     return links;
-  }, [router, openProductsModal, setAffiliateModalOpen, setFaqModalOpen, showThemePicker, showUltimateHub, toggleThemePicker, toggleUltimateHub, isDesignPage, showDesignSections, toggleDesignSections]);
+  }, [router, openProductsModal, setAffiliateModalOpen, setFaqModalOpen, showThemePicker, showUltimateHub, showAudioWidget, toggleThemePicker, toggleUltimateHub, toggleAudioWidget, isDesignPage, showDesignSections, toggleDesignSections]);
 
   // Check if there's a canvas section in the viewport (below header)
   const isOverCanvasSection = useCallback(() => {
@@ -670,18 +795,16 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                     className="w-full"
                   />
                 </div>
-                {showThemePicker && (
-                  <button
-                    onClick={() => {
-                      toggleThemePicker();
-                      setDesktopMenuOpen(false);
-                    }}
-                    className="block text-left text-lg font-medium tracking-tight transition-colors hover:bg-neutral-100 px-2 py-1 rounded w-full"
-                    style={{ color: '#000000' }}
-                  >
-                    Theme Picker
-                  </button>
-                )}
+                <button
+                  onClick={() => {
+                    toggleThemePicker();
+                    setDesktopMenuOpen(false);
+                  }}
+                  className="block text-left text-lg font-medium tracking-tight transition-colors hover:bg-neutral-100 px-2 py-1 rounded w-full"
+                  style={{ color: '#000000', fontWeight: showThemePicker ? 600 : 500 }}
+                >
+                  Theme Picker {showThemePicker ? 'On' : 'Off'}
+                </button>
                 <button
                   onClick={() => {
                     toggleUltimateHub();
@@ -691,6 +814,16 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                   style={{ color: '#000000', fontWeight: showUltimateHub ? 600 : 500 }}
                 >
                   Ultimate Hub {showUltimateHub ? 'On' : 'Off'}
+                </button>
+                <button
+                  onClick={() => {
+                    toggleAudioWidget();
+                    setDesktopMenuOpen(false);
+                  }}
+                  className="block text-left text-lg font-medium tracking-tight transition-colors hover:bg-neutral-100 px-2 py-1 rounded w-full"
+                  style={{ color: '#000000', fontWeight: showAudioWidget ? 600 : 500 }}
+                >
+                  Audio Widget {showAudioWidget ? 'On' : 'Off'}
                 </button>
                 {isDesignPage && (
                   <button
@@ -948,55 +1081,134 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
             >
               <div className="flex items-center justify-between mb-4">
                 <span className="text-2xl font-medium" style={{ color: 'rgb(0,0,0)' }}>Menu</span>
-                <button
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="h-8 w-8 flex items-center justify-center rounded-lg"
-                  style={{ background: 'rgba(0,0,0,0.05)', color: 'rgb(0,0,0)' }}
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Account Section */}
-              {isAuthenticated && recruit ? (
-                <div className="mb-6 space-y-3">
+                <div className="flex items-center gap-2">
                   <button
                     onClick={() => {
                       setMobileMenuOpen(false);
-                      router.push('/store/account');
+                      if (isAuthenticated && recruit) {
+                        router.push('/store/account');
+                        return;
+                      }
+                      startPagemodeLogin();
                     }}
-                    className="block text-left text-2xl font-medium tracking-tight transition-colors"
-                    style={{ color: 'rgba(0,0,0,0.95)' }}
+                    className="h-8 w-8 flex items-center justify-center rounded-lg"
+                    style={{ background: 'rgba(0,0,0,0.05)', color: 'rgb(0,0,0)' }}
+                    title={isAuthenticated ? 'Account' : 'Sign In / Register'}
+                    aria-label={isAuthenticated ? 'Open account' : 'Sign in or register'}
                   >
-                    Account
+                    <User className="w-4 h-4" />
                   </button>
-                  <Link
-                    href="/recruit"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block text-left text-2xl font-medium tracking-tight transition-colors"
-                    style={{ color: 'rgba(0,0,0,0.95)' }}
-                  >
-                    Profile
-                  </Link>
                   <button
-                    onClick={handleLogout}
-                    className="block text-left text-2xl font-medium tracking-tight transition-colors"
-                    style={{ color: 'rgba(0,0,0,0.95)' }}
+                    onClick={handleCloseMobileMenu}
+                    className="h-8 w-8 flex items-center justify-center rounded-lg"
+                    style={{ background: 'rgba(0,0,0,0.05)', color: 'rgb(0,0,0)' }}
+                    aria-label="Close mobile menu"
                   >
-                    Logout
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
-              ) : (
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    startPagemodeLogin();
-                  }}
-                  className="mb-6 w-full text-left text-2xl font-medium tracking-tight transition-colors"
-                  style={{ color: 'rgba(0,0,0,0.95)' }}
-                >
-                  Sign In / Register
-                </button>
+              </div>
+
+              {/* Store Button - Mobile (first) */}
+              <Link
+                href="/store"
+                onClick={handleCloseMobileMenu}
+                className="mb-3 block text-left text-base font-semibold tracking-tight transition-colors"
+                style={{ color: 'rgba(0,0,0,0.95)' }}
+              >
+                Store
+              </Link>
+
+              <div className="mb-3 border-b border-black/10 pb-2">
+                <details className="group">
+                  <summary className="cursor-pointer list-none py-2 text-base font-medium" style={{ color: 'rgba(0,0,0,0.95)' }}>
+                    <span className="flex items-center justify-between">
+                      <span>Store Pages</span>
+                      <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" style={{ color: 'rgba(0,0,0,0.55)' }} />
+                    </span>
+                  </summary>
+                  <div className="space-y-1 pb-1 pl-2">
+                    <button
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        openProductsModal();
+                      }}
+                      className="block w-full py-1.5 text-left text-sm"
+                      style={{ color: 'rgba(0,0,0,0.85)' }}
+                    >
+                      Products Modal
+                    </button>
+                    <Link
+                      href="/design"
+                      onClick={handleCloseMobileMenu}
+                      className="block py-1.5 text-sm"
+                      style={{ color: 'rgba(0,0,0,0.85)' }}
+                    >
+                      Design Page
+                    </Link>
+                  </div>
+                </details>
+              </div>
+
+              <div className="mb-3 border-b border-black/10 pb-2">
+                <details className="group">
+                  <summary className="cursor-pointer list-none py-2 text-base font-medium" style={{ color: 'rgba(0,0,0,0.95)' }}>
+                    <span className="flex items-center justify-between">
+                      <span>About Us</span>
+                      <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" style={{ color: 'rgba(0,0,0,0.55)' }} />
+                    </span>
+                  </summary>
+                  <div className="space-y-1 pb-1 pl-2">
+                    <button
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        setFaqModalOpen(true);
+                      }}
+                      className="block w-full py-1.5 text-left text-sm"
+                      style={{ color: 'rgba(0,0,0,0.85)' }}
+                    >
+                      FAQ
+                    </button>
+                    <Link
+                      href="/"
+                      onClick={handleCloseMobileMenu}
+                      className="block py-1.5 text-sm"
+                      style={{ color: 'rgba(0,0,0,0.85)' }}
+                    >
+                      Back to Home
+                    </Link>
+                  </div>
+                </details>
+              </div>
+
+              {isAuthenticated && recruit && (
+                <div className="mb-3 border-b border-black/10 pb-2">
+                  <details className="group">
+                    <summary className="cursor-pointer list-none py-2 text-base font-medium" style={{ color: 'rgba(0,0,0,0.95)' }}>
+                      <span className="flex items-center justify-between">
+                        <span>Account</span>
+                        <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" style={{ color: 'rgba(0,0,0,0.55)' }} />
+                      </span>
+                    </summary>
+                    <div className="space-y-1 pb-1 pl-2">
+                      <Link
+                        href="/recruit"
+                        onClick={handleCloseMobileMenu}
+                        className="block py-1.5 text-sm"
+                        style={{ color: 'rgba(0,0,0,0.85)' }}
+                      >
+                        Profile
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full py-1.5 text-left text-sm"
+                        style={{ color: 'rgba(0,0,0,0.85)' }}
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  </details>
+                </div>
               )}
               
               {/* Admin Button - Mobile, dev only */}
@@ -1006,7 +1218,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                     setMobileMenuOpen(false);
                     setAdminModalOpen(true);
                   }}
-                  className="mb-6 text-left text-2xl font-medium tracking-tight transition-colors"
+                  className="mb-3 text-left text-sm font-medium tracking-tight transition-colors"
                   style={{ color: 'rgba(113,46,165,0.95)' }}
                 >
                   Admin Panel
@@ -1014,19 +1226,10 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
               )}
               
               {/* Toggles Section - Mobile */}
-              <div className="space-y-4 mb-6">
-                <LanguageToggle
-                  variant="row"
-                  dropDirection="down"
-                  dropAlign="left"
-                  rowDropdown="inline"
-                  tone="light"
-                  className="w-full"
-                />
-
+              <div className="space-y-3 mb-4 border-b border-black/10 pb-3">
                 <button
                   onClick={toggleThemePicker}
-                  className="w-full flex items-center justify-between text-left text-2xl font-medium tracking-tight"
+                  className="w-full flex items-center justify-between text-left text-base font-medium tracking-tight"
                   style={{ color: 'rgba(0,0,0,0.95)' }}
                   role="switch"
                   aria-checked={showThemePicker}
@@ -1045,7 +1248,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
 
                 <button
                   onClick={toggleUltimateHub}
-                  className="w-full flex items-center justify-between text-left text-2xl font-medium tracking-tight"
+                  className="w-full flex items-center justify-between text-left text-base font-medium tracking-tight"
                   style={{ color: 'rgba(0,0,0,0.95)' }}
                   role="switch"
                   aria-checked={showUltimateHub}
@@ -1062,10 +1265,29 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                   </span>
                 </button>
 
+                <button
+                  onClick={toggleAudioWidget}
+                  className="w-full flex items-center justify-between text-left text-base font-medium tracking-tight"
+                  style={{ color: 'rgba(0,0,0,0.95)' }}
+                  role="switch"
+                  aria-checked={showAudioWidget}
+                >
+                  <span>Audio</span>
+                  <span
+                    className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
+                    style={{ background: showAudioWidget ? 'rgba(0,0,0,0.9)' : 'rgba(0,0,0,0.2)' }}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 rounded-full transition-transform ${showAudioWidget ? 'translate-x-5' : 'translate-x-1'}`}
+                      style={{ background: showAudioWidget ? 'rgb(255,255,255)' : 'rgb(0,0,0)' }}
+                    />
+                  </span>
+                </button>
+
                 {isDesignPage && (
                   <button
                     onClick={toggleDesignSections}
-                    className="w-full flex items-center justify-between text-left text-2xl font-medium tracking-tight"
+                    className="w-full flex items-center justify-between text-left text-base font-medium tracking-tight"
                     style={{ color: 'rgba(0,0,0,0.95)' }}
                     role="switch"
                     aria-checked={showDesignSections}
@@ -1084,77 +1306,72 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                 )}
               </div>
               
-              {/* Site Features - Mobile */}
-              <div className="space-y-3 mb-6">
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    setAffiliateModalOpen(true);
-                  }}
-                  className="block text-left text-2xl font-medium tracking-tight transition-colors"
-                  style={{ color: 'rgba(0,0,0,0.95)' }}
+              {/* More - Mobile (animated list) */}
+              <div className="mb-4 border-b border-black/10 pb-3">
+                <LazyMotionUl
+                  initial="hidden"
+                  animate="show"
+                  variants={MOBILE_MENU_LIST_VARIANTS}
+                  className="space-y-1"
                 >
-                  Affiliates
-                </button>
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    openProductsModal();
-                  }}
-                  className="block text-left text-2xl font-medium tracking-tight transition-colors"
-                  style={{ color: 'rgba(0,0,0,0.95)' }}
-                >
-                  Products
-                </button>
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    openGamesDrawer();
-                  }}
-                  className="block text-left text-2xl font-medium tracking-tight transition-colors"
-                  style={{ color: 'rgba(0,0,0,0.95)' }}
-                >
-                  Games
-                </button>
-                <Link
-                  href="/design"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block text-left text-2xl font-medium tracking-tight transition-colors"
-                  style={{ color: 'rgba(0,0,0,0.95)' }}
-                >
-                  Design Studio
-                </Link>
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    setFaqModalOpen(true);
-                  }}
-                  className="block text-left text-2xl font-medium tracking-tight transition-colors"
-                  style={{ color: 'rgba(0,0,0,0.95)' }}
-                >
-                  FAQ
-                </button>
+                  <LazyMotionLi variants={MOBILE_MENU_ITEM_VARIANTS}>
+                    <LazyMotionButton
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        setAffiliateModalOpen(true);
+                      }}
+                      className="block w-full rounded-md px-3 py-2 text-left text-sm font-semibold tracking-tight text-white"
+                      style={{
+                        backgroundImage: 'linear-gradient(110deg, rgb(10,25,63) 15%, rgb(18,53,116) 40%, rgb(30,84,186) 50%, rgb(18,53,116) 60%, rgb(10,25,63) 85%)',
+                        backgroundSize: '240% 100%',
+                        boxShadow: '0 0 0 1px rgba(30,84,186,0.35), 0 5px 14px rgba(10,25,63,0.28)',
+                      }}
+                      animate={{
+                        backgroundPosition: ['0% 50%', '100% 50%'],
+                      }}
+                      transition={{ duration: 2.4, repeat: Infinity, repeatType: 'loop', ease: 'linear' }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      Affiliates
+                    </LazyMotionButton>
+                  </LazyMotionLi>
+                  <LazyMotionLi variants={MOBILE_MENU_ITEM_VARIANTS}>
+                    <LazyMotionButton
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        openGamesDrawer();
+                      }}
+                      className="block w-full rounded-md px-3 py-2 text-left text-sm font-semibold tracking-tight text-white"
+                      style={{
+                        backgroundImage: 'linear-gradient(110deg, rgb(8,22,56) 15%, rgb(14,44,102) 40%, rgb(25,74,170) 50%, rgb(14,44,102) 60%, rgb(8,22,56) 85%)',
+                        backgroundSize: '240% 100%',
+                        boxShadow: '0 0 0 1px rgba(25,74,170,0.35), 0 5px 14px rgba(8,22,56,0.28)',
+                      }}
+                      animate={{
+                        backgroundPosition: ['0% 50%', '100% 50%'],
+                      }}
+                      transition={{ duration: 2.6, repeat: Infinity, repeatType: 'loop', ease: 'linear', delay: 0.16 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      Games
+                    </LazyMotionButton>
+                  </LazyMotionLi>
+                </LazyMotionUl>
               </div>
 
-              {/* Back to Home */}
-              <Link
-                href="/"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block text-left text-2xl font-medium tracking-tight transition-colors"
-                style={{ color: 'rgba(0,0,0,0.95)' }}
-              >
-                Back to Home
-              </Link>
+              <div className="mt-auto pt-2">
+                <div className="border-t border-black/10 pt-3 pb-2">
+                  <LanguageToggle
+                    variant="row"
+                    dropDirection="up"
+                    dropAlign="left"
+                    rowDropdown="inline"
+                    tone="light"
+                    className="w-full"
+                  />
+                </div>
+              </div>
 
-              {/* Shop Now Button - Mobile */}
-              <Link
-                href="/store"
-                onClick={() => setMobileMenuOpen(false)}
-                className="mt-2 block text-left text-2xl font-medium tracking-tight transition-colors"
-                style={{ color: 'rgba(0,0,0,0.95)' }}
-              >
-                Shop Now
-              </Link>
             </LazyMotionDiv>
           </>
         )}

@@ -66,6 +66,9 @@ export function GamesDrawer() {
               isolation: 'isolate', // Create new stacking context
             }}
             data-apple-section
+            role="dialog"
+            aria-modal="true"
+            aria-label="Games drawer"
           >
             <div className="flex-none flex items-center justify-between p-4 md:p-6 border-b border-black/10 bg-white">
               <button
@@ -93,6 +96,7 @@ export function GamesDrawer() {
               className={`flex-1 min-h-0 overflow-y-auto overscroll-contain games-drawer-scroll ${
                 isDesktop ? 'scroll-smooth' : ''
               }`}
+              data-modal-scroll
               style={{
                 background: '#0a0a0c',
                 WebkitOverflowScrolling: 'touch',

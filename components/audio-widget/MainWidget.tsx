@@ -130,6 +130,13 @@ interface MainWidgetProps {
   
   // iPhone Player control
   setPlayerMinimized?: (v: boolean) => void;
+
+  // Casino audio controller (from AudioWidget)
+  casinoMusicMuted: boolean;
+  toggleCasinoMusicMuted: () => void;
+  casinoMusicVolume: number;
+  setCasinoMusicVolume: (v: number) => void;
+  casinoMusicAutoplayBlocked: boolean;
 }
 
 export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps) {
@@ -147,6 +154,11 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
     setMusicEmbedOpen, setShowTipsOverlay, showReturnUserHint, showFirstTimeHelp,
     iframeRef, isWandering, gameStats, gameState,
     setPlayerMinimized,
+    casinoMusicMuted,
+    toggleCasinoMusicMuted,
+    casinoMusicVolume,
+    setCasinoMusicVolume,
+    casinoMusicAutoplayBlocked,
   } = props;
   
   // Mobile performance optimization
@@ -865,9 +877,26 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                           </motion.button>
                         </div>
                       </div>
-                      <Slider label="Music" value={musicVolume} onChange={(v) => { setAllowedChannel("music"); setMusicVolume(v);} } />
+                      <Slider label="Music" value={musicVolume} onChange={(v) => { setMusicVolume(v);} } />
+                      <div className="rounded-lg border border-white/15 bg-black/40 p-2">
+                        <div className="mb-1.5 flex items-center justify-between gap-2">
+                          <span className="text-[10px] font-semibold text-white/85">🎰 Casino Music</span>
+                          <motion.button
+                            onClick={() => { SoundEffects.click(); toggleCasinoMusicMuted(); }}
+                            className={cn(
+                              "rounded px-2 py-0.5 text-[9px] font-semibold border border-white/20 transition-colors",
+                              casinoMusicMuted ? "bg-white/15 text-white" : "bg-white/5 text-white/80"
+                            )}
+                          >
+                            {casinoMusicMuted ? "Mute: ON" : "Mute: OFF"}
+                          </motion.button>
+                        </div>
+                        <Slider label="Casino" value={casinoMusicVolume} onChange={setCasinoMusicVolume} />
+                        {casinoMusicAutoplayBlocked && (
+                          <div className="mt-1 text-[9px] text-amber-300/90">Tap anywhere once if browser blocks autoplay.</div>
+                        )}
+                      </div>
                       <Slider label="Iframe" value={iframeVolume} onChange={(v) => { 
-                        setAllowedChannel("iframe");
                         setIframeVolume(v); 
                         // Immediately broadcast volume to iframe
                         if (iframeRef.current?.contentWindow) { 
@@ -884,7 +913,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                           win.postMessage(JSON.stringify({ method: 'setVolume', value: vol0to100 }), '*');
                         } 
                       }} />
-                      <Slider label="Live TV" value={liveStreamVolume} onChange={(v) => { setAllowedChannel("live"); setLiveStreamVolume(v); }} />
+                      <Slider label="Live TV" value={liveStreamVolume} onChange={(v) => { setLiveStreamVolume(v); }} />
                       <Slider label="SFX" value={sfxVolume} onChange={(v) => setSfxVolume(v)} />
                     </div>
                     )}

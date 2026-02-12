@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
@@ -53,6 +53,28 @@ export function StoreHeader() {
   const [faqModalOpen, setFaqModalOpen] = useState(false);
   const [showUltimateHub, setShowUltimateHub] = useState(false);
   const [showThemePicker, setShowThemePicker] = useState(false);
+
+  const PAGEMODE_FORCE_LOGIN_KEY = 'bullmoney_pagemode_force_login';
+  const PAGEMODE_LOGIN_VIEW_KEY = 'bullmoney_pagemode_login_view';
+  const PAGEMODE_REDIRECT_PATH_KEY = 'bullmoney_pagemode_redirect_path';
+
+  const startPagemodeLogin = useCallback(() => {
+    SoundEffects.click();
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(PAGEMODE_FORCE_LOGIN_KEY, 'true');
+        localStorage.setItem(PAGEMODE_LOGIN_VIEW_KEY, 'true');
+        localStorage.setItem(PAGEMODE_REDIRECT_PATH_KEY, '/store/account');
+      } catch {
+        // Ignore storage errors and still navigate to pagemode.
+      }
+      if (pathname === '/') {
+        window.dispatchEvent(new Event('bullmoney_force_pagemode'));
+        return;
+      }
+    }
+    router.push('/');
+  }, [router, pathname]);
   
   useEffect(() => {
     setMounted(true);
@@ -214,13 +236,14 @@ export function StoreHeader() {
                 </span>
               </Link>
             ) : (
-              <Link 
-                href="/login" 
+              <button
+                onClick={startPagemodeLogin}
                 className="h-10 w-10 flex items-center justify-center rounded-xl bg-white border border-black/10 hover:border-black/20 transition-colors"
                 title="Sign In"
+                type="button"
               >
                 <User className="w-5 h-5 text-black" />
-              </Link>
+              </button>
             )}
 
             {/* Cart Button */}
@@ -321,14 +344,17 @@ export function StoreHeader() {
                   </div>
                 </div>
               ) : (
-                <Link
-                  href="/login"
-                  onClick={() => setMobileMenuOpen(false)}
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    startPagemodeLogin();
+                  }}
                   className="mb-6 h-12 flex items-center justify-center gap-2 rounded-xl bg-white border border-black/10 text-sm font-medium text-black hover:border-black/20 transition-colors"
+                  type="button"
                 >
                   <User className="w-5 h-5 text-black" />
                   <TextType text="Sign In / Register" typingSpeed={12} showCursor={false} loop={false} as="span" />
-                </Link>
+                </button>
               )}
               
               <div className="space-y-1 flex-1">

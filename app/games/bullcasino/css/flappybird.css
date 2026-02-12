@@ -1,0 +1,653 @@
+/* ============================================================================
+   FLAPPY BIRD - Complete Styling
+   ============================================================================
+   Comprehensive CSS for Flappy Bird game matching BullCasino design patterns
+   ============================================================================ */
+
+/* Main Container */
+.flappy-container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Game Layout */
+.flappy-game {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 24px;
+    width: 100%;
+}
+
+/* Sidebar Controls */
+.flappy-sidebar {
+    background: var(--color-inner);
+    border-radius: var(--card-radius);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border-color);
+}
+
+.flappy-sidebar__title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+}
+
+.flappy-sidebar__section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.flappy-sidebar__label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.flappy-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.flappy_bet {
+    width: 100%;
+    background: var(--input-bg);
+    border: 1.5px solid var(--border-color);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    transition: all 0.2s var(--transition-smooth);
+    outline: none;
+}
+
+.flappy_bet:focus {
+    border-color: var(--main-color);
+    box-shadow: 0 0 0 3px rgba(0, 231, 1, 0.1);
+}
+
+.flappy_bet:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Buttons */
+.flappy__play,
+.flappy__cashout {
+    width: 100%;
+    background: var(--btn-color-bg);
+    border: none;
+    border-radius: 980px;
+    padding: 16px 24px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #FFFFFF;
+    cursor: pointer;
+    transition: all 0.3s var(--transition-smooth);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    box-shadow: 0 4px 12px rgba(0, 231, 1, 0.3);
+}
+
+.flappy__play:hover:not(:disabled),
+.flappy__cashout:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 231, 1, 0.4);
+}
+
+.flappy__play:active:not(:disabled),
+.flappy__cashout:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.flappy__play:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.flappy__cashout {
+    background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    display: none;
+}
+
+.flappy__cashout:hover:not(:disabled) {
+    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+}
+
+/* Stats Display */
+.flappy-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.flappy-stat-card {
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.flappy-stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.flappy-stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+}
+
+.flappy-stat-value.highlight {
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.flappy__multiplier {
+    font-size: 32px;
+}
+
+.flappy__potential_win {
+    font-size: 24px;
+}
+
+/* Result Display */
+.flappy__result {
+    display: none;
+    padding: 16px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    text-align: center;
+    animation: slideIn 0.3s var(--transition-smooth);
+}
+
+.flappy__result.success {
+    background: rgba(0, 231, 1, 0.15);
+    border: 1.5px solid var(--success-color);
+    color: var(--success-color);
+}
+
+.flappy__result.danger {
+    background: rgba(237, 66, 69, 0.15);
+    border: 1.5px solid var(--danger-color);
+    color: var(--danger-color);
+}
+
+/* Canvas Container */
+.flappy-canvas-wrapper {
+    background: var(--color-inner);
+    border-radius: var(--card-radius);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border-color);
+    position: relative;
+    overflow: hidden;
+}
+
+#flappy-canvas {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+#flappy-canvas:active {
+    transform: scale(0.98);
+}
+
+.flappy-svg-canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* Instructions */
+.flappy-instructions {
+    background: var(--glass-bg);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.flappy-instructions__title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.flappy-instructions__list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-left: 0;
+}
+
+.flappy-instructions__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    list-style: none;
+}
+
+.flappy-instructions__item::before {
+    content: '→';
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--main-color);
+}
+
+/* Game Stats Footer */
+.flappy-footer-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
+}
+
+.flappy-footer-stat {
+    text-align: center;
+}
+
+.flappy-footer-stat__value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.flappy-footer-stat__label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 4px;
+}
+
+/* Leaderboard */
+.flappy-leaderboard {
+    background: var(--color-inner);
+    border-radius: var(--card-radius);
+    padding: 24px;
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border-color);
+}
+
+.flappy-leaderboard__title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    letter-spacing: -0.02em;
+}
+
+.flappy-leaderboard__list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.flappy-leaderboard__item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px 16px;
+    transition: all 0.2s var(--transition-smooth);
+}
+
+.flappy-leaderboard__item:hover {
+    border-color: var(--main-color);
+    box-shadow: 0 0 0 3px rgba(0, 231, 1, 0.1);
+}
+
+.flappy-leaderboard__rank {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    min-width: 30px;
+}
+
+.flappy-leaderboard__player {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.flappy-leaderboard__score {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--main-color);
+}
+
+/* Animations */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+@keyframes glow {
+    0%, 100% {
+        box-shadow: 0 0 5px var(--main-color), 0 0 10px var(--main-color);
+    }
+    50% {
+        box-shadow: 0 0 10px var(--main-color), 0 0 20px var(--main-color), 0 0 30px var(--main-color);
+    }
+}
+
+.flappy-playing .flappy-canvas-wrapper {
+    animation: pulse 2s infinite;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .flappy-game {
+        grid-template-columns: 1fr;
+    }
+
+    .flappy-sidebar {
+        order: -1;
+    }
+
+    .flappy-stats {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .flappy-container {
+        padding: 12px;
+        gap: 16px;
+    }
+
+    .flappy-game {
+        position: relative;
+    }
+
+    .flappy-canvas-wrapper {
+        padding: 16px;
+        padding-top: 190px;
+    }
+
+    .flappy-sidebar {
+        position: absolute;
+        top: 16px;
+        left: 16px;
+        right: 16px;
+        z-index: 25;
+        order: 0;
+        padding: 12px;
+        gap: 10px;
+        max-height: 160px;
+        overflow-y: auto;
+        background: var(--glass-bg);
+        backdrop-filter: saturate(180%) blur(14px);
+        -webkit-backdrop-filter: saturate(180%) blur(14px);
+        border: 1px solid var(--glass-border);
+    }
+
+    .flappy-canvas-wrapper,
+    .flappy-leaderboard {
+        padding: 16px;
+    }
+
+    .flappy-sidebar__title,
+    .flappy-leaderboard__title {
+        font-size: 20px;
+    }
+
+    .flappy-stats {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .flappy-sidebar__title {
+        font-size: 16px;
+        margin-bottom: 2px;
+    }
+
+    .flappy-sidebar__section {
+        gap: 8px;
+    }
+
+    .flappy_bet {
+        padding: 10px 12px;
+        font-size: 15px;
+    }
+
+    .flappy__play,
+    .flappy__cashout {
+        padding: 10px 16px;
+        font-size: 13px;
+    }
+
+    .flappy-stat-card {
+        padding: 10px;
+    }
+
+    .flappy-stat-label {
+        font-size: 10px;
+    }
+
+    .flappy-stat-value {
+        font-size: 16px;
+    }
+
+    .flappy__multiplier {
+        font-size: 20px;
+    }
+
+    .flappy__potential_win {
+        font-size: 18px;
+    }
+
+    .quick-bet-btn {
+        padding: 8px;
+        font-size: 12px;
+    }
+
+    .flappy-footer-stats {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    #flappy-canvas {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .flappy-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .flappy-stat-value {
+        font-size: 18px;
+    }
+
+    .flappy__multiplier {
+        font-size: 24px;
+    }
+
+    .flappy__potential_win {
+        font-size: 20px;
+    }
+}
+
+/* Dark Mode Enhancements */
+@media (prefers-color-scheme: dark) {
+    .flappy-svg-canvas {
+        filter: brightness(0.95);
+    }
+}
+
+/* Accessibility */
+.flappy__play:focus-visible,
+.flappy__cashout:focus-visible,
+.flappy_bet:focus-visible {
+    outline: 3px solid var(--main-color);
+    outline-offset: 2px;
+}
+
+/* Loading State */
+.flappy-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.flappy-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid var(--border-color);
+    border-top-color: var(--main-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Touch Optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .flappy__play,
+    .flappy__cashout {
+        padding: 18px 24px;
+        font-size: 17px;
+    }
+
+    .flappy_bet {
+        padding: 16px;
+        font-size: 17px;
+    }
+
+    #flappy-canvas {
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }
+}
+
+/* High Score Badge */
+.flappy-high-score-badge {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+    color: #000;
+    padding: 8px 16px;
+    border-radius: 980px;
+    font-size: 14px;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+    animation: glow 2s infinite;
+}
+
+/* Game Status Indicator */
+.flappy-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 980px;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.flappy-status.ready {
+    background: rgba(59, 130, 246, 0.15);
+    border: 1.5px solid #3b82f6;
+    color: #3b82f6;
+}
+
+.flappy-status.playing {
+    background: rgba(0, 231, 1, 0.15);
+    border: 1.5px solid var(--success-color);
+    color: var(--success-color);
+}
+
+.flappy-status.game-over {
+    background: rgba(237, 66, 69, 0.15);
+    border: 1.5px solid var(--danger-color);
+    color: var(--danger-color);
+}
+
+.flappy-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: pulse 2s infinite;
+}

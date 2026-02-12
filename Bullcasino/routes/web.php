@@ -11,6 +11,8 @@ use App\Http\Controllers\WheelController;
 use App\Http\Controllers\DiceController;
 use App\Http\Controllers\JackpotController;
 use App\Http\Controllers\CrashController;
+use App\Http\Controllers\PlinkoController;
+use App\Http\Controllers\FlappyBirdController;
 use App\Http\Middleware\Access;
 use App\Http\Middleware\UserBanned;
 
@@ -32,6 +34,8 @@ Route::get('/', [PagesController::class,'index'])->name('index');
 Route::get('/dice', [PagesController::class, 'dice'])->name('dice');
 Route::get('/mines', [PagesController::class, 'mines'])->name('mines');
 Route::get('/wheel', [PagesController::class, 'wheel'])->name('wheel');
+Route::get('/plinko', [PagesController::class, 'plinko'])->name('plinko');
+Route::get('/flappybird', [FlappyBirdController::class, 'index'])->name('flappybird');
 Route::get('/jackpot', [JackpotController::class, 'index'])->name('jackpot');
 Route::get('/crash', [CrashController::class, 'index'])->name('crash');
 Route::get('/parther/{id}', [MainController::class, 'referral']);
@@ -41,6 +45,18 @@ Route::get('/slots', [PagesController::class, 'slots'])->name('slots');
 
 Route::group(['prefix' => '/dice'], function () {
     Route::post('/bet', [DiceController::class, 'dice']);
+});
+
+Route::group(['prefix' => '/flappybird'], function () {
+    Route::post('/start', [FlappyBirdController::class, 'start']);
+    Route::post('/result', [FlappyBirdController::class, 'result']);
+    Route::get('/leaderboard', [FlappyBirdController::class, 'leaderboard']);
+    Route::get('/stats', [FlappyBirdController::class, 'stats']);
+    Route::get('/history', [FlappyBirdController::class, 'history']);
+});
+
+Route::group(['prefix' => '/plinko'], function () {
+    Route::post('/play', [PlinkoController::class, 'play']);
 });
 
 Route::group(['prefix' => '/mines'], function () {

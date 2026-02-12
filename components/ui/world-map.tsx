@@ -18,6 +18,36 @@ interface MapProps {
   className?: string;
 }
 
+const svgCache = new Map<string, string>();
+
+const getCachedDottedSvg = ({
+  height,
+  grid,
+  radius,
+  color,
+  backgroundColor,
+}: {
+  height: number;
+  grid: 'diagonal' | 'vertical';
+  radius: number;
+  color: string;
+  backgroundColor: string;
+}) => {
+  const key = `${height}|${grid}|${radius}|${color}|${backgroundColor}`;
+  const cached = svgCache.get(key);
+  if (cached) return cached;
+
+  const map = new DottedMap({ height, grid });
+  const svg = map.getSVG({
+    radius,
+    color,
+    shape: 'circle',
+    backgroundColor,
+  });
+  svgCache.set(key, svg);
+  return svg;
+};
+
 // Continent label positions (approximate centers)
 const CONTINENT_LABELS = [
   { name: 'NORTH AMERICA', lat: 45, lng: -100 },
@@ -206,25 +236,35 @@ export default function WorldMap({
 
   // Primary layer: darker, denser dots for the main landmasses
   const svgMap = useMemo(() => {
-    const map = new DottedMap({ height: baseMapHeight, grid: "diagonal" });
-    return map.getSVG({
+    return getCachedDottedSvg({
+      height: baseMapHeight,
+      grid: 'diagonal',
       radius: isLite ? 0.3 : 0.38,
-      color: isLite ? "#FFFFFFB0" : "#FFFFFFDD",
-      shape: "circle",
-      backgroundColor: "#000000",
+      color: isLite ? '#FFFFFFB0' : '#FFFFFFDD',
+      backgroundColor: '#000000',
     });
   }, [baseMapHeight, isLite]);
 
   // Secondary layer: dim fill dots to cover gaps between main dots
   const svgMapFill = useMemo(() => {
-    const map = new DottedMap({ height: baseMapHeight, grid: "vertical" });
-    return map.getSVG({
+    return getCachedDottedSvg({
+      height: baseMapHeight,
+      grid: 'vertical',
       radius: isLite ? 0.2 : 0.25,
-      color: isLite ? "#FFFFFF40" : "#FFFFFF55",
-      shape: "circle",
-      backgroundColor: "transparent",
+      color: isLite ? '#FFFFFF40' : '#FFFFFF55',
+      backgroundColor: 'transparent',
     });
   }, [baseMapHeight, isLite]);
+
+  const svgMapFillUrl = useMemo(
+    () => `data:image/svg+xml;utf8,${encodeURIComponent(svgMapFill)}`,
+    [svgMapFill]
+  );
+
+  const svgMapUrl = useMemo(
+    () => `data:image/svg+xml;utf8,${encodeURIComponent(svgMap)}`,
+    [svgMap]
+  );
 
   // Web Mercator projection matching DottedMap's internal EPSG:3857
   const projectPoint = (lat: number, lng: number) => {
@@ -387,14 +427,14 @@ export default function WorldMap({
       <div className="relative flex-none h-full w-full min-w-[200vw] md:min-w-0 md:w-full max-w-none aspect-[2/1] md:aspect-auto md:h-full">
         {/* Dim fill layer — covers gaps between main dots */}
         <img
-          src={`data:image/svg+xml;utf8,${encodeURIComponent(svgMapFill)}`}
+          src={svgMapFillUrl}
           className="absolute inset-0 w-full h-full object-cover [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)] pointer-events-none select-none"
           alt=""
           draggable={false}
         />
         {/* Primary dot layer — darker, main landmasses */}
         <img
-          src={`data:image/svg+xml;utf8,${encodeURIComponent(svgMap)}`}
+          src={svgMapUrl}
           className="absolute inset-0 w-full h-full object-cover [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)] pointer-events-none select-none"
           alt="world map"
           draggable={false}

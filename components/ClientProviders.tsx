@@ -162,13 +162,35 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
   const { isMobile: isMobileViewport, shouldRender: allowMobileLazy } = useMobileLazyRender(240);
   const allowMobileComponents = allowMobileLazy || !isMobileViewport;
   const { masterMuted } = useAudioSettings();
-  const { isAudioWidgetOpen } = useUIState();
-  const [audioWidgetReady, setAudioWidgetReady] = useState(false);
+  useUIState();
+  const [audioWidgetReady] = useState(true);
+  const [showAudioWidget, setShowAudioWidget] = useState(true);
 
   useEffect(() => {
-    if (!isAudioWidgetOpen) return;
-    if (!audioWidgetReady) setAudioWidgetReady(true);
-  }, [isAudioWidgetOpen, audioWidgetReady]);
+    if (typeof window === 'undefined') return;
+
+    const readValue = () => {
+      const stored = window.localStorage.getItem('store_show_audio_widget');
+      return stored !== 'false';
+    };
+
+    setShowAudioWidget(readValue());
+
+    const handleToggle = (event: Event) => {
+      const detail = (event as CustomEvent<boolean>).detail;
+      if (typeof detail === 'boolean') {
+        setShowAudioWidget(detail);
+        return;
+      }
+      setShowAudioWidget(readValue());
+    };
+
+    window.addEventListener('store_audio_widget_toggle', handleToggle);
+
+    return () => {
+      window.removeEventListener('store_audio_widget_toggle', handleToggle);
+    };
+  }, []);
 
   // ====================================================================
   // STORE PAGE FAST PATH — Skip ALL heavy performance providers.
@@ -212,7 +234,7 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
           <MobilePerformanceProvider>
             <SoundProvider enabled={!masterMuted} volume={0.4}>
               <AuthProvider>
-                {allowMobileComponents && audioWidgetReady && <AudioWidget />}
+                {audioWidgetReady && showAudioWidget && <AudioWidget />}
                 {modal}
                 <div data-lenis-content data-store-lenis>
                   <main
@@ -263,7 +285,7 @@ export function ClientProviders({ children, modal }: ClientProvidersProps) {
           */}
               {/* NOTE: ClientCursor moved to LayoutProviders - rendered LAST in DOM */}
               {/* AudioWidget stays mounted - NOT lazy unmounted - for audio persistence */}
-              {allowMobileComponents && audioWidgetReady && <AudioWidget />}
+              {audioWidgetReady && showAudioWidget && <AudioWidget />}
               {allowMobileComponents && <AutoRefreshPrompt />}
               {modal}
               

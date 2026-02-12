@@ -16,7 +16,7 @@ import {
   Trophy,
   Zap,
 } from 'lucide-react';
-import CasinoMusicAutoplay from './components/CasinoMusicAutoplay';
+import { DonationFundSection } from '@/components/games/DonationFundSection';
 const BullcasinoShell = dynamic(
   () => import('./components/BullcasinoShell'),
   { ssr: false, loading: () => <div className="min-h-[40vh] w-full" /> }
@@ -90,6 +90,7 @@ const LANDING_GAMES = [
   { name: 'Dice', slug: 'dice', category: 'originals', icon: Dice5, img: 'https://images.unsplash.com/photo-1522069213448-443a614da9b6?w=600&q=80&auto=format&fit=crop', tag: 'Classic', desc: 'Roll high or low' },
   { name: 'Mines', slug: 'mines', category: 'originals', icon: Sparkles, img: 'https://images.unsplash.com/photo-1553481187-be93c21490a9?w=600&q=80&auto=format&fit=crop', tag: 'Strategy', desc: 'Avoid the mines' },
   { name: 'Plinko', slug: 'plinko', category: 'originals', icon: Target, img: '/assets/images/games/plinko.svg', tag: 'New', desc: 'Drop and chase multipliers' },
+  { name: 'Flappy Bird', slug: 'flappybird', category: 'originals', icon: Play, img: '/assets/images/games/flappybird.svg', tag: 'Hot', desc: 'Fly through pipes' },
   { name: 'Wheel', slug: 'wheel', category: 'multiplayer', icon: Star, img: 'https://images.unsplash.com/photo-1606167668584-78701c57f13d?w=600&q=80&auto=format&fit=crop', tag: 'Spin', desc: 'Multiplayer wheel' },
   { name: 'Jackpot', slug: 'jackpot', category: 'multiplayer', icon: Trophy, img: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=600&q=80&auto=format&fit=crop', tag: '$$$', desc: 'Winner takes all' },
 ];
@@ -136,6 +137,13 @@ const games = [
     description: 'Drop balls through pegs and hunt the edge multipliers.',
     image: '/assets/images/games/plinko.svg',
     accent: 'linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(245, 158, 11, 0.03))',
+  },
+  {
+    slug: 'flappybird',
+    title: 'Flappy Bird',
+    description: 'Tap to flap, avoid pipes, and multiply your bet with each pass.',
+    image: '/assets/images/games/flappybird.svg',
+    accent: 'linear-gradient(135deg, rgba(59, 130, 246, 0.22), rgba(59, 130, 246, 0.03))',
   },
   {
     slug: 'slots',
@@ -242,7 +250,6 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
 
   return (
     <>
-      <CasinoMusicAutoplay />
       {!embedMode && (
         <style jsx global>{`
           html, body {
@@ -563,6 +570,8 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
         </div>
         )}
         </section>
+
+        <DonationFundSection />
 
         <section id="games-iframe" className={`relative bg-black text-white ${embedMode ? '' : 'overflow-x-hidden'}`}>
         <div className="absolute inset-0 z-0">

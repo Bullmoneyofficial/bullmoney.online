@@ -82,7 +82,7 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
   const [iframeVolume, setIframeVolumeState] = useState(0.5); // Separate iframe volume (50% default)
   const [liveStreamVolume, setLiveStreamVolumeState] = useState(0.5); // Live TV volume
   const [masterMuted, setMasterMutedState] = useState(false);
-  const [allowedChannel, setAllowedChannelState] = useState<"all" | "music" | "iframe" | "live">("music");
+  const [allowedChannel, setAllowedChannelState] = useState<"all" | "music" | "iframe" | "live">("all");
 
   // Cleanup audio resource on unmount.
   useEffect(() => {
@@ -264,8 +264,10 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
     }
 
     if (storedMasterMuted !== null) setMasterMutedState(storedMasterMuted === true || storedMasterMuted === "true" || storedMasterMuted === "1");
-    if (typeof storedAllowedChannel === "string" && ["all","music","iframe","live"].includes(storedAllowedChannel)) {
-      setAllowedChannelState(storedAllowedChannel as "all" | "music" | "iframe" | "live");
+    if (typeof storedAllowedChannel === "string" && storedAllowedChannel === "all") {
+      setAllowedChannelState("all");
+    } else {
+      setAllowedChannelState("all");
     }
   }, []);
 
@@ -389,7 +391,6 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
     } catch {
       // ignore
     }
-    setAllowedChannelState("music");
   }, [musicEnabled, masterMuted, allowedChannel]);
 
   const setSfxVolume = useCallback((volume: number) => {
@@ -406,7 +407,6 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
       const next = !musicEnabled;
       setMusicEnabledState(next);
       setIsMusicPlaying(next && !masterMuted);
-      setAllowedChannelState("music");
       return;
     }
     
@@ -417,7 +417,6 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
       setMusicEnabledState(true);
       const allowMusic = allowedChannel === "all" || allowedChannel === "music";
       audio.volume = clamp01(!masterMuted && allowMusic ? musicVolume : 0);
-      setAllowedChannelState("music");
       if (!masterMuted && allowMusic) audio.play().catch(() => {});
     } else {
       audio.pause();
@@ -430,12 +429,10 @@ export function AudioSettingsProvider({ children }: { children: React.ReactNode 
 
   const setIframeVolume = useCallback((volume: number) => {
     setIframeVolumeState(clamp01(volume));
-    setAllowedChannelState("iframe");
   }, []);
 
   const setLiveStreamVolume = useCallback((volume: number) => {
     setLiveStreamVolumeState(clamp01(volume));
-    setAllowedChannelState("live");
   }, []);
 
   const setMasterMuted = useCallback((muted: boolean) => {

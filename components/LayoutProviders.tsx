@@ -343,7 +343,7 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
       )}
 
       {/* Unified Themes Panel (Colors + Effects) — needs UIStateProvider from ClientProviders */}
-      {canShowCursor && themePanelReady && isThemeSelectorOpen && <ThemesPanel />}
+      {themePanelReady && isThemeSelectorOpen && <ThemesPanel />}
       
     </>
   );

@@ -46,6 +46,12 @@ class PagesController extends Controller
         return view('dice');
     }
 
+    public function plinko() {
+        if($this->settings->tech_work == 1) return response()->view('errors.techworks', [], 404);
+        if($this->settings->plinko_enabled != 1) return redirect('/')->with('error', 'This game mode is currently unavailable!');
+        return view('plinko');
+    }
+
     public function deposit() {
         if($this->settings->tech_work == 1) return response()->view('errors.techworks', [], 404);
         return view('deposit');

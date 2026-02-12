@@ -16,6 +16,18 @@ import { encryptValue, hashValue } from '@/lib/crypto-encryption';
 // ============================================================================
 
 const ADMIN_EMAIL = 'officialbullmoneywebsite@gmail.com';
+const DEFAULT_DONATION_PRODUCT_ID = 'donation-license-fund';
+
+function getDonationProductIds(): string[] {
+  return (process.env.CRYPTO_DONATION_PRODUCT_IDS || DEFAULT_DONATION_PRODUCT_ID)
+    .split(',')
+    .map((id) => id.trim())
+    .filter(Boolean);
+}
+
+function sanitizeInput(value: string): string {
+  return value.replace(/[<>\"'&\x00-\x1f\x7f-\x9f]/g, '').trim();
+}
 
 // ── In-memory rate limiting (per IP, 5 submissions per 10 mins) ─────────
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -195,55 +207,65 @@ export async function POST(request: NextRequest) {
     const productIdClean = String(productId).trim();
     const variantIdClean = variantId ? String(variantId).trim() : null;
 
-    // Validate product/variant pricing server-side (prevent client-side price tampering)
-    const { data: product, error: productError } = await supabase
-      .from('products')
-      .select('id, name, base_price')
-      .eq('id', productIdClean)
-      .maybeSingle();
+    const donationProductIds = getDonationProductIds();
+    const isDonationProduct = donationProductIds.includes(productIdClean);
 
-    if (productError || !product) {
-      return NextResponse.json(
-        { error: 'Invalid product. Please refresh and try again.' },
-        { status: 400 }
-      );
-    }
-
-    let variantAdjustment = 0;
     let resolvedVariantId: string | null = null;
-    if (variantIdClean) {
-      const { data: variant, error: variantError } = await supabase
-        .from('variants')
-        .select('id, product_id, price_adjustment')
-        .eq('id', variantIdClean)
+    let expectedAmountUSD = Number(Number(amountUSD).toFixed(2));
+    let resolvedProductName = sanitizeInput(productName || 'Gaming License Donation');
+
+    if (!isDonationProduct) {
+      // Validate product/variant pricing server-side (prevent client-side price tampering)
+      const { data: product, error: productError } = await supabase
+        .from('products')
+        .select('id, name, base_price')
+        .eq('id', productIdClean)
         .maybeSingle();
 
-      if (variantError || !variant || variant.product_id !== product.id) {
+      if (productError || !product) {
         return NextResponse.json(
-          { error: 'Invalid variant for this product.' },
+          { error: 'Invalid product. Please refresh and try again.' },
           { status: 400 }
         );
       }
 
-      variantAdjustment = Number(variant.price_adjustment || 0);
-      resolvedVariantId = variant.id;
-    }
+      let variantAdjustment = 0;
+      if (variantIdClean) {
+        const { data: variant, error: variantError } = await supabase
+          .from('variants')
+          .select('id, product_id, price_adjustment')
+          .eq('id', variantIdClean)
+          .maybeSingle();
 
-    const basePrice = Number(product.base_price);
-    const unitPrice = basePrice + variantAdjustment;
-    if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
-      return NextResponse.json(
-        { error: 'Invalid product pricing. Please contact support.' },
-        { status: 400 }
-      );
-    }
+        if (variantError || !variant || variant.product_id !== product.id) {
+          return NextResponse.json(
+            { error: 'Invalid variant for this product.' },
+            { status: 400 }
+          );
+        }
 
-    const expectedAmountUSD = Number((unitPrice * normalizedQuantity).toFixed(2));
-    if (Math.abs(expectedAmountUSD - Number(amountUSD)) > 0.01) {
-      return NextResponse.json(
-        { error: 'Payment amount mismatch. Please refresh and try again.' },
-        { status: 400 }
-      );
+        variantAdjustment = Number(variant.price_adjustment || 0);
+        resolvedVariantId = variant.id;
+      }
+
+      const basePrice = Number(product.base_price);
+      const unitPrice = basePrice + variantAdjustment;
+      if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
+        return NextResponse.json(
+          { error: 'Invalid product pricing. Please contact support.' },
+          { status: 400 }
+        );
+      }
+
+      expectedAmountUSD = Number((unitPrice * normalizedQuantity).toFixed(2));
+      if (Math.abs(expectedAmountUSD - Number(amountUSD)) > 0.01) {
+        return NextResponse.json(
+          { error: 'Payment amount mismatch. Please refresh and try again.' },
+          { status: 400 }
+        );
+      }
+
+      resolvedProductName = product.name;
     }
     const orderNumber = generateOrderNumber();
     
@@ -325,7 +347,7 @@ export async function POST(request: NextRequest) {
       locked_price: safeLockedPrice,
       product_id: productIdClean,
       variant_id: resolvedVariantId,
-      product_name: product.name,
+      product_name: resolvedProductName,
       quantity: normalizedQuantity,
       guest_email: encryptedEmail,
       status: 'pending' as const,

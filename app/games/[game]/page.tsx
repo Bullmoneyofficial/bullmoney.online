@@ -170,7 +170,7 @@ const GAME_STYLES = `
 .plinko-peg{position:absolute;width:8px;height:8px;border-radius:50%;background:#dbeafe;transform:translate(-50%,-50%);opacity:.9;box-shadow:0 0 8px rgba(219,234,254,.25)}
 .plinko-ball{position:absolute;width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,#f59e0b 65%,#d97706);transform:translate(-50%,-50%);box-shadow:0 0 16px rgba(245,158,11,.45);transition:left .16s ease,top .16s ease;z-index:3}
 .plinko-bins{display:grid;gap:4px;padding:6px 0 0;align-items:end}
-.plinko-bin{padding:7px 2px;border-radius:8px;text-align:center;font-size:clamp(8px,1.7vw,11px);line-height:1.05;font-weight:800;color:#fff;background:#1f2937;border:1px solid rgba(255,255,255,.12);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plinko-bin{padding:7px 2px;border-radius:8px;text-align:center;font-size:clamp(8px,1.7vw,11px);line-height:1.05;font-weight:800;color:#fff;background:#1f2937;border:1px solid rgba(255,255,255,.12);white-space:nowrap;overflow:visible;text-overflow:ellipsis;min-height:32px;position:relative}
 .plinko-bin.hit{outline:2px solid #00e701;background:rgba(0,231,1,.16);color:#d1fae5}
 .plinko-bin.touched{background:rgba(59,130,246,.12);border-color:rgba(96,165,250,.45)}
 .plinko-bin.glow{background:rgba(0,231,1,.25);border-color:rgba(34,197,94,.85);box-shadow:0 0 14px rgba(0,231,1,.45)}
@@ -317,6 +317,7 @@ const GAME_STYLES = `
 .mines-cell.revealed{cursor:default!important}
 .jackpot-bank-amount{animation:jackpotGlow 2s ease-in-out infinite}
 @keyframes jackpotGlow{0%,100%{text-shadow:0 0 25px rgba(251,191,36,.4)}50%{text-shadow:0 0 40px rgba(251,191,36,.6),0 0 80px rgba(251,191,36,.2)}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(1.2)}}
 .roulette-wheel{box-shadow:0 0 40px rgba(251,191,36,.15),inset 0 0 30px rgba(0,0,0,.3)}
 .roulette-pointer{filter:drop-shadow(0 0 8px rgba(0,231,1,.6))}
 .dice-result-msg.win{animation:winPulse .5s ease}
@@ -1027,7 +1028,6 @@ function CrashContent() {
         showGameNotification(`🚀 Crashed at ${crashRef.current.toFixed(2)}x`, 'lose');
         return;
       }
-      setMultiplier(m);
       animRef.current = requestAnimationFrame(animate);
     };
     animRef.current = requestAnimationFrame(animate);
@@ -1790,6 +1790,7 @@ function PlinkoContent() {
   const [risk, setRisk] = useState<'low' | 'medium' | 'high'>('medium');
   const [dropping, setDropping] = useState(false);
   const [activeBalls, setActiveBalls] = useState<Array<{ id: number; path: number[]; step: number }>>([]);
+  const [settledBalls, setSettledBalls] = useState<Array<{ id: number; binIndex: number }>>([]);
   const [lastBin, setLastBin] = useState<number | null>(null);
   const [lastWin, setLastWin] = useState(0);
   const [history, setHistory] = useState<Array<{ mult: number; win: number; stake: number }>>([]);
@@ -1801,6 +1802,7 @@ function PlinkoContent() {
     setFlashingBins({});
     setLastBin(null);
     setActiveBalls([]);
+    setSettledBalls([]);
     setDropping(false);
   }, [rows]);
 
@@ -1886,7 +1888,14 @@ function PlinkoContent() {
               });
             }, 450);
 
+            // Remove from active balls and add to settled balls
             setActiveBalls(prev => prev.filter(ball => ball.id !== ballId));
+            setSettledBalls(prev => [...prev, { id: ballId, binIndex }]);
+            
+            // Remove settled ball after 2 seconds
+            window.setTimeout(() => {
+              setSettledBalls(prev => prev.filter(ball => ball.id !== ballId));
+            }, 2000);
 
             if (settled >= ballsPerDrop) {
               const payout = Number(totalWin.toFixed(2));
@@ -2046,14 +2055,229 @@ function PlinkoContent() {
           </div>
 
           <div className="plinko-bins" style={{ gridTemplateColumns: `repeat(${rows + 1}, minmax(0, 1fr))` }}>
-            {multipliers.map((mult, index) => (
-              <div
-                key={`${mult}-${index}`}
-                className={`plinko-bin ${lastBin === index ? 'hit' : ''} ${binHits[index] ? 'touched' : ''} ${flashingBins[index] ? 'glow' : ''}`}
-              >
-                {mult}x
-              </div>
-            ))}
+            {multipliers.map((mult, index) => {
+              const ballsInBin = settledBalls.filter(ball => ball.binIndex === index);
+              return (
+                <div
+                  key={`${mult}-${index}`}
+                  className={`plinko-bin ${lastBin === index ? 'hit' : ''} ${binHits[index] ? 'touched' : ''} ${flashingBins[index] ? 'glow' : ''}`}
+                  style={{ position: 'relative' }}
+                >
+                  {mult}x
+                  {ballsInBin.map((ball, i) => (
+                    <span 
+                      key={ball.id} 
+                      className="plinko-ball" 
+                      style={{ 
+                        position: 'absolute', 
+                        left: '50%', 
+                        bottom: `${10 + i * 18}px`,
+                        transform: 'translateX(-50%)',
+                        transition: 'none',
+                        zIndex: 10 + i
+                      }} 
+                    />
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   FLAPPY BIRD — React Component
+   ═══════════════════════════════════════════ */
+function FlappyBirdContent() {
+  const [balance, setBalance] = useState(1000);
+  const [bet, setBet] = useState(10);
+
+  useEffect(() => {
+    // Expose balance to FlappyBird.js
+    (window as any).flappyBirdBalance = balance;
+    (window as any).flappyBirdSetBalance = setBalance;
+  }, [balance]);
+
+  return (
+    <div className="bc-game-area">
+      <div className="bc-game-field" style={{ flex: 1 }}>
+        <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', height: '100%', gap: '12px' }}>
+          {/* Game Status */}
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px',
+            padding: '8px 12px',
+            background: 'rgba(0, 231, 1, 0.1)',
+            borderRadius: '8px',
+            border: '1px solid rgba(0, 231, 1, 0.3)'
+          }}>
+            <span style={{ 
+              width: '8px', 
+              height: '8px', 
+              borderRadius: '50%', 
+              background: '#00e701',
+              animation: 'pulse 2s ease-in-out infinite'
+            }} />
+            <span style={{ color: '#00e701', fontSize: '13px', fontWeight: 600 }}>Ready to Play</span>
+          </div>
+
+          {/* SVG Canvas Container */}
+          <div 
+            id="flappy-canvas" 
+            style={{ 
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'radial-gradient(circle at 50% 30%, rgba(255,255,255,0.08), rgba(15,33,46,0.8))',
+              borderRadius: '12px',
+              border: '1px solid rgba(255,255,255,0.08)',
+              minHeight: '400px',
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+          />
+
+          {/* Footer Stats */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+            <div style={{ 
+              background: 'rgba(15,33,46,0.6)',
+              padding: '10px',
+              borderRadius: '8px',
+              border: '1px solid rgba(255,255,255,0.06)',
+              textAlign: 'center'
+            }}>
+              <div id="flappy-current-score" style={{ fontSize: '20px', fontWeight: 700, color: '#fff' }}>0</div>
+              <div style={{ fontSize: '11px', color: '#7a8a9a', marginTop: '2px' }}>Current Score</div>
+            </div>
+            <div style={{ 
+              background: 'rgba(15,33,46,0.6)',
+              padding: '10px',
+              borderRadius: '8px',
+              border: '1px solid rgba(255,255,255,0.06)',
+              textAlign: 'center'
+            }}>
+              <div id="flappy-high-score" style={{ fontSize: '20px', fontWeight: 700, color: '#fbbf24' }}>0</div>
+              <div style={{ fontSize: '11px', color: '#7a8a9a', marginTop: '2px' }}>High Score</div>
+            </div>
+            <div style={{ 
+              background: 'rgba(15,33,46,0.6)',
+              padding: '10px',
+              borderRadius: '8px',
+              border: '1px solid rgba(255,255,255,0.06)',
+              textAlign: 'center'
+            }}>
+              <div id="flappy-games-played" style={{ fontSize: '20px', fontWeight: 700, color: '#3b82f6' }}>0</div>
+              <div style={{ fontSize: '11px', color: '#7a8a9a', marginTop: '2px' }}>Games Played</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bc-sidebar">
+        <div>
+          <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#e5e7eb', marginBottom: '16px' }}>Place Your Bet</h2>
+          
+          <div style={{ marginBottom: '14px' }}>
+            <label style={{ display: 'block', marginBottom: '6px' }}>Bet Amount</label>
+            <input 
+              type="number" 
+              className="flappy_bet"
+              value={bet}
+              onChange={(e) => setBet(Number(e.target.value))}
+              min="1" 
+              max="10000" 
+              step="0.01"
+            />
+            <div className="bc-btn-row">
+              <button onClick={() => setBet(10)}>10</button>
+              <button onClick={() => setBet(50)}>50</button>
+              <button onClick={() => setBet(100)}>100</button>
+              <button onClick={() => setBet(500)}>500</button>
+            </div>
+          </div>
+
+          {/* Stats Display */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '14px' }}>
+            <div style={{ 
+              background: 'rgba(15,33,46,0.6)',
+              padding: '10px',
+              borderRadius: '8px',
+              border: '1px solid rgba(255,255,255,0.06)'
+            }}>
+              <div style={{ fontSize: '11px', color: '#7a8a9a', marginBottom: '4px' }}>Multiplier</div>
+              <div className="flappy__multiplier" style={{ fontSize: '18px', fontWeight: 700, color: '#00e701' }}>1.00x</div>
+            </div>
+            <div style={{ 
+              background: 'rgba(15,33,46,0.6)',
+              padding: '10px',
+              borderRadius: '8px',
+              border: '1px solid rgba(255,255,255,0.06)'
+            }}>
+              <div style={{ fontSize: '11px', color: '#7a8a9a', marginBottom: '4px' }}>Potential Win</div>
+              <div className="flappy__potential_win" style={{ fontSize: '18px', fontWeight: 700, color: '#fbbf24' }}>0.00</div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <button className="bc-play-btn green flappy__play" style={{ marginBottom: '8px' }}>
+            Start Game
+          </button>
+          <button className="bc-play-btn red flappy__cashout" style={{ display: 'none' }}>
+            Cash Out
+          </button>
+
+          {/* Result Display */}
+          <div className="flappy__result" style={{ 
+            padding: '12px',
+            borderRadius: '8px',
+            background: 'rgba(15,33,46,0.6)',
+            border: '2px solid rgba(255,255,255,0.08)',
+            color: '#b1bad3',
+            fontSize: '13px',
+            fontWeight: 600,
+            textAlign: 'center',
+            display: 'none',
+            marginTop: '8px'
+          }} />
+
+          {/* Info Section */}
+          <div style={{ 
+            marginTop: '16px', 
+            paddingTop: '16px', 
+            borderTop: '1px solid rgba(255,255,255,0.06)',
+            fontSize: '12px',
+            color: '#7a8a9a',
+            lineHeight: 1.6
+          }}>
+            <p style={{ marginBottom: '8px' }}>
+              <strong style={{ color: '#b1bad3' }}>💡 Pro Tip:</strong> Each pipe you pass increases your multiplier by 0.1x!
+            </p>
+            <p>
+              <strong style={{ color: '#b1bad3' }}>🎮 Controls:</strong> Click or press SPACE to flap
+            </p>
+          </div>
+
+          {/* Balance Display */}
+          <div style={{ 
+            marginTop: 'auto',
+            paddingTop: '16px',
+            borderTop: '1px solid rgba(255,255,255,0.06)'
+          }}>
+            <div style={{ 
+              background: 'rgba(15,33,46,0.6)',
+              padding: '12px',
+              borderRadius: '8px',
+              border: '1px solid rgba(255,255,255,0.06)',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '11px', color: '#7a8a9a', marginBottom: '4px' }}>Your Balance</div>
+              <div style={{ fontSize: '24px', fontWeight: 700, color: '#00e701' }}>${balance.toFixed(2)}</div>
+            </div>
           </div>
         </div>
       </div>
@@ -2073,6 +2297,7 @@ function getGameContent(game: string) {
     case 'jackpot': return <JackpotContent />;
     case 'crash': return <CrashContent />;
     case 'slots': return <SlotsContent />;
+    case 'flappybird': return <FlappyBirdContent />;
     default: return null;
   }
 }
@@ -2082,6 +2307,10 @@ function getGameScripts(game: string) {
   if (game === 'dice') scripts.push('/assets/js/dice.js');
   if (game === 'mines') scripts.push('/assets/js/mines.js');
   if (game === 'crash') scripts.push('/assets/js/jquery.flot.min.js', '/assets/js/chart.js', '/assets/js/crash.js');
+  if (game === 'flappybird') {
+    scripts.push('https://code.jquery.com/jquery-3.6.0.min.js');
+    scripts.push('/games/bullcasino/js/flappybird.js');
+  }
   return scripts;
 }
 
@@ -2101,8 +2330,7 @@ export default function CasinoGamePage({ params }: { params: Promise<{ game: str
     );
   }
 
-  const allScripts: string[] = [];
-  // Legacy scripts removed — demo mode uses React state only, no PHP/server calls
+  const allScripts: string[] = getGameScripts(game);
 
   return (
     <CasinoGameInner game={game} content={content} scripts={allScripts} casinoBase={casinoBase} casinoSocket={casinoSocket} />
@@ -2135,6 +2363,7 @@ function CasinoGameInner({ game, content, scripts, casinoBase, casinoSocket }: {
       <style dangerouslySetInnerHTML={{ __html: GAME_STYLES }} />
       <link rel="stylesheet" href="/assets/css/style.css" />
       <link rel="stylesheet" href="/assets/css/notifyme.css" />
+      {game === 'flappybird' && <link rel="stylesheet" href="/games/bullcasino/css/flappybird.css" />}
       {content}
     </BullcasinoShell>
   );

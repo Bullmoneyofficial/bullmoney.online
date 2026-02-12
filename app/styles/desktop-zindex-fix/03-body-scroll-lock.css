@@ -9,10 +9,18 @@ body.menu-open {
   height: 100%;
 }
 
+body[data-active-ui="gamesDrawer"].modal-open,
+body[data-active-ui="supportDrawer"].modal-open {
+  position: static !important;
+  top: auto !important;
+  height: auto !important;
+}
+
 /* But allow scroll inside the modal */
 body.modal-open [role="dialog"],
 body.modal-open [aria-modal="true"],
 body.modal-open .modal-content {
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-y !important;
 }

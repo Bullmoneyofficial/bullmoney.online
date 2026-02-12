@@ -1,0 +1,164 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300">
+  <!-- Gradients and Defs -->
+  <defs>
+    <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#4A90E2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#87CEEB;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="pipeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#3b8a3b;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#4CAF50;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3b8a3b;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="birdGradient" cx="40%" cy="40%" r="60%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#FFA500;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FF8C00;stop-opacity:1" />
+    </radialGradient>
+    <filter id="shadow">
+      <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Sky Background -->
+  <rect x="0" y="0" width="300" height="300" fill="url(#skyGradient)"/>
+  
+  <!-- Clouds -->
+  <g opacity="0.7" fill="#FFFFFF">
+    <ellipse cx="60" cy="50" rx="25" ry="18"/>
+    <ellipse cx="80" cy="45" rx="30" ry="20"/>
+    <ellipse cx="100" cy="50" rx="25" ry="18"/>
+    
+    <ellipse cx="220" cy="75" rx="20" ry="15"/>
+    <ellipse cx="240" cy="72" rx="25" ry="17"/>
+    <ellipse cx="260" cy="75" rx="20" ry="15"/>
+  </g>
+  
+  <!-- Top Pipe -->
+  <g filter="url(#shadow)">
+    <rect x="190" y="0" width="70" height="120" fill="url(#pipeGradient)" stroke="#2d5f2d" stroke-width="3" rx="5"/>
+    <rect x="180" y="105" width="90" height="30" fill="#2d5f2d" stroke="#1a3a1a" stroke-width="2" rx="6"/>
+    <!-- Pipe highlight -->
+    <rect x="195" y="5" width="8" height="110" fill="#5ec55e" opacity="0.4" rx="3"/>
+  </g>
+  
+  <!-- Bottom Pipe -->
+  <g filter="url(#shadow)">
+    <rect x="190" y="210" width="70" height="90" fill="url(#pipeGradient)" stroke="#2d5f2d" stroke-width="3" rx="5"/>
+    <rect x="180" y="195" width="90" height="30" fill="#2d5f2d" stroke="#1a3a1a" stroke-width="2" rx="6"/>
+    <!-- Pipe highlight -->
+    <rect x="195" y="215" width="8" height="80" fill="#5ec55e" opacity="0.4" rx="3"/>
+  </g>
+  
+  <!-- Ground -->
+  <rect x="0" y="265" width="300" height="35" fill="#C19A6B"/>
+  <rect x="0" y="265" width="300" height="8" fill="#9B7653" opacity="0.6"/>
+  
+  <!-- Grass Pattern -->
+  <g opacity="0.8" fill="#2D5016">
+    <path d="M10,265 L12,257 L14,265 Z"/>
+    <path d="M25,265 L27,255 L29,265 Z"/>
+    <path d="M40,265 L42,258 L44,265 Z"/>
+    <path d="M55,265 L57,256 L59,265 Z"/>
+    <path d="M70,265 L72,257 L74,265 Z"/>
+    <path d="M85,265 L87,255 L89,265 Z"/>
+    <path d="M100,265 L102,258 L104,265 Z"/>
+    <path d="M115,265 L117,256 L119,265 Z"/>
+    <path d="M130,265 L132,257 L134,265 Z"/>
+    <path d="M145,265 L147,255 L149,265 Z"/>
+    <path d="M160,265 L162,258 L164,265 Z"/>
+    <path d="M175,265 L177,256 L179,265 Z"/>
+    <path d="M190,265 L192,257 L194,265 Z"/>
+    <path d="M205,265 L207,255 L209,265 Z"/>
+    <path d="M220,265 L222,258 L224,265 Z"/>
+    <path d="M235,265 L237,256 L239,265 Z"/>
+    <path d="M250,265 L252,257 L254,265 Z"/>
+    <path d="M265,265 L267,255 L269,265 Z"/>
+    <path d="M280,265 L282,258 L284,265 Z"/>
+    <path d="M295,265 L297,256 L299,265 Z"/>
+  </g>
+  
+  <!-- Bird (Centered and Prominent) -->
+  <g transform="translate(110, 160)">
+    <!-- Shadow -->
+    <ellipse cx="3" cy="4" rx="28" ry="22" fill="#000000" opacity="0.15"/>
+    
+    <!-- Wing (animated) -->
+    <g opacity="0.95">
+      <ellipse cx="-8" cy="-2" rx="18" ry="14" fill="#FFA500" transform="rotate(-15)">
+        <animateTransform
+          attributeName="transform"
+          attributeType="XML"
+          type="rotate"
+          values="-15 -8 -2; -35 -8 -2; -15 -8 -2"
+          dur="0.4s"
+          repeatCount="indefinite"/>
+      </ellipse>
+      <ellipse cx="-10" cy="-2" rx="12" ry="10" fill="#FF8C00" opacity="0.7" transform="rotate(-15)">
+        <animateTransform
+          attributeName="transform"
+          attributeType="XML"
+          type="rotate"
+          values="-15 -10 -2; -35 -10 -2; -15 -10 -2"
+          dur="0.4s"
+          repeatCount="indefinite"/>
+      </ellipse>
+    </g>
+    
+    <!-- Body -->
+    <ellipse cx="0" cy="0" rx="25" ry="20" fill="url(#birdGradient)" stroke="#FF8C00" stroke-width="2.5" filter="url(#shadow)"/>
+    
+    <!-- Belly -->
+    <ellipse cx="0" cy="5" rx="16" ry="13" fill="#FFED4E" opacity="0.8"/>
+    
+    <!-- Feather details -->
+    <path d="M-15,-8 Q-10,-10 -5,-8" stroke="#FF8C00" stroke-width="2" fill="none" opacity="0.6"/>
+    <path d="M-13,-3 Q-8,-5 -3,-3" stroke="#FF8C00" stroke-width="2" fill="none" opacity="0.6"/>
+    
+    <!-- Eye white -->
+    <circle cx="10" cy="-6" r="6.5" fill="#FFFFFF" stroke="#333" stroke-width="1"/>
+    
+    <!-- Eye pupil -->
+    <circle cx="12" cy="-6" r="4" fill="#000000"/>
+    
+    <!-- Eye shine -->
+    <circle cx="13" cy="-7.5" r="2" fill="#FFFFFF"/>
+    <circle cx="11.5" cy="-5" r="0.8" fill="#FFFFFF" opacity="0.6"/>
+    
+    <!-- Beak top -->
+    <path d="M18,-4 L30,-1 L18,0 Z" fill="#FF6347" stroke="#D94030" stroke-width="1.5"/>
+    
+    <!-- Beak bottom -->
+    <path d="M18,0 L30,-1 L18,2 Z" fill="#FF7F50" stroke="#E85545" stroke-width="1.5"/>
+    
+    <!-- Beak highlight -->
+    <path d="M19,-3 L26,-1.5 L19,-1 Z" fill="#FF8C69" opacity="0.6"/>
+    
+    <!-- Tail -->
+    <g transform="translate(-25, 0)">
+      <ellipse cx="0" cy="0" rx="8" ry="15" fill="#FFA500" opacity="0.9" transform="rotate(-30)"/>
+      <ellipse cx="-2" cy="0" rx="6" ry="12" fill="#FF8C00" opacity="0.7" transform="rotate(-30)"/>
+    </g>
+  </g>
+  
+  <!-- Multiplier Badge with Glow -->
+  <g filter="url(#shadow)">
+    <rect x="15" y="15" width="85" height="40" rx="20" fill="#00E701" opacity="0.95"/>
+    <rect x="17" y="17" width="81" height="36" rx="18" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.3"/>
+    <text x="56" y="44" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#FFFFFF" text-anchor="middle" stroke="#006600" stroke-width="0.5">+2.5x</text>
+  </g>
+  
+  <!-- Score Badge -->
+  <g filter="url(#shadow)">
+    <rect x="210" y="15" width="75" height="35" rx="17.5" fill="#1a1a1a" opacity="0.9"/>
+    <rect x="212" y="17" width="71" height="31" rx="15.5" fill="none" stroke="#FFFFFF" stroke-width="1.5" opacity="0.2"/>
+    <text x="247.5" y="39" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#FFD700" text-anchor="middle">125</text>
+  </g>
+  
+  <!-- Motion lines (speed effect) -->
+  <g opacity="0.4" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round">
+    <line x1="70" y1="155" x2="45" y2="155"/>
+    <line x1="75" y1="162" x2="50" y2="162"/>
+    <line x1="70" y1="169" x2="45" y2="169"/>
+  </g>
+</svg>

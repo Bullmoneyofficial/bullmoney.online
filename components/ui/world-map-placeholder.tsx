@@ -21,6 +21,9 @@ const SVG_MAP_FILL = new DottedMap({ height: 68, grid: 'vertical' }).getSVG({
   backgroundColor: 'transparent',
 });
 
+const SVG_MAP_URL = `data:image/svg+xml;utf8,${encodeURIComponent(SVG_MAP)}`;
+const SVG_MAP_FILL_URL = `data:image/svg+xml;utf8,${encodeURIComponent(SVG_MAP_FILL)}`;
+
 export function WorldMapPlaceholder({ className }: WorldMapPlaceholderProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [scale, setScale] = useState(1);
@@ -111,13 +114,13 @@ export function WorldMapPlaceholder({ className }: WorldMapPlaceholderProps) {
         }}
       >
         <img
-          src={`data:image/svg+xml;utf8,${encodeURIComponent(SVG_MAP_FILL)}`}
+          src={SVG_MAP_FILL_URL}
           className="absolute inset-0 h-full w-full object-cover [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)] pointer-events-none select-none"
           alt=""
           draggable={false}
         />
         <img
-          src={`data:image/svg+xml;utf8,${encodeURIComponent(SVG_MAP)}`}
+          src={SVG_MAP_URL}
           className="absolute inset-0 h-full w-full object-cover [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)] pointer-events-none select-none"
           alt="world map"
           draggable={false}

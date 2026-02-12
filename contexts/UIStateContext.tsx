@@ -302,7 +302,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   // Discord Stage modal should keep audio widget visible so users can control Discord volume
   // Welcome screen should also keep audio widget visible so users can control music while viewing welcome
   // Mobile menu should NOT minimize audio widget - it can coexist
-  const shouldNotMinimizeForThisModal = isDiscordStageModalOpen || isWelcomeScreenActive || isMobileMenuOpen;
+  const shouldNotMinimizeForThisModal = isDiscordStageModalOpen || isWelcomeScreenActive || isMobileMenuOpen || isGamesDrawerOpen;
 
   // Viewport detection is required inside the provider because Next may hydrate on
   // the server first. Default to desktop to avoid SSR mismatches.
@@ -1195,12 +1195,6 @@ export function useAudioWidgetUI() {
     ? true
     : window.matchMedia('(min-width: 768px)').matches;
 
-  // Store page detection
-  const isStorePage = typeof window !== 'undefined' && window.location.pathname.startsWith('/store');
-
-  // Games page detection — hide audio widget completely for clean casino experience
-  const isGamesPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/games');
-
   // IMPORTANT: We no longer return shouldHideFloatingPlayer that causes unmount.
   // Instead, we return shouldMinimizeAudioWidget which signals the floating player
   // to minimize (hide iframe behind pull tab) while keeping audio playing.
@@ -1214,7 +1208,7 @@ export function useAudioWidgetUI() {
   // 2. Registration/Login (step 0+): Show minimized FloatingPlayer only (audio continues)
   // 3. Loader during pagemode flow: Keep FloatingPlayer mounted but hidden (audio continues!)
   // 4. Main content: Show full AudioWidget
-  // 5. Store pages: Hide completely for clean shopping experience
+  // 5. Store and games pages: Keep widget available
   //
   // shouldHideAudioWidgetCompletely = true means the ENTIRE widget is hidden (iframe unmounts, audio stops)
   // shouldHideAudioWidgetCompletely = false means at least the FloatingPlayer shows (audio persists)
@@ -1224,16 +1218,16 @@ export function useAudioWidgetUI() {
   // This ensures the iframe stays mounted even during the loader transition
   //
   // Logic:
-  // - Hide completely ONLY if: store page OR ((loader is open AND user never entered pagemode) OR (not unlocked AND not in pagemode/welcome AND never started pagemode audio))
-  // - In other words: Keep showing (mounted) if user has started the pagemode flow at any point, UNLESS on store page
+  // - Hide completely ONLY if mobile flow is not unlocked and user is not in pagemode/welcome flow
+  // - Keep showing (mounted) on normal routes including store/games
   const isInPagemodeFlow = isPagemodeOpen || isWelcomeScreenActive || hasStartedPagemodeAudio;
-  const shouldHideAudioWidgetCompletely = isStorePage || isGamesPage || (!isDesktopViewport && !isInPagemodeFlow && !isV2Unlocked);
+  const shouldHideAudioWidgetCompletely = false;
 
   // NEW: shouldHideMainWidget - hides MainWidget (settings panel) but keeps FloatingPlayer for audio
   // During pagemode registration (not welcome screen), hide the settings but keep audio playing
   // Also hide during loader (but keep FloatingPlayer for audio persistence)
-  // Also hide on store pages for clean shopping experience
-  const shouldHideMainWidget = (isPagemodeOpen && !isWelcomeScreenActive) || isLoaderv2Open || isUltimateHubOpen || isStorePage;
+  // Keep MainWidget visible on store/games as requested
+  const shouldHideMainWidget = (isPagemodeOpen && !isWelcomeScreenActive) || isLoaderv2Open || isUltimateHubOpen;
 
   return {
     isAudioWidgetOpen,
