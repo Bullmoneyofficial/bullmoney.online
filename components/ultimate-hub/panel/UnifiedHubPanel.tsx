@@ -648,6 +648,13 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
     };
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!isOpen || !isMobile) return;
+    const root = document.documentElement;
+    root.classList.add('ultimate-hub-mobile-open');
+    return () => root.classList.remove('ultimate-hub-mobile-open');
+  }, [isOpen, isMobile]);
+
   const portalContent = (
     <AnimatePresence>
       {isOpen && (
@@ -658,7 +665,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-[10000] flex items-stretch justify-end bg-white/80 backdrop-blur-md"
+            className={`fixed inset-0 z-[10000] flex items-stretch justify-end bg-white/80 ${isMobile ? '' : 'backdrop-blur-md'} ultimate-hub-backdrop`}
             onClick={onClose}
             style={{ pointerEvents: 'all' }}
           />

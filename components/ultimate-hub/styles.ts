@@ -69,6 +69,19 @@ export const GLOBAL_NEON_STYLES = `
       background-position: 200% 50%;
     }
   }
+
+  .ultimate-hub-mobile-open [data-ultimate-hub],
+  .ultimate-hub-mobile-open [data-ultimate-hub] *,
+  .ultimate-hub-mobile-open .ultimate-hub-backdrop,
+  .ultimate-hub-mobile-open .backdrop-blur-sm,
+  .ultimate-hub-mobile-open .backdrop-blur-md,
+  .ultimate-hub-mobile-open .backdrop-blur-xl,
+  .ultimate-hub-mobile-open .backdrop-blur-2xl,
+  .ultimate-hub-mobile-open .glass-panel,
+  .ultimate-hub-mobile-open .glass-surface {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
 `;
 
 export const NEON_STYLES = {
