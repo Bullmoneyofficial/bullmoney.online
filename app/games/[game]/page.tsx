@@ -162,6 +162,43 @@ const GAME_STYLES = `
 .slots-play-btn:hover{opacity:.86}
 .slots-play-btn.disabled{background:#374151;color:#9ca3af;cursor:not-allowed;pointer-events:none}
 
+/* ─── Plinko ─── */
+.plinko-visual{display:flex;flex-direction:column;flex:1;padding:12px;gap:10px}
+.plinko-topbar{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;background:rgba(33,55,67,.55);border-bottom:1px solid rgba(255,255,255,.08)}
+.plinko-board-wrap{position:relative;flex:1;min-height:280px;border-radius:12px;background:radial-gradient(circle at 50% 10%,rgba(255,255,255,.08),rgba(15,33,46,.92));border:1px solid rgba(255,255,255,.08);overflow:hidden}
+.plinko-board{position:absolute;inset:0}
+.plinko-peg{position:absolute;width:8px;height:8px;border-radius:50%;background:#dbeafe;transform:translate(-50%,-50%);opacity:.9;box-shadow:0 0 8px rgba(219,234,254,.25)}
+.plinko-ball{position:absolute;width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,#f59e0b 65%,#d97706);transform:translate(-50%,-50%);box-shadow:0 0 16px rgba(245,158,11,.45);transition:left .16s ease,top .16s ease;z-index:3}
+.plinko-bins{display:grid;gap:4px;padding:6px 0 0;align-items:end}
+.plinko-bin{padding:7px 2px;border-radius:8px;text-align:center;font-size:clamp(8px,1.7vw,11px);line-height:1.05;font-weight:800;color:#fff;background:#1f2937;border:1px solid rgba(255,255,255,.12);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plinko-bin.hit{outline:2px solid #00e701;background:rgba(0,231,1,.16);color:#d1fae5}
+.plinko-bin.touched{background:rgba(59,130,246,.12);border-color:rgba(96,165,250,.45)}
+.plinko-bin.glow{background:rgba(0,231,1,.25);border-color:rgba(34,197,94,.85);box-shadow:0 0 14px rgba(0,231,1,.45)}
+.plinko-controls{display:flex;flex-direction:column;gap:10px}
+.plinko-pill-row{display:flex;gap:6px;flex-wrap:wrap}
+.plinko-pill{padding:7px 10px;border-radius:999px;border:1px solid #2f4553;background:#0f212e;color:#b1bad3;font-size:12px;font-weight:700;cursor:pointer}
+.plinko-pill.active{border-color:#00e701;background:rgba(0,231,1,.15);color:#00e701}
+.plinko-control-grid{display:contents}
+.plinko-control-item{display:flex;flex-direction:column;gap:6px}
+.plinko-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.plinko-stat{padding:8px;border-radius:8px;background:rgba(15,33,46,.75);border:1px solid rgba(255,255,255,.06)}
+.plinko-stat-label{font-size:11px;color:#7a8a9a;text-transform:uppercase}
+.plinko-stat-value{font-size:16px;font-weight:800;color:#e2e8f0}
+.plinko-history{display:flex;gap:6px;flex-wrap:wrap}
+.plinko-history-chip{padding:4px 8px;border-radius:8px;background:#0f212e;border:1px solid #2f4553;color:#cbd5e1;font-size:11px;font-weight:700}
+.plinko-history-chip.win{color:#22c55e;border-color:rgba(34,197,94,.45)}
+.plinko-history-chip.loss{color:#ef4444;border-color:rgba(239,68,68,.45)}
+.plinko-game-field{min-height:auto;height:auto}
+.plinko-layout{gap:clamp(4px,1vw,10px);max-width:100%;width:100%;height:calc(100dvh - 170px);min-height:280px}
+.plinko-sidebar{padding:clamp(6px,1vw,12px);gap:clamp(6px,1vw,10px)}
+.plinko-sidebar .bc-balance-box{padding:6px;margin-bottom:4px}
+.plinko-sidebar .bc-balance-label{font-size:10px}
+.plinko-sidebar .bc-balance-value{font-size:clamp(14px,1.8vw,18px);line-height:1.1}
+.plinko-sidebar label{font-size:10px;letter-spacing:.02em}
+.plinko-sidebar input[type=number]{height:36px;font-size:13px;padding:0 10px}
+.plinko-sidebar .bc-btn-row{gap:3px}
+.plinko-sidebar .bc-btn-row button{padding:4px 0;font-size:10px}
+
 /* ─── Mobile responsive ─── */
 @media(max-width:768px){
   .bc-game-area{flex-direction:column;padding:clamp(6px,1.5vw,10px);gap:8px;width:100%;min-height:auto}
@@ -184,6 +221,30 @@ const GAME_STYLES = `
   .jackpot-bank-amount{font-size:28px}
   .mines-grid{gap:4px;padding:10px;max-width:100%}
   .slots-grid{grid-template-columns:repeat(auto-fill,minmax(min(100px,42%),1fr));gap:6px;padding:10px}
+  .plinko-layout{height:calc(100dvh - 166px);min-height:0;gap:6px;padding:0!important}
+  .plinko-visual{padding:6px;gap:6px}
+  .plinko-topbar{padding:8px 10px}
+  .bc-game-field.plinko-game-field{min-height:auto!important;height:auto!important}
+  .plinko-game-field{order:1}
+  .plinko-sidebar{order:2;padding:6px!important;gap:6px!important;min-width:0;max-height:none;overflow:visible}
+  .plinko-controls{gap:5px}
+  .plinko-sidebar .bc-balance-box{margin-bottom:3px;padding:5px}
+  .plinko-sidebar .bc-balance-label{font-size:9px}
+  .plinko-sidebar .bc-balance-value{font-size:13px}
+  .plinko-sidebar label{font-size:9px}
+  .plinko-sidebar input[type=number]{height:30px;font-size:11px}
+  .plinko-sidebar .bc-btn-row button{padding:3px 0;font-size:9px}
+  .plinko-control-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .plinko-control-item .plinko-pill-row{gap:4px}
+  .plinko-control-item .plinko-pill{padding:4px 7px;font-size:10px;line-height:1}
+  .plinko-control-item .bc-play-btn{height:100%;min-height:32px;padding:6px;font-size:12px}
+  .plinko-stats{gap:4px}
+  .plinko-stat{padding:5px}
+  .plinko-stat-label{font-size:9px}
+  .plinko-stat-value{font-size:12px}
+  .plinko-board-wrap{min-height:clamp(120px,28dvh,200px)}
+  .plinko-bins{gap:2px;padding-top:4px}
+  .plinko-bin{padding:4px 0;font-size:8px;border-radius:5px}
 }
 @media(max-width:480px){
   .bc-game-area{padding:4px;gap:6px}
@@ -207,6 +268,45 @@ const GAME_STYLES = `
   .mines-grid{max-width:100%;gap:3px;padding:8px}
   .mines-cell{border-radius:6px}
   .wheel-bet-colors{grid-template-columns:repeat(2,1fr)}
+  .plinko-layout{height:calc(100dvh - 158px);gap:4px}
+  .plinko-visual{padding:4px;gap:4px}
+  .plinko-topbar{padding:6px 8px}
+  .plinko-topbar span{font-size:10px!important}
+  .bc-game-field.plinko-game-field{min-height:auto!important;height:auto!important}
+  .plinko-game-field{order:1}
+  .plinko-sidebar{order:2;padding:5px!important;gap:5px!important}
+  .plinko-sidebar .bc-balance-box{padding:4px}
+  .plinko-sidebar .bc-balance-label{font-size:8px}
+  .plinko-sidebar .bc-balance-value{font-size:12px}
+  .plinko-sidebar input[type=number]{height:28px;font-size:10px;padding:0 8px}
+  .plinko-sidebar .bc-btn-row button{padding:2px 0;font-size:8px}
+  .plinko-control-grid{gap:4px}
+  .plinko-control-item .plinko-pill{padding:4px 6px;font-size:9px}
+  .plinko-control-item .bc-play-btn{min-height:28px;padding:5px;font-size:11px}
+  .plinko-stat{padding:4px}
+  .plinko-stat-label{font-size:8px}
+  .plinko-stat-value{font-size:11px}
+  .plinko-board-wrap{min-height:clamp(96px,23dvh,150px)}
+  .plinko-bin{padding:3px 0;font-size:7px}
+  .plinko-pill{padding:4px 6px;font-size:9px}
+}
+@media(max-width:360px){
+  .plinko-layout{height:calc(100dvh - 152px)}
+  .plinko-topbar span{font-size:9px!important}
+  .plinko-sidebar .bc-balance-value{font-size:11px}
+  .plinko-sidebar input[type=number]{height:26px;font-size:9px}
+  .plinko-control-item .bc-play-btn{min-height:26px;font-size:10px}
+  .plinko-board-wrap{min-height:clamp(84px,20dvh,124px)}
+  .plinko-bin{font-size:6px}
+}
+@media(max-height:740px){
+  .plinko-layout{height:calc(100dvh - 148px)}
+  .plinko-board-wrap{min-height:clamp(84px,20dvh,136px)}
+}
+@media(max-height:640px){
+  .plinko-layout{height:calc(100dvh - 140px)}
+  .plinko-topbar{padding:5px 8px}
+  .plinko-board-wrap{min-height:clamp(72px,17dvh,110px)}
 }
 /* ─── Enhanced visuals ─── */
 .dice-cube{filter:drop-shadow(0 4px 15px rgba(0,0,0,.4))}
@@ -775,8 +875,8 @@ function DiceContent() {
   }, []);
 
   return (
-    <div className="bc-game-area">
-      <div className="bc-sidebar">
+    <div className="bc-game-area plinko-layout">
+      <div className="bc-sidebar plinko-sidebar">
         <div className="bc-balance-box">
           <div className="bc-balance-label">Balance</div>
           <div className="bc-balance-value">${balance.toFixed(2)}</div>
@@ -801,7 +901,7 @@ function DiceContent() {
           </div>
         </div>
       </div>
-      <div className="bc-game-field">
+      <div className="bc-game-field plinko-game-field">
         <div className="dice-visual">
           {/* 3D Dice — shows actual roll value on all faces */}
           <Dice3DView spinKey={diceSpinKey} face={diceFace} displayValue={lastRoll.toFixed(2)} />
@@ -1680,12 +1780,295 @@ function SlotsContent() {
 }
 
 /* ═══════════════════════════════════════════
+   PLINKO — Stake-inspired demo board
+   ═══════════════════════════════════════════ */
+function PlinkoContent() {
+  const [balance, setBalance] = useState(4710);
+  const [bet, setBet] = useState(10);
+  const [ballsPerDrop, setBallsPerDrop] = useState(1);
+  const [rows, setRows] = useState(16);
+  const [risk, setRisk] = useState<'low' | 'medium' | 'high'>('medium');
+  const [dropping, setDropping] = useState(false);
+  const [activeBalls, setActiveBalls] = useState<Array<{ id: number; path: number[]; step: number }>>([]);
+  const [lastBin, setLastBin] = useState<number | null>(null);
+  const [lastWin, setLastWin] = useState(0);
+  const [history, setHistory] = useState<Array<{ mult: number; win: number; stake: number }>>([]);
+  const [binHits, setBinHits] = useState<number[]>(Array(17).fill(0));
+  const [flashingBins, setFlashingBins] = useState<Record<number, number>>({});
+
+  useEffect(() => {
+    setBinHits(Array(rows + 1).fill(0));
+    setFlashingBins({});
+    setLastBin(null);
+    setActiveBalls([]);
+    setDropping(false);
+  }, [rows]);
+
+  const multipliers = useMemo(() => {
+    const center = rows / 2;
+    const maxByRows = {
+      low: rows >= 16 ? 8 : rows >= 12 ? 5 : 3,
+      medium: rows >= 16 ? 30 : rows >= 12 ? 16 : 9,
+      high: rows >= 16 ? 130 : rows >= 12 ? 60 : 26,
+    };
+    const minByRisk = { low: 0.5, medium: 0.3, high: 0.2 };
+    const powByRisk = { low: 1.9, medium: 1.5, high: 1.2 };
+    const min = minByRisk[risk];
+    const max = maxByRows[risk];
+    const power = powByRisk[risk];
+
+    const roundMult = (value: number) => {
+      if (value >= 100) return Math.round(value);
+      if (value >= 10) return Math.round(value * 10) / 10;
+      return Math.round(value * 100) / 100;
+    };
+
+    return Array.from({ length: rows + 1 }, (_, index) => {
+      const dist = Math.abs(index - center) / center;
+      return roundMult(min + (max - min) * Math.pow(dist, power));
+    });
+  }, [risk, rows]);
+
+  const dropBall = useCallback(() => {
+    const totalStake = Number((bet * ballsPerDrop).toFixed(2));
+    if (dropping || bet <= 0 || totalStake > balance) return;
+
+    setDropping(true);
+    setLastBin(null);
+    setLastWin(0);
+    setBalance(prev => Number((prev - totalStake).toFixed(2)));
+
+    let settled = 0;
+    let totalWin = 0;
+
+    for (let ballIndex = 0; ballIndex < ballsPerDrop; ballIndex++) {
+      const ballId = Date.now() + ballIndex;
+      const generatedPath: number[] = [0];
+      let column = 0;
+      for (let i = 0; i < rows; i++) {
+        if (Math.random() >= 0.5) column += 1;
+        generatedPath.push(column);
+      }
+
+      window.setTimeout(() => {
+        setActiveBalls(prev => [...prev, { id: ballId, path: generatedPath, step: 0 }]);
+
+        let localStep = 0;
+        const timer = window.setInterval(() => {
+          localStep += 1;
+          setActiveBalls(prev => prev.map(ball => (ball.id === ballId ? { ...ball, step: localStep } : ball)));
+
+          if (localStep >= rows) {
+            window.clearInterval(timer);
+
+            const binIndex = generatedPath[generatedPath.length - 1];
+            const mult = multipliers[binIndex] ?? 0;
+            const win = Number((bet * mult).toFixed(2));
+            totalWin += win;
+            settled += 1;
+
+            setLastBin(binIndex);
+            setHistory(prev => [{ mult, win, stake: bet }, ...prev].slice(0, 12));
+            setBinHits(prev => {
+              const next = prev.length === rows + 1 ? [...prev] : Array(rows + 1).fill(0);
+              next[binIndex] = (next[binIndex] || 0) + 1;
+              return next;
+            });
+            setFlashingBins(prev => ({ ...prev, [binIndex]: (prev[binIndex] || 0) + 1 }));
+            window.setTimeout(() => {
+              setFlashingBins(prev => {
+                const next = { ...prev };
+                if (next[binIndex]) {
+                  next[binIndex] -= 1;
+                  if (next[binIndex] <= 0) delete next[binIndex];
+                }
+                return next;
+              });
+            }, 450);
+
+            setActiveBalls(prev => prev.filter(ball => ball.id !== ballId));
+
+            if (settled >= ballsPerDrop) {
+              const payout = Number(totalWin.toFixed(2));
+              const profit = Number((payout - totalStake).toFixed(2));
+              setLastWin(payout);
+              setBalance(prev => Number((prev + payout).toFixed(2)));
+              setDropping(false);
+
+              if (profit > 0) {
+                showGameNotification(`🎯 ${ballsPerDrop} balls settled — +$${profit.toFixed(2)} profit`, 'win');
+              } else {
+                showGameNotification(`🎯 ${ballsPerDrop} balls settled — returned $${payout.toFixed(2)}`, 'info');
+              }
+            }
+          }
+        }, 130);
+      }, ballIndex * 120);
+    }
+  }, [balance, ballsPerDrop, bet, dropping, multipliers, rows]);
+
+  const boardGap = 80 / (rows + 1);
+  const totalStake = Number((bet * ballsPerDrop).toFixed(2));
+
+  return (
+    <div className="bc-game-area">
+      <div className="bc-sidebar">
+        <div className="bc-balance-box">
+          <div className="bc-balance-label">Balance</div>
+          <div className="bc-balance-value">${balance.toFixed(2)}</div>
+        </div>
+
+        <div className="plinko-controls">
+          <div>
+            <label>Bet Amount</label>
+            <input
+              type="number"
+              min={1}
+              value={bet}
+              onChange={e => setBet(Math.max(1, Number(e.target.value) || 1))}
+            />
+            <div className="bc-btn-row">
+              <button onClick={() => setBet(1)}>Min</button>
+              <button onClick={() => setBet(v => v + 10)}>+10</button>
+              <button onClick={() => setBet(v => Math.min(balance, v + 100))}>+100</button>
+              <button onClick={() => setBet(Math.floor(balance))}>Max</button>
+            </div>
+          </div>
+
+          <div className="plinko-control-grid">
+            <div className="plinko-control-item">
+              <label>Risk</label>
+              <div className="plinko-pill-row">
+                {(['low', 'medium', 'high'] as const).map(level => (
+                  <button
+                    key={level}
+                    type="button"
+                    className={`plinko-pill ${risk === level ? 'active' : ''}`}
+                    onClick={() => setRisk(level)}
+                    disabled={dropping}
+                  >
+                    {level}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="plinko-control-item">
+              <label>Rows</label>
+              <div className="plinko-pill-row">
+                {[8, 12, 16].map(value => (
+                  <button
+                    key={value}
+                    type="button"
+                    className={`plinko-pill ${rows === value ? 'active' : ''}`}
+                    onClick={() => setRows(value)}
+                    disabled={dropping}
+                  >
+                    {value}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="plinko-control-item">
+              <label>Balls</label>
+              <div className="plinko-pill-row">
+                {[1, 3, 5, 10].map(value => (
+                  <button
+                    key={value}
+                    type="button"
+                    className={`plinko-pill ${ballsPerDrop === value ? 'active' : ''}`}
+                    onClick={() => setBallsPerDrop(value)}
+                    disabled={dropping}
+                  >
+                    {value}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="plinko-control-item">
+              <label>&nbsp;</label>
+              <button className="bc-play-btn green" onClick={dropBall} disabled={dropping || totalStake > balance || bet <= 0}>
+                {dropping ? 'Dropping…' : 'Bet'}
+              </button>
+            </div>
+          </div>
+
+          <div className="plinko-stats">
+            <div className="plinko-stat">
+              <div className="plinko-stat-label">Last Batch Payout</div>
+              <div className="plinko-stat-value">${lastWin.toFixed(2)}</div>
+            </div>
+            <div className="plinko-stat">
+              <div className="plinko-stat-label">Recent Drop</div>
+              {history[0] ? (
+                <span className={`plinko-history-chip ${history[0].win >= history[0].stake ? 'win' : 'loss'}`}>
+                  x{history[0].mult} · ${history[0].win.toFixed(2)}
+                </span>
+              ) : (
+                <div className="plinko-stat-value">—</div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bc-game-field">
+        <div className="plinko-topbar">
+          <span style={{ color: '#b1bad3', fontSize: 13, fontWeight: 600 }}>
+            Stake-style Plinko · {rows} rows · {risk} risk · {ballsPerDrop} balls
+          </span>
+          <span style={{ color: '#00e701', fontSize: 13, fontWeight: 700 }}>
+            {lastBin === null ? 'Ready' : `Last: x${multipliers[lastBin]}`}
+          </span>
+        </div>
+
+        <div className="plinko-visual">
+          <div className="plinko-board-wrap">
+            <div className="plinko-board">
+              {Array.from({ length: rows }, (_, row) =>
+                Array.from({ length: row + 1 }, (_, col) => {
+                  const x = 50 + (col - row / 2) * boardGap;
+                  const y = 12 + row * (66 / rows);
+                  return <span key={`${row}-${col}`} className="plinko-peg" style={{ left: `${x}%`, top: `${y}%` }} />;
+                })
+              )}
+
+              {activeBalls.map(ball => {
+                const activeRow = Math.min(ball.step, rows);
+                const activeCol = ball.path[activeRow] ?? 0;
+                const ballLeft = 50 + (activeCol - activeRow / 2) * boardGap;
+                const ballTop = 12 + activeRow * (66 / rows);
+                return <span key={ball.id} className="plinko-ball" style={{ left: `${ballLeft}%`, top: `${ballTop}%` }} />;
+              })}
+            </div>
+          </div>
+
+          <div className="plinko-bins" style={{ gridTemplateColumns: `repeat(${rows + 1}, minmax(0, 1fr))` }}>
+            {multipliers.map((mult, index) => (
+              <div
+                key={`${mult}-${index}`}
+                className={`plinko-bin ${lastBin === index ? 'hit' : ''} ${binHits[index] ? 'touched' : ''} ${flashingBins[index] ? 'glow' : ''}`}
+              >
+                {mult}x
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
    Router + Page Shell
    ═══════════════════════════════════════════ */
 function getGameContent(game: string) {
   switch (game) {
     case 'dice': return <DiceContent />;
     case 'mines': return <MinesContent />;
+    case 'plinko': return <PlinkoContent />;
     case 'wheel': return <WheelContent />;
     case 'jackpot': return <JackpotContent />;
     case 'crash': return <CrashContent />;

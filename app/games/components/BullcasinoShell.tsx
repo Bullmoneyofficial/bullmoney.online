@@ -1,10 +1,14 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
 
 const ASSET_BASE = '/assets';
 
 export default function BullcasinoShell({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const isGameDetailPage = /^\/games\/[^/]+$/.test(pathname || '');
+
   return (
     <main
       className="bullcasino-page"
@@ -276,26 +280,28 @@ export default function BullcasinoShell({ children }: { children: ReactNode }) {
         Demo mode only. We do not process deposits or withdrawals, and all balances are virtual for entertainment only.
       </div>
 
-      <div className="mobile_menu">
-        <div className="mobile_menu__content">
-          <a href="/games" className="mobile_menu__link">
-            <i className='bx bxs-home'></i>
-            Home
-          </a>
-          <a href="/games/terms" className="mobile_menu__link">
-            <i className='bx bxs-file'></i>
-            Terms
-          </a>
-          <a href="/community" className="mobile_menu__link">
-            <i className='bx bxs-user-plus'></i>
-            Community
-          </a>
-          <a href="/contact" className="mobile_menu__link">
-            <i className='bx bxs-user-circle'></i>
-            Support
-          </a>
+      {!isGameDetailPage && (
+        <div className="mobile_menu">
+          <div className="mobile_menu__content">
+            <a href="/games" className="mobile_menu__link">
+              <i className='bx bxs-home'></i>
+              Home
+            </a>
+            <a href="/games/terms" className="mobile_menu__link">
+              <i className='bx bxs-file'></i>
+              Terms
+            </a>
+            <a href="/community" className="mobile_menu__link">
+              <i className='bx bxs-user-plus'></i>
+              Community
+            </a>
+            <a href="/contact" className="mobile_menu__link">
+              <i className='bx bxs-user-circle'></i>
+              Support
+            </a>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="main__content" style={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column' }}>
         {children}
