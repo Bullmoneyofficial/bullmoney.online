@@ -36,6 +36,7 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
+    "**/*.d.ts",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
@@ -46,7 +47,10 @@
     "portfolio-overlay",
     "Bullcasino",
     "casino-backend",
-    "components/studio",
-    "app/design"
+    "components/studio/**/*",
+    "app/design/**/*",
+    "CASINO_PAGE_EXAMPLES.tsx",
+    "COMPLETE_SECTION_EXAMPLE.tsx",
+    "ENHANCED_SETTINGS_MODAL.tsx"
   ]
 }

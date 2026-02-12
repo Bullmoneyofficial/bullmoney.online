@@ -11,6 +11,12 @@ declare module '*.png' {
   export default content;
 }
 
+declare module 'lucide-react/dist/esm/icons/*' {
+  import { LucideIcon } from 'lucide-react';
+  const Icon: LucideIcon;
+  export default Icon;
+}
+
 // Handle custom Three.js elements (MeshLine)
 import { Object3DNode } from '@react-three/fiber';
 import { MeshLineGeometry, MeshLineMaterial } from 'meshline';
