@@ -14,6 +14,8 @@
   var statusEl = document.getElementById('bm-splash-status');
   var stepsEl = document.getElementById('bm-splash-steps');
   var stepEls = stepsEl ? stepsEl.querySelectorAll('.bm-step') : [];
+  var lastVisualProgress = -1;
+  var lastVisualTick = Date.now();
 
   // Encrypted text effect (like MultiStepLoader)
   function encryptText(target, text) {
@@ -33,9 +35,16 @@
 
   // Update progress display (safe — these elements have suppressHydrationWarning)
   function updateProgress(pct) {
-    progress = Math.min(pct, 100);
-    var display = Math.floor(progress).toString();
+    progress = Math.max(0, Math.min(pct, 100));
+    var displayNum = Math.floor(progress + 0.35);
+    if (progress < 100 && displayNum > 99) displayNum = 99;
+    if (displayNum < lastVisualProgress) displayNum = lastVisualProgress;
+    var display = displayNum.toString();
     if (display.length < 2) display = '0' + display;
+    if (displayNum !== lastVisualProgress) {
+      lastVisualProgress = displayNum;
+      lastVisualTick = Date.now();
+    }
     if (progressEl) progressEl.textContent = display + '%';
     if (barEl) barEl.style.width = progress + '%';
   }
@@ -68,22 +77,43 @@
   // --- Smooth progress animation with acceleration ---
   var targetPct = 0;
   var animFrame;
+  var stallWatchdog;
+  var lastFrameTs = 0;
   function animateProgress() {
+    var now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+    var dt = lastFrameTs ? Math.min((now - lastFrameTs) / 16.67, 3) : 1;
+    lastFrameTs = now;
+
     if (progress < targetPct) {
-      // Accelerate as we get closer to 100 — slow at start, fast at end
+      // Smooth acceleration curve with capped frame delta (prevents chunky jumps)
       var remaining = targetPct - progress;
       var speed;
-      if (progress >= 90) speed = Math.max(remaining * 0.3, 1.5);    // Very fast final stretch
-      else if (progress >= 70) speed = Math.max(remaining * 0.15, 0.8); // Fast
-      else if (progress >= 50) speed = Math.max(remaining * 0.08, 0.5); // Medium
-      else speed = 0.5;                                                  // Steady start
-      updateProgress(progress + speed);
+      if (progress >= 92) speed = 0.78 + remaining * 0.08;
+      else if (progress >= 75) speed = 0.66 + remaining * 0.06;
+      else if (progress >= 60) speed = 0.58 + remaining * 0.05;
+      else if (progress >= 40) speed = 0.5 + remaining * 0.04;
+      else speed = 0.42;
+
+      var delta = speed * dt;
+      var maxDelta = progress >= 60 ? 0.95 : 1.1;
+      var minDelta = Math.min(remaining, 0.1);
+      delta = Math.max(minDelta, Math.min(delta, maxDelta));
+      updateProgress(progress + delta);
     }
     if (progress < 100) {
       animFrame = requestAnimationFrame(animateProgress);
     }
   }
   animFrame = requestAnimationFrame(animateProgress);
+
+  stallWatchdog = setInterval(function() {
+    if (!splash || splash.classList.contains('hide')) return;
+    if (progress >= 100) return;
+    var stalledFor = Date.now() - lastVisualTick;
+    if (stalledFor > 1000 && targetPct > progress + 0.2) {
+      updateProgress(Math.min(progress + 1, targetPct));
+    }
+  }, 250);
 
   // --- Phase 1: Core loading (0-30%) — only animate counter, no DOM class changes ---
   targetPct = 15;
@@ -171,6 +201,7 @@
 
   function hide() {
     cancelAnimationFrame(animFrame);
+    clearInterval(stallWatchdog);
     splash.classList.add('hide');
     setTimeout(function() {
       if (splash.parentNode) splash.parentNode.removeChild(splash);
