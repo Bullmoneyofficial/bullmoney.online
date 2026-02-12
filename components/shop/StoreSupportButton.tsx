@@ -8,7 +8,7 @@ import {
   Headphones,
 } from 'lucide-react';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
-import { useSupportDrawerUI, useStoreMenuUI } from '@/contexts/UIStateContext';
+import { useSupportDrawerUI, useStoreMenuUI, useUIState } from '@/contexts/UIStateContext';
 
 // next/dynamic with ssr:false — Turbopack fully defers this chunk
 const SupportDrawer = dynamic(() => import('@/components/shop/SupportDrawer'), { ssr: false });
@@ -37,15 +37,16 @@ interface SupportButtonProps {
 export function SupportButton({ position = 'right' }: SupportButtonProps) {
   const { isOpen, setIsOpen } = useSupportDrawerUI();
   const { isMobileMenuOpen: isStoreMobileMenuOpen, isDesktopMenuOpen: isStoreDesktopMenuOpen, isDropdownMenuOpen: isStoreDropdownMenuOpen } = useStoreMenuUI();
+  const { isUltimateHubOpen } = useUIState();
   const [hasUnread, setHasUnread] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [toastIdx, setToastIdx] = useState(0);
   const [drawerMounted, setDrawerMounted] = useState(false);
   const isLeft = position === 'left';
 
-  // Hide support button when any store menu is open
+  // Hide support button when any store menu or Ultimate Hub is open
   const isAnyStoreMenuOpen = isStoreMobileMenuOpen || isStoreDesktopMenuOpen || isStoreDropdownMenuOpen;
-  const shouldHide = isAnyStoreMenuOpen;
+  const shouldHide = isAnyStoreMenuOpen || isUltimateHubOpen;
 
   // Idle toast rotation
   useEffect(() => {

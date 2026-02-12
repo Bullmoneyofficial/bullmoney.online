@@ -124,6 +124,7 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
   // Check if we're on store pages, casino pages, desktop page, design page, or app page - hide navbar (replaced with StoreHeader)
   const pathname = usePathname();
   const isStorePage = pathname.startsWith('/store') || pathname.startsWith('/games') || pathname.startsWith('/design');
+  const isGamesPage = pathname.startsWith('/games');
   const isDesktopPage = pathname === '/desktop';
   const isAppPage = pathname === '/';
   
@@ -297,9 +298,9 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
             - All real device data from browser APIs */}
         {canShowUltimateHub && showUltimateHub && (allowMobileLazy || !isMobileViewport) && <UltimateHub />}
 
-        {/* ✅ SUPPORT BUTTON - Global floating support widget */}
+        {/* ✅ SUPPORT BUTTON - Global floating support widget (hidden on games pages) */}
         {canShowSupport && !isStorePage && <AppSupportButton />}
-        {canShowSupport && isStorePage && typeof document !== "undefined" && createPortal(
+        {canShowSupport && isStorePage && !isGamesPage && typeof document !== "undefined" && createPortal(
           <StoreSupportButton />,
           document.body
         )}

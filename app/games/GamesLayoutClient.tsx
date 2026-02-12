@@ -8,7 +8,7 @@ const StoreHeader = dynamic(
   { ssr: false }
 );
 
-const HEADER_HEIGHT = 48;
+const HEADER_HEIGHT = 72;
 
 export function GamesLayoutClient({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
@@ -87,7 +87,7 @@ export function GamesLayoutClient({ children }: { children: React.ReactNode }) {
 
   return (
     <div
-      className="store-layout bg-white text-black"
+      className="store-layout bg-black text-white"
       data-store-page
       data-theme-aware
       style={{
@@ -98,7 +98,7 @@ export function GamesLayoutClient({ children }: { children: React.ReactNode }) {
         height: 'auto',
         overflowX: 'hidden',
         overflowY: 'auto',
-        backgroundColor: '#ffffff',
+        backgroundColor: '#000000',
         WebkitOverflowScrolling: 'touch',
       }}
     >
@@ -106,7 +106,7 @@ export function GamesLayoutClient({ children }: { children: React.ReactNode }) {
         :global(html.store-active),
         :global(html.store-active body),
         :global(body.store-page-body) {
-          background: #ffffff !important;
+          background: #000000 !important;
           overflow-y: auto !important;
           overflow-x: hidden !important;
           height: auto !important;
@@ -181,7 +181,7 @@ export function GamesLayoutClient({ children }: { children: React.ReactNode }) {
       `}</style>
 
       <StoreHeader />
-      <main className="w-full min-h-screen" style={{ position: 'relative', zIndex: 1 }}>
+      <main className="w-full" style={{ position: 'relative', zIndex: 1, minHeight: 'calc(100vh - 72px)', display: 'flex', flexDirection: 'column' }}>
         {children}
       </main>
     </div>

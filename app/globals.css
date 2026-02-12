@@ -12,6 +12,7 @@
 @import "./styles/60-desktop-zindex-fix.css";
 @import "./styles/70-mobile-performance.css";
 @import "../styles/themes/supreme-z-index.css";
+@import "../styles/modal-scroll-lock.css";
 
 /* Hide horizontal scrollbar for the world map scroller */
 .world-map-scroll {

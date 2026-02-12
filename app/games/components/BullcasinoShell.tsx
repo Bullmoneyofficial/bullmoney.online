@@ -17,6 +17,9 @@ export default function BullcasinoShell({ children }: { children: ReactNode }) {
         position: 'relative',
         zIndex: 10,
         isolation: 'isolate',
+        flex: '1 1 auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
       {/* Only load boxicons for icons - removed style.css and notifyme.css as they have global selectors that break the landing page */}
@@ -37,14 +40,16 @@ export default function BullcasinoShell({ children }: { children: ReactNode }) {
         
         /* Shell layout */
         .bullcasino-page .main__content {
-          display: block !important;
+          display: flex !important;
+          flex-direction: column !important;
           position: static !important;
           padding: 0 !important;
           min-height: auto !important;
           overflow: visible !important;
+          flex: 1 1 auto !important;
         }
         
-        /* Games container */
+        /* Games container — full width */
         .bullcasino-page .games__container {
           position: relative !important;
           margin: 0 auto !important;
@@ -54,20 +59,40 @@ export default function BullcasinoShell({ children }: { children: ReactNode }) {
           border-radius: 0 !important;
           border: none !important;
           overflow: visible !important;
+          box-sizing: border-box !important;
+          padding-left: clamp(12px, 3vw, 32px) !important;
+          padding-right: clamp(12px, 3vw, 32px) !important;
         }
         
-        /* Shell games grid */
+        /* Shell games grid — full-width responsive */
         .bullcasino-page .shell-games-grid {
           display: grid !important;
+          grid-template-columns: repeat(3, 1fr) !important;
+          gap: clamp(10px, 2vw, 20px) !important;
           height: auto !important;
+          width: 100% !important;
+        }
+        @media (max-width: 900px) {
+          .bullcasino-page .shell-games-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+        }
+        @media (max-width: 400px) {
+          .bullcasino-page .shell-games-grid {
+            grid-template-columns: 1fr !important;
+          }
         }
         .bullcasino-page .shell-game-card {
           display: flex !important;
           flex-direction: column !important;
           height: auto !important;
+          min-height: 0 !important;
+          overflow: hidden !important;
         }
         .bullcasino-page .shell-game-image {
+          width: 100% !important;
           height: auto !important;
+          aspect-ratio: 16 / 10 !important;
         }
         
         /* Shell navbar styles (inline replacement for style.css) */
@@ -166,17 +191,18 @@ export default function BullcasinoShell({ children }: { children: ReactNode }) {
         
         /* Footer */
         .bullcasino-page .footer {
-          padding: 32px 24px;
+          padding: 24px clamp(16px, 3vw, 32px) 16px;
           background: #000000;
           border-top: 1px solid #1f2937;
+          margin-top: 0;
         }
         .bullcasino-page .footer__header {
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
           flex-wrap: wrap;
-          gap: 24px;
-          margin-bottom: 24px;
+          gap: 16px;
+          margin-bottom: 12px;
         }
         .bullcasino-page .footer_security {
           display: block;
@@ -222,7 +248,7 @@ export default function BullcasinoShell({ children }: { children: ReactNode }) {
         /* Responsive */
         @media (max-width: 768px) {
           .bullcasino-page .navbar {
-            padding: 10px 16px;
+            padding: 12px 16px;
           }
           .bullcasino-page .navmenu {
             display: none;
@@ -233,44 +259,21 @@ export default function BullcasinoShell({ children }: { children: ReactNode }) {
           .bullcasino-page .mobile_menu {
             display: block;
           }
+          .bullcasino-page .footer {
+            padding: 20px 16px 12px;
+          }
+          .bullcasino-page .footer__header {
+            flex-direction: column;
+            gap: 12px;
+          }
+          .bullcasino-page .footer__bottom {
+            gap: 16px;
+          }
         }
       `}</style>
 
       <div style={{ background: '#111827', color: '#f9fafb', padding: '10px 16px', textAlign: 'center', fontSize: 14, lineHeight: 1.5, borderBottom: '1px solid #1f2937' }}>
         Demo mode only. We do not process deposits or withdrawals, and all balances are virtual for entertainment only.
-      </div>
-
-      <div className="navbar">
-        <div className="logotype">
-          <a href="/" className="logo" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-            <img src={`${ASSET_BASE}/images/IMG_2921.PNG`} alt="BullMoney" style={{ height: 32, width: 32, objectFit: 'contain', borderRadius: 6 }} />
-            <span className="bull-logo">Bull<span className="accent">Money</span></span>
-          </a>
-        </div>
-        <div className="navmenu">
-          <ul className="navmenu__list">
-            <li className="navmenu__item">
-              <a href="/games" className="navmenu__item_link active">Home</a>
-            </li>
-            <li className="navmenu__item">
-              <a href="/games/terms" className="navmenu__item_link">Terms</a>
-            </li>
-            <li className="navmenu__item">
-              <a href="/community" className="navmenu__item_link">Community</a>
-            </li>
-            <li className="navmenu__item">
-              <a href="/contact" className="navmenu__item_link">Support</a>
-            </li>
-          </ul>
-        </div>
-        <div className="user__wallet">
-          <div className="user__balance">
-            <span id="balance">0.00 <span className="ruble">RUB</span></span>
-          </div>
-          <button className="wallet_up_btn" aria-disabled="true" title="Wallet actions are disabled; demo balance only." style={{ cursor: 'not-allowed' }}>
-            Wallet Disabled
-          </button>
-        </div>
       </div>
 
       <div className="mobile_menu">
@@ -294,10 +297,10 @@ export default function BullcasinoShell({ children }: { children: ReactNode }) {
         </div>
       </div>
 
-      <div className="main__content">
+      <div className="main__content" style={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column' }}>
         {children}
 
-        <footer className="footer">
+        <footer className="footer" style={{ marginTop: 'auto' }}>
           <div className="footer__header">
             <div className="footer__logo">
               <a href="/" className="logo" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>

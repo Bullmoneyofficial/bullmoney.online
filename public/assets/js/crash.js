@@ -116,11 +116,21 @@ $(document).ready(function() {
         let html = '';
         for(var i in res.history) html += '<div class="game__crash_coef"> <div class="crash__coef" style="color: '+res.history[i].color+'; border-color: '+res.history[i].color+';">'+res.history[i].multiplier.toFixed(2)+'x </div> </div>';
         $('.game__crash_coefs').html(html);
+        try{
+            if(typeof window !== 'undefined' && window.resetCrashAnimation) {
+                try{ window.resetCrashAnimation(); }catch(err){}
+            }
+        }catch(err){}
     }
 
     this.parseSlider = (res) => {
         $.plot($('#chart'), [res.data], res.options);
         $('.chart-info').text(((res.crashed) ? 'Crashed at ' : '') + 'x' + res.float.toFixed(2));
+        try{
+            if(typeof window !== 'undefined' && window.animateCrashFrame) {
+                try{ window.animateCrashFrame(res.float, !!res.crashed); }catch(err){}
+            }
+        }catch(err){}
         if(res.crashed) 
         {
             $('.chart-info').css({

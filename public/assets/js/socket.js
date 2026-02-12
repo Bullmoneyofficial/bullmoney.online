@@ -103,6 +103,11 @@ socket.on('wheel_roll', function(data) {
                 transition: 'all '+contime[data.timer.data].data+'s cubic-bezier(0, 0.49, 0, 1) -7ms',
                 transform: 'rotate('+data.roll.data+'deg)'
             });
+                try{
+                    if(typeof window !== 'undefined' && window.animateWheelResult) {
+                        try{ window.animateWheelResult(data.roll.data, contime[data.timer.data].data); }catch(err){}
+                    }
+                }catch(err){}
             in_game++;
         }
     } else {
@@ -110,6 +115,11 @@ socket.on('wheel_roll', function(data) {
             transition: '100ms cubic-bezier(0.39, 1.005, 0.32, 1) 0s;',
             transform: 'rotate('+data.roll.data+'deg)'
         });
+        try{
+            if(typeof window !== 'undefined' && window.animateWheelResult) {
+                try{ window.animateWheelResult(data.roll.data, 0.1); }catch(err){}
+            }
+        }catch(err){}
 //} else return n('CLIENT_ERR', 'error');
     }
 });
@@ -260,6 +270,11 @@ socket.on('jackpot.ngTimer', function(data) {
             $('.jackpot__winner .winner__username').text(data.winner.username);
             $('.winner__sum').text(data.winner.sum);
             $('.winner__chance').text(data.winner.chance+'%');
+            try{
+                if(typeof window !== 'undefined' && window.animateJackpotRoll) {
+                    try{ window.animateJackpotRoll(data.ml, data.members, data.winner); }catch(err){}
+                }
+            }catch(err){}
 
         }, 16000);
     });

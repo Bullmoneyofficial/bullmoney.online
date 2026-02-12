@@ -92,7 +92,8 @@ export type UIComponentType =
   | 'storeMobileMenu'     // Store header mobile menu
   | 'storeDesktopMenu'    // Store header desktop dropdown
   | 'storeDropdownMenu'   // Store header manual dropdown (games page)
-  | 'supportDrawer';      // Support drawer (cart-style side panel)
+  | 'supportDrawer'       // Support drawer (cart-style side panel)
+  | 'gamesDrawer';        // Games drawer (cart-style side panel)
 
 // Legacy type for backwards compatibility
 export type NavbarModalType = 'admin' | 'faq' | 'affiliate' | 'themeSelector' | null;
@@ -130,6 +131,7 @@ interface UIStateContextType {
   isStoreDesktopMenuOpen: boolean; // Store header desktop dropdown
   isStoreDropdownMenuOpen: boolean; // Store header manual dropdown (games)
   isSupportDrawerOpen: boolean;    // Support drawer (cart-style side panel)
+  isGamesDrawerOpen: boolean;      // Games drawer (cart-style side panel)
   isV2Unlocked: boolean;
   devSkipPageModeAndLoader: boolean; // Dev flag to skip pagemode and loader
   isWelcomeScreenActive: boolean;  // Welcome screen active - allows AudioWidget to show
@@ -177,6 +179,7 @@ interface UIStateContextType {
   setStoreDesktopMenuOpen: (open: boolean) => void;
   setStoreDropdownMenuOpen: (open: boolean) => void;
   setSupportDrawerOpen: (open: boolean) => void;
+  setGamesDrawerOpen: (open: boolean) => void;
   setV2Unlocked: (unlocked: boolean) => void;
   setDevSkipPageModeAndLoader: (skip: boolean) => void;
   setWelcomeScreenActive: (active: boolean) => void;
@@ -207,6 +210,7 @@ interface UIStateContextType {
   openStoreDesktopMenu: () => void;
   openStoreDropdownMenu: () => void;
   openSupportDrawer: () => void;
+  openGamesDrawer: () => void;
   closeNavbarModal: () => void;
 
   // Close all UI components
@@ -261,6 +265,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const [isStoreDesktopMenuOpen, setIsStoreDesktopMenuOpenState] = useState(false);
   const [isStoreDropdownMenuOpen, setIsStoreDropdownMenuOpenState] = useState(false);
   const [isSupportDrawerOpen, setIsSupportDrawerOpenState] = useState(false);
+  const [isGamesDrawerOpen, setIsGamesDrawerOpenState] = useState(false);
   const [isV2Unlocked, setIsV2UnlockedState] = useState(
     () => typeof window !== 'undefined' && sessionStorage.getItem('affiliate_unlock_complete') === 'true'
   );
@@ -288,7 +293,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isAuthModalOpen || isBullFeedModalOpen || isPostComposerModalOpen || isHeroSceneModalOpen || isDiscordStageModalOpen ||
     isAccountManagerModalOpen || isBgPickerModalOpen || isColorPickerModalOpen || isSplinePanelModalOpen ||
     isStoreMobileMenuOpen || isStoreDesktopMenuOpen || isStoreDropdownMenuOpen ||
-    isSupportDrawerOpen;
+    isSupportDrawerOpen || isGamesDrawerOpen;
 
   // Derived state: is any component currently open?
   const isAnyOpen = isMobileMenuOpen || isAudioWidgetOpen || isUltimatePanelOpen || isUltimateHubOpen || isAnyModalOpen;
@@ -350,6 +355,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isStoreDesktopMenuOpen ? 'storeDesktopMenu' :
     isStoreDropdownMenuOpen ? 'storeDropdownMenu' :
     isSupportDrawerOpen ? 'supportDrawer' :
+    isGamesDrawerOpen ? 'gamesDrawer' :
     null;
 
   // Closes all other components except the one specified
@@ -385,6 +391,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (except !== 'storeDesktopMenu') setIsStoreDesktopMenuOpenState(false);
     if (except !== 'storeDropdownMenu') setIsStoreDropdownMenuOpenState(false);
     if (except !== 'supportDrawer') setIsSupportDrawerOpenState(false);
+    if (except !== 'gamesDrawer') setIsGamesDrawerOpenState(false);
   }, []);
 
   // Closes all modals but preserves floating elements state
@@ -416,6 +423,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setIsStoreDesktopMenuOpenState(false);
     setIsStoreDropdownMenuOpenState(false);
     setIsSupportDrawerOpenState(false);
+    setIsGamesDrawerOpenState(false);
   }, []);
 
   // Closes all components
@@ -439,6 +447,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   }, [closeOthers]);
 
   const setAudioWidgetOpen = useCallback((open: boolean) => {
+    // Prevent opening when Ultimate Hub is active
+    if (open && isUltimateHubOpen) return;
+    
     if (open) {
       closeOthers('audioWidget');
       trackUIStateChange('audioWidget', 'open');
@@ -448,7 +459,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
       SoundEffects.close();
     }
     setIsAudioWidgetOpenState(open);
-  }, [closeOthers]);
+  }, [closeOthers, isUltimateHubOpen]);
 
   const setUltimatePanelOpen = useCallback((open: boolean) => {
     if (open) {
@@ -475,6 +486,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   }, [closeOthers]);
 
   const setFooterOpen = useCallback((open: boolean) => {
+    // Prevent opening when Ultimate Hub is active
+    if (open && isUltimateHubOpen) return;
+    
     if (open) {
       closeOthers('footer');
       trackUIStateChange('footer', 'open');
@@ -484,9 +498,12 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
       SoundEffects.close();
     }
     setIsFooterOpenState(open);
-  }, [closeOthers]);
+  }, [closeOthers, isUltimateHubOpen]);
 
   const setChartNewsOpen = useCallback((open: boolean) => {
+    // Prevent opening when Ultimate Hub is active
+    if (open && isUltimateHubOpen) return;
+    
     if (open) {
       closeOthers('chartnews');
       trackUIStateChange('chartNews', 'open');
@@ -496,10 +513,13 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
       SoundEffects.close();
     }
     setIsChartNewsOpenState(open);
-  }, [closeOthers]);
+  }, [closeOthers, isUltimateHubOpen]);
 
   const setAnalysisModalOpen = useCallback((open: boolean) => {
     console.log('[UIStateContext] setAnalysisModalOpen called with:', open);
+    // Prevent opening when Ultimate Hub is active
+    if (open && isUltimateHubOpen) return;
+    
     if (open) {
       closeOthers('analysisModal');
       trackUIStateChange('analysisModal', 'open');
@@ -509,9 +529,12 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
       SoundEffects.close();
     }
     setIsAnalysisModalOpenState(open);
-  }, [closeOthers]);
+  }, [closeOthers, isUltimateHubOpen]);
 
   const setLiveStreamModalOpen = useCallback((open: boolean) => {
+    // Prevent opening when Ultimate Hub is active
+    if (open && isUltimateHubOpen) return;
+    
     if (open) {
       closeOthers('liveStreamModal');
       trackUIStateChange('liveStreamModal', 'open');
@@ -521,9 +544,12 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
       SoundEffects.close();
     }
     setIsLiveStreamModalOpenState(open);
-  }, [closeOthers]);
+  }, [closeOthers, isUltimateHubOpen]);
 
   const setProductsModalOpen = useCallback((open: boolean) => {
+    // Prevent opening when Ultimate Hub is active
+    if (open && isUltimateHubOpen) return;
+    
     if (open) {
       closeOthers('productsModal');
       trackUIStateChange('productsModal', 'open');
@@ -533,9 +559,12 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
       SoundEffects.close();
     }
     setIsProductsModalOpenState(open);
-  }, [closeOthers]);
+  }, [closeOthers, isUltimateHubOpen]);
 
   const setServicesModalOpen = useCallback((open: boolean) => {
+    // Prevent opening when Ultimate Hub is active
+    if (open && isUltimateHubOpen) return;
+    
     if (open) {
       closeOthers('servicesModal');
       trackUIStateChange('servicesModal', 'open');
@@ -545,9 +574,12 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
       SoundEffects.close();
     }
     setIsServicesModalOpenState(open);
-  }, [closeOthers]);
+  }, [closeOthers, isUltimateHubOpen]);
 
   const setAffiliateModalOpen = useCallback((open: boolean) => {
+    // Prevent opening when Ultimate Hub is active
+    if (open && isUltimateHubOpen) return;
+    
     if (open) {
       closeOthers('affiliateModal');
       trackUIStateChange('affiliateModal', 'open');
@@ -557,9 +589,12 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
       SoundEffects.close();
     }
     setIsAffiliateModalOpenState(open);
-  }, [closeOthers]);
+  }, [closeOthers, isUltimateHubOpen]);
 
   const setThemeSelectorModalOpen = useCallback((open: boolean) => {
+    // Prevent opening when Ultimate Hub is active
+    if (open && isUltimateHubOpen) return;
+    
     if (open) {
       closeOthers('themeSelectorModal');
       trackUIStateChange('themeSelectorModal', 'open');
@@ -569,9 +604,12 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
       SoundEffects.close();
     }
     setIsThemeSelectorModalOpenState(open);
-  }, [closeOthers]);
+  }, [closeOthers, isUltimateHubOpen]);
 
   const setAdminModalOpen = useCallback((open: boolean) => {
+    // Prevent opening when Ultimate Hub is active
+    if (open && isUltimateHubOpen) return;
+    
     if (open) {
       closeOthers('adminModal');
       trackUIStateChange('adminModal', 'open');
@@ -581,9 +619,12 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
       SoundEffects.close();
     }
     setIsAdminModalOpenState(open);
-  }, [closeOthers]);
+  }, [closeOthers, isUltimateHubOpen]);
 
   const setFaqModalOpen = useCallback((open: boolean) => {
+    // Prevent opening when Ultimate Hub is active
+    if (open && isUltimateHubOpen) return;
+    
     if (open) {
       closeOthers('faqModal');
       trackUIStateChange('faqModal', 'open');
@@ -593,9 +634,12 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
       SoundEffects.close();
     }
     setIsFaqModalOpenState(open);
-  }, [closeOthers]);
+  }, [closeOthers, isUltimateHubOpen]);
 
   const setAppsModalOpen = useCallback((open: boolean) => {
+    // Prevent opening when Ultimate Hub is active
+    if (open && isUltimateHubOpen) return;
+    
     if (open) {
       closeOthers('appsModal');
       trackUIStateChange('appsModal', 'open');
@@ -605,9 +649,12 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
       SoundEffects.close();
     }
     setIsAppsModalOpenState(open);
-  }, [closeOthers]);
+  }, [closeOthers, isUltimateHubOpen]);
 
   const setDisclaimerModalOpen = useCallback((open: boolean) => {
+    // Prevent opening when Ultimate Hub is active
+    if (open && isUltimateHubOpen) return;
+    
     if (open) {
       closeOthers('disclaimerModal');
       trackUIStateChange('disclaimerModal', 'open');
@@ -617,7 +664,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
       SoundEffects.close();
     }
     setIsDisclaimerModalOpenState(open);
-  }, [closeOthers]);
+  }, [closeOthers, isUltimateHubOpen]);
 
   const setPagemodeOpen = useCallback((open: boolean) => {
     if (open) {
@@ -642,6 +689,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   }, [closeOthers]);
 
   const setAuthModalOpen = useCallback((open: boolean) => {
+    // Prevent opening when Ultimate Hub is active
+    if (open && isUltimateHubOpen) return;
+    
     if (open) {
       closeOthers('authModal');
       trackUIStateChange('authModal', 'open');
@@ -651,9 +701,12 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
       SoundEffects.close();
     }
     setIsAuthModalOpenState(open);
-  }, [closeOthers]);
+  }, [closeOthers, isUltimateHubOpen]);
 
   const setBullFeedModalOpen = useCallback((open: boolean) => {
+    // Prevent opening when Ultimate Hub is active
+    if (open && isUltimateHubOpen) return;
+    
     if (open) {
       closeOthers('bullFeedModal');
       trackUIStateChange('bullFeedModal', 'open');
@@ -663,9 +716,12 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
       SoundEffects.close();
     }
     setIsBullFeedModalOpenState(open);
-  }, [closeOthers]);
+  }, [closeOthers, isUltimateHubOpen]);
 
   const setPostComposerModalOpen = useCallback((open: boolean) => {
+    // Prevent opening when Ultimate Hub is active
+    if (open && isUltimateHubOpen) return;
+    
     if (open) {
       closeOthers('postComposerModal');
       trackUIStateChange('postComposerModal', 'open');
@@ -675,9 +731,12 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
       SoundEffects.close();
     }
     setIsPostComposerModalOpenState(open);
-  }, [closeOthers]);
+  }, [closeOthers, isUltimateHubOpen]);
 
   const setHeroSceneModalOpen = useCallback((open: boolean) => {
+    // Prevent opening when Ultimate Hub is active
+    if (open && isUltimateHubOpen) return;
+    
     if (open) {
       closeOthers('heroSceneModal');
       trackUIStateChange('heroSceneModal', 'open');
@@ -687,9 +746,12 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
       SoundEffects.close();
     }
     setIsHeroSceneModalOpenState(open);
-  }, [closeOthers]);
+  }, [closeOthers, isUltimateHubOpen]);
 
   const setDiscordStageModalOpen = useCallback((open: boolean) => {
+    // Prevent opening when Ultimate Hub is active
+    if (open && isUltimateHubOpen) return;
+    
     if (open) {
       closeOthers('discordStageModal');
       trackUIStateChange('discordStageModal', 'open');
@@ -699,9 +761,12 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
       SoundEffects.close();
     }
     setIsDiscordStageModalOpenState(open);
-  }, [closeOthers]);
+  }, [closeOthers, isUltimateHubOpen]);
 
   const setAccountManagerModalOpen = useCallback((open: boolean) => {
+    // Prevent opening when Ultimate Hub is active
+    if (open && isUltimateHubOpen) return;
+    
     if (open) {
       closeOthers('accountManagerModal');
       trackUIStateChange('accountManagerModal', 'open');
@@ -711,9 +776,12 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
       SoundEffects.close();
     }
     setIsAccountManagerModalOpenState(open);
-  }, [closeOthers]);
+  }, [closeOthers, isUltimateHubOpen]);
 
   const setBgPickerModalOpen = useCallback((open: boolean) => {
+    // Prevent opening when Ultimate Hub is active
+    if (open && isUltimateHubOpen) return;
+    
     if (open) {
       closeOthers('bgPickerModal');
       trackUIStateChange('bgPickerModal', 'open');
@@ -723,9 +791,12 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
       SoundEffects.close();
     }
     setIsBgPickerModalOpenState(open);
-  }, [closeOthers]);
+  }, [closeOthers, isUltimateHubOpen]);
 
   const setColorPickerModalOpen = useCallback((open: boolean) => {
+    // Prevent opening when Ultimate Hub is active
+    if (open && isUltimateHubOpen) return;
+    
     if (open) {
       closeOthers('colorPickerModal');
       trackUIStateChange('colorPickerModal', 'open');
@@ -735,9 +806,12 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
       SoundEffects.close();
     }
     setIsColorPickerModalOpenState(open);
-  }, [closeOthers]);
+  }, [closeOthers, isUltimateHubOpen]);
 
   const setSplinePanelModalOpen = useCallback((open: boolean) => {
+    // Prevent opening when Ultimate Hub is active
+    if (open && isUltimateHubOpen) return;
+    
     if (open) {
       closeOthers('splinePanelModal');
       trackUIStateChange('splinePanelModal', 'open');
@@ -747,9 +821,12 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
       SoundEffects.close();
     }
     setIsSplinePanelModalOpenState(open);
-  }, [closeOthers]);
+  }, [closeOthers, isUltimateHubOpen]);
 
   const setStoreMobileMenuOpen = useCallback((open: boolean) => {
+    // Prevent opening when Ultimate Hub is active
+    if (open && isUltimateHubOpen) return;
+    
     if (open) {
       closeOthers('storeMobileMenu');
       trackUIStateChange('storeMobileMenu', 'open');
@@ -758,9 +835,12 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
       trackUIStateChange('storeMobileMenu', 'close');
     }
     setIsStoreMobileMenuOpenState(open);
-  }, [closeOthers]);
+  }, [closeOthers, isUltimateHubOpen]);
 
   const setStoreDesktopMenuOpen = useCallback((open: boolean) => {
+    // Prevent opening when Ultimate Hub is active
+    if (open && isUltimateHubOpen) return;
+    
     if (open) {
       closeOthers('storeDesktopMenu');
       trackUIStateChange('storeDesktopMenu', 'open');
@@ -768,9 +848,12 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
       trackUIStateChange('storeDesktopMenu', 'close');
     }
     setIsStoreDesktopMenuOpenState(open);
-  }, [closeOthers]);
+  }, [closeOthers, isUltimateHubOpen]);
 
   const setStoreDropdownMenuOpen = useCallback((open: boolean) => {
+    // Prevent opening when Ultimate Hub is active
+    if (open && isUltimateHubOpen) return;
+    
     if (open) {
       closeOthers('storeDropdownMenu');
       trackUIStateChange('storeDropdownMenu', 'open');
@@ -778,9 +861,12 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
       trackUIStateChange('storeDropdownMenu', 'close');
     }
     setIsStoreDropdownMenuOpenState(open);
-  }, [closeOthers]);
+  }, [closeOthers, isUltimateHubOpen]);
 
   const setSupportDrawerOpen = useCallback((open: boolean) => {
+    // Prevent opening when Ultimate Hub is active
+    if (open && isUltimateHubOpen) return;
+    
     if (open) {
       closeOthers('supportDrawer');
       trackUIStateChange('supportDrawer', 'open');
@@ -790,7 +876,22 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
       SoundEffects.close();
     }
     setIsSupportDrawerOpenState(open);
-  }, [closeOthers]);
+  }, [closeOthers, isUltimateHubOpen]);
+
+  const setGamesDrawerOpen = useCallback((open: boolean) => {
+    // Prevent opening when Ultimate Hub is active
+    if (open && isUltimateHubOpen) return;
+    
+    if (open) {
+      closeOthers('gamesDrawer');
+      trackUIStateChange('gamesDrawer', 'open');
+      SoundEffects.open();
+    } else {
+      trackUIStateChange('gamesDrawer', 'close');
+      SoundEffects.close();
+    }
+    setIsGamesDrawerOpenState(open);
+  }, [closeOthers, isUltimateHubOpen]);
 
   const setV2Unlocked = useCallback((unlocked: boolean) => {
     setIsV2UnlockedState(unlocked);
@@ -865,6 +966,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const openStoreDesktopMenu = useCallback(() => setStoreDesktopMenuOpen(true), [setStoreDesktopMenuOpen]);
   const openStoreDropdownMenu = useCallback(() => setStoreDropdownMenuOpen(true), [setStoreDropdownMenuOpen]);
   const openSupportDrawer = useCallback(() => setSupportDrawerOpen(true), [setSupportDrawerOpen]);
+  const openGamesDrawer = useCallback(() => setGamesDrawerOpen(true), [setGamesDrawerOpen]);
   const closeNavbarModal = useCallback(() => {
     setIsAdminModalOpenState(false);
     setIsFaqModalOpenState(false);
@@ -968,6 +1070,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isStoreDesktopMenuOpen,
     isStoreDropdownMenuOpen,
     isSupportDrawerOpen,
+    isGamesDrawerOpen,
     isV2Unlocked,
     devSkipPageModeAndLoader,
     isWelcomeScreenActive,
@@ -1012,6 +1115,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setStoreDesktopMenuOpen,
     setStoreDropdownMenuOpen,
     setSupportDrawerOpen,
+    setGamesDrawerOpen,
     setV2Unlocked,
     setDevSkipPageModeAndLoader,
     setWelcomeScreenActive: setIsWelcomeScreenActiveState,
@@ -1040,6 +1144,7 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     openStoreDesktopMenu,
     openStoreDropdownMenu,
     openSupportDrawer,
+    openGamesDrawer,
     closeNavbarModal,
     closeAll,
     closeAllModals,
@@ -1093,6 +1198,9 @@ export function useAudioWidgetUI() {
   // Store page detection
   const isStorePage = typeof window !== 'undefined' && window.location.pathname.startsWith('/store');
 
+  // Games page detection — hide audio widget completely for clean casino experience
+  const isGamesPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/games');
+
   // IMPORTANT: We no longer return shouldHideFloatingPlayer that causes unmount.
   // Instead, we return shouldMinimizeAudioWidget which signals the floating player
   // to minimize (hide iframe behind pull tab) while keeping audio playing.
@@ -1119,7 +1227,7 @@ export function useAudioWidgetUI() {
   // - Hide completely ONLY if: store page OR ((loader is open AND user never entered pagemode) OR (not unlocked AND not in pagemode/welcome AND never started pagemode audio))
   // - In other words: Keep showing (mounted) if user has started the pagemode flow at any point, UNLESS on store page
   const isInPagemodeFlow = isPagemodeOpen || isWelcomeScreenActive || hasStartedPagemodeAudio;
-  const shouldHideAudioWidgetCompletely = isStorePage || (!isDesktopViewport && !isInPagemodeFlow && !isV2Unlocked);
+  const shouldHideAudioWidgetCompletely = isStorePage || isGamesPage || (!isDesktopViewport && !isInPagemodeFlow && !isV2Unlocked);
 
   // NEW: shouldHideMainWidget - hides MainWidget (settings panel) but keeps FloatingPlayer for audio
   // During pagemode registration (not welcome screen), hide the settings but keep audio playing
@@ -1375,4 +1483,10 @@ export function useStoreMenuUI() {
 export function useSupportDrawerUI() {
   const { isSupportDrawerOpen, setSupportDrawerOpen, openSupportDrawer } = useUIState();
   return { isOpen: isSupportDrawerOpen, setIsOpen: setSupportDrawerOpen, open: openSupportDrawer };
+}
+
+// Games drawer hook - for games page drawer
+export function useGamesDrawerUI() {
+  const { isGamesDrawerOpen, setGamesDrawerOpen, openGamesDrawer } = useUIState();
+  return { isOpen: isGamesDrawerOpen, setIsOpen: setGamesDrawerOpen, open: openGamesDrawer };
 }

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3a0ca3"/>
+      <stop offset="100%" stop-color="#240046"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#bg)"/>
+  <polygon points="400,70 510,170 510,320 400,420 290,320 290,170" fill="#f4b942" opacity="0.9"/>
+  <circle cx="400" cy="245" r="62" fill="#1d3557"/>
+  <text x="400" y="258" fill="#f1faee" font-size="52" text-anchor="middle" font-family="Arial, sans-serif" font-weight="700">₿</text>
+  <text x="400" y="455" fill="#ffffff" font-size="54" text-anchor="middle" font-family="Arial, sans-serif" font-weight="700">Crypto Pharaoh</text>
+</svg>

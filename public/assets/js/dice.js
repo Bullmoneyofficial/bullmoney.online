@@ -12,6 +12,12 @@ $(document).ready(function () {
             percent: $('.input__chance').val(),
             type: 'min'
         }).then(e => {
+            try{
+                if (typeof window !== 'undefined' && window.animateDiceResult && typeof e.random !== 'undefined'){
+                    var face = (parseInt(e.random) % 6) + 1;
+                    try{ window.animateDiceResult(face, parseInt(e.random)); }catch(err){}
+                }
+            }catch(err){}
             if (e.type == 'success')
                 if (e.out == 'win') {
                     $('.dice__result').css('display', 'block').removeClass("danger").addClass("success").html("Won <b>" + e.cash.toFixed(2) + "</b>");
@@ -38,6 +44,12 @@ $(document).ready(function () {
             percent: $('.input__chance').val(),
             type: 'max'
         }).then(e => {
+            try{
+                if (typeof window !== 'undefined' && window.animateDiceResult && typeof e.random !== 'undefined'){
+                    var face = (parseInt(e.random) % 6) + 1;
+                    try{ window.animateDiceResult(face, parseInt(e.random)); }catch(err){}
+                }
+            }catch(err){}
             if (e.type == 'success')
                 if (e.out == 'win') {
                     $('.dice__result').css('display', 'block').removeClass("danger").fadeIn().addClass("success").html("Won <b>" + e.cash.toFixed(2) + "</b>");

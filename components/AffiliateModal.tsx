@@ -495,31 +495,106 @@ type ModalStep = 'intro' | 'how-it-works' | 'signup-broker' | 'verify-broker' | 
 
 // Main Affiliate Modal Component - Matches ChartNewsModal pattern
 export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps) {
-  const [mounted, setMounted] = useState(false);
+  const [mountedFlag, setMountedFlag] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => setMountedFlag(true), []);
 
   useEffect(() => {
-    setMounted(true);
+    const mq = window.matchMedia('(min-width: 768px)');
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    setIsDesktop(mq.matches);
+    if (mq.addEventListener) mq.addEventListener('change', handler);
+    else mq.addListener(handler);
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener('change', handler);
+      else mq.removeListener(handler);
+    };
   }, []);
 
   useEffect(() => {
+    if (!mountedFlag) return;
+    // Prevent body scroll while drawer is open
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      document.documentElement.setAttribute('data-affiliate-open', 'true');
+      document.body.setAttribute('data-affiliate-open', 'true');
     } else {
       document.body.style.overflow = '';
+      document.documentElement.removeAttribute('data-affiliate-open');
+      document.body.removeAttribute('data-affiliate-open');
     }
+
     return () => {
       document.body.style.overflow = '';
+      document.documentElement.removeAttribute('data-affiliate-open');
+      document.body.removeAttribute('data-affiliate-open');
     };
-  }, [isOpen]);
+  }, [isOpen, mountedFlag]);
 
-  if (!mounted) return null;
+  if (!mountedFlag) return null;
 
-  return createPortal(
+  // Drawer panel matches CartDrawer behavior: top sheet on desktop, right drawer on mobile
+  const drawer = (
     <AnimatePresence>
-      {isOpen && <AffiliateModalContent isOpen={isOpen} onClose={onClose} />}
-    </AnimatePresence>,
-    document.body
+      {isOpen && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.12 }}
+            onClick={onClose}
+            className="fixed inset-0"
+            style={{ zIndex: 2147483648, background: 'rgba(0,0,0,0.2)' }}
+          />
+
+          <motion.div
+            initial={isDesktop ? { y: '-100%' } : { x: '100%' }}
+            animate={isDesktop ? { y: 0 } : { x: 0 }}
+            exit={isDesktop ? { y: '-100%' } : { x: '100%' }}
+            transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
+            className={
+              isDesktop
+                ? 'fixed top-0 left-0 right-0 w-full bg-white border-b border-black/10 flex flex-col safe-area-inset-bottom max-h-[90vh]'
+                : 'fixed top-0 right-0 bottom-0 w-full max-w-md bg-white border-l border-black/10 flex flex-col safe-area-inset-bottom'
+            }
+            style={{ zIndex: 2147483649, color: '#1d1d1f' }}
+            data-apple-section
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 md:p-6 border-b border-black/10">
+              <button
+                onClick={onClose}
+                className="h-10 w-10 rounded-xl bg-black/5 flex items-center justify-center hover:bg-black/10 active:scale-95 transition-all"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-2 md:gap-3">
+                <DollarSign className="w-4 h-4 md:w-5 md:h-5" />
+                <h2 className="text-lg md:text-xl font-light">Affiliate Portal</h2>
+              </div>
+
+              <button
+                onClick={onClose}
+                className="h-9 w-9 md:h-10 md:w-10 rounded-xl bg-black/5 flex items-center justify-center hover:bg-black/10 active:scale-95 transition-all"
+              >
+                <X className="w-4 h-4 md:w-5 md:h-5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto overscroll-contain p-4 md:p-6">
+              <AffiliateModalContent isOpen={isOpen} onClose={onClose} />
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
+
+  return createPortal(drawer, document.body);
 }
 
 // Affiliate Modal Content Component
@@ -1837,70 +1912,21 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
   );
 
   // =========================================
-  // RENDER DASHBOARD SCREEN
+  // RENDER DASHBOARD SCREEN (INLINE FOR DRAWER)
   // =========================================
   const renderDashboard = () => {
-    // Mobile view - Keep existing compact modal layout
-    if (isMobileView) {
-      return (
-        <div className="fixed inset-0 z-[2147483647] flex flex-col bg-white">
-          {/* Header */}
-          <div 
-            className="flex items-center justify-between p-4 border-b border-white/10 bg-black backdrop-blur-md"
-          >
-            <div className="flex items-center gap-2">
-              <h1 className="text-lg font-bold text-white">
-                Affiliate Dashboard
-              </h1>
-            </div>
-            <div className="flex items-center gap-2">
-              <NeonButton
-                onClick={() => setStep('success')}
-                variant="ghost"
-                size="small"
-                className="text-xs text-white"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </NeonButton>
-              <button 
-                onClick={handleClose}
-                className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-all shadow-lg cursor-pointer"
-              >
-                <X className="w-4 h-4 text-white" strokeWidth={2.5} />
-              </button>
-            </div>
-          </div>
-          
-          {/* Mobile Dashboard Content */}
-          <div className="flex-1 overflow-y-auto">
-            {dashboardTab === 'dashboard' && (
-              <AffiliateRecruitsDashboard onBack={() => setStep('success')} />
-            )}
-            {dashboardTab === 'admin' && isAffiliateAdmin && (
-              <AffiliateAdminPanel />
-            )}
-          </div>
-        </div>
-      );
-    }
-
-    // Desktop view - Full layout from AffiliateRecruitsDashboard
     return (
-      <div className="fixed inset-0 z-[2147483647] flex flex-col bg-white">
-        {/* Header */}
-        <div 
-          className="flex items-center justify-between p-4 border-b border-white/10 bg-black backdrop-blur-md"
-        >
-          <div className="flex items-center gap-4">
-            <h1 className="text-lg font-bold text-white">
-              Affiliate Dashboard
-            </h1>
-            <div className="flex items-center gap-2">
+      <div className="flex flex-col min-h-0">
+        {/* Header (inline, not fixed) */}
+        <div className="flex items-center justify-between p-2 md:p-4 border-b border-black/10">
+          <div className="flex items-center gap-3">
+            <h1 className="text-lg font-semibold">Affiliate Dashboard</h1>
+            <div className="hidden md:flex items-center gap-2">
               <button
                 onClick={() => setDashboardTab('dashboard')}
                 className={cn(
-                  "px-3 py-1.5 rounded-full text-xs font-bold border border-white/20 transition-all",
-                  dashboardTab === 'dashboard' ? "bg-white text-black" : "bg-white/10 text-white"
+                  "px-2 py-1 rounded-full text-xs font-bold border transition-all",
+                  dashboardTab === 'dashboard' ? "bg-black text-white" : "bg-white/10 text-black/70"
                 )}
               >
                 Dashboard
@@ -1909,39 +1935,35 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
                 <button
                   onClick={() => setDashboardTab('admin')}
                   className={cn(
-                    "px-3 py-1.5 rounded-full text-xs font-bold border border-white/20 transition-all flex items-center gap-1",
-                    dashboardTab === 'admin' ? "bg-white text-black" : "bg-white/10 text-white"
+                    "px-2 py-1 rounded-full text-xs font-bold border transition-all flex items-center gap-1",
+                    dashboardTab === 'admin' ? "bg-black text-white" : "bg-white/10 text-black/70"
                   )}
                 >
-                  <Shield className="w-3 h-3" /> Admin Panel
+                  <Shield className="w-3 h-3" /> Admin
                 </button>
               )}
             </div>
-            {savedSession && (
-              <span className="text-xs text-white/70">
-                {savedSession.email}
-              </span>
-            )}
           </div>
+
           <div className="flex items-center gap-2">
             <NeonButton
               onClick={() => setStep('success')}
               variant="ghost"
               size="small"
-              className="text-white"
+              className="text-black/70"
             >
               <ChevronLeft className="w-4 h-4 mr-1" /> Back
             </NeonButton>
-            <button 
+            <button
               onClick={handleClose}
-              className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-all shadow-lg cursor-pointer"
+              className="w-9 h-9 rounded-full bg-black/5 hover:bg-black/10 border border-black/10 flex items-center justify-center transition-all"
             >
-              <X className="w-4 h-4 text-white" strokeWidth={2.5} />
+              <X className="w-4 h-4 text-black/80" strokeWidth={2.5} />
             </button>
           </div>
         </div>
-        
-        {/* Desktop Dashboard Content - Full width layout */}
+
+        {/* Content area (dashboard/admin panels) */}
         <div className="flex-1 overflow-y-auto">
           {dashboardTab === 'dashboard' && (
             <AffiliateRecruitsDashboard onBack={() => setStep('success')} />
@@ -1976,8 +1998,8 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
-      className="fixed inset-0 z-[2147483647] bg-black/60 backdrop-blur-md"
+      transition={{ duration: 0.12 }}
+      className="relative w-full h-full"
       onClick={handleClose}
     >
       {/* Tap to close hints */}

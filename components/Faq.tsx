@@ -12,18 +12,17 @@ import { createPortal } from 'react-dom';
 import { gsap } from 'gsap';
 import { 
   motion, 
-  AnimatePresence,
-  type TargetAndTransition
+  AnimatePresence
 } from 'framer-motion';
 import {
-  Zap,
   X,
   ChevronDown,
   Send,
   ShieldAlert,
-  MessageSquare
+  MessageSquare,
+  ArrowLeft,
+  HelpCircle
 } from 'lucide-react';
-import { useUnifiedPerformance } from '@/hooks/useDesktopPerformance';
 import { createSupabaseClient } from '@/lib/supabase';
 
 // ==========================================
@@ -588,12 +587,8 @@ function FAQCategoryItem({ data }: { data: FAQCategoryData }) {
   );
 }
 
-const FaqModalContent = ({onClose}: {onClose: () => void}) => {
+const FaqModalContent = ({ onClose }: { onClose: () => void }) => {
   const [faqData, setFaqData] = useState<FAQCategoryData[]>(FAQ_CONTENT);
-
-  useEffect(() => {
-    injectGlobalStyles();
-  }, []);
 
   useEffect(() => {
     const loadFaq = async () => {
@@ -614,105 +609,175 @@ const FaqModalContent = ({onClose}: {onClose: () => void}) => {
     loadFaq();
   }, []);
 
+  const FaqItemRow = ({ item }: { item: FAQItemData }) => {
+    const [expanded, setExpanded] = useState(false);
+
     return (
-        <>
-            {/* Top Gradient Blur */}
-            <GradualBlur position="top" />
+      <div className="border-b border-black/10 last:border-0">
+        <button
+          type="button"
+          onClick={() => setExpanded((prev) => !prev)}
+          className="w-full flex items-center justify-between gap-4 py-3 text-left"
+        >
+          <span className="text-sm md:text-base font-medium text-black">{item.name}</span>
+          <ChevronDown className={cn('w-4 h-4 text-black/60 transition-transform', expanded && 'rotate-180')} />
+        </button>
+        <AnimatePresence>
+          {expanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className="pb-4 text-sm text-black/70 leading-relaxed">
+                {item.answer}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  };
 
-            {/* Scrollable Content Area */}
-            <div className="flex-1 overflow-y-auto relative scrollbar-hide">
-            
-            {/* Header Section */}
-            <div className="p-8 md:p-12 pb-0 md:pb-0 z-10 relative">
-                <div className="mb-12 md:mb-16">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="h-[1px] w-12" style={{ background: '#ffffff', boxShadow: '0 0 4px #ffffff' }}></div>
-                        <h4 className="font-serif italic text-lg" style={{ color: '#ffffff', textShadow: '0 0 4px #ffffff' }}>Knowledge Base</h4>
-                    </div>
-                    
-                    <div className="text-5xl md:text-7xl font-black tracking-tighter uppercase" style={{ color: '#ffffff', textShadow: '0 0 8px rgba(255, 255, 255, 0.6)' }}>
-                        <TrueFocus 
-                           sentence="Frequently Asked Questions"
-                           borderColor="#ffffff"
-                           glowColor="rgba(255, 255, 255, 0.6)"
-                           blurAmount={4}
-                        />
-                    </div>
-                </div>
-            </div>
+  const FaqCategoryCard = ({ data }: { data: FAQCategoryData }) => {
+    const [open, setOpen] = useState(false);
 
-            {/* Content List with Marquees */}
-            <div className="menu-wrap relative z-10" style={{ borderTop: '1px solid #ffffff', boxShadow: '0 -1px 4px rgba(255, 255, 255, 0.3)' }}>
-                <nav className="menu flex flex-col pb-20">
-                      {faqData.map((cat, idx) => (
-                       <FAQCategoryItem key={idx} data={cat} />
-                    ))}
-                </nav>
-            </div>
-            
-            {/* Footer Information */}
-            <div className="p-8 md:p-12 mt-4 bg-black" style={{ borderTop: '1px solid #ffffff', boxShadow: '0 -1px 4px rgba(255, 255, 255, 0.3)' }}>
-               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 text-xs uppercase tracking-widest">
-                   <div className="flex items-center gap-2" style={{ color: '#ffffff', textShadow: '0 0 4px rgba(255, 255, 255, 0.5)' }}>
-                       <ShieldAlert size={14} style={{ color: '#ffffff', filter: 'drop-shadow(0 0 4px #ffffff)' }} />
-                       <p>Trading involves high risk. No financial advice.</p>
-                   </div>
-                   <div className="flex gap-4">
-                       <a href={SUPPORT_URL} className="transition-colors flex items-center gap-2" style={{ color: '#ffffff', textShadow: '0 0 4px #ffffff' }}><Send size={14}/> Telegram</a>
-                   </div>
-               </div>
+    return (
+      <div className="rounded-2xl border border-black/10 bg-white">
+        <button
+          type="button"
+          onClick={() => setOpen((prev) => !prev)}
+          className="w-full flex items-center justify-between px-4 md:px-5 py-4 text-left"
+        >
+          <span className="text-base md:text-lg font-medium text-black">{data.category}</span>
+          <ChevronDown className={cn('w-5 h-5 text-black/60 transition-transform', open && 'rotate-180')} />
+        </button>
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden border-t border-black/10 px-4 md:px-5"
+            >
+              <div className="py-2">
+                {data.items.map((item, idx) => (
+                  <FaqItemRow key={`${data.category}-${idx}`} item={item} />
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  };
+
+  return (
+    <>
+      <div className="flex-1 overflow-y-auto overscroll-contain p-4 md:p-6" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="space-y-6">
+          <div className="p-4 md:p-5 rounded-2xl border border-black/10 bg-white">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-xl bg-black/5 flex items-center justify-center">
+                <HelpCircle className="w-4 h-4 text-black" />
+              </div>
+              <div>
+                <h3 className="text-base md:text-lg font-medium text-black">Frequently Asked Questions</h3>
+                <p className="text-xs md:text-sm text-black/50">Fast answers to the most common questions.</p>
+              </div>
             </div>
           </div>
 
-          {/* Bottom Gradient Blur */}
-          <GradualBlur position="bottom" />
-          
-          {/* Fixed Footer with CTA - Neon styled */}
-          <div className="flex justify-end p-6 bg-black relative z-50" style={{ borderTop: '1px solid #ffffff', boxShadow: '0 -1px 4px rgba(255, 255, 255, 0.3)' }}>
-             <a 
-               href={SUPPORT_URL} 
-               target="_blank" 
-               rel="noopener noreferrer"
-               className="group relative inline-flex items-center gap-3 px-8 py-3 rounded-full font-bold uppercase tracking-wider text-sm transition-all duration-300"
-               style={{
-                 background: 'transparent',
-                 color: '#ffffff',
-                 textShadow: '0 0 4px rgba(255, 255, 255, 0.6)',
-                 border: '2px solid #ffffff',
-                 boxShadow: '0 0 8px #ffffff, 0 0 16px rgba(255, 255, 255, 0.4)'
-               }}
-             >
-                Open Support Chat
-                <MessageSquare className="w-4 h-4" style={{ color: '#ffffff', filter: 'drop-shadow(0 0 4px #ffffff)' }} />
-             </a>
+          <div className="grid gap-4">
+            {faqData.map((cat, idx) => (
+              <FaqCategoryCard key={`${cat.category}-${idx}`} data={cat} />
+            ))}
           </div>
-        </>
-    )
+
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 rounded-2xl border border-black/10 bg-white px-4 md:px-5 py-4">
+            <div className="flex items-center gap-2 text-xs md:text-sm text-black/60">
+              <ShieldAlert className="w-4 h-4 text-black/40" />
+              <span>Trading involves risk. No financial advice.</span>
+            </div>
+            <a
+              href={SUPPORT_URL}
+              className="text-xs md:text-sm font-medium text-black hover:text-black/70 transition-colors flex items-center gap-2"
+            >
+              <Send className="w-4 h-4" />
+              Telegram
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div className="border-t border-black/10 p-4 md:p-6 bg-white">
+        <div className="flex justify-end">
+          <a
+            href={SUPPORT_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-medium transition-all active:scale-95"
+            style={{ background: '#111111', color: '#ffffff' }}
+          >
+            Open Support Chat
+            <MessageSquare className="w-4 h-4" />
+          </a>
+        </div>
+      </div>
+    </>
+  );
 }
 
 // ==========================================
 // 10. MAIN COMPONENT EXPORT - Static Neon Style
 // ==========================================
-export default function BullMoneyModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
+export default function BullMoneyModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [mounted, setMounted] = useState(false);
-  const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects } = useUnifiedPerformance();
+  const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    const mediaQuery = window.matchMedia('(min-width: 768px)');
+    const updateMatch = () => setIsDesktop(mediaQuery.matches);
+    updateMatch();
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', updateMatch);
+    } else {
+      mediaQuery.addListener(updateMatch);
+    }
+
+    return () => {
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', updateMatch);
+      } else {
+        mediaQuery.removeListener(updateMatch);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
     };
-    // Lock body scroll when modal is open (both mobile and desktop)
+
     if (isOpen) {
-        document.body.style.overflow = 'hidden';
-        window.addEventListener('keydown', handleKeyDown);
-    } else {
-        document.body.style.overflow = '';
-    }
-    return () => {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
         document.body.style.overflow = '';
         window.removeEventListener('keydown', handleKeyDown);
+      };
     }
+
+    document.body.style.overflow = '';
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [isOpen, onClose]);
 
   if (!mounted) return null;
@@ -720,84 +785,60 @@ export default function BullMoneyModal({ isOpen, onClose }: { isOpen: boolean, o
   return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <motion.div
-          initial={animations.modalBackdrop.initial as TargetAndTransition}
-          animate={animations.modalBackdrop.animate as TargetAndTransition}
-          exit={animations.modalBackdrop.exit as TargetAndTransition}
-          className="fixed inset-0 z-[2147483647] bg-black/80 backdrop-blur-xl"
-          onClick={onClose}
-        >
-          {/* Animated tap to close hints - Skip on mobile for performance */}
-          {!shouldSkipHeavyEffects && (
-            <>
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: [0.4, 0.8, 0.4] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute top-4 left-1/2 -translate-x-1/2 text-xs font-medium pointer-events-none flex items-center gap-1"
-                style={{ color: '#ffffff', textShadow: '0 0 4px #ffffff' }}
-              >
-                <span>↑</span> Tap anywhere to close <span>↑</span>
-              </motion.div>
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: [0.4, 0.8, 0.4] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-                className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs font-medium pointer-events-none flex items-center gap-1"
-                style={{ color: '#ffffff', textShadow: '0 0 4px #ffffff' }}
-              >
-                <span>↓</span> Tap anywhere to close <span>↓</span>
-              </motion.div>
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: [0.4, 0.8, 0.4] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.25 }}
-                className="absolute left-2 top-1/2 -translate-y-1/2 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
-                style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', color: '#ffffff', textShadow: '0 0 4px #ffffff' }}
-              >
-                ← Tap to close
-              </motion.div>
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: [0.4, 0.8, 0.4] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.75 }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-medium pointer-events-none writing-mode-vertical hidden sm:flex items-center gap-1"
-                style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', color: '#ffffff', textShadow: '0 0 4px #ffffff' }}
-              >
-                Tap to close →
-              </motion.div>
-            </>
-          )}
-          
+        <>
           <motion.div
-            initial={animations.modalContent.initial as TargetAndTransition}
-            animate={animations.modalContent.animate as TargetAndTransition}
-            exit={animations.modalContent.exit as TargetAndTransition}
-            transition={animations.modalContent.transition}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.12 }}
+            onClick={onClose}
+            className="fixed inset-0"
+            style={{ zIndex: 2147483648, background: 'rgba(0,0,0,0.2)' }}
+          />
+
+          <motion.div
+            initial={isDesktop ? { y: '-100%' } : { x: '100%' }}
+            animate={isDesktop ? { y: 0 } : { x: 0 }}
+            exit={isDesktop ? { y: '-100%' } : { x: '100%' }}
+            transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-[100vw] max-w-[100vw] h-[100dvh] max-h-[100dvh] bg-black overflow-y-auto flex flex-col"
-            style={{
-              border: '2px solid #ffffff',
-              boxShadow: isMobile ? 'none' : '0 0 20px rgba(255, 255, 255, 0.5), 0 0 40px rgba(255, 255, 255, 0.3)'
-            }}
+            className={
+              isDesktop
+                ? 'fixed top-0 left-0 right-0 w-full bg-white border-b border-black/10 flex flex-col safe-area-inset-bottom max-h-[90vh]'
+                : 'fixed top-0 right-0 bottom-0 w-full max-w-md bg-white border-l border-black/10 flex flex-col safe-area-inset-bottom'
+            }
+            style={{ zIndex: 2147483649, color: '#1d1d1f' }}
+            data-apple-section
           >
-            <button
+            <div className="flex items-center justify-between p-4 md:p-6 border-b border-black/10">
+              <button
                 onClick={onClose}
-                className="absolute top-6 right-6 z-50 p-2 rounded-full bg-black transition-colors group"
-                style={{
-                  border: '2px solid #ffffff',
-                  boxShadow: isMobile ? 'none' : '0 0 4px #ffffff, 0 0 8px rgba(255, 255, 255, 0.5)'
-                }}
-                title="Close (ESC)"
-                data-modal-close="true"
-            >
-                <X className="w-5 h-5" style={{ color: '#ffffff', filter: isMobile ? 'none' : 'drop-shadow(0 0 4px #ffffff)' }} />
-                <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap" style={{ color: '#ffffff', textShadow: '0 0 4px #ffffff' }}>ESC</span>
-            </button>
-            
+                className="h-10 w-10 rounded-xl bg-black/5 flex items-center justify-center hover:bg-black/10 active:scale-95 transition-all"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="h-9 w-9 rounded-xl bg-black/5 flex items-center justify-center">
+                  <HelpCircle className="w-4 h-4 md:w-5 md:h-5" />
+                </div>
+                <div className="leading-tight text-center">
+                  <h2 className="text-lg md:text-xl font-light">FAQ</h2>
+                  <p className="text-[10px] font-medium" style={{ color: 'rgba(0,0,0,0.4)' }}>BullMoney support</p>
+                </div>
+              </div>
+
+              <button
+                onClick={onClose}
+                className="h-9 w-9 md:h-10 md:w-10 rounded-xl bg-black/5 flex items-center justify-center hover:bg-black/10 active:scale-95 transition-all"
+              >
+                <X className="w-4 h-4 md:w-5 md:h-5" />
+              </button>
+            </div>
+
             <FaqModalContent onClose={onClose} />
           </motion.div>
-        </motion.div>
+        </>
       )}
     </AnimatePresence>,
     document.body

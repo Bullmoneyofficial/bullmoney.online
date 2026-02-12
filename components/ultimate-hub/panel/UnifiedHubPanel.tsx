@@ -655,6 +655,18 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
     return () => root.classList.remove('ultimate-hub-mobile-open');
   }, [isOpen, isMobile]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleOutsidePointer = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (panelRef.current && panelRef.current.contains(target)) return;
+      onClose();
+    };
+    document.addEventListener('pointerdown', handleOutsidePointer, true);
+    return () => document.removeEventListener('pointerdown', handleOutsidePointer, true);
+  }, [isOpen, onClose]);
+
   const portalContent = (
     <AnimatePresence>
       {isOpen && (
@@ -665,10 +677,37 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className={`fixed inset-0 z-[10000] flex items-stretch justify-end ${isMobile ? 'bg-black/70' : 'bg-white/80 backdrop-blur-md'} ultimate-hub-backdrop`}
+            className="fixed inset-0 z-[10000] flex items-stretch justify-end bg-transparent lg:bg-white/80 lg:backdrop-blur-md ultimate-hub-backdrop"
             onClick={onClose}
+            onPointerDown={(event) => {
+              event.preventDefault();
+              onClose();
+            }}
+            onTouchStart={(event) => {
+              event.preventDefault();
+              onClose();
+            }}
             style={{ pointerEvents: 'all' }}
           />
+
+          <div className="fixed left-2 top-1/2 -translate-y-1/2 z-[10004] flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="h-9 w-9 rounded-full bg-black/80 text-white shadow-lg flex items-center justify-center"
+              aria-label={isMobile ? 'Tap to close' : 'Click to close'}
+            >
+              <X className="w-4 h-4" strokeWidth={2.5} />
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-full bg-black/70 px-2 py-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-white shadow-lg"
+              style={{ writingMode: 'vertical-lr', textOrientation: 'mixed' }}
+            >
+              {isMobile ? 'Tap outside to exit' : 'Click outside to exit'}
+            </button>
+          </div>
 
           {/* Floating Tab Control (Outside Modal) */}
           <div className="fixed inset-0 z-[10001] pointer-events-none">
@@ -710,11 +749,11 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
-            className="fixed right-0 top-0 z-[10003] w-full max-w-[100vw] sm:max-w-[88vw] md:max-w-3xl lg:max-w-4xl h-[100dvh] max-h-[100dvh] overflow-y-auto bg-white text-black border-l border-black/10 shadow-2xl [&_button]:bg-black [&_button]:text-white [&_button]:border-black/90 [&_button]:hover:bg-black/90 [&_button_svg]:text-white"
+            className="fixed right-0 top-0 z-[10003] w-full max-w-[320px] sm:max-w-xl md:max-w-2xl lg:max-w-3xl h-[100dvh] max-h-[100dvh] overflow-y-auto bg-white text-black border-l border-black/10 shadow-2xl [&_button]:bg-black [&_button]:text-white [&_button]:border-black/90 [&_button]:hover:bg-black/90 [&_button_svg]:text-white"
             style={{ pointerEvents: 'all' }}
           >
             {/* Header with FPS Display */}
-            <div className="sticky top-0 z-30 p-2.5 sm:p-3 pr-12 border-b border-black/10 bg-white/90">
+            <div className="sticky top-0 z-30 p-1 sm:p-4 md:p-5 pr-12 border-b border-black/10 bg-white/90">
               <div className="relative">
               <div className="flex items-center justify-between gap-3">
                 {/* FPS Badge */}
@@ -793,7 +832,7 @@ ${browserCapabilities.audioCodecs.length > 0 ? `Audio Codecs: ${browserCapabilit
             </div>
             
             {/* Body: Content flows inside scrollable panel */}
-            <div className="w-full">
+            <div className="w-full px-1 sm:px-6 md:px-8 py-1.5 sm:py-6 md:py-8">
               {/* Tab Carousel - Mobile/Tablet only (desktop has floating version above modal) */}
               <div className="lg:hidden">
                 <HubTabCarousel activeTab={activeTab} setActiveTab={setActiveTab} />

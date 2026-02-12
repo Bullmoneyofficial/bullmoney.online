@@ -2651,7 +2651,6 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
         >
           {isDesktop && columnHeaderSection}
           {isDesktop && heroMode === 'store' && featuresSection}
-          {isDesktop && heroMode === 'store' && metaMarketIntelligenceSection}
           {isDesktop && heroMode === 'trader' && dashboardsSection}
         </div>
 
@@ -2698,7 +2697,7 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
       {!isDesktop && productsSectionBlock}
 
       {!isDesktop && featuresSection}
-      {!isDesktop && metaMarketIntelligenceSection}
+      {!isDesktop && heroMode === 'trader' && metaMarketIntelligenceSection}
       {!isDesktop && testimonialsSection}
 
       {/* Market Quotes — show on mobile below testimonials (trader mode only) */}

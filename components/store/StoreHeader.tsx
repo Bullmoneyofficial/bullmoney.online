@@ -15,7 +15,7 @@ import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
 import { useCartStore } from '@/stores/cart-store';
 import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { useProductsModalUI, useThemeSelectorModalUI, useStoreMenuUI } from '@/contexts/UIStateContext';
+import { useProductsModalUI, useThemeSelectorModalUI, useStoreMenuUI, useGamesDrawerUI, useUIState } from '@/contexts/UIStateContext';
 import dynamic from 'next/dynamic';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useHeroMode } from '@/hooks/useHeroMode';
@@ -37,6 +37,7 @@ const StorePillNav = dynamic(() => import('./StorePillNav').then(m => ({ default
 const LanguageToggle = dynamic(() => import('@/components/LanguageToggle').then(m => ({ default: m.LanguageToggle })), { ssr: false, loading: () => null });
 const RewardsCardBanner = dynamic(() => import('@/components/RewardsCardBanner'), { ssr: false, loading: () => null });
 const ProductsModal = dynamic(() => import('@/components/ProductsModal').then(m => ({ default: m.ProductsModal })), { ssr: false, loading: () => null });
+const GamesDrawer = dynamic(() => import('@/components/GamesDrawer').then(m => ({ default: m.GamesDrawer })), { ssr: false, loading: () => null });
 const CartDrawer = dynamic(() => import('@/components/shop/CartDrawer').then(m => ({ default: m.CartDrawer })), { ssr: false, loading: () => null });
 
 // ============================================================================
@@ -49,7 +50,7 @@ const CartDrawer = dynamic(() => import('@/components/shop/CartDrawer').then(m =
 const STORE_NAV_ITEMS = [
   { href: '/', label: 'Home', category: '' },
   { href: '/design', label: 'Design', category: '' },
-  { href: '/games', label: 'Games', category: '' },
+  { href: '#action:games', label: 'Games', category: '' },
   { href: '#action:products', label: 'Products', category: '' },
   { href: '#action:faq', label: 'FAQ', category: '' },
   { href: '#action:themes', label: 'Themes', category: '' },
@@ -97,6 +98,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     setDesktopMenuOpen,
     setDropdownMenuOpen: setManualDropdownOpen,
   } = useStoreMenuUI();
+  const { isUltimateHubOpen } = useUIState();
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [affiliateModalOpen, setAffiliateModalOpen] = useState(false);
   const [faqModalOpen, setFaqModalOpen] = useState(false);
@@ -114,6 +116,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   const [devAdminEnabled, setDevAdminEnabled] = useState(true);
   const effectiveAdmin = isDev && isAdmin && devAdminEnabled;
   const { open: openProductsModal, isOpen: isProductsModalOpen } = useProductsModalUI();
+  const { open: openGamesDrawer, isOpen: isGamesDrawerOpen } = useGamesDrawerUI();
   const { setIsOpen: setThemePickerModalOpen } = useThemeSelectorModalUI();
   const itemCount = getItemCount();
   const router = useRouter();
@@ -184,12 +187,16 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       const stored = localStorage.getItem('store_show_ultimate_hub');
       // Default to false (hide) unless explicitly enabled
       setShowUltimateHub(stored === 'true');
-      // Broadcast current state so listeners sync immediately on load
-      const currentValue = stored === 'true';
-      window.dispatchEvent(new CustomEvent('store_ultimate_hub_toggle', { detail: currentValue }));
-      window.dispatchEvent(new Event('store_ultimate_hub_toggle'));
     }
   }, []);
+
+  // Persist and broadcast Ultimate Hub changes after render
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem('store_show_ultimate_hub', String(showUltimateHub));
+    window.dispatchEvent(new CustomEvent('store_ultimate_hub_toggle', { detail: showUltimateHub }));
+    window.dispatchEvent(new Event('store_ultimate_hub_toggle'));
+  }, [showUltimateHub]);
 
   // Load Design Sections preference
   useEffect(() => {
@@ -217,11 +224,6 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   const applyUltimateHubToggle = useCallback((nextValue?: boolean) => {
     setShowUltimateHub(prev => {
       const newValue = typeof nextValue === 'boolean' ? nextValue : !prev;
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('store_show_ultimate_hub', String(newValue));
-        window.dispatchEvent(new CustomEvent('store_ultimate_hub_toggle', { detail: newValue }));
-        window.dispatchEvent(new Event('store_ultimate_hub_toggle'));
-      }
       return newValue;
     });
   }, []);
@@ -255,7 +257,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
 
   const desktopLinks = useMemo(() => {
     const links = [
-      { label: 'Games', href: '/games', variant: 'link' as const },
+      { label: 'Games', onClick: () => router.push('/games'), variant: 'link' as const },
       { label: 'Affiliates', onClick: () => setAffiliateModalOpen(true), variant: 'link' as const },
       { label: 'Products', onClick: () => openProductsModal(), variant: 'link' as const },
       { label: 'FAQ', onClick: () => setFaqModalOpen(true), variant: 'link' as const },
@@ -265,7 +267,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     ];
 
     return links;
-  }, [openProductsModal, setAffiliateModalOpen, setFaqModalOpen, showThemePicker, showUltimateHub, toggleThemePicker, toggleUltimateHub, isDesignPage, showDesignSections, toggleDesignSections]);
+  }, [router, openProductsModal, setAffiliateModalOpen, setFaqModalOpen, showThemePicker, showUltimateHub, toggleThemePicker, toggleUltimateHub, isDesignPage, showDesignSections, toggleDesignSections]);
 
   // Check if there's a canvas section in the viewport (below header)
   const isOverCanvasSection = useCallback(() => {
@@ -291,6 +293,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   }, []);
 
   const openDesktopMenu = useCallback(() => {
+    if (isUltimateHubOpen) return; // Never open desktop menu when Ultimate Hub is active
     if (isCasinoPage) return; // Disable hover menu on games pages
     if (isOverCanvasSection()) return; // Disable if cursor is over canvas sections
     if (desktopMenuCloseTimer.current) {
@@ -298,7 +301,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       desktopMenuCloseTimer.current = null;
     }
     setDesktopMenuOpen(true);
-  }, [isCasinoPage, isOverCanvasSection]);
+  }, [isUltimateHubOpen, isCasinoPage, isOverCanvasSection]);
 
   const scheduleDesktopMenuClose = useCallback(() => {
     if (desktopMenuCloseTimer.current) {
@@ -310,10 +313,11 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   }, []);
 
   const toggleDesktopMenu = useCallback(() => {
+    if (isUltimateHubOpen) return; // Never toggle desktop menu when Ultimate Hub is active
     if (isCasinoPage) return; // Ignore toggle on games pages
     SoundEffects.click();
     setDesktopMenuOpen(!desktopMenuOpen);
-  }, [isCasinoPage, desktopMenuOpen, setDesktopMenuOpen]);
+  }, [isUltimateHubOpen, isCasinoPage, desktopMenuOpen, setDesktopMenuOpen]);
 
   // Ensure desktop menu stays closed on games pages
   useEffect(() => {
@@ -379,6 +383,14 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       openProductsModal();
       return;
     }
+    if (href === '#action:games' || href === '/games') {
+      if (typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches) {
+        router.push('/games');
+      } else {
+        openGamesDrawer();
+      }
+      return;
+    }
     if (href === '#action:faq') {
       setFaqModalOpen(true);
       return;
@@ -402,13 +414,14 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
         }
       }, 100);
     }
-  }, [router, startPagemodeLogin, openProductsModal, setFaqModalOpen, toggleThemePicker, toggleUltimateHub]);
+  }, [router, startPagemodeLogin, openGamesDrawer, openProductsModal, setFaqModalOpen, toggleThemePicker, toggleUltimateHub]);
 
 
   const handleOpenMobileMenu = useCallback(() => {
+    if (isUltimateHubOpen) return; // Never open mobile menu when Ultimate Hub is active
     setMobileMenuOpen(true);
     requestAnimationFrame(() => SoundEffects.open());
-  }, []);
+  }, [isUltimateHubOpen]);
 
   const handleCloseMobileMenu = useCallback(() => {
     setMobileMenuOpen(false);
@@ -416,12 +429,13 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   }, []);
 
   const handleManualClick = useCallback(() => {
+    if (isUltimateHubOpen) return; // Never open dropdown when Ultimate Hub is active
     SoundEffects.click();
     if (isCasinoPage) {
       // On games pages, manual button toggles inline dropdown
       setManualDropdownOpen(!manualDropdownOpen);
     }
-  }, [isCasinoPage, manualDropdownOpen, setManualDropdownOpen]);
+  }, [isUltimateHubOpen, isCasinoPage, manualDropdownOpen, setManualDropdownOpen]);
 
   const handleHomeClick = useCallback(() => {
     SoundEffects.click();
@@ -581,14 +595,16 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                 >
                   Products
                 </button>
-                <Link
-                  href="/games"
-                  onClick={() => setDesktopMenuOpen(false)}
-                  className="block text-left text-2xl font-medium tracking-tight transition-colors hover:bg-neutral-100 px-2 py-1 rounded"
+                <button
+                  onClick={() => {
+                    setDesktopMenuOpen(false);
+                    router.push('/games');
+                  }}
+                  className="block text-left text-2xl font-medium tracking-tight transition-colors hover:bg-neutral-100 px-2 py-1 rounded w-full"
                   style={{ color: '#000000' }}
                 >
                   Games
-                </Link>
+                </button>
                 <Link
                   href="/design"
                   onClick={() => setDesktopMenuOpen(false)}
@@ -1090,14 +1106,16 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                 >
                   Products
                 </button>
-                <Link
-                  href="/games"
-                  onClick={() => setMobileMenuOpen(false)}
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    openGamesDrawer();
+                  }}
                   className="block text-left text-2xl font-medium tracking-tight transition-colors"
                   style={{ color: 'rgba(0,0,0,0.95)' }}
                 >
                   Games
-                </Link>
+                </button>
                 <Link
                   href="/design"
                   onClick={() => setMobileMenuOpen(false)}
@@ -1146,6 +1164,9 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       
       {/* Products Modal - Rendered once, controlled by context */}
       {isProductsModalOpen && <ProductsModal />}
+
+      {/* Games Drawer - Rendered once, controlled by context */}
+      {isGamesDrawerOpen && <GamesDrawer />}
       
       {/* Affiliate Modal - Using Lazy System */}
       <LazyAffiliateModal
