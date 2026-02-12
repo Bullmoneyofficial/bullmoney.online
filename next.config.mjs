@@ -31,19 +31,25 @@ console.log(`[Next.js Config] ${platform} ${arch} | ${cpus} cores | Optimization
 // Auto-generate build timestamp for cache versioning
 const BUILD_TIMESTAMP = new Date().toISOString();
 
-const optimizePackageImports = isDev
-  ? []
-  : [
-      'lucide-react',
-      'framer-motion',
-      '@tabler/icons-react',
-      'react-icons',
-      '@radix-ui/react-dialog',
-      '@radix-ui/react-dropdown-menu',
-      '@radix-ui/react-select',
-      'date-fns',
-      'recharts',
-    ];
+// ALWAYS optimize heavy barrel-export packages — even in dev mode
+// This prevents Turbopack from parsing entire package entry points
+// when only a few exports are used (e.g., 34 icons from lucide-react = whole lib)
+const optimizePackageImports = [
+  'lucide-react',
+  'framer-motion',
+  '@tabler/icons-react',
+  'react-icons',
+  '@radix-ui/react-dialog',
+  '@radix-ui/react-dropdown-menu',
+  '@radix-ui/react-select',
+  '@radix-ui/react-tooltip',
+  '@radix-ui/react-tabs',
+  'date-fns',
+  'recharts',
+  'three',
+  'gsap',
+  '@supabase/supabase-js',
+];
 
 const nextConfig = {
   reactStrictMode: false, // Disable StrictMode in prod - reduces double renders

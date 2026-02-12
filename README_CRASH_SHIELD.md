@@ -9,7 +9,7 @@ The Mobile Crash Shield is **fully implemented** and **ready to use**. Here's wh
 ## 📦 What's Included
 
 ### Core System (Automatic)
-✅ **`/public/scripts/mobile-crash-shield.js`** (451 lines, ~6KB)
+✅ **`/public/scripts/BMBRAIN/mobile-crash-shield.js`** (451 lines, ~6KB)
    - Automatically loads on every page
    - Monitors memory usage continuously
    - Cleans caches intelligently
@@ -270,7 +270,7 @@ Simple hooks, clear examples, comprehensive docs.
 ```
 /components/examples/SmartSplineExample.tsx  ← Working examples
 /hooks/useMobileCrashShield.ts               ← Hook source code
-/public/scripts/mobile-crash-shield.js       ← Shield source code
+/public/scripts/BMBRAIN/mobile-crash-shield.js       ← Shield source code
 ```
 
 ### Browser Console

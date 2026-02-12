@@ -3,9 +3,10 @@
 import { useState, useEffect, useRef, useCallback, type CSSProperties } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { detectBrowser } from "@/lib/browserDetection";
-import { GLASS_STYLES } from "@/styles/glassStyles";
-import { deferAnalytics, smartPrefetch } from "@/lib/prefetchHelper";
+// ✅ LAZY-LOADED: These modules are only used in useEffect callbacks,
+// so we use dynamic import() to avoid adding them to the compile-time module graph.
+// browserDetection (309 lines), glassStyles (62 lines), prefetchHelper (170 lines)
+// = 541 fewer lines in the critical compile chain
 
 // Store Header replaces default navbar on app page
 const StoreHeader = dynamic(() => import("@/components/store/StoreHeader").then(mod => ({ default: mod.StoreHeader })), { ssr: false }) as any;
@@ -42,16 +43,14 @@ import {
   TestimonialsCarousel,
 } from "@/components/home/dynamicImports";
 
-// UNIFIED SHIMMER SYSTEM - These are lightweight CSS animations, safe to import statically
-import {
-  ShimmerBorder,
-  ShimmerLine,
-  ShimmerSpinner,
-  ShimmerDot,
-  ShimmerFloat,
-  ShimmerRadialGlow,
-  ShimmerContainer
-} from "@/components/ui/UnifiedShimmer";
+// ✅ SHIMMER: Only 2 of 7 exports were used — inline them instead of importing 1,561-line module
+// Eliminated: ShimmerBorder, ShimmerLine, ShimmerDot, ShimmerFloat, ShimmerContainer (all unused)
+const ShimmerSpinner = ({ size = 48, color = "white" }: { size?: number; color?: string }) => (
+  <div style={{ width: size, height: size, border: `2px solid ${color}33`, borderTop: `2px solid ${color}`, borderRadius: '50%', animation: 'bm-spin 0.8s linear infinite' }} />
+);
+const ShimmerRadialGlow = ({ color = "white", intensity = "low" }: { color?: string; intensity?: string }) => (
+  <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(circle, ${color}${intensity === 'low' ? '0a' : '1a'} 0%, transparent 70%)` }} />
+);
 
 import { useUnifiedPerformance } from "@/lib/UnifiedPerformanceSystem";
 import { useComponentTracking, useCrashTracker } from "@/lib/CrashTracker";
@@ -128,27 +127,6 @@ const DiscordMobileHero = dynamic(
 
 import { useDevSkipShortcut } from "@/hooks/useDevSkipShortcut";
 
-// ✅ SECTION IMPORTS - All page sections in one file for easier editing
-const ToastProvider = dynamic(
-  () => import("./PageSections").then(mod => mod.ToastProvider),
-  { ssr: false, loading: () => null }
-);
-
-const TelegramSection = dynamic(
-  () => import("./PageSections").then(mod => mod.TelegramSection),
-  { ssr: false, loading: () => <MinimalFallback /> }
-);
-
-const QuotesSection = dynamic(
-  () => import("./PageSections").then(mod => mod.QuotesSection),
-  { ssr: false, loading: () => <MinimalFallback /> }
-);
-
-const BreakingNewsSection = dynamic(
-  () => import("./PageSections").then(mod => mod.BreakingNewsSection),
-  { ssr: false, loading: () => <MinimalFallback /> }
-);
-
 const TelegramUnlockScreen = dynamic(
   () => import("@/components/REGISTER USERS/TelegramConfirmationResponsive").then(mod => ({
     default: mod.TelegramConfirmationResponsive,
@@ -156,14 +134,6 @@ const TelegramUnlockScreen = dynamic(
   { ssr: false, loading: () => <MinimalFallback /> }
 );
 
-
-// Lazy load Spline modals - only loaded when actually opened
-const SplineModals = dynamic(
-  () => import("@/components/SplineModals").then(mod => ({
-    default: () => null // This will be replaced with actual exports
-  })),
-  { ssr: false }
-);
 
 import type { RemoteSplineMeta } from "@/components/SplineModals";
 
@@ -232,22 +202,21 @@ function HomeContent() {
   const splinePreloadRanRef = useRef(false);
   const { setLoaderv2Open, setV2Unlocked, devSkipPageModeAndLoader, setDevSkipPageModeAndLoader, openDiscordStageModal, openAccountManagerModal } = useUIState();
 
-  // Defer analytics initialization until after page is interactive
+  // Defer analytics + prefetch — lazy-loaded to avoid compiling 170+309 lines up front
   useEffect(() => {
-    deferAnalytics(() => {
-      import("@/lib/analytics").then(({ trackEvent, BullMoneyAnalytics }) => {
-        // Analytics is now loaded and ready
-        console.log('[Performance] Analytics loaded after page interaction');
+    import("@/lib/prefetchHelper").then(({ deferAnalytics, smartPrefetch }) => {
+      deferAnalytics(() => {
+        import("@/lib/analytics").then(() => {
+          console.log('[Performance] Analytics loaded after page interaction');
+        });
       });
+      smartPrefetch([
+        { href: '/store', options: { priority: 'low' } },
+        { href: '/trading-showcase', options: { priority: 'low' } },
+        { href: '/community', options: { priority: 'low' } },
+        { href: '/course', options: { priority: 'low' } },
+      ]);
     });
-
-    // Smart prefetch likely navigation routes after initial load
-    smartPrefetch([
-      { href: '/store', options: { priority: 'low' } },
-      { href: '/trading-showcase', options: { priority: 'low' } },
-      { href: '/community', options: { priority: 'low' } },
-      { href: '/course', options: { priority: 'low' } },
-    ]);
   }, []);
 
   // Check for Account Manager query parameter and open modal
@@ -523,6 +492,7 @@ function HomeContent() {
   useEffect(() => {
     const preloadSplineEngine = async () => {
       try {
+        const { detectBrowser } = await import("@/lib/browserDetection");
         const browserInfo = detectBrowser();
         const safeForSplinePreload = !browserInfo.isInAppBrowser
           && browserInfo.canHandle3D
@@ -810,10 +780,17 @@ function HomeContent() {
     setCurrentView('content');
   }, [setV2Unlocked]);
 
+  // Lazy-load GLASS_STYLES to avoid compiling glassStyles module at startup
+  const [glassStyles, setGlassStyles] = useState('');
+  useEffect(() => {
+    import("@/styles/glassStyles").then(mod => setGlassStyles(mod.GLASS_STYLES));
+  }, []);
+
   if (!isInitialized) {
     return (
       <>
         <style jsx global>{`
+          @keyframes bm-spin { to { transform: rotate(360deg) } }
           nav, footer, header {
             opacity: 0 !important;
             pointer-events: none !important;
@@ -830,7 +807,7 @@ function HomeContent() {
 
   return (
     <>
-      <style>{GLASS_STYLES}</style>
+      <style>{glassStyles}</style>
       
       {currentView === 'pagemode' && (
         <div className="fixed inset-0 z-99999 bg-black">

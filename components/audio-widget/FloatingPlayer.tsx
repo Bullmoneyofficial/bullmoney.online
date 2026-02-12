@@ -509,7 +509,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
             /* Compact circular wave button when modals/UI is open */
             <motion.div
               key="compact-pill-div"
-              className="fixed bottom-[78px] md:bottom-[70px] pointer-events-none"
+              className="fixed bottom-[128px] md:bottom-[90px] pointer-events-none"
               style={{ 
                 zIndex: Z_INDEX.CAMERA_MODAL,
                 ...(playerSide === 'right'
@@ -595,7 +595,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
             /* Compact circular wave version when scrolling while minimized */
             <motion.div
               key="scroll-compact-pill-div"
-              className="fixed bottom-[78px] md:bottom-[70px] pointer-events-none"
+              className="fixed bottom-[128px] md:bottom-[90px] pointer-events-none"
               style={{ 
                 zIndex: Z_INDEX.CAMERA_MODAL,
                 ...(playerSide === 'right'
@@ -704,7 +704,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
               }
             }}
             className={cn(
-              "fixed bottom-[78px] md:bottom-[70px] flex items-center justify-center",
+              "fixed bottom-[128px] md:bottom-[90px] flex items-center justify-center",
               "w-9 h-9 md:w-12 md:h-12 min-w-[36px] min-h-[36px] md:min-w-[48px] md:min-h-[48px] rounded-full",
               "border border-white/40",
               "transition-all duration-200",
@@ -814,7 +814,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
         } : {
           position: 'fixed',
           // Position: When expanded, sits above content. When scroll minimized, hide above.
-          bottom: isScrollMinimized ? (60 + 200) : (60 + 180),
+          bottom: isScrollMinimized ? (110 + 200) : (110 + 180),
           [playerSide]: isScrollMinimized ? 8 : (playerSide === 'left' ? 8 : 8),
           // Size: Full size when expanded, minimal when scroll minimized
           width: isScrollMinimized ? 0.01 : 254,
@@ -862,7 +862,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
             "bg-linear-to-br from-white/20 via-white/10 to-black/60 hover:from-white/30 hover:to-black/70",
             "border border-white/50 shadow-lg hover:shadow-white/60"
           )}
-          style={{ bottom: 200, zIndex: Z_INDEX.PULL_TAB, left: '8px' }}
+          style={{ bottom: 240, zIndex: Z_INDEX.PULL_TAB, left: '8px' }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
@@ -904,7 +904,7 @@ export const FloatingPlayer = React.memo(function FloatingPlayer(props: Floating
             className="fixed pointer-events-auto"
             style={{ 
               [playerSide]: 0, 
-              bottom: 60, 
+              bottom: 110, 
               pointerEvents: (open || playerHidden) ? 'none' : 'auto',
               filter: `brightness(${brightness / 100})`,
               zIndex: Z_INDEX.PLAYER_BASE,

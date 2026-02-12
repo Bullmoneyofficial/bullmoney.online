@@ -247,15 +247,53 @@ export default function RootLayout({
       <head>
         {/* INSTANT SPLASH: Prevents white/black flash before React hydrates */}
         <style dangerouslySetInnerHTML={{ __html: `
-html,body{background:#050915!important;}
-#bm-splash{position:fixed;inset:0;z-index:99999;background:#050915;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;opacity:1;transition:opacity .35s ease-out,visibility .35s ease-out;}
-#bm-splash.hide{opacity:0;visibility:hidden;pointer-events:none;}
-#bm-splash img{width:64px;height:64px;animation:bm-pulse 1.6s ease-in-out infinite;}
-#bm-splash .bm-name{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:22px;font-weight:700;letter-spacing:.04em;color:#fff;opacity:.92;}
-#bm-splash .bm-bar{width:120px;height:3px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:4px;}
-#bm-splash .bm-bar::after{content:"";display:block;width:40%;height:100%;border-radius:3px;background:linear-gradient(90deg,#ffd700,#f59e0b);animation:bm-slide 1s ease-in-out infinite alternate;}
-@keyframes bm-pulse{0%,100%{opacity:.85;transform:scale(1)}50%{opacity:1;transform:scale(1.04)}}
-@keyframes bm-slide{0%{transform:translateX(0)}100%{transform:translateX(200%)}}
+      html,body{background:#ffffff!important;}
+      #bm-splash{position:fixed;inset:0;z-index:99999;background:#ffffff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;opacity:1;transition:opacity .6s cubic-bezier(.4,0,.2,1),visibility .6s cubic-bezier(.4,0,.2,1),filter .6s cubic-bezier(.4,0,.2,1),transform .6s cubic-bezier(.4,0,.2,1);overflow:hidden;}
+      #bm-splash.hide{opacity:0;visibility:hidden;pointer-events:none;filter:blur(15px);transform:scale(1.05);}
+
+      /* Subtle radial gradient overlay */
+      #bm-splash::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at center,rgba(0,0,0,0.02) 0%,rgba(255,255,255,0) 70%);z-index:0;}
+
+      /* Logo container */
+      #bm-splash .bm-logo-wrap{position:relative;z-index:10;width:120px;height:120px;display:flex;align-items:center;justify-content:center;margin-bottom:24px;animation:bm-logo-float 3s ease-in-out infinite;}
+      #bm-splash .bm-logo-wrap svg{width:100%;height:100%;filter:drop-shadow(0 0 20px rgba(0,0,0,0.08));}
+
+      /* Title */
+      #bm-splash .bm-title{position:relative;z-index:10;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",Inter,"Segoe UI",Roboto,sans-serif;font-size:42px;font-weight:700;letter-spacing:-.02em;line-height:1;margin-bottom:6px;background:linear-gradient(110deg,#a1a1aa 15%,#18181b 45%,#18181b 55%,#a1a1aa 85%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:bm-shimmer 3.5s linear infinite;}
+
+      /* Subtitle */
+      #bm-splash .bm-subtitle{position:relative;z-index:10;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,"Segoe UI",Roboto,sans-serif;font-size:11px;font-weight:600;letter-spacing:.5em;text-transform:uppercase;color:rgba(0,0,0,.35);margin-bottom:32px;}
+
+      /* Progress section */
+      #bm-splash .bm-progress-wrap{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;gap:16px;}
+
+      /* Percentage */
+      #bm-splash .bm-percent{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Monaco,Consolas,monospace;font-size:56px;font-weight:700;letter-spacing:-.04em;line-height:1;background:linear-gradient(110deg,#a1a1aa 15%,#18181b 45%,#18181b 55%,#a1a1aa 85%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:bm-shimmer 3.5s linear infinite;font-variant-numeric:tabular-nums;}
+
+      /* Status pill */
+      #bm-splash .bm-status{display:flex;align-items:center;gap:12px;background:rgba(0,0,0,.03);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:8px 20px;border-radius:9999px;border:1px solid rgba(0,0,0,.06);box-shadow:0 1px 3px rgba(0,0,0,.04);}
+      #bm-splash .bm-dot-wrap{position:relative;display:flex;width:10px;height:10px;}
+      #bm-splash .bm-dot-ping{position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.25);animation:bm-ping 1s cubic-bezier(0,0,.2,1) infinite;}
+      #bm-splash .bm-dot{position:relative;width:10px;height:10px;border-radius:50%;background:#18181b;}
+      #bm-splash .bm-status-text{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Monaco,Consolas,monospace;font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(0,0,0,.5);}
+
+      /* Loading bar */
+      #bm-splash .bm-bar-outer{width:200px;height:2px;border-radius:2px;background:rgba(0,0,0,.06);overflow:hidden;margin-top:8px;}
+      #bm-splash .bm-bar-inner{width:0%;height:100%;border-radius:2px;background:linear-gradient(90deg,#18181b,#3f3f46,#18181b);transition:width .3s ease-out;}
+
+      /* Loading steps */
+      #bm-splash .bm-steps{display:flex;flex-direction:column;gap:6px;margin-top:20px;position:relative;z-index:10;}
+      #bm-splash .bm-step{display:flex;align-items:center;gap:10px;font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Monaco,Consolas,monospace;font-size:11px;letter-spacing:.05em;color:rgba(0,0,0,.25);transition:color .3s ease,opacity .3s ease;opacity:.5;}
+      #bm-splash .bm-step.active{color:rgba(0,0,0,.8);opacity:1;}
+      #bm-splash .bm-step.done{color:rgba(0,0,0,.35);opacity:.7;}
+      #bm-splash .bm-step-icon{width:14px;height:14px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;font-size:8px;flex-shrink:0;transition:all .3s ease;}
+      #bm-splash .bm-step.active .bm-step-icon{background:rgba(0,0,0,.06);}
+      #bm-splash .bm-step.done .bm-step-icon{background:#18181b;color:#fff;}
+
+      @keyframes bm-logo-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+      @keyframes bm-shimmer{0%{background-position:0% 50%;opacity:.4}50%{background-position:-200% 50%;opacity:1}100%{background-position:0% 50%;opacity:.4}}
+      @keyframes bm-ping{75%,100%{transform:scale(2);opacity:0}}
+      @media(min-width:768px){#bm-splash .bm-logo-wrap{width:160px;height:160px;}#bm-splash .bm-title{font-size:64px;}#bm-splash .bm-percent{font-size:72px;}}
         ` }} />
         {/* CRITICAL: Blocking init — served as static file (no Turbopack compilation cost) */}
         <script src="/scripts/splash-init.js" />
@@ -488,9 +526,35 @@ html,body{background:#050915!important;}
       >
         {/* INSTANT SPLASH: Shows BullMoney logo + name before React hydrates */}
         <div id="bm-splash" aria-hidden="true" suppressHydrationWarning>
-          <img src="/ONcc2l601.svg" alt="" width={64} height={64} />
-          <span className="bm-name">BullMoney</span>
-          <div className="bm-bar" />
+          {/* Logo */}
+          <div className="bm-logo-wrap">
+            <svg viewBox="0 0 16 16" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M2 1H8.625C11.0412 1 13 2.95875 13 5.375C13 6.08661 12.8301 6.75853 12.5287 7.35243C13.4313 8.15386 14 9.32301 14 10.625C14 13.0412 12.0412 15 9.625 15H2V1ZM5.5 9.75V11.5H9.625C10.1082 11.5 10.5 11.1082 10.5 10.625C10.5 10.1418 10.1082 9.75 9.625 9.75H5.5ZM5.5 6.25H8.625C9.10825 6.25 9.5 5.85825 9.5 5.375C9.5 4.89175 9.10825 4.5 8.625 4.5H5.5V6.25Z"
+                fill="#18181b"
+              />
+            </svg>
+          </div>
+          {/* Title */}
+          <span className="bm-title">BULLMONEY</span>
+          <span className="bm-subtitle">Premium Gateway</span>
+          {/* Progress section */}
+          <div className="bm-progress-wrap">
+            <span className="bm-percent" id="bm-splash-pct" suppressHydrationWarning>00%</span>
+            <div className="bm-status">
+              <span className="bm-dot-wrap"><span className="bm-dot-ping" /><span className="bm-dot" /></span>
+              <span className="bm-status-text" id="bm-splash-status" suppressHydrationWarning>INITIALIZING</span>
+            </div>
+            <div className="bm-bar-outer"><div className="bm-bar-inner" id="bm-splash-bar" suppressHydrationWarning /></div>
+            <div className="bm-steps" id="bm-splash-steps" suppressHydrationWarning>
+              <div className="bm-step active" data-step="0" suppressHydrationWarning><span className="bm-step-icon" suppressHydrationWarning></span><span>LOADING CORE</span></div>
+              <div className="bm-step" data-step="1" suppressHydrationWarning><span className="bm-step-icon" suppressHydrationWarning></span><span>CONNECTING SERVICES</span></div>
+              <div className="bm-step" data-step="2" suppressHydrationWarning><span className="bm-step-icon" suppressHydrationWarning></span><span>HYDRATING UI</span></div>
+              <div className="bm-step" data-step="3" suppressHydrationWarning><span className="bm-step-icon" suppressHydrationWarning></span><span>READY</span></div>
+            </div>
+          </div>
         </div>
         <script src="/scripts/splash-hide.js" />
         {/* All providers consolidated into AppProviders (heavy ones dynamically imported) */}

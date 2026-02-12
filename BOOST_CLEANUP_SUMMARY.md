@@ -31,7 +31,7 @@
 **Automatically loaded in layout.tsx:**
 ```tsx
 <Script
-  src="/scripts/mobile-crash-shield.js"
+  src="/scripts/BMBRAIN/mobile-crash-shield.js"
   strategy="afterInteractive"
 />
 ```

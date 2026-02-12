@@ -17,7 +17,13 @@ import { MobileMenuProvider } from "@/contexts/MobileMenuContext";
 import { ViewportStateProvider } from "@/contexts/ViewportStateContext";
 import { RecruitAuthProvider } from "@/contexts/RecruitAuthContext";
 import { ShopProvider } from "@/components/ShopContext";
-import { FPSCounter } from "@/components/PerformanceProvider";
+
+// FPSCounter: dev-only, loaded lazily to avoid compiling PerformanceProvider.tsx (997 lines)
+// + deviceMonitor.ts (2737 lines) + browserDetection + safariOptimizations = ~4000 lines
+const FPSCounter = dynamic(
+  () => import("@/components/PerformanceProvider").then(m => ({ default: m.FPSCounter })),
+  { ssr: false }
+);
 
 // ── HEAVY PROVIDERS (dynamic imports — avoid pulling in large module graphs) ─
 // ThemesContext: 3,478 lines — deferred but SSR-safe (renders children immediately)

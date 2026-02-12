@@ -3,7 +3,7 @@
 ## ✅ What Was Created
 
 ### Core System
-1. **`/public/scripts/mobile-crash-shield.js`** (~6KB)
+1. **`/public/scripts/BMBRAIN/mobile-crash-shield.js`** (~6KB)
    - Smart cache management (auto-cleans old caches, preserves critical assets)
    - Memory pressure monitoring (tracks heap usage, triggers cleanup)
    - Smart lazy loading (defers heavy components until viewport-near)
@@ -275,7 +275,7 @@ window.addEventListener('bullmoney-performance-hint', (e) => {
 
 | File | Purpose | Size |
 |------|---------|------|
-| `public/scripts/mobile-crash-shield.js` | Core crash prevention script | 6KB |
+| `public/scripts/BMBRAIN/mobile-crash-shield.js` | Core crash prevention script | 6KB |
 | `hooks/useMobileCrashShield.ts` | React integration hooks | 8KB |
 | `components/examples/SmartSplineExample.tsx` | Usage examples | 7KB |
 | `MOBILE_CRASH_SHIELD_GUIDE.md` | Full documentation | 15KB |

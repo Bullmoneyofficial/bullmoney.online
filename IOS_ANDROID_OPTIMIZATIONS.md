@@ -132,7 +132,7 @@ Android In-App Browsers:     80MB
 - Smart cache strategies per resource type
 ```
 
-### 2. **Mobile Crash Shield** (`public/scripts/mobile-crash-shield.js`)
+### 2. **Mobile Crash Shield** (`public/scripts/BMBRAIN/mobile-crash-shield.js`)
 ```javascript
 // Version 1.1 - iOS & Android Enhanced
 - iOS/Android detection and memory budgets

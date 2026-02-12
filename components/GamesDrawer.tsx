@@ -41,7 +41,7 @@ export function GamesDrawer() {
             transition={{ duration: 0.12 }}
             onClick={closeDrawer}
             className="fixed inset-0"
-            style={{ zIndex: 2147483648, background: 'rgba(0,0,0,0.3)' }}
+            style={{ zIndex: 2147483646, background: 'rgba(0,0,0,0.3)' }}
           />
 
           {/* Drawer Panel - 75% width on desktop, full width on mobile */}
@@ -57,16 +57,19 @@ export function GamesDrawer() {
                 : 'w-full max-w-full'   // Full width on mobile
             }`}
             style={{
-              zIndex: 2147483649,
+              zIndex: 2147483647,
               color: '#1d1d1f',
-              height: '100dvh',
-              maxHeight: '100dvh',
+              height: '100vh',
+              maxHeight: '100vh',
+              minHeight: '100vh',
               width: isDesktop ? undefined : '100vw',
               maxWidth: isDesktop ? undefined : '100vw',
               minWidth: 0,
               overscrollBehavior: 'contain', // Prevent page scroll when drawer scrolls
               pointerEvents: 'auto', // Ensure interactions work
               isolation: 'isolate', // Create new stacking context
+              paddingTop: 'env(safe-area-inset-top, 0px)',
+              paddingBottom: 'env(safe-area-inset-bottom, 0px)',
             }}
             data-apple-section
             role="dialog"

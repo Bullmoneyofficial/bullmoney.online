@@ -418,7 +418,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
         <AnimatePresence mode="wait">
         {widgetHidden && !isScrollMinimized && (
           <motion.div
-            className="fixed bottom-[78px] md:bottom-[70px] pointer-events-none"
+            className="fixed bottom-[128px] md:bottom-[90px] pointer-events-none"
             style={{
               zIndex: MAIN_WIDGET_Z_INDEX,
               // Mobile: RIGHT, Desktop: LEFT
@@ -479,7 +479,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
         {/* Minimized circular wave icon on scroll when widget is hidden */}
         {widgetHidden && isScrollMinimized && (
           <motion.div
-            className="fixed bottom-[78px] md:bottom-[70px] pointer-events-none"
+            className="fixed bottom-[128px] md:bottom-[90px] pointer-events-none"
             style={{
               zIndex: MAIN_WIDGET_Z_INDEX,
               ...(isMobileDevice
@@ -554,7 +554,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
             {/* MINIMIZED CIRCULAR ICON - White glow circle with animated waves */}
             {isScrollMinimized && !open && (
               <motion.div
-                className="fixed bottom-[78px] md:bottom-[70px] pointer-events-none"
+                className="fixed bottom-[128px] md:bottom-[90px] pointer-events-none"
                 style={{
                   zIndex: MAIN_WIDGET_Z_INDEX,
                   // Mobile: RIGHT, Desktop: LEFT
@@ -631,7 +631,7 @@ export const MainWidget = React.memo(function MainWidget(props: MainWidgetProps)
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.25 }}
-                className="fixed bottom-[78px] md:bottom-[70px] pointer-events-auto"
+                className="fixed bottom-[128px] md:bottom-[90px] pointer-events-auto"
                 drag="x"
                 dragConstraints={{ left: 0, right: 150 }}
                 dragElastic={0.1}

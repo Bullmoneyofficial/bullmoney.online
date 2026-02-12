@@ -8,7 +8,7 @@ The crash shield automatically loads on every page via `app/layout.tsx`:
 
 ```tsx
 <Script
-  src="/scripts/mobile-crash-shield.js"
+  src="/scripts/BMBRAIN/mobile-crash-shield.js"
   strategy="afterInteractive"
 />
 ```
@@ -291,7 +291,7 @@ See these files for working examples:
 
 - `/components/examples/SmartSplineExample.tsx` - Full examples
 - `/hooks/useMobileCrashShield.ts` - Hook implementation
-- `/public/scripts/mobile-crash-shield.js` - Core script
+- `/public/scripts/BMBRAIN/mobile-crash-shield.js` - Core script
 - `/MOBILE_CRASH_SHIELD_GUIDE.md` - Full documentation
 
 ---
