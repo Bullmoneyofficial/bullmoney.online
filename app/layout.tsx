@@ -248,51 +248,66 @@ export default function RootLayout({
         {/* INSTANT SPLASH: Prevents white/black flash before React hydrates */}
         <style dangerouslySetInnerHTML={{ __html: `
       html,body{background:#ffffff!important;}
-      #bm-splash{position:fixed;inset:0;z-index:99999;background:#ffffff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;opacity:1;transition:opacity .6s cubic-bezier(.4,0,.2,1),visibility .6s cubic-bezier(.4,0,.2,1),filter .6s cubic-bezier(.4,0,.2,1),transform .6s cubic-bezier(.4,0,.2,1);overflow:hidden;}
-      #bm-splash.hide{opacity:0;visibility:hidden;pointer-events:none;filter:blur(15px);transform:scale(1.05);}
+      #bm-splash{position:fixed;inset:0;z-index:99999;background:#ffffff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;opacity:1;transition:opacity .5s cubic-bezier(.4,0,.2,1),visibility .5s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.4,0,.2,1);overflow:hidden;will-change:opacity,transform;}
+      #bm-splash.hide{opacity:0;visibility:hidden;pointer-events:none;transform:scale(1.02);}
 
       /* Subtle radial gradient overlay */
-      #bm-splash::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at center,rgba(0,0,0,0.02) 0%,rgba(255,255,255,0) 70%);z-index:0;}
+      #bm-splash::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at center,rgba(0,0,0,0.02) 0%,rgba(255,255,255,0) 70%);z-index:0;animation:bm-breathe 5.5s ease-in-out infinite;will-change:transform,opacity;}
+      #bm-splash::after{content:"";position:absolute;inset:-20%;background:conic-gradient(from 180deg at 50% 50%,rgba(24,24,27,.04),rgba(24,24,27,0),rgba(24,24,27,.04));filter:blur(20px);opacity:.48;z-index:0;animation:bm-rotate-bg 18s linear infinite;will-change:transform;}
+      #bm-splash .bm-orb{position:absolute;border-radius:9999px;filter:blur(20px);pointer-events:none;z-index:1;will-change:transform;}
+      #bm-splash .bm-orb-a{width:240px;height:240px;top:12%;left:18%;background:radial-gradient(circle,rgba(24,24,27,.12),rgba(24,24,27,0) 65%);animation:bm-orb-float-a 9s ease-in-out infinite;}
+      #bm-splash .bm-orb-b{width:280px;height:280px;right:14%;bottom:10%;background:radial-gradient(circle,rgba(24,24,27,.1),rgba(24,24,27,0) 65%);animation:bm-orb-float-b 11s ease-in-out infinite;}
 
       /* Logo container */
-      #bm-splash .bm-logo-wrap{position:relative;z-index:10;width:120px;height:120px;display:flex;align-items:center;justify-content:center;margin-bottom:24px;animation:bm-logo-float 3s ease-in-out infinite;}
+      #bm-splash .bm-logo-wrap{position:relative;z-index:10;width:120px;height:120px;display:flex;align-items:center;justify-content:center;margin-bottom:24px;animation:bm-logo-intro .7s cubic-bezier(.2,.8,.2,1) both,bm-logo-float 3s ease-in-out .7s infinite;will-change:transform,opacity;}
       #bm-splash .bm-logo-wrap svg{width:100%;height:100%;filter:drop-shadow(0 0 20px rgba(0,0,0,0.08));}
 
       /* Title */
-      #bm-splash .bm-title{position:relative;z-index:10;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",Inter,"Segoe UI",Roboto,sans-serif;font-size:42px;font-weight:700;letter-spacing:-.02em;line-height:1;margin-bottom:6px;background:linear-gradient(110deg,#a1a1aa 15%,#18181b 45%,#18181b 55%,#a1a1aa 85%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:bm-shimmer 3.5s linear infinite;}
+      #bm-splash .bm-title{position:relative;z-index:10;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",Inter,"Segoe UI",Roboto,sans-serif;font-size:42px;font-weight:700;letter-spacing:-.02em;line-height:1;margin-bottom:6px;background:linear-gradient(110deg,#a1a1aa 15%,#18181b 45%,#18181b 55%,#a1a1aa 85%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:bm-text-intro .6s cubic-bezier(.2,.8,.2,1) .15s both,bm-shimmer 4.2s linear .8s infinite;will-change:transform,opacity;}
 
       /* Subtitle */
-      #bm-splash .bm-subtitle{position:relative;z-index:10;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,"Segoe UI",Roboto,sans-serif;font-size:11px;font-weight:600;letter-spacing:.5em;text-transform:uppercase;color:rgba(0,0,0,.35);margin-bottom:32px;}
+      #bm-splash .bm-subtitle{position:relative;z-index:10;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,"Segoe UI",Roboto,sans-serif;font-size:11px;font-weight:600;letter-spacing:.5em;text-transform:uppercase;color:rgba(0,0,0,.35);margin-bottom:32px;animation:bm-text-intro .6s cubic-bezier(.2,.8,.2,1) .28s both;will-change:transform,opacity;}
 
       /* Progress section */
-      #bm-splash .bm-progress-wrap{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;gap:16px;}
+      #bm-splash .bm-progress-wrap{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;gap:16px;animation:bm-text-intro .6s cubic-bezier(.2,.8,.2,1) .4s both,bm-progress-float 4s ease-in-out 1.1s infinite;will-change:transform,opacity;}
 
       /* Percentage */
       #bm-splash .bm-percent{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Monaco,Consolas,monospace;font-size:56px;font-weight:700;letter-spacing:-.04em;line-height:1;background:linear-gradient(110deg,#a1a1aa 15%,#18181b 45%,#18181b 55%,#a1a1aa 85%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:bm-shimmer 3.5s linear infinite;font-variant-numeric:tabular-nums;}
 
       /* Status pill */
-      #bm-splash .bm-status{display:flex;align-items:center;gap:12px;background:rgba(0,0,0,.03);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:8px 20px;border-radius:9999px;border:1px solid rgba(0,0,0,.06);box-shadow:0 1px 3px rgba(0,0,0,.04);}
+      #bm-splash .bm-status{display:flex;align-items:center;gap:12px;background:rgba(0,0,0,.03);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:8px 20px;border-radius:9999px;border:1px solid rgba(0,0,0,.06);box-shadow:0 1px 3px rgba(0,0,0,.04);}
       #bm-splash .bm-dot-wrap{position:relative;display:flex;width:10px;height:10px;}
       #bm-splash .bm-dot-ping{position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.25);animation:bm-ping 1s cubic-bezier(0,0,.2,1) infinite;}
       #bm-splash .bm-dot{position:relative;width:10px;height:10px;border-radius:50%;background:#18181b;}
       #bm-splash .bm-status-text{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Monaco,Consolas,monospace;font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(0,0,0,.5);}
 
       /* Loading bar */
-      #bm-splash .bm-bar-outer{width:200px;height:2px;border-radius:2px;background:rgba(0,0,0,.06);overflow:hidden;margin-top:8px;}
-      #bm-splash .bm-bar-inner{width:0%;height:100%;border-radius:2px;background:linear-gradient(90deg,#18181b,#3f3f46,#18181b);transition:width .3s ease-out;}
+      #bm-splash .bm-bar-outer{width:200px;height:2px;border-radius:2px;background:rgba(0,0,0,.06);overflow:hidden;margin-top:8px;position:relative;}
+      #bm-splash .bm-bar-outer::after{content:"";position:absolute;inset:0;transform:translate3d(-130%,0,0);background:linear-gradient(90deg,transparent,rgba(255,255,255,.7),transparent);animation:bm-bar-scan 1.8s linear infinite;will-change:transform;}
+      #bm-splash .bm-bar-inner{width:0%;height:100%;border-radius:2px;background:linear-gradient(90deg,#18181b,#3f3f46,#18181b);transition:width .3s ease-out,opacity .3s ease-out;animation:bm-bar-glow 2s ease-in-out infinite;}
 
       /* Loading steps */
       #bm-splash .bm-steps{display:flex;flex-direction:column;gap:6px;margin-top:20px;position:relative;z-index:10;}
-      #bm-splash .bm-step{display:flex;align-items:center;gap:10px;font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Monaco,Consolas,monospace;font-size:11px;letter-spacing:.05em;color:rgba(0,0,0,.25);transition:color .3s ease,opacity .3s ease;opacity:.5;}
-      #bm-splash .bm-step.active{color:rgba(0,0,0,.8);opacity:1;}
+      #bm-splash .bm-step{display:flex;align-items:center;gap:10px;font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Monaco,Consolas,monospace;font-size:11px;letter-spacing:.05em;color:rgba(0,0,0,.25);transition:color .3s ease,opacity .3s ease,transform .3s ease;opacity:.5;transform:translateX(0);}
+      #bm-splash .bm-step.active{color:rgba(0,0,0,.8);opacity:1;transform:translateX(3px);}
       #bm-splash .bm-step.done{color:rgba(0,0,0,.35);opacity:.7;}
       #bm-splash .bm-step-icon{width:14px;height:14px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;font-size:8px;flex-shrink:0;transition:all .3s ease;}
       #bm-splash .bm-step.active .bm-step-icon{background:rgba(0,0,0,.06);}
       #bm-splash .bm-step.done .bm-step-icon{background:#18181b;color:#fff;}
 
-      @keyframes bm-logo-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+      @keyframes bm-logo-intro{0%{opacity:0;transform:translate3d(0,14px,0) scale(.9)}100%{opacity:1;transform:translate3d(0,0,0) scale(1)}}
+      @keyframes bm-logo-float{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(0,-8px,0)}}
+      @keyframes bm-text-intro{0%{opacity:0;transform:translate3d(0,10px,0)}100%{opacity:1;transform:translate3d(0,0,0)}}
       @keyframes bm-shimmer{0%{background-position:0% 50%;opacity:.4}50%{background-position:-200% 50%;opacity:1}100%{background-position:0% 50%;opacity:.4}}
       @keyframes bm-ping{75%,100%{transform:scale(2);opacity:0}}
+      @keyframes bm-breathe{0%,100%{opacity:.85;transform:scale(1)}50%{opacity:1;transform:scale(1.04)}}
+      @keyframes bm-rotate-bg{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+      @keyframes bm-orb-float-a{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(26px,-18px,0)}}
+      @keyframes bm-orb-float-b{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(-22px,20px,0)}}
+      @keyframes bm-bar-scan{0%{transform:translate3d(-130%,0,0)}100%{transform:translate3d(130%,0,0)}}
+      @keyframes bm-bar-glow{0%,100%{opacity:.86}50%{opacity:1}}
+      @keyframes bm-progress-float{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(0,-3px,0)}}
+      @media(prefers-reduced-motion:reduce){#bm-splash::before,#bm-splash::after,#bm-splash .bm-orb,#bm-splash .bm-logo-wrap,#bm-splash .bm-title,#bm-splash .bm-subtitle,#bm-splash .bm-progress-wrap,#bm-splash .bm-dot-ping,#bm-splash .bm-bar-outer::after,#bm-splash .bm-bar-inner{animation:none!important;}#bm-splash,#bm-splash .bm-step{transition:none!important;}}
       @media(min-width:768px){#bm-splash .bm-logo-wrap{width:160px;height:160px;}#bm-splash .bm-title{font-size:64px;}#bm-splash .bm-percent{font-size:72px;}}
         ` }} />
         {/* CRITICAL: Blocking init — served as static file (no Turbopack compilation cost) */}
@@ -526,6 +541,8 @@ export default function RootLayout({
       >
         {/* INSTANT SPLASH: Shows BullMoney logo + name before React hydrates */}
         <div id="bm-splash" aria-hidden="true" suppressHydrationWarning>
+          <div className="bm-orb bm-orb-a" />
+          <div className="bm-orb bm-orb-b" />
           {/* Logo */}
           <div className="bm-logo-wrap">
             <svg viewBox="0 0 16 16" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
