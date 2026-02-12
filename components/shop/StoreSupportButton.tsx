@@ -8,7 +8,7 @@ import {
   Headphones,
 } from 'lucide-react';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
-import { useSupportDrawerUI } from '@/contexts/UIStateContext';
+import { useSupportDrawerUI, useStoreMenuUI } from '@/contexts/UIStateContext';
 
 // next/dynamic with ssr:false — Turbopack fully defers this chunk
 const SupportDrawer = dynamic(() => import('@/components/shop/SupportDrawer'), { ssr: false });
@@ -16,6 +16,7 @@ const SupportDrawer = dynamic(() => import('@/components/shop/SupportDrawer'), {
 // ============================================================================
 // SUPPORT BUTTON — Floating button that opens the SupportDrawer via UIState
 // The drawer itself is rendered globally in LayoutProviders
+// Hides when store header menus (mobile/desktop) are open
 // ============================================================================
 
 const IDLE_PROMPTS = [
@@ -35,11 +36,16 @@ interface SupportButtonProps {
 
 export function SupportButton({ position = 'right' }: SupportButtonProps) {
   const { isOpen, setIsOpen } = useSupportDrawerUI();
+  const { isMobileMenuOpen: isStoreMobileMenuOpen, isDesktopMenuOpen: isStoreDesktopMenuOpen, isDropdownMenuOpen: isStoreDropdownMenuOpen } = useStoreMenuUI();
   const [hasUnread, setHasUnread] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [toastIdx, setToastIdx] = useState(0);
   const [drawerMounted, setDrawerMounted] = useState(false);
   const isLeft = position === 'left';
+
+  // Hide support button when any store menu is open
+  const isAnyStoreMenuOpen = isStoreMobileMenuOpen || isStoreDesktopMenuOpen || isStoreDropdownMenuOpen;
+  const shouldHide = isAnyStoreMenuOpen;
 
   // Idle toast rotation
   useEffect(() => {
@@ -75,6 +81,11 @@ export function SupportButton({ position = 'right' }: SupportButtonProps) {
   };
 
   const side = isLeft ? 'left-5 md:left-auto md:right-5' : 'right-5';
+
+  // Don't render if any store menu is open
+  if (shouldHide) {
+    return null;
+  }
 
   return (
     <>

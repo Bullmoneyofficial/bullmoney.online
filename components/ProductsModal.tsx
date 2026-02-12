@@ -2,14 +2,14 @@
 
 import React, { useState, useEffect, useCallback, memo, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence, type TargetAndTransition } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, 
   Search, 
   ChevronDown,
+  ArrowLeft,
   ArrowUpNarrowWide, 
   ArrowDownWideNarrow,
-  ShoppingCart,
   Package,
   ExternalLink,
   CreditCard
@@ -75,17 +75,6 @@ export const ProductsModal = memo(() => {
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
 
   if (!mounted) return null;
 
@@ -257,7 +246,8 @@ const ProductsContent = memo(() => {
   const { setIsOpen } = useModalState();
   const { state: { /*products, categories*/ } } = useShop();
   const { formatPrice } = useCurrencyLocaleStore();
-  const { isMobile, animations, shouldDisableBackdropBlur, shouldSkipHeavyEffects } = useMobilePerformance();
+  const { isMobile } = useMobilePerformance();
+  const [isDesktop, setIsDesktop] = useState(false);
   const [vipProducts, setVipProducts] = useState<VipProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -268,6 +258,25 @@ const ProductsContent = memo(() => {
   });
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [expandedProduct, setExpandedProduct] = useState<VipProduct | null>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mediaQuery = window.matchMedia('(min-width: 768px)');
+    const updateMatch = () => setIsDesktop(mediaQuery.matches);
+    updateMatch();
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', updateMatch);
+    } else {
+      mediaQuery.addListener(updateMatch);
+    }
+    return () => {
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', updateMatch);
+      } else {
+        mediaQuery.removeListener(updateMatch);
+      }
+    };
+  }, []);
 
   // ESC key to close expanded product modal
   useEffect(() => {
@@ -360,118 +369,103 @@ const ProductsContent = memo(() => {
   }, [handleClose]);
 
   return (
-    <motion.div
-      initial={animations.modalBackdrop.initial}
-      animate={animations.modalBackdrop.animate as TargetAndTransition}
-      exit={animations.modalBackdrop.exit}
-      transition={animations.modalBackdrop.transition}
-      className="fixed inset-0 z-[2147483647] bg-black/60 backdrop-blur-md"
-      onClick={handleClose}
-      onTouchEnd={handleBackdropTouch}
-    >
-      {/* Tap to close hint */}
-      {!isMobile && ['top', 'bottom', 'left', 'right'].map(pos => (
-        <motion.div
-          key={pos}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0.4, 0.7, 0.4] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className={`absolute text-blue-300/50 text-xs pointer-events-none ${
-            pos === 'top' ? 'top-4 left-1/2 -translate-x-1/2' :
-            pos === 'bottom' ? 'bottom-4 left-1/2 -translate-x-1/2' :
-            pos === 'left' ? 'left-2 top-1/2 -translate-y-1/2' :
-            'right-2 top-1/2 -translate-y-1/2'
-          }`}
-        >
-          {pos === 'top' || pos === 'bottom' ? (
-            <span>↑ Tap anywhere to close ↑</span>
-          ) : (
-            <span style={{ writingMode: 'vertical-rl' }}>Tap to close</span>
-          )}
-        </motion.div>
-      ))}
-      
-      {/* Modal - Apple Glass Style */}
+    <>
       <motion.div
-        initial={animations.modalContent.initial}
-        animate={animations.modalContent.animate as TargetAndTransition}
-        exit={animations.modalContent.exit}
-        transition={animations.modalContent.transition}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.12 }}
+        onClick={handleClose}
+        onTouchEnd={handleBackdropTouch}
+        className="fixed inset-0"
+        style={{ zIndex: 2147483648, background: 'rgba(0,0,0,0.2)' }}
+      />
+
+      <motion.div
+        initial={isDesktop ? { y: '-100%' } : { x: '100%' }}
+        animate={isDesktop ? { y: 0 } : { x: 0 }}
+        exit={isDesktop ? { y: '-100%' } : { x: '100%' }}
+        transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
         onClick={(e) => e.stopPropagation()}
         onTouchEnd={(e) => e.stopPropagation()}
-        className="relative w-full max-w-[96vw] sm:max-w-5xl lg:max-w-6xl max-h-[92vh] overflow-hidden my-auto mx-auto bg-white text-black rounded-2xl md:rounded-3xl border border-black/10 shadow-2xl"
+        className={
+          isDesktop
+            ? 'fixed top-0 left-0 right-0 w-full bg-white border-b border-black/10 flex flex-col safe-area-inset-bottom max-h-[90vh]'
+            : 'fixed top-0 right-0 bottom-0 w-full max-w-md bg-white border-l border-black/10 flex flex-col safe-area-inset-bottom'
+        }
+        style={{ zIndex: 2147483649, color: '#1d1d1f' }}
+        data-apple-section
       >
-        {/* Inner Container */}
-        <div className="relative z-10 overflow-hidden max-h-[92vh] flex flex-col">
-          
-          {/* Header */}
-          <div className="sticky top-0 z-30 flex items-center justify-between p-4 border-b border-white/10 flex-shrink-0 bg-black backdrop-blur-md">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-white/10">
-                <Package className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-lg sm:text-xl font-bold text-white">BullMoney VIP</h2>
-                <p className="text-xs text-white/70">Premium trading products</p>
-              </div>
-            </div>
-            
-            <motion.button
-              whileHover={isMobile ? {} : { scale: 1.08 }}
-              whileTap={{ scale: 0.94 }}
-              onClick={handleClose}
-              onTouchEnd={(e) => { e.stopPropagation(); handleClose(); }}
-              className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-all shadow-lg cursor-pointer"
-              style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
-            >
-              <X className="w-4 h-4 text-white" strokeWidth={2.5} />
-            </motion.button>
-          </div>
-          
-          {/* Filters Bar */}
-          <div className="p-3 border-b border-black/10 flex flex-col sm:flex-row gap-3 flex-shrink-0 bg-white">
-            {/* Search */}
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-black/40 w-4 h-4" />
-              <input
-                value={filters.search}
-                onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
-                placeholder="Search products..."
-                className="w-full bg-white border border-black/10 rounded-xl pl-10 pr-4 py-3 text-sm text-black placeholder:text-black/30 focus:outline-none focus:border-black/30 transition-all"
-                style={{ WebkitTapHighlightColor: 'transparent' }}
-              />
-            </div>
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 md:p-6 border-b border-black/10">
+          <button
+            onClick={handleClose}
+            className="h-10 w-10 rounded-xl bg-black/5 flex items-center justify-center hover:bg-black/10 active:scale-95 transition-all"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
 
-            {/* Category Dropdown */}
-            <div className="relative w-full sm:w-44">
-              <select
-                value={filters.category}
-                onChange={(e) => { SoundEffects.click(); setFilters((f) => ({ ...f, category: e.target.value })); }}
-                className="w-full appearance-none bg-white border border-black/10 rounded-xl pl-4 pr-10 py-3 text-sm text-black focus:outline-none focus:border-black/30 cursor-pointer transition-all"
-                style={{ WebkitTapHighlightColor: 'transparent' }}
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="h-9 w-9 rounded-xl bg-black/5 flex items-center justify-center">
+              <Package className="w-4 h-4 md:w-5 md:h-5" />
+            </div>
+            <div className="leading-tight text-center">
+              <h2 className="text-lg md:text-xl font-light">BullMoney VIP</h2>
+              <p className="text-[10px] font-medium" style={{ color: 'rgba(0,0,0,0.4)' }}>Premium trading products</p>
+            </div>
+          </div>
+
+          <button
+            onClick={handleClose}
+            className="h-9 w-9 md:h-10 md:w-10 rounded-xl bg-black/5 flex items-center justify-center hover:bg-black/10 active:scale-95 transition-all"
+          >
+            <X className="w-4 h-4 md:w-5 md:h-5" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto overscroll-contain p-4 md:p-6" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div className="space-y-4">
+            {/* Filters */}
+            <div className="p-3 border border-black/10 rounded-2xl flex flex-col sm:flex-row gap-3 bg-white">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-black/40 w-4 h-4" />
+                <input
+                  value={filters.search}
+                  onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
+                  placeholder="Search products..."
+                  className="w-full bg-white border border-black/10 rounded-xl pl-10 pr-4 py-3 text-sm text-black placeholder:text-black/30 focus:outline-none focus:border-black/30 transition-all"
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                />
+              </div>
+
+              <div className="relative w-full sm:w-44">
+                <select
+                  value={filters.category}
+                  onChange={(e) => { SoundEffects.click(); setFilters((f) => ({ ...f, category: e.target.value })); }}
+                  className="w-full appearance-none bg-white border border-black/10 rounded-xl pl-4 pr-10 py-3 text-sm text-black focus:outline-none focus:border-black/30 cursor-pointer transition-all"
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                >
+                  <option value="all">All Categories</option>
+                  {vipCategories.map((c: Category) => (
+                    <option key={c._id || c.id} value={c.name}>{c.name}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-black/40 w-4 h-4 pointer-events-none" />
+              </div>
+
+              <button
+                onClick={toggleSortDirection}
+                onTouchEnd={(e) => { e.stopPropagation(); toggleSortDirection(); }}
+                className="px-4 py-3 rounded-xl bg-white border border-black/10 hover:border-black/30 text-black text-xs font-medium flex items-center justify-center gap-2 transition-all whitespace-nowrap active:scale-95"
+                style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
               >
-                <option value="all">All Categories</option>
-                {vipCategories.map((c: Category) => (
-                  <option key={c._id || c.id} value={c.name}>{c.name}</option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-black/40 w-4 h-4 pointer-events-none" />
+                {sortDirection === 'asc' ? <ArrowUpNarrowWide size={16} /> : <ArrowDownWideNarrow size={16} />}
+                {sortDirection === 'asc' ? "Low → High" : "High → Low"}
+              </button>
             </div>
 
-            {/* Sort Toggle */}
-            <button
-              onClick={toggleSortDirection}
-              onTouchEnd={(e) => { e.stopPropagation(); toggleSortDirection(); }}
-              className="px-4 py-3 rounded-xl bg-white border border-black/10 hover:border-black/30 text-black text-xs font-medium flex items-center justify-center gap-2 transition-all whitespace-nowrap active:scale-95"
-              style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
-            >
-              {sortDirection === 'asc' ? <ArrowUpNarrowWide size={16} /> : <ArrowDownWideNarrow size={16} />}
-              {sortDirection === 'asc' ? "Low → High" : "High → Low"}
-            </button>
-          </div>
-          
-          {/* Products Grid */}
-          <div className="flex-1 overflow-y-auto p-4 md:p-6 overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+            {/* Products Grid */}
             {loading ? (
               <div className="flex flex-col items-center justify-center py-16 text-center text-black/60">Loading VIP tiers…</div>
             ) : error ? (
@@ -699,7 +693,7 @@ const ProductsContent = memo(() => {
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </>
   );
 });
 ProductsContent.displayName = 'ProductsContent';

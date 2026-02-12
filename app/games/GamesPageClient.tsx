@@ -68,6 +68,13 @@ const HERO_BG_IMAGES = [
   { src: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=3840&q=80&auto=format&fit=crop', alt: 'Jackpot — Gold coins treasure' },
 ];
 
+const HERO_BG_SIZES = [1200, 1920, 2560] as const;
+const buildHeroSrcSet = (src: string) => (
+  HERO_BG_SIZES
+    .map((size) => `${src.replace('w=3840', `w=${size}`)} ${size}w`)
+    .join(', ')
+);
+
 const GAME_CATEGORIES = [
   { key: 'all', label: 'All Games', icon: Gamepad2 },
   { key: 'slots', label: 'Slots', icon: Dice5 },
@@ -132,6 +139,13 @@ const games = [
 export function GamesPageClient() {
   const [heroBgIndex, setHeroBgIndex] = useState(0);
   const [activeGameCategory, setActiveGameCategory] = useState('all');
+
+  useEffect(() => {
+    const firstHero = HERO_BG_IMAGES[0]?.src;
+    if (!firstHero) return;
+    const preload = new Image();
+    preload.src = firstHero.replace('w=3840', 'w=1920');
+  }, []);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -350,8 +364,6 @@ export function GamesPageClient() {
         style={{
           minHeight: 'min(120vh, 1000px)',
           borderBottom: '1px solid rgba(255,255,255,0.06)',
-          contentVisibility: 'auto',
-          containIntrinsicSize: 'auto 1000px',
         }}
         >
         <div className="absolute inset-0 z-0" aria-hidden="true">
@@ -361,8 +373,11 @@ export function GamesPageClient() {
               src={img.src}
               alt={img.alt}
               className="absolute inset-0 h-full w-full object-cover transition-opacity duration-1800 ease-in-out"
-              style={{ opacity: idx === heroBgIndex ? 1 : 0 }}
+              style={{ opacity: idx === heroBgIndex ? 1 : 0, willChange: 'opacity' }}
+              srcSet={buildHeroSrcSet(img.src)}
+              sizes="100vw"
               loading={idx === 0 ? 'eager' : 'lazy'}
+              fetchPriority={idx === 0 ? 'high' : 'auto'}
               decoding="async"
             />
           ))}

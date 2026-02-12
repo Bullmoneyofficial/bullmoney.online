@@ -177,6 +177,11 @@ const HERO_CAROUSEL_SLIDES = [
   { type: 'spline' as const, scene: '/scene3.splinecode' },
 ];
 
+const HERO_IMAGE_INDICES = HERO_CAROUSEL_SLIDES
+  .map((slide, index) => (slide.type === 'image' ? index : -1))
+  .filter((index) => index >= 0);
+const FIRST_HERO_IMAGE_INDEX = HERO_IMAGE_INDICES[0] ?? 0;
+
 const GRID_VARIANTS = [
   { value: 'spotlight', label: 'Spotlight', group: 'Featured' },
   { value: 'animated', label: 'Animated grid', group: 'Featured' },
@@ -339,7 +344,9 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
   const [featuredGridVariant, setFeaturedGridVariant] = useState<GridVariant>('animated');
   const [timelineGridVariant, setTimelineGridVariant] = useState<GridVariant>('snug');
   const [heroSlideIndex, setHeroSlideIndex] = useState(() => pickHeroSlideIndex());
+  const [heroImageIndex, setHeroImageIndex] = useState(0);
   const [showHeroMapOverlay] = useState(() => Math.random() < 0.05);
+  const [heroImageReady, setHeroImageReady] = useState(false);
 
   const openStudio = useCallback((opts?: StudioOpts) => {
     setStudioState({ open: true, ...opts });
@@ -347,15 +354,19 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
 
 
   const heroCacheLoadedRef = useRef(false);
+  const allowHeavyHeroReady = allowHeavyHero && hasMounted && heroImageReady;
   const resolvedHeroSlide = useMemo(() => {
-    if (!hasMounted) {
-      return HERO_CAROUSEL_SLIDES.find((slide) => slide.type === 'image') || HERO_CAROUSEL_SLIDES[0];
+    const fallbackImage = HERO_CAROUSEL_SLIDES[FIRST_HERO_IMAGE_INDEX] || HERO_CAROUSEL_SLIDES[0];
+
+    if (!hasMounted || !allowHeavyHeroReady) {
+      const imageIndex = HERO_IMAGE_INDICES[heroImageIndex] ?? FIRST_HERO_IMAGE_INDEX;
+      return HERO_CAROUSEL_SLIDES[imageIndex] || fallbackImage;
     }
+
     // Mobile gets the same hero types as desktop (videos, splines, world-map)
     return HERO_CAROUSEL_SLIDES[heroSlideIndex];
-  }, [hasMounted, heroSlideIndex]);
+  }, [allowHeavyHero, hasMounted, heroImageReady, heroImageIndex, heroSlideIndex]);
   const heroIsWorldMap = resolvedHeroSlide?.type === 'world-map';
-  const allowHeavyHeroReady = allowHeavyHero && hasMounted;
   const heroTitleColor = 'rgb(255,255,255)';
   const heroMetaColor = 'rgb(255,255,255)';
   const heroBodyColor = 'rgb(255,255,255)';
@@ -378,14 +389,45 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
     userStorage.set(HERO_CACHE_KEY, heroSlideIndex, HERO_CACHE_TTL);
   }, [heroSlideIndex]);
 
+  useEffect(() => {
+    if (!hasMounted) return;
+    const firstImage = HERO_CAROUSEL_SLIDES[FIRST_HERO_IMAGE_INDEX];
+    if (!firstImage || firstImage.type !== 'image') {
+      setHeroImageReady(true);
+      return;
+    }
+
+    const img = new Image();
+    img.src = firstImage.src;
+    if (img.complete) {
+      setHeroImageReady(true);
+      return;
+    }
+
+    const handleLoad = () => setHeroImageReady(true);
+    const handleError = () => setHeroImageReady(true);
+    img.addEventListener('load', handleLoad);
+    img.addEventListener('error', handleError);
+    return () => {
+      img.removeEventListener('load', handleLoad);
+      img.removeEventListener('error', handleError);
+    };
+  }, [hasMounted]);
+
   // Auto-cycle hero slides every HERO_SLIDE_DURATION seconds
   useEffect(() => {
     if (!hasMounted) return;
     const interval = setInterval(() => {
+      if (!allowHeavyHeroReady) {
+        if (HERO_IMAGE_INDICES.length > 1) {
+          setHeroImageIndex((prev) => (prev + 1) % HERO_IMAGE_INDICES.length);
+        }
+        return;
+      }
       setHeroSlideIndex((prev) => (prev + 1) % HERO_CAROUSEL_SLIDES.length);
     }, HERO_SLIDE_DURATION * 1000);
     return () => clearInterval(interval);
-  }, [hasMounted]);
+  }, [allowHeavyHeroReady, hasMounted]);
 
 
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
@@ -1279,6 +1321,7 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
           muted
           loop
           playsInline
+          preload="metadata"
           poster={slide.poster}
         >
           <source src={slide.src} type="video/mp4" />

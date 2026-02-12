@@ -9,7 +9,7 @@ import { useUltimateHubUI, useProductsModalUI, useBgPickerModalUI, useColorPicke
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Box, Palette } from 'lucide-react';
+import { Box, Palette, ArrowLeft, X } from 'lucide-react';
 
 // Dynamic import for Spline (heavy 3D component)
 const Spline = dynamic(() => import('@splinetool/react-spline'), {
@@ -3754,17 +3754,63 @@ export default function Hero({ sources, onOpenModal, variant }: HeroProps) {
         </div>
       )}
 
-      {/* Products Modal - Uses UIStateContext */}
-      {isProductsModalOpen && (
-        <div className="modal-overlay" onClick={() => setProductsModalOpen(false)}>
-          <div className="modal-content modal-content-hub" onClick={e => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setProductsModalOpen(false)}>×</button>
-            <div style={{ width: '100%', height: '100%', overflow: 'auto', background: '#0a0a0c' }}>
-              <ProductsSection />
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Products Modal - Support drawer style */}
+      <AnimatePresence>
+        {isProductsModalOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.12 }}
+              onClick={() => setProductsModalOpen(false)}
+              className="fixed inset-0"
+              style={{ zIndex: 2147483648, background: 'rgba(0,0,0,0.2)' }}
+            />
+            <motion.div
+              initial={isDesktop ? { y: '-100%' } : { x: '100%' }}
+              animate={isDesktop ? { y: 0 } : { x: 0 }}
+              exit={isDesktop ? { y: '-100%' } : { x: '100%' }}
+              transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
+              onClick={(e) => e.stopPropagation()}
+              className={
+                isDesktop
+                  ? 'fixed top-0 left-0 right-0 w-full bg-white border-b border-black/10 flex flex-col safe-area-inset-bottom max-h-[90vh]'
+                  : 'fixed top-0 right-0 bottom-0 w-full max-w-md bg-white border-l border-black/10 flex flex-col safe-area-inset-bottom'
+              }
+              style={{ zIndex: 2147483649, color: '#1d1d1f' }}
+              data-apple-section
+            >
+              <div className="flex items-center justify-between p-4 md:p-6 border-b border-black/10">
+                <button
+                  onClick={() => setProductsModalOpen(false)}
+                  className="h-10 w-10 rounded-xl bg-black/5 flex items-center justify-center hover:bg-black/10 active:scale-95 transition-all"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+
+                <div className="flex items-center gap-2 md:gap-3">
+                  <div className="h-9 w-9 rounded-xl bg-black/5 flex items-center justify-center">
+                    <Box className="w-4 h-4 md:w-5 md:h-5" />
+                  </div>
+                  <h2 className="text-lg md:text-xl font-light">Products</h2>
+                </div>
+
+                <button
+                  onClick={() => setProductsModalOpen(false)}
+                  className="h-9 w-9 md:h-10 md:w-10 rounded-xl bg-black/5 flex items-center justify-center hover:bg-black/10 active:scale-95 transition-all"
+                >
+                  <X className="w-4 h-4 md:w-5 md:h-5" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto" style={{ background: '#0a0a0c' }}>
+                <ProductsSection />
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* New Shop Modal */}
       {showNewShopModal && (

@@ -382,8 +382,8 @@ export function ThemesProvider({ children }: { children: ReactNode }) {
       // Also add a subtle color tint based on hueShiftColor
       const opacity = colorSettings.intensity / 100 * 0.3;
       css = `
-        html:not(.theme-effect-active) { filter: ${filters.join(' ')} !important; }
-        html:not(.theme-effect-active)::after {
+        html:not(.theme-effect-active):not([data-modal-open="true"]):not([data-cart-open="true"]) { filter: ${filters.join(' ')} !important; }
+        html:not(.theme-effect-active):not([data-modal-open="true"]):not([data-cart-open="true"])::after {
           content: '';
           position: fixed;
           top: 0; left: 0; right: 0; bottom: 0;
@@ -408,8 +408,8 @@ export function ThemesProvider({ children }: { children: ReactNode }) {
       const filterStr = filters.length > 0 ? `filter: ${filters.join(' ')} !important;` : '';
       
       css = `
-        html:not(.theme-effect-active) { ${filterStr} }
-        html:not(.theme-effect-active)::after {
+        html:not(.theme-effect-active):not([data-modal-open="true"]):not([data-cart-open="true"]) { ${filterStr} }
+        html:not(.theme-effect-active):not([data-modal-open="true"]):not([data-cart-open="true"])::after {
           content: '';
           position: fixed;
           top: 0; left: 0; right: 0; bottom: 0;
@@ -421,7 +421,7 @@ export function ThemesProvider({ children }: { children: ReactNode }) {
           z-index: 2147483647;
         }
         ${colorSettings.mode === 'neon' ? `
-        html:not(.theme-effect-active)::before {
+        html:not(.theme-effect-active):not([data-modal-open="true"]):not([data-cart-open="true"])::before {
           content: '';
           position: fixed;
           top: 0; left: 0; right: 0; bottom: 0;

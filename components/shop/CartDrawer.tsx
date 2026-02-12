@@ -65,6 +65,24 @@ export function CartDrawer() {
     };
   }, []);
 
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const html = document.documentElement;
+    const body = document.body;
+
+    if (isOpen) {
+      html.setAttribute('data-cart-open', 'true');
+      body.setAttribute('data-cart-open', 'true');
+      return () => {
+        html.removeAttribute('data-cart-open');
+        body.removeAttribute('data-cart-open');
+      };
+    }
+
+    html.removeAttribute('data-cart-open');
+    body.removeAttribute('data-cart-open');
+  }, [isOpen]);
+
   const handleApplyCoupon = async () => {
     if (!couponInput.trim() || couponLoading) return;
     setCouponLoading(true);

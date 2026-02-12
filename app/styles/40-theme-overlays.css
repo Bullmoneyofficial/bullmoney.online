@@ -223,6 +223,25 @@ html[data-active-theme]::before {
   overflow: visible !important;
 }
 
+/* Suspend theme overlays while modals or drawers are open */
+html[data-active-theme][data-modal-open="true"]::before,
+html[data-active-theme][data-cart-open="true"]::before,
+html[data-active-theme][data-modal-open="true"]::after,
+html[data-active-theme][data-cart-open="true"]::after {
+  opacity: 0 !important;
+  background: transparent !important;
+  mix-blend-mode: normal !important;
+}
+
+html[data-modal-open="true"] #theme-global-overlay,
+html[data-modal-open="true"] #theme-edge-glow,
+html[data-modal-open="true"] #theme-filter-overlay,
+html[data-cart-open="true"] #theme-global-overlay,
+html[data-cart-open="true"] #theme-edge-glow,
+html[data-cart-open="true"] #theme-filter-overlay {
+  opacity: 0 !important;
+}
+
 /* Reduce overlay on mobile for performance */
 @media (max-width: 768px) {
   html[data-active-theme]::before {
