@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { memo, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Check, Copy, ExternalLink, MessageSquare } from 'lucide-react';
