@@ -26,7 +26,12 @@ export function GlobalThemeProvider({ children }: { children: React.ReactNode })
   const [isInitialized, setIsInitialized] = useState(false);
   const [isXMUser, setIsXMUserState] = useState(false);
   const [isAppLoading, setAppLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 768;
+    }
+    return false;
+  });
   const [disableOverlays, setDisableOverlays] = useState(false);
 
   // Track mobile state for responsive theme filters

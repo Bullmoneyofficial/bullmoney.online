@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Suspense, ReactNode, useEffect, useState, useCallback } from "react";
+import { Suspense, ReactNode, useEffect, useState, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
@@ -162,8 +162,13 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
     }
   }, []);
 
+  // Only run mount stage progression ONCE on initial load, not on every pathname change.
+  // Re-running on every navigation causes flicker as components gated on mountStage re-render.
+  const mountStageInitialized = useRef(false);
   useEffect(() => {
-    // Stage 1: Show navbar + children immediately
+    if (mountStageInitialized.current) return;
+    mountStageInitialized.current = true;
+    // Stage 2: Show navbar + children immediately
     setMountStage(2);
     // Stage 3: Cursor + extras after a short delay to not block first paint
     if ('requestIdleCallback' in window) {
@@ -171,7 +176,7 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
     } else {
       setTimeout(() => setMountStage(3), 300);
     }
-  }, [pathname]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (isThemeSelectorOpen) {

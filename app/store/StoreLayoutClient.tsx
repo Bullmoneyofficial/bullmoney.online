@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useLayoutEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { StoreHeader } from '@/components/store/StoreHeader';
 // CartDrawer is now rendered inside StoreHeader for global availability
@@ -46,7 +46,9 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
   }, [mounted, isAuthenticated]);
 
   // Fix scroll issues - ensure store page can scroll properly
-  useEffect(() => {
+  // Use useLayoutEffect so cleanup runs synchronously before next paint,
+  // preventing store-active class from leaking to other pages on back-navigation
+  useLayoutEffect(() => {
     if (!mounted) return;
     
     const html = document.documentElement;

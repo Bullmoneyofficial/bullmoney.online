@@ -3253,7 +3253,7 @@ export default function Hero({ sources, onOpenModal, variant }: HeroProps) {
 
       {/* Ultimate Hub Modal - Uses UIStateContext */}
       {isUltimateHubOpen && (
-        <div className="modal-overlay" onClick={() => setUltimateHubOpen(false)}>
+        <div className="modal-overlay" style={{ background: 'transparent', backdropFilter: 'none', WebkitBackdropFilter: 'none' }} onClick={() => setUltimateHubOpen(false)}>
           <div className="modal-content modal-content-hub" onClick={e => e.stopPropagation()}>
             <button className="modal-close" onClick={() => setUltimateHubOpen(false)}>×</button>
             <div style={{ width: '100%', height: '100%', overflow: 'auto' }}>

@@ -15,7 +15,7 @@ import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
 import { useCartStore } from '@/stores/cart-store';
 import { useRecruitAuth } from '@/contexts/RecruitAuthContext';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { useProductsModalUI, useThemeSelectorModalUI } from '@/contexts/UIStateContext';
+import { useProductsModalUI, useThemeSelectorModalUI, useStoreMenuUI } from '@/contexts/UIStateContext';
 import dynamic from 'next/dynamic';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useHeroMode } from '@/hooks/useHeroMode';
@@ -88,15 +88,21 @@ type StoreHeaderProps = {
 };
 
 export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: StoreHeaderProps) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
+  // Store menus managed via centralized UIState for proper mutual exclusion and back-nav reset
+  const {
+    isMobileMenuOpen: mobileMenuOpen,
+    isDesktopMenuOpen: desktopMenuOpen,
+    isDropdownMenuOpen: manualDropdownOpen,
+    setMobileMenuOpen,
+    setDesktopMenuOpen,
+    setDropdownMenuOpen: setManualDropdownOpen,
+  } = useStoreMenuUI();
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [affiliateModalOpen, setAffiliateModalOpen] = useState(false);
   const [faqModalOpen, setFaqModalOpen] = useState(false);
   const [showThemePicker, setShowThemePicker] = useState(false);
   const [showUltimateHub, setShowUltimateHub] = useState(false);
   const [gamesManualOpen, setGamesManualOpen] = useState(false);
-  const [manualDropdownOpen, setManualDropdownOpen] = useState(false);
   const [siteSearchOpen, setSiteSearchOpen] = useState(false);
   const [showDesignSections, setShowDesignSections] = useState(true);
   const desktopMenuCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -155,6 +161,17 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       }
     };
   }, []);
+
+  // Close menus when pathname changes (e.g. back button navigation)
+  // Store mobile/desktop/dropdown menus are managed via UIState and auto-close via closeOthers
+  // Only local state needs manual reset here
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setDesktopMenuOpen(false);
+    setManualDropdownOpen(false);
+    setGamesManualOpen(false);
+    setSiteSearchOpen(false);
+  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
   
   // Sync theme picker local state → UIState context (avoids setState-during-render)
   useEffect(() => {
@@ -295,8 +312,8 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   const toggleDesktopMenu = useCallback(() => {
     if (isCasinoPage) return; // Ignore toggle on games pages
     SoundEffects.click();
-    setDesktopMenuOpen(prev => !prev);
-  }, [isCasinoPage]);
+    setDesktopMenuOpen(!desktopMenuOpen);
+  }, [isCasinoPage, desktopMenuOpen, setDesktopMenuOpen]);
 
   // Ensure desktop menu stays closed on games pages
   useEffect(() => {
@@ -402,9 +419,9 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     SoundEffects.click();
     if (isCasinoPage) {
       // On games pages, manual button toggles inline dropdown
-      setManualDropdownOpen(prev => !prev);
+      setManualDropdownOpen(!manualDropdownOpen);
     }
-  }, [isCasinoPage]);
+  }, [isCasinoPage, manualDropdownOpen, setManualDropdownOpen]);
 
   const handleHomeClick = useCallback(() => {
     SoundEffects.click();

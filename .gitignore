@@ -2,6 +2,8 @@ node_modules
 .next/
 .vercel
 .env*.local
+.env*.local*
+.env.*.boost
 
 # Casino backend (Laravel) - kept as separate service
 casino-backend/vendor/

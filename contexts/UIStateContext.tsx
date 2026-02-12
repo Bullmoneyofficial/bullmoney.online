@@ -88,7 +88,11 @@ export type UIComponentType =
   | 'accountManagerModal' // Account Manager modal
   | 'bgPickerModal'        // Background picker modal (MobileDiscordHero)
   | 'colorPickerModal'    // Color picker modal (MobileDiscordHero)
-  | 'splinePanelModal';   // Spline scene picker modal (MobileDiscordHero)
+  | 'splinePanelModal'    // Spline scene picker modal (MobileDiscordHero)
+  | 'storeMobileMenu'     // Store header mobile menu
+  | 'storeDesktopMenu'    // Store header desktop dropdown
+  | 'storeDropdownMenu'   // Store header manual dropdown (games page)
+  | 'supportDrawer';      // Support drawer (cart-style side panel)
 
 // Legacy type for backwards compatibility
 export type NavbarModalType = 'admin' | 'faq' | 'affiliate' | 'themeSelector' | null;
@@ -122,6 +126,10 @@ interface UIStateContextType {
   isBgPickerModalOpen: boolean; // BG Picker modal
   isColorPickerModalOpen: boolean; // Color picker modal
   isSplinePanelModalOpen: boolean; // Spline scene picker modal
+  isStoreMobileMenuOpen: boolean;  // Store header mobile menu
+  isStoreDesktopMenuOpen: boolean; // Store header desktop dropdown
+  isStoreDropdownMenuOpen: boolean; // Store header manual dropdown (games)
+  isSupportDrawerOpen: boolean;    // Support drawer (cart-style side panel)
   isV2Unlocked: boolean;
   devSkipPageModeAndLoader: boolean; // Dev flag to skip pagemode and loader
   isWelcomeScreenActive: boolean;  // Welcome screen active - allows AudioWidget to show
@@ -165,6 +173,10 @@ interface UIStateContextType {
   setBgPickerModalOpen: (open: boolean) => void;
   setColorPickerModalOpen: (open: boolean) => void;
   setSplinePanelModalOpen: (open: boolean) => void;
+  setStoreMobileMenuOpen: (open: boolean) => void;
+  setStoreDesktopMenuOpen: (open: boolean) => void;
+  setStoreDropdownMenuOpen: (open: boolean) => void;
+  setSupportDrawerOpen: (open: boolean) => void;
   setV2Unlocked: (unlocked: boolean) => void;
   setDevSkipPageModeAndLoader: (skip: boolean) => void;
   setWelcomeScreenActive: (active: boolean) => void;
@@ -191,6 +203,10 @@ interface UIStateContextType {
   openBgPickerModal: () => void;
   openColorPickerModal: () => void;
   openSplinePanelModal: () => void;
+  openStoreMobileMenu: () => void;
+  openStoreDesktopMenu: () => void;
+  openStoreDropdownMenu: () => void;
+  openSupportDrawer: () => void;
   closeNavbarModal: () => void;
 
   // Close all UI components
@@ -241,6 +257,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const [isBgPickerModalOpen, setIsBgPickerModalOpenState] = useState(false);
   const [isColorPickerModalOpen, setIsColorPickerModalOpenState] = useState(false);
   const [isSplinePanelModalOpen, setIsSplinePanelModalOpenState] = useState(false);
+  const [isStoreMobileMenuOpen, setIsStoreMobileMenuOpenState] = useState(false);
+  const [isStoreDesktopMenuOpen, setIsStoreDesktopMenuOpenState] = useState(false);
+  const [isStoreDropdownMenuOpen, setIsStoreDropdownMenuOpenState] = useState(false);
+  const [isSupportDrawerOpen, setIsSupportDrawerOpenState] = useState(false);
   const [isV2Unlocked, setIsV2UnlockedState] = useState(
     () => typeof window !== 'undefined' && sessionStorage.getItem('affiliate_unlock_complete') === 'true'
   );
@@ -266,7 +286,9 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isThemeSelectorModalOpen || isAdminModalOpen || isFaqModalOpen ||
     isAppsModalOpen || isDisclaimerModalOpen || isPagemodeOpen || isLoaderv2Open ||
     isAuthModalOpen || isBullFeedModalOpen || isPostComposerModalOpen || isHeroSceneModalOpen || isDiscordStageModalOpen ||
-    isAccountManagerModalOpen || isBgPickerModalOpen || isColorPickerModalOpen || isSplinePanelModalOpen;
+    isAccountManagerModalOpen || isBgPickerModalOpen || isColorPickerModalOpen || isSplinePanelModalOpen ||
+    isStoreMobileMenuOpen || isStoreDesktopMenuOpen || isStoreDropdownMenuOpen ||
+    isSupportDrawerOpen;
 
   // Derived state: is any component currently open?
   const isAnyOpen = isMobileMenuOpen || isAudioWidgetOpen || isUltimatePanelOpen || isUltimateHubOpen || isAnyModalOpen;
@@ -324,6 +346,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isBgPickerModalOpen ? 'bgPickerModal' :
     isColorPickerModalOpen ? 'colorPickerModal' :
     isSplinePanelModalOpen ? 'splinePanelModal' :
+    isStoreMobileMenuOpen ? 'storeMobileMenu' :
+    isStoreDesktopMenuOpen ? 'storeDesktopMenu' :
+    isStoreDropdownMenuOpen ? 'storeDropdownMenu' :
+    isSupportDrawerOpen ? 'supportDrawer' :
     null;
 
   // Closes all other components except the one specified
@@ -355,6 +381,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     if (except !== 'bgPickerModal') setIsBgPickerModalOpenState(false);
     if (except !== 'colorPickerModal') setIsColorPickerModalOpenState(false);
     if (except !== 'splinePanelModal') setIsSplinePanelModalOpenState(false);
+    if (except !== 'storeMobileMenu') setIsStoreMobileMenuOpenState(false);
+    if (except !== 'storeDesktopMenu') setIsStoreDesktopMenuOpenState(false);
+    if (except !== 'storeDropdownMenu') setIsStoreDropdownMenuOpenState(false);
+    if (except !== 'supportDrawer') setIsSupportDrawerOpenState(false);
   }, []);
 
   // Closes all modals but preserves floating elements state
@@ -382,6 +412,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setIsBgPickerModalOpenState(false);
     setIsColorPickerModalOpenState(false);
     setIsSplinePanelModalOpenState(false);
+    setIsStoreMobileMenuOpenState(false);
+    setIsStoreDesktopMenuOpenState(false);
+    setIsStoreDropdownMenuOpenState(false);
+    setIsSupportDrawerOpenState(false);
   }, []);
 
   // Closes all components
@@ -715,6 +749,49 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setIsSplinePanelModalOpenState(open);
   }, [closeOthers]);
 
+  const setStoreMobileMenuOpen = useCallback((open: boolean) => {
+    if (open) {
+      closeOthers('storeMobileMenu');
+      trackUIStateChange('storeMobileMenu', 'open');
+      // Sound handled by StoreHeader with RAF timing
+    } else {
+      trackUIStateChange('storeMobileMenu', 'close');
+    }
+    setIsStoreMobileMenuOpenState(open);
+  }, [closeOthers]);
+
+  const setStoreDesktopMenuOpen = useCallback((open: boolean) => {
+    if (open) {
+      closeOthers('storeDesktopMenu');
+      trackUIStateChange('storeDesktopMenu', 'open');
+    } else {
+      trackUIStateChange('storeDesktopMenu', 'close');
+    }
+    setIsStoreDesktopMenuOpenState(open);
+  }, [closeOthers]);
+
+  const setStoreDropdownMenuOpen = useCallback((open: boolean) => {
+    if (open) {
+      closeOthers('storeDropdownMenu');
+      trackUIStateChange('storeDropdownMenu', 'open');
+    } else {
+      trackUIStateChange('storeDropdownMenu', 'close');
+    }
+    setIsStoreDropdownMenuOpenState(open);
+  }, [closeOthers]);
+
+  const setSupportDrawerOpen = useCallback((open: boolean) => {
+    if (open) {
+      closeOthers('supportDrawer');
+      trackUIStateChange('supportDrawer', 'open');
+      SoundEffects.open();
+    } else {
+      trackUIStateChange('supportDrawer', 'close');
+      SoundEffects.close();
+    }
+    setIsSupportDrawerOpenState(open);
+  }, [closeOthers]);
+
   const setV2Unlocked = useCallback((unlocked: boolean) => {
     setIsV2UnlockedState(unlocked);
     if (typeof window !== 'undefined') {
@@ -784,6 +861,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
   const openBgPickerModal = useCallback(() => setBgPickerModalOpen(true), [setBgPickerModalOpen]);
   const openColorPickerModal = useCallback(() => setColorPickerModalOpen(true), [setColorPickerModalOpen]);
   const openSplinePanelModal = useCallback(() => setSplinePanelModalOpen(true), [setSplinePanelModalOpen]);
+  const openStoreMobileMenu = useCallback(() => setStoreMobileMenuOpen(true), [setStoreMobileMenuOpen]);
+  const openStoreDesktopMenu = useCallback(() => setStoreDesktopMenuOpen(true), [setStoreDesktopMenuOpen]);
+  const openStoreDropdownMenu = useCallback(() => setStoreDropdownMenuOpen(true), [setStoreDropdownMenuOpen]);
+  const openSupportDrawer = useCallback(() => setSupportDrawerOpen(true), [setSupportDrawerOpen]);
   const closeNavbarModal = useCallback(() => {
     setIsAdminModalOpenState(false);
     setIsFaqModalOpenState(false);
@@ -883,6 +964,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     isBgPickerModalOpen,
     isColorPickerModalOpen,
     isSplinePanelModalOpen,
+    isStoreMobileMenuOpen,
+    isStoreDesktopMenuOpen,
+    isStoreDropdownMenuOpen,
+    isSupportDrawerOpen,
     isV2Unlocked,
     devSkipPageModeAndLoader,
     isWelcomeScreenActive,
@@ -923,6 +1008,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     setBgPickerModalOpen,
     setColorPickerModalOpen,
     setSplinePanelModalOpen,
+    setStoreMobileMenuOpen,
+    setStoreDesktopMenuOpen,
+    setStoreDropdownMenuOpen,
+    setSupportDrawerOpen,
     setV2Unlocked,
     setDevSkipPageModeAndLoader,
     setWelcomeScreenActive: setIsWelcomeScreenActiveState,
@@ -947,6 +1036,10 @@ export function UIStateProvider({ children }: { children: ReactNode }) {
     openBgPickerModal,
     openColorPickerModal,
     openSplinePanelModal,
+    openStoreMobileMenu,
+    openStoreDesktopMenu,
+    openStoreDropdownMenu,
+    openSupportDrawer,
     closeNavbarModal,
     closeAll,
     closeAllModals,
@@ -1249,4 +1342,37 @@ export function useColorPickerModalUI() {
 export function useSplinePanelModalUI() {
   const { isSplinePanelModalOpen, setSplinePanelModalOpen, openSplinePanelModal } = useUIState();
   return { isOpen: isSplinePanelModalOpen, setIsOpen: setSplinePanelModalOpen, open: openSplinePanelModal };
+}
+
+// Store header menu hooks - centralized so back-navigation and mutual exclusion work correctly
+export function useStoreMenuUI() {
+  const {
+    isStoreMobileMenuOpen,
+    isStoreDesktopMenuOpen,
+    isStoreDropdownMenuOpen,
+    setStoreMobileMenuOpen,
+    setStoreDesktopMenuOpen,
+    setStoreDropdownMenuOpen,
+    openStoreMobileMenu,
+    openStoreDesktopMenu,
+    openStoreDropdownMenu,
+  } = useUIState();
+
+  return {
+    isMobileMenuOpen: isStoreMobileMenuOpen,
+    isDesktopMenuOpen: isStoreDesktopMenuOpen,
+    isDropdownMenuOpen: isStoreDropdownMenuOpen,
+    setMobileMenuOpen: setStoreMobileMenuOpen,
+    setDesktopMenuOpen: setStoreDesktopMenuOpen,
+    setDropdownMenuOpen: setStoreDropdownMenuOpen,
+    openMobileMenu: openStoreMobileMenu,
+    openDesktopMenu: openStoreDesktopMenu,
+    openDropdownMenu: openStoreDropdownMenu,
+  };
+}
+
+// Support drawer hook - for floating support button & drawer
+export function useSupportDrawerUI() {
+  const { isSupportDrawerOpen, setSupportDrawerOpen, openSupportDrawer } = useUIState();
+  return { isOpen: isSupportDrawerOpen, setIsOpen: setSupportDrawerOpen, open: openSupportDrawer };
 }

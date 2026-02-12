@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useLayoutEffect, useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
 
 const StoreHeader = dynamic(
@@ -17,7 +17,9 @@ export function GamesLayoutClient({ children }: { children: React.ReactNode }) {
   useEffect(() => { setMounted(true); }, []);
 
   // Fix scroll & body background — match store behavior
-  useEffect(() => {
+  // Use useLayoutEffect so cleanup runs synchronously before the next paint,
+  // preventing store-active class from leaking to other pages on back-navigation
+  useLayoutEffect(() => {
     if (!mounted) return;
     const html = document.documentElement;
     const body = document.body;

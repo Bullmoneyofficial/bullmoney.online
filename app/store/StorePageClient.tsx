@@ -20,8 +20,17 @@ const WorldMapPlaceholder = dynamic(
   () => import('@/components/ui/world-map-placeholder').then(m => ({ default: m.WorldMapPlaceholder })),
   { ssr: false, loading: () => <div className="h-64 w-full rounded-2xl bg-black/5 animate-pulse" /> }
 );
+const PrintProductsSection = dynamic(
+  () => import('@/components/shop/PrintProductsSection').then(m => ({ default: m.PrintProductsSection })),
+  { ssr: false, loading: () => <div className="h-80 w-full rounded-2xl bg-black/5 animate-pulse" /> }
+);
+const DigitalArtSection = dynamic(
+  () => import('@/components/shop/DigitalArtSection').then(m => ({ default: m.DigitalArtSection })),
+  { ssr: false, loading: () => <div className="h-80 w-full rounded-2xl bg-black/5 animate-pulse" /> }
+);
 
-
+import { SAMPLE_PRINT_PRODUCTS } from '@/components/shop/PrintProductsSection';
+import { SAMPLE_DIGITAL_ART } from '@/components/shop/DigitalArtSection';
 
 
 // Heavy grid components — lazy loaded since user may not use dynamic variants
@@ -1594,6 +1603,127 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
       </div>
     </section>
   );
+
+  const metaMarketIntelligenceSection = (
+    <section
+      data-apple-section
+      className="lg:min-h-[calc(100vh-64px)]"
+      style={{ backgroundColor: 'rgb(255,255,255)', borderBottom: '1px solid rgba(0,0,0,0.04)', contentVisibility: 'auto', containIntrinsicSize: 'auto 800px' }}
+    >
+      <div className="mx-auto w-full max-w-[90rem] px-4 sm:px-8 lg:min-h-[calc(100vh-128px)] lg:flex lg:flex-col" style={{ paddingTop: 16, paddingBottom: 32 }}>
+        <div className="rounded-3xl border border-black/10 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] lg:flex lg:flex-col lg:flex-1">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold">Meta Market Intelligence</h3>
+            <span className="rounded-full border border-green-500/20 bg-green-50 px-2 py-1 text-[10px] uppercase tracking-[0.24em] text-green-700">
+              AI-Powered
+            </span>
+          </div>
+          <div className="mt-4 overflow-hidden rounded-2xl border border-black/5 bg-white lg:flex-1 lg:min-h-0">
+            <div className="max-h-[560px] overflow-y-auto lg:max-h-none lg:min-h-0 lg:h-full p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
+                {/* Market Sentiment Analysis */}
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl p-6 border border-blue-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-lg font-semibold text-blue-900">Market Sentiment</h4>
+                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-blue-700">Fear & Greed Index</span>
+                      <span className="text-xl font-bold text-green-600">73</span>
+                    </div>
+                    <div className="w-full bg-blue-200 rounded-full h-2">
+                      <div className="bg-green-500 h-2 rounded-full" style={{ width: '73%' }}></div>
+                    </div>
+                    <div className="text-xs text-blue-600">
+                      Market showing strong bullish sentiment with institutional inflows
+                    </div>
+                  </div>
+                </div>
+
+                {/* AI Predictions */}
+                <div className="bg-gradient-to-br from-purple-50 to-violet-100 rounded-xl p-6 border border-purple-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-lg font-semibold text-purple-900">AI Predictions</h4>
+                    <div className="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded">95% Accuracy</div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-purple-700">SPY Target</span>
+                      <span className="font-semibold text-green-600">↑ $485</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-purple-700">BTC Forecast</span>
+                      <span className="font-semibold text-green-600">↑ $48K</span>
+                    </div>
+                    <div className="text-xs text-purple-600">
+                      Next major support: $445 | Resistance: $495
+                    </div>
+                  </div>
+                </div>
+
+                {/* Options Flow */}
+                <div className="bg-gradient-to-br from-orange-50 to-red-100 rounded-xl p-6 border border-orange-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-lg font-semibold text-orange-900">Options Flow</h4>
+                    <div className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">Real-time</div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-orange-700">Dark Pool Activity</span>
+                      <span className="text-sm font-semibold text-red-600">Heavy Buying</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-orange-700">Call/Put Ratio</span>
+                      <span className="text-sm font-semibold">1.8:1</span>
+                    </div>
+                    <div className="text-xs text-orange-600">
+                      Unusual activity detected in SPY 480C expiring Friday
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sector Rotation */}
+                <div className="bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl p-6 border border-green-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-lg font-semibold text-green-900">Sector Rotation</h4>
+                    <div className="text-xs bg-green-200 text-green-800 px-2 py-1 rounded">Updated 1m ago</div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-green-700">Technology</span>
+                      <span className="font-semibold text-green-600">+2.1%</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-green-700">Financials</span>
+                      <span className="font-semibold text-green-600">+1.8%</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-green-700">Energy</span>
+                      <span className="font-semibold text-red-600">-0.8%</span>
+                    </div>
+                    <div className="text-xs text-green-600">
+                      Tech leading with semiconductor strength
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Bottom Action Bar */}
+              <div className="mt-6 pt-4 border-t border-gray-200 flex justify-between items-center">
+                <div className="text-xs text-gray-500">
+                  Data updated every 30 seconds • Powered by Meta AI
+                </div>
+                <button className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">
+                  View Full Analysis
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
   const testimonialsSection = (
     <section
       data-apple-section
@@ -2087,7 +2217,36 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
     </>
   ) : null;
 
+  /* ── Print & Design — full-viewport standalone section (rendered below columns on ALL pages) ── */
+  const printDesignSection = (
+    <section
+      id="print-design"
+      data-no-theme
+      className="relative z-20 w-full min-h-screen flex flex-col justify-center bg-gradient-to-b from-white to-gray-50 border-t border-black/5"
+      style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 100vh' }}
+    >
+      <div className="mx-auto w-full max-w-7xl px-5 sm:px-8 py-20 lg:py-28">
+        {/* Section Header */}
+        <div className="mb-16 text-center">
+          <p className="text-[11px] uppercase tracking-[0.28em] text-black/45">Expand Your Collection</p>
+          <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight text-black">Custom Print & Digital Art</h2>
+          <p className="mt-3 text-sm sm:text-base text-black/60 max-w-xl mx-auto">Professional printing services and premium digital artwork</p>
+        </div>
 
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
+          {/* Left — Print Products */}
+          <div id="print-products" className="border-r-0 lg:border-r border-black/10 pr-0 lg:pr-10">
+            <PrintProductsSection products={SAMPLE_PRINT_PRODUCTS} onOpenStudio={openStudio} />
+          </div>
+
+          {/* Right — Digital Art */}
+          <div id="digital-art" className="pl-0 lg:pl-6">
+            <DigitalArtSection arts={SAMPLE_DIGITAL_ART} onOpenStudio={openStudio} />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
   const handleExpandedBuy = useCallback(async (method: typeof paymentMethod) => {
     if (!expandedProduct) return;
     const variant = expandedProduct.variants?.[0];
@@ -2419,7 +2578,8 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
 
 
 
-      {heroMode !== 'design' && (
+
+      {/* Columns grid */}
       <div
         data-columns-grid
         className="w-full lg:grid lg:grid-cols-[minmax(0,1.05fr)_auto_minmax(0,0.95fr)] lg:items-start lg:h-[100vh] lg:overflow-hidden store-columns-container"
@@ -2432,6 +2592,7 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
         >
           {isDesktop && columnHeaderSection}
           {isDesktop && heroMode === 'store' && featuresSection}
+          {isDesktop && heroMode === 'store' && metaMarketIntelligenceSection}
           {isDesktop && heroMode === 'trader' && dashboardsSection}
         </div>
 
@@ -2463,27 +2624,27 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
             {isDesktop && heroMode === 'store' && testimonialsSection}
             {isDesktop && heroMode === 'trader' && heroDuplicateSection}
             {isDesktop && heroMode === 'trader' && featuresSection}
+            {isDesktop && heroMode === 'trader' && metaMarketIntelligenceSection}
             {isDesktop && heroMode === 'trader' && testimonialsSection}
             {!isDesktop && dashboardsSection}
           </div>
         </div>
       </div>
-      )}
 
       {/* Products section — always below columns on desktop */}
-      {isDesktop && heroMode !== 'design' && productsSectionBlock}
+      {isDesktop && productsSectionBlock}
       {/* metaQuotesSection only appears below columns (not in either column) — trader mode only */}
       {isDesktop && heroMode === 'trader' && metaQuotesSection}
 
-      {!isDesktop && heroMode !== 'design' && productsSectionBlock}
+      {!isDesktop && productsSectionBlock}
 
-      {!isDesktop && heroMode !== 'design' && featuresSection}
-      {!isDesktop && heroMode !== 'design' && testimonialsSection}
+      {!isDesktop && featuresSection}
+      {!isDesktop && metaMarketIntelligenceSection}
+      {!isDesktop && testimonialsSection}
 
       {/* Market Quotes — show on mobile below testimonials (trader mode only) */}
       {!isDesktop && heroMode === 'trader' && metaQuotesSection}
 
-      {/* Print & Design — full viewport section only in design mode */}
 
 
       {/* Store Footer — always at the very bottom */}

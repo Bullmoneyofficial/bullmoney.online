@@ -3,38 +3,47 @@ import type { NextRequest } from 'next/server';
 
 /**
  * Domain-specific routing proxy (Next.js 16)
- * Routes www.bullmoney.shop to /store page only
- * Avoids conflicts by handling rewrite at edge
+ * Routes www.bullmoney.shop:
+ *   - / → /store (main page)
+ *   - /store, /games, /design, /apps, /desktop → allowed
+ *   - Everything else → redirect to /store
+ * 
+ * Replaces the deprecated middleware.ts convention in Next.js 16+.
  */
 export function proxy(request: NextRequest) {
   const hostname = request.headers.get('host') || '';
-  
-  // Check if request is from bullmoney.shop domain (with or without www)
   const isBullmoneyShop = hostname.includes('bullmoney.shop');
   
-  if (isBullmoneyShop) {
-    const url = request.nextUrl;
-    const pathname = url.pathname;
-    
-    // If already on /store or /store/* pages, allow through
-    if (pathname.startsWith('/store')) {
+  if (!isBullmoneyShop) {
+    return NextResponse.next();
+  }
+
+  const { pathname } = request.nextUrl;
+  
+  // Root → rewrite to /store
+  if (pathname === '/') {
+    const url = request.nextUrl.clone();
+    url.pathname = '/store';
+    return NextResponse.rewrite(url);
+  }
+
+  // Allowed paths on bullmoney.shop
+  const allowedPaths = ['/store', '/games', '/design', '/apps', '/desktop', '/login', '/register', '/auth', '/api', '/casino-games', '/crypto-game'];
+  for (const allowed of allowedPaths) {
+    if (pathname === allowed || pathname.startsWith(allowed + '/')) {
       return NextResponse.next();
     }
-    
-    // If accessing root /, redirect to /store
-    if (pathname === '/') {
-      url.pathname = '/store';
-      return NextResponse.rewrite(url);
-    }
-    
-    // For any other path on bullmoney.shop, redirect to /store
-    // This ensures only /store is accessible on this domain
-    url.pathname = '/store';
-    return NextResponse.redirect(url);
   }
-  
-  // For all other domains (bullmoney.online, etc.), allow normal routing
-  return NextResponse.next();
+
+  // Static/internal paths
+  if (pathname.startsWith('/_next') || pathname.startsWith('/api') || pathname.startsWith('/assets') || pathname.includes('.')) {
+    return NextResponse.next();
+  }
+
+  // Everything else → redirect to /store
+  const url = request.nextUrl.clone();
+  url.pathname = '/store';
+  return NextResponse.redirect(url);
 }
 
 /**

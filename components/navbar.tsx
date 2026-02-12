@@ -20,6 +20,7 @@ import React, {
 import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
+import { usePathname } from "next/navigation";
 
 import { useCalEmbed } from "@/app/hooks/useCalEmbed";
 import { CONSTANTS } from "@/constants/links";
@@ -337,10 +338,27 @@ export const Navbar = memo(() => {
     layout: CONSTANTS.CALCOM_LAYOUT,
   });
 
+  // Track pathname for resetting state on navigation (including back button)
+  const pathname = usePathname();
+
   // Mount effect
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Reset scroll minimization and mobile navbar hidden state on route change
+  // This fixes the bug where back-button navigation leaves the navbar in a hidden/minimized state
+  useEffect(() => {
+    setIsScrollMinimized(false);
+    setIsDesktopScrollMinimized(false);
+    setMobileNavbarHidden(false);
+    lastScrollY.current = 0;
+    lastDesktopScrollY.current = 0;
+    // Also close mobile menu on navigation
+    if (isMobileMenuOpen) {
+      setIsMobileMenuOpen(false);
+    }
+  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Scroll detection using optimized hook with RAF throttling
   const { isScrolling, scrollDirection } = useScrollOptimization({

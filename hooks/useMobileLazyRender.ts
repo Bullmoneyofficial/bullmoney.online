@@ -10,9 +10,20 @@ import { isMobileDevice } from "@/lib/mobileDetection";
  *   to avoid blocking initial paint and reduce crash risk on low-end devices.
  */
 export function useMobileLazyRender(delayMs = 200) {
-  const initialIsMobile = typeof window !== "undefined" ? isMobileDevice() : false;
-  const [isMobile, setIsMobile] = useState(initialIsMobile);
-  const [shouldRender, setShouldRender] = useState(() => !initialIsMobile);
+  // Use function initializer so the check runs synchronously on client
+  // This avoids the false→true flash on back-navigation
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window !== "undefined") {
+      return isMobileDevice();
+    }
+    return false;
+  });
+  const [shouldRender, setShouldRender] = useState(() => {
+    if (typeof window !== "undefined") {
+      return !isMobileDevice();
+    }
+    return true; // SSR: render immediately, client will reconcile
+  });
 
   useEffect(() => {
     const mobile = isMobileDevice();
