@@ -508,17 +508,17 @@ export default function RootLayout({
         <Script id="sw-and-touch" src="/scripts/sw-touch.js" strategy="afterInteractive" />
 
         {/* CRITICAL SCRIPTS - afterInteractive (run after page is interactive) */}
-        <Script id="mobile-crash-shield" src="/scripts/mobile-crash-shield.js" strategy="afterInteractive" />
-        <Script id="inapp-shield" src="/scripts/inapp-shield.js" strategy="afterInteractive" />
+        <Script id="mobile-crash-shield" src="/scripts/BMBRAIN/mobile-crash-shield.js" strategy="afterInteractive" />
+        <Script id="inapp-shield" src="/scripts/BMBRAIN/inapp-shield.js" strategy="afterInteractive" />
 
         {/* NON-CRITICAL SCRIPTS - lazyOnload (defer until after everything else) */}
         <Script id="ui-debug" src="/scripts/ui-debug.js" strategy="lazyOnload" />
         <Script id="detect-120hz" src="/scripts/detect-120hz.js" strategy="lazyOnload" />
         <Script id="perf-monitor" src="/scripts/perf-monitor.js" strategy="lazyOnload" />
         <Script id="device-detect" src="/scripts/device-detect.js" strategy="lazyOnload" />
-        <Script id="network-optimizer" src="/scripts/network-optimizer.js" strategy="lazyOnload" />
-        <Script id="spline-universal" src="/scripts/spline-universal.js" strategy="lazyOnload" />
-        <Script id="offline-detect" src="/scripts/offline-detect.js" strategy="lazyOnload" />
+        <Script id="network-optimizer" src="/scripts/BMBRAIN/network-optimizer.js" strategy="lazyOnload" />
+        <Script id="spline-universal" src="/scripts/BMBRAIN/spline-universal.js" strategy="lazyOnload" />
+        <Script id="offline-detect" src="/scripts/BMBRAIN/offline-detect.js" strategy="lazyOnload" />
       </head>
       <body
         className={cn("antialiased bg-[#050915] text-white", inter.className)}

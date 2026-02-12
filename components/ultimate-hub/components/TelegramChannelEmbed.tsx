@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Crown, ExternalLink, Loader, Lock, MessageCircle, ShoppingBag, Star, TrendingUp } from 'lucide-react';
+import { CheckCircle, Crown, ExternalLink, Loader, Lock, MessageCircle, ShoppingBag, Star, TrendingUp } from 'lucide-react';
 import type { ChannelKey, TelegramPost } from '@/components/ultimate-hub/types';
 import { TELEGRAM_CHANNELS } from '@/components/ultimate-hub/constants';
 
