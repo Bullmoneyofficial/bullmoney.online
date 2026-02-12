@@ -91,7 +91,7 @@ export function AnimatedProductGrid({
   // Stable rotation values per page to avoid recalculating in render
   const rotationValues = useMemo(() => 
     pages.map(() => Math.floor(Math.random() * 21) - 10),
-    [pages.length] // eslint-disable-line react-hooks/exhaustive-deps
+    [pages.length]  
   );
 
   if (!products || products.length === 0 || pages.length === 0) {

@@ -32,7 +32,7 @@ export function useIdleEffect(callback: () => void | (() => void), deps: React.D
         if (cleanup) cleanup();
       };
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, deps);
 }
 

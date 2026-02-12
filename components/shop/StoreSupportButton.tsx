@@ -60,7 +60,7 @@ export function SupportButton({ position = 'right' }: SupportButtonProps) {
       });
     }, 6000);
     return () => { clearTimeout(initial); clearInterval(interval); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [isOpen]);
 
   // Unread indicator

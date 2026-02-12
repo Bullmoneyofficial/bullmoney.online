@@ -186,7 +186,7 @@ function CryptoIcon({ code, symbol }: { code: string; symbol: string }) {
   if (logoUrl && !imgFailed) {
     return (
       <span className="inline-flex items-center justify-center shrink-0 w-4 h-4 rounded-full overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
+        { }
         <img
           src={logoUrl}
           alt={code}

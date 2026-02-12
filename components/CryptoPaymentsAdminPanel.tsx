@@ -192,7 +192,7 @@ export default function CryptoPaymentsAdminPanel() {
   useEffect(() => {
     if (!adminEmail) return;
     fetchPayments();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [adminEmail, statusFilter, refreshTick]);
 
   useEffect(() => {
@@ -205,7 +205,7 @@ export default function CryptoPaymentsAdminPanel() {
       )
     );
     fetchRecruits(emails);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [payments, adminEmail, adminToken]);
 
   const updatePayment = async (paymentId: string) => {

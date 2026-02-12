@@ -358,7 +358,7 @@ export const Navbar = memo(() => {
     if (isMobileMenuOpen) {
       setIsMobileMenuOpen(false);
     }
-  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pathname]);  
 
   // Scroll detection using optimized hook with RAF throttling
   const { isScrolling, scrollDirection } = useScrollOptimization({

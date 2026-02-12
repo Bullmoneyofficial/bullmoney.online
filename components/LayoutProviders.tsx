@@ -177,7 +177,7 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
     } else {
       setTimeout(() => setMountStage(3), 300);
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);  
 
   useEffect(() => {
     if (isThemeSelectorOpen) {

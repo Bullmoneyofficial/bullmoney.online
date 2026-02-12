@@ -213,7 +213,7 @@ export function ScrollSciFiAudio() {
       }
       contextRef.current = null;
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);  
 
   // When muted/volume changes to 0, kill active sound immediately
   useEffect(() => {

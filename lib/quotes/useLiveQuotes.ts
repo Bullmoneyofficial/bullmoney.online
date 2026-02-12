@@ -316,7 +316,7 @@ export function useLiveQuotes() {
       }
     };
     // Re-connect when crypto watchlist changes or visibility changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [cryptoInstruments.map((i) => i.symbol).join(','), isVisible]);
 
   // ══════════════════════════════════════════════════════════
@@ -358,7 +358,7 @@ export function useLiveQuotes() {
         );
       });
     } catch {}
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [nonCryptoInstruments.map((i) => i.symbol).join(','), updateQuote]);
 
   useEffect(() => {

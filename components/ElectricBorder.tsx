@@ -267,7 +267,7 @@ const ElectricBorder: React.FC<ElectricBorderProps> = ({
       cancelAnimationFrame(animationId);
       resizeObserver.disconnect();
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- reads props via ref
+  }, []);  
 
   const vars = {
     '--electric-border-color': color,

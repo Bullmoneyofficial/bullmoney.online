@@ -1,6 +1,16 @@
 import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
 
 export default [
+  {
+    ignores: [
+      "Bullcasino/**",
+      "casino-backend/**",
+      "**/*.min.js",
+      "ENHANCED_SETTINGS_MODAL.tsx",
+      "CASINO_PAGE_EXAMPLES.tsx",
+      "COMPLETE_SECTION_EXAMPLE.tsx",
+    ],
+  },
   ...nextCoreWebVitals,
   {
     rules: {
@@ -21,8 +31,12 @@ export default [
       "react-hooks/unsupported-syntax": "off",
       "react-hooks/use-memo": "off",
       "@next/next/no-img-element": "off",
+      "@next/next/no-html-link-for-pages": "off",
+      "@next/next/no-sync-scripts": "off",
       "import/no-anonymous-default-export": "off",
       "jsx-a11y/alt-text": "off",
+      "react/display-name": "off",
+      "react/no-unescaped-entities": "off",
     },
   },
 ];

@@ -309,7 +309,7 @@ export default function CommunityNotification() {
     poll();
     const id = setInterval(poll, POLL_INTERVAL);
     return () => { active = false; clearInterval(id); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, []);
 
   if (!portalTarget) return null;

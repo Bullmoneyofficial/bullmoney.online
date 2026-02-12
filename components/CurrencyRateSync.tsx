@@ -34,7 +34,7 @@ export function CurrencyRateSync() {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);  
 
   return null; // Invisible — just keeps rates fresh
 }

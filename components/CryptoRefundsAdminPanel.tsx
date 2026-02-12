@@ -103,7 +103,7 @@ export default function CryptoRefundsAdminPanel() {
   useEffect(() => {
     if (!adminEmail) return;
     fetchRefunds();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [adminEmail, statusFilter, refreshTick]);
 
   const updateRefund = async (refundId: string, action: string) => {

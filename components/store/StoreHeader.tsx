@@ -201,7 +201,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     setManualDropdownOpen(false);
     setGamesManualOpen(false);
     setSiteSearchOpen(false);
-  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pathname]);  
   
   // Load Ultimate Hub preference
   useEffect(() => {

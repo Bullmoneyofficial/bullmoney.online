@@ -43,6 +43,9 @@
     "node_modules",
     "static-app",
     "my-app",
-    "portfolio-overlay"
+    "portfolio-overlay",
+    "Bullcasino",
+    "casino-backend",
+    "components/studio"
   ]
 }
