@@ -497,6 +497,11 @@ type ModalStep = 'intro' | 'how-it-works' | 'signup-broker' | 'verify-broker' | 
 export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps) {
   const [mountedFlag, setMountedFlag] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const affiliateScrollYRef = useRef(0);
+  const affiliateLockAcquiredRef = useRef(false);
+  const previousHtmlOverflowRef = useRef('');
+  const previousBodyOverscrollRef = useRef('');
+  const previousHtmlOverscrollRef = useRef('');
 
   useEffect(() => setMountedFlag(true), []);
 
@@ -514,21 +519,83 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
 
   useEffect(() => {
     if (!mountedFlag) return;
-    // Prevent body scroll while drawer is open
+    const html = document.documentElement;
+    const body = document.body;
+
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      document.documentElement.setAttribute('data-affiliate-open', 'true');
-      document.body.setAttribute('data-affiliate-open', 'true');
+      html.setAttribute('data-affiliate-open', 'true');
+      body.setAttribute('data-affiliate-open', 'true');
+
+      previousHtmlOverflowRef.current = html.style.overflow;
+      previousBodyOverscrollRef.current = body.style.overscrollBehavior;
+      previousHtmlOverscrollRef.current = html.style.overscrollBehavior;
+
+      html.style.overflow = 'hidden';
+      body.style.overscrollBehavior = 'none';
+      html.style.overscrollBehavior = 'none';
+
+      const isStoreHeaderLockActive = body.getAttribute('data-storeheader-scroll-lock') === 'true';
+
+      if (!isStoreHeaderLockActive) {
+        affiliateScrollYRef.current = window.scrollY || window.pageYOffset || 0;
+        affiliateLockAcquiredRef.current = true;
+
+        body.setAttribute('data-affiliate-scroll-lock', 'true');
+        html.setAttribute('data-affiliate-scroll-lock', 'true');
+
+        body.style.position = 'fixed';
+        body.style.top = `-${affiliateScrollYRef.current}px`;
+        body.style.left = '0';
+        body.style.right = '0';
+        body.style.width = '100%';
+        body.style.overflow = 'hidden';
+      }
     } else {
-      document.body.style.overflow = '';
-      document.documentElement.removeAttribute('data-affiliate-open');
-      document.body.removeAttribute('data-affiliate-open');
+      html.removeAttribute('data-affiliate-open');
+      body.removeAttribute('data-affiliate-open');
+
+      html.style.overflow = previousHtmlOverflowRef.current;
+      body.style.overscrollBehavior = previousBodyOverscrollRef.current;
+      html.style.overscrollBehavior = previousHtmlOverscrollRef.current;
+
+      if (affiliateLockAcquiredRef.current) {
+        affiliateLockAcquiredRef.current = false;
+        body.removeAttribute('data-affiliate-scroll-lock');
+        html.removeAttribute('data-affiliate-scroll-lock');
+
+        body.style.position = '';
+        body.style.top = '';
+        body.style.left = '';
+        body.style.right = '';
+        body.style.width = '';
+        body.style.overflow = '';
+
+        window.scrollTo(0, affiliateScrollYRef.current);
+      }
     }
 
     return () => {
-      document.body.style.overflow = '';
-      document.documentElement.removeAttribute('data-affiliate-open');
-      document.body.removeAttribute('data-affiliate-open');
+      html.removeAttribute('data-affiliate-open');
+      body.removeAttribute('data-affiliate-open');
+
+      html.style.overflow = previousHtmlOverflowRef.current;
+      body.style.overscrollBehavior = previousBodyOverscrollRef.current;
+      html.style.overscrollBehavior = previousHtmlOverscrollRef.current;
+
+      if (!affiliateLockAcquiredRef.current) return;
+
+      affiliateLockAcquiredRef.current = false;
+      body.removeAttribute('data-affiliate-scroll-lock');
+      html.removeAttribute('data-affiliate-scroll-lock');
+
+      body.style.position = '';
+      body.style.top = '';
+      body.style.left = '';
+      body.style.right = '';
+      body.style.width = '';
+      body.style.overflow = '';
+
+      window.scrollTo(0, affiliateScrollYRef.current);
     };
   }, [isOpen, mountedFlag]);
 
@@ -554,10 +621,11 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
             animate={isDesktop ? { y: 0 } : { x: 0 }}
             exit={isDesktop ? { y: '-100%' } : { x: '100%' }}
             transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
+            onClick={(e) => e.stopPropagation()}
             className={
               isDesktop
-                ? 'fixed top-0 left-0 right-0 w-full bg-white border-b border-black/10 flex flex-col safe-area-inset-bottom max-h-[90vh]'
-                : 'fixed top-0 right-0 bottom-0 w-full max-w-md bg-white border-l border-black/10 flex flex-col safe-area-inset-bottom'
+                ? 'fixed top-0 left-0 right-0 w-full bg-white border-b border-black/10 flex flex-col safe-area-inset-bottom max-h-[90vh] overflow-hidden'
+                : 'fixed top-0 right-0 bottom-0 w-full max-w-md bg-white border-l border-black/10 flex flex-col safe-area-inset-bottom overflow-hidden'
             }
             style={{ zIndex: 2147483649, color: '#1d1d1f' }}
             data-apple-section
@@ -585,7 +653,10 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto overscroll-contain p-4 md:p-6">
+            <div
+              className="flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y p-4 md:p-6 pb-safe"
+              style={{ WebkitOverflowScrolling: 'touch' }}
+            >
               <AffiliateModalContent isOpen={isOpen} onClose={onClose} />
             </div>
           </motion.div>
@@ -1916,7 +1987,7 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
   // =========================================
   const renderDashboard = () => {
     return (
-      <div className="flex flex-col min-h-0">
+      <div className="flex h-full min-h-0 flex-col">
         {/* Header (inline, not fixed) */}
         <div className="flex items-center justify-between p-2 md:p-4 border-b border-black/10">
           <div className="flex items-center gap-3">
@@ -1964,7 +2035,7 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
         </div>
 
         {/* Content area (dashboard/admin panels) */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
           {dashboardTab === 'dashboard' && (
             <AffiliateRecruitsDashboard onBack={() => setStep('success')} />
           )}

@@ -342,6 +342,9 @@ export default function SiteSearchOverlay({ isOpen, onClose }: SiteSearchOverlay
           style={{
             maxHeight: 'min(50vh, 400px)',
             overflowY: 'auto',
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehavior: 'contain',
+            touchAction: 'pan-y',
             padding: '8px',
           }}
         >

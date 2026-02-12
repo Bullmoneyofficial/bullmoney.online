@@ -136,7 +136,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   const [showDesignSections, setShowDesignSections] = useState(true);
   const desktopMenuCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const menuToggleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { openCart, getItemCount } = useCartStore();
+  const { openCart, getItemCount, isOpen: isCartOpen } = useCartStore();
   const { isAuthenticated, recruit, signOut } = useRecruitAuth();
   const { isAdmin } = useAdminAuth();
   const isDev = process.env.NODE_ENV === 'development';
@@ -157,6 +157,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   const isHomePage = pathname === '/';
   // Show home button on non-home pages (store, games, etc.) so users can navigate back
   const showHomeButton = !isHomePage;
+  const storeHeaderScrollYRef = useRef(0);
 
   const PAGEMODE_FORCE_LOGIN_KEY = 'bullmoney_pagemode_force_login';
   const PAGEMODE_LOGIN_VIEW_KEY = 'bullmoney_pagemode_login_view';
@@ -232,6 +233,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   useEffect(() => {
     if (typeof window === 'undefined') return;
     localStorage.setItem('store_show_theme_picker', String(showThemePicker));
+    window.dispatchEvent(new CustomEvent('store_theme_picker_toggle', { detail: showThemePicker }));
     window.dispatchEvent(new Event('store_theme_picker_toggle'));
   }, [showThemePicker]);
 
@@ -290,6 +292,83 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     return () => window.removeEventListener('store_audio_widget_toggle', handleAudioToggle);
   }, []);
 
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+
+    const shouldLockBackgroundScroll = Boolean(
+      mobileMenuOpen ||
+      siteSearchOpen ||
+      affiliateModalOpen ||
+      faqModalOpen ||
+      adminModalOpen ||
+      gamesManualOpen ||
+      isProductsModalOpen ||
+      isCartOpen
+    );
+
+    const html = document.documentElement;
+    const body = document.body;
+
+    if (shouldLockBackgroundScroll) {
+      if (body.getAttribute('data-storeheader-scroll-lock') !== 'true') {
+        storeHeaderScrollYRef.current = window.scrollY || window.pageYOffset || 0;
+      }
+
+      body.setAttribute('data-storeheader-scroll-lock', 'true');
+      html.setAttribute('data-storeheader-scroll-lock', 'true');
+
+      body.style.position = 'fixed';
+      body.style.top = `-${storeHeaderScrollYRef.current}px`;
+      body.style.left = '0';
+      body.style.right = '0';
+      body.style.width = '100%';
+      body.style.overflow = 'hidden';
+      return;
+    }
+
+    if (body.getAttribute('data-storeheader-scroll-lock') === 'true') {
+      body.removeAttribute('data-storeheader-scroll-lock');
+      html.removeAttribute('data-storeheader-scroll-lock');
+
+      body.style.position = '';
+      body.style.top = '';
+      body.style.left = '';
+      body.style.right = '';
+      body.style.width = '';
+      body.style.overflow = '';
+
+      window.scrollTo(0, storeHeaderScrollYRef.current);
+    }
+  }, [
+    mobileMenuOpen,
+    siteSearchOpen,
+    affiliateModalOpen,
+    faqModalOpen,
+    adminModalOpen,
+    gamesManualOpen,
+    isProductsModalOpen,
+    isCartOpen,
+  ]);
+
+  useEffect(() => {
+    return () => {
+      if (typeof document === 'undefined') return;
+      const html = document.documentElement;
+      const body = document.body;
+      if (body.getAttribute('data-storeheader-scroll-lock') !== 'true') return;
+
+      body.removeAttribute('data-storeheader-scroll-lock');
+      html.removeAttribute('data-storeheader-scroll-lock');
+
+      body.style.position = '';
+      body.style.top = '';
+      body.style.left = '';
+      body.style.right = '';
+      body.style.width = '';
+      body.style.overflow = '';
+    };
+  }, []);
+
   // Load Design Sections preference
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -304,10 +383,13 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   const applyThemePickerToggle = useCallback((nextValue?: boolean) => {
     setShowThemePicker(prev => {
       const newValue = typeof nextValue === 'boolean' ? nextValue : !prev;
+      if (newValue && showUltimateHub) {
+        setShowUltimateHub(false);
+      }
       setThemePickerModalOpen(newValue);
       return newValue;
     });
-  }, [setThemePickerModalOpen]);
+  }, [setThemePickerModalOpen, showUltimateHub]);
 
   const toggleThemePicker = useCallback(() => {
     SoundEffects.click();
@@ -578,8 +660,8 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
 
   const handleThemeButtonClick = useCallback(() => {
     SoundEffects.click();
-    setThemePickerModalOpen(true);
-  }, [setThemePickerModalOpen]);
+    applyThemePickerToggle(true);
+  }, [applyThemePickerToggle]);
 
   const handleHeroModeChange = useCallback((mode: HeroMode) => {
     setHeroMode(mode);
@@ -1087,11 +1169,12 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'tween', duration: 0.14, ease: [0.25, 1, 0.5, 1] }}
-              className="fixed top-0 right-0 bottom-0 w-72 max-w-[80vw] z-[1300] p-4 flex flex-col overflow-y-auto"
+              className="fixed top-0 right-0 bottom-0 w-72 max-w-[80vw] z-[1300] p-4 flex flex-col overflow-y-auto overscroll-contain touch-pan-y"
               style={{
                 background: 'rgb(255,255,255)',
                 borderLeft: '1px solid rgba(0,0,0,0.1)',
                 willChange: 'transform',
+                WebkitOverflowScrolling: 'touch',
               }}
               data-apple-section
             >

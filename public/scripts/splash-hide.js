@@ -16,6 +16,9 @@
   var stepEls = stepsEl ? stepsEl.querySelectorAll('.bm-step') : [];
   var lastVisualProgress = -1;
   var lastVisualTick = Date.now();
+  var splashStartAt = Date.now();
+  var isInAppBrowser = document.documentElement.classList.contains('is-in-app-browser');
+  var minVisibleMs = isInAppBrowser ? 1200 : 700;
 
   // Encrypted text effect (like MultiStepLoader)
   function encryptText(target, text) {
@@ -200,6 +203,11 @@
   });
 
   function hide() {
+    var elapsed = Date.now() - splashStartAt;
+    if (elapsed < minVisibleMs) {
+      setTimeout(hide, minVisibleMs - elapsed);
+      return;
+    }
     cancelAnimationFrame(animFrame);
     clearInterval(stallWatchdog);
     splash.classList.add('hide');

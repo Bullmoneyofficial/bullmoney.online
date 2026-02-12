@@ -804,8 +804,8 @@ export default function BullMoneyModal({ isOpen, onClose }: { isOpen: boolean; o
             onClick={(e) => e.stopPropagation()}
             className={
               isDesktop
-                ? 'fixed top-0 left-0 right-0 w-full bg-white border-b border-black/10 flex flex-col safe-area-inset-bottom max-h-[90vh]'
-                : 'fixed top-0 right-0 bottom-0 w-full max-w-md bg-white border-l border-black/10 flex flex-col safe-area-inset-bottom'
+                ? 'fixed top-0 left-0 right-0 w-full bg-white border-b border-black/10 flex flex-col safe-area-inset-bottom max-h-[90vh] overflow-hidden'
+                : 'fixed top-0 right-0 bottom-0 w-full max-w-md bg-white border-l border-black/10 flex flex-col safe-area-inset-bottom overflow-hidden'
             }
             style={{ zIndex: 2147483649, color: '#1d1d1f' }}
             data-apple-section

@@ -247,8 +247,9 @@ export default function RootLayout({
       <head>
         {/* INSTANT SPLASH: Prevents white/black flash before React hydrates */}
         <style dangerouslySetInnerHTML={{ __html: `
+      :root{--app-vh:1vh;}
       html,body{background:#ffffff!important;}
-      #bm-splash{position:fixed;inset:0;z-index:99999;background:#ffffff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;opacity:1;transition:opacity .5s cubic-bezier(.4,0,.2,1),visibility .5s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.4,0,.2,1);overflow:hidden;will-change:opacity,transform;}
+      #bm-splash{position:fixed;top:0;right:0;bottom:0;left:0;width:100vw;height:calc(var(--app-vh,1vh)*100);min-height:100vh;min-height:100dvh;min-height:100svh;z-index:99999;background:#ffffff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;opacity:1;transition:opacity .5s cubic-bezier(.4,0,.2,1),visibility .5s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.4,0,.2,1);overflow:hidden;will-change:opacity,transform;}
       #bm-splash.hide{opacity:0;visibility:hidden;pointer-events:none;transform:scale(1.02);}
 
       /* Subtle radial gradient overlay */

@@ -5,7 +5,6 @@ import { Suspense, ReactNode, useEffect, useState, useCallback, useRef } from "r
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { useMobileLazyRender } from "@/hooks/useMobileLazyRender";
-import { useThemeSelectorModalUI } from "@/contexts/UIStateContext";
 import { useUIState } from "@/contexts/UIStateContext";
 // ✅ LAZY-LOADED: SEO/analytics/audio deferred to avoid blocking first paint
 const ScrollSciFiAudio = dynamic(
@@ -117,8 +116,6 @@ interface LayoutProvidersProps {
 export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
   // Only defer navbar/UltimateHub on mobile to avoid blocking first paint
   const { isMobile: isMobileViewport, shouldRender: allowMobileLazy } = useMobileLazyRender(220);
-  const { isOpen: isThemeSelectorOpen } = useThemeSelectorModalUI();
-  const [themePanelReady, setThemePanelReady] = useState(false);
   const [supportReady, setSupportReady] = useState(false);
   
   // Check if we're on store pages, casino pages, desktop page, design page, or app page - hide navbar (replaced with StoreHeader)
@@ -178,12 +175,6 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
       setTimeout(() => setMountStage(3), 300);
     }
   }, []);  
-
-  useEffect(() => {
-    if (isThemeSelectorOpen) {
-      setThemePanelReady(true);
-    }
-  }, [isThemeSelectorOpen]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -342,8 +333,8 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
         </Suspense>
       )}
 
-      {/* Unified Themes Panel (Colors + Effects) — needs UIStateProvider from ClientProviders */}
-      {themePanelReady && isThemeSelectorOpen && <ThemesPanel />}
+      {/* Unified Themes Panel (Colors + Effects) */}
+      <ThemesPanel />
       
     </>
   );

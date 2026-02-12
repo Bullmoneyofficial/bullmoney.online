@@ -1,6 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
+import { createPortal } from 'react-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useThemeSelectorModalUI, useUIState } from './UIStateContext';
 
 // ============================================================================
@@ -1844,22 +1846,43 @@ export function ThemesPanel() {
   
   // Mounted state to prevent hydration flash
   const [mounted, setMounted] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
   
   // Check if we're on store page and theme picker is disabled
   const [storeThemePickerEnabled, setStoreThemePickerEnabled] = useState(false);
   
-  // CRITICAL: Ensure panel is closed on mount - prevent flash
+  // Mark mounted after hydration
   useEffect(() => {
     setMounted(true);
-    // Force close on mount to prevent any flash
-    setIsOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const mediaQuery = window.matchMedia('(min-width: 768px)');
+    const updateDesktop = () => setIsDesktop(mediaQuery.matches);
+    updateDesktop();
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', updateDesktop);
+    } else {
+      mediaQuery.addListener(updateDesktop);
+    }
+
+    return () => {
+      if (mediaQuery.addEventListener) {
+        mediaQuery.removeEventListener('change', updateDesktop);
+      } else {
+        mediaQuery.removeListener(updateDesktop);
+      }
+    };
   }, []);
   
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const checkStoreThemePicker = () => {
         const stored = localStorage.getItem('store_show_theme_picker');
-        // Only show when user explicitly enabled it (default OFF on first load)
+        // Start hidden by default; show only when explicitly enabled.
         const enabled = stored === 'true';
         setStoreThemePickerEnabled(enabled);
         // Also close the panel when the toggle is turned off
@@ -1987,34 +2010,49 @@ export function ThemesPanel() {
         </button>
       )}
 
-      {/* Panel - only render after mounted and explicitly opened */}
-      {mounted && isOpen && (
-        <div
-          className="themes-panel themes-panel-isolated"
-          style={{
-            position: 'fixed',
-            top: 'calc(env(safe-area-inset-top, 0px) + 194px)',
-            right: 12,
-            zIndex: 2147483630,
-            width: 'min(90vw, 340px)',
-            maxWidth: '100%',
-            maxHeight: '70vh',
-            overflowY: 'auto',
-            overflowX: 'hidden',
-            background: 'rgba(0, 0, 0, 0.98)',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-            borderRadius: 12,
-            boxShadow: '0 8px 40px rgba(0, 0, 0, 0.6)',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif',
-            // Isolate from parent effects
-            isolation: 'isolate',
-            transform: 'translateZ(0)',
-            willChange: 'auto',
-            filter: 'none',
-            contain: 'layout style paint',
-            boxSizing: 'border-box',
-          }}
-        >
+      {/* Drawer Panel - cart style (portal + backdrop + slide-in) */}
+      {mounted && typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {isOpen && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.12 }}
+                onClick={() => setIsOpen(false)}
+                className="fixed inset-0"
+                style={{ zIndex: 2147483630, background: 'rgba(0,0,0,0.2)' }}
+              />
+
+              <motion.div
+                initial={isDesktop ? { y: '-100%' } : { x: '100%' }}
+                animate={isDesktop ? { y: 0 } : { x: 0 }}
+                exit={isDesktop ? { y: '-100%' } : { x: '100%' }}
+                transition={{ type: 'tween', duration: 0.18, ease: [0.25, 1, 0.5, 1] }}
+                className={isDesktop ? 'fixed top-0 left-0 right-0 w-full max-h-[88vh]' : 'fixed top-0 right-0 bottom-0 w-full max-w-[420px]'}
+                style={{ zIndex: 2147483631 }}
+              >
+                <div
+                  className="themes-panel themes-panel-isolated"
+                  style={{
+                    width: '100%',
+                    height: isDesktop ? '88vh' : '100%',
+                    overflowY: 'auto',
+                    overflowX: 'hidden',
+                    background: 'rgba(8, 8, 8, 0.98)',
+                    borderLeft: isDesktop ? 'none' : '1px solid rgba(255, 255, 255, 0.15)',
+                    borderBottom: isDesktop ? '1px solid rgba(255, 255, 255, 0.15)' : 'none',
+                    borderBottomLeftRadius: isDesktop ? 14 : 0,
+                    borderBottomRightRadius: isDesktop ? 14 : 0,
+                    boxShadow: '0 8px 40px rgba(0, 0, 0, 0.6)',
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif',
+                    isolation: 'isolate',
+                    filter: 'none',
+                    contain: 'layout style paint',
+                    boxSizing: 'border-box',
+                  }}
+                >
           {/* Responsive Styles */}
           <style>{`
             /* Isolate themes panel from all effects */
@@ -2103,9 +2141,7 @@ export function ThemesPanel() {
             }
             @media (min-width: 768px) {
               .themes-panel {
-                width: 340px !important;
-                max-height: 80vh !important;
-                right: 20px !important;
+                max-height: 100vh !important;
               }
               .themes-btn-text {
                 display: inline !important;
@@ -2124,9 +2160,7 @@ export function ThemesPanel() {
             }
             @media (max-width: 767px) {
               .themes-panel {
-                width: calc(100vw - 24px) !important;
-                max-width: 320px !important;
-                right: 12px !important;
+                max-width: 100% !important;
               }
               .themes-btn-text {
                 display: none !important;
@@ -2147,40 +2181,63 @@ export function ThemesPanel() {
 
           {/* Header */}
           <div style={{
-            padding: '12px 14px',
+            padding: '14px 14px',
             borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            background: 'rgba(255, 255, 255, 0.03)',
+            background: 'rgba(255, 255, 255, 0.04)',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Icons.palette />
-              <h3 style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#fff' }}>
-                Themes & Effects
-              </h3>
-            </div>
             <button
               onClick={() => setIsOpen(false)}
-              style={{ 
-                background: 'rgba(255,255,255,0.1)', 
-                border: 'none', 
-                color: '#fff', 
+              style={{
+                background: 'rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.16)',
+                color: '#fff',
                 cursor: 'pointer',
-                width: 26,
-                height: 26,
-                borderRadius: 13,
+                width: 34,
+                height: 34,
+                borderRadius: 10,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                flexShrink: 0,
               }}
+              title="Close themes drawer"
+            >
+              <span style={{ fontSize: 16, lineHeight: 1 }}>←</span>
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Icons.palette />
+              <h3 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#fff' }}>
+                Themes & Effects
+              </h3>
+            </div>
+
+            <button
+              onClick={() => setIsOpen(false)}
+              style={{ 
+                background: 'rgba(255,255,255,0.08)', 
+                border: '1px solid rgba(255,255,255,0.16)', 
+                color: '#fff', 
+                cursor: 'pointer',
+                width: 34,
+                height: 34,
+                borderRadius: 10,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+              title="Close themes drawer"
             >
               <Icons.close />
             </button>
           </div>
 
           {/* Tabs */}
-          <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+          <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.02)' }}>
             {(['effects', 'colors'] as const).map(tab => (
               <button
                 key={tab}
@@ -3471,7 +3528,12 @@ export function ThemesPanel() {
               <Icons.reset /> Reset All
             </button>
           </div>
-        </div>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>,
+        document.body
       )}
     </>
   );

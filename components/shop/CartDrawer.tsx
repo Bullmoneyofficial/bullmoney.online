@@ -145,10 +145,11 @@ export function CartDrawer() {
             animate={isDesktop ? { y: 0 } : { x: 0 }}
             exit={isDesktop ? { y: '-100%' } : { x: '100%' }}
             transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
+            onClick={(e) => e.stopPropagation()}
             className={
               isDesktop
-                ? 'fixed top-0 left-0 right-0 w-full bg-white border-b border-black/10 flex flex-col safe-area-inset-bottom max-h-[90vh]'
-                : 'fixed top-0 right-0 bottom-0 w-full max-w-md bg-white border-l border-black/10 flex flex-col safe-area-inset-bottom'
+                ? 'fixed top-0 left-0 right-0 w-full bg-white border-b border-black/10 flex flex-col safe-area-inset-bottom max-h-[90vh] overflow-hidden'
+                : 'fixed top-0 right-0 bottom-0 w-full max-w-md bg-white border-l border-black/10 flex flex-col safe-area-inset-bottom overflow-hidden'
             }
             style={{ zIndex: CART_DRAWER_PANEL_Z_INDEX, color: '#1d1d1f' }}
             data-apple-section
@@ -180,7 +181,10 @@ export function CartDrawer() {
             </div>
 
             {/* Cart Items - Scrollable */}
-            <div className="flex-1 overflow-y-auto overscroll-contain p-4 md:p-6">
+            <div
+              className="flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y p-4 md:p-6"
+              style={{ WebkitOverflowScrolling: 'touch' }}
+            >
               {items.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center px-6">
                   <div className="w-20 h-20 rounded-full bg-black/5 flex items-center justify-center mb-6">

@@ -390,8 +390,8 @@ const ProductsContent = memo(() => {
         onTouchEnd={(e) => e.stopPropagation()}
         className={
           isDesktop
-            ? 'fixed top-0 left-0 right-0 w-full bg-white border-b border-black/10 flex flex-col safe-area-inset-bottom max-h-[90vh]'
-            : 'fixed top-0 right-0 bottom-0 w-full max-w-md bg-white border-l border-black/10 flex flex-col safe-area-inset-bottom'
+            ? 'fixed top-0 left-0 right-0 w-full bg-white border-b border-black/10 flex flex-col safe-area-inset-bottom max-h-[90vh] overflow-hidden'
+            : 'fixed top-0 right-0 bottom-0 w-full max-w-md bg-white border-l border-black/10 flex flex-col safe-area-inset-bottom overflow-hidden'
         }
         style={{ zIndex: 2147483649, color: '#1d1d1f' }}
         data-apple-section
@@ -424,7 +424,7 @@ const ProductsContent = memo(() => {
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto overscroll-contain p-4 md:p-6" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y p-4 md:p-6" style={{ WebkitOverflowScrolling: 'touch' }}>
           <div className="space-y-4">
             {/* Filters */}
             <div className="p-3 border border-black/10 rounded-2xl flex flex-col sm:flex-row gap-3 bg-white">
