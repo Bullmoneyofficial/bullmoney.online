@@ -244,11 +244,6 @@ export default function DrawingCanvas({
         }}
       />
 
-      {showFooter && (
-        <div style={{ marginTop: '16px', fontSize: '13px', color: 'rgba(0,0,0,0.5)', textAlign: 'center' }}>
-          <p>✨ Pure HTML5 Canvas • Zero dependencies • Works offline</p>
-        </div>
-      )}
     </div>
   );
 }

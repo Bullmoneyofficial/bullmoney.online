@@ -1,32 +1,215 @@
+.design-page-root {
+  background: #000000;
+  min-height: 100vh;
+}
+
+.design-content-wrap {
+  background: #000000;
+}
+
+.design-hero-layout {
+  background: #000000;
+  color: #ffffff;
+  padding: 40px 20px 28px;
+  display: grid;
+  gap: 24px;
+}
+
+.design-hero-card {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 28px;
+  background: linear-gradient(145deg, #0d0d0d, #050505);
+  box-shadow: 0 26px 60px rgba(0, 0, 0, 0.42);
+  overflow: hidden;
+}
+
+.design-hero-head {
+  padding: 34px 28px 22px;
+}
+
+.design-hero-kicker {
+  margin: 0 0 8px;
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.design-hero-title {
+  margin: 0;
+  font-size: clamp(30px, 5vw, 54px);
+  letter-spacing: -0.03em;
+  line-height: 1.04;
+  font-weight: 760;
+  color: #ffffff;
+}
+
+.design-hero-subtitle {
+  margin: 12px 0 0;
+  max-width: 880px;
+  font-size: clamp(14px, 1.45vw, 18px);
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.design-hero-actions {
+  margin-top: 18px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.design-hero-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #000000;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: transform 0.18s ease, opacity 0.18s ease, box-shadow 0.2s ease;
+  box-shadow: 0 8px 26px rgba(255, 255, 255, 0.22);
+}
+
+.design-hero-btn:hover {
+  transform: translateY(-1px);
+  opacity: 0.92;
+  color: #000000;
+}
+
+.design-hero-btn:focus,
+.design-hero-btn:focus-visible,
+.design-hero-btn:active,
+.design-hero-btn:visited {
+  color: #000000;
+}
+
+.design-hero-btn-muted {
+  background: #f4f4f4;
+  color: #000000;
+  border: 1px solid #ffffff;
+  box-shadow: 0 8px 20px rgba(255, 255, 255, 0.14);
+}
+
+.design-hero-carousel {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(280px, 44vw);
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 0 20px 22px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.design-hero-slide {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  scroll-snap-align: start;
+  background: #111111;
+}
+
+.design-hero-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(1.06) contrast(1.03);
+}
+
+@media (min-width: 1200px) {
+  .design-hero-layout {
+    padding: 54px 36px 34px;
+  }
+
+  .design-hero-carousel {
+    grid-auto-columns: minmax(340px, 31vw);
+  }
+}
+
+@media (max-width: 768px) {
+  .design-hero-layout {
+    padding: 26px 12px 16px;
+    gap: 16px;
+  }
+
+  .design-hero-card {
+    border-radius: 20px;
+  }
+
+  .design-hero-head {
+    padding: 22px 16px 14px;
+  }
+
+  .design-hero-carousel {
+    grid-auto-columns: 82vw;
+    padding: 0 12px 14px;
+  }
+}
+
 .design-root {
-  --studio-bg: #ffffff;
-  --studio-bg-strong: #ffffff;
-  --studio-panel: #ffffff;
-  --studio-panel-soft: rgba(255, 255, 255, 0.98);
-  --studio-border: rgba(0, 0, 0, 0.12);
-  --studio-accent: #000000;
-  --studio-accent-strong: #1d1d1f;
-  --studio-accent-soft: rgba(0, 0, 0, 0.04);
-  --studio-text: #1d1d1f;
-  --studio-text-soft: rgba(29, 29, 31, 0.6);
+  --studio-bg: #000000;
+  --studio-bg-strong: #000000;
+  --studio-panel: #0b0b0b;
+  --studio-panel-soft: rgba(11, 11, 11, 0.98);
+  --studio-border: rgba(255, 255, 255, 0.14);
+  --studio-accent: #ffffff;
+  --studio-accent-strong: #f5f5f7;
+  --studio-accent-soft: rgba(255, 255, 255, 0.1);
+  --studio-text: #ffffff;
+  --studio-text-soft: rgba(255, 255, 255, 0.72);
   --studio-display-font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
   --studio-body-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
   color: var(--studio-text);
   font-family: var(--studio-body-font);
-  background: #ffffff;
-  scroll-behavior: smooth;
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
+  background: #000000;
+  /* Removed scroll-behavior:smooth — it caused auto-scroll-to-canvas on load */
+  scroll-behavior: auto;
+  position: relative;
+  /* FIXED: Use min-height instead of fixed height so parent page can scroll */
+  min-height: 100vh;
+  min-height: 100dvh;
+  /* FIXED: Allow overflow so content below is reachable */
+  overflow: visible;
   display: flex;
   flex-direction: column;
 }
 
+/* Keep contrast consistent on white surfaces within /design */
+.design-page-root :where(
+  .bg-white,
+  .bg-white\/90,
+  .bg-white\/95,
+  .ds-btn-primary,
+  .ds-tab-active
+) {
+  color: #000000;
+}
+
+.design-page-root :where(
+  .bg-white,
+  .bg-white\/90,
+  .bg-white\/95,
+  .ds-btn-primary,
+  .ds-tab-active
+) :where(h1, h2, h3, h4, h5, h6, p, span, a, button, label, li, strong, small) {
+  color: inherit;
+}
+
 @media (max-width: 1024px) {
   .design-root {
-    position: relative;
     min-height: 100vh;
+    min-height: 100dvh;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
@@ -45,8 +228,10 @@
   grid-template-columns: minmax(180px, 240px) minmax(0, 1fr) minmax(240px, 320px);
   gap: 20px;
   padding: 24px;
-  flex: 1;
-  overflow: auto;
+  /* FIXED: Use min-height instead of flex:1 to avoid trapping scroll */
+  min-height: 80vh;
+  /* FIXED: Remove overflow:auto — let page-level scroll handle it */
+  overflow: visible;
 }
 
 @media (max-width: 1024px) {
@@ -56,8 +241,10 @@
     gap: 0;
     padding: 0;
     padding-bottom: 90px;
-    overflow-y: auto;
+    /* FIXED: Let page-level scroll handle mobile too */
+    overflow-y: visible;
     -webkit-overflow-scrolling: touch;
+    min-height: auto;
   }
 }
 
@@ -146,7 +333,7 @@
 @media (max-width: 1024px) {
   .studio-header {
     padding: 12px 16px;
-    background: rgba(255, 255, 255, 0.98);
+    background: rgba(0, 0, 0, 0.94);
     backdrop-filter: blur(20px);
   }
 }
@@ -239,13 +426,13 @@
 }
 
 .studio-btn:hover {
-  background: #f5f5f7;
-  border-color: var(--studio-text);
+  background: #161616;
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .studio-btn:active {
   transform: scale(0.98);
-  background: #e8e8ed;
+  background: #1f1f1f;
 }
 
 .studio-btn:disabled {
@@ -279,19 +466,19 @@
 }
 
 .studio-toggle {
-  background: #f5f5f7;
+  background: #161616;
 }
 
 .studio-toggle.is-on {
-  background: #000000;
-  border-color: #000000;
-  color: #ffffff;
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #000000;
 }
 
 .studio-canvas-wrap {
   position: relative;
   min-height: 70vh;
-  background: #ffffff;
+  background: #000000;
   border-radius: 12px;
   border: 1px solid var(--studio-border);
   overflow: hidden;
@@ -305,7 +492,8 @@
     border: none;
     border-top: 1px solid var(--studio-border);
     border-bottom: 1px solid var(--studio-border);
-    overflow: auto;
+    /* FIXED: Use hidden to prevent double-scrollbar, canvas handles its own scroll */
+    overflow: hidden;
     -webkit-overflow-scrolling: touch;
     order: -1;
   }
@@ -338,6 +526,16 @@
   touch-action: none;
 }
 
+/* Prevent Fabric.js hidden textarea from causing scroll-to-focus */
+.studio-canvas-stage textarea,
+.studio-canvas-wrap textarea {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 .studio-canvas-el {
   width: 100%;
   height: 100%;
@@ -358,7 +556,8 @@
   padding: 10px 12px;
   border-radius: 8px;
   border: 1px solid transparent;
-  background: #f5f5f7;
+  background: #131313;
+  color: #ffffff;
   font-size: 13px;
   letter-spacing: -0.01em;
   cursor: pointer;
@@ -366,13 +565,13 @@
 }
 
 .studio-layer:hover {
-  background: #e8e8ed;
+  background: #1d1d1d;
 }
 
 .studio-layer.is-active {
-  border-color: #000000;
-  background: #000000;
-  color: #ffffff;
+  border-color: #ffffff;
+  background: #ffffff;
+  color: #000000;
 }
 
 .studio-input {
@@ -388,8 +587,8 @@
 
 .studio-input:focus {
   outline: none;
-  border-color: #000000;
-  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08);
+  border-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.14);
 }
 
 .studio-field {
@@ -408,7 +607,8 @@
   padding: 6px 12px;
   border-radius: 999px;
   border: 1px solid var(--studio-border);
-  background: #f5f5f7;
+  background: #161616;
+  color: #ffffff;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: -0.01em;
@@ -505,6 +705,8 @@
 
 .editor-menu {
   animation: dropdownFadeIn 0.2s ease both;
+  color: #000000;
+  --studio-text-soft: rgba(0, 0, 0, 0.56);
 }
 
 @keyframes dropdownFadeIn {
@@ -521,6 +723,7 @@
 .editor-menu-item {
   transition: all 0.2s ease;
   font-family: var(--studio-body-font);
+  color: #000000;
 }
 
 .editor-menu-item:hover {
@@ -534,6 +737,9 @@
 .editor-menu a.studio-chip {
   text-decoration: none;
   transition: all 0.2s ease;
+  color: #000000;
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.14);
 }
 
 .editor-menu a.studio-chip:hover {
@@ -557,12 +763,13 @@
   display: flex;
   flex-direction: column;
   flex: 1;
-  overflow: hidden;
+  /* FIXED: Allow content to flow naturally instead of trapping scroll */
+  overflow: visible;
 }
 
 @media (max-width: 1024px) {
   .studio-animate {
-    overflow-y: auto;
+    overflow: visible;
     -webkit-overflow-scrolling: touch;
   }
 }
@@ -576,6 +783,8 @@
   .design-root {
     min-height: 100vh;
     min-height: 100dvh;
+    /* FIXED: Ensure page-level scroll works on small viewports */
+    overflow-y: visible !important;
   }
 
   .studio-list {
@@ -632,7 +841,7 @@
     gap: 8px;
     padding: 12px 16px;
     padding-bottom: calc(12px + env(safe-area-inset-bottom));
-    background: rgba(255, 255, 255, 0.98);
+    background: rgba(0, 0, 0, 0.94);
     backdrop-filter: blur(20px);
     border-top: 1px solid var(--studio-border);
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
@@ -761,5 +970,520 @@
   .fallback-actions button,
   .fallback-actions a {
     width: 100%;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DESIGN SECTIONS — Below-studio content
+   ═══════════════════════════════════════════════════════════════ */
+
+.design-sections {
+  background: #000000;
+  color: #ffffff;
+  overflow: hidden;
+}
+
+/* ── HERO ──────────────────────────────────────────────────── */
+.ds-hero {
+  position: relative;
+  padding: 100px 24px 80px;
+  text-align: center;
+  overflow: hidden;
+  background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(99, 102, 241, 0.15), transparent);
+}
+
+.ds-hero-inner {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.ds-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 24px;
+}
+
+.ds-hero-title {
+  font-size: clamp(36px, 6vw, 64px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin-bottom: 20px;
+}
+
+.ds-hero-gradient {
+  background: linear-gradient(135deg, #818cf8, #c084fc, #f472b6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.ds-hero-subtitle {
+  font-size: clamp(15px, 2vw, 18px);
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.6;
+  max-width: 540px;
+  margin: 0 auto 32px;
+}
+
+.ds-hero-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 48px;
+}
+
+.ds-hero-tools {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ds-tool-float {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 11px;
+  font-weight: 500;
+  transition: all 0.25s ease;
+  cursor: default;
+}
+
+.ds-tool-float:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* ── BUTTONS ──────────────────────────────────────────────── */
+.ds-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+}
+
+.ds-btn-primary {
+  background: #ffffff;
+  color: #000000;
+}
+
+.ds-btn-primary:hover {
+  background: #e5e5e5;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.15);
+}
+
+.ds-btn-secondary {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.ds-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.ds-btn-large {
+  padding: 16px 32px;
+  font-size: 16px;
+  border-radius: 14px;
+}
+
+/* ── SECTION COMMON ───────────────────────────────────────── */
+.ds-section {
+  padding: 80px 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.ds-section-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.ds-section-title {
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 12px;
+}
+
+.ds-section-subtitle {
+  font-size: clamp(14px, 1.8vw, 17px);
+  color: rgba(255, 255, 255, 0.5);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* ── FEATURES GRID ────────────────────────────────────────── */
+.ds-features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.ds-feature-card {
+  padding: 24px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.3s ease;
+}
+
+.ds-feature-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-4px);
+}
+
+.ds-feature-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.ds-feature-title {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 8px;
+}
+
+.ds-feature-desc {
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ── CATEGORY TABS ────────────────────────────────────────── */
+.ds-category-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 32px;
+}
+
+.ds-tab {
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ds-tab:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.ds-tab-active {
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+}
+
+.ds-tab-active:hover {
+  background: #e5e5e5;
+  color: #000000;
+}
+
+/* ── TEMPLATES GRID ───────────────────────────────────────── */
+.ds-templates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.ds-template-card {
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.ds-template-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.ds-template-preview {
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ds-template-info {
+  padding: 14px 16px 12px;
+}
+
+.ds-template-name {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.ds-template-size {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.ds-template-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ── SHOWCASE GRID ────────────────────────────────────────── */
+.ds-showcase-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.ds-showcase-card {
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.35s ease;
+  cursor: pointer;
+}
+
+.ds-showcase-card:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.ds-showcase-visual {
+  height: 180px;
+  position: relative;
+}
+
+.ds-showcase-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(1px);
+  transition: background 0.3s ease;
+}
+
+.ds-showcase-card:hover .ds-showcase-overlay {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.ds-showcase-body {
+  padding: 18px 20px;
+}
+
+.ds-showcase-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.ds-showcase-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ds-showcase-tag {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ── ENGINES GRID ─────────────────────────────────────────── */
+.ds-engines-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.ds-engine-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px 20px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.25s ease;
+  cursor: default;
+}
+
+.ds-engine-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.ds-engine-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.ds-engine-name {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.ds-engine-desc {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.ds-engine-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ── CTA SECTION ──────────────────────────────────────────── */
+.ds-cta {
+  padding: 100px 24px;
+  text-align: center;
+  background: radial-gradient(ellipse 70% 50% at 50% 110%, rgba(99, 102, 241, 0.12), transparent);
+}
+
+.ds-cta-inner {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.ds-cta-title {
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 16px;
+}
+
+.ds-cta-subtitle {
+  font-size: clamp(14px, 1.8vw, 16px);
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+
+/* ── RESPONSIVE ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .ds-hero {
+    padding: 64px 16px 48px;
+  }
+
+  .ds-section {
+    padding: 56px 16px;
+  }
+
+  .ds-cta {
+    padding: 64px 16px;
+  }
+
+  .ds-hero-tools {
+    gap: 8px;
+  }
+
+  .ds-tool-float {
+    padding: 10px 12px;
+    font-size: 10px;
+  }
+
+  .ds-features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ds-templates-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .ds-showcase-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ds-engines-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ds-category-tabs {
+    gap: 6px;
+  }
+
+  .ds-tab {
+    padding: 6px 14px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ds-templates-grid {
+    grid-template-columns: 1fr;
   }
 }

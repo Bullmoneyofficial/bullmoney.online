@@ -164,11 +164,11 @@ export const StickyScroll = ({
       animate={{
         backgroundColor: backgroundColors[activeCard % backgroundColors.length],
       }}
-      className="relative flex h-[40rem] justify-between gap-10 overflow-y-auto rounded-2xl p-10 border border-white/10"
+      className="relative flex h-[40rem] justify-between gap-6 lg:gap-10 overflow-y-auto rounded-2xl p-6 lg:p-10 border border-white/10"
       ref={ref}
     >
       {/* Left side - Text items scroll, user scrolls through them */}
-      <div className="div relative flex items-start px-4">
+      <div className="div relative flex min-w-0 flex-1 items-start px-2 lg:px-4">
         <div className="max-w-xl">
           {content.map((item, index) => (
             <div key={item.title + index} className="my-20 relative">
@@ -222,7 +222,7 @@ export const StickyScroll = ({
       {/* Right side - Content panel is sticky */}
       <div
         className={cn(
-          "sticky top-10 hidden h-80 w-96 overflow-hidden rounded-2xl bg-black lg:block border border-white/10",
+          "sticky top-6 hidden h-80 w-80 overflow-hidden rounded-2xl bg-black md:block lg:top-10 lg:w-96 border border-white/10 shrink-0",
           contentClassName,
         )}
       >

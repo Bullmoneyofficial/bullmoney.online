@@ -12,26 +12,32 @@
 }
 
 :root {
-    --color-main-bg: #FFFFFF;
-    --color-inner: #F2F2F7;
-    --color-nav-active: rgba(0,0,0,0.04);
-    --main-color: #007AFF;
-    --btn-color-bg: linear-gradient(135deg, #007AFF 0%, #5AC8FA 100%);
+    /* Stake-style Dark Theme */
+    --color-main-bg: #0f212e;
+    --color-inner: #1a2c38;
+    --color-nav-active: rgba(255,255,255,0.08);
+    --main-color: #00e701;
+    --btn-color-bg: linear-gradient(135deg, #00e701 0%, #1fff20 100%);
     --x2: #8E8E93;
     --x3: #FF9500;
     --x5: #FF3B30;
     --x50: #34C759;
-    --glass-bg: rgba(255,255,255,0.88);
-    --glass-border: rgba(0,0,0,0.08);
-    --surface-elevated: #FFFFFF;
-    --text-primary: #1D1D1F;
-    --text-secondary: #6E6E73;
-    --text-tertiary: #AEAEB2;
-    --accent-gradient: linear-gradient(135deg, #007AFF 0%, #5AC8FA 100%);
-    --card-radius: 20px;
+    --glass-bg: rgba(26, 44, 56, 0.95);
+    --glass-border: rgba(255,255,255,0.08);
+    --surface-elevated: #213743;
+    --text-primary: #ffffff;
+    --text-secondary: #b1bad3;
+    --text-tertiary: #7a8a9a;
+    --accent-gradient: linear-gradient(135deg, #00e701 0%, #1fff20 100%);
+    --card-radius: 12px;
     --transition-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    --card-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-    --card-shadow-hover: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+    --card-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    --card-shadow-hover: 0 4px 16px rgba(0,0,0,0.4);
+    --input-bg: #0f212e;
+    --border-color: #2f4553;
+    --success-color: #00e701;
+    --danger-color: #ed4245;
+    --warning-color: #f59e0b;
 }
 
 body {
@@ -1131,14 +1137,14 @@ button:disabled {
 
 .games__sidebar_input {
     width: 100%;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid var(--glass-border);
-    border-radius: 12px;
+    background: var(--input-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
     outline: none;
     padding: 0 14px;
     color: var(--text-primary);
     font-size: 16px;
-    font-weight: 500;
+    font-weight: 600;
     height: 48px;
     box-sizing: border-box;
     transition: border-color 0.3s var(--transition-smooth);
@@ -1160,15 +1166,15 @@ button:disabled {
 }
 
 .games__sidebar_bombs_action {
-    background: var(--surface-elevated);
-    font-weight: 500;
+    background: var(--input-bg);
+    font-weight: 600;
     font-size: 13px;
     text-align: center;
     color: var(--text-secondary);
     flex: auto;
     outline: none;
     border: none;
-    border-right: 1px solid var(--glass-border);
+    border-right: 1px solid var(--border-color);
     line-height: 32px;
     cursor: pointer;
     transition: all 0.2s var(--transition-smooth);
@@ -1187,17 +1193,18 @@ button:disabled {
 
 .sidebar__play {
     width: 100%;
-    background: var(--accent-gradient);
-    border-radius: 14px;
-    font-weight: 600;
-    font-size: 17px;
+    background: var(--success-color);
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 15px;
     line-height: 22px;
-    color: #FFFFFF;
-    padding: 16px 15px;
-    border-color: transparent;
+    color: #000000;
+    padding: 14px 15px;
+    border: none;
     cursor: pointer;
-    transition: transform 0.2s var(--transition-smooth), opacity 0.2s;
-    letter-spacing: -0.01em;
+    transition: all 0.2s var(--transition-smooth);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
 }
 
 .sidebar__play:hover {
@@ -1207,16 +1214,17 @@ button:disabled {
 
 .sidebar__take_win{
     width: 100%;
-    background: linear-gradient(135deg, #30D158 0%, #34C759 100%);
-    border-radius: 14px;
-    font-weight: 600;
-    font-size: 17px;
+    background: var(--success-color);
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 15px;
     line-height: 22px;
-    color: #FFFFFF;
-    padding: 16px 15px;
-    border-color: transparent;
+    color: #000000;
+    padding: 14px 15px;
+    border: none;
     cursor: pointer;
-    transition: transform 0.2s var(--transition-smooth), opacity 0.2s;
+    transition: all 0.2s var(--transition-smooth);
+    text-transform: uppercase;
 }
 
 .sidebar__take_win:hover {
@@ -1381,23 +1389,25 @@ button:disabled {
 
 .mines__cell {
     display: flex;
-    background: var(--main-color);
-    border-radius: 12px;
+    background: var(--surface-elevated);
+    border-radius: 8px;
     height: 70px;
 	width: 70px;
     margin: 4px;
     cursor: pointer;
-    border-color: transparent;
-    transition: transform 0.15s var(--transition-smooth);
+    border: 2px solid var(--border-color);
+    transition: all 0.15s var(--transition-smooth);
 }
 
 .mines__cell:hover {
     transform: scale(1.06);
+    border-color: var(--success-color);
+    box-shadow: 0 0 15px rgba(0, 231, 1, 0.3);
 }
 
 .mines__cell.active {
-    background-color: var(--color-nav-active);
-    border: 2px solid var(--main-color);
+    background-color: var(--success-color);
+    border: 2px solid var(--success-color);
 }
 
 .mines__cell .cristal {
@@ -1430,10 +1440,8 @@ button:disabled {
     font-weight: 700;
     font-size: 96px;
     line-height: 115px;
-    background: var(--accent-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--success-color);
+    text-shadow: 0 0 30px rgba(0, 231, 1, 0.4);
     letter-spacing: -0.04em;
 }
 
@@ -1454,17 +1462,18 @@ button:disabled {
 
 .dice__play {
     padding: 14px 60px;
-    background: var(--accent-gradient);
-    border-radius: 14px;
+    background: var(--success-color);
+    border-radius: 8px;
     font-style: normal;
-    font-weight: 600;
-    font-size: 15px;
+    font-weight: 700;
+    font-size: 14px;
     line-height: 18px;
-    color: #FFFFFF;
-    border-color: transparent;
+    color: #000000;
+    border: none;
     cursor: pointer;
-    transition: transform 0.2s var(--transition-smooth), opacity 0.2s;
-    letter-spacing: -0.01em;
+    transition: all 0.2s var(--transition-smooth);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
 }
 
 .dice__play:hover {
@@ -1481,12 +1490,13 @@ button:disabled {
     width: 100%;
     margin-top: 15px;
     font-style: normal;
-    font-weight: 500;
+    font-weight: 600;
     font-size: 16px;
     line-height: 45px;
-    color: var(--text-tertiary);
-    border: 1px solid var(--glass-border);
-    border-radius: 12px;
+    color: var(--text-secondary);
+    background: var(--input-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
     transition: all 0.3s var(--transition-smooth);
 }
 
@@ -1506,13 +1516,15 @@ button:disabled {
 }
 
 .dice__result.danger {
-    border-color: rgb(216,51,51);
-    color: rgb(216,51,51);
+    border-color: var(--danger-color);
+    color: var(--danger-color);
+    box-shadow: 0 0 15px rgba(237, 66, 69, 0.3);
 } 
 
 .dice__result.success {
-    border-color: var(--main-color);
-    color: var(--main-color);
+    border-color: var(--success-color);
+    color: var(--success-color);
+    box-shadow: 0 0 15px rgba(0, 231, 1, 0.3);
 }
 
 .modal__wallet {
@@ -2131,8 +2143,8 @@ button:disabled {
     left: 50%;
     top: 50%;
     transform: translate(-50%,-50%);
-    color: var(--text-primary);
-    text-shadow: 0 0 30px rgba(10,132,255,0.5), 0 0 60px transparent;
+    color: var(--success-color);
+    text-shadow: 0 0 30px rgba(0, 231, 1, 0.5);
     letter-spacing: -0.02em;
     font-size: 34px;
     font-weight: 700;
@@ -2160,9 +2172,10 @@ button:disabled {
 
 .wheel__bet_history {
     margin-top: 10px;
-    background: var(--color-inner);
+    background: var(--surface-elevated);
     padding: 15px;
-    border-radius: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
 }
 
 .wheel__colors_history {
@@ -2973,8 +2986,9 @@ button:disabled {
     position: absolute;
     text-align: center;
     font-weight: 800;
-    font-size: 40px;
-    color: var(--text-primary);
+    font-size: 48px;
+    color: var(--success-color);
+    text-shadow: 0 0 30px rgba(0, 231, 1, 0.5);
     -webkit-box-sizing: border-box;
     box-sizing: border-box;
     padding-left: 30px;

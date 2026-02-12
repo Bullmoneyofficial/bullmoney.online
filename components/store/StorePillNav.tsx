@@ -228,19 +228,19 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
                 <span className="text-[12px] font-semibold hidden sm:inline relative z-10">Manual</span>
               </button>
             )}
-            {/* Hero Mode Toggle - Design / Trader */}
+            {/* Hero Mode Toggle - Store / Trader / Design */}
             {heroMode && onHeroModeChange && (
               <div className="hidden sm:flex items-center h-8 rounded-full border border-black/10 bg-white overflow-hidden mr-1">
                 <button
                   type="button"
-                  onClick={() => onHeroModeChange('design')}
+                  onClick={() => onHeroModeChange('store')}
                   className={`px-3 h-full text-[11px] font-semibold uppercase tracking-[0.12em] transition-all ${
-                    heroMode === 'design'
+                    heroMode === 'store'
                       ? 'bg-black text-white'
                       : 'text-black/60 hover:text-black'
                   }`}
                 >
-                  Design
+                  Store
                 </button>
                 <button
                   type="button"
@@ -252,6 +252,17 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
                   }`}
                 >
                   Trader
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onHeroModeChange('design')}
+                  className={`px-3 h-full text-[11px] font-semibold uppercase tracking-[0.12em] transition-all ${
+                    heroMode === 'design'
+                      ? 'bg-black text-white'
+                      : 'text-black/60 hover:text-black'
+                  }`}
+                >
+                  Design
                 </button>
               </div>
             )}

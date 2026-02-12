@@ -57,7 +57,10 @@ export default function TLDrawEditor({ onExport }: TLDrawEditorProps) {
         ref={containerRef} 
         style={{ 
           width: '100%',
-          height: '800px',
+          // Match Excalidraw behavior: full viewport height on mobile,
+          // up to 800px on larger screens.
+          height: 'min(100dvh, 800px)',
+          maxHeight: '100dvh',
           borderRadius: '12px',
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
           overflow: 'hidden',

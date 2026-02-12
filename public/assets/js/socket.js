@@ -12,24 +12,7 @@ var chd = 0;
 
 let gocheck;
 
-const socketEndpoint = (typeof window !== 'undefined' && window.__BULLCASINO_SOCKET__) || ':8443';
-let socket;
-
-function initSocket() {
-    if (typeof io === 'undefined') {
-        return false;
-    }
-    socket = io.connect(socketEndpoint);
-    return true;
-}
-
-if (!initSocket()) {
-    const ioWait = setInterval(() => {
-        if (initSocket()) {
-            clearInterval(ioWait);
-        }
-    }, 200);
-}
+const socket = io.connect(':8443');
 socket.on('live', function(data) {
     $('.online').html(data.count);
 });

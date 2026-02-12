@@ -1,7 +1,6 @@
 'use client';
 
-import { use } from 'react';
-import Script from 'next/script';
+import { use, useEffect, useRef } from 'react';
 import BullcasinoShell from '../components/BullcasinoShell';
 
 const gameTitles: Record<string, string> = {
@@ -12,6 +11,50 @@ const gameTitles: Record<string, string> = {
   crash: 'Crash',
   slots: 'Slots',
 };
+
+/**
+ * Sequentially load scripts — each waits for the previous to finish.
+ * This guarantees jQuery & socket.io are ready before game JS runs.
+ */
+function useSequentialScripts(srcs: string[]) {
+  const loaded = useRef(false);
+  useEffect(() => {
+    if (loaded.current) return;
+    loaded.current = true;
+
+    let cancelled = false;
+
+    function loadScript(src: string): Promise<void> {
+      return new Promise((resolve, reject) => {
+        if (cancelled) return reject('cancelled');
+        // Skip if already loaded
+        if (document.querySelector(`script[src="${src}"]`)) {
+          resolve();
+          return;
+        }
+        const s = document.createElement('script');
+        s.src = src;
+        s.async = false;
+        s.onload = () => resolve();
+        s.onerror = () => reject(`Failed to load ${src}`);
+        document.body.appendChild(s);
+      });
+    }
+
+    (async () => {
+      for (const src of srcs) {
+        if (cancelled) break;
+        try {
+          await loadScript(src);
+        } catch (e) {
+          if (e !== 'cancelled') console.warn(e);
+        }
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [srcs]);
+}
 
 function DiceContent() {
   return (
@@ -326,6 +369,7 @@ export default function CasinoGamePage({ params }: { params: Promise<{ game: str
   const content = getGameContent(game);
   const casinoBase = (process.env.NEXT_PUBLIC_CASINO_URL || 'https://bullmoney-casino.onrender.com').replace(/\/$/, '');
   const casinoSocket = process.env.NEXT_PUBLIC_CASINO_SOCKET_URL || `${casinoBase}:8443`;
+
   if (!content) {
     return (
       <BullcasinoShell>
@@ -336,29 +380,49 @@ export default function CasinoGamePage({ params }: { params: Promise<{ game: str
     );
   }
 
-  const scripts = getGameScripts(game);
+  // Build the ordered list of scripts: jQuery first, then socket.io, then app utilities, then game-specific
+  const allScripts: string[] = [
+    'https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.3/jquery.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js',
+    '/assets/js/notifyme.min.js',
+    '/assets/js/app.js',
+    '/assets/js/socket.js',
+    ...getGameScripts(game),
+  ];
+
+  return (
+    <CasinoGameInner game={game} content={content} scripts={allScripts} casinoBase={casinoBase} casinoSocket={casinoSocket} />
+  );
+}
+
+function CasinoGameInner({ game, content, scripts, casinoBase, casinoSocket }: {
+  game: string;
+  content: React.ReactNode;
+  scripts: string[];
+  casinoBase: string;
+  casinoSocket: string;
+}) {
+  // Set globals before any scripts run
+  useEffect(() => {
+    (window as any).client_user = 0;
+    (window as any).__BULLCASINO_BASE__ = casinoBase;
+    (window as any).__BULLCASINO_SOCKET__ = casinoSocket;
+    if (game === 'crash') {
+      (window as any).game_active = false;
+      (window as any).bet = undefined;
+      (window as any).isCashout = undefined;
+      (window as any).withdraw = undefined;
+    }
+  }, [game, casinoBase, casinoSocket]);
+
+  // Load all scripts sequentially (jQuery -> socket.io -> app.js -> game scripts)
+  useSequentialScripts(scripts);
 
   return (
     <BullcasinoShell>
-      <Script id="bullcasino-config" strategy="beforeInteractive">
-        {`var client_user = 0; window.__BULLCASINO_BASE__ = '${casinoBase}'; window.__BULLCASINO_SOCKET__ = '${casinoSocket}';`}
-      </Script>
-      {game === 'crash' && (
-        <Script id="bullcasino-crash-config" strategy="beforeInteractive">
-          {`var game_active = false; var bet; var isCashout; var withdraw;`}
-        </Script>
-      )}
-
-      <Script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.3/jquery.min.js" strategy="beforeInteractive" />
-      <Script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js" strategy="beforeInteractive" />
-      <Script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js" strategy="beforeInteractive" />
-      <Script src="/assets/js/notifyme.min.js" strategy="afterInteractive" />
-      <Script src="/assets/js/app.js" strategy="afterInteractive" />
-      <Script src="/assets/js/socket.js" strategy="afterInteractive" />
-      {scripts.map((src) => (
-        <Script key={src} src={src} strategy="afterInteractive" />
-      ))}
-
+      <link rel="stylesheet" href="/assets/css/style.css" />
+      <link rel="stylesheet" href="/assets/css/notifyme.css" />
       {content}
     </BullcasinoShell>
   );

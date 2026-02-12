@@ -156,52 +156,22 @@ const TradingViewBackground = memo(({ assetKey }: { assetKey: AssetKey }) => {
     const currentRef = containerRef.current;
     if (!currentRef) return;
 
-    const widgetId = "tv_bg_" + Math.random().toString(36).substring(7);
-    currentRef.innerHTML = "";
-
-    const container = document.createElement("div");
-    container.id = widgetId;
-    container.style.height = "100%";
-    container.style.width = "100%";
-    currentRef.appendChild(container);
-
-    const script = document.createElement("script");
-    script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
-    script.async = true;
-    script.type = "text/javascript";
-
-    script.innerHTML = JSON.stringify({
-      autosize: true,
-      symbol: asset.symbol,
-      interval: "1",
-      timezone: "Etc/UTC",
-      theme: "dark",
-      style: "1",
-      locale: "en",
-      enable_publishing: false,
-      hide_top_toolbar: true,
-      hide_legend: true,
-      save_image: false,
-      calendar: false,
-      hide_volume: true,
-      // --- VIP COLOR SCHEME ---
-      backgroundColor: "rgba(5, 1, 13, 1)", // Almost black purple (Void)
-      gridLineColor: "rgba(255, 255, 255, 0.15)", // Subtle purple grid
-      scaleFontColor: "rgba(134, 137, 147, 0)",
-      // --- PURPLE & WHITE CANDLES ---
-      upColor: "#ffffff", // Neon Purple for UP
-      downColor: "#FFFFFF", // White for DOWN
-      borderUpColor: "#ffffff",
-      borderDownColor: "#FFFFFF",
-      wickUpColor: "#ffffff",
-      wickDownColor: "#FFFFFF",
-    });
-    container.appendChild(script);
+    // Use iframe embed instead of script widget to avoid contentWindow errors
+    currentRef.innerHTML = `
+      <iframe
+        src="https://www.tradingview.com/widgetembed/?frameElementId=tv_bg_chart&symbol=${asset.symbol}&interval=1&hidesidetoolbar=1&theme=dark&style=1&timezone=Etc%2FUTC"
+        width="100%"
+        height="100%"
+        style="border: 0; background: rgba(5, 1, 13, 1);"
+        allowfullscreen
+        loading="lazy"
+      ></iframe>
+    `;
 
     return () => {
       if (currentRef) currentRef.innerHTML = "";
     };
-  }, [assetKey]);
+  }, [assetKey, asset.symbol]);
 
   return (
     <div className="absolute inset-0 z-0 pointer-events-none">

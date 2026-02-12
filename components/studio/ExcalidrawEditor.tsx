@@ -57,7 +57,10 @@ export default function ExcalidrawEditor({ onExport }: ExcalidrawEditorProps) {
         ref={containerRef} 
         style={{ 
           width: '100%',
-          height: '800px',
+          // On mobile, let the canvas stretch to (almost) full viewport height.
+          // On larger screens, keep a comfortable fixed height.
+          height: 'min(100dvh, 800px)',
+          maxHeight: '100dvh',
           borderRadius: '12px',
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
           overflow: 'hidden',

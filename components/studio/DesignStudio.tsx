@@ -172,13 +172,43 @@ export default function DesignStudio() {
   const [fabricLoading, setFabricLoading] = useState(true);
   const [fabricError, setFabricError] = useState<string | null>(null);
   const [useFallback, setUseFallback] = useState(false);
-  const [editorType, setEditorType] = useState<EditorType>('drawing');
+  const [editorType, setEditorType] = useState<EditorType>('excalidraw');
   const [showEditorMenu, setShowEditorMenu] = useState(false);
+
+  const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null);
+  const [canvasReady, setCanvasReady] = useState(false);
 
   const editorMeta = EDITOR_META[editorType];
 
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < historyLength - 1;
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handler = (event: Event) => {
+      const custom = event as CustomEvent<{ action: string; editorType?: EditorType | string }>;
+      const detail = custom.detail || { action: '' };
+
+      if (detail.action === 'switch-engine' && detail.editorType) {
+        const next = String(detail.editorType) as EditorType;
+        if (EDITOR_META[next]) {
+          setEditorType(next);
+          setUseFallback(next === 'drawing' || next === 'html5');
+          setShowEditorMenu(false);
+        }
+      }
+
+      if (detail.action === 'open') {
+        // For now, "open" is a no-op since the studio
+        // is already visible on the /design page, but
+        // we keep the hook so future behaviors can be added.
+      }
+    };
+
+    window.addEventListener('design_studio_control', handler as EventListener);
+    return () => window.removeEventListener('design_studio_control', handler as EventListener);
+  }, []);
 
   const setActiveObject = useCallback((object: FabricObject | null) => {
     const canvas = canvasRef.current;
@@ -809,124 +839,99 @@ export default function DesignStudio() {
     pushHistory();
   }, [pushHistory]);
 
-  useEffect(() => {
-    let mounted = true;
-    let resizeObserver: ResizeObserver | null = null;
+  // Initialize canvas only when user clicks to activate (prevents auto-scroll)
+  const initializeCanvas = useCallback(async () => {
+    const canvasElement = canvasElementRef.current;
+    if (!canvasElement || canvasRef.current) return;
 
-    const setupCanvas = async () => {
-      const canvasElement = canvasElementRef.current;
-      if (!canvasElement) {
-        console.log('[DesignStudio] Canvas element not found, retrying...');
-        return;
-      }
+    try {
+      setFabricLoading(true);
+      setFabricError(null);
+      
+      const fabricModule = await import("fabric");
+      fabricRef.current = fabricModule;
+      const { Canvas, Rect, Shadow } = fabricModule;
 
-      console.log('[DesignStudio] Initializing Fabric.js...');
+      const canvas = new Canvas(canvasElement, {
+        selection: true,
+        preserveObjectStacking: true,
+        fireRightClick: false,
+        stopContextMenu: true,
+      });
 
-      try {
-        setFabricLoading(true);
-        setFabricError(null);
-        const fabricModule = await import("fabric");
-        if (!mounted) {
-          console.log('[DesignStudio] Component unmounted, aborting...');
-          return;
+      canvasRef.current = canvas;
+
+      const artboard = new Rect({
+        left: 0,
+        top: 0,
+        width: ARTBOARD.width,
+        height: ARTBOARD.height,
+        fill: "#ffffff",
+        stroke: "#e5e5e7",
+        strokeWidth: 1,
+        selectable: false,
+        evented: false,
+        rx: 12,
+        ry: 12,
+        shadow: new Shadow({
+          color: "rgba(0, 0, 0, 0.1)",
+          blur: 20,
+          offsetX: 0,
+          offsetY: 4,
+        }),
+      });
+
+      artboard.set({ objectId: "artboard", studioLabel: "Artboard" });
+      artboardRef.current = artboard;
+      canvas.add(artboard);
+
+      const handleSelection = () => {
+        const active = canvas.getActiveObject();
+        updateSelectionState(active ?? null);
+        syncSelectionControls(active ?? null);
+        syncLayers();
+      };
+
+      canvas.on("selection:created", handleSelection);
+      canvas.on("selection:updated", handleSelection);
+      canvas.on("selection:cleared", () => {
+        updateSelectionState(null);
+        syncLayers();
+      });
+
+      canvas.on("object:added", (event) => {
+        if (event.target) {
+          ensureObjectMeta(event.target);
         }
-
-        console.log('[DesignStudio] Fabric.js loaded successfully');
-        fabricRef.current = fabricModule;
-        const { Canvas, Rect, Shadow } = fabricModule;
-
-        const canvas = new Canvas(canvasElement, {
-          selection: true,
-          preserveObjectStacking: true,
-          fireRightClick: false,
-          stopContextMenu: true,
-        });
-
-        canvasRef.current = canvas;
-
-        const artboard = new Rect({
-          left: 0,
-          top: 0,
-          width: ARTBOARD.width,
-          height: ARTBOARD.height,
-          fill: "#ffffff",
-          stroke: "#e5e5e7",
-          strokeWidth: 1,
-          selectable: false,
-          evented: false,
-          rx: 12,
-          ry: 12,
-          shadow: new Shadow({
-            color: "rgba(0, 0, 0, 0.1)",
-            blur: 20,
-            offsetX: 0,
-            offsetY: 4,
-          }),
-        });
-
-        artboard.set({ objectId: "artboard", studioLabel: "Artboard" });
-        artboardRef.current = artboard;
-        canvas.add(artboard);
-
-        const handleSelection = () => {
-          const active = canvas.getActiveObject();
-          updateSelectionState(active ?? null);
-          syncSelectionControls(active ?? null);
-          syncLayers();
-        };
-
-        canvas.on("selection:created", handleSelection);
-        canvas.on("selection:updated", handleSelection);
-        canvas.on("selection:cleared", () => {
-          updateSelectionState(null);
-          syncLayers();
-        });
-
-        canvas.on("object:added", (event) => {
-          if (event.target) {
-            ensureObjectMeta(event.target);
-          }
-          syncLayers();
-          pushHistory();
-        });
-
-        canvas.on("object:modified", () => {
-          syncLayers();
-          pushHistory();
-        });
-
-        canvas.on("object:removed", () => {
-          syncLayers();
-          pushHistory();
-        });
-
-        resizeObserver = new ResizeObserver(() => resizeCanvas());
-        if (containerRef.current) {
-          resizeObserver.observe(containerRef.current);
-        }
-
-        resizeCanvas();
+        syncLayers();
         pushHistory();
-        console.log('[DesignStudio] Canvas initialized successfully');
-        setFabricLoading(false);
-      } catch (error) {
-        console.error("[DesignStudio] Failed to load Fabric.js:", error);
-        setFabricError(error instanceof Error ? error.message : "Failed to load design library");
-        setFabricLoading(false);
-        setUseFallback(true);
-      }
-    };
+      });
 
-    setupCanvas();
+      canvas.on("object:modified", () => {
+        syncLayers();
+        pushHistory();
+      });
 
-    return () => {
-      mounted = false;
-      if (resizeObserver) {
-        resizeObserver.disconnect();
+      canvas.on("object:removed", () => {
+        syncLayers();
+        pushHistory();
+      });
+
+      const resizeObserver = new ResizeObserver(() => resizeCanvas());
+      if (containerRef.current) {
+        resizeObserver.observe(containerRef.current);
       }
-      canvasRef.current?.dispose();
-      canvasRef.current = null;
-    };
+
+      resizeCanvas();
+      pushHistory();
+      setCanvasReady(true);
+      setFabricLoading(false);
+    } catch (error) {
+      console.error("[DesignStudio] Failed to load Fabric.js:", error);
+      setFabricError(error instanceof Error ? error.message : "Failed to load design library");
+      setFabricLoading(false);
+      setUseFallback(true);
+    }
   }, [ensureObjectMeta, pushHistory, resizeCanvas, syncLayers, syncSelectionControls, updateSelectionState]);
 
   useEffect(() => {
@@ -1179,18 +1184,6 @@ export default function DesignStudio() {
                     <div style={{ fontSize: '11px', color: 'var(--studio-text-soft)' }}>Static canvas</div>
                   </div>
                 </button>
-                <div style={{ padding: '10px 12px', borderTop: '1px solid var(--studio-border)', fontSize: '10px', color: 'var(--studio-text-soft)', background: 'rgba(0,0,0,0.02)' }}>
-                  <div style={{ marginBottom: '6px', fontWeight: '600' }}>Quick Links:</div>
-                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                    <a href="https://paperjs.org/" target="_blank" rel="noopener noreferrer" className="studio-chip" style={{ fontSize: '9px', padding: '3px 6px' }}>Paper</a>
-                    <a href="https://p5js.org/" target="_blank" rel="noopener noreferrer" className="studio-chip" style={{ fontSize: '9px', padding: '3px 6px' }}>P5</a>
-                    <a href="https://two.js.org/" target="_blank" rel="noopener noreferrer" className="studio-chip" style={{ fontSize: '9px', padding: '3px 6px' }}>Two</a>
-                    <a href="https://threejs.org/" target="_blank" rel="noopener noreferrer" className="studio-chip" style={{ fontSize: '9px', padding: '3px 6px' }}>Three</a>
-                    <a href="https://pixijs.com/" target="_blank" rel="noopener noreferrer" className="studio-chip" style={{ fontSize: '9px', padding: '3px 6px' }}>Pixi</a>
-                    <a href="https://excalidraw.com/" target="_blank" rel="noopener noreferrer" className="studio-chip" style={{ fontSize: '9px', padding: '3px 6px' }}>Excali</a>
-                    <a href="https://tldraw.com/" target="_blank" rel="noopener noreferrer" className="studio-chip" style={{ fontSize: '9px', padding: '3px 6px' }}>TLDraw</a>
-                  </div>
-                </div>
               </div>
             )}
           </div>
@@ -1424,18 +1417,25 @@ export default function DesignStudio() {
         </aside>
 
         <section className="studio-canvas-wrap">
-          {editorType === 'fabric' && fabricLoading && (
+          {editorType === 'fabric' && !canvasReady && (
             <div className="studio-loading-state">
               <div className="studio-spinner"></div>
-              <div className="studio-loading-text">Loading design tools...</div>
-              <div className="studio-loading-subtext">Initializing Fabric.js canvas library</div>
+              <div className="studio-loading-text">Design Studio Ready</div>
+              <div className="studio-loading-subtext">Click to start creating</div>
+              <button 
+                onClick={initializeCanvas}
+                className="studio-btn studio-btn-primary mt-4"
+                disabled={fabricLoading}
+              >
+                {fabricLoading ? 'Loading...' : 'Start Design Studio'}
+              </button>
             </div>
           )}
 
-          {editorType === 'fabric' && !useFallback && (
+          {editorType === 'fabric' && canvasReady && (
             <>
-              <div className={`studio-grid${gridEnabled ? " is-on" : ""}`} style={{ opacity: fabricLoading ? 0 : 1 }} />
-              <div className="studio-canvas-stage" ref={containerRef} style={{ opacity: fabricLoading ? 0 : 1, pointerEvents: fabricLoading ? 'none' : 'auto' }}>
+              <div className={`studio-grid${gridEnabled ? " is-on" : ""}`} />
+              <div className="studio-canvas-stage" ref={containerRef}>
                 <canvas className="studio-canvas-el" ref={canvasElementRef} />
               </div>
             </>

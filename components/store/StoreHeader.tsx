@@ -48,6 +48,7 @@ const CartDrawer = dynamic(() => import('@/components/shop/CartDrawer').then(m =
 // Items with action: 'modal-*' are intercepted by handleCategoryClick to open modals instead of navigating
 const STORE_NAV_ITEMS = [
   { href: '/', label: 'Home', category: '' },
+  { href: '/design', label: 'Design', category: '' },
   { href: '/games', label: 'Games', category: '' },
   { href: '#action:products', label: 'Products', category: '' },
   { href: '#action:faq', label: 'FAQ', category: '' },
@@ -97,6 +98,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   const [gamesManualOpen, setGamesManualOpen] = useState(false);
   const [manualDropdownOpen, setManualDropdownOpen] = useState(false);
   const [siteSearchOpen, setSiteSearchOpen] = useState(false);
+  const [showDesignSections, setShowDesignSections] = useState(true);
   const desktopMenuCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hubToggleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { openCart, getItemCount } = useCartStore();
@@ -115,6 +117,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   const setHeroMode = onHeroModeChangeOverride ?? setHookHeroMode;
   const isAccountPage = pathname?.startsWith('/store/account');
   const isCasinoPage = pathname?.startsWith('/games');
+  const isDesignPage = pathname?.startsWith('/design');
   const isHomePage = pathname === '/';
   // Show home button on non-home pages (store, games, etc.) so users can navigate back
   const showHomeButton = !isHomePage;
@@ -170,6 +173,17 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       window.dispatchEvent(new Event('store_ultimate_hub_toggle'));
     }
   }, []);
+
+  // Load Design Sections preference
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('store_show_design_sections');
+      // Default to true (sections visible) unless explicitly disabled
+      const value = stored !== 'false';
+      setShowDesignSections(value);
+      window.dispatchEvent(new CustomEvent('store_design_sections_toggle', { detail: value }));
+    }
+  }, []);
   
   const toggleThemePicker = useCallback(() => {
     SoundEffects.click();
@@ -210,6 +224,18 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     applyUltimateHubToggle();
   }, [applyUltimateHubToggle, desktopMenuOpen]);
 
+  const toggleDesignSections = useCallback(() => {
+    SoundEffects.click();
+    setShowDesignSections(prev => {
+      const newValue = !prev;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('store_show_design_sections', String(newValue));
+        window.dispatchEvent(new CustomEvent('store_design_sections_toggle', { detail: newValue }));
+      }
+      return newValue;
+    });
+  }, []);
+
   const desktopLinks = useMemo(() => {
     const links = [
       { label: 'Games', href: '/games', variant: 'link' as const },
@@ -218,19 +244,44 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       { label: 'FAQ', onClick: () => setFaqModalOpen(true), variant: 'link' as const },
       { label: 'Themes', onClick: toggleThemePicker, isActive: showThemePicker, variant: 'toggle' as const },
       { label: 'Hub', onClick: toggleUltimateHub, isActive: showUltimateHub, variant: 'toggle' as const },
+      ...(isDesignPage ? [{ label: 'Sections', onClick: toggleDesignSections, isActive: showDesignSections, variant: 'toggle' as const }] : []),
     ];
 
     return links;
-  }, [openProductsModal, setAffiliateModalOpen, setFaqModalOpen, showThemePicker, showUltimateHub, toggleThemePicker, toggleUltimateHub]);
+  }, [openProductsModal, setAffiliateModalOpen, setFaqModalOpen, showThemePicker, showUltimateHub, toggleThemePicker, toggleUltimateHub, isDesignPage, showDesignSections, toggleDesignSections]);
+
+  // Check if there's a canvas section in the viewport (below header)
+  const isOverCanvasSection = useCallback(() => {
+    if (typeof window === 'undefined') return false;
+    // Check multiple points in the trigger zone area (48px to 200px down)
+    const checkPoints = [
+      [window.innerWidth / 2, 68],  // Center, just below header
+      [window.innerWidth / 2, 150], // Center, mid-area
+      [window.innerWidth / 4, 68],  // Left quarter
+      [window.innerWidth * 0.75, 68], // Right quarter
+    ];
+    
+    return checkPoints.some(([x, y]) => {
+      const elementsUnderPoint = document.elementsFromPoint(x, y);
+      return elementsUnderPoint.some(el => 
+        el.tagName === 'CANVAS' ||
+        el.closest('[data-canvas-section]') !== null ||
+        el.closest('[data-spline-container]') !== null ||
+        el.id === 'spline-container' ||
+        el.classList.contains('spline-container')
+      );
+    });
+  }, []);
 
   const openDesktopMenu = useCallback(() => {
     if (isCasinoPage) return; // Disable hover menu on games pages
+    if (isOverCanvasSection()) return; // Disable if cursor is over canvas sections
     if (desktopMenuCloseTimer.current) {
       clearTimeout(desktopMenuCloseTimer.current);
       desktopMenuCloseTimer.current = null;
     }
     setDesktopMenuOpen(true);
-  }, [isCasinoPage]);
+  }, [isCasinoPage, isOverCanvasSection]);
 
   const scheduleDesktopMenuClose = useCallback(() => {
     if (desktopMenuCloseTimer.current) {
@@ -247,7 +298,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     setDesktopMenuOpen(prev => !prev);
   }, [isCasinoPage]);
 
-  // Ensure desktop menu stays closed while on games pages
+  // Ensure desktop menu stays closed on games pages
   useEffect(() => {
     if (isCasinoPage && desktopMenuOpen) {
       setDesktopMenuOpen(false);
@@ -360,6 +411,17 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     router.push('/');
   }, [router]);
 
+  const handleHeroModeChange = useCallback((mode: HeroMode) => {
+    setHeroMode(mode);
+    if (mode === 'design') {
+      router.push('/design');
+    } else if (mode === 'trader') {
+      router.push('/'); // Redirect to app page (homepage)
+    } else if (mode === 'store') {
+      router.push('/store'); // Redirect to store page
+    }
+  }, [router, setHeroMode]);
+
   return (
     <>
       {/* Modern Pill Navigation Header */}
@@ -400,7 +462,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
         desktopMenuOpen={isCasinoPage ? false : desktopMenuOpen}
         // Hero mode toggle
         heroMode={heroMode}
-        onHeroModeChange={setHeroMode}
+        onHeroModeChange={handleHeroModeChange}
       />
 
       {!isCasinoPage && (
@@ -412,13 +474,14 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
         </div>
       )}
 
-      {/* Invisible Hover Trigger Strip - Top 15% of viewport for easy menu access on desktop */}
+      {/* Invisible Hover Trigger Strip - Smart detection avoids canvas sections */}
       {!isCasinoPage && !isAccountPage && (
         <div
           className="fixed left-0 right-0 hidden lg:block pointer-events-auto z-[895]"
           style={{
             top: '48px',
-            height: '15vh',
+            // Minimal 5px activation zone - only opens when cursor touches the header edge
+            height: '5px',
           }}
           onMouseEnter={openDesktopMenu}
           onMouseLeave={scheduleDesktopMenuClose}
@@ -444,6 +507,9 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
           />
         </>
       )}
+      {/* Desktop Dropdown Content — only rendered on non-casino pages to prevent
+          invisible links from capturing clicks over the game area */}
+      {!isCasinoPage && (
       <div
         className={`fixed left-0 right-0 z-[950] hidden lg:block transition-opacity ${desktopMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
         style={{
@@ -505,6 +571,14 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                   style={{ color: '#000000' }}
                 >
                   Games
+                </Link>
+                <Link
+                  href="/design"
+                  onClick={() => setDesktopMenuOpen(false)}
+                  className="block text-left text-2xl font-medium tracking-tight transition-colors hover:bg-neutral-100 px-2 py-1 rounded"
+                  style={{ color: '#000000' }}
+                >
+                  Design Studio
                 </Link>
                 <button
                   onClick={() => {
@@ -585,6 +659,18 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                 >
                   Ultimate Hub {showUltimateHub ? 'On' : 'Off'}
                 </button>
+                {isDesignPage && (
+                  <button
+                    onClick={() => {
+                      toggleDesignSections();
+                      setDesktopMenuOpen(false);
+                    }}
+                    className="block text-left text-lg font-medium tracking-tight transition-colors hover:bg-neutral-100 px-2 py-1 rounded w-full"
+                    style={{ color: '#000000', fontWeight: showDesignSections ? 600 : 500 }}
+                  >
+                    Design Sections {showDesignSections ? 'On' : 'Off'}
+                  </button>
+                )}
                 {effectiveAdmin && (
                   <button
                     onClick={() => {
@@ -602,6 +688,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
           </div>
         </div>
       </div>
+      )}
 
       {/* Manual Dropdown - Inline on Games Pages */}
       {isCasinoPage && manualDropdownOpen && (
@@ -941,6 +1028,27 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                     />
                   </span>
                 </button>
+
+                {isDesignPage && (
+                  <button
+                    onClick={toggleDesignSections}
+                    className="w-full flex items-center justify-between text-left text-2xl font-medium tracking-tight"
+                    style={{ color: 'rgba(0,0,0,0.95)' }}
+                    role="switch"
+                    aria-checked={showDesignSections}
+                  >
+                    <span>Sections</span>
+                    <span
+                      className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
+                      style={{ background: showDesignSections ? 'rgba(0,0,0,0.9)' : 'rgba(0,0,0,0.2)' }}
+                    >
+                      <span
+                        className={`inline-block h-5 w-5 rounded-full transition-transform ${showDesignSections ? 'translate-x-5' : 'translate-x-1'}`}
+                        style={{ background: showDesignSections ? 'rgb(255,255,255)' : 'rgb(0,0,0)' }}
+                      />
+                    </span>
+                  </button>
+                )}
               </div>
               
               {/* Site Features - Mobile */}
@@ -972,6 +1080,14 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                   style={{ color: 'rgba(0,0,0,0.95)' }}
                 >
                   Games
+                </Link>
+                <Link
+                  href="/design"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block text-left text-2xl font-medium tracking-tight transition-colors"
+                  style={{ color: 'rgba(0,0,0,0.95)' }}
+                >
+                  Design Studio
                 </Link>
                 <button
                   onClick={() => {

@@ -5,15 +5,6 @@ function noty(text, type) {
     });
 }
 
-if (typeof window !== 'undefined' && window.__BULLCASINO_BASE__ && typeof $ !== 'undefined') {
-    const baseUrl = window.__BULLCASINO_BASE__.replace(/\/$/, '');
-    $.ajaxPrefilter(function(options) {
-        if (options.url && options.url.startsWith('/')) {
-            options.url = baseUrl + options.url;
-        }
-    });
-}
-
 function updateBalance(balance) {
     current_balance = balance;
     var init_balance = parseInt($('#balance').text().split(' ').join(''));

@@ -1,48 +1,238 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { useHubStore } from '@/stores/hub-store';
-import { HubDrawer } from './HubDrawer';
-import { Layers } from 'lucide-react';
 
 const ASSET_BASE = '/assets';
-
-
-const navGames = [
-  { slug: 'dice', icon: 'bx-dice-5' },
-  { slug: 'mines', icon: 'bx-bomb' },
-  { slug: 'wheel', icon: 'bx-color' },
-  { slug: 'jackpot', icon: 'bx-crown' },
-  { slug: 'crash', icon: 'bx-line-chart' },
-  { slug: 'slots', icon: 'bx-grid-alt' },
-];
 
 export default function BullcasinoShell({ children }: { children: ReactNode }) {
   return (
     <main
       className="bullcasino-page"
+      onClick={(e) => e.stopPropagation()}
+      onMouseEnter={(e) => e.stopPropagation()}
       style={{
         background: 'radial-gradient(circle at top, rgba(15, 23, 42, 0.7), rgba(2, 6, 23, 0.95)), #0b1120',
-        minHeight: '100vh',
+        minHeight: 'auto',
         overflow: 'visible',
+        position: 'relative',
+        zIndex: 10,
+        isolation: 'isolate',
       }}
     >
-      <link rel="stylesheet" href={`${ASSET_BASE}/css/style.css`} />
-      <link rel="stylesheet" href={`${ASSET_BASE}/css/notifyme.css`} />
+      {/* Only load boxicons for icons - removed style.css and notifyme.css as they have global selectors that break the landing page */}
       <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" />
       <style>{`
-        /* Fix scrolling issues - override external CSS */
-        html, body {
-          height: auto !important;
-          min-height: 100% !important;
-          overflow-y: auto !important;
-          overflow-x: hidden !important;
-        }
+        /* Shell-specific styles - no external CSS that can leak to parent page */
         .bullcasino-page {
           overflow: visible !important;
+          min-height: auto !important;
         }
-        .main__content {
+        
+        /* Hide left navigation */
+        .bullcasino-page .fix__left_nav,
+        .bullcasino-page .leftside__games,
+        .bullcasino-page .leftside__social {
+          display: none !important;
+        }
+        
+        /* Shell layout */
+        .bullcasino-page .main__content {
+          display: block !important;
+          position: static !important;
+          padding: 0 !important;
+          min-height: auto !important;
           overflow: visible !important;
+        }
+        
+        /* Games container */
+        .bullcasino-page .games__container {
+          position: relative !important;
+          margin: 0 auto !important;
+          max-width: 100% !important;
+          width: 100% !important;
+          background: transparent !important;
+          border-radius: 0 !important;
+          border: none !important;
+          overflow: visible !important;
+        }
+        
+        /* Shell games grid */
+        .bullcasino-page .shell-games-grid {
+          display: grid !important;
+          height: auto !important;
+        }
+        .bullcasino-page .shell-game-card {
+          display: flex !important;
+          flex-direction: column !important;
+          height: auto !important;
+        }
+        .bullcasino-page .shell-game-image {
+          height: auto !important;
+        }
+        
+        /* Shell navbar styles (inline replacement for style.css) */
+        .bullcasino-page .navbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 12px 24px;
+          background: rgba(15, 23, 42, 0.95);
+          border-bottom: 1px solid #1f2937;
+        }
+        .bullcasino-page .logotype {
+          display: flex;
+          align-items: center;
+        }
+        .bullcasino-page .bull-logo {
+          font-weight: 700;
+          font-size: 18px;
+          color: #f8fafc;
+        }
+        .bullcasino-page .bull-logo .accent {
+          background: linear-gradient(135deg, #007AFF 0%, #5AC8FA 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+        .bullcasino-page .navmenu__list {
+          display: flex;
+          gap: 24px;
+          list-style: none;
+          margin: 0;
+          padding: 0;
+        }
+        .bullcasino-page .navmenu__item_link {
+          color: #94a3b8;
+          text-decoration: none;
+          font-size: 14px;
+          font-weight: 500;
+          transition: color 0.2s;
+        }
+        .bullcasino-page .navmenu__item_link:hover,
+        .bullcasino-page .navmenu__item_link.active {
+          color: #f8fafc;
+        }
+        .bullcasino-page .user__wallet {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .bullcasino-page .user__balance {
+          padding: 8px 16px;
+          background: rgba(15, 23, 42, 0.8);
+          border: 1px solid #1f2937;
+          border-radius: 8px;
+          color: #f8fafc;
+          font-size: 14px;
+        }
+        .bullcasino-page .wallet_up_btn {
+          padding: 8px 16px;
+          background: #1f2937;
+          border: 1px solid #374151;
+          border-radius: 8px;
+          color: #6b7280;
+          font-size: 13px;
+          cursor: not-allowed;
+        }
+        
+        /* Mobile menu */
+        .bullcasino-page .mobile_menu {
+          display: none;
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          background: rgba(15, 23, 42, 0.98);
+          border-top: 1px solid #1f2937;
+          padding: 8px 0;
+          z-index: 100;
+        }
+        .bullcasino-page .mobile_menu__content {
+          display: flex;
+          justify-content: space-around;
+        }
+        .bullcasino-page .mobile_menu__link {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 4px;
+          color: #94a3b8;
+          text-decoration: none;
+          font-size: 11px;
+        }
+        .bullcasino-page .mobile_menu__link i {
+          font-size: 20px;
+        }
+        
+        /* Footer */
+        .bullcasino-page .footer {
+          padding: 32px 24px;
+          background: #000000;
+          border-top: 1px solid #1f2937;
+        }
+        .bullcasino-page .footer__header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          flex-wrap: wrap;
+          gap: 24px;
+          margin-bottom: 24px;
+        }
+        .bullcasino-page .footer_security {
+          display: block;
+          margin-top: 8px;
+          color: #6b7280;
+          font-size: 12px;
+          font-weight: 400;
+        }
+        .bullcasino-page .footer__warn {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .bullcasino-page .warn_mark {
+          padding: 8px 12px;
+          background: #dc2626;
+          border-radius: 6px;
+          color: white;
+          font-weight: 700;
+          font-size: 14px;
+        }
+        .bullcasino-page .warn_text {
+          max-width: 400px;
+          color: #94a3b8;
+          font-size: 12px;
+          line-height: 1.5;
+        }
+        .bullcasino-page .footer__bottom {
+          display: flex;
+          gap: 24px;
+        }
+        .bullcasino-page .footer__rules,
+        .bullcasino-page .footer__privacy {
+          color: #64748b;
+          text-decoration: none;
+          font-size: 13px;
+        }
+        .bullcasino-page .footer__rules:hover,
+        .bullcasino-page .footer__privacy:hover {
+          color: #94a3b8;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+          .bullcasino-page .navbar {
+            padding: 10px 16px;
+          }
+          .bullcasino-page .navmenu {
+            display: none;
+          }
+          .bullcasino-page .user__wallet {
+            display: none;
+          }
+          .bullcasino-page .mobile_menu {
+            display: block;
+          }
         }
       `}</style>
 
@@ -101,25 +291,6 @@ export default function BullcasinoShell({ children }: { children: ReactNode }) {
             <i className='bx bxs-user-circle'></i>
             Support
           </a>
-        </div>
-      </div>
-
-      <div className="fix__left_nav">
-        <div className="leftside__games">
-          {navGames.map((game) => (
-            <div className="leftside__game" key={game.slug}>
-              <a href={`/games/${game.slug}`}>
-                <i className={`bx ${game.icon}`}></i>
-              </a>
-            </div>
-          ))}
-        </div>
-        <div className="leftside__social">
-          <div className="social social_tg">
-            <a href="https://t.me/BullMoney" target="_blank" rel="noreferrer">
-              <i className='bx bxl-telegram'></i>
-            </a>
-          </div>
         </div>
       </div>
 

@@ -117,13 +117,14 @@ export function GamesLayoutClient({ children }: { children: React.ReactNode }) {
           pointer-events: none !important;
           z-index: -1 !important;
         }
-        /* Ensure iframes and game content are always clickable */
-        :global(.store-layout iframe),
-        :global(.store-layout button),
-        :global(.store-layout a),
-        :global(.store-layout input),
-        :global(.store-layout select),
-        :global(.store-layout textarea) {
+        /* Ensure iframes and game content are always clickable — SCOPED to main only */
+        /* Do NOT use .store-layout selector — it also targets invisible StoreHeader dropdown links */
+        :global(.store-layout > main iframe),
+        :global(.store-layout > main button),
+        :global(.store-layout > main a),
+        :global(.store-layout > main input),
+        :global(.store-layout > main select),
+        :global(.store-layout > main textarea) {
           pointer-events: auto !important;
         }
         /* Prevent touch delay on mobile */
@@ -149,6 +150,31 @@ export function GamesLayoutClient({ children }: { children: React.ReactNode }) {
           z-index: 5;
           -webkit-transform: translateZ(0);
           transform: translateZ(0);
+        }
+        /* CRITICAL: Isolate game content from StoreHeader hover/click interactions */
+        :global(.bullcasino-page),
+        :global(.bullcasino-page *) {
+          /* Ensure all game content captures its own events */
+        }
+        :global(.bullcasino-page) {
+          isolation: isolate;
+          position: relative;
+          z-index: 10;
+        }
+        /* Disable StoreHeader dropdown/hover triggers when over game content */
+        :global(.store-main-nav) {
+          pointer-events: auto;
+        }
+        /* Game content area must capture all pointer events */
+        :global(.store-layout main .bullcasino-page) {
+          pointer-events: auto !important;
+        }
+        /* Prevent StoreHeader hidden overlays from capturing clicks over game area */
+        /* The always-rendered desktop dropdown is opacity-0 + pointer-events-none when closed,
+           but child <a>/<button> elements must NOT get pointer-events:auto from global rules */
+        :global(.store-layout [data-apple-section][class*="pointer-events-none"]) *,
+        :global(.store-layout [class*="opacity-0"][class*="pointer-events-none"]) * {
+          pointer-events: none !important;
         }
       `}</style>
 

@@ -294,7 +294,7 @@ export function Features() {
   );
 
   return (
-    <div className="w-full min-h-screen bg-black py-12 md:py-20 px-4 md:px-8">
+    <div className="w-full bg-black py-12 md:py-20 px-4 md:px-8">
       {/* Header with TrueFocus Effect */}
       <header className="max-w-7xl mx-auto text-center mb-8 md:mb-16">
         <motion.div
@@ -338,8 +338,8 @@ export function Features() {
         </motion.div>
       </header>
 
-      {/* Sticky Scroll Section - Desktop only */}
-      <div className="hidden md:block max-w-7xl mx-auto mb-12">
+      {/* Sticky Scroll disabled: unified card flow is more stable across desktop widths */}
+      <div className="hidden max-w-7xl mx-auto mb-12">
         <StickyScroll 
           content={stickyScrollContent} 
           contentClassName="rounded-2xl"
@@ -347,8 +347,8 @@ export function Features() {
         />
       </div>
 
-      {/* Mobile Cards - Shown only on mobile */}
-      <div className="md:hidden max-w-7xl mx-auto grid grid-cols-1 gap-3">
+      {/* Unified cards for all breakpoints */}
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
         
         {/* Goat Funded Card - Compact on mobile */}
         <motion.div

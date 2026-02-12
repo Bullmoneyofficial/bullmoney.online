@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, type CSSProperties } from "react";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 import { detectBrowser } from "@/lib/browserDetection";
 import { GLASS_STYLES } from "@/styles/glassStyles";
 import { deferAnalytics, smartPrefetch } from "@/lib/prefetchHelper";
@@ -204,6 +205,19 @@ function HomeContent() {
   const [desktopHeroReady, setDesktopHeroReady] = useState(false);
   const [allowHeavyDesktop, setAllowHeavyDesktop] = useState(false);
   const [appHeroMode, setAppHeroMode] = useState<HeroMode>('trader');
+  const appRouter = useRouter();
+
+  // Navigate to the appropriate page when hero mode changes
+  const handleAppHeroModeChange = useCallback((mode: HeroMode) => {
+    if (mode === 'design') {
+      appRouter.push('/design');
+    } else if (mode === 'store') {
+      appRouter.push('/store');
+    } else {
+      setAppHeroMode(mode);
+    }
+  }, [appRouter]);
+
   // Legacy flag retained for older bundles; default keeps desktop on 3D hero.
   const desktopHeroVariant = 'spline';
   const useDesktopVideoVariant = desktopHeroVariant === 'spline';
@@ -267,6 +281,28 @@ function HomeContent() {
     return () => {
       root.classList.remove('home-active');
       body.classList.remove('home-page-body');
+    };
+  }, []);
+
+  // Prevent browser from auto-restoring scroll position on page load
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    let previousRestoration: string | undefined;
+    if ('scrollRestoration' in window.history) {
+      previousRestoration = (window.history as any).scrollRestoration;
+      (window.history as any).scrollRestoration = 'manual';
+    }
+
+    // Always start at top of page
+    const { pathname, search } = window.location;
+    window.history.replaceState(null, '', pathname + search);
+    window.scrollTo({ top: 0, behavior: 'auto' });
+
+    return () => {
+      if (previousRestoration !== undefined && 'scrollRestoration' in window.history) {
+        (window.history as any).scrollRestoration = previousRestoration;
+      }
     };
   }, []);
 
@@ -444,11 +480,14 @@ function HomeContent() {
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
-    // CRITICAL FIX: Only apply overflow hidden on desktop to prevent mobile scroll issues
+    // Only apply overflow hidden on desktop to prevent mobile scroll issues
     // Mobile devices handle modal scrolling differently and overflow hidden breaks page scroll
     const isCurrentlyMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-    if (!isCurrentlyMobile) {
-      document.body.style.overflow = activeRemoteScene || isSplitModalOpen || isAllScenesModalOpen ? 'hidden' : '';
+    const hasModal = !!(activeRemoteScene || isSplitModalOpen || isAllScenesModalOpen);
+    if (!isCurrentlyMobile && hasModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
     }
     return () => {
       // Always reset on cleanup - use empty string to remove inline style completely
@@ -821,7 +860,7 @@ function HomeContent() {
       {currentView === 'content' && (
         <div className="relative min-h-screen w-full">
           {/* Store Header as main navigation (Design/Trader toggle on app page) */}
-          <StoreHeader heroModeOverride={appHeroMode} onHeroModeChangeOverride={setAppHeroMode} />
+          <StoreHeader heroModeOverride={appHeroMode} onHeroModeChangeOverride={handleAppHeroModeChange} />
 
           {appHeroMode === 'trader' && (
             <style>{`
@@ -834,6 +873,20 @@ function HomeContent() {
                   touch-action: pan-y pan-x !important;
                 }
               }
+              
+              /* DESKTOP FIX: Ensure scrolling works on desktop */
+              @media (min-width: 768px) {
+                body, html {
+                  overflow-y: auto !important;
+                  overflow-x: hidden !important;
+                }
+                #hero {
+                  height: auto !important;
+                  max-height: none !important;
+                  overflow-y: visible !important;
+                }
+              }
+              
               #hero .cycling-bg-layer,
               #hero .cycling-bg-item,
               #hero .cycling-bg-item.active {
@@ -863,38 +916,291 @@ function HomeContent() {
             <section
               id="hero"
               className={isMobile
-                ? "w-full full-bleed flex items-end justify-center overflow-x-hidden overflow-y-visible relative px-2 sm:px-4"
-                : "w-full full-bleed viewport-full overflow-x-hidden overflow-y-visible relative px-2 sm:px-4"}
+                ? "w-full full-bleed flex flex-col overflow-x-hidden overflow-y-visible relative px-2 sm:px-4"
+                : "w-full full-bleed flex flex-col overflow-x-hidden overflow-y-visible relative px-2 sm:px-4"}
               style={isMobile ? {
-                height: 'calc(100dvh - env(safe-area-inset-bottom, 0px))',
+                minHeight: 'calc(100dvh - env(safe-area-inset-bottom, 0px))',
                 paddingTop: 'calc(110px + env(safe-area-inset-top, 0px))',
                 paddingBottom: '12px',
-                display: 'flex',
-                flexDirection: 'column' as const,
               } : {
-                minHeight: '100vh',
+                paddingTop: '120px',
+                paddingBottom: '40px',
               }}
+              data-canvas-section="true"
               data-allow-scroll
               data-content
               data-theme-aware
             >
-              {!hasMounted ? (
-                <HeroSkeleton />
-              ) : isMobile ? (
-                canRenderMobileSections ? (
-                  <DiscordMobileHero
-                    sources={featuredVideos}
-                    onOpenModal={openDiscordStageModal}
-                    variant="mobile"
-                  />
-                ) : (
+              {/* Hero Content */}
+              <div className={isMobile ? "flex-shrink-0" : "flex-shrink-0"}>
+                {!hasMounted ? (
                   <HeroSkeleton />
-                )
-              ) : (
-                <DiscordDesktopHero />
-              )}
+                ) : isMobile ? (
+                  canRenderMobileSections ? (
+                    <DiscordMobileHero
+                      sources={featuredVideos}
+                      onOpenModal={openDiscordStageModal}
+                      variant="mobile"
+                    />
+                  ) : (
+                    <HeroSkeleton />
+                  )
+                ) : (
+                  <DiscordDesktopHero />
+                )}
+              </div>
+
+              {/* Canvas/Whiteboard integrated into hero */}
+              <div className={isMobile ? "flex-shrink-0 mt-4" : "flex-shrink-0 mt-8"}>
+                <div
+                  className={isMobile
+                    ? "w-full border-t border-white/15 overflow-hidden"
+                    : "mx-auto w-full max-w-[1800px] rounded-2xl sm:rounded-3xl border border-white/15 overflow-hidden"}
+                  style={isMobile ? {
+                    background: '#000000',
+                  } : {
+                    background: 'linear-gradient(180deg, rgba(7,7,7,0.98), rgba(0,0,0,1))',
+                    boxShadow: '0 24px 60px rgba(0,0,0,0.45)',
+                  }}
+                >
+                  {!isMobile && (
+                    <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-white/10">
+                      <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.28em] text-white/55">Notes & Whiteboard</p>
+                      <h2 className="mt-2 text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-white">
+                        Trader Notes & Whiteboard Page
+                      </h2>
+                      <p className="mt-2 text-sm sm:text-base text-white/70 max-w-3xl">
+                        Use this page to map setups, annotate chart ideas, plan risk, and track post-trade lessons in one focused workspace built for traders.
+                      </p>
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {[
+                          "Pre-market plan",
+                          "Trade setup mapping",
+                          "Risk/reward scenarios",
+                          "Session notes",
+                          "Post-trade review",
+                          "Weekly playbook",
+                        ].map((useCase) => (
+                          <span
+                            key={useCase}
+                            className="inline-flex items-center rounded-full border border-white/20 bg-white/8 px-3 py-1.5 text-[10px] sm:text-[11px] font-medium uppercase tracking-[0.08em] text-white/90"
+                          >
+                            {useCase}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="mt-4 flex flex-wrap items-center gap-2.5">
+                        <a
+                          href="/design"
+                          className="inline-flex items-center justify-center rounded-full border border-white/30 bg-black px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white"
+                        >
+                          Open Full Notes Studio
+                        </a>
+                        <a
+                          href="https://excalidraw.com"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center rounded-full border border-white/30 bg-black/60 px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white"
+                        >
+                          Open Whiteboard In New Tab
+                        </a>
+                      </div>
+                    </div>
+                  )}
+
+                  <div
+                    style={{
+                      // Excalidraw whiteboard - use max-height so it doesn't consume entire viewport
+                      // and block scroll past it on small screens
+                      height: isMobile ? 'min(50vh, 400px)' : 'min(60vh, 700px)',
+                      minHeight: isMobile ? '280px' : 'min(40vh, 480px)',
+                      background: '#ffffff',
+                    }}
+                  >
+                    <iframe
+                      src="https://excalidraw.com"
+                      title="App Design Canvas"
+                      style={{ width: '100%', height: '100%', border: 'none' }}
+                      loading="lazy"
+                      tabIndex={-1}
+                      sandbox="allow-scripts allow-same-origin allow-popups"
+                      onLoad={(e) => {
+                        // Prevent iframe from stealing focus and scrolling page
+                        try { (e.target as HTMLIFrameElement).blur(); } catch {}
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Market Quotes section within hero */}
+              <div className={isMobile ? "flex-shrink-0 mt-6" : "flex-shrink-0 mt-12"}>
+                {hasMounted && showStage2 && (
+                  <div style={deferredSectionStyle}>
+                    <div
+                      className={isMobile
+                        ? "w-full border-t border-white/15 overflow-hidden"
+                        : "mx-auto w-full max-w-[1800px] rounded-2xl sm:rounded-3xl border border-white/15 overflow-hidden"}
+                      style={isMobile ? {
+                        background: '#000000',
+                      } : {
+                        background: 'linear-gradient(180deg, rgba(7,7,7,0.98), rgba(0,0,0,1))',
+                        boxShadow: '0 24px 60px rgba(0,0,0,0.45)',
+                      }}
+                    >
+                      {!isMobile && (
+                        <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-white/10">
+                          <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.28em] text-white/55">Live Market Data</p>
+                          <h2 className="mt-2 text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-white">
+                            Market Quotes
+                          </h2>
+                          <p className="mt-2 text-sm sm:text-base text-white/70 max-w-3xl">
+                            Real-time quotes and market data to keep you informed on price movements and trading opportunities.
+                          </p>
+                        </div>
+                      )}
+
+                      <div
+                        style={{
+                          height: isMobile ? 'min(50vh, 400px)' : 'min(60vh, 700px)',
+                          minHeight: isMobile ? '280px' : 'min(40vh, 480px)',
+                          background: '#ffffff',
+                        }}
+                      >
+                        <div
+                          className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain"
+                          style={{ filter: 'invert(1) hue-rotate(180deg)' }}
+                        >
+                          <MetaTraderQuotes embedded />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Breaking News section within hero */}
+              <div className={isMobile ? "flex-shrink-0 mt-6" : "flex-shrink-0 mt-12"}>
+                {hasMounted && showStage2 && (
+                  <div style={deferredSectionStyle}>
+                    <div
+                      className={isMobile
+                        ? "w-full border-t border-white/15 overflow-hidden"
+                        : "mx-auto w-full max-w-[1800px] rounded-2xl sm:rounded-3xl border border-white/15 overflow-hidden"}
+                      style={isMobile ? {
+                        background: '#000000',
+                      } : {
+                        background: 'linear-gradient(180deg, rgba(7,7,7,0.98), rgba(0,0,0,1))',
+                        boxShadow: '0 24px 60px rgba(0,0,0,0.45)',
+                      }}
+                    >
+                      {!isMobile && (
+                        <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-white/10">
+                          <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.28em] text-white/55">Market News</p>
+                          <h2 className="mt-2 text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-white">
+                            Breaking News
+                          </h2>
+                          <p className="mt-2 text-sm sm:text-base text-white/70 max-w-3xl">
+                            Stay updated with the latest market-moving news and financial headlines from around the world.
+                          </p>
+                        </div>
+                      )}
+
+                      <div
+                        style={{
+                          height: isMobile ? 'min(50vh, 400px)' : 'min(60vh, 700px)',
+                          minHeight: isMobile ? '280px' : 'min(40vh, 480px)',
+                          background: '#ffffff',
+                        }}
+                      >
+                        <div
+                          className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain"
+                          style={{ filter: 'invert(1) hue-rotate(180deg)' }}
+                        >
+                          <BreakingNewsTicker />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Community Signals section within hero */}
+              <div className={isMobile ? "flex-shrink-0 mt-6" : "flex-shrink-0 mt-12"}>
+                {hasMounted && showStage2 && (
+                  <div style={deferredSectionStyle}>
+                    <div
+                      className={isMobile
+                        ? "w-full border-t border-white/15 overflow-hidden"
+                        : "mx-auto w-full max-w-[1800px] rounded-2xl sm:rounded-3xl border border-white/15 overflow-hidden"}
+                      style={isMobile ? {
+                        background: '#000000',
+                      } : {
+                        background: 'linear-gradient(180deg, rgba(7,7,7,0.98), rgba(0,0,0,1))',
+                        boxShadow: '0 24px 60px rgba(0,0,0,0.45)',
+                      }}
+                    >
+                      {!isMobile && (
+                        <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-white/10">
+                          <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.28em] text-white/55">Community Hub</p>
+                          <h2 className="mt-2 text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-white">
+                            Community Signals
+                          </h2>
+                          <p className="mt-2 text-sm sm:text-base text-white/70 max-w-3xl">
+                            Connect with the BullMoney trading community and access real-time signals and market insights.
+                          </p>
+                        </div>
+                      )}
+
+                      <div
+                        style={{
+                          height: isMobile ? 'min(50vh, 400px)' : 'min(60vh, 700px)',
+                          minHeight: isMobile ? '280px' : 'min(40vh, 480px)',
+                          background: '#ffffff',
+                        }}
+                      >
+                        <div
+                          className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain"
+                          style={{ filter: 'invert(1) hue-rotate(180deg)' }}
+                        >
+                          <BullMoneyCommunity />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Features section within hero */}
+              <div className={isMobile ? "flex-shrink-0 mt-6" : "flex-shrink-0 mt-12"}>
+                {hasMounted && showStage2 && (
+                  <div style={deferredSectionStyle}>
+                    <FeaturesComponent />
+                  </div>
+                )}
+              </div>
+
+              {/* Testimonials section within hero */}
+              <div className={isMobile ? "flex-shrink-0 mt-6" : "flex-shrink-0 mt-12"}>
+                {hasMounted && showStage3 && (
+                  <div style={deferredSectionStyle}>
+                    <TestimonialsCarousel />
+                  </div>
+                )}
+              </div>
+
+              {/* Footer section within hero */}
+              <div className={isMobile ? "flex-shrink-0 mt-8" : "flex-shrink-0 mt-16"}>
+                {hasMounted && showStage4 && (
+                  <div style={deferredSectionStyle}>
+                    <FooterComponent />
+                  </div>
+                )}
+              </div>
             </section>
           )}
+
+
 
           {/* Store page is isolated under /store. Keep home content only here. */}
         </div>

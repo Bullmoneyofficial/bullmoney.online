@@ -19,6 +19,10 @@ const BullcasinoShell = dynamic(
   () => import('./components/BullcasinoShell'),
   { ssr: false, loading: () => <div className="min-h-[40vh] w-full" /> }
 );
+const StoreHeader = dynamic(
+  () => import('@/components/store/StoreHeader').then(mod => ({ default: mod.StoreHeader })),
+  { ssr: false }
+);
 
 function DeferredMount({
   children,
@@ -215,88 +219,139 @@ export function GamesPageClient() {
         body {
           overflow-y: auto !important;
         }
-        .shell-game-image {
-          width: 100%;
-          border-radius: 16px;
-          background: rgba(15, 23, 42, 0.7);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 18px;
+        
+        /* Isolated styles for games grid */
+        .bullcasino-page .shell-games-grid {
+          display: grid !important;
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+          gap: 18px !important;
+          width: 100% !important;
+          height: auto !important;
+          box-sizing: border-box !important;
         }
-        .shell-game-image img {
-          width: 72px;
-          height: 72px;
-          object-fit: contain;
+        .bullcasino-page .shell-game-card {
+          text-decoration: none !important;
+          border-radius: 20px !important;
+          border: 1px solid #1f2937 !important;
+          padding: 18px !important;
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 14px !important;
+          min-height: 220px !important;
+          height: auto !important;
+          max-height: none !important;
+          color: #e2e8f0 !important;
+          box-shadow: 0 16px 40px rgba(2, 6, 23, 0.4) !important;
+          box-sizing: border-box !important;
+          transition: transform 0.2s ease !important;
         }
-        .shell-game-title {
-          font-size: 18px;
-          font-weight: 600;
+        .bullcasino-page .shell-game-card:hover {
+          transform: translateY(-2px) !important;
         }
-        .shell-game-desc {
-          color: #cbd5f5;
-          line-height: 1.5;
-          font-size: 14px;
+        .bullcasino-page .shell-game-image {
+          width: 100% !important;
+          height: 120px !important;
+          border-radius: 16px !important;
+          background: rgba(15, 23, 42, 0.7) !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          padding: 18px !important;
+          box-sizing: border-box !important;
         }
-        .shell-game-footer {
-          margin-top: auto;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
+        .bullcasino-page .shell-game-image img {
+          width: 72px !important;
+          height: 72px !important;
+          object-fit: contain !important;
         }
-        .shell-game-hint {
-          font-size: 12px;
-          color: #94a3b8;
+        .bullcasino-page .shell-game-title {
+          font-size: 18px !important;
+          font-weight: 600 !important;
+          margin: 0 !important;
         }
-        .shell-game-cta {
-          padding: 8px 14px;
-          border-radius: 999px;
-          background: rgba(15, 23, 42, 0.9);
-          border: 1px solid rgba(148, 163, 184, 0.25);
-          color: #f8fafc;
-          font-size: 12px;
+        .bullcasino-page .shell-game-desc {
+          color: #cbd5f5 !important;
+          line-height: 1.5 !important;
+          font-size: 14px !important;
+          margin: 0 !important;
         }
+        .bullcasino-page .shell-game-footer {
+          margin-top: auto !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+        }
+        .bullcasino-page .shell-game-hint {
+          font-size: 12px !important;
+          color: #94a3b8 !important;
+        }
+        .bullcasino-page .shell-game-cta {
+          padding: 8px 14px !important;
+          border-radius: 999px !important;
+          background: rgba(15, 23, 42, 0.9) !important;
+          border: 1px solid rgba(148, 163, 184, 0.25) !important;
+          color: #f8fafc !important;
+          font-size: 12px !important;
+        }
+        
+        /* Mobile responsive fixes with higher specificity */
         @media (max-width: 780px) {
-          .shell-games-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 12px;
+          .bullcasino-page .shell-games-grid {
+            grid-template-columns: repeat(2, minmax(140px, 1fr)) !important;
+            gap: 12px !important;
+            padding: 0 !important;
           }
-          .shell-game-card {
-            padding: 12px;
-            min-height: 0;
+          .bullcasino-page .shell-game-card {
+            padding: 12px !important;
+            min-height: 180px !important;
+            gap: 8px !important;
           }
-          .shell-game-image {
-            padding: 0;
-            background: transparent;
-            border-radius: 14px;
-            overflow: hidden;
+          .bullcasino-page .shell-game-image {
+            padding: 0 !important;
+            background: transparent !important;
+            border-radius: 14px !important;
+            overflow: hidden !important;
+            height: 90px !important;
           }
-          .shell-game-image img {
-            width: 100%;
-            height: auto;
-            display: block;
-            aspect-ratio: 4 / 3;
-            object-fit: cover;
+          .bullcasino-page .shell-game-image img {
+            width: 100% !important;
+            height: 100% !important;
+            display: block !important;
+            object-fit: cover !important;
           }
-          .shell-game-title {
-            font-size: 14px;
-            margin-top: 8px;
+          .bullcasino-page .shell-game-title {
+            font-size: 14px !important;
+            margin-top: 8px !important;
           }
-          .shell-game-desc,
-          .shell-game-footer {
-            display: none;
+          .bullcasino-page .shell-game-desc,
+          .bullcasino-page .shell-game-footer {
+            display: none !important;
           }
+        }
+        
+        /* Container isolation */
+        .bullcasino-page .games__container {
+          overflow: visible !important;
+          position: relative !important;
+          height: auto !important;
+          min-height: auto !important;
         }
       `}</style>
-      <main className="w-full bg-white text-black min-h-screen pb-0" style={{ overflowX: 'hidden' }}>
-        <div className="w-full px-2 sm:px-4 lg:pl-[84px] lg:pr-[20px] pt-[90px] lg:pt-[76px] pb-[55px]">
+      <StoreHeader />
+      <main
+        className="w-full bg-black text-white min-h-screen pb-0"
+        style={{ overflowX: 'hidden', position: 'relative', zIndex: 1 }}
+        onClick={(e) => e.stopPropagation()}
+        onMouseOver={(e) => e.stopPropagation()}
+      >
+        <div className="w-full pt-[90px] lg:pt-[76px] pb-0">
           <section
         className="relative w-full overflow-x-hidden bg-black text-white"
         style={{
-          minHeight: 'min(100vh, 800px)',
+          minHeight: 'min(120vh, 1000px)',
           borderBottom: '1px solid rgba(255,255,255,0.06)',
           contentVisibility: 'auto',
-          containIntrinsicSize: 'auto 800px',
+          containIntrinsicSize: 'auto 1000px',
         }}
         >
         <div className="absolute inset-0 z-0" aria-hidden="true">
@@ -334,7 +389,7 @@ export function GamesPageClient() {
 
         <div
           className="games-hero-content relative z-10 mx-auto flex w-full max-w-6xl flex-col justify-center px-4 sm:px-6 lg:px-10 pt-12 pb-12 lg:pt-[124px]"
-          style={{ minHeight: 'min(100vh, 800px)' }}
+          style={{ minHeight: 'min(120vh, 1000px)' }}
         >
           <div className="flex items-center gap-3 mb-6">
             <img
@@ -508,39 +563,87 @@ export function GamesPageClient() {
 
       <DeferredMount fallback={<div className="min-h-[40vh] w-full bg-[#0b1120]" />}>
         <BullcasinoShell>
-        <section className="games__container" style={{ padding: '32px 24px 12px' }}>
+        <section className="games__container" style={{ padding: '48px 24px 24px' }}>
           <div
             style={{
-              background: 'radial-gradient(circle at top left, rgba(56, 189, 248, 0.15), transparent 45%), radial-gradient(circle at 20% 40%, rgba(251, 191, 36, 0.18), transparent 50%), #0b1120',
-              border: '1px solid #1f2937',
-              borderRadius: 24,
-              padding: '28px 28px 24px',
-              boxShadow: '0 20px 60px rgba(2, 6, 23, 0.55)',
-              color: '#e2e8f0',
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 28,
+              padding: '40px 36px',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.05)',
             }}
           >
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ maxWidth: 560 }}>
-                <div style={{ fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', color: '#94a3b8', marginBottom: 8 }}>Bullcasino Engine</div>
-                <h1 style={{ fontSize: 34, margin: 0, color: '#f8fafc' }}>Play the demo lineup</h1>
-                <p style={{ marginTop: 10, color: '#cbd5f5', lineHeight: 1.6 }}>
-                  Pick a game, place a virtual bet, and explore the Bullcasino interface in demo mode. All gameplay is for entertainment only.
-                </p>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ 
+                  width: 6, 
+                  height: 6, 
+                  borderRadius: '50%', 
+                  background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                  boxShadow: '0 0 8px rgba(34, 197, 94, 0.5)'
+                }} />
+                <span style={{ 
+                  fontSize: 11, 
+                  fontWeight: 500,
+                  letterSpacing: '0.1em', 
+                  textTransform: 'uppercase', 
+                  color: 'rgba(255,255,255,0.5)'
+                }}>
+                  Demo Mode Active
+                </span>
               </div>
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                {['Demo balance', 'Instant rounds', 'No deposits'].map((label) => (
+              <h2 style={{ 
+                fontSize: 'clamp(28px, 5vw, 44px)', 
+                fontWeight: 600,
+                margin: 0, 
+                color: '#ffffff',
+                letterSpacing: '-0.025em',
+                lineHeight: 1.1
+              }}>
+                Choose your game
+              </h2>
+              <p style={{ 
+                maxWidth: 440,
+                margin: 0,
+                fontSize: 15, 
+                color: 'rgba(255,255,255,0.55)', 
+                lineHeight: 1.6,
+                fontWeight: 400
+              }}>
+                Explore the full collection below. No account needed, no deposits — just tap and play.
+              </p>
+              <div style={{ 
+                display: 'flex', 
+                gap: 8, 
+                flexWrap: 'wrap',
+                justifyContent: 'center',
+                marginTop: 4
+              }}>
+                {[
+                  { label: 'Free to play', icon: '✦' },
+                  { label: 'Instant start', icon: '⚡' },
+                  { label: 'Virtual chips', icon: '🎰' }
+                ].map((item) => (
                   <div
-                    key={label}
+                    key={item.label}
                     style={{
-                      padding: '10px 16px',
-                      borderRadius: 999,
-                      border: '1px solid #1f2937',
-                      background: 'rgba(15, 23, 42, 0.75)',
-                      color: '#e2e8f0',
-                      fontSize: 13,
+                      padding: '8px 14px',
+                      borderRadius: 100,
+                      background: 'rgba(255,255,255,0.06)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      color: 'rgba(255,255,255,0.7)',
+                      fontSize: 12,
+                      fontWeight: 500,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      transition: 'all 0.2s ease',
                     }}
                   >
-                    {label}
+                    <span style={{ fontSize: 10 }}>{item.icon}</span>
+                    {item.label}
                   </div>
                 ))}
               </div>
@@ -548,19 +651,20 @@ export function GamesPageClient() {
           </div>
         </section>
 
-        <section className="games__container" style={{ padding: '8px 24px 40px' }}>
+        <section className="games__container" style={{ padding: '8px 24px 40px', position: 'relative', zIndex: 1 }}>
           <div
             className="shell-games-grid"
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
               gap: 18,
+              width: '100%',
+              boxSizing: 'border-box',
             }}
           >
             {games.map((game) => (
-              <a
+              <div
                 key={game.slug}
-                href={`/games/${game.slug}`}
                 className="shell-game-card"
                 style={{
                   textDecoration: 'none',
@@ -574,10 +678,25 @@ export function GamesPageClient() {
                   minHeight: 220,
                   color: '#e2e8f0',
                   boxShadow: '0 16px 40px rgba(2, 6, 23, 0.4)',
+                  position: 'relative',
+                  overflow: 'hidden',
                 }}
               >
+                <a
+                  href={`/games/${game.slug}`}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    zIndex: 1,
+                    textDecoration: 'none',
+                  }}
+                  aria-label={`Play ${game.title}`}
+                />
                 <div className="shell-game-image">
-                  <img src={game.image} alt={game.title} />
+                  <img src={game.image} alt={game.title} loading="lazy" />
                 </div>
                 <div className="shell-game-title">{game.title}</div>
                 <div className="shell-game-desc">{game.description}</div>
@@ -585,7 +704,7 @@ export function GamesPageClient() {
                   <span className="shell-game-hint">Open demo</span>
                   <span className="shell-game-cta">Play</span>
                 </div>
-              </a>
+              </div>
             ))}
           </div>
         </section>

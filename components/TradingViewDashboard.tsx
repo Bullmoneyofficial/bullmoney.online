@@ -186,83 +186,35 @@ export default function TradingViewDashboard() {
   }, []);
 
   // ── Advanced Chart (Desktop) ───────────────────────────────
+  // Using iframe embed instead of script widget to avoid contentWindow errors
   useEffect(() => {
     if (!chartRef.current || !isMounted || !isDesktop) return;
-    loadTradingViewWidget(
-      chartRef.current,
-      'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js',
-      {
-        autosize: true,
-        symbol: activeSymbol,
-        interval: 'D',
-        timezone: 'Etc/UTC',
-        theme: 'dark',
-        style: '1',
-        locale: 'en',
-        backgroundColor: 'rgba(0, 0, 0, 1)',
-        gridColor: 'rgba(30, 30, 30, 0.15)',
-        hide_top_toolbar: false,
-        hide_legend: false,
-        allow_symbol_change: true,
-        save_image: true,
-        calendar: false,
-        hide_volume: false,
-        support_host: 'https://www.tradingview.com',
-        withdateranges: true,
-        show_popup_button: true,
-        popup_width: '1000',
-        popup_height: '650',
-        overrides: {
-          'mainSeriesProperties.candleStyle.upColor': '#2962FF',
-          'mainSeriesProperties.candleStyle.borderUpColor': '#2962FF',
-          'mainSeriesProperties.candleStyle.wickUpColor': '#2962FF',
-          'mainSeriesProperties.candleStyle.downColor': '#F23645',
-          'mainSeriesProperties.candleStyle.borderDownColor': '#F23645',
-          'mainSeriesProperties.candleStyle.wickDownColor': '#F23645',
-          'mainSeriesProperties.hollowCandleStyle.upColor': '#2962FF',
-          'mainSeriesProperties.hollowCandleStyle.borderUpColor': '#2962FF',
-          'mainSeriesProperties.hollowCandleStyle.wickUpColor': '#2962FF',
-        },
-      }
-    );
+    chartRef.current.innerHTML = `
+      <iframe
+        src="https://www.tradingview.com/widgetembed/?frameElementId=tv_desktop_chart&symbol=${activeSymbol}&interval=D&hidesidetoolbar=0&theme=dark&style=1&timezone=Etc%2FUTC"
+        width="100%"
+        height="100%"
+        style="border: 0; background: #000000;"
+        allowfullscreen
+        loading="lazy"
+      ></iframe>
+    `;
   }, [activeSymbol, isMounted, isDesktop]);
 
   // ── Advanced Chart (Mobile) ────────────────────────────────
+  // Using iframe embed instead of script widget to avoid contentWindow errors
   useEffect(() => {
     if (!mobileChartRef.current || !isMounted || isDesktop) return;
-    loadTradingViewWidget(
-      mobileChartRef.current,
-      'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js',
-      {
-        autosize: true,
-        symbol: activeSymbol,
-        interval: 'D',
-        timezone: 'Etc/UTC',
-        theme: 'dark',
-        style: '1',
-        locale: 'en',
-        backgroundColor: 'rgba(0, 0, 0, 1)',
-        gridColor: 'rgba(30, 30, 30, 0.15)',
-        hide_top_toolbar: true,
-        hide_legend: true,
-        allow_symbol_change: false,
-        save_image: false,
-        calendar: false,
-        hide_volume: false,
-        support_host: 'https://www.tradingview.com',
-        overrides: {
-          'mainSeriesProperties.candleStyle.upColor': '#2962FF',
-          'mainSeriesProperties.candleStyle.borderUpColor': '#2962FF',
-          'mainSeriesProperties.candleStyle.wickUpColor': '#2962FF',
-          'mainSeriesProperties.candleStyle.downColor': '#F23645',
-          'mainSeriesProperties.candleStyle.borderDownColor': '#F23645',
-          'mainSeriesProperties.candleStyle.wickDownColor': '#F23645',
-          'mainSeriesProperties.hollowCandleStyle.upColor': '#2962FF',
-          'mainSeriesProperties.hollowCandleStyle.borderUpColor': '#2962FF',
-          'mainSeriesProperties.hollowCandleStyle.wickUpColor': '#2962FF',
-        },
-      }
-    );
+    mobileChartRef.current.innerHTML = `
+      <iframe
+        src="https://www.tradingview.com/widgetembed/?frameElementId=tv_mobile_chart&symbol=${activeSymbol}&interval=D&hidesidetoolbar=1&theme=dark&style=1&timezone=Etc%2FUTC"
+        width="100%"
+        height="100%"
+        style="border: 0; background: #000000;"
+        allowfullscreen
+        loading="lazy"
+      ></iframe>
+    `;
   }, [activeSymbol, isMounted, isDesktop]);
 
   // ── Market Overview Widget (Desktop right panel) ───────────

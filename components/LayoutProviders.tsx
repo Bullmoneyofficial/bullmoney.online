@@ -121,9 +121,9 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
   const [themePanelReady, setThemePanelReady] = useState(false);
   const [supportReady, setSupportReady] = useState(false);
   
-  // Check if we're on store pages, casino pages, desktop page, or app page - hide navbar (replaced with StoreHeader)
+  // Check if we're on store pages, casino pages, desktop page, design page, or app page - hide navbar (replaced with StoreHeader)
   const pathname = usePathname();
-  const isStorePage = pathname.startsWith('/store') || pathname.startsWith('/games');
+  const isStorePage = pathname.startsWith('/store') || pathname.startsWith('/games') || pathname.startsWith('/design');
   const isDesktopPage = pathname === '/desktop';
   const isAppPage = pathname === '/';
   

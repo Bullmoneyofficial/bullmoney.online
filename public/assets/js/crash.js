@@ -4,7 +4,7 @@ $(document).ready(function() {
 
     this.chart = null;
     this.counter = 0;
-    this.socket = io.connect((typeof window !== 'undefined' && window.__BULLCASINO_SOCKET__) || ':8443');
+    this.socket = io.connect(':8443');
 
     this.interpolate_coefs = [
         1.37536023,
@@ -23,7 +23,7 @@ $(document).ready(function() {
             xaxis : {
                 max : Math.max(1, 5000/2000),
                 min : 1,
-                color: "rgba(43, 43, 43, 0.6)",
+                color: "rgba(47, 69, 83, 0.8)",
                 ticks : {
                     show : false
                 }
@@ -31,21 +31,22 @@ $(document).ready(function() {
             yaxis : {
                 max : Math.max(1.003004504503377*1, 2),
                 min : 1,
-                color: "rgba(43, 43, 43, 0.6)"
+                color: "rgba(47, 69, 83, 0.8)"
             },
             series: {
                 lines: { fill: true},
             },
             grid: {
-                borderColor: "rgba(43, 43, 43, 0.6)",
+                borderColor: "rgba(47, 69, 83, 0.8)",
                 borderWidth: {
                     top: 0,
                     right: 0,
                     left: 2,
                     bottom: 2
-                }
+                },
+                backgroundColor: '#1a2c38'
             },
-            colors : ['#fff']
+            colors : ['#00e701']
         });
     }
 
@@ -103,7 +104,7 @@ $(document).ready(function() {
 
     this.reset = (res) => {
         $('.crash__bets').html('');
-        $('.chart-info').css('color', '#fff').text('Loading');
+        $('.chart-info').css('color', '#00e701').text('Loading');
         $('.crash__play').prop('disabled', false).text('Play');
         game_active = false;
         isCashout = undefined;
@@ -124,7 +125,7 @@ $(document).ready(function() {
         {
             $('.chart-info').css({
                 'transition' : 'color 200ms ease',
-                'color' : '#fe4747'
+                'color' : '#ed4245'
             });
             
             if (game_active){
