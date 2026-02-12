@@ -46,6 +46,7 @@
     "portfolio-overlay",
     "Bullcasino",
     "casino-backend",
-    "components/studio"
+    "components/studio",
+    "app/design"
   ]
 }
