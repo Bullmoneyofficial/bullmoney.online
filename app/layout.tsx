@@ -15,8 +15,6 @@ import { AppProviders } from "@/components/AppProviders";
 
 // ✅ LAYOUT PROVIDERS - Client component wrapper for dynamic imports
 import { LayoutProviders } from "@/components/LayoutProviders";
-import { HreflangMeta } from "@/components/HreflangMeta";
-import MemoryBoostClient from "@/components/MemoryBoostClient";
 
 
 
@@ -823,8 +821,6 @@ export default function RootLayout({
         {/* All providers consolidated into AppProviders (heavy ones dynamically imported) */}
         <AppProviders>
           <LayoutProviders modal={modal}>
-            <MemoryBoostClient />
-            <HreflangMeta />
             {children}
           </LayoutProviders>
         </AppProviders>

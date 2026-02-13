@@ -32,6 +32,16 @@ const GoogleSEOBoost = dynamic(
   { ssr: false }
 );
 
+const MemoryBoostClient = dynamic(
+  () => import("@/components/MemoryBoostClient"),
+  { ssr: false }
+);
+
+const HreflangMeta = dynamic(
+  () => import("@/components/HreflangMeta").then((mod) => ({ default: mod.HreflangMeta })),
+  { ssr: false }
+);
+
 import VercelAnalyticsWrapper from "@/components/VercelAnalyticsWrapper";
 
 // ✅ OFF-SCREEN ANIMATION CONTROLLER - Pauses animations we can't see
@@ -346,6 +356,8 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
       {/* ✅ SEO STRUCTURED DATA - Deferred to idle for faster first paint */}
       {canShowCursor && (
         <Suspense fallback={null}>
+          <MemoryBoostClient />
+          <HreflangMeta />
           <AllSEOSchemas />
           <AdvancedSEO />
           <GoogleSEOBoost />
