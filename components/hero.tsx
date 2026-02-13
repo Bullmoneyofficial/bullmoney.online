@@ -1284,12 +1284,13 @@ const HeroParallax = () => {
         };
       }
       
-      // Override for in-app browsers (often have limited WebGL support)
-      if (isInAppBrowser && !isMobileDevice) {
+      // Override for in-app browsers (Discord, Instagram, etc.) — lower quality but ALWAYS render
+      if (isInAppBrowser) {
         settings = {
           ...settings,
-          targetFPS: Math.min(settings.targetFPS, 45),
-          maxDpr: Math.min(settings.maxDpr, 1.25),
+          targetFPS: Math.min(settings.targetFPS, isMobileDevice ? 30 : 45),
+          maxDpr: Math.min(settings.maxDpr, isMobileDevice ? 0.75 : 1.25),
+          shouldRender: true, // ALWAYS render in in-app browsers
         };
       }
       

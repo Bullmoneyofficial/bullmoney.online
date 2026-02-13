@@ -76,12 +76,15 @@ setTimeout(applyScrollFix,600);
 
 var style=d.createElement('style');
 style.textContent=[
-  '.in-app-browser *:not([role="dialog"]):not([role="dialog"] *):not([data-state="open"]):not([data-state="open"] *):not([data-radix-popper-content-wrapper]):not([data-radix-popper-content-wrapper] *):not(nav):not(nav *):not(button):not([role="menu"]):not([role="menu"] *):not([role="menuitem"]){animation-duration:.16s!important;transition-duration:.12s!important;}',
+  '.in-app-browser *:not([role="dialog"]):not([role="dialog"] *):not([data-state="open"]):not([data-state="open"] *):not([data-radix-popper-content-wrapper]):not([data-radix-popper-content-wrapper] *):not(nav):not(nav *):not(button):not([role="menu"]):not([role="menu"] *):not([role="menuitem"]):not(canvas):not(spline-viewer):not([data-spline] *):not([data-spline-scene] *):not([data-spline-hero] *){animation-duration:.16s!important;transition-duration:.12s!important;}',
   '.in-app-browser .particle-container,.in-app-browser .confetti{opacity:0!important;pointer-events:none!important;height:0!important;overflow:hidden!important;}',
   '.in-app-browser .aurora{opacity:.05!important;}',
   '.in-app-browser .glass-effect,.in-app-browser .glassmorphism,.in-app-browser .glass-surface,.in-app-browser .glass-card{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:rgba(5,9,21,.86)!important;border-color:rgba(255,255,255,.06)!important;}',
   '.in-app-browser .circular-gallery,.in-app-browser .card-swap{animation:none!important;}',
   '.in-app-browser .color-bends{animation:none!important;opacity:.55!important;}',
+  '/* SPLINE 3D PROTECTION: always visible in in-app browsers (Discord, Instagram, etc.) */',
+  '.in-app-browser [data-spline]::after,.in-app-browser .spline-container::after,.in-app-browser [data-spline-scene]::after,.in-app-browser [data-spline-hero]::after{display:none!important;}',
+  '.in-app-browser [data-spline] canvas,.in-app-browser [data-spline-scene] canvas,.in-app-browser [data-spline-hero] canvas,.in-app-browser spline-viewer,.in-app-browser spline-viewer canvas{display:block!important;visibility:visible!important;opacity:1!important;}',
   '.in-app-browser #bm-open-browser{position:fixed;top:0;left:0;right:0;max-width:100vw;padding:calc(10px + env(safe-area-inset-top,0px)) 14px 10px;background:#000;border-bottom:1px solid rgba(255,255,255,.18);z-index:99999;display:flex;align-items:center;justify-content:space-between;gap:10px;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;color:#fff;box-sizing:border-box;}',
   '.in-app-browser #bm-open-browser .bm-open-browser__text{color:#fff;font-size:13px;font-weight:500;letter-spacing:.01em;line-height:1.25;}',
   '.in-app-browser #bm-open-browser .bm-open-browser__actions{display:flex;gap:6px;flex-shrink:0;}',
@@ -112,7 +115,7 @@ if(crashes>0){
   root.classList.add('ultra-light-mode');
   var ultra=d.createElement('style');
   ultra.textContent=[
-    '.ultra-light-mode *:not([role="dialog"]):not([role="dialog"] *):not([data-state="open"]):not([data-state="open"] *):not([data-radix-popper-content-wrapper]):not([data-radix-popper-content-wrapper] *):not(nav):not(nav *):not(button):not([role="menu"]):not([role="menu"] *):not([role="menuitem"]){animation:none!important;transition:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}',
+    '.ultra-light-mode *:not([role="dialog"]):not([role="dialog"] *):not([data-state="open"]):not([data-state="open"] *):not([data-radix-popper-content-wrapper]):not([data-radix-popper-content-wrapper] *):not(nav):not(nav *):not(button):not([role="menu"]):not([role="menu"] *):not([role="menuitem"]):not(canvas):not(spline-viewer):not([data-spline] *):not([data-spline-scene] *):not([data-spline-hero] *){animation:none!important;transition:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}',
     '.ultra-light-mode *:not(.product-card-premium):not(input):not(button):not(a){box-shadow:none!important;}',
     '.ultra-light-mode .glass-effect,.ultra-light-mode .glassmorphism,.ultra-light-mode .glass-surface,.ultra-light-mode .glass-card{background:rgba(5,9,21,.9)!important;border-color:rgba(255,255,255,.05)!important;}'
   ].join('\n');

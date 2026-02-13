@@ -160,20 +160,24 @@ export function detectBrowser(): BrowserInfo {
   let recommendedSplineQuality: 'high' | 'medium' | 'low' | 'disabled' = 'medium';
   let shouldDisableSpline = false;
   
-  // Quality tiers based on device capability - but NEVER disabled
-  if (isInAppBrowser || gpuTier === 'minimal' || isUltraLowMemoryDevice || isTinyViewport) {
+  // Quality tiers based on device capability - ALWAYS render, just lower quality
+  // In-app browsers (Discord, Instagram, etc.) and iOS Safari MUST still render Spline
+  if (gpuTier === 'minimal' || isUltraLowMemoryDevice || isTinyViewport) {
     recommendedSplineQuality = 'low';
-    shouldDisableSpline = isUltraLowMemoryDevice || (isInAppBrowser && isVeryLowMemoryDevice);
-  } else if (gpuTier === 'low' || isVeryLowMemoryDevice || isSmallViewport) {
+    // NEVER disable Spline — always render at lower quality instead
+    shouldDisableSpline = false;
+  } else if (isInAppBrowser || gpuTier === 'low' || isVeryLowMemoryDevice || isSmallViewport) {
     recommendedSplineQuality = 'low';
   } else if (gpuTier === 'medium' || isLowMemoryDevice) {
     recommendedSplineQuality = 'medium';
   } else {
     recommendedSplineQuality = 'high';
   }
-  
-  const canHandleWebGL = !isInAppBrowser && !isUltraLowMemoryDevice;
-  const canHandle3D = !isInAppBrowser && !isUltraLowMemoryDevice;
+
+  // ALWAYS allow 3D and WebGL — in-app browsers (Discord, Instagram, Safari) can handle Spline
+  // Quality reduction is handled by recommendedSplineQuality, not by blocking rendering
+  const canHandleWebGL = true;
+  const canHandle3D = true;
   const canHandleWebSocket = true;
   const canHandleAudio = true;
 

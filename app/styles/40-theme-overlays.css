@@ -493,41 +493,65 @@ body[data-theme]::before {
 
 /* ============================================
    SPLINE & CANVAS THEME OVERLAY
-   Applies theme color tint to 3D scenes
+   CRITICAL: No overlays on mobile/iOS/Safari — they block Spline visibility
    ============================================ */
 
-/* Spline container gets theme color glow */
+/* Spline container */
 [data-spline],
 .spline-container {
   position: relative;
 }
 
-[data-spline]::after,
-.spline-container::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(
-    ellipse at 50% 30%,
-    rgba(var(--accent-rgb, 255, 255, 255), 0.08) 0%,
-    transparent 60%
-  );
-  mix-blend-mode: screen;
-  z-index: 1;
-  border-radius: inherit;
-  transition: background 0.5s ease;
+/* Desktop only: subtle theme tint over Spline */
+@media (min-width: 769px) {
+  [data-spline]::after,
+  .spline-container::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      ellipse at 50% 30%,
+      rgba(var(--accent-rgb, 255, 255, 255), 0.05) 0%,
+      transparent 60%
+    );
+    mix-blend-mode: screen;
+    z-index: 1;
+    border-radius: inherit;
+    transition: background 0.5s ease;
+  }
+
+  .hero [data-spline]::after,
+  section#hero [data-spline]::after {
+    background: radial-gradient(
+      ellipse at 50% 40%,
+      rgba(var(--accent-rgb, 255, 255, 255), 0.08) 0%,
+      rgba(var(--accent-rgb, 255, 255, 255), 0.03) 40%,
+      transparent 70%
+    );
+  }
 }
 
-/* Hero spline special treatment - stronger glow */
-.hero [data-spline]::after,
-section#hero [data-spline]::after {
-  background: radial-gradient(
-    ellipse at 50% 40%,
-    rgba(var(--accent-rgb, 255, 255, 255), 0.12) 0%,
-    rgba(var(--accent-rgb, 255, 255, 255), 0.05) 40%,
-    transparent 70%
-  );
+/* Mobile/iOS/Safari/in-app: NO overlay on Spline — render 3D cleanly */
+@media (max-width: 768px) {
+  [data-spline]::after,
+  .spline-container::after {
+    display: none !important;
+  }
+}
+
+html.in-app-browser [data-spline]::after,
+html.in-app-browser .spline-container::after,
+html[data-inapp] [data-spline]::after,
+html[data-inapp] .spline-container::after {
+  display: none !important;
+}
+
+@supports (-webkit-touch-callout: none) {
+  [data-spline]::after,
+  .spline-container::after {
+    display: none !important;
+  }
 }
 
 /* Theme-aware borders with glow */

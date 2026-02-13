@@ -151,9 +151,9 @@ function SplineSceneComponent({
 
   useEffect(() => {
     const browserInfo = detectBrowser();
-    const canRenderSpline = browserInfo.canHandle3D
-      && !browserInfo.shouldDisableSpline
-      && !browserInfo.isInAppBrowser;
+    // ALWAYS render Spline — in-app browsers (Discord, Instagram, iOS Safari) must see 3D
+    // Quality is reduced via recommendedSplineQuality, never by blocking rendering entirely
+    const canRenderSpline = browserInfo.canHandle3D && !browserInfo.shouldDisableSpline;
 
     setShouldRender(canRenderSpline);
     setHasError(false);

@@ -442,20 +442,20 @@ function injectLowEndCSS(){
   var rules=[];
 
   if(isUltraLow){
-    // ULTRA-LOW (≤1GB): strip everything animated — EXCEPT modals/menus/buttons
+    // ULTRA-LOW (≤1GB): strip everything animated — EXCEPT modals/menus/buttons/Spline
     rules.push(
-      '/* Ultra-low: kill animations (modals/menus excluded) */',
-      '*:not([role="dialog"]):not([role="dialog"] *):not([data-state="open"]):not([data-state="open"] *):not([data-radix-popper-content-wrapper]):not([data-radix-popper-content-wrapper] *):not(nav):not(nav *):not(button):not([role="menu"]):not([role="menu"] *):not([role="menuitem"]){animation-duration:0.01s!important;animation-delay:0s!important;transition-duration:0.05s!important;}',
+      '/* Ultra-low: kill animations (modals/menus/Spline excluded) */',
+      '*:not([role="dialog"]):not([role="dialog"] *):not([data-state="open"]):not([data-state="open"] *):not([data-radix-popper-content-wrapper]):not([data-radix-popper-content-wrapper] *):not(nav):not(nav *):not(button):not([role="menu"]):not([role="menu"] *):not([role="menuitem"]):not(canvas):not(spline-viewer):not([data-spline] *):not([data-spline-scene] *):not([data-spline-hero] *):not([data-keep-canvas] *){animation-duration:0.01s!important;animation-delay:0s!important;transition-duration:0.05s!important;}',
       '.particle-container,.confetti,.aurora,.floating-particles,.bg-particles,.color-bends,.circular-gallery{display:none!important;}',
       '.parallax,[data-parallax]{transform:none!important;}',
-      // Kill all transforms except essential UI (menus, modals)
-      '*:not([data-modal]):not([role="dialog"]):not([data-menu]){transform:none!important;perspective:none!important;}'
+      // Kill all transforms except essential UI (menus, modals) and Spline 3D
+      '*:not([data-modal]):not([role="dialog"]):not([data-menu]):not(canvas):not(spline-viewer):not([data-spline] *):not([data-spline-scene] *):not([data-spline-hero] *):not([data-keep-canvas] *){transform:none!important;perspective:none!important;}'
     );
   } else if(isLowEnd){
-    // LOW (≤2GB): heavy reduction — EXCEPT modals/menus/buttons
+    // LOW (≤2GB): heavy reduction — EXCEPT modals/menus/buttons/Spline
     rules.push(
-      '/* Low-end: reduce animations (modals/menus excluded) */',
-      '*:not([role="dialog"]):not([role="dialog"] *):not([data-state="open"]):not([data-state="open"] *):not([data-radix-popper-content-wrapper]):not([data-radix-popper-content-wrapper] *):not(nav):not(nav *):not(button):not([role="menu"]):not([role="menu"] *):not([role="menuitem"]){animation-duration:0.1s!important;transition-duration:0.1s!important;}',
+      '/* Low-end: reduce animations (modals/menus/Spline excluded) */',
+      '*:not([role="dialog"]):not([role="dialog"] *):not([data-state="open"]):not([data-state="open"] *):not([data-radix-popper-content-wrapper]):not([data-radix-popper-content-wrapper] *):not(nav):not(nav *):not(button):not([role="menu"]):not([role="menu"] *):not([role="menuitem"]):not(canvas):not(spline-viewer):not([data-spline] *):not([data-spline-scene] *):not([data-spline-hero] *):not([data-keep-canvas] *){animation-duration:0.1s!important;transition-duration:0.1s!important;}',
       '.particle-container,.confetti{opacity:0!important;pointer-events:none!important;height:0!important;overflow:hidden!important;}',
       // Reduce Spline/3D canvas DPR
       'canvas{image-rendering:optimizeSpeed!important;}'
@@ -813,12 +813,14 @@ function onVisibilityChange(){
     // Signal components to stop their animation loops
     try{w.dispatchEvent(new CustomEvent('bm:pause-animations',{detail:{reason:'tab-hidden'}}));}catch(e){}
 
-    // ── STEP 6: iOS-specific — downsize remaining canvases ──
+    // ── STEP 6: iOS-specific — downsize remaining canvases (PROTECT Spline) ──
     if(isIOS){
       var canvases=d.querySelectorAll('canvas');
       for(var i=0;i<canvases.length;i++){
         var c=canvases[i];
         if(c.dataset.mmProtected) continue;
+        // PROTECT Spline canvases — never shrink them, they must always render
+        if(c.closest('[data-spline],[data-spline-scene],[data-keep-canvas],[data-spline-hero]')) continue;
         if(c.width>2&&!c.dataset.mmOrigW){
           c.dataset.mmOrigW=c.width;
           c.dataset.mmOrigH=c.height;
