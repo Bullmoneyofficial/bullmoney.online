@@ -397,13 +397,9 @@ function HomeContent() {
   const splinePreloadRanRef = useRef(false);
   const { setLoaderv2Open, setV2Unlocked, devSkipPageModeAndLoader, setDevSkipPageModeAndLoader, openDiscordStageModal, openAccountManagerModal } = useUIState();
 
-  // Showcase scroll - Re-enabled with fixed drunk scroll that doesn't block user interaction
+  // Showcase scroll — uses hook defaults for duration (lightweight)
   useShowcaseScroll({
-    scrollDownDuration: 1800,
-    springBackDuration: 1200,
-    genieDuration: 500,
-    genieScale: 0.96,
-    startDelay: currentView === 'content' ? 800 : 99999,
+    startDelay: currentView === 'content' ? 1200 : 99999,
     enabled: currentView === 'content',
     pageId: 'home',
   });

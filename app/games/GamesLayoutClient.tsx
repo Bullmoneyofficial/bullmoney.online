@@ -99,6 +99,7 @@ export function GamesLayoutClient({ children }: { children: React.ReactNode }) {
         overflowX: 'hidden',
         overflowY: 'auto',
         backgroundColor: '#000000',
+        colorScheme: 'dark' as const,
         WebkitOverflowScrolling: 'touch',
       }}
     >
@@ -129,9 +130,9 @@ export function GamesLayoutClient({ children }: { children: React.ReactNode }) {
         :global(.store-layout > main textarea) {
           pointer-events: auto !important;
         }
-        /* Prevent touch delay on mobile */
+        /* Allow full scroll/pan on mobile — pan-y pan-x is more permissive than manipulation */
         :global(.store-layout) {
-          touch-action: manipulation;
+          touch-action: pan-y pan-x;
           -webkit-tap-highlight-color: transparent;
         }
         /* Game iframe containers: full touch + click passthrough (mobile + desktop) */
@@ -181,7 +182,7 @@ export function GamesLayoutClient({ children }: { children: React.ReactNode }) {
       `}</style>
 
       <StoreHeader />
-      <main className="w-full" style={{ position: 'relative', zIndex: 1, minHeight: 'calc(100dvh - 72px)', display: 'flex', flexDirection: 'column' }}>
+      <main className="w-full" style={{ position: 'relative', zIndex: 1, minHeight: 'calc(100dvh - 72px)', display: 'flex', flexDirection: 'column', touchAction: 'pan-y pan-x' }}>
         {children}
       </main>
     </div>

@@ -244,7 +244,7 @@ html.shimmer-quality-disabled {
   --animation-duration-multiplier: 0.1;
 }
 
-html.shimmer-quality-disabled * {
+html.shimmer-quality-disabled *:not([role="dialog"]):not([role="dialog"] *):not([data-radix-popper-content-wrapper]):not([data-radix-popper-content-wrapper] *):not([data-state="open"]):not([data-state="open"] *):not(nav):not(nav *):not(button):not([role="menu"]):not([role="menu"] *):not([role="menuitem"]) {
   animation-duration: 0.1s !important;
   transition-duration: 0.1s !important;
 }
@@ -333,8 +333,8 @@ html.reduce-shadows * {
   box-shadow: none !important;
 }
 
-/* Reduce animations globally */
-html.reduce-animations * {
+/* Reduce animations globally — EXCEPT interactive UI (modals, menus, buttons) */
+html.reduce-animations *:not([role="dialog"]):not([role="dialog"] *):not([data-radix-popper-content-wrapper]):not([data-radix-popper-content-wrapper] *):not([data-state="open"]):not([data-state="open"] *):not(nav):not(nav *):not(button):not([role="menu"]):not([role="menu"] *):not([role="menuitem"]) {
   animation-duration: 0.1s !important;
   transition-duration: 0.1s !important;
 }
@@ -3412,27 +3412,29 @@ body {
   animation: none !important;
 }
 
-/* Pause ALL animations during scroll */
-html.is-scrolling * {
+/* Pause non-UI animations during scroll — modals/menus/buttons keep their transitions */
+html.is-scrolling *:not([role="dialog"]):not([role="dialog"] *):not([data-state="open"]):not([data-state="open"] *):not(nav):not(nav *):not(button):not([role="menu"]):not([role="menu"] *):not([role="menuitem"]):not([data-radix-popper-content-wrapper]):not([data-radix-popper-content-wrapper] *):not(.fixed):not(.fixed *) {
   animation-play-state: paused !important;
   transition: none !important;
 }
 
-/* Disable backdrop-blur EVERYWHERE - extremely expensive */
-*,
-*::before,
-*::after {
+/* Disable backdrop-blur on decorative elements only — preserve for modals, menus, overlays */
+.aurora,
+.color-bends,
+.bg-particles,
+.particle-container,
+[data-decorative],
+.floating-particles {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
 
-/* Replace blur with solid backgrounds */
-.backdrop-blur-xl,
-.backdrop-blur-lg,
-.backdrop-blur-md,
-.backdrop-blur-sm,
-.backdrop-blur,
-[class*="backdrop-blur"] {
+/* Replace blur with solid backgrounds on non-interactive blur elements */
+.backdrop-blur-xl:not([role="dialog"]):not([data-state]):not(nav):not([data-radix-popper-content-wrapper]),
+.backdrop-blur-lg:not([role="dialog"]):not([data-state]):not(nav):not([data-radix-popper-content-wrapper]),
+.backdrop-blur-md:not([role="dialog"]):not([data-state]):not(nav):not([data-radix-popper-content-wrapper]),
+.backdrop-blur-sm:not([role="dialog"]):not([data-state]):not(nav):not([data-radix-popper-content-wrapper]),
+.backdrop-blur:not([role="dialog"]):not([data-state]):not(nav):not([data-radix-popper-content-wrapper]) {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   background: rgba(0, 0, 0, 0.85) !important;
@@ -3663,8 +3665,8 @@ html.fps-minimal video {
   }
 }
 
-/* CRITICAL: Page visibility optimization */
-html.page-hidden * {
+/* CRITICAL: Page visibility optimization — exclude interactive elements */
+html.page-hidden *:not([role="dialog"]):not([role="dialog"] *):not([data-state="open"]):not([data-state="open"] *) {
   animation-play-state: paused !important;
   transition: none !important;
 }

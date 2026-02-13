@@ -12,8 +12,6 @@ export default function BullcasinoShell({ children }: { children: ReactNode }) {
   return (
     <main
       className="bullcasino-page"
-      onClick={(e) => e.stopPropagation()}
-      onMouseEnter={(e) => e.stopPropagation()}
       style={{
         background: 'radial-gradient(circle at top, rgba(15, 23, 42, 0.7), rgba(2, 6, 23, 0.95)), #0b1120',
         minHeight: 'auto',
@@ -24,6 +22,7 @@ export default function BullcasinoShell({ children }: { children: ReactNode }) {
         flex: '1 1 auto',
         display: 'flex',
         flexDirection: 'column',
+        touchAction: 'pan-y pan-x',
       }}
     >
       {/* Only load boxicons for icons - removed style.css and notifyme.css as they have global selectors that break the landing page */}

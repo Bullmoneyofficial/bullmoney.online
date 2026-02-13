@@ -41,11 +41,25 @@
     transform: none !important;
   }
   
-  /* CRITICAL: Prevent Chrome from forcing black backgrounds on store page */
-  html.chrome-browser[data-store-page],
-  html.chrome-browser[data-store-page] body,
-  html.chrome-browser[data-store-page] .store-layout,
-  html.chrome-browser[data-store-page] header,
+  /* Games page touch scroll: ensure backgrounds don't block scrolling */
+  html.chrome-browser[data-games-page] section,
+  html.chrome-browser[data-games-page] .store-layout,
+  html.chrome-browser[data-games-page] .bullcasino-page {
+    touch-action: pan-y pan-x !important;
+  }
+  
+  html.chrome-browser[data-games-page] [aria-hidden="true"],
+  html.chrome-browser[data-games-page] [aria-hidden="true"] > * {
+    pointer-events: none !important;
+  }
+  
+  html.chrome-browser[data-games-page] .shell-game-card a,
+  html.chrome-browser[data-games-page] .bullcasino-page a[aria-label*="Play"] {
+    touch-action: pan-y pan-x !important;
+  }
+  
+  /* CRITICAL: Prevent Chrome from forcing black backgrounds on modals/drawers */
+  /* NOTE: Do NOT apply to html/body/store-layout — games page uses data-store-page but needs dark bg */
   html.chrome-browser[data-store-page] [role="dialog"],
   html.chrome-browser[data-store-page] [aria-modal="true"],
   html.chrome-browser[data-store-page] .modal,

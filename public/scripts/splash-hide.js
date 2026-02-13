@@ -147,11 +147,17 @@
       // Brief pause at READY state so user sees it
       setTimeout(function() {
         targetPct = 100;
-        updateProgress(100);
-        
-        setTimeout(function() {
-          hide();
-        }, 400);
+        // Smoothly animate to 100 instead of forcing a jump
+        var fullStart = Date.now();
+        function waitForFull() {
+          if (progress >= 99.5 || Date.now() - fullStart > 2000) {
+            updateProgress(100);
+            setTimeout(hide, 400);
+          } else {
+            requestAnimationFrame(waitForFull);
+          }
+        }
+        waitForFull();
       }, 300);
     });
   }
@@ -211,6 +217,7 @@
     cancelAnimationFrame(animFrame);
     clearInterval(stallWatchdog);
     splash.classList.add('hide');
+    document.documentElement.classList.add('bm-splash-done');
     setTimeout(function() {
       if (splash.parentNode) splash.parentNode.removeChild(splash);
       triggerFinishEffects();

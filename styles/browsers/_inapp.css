@@ -57,6 +57,33 @@ html.google-browser[data-games-page] body {
   min-height: 100vh !important;
 }
 
+/* Games page touch scroll: ensure backgrounds don't block scrolling */
+html.inapp-browser[data-games-page] section,
+html.instagram-browser[data-games-page] section,
+html.facebook-browser[data-games-page] section,
+html.google-browser[data-games-page] section,
+html.inapp-browser[data-games-page] .store-layout,
+html.instagram-browser[data-games-page] .store-layout,
+html.facebook-browser[data-games-page] .store-layout,
+html.google-browser[data-games-page] .store-layout,
+html.inapp-browser[data-games-page] .bullcasino-page,
+html.instagram-browser[data-games-page] .bullcasino-page,
+html.facebook-browser[data-games-page] .bullcasino-page,
+html.google-browser[data-games-page] .bullcasino-page {
+  touch-action: pan-y pan-x !important;
+}
+
+html.inapp-browser[data-games-page] [aria-hidden="true"],
+html.instagram-browser[data-games-page] [aria-hidden="true"],
+html.facebook-browser[data-games-page] [aria-hidden="true"],
+html.google-browser[data-games-page] [aria-hidden="true"],
+html.inapp-browser[data-games-page] [aria-hidden="true"] > *,
+html.instagram-browser[data-games-page] [aria-hidden="true"] > *,
+html.facebook-browser[data-games-page] [aria-hidden="true"] > *,
+html.google-browser[data-games-page] [aria-hidden="true"] > * {
+  pointer-events: none !important;
+}
+
 /* Design page */
 html.inapp-browser[data-design-page],
 html.instagram-browser[data-design-page],
@@ -97,31 +124,8 @@ html.twitter-browser[data-store-page] body {
   min-height: 100vh !important;
 }
 
-/* CRITICAL: Prevent in-app browsers from forcing black backgrounds on store page */
-html.inapp-browser[data-store-page],
-html.instagram-browser[data-store-page],
-html.facebook-browser[data-store-page],
-html.google-browser[data-store-page],
-html.tiktok-browser[data-store-page],
-html.twitter-browser[data-store-page],
-html.inapp-browser[data-store-page] body,
-html.instagram-browser[data-store-page] body,
-html.facebook-browser[data-store-page] body,
-html.google-browser[data-store-page] body,
-html.tiktok-browser[data-store-page] body,
-html.twitter-browser[data-store-page] body,
-html.inapp-browser[data-store-page] .store-layout,
-html.instagram-browser[data-store-page] .store-layout,
-html.facebook-browser[data-store-page] .store-layout,
-html.google-browser[data-store-page] .store-layout,
-html.tiktok-browser[data-store-page] .store-layout,
-html.twitter-browser[data-store-page] .store-layout,
-html.inapp-browser[data-store-page] header,
-html.instagram-browser[data-store-page] header,
-html.facebook-browser[data-store-page] header,
-html.google-browser[data-store-page] header,
-html.tiktok-browser[data-store-page] header,
-html.twitter-browser[data-store-page] header,
+/* CRITICAL: Prevent in-app browsers from forcing black backgrounds on modals/drawers */
+/* NOTE: Do NOT apply to html/body/store-layout — games page uses data-store-page but needs dark bg */
 html.inapp-browser[data-store-page] [role="dialog"],
 html.instagram-browser[data-store-page] [role="dialog"],
 html.facebook-browser[data-store-page] [role="dialog"],

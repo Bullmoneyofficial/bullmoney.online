@@ -250,11 +250,14 @@ export default function RootLayout({
       :root{--app-vh:1vh;}
       html,body{background:#000000!important;}
       
-      #bm-splash{position:fixed;top:0;right:0;bottom:0;left:0;width:100vw;height:calc(var(--app-vh,1vh)*100);min-height:100vh;min-height:100dvh;min-height:100svh;z-index:99999;background:#ffffff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;opacity:1;transition:opacity .5s cubic-bezier(.4,0,.2,1),visibility .5s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.4,0,.2,1);overflow:hidden;will-change:opacity,transform;}
+      #bm-splash{position:fixed;top:0;right:0;bottom:0;left:0;width:100%;height:100%;min-height:100vh;min-height:100dvh;min-height:-webkit-fill-available;z-index:99999;background:#ffffff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;opacity:1;transition:opacity .5s cubic-bezier(.4,0,.2,1),visibility .5s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.4,0,.2,1);overflow:hidden;will-change:opacity,transform;}
+      /* Lock viewport while splash is active — overrides scroll fixes below */
+      html:has(#bm-splash:not(.hide)),html:has(#bm-splash:not(.hide)) body{overflow:hidden!important;height:100%!important;position:static!important;}
+      @supports not (selector(:has(*))){html:not(.bm-splash-done),html:not(.bm-splash-done) body{overflow:hidden!important;height:100%!important;}}
       #bm-splash.hide{opacity:0;visibility:hidden;pointer-events:none;transform:scale(1.02);}
 
       /* Safari/iOS fallback: reduce compositor stress + stabilize viewport sizing */
-      html.is-safari #bm-splash,html.is-ios-safari #bm-splash{left:0;right:0;width:100%;height:100%;height:calc(var(--app-vh,1vh)*100);min-height:100vh;min-height:-webkit-fill-available;transform:translateZ(0);-webkit-transform:translateZ(0);backface-visibility:hidden;-webkit-backface-visibility:hidden;}
+      html.is-safari #bm-splash,html.is-ios-safari #bm-splash{left:0;right:0;width:100%;height:100%;min-height:100vh;min-height:-webkit-fill-available;transform:translateZ(0);-webkit-transform:translateZ(0);backface-visibility:hidden;-webkit-backface-visibility:hidden;}
       html.is-safari #bm-splash::before,html.is-safari #bm-splash::after,html.is-ios-safari #bm-splash::before,html.is-ios-safari #bm-splash::after{animation:none!important;filter:none!important;}
       html.is-safari #bm-splash .bm-orb,html.is-ios-safari #bm-splash .bm-orb{display:none;}
       html.is-safari #bm-splash .bm-status,html.is-ios-safari #bm-splash .bm-status{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
@@ -704,6 +707,7 @@ export default function RootLayout({
         {/* CRITICAL SCRIPTS - afterInteractive (run after page is interactive) */}
         <Script id="mobile-crash-shield" src="/scripts/BMBRAIN/mobile-crash-shield.js" strategy="afterInteractive" />
         <Script id="inapp-shield" src="/scripts/BMBRAIN/inapp-shield.js" strategy="afterInteractive" />
+        <Script id="memory-manager" src="/scripts/BMBRAIN/memory-manager.js" strategy="afterInteractive" />
 
         {/* NON-CRITICAL SCRIPTS - lazyOnload (defer until after everything else) */}
         <Script id="detect-120hz" src="/scripts/detect-120hz.js" strategy="lazyOnload" />

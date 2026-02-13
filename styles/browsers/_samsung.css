@@ -91,6 +91,24 @@
     position: relative !important;
   }
   
+  /* Games page: ensure backgrounds/overlays pass through touch */
+  [data-games-page] section,
+  [data-games-page] .store-layout,
+  [data-games-page] .bullcasino-page {
+    touch-action: pan-y pan-x !important;
+  }
+
+  [data-games-page] [aria-hidden="true"],
+  [data-games-page] [aria-hidden="true"] > * {
+    pointer-events: none !important;
+  }
+
+  /* Game card overlay links must allow scroll passthrough */
+  [data-games-page] .shell-game-card a,
+  [data-games-page] .bullcasino-page a[aria-label*="Play"] {
+    touch-action: pan-y pan-x !important;
+  }
+  
   /* Design page scroll fix */
   [data-design-page],
   [data-design-page] body,
@@ -117,11 +135,7 @@
     position: relative !important;
   }
   
-  /* CRITICAL: Prevent Samsung from forcing black backgrounds on store page */
-  html[data-store-page],
-  html[data-store-page] body,
-  html[data-store-page] .store-layout,
-  html[data-store-page] header,
+  /* CRITICAL: Prevent Samsung from forcing black backgrounds on modals/drawers */\n  /* NOTE: Do NOT apply to html/body/store-layout — games page uses data-store-page but needs dark bg */
   html[data-store-page] [role="dialog"],
   html[data-store-page] [aria-modal="true"],
   html[data-store-page] .modal,

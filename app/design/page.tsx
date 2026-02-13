@@ -10,13 +10,9 @@ import { useShowcaseScroll } from '@/hooks/useShowcaseScroll';
 import "./design.css";
 
 export default function DesignPage() {
-  // Showcase scroll animation - runs once per session
+  // Showcase scroll animation — uses hook defaults for lightweight perf
   useShowcaseScroll({
-    scrollDownDuration: 1800,
-    springBackDuration: 1200,
-    genieDuration: 500,
-    genieScale: 0.96,
-    startDelay: 800,
+    startDelay: 1000,
     enabled: true,
     pageId: 'design',
   });

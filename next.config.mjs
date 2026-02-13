@@ -44,11 +44,17 @@ const optimizePackageImports = [
   '@radix-ui/react-select',
   '@radix-ui/react-tooltip',
   '@radix-ui/react-tabs',
+  '@radix-ui/react-popover',
+  '@radix-ui/react-accordion',
   'date-fns',
   'recharts',
   'three',
   'gsap',
   '@supabase/supabase-js',
+  'sonner',
+  'zustand',
+  'class-variance-authority',
+  'clsx',
 ];
 
 const nextConfig = {
@@ -351,6 +357,30 @@ const nextConfig = {
           },
         ],
       },
+      // Cache BMBRAIN scripts aggressively (they change with deploys, not per-request)
+      {
+        source: '/scripts/BMBRAIN/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=604800, stale-while-revalidate=86400',
+          },
+          {
+            key: 'Content-Type',
+            value: 'application/javascript; charset=utf-8',
+          },
+        ],
+      },
+      // Cache all static scripts
+      {
+        source: '/scripts/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=604800, stale-while-revalidate=86400',
+          },
+        ],
+      },
       // Cache Spline scene files aggressively (large binary files)
       {
         source: '/:path*.splinecode',
@@ -389,11 +419,17 @@ const nextConfig = {
       'gsap': 'gsap',
       'recharts': 'recharts',
       'mongoose': 'mongoose',
+      'sonner': 'sonner',
+      'zustand': 'zustand',
     },
     // SPEED: Turbopack-specific rules to skip unnecessary processing
     rules: {
       // Skip type checking for .d.ts files during dev
       '*.d.ts': {
+        loaders: [],
+      },
+      // Skip processing markdown files
+      '*.md': {
         loaders: [],
       },
     },

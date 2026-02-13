@@ -168,12 +168,24 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
 
   const navigateWithFallback = (href: string) => {
     router.push(href);
+    // Give client-side navigation enough time to load the game bundle
+    // (large chunk — Three.js + game logic). Fall back to hard nav if it fails.
     window.setTimeout(() => {
       if (window.location.pathname !== href) {
         window.location.assign(href);
       }
-    }, 500);
+    }, 3000);
   };
+
+  // Prefetch all game routes on mount for instant navigation
+  useEffect(() => {
+    if (embedMode) return;
+    const slugs = LANDING_GAMES.map((g) => g.slug);
+    // Stagger prefetches to avoid network contention
+    slugs.forEach((slug, i) => {
+      setTimeout(() => router.prefetch(`/games/${slug}`), 200 + i * 100);
+    });
+  }, [embedMode, router]);
 
   useEffect(() => {
     if (embedMode) return;
@@ -191,13 +203,9 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
     return () => clearInterval(id);
   }, [embedMode]);
 
-  // Showcase scroll animation - runs once per session
+  // Showcase scroll animation — uses hook defaults for lightweight perf
   useShowcaseScroll({
-    scrollDownDuration: 1800,
-    springBackDuration: 1200,
-    genieDuration: 500,
-    genieScale: 0.96,
-    startDelay: 800,
+    startDelay: 1000,
     enabled: !embedMode,
     pageId: 'games',
   });
@@ -233,6 +241,18 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
           }
           body {
             overflow-y: auto !important;
+          }
+          
+          /* CRITICAL: Ensure all decorative/background elements pass through touch */
+          [data-games-page] [aria-hidden="true"],
+          [data-games-page] [aria-hidden="true"] > * {
+            pointer-events: none !important;
+          }
+          
+          /* Ensure game page sections allow scrolling via touch */
+          [data-games-page] section,
+          [data-games-page] main {
+            touch-action: pan-y pan-x !important;
           }
           
           /* Samsung browser scroll fixes */
@@ -444,9 +464,8 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
           zIndex: 1,
           minHeight: 'auto',
           flex: embedMode ? undefined : '0 0 auto',
+          touchAction: 'pan-y pan-x',
         }}
-        onClick={embedMode ? undefined : (e) => e.stopPropagation()}
-        onMouseOver={embedMode ? undefined : (e) => e.stopPropagation()}
       >
         <div className="w-full pb-0" style={{ paddingTop: embedMode ? 0 : undefined }}>
           {!embedMode && <div className="pt-4 lg:pt-2" />}
@@ -455,15 +474,16 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
         style={{
             minHeight: embedMode ? 'auto' : 'min(80svh, 700px)',
           borderBottom: '1px solid rgba(255,255,255,0.06)',
+          touchAction: 'pan-y pan-x',
         }}
         >
-        <div className="absolute inset-0 z-0" aria-hidden="true">
+        <div className="absolute inset-0 z-0 pointer-events-none" aria-hidden="true">
           {HERO_BG_IMAGES.map((img, idx) => (
             <img
               key={img.src}
               src={img.src}
               alt={img.alt}
-              className="absolute inset-0 h-full w-full object-cover transition-opacity duration-1800 ease-in-out"
+              className="absolute inset-0 h-full w-full object-cover transition-opacity duration-1800 ease-in-out pointer-events-none"
               style={{ opacity: idx === heroBgIndex ? 1 : 0, willChange: 'opacity' }}
               srcSet={buildHeroSrcSet(img.src)}
               sizes="100vw"
@@ -472,10 +492,10 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
               decoding="async"
             />
           ))}
-          <div className="absolute inset-0 bg-black/60" />
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-size-[60px_60px] mix-blend-overlay" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(120,119,198,0.12),transparent)]" />
-          <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-linear-to-t from-black to-transparent" />
+          <div className="absolute inset-0 bg-black/60 pointer-events-none" />
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-size-[60px_60px] mix-blend-overlay pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(120,119,198,0.12),transparent)] pointer-events-none" />
+          <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-linear-to-t from-black to-transparent pointer-events-none" />
         </div>
 
         {!embedMode && (
@@ -575,17 +595,17 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
 
         <DonationFundSection />
 
-        <section id="games-iframe" className={`relative bg-black text-white ${embedMode ? '' : 'overflow-x-hidden'}`}>
-        <div className="absolute inset-0 z-0">
+        <section id="games-iframe" className={`relative bg-black text-white ${embedMode ? '' : 'overflow-x-hidden'}`} style={{ touchAction: 'pan-y pan-x' }}>
+        <div className="absolute inset-0 z-0 pointer-events-none" aria-hidden="true">
           <img
             src="https://images.unsplash.com/photo-1511512578047-dfb367046420?w=3840&q=80&auto=format&fit=crop"
             alt="Gaming atmosphere"
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
             loading="lazy"
             decoding="async"
           />
-          <div className="absolute inset-0 bg-linear-to-b from-black/80 via-black/60 to-black" />
-          <div className="absolute inset-0 bg-linear-to-r from-black/40 via-transparent to-black/40" />
+          <div className="absolute inset-0 bg-linear-to-b from-black/80 via-black/60 to-black pointer-events-none" />
+          <div className="absolute inset-0 bg-linear-to-r from-black/40 via-transparent to-black/40 pointer-events-none" />
         </div>
 
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
@@ -806,6 +826,8 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
                     bottom: 0,
                     zIndex: 1,
                     textDecoration: 'none',
+                    touchAction: 'pan-y pan-x',
+                    WebkitTapHighlightColor: 'transparent',
                   }}
                   aria-label={`Play ${game.title}`}
                 />
@@ -956,6 +978,8 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
                         bottom: 0,
                         zIndex: 1,
                         textDecoration: 'none',
+                        touchAction: 'pan-y pan-x',
+                        WebkitTapHighlightColor: 'transparent',
                       }}
                       aria-label={`Play ${game.title}`}
                     />

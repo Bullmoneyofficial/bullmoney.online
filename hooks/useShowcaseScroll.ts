@@ -212,9 +212,27 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
         timeoutRef.current = hard;
       });
 
+    // ── Wait for browser idle (avoids fighting initial render) ──
+    const waitForIdle = (): Promise<void> =>
+      new Promise((resolve) => {
+        if (typeof requestIdleCallback === "function") {
+          requestIdleCallback(() => resolve(), { timeout: 3000 });
+        } else {
+          setTimeout(resolve, 100);
+        }
+      });
+
+    // ── Detect in-app browsers (laggy on these) ──
+    const ua = navigator.userAgent;
+    const isInApp = /Instagram|FBAN|FBAV|TikTok|musical_ly|Twitter|GSA|Line\//i.test(ua);
+
     // ── Main sequence ──
     const run = async () => {
       await waitForSplash();
+      if (cancelledRef.current) return;
+
+      // Let the browser finish painting before we start animating
+      await waitForIdle();
       if (cancelledRef.current) return;
 
       await delay(startDelay);
@@ -234,9 +252,13 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
       await delay(800);
       if (cancelledRef.current) return;
 
+      // Use shorter durations in in-app browsers to reduce lag
+      const downDur = isInApp ? Math.min(scrollDownDuration, 900) : scrollDownDuration;
+      const upDur = isInApp ? Math.min(springBackDuration, 600) : springBackDuration;
+
       // 1) Scroll down — re-measures for lazy content
       setPhase("Loading sections");
-      const finalMax = await animate(0, maxScroll, scrollDownDuration, easeInOutCubic, (v, curTo) => {
+      const finalMax = await animate(0, maxScroll, downDur, easeInOutCubic, (v, curTo) => {
         setScroll(v);
         setProgress(curTo > 0 ? (v / curTo) * 60 : 0);
       }, true);
@@ -255,7 +277,7 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
       // 3) Scroll back up
       const backFrom = Math.max(finalMax, trueBottom);
       setPhase("Returning");
-      await animate(backFrom, 0, springBackDuration, easeInOutCubic, (v) => {
+      await animate(backFrom, 0, upDur, easeInOutCubic, (v) => {
         setScroll(v);
         setProgress(60 + (1 - v / Math.max(1, backFrom)) * 30);
       });

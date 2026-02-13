@@ -76,7 +76,7 @@ setTimeout(applyScrollFix,600);
 
 var style=d.createElement('style');
 style.textContent=[
-  '.in-app-browser *{animation-duration:.16s!important;transition-duration:.12s!important;}',
+  '.in-app-browser *:not([role="dialog"]):not([role="dialog"] *):not([data-state="open"]):not([data-state="open"] *):not([data-radix-popper-content-wrapper]):not([data-radix-popper-content-wrapper] *):not(nav):not(nav *):not(button):not([role="menu"]):not([role="menu"] *):not([role="menuitem"]){animation-duration:.16s!important;transition-duration:.12s!important;}',
   '.in-app-browser .particle-container,.in-app-browser .confetti{opacity:0!important;pointer-events:none!important;height:0!important;overflow:hidden!important;}',
   '.in-app-browser .aurora{opacity:.05!important;}',
   '.in-app-browser .glass-effect,.in-app-browser .glassmorphism,.in-app-browser .glass-surface,.in-app-browser .glass-card{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:rgba(5,9,21,.86)!important;border-color:rgba(255,255,255,.06)!important;}',
@@ -112,7 +112,7 @@ if(crashes>0){
   root.classList.add('ultra-light-mode');
   var ultra=d.createElement('style');
   ultra.textContent=[
-    '.ultra-light-mode *{animation:none!important;transition:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}',
+    '.ultra-light-mode *:not([role="dialog"]):not([role="dialog"] *):not([data-state="open"]):not([data-state="open"] *):not([data-radix-popper-content-wrapper]):not([data-radix-popper-content-wrapper] *):not(nav):not(nav *):not(button):not([role="menu"]):not([role="menu"] *):not([role="menuitem"]){animation:none!important;transition:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}',
     '.ultra-light-mode *:not(.product-card-premium):not(input):not(button):not(a){box-shadow:none!important;}',
     '.ultra-light-mode .glass-effect,.ultra-light-mode .glassmorphism,.ultra-light-mode .glass-surface,.ultra-light-mode .glass-card{background:rgba(5,9,21,.9)!important;border-color:rgba(255,255,255,.05)!important;}'
   ].join('\n');

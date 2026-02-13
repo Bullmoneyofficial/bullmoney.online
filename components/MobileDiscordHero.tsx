@@ -162,6 +162,18 @@ if (typeof window !== 'undefined') {
   document.head.appendChild(defaultLink);
 }
 
+// =============================================================================
+// MOBILE PERFORMANCE UTILITIES
+// Detect mobile, throttle RAF to ~30fps, lower quality on mobile devices
+// =============================================================================
+const IS_MOBILE = typeof window !== 'undefined' && (
+  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+  (window.innerWidth <= 768)
+);
+const MOBILE_DPR = IS_MOBILE ? Math.min(window.devicePixelRatio, 1) : (typeof window !== 'undefined' ? Math.min(window.devicePixelRatio, 2) : 1);
+const MOBILE_TARGET_FPS = IS_MOBILE ? 30 : 60;
+const MOBILE_FRAME_INTERVAL = 1000 / MOBILE_TARGET_FPS;
+
 // Import the cool background effects
 import LiquidEther from './LiquidEther';
 import DarkVeil from './DarkVeil';
@@ -1702,6 +1714,11 @@ const FaultyTerminal = ({
   dither = 0, curvature = 0.2, tint = '#ffffff', mouseReact = true, mouseStrength = 0.2,
   dpr = 1, pageLoadAnimation = true, brightness = 1, timeOffset, style, className, ...rest
 }: FaultyTerminalProps) => {
+  // Mobile: force lower DPR and disable expensive features
+  const effectiveDpr = IS_MOBILE ? Math.min(dpr, MOBILE_DPR) : dpr;
+  const effectiveMouseReact = IS_MOBILE ? false : mouseReact;
+  const effectiveChromaticAberration = IS_MOBILE ? 0 : chromaticAberration;
+  const effectiveNoiseAmp = IS_MOBILE ? Math.min(noiseAmp, 0.4) : noiseAmp;
   const containerRef = useRef<HTMLDivElement>(null);
   const programRef = useRef<Program>(null);
   const rendererRef = useRef<Renderer>(null);
@@ -1711,6 +1728,8 @@ const FaultyTerminal = ({
   const rafRef = useRef<number>(0);
   const loadAnimationStartRef = useRef<number>(0);
   const timeOffsetRef = useRef<number>(timeOffset ?? Math.random() * 100);
+  const lastFrameTimeRef = useRef<number>(0);
+  const isVisibleRef = useRef(true);
   
   const tintVec = useMemo(() => hexToRgb(tint), [tint]);
   const ditherValue = useMemo(() => (typeof dither === 'boolean' ? (dither ? 1 : 0) : dither), [dither]);
@@ -1734,10 +1753,23 @@ const FaultyTerminal = ({
     mouseRef.current = { x, y };
   }, []);
 
+  // Visibility observer — pause rendering when off-screen on mobile
+  useEffect(() => {
+    if (!IS_MOBILE) return;
+    const ctn = containerRef.current;
+    if (!ctn) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { isVisibleRef.current = entry.isIntersecting; },
+      { threshold: 0.05 }
+    );
+    observer.observe(ctn);
+    return () => observer.disconnect();
+  }, []);
+
   useEffect(() => {
     const ctn = containerRef.current;
     if (!ctn) return;
-    const renderer = new Renderer({ dpr });
+    const renderer = new Renderer({ dpr: effectiveDpr });
     rendererRef.current = renderer;
     const gl = renderer.gl;
     gl.clearColor(1, 1, 1, 0); 
@@ -1755,14 +1787,14 @@ const FaultyTerminal = ({
         uScanlineIntensity: { value: scanlineIntensity },
         uGlitchAmount: { value: glitchAmount },
         uFlickerAmount: { value: flickerAmount },
-        uNoiseAmp: { value: noiseAmp },
-        uChromaticAberration: { value: chromaticAberration },
+        uNoiseAmp: { value: effectiveNoiseAmp },
+        uChromaticAberration: { value: effectiveChromaticAberration },
         uDither: { value: ditherValue },
         uCurvature: { value: curvature },
         uTint: { value: new OglColor(tintVec[0], tintVec[1], tintVec[2]) },
         uMouse: { value: new Float32Array([smoothMouseRef.current.x, smoothMouseRef.current.y]) },
         uMouseStrength: { value: mouseStrength },
-        uUseMouse: { value: mouseReact ? 1 : 0 },
+        uUseMouse: { value: effectiveMouseReact ? 1 : 0 },
         uPageLoadProgress: { value: pageLoadAnimation ? 0 : 1 },
         uUsePageLoadAnimation: { value: pageLoadAnimation ? 1 : 0 },
         uBrightness: { value: brightness }
@@ -1782,6 +1814,15 @@ const FaultyTerminal = ({
 
     const update = (t: number) => {
       rafRef.current = requestAnimationFrame(update);
+
+      // Mobile: skip frame if not visible or throttle to target FPS
+      if (IS_MOBILE) {
+        if (!isVisibleRef.current) return;
+        const delta = t - lastFrameTimeRef.current;
+        if (delta < MOBILE_FRAME_INTERVAL) return;
+        lastFrameTimeRef.current = t - (delta % MOBILE_FRAME_INTERVAL);
+      }
+
       if (pageLoadAnimation && loadAnimationStartRef.current === 0) loadAnimationStartRef.current = t;
       if (!pause) {
         const elapsed = (t * 0.001 + timeOffsetRef.current) * timeScale;
@@ -1796,7 +1837,7 @@ const FaultyTerminal = ({
         const progress = Math.min(animationElapsed / animationDuration, 1);
         program.uniforms.uPageLoadProgress.value = progress;
       }
-      if (mouseReact) {
+      if (effectiveMouseReact) {
         const damping = 0.08;
         smoothMouseRef.current.x += (mouseRef.current.x - smoothMouseRef.current.x) * damping;
         smoothMouseRef.current.y += (mouseRef.current.y - smoothMouseRef.current.y) * damping;
@@ -1808,21 +1849,21 @@ const FaultyTerminal = ({
     rafRef.current = requestAnimationFrame(update);
     ctn.appendChild(gl.canvas);
     
-    if (mouseReact) {
+    if (effectiveMouseReact) {
         ctn.addEventListener('mousemove', handleMouseMove);
         ctn.addEventListener('touchmove', handleTouchMove, { passive: true });
     }
     return () => {
       cancelAnimationFrame(rafRef.current);
       resizeObserver.disconnect();
-      if (mouseReact) {
+      if (effectiveMouseReact) {
         ctn.removeEventListener('mousemove', handleMouseMove);
         ctn.removeEventListener('touchmove', handleTouchMove);
       }
       if (gl.canvas.parentElement === ctn) ctn.removeChild(gl.canvas);
       gl.getExtension('WEBGL_lose_context')?.loseContext();
     };
-  }, [dpr, pause, timeScale, scale, digitSize, scanlineIntensity, glitchAmount, flickerAmount, noiseAmp, chromaticAberration, ditherValue, curvature, mouseReact, mouseStrength, pageLoadAnimation, brightness, handleMouseMove, handleTouchMove, tintVec]);
+  }, [effectiveDpr, pause, timeScale, scale, digitSize, scanlineIntensity, glitchAmount, flickerAmount, effectiveNoiseAmp, effectiveChromaticAberration, ditherValue, curvature, effectiveMouseReact, mouseStrength, pageLoadAnimation, brightness, handleMouseMove, handleTouchMove, tintVec]);
 
   return <div ref={containerRef} className={className} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', ...style }} {...rest} />;
 };
@@ -1943,6 +1984,7 @@ const YouTubePlayer: React.FC<{ videoId: string; loading?: boolean; error?: bool
 );
 
 // --- SPLINE BACKGROUND COMPONENT (for cycling backgrounds) ---
+// Mobile: lower canvas resolution, renderOnDemand, pause when off-screen
 const SplineBackground = memo(function SplineBackground({ grayscale = true, sceneUrl }: { grayscale?: boolean; sceneUrl: string }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -1950,8 +1992,10 @@ const SplineBackground = memo(function SplineBackground({ grayscale = true, scen
   const [cachedSceneUrl, setCachedSceneUrl] = useState<string | null>(null);
   const [cacheChecked, setCacheChecked] = useState(false);
   const splineRef = useRef<any>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const loadStartTime = useRef<number>(0);
   const blobUrlRef = useRef<string | null>(null);
+  const isVisibleRef = useRef(true);
   const MAX_RETRIES = 2;
   
   // Use provided scene URL
@@ -1992,12 +2036,50 @@ const SplineBackground = memo(function SplineBackground({ grayscale = true, scen
     };
   }, [scene]);
 
+  // Mobile: IntersectionObserver to pause/play Spline when off-screen
+  useEffect(() => {
+    if (!IS_MOBILE) return;
+    const ctn = containerRef.current;
+    if (!ctn) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isVisibleRef.current = entry.isIntersecting;
+        const app = splineRef.current;
+        if (!app) return;
+        if (entry.isIntersecting) {
+          try { app.play(); } catch (_e) { /* ignore */ }
+        } else {
+          try { app.stop(); } catch (_e) { /* ignore */ }
+        }
+      },
+      { threshold: 0.05 }
+    );
+    observer.observe(ctn);
+    return () => observer.disconnect();
+  }, [isLoaded]);
+
   const handleLoad = useCallback((splineApp: any) => {
     const loadTime = performance.now() - loadStartTime.current;
     console.log(`[SplineBackground] ✅ Spline loaded in ${loadTime.toFixed(1)}ms`);
     splineRef.current = splineApp;
     setIsLoaded(true);
     setHasError(false);
+
+    // Mobile: reduce Spline canvas resolution for better performance
+    if (IS_MOBILE && splineApp) {
+      try {
+        const canvas = splineApp.canvas as HTMLCanvasElement | undefined;
+        if (canvas) {
+          const scaleFactor = 0.6; // Render at 60% resolution on mobile
+          const w = Math.round(canvas.clientWidth * scaleFactor);
+          const h = Math.round(canvas.clientHeight * scaleFactor);
+          splineApp.setSize(w, h);
+          console.log(`[SplineBackground] Mobile: reduced canvas to ${w}x${h} (${Math.round(scaleFactor * 100)}% quality)`);
+        }
+      } catch (e) {
+        console.warn('[SplineBackground] Could not reduce canvas size:', e);
+      }
+    }
   }, []);
 
   const handleError = useCallback((error: any) => {
@@ -2023,6 +2105,7 @@ const SplineBackground = memo(function SplineBackground({ grayscale = true, scen
 
   return (
     <div 
+      ref={containerRef}
       className="absolute inset-0 w-full h-full overflow-hidden"
       style={{ 
         zIndex: 0,
@@ -2073,6 +2156,7 @@ const SplineBackground = memo(function SplineBackground({ grayscale = true, scen
           <div className="spline-scene-inner">
             <Spline
               scene={sceneToLoad}
+              renderOnDemand={IS_MOBILE}
               onLoad={handleLoad}
               onError={handleError}
               style={{
@@ -2084,7 +2168,7 @@ const SplineBackground = memo(function SplineBackground({ grayscale = true, scen
                 opacity: isLoaded ? 1 : 0.6,
                 filter: grayscale ? 'grayscale(100%) saturate(0) contrast(1.1)' : 'none',
                 WebkitFilter: grayscale ? 'grayscale(100%) saturate(0) contrast(1.1)' : 'none',
-                pointerEvents: 'auto', // Spline needs canvas events to initialize WebGL
+                pointerEvents: IS_MOBILE ? 'none' : 'auto', // Mobile: disable pointer events to save GPU (no interaction needed for background)
                 zIndex: 1,
                 touchAction: 'pan-y',
                 transition: 'opacity 400ms ease-out, filter 300ms ease-out',
@@ -3057,17 +3141,17 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
         return (
           <LiquidEther
             colors={['#ffffff', '#e8e8e8', '#d0d0d0']}
-            mouseForce={10}
-            cursorSize={60}
+            mouseForce={IS_MOBILE ? 5 : 10}
+            cursorSize={IS_MOBILE ? 30 : 60}
             isViscous={false}
-            viscous={15}
-            iterationsViscous={8}
-            iterationsPoisson={8}
-            resolution={0.25}
+            viscous={IS_MOBILE ? 8 : 15}
+            iterationsViscous={IS_MOBILE ? 4 : 8}
+            iterationsPoisson={IS_MOBILE ? 4 : 8}
+            resolution={IS_MOBILE ? 0.15 : 0.25}
             isBounce={false}
             autoDemo
-            autoSpeed={0.3}
-            autoIntensity={1.2}
+            autoSpeed={IS_MOBILE ? 0.15 : 0.3}
+            autoIntensity={IS_MOBILE ? 0.6 : 1.2}
             takeoverDuration={0.3}
             autoResumeDelay={3000}
             autoRampDuration={0.5}
@@ -3078,12 +3162,12 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
           <div style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
             <DarkVeil
               hueShift={0}
-              noiseIntensity={0.01}
+              noiseIntensity={IS_MOBILE ? 0.005 : 0.01}
               scanlineIntensity={0}
-              speed={0.3}
+              speed={IS_MOBILE ? 0.15 : 0.3}
               scanlineFrequency={0}
-              warpAmount={0.05}
-              resolutionScale={1}
+              warpAmount={IS_MOBILE ? 0.02 : 0.05}
+              resolutionScale={IS_MOBILE ? 0.5 : 1}
             />
           </div>
         );
@@ -3092,12 +3176,12 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
           <LightPillar
             topColor="#ffffff"
             bottomColor="#cccccc"
-            intensity={0.6}
-            rotationSpeed={0.15}
-            glowAmount={0.002}
-            pillarWidth={2}
+            intensity={IS_MOBILE ? 0.4 : 0.6}
+            rotationSpeed={IS_MOBILE ? 0.08 : 0.15}
+            glowAmount={IS_MOBILE ? 0.001 : 0.002}
+            pillarWidth={IS_MOBILE ? 1.5 : 2}
             pillarHeight={0.3}
-            noiseIntensity={0.2}
+            noiseIntensity={IS_MOBILE ? 0.1 : 0.2}
             pillarRotation={15}
             interactive={false}
             mixBlendMode="screen"
@@ -3107,18 +3191,18 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
       case 'gridScan':
         return (
           <GridScan
-            sensitivity={0.4}
+            sensitivity={IS_MOBILE ? 0.2 : 0.4}
             lineThickness={1}
             linesColor="#444444"
-            gridScale={0.15}
+            gridScale={IS_MOBILE ? 0.1 : 0.15}
             scanColor="#ffffff"
-            scanOpacity={0.3}
+            scanOpacity={IS_MOBILE ? 0.2 : 0.3}
             enablePost={false}
             bloomIntensity={0}
             chromaticAberration={0}
-            noiseIntensity={0.005}
-            scanDuration={4}
-            scanDelay={2}
+            noiseIntensity={IS_MOBILE ? 0.002 : 0.005}
+            scanDuration={IS_MOBILE ? 6 : 4}
+            scanDelay={IS_MOBILE ? 3 : 2}
           />
         );
       case 'galaxy':
@@ -3126,16 +3210,16 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
           <Galaxy
             mouseRepulsion={false}
             mouseInteraction={false}
-            density={0.8}
-            glowIntensity={0.4}
+            density={IS_MOBILE ? 0.4 : 0.8}
+            glowIntensity={IS_MOBILE ? 0.2 : 0.4}
             saturation={0}
             hueShift={0}
-            twinkleIntensity={0.05}
-            rotationSpeed={0.015}
+            twinkleIntensity={IS_MOBILE ? 0.02 : 0.05}
+            rotationSpeed={IS_MOBILE ? 0.008 : 0.015}
             repulsionStrength={1}
             autoCenterRepulsion={0}
-            starSpeed={0.15}
-            speed={0.2}
+            starSpeed={IS_MOBILE ? 0.08 : 0.15}
+            speed={IS_MOBILE ? 0.1 : 0.2}
             transparent={false}
             disableAnimation={false}
           />
@@ -3144,7 +3228,7 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
         return (
           <LetterGlitch
             glitchColors={['#ffffff', '#dddddd', '#bbbbbb']}
-            glitchSpeed={80}
+            glitchSpeed={IS_MOBILE ? 120 : 80}
             centerVignette={true}
             outerVignette={true}
             smooth={false}
@@ -3154,7 +3238,7 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
       case 'ballpit':
         return (
           <Ballpit
-            count={40}
+            count={IS_MOBILE ? 20 : 40}
             gravity={0.005}
             friction={0.99}
             wallBounce={0.85}
@@ -3164,31 +3248,31 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
       case 'gridDistortion':
         return (
           <GridDistortion
-            imageSrc="https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=800&q=60"
-            grid={8}
-            mouse={0.08}
-            strength={0.08}
+            imageSrc={IS_MOBILE ? "https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=400&q=40" : "https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=800&q=60"}
+            grid={IS_MOBILE ? 5 : 8}
+            mouse={IS_MOBILE ? 0.04 : 0.08}
+            strength={IS_MOBILE ? 0.04 : 0.08}
             relaxation={0.95}
           />
         );
       case 'terminal':
         return (
           <FaultyTerminal
-            scale={1.5}
-            gridMul={[1.5, 1]}
-            digitSize={1}
-            timeScale={0.3}
-            scanlineIntensity={0.4}
-            glitchAmount={0.5}
-            flickerAmount={0.4}
-            noiseAmp={0.8}
-            curvature={0.03}
+            scale={IS_MOBILE ? 1 : 1.5}
+            gridMul={IS_MOBILE ? [1, 0.75] : [1.5, 1]}
+            digitSize={IS_MOBILE ? 0.8 : 1}
+            timeScale={IS_MOBILE ? 0.15 : 0.3}
+            scanlineIntensity={IS_MOBILE ? 0.2 : 0.4}
+            glitchAmount={IS_MOBILE ? 0.3 : 0.5}
+            flickerAmount={IS_MOBILE ? 0.2 : 0.4}
+            noiseAmp={IS_MOBILE ? 0.4 : 0.8}
+            curvature={IS_MOBILE ? 0.01 : 0.03}
             tint="#ffffff"
             mouseReact={false}
             mouseStrength={0}
             pageLoadAnimation={false}
             brightness={0.5}
-            dpr={0.75}
+            dpr={IS_MOBILE ? 0.5 : 0.75}
           />
         );
       default:

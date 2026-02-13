@@ -887,35 +887,12 @@ body[data-active-ui="supportDrawer"] {
    ============================================================================ */
 
 /* Protect entire store page from browser dark mode forcing */
-html[data-store-page],
-html[data-store-page] body,
-body.store-page-body,
-html.store-active,
-html.store-active body {
-  color-scheme: light !important;
-  -webkit-color-scheme: light !important;
-  background-color: #ffffff !important;
-}
+/* NOTE: Do NOT set background-color here — games page uses data-store-page but needs black bg */
+/* NOTE: Do NOT set color-scheme on html/body — it breaks dark-themed pages like games */
+/* Modals and drawers have their own inline colorScheme: 'light' protection */
 
-/* Protect store layout and all children */
-[data-store-page] *,
-.store-layout,
-.store-layout *,
-body.store-page-body * {
-  color-scheme: inherit !important;
-}
-
-/* Specifically protect store header elements */
-[data-store-page] header,
-[data-store-page] .store-header,
-.store-layout header,
-body.store-page-body header {
-  color-scheme: light !important;
-  -webkit-color-scheme: light !important;
-  background-color: inherit !important;
-}
-
-/* Protect store modals and drawers */
+/* Protect store layout children — only modals/drawers, not all elements */
+/* NOTE: Do NOT use wildcard * here — it breaks dark sections like games page */
 [data-store-page] [role="dialog"],
 [data-store-page] [aria-modal="true"],
 [data-store-page] .modal,

@@ -364,13 +364,9 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
   const heroCacheLoadedRef = useRef(false);
   const allowHeavyHeroReady = allowHeavyHero && hasMounted && heroImageReady;
 
-  // Showcase scroll - Re-enabled with fixed drunk scroll that doesn't block user interaction
+  // Showcase scroll — uses hook defaults for lightweight perf
   useShowcaseScroll({
-    scrollDownDuration: 1800,
-    springBackDuration: 1200,
-    genieDuration: 500,
-    genieScale: 0.96,
-    startDelay: 800,
+    startDelay: 1000,
     enabled: allowHeavyHeroReady,
     pageId: 'store',
   });
