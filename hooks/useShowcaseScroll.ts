@@ -48,10 +48,18 @@ function easeInOutCubic(t: number): number {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
+function easeInCubic(t: number): number {
+  return t * t * t;
+}
+
 function easeOutBack(t: number): number {
   const c1 = 1.70158;
   const c3 = c1 + 1;
   return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+}
+
+function lerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
 }
 
 export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
@@ -76,6 +84,8 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
   const drunkLastScrollRef = useRef<number>(0);
   const drunkActiveRef = useRef(false);
   const drunkLastUpdateRef = useRef(0);
+  const drunkXRef = useRef(0);
+  const drunkRotRef = useRef(0);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -100,21 +110,33 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
 
     cancelledRef.current = false;
 
-    const getContainer = (): HTMLElement | null => {
-      if (containerSelector) return document.querySelector(containerSelector);
-      return null; // null = use window
-    };
+    const containerEl = containerSelector ? document.querySelector(containerSelector) : null;
+    const getContainer = (): HTMLElement | null => containerEl as HTMLElement | null;
+
+    const maxScrollRef = { current: 0 };
+    const maxScrollLastUpdateRef = { current: 0 };
 
     const getScrollTop = (): number => {
       const el = getContainer();
       return el ? el.scrollTop : window.scrollY;
     };
 
-    const getMaxScroll = (): number => {
+    const computeMaxScroll = (): number => {
       const el = getContainer();
       if (el) return el.scrollHeight - el.clientHeight;
       return document.documentElement.scrollHeight - window.innerHeight;
     };
+
+    const refreshMaxScroll = (force = false): number => {
+      const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+      if (force || now - maxScrollLastUpdateRef.current > 500) {
+        maxScrollRef.current = computeMaxScroll();
+        maxScrollLastUpdateRef.current = now;
+      }
+      return maxScrollRef.current;
+    };
+
+    const getMaxScroll = (force = false): number => refreshMaxScroll(force);
 
     const setScroll = (y: number) => {
       const el = getContainer();
@@ -128,6 +150,8 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
     const stopDrunk = () => {
       if (drunkRafRef.current) cancelAnimationFrame(drunkRafRef.current);
       drunkActiveRef.current = false;
+      drunkXRef.current = 0;
+      drunkRotRef.current = 0;
       const root = document.documentElement;
       root.classList.remove("bm-drunk-scroll");
       root.style.removeProperty("--bm-drunk-x");
@@ -137,7 +161,8 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
     const updateDrunk = (now?: number) => {
       if (cancelledRef.current) { stopDrunk(); return; }
       const ts = typeof now === "number" ? now : (typeof performance !== "undefined" ? performance.now() : Date.now());
-      if (ts - drunkLastUpdateRef.current < 42) {
+      // Cap updates to reduce CPU load while keeping motion smooth.
+      if (ts - drunkLastUpdateRef.current < 24) {
         drunkRafRef.current = requestAnimationFrame(updateDrunk);
         return;
       }
@@ -155,14 +180,19 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
         return;
       }
 
-      const t = ts / 240;
-      const ampX = 2 + 8 * strength;
-      const ampRot = 0.12 + 0.5 * strength;
-      const x = Math.sin(t) * ampX + Math.sin(t * 0.6 + 1.2) * (ampX * 0.3);
-      const rot = Math.sin(t + 0.7) * ampRot + Math.sin(t * 0.85) * (ampRot * 0.25);
+      const t = ts / 280;
+      const ampX = 2 + 6 * strength;
+      const ampRot = 0.1 + 0.4 * strength;
+      const targetX = Math.sin(t) * ampX;
+      const targetRot = Math.sin(t + 0.7) * ampRot;
+      const smooth = 0.18 + 0.12 * strength;
+      const x = lerp(drunkXRef.current, targetX, smooth);
+      const rot = lerp(drunkRotRef.current, targetRot, smooth);
+      drunkXRef.current = x;
+      drunkRotRef.current = rot;
 
-      root.style.setProperty("--bm-drunk-x", `${x}px`);
-      root.style.setProperty("--bm-drunk-rot", `${rot}deg`);
+      root.style.setProperty("--bm-drunk-x", `${Math.round(x * 100) / 100}px`);
+      root.style.setProperty("--bm-drunk-rot", `${Math.round(rot * 1000) / 1000}deg`);
       drunkRafRef.current = requestAnimationFrame(updateDrunk);
     };
 
@@ -175,6 +205,7 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
 
     const noteScrollActivity = () => {
       drunkLastScrollRef.current = Date.now();
+      refreshMaxScroll();
       startDrunk();
     };
 
@@ -264,12 +295,18 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
     };
     scrollTarget.addEventListener("scroll", onScroll, { passive: true });
 
+    const onResize = () => {
+      refreshMaxScroll(true);
+    };
+    window.addEventListener("resize", onResize, { passive: true });
+
     const cleanup = () => {
       interactionEvents.forEach((evt) => window.removeEventListener(evt, cancel));
       scrollTarget.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
     };
 
-    // Animate helper using rAF
+    // Optimized animate helper using rAF with frame skipping for 60fps
     const animate = (
       from: number,
       to: number,
@@ -279,8 +316,15 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
     ): Promise<void> => {
       return new Promise((resolve) => {
         const start = performance.now();
+        let lastFrameTime = start;
         const tick = (now: number) => {
           if (cancelledRef.current) { resolve(); return; }
+          // Enforce ~16.67ms per frame (60fps) to avoid excessive DOM writes
+          if (now - lastFrameTime < 14) {
+            rafRef.current = requestAnimationFrame(tick);
+            return;
+          }
+          lastFrameTime = now;
           const elapsed = now - start;
           const progress = Math.min(elapsed / duration, 1);
           const easedProgress = easing(progress);
@@ -305,7 +349,7 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
       let checks = 0;
       const maxChecks = 60;
       while (!cancelledRef.current && checks < maxChecks) {
-        const maxScroll = getMaxScroll();
+        const maxScroll = getMaxScroll(true);
         if (maxScroll > 120) return maxScroll;
         checks += 1;
         await delay(200);
@@ -377,7 +421,7 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
       noteScrollActivity();
 
       // 1) Scroll down to bottom — progress 0→60%
-      await animate(0, maxScroll, scrollDownDuration, easeInOutCubic, (v) => {
+      await animate(0, maxScroll, scrollDownDuration, easeInCubic, (v) => {
         setScroll(v);
         setOverlayProgress((v / maxScroll) * 60);
         noteScrollActivity();
@@ -393,7 +437,7 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
       setOverlayPhase("Returning");
 
       // 3) Spring back to top — progress 60→85%
-      await animate(maxScroll, 0, springBackDuration, easeOutBack, (v) => {
+      await animate(maxScroll, 0, springBackDuration, easeInCubic, (v) => {
         setScroll(v);
         setOverlayProgress(60 + (1 - v / maxScroll) * 25);
         noteScrollActivity();

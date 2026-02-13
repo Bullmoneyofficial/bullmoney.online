@@ -305,13 +305,13 @@ export default function RootLayout({
       #bm-splash .bm-step-icon{width:14px;height:14px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;font-size:8px;flex-shrink:0;transition:all .3s ease;}
       #bm-splash .bm-step.active .bm-step-icon{background:rgba(0,0,0,.06);}
       #bm-splash .bm-step.done .bm-step-icon{background:#18181b;color:#fff;}
-      html.bm-sway,html.bm-sway body{animation:bm-sway 2.1s ease-in-out both;transform-origin:50% 50%;will-change:transform;}
+      html.bm-sway,html.bm-sway body{animation:bm-sway 2.1s cubic-bezier(.34,.73,.64,.26) both;transform-origin:50% 50%;will-change:transform;contain:layout style paint;}
 
-      @keyframes bm-logo-intro{0%{opacity:0;transform:translate3d(0,14px,0) scale(.9)}100%{opacity:1;transform:translate3d(0,0,0) scale(1)}}
+      @keyframes bm-logo-intro{0%{opacity:0;transform:translate3d(0,14px,0) scale(.9);will-change:transform}100%{opacity:1;transform:translate3d(0,0,0) scale(1)}}
       @keyframes bm-text-intro{0%{opacity:0;transform:translate3d(0,10px,0)}100%{opacity:1;transform:translate3d(0,0,0)}}
       @keyframes bm-step-sheen{0%{background-position:0% 50%;transform:translate3d(0,0,0)}50%{background-position:100% 50%;transform:translate3d(2px,0,0)}100%{background-position:0% 50%;transform:translate3d(0,0,0)}}
       @keyframes bm-step-settle{0%{opacity:.6;transform:translate3d(0,0,0)}100%{opacity:1;transform:translate3d(0,0,0)}}
-      @keyframes bm-sway{0%{transform:translate3d(0,0,0) rotate(0deg)}12%{transform:translate3d(-18px,2px,0) rotate(-1.2deg)}24%{transform:translate3d(14px,-2px,0) rotate(1deg)}38%{transform:translate3d(-22px,3px,0) rotate(-1.5deg)}52%{transform:translate3d(16px,-3px,0) rotate(1.1deg)}68%{transform:translate3d(-12px,2px,0) rotate(-0.7deg)}84%{transform:translate3d(8px,-1px,0) rotate(0.5deg)}100%{transform:translate3d(0,0,0) rotate(0deg)}}
+      @keyframes bm-sway{0%{transform:translate3d(0,0,0) rotate(0deg)}16%{transform:translate3d(-16px,1.5px,0) rotate(-1.1deg)}32%{transform:translate3d(12px,-1.8px,0) rotate(0.9deg)}50%{transform:translate3d(-14px,2px,0) rotate(-0.8deg)}68%{transform:translate3d(10px,-1.2px,0) rotate(0.6deg)}84%{transform:translate3d(-8px,1px,0) rotate(-0.3deg)}100%{transform:translate3d(0,0,0) rotate(0deg)}}
       @media(prefers-reduced-motion:reduce){#bm-splash::before,#bm-splash::after,#bm-splash .bm-orb,#bm-splash .bm-logo-wrap,#bm-splash .bm-title,#bm-splash .bm-subtitle,#bm-splash .bm-progress-wrap,#bm-splash .bm-dot-ping,#bm-splash .bm-bar-outer::after,#bm-splash .bm-bar-inner,#bm-splash .bm-step span:last-child{animation:none!important;}#bm-splash,#bm-splash .bm-step{transition:none!important;}}
       @media(min-width:768px){#bm-splash .bm-logo-wrap{width:160px;height:160px;}#bm-splash .bm-title{font-size:64px;}#bm-splash .bm-percent{font-size:72px;}}
         ` }} />

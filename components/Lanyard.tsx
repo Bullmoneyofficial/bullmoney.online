@@ -399,15 +399,15 @@ function Card({ position = [0, 0, 20], gravity = [0, -40, 0] }: CardProps) {
     cardRef.current.rotation.x = currentRotation.current.x + Math.sin(time * 0.6) * 0.04;
     cardRef.current.rotation.y = currentRotation.current.y + Math.cos(time * 0.4) * 0.04 + Math.PI;
 
-    // More dramatic swaying when not dragging
+    // More dramatic swaying when not dragging — optimized for 60fps
     if (!isDragging.current) {
-      const swayX = Math.sin(time * 0.6) * 0.5 + Math.sin(time * 1.2) * 0.2;
-      const swayY = Math.cos(time * 0.5) * 0.15;
+      const swayX = Math.sin(time * 0.5) * 0.3 + Math.sin(time * 0.95) * 0.15;
+      const swayY = Math.cos(time * 0.4) * 0.1;
       
       const endPoint = ropeRef.current.points[ropeRef.current.points.length - 1];
       if (!endPoint.pinned) {
-        endPoint.position.x += swayX * delta;
-        endPoint.position.y += swayY * delta;
+        endPoint.position.x += swayX * delta * 0.8;
+        endPoint.position.y += swayY * delta * 0.8;
       }
     }
   });
