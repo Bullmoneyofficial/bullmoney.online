@@ -785,3 +785,22 @@ body.store-page-body {
   /* Mark as essential UI animation for boost.py compatibility */
   --boost-protected: 1;
 }
+
+/* Affiliate dashboard visual reset: white background + black text */
+.affiliate-dashboard-reset,
+.affiliate-dashboard-reset * {
+  color: #000000 !important;
+  text-shadow: none !important;
+}
+
+.affiliate-dashboard-reset {
+  background: #ffffff !important;
+}
+
+.affiliate-dashboard-reset * {
+  background-image: none !important;
+}
+
+.affiliate-dashboard-reset [class*="border-"] {
+  border-color: rgba(0, 0, 0, 0.14) !important;
+}

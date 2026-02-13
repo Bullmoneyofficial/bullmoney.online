@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
-import { createClient } from '@supabase/supabase-js'; 
+import { createClient } from '@supabase/supabase-js';
 import { gsap } from 'gsap';
 import dynamic from 'next/dynamic';
 import {
@@ -16,7 +16,7 @@ import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { persistSession } from '@/lib/sessionPersistence';
 
 // --- IMPORT SEPARATE LOADER COMPONENT ---
-import { MultiStepLoader} from "@/components/Mainpage/MultiStepLoader"; 
+import { MultiStepLoader} from "@/components/Mainpage/MultiStepLoader";
 
 // --- 1. SUPABASE SETUP ---
 const TELEGRAM_GROUP_LINK = "https://t.me/addlist/uswKuwT2JUQ4YWI8";
@@ -47,7 +47,7 @@ const useIsMobile = () => {
   return isMobile;
 };
 
-// --- 2. INTERNAL CSS FOR GLOBAL CURSOR & SCROLL LOCK ---
+// --- 2. GLOBAL STYLES ---
 const CursorStyles = () => (
   <style jsx global>{`
     .target-cursor-wrapper {
@@ -80,26 +80,72 @@ const CursorStyles = () => (
     .corner-tr { top: -6px; right: -6px; border-left: none; border-bottom: none; }
     .corner-br { bottom: -6px; right: -6px; border-left: none; border-top: none; }
     .corner-bl { bottom: -6px; left: -6px; border-right: none; border-top: none; }
-    
+
     body.custom-cursor-active {
       cursor: none !important;
     }
-    
-    /* Input autofill styling override */
+
+    /* Input autofill styling for white bg */
     input:-webkit-autofill,
-    input:-webkit-autofill:hover, 
-    input:-webkit-autofill:focus, 
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
     input:-webkit-autofill:active{
-        -webkit-box-shadow: 0 0 0 30px #171717 inset !important;
-        -webkit-text-fill-color: white !important;
+        -webkit-box-shadow: 0 0 0 30px #f5f5f7 inset !important;
+        -webkit-text-fill-color: #1d1d1f !important;
         transition: background-color 5000s ease-in-out 0s;
     }
 
-    /* === ADDED GLOBAL SCROLL LOCK CLASS === */
+    /* Scroll lock */
     body.loader-lock {
         overflow: hidden !important;
-        height: 100vh !important; /* Locks height to viewport */
+        height: 100vh !important;
         width: 100vw !important;
+    }
+
+    /* Apple-style animations */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes checkPop {
+      0% { transform: scale(0); }
+      70% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    .apple-card {
+      animation: scaleIn 0.5s cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+    .apple-fade-up {
+      animation: fadeInUp 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+    .apple-btn {
+      transition: all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+    .apple-btn:hover {
+      transform: scale(1.015);
+    }
+    .apple-btn:active {
+      transform: scale(0.985);
+    }
+    .apple-input {
+      transition: all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+    .apple-input:focus {
+      border-color: #1d1d1f !important;
+      box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06) !important;
     }
   `}</style>
 );
@@ -114,7 +160,7 @@ interface TargetCursorProps {
 }
 
 const TargetCursorComponent = memo(({
-  targetSelector = 'button, a, input, [role="button"], .cursor-target', 
+  targetSelector = 'button, a, input, [role="button"], .cursor-target',
   spinDuration = 2,
   hideDefaultCursor = true,
   hoverDuration = 0.2,
@@ -165,10 +211,9 @@ const TargetCursorComponent = memo(({
 
     const cursor = cursorRef.current;
     cornersRef.current = cursor.querySelectorAll<HTMLDivElement>('.target-cursor-corner');
-    
+
     let ctx = gsap.context(() => {});
 
-    // DESKTOP LOGIC
     if (!isMobile) {
         ctx = gsap.context(() => {
             const corners = cornersRef.current!;
@@ -182,11 +227,10 @@ const TargetCursorComponent = memo(({
             window.addEventListener('mousedown', handleDown);
             window.addEventListener('mouseup', handleUp);
 
-            // Magnetic Ticker
             const tickerFn = () => {
                 const state = stateRef.current;
                 if (!state.targetCornerPositions || !cursorRef.current) return;
-                
+
                 const strength = state.activeStrength.current;
                 if (strength === 0) {
                     if (stateRef.current.tickerFn) {
@@ -210,7 +254,7 @@ const TargetCursorComponent = memo(({
 
                     const finalX = currentX + (targetX - currentX) * strength;
                     const finalY = currentY + (targetY - currentY) * strength;
-                    
+
                     const duration = strength >= 0.99 ? (parallaxOn ? 0.2 : 0) : 0.05;
                     gsap.to(corner, { x: finalX, y: finalY, duration: duration, ease: duration === 0 ? 'none' : 'power1.out', overwrite: 'auto' });
                 }
@@ -218,15 +262,13 @@ const TargetCursorComponent = memo(({
             stateRef.current.tickerFn = tickerFn;
             gsap.ticker.add(tickerFn);
 
-
-            // Hover Events
             const handleHover = (e: MouseEvent) => {
                 const target = (e.target as Element).closest(targetSelector);
                 if (target && target !== stateRef.current.activeTarget) {
                     stateRef.current.activeTarget = target;
                     stateRef.current.isActive = true;
                     spinTlRef.current?.pause();
-                    gsap.to(cursor, { rotation: 0, duration: 0.3 }); 
+                    gsap.to(cursor, { rotation: 0, duration: 0.3 });
 
                     const rect = target.getBoundingClientRect();
                     const borderWidth = 3; const cornerSize = 12;
@@ -239,7 +281,7 @@ const TargetCursorComponent = memo(({
                     ];
 
                     gsap.to(stateRef.current.activeStrength, { current: 1, duration: hoverDuration, ease: 'power2.out' });
-                    
+
                     if (!stateRef.current.tickerFn) {
                         stateRef.current.tickerFn = tickerFn;
                         gsap.ticker.add(tickerFn);
@@ -251,7 +293,7 @@ const TargetCursorComponent = memo(({
                         stateRef.current.isActive = false;
                         stateRef.current.targetCornerPositions = null;
                         gsap.to(stateRef.current.activeStrength, { current: 0, duration: 0.2, overwrite: true });
-                        
+
                          const positions = [
                           { x: -18, y: -18 },
                           { x: 6, y: -18 },
@@ -271,9 +313,7 @@ const TargetCursorComponent = memo(({
         });
     }
 
-    // --- CLEANUP FUNCTION ---
     return () => {
-        // Copy ref value to local variable at start of cleanup
         const state = stateRef.current;
         document.body.classList.remove('custom-cursor-active');
         window.removeEventListener('mousemove', moveCursor);
@@ -297,14 +337,14 @@ const TargetCursorComponent = memo(({
 });
 TargetCursorComponent.displayName = "TargetCursorComponent";
 
-const TargetCursor = dynamic(() => Promise.resolve(TargetCursorComponent), { 
-  ssr: false 
+const TargetCursor = dynamic(() => Promise.resolve(TargetCursorComponent), {
+  ssr: false
 });
 
 // --- LOADING STATES DATA ---
 const loadingStates = [
   { text: "INITIALIZING..." },
-  { text: "RESTORING SESSION" }, 
+  { text: "RESTORING SESSION" },
   { text: "VERIFYING CREDENTIALS" },
   { text: "UNLOCKING DASHBOARD" },
   { text: "WELCOME BACK" },
@@ -315,15 +355,17 @@ interface RegisterPageProps {
 }
 
 export default function RegisterPage({ onUnlock }: RegisterPageProps) {
+  const PENDING_BROKER_RETURN_KEY = 'bullmoney_pending_broker_return';
+
   // --- STATE ---
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'register' | 'login'>('register');
-  const [step, setStep] = useState(0); 
+  const [step, setStep] = useState(0);
   const [activeBroker, setActiveBroker] = useState<'Vantage' | 'XM'>('Vantage');
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [acceptedTerms, setAcceptedTerms] = useState(false); 
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const [formData, setFormData] = useState({
     email: '',
@@ -332,27 +374,138 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     referralCode: ''
   });
 
+  const [referralAttribution, setReferralAttribution] = useState({
+    affiliateId: '',
+    affiliateName: '',
+    affiliateEmail: '',
+    affiliateCode: '',
+    source: '',
+    medium: '',
+    campaign: '',
+  });
+
+  const deepLinkStepRef = useRef<number | null>(null);
+  const deepLinkBrokerRef = useRef<'Vantage' | 'XM' | null>(null);
+
   // Extract referral code from URL on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const refCode = urlParams.get('ref');
+      const affCode = urlParams.get('aff_code');
+      const affiliateCode = (refCode || affCode || '').trim();
+      const brokerParam = (urlParams.get('broker') || urlParams.get('partner') || urlParams.get('aff_broker') || '').trim().toLowerCase();
+      const quickStartParam = (urlParams.get('quick_start') || urlParams.get('fast') || '').trim().toLowerCase();
+      const skipToParam = (urlParams.get('skip_to') || urlParams.get('go_to') || '').trim().toLowerCase();
+
+      const deepLinkBroker: 'Vantage' | 'XM' | null =
+        brokerParam === 'xm' ? 'XM' : brokerParam === 'vantage' ? 'Vantage' : null;
+      const quickStartEnabled = ['1', 'true', 'yes'].includes(quickStartParam);
+      const deepLinkStep =
+        skipToParam === 'broker' || skipToParam === 'step1' ? 1 :
+        skipToParam === 'mt5' || skipToParam === 'id' || skipToParam === 'verify' || skipToParam === 'step2' ? 2 :
+        skipToParam === 'login' || skipToParam === 'auth' || skipToParam === 'step3' ? 3 :
+        affiliateCode ? (quickStartEnabled ? 2 : 1) :
+        null;
+
+      if (deepLinkBroker) {
+        deepLinkBrokerRef.current = deepLinkBroker;
+        setActiveBroker(deepLinkBroker);
+      }
+
+      if (deepLinkStep !== null) {
+        deepLinkStepRef.current = deepLinkStep;
+        setStep((prev) => Math.max(prev, deepLinkStep));
+      }
+
+      const affiliateId = (urlParams.get('aff_id') || '').trim();
+      const affiliateName = (urlParams.get('aff_name') || '').trim();
+      const affiliateEmail = (urlParams.get('aff_email') || '').trim();
+      const source = (urlParams.get('utm_source') || '').trim();
+      const medium = (urlParams.get('utm_medium') || '').trim();
+      const campaign = (urlParams.get('utm_campaign') || '').trim();
+      let storedContext: any = null;
+
+      try {
+        const rawStoredContext = localStorage.getItem('bullmoney_referral_context');
+        if (rawStoredContext) {
+          storedContext = JSON.parse(rawStoredContext);
+        }
+      } catch {}
+
+      const resolvedAffiliateCode = affiliateCode || String(storedContext?.affiliateCode || '').trim();
+      const resolvedAffiliateId = affiliateId || String(storedContext?.affiliateId || '').trim();
+      const resolvedAffiliateName = affiliateName || String(storedContext?.affiliateName || '').trim();
+      const resolvedAffiliateEmail = affiliateEmail || String(storedContext?.affiliateEmail || '').trim();
+      const resolvedSource = source || String(storedContext?.source || '').trim();
+      const resolvedMedium = medium || String(storedContext?.medium || '').trim();
+      const resolvedCampaign = campaign || String(storedContext?.campaign || '').trim();
+
+      if (resolvedAffiliateCode) {
+        console.log('[RegisterPage] 🎯 Referral attribution detected:', {
+          affiliateCode: resolvedAffiliateCode,
+          affiliateId: resolvedAffiliateId,
+          affiliateName: resolvedAffiliateName,
+          affiliateEmail: resolvedAffiliateEmail,
+        });
+
+        setFormData(prev => ({ ...prev, referralCode: resolvedAffiliateCode }));
+        setReferralAttribution({
+          affiliateId: resolvedAffiliateId,
+          affiliateName: resolvedAffiliateName,
+          affiliateEmail: resolvedAffiliateEmail,
+          affiliateCode: resolvedAffiliateCode,
+          source: resolvedSource,
+          medium: resolvedMedium,
+          campaign: resolvedCampaign,
+        });
+
+        try {
+          localStorage.setItem('bullmoney_referral_context', JSON.stringify({
+            affiliateId: resolvedAffiliateId,
+            affiliateName: resolvedAffiliateName,
+            affiliateEmail: resolvedAffiliateEmail,
+            affiliateCode: resolvedAffiliateCode,
+            source: resolvedSource,
+            medium: resolvedMedium,
+            campaign: resolvedCampaign,
+            capturedAt: new Date().toISOString(),
+          }));
+        } catch {}
+
+        const clickTrackKey = `bm_ref_click_tracked_${resolvedAffiliateCode}`;
+        const hasQueryCode = Boolean(affiliateCode);
+        if (hasQueryCode && !sessionStorage.getItem(clickTrackKey)) {
+          fetch('/api/affiliate/track-click', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              affiliateCode: resolvedAffiliateCode,
+              affiliateId: resolvedAffiliateId,
+              source: resolvedSource || 'affiliate',
+              medium: resolvedMedium || 'dashboard',
+              campaign: resolvedCampaign || 'partner_link',
+            }),
+          })
+            .then(() => sessionStorage.setItem(clickTrackKey, '1'))
+            .catch((error) => console.error('[RegisterPage] Referral click track failed:', error));
+        }
+      }
+
       if (refCode) {
         console.log('[RegisterPage] 🎯 Referral code detected from URL:', refCode);
-        setFormData(prev => ({ ...prev, referralCode: refCode }));
       }
     }
   }, []);
 
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
-  
+
   const isVantage = activeBroker === 'Vantage';
   const brokerCode = isVantage ? "BULLMONEY" : "X3R7P";
 
-  // --- DRAFT SAVER (Auto-Save partial progress) ---
+  // --- DRAFT SAVER ---
   useEffect(() => {
-    // Only save if we have data and are not logged in
     if (step > 0 && step < 5 && (formData.email || formData.mt5Number)) {
         const draft = {
             step,
@@ -364,19 +517,16 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     }
   }, [step, formData, activeBroker]);
 
-
   // --- INITIAL LOAD & AUTO-LOGIN CHECK ---
   useEffect(() => {
     let mounted = true;
 
     const initSession = async () => {
-      // 1. Check for completed session
       const savedSession = localStorage.getItem("bullmoney_session");
-      
+
       if (savedSession) {
         try {
           const session = JSON.parse(savedSession);
-          // Verify ID exists in Supabase (async)
           const { data, error } = await supabase
             .from("recruits")
             .select("id")
@@ -385,16 +535,14 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
           if (!error && data && mounted) {
              console.log("Session valid, auto-unlocking...");
-             // Clear any old drafts since we are logged in
              localStorage.removeItem("bullmoney_draft");
-             
-             // FORCE LOADER TO PLAY FOR 2.5s EVEN ON SUCCESS
+
              setTimeout(() => {
-                 onUnlock(); 
-             }, 2500); 
-             return; 
-          } 
-          
+                 onUnlock();
+             }, 2500);
+             return;
+          }
+
           if(error || !data) {
              localStorage.removeItem("bullmoney_session");
           }
@@ -403,17 +551,22 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         }
       }
 
-      // 2. DRAFT RESTORE PATH: If no session, check for partial form data
       const savedDraft = localStorage.getItem("bullmoney_draft");
       if (savedDraft) {
           try {
               const draft = JSON.parse(savedDraft);
-              // Only restore if less than 24 hours old
               if (Date.now() - draft.timestamp < 24 * 60 * 60 * 1000) {
                   if (mounted) {
-                      setFormData(draft.formData);
-                      setStep(draft.step);
-                      setActiveBroker(draft.activeBroker || 'Vantage');
+                      setFormData(prev => ({
+                        ...draft.formData,
+                        referralCode: prev.referralCode || draft.formData?.referralCode || '',
+                      }));
+                      const restoredStep = Number.isFinite(Number(draft.step)) ? Number(draft.step) : 0;
+                      const targetStep = deepLinkStepRef.current !== null
+                        ? Math.max(restoredStep, deepLinkStepRef.current)
+                        : restoredStep;
+                      setStep(targetStep);
+                      setActiveBroker(deepLinkBrokerRef.current || draft.activeBroker || 'Vantage');
                   }
               }
           } catch (e) {
@@ -421,9 +574,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
           }
       }
 
-      // 3. DONE LOADING (If no session was found)
       if (mounted) {
-        // Allow the "Initializing" text to read before showing form
         setTimeout(() => { setLoading(false); }, 1500);
       }
     };
@@ -432,21 +583,17 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     return () => { mounted = false; };
   }, [onUnlock]);
 
-
-  // === ADDED SCROLL LOCK/UNLOCK EFFECT ===
+  // === SCROLL LOCK/UNLOCK ===
   useEffect(() => {
     if (loading) {
       document.body.classList.add("loader-lock");
     } else {
       document.body.classList.remove("loader-lock");
     }
-    // Cleanup ensures scroll lock is removed on unmount
     return () => {
       document.body.classList.remove("loader-lock");
     };
   }, [loading]);
-  // =======================================
-
 
   const handleBrokerSwitch = (newBroker: 'Vantage' | 'XM') => {
     if (activeBroker === newBroker) return;
@@ -469,15 +616,12 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     setSubmitError(null);
     SoundEffects.click();
 
-    // INTRO -> STEP 1
     if (step === 0) {
       setStep(1);
     }
-    // STEP 1 -> STEP 2
     else if (step === 1) {
       setStep(2);
     }
-    // STEP 2 -> STEP 3
     else if (step === 2) {
       if (!isValidMT5(formData.mt5Number)) {
         setSubmitError("Please enter a valid MT5 ID (min 5 digits).");
@@ -485,7 +629,6 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       }
       setStep(3);
     }
-    // STEP 3 -> SUBMIT
     else if (step === 3) {
       if (!isValidEmail(formData.email)) {
         setSubmitError("Please enter a valid email address.");
@@ -515,7 +658,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
     SoundEffects.tab();
     if (viewMode === 'register') {
       setViewMode('login');
-      setStep(0); 
+      setStep(0);
     } else {
       setViewMode('register');
       setStep(0);
@@ -535,12 +678,63 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   };
 
   const handleBrokerClick = () => {
+    try {
+      sessionStorage.setItem(PENDING_BROKER_RETURN_KEY, JSON.stringify({
+        broker: activeBroker,
+        createdAt: Date.now(),
+      }));
+    } catch {}
+
     const link = activeBroker === 'Vantage' ? "https://vigco.co/iQbe2u" : "https://affs.click/t5wni";
     window.open(link, '_blank');
   };
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const resumeAfterBrokerReturn = () => {
+      try {
+        const payload = sessionStorage.getItem(PENDING_BROKER_RETURN_KEY);
+        if (!payload) return;
+
+        const parsed = JSON.parse(payload);
+        const createdAt = Number(parsed?.createdAt || 0);
+        const isFresh = createdAt > 0 && Date.now() - createdAt < 90 * 60 * 1000;
+
+        if (parsed?.broker === 'Vantage' || parsed?.broker === 'XM') {
+          setActiveBroker(parsed.broker);
+        }
+
+        sessionStorage.removeItem(PENDING_BROKER_RETURN_KEY);
+        if (!isFresh) return;
+
+        if (viewMode === 'register' && step <= 1) {
+          setStep(2);
+          setSubmitError(null);
+        }
+      } catch {
+        sessionStorage.removeItem(PENDING_BROKER_RETURN_KEY);
+      }
+    };
+
+    const onFocus = () => resumeAfterBrokerReturn();
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        resumeAfterBrokerReturn();
+      }
+    };
+
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [step, viewMode]);
+
   const handleRegisterSubmit = async () => {
-    setStep(4); // Loading
+    setStep(4);
     setSubmitError(null);
 
     try {
@@ -552,6 +746,17 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
           password: formData.password,
           mt5_id: formData.mt5Number,
           referred_by_code: formData.referralCode || null,
+          referral_attribution: formData.referralCode
+            ? {
+                affiliate_id: referralAttribution.affiliateId || null,
+                affiliate_name: referralAttribution.affiliateName || null,
+                affiliate_email: referralAttribution.affiliateEmail || null,
+                affiliate_code: referralAttribution.affiliateCode || formData.referralCode,
+                source: referralAttribution.source || 'affiliate',
+                medium: referralAttribution.medium || 'dashboard',
+                campaign: referralAttribution.campaign || 'partner_link',
+              }
+            : null,
           used_code: true,
         }),
       });
@@ -573,14 +778,11 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         timestamp: Date.now(),
       });
 
-      // Dispatch custom event so trading journal and other components pick up the session immediately
       window.dispatchEvent(new Event('bullmoney_session_changed'));
-
-      // Clear draft
       localStorage.removeItem("bullmoney_draft");
 
       setTimeout(() => {
-        setStep(5); // Success
+        setStep(5);
       }, 1000);
 
     } catch (err: any) {
@@ -590,7 +792,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
       } else {
         setSubmitError(err.message || "Connection failed. Please check your internet.");
       }
-      setStep(3); // Go back to auth step
+      setStep(3);
     }
   };
 
@@ -621,17 +823,13 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
         timestamp: Date.now(),
       });
 
-      // Mark telegram as confirmed for existing users logging in
-      // This ensures Telegram screen NEVER shows for login route, only for new signups
       localStorage.setItem("bullmoney_telegram_confirmed", "true");
-
-      // Dispatch custom event so trading journal and other components pick up the session immediately
       window.dispatchEvent(new Event('bullmoney_session_changed'));
 
       setTimeout(() => {
         setLoading(false);
         onUnlock();
-      }, 1000); 
+      }, 1000);
 
     } catch (err: any) {
       setLoading(false);
@@ -646,44 +844,37 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   // --- RENDER: SUCCESS (SCREEN 5) ---
   if (step === 5 && viewMode === 'register') {
     return (
-      <div className="min-h-screen bg-[#010309] flex items-center justify-center p-4 relative">
+      <div className="min-h-screen bg-[#fbfbfd] flex items-center justify-center p-4 relative">
         <CursorStyles />
         <TargetCursor />
-        
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white/10 via-[#010309] to-[#010309] gpu-accel" />
-        
-        <div className="bg-[#0A1120] border border-white/15 p-6 md:p-8 rounded-2xl shadow-[0_0_50px_rgba(255, 255, 255,0.2)] text-center max-w-md w-full relative z-10 animate-in fade-in zoom-in duration-500">
-          <div className="mx-auto w-24 h-24 relative mb-6">
-            <div className="absolute inset-0 rounded-full border-4 border-white/10 animate-[spin_3s_linear_infinite]" />
-            <div className="absolute inset-0 bg-green-500 rounded-full scale-0 animate-[scale-up_0.5s_ease-out_forwards_0.2s] flex items-center justify-center">
-              <Check className="w-12 h-12 text-white stroke-[3] opacity-0 animate-[fade-in_0.3s_ease-out_forwards_0.6s]" />
+
+        <div className="apple-card bg-white border border-[#e5e5ea] p-8 md:p-12 rounded-3xl shadow-[0_4px_40px_rgba(0,0,0,0.06)] text-center max-w-md w-full relative z-10">
+          <div className="mx-auto w-20 h-20 relative mb-8">
+            <div className="absolute inset-0 bg-[#34c759] rounded-full flex items-center justify-center" style={{ animation: 'checkPop 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards' }}>
+              <Check className="w-10 h-10 text-white stroke-[3]" style={{ animation: 'fadeIn 0.3s ease-out 0.3s forwards', opacity: 0 }} />
             </div>
           </div>
-          
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">You&apos;re In 🚀</h2>
-          <p className="text-slate-400 mb-8 text-sm md:text-base">
-            Your free BullMoney access is now active.<br/>
+
+          <h2 className="text-2xl md:text-3xl font-bold text-[#1d1d1f] mb-2 tracking-tight">You&apos;re In</h2>
+          <p className="text-[#86868b] mb-10 text-sm md:text-base">
+            Your free BullMoney access is now active.
           </p>
-          
-          <button 
+
+          <button
             onClick={onUnlock}
-            className="w-full py-4 bg-white text-black rounded-xl font-bold tracking-wide transition-all shadow-[0_0_20px_rgba(255,255,255,0.25)] hover:shadow-[0_0_30px_rgba(255,255,255,0.35)] hover:bg-neutral-200 group flex items-center justify-center mb-4 cursor-target"
+            className="apple-btn w-full py-4 bg-[#1d1d1f] text-white rounded-2xl font-semibold tracking-wide shadow-[0_2px_12px_rgba(0,0,0,0.15)] hover:bg-[#333336] group flex items-center justify-center mb-4 cursor-target text-base"
           >
-            Go to Dashboard  
+            Go to Dashboard
             <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
           </button>
 
-           <button 
+          <button
             onClick={() => window.open(TELEGRAM_GROUP_LINK, '_blank')}
-            className="text-sm text-slate-500 hover:text-white transition-colors flex items-center justify-center gap-2 mx-auto cursor-target"
+            className="apple-btn text-sm text-[#86868b] hover:text-[#1d1d1f] transition-colors flex items-center justify-center gap-2 mx-auto cursor-target"
           >
             <FolderPlus className="w-4 h-4" /> Join Free Telegram
           </button>
         </div>
-        <style jsx global>{`
-          @keyframes scale-up { 0% { transform: scale(0); } 80% { transform: scale(1.1); } 100% { transform: scale(1); } }
-          @keyframes fade-in { 0% { opacity: 0; transform: scale(0.5); } 100% { opacity: 1; transform: scale(1); } }
-        `}</style>
       </div>
     );
   }
@@ -691,459 +882,440 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   // --- RENDER: LOADING (SCREEN 4 AFTER SUBMIT) ---
   if (step === 4) {
     return (
-      <div className="min-h-screen bg-[#010309] flex flex-col items-center justify-center relative">
-         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/10 rounded-full blur-[60px] pointer-events-none" />
-        <Loader2 className="w-16 h-16 text-white animate-spin mb-4" />
-        <h2 className="text-xl font-bold text-white">Unlocking Platform...</h2>
+      <div className="min-h-screen bg-[#fbfbfd] flex flex-col items-center justify-center relative">
+        <Loader2 className="w-12 h-12 text-[#1d1d1f] animate-spin mb-4" />
+        <h2 className="text-lg font-semibold text-[#1d1d1f] tracking-tight">Setting up your account...</h2>
       </div>
     );
   }
 
   // --- RENDER: MAIN INTERFACE ---
   return (
-    <div className="min-h-screen bg-[#010309] flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-[#fbfbfd] flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans">
       <CursorStyles />
-      <TargetCursor 
+      <TargetCursor
         targetSelector="button, a, input, [role='button'], .cursor-target"
         hideDefaultCursor={true}
         spinDuration={2}
         parallaxOn={true}
       />
-      
-      {/* === FIX: HIGH Z-INDEX WRAPPER FOR LOADER === */}
-      {/* This fixed container ensures the loader covers the entire viewport and overlays native browser bars. */}
+
+      {/* Loader overlay */}
       {loading && (
-          <div 
-             // CRITICAL: Fixed, full coverage, max z-index to overlay native browser UI
-             className="fixed inset-0 z-[99999999] w-screen h-screen bg-[#05010d]"
-             // We render the loader component inside this wrapper
-          >
-            <MultiStepLoader loadingStates={loadingStates} loading={loading}  />
+          <div className="fixed inset-0 z-[99999999] w-screen h-screen bg-[#fbfbfd]">
+            <MultiStepLoader loadingStates={loadingStates} loading={loading} />
           </div>
       )}
-      {/* =========================================== */}
 
-      {/* RENDER CONTENT ONLY IF NOT LOADING */}
+      {/* Main content */}
       <div className={cn(
-        // Opacity transition for a smooth reveal after loading is done
-        "transition-opacity duration-500 w-full max-w-xl relative z-10",
+        "transition-opacity duration-700 w-full max-w-lg relative z-10",
         loading ? "opacity-0 pointer-events-none" : "opacity-100"
       )}>
 
-        {/* Existing background elements */}
-        <div className={cn(
-          "absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent to-transparent opacity-50 transition-colors duration-500",
-          isVantage ? "via-purple-900" : "via-neutral-900"
-        )} />
-        <div className={cn(
-          "absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full blur-[80px] pointer-events-none transition-colors duration-500 gpu-accel",
-          isVantage ? "bg-purple-900/10" : "bg-neutral-900/20"
-        )} />
-
-        <div className="mb-6 md:mb-8 text-center">
-           <h1 className="text-xl md:text-2xl font-black text-white tracking-tight opacity-50">
-            BULLMONEY <span className="transition-colors duration-300 text-white">FREE</span>
+        {/* Header */}
+        <div className="mb-8 md:mb-10 text-center apple-fade-up">
+          <h1 className="text-lg md:text-xl font-semibold text-[#86868b] tracking-[0.02em]">
+            BULLMONEY
           </h1>
         </div>
 
         {/* ================= LOGIN VIEW ================= */}
         {viewMode === 'login' ? (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
             className="w-full"
           >
-             <div className="bg-neutral-900/80 ring-1 ring-white/10 backdrop-blur-md p-6 md:p-8 rounded-2xl shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-4 opacity-10">
-                    <Lock className="w-32 h-32 text-white" />
+            <div className="apple-card bg-white border border-[#e5e5ea] p-6 md:p-10 rounded-3xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] relative overflow-hidden">
+              <h2 className="text-2xl font-bold text-[#1d1d1f] mb-1 tracking-tight">Sign In</h2>
+              <p className="text-[#86868b] mb-8 text-sm">Welcome back. Enter your credentials.</p>
+
+              <form onSubmit={handleLoginSubmit} className="space-y-4" autoComplete="on">
+                <div className="relative group">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#aeaeb2] w-5 h-5 group-focus-within:text-[#1d1d1f] transition-colors" />
+                  <input
+                    autoFocus
+                    type="email"
+                    name="email"
+                    id="login-email"
+                    autoComplete="username"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    placeholder="Email"
+                    className="apple-input w-full bg-[#f5f5f7] border border-[#e5e5ea] rounded-xl pl-12 pr-4 py-3.5 md:py-4 text-[#1d1d1f] placeholder-[#aeaeb2] focus:outline-none focus:border-[#1d1d1f] cursor-target text-base"
+                  />
                 </div>
-                
-                <h2 className="text-2xl font-bold text-white mb-2 relative z-10">Member Login</h2>
-                <p className="text-slate-400 mb-6 relative z-10 text-sm md:text-base">Sign in to access the platform.</p>
 
-                <form onSubmit={handleLoginSubmit} className="space-y-4 relative z-10" autoComplete="on">
-                   <div className="relative group">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5 group-focus-within:text-white transition-colors" />
-                      <input
-                        autoFocus
-                        type="email"
-                        name="email"
-                        id="login-email"
-                        autoComplete="username"
-                        value={loginEmail}
-                        onChange={(e) => setLoginEmail(e.target.value)}
-                        placeholder="Email Address"
-                        className="w-full bg-black/40 border border-white/15 rounded-xl pl-10 pr-4 py-3.5 md:py-4 text-white placeholder-white/40 focus:outline-none focus:border-white/60 transition-all cursor-target text-base"
-                      />
-                    </div>
-
-                   <div className="relative group">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5 group-focus-within:text-white transition-colors" />
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        name="password"
-                        id="login-password"
-                        autoComplete="current-password"
-                        value={loginPassword}
-                        onChange={(e) => setLoginPassword(e.target.value)}
-                        placeholder="Password"
-                        className="w-full bg-black/40 border border-white/15 rounded-xl pl-10 pr-12 py-3.5 md:py-4 text-white placeholder-white/40 focus:outline-none focus:border-white/60 transition-all cursor-target text-base"
-                      />
-                      <button 
-                        type="button" 
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white transition-colors cursor-target"
-                      >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                    
-                    {submitError && (
-                      <div className="text-red-400 text-sm bg-red-950/30 p-3 rounded-lg flex items-center gap-2 border border-red-500/20">
-                        <AlertCircle className="w-4 h-4" /> {submitError}
-                      </div>
-                    )}
-
-                    <button
-                      type="submit"
-                      disabled={!loginEmail || !loginPassword}
-                      className="w-full py-3.5 md:py-4 bg-white text-black rounded-xl font-bold tracking-wide transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:bg-neutral-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-target text-base"
-                    >
-                      LOGIN
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
-                </form>
-
-                <div className="mt-6 text-center border-t border-white/5 pt-4">
-                  <button onClick={toggleViewMode} className="text-sm text-slate-500 hover:text-white transition-colors cursor-target">
-                    Don&apos;t have a password? <span className="underline">Register Now</span>
+                <div className="relative group">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#aeaeb2] w-5 h-5 group-focus-within:text-[#1d1d1f] transition-colors" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    id="login-password"
+                    autoComplete="current-password"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    placeholder="Password"
+                    className="apple-input w-full bg-[#f5f5f7] border border-[#e5e5ea] rounded-xl pl-12 pr-12 py-3.5 md:py-4 text-[#1d1d1f] placeholder-[#aeaeb2] focus:outline-none focus:border-[#1d1d1f] cursor-target text-base"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#aeaeb2] hover:text-[#1d1d1f] transition-colors cursor-target"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-             </div>
+
+                {submitError && (
+                  <div className="text-[#ff3b30] text-sm bg-[#ff3b30]/5 p-3.5 rounded-xl flex items-center gap-2.5 border border-[#ff3b30]/15" style={{ animation: 'fadeInUp 0.3s ease-out' }}>
+                    <AlertCircle className="w-4 h-4 shrink-0" /> {submitError}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={!loginEmail || !loginPassword}
+                  className="apple-btn w-full py-3.5 md:py-4 bg-[#1d1d1f] text-white rounded-xl font-semibold tracking-wide shadow-[0_2px_12px_rgba(0,0,0,0.12)] hover:bg-[#333336] flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:transform-none cursor-target text-base"
+                >
+                  Sign In
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </form>
+
+              <div className="mt-8 text-center pt-6 border-t border-[#e5e5ea]">
+                <button onClick={toggleViewMode} className="text-sm text-[#86868b] hover:text-[#1d1d1f] transition-colors cursor-target">
+                  Don&apos;t have an account? <span className="font-semibold text-[#1d1d1f]">Register</span>
+                </button>
+              </div>
+            </div>
           </motion.div>
         ) : (
-          /* ================= UNLOCK FLOW VIEW ================= */
+          /* ================= REGISTER FLOW ================= */
           <>
+            {/* Progress dots for steps 1-3 */}
+            {step >= 1 && step <= 3 && (
+              <div className="flex justify-center gap-2.5 mb-6" style={{ animation: 'fadeIn 0.4s ease-out' }}>
+                {[1, 2, 3].map((s) => (
+                  <div
+                    key={s}
+                    className={cn(
+                      "h-2 rounded-full transition-all duration-500 ease-[cubic-bezier(0.25,0.1,0.25,1)]",
+                      s <= step ? "bg-[#1d1d1f] w-6" : "bg-[#d2d2d7] w-2"
+                    )}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Broker tabs for step 1 */}
             {step === 1 && (
-              <div className="flex justify-center gap-3 mb-8">
-                {(["Vantage", "XM"] as const).map((partner) => {
-                  const isActive = activeBroker === partner;
-                  return (
-                    <button
-                      key={partner}
-                      onClick={() => handleBrokerSwitch(partner)}
-                      className={cn(
-                        "relative px-6 py-2 rounded-full font-semibold transition-all duration-300 z-20 cursor-target text-sm md:text-base",
-                        isActive ? "text-white" : "bg-neutral-800 text-neutral-300 hover:bg-neutral-700"
-                      )}
-                    >
-                      {partner}
-                      {isActive && (
-                        <motion.span
-                          layoutId="tab-pill"
-                          className={cn(
-                            "absolute inset-0 -z-10 rounded-full",
-                            partner === "Vantage"
-                              ? "bg-linear-to-r from-purple-500 to-violet-600 shadow-[0_0_25px_rgba(255, 255, 255,0.45)]"
-                              : "bg-linear-to-r from-sky-500 to-blue-600 shadow-[0_0_25px_rgba(255, 255, 255,0.45)]"
-                          )}
-                          transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                        />
-                      )}
-                    </button>
-                  );
-                })}
+              <div className="flex justify-center mb-6" style={{ animation: 'fadeInUp 0.4s ease-out' }}>
+                <div className="inline-flex bg-[#f5f5f7] rounded-full p-1 border border-[#e5e5ea]">
+                  {(["Vantage", "XM"] as const).map((partner) => {
+                    const isActive = activeBroker === partner;
+                    return (
+                      <button
+                        key={partner}
+                        onClick={() => handleBrokerSwitch(partner)}
+                        className={cn(
+                          "relative px-6 py-2 rounded-full font-medium transition-all duration-300 z-20 cursor-target text-sm",
+                          isActive ? "text-white" : "text-[#86868b] hover:text-[#1d1d1f]"
+                        )}
+                      >
+                        {partner}
+                        {isActive && (
+                          <motion.span
+                            layoutId="tab-pill"
+                            className="absolute inset-0 -z-10 rounded-full bg-[#1d1d1f] shadow-sm"
+                            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
             <AnimatePresence mode="wait">
-                
-              {/* --- SCREEN 1: ENTRY GATE (Step 0) --- */}
+
+              {/* --- STEP 0: WELCOME GATE --- */}
               {step === 0 && (
-                 <motion.div
+                <motion.div
                   key="step0"
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.3 }}
-                 >
-                   <div className="bg-neutral-900/80 ring-1 ring-white/10 backdrop-blur-md p-6 md:p-8 rounded-2xl shadow-2xl relative overflow-hidden text-center">
-                      <div className="absolute top-0 right-0 p-4 opacity-5">
-                        <Lock className="w-32 h-32 text-white" />
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+                >
+                  <div className="apple-card bg-white border border-[#e5e5ea] p-8 md:p-12 rounded-3xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] text-center">
+
+                    <div className="mb-8 flex justify-center">
+                      <div className="h-16 w-16 rounded-2xl bg-[#f5f5f7] flex items-center justify-center border border-[#e5e5ea]">
+                        <ShieldCheck className="w-8 h-8 text-[#1d1d1f]" />
+                      </div>
+                    </div>
+
+                    <h2 className="text-2xl md:text-3xl font-bold text-[#1d1d1f] mb-3 tracking-tight">Unlock Free Access</h2>
+                    <p className="text-[#86868b] text-sm md:text-base mb-10 max-w-xs mx-auto leading-relaxed">
+                      Get free trading setups and community access.
+                      <br />
+                      <span className="text-[#aeaeb2]">No payment. Takes about 2 minutes.</span>
+                    </p>
+
+                    <button
+                      onClick={handleNext}
+                      className="apple-btn w-full py-4 bg-[#1d1d1f] text-white rounded-2xl font-semibold text-base tracking-wide shadow-[0_2px_12px_rgba(0,0,0,0.15)] hover:bg-[#333336] flex items-center justify-center cursor-target"
+                    >
+                      Get Started <ArrowRight className="w-5 h-5 ml-2" />
+                    </button>
+
+                    <div className="mt-5 space-y-4">
+                      <div className="flex items-center justify-center gap-1.5 text-xs text-[#aeaeb2]">
+                        <Lock className="w-3 h-3" /> No credit card required
                       </div>
 
-                      <div className="mb-6 flex justify-center">
-                         <div className="h-16 w-16 rounded-full bg-white/10 flex items-center justify-center border border-white/20 shadow-[0_0_30px_rgba(255, 255, 255,0.2)]">
-                           <ShieldCheck className="w-8 h-8 text-white" />
-                         </div>
-                      </div>
-
-                      <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-3">Unlock Free BullMoney Access</h2>
-                      <p className="text-slate-300 text-sm md:text-base mb-8 max-w-sm mx-auto leading-relaxed">
-                        Get free trading setups and community access. <br/>
-                        <span className="text-slate-500">No payment. Takes about 2 minutes.</span>
-                      </p>
-
-                      <motion.button 
-                        onClick={handleNext}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="w-full py-3.5 md:py-4 bg-linear-to-r from-purple-600 to-purple-500 text-white rounded-xl font-bold text-base md:text-lg tracking-wide transition-all shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] flex items-center justify-center cursor-target"
+                      <button
+                        onClick={toggleViewMode}
+                        className="apple-btn w-full py-3.5 rounded-2xl text-sm font-semibold transition-all border border-[#e5e5ea] bg-white text-[#1d1d1f] hover:bg-[#f5f5f7]"
                       >
-                        Start Free Access <ArrowRight className="w-5 h-5 ml-2" />
-                      </motion.button>
-                      
-                      <div className="mt-4 space-y-3">
-                         <div className="flex items-center justify-center gap-2 text-xs text-slate-600">
-                             <Lock className="w-3 h-3" /> No credit card required
-                         </div>
-
-                         {/* DYNAMIC BUTTON FOR EXISTING USERS */}
-                         <motion.button 
-                           onClick={toggleViewMode}
-                           whileHover={{ scale: 1.01 }}
-                           className="w-full py-3 rounded-lg text-sm font-semibold transition-all border border-white/15 bg-white/10 text-white hover:bg-white/20 mt-2"
-                         >
-                            Already a member? Login here
-                         </motion.button>
-                      </div>
-                   </div>
-                 </motion.div>
+                        Already a member? Sign in
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
               )}
 
-              {/* --- SCREEN 2: OPEN ACCOUNT (Step 1) --- */}
+              {/* --- STEP 1: OPEN ACCOUNT --- */}
               {step === 1 && (
                 <motion.div
                   key="step1"
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.3 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
                 >
                   <StepCard
                     {...getStepProps(1)}
                     title="Open Free Account"
-                    className={isVantage 
-                      ? "bg-linear-to-br from-purple-950/40 via-slate-950 to-neutral-950"
-                      : "bg-linear-to-br from-sky-950/40 via-slate-950 to-neutral-950"
-                    }
                     actions={
-                      <div className="flex flex-col gap-3 md:gap-4">
-                        <p className="text-xs text-center text-slate-500 flex items-center justify-center gap-1">
-                          <Clock className="w-3 h-3" /> Takes about 1 minute • No deposit required
+                      <div className="flex flex-col gap-3">
+                        <p className="text-xs text-center text-[#aeaeb2] flex items-center justify-center gap-1.5">
+                          <Clock className="w-3 h-3" /> Takes about 1 minute
                         </p>
-                        
-                        <div className="flex flex-col items-center justify-center gap-3">
-                           {/* COPY CODE BUTTON */}
+
+                        <div className="flex flex-col gap-3">
                           <button
                             onClick={() => copyCode(brokerCode)}
-                            className={cn(
-                              "inline-flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-semibold ring-1 ring-inset transition cursor-target w-full justify-center mb-1",
-                              isVantage 
-                                ? "text-purple-300 ring-purple-500/40 hover:bg-purple-500/10" 
-                                : "text-sky-300 ring-sky-500/40 hover:bg-sky-500/10"
-                            )}
+                            className="apple-btn inline-flex items-center gap-2 rounded-xl px-4 py-3.5 text-sm font-semibold border border-[#e5e5ea] bg-[#f5f5f7] text-[#1d1d1f] hover:bg-[#ebebed] transition-all cursor-target w-full justify-center"
                           >
-                            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                            {copied ? "Copied" : `Copy Code: ${brokerCode}`}
+                            {copied ? <Check className="h-4 w-4 text-[#34c759]" /> : <Copy className="h-4 w-4" />}
+                            {copied ? "Copied!" : `Copy Code: ${brokerCode}`}
                           </button>
 
-                           {/* EXTERNAL LINK BUTTON */}
                           <button
                             onClick={handleBrokerClick}
-                            className={cn(
-                              "w-full py-3.5 rounded-xl font-bold text-white shadow transition flex items-center justify-center gap-2 cursor-target text-base",
-                              isVantage
-                                ? "bg-linear-to-r from-purple-500 to-violet-600 hover:from-violet-600 hover:to-fuchsia-700"
-                                : "bg-linear-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700"
-                            )}
+                            className="apple-btn w-full py-3.5 rounded-xl font-semibold text-white bg-[#1d1d1f] shadow-[0_2px_12px_rgba(0,0,0,0.15)] hover:bg-[#333336] transition-all flex items-center justify-center gap-2 cursor-target text-base"
                           >
                             <span>Open Free Account</span>
                             <ExternalLink className="h-4 w-4" />
                           </button>
                         </div>
-                        
-                        {/* DYNAMIC SECONDARY BUTTON FOR "ALREADY HAVE ACCOUNT" */}
-                        <button 
-                            onClick={handleNext}
-                            className={cn(
-                                "w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 border mt-1",
-                                isVantage 
-                                 ? "border-purple-500/30 text-purple-300 bg-purple-500/5 hover:bg-purple-500/10" 
-                                 : "border-blue-500/30 text-blue-300 bg-blue-500/5 hover:bg-blue-500/10"
-                            )}
+
+                        <button
+                          onClick={handleNext}
+                          className="apple-btn w-full py-3.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 border border-[#e5e5ea] text-[#1d1d1f] bg-white hover:bg-[#f5f5f7]"
                         >
-                            I already have an account
+                          I already have an account
                         </button>
                       </div>
                     }
                   >
-                    <p className="text-sm md:text-[15px] leading-relaxed text-neutral-300 mb-4 text-center">
+                    <p className="text-sm md:text-[15px] leading-relaxed text-[#86868b] mb-5 text-center">
                       BullMoney works with regulated brokers. <br className="hidden md:block" />
                       This free account lets us verify your access.
                     </p>
-                    
-                    {/* VISUAL ELEMENT (CARD) */}
-                    <div className="relative mx-auto w-full max-w-[280px] h-32 md:h-40 rounded-3xl border border-white/10 overflow-hidden shadow-2xl mb-2 opacity-80 hover:opacity-100 transition-opacity">
+
+                    {/* Visual card element */}
+                    <div className="relative mx-auto w-full max-w-[260px] h-32 md:h-36 rounded-2xl border border-[#e5e5ea] overflow-hidden shadow-[0_4px_16px_rgba(0,0,0,0.06)] mb-2 bg-[#f5f5f7]">
                       <IconPlusCorners />
                       <div className="absolute inset-0 p-2">
                         {isVantage ? <EvervaultCardRed text="VANTAGE" /> : <EvervaultCard text="X3R7P" />}
                       </div>
                     </div>
-
                   </StepCard>
                 </motion.div>
               )}
 
-              {/* --- SCREEN 3: VERIFY ID (Step 2) --- */}
+              {/* --- STEP 2: VERIFY ID --- */}
               {step === 2 && (
                 <motion.div
                   key="step2"
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.3 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
                 >
                   <StepCard
                     {...getStepProps(2)}
-                    title="Confirm Your Account ID"
+                    title="Enter Your Account ID"
                     actions={
                       <button
                         onClick={handleNext}
                         disabled={!formData.mt5Number}
                         className={cn(
-                          "w-full py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-target text-base",
-                          !formData.mt5Number ? "opacity-50 cursor-not-allowed bg-slate-800 text-slate-500" :
-                          isVantage ? "bg-white text-purple-950 hover:bg-purple-50" : "bg-white text-blue-950 hover:bg-blue-50"
+                          "apple-btn w-full py-3.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-sm cursor-target text-base",
+                          !formData.mt5Number
+                            ? "bg-[#e5e5ea] text-[#aeaeb2] cursor-not-allowed"
+                            : "bg-[#1d1d1f] text-white hover:bg-[#333336] shadow-[0_2px_12px_rgba(0,0,0,0.12)]"
                         )}
                       >
                         Continue <ArrowRight className="w-4 h-4" />
                       </button>
                     }
                   >
-                    <div className="space-y-4 pt-2">
-                      <div className="flex items-center justify-between">
-                          <p className="text-slate-300 text-sm">After opening your account, you’ll receive an email with your trading ID (MT5 ID).</p>
-                      </div>
-                      
+                    <div className="space-y-4 pt-1">
+                      <p className="text-[#86868b] text-sm leading-relaxed">
+                        After opening your account, you&apos;ll receive an email with your trading ID (MT5 ID).
+                      </p>
+
                       <div className="relative group">
-                        <Hash className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5 group-focus-within:text-white transition-colors" />
+                        <Hash className="absolute left-4 top-1/2 -translate-y-1/2 text-[#aeaeb2] w-5 h-5 group-focus-within:text-[#1d1d1f] transition-colors" />
                         <input
                           autoFocus
-                          type="tel" // optimized for mobile number pad
+                          type="tel"
                           name="mt5Number"
                           value={formData.mt5Number}
                           onChange={handleChange}
                           placeholder="Enter MT5 ID (numbers only)"
-                          className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-4 text-white placeholder-slate-600 focus:outline-none focus:border-white/30 focus:bg-black/40 transition-all cursor-target text-base"
+                          className="apple-input w-full bg-[#f5f5f7] border border-[#e5e5ea] rounded-xl pl-12 pr-4 py-4 text-[#1d1d1f] placeholder-[#aeaeb2] focus:outline-none focus:border-[#1d1d1f] cursor-target text-base"
                         />
                       </div>
-                      <p className="text-xs text-slate-500 flex items-center gap-1"><Lock className="w-3 h-3"/> Used only to verify access</p>
+                      <p className="text-xs text-[#aeaeb2] flex items-center gap-1.5"><Lock className="w-3 h-3"/> Used only to verify access</p>
                     </div>
                   </StepCard>
-                  <button onClick={handleBack} className="mt-4 flex items-center text-slate-500 hover:text-slate-300 text-sm mx-auto transition-colors cursor-target">
+                  <button onClick={handleBack} className="apple-btn mt-5 flex items-center text-[#86868b] hover:text-[#1d1d1f] text-sm mx-auto transition-colors cursor-target">
                     <ChevronLeft className="w-4 h-4 mr-1" /> Back
                   </button>
                 </motion.div>
               )}
 
-              {/* --- SCREEN 4: CREATE LOGIN (Step 3) --- */}
+              {/* --- STEP 3: CREATE LOGIN --- */}
               {step === 3 && (
                 <motion.div
                   key="step3"
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.3 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
                 >
                   <StepCard
                     {...getStepProps(3)}
-                    title="Create BullMoney Login"
+                    title="Create Your Login"
                     actions={
                       <button
                         onClick={handleNext}
                         disabled={!formData.email || !formData.password || !acceptedTerms}
                         className={cn(
-                          "w-full py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg cursor-target text-base",
-                          (!formData.email || !formData.password || !acceptedTerms) ? "opacity-50 cursor-not-allowed bg-slate-800 text-slate-500" :
-                          isVantage ? "bg-white text-purple-950 hover:bg-purple-50" : "bg-white text-blue-950 hover:bg-blue-50"
+                          "apple-btn w-full py-3.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-sm cursor-target text-base",
+                          (!formData.email || !formData.password || !acceptedTerms)
+                            ? "bg-[#e5e5ea] text-[#aeaeb2] cursor-not-allowed"
+                            : "bg-[#1d1d1f] text-white hover:bg-[#333336] shadow-[0_2px_12px_rgba(0,0,0,0.12)]"
                         )}
                       >
                         Unlock My Access <ArrowRight className="w-4 h-4" />
                       </button>
                     }
                   >
-                     <p className="text-slate-400 text-xs md:text-sm mb-4">This lets you access <span className="text-white font-medium">setups</span>, tools, and the community.</p>
-                    <div className="space-y-4 pt-1">
+                    <p className="text-[#86868b] text-xs md:text-sm mb-5">This lets you access <span className="text-[#1d1d1f] font-medium">setups</span>, tools, and the community.</p>
+                    <div className="space-y-4">
                       <div>
                         <div className="relative group">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5 group-focus-within:text-white transition-colors" />
+                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#aeaeb2] w-5 h-5 group-focus-within:text-[#1d1d1f] transition-colors" />
                           <input
                             autoFocus
                             type="email"
                             name="email"
-                            autoComplete="username" // Enables browser autofill
+                            autoComplete="username"
                             value={formData.email}
                             onChange={handleChange}
                             placeholder="Email address"
-                            className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:border-white/30 focus:bg-black/40 transition-all cursor-target text-base"
+                            className="apple-input w-full bg-[#f5f5f7] border border-[#e5e5ea] rounded-xl pl-12 pr-4 py-3.5 text-[#1d1d1f] placeholder-[#aeaeb2] focus:outline-none focus:border-[#1d1d1f] cursor-target text-base"
                           />
                         </div>
-                        <p className="text-[10px] text-slate-500 mt-1 ml-1">We&apos;ll send your login details here.</p>
+                        <p className="text-[10px] text-[#aeaeb2] mt-1.5 ml-1">We&apos;ll send your login details here.</p>
                       </div>
 
                       <div>
                         <div className="relative group">
-                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5 group-focus-within:text-white transition-colors" />
+                          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#aeaeb2] w-5 h-5 group-focus-within:text-[#1d1d1f] transition-colors" />
                           <input
                             type={showPassword ? "text" : "password"}
                             name="password"
-                            autoComplete="new-password" // Enables browser to save this password
+                            autoComplete="new-password"
                             value={formData.password}
                             onChange={handleChange}
                             placeholder="Create password (min 6 chars)"
-                            className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-12 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:border-white/30 focus:bg-black/40 transition-all cursor-target text-base"
+                            className="apple-input w-full bg-[#f5f5f7] border border-[#e5e5ea] rounded-xl pl-12 pr-12 py-3.5 text-[#1d1d1f] placeholder-[#aeaeb2] focus:outline-none focus:border-[#1d1d1f] cursor-target text-base"
                           />
-                          <button 
-                            type="button" 
+                          <button
+                            type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors cursor-target"
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-[#aeaeb2] hover:text-[#1d1d1f] transition-colors cursor-target"
                           >
                             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                           </button>
                         </div>
-                        <p className="text-[10px] text-slate-500 mt-1 ml-1">Must be at least 6 characters.</p>
+                        <p className="text-[10px] text-[#aeaeb2] mt-1.5 ml-1">Must be at least 6 characters.</p>
                       </div>
 
                       <div>
                         <div className="relative group">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5 group-focus-within:text-white transition-colors" />
+                          <User className="absolute left-4 top-1/2 -translate-y-1/2 text-[#aeaeb2] w-5 h-5 group-focus-within:text-[#1d1d1f] transition-colors" />
                           <input
                             type="text"
                             name="referralCode"
                             value={formData.referralCode}
                             onChange={handleChange}
                             placeholder="Referral Code (Optional)"
-                            className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:border-white/30 focus:bg-black/40 transition-all cursor-target text-base"
+                            className="apple-input w-full bg-[#f5f5f7] border border-[#e5e5ea] rounded-xl pl-12 pr-4 py-3.5 text-[#1d1d1f] placeholder-[#aeaeb2] focus:outline-none focus:border-[#1d1d1f] cursor-target text-base"
                           />
                         </div>
-                        <p className="text-[10px] text-slate-500 mt-1 ml-1">Leave blank if you don&apos;t have one.</p>
+                        <p className="text-[10px] text-[#aeaeb2] mt-1.5 ml-1">Leave blank if you don&apos;t have one.</p>
+
+                        {referralAttribution.affiliateCode && (
+                          <div className="mt-2.5 rounded-xl border border-[#e5e5ea] bg-[#f5f5f7] p-3">
+                            <p className="text-[10px] text-[#86868b] font-semibold">Referral auto-filled</p>
+                            <div className="mt-1 grid grid-cols-1 gap-0.5 text-[10px] text-[#86868b]">
+                              <p>Code: <span className="text-[#1d1d1f] font-medium">{referralAttribution.affiliateCode}</span></p>
+                              {referralAttribution.affiliateName && (
+                                <p>Affiliate: <span className="text-[#1d1d1f] font-medium">{referralAttribution.affiliateName}</span></p>
+                              )}
+                              {referralAttribution.affiliateEmail && (
+                                <p>Email: <span className="text-[#1d1d1f] font-medium">{referralAttribution.affiliateEmail}</span></p>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
-                        <div 
+                      <div
                         onClick={() => setAcceptedTerms(!acceptedTerms)}
-                        className="flex items-start gap-3 p-3 rounded-lg border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors cursor-target"
+                        className="flex items-start gap-3 p-3.5 rounded-xl border border-[#e5e5ea] bg-[#f5f5f7] cursor-pointer hover:bg-[#ebebed] transition-colors cursor-target"
                       >
                         <div className={cn(
-                          "w-5 h-5 rounded border flex items-center justify-center mt-0.5 transition-colors shrink-0",
-                          acceptedTerms 
-                            ? (isVantage ? "bg-purple-600 border-purple-600" : "bg-blue-600 border-blue-600") 
-                            : "border-slate-500"
+                          "w-5 h-5 rounded-md border-2 flex items-center justify-center mt-0.5 transition-all duration-200 shrink-0",
+                          acceptedTerms
+                            ? "bg-[#1d1d1f] border-[#1d1d1f]"
+                            : "border-[#d2d2d7] bg-white"
                         )}>
-                          {acceptedTerms && <Check className="w-3.5 h-3.5 text-white" />}
+                          {acceptedTerms && <Check className="w-3 h-3 text-white" />}
                         </div>
                         <div className="flex-1">
-                          <p className="text-xs text-slate-300 leading-tight">
+                          <p className="text-xs text-[#86868b] leading-relaxed">
                             I agree to the Terms of Service and understand this is educational content.
                           </p>
                         </div>
@@ -1151,14 +1323,14 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     </div>
 
                     {submitError && (
-                      <div className="flex items-center gap-2 text-red-400 bg-red-950/20 p-3 rounded-lg border border-red-900/50 mt-4 animate-in slide-in-from-top-2">
+                      <div className="flex items-center gap-2.5 text-[#ff3b30] bg-[#ff3b30]/5 p-3.5 rounded-xl border border-[#ff3b30]/15 mt-4" style={{ animation: 'fadeInUp 0.3s ease-out' }}>
                         <AlertCircle className="w-4 h-4 shrink-0" />
                         <span className="text-xs font-medium">{submitError}</span>
                       </div>
                     )}
                   </StepCard>
 
-                  <button onClick={handleBack} className="mt-4 flex items-center text-slate-500 hover:text-slate-300 text-sm mx-auto transition-colors cursor-target">
+                  <button onClick={handleBack} className="apple-btn mt-5 flex items-center text-[#86868b] hover:text-[#1d1d1f] text-sm mx-auto transition-colors cursor-target">
                     <ChevronLeft className="w-4 h-4 mr-1" /> Back
                   </button>
                 </motion.div>
@@ -1171,34 +1343,26 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
   );
 }
 
-// --- SUB-COMPONENTS (MEMOIZED CARDS) ---
+// --- SUB-COMPONENTS ---
 
 const StepCard = memo(({ number, number2, title, children, actions, className }: any) => {
-  const useRed = typeof number2 === "number";
-  const n = useRed ? number2 : number;
+  const useAlt = typeof number2 === "number";
+  const n = useAlt ? number2 : number;
   return (
     <div className={cn(
-      "group relative overflow-hidden rounded-2xl p-6 md:p-8",
-      "bg-neutral-900/80 ring-1 ring-white/10 backdrop-blur-md",
-      "shadow-[0_1px_1px_rgba(0,0,0,0.05),0_8px_40px_rgba(2,6,23,0.35)]",
+      "apple-card group relative overflow-hidden rounded-3xl p-6 md:p-8",
+      "bg-white border border-[#e5e5ea]",
+      "shadow-[0_4px_24px_rgba(0,0,0,0.06)]",
       className
     )}>
-      <div className={cn(
-        "pointer-events-none absolute -top-12 right-0 h-24 w-2/3 bg-linear-to-l blur-2xl",
-        useRed ? "from-purple-500/15 via-violet-500/10 to-transparent" : "from-sky-500/15 via-blue-500/10 to-transparent"
-      )} />
-      <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10" />
-      <div className="flex items-center justify-between mb-4 md:mb-6">
-        <span className={cn(
-          "inline-flex items-center gap-2 text-[10px] md:text-[11px] uppercase tracking-[0.18em] px-2 py-1 rounded-md ring-1",
-          useRed ? "text-purple-300/90 ring-purple-500/30 bg-purple-500/10" : "text-sky-300/90 ring-sky-500/30 bg-sky-500/10"
-        )}>
+      <div className="flex items-center justify-between mb-5 md:mb-6">
+        <span className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] font-medium text-[#86868b]">
           Step {n} of 3
         </span>
       </div>
-      <h3 className="text-xl md:text-2xl font-extrabold text-white mb-4">{title}</h3>
+      <h3 className="text-xl md:text-2xl font-bold text-[#1d1d1f] mb-4 tracking-tight">{title}</h3>
       <div className="flex-1">{children}</div>
-      {actions && <div className="mt-6 md:mt-8 pt-6 border-t border-white/10">{actions}</div>}
+      {actions && <div className="mt-6 md:mt-8 pt-6 border-t border-[#f0f0f0]">{actions}</div>}
     </div>
   );
 });
@@ -1207,10 +1371,10 @@ StepCard.displayName = "StepCard";
 function IconPlusCorners() {
   return (
     <>
-      <Plus className="absolute h-4 w-4 -top-2 -left-2 text-white/70" />
-      <Plus className="absolute h-4 w-4 -bottom-2 -left-2 text-white/70" />
-      <Plus className="absolute h-4 w-4 -top-2 -right-2 text-white/70" />
-      <Plus className="absolute h-4 w-4 -bottom-2 -right-2 text-white/70" />
+      <Plus className="absolute h-4 w-4 -top-2 -left-2 text-[#d2d2d7]" />
+      <Plus className="absolute h-4 w-4 -bottom-2 -left-2 text-[#d2d2d7]" />
+      <Plus className="absolute h-4 w-4 -top-2 -right-2 text-[#d2d2d7]" />
+      <Plus className="absolute h-4 w-4 -bottom-2 -right-2 text-[#d2d2d7]" />
     </>
   );
 }
@@ -1238,12 +1402,12 @@ export const EvervaultCard = memo(({ text }: { text?: string }) => {
   }
   return (
     <div className="w-full h-full flex items-center justify-center bg-transparent" onMouseMove={onMouseMove}>
-      <div className="group/card rounded-3xl w-full h-full relative overflow-hidden bg-transparent flex items-center justify-center">
+      <div className="group/card rounded-2xl w-full h-full relative overflow-hidden bg-transparent flex items-center justify-center">
         <CardPattern mouseX={mouseX} mouseY={mouseY} randomString={randomString} />
         <div className="relative z-10">
-          <div className="relative h-32 w-32 rounded-full flex items-center justify-center">
-            <div className="absolute inset-0 rounded-full bg-white/10 blur-md" />
-            <span className="relative z-20 font-extrabold text-2xl md:text-3xl text-white select-none">{text}</span>
+          <div className="relative h-28 w-28 rounded-full flex items-center justify-center">
+            <div className="absolute inset-0 rounded-full bg-[#1d1d1f]/5 blur-md" />
+            <span className="relative z-20 font-bold text-xl md:text-2xl text-[#1d1d1f] select-none">{text}</span>
           </div>
         </div>
       </div>
@@ -1253,19 +1417,19 @@ export const EvervaultCard = memo(({ text }: { text?: string }) => {
 EvervaultCard.displayName = "EvervaultCard";
 
 function CardPattern({ mouseX, mouseY, randomString }: any) {
-  const maskImage = useMotionTemplate`radial-gradient(250px at ${mouseX}px ${mouseY}px, white, transparent)`;
+  const maskImage = useMotionTemplate`radial-gradient(200px at ${mouseX}px ${mouseY}px, white, transparent)`;
   const style = { maskImage, WebkitMaskImage: maskImage as unknown as string };
   return (
     <div className="pointer-events-none absolute inset-0">
-      <motion.div className="absolute inset-0 bg-linear-to-r from-green-500 to-blue-700 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
-      <motion.div className="absolute inset-0 opacity-0 mix-blend-overlay group-hover/card:opacity-100" style={style}>
-        <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-white font-mono font-bold transition duration-500">{randomString}</p>
+      <motion.div className="absolute inset-0 bg-linear-to-r from-[#86868b]/30 to-[#1d1d1f]/20 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
+      <motion.div className="absolute inset-0 opacity-0 mix-blend-multiply group-hover/card:opacity-100" style={style}>
+        <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-[#aeaeb2] font-mono font-bold transition duration-500">{randomString}</p>
       </motion.div>
     </div>
   );
-};
+}
 
-// --- Vantage Card (Red/Purple) ---
+// --- Vantage Card (Purple) ---
 export const EvervaultCardRed = memo(({ text }: { text?: string }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -1279,12 +1443,12 @@ export const EvervaultCardRed = memo(({ text }: { text?: string }) => {
   }
   return (
     <div className="w-full h-full flex items-center justify-center bg-transparent" onMouseMove={onMouseMove}>
-      <div className="group/card rounded-3xl w-full h-full relative overflow-hidden bg-transparent flex items-center justify-center">
+      <div className="group/card rounded-2xl w-full h-full relative overflow-hidden bg-transparent flex items-center justify-center">
         <CardPatternRed mouseX={mouseX} mouseY={mouseY} randomString={randomString} />
         <div className="relative z-10">
-          <div className="relative h-32 w-32 rounded-full flex items-center justify-center">
-            <div className="absolute inset-0 rounded-full bg-white/10 blur-md" />
-            <span className="relative z-20 font-extrabold text-2xl md:text-3xl text-white select-none">{text}</span>
+          <div className="relative h-28 w-28 rounded-full flex items-center justify-center">
+            <div className="absolute inset-0 rounded-full bg-[#1d1d1f]/5 blur-md" />
+            <span className="relative z-20 font-bold text-xl md:text-2xl text-[#1d1d1f] select-none">{text}</span>
           </div>
         </div>
       </div>
@@ -1294,13 +1458,13 @@ export const EvervaultCardRed = memo(({ text }: { text?: string }) => {
 EvervaultCardRed.displayName = "EvervaultCardRed";
 
 function CardPatternRed({ mouseX, mouseY, randomString }: any) {
-  const maskImage = useMotionTemplate`radial-gradient(250px at ${mouseX}px ${mouseY}px, white, transparent)`;
+  const maskImage = useMotionTemplate`radial-gradient(200px at ${mouseX}px ${mouseY}px, white, transparent)`;
   const style = { maskImage, WebkitMaskImage: maskImage as unknown as string };
   return (
     <div className="pointer-events-none absolute inset-0">
-      <motion.div className="absolute inset-0 bg-linear-to-r from-purple-500 to-violet-600 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
-      <motion.div className="absolute inset-0 opacity-0 mix-blend-overlay group-hover/card:opacity-100" style={style}>
-        <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-violet-100/90 font-mono font-bold transition duration-500">{randomString}</p>
+      <motion.div className="absolute inset-0 bg-linear-to-r from-[#86868b]/30 to-[#1d1d1f]/20 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500" style={style} />
+      <motion.div className="absolute inset-0 opacity-0 mix-blend-multiply group-hover/card:opacity-100" style={style}>
+        <p className="absolute inset-x-0 p-2 text-[10px] leading-4 h-full whitespace-pre-wrap break-words text-[#aeaeb2] font-mono font-bold transition duration-500">{randomString}</p>
       </motion.div>
     </div>
   );

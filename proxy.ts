@@ -11,6 +11,19 @@ import type { NextRequest } from 'next/server';
  * Replaces the deprecated middleware.ts convention in Next.js 16+.
  */
 export function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Canonical affiliate onboarding URL:
+  // /register/pagemode -> /about?src=nav (+ preserve existing query params)
+  if (pathname === '/register/pagemode' || pathname === '/register/pagemode/') {
+    const url = request.nextUrl.clone();
+    url.pathname = '/about';
+    if (!url.searchParams.get('src')) {
+      url.searchParams.set('src', 'nav');
+    }
+    return NextResponse.rewrite(url);
+  }
+
   const hostname = request.headers.get('host') || '';
   const isBullmoneyShop = hostname.includes('bullmoney.shop');
   
@@ -18,8 +31,6 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const { pathname } = request.nextUrl;
-  
   // Root → rewrite to /store
   if (pathname === '/') {
     const url = request.nextUrl.clone();

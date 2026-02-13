@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
-import { redirect } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import YouTube, { YouTubeProps, YouTubeEvent } from 'react-youtube'; 
 import { Volume2, Volume1, VolumeX, X, Palette, Sparkles, MessageCircle } from 'lucide-react'; 
 
@@ -284,13 +284,19 @@ const SupportWidget = ({ theme }: { theme: Theme }) => {
 // --- MAIN PAGE COMPONENT ---
 // ----------------------------------------------------------------------
 export default function Page({
-  searchParams,
-}: {
-  searchParams?: { src?: string };
-}) {
+}: {}) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if ((searchParams?.get('src') || '') !== 'nav') {
+      router.replace('/');
+    }
+  }, [searchParams, router]);
+
   // Master Gating Logic
-  if (searchParams?.src !== "nav") {
-    redirect("/");
+  if ((searchParams?.get('src') || '') !== 'nav') {
+    return null;
   }
 
   const [currentStage, setCurrentStage] = useState<"register" | "hold" | "v2" | "content">("v2");

@@ -201,46 +201,32 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
   const canShowSupport = canShowUltimateHub && supportReady;
 
   // ============================================
-  // ADMIN PANEL KEYBOARD SHORTCUT: Ctrl+A+P
+  // ADMIN PANEL KEYBOARD SHORTCUT: Cmd/Ctrl+Shift+A
   // ============================================
   const { setAdminModalOpen } = useUIState();
-  const [adminKeySequence, setAdminKeySequence] = useState<string[]>([]);
   
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Check for Ctrl (or Cmd on Mac)
-      if (e.ctrlKey || e.metaKey) {
-        // Add pressed key to sequence
-        const key = e.key.toLowerCase();
-        
-        setAdminKeySequence(prev => {
-          const newSequence = [...prev, key].slice(-2); // Keep last 2 keys
-          
-          // Check if sequence is 'a' then 'p' while holding ctrl
-          if (newSequence.length === 2 && newSequence[0] === 'a' && newSequence[1] === 'p') {
-            e.preventDefault();
-            setAdminModalOpen(true);
-            return []; // Reset sequence
-          }
-          
-          return newSequence;
-        });
+      const target = e.target as HTMLElement | null;
+      const isTypingTarget = Boolean(
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable)
+      );
+
+      if (isTypingTarget) return;
+
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        setAdminModalOpen(true);
       }
     };
-    
-    const handleKeyUp = (e: KeyboardEvent) => {
-      // Reset sequence when ctrl/cmd is released
-      if (!e.ctrlKey && !e.metaKey) {
-        setAdminKeySequence([]);
-      }
-    };
-    
+
     window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-    
+
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
     };
   }, [setAdminModalOpen]);
 
@@ -292,7 +278,7 @@ export function LayoutProviders({ children, modal }: LayoutProvidersProps) {
         {/* ✅ SUPPORT BUTTON - Global floating support widget (hidden on games pages) */}
         {canShowSupport && !isStorePage && <AppSupportButton />}
         {canShowSupport && isStorePage && !isGamesPage && typeof document !== "undefined" && createPortal(
-          <StoreSupportButton />,
+          <AppSupportButton />,
           document.body
         )}
         

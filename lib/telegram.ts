@@ -21,7 +21,7 @@ const TELEGRAM_CHANNEL_USERNAME = process.env.TELEGRAM_CHANNEL_USERNAME || 'bull
  * Fetches messages from a Telegram channel using the Bot API
  * Requires bot to be an administrator in the channel
  */
-export async function fetchTelegramMessages(limit: number = 20): Promise<TelegramMessage[]> {
+export async function fetchTelegramMessages(limit: number = 20, targetChat?: string): Promise<TelegramMessage[]> {
   if (!TELEGRAM_BOT_TOKEN) {
     console.error('TELEGRAM_BOT_TOKEN not configured');
     return [];
@@ -57,9 +57,19 @@ export async function fetchTelegramMessages(limit: number = 20): Promise<Telegra
 
     const messages: TelegramMessage[] = [];
 
+    const normalizedTarget = String(targetChat || '').trim().toLowerCase();
+
     data.result?.forEach((update: any) => {
       const msg = update.channel_post;
       if (!msg) return;
+
+      if (normalizedTarget) {
+        const chatId = String(msg.chat?.id ?? '').toLowerCase();
+        const chatUsername = String(msg.chat?.username ?? '').toLowerCase().replace(/^@/, '');
+        const expected = normalizedTarget.replace(/^@/, '');
+        const matchesTarget = chatId === normalizedTarget || chatId === expected || chatUsername === expected;
+        if (!matchesTarget) return;
+      }
 
       const text = msg.text || msg.caption || '(Media message)';
       const timestamp = msg.date * 1000;
@@ -78,7 +88,7 @@ export async function fetchTelegramMessages(limit: number = 20): Promise<Telegra
       });
     });
 
-    return messages.sort((a, b) => b.timestamp - a.timestamp);
+    return messages.sort((a, b) => b.timestamp - a.timestamp).slice(0, limit);
   } catch (error) {
     console.error('Error fetching Telegram messages:', error);
     return [];

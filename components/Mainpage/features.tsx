@@ -237,7 +237,7 @@ export function Features() {
                 {
                   label: "FTMO",
                   href: "https://trader.ftmo.com/?affiliates=fGDPMCcFOXviWzowTyxV", 
-                  icon: (<Image src="/FTMO_LOGOB.png" alt="FTMO" width={20} height={20} />),
+                  icon: (<Image src="/FTMO_LOGO.png" alt="FTMO" width={20} height={20} />),
                   gradient: cn(GOLD_TEXT_GRADIENT, "text-black"),
                 },
               ]}

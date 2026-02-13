@@ -251,7 +251,7 @@ export default function AffiliateAdminPanel() {
         </div>
 
         {error && (
-          <div className="mb-4 p-3 rounded-lg bg-red-950/30 border border-red-500/20 text-red-200 flex items-center gap-2">
+          <div className="mb-4 p-3 rounded-lg bg-white border border-black/20 text-black flex items-center gap-2">
             <AlertTriangle className="w-4 h-4" /> {error}
           </div>
         )}
@@ -261,7 +261,7 @@ export default function AffiliateAdminPanel() {
           </div>
         )}
         {!adminEmail && (
-          <div className="mb-4 p-3 rounded-lg bg-amber-950/30 border border-amber-500/20 text-amber-200 flex items-center gap-2">
+          <div className="mb-4 p-3 rounded-lg bg-white border border-black/20 text-black flex items-center gap-2">
             <AlertTriangle className="w-4 h-4" /> Admin email not detected. Set a session or add your email to NEXT_PUBLIC_AFFILIATE_ADMIN_EMAILS.
           </div>
         )}
@@ -269,10 +269,10 @@ export default function AffiliateAdminPanel() {
         {/* Mobile Layout */}
         <div className="lg:hidden">
           <div className="grid grid-cols-1 gap-4">
-            <div className="bg-slate-950/70 border border-black/10 rounded-2xl overflow-hidden">
+            <div className="bg-white border border-black/10 rounded-2xl overflow-hidden">
               <div className="p-4 border-b border-black/10">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black/40" />
                   <input
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
@@ -282,17 +282,17 @@ export default function AffiliateAdminPanel() {
                 </div>
               </div>
 
-              <div className="divide-y divide-slate-800 max-h-[70vh] overflow-y-auto">
+              <div className="divide-y divide-black/10 max-h-[70vh] overflow-y-auto">
               {loading ? (
-                <div className="p-6 text-center text-slate-500">Loading recruits...</div>
+                <div className="p-6 text-center text-black/50">Loading recruits...</div>
               ) : filtered.length === 0 ? (
-                <div className="p-6 text-center text-slate-500">No recruits found.</div>
+                <div className="p-6 text-center text-black/50">No recruits found.</div>
               ) : (
                 filtered.map((r) => {
                   const isOpen = expandedId === r.id;
                   const draft = drafts[r.id] || r;
                   return (
-                    <div key={String(r.id)} className="bg-slate-950/70">
+                    <div key={String(r.id)} className="bg-white">
                       <button
                         onClick={() => openEditor(r)}
                         className={cn(
@@ -302,7 +302,7 @@ export default function AffiliateAdminPanel() {
                       >
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <div className="flex items-center gap-3">
-                            <div className="h-12 w-12 rounded-xl bg-slate-900 border border-black/10 overflow-hidden flex items-center justify-center text-slate-400">
+                            <div className="h-12 w-12 rounded-xl bg-white border border-black/10 overflow-hidden flex items-center justify-center text-black/50">
                               {r.image_url ? (
                                 <img src={r.image_url} alt={r.email} className="h-full w-full object-cover" />
                               ) : (
@@ -311,11 +311,11 @@ export default function AffiliateAdminPanel() {
                             </div>
                             <div>
                               <p className="text-sm font-semibold text-black">{r.email}</p>
-                              <p className="text-xs text-slate-500">ID: {r.id} • MT5: {r.mt5_id || "—"}</p>
+                              <p className="text-xs text-black/50">ID: {r.id} • MT5: {r.mt5_id || "—"}</p>
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className="text-xs text-slate-400">Lots</p>
+                            <p className="text-xs text-black/50">Lots</p>
                             <p className="text-sm font-mono text-black">{Number(r.total_lots_traded || 0).toFixed(2)}</p>
                           </div>
                         </div>
@@ -326,10 +326,10 @@ export default function AffiliateAdminPanel() {
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div>
                               <h3 className="text-lg font-bold text-black">Edit Recruit</h3>
-                              <p className="text-xs text-slate-500">{draft.email}</p>
-                              <p className="text-[11px] text-slate-600">ID: {draft.id} • Created: {draft.created_at}</p>
+                              <p className="text-xs text-black/55">{draft.email}</p>
+                              <p className="text-[11px] text-black/55">ID: {draft.id} • Created: {draft.created_at}</p>
                             </div>
-                            <Edit3 className="w-4 h-4 text-slate-400" />
+                            <Edit3 className="w-4 h-4 text-black/50" />
                           </div>
 
                           <Section title="Core Profile">
@@ -441,8 +441,8 @@ export default function AffiliateAdminPanel() {
                             className={cn(
                               "w-full py-2.5 rounded-lg font-semibold text-sm transition-all",
                               isXMUser
-                                ? "bg-red-600 hover:bg-red-500"
-                                : "bg-white hover:bg-white",
+                                ? "bg-white hover:bg-black/5 border border-black/20"
+                                : "bg-white hover:bg-black/5 border border-black/20",
                               saving && "opacity-60 cursor-not-allowed"
                             )}
                           >
@@ -479,7 +479,7 @@ export default function AffiliateAdminPanel() {
       <div className="space-y-6">
         <div>
           <h3 className="text-lg font-bold text-black mb-1">Edit Recruit</h3>
-          <p className="text-xs text-slate-500">{draft.email} • ID: {draft.id}</p>
+          <p className="text-xs text-black/55">{draft.email} • ID: {draft.id}</p>
         </div>
 
         <Section title="Core Profile">
@@ -532,6 +532,7 @@ export default function AffiliateAdminPanel() {
           className={cn(
             "px-6 py-2.5 rounded-lg font-semibold text-sm transition-all",
             isXMUser ? "bg-red-600 hover:bg-red-500" : "bg-white hover:bg-white",
+            "border border-black/20",
             saving && "opacity-60 cursor-not-allowed"
           )}
         >
@@ -544,8 +545,8 @@ export default function AffiliateAdminPanel() {
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <div className="space-y-3">
-    <div className="text-xs uppercase tracking-widest text-slate-500">{title}</div>
-    <div className="bg-slate-950/70 border border-black/10 rounded-xl p-3 space-y-3">
+    <div className="text-xs uppercase tracking-widest text-black/55">{title}</div>
+    <div className="bg-white border border-black/10 rounded-xl p-3 space-y-3">
       {children}
     </div>
   </div>
@@ -562,7 +563,7 @@ const Field = ({
   onChange: (value: string) => void;
   type?: "text" | "number";
 }) => (
-  <label className="text-xs text-slate-400">
+  <label className="text-xs text-black/70">
     {label}
     <input
       type={type}
@@ -582,7 +583,7 @@ const TextAreaField = ({
   value: string;
   onChange: (value: string) => void;
 }) => (
-  <label className="text-xs text-slate-400">
+  <label className="text-xs text-black/70">
     {label}
     <textarea
       value={value}
@@ -601,13 +602,13 @@ const ToggleField = ({
   value: boolean;
   onChange: (value: boolean) => void;
 }) => (
-  <label className="text-xs text-slate-400 flex items-center justify-between gap-2">
+  <label className="text-xs text-black/70 flex items-center justify-between gap-2">
     <span>{label}</span>
     <input
       type="checkbox"
       checked={value}
       onChange={(e) => onChange(e.target.checked)}
-      className="h-4 w-4 rounded border border-slate-700 bg-slate-900"
+      className="h-4 w-4 rounded border border-black/20 bg-white"
     />
   </label>
 );
@@ -619,7 +620,7 @@ const ReadOnlyField = ({
   label: string;
   value: string | number;
 }) => (
-  <label className="text-xs text-slate-400">
+  <label className="text-xs text-black/70">
     {label}
     <div className="mt-1 w-full bg-white border border-black/10 rounded-lg px-3 py-2 text-sm text-black">
       {value}
@@ -638,7 +639,7 @@ const SelectField = ({
   options: string[];
   onChange: (value: string) => void;
 }) => (
-  <label className="text-xs text-slate-400">
+  <label className="text-xs text-black/70">
     {label}
     <select
       value={value}
@@ -646,7 +647,7 @@ const SelectField = ({
       className="mt-1 w-full bg-white border border-black/10 rounded-lg px-3 py-2 text-sm text-black focus:outline-none"
     >
       {options.map((opt) => (
-        <option key={opt} value={opt} className="bg-slate-950">
+        <option key={opt} value={opt} className="bg-white text-black">
           {opt}
         </option>
       ))}

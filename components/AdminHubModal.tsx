@@ -273,7 +273,9 @@ export function AdminHubModal({
   const [authChecked, setAuthChecked] = useState(false);
   const [pagemodeAuthorized, setPagemodeAuthorized] = useState(false);
   const [pagemodeChecked, setPagemodeChecked] = useState(false);
-  const isAdmin = (authorized || pagemodeAuthorized) && (authChecked || pagemodeChecked);
+  const isDevBypass = process.env.NODE_ENV === "development";
+  const isAdmin = isDevBypass || ((authorized || pagemodeAuthorized) && (authChecked || pagemodeChecked));
+  const accessCheckComplete = isDevBypass || authChecked || pagemodeChecked;
 
   // Products
   const [products, setProducts] = useState<any[]>([]);
@@ -1962,7 +1964,7 @@ export function AdminHubModal({
             </div>
 
               <div className="p-3 sm:p-4 bg-slate-950/70 flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-900/30 hover:scrollbar-thumb-slate-500 relative z-0">
-                {!authChecked ? (
+                {!accessCheckComplete ? (
                   <div className="flex items-center justify-center gap-2 py-12 text-slate-300 text-sm">
                     <RefreshCw className="w-4 h-4" /> Checking admin access...
                   </div>

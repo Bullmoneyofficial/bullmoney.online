@@ -50,7 +50,9 @@ window.addEventListener('resize',setViewportVars,{passive:true});
 window.addEventListener('orientationchange',setViewportVars,{passive:true});
 if(window.visualViewport){
 	window.visualViewport.addEventListener('resize',setViewportVars,{passive:true});
-	window.visualViewport.addEventListener('scroll',setViewportVars,{passive:true});
+	if(!iOS){
+		window.visualViewport.addEventListener('scroll',setViewportVars,{passive:true});
+	}
 }
 
 try{

@@ -17,6 +17,9 @@ export async function POST(request: NextRequest) {
     const password = String(body?.password || '');
     const mt5Id = String(body?.mt5_id || body?.mt5Number || '').trim();
     const referralCode = String(body?.referred_by_code || body?.referralCode || '').trim();
+    const referralAttribution = body?.referral_attribution && typeof body.referral_attribution === 'object'
+      ? body.referral_attribution
+      : null;
 
     if (!email || !password) {
       return NextResponse.json({ success: false, error: 'Missing credentials' }, { status: 400 });
@@ -47,6 +50,21 @@ export async function POST(request: NextRequest) {
       referred_by_code: referralCode || null,
       used_code: true,
     };
+
+    if (referralAttribution && referralCode) {
+      const trackingNote = {
+        tracked_at: new Date().toISOString(),
+        affiliate_id: referralAttribution.affiliate_id || null,
+        affiliate_name: referralAttribution.affiliate_name || null,
+        affiliate_email: referralAttribution.affiliate_email || null,
+        affiliate_code: referralAttribution.affiliate_code || referralCode,
+        source: referralAttribution.source || null,
+        medium: referralAttribution.medium || null,
+        campaign: referralAttribution.campaign || null,
+      };
+
+      insertPayload.notes = `[ReferralAttribution] ${JSON.stringify(trackingNote)}`;
+    }
 
     if (mt5Id) insertPayload.mt5_id = mt5Id;
 

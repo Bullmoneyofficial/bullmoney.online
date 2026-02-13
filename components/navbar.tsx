@@ -267,6 +267,7 @@ export const Navbar = memo(() => {
   // Dev toggle: allows admin to preview the site as a non-admin user
   const [devAdminEnabled, setDevAdminEnabled] = useState(true);
   const effectiveAdmin = isDev ? (isAdmin && devAdminEnabled) : false;
+  const canUseDevAdminShortcut = isDev;
 
   const supabase = useMemo(() => createSupabaseClient(), []);
   const [hasAccountManagerAccess, setHasAccountManagerAccess] = useState<boolean>(() => getStoredAccountManagerAccess());
@@ -528,7 +529,7 @@ export const Navbar = memo(() => {
           3. Freeze animations during scroll
           4. Use content-visibility for off-screen sections
       */}
-      {effectiveAdmin && <LazyAdminModal isOpen={isAdminOpen} onClose={closeNavbarModal} />}
+      {(effectiveAdmin || canUseDevAdminShortcut) && <LazyAdminModal isOpen={isAdminOpen} onClose={closeNavbarModal} />}
       <LazyFaqModal isOpen={isFaqOpen} onClose={closeNavbarModal} />
       <LazyAffiliateModal isOpen={isAffiliateOpen} onClose={closeNavbarModal} />
       <LazyAccountManagerModal isOpen={isAccountManagerOpen} onClose={closeNavbarModal} />

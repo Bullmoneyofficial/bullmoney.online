@@ -81,7 +81,15 @@ style.textContent=[
   '.in-app-browser .aurora{opacity:.05!important;}',
   '.in-app-browser .glass-effect,.in-app-browser .glassmorphism,.in-app-browser .glass-surface,.in-app-browser .glass-card{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:rgba(5,9,21,.86)!important;border-color:rgba(255,255,255,.06)!important;}',
   '.in-app-browser .circular-gallery,.in-app-browser .card-swap{animation:none!important;}',
-  '.in-app-browser .color-bends{animation:none!important;opacity:.55!important;}'
+  '.in-app-browser .color-bends{animation:none!important;opacity:.55!important;}',
+  '.in-app-browser #bm-open-browser{position:fixed;top:0;left:0;right:0;max-width:100vw;padding:calc(10px + env(safe-area-inset-top,0px)) 14px 10px;background:#000;border-bottom:1px solid rgba(255,255,255,.18);z-index:99999;display:flex;align-items:center;justify-content:space-between;gap:10px;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;color:#fff;box-sizing:border-box;}',
+  '.in-app-browser #bm-open-browser .bm-open-browser__text{color:#fff;font-size:13px;font-weight:500;letter-spacing:.01em;line-height:1.25;}',
+  '.in-app-browser #bm-open-browser .bm-open-browser__actions{display:flex;gap:6px;flex-shrink:0;}',
+  '.in-app-browser #bm-open-browser .bm-open-browser__dismiss{background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;padding:5px 11px;border-radius:9999px;font-size:12px;line-height:1;cursor:pointer;}',
+  '.in-app-browser #bm-open-browser .bm-open-browser__open{background:#fff;color:#000;padding:5px 12px;border-radius:9999px;font-size:12px;line-height:1;text-decoration:none;font-weight:600;display:inline-flex;align-items:center;}',
+  '.in-app-browser body.bm-open-browser-visible{padding-top:var(--bm-open-browser-h,0px)!important;}',
+  '@media (max-width:390px),(max-height:700px){.in-app-browser #bm-open-browser{padding:calc(8px + env(safe-area-inset-top,0px)) 10px 8px;gap:8px;align-items:flex-start;flex-wrap:wrap;justify-content:flex-start;}.in-app-browser #bm-open-browser .bm-open-browser__text{font-size:12px;line-height:1.2;max-width:100%;}.in-app-browser #bm-open-browser .bm-open-browser__actions{gap:5px;width:100%;justify-content:flex-end;}.in-app-browser #bm-open-browser .bm-open-browser__dismiss,.in-app-browser #bm-open-browser .bm-open-browser__open{padding:4px 9px;font-size:11px;}}',
+  '@media (max-width:340px){.in-app-browser #bm-open-browser .bm-open-browser__actions{justify-content:space-between;}.in-app-browser #bm-open-browser .bm-open-browser__dismiss,.in-app-browser #bm-open-browser .bm-open-browser__open{flex:1;justify-content:center;text-align:center;}}'
 ].join('\n');
 if(d.head)d.head.appendChild(style);
 S.fixes.push('css-reduced');
@@ -120,13 +128,36 @@ if(S.browser==='instagram'||S.browser==='tiktok'||S.browser==='facebook'){
       if(d.getElementById('bm-open-browser')||!d.body)return;
       var bar=d.createElement('div');
       bar.id='bm-open-browser';
-      bar.style.cssText='position:fixed;top:0;left:0;right:0;padding:12px 16px;background:#000;border-bottom:1px solid rgba(255,255,255,.18);z-index:99999;display:flex;align-items:center;justify-content:space-between;gap:10px;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;color:#fff;';
-      bar.innerHTML='<span style="color:#fff;font-size:13px;font-weight:500;letter-spacing:.01em;">Open in browser for best performance</span>'+
-        '<div style="display:flex;gap:6px;">'+
-        '<button onclick="this.parentElement.parentElement.remove()" style="background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;padding:5px 11px;border-radius:9999px;font-size:12px;line-height:1;cursor:pointer;">Dismiss</button>'+
-        '<a href="'+w.location.href+'" target="_blank" style="background:#fff;color:#000;padding:5px 12px;border-radius:9999px;font-size:12px;line-height:1;text-decoration:none;font-weight:600;">Open</a>'+
+      bar.innerHTML='<span class="bm-open-browser__text">Open in browser for best performance</span>'+
+        '<div class="bm-open-browser__actions">'+
+        '<button type="button" class="bm-open-browser__dismiss">Dismiss</button>'+
+        '<a href="'+w.location.href+'" target="_blank" class="bm-open-browser__open">Open</a>'+
         '</div>';
       d.body.appendChild(bar);
+
+      function setBannerOffset(){
+        if(!bar||!bar.parentNode)return;
+        var h=Math.ceil(bar.getBoundingClientRect().height||0);
+        root.style.setProperty('--bm-open-browser-h',h+'px');
+        d.body.classList.add('bm-open-browser-visible');
+      }
+
+      function clearBannerOffset(){
+        root.style.removeProperty('--bm-open-browser-h');
+        d.body.classList.remove('bm-open-browser-visible');
+      }
+
+      var dismissBtn=bar.querySelector('.bm-open-browser__dismiss');
+      if(dismissBtn){
+        dismissBtn.addEventListener('click',function(){
+          clearBannerOffset();
+          if(bar&&bar.parentNode)bar.parentNode.removeChild(bar);
+        },{once:true});
+      }
+
+      setTimeout(setBannerOffset,0);
+      w.addEventListener('resize',setBannerOffset,{passive:true});
+      w.addEventListener('orientationchange',setBannerOffset,{passive:true});
     },1800);
   },{once:true});
   S.fixes.push('open-banner');

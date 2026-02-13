@@ -32,11 +32,11 @@ export function GamesLayoutClient({ children }: { children: React.ReactNode }) {
     html.style.overflow = 'auto';
     html.style.overflowX = 'hidden';
     html.style.height = 'auto';
-    html.style.minHeight = '100vh';
+    html.style.minHeight = '100dvh';
     body.style.overflow = 'auto';
     body.style.overflowX = 'hidden';
     body.style.height = 'auto';
-    body.style.minHeight = '100vh';
+    body.style.minHeight = '100dvh';
 
     html.classList.add('store-active');
     body.classList.add('store-page-body');
@@ -94,7 +94,7 @@ export function GamesLayoutClient({ children }: { children: React.ReactNode }) {
         position: 'relative',
         paddingTop: `${HEADER_HEIGHT}px`,
         width: '100%',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         height: 'auto',
         overflowX: 'hidden',
         overflowY: 'auto',
@@ -110,7 +110,7 @@ export function GamesLayoutClient({ children }: { children: React.ReactNode }) {
           overflow-y: auto !important;
           overflow-x: hidden !important;
           height: auto !important;
-          min-height: 100vh;
+          min-height: 100dvh;
           -webkit-overflow-scrolling: touch;
         }
         /* Only hide the background Spline canvas, never game canvases */
@@ -181,7 +181,7 @@ export function GamesLayoutClient({ children }: { children: React.ReactNode }) {
       `}</style>
 
       <StoreHeader />
-      <main className="w-full" style={{ position: 'relative', zIndex: 1, minHeight: 'calc(100vh - 72px)', display: 'flex', flexDirection: 'column' }}>
+      <main className="w-full" style={{ position: 'relative', zIndex: 1, minHeight: 'calc(100dvh - 72px)', display: 'flex', flexDirection: 'column' }}>
         {children}
       </main>
     </div>

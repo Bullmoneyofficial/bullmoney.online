@@ -114,7 +114,7 @@ const getStickyScrollContent = (
   },
   {
     title: "FTMO",
-    logo: "/FTMO_LOGOB.png",
+    logo: "/FTMO_LOGO.png",
     description:
       "The World's #1 Prop Firm • Paid out $100M+ to traders • Scale up to $400K accounts • 80% profit split • Professional trading conditions • The ultimate test for serious traders.",
     content: (
@@ -417,7 +417,7 @@ export function Features() {
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-2xl overflow-hidden bg-white/5 p-2">
                 <Image
-                  src="/FTMO_LOGOB.png"
+                  src="/FTMO_LOGO.png"
                   alt="FTMO"
                   width={48}
                   height={48}
@@ -666,7 +666,7 @@ export function Features() {
             <div className="flex items-center gap-3 mb-4 md:mb-6">
               <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl overflow-hidden bg-white/5 p-2">
                 <Image
-                  src="/FTMO_LOGOB.png"
+                  src="/FTMO_LOGO.png"
                   alt="FTMO"
                   width={48}
                   height={48}

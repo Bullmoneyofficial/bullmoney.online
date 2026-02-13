@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { ShieldAlert, AlertTriangle, CheckCircle2, FileText, Lock, Globe } from "lucide-react";
-import { EnhancedModal } from "./EnhancedModal";
+import React, { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { ShieldAlert, AlertTriangle, CheckCircle2, FileText, Lock, Globe, X, ArrowLeft } from "lucide-react";
+import { SoundEffects } from "@/app/hooks/useSoundEffects";
 import { DisclaimerSection } from "./DisclaimerSection";
 
 export interface LegalDisclaimerModalProps {
@@ -301,16 +302,60 @@ const DISCLAIMER_SECTIONS = [
 ];
 
 export const LegalDisclaimerModal = ({ isOpen, onClose, initialTab = 'disclaimer' }: LegalDisclaimerModalProps) => {
+  const [mounted, setMounted] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
   const [openSection, setOpenSection] = useState<string | null>("01");
   const [activeTab, setActiveTab] = useState<'terms' | 'privacy' | 'disclaimer'>(initialTab);
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mediaQuery = window.matchMedia('(min-width: 768px)');
+    const updateMatch = () => setIsDesktop(mediaQuery.matches);
+    updateMatch();
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', updateMatch);
+    }
+    return () => {
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', updateMatch);
+      }
+    };
+  }, []);
+
   // Reset to initial tab when modal opens
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
       setActiveTab(initialTab);
       setOpenSection("01");
     }
   }, [isOpen, initialTab]);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
+  const handleClose = useCallback(() => {
+    SoundEffects.click();
+    onClose();
+  }, [onClose]);
+
+  const handleBackdropTouch = useCallback((e: React.TouchEvent) => {
+    if (e.target === e.currentTarget) {
+      e.preventDefault();
+      handleClose();
+    }
+  }, [handleClose]);
 
   const getCurrentSections = () => {
     switch (activeTab) {
@@ -339,216 +384,143 @@ export const LegalDisclaimerModal = ({ isOpen, onClose, initialTab = 'disclaimer
   const getTabIcon = () => {
     switch (activeTab) {
       case 'terms':
-        return <FileText className="w-4 h-4 xs:w-5 xs:h-5 sm:w-5 sm:h-5 text-white shrink-0" />;
+        return <FileText className="w-4 h-4 md:w-5 md:h-5 text-black" />;
       case 'privacy':
-        return <Lock className="w-4 h-4 xs:w-5 xs:h-5 sm:w-5 sm:h-5 text-white shrink-0" />;
+        return <Lock className="w-4 h-4 md:w-5 md:h-5 text-black" />;
       case 'disclaimer':
       default:
-        return <ShieldAlert className="w-4 h-4 xs:w-5 xs:h-5 sm:w-5 sm:h-5 text-white shrink-0" />;
+        return <ShieldAlert className="w-4 h-4 md:w-5 md:h-5 text-black" />;
     }
   };
 
-  return (
-    <EnhancedModal
-      isOpen={isOpen}
-      onClose={onClose}
-      maxWidth="max-w-4xl"
-      title={
-        <div className="flex items-center gap-2 xs:gap-2.5 sm:gap-3">
-          {getTabIcon()}
-          <span className="text-sm xs:text-base sm:text-lg font-semibold tracking-tight text-white">{getTabTitle()}</span>
-        </div>
-      }
-    >
-      <div className="flex flex-col -mx-4 xs:-mx-5 sm:-mx-6 md:-mx-8 -mt-4 xs:-mt-5 sm:-mt-6 -mb-4 xs:-mb-5 sm:-mb-6" style={{ height: 'calc(85vh - 80px)', maxHeight: 'calc(85vh - 80px)', minHeight: '300px' }}>
-        {/* Apple-style Tab Navigation */}
-        <div className="flex gap-2 px-4 xs:px-5 sm:px-6 md:px-8 py-3 xs:py-4 overflow-x-auto shrink-0 bg-black border-b border-white/10">
-          <button
-            onClick={() => { setActiveTab('terms'); setOpenSection("01"); }}
-            className={`flex items-center gap-1.5 sm:gap-2 px-3 xs:px-4 sm:px-5 py-2 xs:py-2.5 rounded-full text-xs xs:text-sm font-medium transition-all whitespace-nowrap ${
-              activeTab === 'terms' 
-                ? 'bg-white text-black' 
-                : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
-            }`}
-          >
-            <FileText className="w-3.5 h-3.5 xs:w-4 xs:h-4" />
-            Terms
-          </button>
-          <button
-            onClick={() => { setActiveTab('privacy'); setOpenSection("01"); }}
-            className={`flex items-center gap-1.5 sm:gap-2 px-3 xs:px-4 sm:px-5 py-2 xs:py-2.5 rounded-full text-xs xs:text-sm font-medium transition-all whitespace-nowrap ${
-              activeTab === 'privacy' 
-                ? 'bg-white text-black' 
-                : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
-            }`}
-          >
-            <Lock className="w-3.5 h-3.5 xs:w-4 xs:h-4" />
-            Privacy
-          </button>
-          <button
-            onClick={() => { setActiveTab('disclaimer'); setOpenSection("01"); }}
-            className={`flex items-center gap-1.5 sm:gap-2 px-3 xs:px-4 sm:px-5 py-2 xs:py-2.5 rounded-full text-xs xs:text-sm font-medium transition-all whitespace-nowrap ${
-              activeTab === 'disclaimer' 
-                ? 'bg-white text-black' 
-                : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white'
-            }`}
-          >
-            <ShieldAlert className="w-3.5 h-3.5 xs:w-4 xs:h-4" />
-            Disclaimer
-          </button>
-        </div>
+  if (!mounted) return null;
 
-          {/* Scrollable Content Area */}
-          <div 
-            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden footer-scrollbar px-4 xs:px-5 sm:px-6 md:px-8 py-4 xs:py-5 sm:py-6 space-y-4 xs:space-y-5 sm:space-y-6 text-sm sm:text-base leading-relaxed"
-            style={{ 
-              WebkitOverflowScrolling: 'touch',
-              overscrollBehavior: 'contain',
-              touchAction: 'pan-y'
-            }}
+  const currentSections = getCurrentSections();
+
+  const modalContent = (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.12 }}
+            onClick={handleClose}
+            onTouchEnd={handleBackdropTouch}
+            className="fixed inset-0"
+            style={{ zIndex: 2147483648, background: 'rgba(0,0,0,0.2)' }}
+          />
+
+          <motion.div
+            initial={isDesktop ? { y: '-100%' } : { x: '100%' }}
+            animate={isDesktop ? { y: 0 } : { x: 0 }}
+            exit={isDesktop ? { y: '-100%' } : { x: '100%' }}
+            transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
+            onClick={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
+            className={
+              isDesktop
+                ? 'fixed top-0 left-0 right-0 w-full bg-white border-b border-black/10 flex flex-col safe-area-inset-bottom max-h-[90vh] overflow-hidden'
+                : 'fixed top-0 right-0 bottom-0 w-full max-w-md bg-white border-l border-black/10 flex flex-col safe-area-inset-bottom overflow-hidden'
+            }
+            style={{ zIndex: 2147483649, color: '#1d1d1f' }}
           >
-            {/* Apple-style Critical Notice */}
-            <div 
-              className="relative overflow-hidden rounded-2xl p-4 xs:p-5 sm:p-6"
-              style={{
-                background: 'linear-gradient(to bottom, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
-                border: '1px solid rgba(255, 255, 255, 0.1)'
-              }}
-            >
-              <div className="flex gap-3 xs:gap-4">
-                <div className="shrink-0 w-10 h-10 xs:w-11 xs:h-11 rounded-full bg-white/10 flex items-center justify-center">
-                  <AlertTriangle className="h-5 w-5 xs:h-6 xs:w-6 text-white" />
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 md:p-6 border-b border-black/10">
+              <button
+                onClick={handleClose}
+                className="h-10 w-10 rounded-xl bg-black/5 flex items-center justify-center hover:bg-black/10 active:scale-95 transition-all"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="h-9 w-9 rounded-xl bg-black/5 flex items-center justify-center">
+                  {getTabIcon()}
                 </div>
-                <div className="min-w-0 flex-1">
-                  <h2 className="text-sm xs:text-base sm:text-lg font-semibold text-white tracking-tight mb-1">
-                    {activeTab === 'terms' && 'Binding Legal Agreement'}
-                    {activeTab === 'privacy' && 'Your Privacy Rights'}
-                    {activeTab === 'disclaimer' && 'Critical Risk Warning'}
-                  </h2>
-                  <p className="text-xs xs:text-sm sm:text-[15px] leading-relaxed text-white/60">
-                    {activeTab === 'terms' && 'By using Bullmoney, you agree to these Terms. This affects your legal rights.'}
-                    {activeTab === 'privacy' && 'We collect and process your data as described below. Your privacy is important.'}
-                    {activeTab === 'disclaimer' && 'Trading involves substantial risk of loss. NOT financial advice. You may lose all capital.'}
-                  </p>
+                <div className="leading-tight text-center">
+                  <h2 className="text-lg md:text-xl font-light">{getTabTitle()}</h2>
+                  <p className="text-[10px] font-medium" style={{ color: 'rgba(0,0,0,0.4)' }}>Legal Information</p>
                 </div>
               </div>
+
+              <button
+                onClick={handleClose}
+                className="h-9 w-9 md:h-10 md:w-10 rounded-xl bg-black/5 flex items-center justify-center hover:bg-black/10 active:scale-95 transition-all"
+              >
+                <X className="w-4 h-4 md:w-5 md:h-5" />
+              </button>
             </div>
 
-            <p className="text-white/80 text-sm xs:text-[15px]">
-              By accessing <span className="font-semibold text-white">Bullmoney</span>, you agree to be bound by these {getTabTitle().toLowerCase()} and all applicable laws.
-            </p>
-
-            {/* Apple-style Quick Summary Box */}
-            <div 
-              className="relative overflow-hidden rounded-2xl p-4 xs:p-5 sm:p-6"
-              style={{
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid rgba(255, 255, 255, 0.08)'
-              }}
-            >
-              <h3 className="text-sm xs:text-base font-semibold text-white mb-3 tracking-tight">Quick Summary</h3>
-              <ul className="space-y-2 text-sm xs:text-[15px] text-white/60">
-                {activeTab === 'terms' && (
-                  <>
-                    <li className="flex items-start gap-3"><span className="text-white/40 mt-1.5">•</span> You must be 18+ to use this platform</li>
-                    <li className="flex items-start gap-3"><span className="text-white/40 mt-1.5">•</span> This is educational content ONLY, not financial advice</li>
-                    <li className="flex items-start gap-3"><span className="text-white/40 mt-1.5">•</span> All digital product sales are FINAL - no refunds</li>
-                    <li className="flex items-start gap-3"><span className="text-white/40 mt-1.5">•</span> We may use affiliate links and receive compensation</li>
-                    <li className="flex items-start gap-3"><span className="text-white/40 mt-1.5">•</span> You are solely responsible for your trading decisions</li>
-                  </>
-                )}
-                {activeTab === 'privacy' && (
-                  <>
-                    <li className="flex items-start gap-3"><span className="text-white/40 mt-1.5">•</span> We collect account, trading, and technical data</li>
-                    <li className="flex items-start gap-3"><span className="text-white/40 mt-1.5">•</span> Your data is stored securely with encryption</li>
-                    <li className="flex items-start gap-3"><span className="text-white/40 mt-1.5">•</span> We do NOT sell your personal data to third parties</li>
-                    <li className="flex items-start gap-3"><span className="text-white/40 mt-1.5">•</span> You have rights to access, correct, and delete your data</li>
-                    <li className="flex items-start gap-3"><span className="text-white/40 mt-1.5">•</span> Compliant with GDPR, CCPA, LGPD, and other privacy laws</li>
-                  </>
-                )}
-                {activeTab === 'disclaimer' && (
-                  <>
-                    <li className="flex items-start gap-3"><span className="text-white/70 mt-1.5">⚠</span> <span className="text-white/70">70-90% of retail traders LOSE money</span></li>
-                    <li className="flex items-start gap-3"><span className="text-white/70 mt-1.5">⚠</span> <span className="text-white/70">You could lose ALL your invested capital</span></li>
-                    <li className="flex items-start gap-3"><span className="text-white/40 mt-1.5">•</span> We are NOT licensed financial advisors</li>
-                    <li className="flex items-start gap-3"><span className="text-white/40 mt-1.5">•</span> Past performance does NOT guarantee future results</li>
-                    <li className="flex items-start gap-3"><span className="text-white/40 mt-1.5">•</span> Never trade with money you cannot afford to lose</li>
-                  </>
-                )}
-              </ul>
-            </div>
-
-            <div className="space-y-2 xs:space-y-2.5 sm:space-y-3">
-              {getCurrentSections().map((section) => (
-                <DisclaimerSection
-                  key={section.number}
-                  number={section.number}
-                  title={section.title}
-                  text={section.text}
-                  isOpen={openSection === section.number}
-                  onToggle={(id) => setOpenSection((prev) => (prev === id ? null : id))}
-                />
+            {/* Tab Navigation */}
+            <div className="flex gap-2 px-4 md:px-6 py-3 md:py-4 overflow-x-auto border-b border-black/10 bg-white" style={{ WebkitOverflowScrolling: 'touch' }}>
+              {[
+                { key: 'terms' as const, label: 'Terms', icon: FileText },
+                { key: 'privacy' as const, label: 'Privacy', icon: Lock },
+                { key: 'disclaimer' as const, label: 'Disclaimer', icon: ShieldAlert },
+              ].map(({ key, label, icon: TabIcon }) => (
+                <motion.button
+                  key={key}
+                  onClick={() => {
+                    SoundEffects.click();
+                    setActiveTab(key);
+                    setOpenSection("01");
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`flex items-center gap-1.5 px-3 md:px-4 py-2 md:py-2.5 rounded-lg whitespace-nowrap text-xs md:text-sm font-medium transition-all ${
+                    activeTab === key
+                      ? 'bg-black text-white'
+                      : 'bg-black/5 text-black hover:bg-black/10'
+                  }`}
+                >
+                  <TabIcon className="w-4 h-4" />
+                  {label}
+                </motion.button>
               ))}
             </div>
 
-            {/* Apple-style subtle divider */}
-            <div className="py-2">
-              <div className="h-px w-full bg-white/10" />
-            </div>
-
-            {/* Apple-style International Compliance Notice */}
-            <div 
-              className="relative overflow-hidden rounded-2xl p-4 xs:p-5"
-              style={{
-                background: 'rgba(255, 255, 255, 0.02)',
-                border: '1px solid rgba(255, 255, 255, 0.06)'
-              }}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <Globe className="w-4 h-4 xs:w-5 xs:h-5 text-white/60" />
-                <h3 className="text-sm xs:text-base font-semibold text-white tracking-tight">International Compliance</h3>
+            {/* Body */}
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y p-4 md:p-6" style={{ WebkitOverflowScrolling: 'touch' }}>
+              <div className="space-y-3">
+                {currentSections.map((section) => (
+                  <motion.div
+                    key={section.number}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.05 }}
+                  >
+                    <DisclaimerSection
+                      section={section}
+                      isOpen={openSection === section.number}
+                      onToggle={() => setOpenSection(openSection === section.number ? null : section.number)}
+                      isDark={false}
+                    />
+                  </motion.div>
+                ))}
               </div>
-              <p className="text-xs xs:text-sm text-white/50">
-                Compliant with:
-                <span className="text-white/70"> GDPR</span> (EU),
-                <span className="text-white/70"> CCPA</span> (CA),
-                <span className="text-white/70"> LGPD</span> (BR),
-                <span className="text-white/70"> POPIA</span> (ZA),
-                <span className="text-white/70"> PDPA</span> (SG),
-                <span className="text-white/70"> PIPEDA</span> (CA)
-              </p>
             </div>
 
-            <p className="text-white/40 text-xs xs:text-sm text-center">
-              By clicking &quot;I Agree&quot; you confirm you have read and accept all Terms, Privacy Policy, and Disclaimers.
-            </p>
-
-            {/* Last Updated */}
-            <p className="text-center text-xs text-white/30">
-              Last Updated: January 2026 | v2.0
-            </p>
-          </div>
-
-          {/* Apple-style Footer button */}
-          <div 
-            className="shrink-0 bg-black px-4 xs:px-5 sm:px-6 md:px-8 py-4 xs:py-5 sm:py-6 flex justify-center sm:justify-end border-t border-white/10"
-            style={{
-              paddingBottom: 'max(16px, env(safe-area-inset-bottom, 16px))'
-            }}
-          >
-            <motion.button
-              onClick={onClose}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="flex w-full sm:w-auto items-center justify-center gap-2 px-6 xs:px-8 sm:px-10 py-3 xs:py-3.5 sm:py-4 rounded-full text-sm xs:text-base sm:text-lg font-semibold bg-white text-black transition-all hover:bg-white/90 active:scale-95"
-            >
-              I Agree & Understand
-              <CheckCircle2 className="w-5 h-5 xs:w-5.5 xs:h-5.5 sm:w-6 sm:h-6" />
-            </motion.button>
-          </div>
-        </div>
-      </EnhancedModal>
+            {/* Footer Button */}
+            <div className="shrink-0 bg-white px-4 md:px-6 py-4 md:py-6 border-t border-black/10 flex justify-center sm:justify-end">
+              <motion.button
+                onClick={handleClose}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex w-full sm:w-auto items-center justify-center gap-2 px-6 md:px-8 py-3 md:py-4 rounded-xl text-sm md:text-base font-semibold bg-black text-white hover:bg-black/85 transition-all active:scale-95"
+              >
+                I Agree & Understand
+                <CheckCircle2 className="w-5 h-5" />
+              </motion.button>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default LegalDisclaimerModal;

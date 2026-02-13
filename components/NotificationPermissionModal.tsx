@@ -270,36 +270,36 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
 
   // ── Shared Apple-style content (used by both desktop 3D wrapper and mobile flat) ──
   const popupContent = (
-    <div className="relative px-7 pt-10 pb-8">
+    <div className="relative px-7 pt-10 pb-8 text-black">
       {/* Close button */}
       <button
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleClose(); }}
         className="absolute top-3.5 right-3.5 w-8 h-8 flex items-center justify-center rounded-full
-                   border border-white/10 bg-white/[0.05]
-                   hover:bg-white/10 hover:border-white/20
+                   border border-black/10 bg-black/[0.03]
+                   hover:bg-black/[0.06] hover:border-black/20
                    active:scale-90
                    transition-all duration-200 ease-out z-50 cursor-pointer"
         style={{ WebkitTapHighlightColor: 'transparent' }}
       >
-        <X className="w-3.5 h-3.5 text-white/50" strokeWidth={2.5} />
+        <X className="w-3.5 h-3.5 text-black/60" strokeWidth={2.5} />
       </button>
 
       {step === 'ask' && (
         <>
           {/* Bell icon */}
           <motion.div
-            className="w-14 h-14 mx-auto mb-5 rounded-full border border-white/10 bg-white/[0.04] flex items-center justify-center relative"
+            className="w-14 h-14 mx-auto mb-5 rounded-full border border-black/10 bg-black/[0.03] flex items-center justify-center relative"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.08, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           >
-            <Bell className="w-6 h-6 text-white/80" strokeWidth={1.5} />
+            <Bell className="w-6 h-6 text-black/70" strokeWidth={1.5} />
             <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full" />
           </motion.div>
 
           {/* Title */}
           <motion.h3
-            className="text-[22px] font-semibold text-white text-center tracking-tight leading-tight mb-1.5"
+            className="text-[22px] font-semibold text-black text-center tracking-tight leading-tight mb-1.5"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.12, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
@@ -309,7 +309,7 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
 
           {/* Subtitle */}
           <motion.p
-            className="text-[13px] text-white/40 text-center tracking-wide mb-6 font-normal leading-relaxed"
+            className="text-[13px] text-black/50 text-center tracking-wide mb-6 font-normal leading-relaxed"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.18, duration: 0.35 }}
@@ -332,10 +332,10 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
               <div
                 key={i}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-lg
-                           border border-white/[0.08] bg-white/[0.03]"
+                           border border-black/10 bg-black/[0.03]"
               >
-                <feature.icon className="w-3.5 h-3.5 text-white/50" strokeWidth={2} />
-                <span className="text-[11px] text-white/50 font-medium tracking-wide">{feature.text}</span>
+                <feature.icon className="w-3.5 h-3.5 text-black/60" strokeWidth={2} />
+                <span className="text-[11px] text-black/60 font-medium tracking-wide">{feature.text}</span>
               </div>
             ))}
           </motion.div>
@@ -345,10 +345,10 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleEnable(); }}
             disabled={isLoading}
             className="w-full py-3.5 rounded-xl font-semibold text-[15px] tracking-wide
-                       bg-white text-black
-                       border border-white/20
-                       hover:bg-white/90
-                       active:scale-[0.97] active:bg-white/80
+                       bg-black text-white
+                       border border-black/20
+                       hover:bg-black/90
+                       active:scale-[0.97] active:bg-black/80
                        transition-all duration-200 ease-out
                        cursor-pointer disabled:opacity-50"
             style={{ WebkitTapHighlightColor: 'transparent' }}
@@ -361,7 +361,7 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                  className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full"
+                  className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
                 />
                 Enabling...
               </span>
@@ -377,9 +377,9 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
           <motion.button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDecline(); }}
             className="w-full py-2.5 mt-2.5 rounded-xl font-medium text-[13px] tracking-wide
-                       text-white/35
-                       border border-white/[0.06]
-                       hover:text-white/50 hover:bg-white/[0.04] hover:border-white/[0.12]
+                       text-black/60
+                       border border-black/15
+                       hover:text-black/80 hover:bg-black/[0.04] hover:border-black/25
                        active:scale-[0.97]
                        transition-all duration-200 ease-out
                        cursor-pointer"
@@ -396,30 +396,34 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
       {step === 'success' && (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center pt-2 pb-2">
           <motion.div
-            className="w-14 h-14 mx-auto mb-5 rounded-full border border-white/10 bg-white/[0.04] flex items-center justify-center"
+            className="w-14 h-14 mx-auto mb-5 rounded-full border border-black/10 bg-black/[0.03] flex items-center justify-center"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', damping: 15 }}
           >
-            <Check className="w-6 h-6 text-white/80" strokeWidth={2} />
+            <Check className="w-6 h-6 text-black/70" strokeWidth={2} />
           </motion.div>
-          <h3 className="text-[22px] font-semibold text-white text-center tracking-tight mb-1.5">All Set</h3>
-          <p className="text-[13px] text-white/40 text-center tracking-wide font-normal">You&apos;ll receive instant trade alerts</p>
+          <h3 className="text-[22px] font-semibold text-black text-center tracking-tight mb-1.5">All Set</h3>
+          <p className="text-[13px] text-black/50 text-center tracking-wide font-normal">You&apos;ll receive instant trade alerts</p>
         </motion.div>
       )}
 
       {step === 'declined' && (
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center pt-2 pb-2">
-          <div className="w-14 h-14 mx-auto mb-5 rounded-full border border-white/10 bg-white/[0.04] flex items-center justify-center">
-            <BellOff className="w-6 h-6 text-white/40" strokeWidth={1.5} />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center pt-2 pb-2"
+        >
+          <div className="w-14 h-14 mx-auto mb-5 rounded-full border border-black/10 bg-black/[0.03] flex items-center justify-center">
+            <BellOff className="w-6 h-6 text-black/50" strokeWidth={1.5} />
           </div>
-          <h3 className="text-[22px] font-semibold text-white text-center tracking-tight mb-1.5">Notifications Off</h3>
-          <p className="text-[13px] text-white/40 text-center tracking-wide font-normal mb-5">You can enable them later in settings</p>
+          <h3 className="text-[22px] font-semibold text-black text-center tracking-tight mb-1.5">Notifications Off</h3>
+          <p className="text-[13px] text-black/50 text-center tracking-wide font-normal mb-5">You can enable them later in settings</p>
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleClose(); }}
             className="px-8 py-2.5 rounded-xl font-medium text-[13px] tracking-wide
-                       text-white/50 border border-white/[0.08]
-                       hover:bg-white/[0.04] hover:border-white/[0.14]
+                       text-black/70 border border-black/20
+                       hover:bg-black/[0.04] hover:border-black/30
                        active:scale-[0.97]
                        transition-all duration-200 ease-out cursor-pointer"
           >
@@ -430,23 +434,23 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
 
       {step === 'blocked' && (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center pt-2 pb-2">
-          <div className="w-14 h-14 mx-auto mb-5 rounded-full border border-white/10 bg-white/[0.04] flex items-center justify-center">
-            <BellOff className="w-6 h-6 text-white/40" strokeWidth={1.5} />
+          <div className="w-14 h-14 mx-auto mb-5 rounded-full border border-black/10 bg-black/[0.03] flex items-center justify-center">
+            <BellOff className="w-6 h-6 text-black/50" strokeWidth={1.5} />
           </div>
-          <h3 className="text-[22px] font-semibold text-white text-center tracking-tight mb-1.5">Blocked by Browser</h3>
-          <p className="text-[13px] text-white/40 text-center tracking-wide font-normal mb-5">
+          <h3 className="text-[22px] font-semibold text-black text-center tracking-tight mb-1.5">Blocked by Browser</h3>
+          <p className="text-[13px] text-black/50 text-center tracking-wide font-normal mb-5">
             Notifications were previously blocked
           </p>
           
-          <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 mb-5 text-left space-y-2.5">
+          <div className="rounded-xl border border-black/10 bg-black/[0.03] p-4 mb-5 text-left space-y-2.5">
             {[
               'Tap the lock icon in the address bar',
               'Find "Notifications" and change to "Allow"',
               'Refresh this page',
             ].map((text, i) => (
               <div key={i} className="flex items-start gap-2.5">
-                <span className="text-[11px] text-white/30 font-semibold mt-px">{i + 1}.</span>
-                <span className="text-[12px] text-white/40 font-normal leading-relaxed">{text}</span>
+                <span className="text-[11px] text-black/40 font-semibold mt-px">{i + 1}.</span>
+                <span className="text-[12px] text-black/60 font-normal leading-relaxed">{text}</span>
               </div>
             ))}
           </div>
@@ -455,8 +459,8 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
             <button
               onClick={() => window.location.reload()}
               className="flex-1 py-3 rounded-xl font-semibold text-[14px] tracking-wide
-                         bg-white text-black border border-white/20
-                         hover:bg-white/90 active:scale-[0.97] active:bg-white/80
+                         bg-black text-white border border-black/20
+                         hover:bg-black/90 active:scale-[0.97] active:bg-black/80
                          transition-all duration-200 ease-out cursor-pointer"
             >
               Refresh
@@ -464,8 +468,8 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleClose(); }}
               className="flex-1 py-3 rounded-xl font-medium text-[14px] tracking-wide
-                         text-white/40 border border-white/[0.08]
-                         hover:bg-white/[0.04] hover:border-white/[0.14]
+                         text-black/70 border border-black/20
+                         hover:bg-black/[0.04] hover:border-black/30
                          active:scale-[0.97]
                          transition-all duration-200 ease-out cursor-pointer"
             >
@@ -492,7 +496,7 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
       >
         {/* Desktop: subtle 3D wrapper | Mobile: flat */}
         {!isMobile ? (
-          <CardContainer className="w-full max-w-sm" containerClassName="py-0">
+          <CardContainer className="w-full max-w-sm scale-[0.7] origin-center" containerClassName="py-0">
             <CardBody className="w-full h-auto p-0">
               <CardItem translateZ="40" className="w-full">
                 <HoverBorderGradient
@@ -509,12 +513,12 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
                     onClick={(e) => e.stopPropagation()}
                     onMouseMove={handleMouseMove}
                     onMouseLeave={handleMouseLeave}
-                    className="relative w-full overflow-hidden rounded-2xl bg-black"
+                    className="relative w-full overflow-hidden rounded-2xl bg-white"
                     style={{ transition: 'transform 0.15s ease-out' }}
                   >
-                    <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
-                    <div className="absolute inset-0 border border-white/[0.06] rounded-2xl pointer-events-none z-2" />
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/[0.04] via-transparent to-transparent pointer-events-none rounded-2xl" />
+                    <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-black/20 to-transparent pointer-events-none" />
+                    <div className="absolute inset-0 border border-black/10 rounded-2xl pointer-events-none z-2" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/[0.03] via-transparent to-transparent pointer-events-none rounded-2xl" />
                     {popupContent}
                   </motion.div>
                 </HoverBorderGradient>
@@ -529,9 +533,9 @@ export function NotificationPermissionModal({ onClose, forceShow = false }: Noti
             exit={{ opacity: 0, scale: 0.96, y: 24 }}
             transition={{ type: 'spring', damping: 30, stiffness: 320, mass: 0.7 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-sm overflow-hidden rounded-2xl bg-black border border-white/[0.08] shadow-2xl"
+            className="relative w-full max-w-sm scale-[0.7] origin-center overflow-hidden rounded-2xl bg-white border border-black/10 shadow-2xl"
           >
-            <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
+            <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-black/20 to-transparent pointer-events-none" />
             {popupContent}
           </motion.div>
         )}

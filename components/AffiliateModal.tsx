@@ -670,6 +670,8 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
 
 // Affiliate Modal Content Component
 function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
+  const DEV_AUTH_BYPASS_KEY = 'bullmoney_affiliate_dev_skip_auth';
+  const isDevMode = process.env.NODE_ENV !== 'production';
   const router = useRouter();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { isMobile } = useMobilePerformance();
@@ -698,6 +700,7 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
   const [isReturningUser, setIsReturningUser] = useState(false);
   const [isVerifyingMT5, setIsVerifyingMT5] = useState(false);
   const [dashboardTab, setDashboardTab] = useState<'dashboard' | 'admin'>('dashboard');
+  const [devSkipAuthEnabled, setDevSkipAuthEnabled] = useState(false);
   
   // Detect mobile/desktop for layout switching
   const [isMobileView, setIsMobileView] = useState(false);
@@ -739,6 +742,52 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
   }, [onClose]);
+
+  useEffect(() => {
+    if (!isOpen || !isDevMode) return;
+    try {
+      setDevSkipAuthEnabled(localStorage.getItem(DEV_AUTH_BYPASS_KEY) === '1');
+    } catch {
+      setDevSkipAuthEnabled(false);
+    }
+  }, [isOpen, isDevMode]);
+
+  useEffect(() => {
+    if (!isOpen || !isDevMode) return;
+
+    const handleDevShortcut = (event: KeyboardEvent) => {
+      const isToggleShortcut =
+        (event.metaKey || event.ctrlKey) &&
+        event.shiftKey &&
+        event.key.toLowerCase() === 'd';
+
+      if (!isToggleShortcut) return;
+
+      event.preventDefault();
+      setDevSkipAuthEnabled((previous) => {
+        const next = !previous;
+        try {
+          if (next) {
+            localStorage.setItem(DEV_AUTH_BYPASS_KEY, '1');
+            setSubmitError('Dev bypass ON (Cmd/Ctrl+Shift+D).');
+            setStep('dashboard');
+            setDashboardTab('dashboard');
+          } else {
+            localStorage.removeItem(DEV_AUTH_BYPASS_KEY);
+            setSubmitError('Dev bypass OFF (Cmd/Ctrl+Shift+D).');
+          }
+          setTimeout(() => setSubmitError(null), 1800);
+        } catch {
+          setSubmitError('Could not toggle dev bypass.');
+          setTimeout(() => setSubmitError(null), 1800);
+        }
+        return next;
+      });
+    };
+
+    window.addEventListener('keydown', handleDevShortcut);
+    return () => window.removeEventListener('keydown', handleDevShortcut);
+  }, [isOpen, isDevMode]);
 
   // Initialize and check for saved session
   useEffect(() => {
@@ -1153,7 +1202,6 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
           title="How You Earn Money"
           subtitle="The 3-step process"
           icon={Info}
-          defaultOpen
         >
           <div className="space-y-3">
             <div className="flex gap-3 p-4 rounded-xl" style={{ background: 'rgba(0, 0, 0, 0.03)' }}>
@@ -1369,60 +1417,66 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
         </p>
         
         {/* Important Notice - Apple Alert Style */}
-        <div 
-          className="mb-6 p-4 rounded-2xl border"
-          style={{ background: 'rgba(0, 0, 0, 0.03)', borderColor: 'rgba(0, 0, 0, 0.08)' }}
+        <CollapsibleSection
+          title="Important Notice"
+          subtitle="Broker codes are #1 priority"
+          icon={AlertCircle}
+          defaultOpen={true}
         >
-          <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: '#000000' }} />
-            <div>
-              <p className="text-sm font-medium mb-1" style={{ color: '#000000' }}>
-                Broker codes are #1 priority
-              </p>
-              <p className="text-xs" style={{ color: 'rgba(0, 0, 0, 0.50)' }}>
-                Without clients using your broker code, you cannot earn commissions. Make sure every client signs up with your code.
-              </p>
+          <div 
+            className="p-4 rounded-xl"
+            style={{ background: 'rgba(0, 0, 0, 0.03)' }}
+          >
+            <p className="text-sm" style={{ color: 'rgba(0, 0, 0, 0.60)' }}>
+              Without clients using your broker code, you cannot earn commissions. Make sure every client signs up with your code.
+            </p>
+          </div>
+        </CollapsibleSection>
+        
+        <CollapsibleSection
+          title="Setup Instructions"
+          subtitle="Complete these 3 steps"
+          icon={Target}
+          defaultOpen={true}
+        >
+          {/* Broker Toggle - Apple Segmented Control */}
+          <div className="flex justify-center gap-2 mb-6 p-1 rounded-xl" style={{ background: 'rgba(0, 0, 0, 0.04)' }}>
+            {(['Vantage', 'XM'] as const).map((broker) => (
+              <button
+                key={broker}
+                onClick={() => setActiveBroker(broker)}
+                className="flex-1 px-6 py-3 rounded-lg text-[15px] font-medium transition-all"
+                style={{
+                  background: activeBroker === broker ? 'rgba(0, 0, 0, 0.08)' : 'transparent',
+                  color: activeBroker === broker ? '#ffffff' : 'rgba(0, 0, 0, 0.50)',
+                }}
+              >
+                {broker}
+              </button>
+            ))}
+          </div>
+          
+          {/* Referral Code - Clean Apple style */}
+          <div className="mb-6">
+            <CodeVaultCard label="Your Affiliate Code" code={brokerCode} onCopy={() => copyCode(brokerCode)} copied={copied} />
+          </div>
+
+          {/* Steps - Apple minimalist */}
+          <div className="grid grid-cols-3 gap-2 mb-0">
+            <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(0, 0, 0, 0.03)' }}>
+              <p className="text-[10px] mb-1" style={{ color: 'rgba(0, 0, 0, 0.35)' }}>Step A</p>
+              <p className="text-xs font-medium" style={{ color: '#000000' }}>Open account</p>
+            </div>
+            <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(0, 0, 0, 0.03)' }}>
+              <p className="text-[10px] mb-1" style={{ color: 'rgba(0, 0, 0, 0.35)' }}>Step B</p>
+              <p className="text-xs font-medium" style={{ color: '#000000' }}>Paste code</p>
+            </div>
+            <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(0, 0, 0, 0.03)' }}>
+              <p className="text-[10px] mb-1" style={{ color: 'rgba(0, 0, 0, 0.35)' }}>Step C</p>
+              <p className="text-xs font-medium" style={{ color: '#000000' }}>Get MT5 ID</p>
             </div>
           </div>
-        </div>
-        
-        {/* Broker Toggle - Apple Segmented Control */}
-        <div className="flex justify-center gap-2 mb-6 p-1 rounded-xl" style={{ background: 'rgba(0, 0, 0, 0.04)' }}>
-          {(['Vantage', 'XM'] as const).map((broker) => (
-            <button
-              key={broker}
-              onClick={() => setActiveBroker(broker)}
-              className="flex-1 px-6 py-3 rounded-lg text-[15px] font-medium transition-all"
-              style={{
-                background: activeBroker === broker ? 'rgba(0, 0, 0, 0.08)' : 'transparent',
-                color: activeBroker === broker ? '#ffffff' : 'rgba(0, 0, 0, 0.50)',
-              }}
-            >
-              {broker}
-            </button>
-          ))}
-        </div>
-        
-        {/* Referral Code - Clean Apple style */}
-        <div className="mb-6">
-          <CodeVaultCard label="Your Affiliate Code" code={brokerCode} onCopy={() => copyCode(brokerCode)} copied={copied} />
-        </div>
-
-        {/* Steps - Apple minimalist */}
-        <div className="grid grid-cols-3 gap-2 mb-6">
-          <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(0, 0, 0, 0.03)' }}>
-            <p className="text-[10px] mb-1" style={{ color: 'rgba(0, 0, 0, 0.35)' }}>Step A</p>
-            <p className="text-xs font-medium" style={{ color: '#000000' }}>Open account</p>
-          </div>
-          <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(0, 0, 0, 0.03)' }}>
-            <p className="text-[10px] mb-1" style={{ color: 'rgba(0, 0, 0, 0.35)' }}>Step B</p>
-            <p className="text-xs font-medium" style={{ color: '#000000' }}>Paste code</p>
-          </div>
-          <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(0, 0, 0, 0.03)' }}>
-            <p className="text-[10px] mb-1" style={{ color: 'rgba(0, 0, 0, 0.35)' }}>Step C</p>
-            <p className="text-xs font-medium" style={{ color: '#000000' }}>Get MT5 ID</p>
-          </div>
-        </div>
+        </CollapsibleSection>
         
         {/* Open Account Button */}
         <NeonButton onClick={handleBrokerClick} variant="primary" size="large" className="w-full mb-3">
@@ -1483,24 +1537,12 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
         </p>
         
         {/* Critical Reminder */}
-        <div 
-          className="mb-6 p-5 rounded-2xl"
-          style={{ background: 'rgba(0, 0, 0, 0.03)' }}
+        <CollapsibleSection
+          title="Important Checklist"
+          subtitle="Your earnings depend on this"
+          icon={Check}
+          defaultOpen={true}
         >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(0, 0, 0, 0.05)' }}>
-              <AlertCircle className="w-5 h-5" style={{ color: '#000000' }} />
-            </div>
-            <div>
-              <p className="text-sm font-semibold" style={{ color: '#000000' }}>
-                Important Checklist
-              </p>
-              <p className="text-xs" style={{ color: 'rgba(0, 0, 0, 0.50)' }}>
-                Your earnings depend on this
-              </p>
-            </div>
-          </div>
-          
           <div className="space-y-3">
             <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(0, 0, 0, 0.03)' }}>
               <Check className="w-5 h-5" style={{ color: 'rgba(0, 0, 0, 0.60)' }} />
@@ -1521,20 +1563,24 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
               </p>
             </div>
           </div>
-        </div>
+        </CollapsibleSection>
         
         {/* Warning Box */}
-        <div 
-          className="mb-6 p-4 rounded-xl border"
-          style={{ background: 'rgba(180, 120, 0, 0.08)', borderColor: 'rgba(180, 120, 0, 0.25)' }}
+        <CollapsibleSection
+          title="⚠️ No code = No earnings"
+          subtitle="Critical reminder"
+          icon={Shield}
+          defaultOpen={false}
         >
-          <p className="text-sm font-medium mb-1" style={{ color: '#92600a' }}>
-            ⚠️ No code = No earnings
-          </p>
-          <p className="text-xs" style={{ color: 'rgba(120, 80, 0, 0.8)' }}>
-            If your clients don&apos;t use your broker code when signing up, you will not receive any commission from their trades.
-          </p>
-        </div>
+          <div 
+            className="p-4 rounded-xl"
+            style={{ background: 'rgba(180, 120, 0, 0.08)' }}
+          >
+            <p className="text-sm" style={{ color: 'rgba(120, 80, 0, 0.8)' }}>
+              If your clients don&apos;t use your broker code when signing up, you will not receive any commission from their trades.
+            </p>
+          </div>
+        </CollapsibleSection>
         
         {/* Confirm Button */}
         <NeonButton onClick={handleNext} variant="primary" size="large" className="w-full">
@@ -1583,17 +1629,13 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
         </p>
         
         {/* Skrill Info Card */}
-        <div 
-          className="mb-6 p-5 rounded-2xl text-center"
-          style={{ background: 'rgba(0, 0, 0, 0.03)' }}
+        <CollapsibleSection
+          title="Why Skrill?"
+          subtitle="Fast, secure, and low fees"
+          icon={Coins}
+          defaultOpen={true}
         >
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(0, 0, 0, 0.05)' }}>
-            <Coins className="w-8 h-8" style={{ color: '#000000' }} />
-          </div>
-          <h3 className="text-lg font-semibold mb-2" style={{ color: '#000000' }}>
-            Why Skrill?
-          </h3>
-          <div className="space-y-2 text-left max-w-xs mx-auto">
+          <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Check className="w-4 h-4" style={{ color: 'rgba(0, 0, 0, 0.50)' }} />
               <p className="text-sm" style={{ color: 'rgba(0, 0, 0, 0.70)' }}>Fast international transfers</p>
@@ -1611,23 +1653,24 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
               <p className="text-sm" style={{ color: 'rgba(0, 0, 0, 0.70)' }}>Most payments arrive in minutes</p>
             </div>
           </div>
-        </div>
+        </CollapsibleSection>
         
         {/* Payment Schedule */}
-        <div 
-          className="mb-6 p-4 rounded-xl"
-          style={{ background: 'rgba(0, 0, 0, 0.03)' }}
+        <CollapsibleSection
+          title="Payment Schedule"
+          subtitle="When you get paid"
+          icon={Calendar}
+          defaultOpen={false}
         >
-          <div className="flex items-center gap-3">
-            <Calendar className="w-5 h-5" style={{ color: 'rgba(0, 0, 0, 0.50)' }} />
-            <div>
-              <p className="text-sm font-medium" style={{ color: '#000000' }}>Paid Monthly</p>
-              <p className="text-xs" style={{ color: 'rgba(0, 0, 0, 0.50)' }}>
-                First week of each month (latest Friday)
-              </p>
-            </div>
+          <div 
+            className="p-3 rounded-xl"
+            style={{ background: 'rgba(0, 0, 0, 0.03)' }}
+          >
+            <p className="text-sm" style={{ color: 'rgba(0, 0, 0, 0.60)' }}>
+              Paid monthly in the first week of each month (latest Friday)
+            </p>
           </div>
-        </div>
+        </CollapsibleSection>
         
         {/* Create Skrill Button */}
         <NeonButton 
@@ -1705,6 +1748,29 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
             </p>
           </div>
         )}
+        
+        {/* What is MT5 Info */}
+        <CollapsibleSection
+          title="What is MT5?"
+          subtitle="About your trading ID"
+          icon={Info}
+          defaultOpen={false}
+        >
+          <div className="space-y-3">
+            <p className="text-sm" style={{ color: 'rgba(0, 0, 0, 0.60)' }}>
+              MetaTrader 5 (MT5) is a trading platform. Your MT5 ID is a unique number that identifies your trading account.
+            </p>
+            <div 
+              className="p-3 rounded-xl"
+              style={{ background: 'rgba(0, 0, 0, 0.03)' }}
+            >
+              <p className="text-xs font-medium mb-1" style={{ color: '#000000' }}>Where to find it:</p>
+              <p className="text-xs" style={{ color: 'rgba(0, 0, 0, 0.50)' }}>
+                Check your email from {activeBroker}. It's usually sent immediately after account creation.
+              </p>
+            </div>
+          </div>
+        </CollapsibleSection>
         
         {/* MT5 Input */}
         <div className="space-y-4">
@@ -1856,6 +1922,33 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
               </p>
             </div>
           )}
+        </div>
+        
+        {/* Account Security Info */}
+        <CollapsibleSection
+          title="Account Security"
+          subtitle="How we protect your data"
+          icon={Shield}
+          defaultOpen={false}
+        >
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Lock className="w-4 h-4" style={{ color: 'rgba(0, 0, 0, 0.50)' }} />
+              <p className="text-sm" style={{ color: 'rgba(0, 0, 0, 0.70)' }}>Password encryption</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4" style={{ color: 'rgba(0, 0, 0, 0.50)' }} />
+              <p className="text-sm" style={{ color: 'rgba(0, 0, 0, 0.70)' }}>Secure database storage</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4" style={{ color: 'rgba(0, 0, 0, 0.50)' }} />
+              <p className="text-sm" style={{ color: 'rgba(0, 0, 0, 0.70)' }}>No sharing with third parties</p>
+            </div>
+          </div>
+        </CollapsibleSection>
+        
+        {/* Form submission section */}
+        <div className="space-y-4 mt-6">
           
           {/* Terms Checkbox - Apple Toggle Style */}
           <div 
@@ -1992,6 +2085,11 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
         <div className="flex items-center justify-between p-2 md:p-4 border-b border-black/10">
           <div className="flex items-center gap-3">
             <h1 className="text-lg font-semibold">Affiliate Dashboard</h1>
+            {isDevMode && devSkipAuthEnabled && (
+              <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold border border-black/20 bg-black/5 text-black/70">
+                DEV BYPASS
+              </span>
+            )}
             <div className="hidden md:flex items-center gap-2">
               <button
                 onClick={() => setDashboardTab('dashboard')}
@@ -2037,7 +2135,7 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
         {/* Content area (dashboard/admin panels) */}
         <div className="flex-1 min-h-0 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
           {dashboardTab === 'dashboard' && (
-            <AffiliateRecruitsDashboard onBack={() => setStep('success')} />
+            <AffiliateRecruitsDashboard onBack={() => setStep('success')} skipAuthInDev={devSkipAuthEnabled} />
           )}
           {dashboardTab === 'admin' && isAffiliateAdmin && (
             <AffiliateAdminPanel />

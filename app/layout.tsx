@@ -10,7 +10,7 @@ import { APP_VERSION, PRESERVED_KEYS } from "@/lib/appVersion";
 // ✅ CUSTOM EVENT TRACKING - Removed from layout (static import pulled analytics into every page)
 // Import trackEvent in individual client components that need it instead.
 
-// ✅ PROVIDERS — single consolidated wrapper (reduces Turbopack module graph)
+// ✅ PROVIDERS  single consolidated wrapper (reduces Turbopack module graph)
 import { AppProviders } from "@/components/AppProviders";
 
 // ✅ LAYOUT PROVIDERS - Client component wrapper for dynamic imports
@@ -248,9 +248,16 @@ export default function RootLayout({
         {/* INSTANT SPLASH: Prevents white/black flash before React hydrates */}
         <style dangerouslySetInnerHTML={{ __html: `
       :root{--app-vh:1vh;}
-      html,body{background:#ffffff!important;}
+      html,body{background:#000000!important;}
       #bm-splash{position:fixed;top:0;right:0;bottom:0;left:0;width:100vw;height:calc(var(--app-vh,1vh)*100);min-height:100vh;min-height:100dvh;min-height:100svh;z-index:99999;background:#ffffff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;opacity:1;transition:opacity .5s cubic-bezier(.4,0,.2,1),visibility .5s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.4,0,.2,1);overflow:hidden;will-change:opacity,transform;}
       #bm-splash.hide{opacity:0;visibility:hidden;pointer-events:none;transform:scale(1.02);}
+
+      /* Safari/iOS fallback: reduce compositor stress + stabilize viewport sizing */
+      html.is-safari #bm-splash,html.is-ios-safari #bm-splash{left:0;right:0;width:100%;height:100%;height:calc(var(--app-vh,1vh)*100);min-height:100vh;min-height:-webkit-fill-available;transform:translateZ(0);-webkit-transform:translateZ(0);backface-visibility:hidden;-webkit-backface-visibility:hidden;}
+      html.is-safari #bm-splash::before,html.is-safari #bm-splash::after,html.is-ios-safari #bm-splash::before,html.is-ios-safari #bm-splash::after{animation:none!important;filter:none!important;}
+      html.is-safari #bm-splash .bm-orb,html.is-ios-safari #bm-splash .bm-orb{display:none;}
+      html.is-safari #bm-splash .bm-status,html.is-ios-safari #bm-splash .bm-status{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
+      html.is-safari #bm-splash .bm-logo-wrap,html.is-safari #bm-splash .bm-progress-wrap,html.is-ios-safari #bm-splash .bm-logo-wrap,html.is-ios-safari #bm-splash .bm-progress-wrap{animation:none!important;}
 
       /* Subtle radial gradient overlay */
       #bm-splash::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at center,rgba(0,0,0,0.02) 0%,rgba(255,255,255,0) 70%);z-index:0;animation:bm-breathe 5.5s ease-in-out infinite;will-change:transform,opacity;}
@@ -311,7 +318,7 @@ export default function RootLayout({
       @media(prefers-reduced-motion:reduce){#bm-splash::before,#bm-splash::after,#bm-splash .bm-orb,#bm-splash .bm-logo-wrap,#bm-splash .bm-title,#bm-splash .bm-subtitle,#bm-splash .bm-progress-wrap,#bm-splash .bm-dot-ping,#bm-splash .bm-bar-outer::after,#bm-splash .bm-bar-inner{animation:none!important;}#bm-splash,#bm-splash .bm-step{transition:none!important;}}
       @media(min-width:768px){#bm-splash .bm-logo-wrap{width:160px;height:160px;}#bm-splash .bm-title{font-size:64px;}#bm-splash .bm-percent{font-size:72px;}}
         ` }} />
-        {/* CRITICAL: Blocking init — served as static file (no Turbopack compilation cost) */}
+        {/* CRITICAL: Blocking init  served as static file (no Turbopack compilation cost) */}
         <script src="/scripts/splash-init.js" />
         {/* Cache validation (deferred to avoid blocking first paint) */}
         <Script
@@ -472,7 +479,7 @@ export default function RootLayout({
           via the Cache API system, which already handles caching efficiently.
         */}
         
-        {/* Spline preloading deferred to lazyOnload — static file avoids Turbopack compile cost */}
+        {/* Spline preloading deferred to lazyOnload  static file avoids Turbopack compile cost */}
         <Script id="spline-preload" src="/scripts/spline-preload.js" strategy="lazyOnload" />
 
         {/* PWA Manifest */}
@@ -496,7 +503,7 @@ export default function RootLayout({
         {/* 
           HREFLANG: Handled by Next.js Metadata API `alternates` in each layout.
           Each layout (root, store, about, products, etc.) exports its own alternates 
-          via makeAlternatesMetadata() — Next.js renders these as <link rel="alternate"> 
+          via makeAlternatesMetadata()  Next.js renders these as <link rel="alternate"> 
           tags server-side. No need for a separate ServerHreflangMeta component.
         */}
 
@@ -504,16 +511,16 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="180x180" href="/icon-180x180.png" />
 
         {/* Splash Screens for iOS - top 3 most common sizes only */}
-        <link rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash-screens/iPhone_15_Pro_Max__iPhone_15_Plus__iPhone_14_Pro_Max_portrait.png" />
-        <link rel="apple-touch-startup-image" media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash-screens/iPhone_15_Pro__iPhone_15__iPhone_14_Pro_portrait.png" />
-        <link rel="apple-touch-startup-image" media="screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash-screens/iPhone_14__iPhone_13_Pro__iPhone_13__iPhone_12_Pro__iPhone_12_portrait.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/icon-512x512.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/icon-512x512.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/icon-512x512.png" />
 
         {/* Favicon for various platforms */}
         <link rel="icon" type="image/svg+xml" href="/ONcc2l601.svg" />
         <link rel="shortcut icon" href="/ONcc2l601.svg" />
         <link rel="apple-touch-icon" href="/ONcc2l601.svg" />
 
-        {/* Service Worker & Touch — tiny inline shim sets globals, bulk logic in static file */}
+        {/* Service Worker & Touch  tiny inline shim sets globals, bulk logic in static file */}
         <Script
           id="sw-init"
           strategy="afterInteractive"

@@ -18,8 +18,10 @@ export async function GET(request: NextRequest) {
       100
     );
 
+    const chatId = request.nextUrl.searchParams.get('chatId') || undefined;
+
     // Fetch messages from Telegram
-    const messages = await fetchTelegramMessages(limit);
+    const messages = await fetchTelegramMessages(limit, chatId);
 
     // Cache response for 5 minutes
     const cacheControl = 'public, s-maxage=300, stale-while-revalidate=600';

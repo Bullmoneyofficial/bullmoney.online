@@ -169,12 +169,15 @@ export function applySafariCSSFixes(): void {
        SAFARI-SPECIFIC CSS FIXES
        ================================================================ */
     
-    /* NO BLUR - removed for performance */
-    html.is-safari .backdrop-blur-2xl,
+    /* Keep blur parity with other browsers on modern Safari */
+    html.is-safari .backdrop-blur-2xl {
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+    }
+
     html.is-safari .backdrop-blur-xl {
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
-      background-color: rgba(0, 0, 0, 0.85);
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
     }
     
     /* Safari needs explicit -webkit prefixes for some animations */
@@ -183,10 +186,11 @@ export function applySafariCSSFixes(): void {
       animation: unified-spin 14s linear infinite;
     }
     
-    /* Fix Safari transform compositing */
-    html.is-safari [class*="translate"],
-    html.is-safari [class*="rotate"],
-    html.is-safari [class*="scale"] {
+    /* Limit compositing fixes to animated elements only */
+    html.is-safari .animate-pulse,
+    html.is-safari .animate-spin,
+    html.is-safari .animate-bounce,
+    html.is-safari .animate-ping {
       -webkit-transform: translateZ(0);
       transform: translateZ(0);
       -webkit-backface-visibility: hidden;
@@ -200,7 +204,6 @@ export function applySafariCSSFixes(): void {
     
     html.is-mobile-safari main {
       -webkit-overflow-scrolling: touch;
-      overflow-y: auto;
     }
     
     /* Safari position: fixed issues in iOS */
@@ -215,13 +218,13 @@ export function applySafariCSSFixes(): void {
       transform: translateZ(0);
     }
     
-    /* Safari legacy fixes (< 15) - NO BLUR */
+    /* Safari legacy fixes (< 15): softened blur fallback */
     html.safari-legacy .backdrop-blur-2xl,
     html.safari-legacy .backdrop-blur-xl,
     html.safari-legacy .backdrop-blur-lg {
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
-      background-color: rgba(0, 0, 0, 0.9);
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+      background-color: rgba(0, 0, 0, 0.85);
     }
     
     /* Fix Safari CSS contain support */
@@ -273,10 +276,9 @@ export function applySafariCSSFixes(): void {
       min-height: -webkit-fill-available;
     }
     
-    /* Prevent Safari from breaking layouts with empty space at bottom */
+    /* Keep viewport stable without forcing extra layout padding */
     html.is-ios-safari main {
-      min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-      padding-bottom: env(safe-area-inset-bottom);
+      min-height: 100dvh;
     }
   `;
   

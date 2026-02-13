@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
 import {
   Activity,
   ArrowDown,
@@ -159,8 +160,18 @@ type GamesPageClientProps = {
 };
 
 export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
+  const router = useRouter();
   const [heroBgIndex, setHeroBgIndex] = useState(0);
   const [activeGameCategory, setActiveGameCategory] = useState('all');
+
+  const navigateWithFallback = (href: string) => {
+    router.push(href);
+    window.setTimeout(() => {
+      if (window.location.pathname !== href) {
+        window.location.assign(href);
+      }
+    }, 500);
+  };
 
   useEffect(() => {
     if (embedMode) return;
@@ -436,8 +447,8 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
       <main
         className="w-full bg-black text-white pb-0"
         style={{
-          overflow: embedMode ? 'visible' : 'hidden',
-          overflowX: embedMode ? 'visible' : 'hidden',
+          overflow: 'visible',
+          overflowX: 'hidden',
           overflowY: embedMode ? 'visible' : undefined,
           position: 'relative',
           zIndex: 1,
@@ -452,7 +463,7 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
           <section
         className={`relative w-full bg-black text-white ${embedMode ? '' : 'overflow-x-hidden'}`}
         style={{
-          minHeight: embedMode ? 'auto' : 'min(80vh, 700px)',
+            minHeight: embedMode ? 'auto' : 'min(80svh, 700px)',
           borderBottom: '1px solid rgba(255,255,255,0.06)',
         }}
         >
@@ -496,7 +507,7 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
 
         <div
           className={`games-hero-content relative z-10 mx-auto flex w-full flex-col justify-center px-4 sm:px-6 ${embedMode ? 'pt-6 pb-6' : 'max-w-6xl lg:px-10 pt-10 pb-10 lg:pt-20'}`}
-          style={{ minHeight: embedMode ? 'auto' : 'min(80vh, 700px)' }}
+          style={{ minHeight: embedMode ? 'auto' : 'min(80svh, 700px)' }}
         >
           <div className="flex items-center gap-3 mb-6">
             <img
@@ -625,7 +636,7 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
                 <button
                   key={game.name}
                   onClick={() => {
-                    window.location.href = `/games/${game.slug}`;
+                    navigateWithFallback(`/games/${game.slug}`);
                   }}
                   className="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 hover:border-white/30 active:border-white/40 transition-all duration-200 text-left w-full active:scale-[0.97] cursor-pointer select-none"
                   style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
@@ -659,7 +670,7 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
             <button
               type="button"
               onClick={() => {
-                window.location.href = '/games';
+                navigateWithFallback('/games');
               }}
               className="inline-flex items-center gap-2 rounded-full bg-white text-black px-6 py-3 text-sm font-bold uppercase tracking-[0.06em] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(255,255,255,0.15)]"
             >

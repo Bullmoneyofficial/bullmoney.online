@@ -1011,7 +1011,7 @@ function HomeContent() {
               </div>
 
               {/* Market Quotes section within hero */}
-              <div className={isMobile ? "flex-shrink-0 mt-6" : "flex-shrink-0 mt-12"}>
+              <div data-apple-section-wrapper className={isMobile ? "flex-shrink-0 mt-6" : "flex-shrink-0 mt-12"}>
                 {hasMounted && showStage2 && (
                   <div style={deferredSectionStyle}>
                     <div
@@ -1046,7 +1046,6 @@ function HomeContent() {
                       >
                         <div
                           className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain"
-                          style={{ filter: 'invert(1) hue-rotate(180deg)' }}
                         >
                           <MetaTraderQuotes embedded />
                         </div>
@@ -1057,7 +1056,7 @@ function HomeContent() {
               </div>
 
               {/* Breaking News section within hero */}
-              <div className={isMobile ? "flex-shrink-0 mt-6" : "flex-shrink-0 mt-12"}>
+              <div data-apple-section-wrapper className={isMobile ? "flex-shrink-0 mt-6" : "flex-shrink-0 mt-12"}>
                 {hasMounted && showStage2 && (
                   <div style={deferredSectionStyle}>
                     <div
@@ -1092,7 +1091,6 @@ function HomeContent() {
                       >
                         <div
                           className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain"
-                          style={{ filter: 'invert(1) hue-rotate(180deg)' }}
                         >
                           <BreakingNewsTicker />
                         </div>
@@ -1103,7 +1101,7 @@ function HomeContent() {
               </div>
 
               {/* Community Signals section within hero */}
-              <div className={isMobile ? "flex-shrink-0 mt-6" : "flex-shrink-0 mt-12"}>
+              <div data-apple-section-wrapper className={isMobile ? "flex-shrink-0 mt-6" : "flex-shrink-0 mt-12"}>
                 {hasMounted && showStage2 && (
                   <div style={deferredSectionStyle}>
                     <div
@@ -1138,7 +1136,6 @@ function HomeContent() {
                       >
                         <div
                           className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain"
-                          style={{ filter: 'invert(1) hue-rotate(180deg)' }}
                         >
                           <BullMoneyCommunity />
                         </div>
@@ -1149,7 +1146,7 @@ function HomeContent() {
               </div>
 
               {/* Features section within hero */}
-              <div className={isMobile ? "flex-shrink-0 mt-6" : "flex-shrink-0 mt-12"}>
+              <div data-apple-section-wrapper className={isMobile ? "flex-shrink-0 mt-6" : "flex-shrink-0 mt-12"}>
                 {hasMounted && showStage2 && (
                   <div style={deferredSectionStyle}>
                     <FeaturesComponent />

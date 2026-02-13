@@ -55,7 +55,7 @@ const STORE_NAV_ITEMS = [
   { href: '/', label: 'Home', category: '' },
   { href: '/design', label: 'Design', category: '' },
   { href: '#action:games', label: 'Games', category: '' },
-  { href: '#action:products', label: 'Products', category: '' },
+  { href: '#action:products', label: 'BULLMONEY VIP+', category: '' },
   { href: '#action:faq', label: 'FAQ', category: '' },
   { href: '#action:themes', label: 'Themes', category: '' },
   { href: '#action:hub', label: 'Hub', category: '' },
@@ -142,6 +142,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   const isDev = process.env.NODE_ENV === 'development';
   const [devAdminEnabled, setDevAdminEnabled] = useState(true);
   const effectiveAdmin = isDev && isAdmin && devAdminEnabled;
+  const canUseDevAdminShortcut = isDev;
   const { open: openProductsModal, isOpen: isProductsModalOpen } = useProductsModalUI();
   const { setIsOpen: setThemePickerModalOpen } = useThemeSelectorModalUI();
   const { setAudioWidgetOpen } = useAudioWidgetUI();
@@ -259,11 +260,13 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('store_show_audio_widget');
+      const shouldShow = stored !== 'false';
       // Default to true (visible) unless explicitly disabled
-      setShowAudioWidget(stored !== 'false');
+      setShowAudioWidget(shouldShow);
+      setAudioWidgetOpen(shouldShow);
       setAudioWidgetPrefLoaded(true);
     }
-  }, []);
+  }, [setAudioWidgetOpen]);
 
   // Persist and broadcast Audio Widget changes after render
   useEffect(() => {
@@ -469,16 +472,19 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     setDesktopMenuOpen(false);
     setManualDropdownOpen(false);
     setSiteSearchOpen(false);
-    requestAnimationFrame(() => {
-      window.location.assign('/games');
-    });
-  }, [pathname, setDesktopMenuOpen, setManualDropdownOpen, setMobileMenuOpen]);
+    router.push('/games');
+    window.setTimeout(() => {
+      if (!window.location.pathname.startsWith('/games')) {
+        window.location.assign('/games');
+      }
+    }, 500);
+  }, [pathname, router, setDesktopMenuOpen, setManualDropdownOpen, setMobileMenuOpen]);
 
   const desktopLinks = useMemo(() => {
     const links = [
       { label: 'Games', onClick: navigateToGames, variant: 'link' as const },
       { label: 'Affiliates', onClick: () => setAffiliateModalOpen(true), variant: 'link' as const },
-      { label: 'Products', onClick: () => openProductsModal(), variant: 'link' as const },
+      { label: 'BULLMONEY VIP+', onClick: () => openProductsModal(), variant: 'link' as const },
       { label: 'FAQ', onClick: () => setFaqModalOpen(true), variant: 'link' as const },
       { label: 'Themes', onClick: toggleThemePicker, isActive: showThemePicker, variant: 'toggle' as const },
       { label: 'Hub', onClick: toggleUltimateHub, isActive: showUltimateHub, variant: 'toggle' as const },
@@ -579,6 +585,20 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     window.addEventListener('keydown', handleCmdK);
     return () => window.removeEventListener('keydown', handleCmdK);
   }, []);
+
+  useEffect(() => {
+    if (!canUseDevAdminShortcut || isCasinoPage) return;
+
+    const handleAdminHubShortcut = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        setAdminModalOpen(prev => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleAdminHubShortcut);
+    return () => window.removeEventListener('keydown', handleAdminHubShortcut);
+  }, [canUseDevAdminShortcut, isCasinoPage]);
 
   const handleRewardsClick = useCallback(() => {
     if (isAuthenticated && recruit) {
@@ -816,7 +836,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                   className="block text-left text-2xl font-medium tracking-tight transition-colors hover:bg-neutral-100 px-2 py-1 rounded w-full"
                   style={{ color: '#000000' }}
                 >
-                  Products
+                  BULLMONEY VIP+
                 </button>
                 <button
                   onClick={() => {
@@ -1208,21 +1228,21 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                 </div>
               </div>
 
-              {/* Store Button - Mobile (first) */}
+              {/* Shop Button - Mobile (first) */}
               <Link
                 href="/store"
                 onClick={handleCloseMobileMenu}
                 className="mb-3 block text-left text-base font-semibold tracking-tight transition-colors"
                 style={{ color: 'rgba(0,0,0,0.95)' }}
               >
-                Store
+                Shop
               </Link>
 
               <div className="mb-3 border-b border-black/10 pb-2">
                 <details className="group">
                   <summary className="cursor-pointer list-none py-2 text-base font-medium" style={{ color: 'rgba(0,0,0,0.95)' }}>
                     <span className="flex items-center justify-between">
-                      <span>Store Pages</span>
+                      <span>Shop Pages</span>
                       <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" style={{ color: 'rgba(0,0,0,0.55)' }} />
                     </span>
                   </summary>
@@ -1235,7 +1255,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
                       className="block w-full py-1.5 text-left text-sm"
                       style={{ color: 'rgba(0,0,0,0.85)' }}
                     >
-                      Products Modal
+                      BULLMONEY VIP+
                     </button>
                     <Link
                       href="/design"
@@ -1502,7 +1522,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
       <CartDrawer />
 
       {/* Admin Hub Modal - dev only, store/home pages only */}
-      {!isCasinoPage && effectiveAdmin && adminModalOpen && (
+      {!isCasinoPage && (effectiveAdmin || canUseDevAdminShortcut) && adminModalOpen && (
         <div style={{ zIndex: 800 }}>
           <AdminHubModal
             isOpen={adminModalOpen}
