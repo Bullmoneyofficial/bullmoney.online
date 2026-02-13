@@ -707,7 +707,50 @@ export default function RootLayout({
         {/* CRITICAL SCRIPTS - afterInteractive (run after page is interactive) */}
         <Script id="mobile-crash-shield" src="/scripts/BMBRAIN/mobile-crash-shield.js" strategy="afterInteractive" />
         <Script id="inapp-shield" src="/scripts/BMBRAIN/inapp-shield.js" strategy="afterInteractive" />
-        <Script id="memory-manager" src="/scripts/BMBRAIN/memory-manager.js" strategy="afterInteractive" />
+        <Script
+          id="memory-manager-loader"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function () {
+                if (typeof window === 'undefined' || typeof document === 'undefined') return;
+                if (window.__BM_MEMORY_MANAGER_LOADED__) return;
+
+                var nav = navigator || {};
+                var ua = String(nav.userAgent || '').toLowerCase();
+                var mem = Number(nav.deviceMemory || 0);
+                var cores = Number(nav.hardwareConcurrency || 0);
+
+                var isIOS = /iphone|ipad|ipod/.test(ua);
+                var isInApp = /fban|fbav|instagram|line|tiktok|telegram|wechat|wv|webview/.test(ua);
+                var constrained = isIOS || isInApp || (mem > 0 && mem <= 4) || (cores > 0 && cores <= 4);
+
+                var inject = function () {
+                  if (window.__BM_MEMORY_MANAGER_LOADED__) return;
+                  window.__BM_MEMORY_MANAGER_LOADED__ = true;
+                  var s = document.createElement('script');
+                  s.src = '/scripts/BMBRAIN/memory-manager.js';
+                  s.async = true;
+                  document.head.appendChild(s);
+                };
+
+                if (constrained) {
+                  inject();
+                  return;
+                }
+
+                var idle = window.requestIdleCallback;
+                if (typeof idle === 'function') {
+                  idle(inject, { timeout: 2000 });
+                } else {
+                  window.addEventListener('load', function () {
+                    window.setTimeout(inject, 400);
+                  }, { once: true });
+                }
+              })();
+            `,
+          }}
+        />
 
         {/* NON-CRITICAL SCRIPTS - lazyOnload (defer until after everything else) */}
         <Script id="detect-120hz" src="/scripts/detect-120hz.js" strategy="lazyOnload" />

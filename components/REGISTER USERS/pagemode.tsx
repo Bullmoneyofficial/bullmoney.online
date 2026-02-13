@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, memo, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, memo, lazy, Suspense } from 'react';
 import { createClient } from '@supabase/supabase-js'; 
 import { gsap } from 'gsap';
 import dynamic from 'next/dynamic';
@@ -48,56 +48,111 @@ import { createPortal } from 'react-dom';
 // Available Spline scenes - scene1 is preloaded in layout.tsx for fastest first load
 const SPLINE_SCENES = ['/scene1.splinecode', '/scene.splinecode', '/scene2.splinecode', '/scene4.splinecode', '/scene5.splinecode', '/scene6.splinecode'];
 
-// Detect low memory / constrained environments
-const isLowMemoryDevice = (): boolean => {
-  if (typeof window === 'undefined' || typeof navigator === 'undefined') return true;
-  
+type RuntimeProfile = {
+  isIOS: boolean;
+  isSafari: boolean;
+  isInAppBrowser: boolean;
+  isWebView: boolean;
+  isOldAndroid: boolean;
+  isLowRAM: boolean;
+  isLowCPU: boolean;
+  isLowMemory: boolean;
+  deviceMemory?: number;
+};
+
+const getRuntimeProfile = (): RuntimeProfile => {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+    return {
+      isIOS: false,
+      isSafari: false,
+      isInAppBrowser: false,
+      isWebView: false,
+      isOldAndroid: false,
+      isLowRAM: true,
+      isLowCPU: true,
+      isLowMemory: true,
+    };
+  }
+
   const ua = navigator.userAgent.toLowerCase();
-  
-  // iOS Safari and in-app browsers (Facebook, Instagram, TikTok, Twitter, LinkedIn, etc.)
-  const isIOS = /iphone|ipad|ipod/.test(ua);
-  const isSafari = /safari/.test(ua) && !/chrome|crios|fxios/.test(ua);
+  const platform = (navigator.platform || '').toLowerCase();
+  const isIOS = /iphone|ipad|ipod/.test(ua) || (platform === 'macintel' && navigator.maxTouchPoints > 1);
+  const isSafari = /safari/.test(ua) && !/chrome|crios|fxios|edgios/.test(ua);
   const isInAppBrowser = /fban|fbav|instagram|twitter|linkedin|snapchat|tiktok|wechat|line|telegram/i.test(ua);
-  
-  // Check for low device memory (Chrome/Edge expose this)
-  const deviceMemory = (navigator as any).deviceMemory;
-  const isLowRAM = deviceMemory !== undefined && deviceMemory < 4;
-  
-  // Check for low CPU cores
+  const isWebView = /wv|webview|; wv\)|instagram|fb_iab|line\//i.test(ua) || (isIOS && !isSafari && !/crios|fxios|edgios/.test(ua));
+  const isOldAndroid = /android [1-7]\./i.test(ua);
+
+  const rawDeviceMemory = (navigator as any).deviceMemory;
+  const deviceMemory = typeof rawDeviceMemory === 'number' ? rawDeviceMemory : undefined;
+  const isLowRAM = deviceMemory !== undefined ? deviceMemory <= 4 : isIOS;
+
   const hardwareConcurrency = navigator.hardwareConcurrency;
   const isLowCPU = hardwareConcurrency !== undefined && hardwareConcurrency < 4;
-  
-  // Older/budget Android devices
-  const isOldAndroid = /android [1-7]\./i.test(ua);
-  
-  // WebView detection (apps embedding browsers)
-  const isWebView = /wv|webview/i.test(ua) || (isIOS && !/safari/i.test(ua));
-  
+
+  return {
+    isIOS,
+    isSafari,
+    isInAppBrowser,
+    isWebView,
+    isOldAndroid,
+    isLowRAM,
+    isLowCPU,
+    isLowMemory: isLowRAM || isLowCPU || isOldAndroid,
+    deviceMemory,
+  };
+};
+
+// Detect low memory / constrained environments
+const isLowMemoryDevice = (): boolean => {
+  const profile = getRuntimeProfile();
   return (
-    (isIOS && isSafari) || // iOS Safari has strict memory limits
-    isInAppBrowser ||       // In-app browsers are very constrained
-    isWebView ||            // WebViews have limited resources
-    isLowRAM ||             // Low RAM devices
-    isLowCPU ||             // Low CPU devices
-    isOldAndroid            // Old Android versions
+    (profile.isIOS && profile.isSafari) ||
+    profile.isInAppBrowser ||
+    profile.isWebView ||
+    profile.isLowMemory
   );
 };
 
 // --- SIMPLE SPLINE BACKGROUND COMPONENT (MOBILE) ---
 // Preloaded scene, interactive, loads fast - z-index 0 so menus overlay properly
 const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
+  const runtimeProfile = useMemo(() => getRuntimeProfile(), []);
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [loadTimeout, setLoadTimeout] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [retryKey, setRetryKey] = useState(0);
+  const [sceneIndex, setSceneIndex] = useState(0);
   const splineRef = useRef<any>(null);
+  const retryTimeoutRef = useRef<number | null>(null);
+
+  const scene = SPLINE_SCENES[sceneIndex] || SPLINE_SCENES[0];
+  const maxRetries = runtimeProfile.isLowMemory ? 5 : 4;
+  const retryDelayMs = runtimeProfile.isLowMemory ? 700 : 450;
+  const loadTimeoutMs = runtimeProfile.isLowMemory ? 12000 : 9000;
+  const useSafeSplineFilters = runtimeProfile.isInAppBrowser || runtimeProfile.isWebView || runtimeProfile.isLowMemory;
   
-  // Always use scene1 for fastest cold start and reliable reloads
-  const [scene] = useState(() => {
-    if (typeof window === 'undefined') return SPLINE_SCENES[0];
-    return SPLINE_SCENES[0];
-  });
+  const scheduleRetry = useCallback((reason: 'timeout' | 'error' | 'visibility') => {
+    if (retryCount >= maxRetries) {
+      setLoadTimeout(true);
+      return;
+    }
+
+    if (retryTimeoutRef.current) {
+      window.clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
+
+    retryTimeoutRef.current = window.setTimeout(() => {
+      console.warn(`[WelcomeSpline] Retry #${retryCount + 1} (${reason})`);
+      setRetryCount((count) => count + 1);
+      setRetryKey((key) => key + 1);
+      setSceneIndex((index) => (index + 1) % SPLINE_SCENES.length);
+      setHasError(false);
+      setLoadTimeout(false);
+      setIsLoaded(false);
+    }, retryDelayMs);
+  }, [maxRetries, retryCount, retryDelayMs]);
 
   // Preload Spline runtime + scene for faster first paint and reliable reloads
   useEffect(() => {
@@ -112,32 +167,48 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
     link.crossOrigin = 'anonymous';
     document.head.appendChild(link);
 
-    fetch(scene, { cache: 'force-cache' }).catch(() => undefined);
+    const controller = new AbortController();
+    fetch(scene, { cache: 'force-cache', signal: controller.signal }).catch(() => undefined);
 
     return () => {
+      controller.abort();
       if (link.parentNode) link.parentNode.removeChild(link);
     };
   }, [scene]);
 
-  // Timeout fallback - if Spline doesn't load in 10 seconds, show fallback and retry
+  // Timeout fallback - if Spline doesn't load in time, rotate scene and retry
   useEffect(() => {
+    if (isLoaded) return;
+
     const timer = setTimeout(() => {
       if (!isLoaded) {
         console.warn('[WelcomeSpline] Load timeout - showing fallback');
         setLoadTimeout(true);
-        if (retryCount < 2) {
-          const retryTimer = setTimeout(() => {
-            setRetryCount((count) => count + 1);
-            setRetryKey((key) => key + 1);
-            setHasError(false);
-            setLoadTimeout(false);
-          }, 400);
-          return () => clearTimeout(retryTimer);
-        }
+        scheduleRetry('timeout');
       }
-    }, 10000);
+    }, loadTimeoutMs);
+
     return () => clearTimeout(timer);
-  }, [isLoaded, retryCount]);
+  }, [isLoaded, loadTimeoutMs, scheduleRetry]);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible' && !isLoaded) {
+        scheduleRetry('visibility');
+      }
+    };
+
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [isLoaded, scheduleRetry]);
+
+  useEffect(() => {
+    return () => {
+      if (retryTimeoutRef.current) {
+        window.clearTimeout(retryTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleLoad = useCallback((splineApp: any) => {
     splineRef.current = splineApp;
@@ -149,16 +220,8 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
   const handleError = useCallback((error: any) => {
     console.error('[WelcomeSpline] Load error:', error);
     setHasError(true);
-    if (retryCount < 2) {
-      setTimeout(() => {
-        setRetryCount((count) => count + 1);
-        setRetryKey((key) => key + 1);
-        setHasError(false);
-        setLoadTimeout(false);
-        setIsLoaded(false);
-      }, 500);
-    }
-  }, []);
+    scheduleRetry('error');
+  }, [scheduleRetry]);
 
   // Show animated gradient fallback if Spline fails or times out
   const showFallback = hasError || (!isLoaded && loadTimeout);
@@ -172,19 +235,20 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
         backgroundColor: 'rgb(0, 0, 0)',
       }}
     >
-      {/* SVG Filter for maximum in-app browser compatibility (Facebook, Instagram, TikTok, etc.) */}
-      <svg style={{ position: 'absolute', width: 0, height: 0 }}>
-        <defs>
-          <filter id="grayscale-filter-mobile">
-            <feColorMatrix type="saturate" values="0" />
-            <feComponentTransfer>
-              <feFuncR type="linear" slope="1.1" />
-              <feFuncG type="linear" slope="1.1" />
-              <feFuncB type="linear" slope="1.1" />
-            </feComponentTransfer>
-          </filter>
-        </defs>
-      </svg>
+      {!useSafeSplineFilters && (
+        <svg style={{ position: 'absolute', width: 0, height: 0 }}>
+          <defs>
+            <filter id="grayscale-filter-mobile">
+              <feColorMatrix type="saturate" values="0" />
+              <feComponentTransfer>
+                <feFuncR type="linear" slope="1.1" />
+                <feFuncG type="linear" slope="1.1" />
+                <feFuncB type="linear" slope="1.1" />
+              </feComponentTransfer>
+            </filter>
+          </defs>
+        </svg>
+      )}
 
       {/* Animated gradient fallback - always visible as base layer */}
       <div
@@ -196,7 +260,7 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
         }}
       >
         {/* Subtle animated glow for visual interest when no Spline */}
-        {showFallback && (
+        {showFallback && !runtimeProfile.isLowMemory && (
           <div
             className="absolute inset-0"
             style={{
@@ -211,8 +275,12 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
       <div
         className="absolute inset-0"
         style={{
-          filter: 'url(#grayscale-filter-mobile) grayscale(100%) saturate(0) contrast(1.1)',
-          WebkitFilter: 'grayscale(100%) saturate(0) contrast(1.1)',
+          filter: useSafeSplineFilters
+            ? 'grayscale(100%) saturate(0)'
+            : 'url(#grayscale-filter-mobile) grayscale(100%) saturate(0) contrast(1.1)',
+          WebkitFilter: useSafeSplineFilters
+            ? 'grayscale(100%) saturate(0)'
+            : 'grayscale(100%) saturate(0) contrast(1.1)',
         } as React.CSSProperties}
       >
         <Spline
@@ -229,31 +297,42 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
             willChange: 'opacity',
             filter: 'grayscale(100%) saturate(0)',
             WebkitFilter: 'grayscale(100%) saturate(0)',
+            transform: 'translateZ(0)',
+            backfaceVisibility: 'hidden',
           } as React.CSSProperties}
         />
       </div>
 
-      {/* Color-kill overlay - mix-blend-mode: color with gray removes ALL remaining color */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          zIndex: 1,
-          backgroundColor: 'rgb(128, 128, 128)',
-          mixBlendMode: 'color',
-          WebkitMixBlendMode: 'color',
-        } as React.CSSProperties}
-      />
-
-      {/* Extra fallback: semi-transparent grayscale overlay for stubborn in-app browsers */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          zIndex: 1,
-          backgroundColor: 'rgba(128, 128, 128, 0.3)',
-          mixBlendMode: 'saturation',
-          WebkitMixBlendMode: 'saturation',
-        } as React.CSSProperties}
-      />
+      {!useSafeSplineFilters ? (
+        <>
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              zIndex: 1,
+              backgroundColor: 'rgb(128, 128, 128)',
+              mixBlendMode: 'color',
+              WebkitMixBlendMode: 'color',
+            } as React.CSSProperties}
+          />
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              zIndex: 1,
+              backgroundColor: 'rgba(128, 128, 128, 0.3)',
+              mixBlendMode: 'saturation',
+              WebkitMixBlendMode: 'saturation',
+            } as React.CSSProperties}
+          />
+        </>
+      ) : (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            zIndex: 1,
+            backgroundColor: 'rgba(110, 110, 110, 0.16)',
+          }}
+        />
+      )}
     </div>
   );
 });
@@ -426,6 +505,7 @@ const GlobalStyles = () => (
 
     /* === REGISTER container - Apple style white background === */
     .register-container {
+      min-height: calc(var(--pagemode-vh, 1vh) * 100);
       min-height: 100vh;
       min-height: 100dvh; /* Dynamic viewport for iOS Safari */
       min-height: -webkit-fill-available;
@@ -501,6 +581,7 @@ const GlobalStyles = () => (
       right: 0 !important;
       bottom: 0 !important;
       width: 100vw !important;
+      height: calc(var(--pagemode-vh, 1vh) * 100) !important;
       height: 100vh !important;
       height: 100dvh !important;
       display: -webkit-box !important;
@@ -609,7 +690,93 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
   // --- MOBILE PERFORMANCE PROFILE ---
   const { isMobile, shouldSkipHeavyEffects, shouldDisableBackdropBlur } = useMobilePerformance();
-  const shouldReduceEffects = isMobile || shouldSkipHeavyEffects;
+  const isLowMemoryRuntime = useMemo(() => isLowMemoryDevice(), []);
+  const shouldReduceEffects = isMobile || shouldSkipHeavyEffects || isLowMemoryRuntime;
+  const disableBackdropBlur = shouldDisableBackdropBlur || isLowMemoryRuntime;
+
+  // --- iOS / In-App viewport shield (match Android/Samsung visual sizing + centering) ---
+  const [iosInAppScale, setIosInAppScale] = useState(1);
+  const [isIOSInAppShield, setIsIOSInAppShield] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
+    const rootStyle = document.documentElement.style;
+    const runtimeProfile = getRuntimeProfile();
+
+    const updateViewportMetrics = () => {
+      const viewportHeight = window.visualViewport?.height || window.innerHeight;
+      const viewportWidth = window.visualViewport?.width || window.innerWidth;
+      const userAgent = navigator.userAgent.toLowerCase();
+
+      rootStyle.setProperty('--pagemode-vh', `${Math.max(1, viewportHeight) * 0.01}px`);
+
+      const isVeryNarrowPhone = viewportWidth <= 390;
+      const isNarrowPhone = viewportWidth <= 430;
+      const isCompactPhone = viewportWidth <= 480;
+      const isInstagramInApp = /instagram/.test(userAgent);
+      const isInAppRuntime = runtimeProfile.isInAppBrowser || runtimeProfile.isWebView;
+      const shouldShield = runtimeProfile.isIOS && (isInAppRuntime || isNarrowPhone);
+
+      let scale = 1;
+      if (shouldShield) {
+        if (isVeryNarrowPhone) {
+          scale = 0.86;
+        } else if (isNarrowPhone) {
+          scale = 0.89;
+        } else if (isCompactPhone) {
+          scale = 0.92;
+        } else {
+          scale = 0.95;
+        }
+
+        if (isInAppRuntime) {
+          scale -= 0.03;
+        }
+
+        if (isInstagramInApp) {
+          scale -= 0.01;
+        }
+
+        if (runtimeProfile.isSafari && isNarrowPhone) {
+          scale -= 0.01;
+        }
+
+        if (runtimeProfile.deviceMemory !== undefined && runtimeProfile.deviceMemory <= 2) {
+          scale -= 0.01;
+        }
+
+        scale = Math.min(0.96, Math.max(0.82, scale));
+      }
+
+      setIsIOSInAppShield(shouldShield);
+      setIosInAppScale(scale);
+      rootStyle.setProperty('--pagemode-ios-ui-scale', `${scale}`);
+    };
+
+    updateViewportMetrics();
+
+    window.addEventListener('resize', updateViewportMetrics);
+    window.addEventListener('orientationchange', updateViewportMetrics);
+    window.visualViewport?.addEventListener('resize', updateViewportMetrics);
+    window.visualViewport?.addEventListener('scroll', updateViewportMetrics);
+
+    return () => {
+      window.removeEventListener('resize', updateViewportMetrics);
+      window.removeEventListener('orientationchange', updateViewportMetrics);
+      window.visualViewport?.removeEventListener('resize', updateViewportMetrics);
+      window.visualViewport?.removeEventListener('scroll', updateViewportMetrics);
+      rootStyle.removeProperty('--pagemode-vh');
+      rootStyle.removeProperty('--pagemode-ios-ui-scale');
+    };
+  }, []);
+
+  const iosInAppShieldStyle = isIOSInAppShield && iosInAppScale < 1
+    ? ({
+        transform: `scale(${iosInAppScale})`,
+        transformOrigin: 'top center',
+      } as React.CSSProperties)
+    : undefined;
 
   // --- ULTIMATE HUB STATE (for mobile welcome screen) ---
   const [isHubOpen, setIsHubOpen] = useState(false);
@@ -1103,8 +1270,12 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
 
   // --- RENDER: MAIN INTERFACE ---
   return (
-    <div className={cn("register-container px-4 py-6 md:p-4 md:overflow-hidden md:h-screen font-sans", isWelcomeScreen ? "bg-transparent" : "bg-white")}
-         style={{ position: 'relative' }}>
+        <div className={cn(
+        "register-container px-4 py-6 md:p-4 md:overflow-hidden md:h-screen font-sans",
+        isWelcomeScreen ? "bg-transparent" : "bg-white",
+        isIOSInAppShield && "pagemode-ios-shield"
+         )}
+          style={{ position: 'relative', minHeight: 'calc(var(--pagemode-vh, 1vh) * 100)' }}>
       <GlobalStyles />
 
       {/* Shared Spline background for welcome/guest to survive resizes */}
@@ -1118,7 +1289,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
             touchAction: 'pan-y pinch-zoom',
             width: '100vw',
             minWidth: '100vw',
-            height: '100vh',
+            height: 'calc(var(--pagemode-vh, 1vh) * 100)',
             minHeight: '100dvh',
             cursor: 'default',
             backgroundColor: 'rgb(0, 0, 0)', // Prevent white flash during load
@@ -1208,9 +1379,10 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                 style={{ 
                   minHeight: '100dvh', 
                   width: '100vw', 
-                  height: '100vh',
+                  height: 'calc(var(--pagemode-vh, 1vh) * 100)',
                   pointerEvents: 'none',
                   zIndex: UI_Z_INDEX.PAGEMODE,
+                  ...(iosInAppShieldStyle ?? {}),
                 }}
               >
                 {/* Minimalistic Branding Header - Clean Apple-style */}
@@ -1370,8 +1542,10 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
               className="fixed inset-0 flex flex-col"
               style={{ 
                 minHeight: '100dvh',
+                height: 'calc(var(--pagemode-vh, 1vh) * 100)',
                 pointerEvents: 'none', // Allow Spline interaction, UI elements override
                 zIndex: UI_Z_INDEX.PAGEMODE,
+                ...(iosInAppShieldStyle ?? {}),
               }}
             >
               {/* Back Button - Apple Style */}
@@ -1472,7 +1646,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="fixed inset-0 bg-white flex flex-col items-center justify-center z-[99999998] apple-card"
-            style={{ minHeight: '100dvh' }}
+            style={{ minHeight: '100dvh', height: 'calc(var(--pagemode-vh, 1vh) * 100)', ...(iosInAppShieldStyle ?? {}) }}
           >
              {/* Back Button - Apple Style */}
              <button 
@@ -1588,7 +1762,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3 }}
                   className="fixed inset-0 bg-white flex flex-col items-center justify-center z-[99999998] apple-card"
-                  style={{ minHeight: '100dvh' }}
+                  style={{ minHeight: '100dvh', height: 'calc(var(--pagemode-vh, 1vh) * 100)', ...(iosInAppShieldStyle ?? {}) }}
                  >
                    {/* Back Button - Apple Style */}
                    <button 
@@ -1664,7 +1838,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     className="register-card w-full max-w-md mx-auto"
                     isXM={isXM}
                     disableEffects={true}
-                    disableBackdropBlur={shouldDisableBackdropBlur}
+                    disableBackdropBlur={disableBackdropBlur}
                     actions={
                       <div className="flex flex-col gap-3 md:gap-4">
                         <p className="text-xs text-center flex items-center justify-center gap-1.5 text-black/40">
@@ -1741,7 +1915,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     className="register-card w-full max-w-md mx-auto"
                     isXM={isXM}
                     disableEffects={shouldReduceEffects}
-                    disableBackdropBlur={shouldDisableBackdropBlur}
+                    disableBackdropBlur={disableBackdropBlur}
                     actions={
                       <button
                         onClick={handleNext}
@@ -1797,7 +1971,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
                     className="register-card w-full max-w-md mx-auto"
                     isXM={isXM}
                     disableEffects={true}
-                    disableBackdropBlur={shouldDisableBackdropBlur}
+                    disableBackdropBlur={disableBackdropBlur}
                     actions={
                       <button
                         onClick={handleNext}

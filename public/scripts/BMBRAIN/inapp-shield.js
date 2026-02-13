@@ -4,6 +4,7 @@
 
 var w=window,d=document,n=navigator;
 var ua=n.userAgent||'';
+var isIOS=/iphone|ipad|ipod/i.test(ua)||(/macintosh/i.test(ua)&&n.maxTouchPoints>1);
 var B=w.__BM_BRAIN__=w.__BM_BRAIN__||{};
 var S=w.__BM_INAPP_SHIELD__={active:false,browser:null,fixes:[]};
 
@@ -49,6 +50,29 @@ function fixViewport(){
   rs.setProperty('--app-height',h+'px');
   rs.setProperty('--app-width',ww+'px');
   if(!rs.getPropertyValue('--safe-bottom'))rs.setProperty('--safe-bottom','env(safe-area-inset-bottom,0px)');
+
+  if(isIOS){
+    // Normalize large iPhone CSS viewport to feel closer to Android (360dp baseline).
+    var targetWidth=360;
+    var rawScale=ww>targetWidth?(targetWidth/ww):1;
+    // Keep range safe to avoid breaking fixed/sticky layers in webviews.
+    var scale=Math.max(0.88,Math.min(1,rawScale));
+
+    // Use rem scaling for broad, low-risk size normalization across Tailwind layouts.
+    rs.setProperty('font-size',(scale*100).toFixed(2)+'%');
+    rs.setProperty('--bm-ios-inapp-ui-scale',String(scale));
+    rs.setProperty('--bm-ios-inapp-ref-width',targetWidth+'px');
+
+    if(scale<1){
+      root.classList.add('ios-inapp-viewport-normalized');
+      root.setAttribute('data-ios-inapp-scale',scale.toFixed(3));
+      S.scale=scale;
+    } else {
+      root.classList.remove('ios-inapp-viewport-normalized');
+      root.removeAttribute('data-ios-inapp-scale');
+      S.scale=1;
+    }
+  }
 }
 fixViewport();
 w.addEventListener('resize',fixViewport,{passive:true});
@@ -56,6 +80,7 @@ if(w.visualViewport&&w.visualViewport.addEventListener){
   w.visualViewport.addEventListener('resize',fixViewport,{passive:true});
 }
 S.fixes.push('viewport-fix');
+if(isIOS)S.fixes.push('ios-viewport-normalize');
 
 function applyScrollFix(){
   if(!d.body)return;
