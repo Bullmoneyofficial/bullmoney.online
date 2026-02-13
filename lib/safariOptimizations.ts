@@ -15,6 +15,11 @@ export interface SafariInfo {
   isSafari: boolean;
   isMobileSafari: boolean;
   isIOSSafari: boolean;
+  isIOSWebKit: boolean;
+  isInAppBrowser: boolean;
+  isLegacyIOS: boolean;
+  supportsIOS16Plus: boolean;
+  supportsIOS17Plus: boolean;
   safariVersion: number;
   iosVersion: number;
   hasServiceWorkerSupport: boolean;
@@ -27,6 +32,201 @@ export interface SafariInfo {
 }
 
 let cachedSafariInfo: SafariInfo | null = null;
+let gpuMemoryManagerStarted = false;
+
+type ManagedElement = {
+  el: HTMLElement;
+  visibility: string;
+  contentVisibility: string;
+  pointerEvents: string;
+};
+
+const managedElements = new Map<HTMLElement, ManagedElement>();
+
+function isLikelyMapElement(element: Element): boolean {
+  const iframe = element as HTMLIFrameElement;
+  const src = (iframe?.src || '').toLowerCase();
+  const className = (element as HTMLElement).className?.toString().toLowerCase() || '';
+  const id = ((element as HTMLElement).id || '').toLowerCase();
+  return (
+    src.includes('google.com/maps') ||
+    src.includes('mapbox') ||
+    src.includes('openstreetmap') ||
+    className.includes('map') ||
+    id.includes('map')
+  );
+}
+
+function shouldManageElementForGpu(element: Element, mode: 'hidden' | 'idle'): boolean {
+  if (!(element instanceof HTMLElement)) return false;
+  if (element.closest('[data-bullmoney-overlay]')) return false;
+  if (element.hasAttribute('data-gpu-keepalive')) return false;
+
+  const isCanvas = element.tagName === 'CANVAS';
+  const isSpline = element.tagName === 'SPLINE-VIEWER' || !!element.closest('spline-viewer') || element.hasAttribute('data-spline-scene');
+  const isMap = isLikelyMapElement(element) || element.hasAttribute('data-map') || !!element.closest('[data-map]');
+
+  if (!isCanvas && !isSpline && !isMap) return false;
+  if (mode === 'hidden') return true;
+
+  const rect = element.getBoundingClientRect();
+  const vh = window.innerHeight;
+  const vw = window.innerWidth;
+  const offscreen = rect.bottom < -200 || rect.top > vh + 200 || rect.right < -200 || rect.left > vw + 200;
+  return offscreen;
+}
+
+function pauseGpuElements(reason: 'hidden' | 'idle'): void {
+  if (typeof document === 'undefined') return;
+
+  const selector = [
+    'canvas',
+    'spline-viewer',
+    '[data-spline-scene]',
+    '[data-spline]',
+    '[data-map]',
+    'iframe',
+  ].join(',');
+
+  const candidates = Array.from(document.querySelectorAll(selector));
+  let pausedCount = 0;
+
+  candidates.forEach((element) => {
+    if (!shouldManageElementForGpu(element, reason)) return;
+    const el = element as HTMLElement;
+
+    if (!managedElements.has(el)) {
+      managedElements.set(el, {
+        el,
+        visibility: el.style.visibility,
+        contentVisibility: (el.style as any).contentVisibility || '',
+        pointerEvents: el.style.pointerEvents,
+      });
+    }
+
+    el.style.visibility = 'hidden';
+    (el.style as any).contentVisibility = 'hidden';
+    el.style.pointerEvents = 'none';
+
+    if (el.tagName === 'SPLINE-VIEWER') {
+      const viewer = el as any;
+      try {
+        viewer.pause?.();
+        viewer.stop?.();
+      } catch {}
+    }
+
+    pausedCount += 1;
+  });
+
+  if (pausedCount > 0) {
+    document.documentElement.classList.add('bullmoney-gpu-paused');
+    window.dispatchEvent(new CustomEvent('bullmoney-gpu-pause', { detail: { reason, count: pausedCount } }));
+  }
+}
+
+function resumeGpuElements(): void {
+  if (typeof document === 'undefined') return;
+
+  let resumedCount = 0;
+  managedElements.forEach((managed, el) => {
+    if (!document.contains(el)) {
+      managedElements.delete(el);
+      return;
+    }
+
+    el.style.visibility = managed.visibility;
+    (el.style as any).contentVisibility = managed.contentVisibility;
+    el.style.pointerEvents = managed.pointerEvents;
+
+    if (el.tagName === 'SPLINE-VIEWER') {
+      const viewer = el as any;
+      try {
+        viewer.play?.();
+      } catch {}
+    }
+
+    resumedCount += 1;
+  });
+
+  managedElements.clear();
+  document.documentElement.classList.remove('bullmoney-gpu-paused');
+
+  if (resumedCount > 0) {
+    window.dispatchEvent(new CustomEvent('bullmoney-gpu-resume', { detail: { count: resumedCount } }));
+  }
+}
+
+function setupSafariGpuMemoryManager(): void {
+  if (typeof window === 'undefined' || gpuMemoryManagerStarted) return;
+
+  gpuMemoryManagerStarted = true;
+  const root = document.documentElement;
+
+  let idleTimer: number | null = null;
+  const ua = navigator.userAgent;
+  const isAndroidFamily = /Android|SamsungBrowser/i.test(ua);
+  const IDLE_MS = (detectSafari().isMobileSafari || isAndroidFamily) ? 60_000 : 90_000;
+
+  const queueIdlePause = () => {
+    const task = () => pauseGpuElements('idle');
+    if (typeof requestIdleCallback === 'function') {
+      requestIdleCallback(task, { timeout: 1500 });
+    } else {
+      window.setTimeout(task, 120);
+    }
+  };
+
+  const scheduleIdlePause = () => {
+    if (document.hidden) return;
+    if (idleTimer) window.clearTimeout(idleTimer);
+    idleTimer = window.setTimeout(() => {
+      queueIdlePause();
+    }, IDLE_MS);
+  };
+
+  const onUserActivity = () => {
+    if (root.classList.contains('bullmoney-gpu-paused')) {
+      resumeGpuElements();
+    }
+    scheduleIdlePause();
+  };
+
+  const onVisibilityChange = () => {
+    if (document.hidden) {
+      if (idleTimer) {
+        window.clearTimeout(idleTimer);
+        idleTimer = null;
+      }
+      pauseGpuElements('hidden');
+    } else {
+      resumeGpuElements();
+      scheduleIdlePause();
+    }
+  };
+
+  const activityEvents: Array<keyof WindowEventMap> = [
+    'mousemove',
+    'mousedown',
+    'pointerdown',
+    'touchstart',
+    'keydown',
+    'scroll',
+  ];
+
+  activityEvents.forEach((eventName) => {
+    window.addEventListener(eventName, onUserActivity, { passive: true });
+  });
+  window.addEventListener('focus', onUserActivity, { passive: true });
+  document.addEventListener('visibilitychange', onVisibilityChange);
+
+  // Treat existing memory warnings as signals to trim GPU workload without context loss
+  window.addEventListener('bullmoney-memory-warning', () => {
+    queueIdlePause();
+  });
+
+  scheduleIdlePause();
+}
 
 /**
  * Detect Safari browser and version with all its quirks
@@ -44,14 +244,21 @@ export function detectSafari(): SafariInfo {
   // Safari detection (must exclude Chrome which also contains 'Safari')
   const isSafari = /^((?!chrome|android|crios|fxios|opera|opr|edge|edg).)*safari/i.test(ua);
   
-  // iOS detection
-  const isIOS = /iphone|ipad|ipod/i.test(ua);
+  // iOS detection (includes iPadOS desktop-mode UA)
+  const isIPadOSDesktopMode = navigator.platform === 'MacIntel' && (navigator.maxTouchPoints || 0) > 1;
+  const isIOS = /iphone|ipad|ipod/i.test(ua) || isIPadOSDesktopMode;
+
+  // In-app browser detection (social/search app webviews)
+  const isInAppBrowser = /Instagram|FBAN|FBAV|TikTok|musical_ly|Line\/|GSA|Twitter|Snapchat|LinkedInApp|wv\)/i.test(ua);
   
   // iOS Safari specifically
   const isIOSSafari = isIOS && isSafari;
+
+  // iOS WebKit engine browsers/webviews (Safari + in-app + other iOS wrappers on WebKit)
+  const isIOSWebKit = isIOS && /AppleWebKit/i.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/i.test(ua);
   
   // Mobile Safari (includes iPadOS in mobile mode)
-  const isMobileSafari = isIOSSafari || (uaLower.includes('mobile') && isSafari);
+  const isMobileSafari = isIOSSafari || (uaLower.includes('mobile') && isSafari) || (isIOSWebKit && isInAppBrowser);
   
   // Safari version extraction
   let safariVersion = 0;
@@ -66,6 +273,10 @@ export function detectSafari(): SafariInfo {
   if (iosMatch) {
     iosVersion = parseInt(iosMatch[1], 10);
   }
+
+  const supportsIOS16Plus = iosVersion >= 16;
+  const supportsIOS17Plus = iosVersion >= 17;
+  const isLegacyIOS = iosVersion > 0 && iosVersion < 16;
   
   // Feature detection
   let hasServiceWorkerSupport = 'serviceWorker' in navigator;
@@ -86,15 +297,20 @@ export function detectSafari(): SafariInfo {
   }
   
   // Safari < 15 needs polyfills for many features
-  const needsPolyfills = isSafari && safariVersion < 15;
+  const needsPolyfills = (isSafari && safariVersion < 15) || isLegacyIOS;
   
   // Safari has known cache invalidation issues, especially on iOS
-  const needsCacheFix = isSafari || isIOS;
+  const needsCacheFix = isSafari || isIOS || isInAppBrowser;
   
   cachedSafariInfo = {
     isSafari,
     isMobileSafari,
     isIOSSafari,
+    isIOSWebKit,
+    isInAppBrowser,
+    isLegacyIOS,
+    supportsIOS16Plus,
+    supportsIOS17Plus,
     safariVersion,
     iosVersion,
     hasServiceWorkerSupport,
@@ -118,6 +334,11 @@ function getDefaultSafariInfo(): SafariInfo {
     isSafari: false,
     isMobileSafari: false,
     isIOSSafari: false,
+    isIOSWebKit: false,
+    isInAppBrowser: false,
+    isLegacyIOS: false,
+    supportsIOS16Plus: false,
+    supportsIOS17Plus: false,
     safariVersion: 0,
     iosVersion: 0,
     hasServiceWorkerSupport: true,
@@ -137,17 +358,32 @@ export function applySafariCSSFixes(): void {
   if (typeof document === 'undefined') return;
   
   const info = detectSafari();
-  if (!info.isSafari) return;
+  if (!info.isSafari && !info.isIOSWebKit) return;
   
   const root = document.documentElement;
   
   // Add Safari class for CSS targeting
   root.classList.add('is-safari');
+  if (info.isIOSWebKit) {
+    root.classList.add('is-ios-webkit');
+  }
   if (info.isMobileSafari) {
     root.classList.add('is-mobile-safari');
   }
   if (info.isIOSSafari) {
     root.classList.add('is-ios-safari');
+  }
+  if (info.isInAppBrowser) {
+    root.classList.add('is-in-app-browser');
+  }
+  if (info.isLegacyIOS) {
+    root.classList.add('ios-legacy');
+  }
+  if (info.supportsIOS16Plus) {
+    root.classList.add('ios-16-plus');
+  }
+  if (info.supportsIOS17Plus) {
+    root.classList.add('ios-17-plus');
   }
   
   // Version-specific classes
@@ -340,7 +576,7 @@ export function setupSafariWebGLFix(): void {
   if (typeof window === 'undefined') return;
   
   const info = detectSafari();
-  if (!info.isSafari) return;
+  if (!info.isSafari && !info.isIOSWebKit) return;
   
   // Safari can lose WebGL context under memory pressure
   // Listen for context loss and attempt recovery
@@ -369,13 +605,25 @@ export function applySafariMemoryOptimizations(): void {
   if (typeof window === 'undefined') return;
   
   const info = detectSafari();
-  if (!info.isSafari) return;
+  const ua = navigator.userAgent;
+  const isSamsungInternet = /SamsungBrowser/i.test(ua);
+  const isAndroidBrowser = /Android/i.test(ua);
+  const shouldRunGpuManager = info.isSafari || info.isIOSWebKit || info.isInAppBrowser || isSamsungInternet || isAndroidBrowser;
+  const shouldApplySafariLikeTuning = info.isSafari || info.isIOSWebKit;
+
+  if (!shouldApplySafariLikeTuning) {
+    if (shouldRunGpuManager) {
+      setupSafariGpuMemoryManager();
+      console.log('[SafariOptimizations] GPU memory manager enabled for Android/Samsung browser');
+    }
+    return;
+  }
   
   // Safari has aggressive memory limits, especially on iOS
   // Reduce animation complexity preemptively
   const root = document.documentElement;
   
-  if (info.isMobileSafari) {
+  if (info.isMobileSafari || info.isIOSWebKit) {
     // On mobile Safari, be aggressive with optimizations - NO BLUR
     root.classList.add('reduce-blur');
     root.style.setProperty('--blur-amount', '0px');  // NO BLUR ever
@@ -383,8 +631,18 @@ export function applySafariMemoryOptimizations(): void {
     // Reduce animation duration significantly
     root.style.setProperty('--animation-duration-multiplier', '0.3');
     
-    console.log('[SafariOptimizations] Mobile Safari memory optimizations applied');
+    if (info.isLegacyIOS) {
+      root.classList.add('reduce-animations', 'reduce-shadows');
+      root.style.setProperty('--animation-duration-multiplier', '0.2');
+      console.log('[SafariOptimizations] Legacy iOS memory profile enabled');
+    } else {
+      console.log('[SafariOptimizations] Mobile Safari/iOS WebKit memory optimizations applied');
+    }
   }
+
+  // Non-destructive GPU memory manager:
+  // pauses hidden/offscreen canvas/spline/map rendering and auto-resumes on activity.
+  setupSafariGpuMemoryManager();
   
   // Listen for memory warnings (iOS 15+)
   // @ts-ignore - This API exists on iOS Safari
@@ -407,7 +665,7 @@ export function applySafariMemoryOptimizations(): void {
 export function initSafariOptimizations(): SafariInfo {
   const info = detectSafari();
   
-  if (!info.isSafari) {
+  if (!info.isSafari && !info.isIOSWebKit && !info.isInAppBrowser) {
     return info;
   }
   

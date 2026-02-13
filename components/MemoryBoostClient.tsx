@@ -2,11 +2,16 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
-import { triggerMemoryBoost } from "@/lib/memory";
+import { initializeMemoryGuardian, triggerMemoryBoost } from "@/lib/memory";
 
 export default function MemoryBoostClient() {
   const pathname = usePathname();
   const hasMountedRef = useRef(false);
+
+  useEffect(() => {
+    const cleanup = initializeMemoryGuardian();
+    return cleanup;
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
