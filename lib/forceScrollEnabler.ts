@@ -15,6 +15,8 @@
 export function forceEnableScrolling() {
   if (typeof window === 'undefined') return;
 
+  let clickTimeout: ReturnType<typeof setTimeout> | null = null;
+
   // Detect browser types
   const ua = navigator.userAgent;
   const isSamsungBrowser = /SamsungBrowser/i.test(ua);
@@ -176,8 +178,8 @@ export function forceEnableScrolling() {
       if (isIOSSafari) {
         html.classList.add('ios-safari');
         // Ensure momentum scrolling
-        html.style.webkitOverflowScrolling = 'touch';
-        body.style.webkitOverflowScrolling = 'touch';
+        html.style.setProperty('-webkit-overflow-scrolling', 'touch');
+        body.style.setProperty('-webkit-overflow-scrolling', 'touch');
       }
     }
     
@@ -220,8 +222,11 @@ export function forceEnableScrolling() {
   enableScroll();
 
   // Run on DOM content loaded
+  const onDomContentLoaded = () => {
+    enableScroll();
+  };
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', enableScroll);
+    document.addEventListener('DOMContentLoaded', onDomContentLoaded);
   }
 
   // Watch for style attribute changes that might disable scroll
@@ -239,26 +244,38 @@ export function forceEnableScrolling() {
     attributeFilter: ['style', 'class'],
   });
 
-  observer.observe(document.body, {
-    attributes: true,
-    attributeFilter: ['style', 'class'],
-  });
+  if (document.body) {
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ['style', 'class'],
+    });
+  }
 
   // Re-enable scroll on visibility change (user returns to tab)
-  document.addEventListener('visibilitychange', () => {
+  const onVisibilityChange = () => {
     if (!document.hidden) {
       enableScroll();
     }
-  });
+  };
+  document.addEventListener('visibilitychange', onVisibilityChange);
 
   // Re-enable scroll after any modal closes (detects clicks)
-  document.addEventListener('click', () => {
-    setTimeout(enableScroll, 100);
-  }, { passive: true });
+  const onClick = () => {
+    if (clickTimeout) clearTimeout(clickTimeout);
+    clickTimeout = setTimeout(enableScroll, 100);
+  };
+  document.addEventListener('click', onClick, { passive: true });
 
   // Cleanup function
   return () => {
     observer.disconnect();
+    if (clickTimeout) {
+      clearTimeout(clickTimeout);
+      clickTimeout = null;
+    }
+    document.removeEventListener('DOMContentLoaded', onDomContentLoaded);
+    document.removeEventListener('visibilitychange', onVisibilityChange);
+    document.removeEventListener('click', onClick);
   };
 }
 

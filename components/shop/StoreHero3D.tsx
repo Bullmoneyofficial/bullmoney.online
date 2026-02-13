@@ -796,14 +796,45 @@ const SplineBackground = memo(function SplineBackground({
 }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [retryKey, setRetryKey] = useState(0);
   const splineRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const retryTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const MAX_RETRIES = 3;
 
   const handleLoad = useCallback(() => {
     console.log('[StoreHero3D] Spline loaded via spline-wrapper');
     setIsLoaded(true);
     setHasError(false);
+    setRetryCount(0);
   }, []);
+
+  const queueRetry = useCallback((reason: 'error' | 'context') => {
+    setRetryCount((prev) => {
+      if (prev >= MAX_RETRIES) {
+        console.error(`[StoreHero3D] Spline retry limit reached (${reason})`);
+        setHasError(true);
+        return prev;
+      }
+
+      const next = prev + 1;
+      const delay = 600 + next * 350;
+      console.warn(`[StoreHero3D] Retrying Spline after ${reason} (${next}/${MAX_RETRIES}) in ${delay}ms`);
+
+      if (retryTimerRef.current) {
+        clearTimeout(retryTimerRef.current);
+      }
+
+      retryTimerRef.current = setTimeout(() => {
+        setHasError(false);
+        setIsLoaded(false);
+        setRetryKey((key) => key + 1);
+      }, delay);
+
+      return next;
+    });
+  }, [MAX_RETRIES]);
 
   // Attach canvas event listeners once Spline is loaded
   useEffect(() => {
@@ -820,6 +851,11 @@ const SplineBackground = memo(function SplineBackground({
     const handleHoverEv = () => {
       if (onHover) onHover();
     };
+    const handleContextLost = (event: Event) => {
+      event.preventDefault();
+      setIsLoaded(false);
+      queueRetry('context');
+    };
     const handleWheel = (e: WheelEvent) => {
       if (playMode) return; // Let Spline handle zoom in play mode
     };
@@ -833,6 +869,7 @@ const SplineBackground = memo(function SplineBackground({
     canvas.addEventListener('touchstart', handleInteraction as EventListener, { passive: true });
     canvas.addEventListener('mousedown', handleInteraction as EventListener);
     canvas.addEventListener('mousemove', handleHoverEv as EventListener);
+    canvas.addEventListener('webglcontextlost', handleContextLost, false);
     
     return () => {
       canvas.removeEventListener('wheel', handleWheel);
@@ -841,14 +878,15 @@ const SplineBackground = memo(function SplineBackground({
       canvas.removeEventListener('touchstart', handleInteraction as EventListener);
       canvas.removeEventListener('mousedown', handleInteraction as EventListener);
       canvas.removeEventListener('mousemove', handleHoverEv as EventListener);
+      canvas.removeEventListener('webglcontextlost', handleContextLost, false);
       canvas.style.touchAction = 'pan-y';
     };
-  }, [isLoaded, onInteraction, onHover, playMode]);
+  }, [isLoaded, onInteraction, onHover, playMode, queueRetry, retryKey]);
 
   const handleError = useCallback((error: any) => {
     console.error('[StoreHero3D] Spline load error:', error);
-    setHasError(true);
-  }, []);
+    queueRetry('error');
+  }, [queueRetry]);
   
   const handleSplineMouseDown = useCallback(() => {
     if (!playMode) return;
@@ -867,6 +905,14 @@ const SplineBackground = memo(function SplineBackground({
   // Callback to receive the Spline app instance for external control
   const handleSplineApp = useCallback((app: any) => {
     splineRef.current = app;
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (retryTimerRef.current) {
+        clearTimeout(retryTimerRef.current);
+      }
+    };
   }, []);
 
   return (
@@ -911,8 +957,12 @@ const SplineBackground = memo(function SplineBackground({
           </div>
         }>
           <SplineWrapperDynamic
+            key={`store-hero-spline-${retryKey}`}
             scene={SPLINE_SCENE}
             isHero={true}
+            targetFPS={playMode ? 45 : 30}
+            maxDpr={1.4}
+            minDpr={0.75}
             onLoad={handleLoad}
             onError={handleError}
             onSplineApp={handleSplineApp}

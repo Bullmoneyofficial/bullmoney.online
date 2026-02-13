@@ -6,6 +6,7 @@ var docEl=d.documentElement;
 var conn=n.connection||n.mozConnection||n.webkitConnection||{};
 var B=w.__BM_BRAIN__=w.__BM_BRAIN__||{};
 var NW=w.__BM_NETWORK__=w.__BM_NETWORK__||{prefetched:new Set(),priorities:{}};
+var routePrefetchEnabled = typeof w.__BM_ENABLE_ROUTE_PREFETCH__ === 'boolean' ? w.__BM_ENABLE_ROUTE_PREFETCH__ : true;
 
 function onReady(fn){
   if(d.readyState==='loading')d.addEventListener('DOMContentLoaded',fn,{once:true});
@@ -109,6 +110,7 @@ NW.deduplicatedFetch=function(url,opts){
 };
 
 function prefetchPredictedRoutes(){
+  if(!routePrefetchEnabled)return;
   var predictions={
     '/':['/about','/store','/Blogs','/community'],
     '/about':['/community','/recruit'],

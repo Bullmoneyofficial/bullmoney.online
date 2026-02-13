@@ -53,6 +53,10 @@ export function StoreLayoutClient({ children }: { children: React.ReactNode }) {
     
     const html = document.documentElement;
     const body = document.body;
+
+    // Safety: clear residual splash sway class on route entry
+    html.classList.remove('bm-sway', 'bm-sway-safe');
+    body.classList.remove('bm-sway', 'bm-sway-safe');
     
     // NOTE: Don't remove drunk scroll here - it's used by showcase scroll animation
     // forceScrollEnabler will handle cleanup when showcase is not active

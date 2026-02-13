@@ -1,19 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-
-/**
- * useShowcaseScroll — ultra-lightweight "hero → footer → hero" showcase scroll.
- * V3 — optimized for low-end devices:
- *  - Throttled scrollTo (skips if delta < 2px)
- *  - Progress bar updated max 10x/sec (not every rAF)
- *  - No CSS transitions on progress (eliminates GPU compositing fight)
- *  - Re-measures scrollHeight max every 500ms
- *  - Cancels on any user interaction
- *  - Only runs once per session
- */
-
-const SESSION_KEY_PREFIX = "bm_showcase_scroll_done";
+import { setShowcaseRunningMode, triggerShowcaseBoost } from "@/lib/showcaseBoost";
 
 interface ShowcaseScrollOptions {
   scrollDownDuration?: number;
@@ -24,8 +12,9 @@ interface ShowcaseScrollOptions {
   containerSelector?: string;
   enabled?: boolean;
   pageId?: string;
-  /** @deprecated */ genieDuration?: number;
-  /** @deprecated */ genieScale?: number;
+  persistInSession?: boolean;
+  genieDuration?: number;
+  genieScale?: number;
 }
 
 function easeInOutCubic(t: number): number {
@@ -51,25 +40,34 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
 
   useEffect(() => {
     if (typeof window === "undefined" || !enabled) return;
-    if (respectReducedMotion && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    if (respectReducedMotion && window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
 
-    const sessionKey = `${SESSION_KEY_PREFIX}_${pageId || location?.pathname || "default"}`;
-    try { if (sessionStorage.getItem(sessionKey)) return; } catch { /* private */ }
     if (hasRunRef.current) return;
     hasRunRef.current = true;
     cancelledRef.current = false;
 
     const containerEl = containerSelector ? document.querySelector<HTMLElement>(containerSelector) : null;
+    const rootScroller = !containerEl
+      ? ((document.scrollingElement as HTMLElement | null) || document.documentElement || document.body)
+      : null;
 
-    // Cache scrollHeight — reading it forces layout, so we throttle
+    let boostTriggered = false;
+    const nav = navigator as Navigator & { deviceMemory?: number; hardwareConcurrency?: number };
+    const deviceMemory = nav.deviceMemory ?? 8;
+    const hardwareConcurrency = nav.hardwareConcurrency ?? 8;
+    const isTouchPointer = window.matchMedia?.("(pointer: coarse)")?.matches ?? false;
+    const isSmallViewport = Math.min(window.innerWidth, window.innerHeight) <= 900;
+    const isLikelyMobile = isTouchPointer || isSmallViewport;
+    const isLowEndDevice = isLikelyMobile && (deviceMemory <= 4 || hardwareConcurrency <= 4);
+
     let cachedMax = 0;
     let lastMaxRead = 0;
     const getMaxScroll = (): number => {
       const now = performance.now();
       if (now - lastMaxRead > 500) {
-        cachedMax = containerEl
-          ? containerEl.scrollHeight - containerEl.clientHeight
-          : document.documentElement.scrollHeight - window.innerHeight;
+        if (containerEl) cachedMax = containerEl.scrollHeight - containerEl.clientHeight;
+        else if (rootScroller) cachedMax = rootScroller.scrollHeight - rootScroller.clientHeight;
+        else cachedMax = document.documentElement.scrollHeight - window.innerHeight;
         lastMaxRead = now;
       }
       return cachedMax;
@@ -77,225 +75,292 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
 
     let lastScrollY = -999;
     const setScroll = (y: number) => {
-      // Skip DOM write if change is < 2px (invisible, saves layout thrash)
       if (Math.abs(y - lastScrollY) < 2) return;
       lastScrollY = y;
-      if (containerEl) containerEl.scrollTop = y;
-      else window.scrollTo(0, y);
+      if (containerEl) {
+        containerEl.scrollTop = y;
+        return;
+      }
+      if (rootScroller) rootScroller.scrollTop = y;
+      window.scrollTo(0, y);
     };
 
-    // ── Cancel ──
-    const cancel = () => {
-      if (cancelledRef.current) return;
-      cancelledRef.current = true;
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      removeOverlay();
-      detach();
+    const pendingTimeouts = new Set<ReturnType<typeof setTimeout>>();
+    const pendingIntervals = new Set<ReturnType<typeof setInterval>>();
+    let showcaseModeActive = false;
+
+    const setShowcaseMode = (active: boolean) => {
+      if (showcaseModeActive === active) return;
+      showcaseModeActive = active;
+      setShowcaseRunningMode(active);
     };
 
-    const events = ["wheel", "touchstart", "touchmove", "mousedown", "keydown"] as const;
-    const attach = () => { for (const e of events) window.addEventListener(e, cancel, { passive: true, once: true }); };
-    const detach = () => { for (const e of events) window.removeEventListener(e, cancel); };
-    attach();
+    const addTimeout = (handler: () => void, ms: number) => {
+      const id = setTimeout(() => {
+        pendingTimeouts.delete(id);
+        handler();
+      }, ms);
+      pendingTimeouts.add(id);
+      return id;
+    };
 
-    // ── Overlay (inline styles only — no injected <style> tag) ──
+    const addInterval = (handler: () => void, ms: number) => {
+      const id = setInterval(handler, ms);
+      pendingIntervals.add(id);
+      return id;
+    };
+
     let overlayEl: HTMLDivElement | null = null;
     let barEl: HTMLDivElement | null = null;
     let txtEl: HTMLSpanElement | null = null;
     let lastBarUpdate = 0;
 
+    const removeOverlay = () => {
+      if (!overlayEl) return;
+      if (barEl) barEl.style.width = "100%";
+      if (txtEl) txtEl.textContent = "Cached ✓";
+      const el = overlayEl;
+      overlayEl = null;
+      barEl = null;
+      txtEl = null;
+      addTimeout(() => {
+        el.style.opacity = "0";
+        addTimeout(() => el.remove(), 300);
+      }, 600);
+    };
+
+    let cancelArmed = false;
+    const events = ["wheel", "touchstart", "touchmove", "mousedown", "keydown"] as const;
+
+    const detach = () => {
+      if (!cancelArmed) return;
+      cancelArmed = false;
+      for (const e of events) window.removeEventListener(e, cancel);
+    };
+
+    const cancel = () => {
+      if (cancelledRef.current) return;
+      cancelledRef.current = true;
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      pendingTimeouts.forEach((id) => clearTimeout(id));
+      pendingIntervals.forEach((id) => clearInterval(id));
+      pendingTimeouts.clear();
+      pendingIntervals.clear();
+      setShowcaseMode(false);
+      removeOverlay();
+      detach();
+    };
+
+    const attach = () => {
+      if (cancelArmed) return;
+      cancelArmed = true;
+      for (const e of events) window.addEventListener(e, cancel, { passive: true, once: true });
+    };
+
     const injectOverlay = () => {
       if (overlayEl) return;
       overlayEl = document.createElement("div");
       overlayEl.id = "_sc_overlay";
-      overlayEl.style.cssText = "position:fixed;inset:0;z-index:999999;pointer-events:none;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.32);opacity:0;transition:opacity .35s";
-      overlayEl.innerHTML = `<div style="background:rgba(0,0,0,.7);color:#fff;font-size:12px;font-weight:500;padding:8px 18px;border-radius:40px;display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:_scSpin .6s linear infinite"></span><span id="_sc_txt">Caching page</span><div style="width:56px;height:2px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden;margin-left:4px"><div id="_sc_bar" style="height:100%;width:0%;background:#fff;border-radius:2px"></div></div></div>`;
-
-      // Single tiny keyframes rule for spinner only
-      const s = document.createElement("style");
-      s.id = "_sc_kf";
-      s.textContent = "@keyframes _scSpin{to{transform:rotate(360deg)}}";
-      if (!document.getElementById("_sc_kf")) document.head.appendChild(s);
-
+      overlayEl.style.cssText = "position:fixed;inset:0;z-index:999999;pointer-events:none;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.28);opacity:0;transition:opacity .3s";
+      overlayEl.innerHTML = isLowEndDevice
+        ? '<div style="background:rgba(0,0,0,.72);color:#fff;font-size:12px;font-weight:500;padding:8px 16px;border-radius:40px;display:flex;align-items:center;gap:8px"><span id="_sc_txt">Loading sections</span><div style="width:56px;height:2px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden"><div id="_sc_bar" style="height:100%;width:0%;background:#fff;border-radius:2px"></div></div></div>'
+        : '<div style="background:rgba(0,0,0,.72);color:#fff;font-size:12px;font-weight:500;padding:8px 18px;border-radius:40px;display:flex;align-items:center;gap:8px"><span id="_sc_txt">Loading sections</span><div style="width:56px;height:2px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden"><div id="_sc_bar" style="height:100%;width:0%;background:#fff;border-radius:2px"></div></div></div>';
       document.body.appendChild(overlayEl);
       barEl = overlayEl.querySelector("#_sc_bar") as HTMLDivElement;
       txtEl = overlayEl.querySelector("#_sc_txt") as HTMLSpanElement;
-      requestAnimationFrame(() => { if (overlayEl) overlayEl.style.opacity = "1"; });
+      requestAnimationFrame(() => {
+        if (overlayEl) overlayEl.style.opacity = "1";
+      });
     };
 
     const setProgress = (pct: number) => {
-      // Throttle bar DOM writes to max ~10/sec
       const now = performance.now();
       if (now - lastBarUpdate < 100 && pct < 100) return;
       lastBarUpdate = now;
       if (barEl) barEl.style.width = `${Math.round(pct)}%`;
     };
 
-    const setPhase = (t: string) => { if (txtEl) txtEl.textContent = t; };
-
-    const removeOverlay = () => {
-      if (!overlayEl) return;
-      if (barEl) barEl.style.width = "100%";
-      setPhase("Cached ✓");
-      const el = overlayEl;
-      overlayEl = null; barEl = null; txtEl = null;
-      setTimeout(() => {
-        el.style.opacity = "0";
-        setTimeout(() => el.remove(), 350);
-      }, 800);
+    const setPhase = (text: string) => {
+      if (txtEl) txtEl.textContent = text;
     };
 
-    // ── Animate ──
+    const runShowcaseBoost = () => {
+      if (boostTriggered || cancelledRef.current) return;
+      boostTriggered = true;
+      triggerShowcaseBoost({ pageId, path: window.location.pathname || "/" });
+    };
+
     const animate = (
-      from: number, to: number, duration: number,
+      from: number,
+      to: number,
+      duration: number,
       easing: (t: number) => number,
-      onFrame: (v: number, curTo: number) => void,
+      onFrame: (value: number, currentTo: number) => void,
       dynamicTo?: boolean,
     ): Promise<number> =>
       new Promise((resolve) => {
         const start = performance.now();
-        let curTo = to;
+        let currentTo = to;
         let lastRemeasure = start;
+
         const tick = (now: number) => {
-          if (cancelledRef.current) { resolve(curTo); return; }
-          // Re-measure every 500ms for lazy content (only on scroll-down)
+          if (cancelledRef.current) {
+            resolve(currentTo);
+            return;
+          }
+
           if (dynamicTo && now - lastRemeasure > 500) {
-            lastMaxRead = 0; // force fresh read
-            const m = getMaxScroll();
-            if (m > curTo) curTo = m;
+            lastMaxRead = 0;
+            const max = getMaxScroll();
+            if (max > currentTo) currentTo = max;
             lastRemeasure = now;
           }
+
           const t = Math.min((now - start) / duration, 1);
-          onFrame(from + (curTo - from) * easing(t), curTo);
+          onFrame(from + (currentTo - from) * easing(t), currentTo);
+
           if (t < 1) rafRef.current = requestAnimationFrame(tick);
-          else resolve(curTo);
+          else resolve(currentTo);
         };
+
         rafRef.current = requestAnimationFrame(tick);
       });
 
     const delay = (ms: number): Promise<void> =>
-      new Promise((resolve) => { timeoutRef.current = setTimeout(resolve, ms); });
+      new Promise((resolve) => {
+        timeoutRef.current = addTimeout(resolve, ms);
+      });
 
-    // ── Wait for scrollable content (max 6s) ──
+    const waitForSplash = (): Promise<void> =>
+      new Promise((resolve) => {
+        if ((window as any).__BM_SPLASH_FINISHED__ === true || !document.getElementById("bm-splash")) {
+          resolve();
+          return;
+        }
+
+        let done = false;
+        const finish = () => {
+          if (done) return;
+          done = true;
+          window.removeEventListener("bm-splash-finished", finish);
+          clearInterval(poll);
+          clearTimeout(hard);
+          pendingIntervals.delete(poll);
+          pendingTimeouts.delete(hard);
+          resolve();
+        };
+
+        window.addEventListener("bm-splash-finished", finish);
+        const poll = addInterval(() => {
+          if ((window as any).__BM_SPLASH_FINISHED__ === true || !document.getElementById("bm-splash")) {
+            if (!(window as any).__BM_SPLASH_FINISHED__) addTimeout(finish, 80);
+            else finish();
+          }
+        }, 200);
+        const hard = addTimeout(finish, 10000);
+        timeoutRef.current = hard;
+      });
+
     const waitForScrollable = async (): Promise<number> => {
       for (let i = 0; i < 30 && !cancelledRef.current; i++) {
         lastMaxRead = 0;
-        const m = getMaxScroll();
-        if (m > 120) return m;
+        const max = getMaxScroll();
+        if (max > 120) return max;
         await delay(200);
       }
       return getMaxScroll();
     };
 
-    // ── Wait for splash-hide.js ──
-    const waitForSplash = (): Promise<void> =>
-      new Promise((resolve) => {
-        if ((window as any).__BM_SPLASH_FINISHED__ === true || !document.getElementById("bm-splash")) {
-          resolve(); return;
-        }
-        let done = false;
-        const finish = () => {
-          if (done) return; done = true;
-          window.removeEventListener("bm-splash-finished", finish);
-          clearInterval(poll); clearTimeout(hard);
-          resolve();
-        };
-        window.addEventListener("bm-splash-finished", finish);
-        const poll = setInterval(() => {
-          if ((window as any).__BM_SPLASH_FINISHED__ === true || !document.getElementById("bm-splash")) {
-            if (!(window as any).__BM_SPLASH_FINISHED__) setTimeout(finish, 80);
-            else finish();
-          }
-        }, 200);
-        const hard = setTimeout(finish, 10000);
-        timeoutRef.current = hard;
-      });
-
-    // ── Wait for browser idle (avoids fighting initial render) ──
     const waitForIdle = (): Promise<void> =>
       new Promise((resolve) => {
-        if (typeof requestIdleCallback === "function") {
-          requestIdleCallback(() => resolve(), { timeout: 3000 });
-        } else {
-          setTimeout(resolve, 100);
-        }
+        if (typeof requestIdleCallback === "function") requestIdleCallback(() => resolve(), { timeout: 3000 });
+        else setTimeout(resolve, 100);
       });
 
-    // ── Detect in-app browsers (laggy on these) ──
     const ua = navigator.userAgent;
     const isInApp = /Instagram|FBAN|FBAV|TikTok|musical_ly|Twitter|GSA|Line\//i.test(ua);
 
-    // ── Main sequence ──
     const run = async () => {
       await waitForSplash();
       if (cancelledRef.current) return;
 
-      // Let the browser finish painting before we start animating
       await waitForIdle();
       if (cancelledRef.current) return;
 
       await delay(startDelay);
       if (cancelledRef.current) return;
 
-      setScroll(0); lastScrollY = 0;
-      await delay(150);
+      // Arm user-cancel only when showcase starts to avoid premature mobile touch cancellations.
+      attach();
+
+      setShowcaseMode(true);
+      runShowcaseBoost();
+
+      setScroll(0);
+      lastScrollY = 0;
+      await delay(120);
       if (cancelledRef.current) return;
 
       lastMaxRead = 0;
       const maxScroll = await waitForScrollable();
-      if (cancelledRef.current || maxScroll <= 120) return;
+      if (cancelledRef.current || maxScroll <= 120) {
+        setShowcaseMode(false);
+        detach();
+        return;
+      }
 
       injectOverlay();
-
-      // Brief "Caching page" display
-      await delay(800);
+      await delay(500);
       if (cancelledRef.current) return;
 
-      // Use shorter durations in in-app browsers to reduce lag
-      const downDur = isInApp ? Math.min(scrollDownDuration, 900) : scrollDownDuration;
-      const upDur = isInApp ? Math.min(springBackDuration, 600) : springBackDuration;
+      const downDur = isLowEndDevice ? Math.min(scrollDownDuration, 700) : isInApp ? Math.min(scrollDownDuration, 900) : scrollDownDuration;
+      const upDur = isLowEndDevice ? Math.min(springBackDuration, 450) : isInApp ? Math.min(springBackDuration, 600) : springBackDuration;
 
-      // 1) Scroll down — re-measures for lazy content
       setPhase("Loading sections");
-      const finalMax = await animate(0, maxScroll, downDur, easeInOutCubic, (v, curTo) => {
-        setScroll(v);
-        setProgress(curTo > 0 ? (v / curTo) * 60 : 0);
-      }, true);
+      const finalMax = await animate(0, maxScroll, downDur, easeInOutCubic, (value, currentTo) => {
+        setScroll(value);
+        setProgress(currentTo > 0 ? (value / currentTo) * 60 : 0);
+      }, !isLowEndDevice);
       if (cancelledRef.current) return;
 
-      // Snap to true bottom if more content loaded
       lastMaxRead = 0;
       const trueBottom = getMaxScroll();
       if (trueBottom > finalMax + 50) setScroll(trueBottom);
       setProgress(60);
 
-      // 2) Pause
       await delay(bottomPause);
       if (cancelledRef.current) return;
 
-      // 3) Scroll back up
       const backFrom = Math.max(finalMax, trueBottom);
       setPhase("Returning");
-      await animate(backFrom, 0, upDur, easeInOutCubic, (v) => {
-        setScroll(v);
-        setProgress(60 + (1 - v / Math.max(1, backFrom)) * 30);
+      await animate(backFrom, 0, upDur, easeInOutCubic, (value) => {
+        setScroll(value);
+        setProgress(60 + (1 - value / Math.max(1, backFrom)) * 30);
       });
       if (cancelledRef.current) return;
 
-      // 4) Finalize
-      setProgress(90);
-      setPhase("Finalizing");
-      await delay(300);
-      if (cancelledRef.current) return;
       setProgress(100);
-
+      setShowcaseMode(false);
       removeOverlay();
-      try { sessionStorage.setItem(sessionKey, "1"); } catch {}
       detach();
+
     };
 
     run();
-    return () => { cancel(); };
-  }, [scrollDownDuration, bottomPause, springBackDuration, startDelay, respectReducedMotion, containerSelector, enabled, pageId]);
+
+    return () => {
+      setShowcaseMode(false);
+      cancel();
+    };
+  }, [
+    scrollDownDuration,
+    bottomPause,
+    springBackDuration,
+    startDelay,
+    respectReducedMotion,
+    containerSelector,
+    enabled,
+    pageId,
+  ]);
 }

@@ -402,6 +402,7 @@ function HomeContent() {
     startDelay: currentView === 'content' ? 1200 : 99999,
     enabled: currentView === 'content',
     pageId: 'home',
+    persistInSession: false,
   });
 
   // Defer analytics + prefetch — lazy-loaded to avoid compiling 170+309 lines up front
@@ -447,6 +448,10 @@ function HomeContent() {
     if (typeof document === 'undefined') return;
     const root = document.documentElement;
     const body = document.body;
+
+    // Safety: clear residual splash sway class on route entry
+    root.classList.remove('bm-sway', 'bm-sway-safe');
+    body.classList.remove('bm-sway', 'bm-sway-safe');
     
     // NOTE: Don't remove drunk scroll here - it's used by showcase scroll animation
     // forceScrollEnabler will handle cleanup when showcase is not active

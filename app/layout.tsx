@@ -242,6 +242,7 @@ export default function RootLayout({
   modal: React.ReactNode;
 }>) {
   const swEnabled = process.env.NODE_ENV === "production";
+  const routePrefetchEnabled = process.env.NODE_ENV === "production";
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -250,11 +251,11 @@ export default function RootLayout({
       :root{--app-vh:1vh;}
       html,body{background:#000000!important;}
       
-      #bm-splash{position:fixed;top:0;right:0;bottom:0;left:0;width:100%;height:100%;min-height:100vh;min-height:100dvh;min-height:-webkit-fill-available;z-index:99999;background:#ffffff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;opacity:1;transition:opacity .5s cubic-bezier(.4,0,.2,1),visibility .5s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.4,0,.2,1);overflow:hidden;will-change:opacity,transform;}
+      #bm-splash{position:fixed;top:0;right:0;bottom:0;left:0;width:100%;height:100%;min-height:100vh;min-height:100dvh;min-height:-webkit-fill-available;z-index:99999;background:#ffffff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;opacity:1;transition:opacity .5s cubic-bezier(.4,0,.2,1),visibility .5s cubic-bezier(.4,0,.2,1);overflow:hidden;will-change:opacity,transform;transform-origin:50% 50%;}
       /* Lock viewport while splash is active — overrides scroll fixes below */
       html:has(#bm-splash:not(.hide)),html:has(#bm-splash:not(.hide)) body{overflow:hidden!important;height:100%!important;position:static!important;}
       @supports not (selector(:has(*))){html:not(.bm-splash-done),html:not(.bm-splash-done) body{overflow:hidden!important;height:100%!important;}}
-      #bm-splash.hide{opacity:0;visibility:hidden;pointer-events:none;transform:scale(1.02);}
+      #bm-splash.hide{opacity:0;visibility:hidden;pointer-events:none;transform:scale(1.02);animation:none!important;transition:opacity .5s cubic-bezier(.4,0,.2,1),visibility .5s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.4,0,.2,1);}
 
       /* Safari/iOS fallback: reduce compositor stress + stabilize viewport sizing */
       html.is-safari #bm-splash,html.is-ios-safari #bm-splash{left:0;right:0;width:100%;height:100%;min-height:100vh;min-height:-webkit-fill-available;transform:translateZ(0);-webkit-transform:translateZ(0);backface-visibility:hidden;-webkit-backface-visibility:hidden;}
@@ -270,8 +271,11 @@ export default function RootLayout({
       #bm-splash .bm-orb-a{width:240px;height:240px;top:12%;left:18%;background:radial-gradient(circle,rgba(24,24,27,.12),rgba(24,24,27,0) 65%);}
       #bm-splash .bm-orb-b{width:280px;height:280px;right:14%;bottom:10%;background:radial-gradient(circle,rgba(24,24,27,.1),rgba(24,24,27,0) 65%);}
 
+      /* Cross-browser sway layer (more reliable than animating the fixed viewport itself) */
+      #bm-splash .bm-sway-content{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;animation:bm-splash-drunk-sway 3.2s cubic-bezier(.37,.01,.63,1) infinite;will-change:transform;transform:translate3d(0,0,0);}
+
       /* Logo container */
-      #bm-splash .bm-logo-wrap{position:relative;z-index:10;width:120px;height:120px;display:flex;align-items:center;justify-content:center;margin-bottom:24px;animation:bm-logo-intro .7s cubic-bezier(.2,.8,.2,1) both;will-change:transform,opacity;}
+      #bm-splash .bm-logo-wrap{position:relative;z-index:10;width:162px;height:162px;display:flex;align-items:center;justify-content:center;margin-bottom:24px;animation:bm-logo-intro .7s cubic-bezier(.2,.8,.2,1) both;will-change:transform,opacity;}
       #bm-splash .bm-logo-wrap svg{width:100%;height:100%;filter:drop-shadow(0 0 20px rgba(0,0,0,0.08));}
 
       /* Title */
@@ -284,7 +288,7 @@ export default function RootLayout({
       #bm-splash .bm-progress-wrap{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;gap:16px;animation:bm-text-intro .6s cubic-bezier(.2,.8,.2,1) .4s both;will-change:transform,opacity;}
 
       /* Percentage */
-      #bm-splash .bm-percent{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Monaco,Consolas,monospace;font-size:56px;font-weight:700;letter-spacing:-.04em;line-height:1;background:linear-gradient(110deg,#a1a1aa 15%,#18181b 45%,#18181b 55%,#a1a1aa 85%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;font-variant-numeric:tabular-nums;}
+      #bm-splash .bm-percent{display:inline-block;white-space:nowrap;padding-right:.08em;overflow:visible;font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Monaco,Consolas,monospace;font-size:56px;font-weight:700;letter-spacing:-.04em;line-height:1;background:linear-gradient(110deg,#a1a1aa 15%,#18181b 45%,#18181b 55%,#a1a1aa 85%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;font-variant-numeric:tabular-nums;}
 
       /* Status pill */
       #bm-splash .bm-status{display:flex;align-items:center;gap:12px;background:rgba(0,0,0,.03);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:8px 20px;border-radius:9999px;border:1px solid rgba(0,0,0,.06);box-shadow:0 1px 3px rgba(0,0,0,.04);}
@@ -482,15 +486,18 @@ export default function RootLayout({
       #bm-splash .bm-step-icon{width:14px;height:14px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;font-size:8px;flex-shrink:0;transition:all .3s ease;}
       #bm-splash .bm-step.active .bm-step-icon{background:rgba(0,0,0,.06);}
       #bm-splash .bm-step.done .bm-step-icon{background:#18181b;color:#fff;}
-      html.bm-sway,html.bm-sway body{animation:bm-sway 2.1s cubic-bezier(.34,.73,.64,.26) both;transform-origin:50% 50%;will-change:transform;contain:layout style paint;}
+      html.bm-sway body{animation:bm-sway 2.1s cubic-bezier(.34,.73,.64,.26) both;transform-origin:50% 50%;will-change:transform;}
+      html.bm-sway-safe body{animation:bm-sway-safe .9s ease-out both;transform-origin:50% 50%;}
 
       @keyframes bm-logo-intro{0%{opacity:0;transform:translate3d(0,14px,0) scale(.9);will-change:transform}100%{opacity:1;transform:translate3d(0,0,0) scale(1)}}
       @keyframes bm-text-intro{0%{opacity:0;transform:translate3d(0,10px,0)}100%{opacity:1;transform:translate3d(0,0,0)}}
       @keyframes bm-step-sheen{0%{background-position:0% 50%;transform:translate3d(0,0,0)}50%{background-position:100% 50%;transform:translate3d(2px,0,0)}100%{background-position:0% 50%;transform:translate3d(0,0,0)}}
       @keyframes bm-step-settle{0%{opacity:.6;transform:translate3d(0,0,0)}100%{opacity:1;transform:translate3d(0,0,0)}}
+      @keyframes bm-splash-drunk-sway{0%{transform:translate3d(0,0,0) rotate(0deg)}20%{transform:translate3d(-22px,.2px,0) rotate(-.48deg)}40%{transform:translate3d(22px,-.2px,0) rotate(.48deg)}60%{transform:translate3d(-20px,.16px,0) rotate(-.4deg)}80%{transform:translate3d(20px,-.16px,0) rotate(.4deg)}100%{transform:translate3d(0,0,0) rotate(0deg)}}
       @keyframes bm-sway{0%{transform:translate3d(0,0,0) rotate(0deg)}16%{transform:translate3d(-16px,1.5px,0) rotate(-1.1deg)}32%{transform:translate3d(12px,-1.8px,0) rotate(0.9deg)}50%{transform:translate3d(-14px,2px,0) rotate(-0.8deg)}68%{transform:translate3d(10px,-1.2px,0) rotate(0.6deg)}84%{transform:translate3d(-8px,1px,0) rotate(-0.3deg)}100%{transform:translate3d(0,0,0) rotate(0deg)}}
-      @media(prefers-reduced-motion:reduce){#bm-splash::before,#bm-splash::after,#bm-splash .bm-orb,#bm-splash .bm-logo-wrap,#bm-splash .bm-title,#bm-splash .bm-subtitle,#bm-splash .bm-progress-wrap,#bm-splash .bm-dot-ping,#bm-splash .bm-bar-outer::after,#bm-splash .bm-bar-inner,#bm-splash .bm-step span:last-child{animation:none!important;}#bm-splash,#bm-splash .bm-step{transition:none!important;}}
-      @media(min-width:768px){#bm-splash .bm-logo-wrap{width:160px;height:160px;}#bm-splash .bm-title{font-size:64px;}#bm-splash .bm-percent{font-size:72px;}}
+      @keyframes bm-sway-safe{0%{transform:translate3d(0,0,0)}25%{transform:translate3d(-3px,0,0)}50%{transform:translate3d(3px,0,0)}75%{transform:translate3d(-2px,0,0)}100%{transform:translate3d(0,0,0)}}
+      @media(prefers-reduced-motion:reduce){#bm-splash,#bm-splash::before,#bm-splash::after,#bm-splash .bm-orb,#bm-splash .bm-sway-content,#bm-splash .bm-logo-wrap,#bm-splash .bm-title,#bm-splash .bm-subtitle,#bm-splash .bm-progress-wrap,#bm-splash .bm-dot-ping,#bm-splash .bm-bar-outer::after,#bm-splash .bm-bar-inner,#bm-splash .bm-step span:last-child{animation:none!important;}#bm-splash,#bm-splash .bm-step{transition:none!important;}}
+      @media(min-width:768px){#bm-splash .bm-logo-wrap{width:216px;height:216px;}#bm-splash .bm-title{font-size:64px;}#bm-splash .bm-percent{font-size:72px;}}
         ` }} />
         {/* CRITICAL: Blocking init  served as static file (no Turbopack compilation cost) */}
         <script src="/scripts/splash-init.js" />
@@ -699,7 +706,7 @@ export default function RootLayout({
           id="sw-init"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
-            __html: `window.__BM_SW_ENABLED__=${swEnabled};window.__BM_VAPID_KEY__='${process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ""}';`
+            __html: `window.__BM_SW_ENABLED__=${swEnabled};window.__BM_ENABLE_ROUTE_PREFETCH__=${routePrefetchEnabled};window.__BM_VAPID_KEY__='${process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ""}';`
           }}
         />
         <Script id="sw-and-touch" src="/scripts/sw-touch.js" strategy="afterInteractive" />
@@ -756,7 +763,9 @@ export default function RootLayout({
         <Script id="detect-120hz" src="/scripts/detect-120hz.js" strategy="lazyOnload" />
         <Script id="perf-monitor" src="/scripts/perf-monitor.js" strategy="lazyOnload" />
         <Script id="device-detect" src="/scripts/device-detect.js" strategy="lazyOnload" />
-        <Script id="network-optimizer" src="/scripts/BMBRAIN/network-optimizer.js" strategy="lazyOnload" />
+        {routePrefetchEnabled && (
+          <Script id="network-optimizer" src="/scripts/BMBRAIN/network-optimizer.js" strategy="lazyOnload" />
+        )}
         <Script id="spline-universal" src="/scripts/BMBRAIN/spline-universal.js" strategy="lazyOnload" />
         <Script id="offline-detect" src="/scripts/BMBRAIN/offline-detect.js" strategy="lazyOnload" />
       </head>
@@ -768,6 +777,7 @@ export default function RootLayout({
         <div id="bm-splash" aria-hidden="true" suppressHydrationWarning>
           <div className="bm-orb bm-orb-a" />
           <div className="bm-orb bm-orb-b" />
+          <div className="bm-sway-content">
           {/* Logo */}
           <div className="bm-logo-wrap">
             <svg
@@ -800,6 +810,7 @@ export default function RootLayout({
               <div className="bm-step" data-step="2" suppressHydrationWarning><span className="bm-step-icon" suppressHydrationWarning></span><span>HYDRATING UI</span></div>
               <div className="bm-step" data-step="3" suppressHydrationWarning><span className="bm-step-icon" suppressHydrationWarning></span><span>READY</span></div>
             </div>
+          </div>
           </div>
         </div>
         <script src="/scripts/splash-hide.js" />

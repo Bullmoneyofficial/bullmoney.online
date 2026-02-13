@@ -183,6 +183,10 @@ const HERO_IMAGE_INDICES = HERO_CAROUSEL_SLIDES
   .map((slide, index) => (slide.type === 'image' ? index : -1))
   .filter((index) => index >= 0);
 const FIRST_HERO_IMAGE_INDEX = HERO_IMAGE_INDICES[0] ?? 0;
+const HERO_VIDEO_INDICES = HERO_CAROUSEL_SLIDES
+  .map((slide, index) => (slide.type === 'video' ? index : -1))
+  .filter((index) => index >= 0);
+const FIRST_HERO_VIDEO_INDEX = HERO_VIDEO_INDICES[0] ?? 0;
 
 const GRID_VARIANTS = [
   { value: 'spotlight', label: 'Spotlight', group: 'Featured' },
@@ -251,32 +255,7 @@ const HERO_TYPE_WEIGHTS = {
 } as const;
 
 const pickHeroSlideIndex = () => {
-  const buckets = {
-    'world-map': [] as number[],
-    spline: [] as number[],
-    image: [] as number[],
-    video: [] as number[],
-  };
-
-  HERO_CAROUSEL_SLIDES.forEach((slide, index) => {
-    buckets[slide.type].push(index);
-  });
-
-  const roll = Math.random();
-  const cutoffs = [
-    HERO_TYPE_WEIGHTS['world-map'],
-    HERO_TYPE_WEIGHTS['world-map'] + HERO_TYPE_WEIGHTS.spline,
-    HERO_TYPE_WEIGHTS['world-map'] + HERO_TYPE_WEIGHTS.spline + HERO_TYPE_WEIGHTS.image,
-  ];
-
-  let type: keyof typeof buckets = 'video';
-  if (roll < cutoffs[0]) type = 'world-map';
-  else if (roll < cutoffs[1]) type = 'spline';
-  else if (roll < cutoffs[2]) type = 'image';
-
-  const pool = buckets[type];
-  if (!pool.length) return 0;
-  return pool[Math.floor(Math.random() * pool.length)];
+  return FIRST_HERO_VIDEO_INDEX;
 };
 
 type StorePageProps = {
@@ -351,10 +330,11 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
   const [productsGridVariant, setProductsGridVariant] = useState<GridVariant>('spotlight');
   const [featuredGridVariant, setFeaturedGridVariant] = useState<GridVariant>('animated');
   const [timelineGridVariant, setTimelineGridVariant] = useState<GridVariant>('snug');
-  const [heroSlideIndex, setHeroSlideIndex] = useState(() => pickHeroSlideIndex());
+  const [heroSlideIndex, setHeroSlideIndex] = useState(() => FIRST_HERO_VIDEO_INDEX);
   const [heroImageIndex, setHeroImageIndex] = useState(0);
   const [showHeroMapOverlay] = useState(() => Math.random() < 0.05);
   const [heroImageReady, setHeroImageReady] = useState(false);
+  const [heroVideoFinished, setHeroVideoFinished] = useState(false);
 
   const openStudio = useCallback((opts?: StudioOpts) => {
     setStudioState({ open: true, ...opts });
@@ -367,8 +347,9 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
   // Showcase scroll — uses hook defaults for lightweight perf
   useShowcaseScroll({
     startDelay: 1000,
-    enabled: allowHeavyHeroReady,
+    enabled: hasMounted,
     pageId: 'store',
+    persistInSession: false,
   });
 
   const resolvedHeroSlide = useMemo(() => {
@@ -394,15 +375,22 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
     if (heroCacheLoadedRef.current) return;
     heroCacheLoadedRef.current = true;
 
-    const cachedIndex = userStorage.get<number>(HERO_CACHE_KEY);
-    if (typeof cachedIndex === 'number' && cachedIndex >= 0 && cachedIndex < HERO_CAROUSEL_SLIDES.length) {
-      setHeroSlideIndex(cachedIndex);
-    }
+    setHeroSlideIndex(FIRST_HERO_VIDEO_INDEX);
+    setHeroVideoFinished(false);
   }, []);
 
   useEffect(() => {
     if (!heroCacheLoadedRef.current) return;
     userStorage.set(HERO_CACHE_KEY, heroSlideIndex, HERO_CACHE_TTL);
+  }, [heroSlideIndex]);
+
+  useEffect(() => {
+    const currentSlide = HERO_CAROUSEL_SLIDES[heroSlideIndex];
+    if (currentSlide?.type === 'video') {
+      setHeroVideoFinished(false);
+      return;
+    }
+    setHeroVideoFinished(true);
   }, [heroSlideIndex]);
 
   useEffect(() => {
@@ -440,10 +428,14 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
         }
         return;
       }
+      const currentSlide = HERO_CAROUSEL_SLIDES[heroSlideIndex];
+      if (currentSlide?.type === 'video' && !heroVideoFinished) {
+        return;
+      }
       setHeroSlideIndex((prev) => (prev + 1) % HERO_CAROUSEL_SLIDES.length);
     }, HERO_SLIDE_DURATION * 1000);
     return () => clearInterval(interval);
-  }, [allowHeavyHeroReady, hasMounted]);
+  }, [allowHeavyHeroReady, hasMounted, heroSlideIndex, heroVideoFinished]);
 
 
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
@@ -1302,16 +1294,17 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
   const timelineProducts = useMemo(() => products.slice(4, 8), [products]);
   const heroMedia = useMemo(() => {
     const slide = resolvedHeroSlide;
-    const forcedSplineScene = slide.type === 'spline' ? (slide.scene ?? '/scene1.splinecode') : '/scene1.splinecode';
 
-    return (
-      <div
-        className="absolute inset-0 z-0 h-full w-full"
-        style={{ pointerEvents: 'none', touchAction: 'pan-y' }}
-      >
-        <SplineBackground scene={forcedSplineScene} className="h-full w-full" priority />
-      </div>
-    );
+    if (slide.type === 'spline') {
+      return (
+        <div
+          className="absolute inset-0 z-0 h-full w-full"
+          style={{ pointerEvents: 'none', touchAction: 'pan-y' }}
+        >
+          <SplineBackground scene={slide.scene ?? '/scene1.splinecode'} className="h-full w-full" priority />
+        </div>
+      );
+    }
 
     if (slide.type === 'image') {
       return (
@@ -1345,10 +1338,12 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
           style={{ touchAction: 'pan-y' }}
           autoPlay
           muted
-          loop
+          loop={false}
           playsInline
           preload="metadata"
           poster={slide.poster}
+          onEnded={() => setHeroVideoFinished(true)}
+          onError={() => setHeroVideoFinished(true)}
         >
           <source src={slide.src} type="video/mp4" />
         </video>
@@ -1497,7 +1492,7 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
         className="absolute inset-0 z-0 h-full w-full"
         style={{ pointerEvents: 'none', touchAction: 'pan-y' }}
       >
-        <SplineBackground scene={slide.type === 'spline' ? (slide.scene ?? '/scene1.splinecode') : '/scene1.splinecode'} className="h-full w-full" priority />
+        <SplineBackground scene="/scene1.splinecode" className="h-full w-full" priority />
       </div>
     );
   }, [resolvedHeroSlide, allowHeavyHeroReady]);

@@ -1890,50 +1890,39 @@ interface CyclingBackgroundProps {
 const ALL_EFFECTS: BackgroundEffect[] = ['spline', 'liquidEther', 'galaxy', 'terminal', 'darkVeil', 'lightPillar', 'letterGlitch', 'gridScan', 'ballpit', 'gridDistortion'];
 
 // Helper to get initial effect index from localStorage (runs only once)
-// SPLINE IS ALWAYS DEFAULT — users must manually pick to switch
+// GRID SCAN is always prioritized on load
 const getInitialEffectIndex = (effectsLength: number, reloadsPerCycle: number): number => {
-  // SSR safety - always return Spline (index 0)
-  if (typeof window === 'undefined') return 0;
+  const gridScanIndex = Math.max(0, ALL_EFFECTS.indexOf('gridScan'));
+  // SSR safety - default to Grid Scan index
+  if (typeof window === 'undefined') return gridScanIndex;
   
   try {
-    // Only use a different bg if user explicitly picked one via BG Picker
-    const userPicked = localStorage.getItem('bg-user-picked');
-    if (userPicked === 'true') {
-      const storedIndex = localStorage.getItem('bg-effect-index');
-      if (storedIndex !== null) {
-        const idx = parseInt(storedIndex, 10);
-        if (idx >= 0 && idx < effectsLength) {
-          console.log('[CyclingBG] User-picked background:', ALL_EFFECTS[idx], 'at index', idx);
-          return idx;
-        }
-      }
-    }
-    
-    // FORCE CLEAR old cache on version change - ensures Spline shows
+    // FORCE CLEAR old cache on version change - ensures Grid Scan is default
     const VERSION_KEY = 'bullmoney-bg-version';
-    const CURRENT_VERSION = 'v5-spline-always-default';
+    const CURRENT_VERSION = 'v6-gridscan-priority-default';
     const storedVersion = localStorage.getItem(VERSION_KEY);
+    const targetEffect = 'gridScan';
+    const targetIndex = Math.max(0, ALL_EFFECTS.indexOf(targetEffect));
     
     if (storedVersion !== CURRENT_VERSION) {
-      // Clear all old data and force Spline
+      // Clear all old data and force Grid Scan
       localStorage.removeItem('bg-effect-index');
       localStorage.removeItem('bg-reload-count');
       localStorage.removeItem('bg-user-picked');
       sessionStorage.removeItem('bullmoney-bg-session-started');
       sessionStorage.removeItem('bg-first-effect-shown');
       localStorage.setItem(VERSION_KEY, CURRENT_VERSION);
-      console.log('[CyclingBG] Version change detected - clearing cache, showing Spline');
+      console.log('[CyclingBG] Version change detected - clearing cache, showing Grid Scan');
     }
     
-    // SPLINE IS ALWAYS DEFAULT — no cycling, no randomization
-    // User must explicitly pick a different background via BG Picker
-    console.log('[CyclingBG] Defaulting to Spline (index 0) — user must pick to switch');
-    localStorage.setItem('bg-effect-index', '0');
+    // GRID SCAN always starts first on each load
+    console.log('[CyclingBG] Defaulting to Grid Scan — prioritized on load');
+    localStorage.setItem('bg-effect-index', String(targetIndex));
     localStorage.setItem('bg-reload-count', '0');
-    return 0;
+    return targetIndex;
   } catch (e) {
     console.error('[CyclingBG] Error:', e);
-    return 0; // Fallback - show Spline
+    return gridScanIndex; // Fallback - show Grid Scan
   }
 };
 
@@ -1989,6 +1978,8 @@ const SplineBackground = memo(function SplineBackground({ grayscale = true, scen
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [retryKey, setRetryKey] = useState(0);
+  const [useDirectScene, setUseDirectScene] = useState(false);
   const [cachedSceneUrl, setCachedSceneUrl] = useState<string | null>(null);
   const [cacheChecked, setCacheChecked] = useState(false);
   const splineRef = useRef<any>(null);
@@ -1996,6 +1987,7 @@ const SplineBackground = memo(function SplineBackground({ grayscale = true, scen
   const loadStartTime = useRef<number>(0);
   const blobUrlRef = useRef<string | null>(null);
   const isVisibleRef = useRef(true);
+  const retryTimerRef = useRef<number | null>(null);
   const MAX_RETRIES = 2;
   
   // Use provided scene URL
@@ -2005,6 +1997,11 @@ const SplineBackground = memo(function SplineBackground({ grayscale = true, scen
   useEffect(() => {
     if (typeof window === 'undefined') return;
     loadStartTime.current = performance.now();
+    setRetryCount(0);
+    setRetryKey(0);
+    setUseDirectScene(false);
+    setHasError(false);
+    setIsLoaded(false);
 
     // Ensure cache is initialized
     initSplineCache().then(() => {
@@ -2030,11 +2027,45 @@ const SplineBackground = memo(function SplineBackground({ grayscale = true, scen
     // Cleanup blob URL on unmount
     return () => {
       clearTimeout(timeout);
+      if (retryTimerRef.current) {
+        window.clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = null;
+      }
       if (blobUrlRef.current) {
         URL.revokeObjectURL(blobUrlRef.current);
       }
     };
   }, [scene]);
+
+  const queueRetry = useCallback((reason: 'error' | 'context') => {
+    setRetryCount((prev) => {
+      if (prev >= MAX_RETRIES) {
+        console.error(`[SplineBackground] Max retries reached (${reason}), showing fallback`);
+        setHasError(true);
+        return prev;
+      }
+
+      const next = prev + 1;
+      const delay = 700 + next * 450;
+      console.warn(`[SplineBackground] Retrying after ${reason} (${next}/${MAX_RETRIES}) in ${delay}ms`);
+
+      if (retryTimerRef.current) {
+        window.clearTimeout(retryTimerRef.current);
+      }
+
+      if (!useDirectScene) {
+        setUseDirectScene(true);
+      }
+
+      retryTimerRef.current = window.setTimeout(() => {
+        setHasError(false);
+        setIsLoaded(false);
+        setRetryKey((k) => k + 1);
+      }, delay);
+
+      return next;
+    });
+  }, [MAX_RETRIES, useDirectScene]);
 
   // Mobile: IntersectionObserver to pause/play Spline when off-screen
   useEffect(() => {
@@ -2057,6 +2088,23 @@ const SplineBackground = memo(function SplineBackground({ grayscale = true, scen
     observer.observe(ctn);
     return () => observer.disconnect();
   }, [isLoaded]);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const canvas = containerRef.current.querySelector('canvas');
+    if (!canvas) return;
+
+    const onContextLost = (event: Event) => {
+      event.preventDefault();
+      setIsLoaded(false);
+      queueRetry('context');
+    };
+
+    canvas.addEventListener('webglcontextlost', onContextLost, false);
+    return () => {
+      canvas.removeEventListener('webglcontextlost', onContextLost, false);
+    };
+  }, [isLoaded, retryKey, queueRetry]);
 
   const handleLoad = useCallback((splineApp: any) => {
     const loadTime = performance.now() - loadStartTime.current;
@@ -2084,24 +2132,13 @@ const SplineBackground = memo(function SplineBackground({ grayscale = true, scen
 
   const handleError = useCallback((error: any) => {
     console.error('[SplineBackground] Load error:', error);
-    setRetryCount(prev => {
-      if (prev < MAX_RETRIES) {
-        console.log(`[SplineBackground] Retrying... attempt ${prev + 2}/${MAX_RETRIES + 1}`);
-        // Reset after a short delay so Spline remounts
-        setTimeout(() => {
-          setHasError(false);
-          setIsLoaded(false);
-        }, 1500);
-        return prev + 1;
-      }
-      console.error('[SplineBackground] Max retries reached, showing fallback');
-      setHasError(true);
-      return prev;
-    });
-  }, [MAX_RETRIES]);
+    queueRetry('error');
+  }, [queueRetry]);
 
   // Use cached URL if available, otherwise fall back to direct URL once cache check is done
-  const sceneToLoad = cachedSceneUrl || (cacheChecked ? scene : null);
+  const sceneToLoad = useDirectScene
+    ? (cacheChecked ? scene : null)
+    : (cachedSceneUrl || (cacheChecked ? scene : null));
 
   return (
     <div 
@@ -2155,6 +2192,7 @@ const SplineBackground = memo(function SplineBackground({ grayscale = true, scen
         <div className="absolute inset-0 spline-scene">
           <div className="spline-scene-inner">
             <Spline
+              key={`mobile-hero-spline-${retryKey}`}
               scene={sceneToLoad}
               renderOnDemand={IS_MOBILE}
               onLoad={handleLoad}
@@ -2793,8 +2831,8 @@ const ColorPickerPanel = ({
 
 const CyclingBackground: React.FC<CyclingBackgroundProps> = ({ 
   reloadsPerCycle = 2, // Switch background every 2 reloads
-  // SPLINE FIRST (index 0) - prioritized 60% of the time
-  effects = ['spline', 'liquidEther', 'galaxy', 'terminal', 'darkVeil', 'lightPillar', 'letterGlitch', 'gridScan', 'ballpit', 'gridDistortion'],
+  // GRID SCAN FIRST - prioritized on all loads
+  effects = ['gridScan', 'spline', 'liquidEther', 'galaxy', 'terminal', 'darkVeil', 'lightPillar', 'letterGlitch', 'ballpit', 'gridDistortion'],
   videoId = 'jfKfPfyJRdk',
   videoLoading = false,
   videoError = false,
@@ -3814,10 +3852,10 @@ export default function Hero({ sources, onOpenModal, variant }: HeroProps) {
       <Styles />
       <div className="hero-wrapper">
         
-        {/* Cycling Background Effects - SPLINE FIRST */}
+        {/* Cycling Background Effects - GRID SCAN PRIORITY */}
         <CyclingBackground 
           reloadsPerCycle={2} 
-          effects={['spline', 'liquidEther', 'galaxy', 'terminal', 'darkVeil', 'lightPillar', 'letterGlitch', 'gridScan', 'ballpit', 'gridDistortion']}
+          effects={['gridScan', 'spline', 'liquidEther', 'galaxy', 'terminal', 'darkVeil', 'lightPillar', 'letterGlitch', 'ballpit', 'gridDistortion']}
           videoId={videoId}
           videoLoading={loading}
           videoError={videoError}

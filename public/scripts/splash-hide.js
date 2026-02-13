@@ -1,6 +1,28 @@
 (function(){
   var splash = document.getElementById('bm-splash');
   if (!splash) return;
+  var swayTarget = splash.querySelector('.bm-sway-content') || splash;
+  var SPLASH_SWAY_ANIMATION = 'bm-splash-drunk-sway 3.2s cubic-bezier(.37,.01,.63,1) infinite';
+
+  function resetSplashSwayAnimation() {
+    if (!splash || splash.classList.contains('hide')) return;
+    swayTarget.style.animation = 'none';
+    void swayTarget.offsetHeight;
+    swayTarget.style.animation = SPLASH_SWAY_ANIMATION;
+    swayTarget.style.animationPlayState = 'running';
+  }
+
+  function scheduleSplashSwayReset() {
+    requestAnimationFrame(function() {
+      resetSplashSwayAnimation();
+    });
+  }
+
+  // Ensure sway animation reliably runs with the same start state on reload/open
+  scheduleSplashSwayReset();
+  window.addEventListener('pageshow', function() {
+    scheduleSplashSwayReset();
+  }, { passive: true });
 
   // --- Loading state machine ---
   var STEPS = ['LOADING CORE','CONNECTING SERVICES','HYDRATING UI','READY'];
@@ -19,6 +41,130 @@
   var splashStartAt = Date.now();
   var isInAppBrowser = document.documentElement.classList.contains('is-in-app-browser');
   var minVisibleMs = isInAppBrowser ? 1200 : 700;
+  var loadAudio = null;
+  var interactionBound = false;
+  var lifecycleBound = false;
+  var loadSoundPlayed = false;
+  var mutedBootstrapTried = false;
+  var readyAt95Armed = false;
+  var readyShownAt95 = false;
+
+  function playLoadSound(useMutedBootstrap) {
+    if (loadSoundPlayed) return;
+    if (!loadAudio) {
+      loadAudio = new Audio('/modals.mp3');
+      loadAudio.preload = 'auto';
+      loadAudio.volume = 0.18;
+      loadAudio.playsInline = true;
+    }
+
+    loadAudio.muted = !!useMutedBootstrap;
+    if (!loadAudio.muted) loadAudio.volume = 0.18;
+
+    var playPromise;
+    try {
+      loadAudio.currentTime = 0;
+      playPromise = loadAudio.play();
+    } catch (e) {
+      playPromise = null;
+    }
+
+    if (playPromise && typeof playPromise.then === 'function') {
+      playPromise.then(function() {
+        loadSoundPlayed = true;
+        unbindInteractionSoundRetry();
+        unbindLifecycleSoundRetry();
+        if (loadAudio && loadAudio.muted) {
+          setTimeout(function() {
+            if (!loadAudio) return;
+            loadAudio.muted = false;
+            loadAudio.volume = 0;
+            var targetVolume = 0.18;
+            var fadeStep = 0;
+            var fadeMax = 6;
+            var fadeIv = setInterval(function() {
+              if (!loadAudio) {
+                clearInterval(fadeIv);
+                return;
+              }
+              fadeStep++;
+              loadAudio.volume = Math.min(targetVolume, (targetVolume / fadeMax) * fadeStep);
+              if (fadeStep >= fadeMax) clearInterval(fadeIv);
+            }, 35);
+          }, 25);
+        }
+      });
+    }
+
+    if (playPromise && typeof playPromise.catch === 'function') {
+      playPromise.catch(function() {
+        if (!mutedBootstrapTried && !useMutedBootstrap) {
+          mutedBootstrapTried = true;
+          playLoadSound(true);
+          return;
+        }
+        bindInteractionSoundRetry();
+        bindLifecycleSoundRetry();
+      });
+    } else if (!playPromise) {
+      bindInteractionSoundRetry();
+      bindLifecycleSoundRetry();
+    }
+  }
+
+  function onFirstInteraction() {
+    unbindInteractionSoundRetry();
+    playLoadSound();
+  }
+
+  function bindInteractionSoundRetry() {
+    if (interactionBound) return;
+    interactionBound = true;
+    window.addEventListener('pointerdown', onFirstInteraction, { once: true, passive: true, capture: true });
+    window.addEventListener('mousedown', onFirstInteraction, { once: true, passive: true, capture: true });
+    window.addEventListener('touchstart', onFirstInteraction, { once: true, passive: true, capture: true });
+    window.addEventListener('touchend', onFirstInteraction, { once: true, passive: true, capture: true });
+    window.addEventListener('click', onFirstInteraction, { once: true, passive: true, capture: true });
+    window.addEventListener('keydown', onFirstInteraction, { once: true, capture: true });
+  }
+
+  function onLifecycleRetry() {
+    if (loadSoundPlayed) {
+      unbindLifecycleSoundRetry();
+      return;
+    }
+    playLoadSound(false);
+  }
+
+  function bindLifecycleSoundRetry() {
+    if (lifecycleBound) return;
+    lifecycleBound = true;
+    window.addEventListener('pageshow', onLifecycleRetry, { passive: true });
+    window.addEventListener('focus', onLifecycleRetry, { passive: true });
+    document.addEventListener('visibilitychange', onLifecycleRetry, { passive: true });
+  }
+
+  function unbindLifecycleSoundRetry() {
+    if (!lifecycleBound) return;
+    lifecycleBound = false;
+    window.removeEventListener('pageshow', onLifecycleRetry);
+    window.removeEventListener('focus', onLifecycleRetry);
+    document.removeEventListener('visibilitychange', onLifecycleRetry);
+  }
+
+  function unbindInteractionSoundRetry() {
+    if (!interactionBound) return;
+    interactionBound = false;
+    window.removeEventListener('pointerdown', onFirstInteraction);
+    window.removeEventListener('mousedown', onFirstInteraction);
+    window.removeEventListener('touchstart', onFirstInteraction);
+    window.removeEventListener('touchend', onFirstInteraction);
+    window.removeEventListener('click', onFirstInteraction);
+    window.removeEventListener('keydown', onFirstInteraction);
+  }
+
+  playLoadSound(false);
+  bindLifecycleSoundRetry();
 
   // Encrypted text effect (like MultiStepLoader)
   function encryptText(target, text) {
@@ -50,6 +196,32 @@
     }
     if (progressEl) progressEl.textContent = display + '%';
     if (barEl) barEl.style.width = progress + '%';
+
+    if (readyAt95Armed && !readyShownAt95 && progress >= 95) {
+      readyShownAt95 = true;
+      setStep(3);
+    }
+
+    syncStepClassesByProgress();
+  }
+
+  function syncStepClassesByProgress() {
+    if (!stepEls || !stepEls.length) return;
+
+    var completedSteps = Math.floor(progress / 20);
+    if (completedSteps < 0) completedSteps = 0;
+    if (completedSteps > stepEls.length) completedSteps = stepEls.length;
+
+    for (var i = 0; i < stepEls.length; i++) {
+      var nextClass = 'bm-step';
+      if (i < completedSteps) nextClass += ' done';
+      else if (i === completedSteps && completedSteps < stepEls.length) nextClass += ' active';
+      stepEls[i].className = nextClass;
+
+      var icon = stepEls[i].querySelector('.bm-step-icon');
+      if (!icon) continue;
+      icon.textContent = i < completedSteps ? '\u2713' : '';
+    }
   }
 
   // Advance step — only touches DOM after React hydration to avoid mismatch
@@ -62,11 +234,6 @@
 
   function applyStep(idx) {
     currentStep = idx;
-    for (var i = 0; i < stepEls.length; i++) {
-      stepEls[i].className = 'bm-step' + (i < idx ? ' done' : (i === idx ? ' active' : ''));
-      var icon = stepEls[i].querySelector('.bm-step-icon');
-      if (i < idx && icon) icon.textContent = '\u2713';
-    }
     if (STEPS[idx]) encryptText(statusEl, STEPS[idx]);
   }
 
@@ -75,6 +242,7 @@
     if (reactHydrated) return;
     reactHydrated = true;
     if (pendingStep > 0) applyStep(pendingStep);
+    syncStepClassesByProgress();
   }
 
   // --- Smooth progress animation with acceleration ---
@@ -88,19 +256,19 @@
     lastFrameTs = now;
 
     if (progress < targetPct) {
-      // Smooth acceleration curve with capped frame delta (prevents chunky jumps)
+      // Proportional easing toward target (prevents stair-step/choppy jumps after 60%)
       var remaining = targetPct - progress;
-      var speed;
-      if (progress >= 92) speed = 0.78 + remaining * 0.08;
-      else if (progress >= 75) speed = 0.66 + remaining * 0.06;
-      else if (progress >= 60) speed = 0.58 + remaining * 0.05;
-      else if (progress >= 40) speed = 0.5 + remaining * 0.04;
-      else speed = 0.42;
+      var easing;
+      if (progress >= 92) easing = 0.06;
+      else if (progress >= 75) easing = 0.08;
+      else if (progress >= 60) easing = 0.10;
+      else if (progress >= 40) easing = 0.12;
+      else easing = 0.14;
 
-      var delta = speed * dt;
-      var maxDelta = progress >= 60 ? 0.95 : 1.1;
-      var minDelta = Math.min(remaining, 0.1);
-      delta = Math.max(minDelta, Math.min(delta, maxDelta));
+      var delta = remaining * easing * dt;
+      var maxDelta = progress >= 60 ? 0.45 : 0.75;
+      var minDelta = remaining > 1 ? 0.04 : 0.008;
+      delta = Math.min(remaining, Math.max(minDelta, Math.min(delta, maxDelta)));
       updateProgress(progress + delta);
     }
     if (progress < 100) {
@@ -123,6 +291,7 @@
 
   // Document ready = core loaded
   function onDomReady() {
+    resetSplashSwayAnimation();
     targetPct = 30;
     setStep(1);
 
@@ -141,8 +310,12 @@
     // --- Phase 3: Hydration (60-95%) ---
     waitForHydration(function() {
       onReactHydrated();
+      readyAt95Armed = true;
       targetPct = 95;
-      setStep(3);
+      if (progress >= 95 && !readyShownAt95) {
+        readyShownAt95 = true;
+        setStep(3);
+      }
       
       // Brief pause at READY state so user sees it
       setTimeout(function() {
@@ -216,6 +389,8 @@
     }
     cancelAnimationFrame(animFrame);
     clearInterval(stallWatchdog);
+    unbindInteractionSoundRetry();
+    unbindLifecycleSoundRetry();
     splash.classList.add('hide');
     document.documentElement.classList.add('bm-splash-done');
     setTimeout(function() {
@@ -237,14 +412,28 @@
       }
     } catch (e) {}
 
+    var ua = (navigator && navigator.userAgent) || '';
+    var isInAppBrowser = /Instagram|FBAN|FBAV|TikTok|musical_ly|Twitter|GSA|Line\//i.test(ua);
+    var isWebView = /\bwv\b|WebView|; wv\)/i.test(ua);
+
     var root = document.documentElement;
+    var body = document.body;
     if (root) {
-      root.classList.remove('bm-sway');
-      void root.offsetHeight;
-      root.classList.add('bm-sway');
+      var swayClass = (isInAppBrowser || isWebView) ? 'bm-sway-safe' : 'bm-sway';
+      var swayDuration = (isInAppBrowser || isWebView) ? 900 : 1600;
+
+      root.classList.remove('bm-sway', 'bm-sway-safe');
+      if (body) body.classList.remove('bm-sway', 'bm-sway-safe');
+
+      requestAnimationFrame(function() {
+        root.classList.add(swayClass);
+        if (body) body.classList.add(swayClass);
+      });
+
       setTimeout(function() {
-        root.classList.remove('bm-sway');
-      }, 1600);
+        root.classList.remove('bm-sway', 'bm-sway-safe');
+        if (body) body.classList.remove('bm-sway', 'bm-sway-safe');
+      }, swayDuration);
     }
 
     if (navigator.vibrate) {

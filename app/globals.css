@@ -37,6 +37,26 @@ html.bm-drunk-scroll body > * {
   pointer-events: auto; /* Re-enable pointer events on children */
 }
 
+/* Showcase perf mode: temporarily disable heavy render effects globally */
+html[data-showcase-running="true"] *,
+html[data-showcase-running="true"] *::before,
+html[data-showcase-running="true"] *::after {
+  animation: none !important;
+  transition: none !important;
+  filter: none !important;
+  -webkit-filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  will-change: auto !important;
+}
+
+html[data-showcase-running="true"] canvas,
+html[data-showcase-running="true"] [class*="spline"],
+html[data-showcase-running="true"] [data-spline],
+html[data-showcase-running="true"] [class*="particle"] {
+  visibility: hidden !important;
+}
+
 /* Hide horizontal scrollbar for the world map scroller */
 .world-map-scroll {
   scrollbar-width: none;

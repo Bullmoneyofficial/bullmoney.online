@@ -2,84 +2,29 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 /**
- * Domain-specific routing proxy (Next.js 16)
- * Routes www.bullmoney.shop:
- *   - / → /store (main page)
- *   - /store, /games, /design, /apps, /desktop → allowed
- *   - Everything else → redirect to /store
- * 
+ * Routing proxy (Next.js 16)
+ * bullmoney.shop: redirect root `/` to `/store`
+ * all other routes/domains: pass through unchanged
+ *
  * Replaces the deprecated middleware.ts convention in Next.js 16+.
  */
 export function proxy(request: NextRequest) {
+  const host = (request.headers.get('host') || '').toLowerCase();
   const { pathname } = request.nextUrl;
 
-  // Canonical affiliate onboarding URL:
-  // /register/pagemode -> /about?src=nav (+ preserve existing query params)
-  if (pathname === '/register/pagemode' || pathname === '/register/pagemode/') {
-    const url = request.nextUrl.clone();
-    url.pathname = '/about';
-    if (!url.searchParams.get('src')) {
-      url.searchParams.set('src', 'nav');
-    }
-    return NextResponse.rewrite(url);
-  }
-
-  const hostname = request.headers.get('host') || '';
-  const isBullmoneyShop = hostname.includes('bullmoney.shop');
-  
-  if (!isBullmoneyShop) {
-    return NextResponse.next();
-  }
-
-  // Canonicalize legacy/app aliases that can appear in mobile app links
-  const aliasRedirects: Record<string, string> = {
-    '/game': '/games',
-    '/app/game': '/games',
-    '/app/games': '/games',
-    '/app/design': '/design',
-  };
-
-  const normalizedPath = pathname.endsWith('/') && pathname.length > 1
-    ? pathname.slice(0, -1)
-    : pathname;
-
-  const aliasTarget = aliasRedirects[normalizedPath];
-  if (aliasTarget) {
-    const url = request.nextUrl.clone();
-    url.pathname = aliasTarget;
-    return NextResponse.redirect(url, 308);
-  }
-
-  // Root → rewrite to /store
-  if (pathname === '/') {
+  const isBullmoneyShop = host.includes('bullmoney.shop');
+  if (isBullmoneyShop && pathname === '/') {
     const url = request.nextUrl.clone();
     url.pathname = '/store';
-    return NextResponse.rewrite(url);
+    return NextResponse.redirect(url, 307);
   }
 
-  // Allowed paths on bullmoney.shop
-  const allowedPaths = ['/store', '/games', '/design', '/apps', '/desktop', '/login', '/register', '/auth', '/api', '/casino-games', '/crypto-game'];
-  for (const allowed of allowedPaths) {
-    if (pathname === allowed || pathname.startsWith(allowed + '/')) {
-      return NextResponse.next();
-    }
-  }
-
-  // Static/internal paths
-  if (pathname.startsWith('/_next') || pathname.startsWith('/api') || pathname.startsWith('/assets') || pathname.includes('.')) {
-    return NextResponse.next();
-  }
-
-  // Everything else → redirect to /store
-  const url = request.nextUrl.clone();
-  url.pathname = '/store';
-  return NextResponse.redirect(url);
+  return NextResponse.next();
 }
 
 /**
  * Proxy matcher configuration
- * Only run on routes that need domain checking
- * Exclude static files, API routes, and _next internal routes
+ * Match app routes while excluding static internals.
  */
 export const config = {
   matcher: [

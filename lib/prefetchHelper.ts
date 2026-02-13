@@ -9,11 +9,27 @@ interface PrefetchOptions {
   crossOrigin?: 'anonymous' | 'use-credentials';
 }
 
+function isRoutePrefetchEnabled(): boolean {
+  if (typeof window === 'undefined') return true;
+
+  const globalFlag = (window as Window & { __BM_ENABLE_ROUTE_PREFETCH__?: boolean })
+    .__BM_ENABLE_ROUTE_PREFETCH__;
+
+  if (typeof globalFlag === 'boolean') {
+    return globalFlag;
+  }
+
+  return process.env.NODE_ENV === 'production';
+}
+
 /**
  * Prefetch a resource during idle time
  */
 export function prefetchResource(href: string, options: PrefetchOptions = {}) {
   if (typeof document === 'undefined') return;
+
+  const isRoute = href.startsWith('/');
+  if (isRoute && !isRoutePrefetchEnabled()) return;
 
   // Check if already prefetched
   const selector = `link[rel="prefetch"][href="${href}"]`;
@@ -63,6 +79,7 @@ export function preloadResource(href: string, options: PrefetchOptions = {}) {
  */
 export function prefetchRoutes(routes: string[]) {
   if (typeof window === 'undefined') return;
+  if (!isRoutePrefetchEnabled()) return;
   if (!('requestIdleCallback' in window)) return;
 
   (window as any).requestIdleCallback(() => {
@@ -101,6 +118,8 @@ export function isSlowConnection(): boolean {
  * Smart prefetch based on device capabilities
  */
 export function smartPrefetch(resources: Array<{ href: string; options?: PrefetchOptions }>) {
+  if (!isRoutePrefetchEnabled()) return;
+
   if (isSlowConnection()) {
     console.log('[Prefetch] Skipping prefetch on slow connection');
     return;

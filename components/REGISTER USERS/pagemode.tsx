@@ -132,7 +132,7 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
   const loadTimeoutMs = runtimeProfile.isLowMemory ? 12000 : 9000;
   const useSafeSplineFilters = runtimeProfile.isInAppBrowser || runtimeProfile.isWebView || runtimeProfile.isLowMemory;
   
-  const scheduleRetry = useCallback((reason: 'timeout' | 'error' | 'visibility') => {
+  const scheduleRetry = useCallback((reason: 'timeout' | 'error' | 'visibility' | 'contextlost') => {
     if (retryCount >= maxRetries) {
       setLoadTimeout(true);
       return;
@@ -210,6 +210,24 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!isLoaded) return;
+    const canvas = document.querySelector('.welcome-spline-canvas-host canvas') as HTMLCanvasElement | null;
+    if (!canvas) return;
+
+    const onContextLost = (event: Event) => {
+      event.preventDefault();
+      setIsLoaded(false);
+      setHasError(true);
+      scheduleRetry('contextlost');
+    };
+
+    canvas.addEventListener('webglcontextlost', onContextLost, false);
+    return () => {
+      canvas.removeEventListener('webglcontextlost', onContextLost, false);
+    };
+  }, [isLoaded, retryKey, scheduleRetry]);
+
   const handleLoad = useCallback((splineApp: any) => {
     splineRef.current = splineApp;
     setIsLoaded(true);
@@ -273,7 +291,7 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
 
       {/* Spline container with forced black & white - works in all browsers including in-app */}
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 welcome-spline-canvas-host"
         style={{
           filter: useSafeSplineFilters
             ? 'grayscale(100%) saturate(0)'
@@ -286,6 +304,7 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
         <Spline
           key={`welcome-spline-${retryKey}`}
           scene={scene}
+          renderOnDemand={runtimeProfile.isLowMemory}
           onLoad={handleLoad}
           onError={handleError}
           style={{
