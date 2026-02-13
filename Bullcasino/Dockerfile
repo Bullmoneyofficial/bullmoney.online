@@ -7,7 +7,7 @@ RUN composer install --no-dev --prefer-dist --no-interaction --no-scripts
 COPY . .
 RUN composer dump-autoload --optimize --no-scripts
 
-FROM php:8.2-cli
+FROM php:8.4-cli
 WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
   git unzip libzip-dev libsqlite3-dev sqlite3 \

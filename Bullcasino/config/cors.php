@@ -7,11 +7,7 @@ return [
     | Cross-Origin Resource Sharing (CORS) Configuration
     |--------------------------------------------------------------------------
     |
-    | Here you may configure your settings for cross-origin resource sharing
-    | or "CORS". This determines what cross-origin operations may execute
-    | in web browsers. You are free to adjust these settings as needed.
-    |
-    | To learn more: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+    | Configure to allow Next.js frontend (localhost, IP, production)
     |
     */
 
@@ -19,13 +15,23 @@ return [
 
     'allowed_methods' => ['*'],
 
-    // In production, use CORS_ALLOWED_ORIGINS from .env
-    // In development, allow all for easier testing
+    // Allow Next.js origins: localhost, IP addresses, production
     'allowed_origins' => env('CORS_ALLOWED_ORIGINS')
         ? explode(',', env('CORS_ALLOWED_ORIGINS'))
-        : ['*'],
+        : [
+            'http://localhost:3000',
+            'http://127.0.0.1:3000',
+            'http://192.168.1.163:3000',
+            'https://bullmoney.online',
+            'https://www.bullmoney.online',
+        ],
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => [
+        '/^http:\/\/localhost:\d+$/',
+        '/^http:\/\/127\.0\.0\.1:\d+$/',
+        '/^http:\/\/192\.168\.\d+\.\d+:\d+$/',
+        '/^http:\/\/10\.\d+\.\d+\.\d+:\d+$/',
+    ],
 
     'allowed_headers' => ['*'],
 
@@ -33,6 +39,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => false,
+    'supports_credentials' => true,
 
 ];

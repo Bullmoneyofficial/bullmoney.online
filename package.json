@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "node scripts/platform-check.mjs && cross-env NODE_OPTIONS=--max-old-space-size=12288 node scripts/dev-logger.mjs --turbo",
+    "dev:local": "node scripts/platform-check.mjs && cross-env NODE_OPTIONS=--max-old-space-size=12288 concurrently -n \"NEXT.JS,PHP-LOCAL\" -c \"cyan,yellow\" \"node scripts/dev-logger.mjs --turbo\" \"cd Bullcasino && php artisan serve --host=0.0.0.0 --port=8000\"",
+    "dev:fullstack": "node scripts/platform-check.mjs && cross-env NODE_OPTIONS=--max-old-space-size=12288 concurrently -n \"NEXT.JS,PHP-LOCAL\" -c \"cyan,yellow\" \"node scripts/dev-logger.mjs --turbo\" \"cd Bullcasino && php artisan serve --host=0.0.0.0 --port=8000\"",
     "dev:with-casino": "node scripts/platform-check.mjs && cross-env NODE_OPTIONS=--max-old-space-size=12288 concurrently -n \"NEXT,CASINO-PHP,CASINO-NODE\" -c \"cyan,yellow,green\" \"node scripts/dev-logger.mjs --turbo\" \"cd Bullcasino && php artisan serve --host=127.0.0.1 --port=8000\" \"cd Bullcasino/server && node app.js\"",
     "dev:no-casino": "node scripts/platform-check.mjs && cross-env NODE_OPTIONS=--max-old-space-size=12288 node scripts/dev-logger.mjs --turbo",
     "dev:standard": "node scripts/platform-check.mjs && cross-env NODE_OPTIONS=--max-old-space-size=8192 node scripts/dev-logger.mjs",

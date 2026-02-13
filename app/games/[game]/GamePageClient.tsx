@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import BullcasinoShell from '../components/BullcasinoShell';
+import { phpGameApi, PHP_BACKEND_URL } from '@/lib/php-backend-api';
 
 /* ───────────────────────────────────────────
    Inline game-specific CSS (animations, etc.)
@@ -834,32 +835,49 @@ function DiceContent() {
 
   const winAmount = ((100 / chance) * bet).toFixed(2);
 
-  const playDice = useCallback((type: 'under' | 'over') => {
+  const playDice = useCallback(async (type: 'under' | 'over') => {
     if (rolling || bet <= 0 || bet > balance) return;
     setRolling(true);
-    // Generate random in same 0–999999 range as PHP/API backend
-    const random = Math.floor(Math.random() * 999999);
-    // Convert to 0-100 for display (same as PHP: percent * 10000)
-    const roll = Number(((random / 999999) * 100).toFixed(2));
-    setLastRoll(roll);
-    // Derive dice face from the random number — matches PHP: (parseInt(e.random) % 6) + 1
-    const nextFace = (random % 6) + 1;
-    setDiceFace(nextFace);
-    setDiceSpinKey(k => k + 1);
-    const isWin = type === 'under' ? roll < chance : roll > (100 - chance);
-    setTimeout(() => {
-      setRolling(false);
-      if (isWin) {
-        const winnings = (100 / chance) * bet;
-        setBalance(prev => Number((prev + winnings - bet).toFixed(2)));
-        setResult({ type: 'win', text: `Won $${winnings.toFixed(2)}! Roll: ${roll.toFixed(2)}` });
-        showGameNotification(`🎲 Won $${winnings.toFixed(2)}!`, 'win');
+    
+    try {
+      //  Call PHP backend API
+      const apiType = type === 'under' ? 'min' : 'max';
+      const data = await phpGameApi.dice.bet(bet, chance, apiType);
+      
+      if (data.type === 'success' && data.out) {
+        const random = data.random || 0;
+        const roll = Number(((random / 999999) * 100).toFixed(2));
+        setLastRoll(roll);
+        
+        // Update dice face animation
+        const nextFace = (random % 6) + 1;
+        setDiceFace(nextFace);
+        setDiceSpinKey(k => k + 1);
+        
+        setTimeout(() => {
+          setRolling(false);
+          const isWin = data.out === 'win';
+          const winnings = data.cash || 0;
+          
+          if (isWin) {
+            setBalance(data.balance);
+            setResult({ type: 'win', text: `Won $${winnings.toFixed(2)}! Roll: ${roll.toFixed(2)}` });
+            showGameNotification(`🎲 Won $${winnings.toFixed(2)}!`, 'win');
+          } else {
+            setBalance(data.balance);
+            setResult({ type: 'lose', text: `Lost! Roll: ${roll.toFixed(2)}` });
+            showGameNotification(`🎲 Lost $${bet.toFixed(2)}`, 'lose');
+          }
+        }, 760);
       } else {
-        setBalance(prev => Number((prev - bet).toFixed(2)));
-        setResult({ type: 'lose', text: `Lost! Roll: ${roll.toFixed(2)}` });
-        showGameNotification(`🎲 Lost $${bet.toFixed(2)}`, 'lose');
+        setRolling(false);
+        showGameNotification(data.msg || 'Bet failed', 'lose');
       }
-    }, 760);
+    } catch (error: any) {
+      setRolling(false);
+      console.error('Dice bet error:', error);
+      showGameNotification(error.message || 'Failed to place bet', 'lose');
+    }
   }, [rolling, bet, balance, chance]);
 
   // Expose animateDiceResult for legacy dice.js (PHP API path)
@@ -1552,52 +1570,112 @@ function MinesContent() {
     return Number(Math.max(1, m * 0.97).toFixed(2));
   }, []);
 
-  const startGame = useCallback(() => {
+  const startGame = useCallback(async () => {
     if (bet <= 0 || bet > balance) return;
-    setBalance(prev => Number((prev - bet).toFixed(2)));
-    const bombSet = new Set<number>();
-    while (bombSet.size < numBombs) bombSet.add(Math.floor(Math.random() * 25));
-    setBombs(bombSet);
-    setBoard(Array(25).fill('hidden'));
-    setRevealed(0);
-    setCurrentMult(1);
-    setGameState('playing');
+    
+    try {
+      // Call PHP backend to create mines game
+      const data = await phpGameApi.mines.create(numBombs, bet);
+      
+      if (data.msg) {
+        // Success - PHP created the game session
+        setBombs(new Set()); // Will be revealed when cells are opened
+        setBoard(Array(25).fill('hidden'));
+        setRevealed(0);
+        setCurrentMult(1);
+        setGameState('playing');
+        setBalance(data.balance); // Update balance from server
+      } else {
+        showGameNotification(data.msg || 'Failed to start game', 'lose');
+      }
+    } catch (error: any) {
+      console.error('Mines create error:', error);
+      showGameNotification(error.message || 'Failed to start game', 'lose');
+    }
   }, [bet, balance, numBombs]);
 
-  const revealCell = useCallback((idx: number) => {
+  const revealCell = useCallback(async (idx: number) => {
     if (gameState !== 'playing' || board[idx] !== 'hidden') return;
-    const newBoard = [...board];
-    if (bombs.has(idx)) {
-      newBoard[idx] = 'bomb';
-      bombs.forEach(b => { newBoard[b] = 'bomb'; });
-      for (let i = 0; i < 25; i++) { if (newBoard[i] === 'hidden') newBoard[i] = 'gem'; }
-      setBoard(newBoard);
-      setGameState('lost');
-      showGameNotification(`💣 Hit a mine! Lost $${bet.toFixed(2)}`, 'lose');
-    } else {
-      newBoard[idx] = 'gem';
-      const newRev = revealed + 1;
-      const newM = getMult(newRev, numBombs);
-      setBoard(newBoard);
-      setRevealed(newRev);
-      setCurrentMult(newM);
-      if (newRev >= 25 - numBombs) {
-        setBalance(prev => Number((prev + bet * newM).toFixed(2)));
-        setGameState('won');
-        showGameNotification(`💎 All gems found! Won $${(bet * newM).toFixed(2)}!`, 'win');
+    
+    try {
+      // Call PHP backend to open cell (+1 because PHP uses 1-25, not 0-24)
+      const data = await phpGameApi.mines.open(idx + 1);
+      
+      const newBoard = [...board];
+      
+      if (data.error || data.status === 'lose') {
+        // Hit a bomb
+        newBoard[idx] = 'bomb';
+        if (data.bombs) {
+          // Show all bombs from server response
+          data.bombs.forEach((bombCell: number) => {
+            newBoard[bombCell - 1] = 'bomb'; // Convert from 1-based to 0-based
+          });
+        }
+        for (let i = 0; i < 25; i++) {
+          if (newBoard[i] === 'hidden') newBoard[i] = 'gem';
+        }
+        setBoard(newBoard);
+        setGameState('lost');
+        showGameNotification(`💣 Hit a mine! Lost $${bet.toFixed(2)}`, 'lose');
+      } else {
+        // Found a gem
+        newBoard[idx] = 'gem';
+        const newRev = revealed + 1;
+        const newM = data.multiplier || getMult(newRev, numBombs);
+        setBoard(newBoard);
+        setRevealed(newRev);
+        setCurrentMult(newM);
+        
+        if (data.balance) {
+          setBalance(data.balance);
+        }
+        
+        if (newRev >= 25 - numBombs) {
+          const winnings = data.win || bet * newM;
+          setGameState('won');
+          showGameNotification(`💎 All gems found! Won $${winnings.toFixed(2)}!`, 'win');
+        }
       }
+    } catch (error: any) {
+      console.error('Mines open cell error:', error);
+      showGameNotification(error.message || 'Failed to open cell', 'lose');
     }
   }, [gameState, board, bombs, revealed, numBombs, bet, getMult]);
 
-  const cashOut = useCallback(() => {
+  const cashOut = useCallback(async () => {
     if (gameState !== 'playing' || revealed === 0) return;
-    const winnings = Number((bet * currentMult).toFixed(2));
-    setBalance(prev => Number((prev + winnings).toFixed(2)));
-    const newBoard = [...board];
-    for (let i = 0; i < 25; i++) { if (newBoard[i] === 'hidden') newBoard[i] = bombs.has(i) ? 'bomb' : 'gem'; }
-    setBoard(newBoard);
-    setGameState('won');
-    showGameNotification(`💎 Cashed out $${winnings.toFixed(2)} at x${currentMult.toFixed(2)}!`, 'win');
+    
+    try {
+      // Call PHP backend to cash out
+      const data = await phpGameApi.mines.take();
+      
+      if (data.error) {
+        showGameNotification(data.msg || 'Failed to cash out', 'lose');
+      } else {
+        const winnings = data.win || Number((bet * currentMult).toFixed(2));
+        setBalance(data.balance);
+        
+        const newBoard = [...board];
+        if (data.bombs) {
+          //Show all bombs from server
+          data.bombs.forEach((bombCell: number) => {
+            newBoard[bombCell - 1] = 'bomb';
+          });
+        }
+        for (let i = 0; i < 25; i++) {
+          if (newBoard[i] === 'hidden' && !data.bombs?.includes(i + 1)) {
+            newBoard[i] = 'gem';
+          }
+        }
+        setBoard(newBoard);
+        setGameState('won');
+        showGameNotification(`💎 Cashed out $${winnings.toFixed(2)} at x${currentMult.toFixed(2)}!`, 'win');
+      }
+    } catch (error: any) {
+      console.error('Mines cash out error:', error);
+      showGameNotification(error.message || 'Failed to cash out', 'lose');
+    }
   }, [gameState, revealed, bet, currentMult, board, bombs]);
 
   return (
@@ -1831,90 +1909,125 @@ function PlinkoContent() {
     });
   }, [risk, rows]);
 
-  const dropBall = useCallback(() => {
+  const dropBall = useCallback(async () => {
     const totalStake = Number((bet * ballsPerDrop).toFixed(2));
     if (dropping || bet <= 0 || totalStake > balance) return;
 
     setDropping(true);
     setLastBin(null);
     setLastWin(0);
-    setBalance(prev => Number((prev - totalStake).toFixed(2)));
 
     let settled = 0;
     let totalWin = 0;
 
     for (let ballIndex = 0; ballIndex < ballsPerDrop; ballIndex++) {
-      const ballId = Date.now() + ballIndex;
-      const generatedPath: number[] = [0];
-      let column = 0;
-      for (let i = 0; i < rows; i++) {
-        if (Math.random() >= 0.5) column += 1;
-        generatedPath.push(column);
-      }
-
-      window.setTimeout(() => {
-        setActiveBalls(prev => [...prev, { id: ballId, path: generatedPath, step: 0 }]);
-
-        let localStep = 0;
-        const timer = window.setInterval(() => {
-          localStep += 1;
-          setActiveBalls(prev => prev.map(ball => (ball.id === ballId ? { ...ball, step: localStep } : ball)));
-
-          if (localStep >= rows) {
-            window.clearInterval(timer);
-
-            const binIndex = generatedPath[generatedPath.length - 1];
-            const mult = multipliers[binIndex] ?? 0;
-            const win = Number((bet * mult).toFixed(2));
-            totalWin += win;
+      (async () => {
+        try {
+          // Call PHP backend for each ball drop
+          const data = await phpGameApi.plinko.play(bet, rows, risk);
+          
+          if (data.error) {
+            showGameNotification(data.msg || 'Failed to drop ball', 'lose');
             settled += 1;
-
-            setLastBin(binIndex);
-            setHistory(prev => [{ mult, win, stake: bet }, ...prev].slice(0, 12));
-            setBinHits(prev => {
-              const next = prev.length === rows + 1 ? [...prev] : Array(rows + 1).fill(0);
-              next[binIndex] = (next[binIndex] || 0) + 1;
-              return next;
-            });
-            setFlashingBins(prev => ({ ...prev, [binIndex]: (prev[binIndex] || 0) + 1 }));
-            window.setTimeout(() => {
-              setFlashingBins(prev => {
-                const next = { ...prev };
-                if (next[binIndex]) {
-                  next[binIndex] -= 1;
-                  if (next[binIndex] <= 0) delete next[binIndex];
-                }
-                return next;
-              });
-            }, 450);
-
-            // Remove from active balls and add to settled balls
-            setActiveBalls(prev => prev.filter(ball => ball.id !== ballId));
-            setSettledBalls(prev => [...prev, { id: ballId, binIndex }]);
-            
-            // Remove settled ball after 2 seconds
-            window.setTimeout(() => {
-              setSettledBalls(prev => prev.filter(ball => ball.id !== ballId));
-            }, 2000);
-
             if (settled >= ballsPerDrop) {
-              const payout = Number(totalWin.toFixed(2));
-              const profit = Number((payout - totalStake).toFixed(2));
-              setLastWin(payout);
-              setBalance(prev => Number((prev + payout).toFixed(2)));
               setDropping(false);
-
-              if (profit > 0) {
-                showGameNotification(`🎯 ${ballsPerDrop} balls settled — +$${profit.toFixed(2)} profit`, 'win');
-              } else {
-                showGameNotification(`🎯 ${ballsPerDrop} balls settled — returned $${payout.toFixed(2)}`, 'info');
-              }
             }
+            return;
           }
-        }, 130);
-      }, ballIndex * 120);
+
+          const ballId = Date.now() + ballIndex;
+          // Generate visual path to match server's position result
+          // Server returns position 0-(rows), we animate a path to reach that position
+          const binIndex = data.position || 0;
+          const generatedPath: number[] = [0];
+          let column = 0;
+          for (let i = 0; i < rows; i++) {
+            // Bias the random selection to end up at binIndex
+            const targetRatio = binIndex /rows;
+            const currentRatio = column / (i + 1);
+            const shouldGoRight = Math.random() < (i < rows - 1 ? 0.5 : (binIndex > column ? 0.9 : 0.1));
+            if (shouldGoRight && column < rows) column += 1;
+            generatedPath.push(column);
+          }
+          // Force final position to match server result
+          generatedPath[generatedPath.length - 1] = binIndex;
+
+          window.setTimeout(() => {
+            setActiveBalls(prev => [...prev, { id: ballId, path: generatedPath, step: 0 }]);
+
+            let localStep = 0;
+            const timer = window.setInterval(() => {
+              localStep += 1;
+              setActiveBalls(prev => prev.map(ball => (ball.id === ballId ? { ...ball, step: localStep } : ball)));
+
+              if (localStep >= rows) {
+                window.clearInterval(timer);
+
+                const mult = data.multiplier || multipliers[binIndex] || 0;
+                const win = data.win || Number((bet * mult).toFixed(2));
+                totalWin += win;
+                settled += 1;
+
+                setLastBin(binIndex);
+                setHistory(prev => [{ mult, win, stake: bet }, ...prev].slice(0, 12));
+                setBinHits(prev => {
+                  const next = prev.length === rows + 1 ? [...prev] : Array(rows + 1).fill(0);
+                  next[binIndex] = (next[binIndex] || 0) + 1;
+                  return next;
+                });
+                setFlashingBins(prev => ({ ...prev, [binIndex]: (prev[binIndex] || 0) + 1 }));
+                window.setTimeout(() => {
+                  setFlashingBins(prev => {
+                    const next = { ...prev };
+                    if (next[binIndex]) {
+                      next[binIndex] -= 1;
+                      if (next[binIndex] <= 0) delete next[binIndex];
+                    }
+                    return next;
+                  });
+                }, 450);
+
+                // Remove from active balls and add to settled balls
+                setActiveBalls(prev => prev.filter(ball => ball.id !== ballId));
+                setSettledBalls(prev => [...prev, { id: ballId, binIndex }]);
+                
+                // Remove settled ball after 2 seconds
+                window.setTimeout(() => {
+                  setSettledBalls(prev => prev.filter(ball => ball.id !== ballId));
+                }, 2000);
+
+                if (settled >= ballsPerDrop) {
+                  const payout = Number(totalWin.toFixed(2));
+                  const profit = Number((payout - totalStake).toFixed(2));
+                  setLastWin(payout);
+                  // Update balance from last server response
+                  if (data.balance) {
+                    setBalance(data.balance);
+                  } else {
+                    setBalance(prev => Number((prev + payout).toFixed(2)));
+                  }
+                  setDropping(false);
+
+                  if (profit > 0) {
+                    showGameNotification(`🎯 ${ballsPerDrop} balls settled — +$${profit.toFixed(2)} profit`, 'win');
+                  } else {
+                    showGameNotification(`🎯 ${ballsPerDrop} balls settled — returned $${payout.toFixed(2)}`, 'info');
+                  }
+                }
+              }
+            }, 130);
+          }, ballIndex * 120);
+        } catch (error: any) {
+          console.error('Plinko drop error:', error);
+          showGameNotification(error.message || 'Failed to drop ball', 'lose');
+          settled += 1;
+          if (settled >= ballsPerDrop) {
+            setDropping(false);
+          }
+        }
+      })();
     }
-  }, [balance, ballsPerDrop, bet, dropping, multipliers, rows]);
+  }, [balance, ballsPerDrop, bet, dropping, multipliers, rows, risk]);
 
   const boardGap = 80 / (rows + 1);
   const totalStake = Number((bet * ballsPerDrop).toFixed(2));

@@ -104,8 +104,16 @@ const nextConfig = {
   // NOTE: eslint config removed - not supported in Next.js 16+
   // Run `npm run lint` separately instead
 
-  // Allow local network dev origins (suppress warning)
-  allowedDevOrigins: ['192.168.1.162'],
+  // Allow local network dev origins (localhost, LAN IPs)
+  // Add your specific local IP addresses here
+  allowedDevOrigins: [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://192.168.1.163:3000',
+    'http://192.168.1.162:3000',
+    'http://192.168.1.1:3000',
+    'http://10.0.0.1:3000',
+  ],
 
   // SPEED: Skip transpilation for modern packages (they're already ES6+)
   transpilePackages: [],
@@ -481,12 +489,15 @@ const nextConfig = {
       { source: '/privacy', destination: `${CASINO_BACKEND_URL}/privacy` },
       { source: '/parther/:path*', destination: `${CASINO_BACKEND_URL}/parther/:path*` },
       { source: '/auth/:path*', destination: `${CASINO_BACKEND_URL}/auth/:path*` },
+      // === PHP GAME BACKEND PROXIES (All games use PHP + JS) ===
       { source: '/dice/:path*', destination: `${CASINO_BACKEND_URL}/dice/:path*` },
       { source: '/mines/:path*', destination: `${CASINO_BACKEND_URL}/mines/:path*` },
+      { source: '/plinko/:path*', destination: `${CASINO_BACKEND_URL}/plinko/:path*` },
       { source: '/wheel/:path*', destination: `${CASINO_BACKEND_URL}/wheel/:path*` },
       { source: '/jackpot/:path*', destination: `${CASINO_BACKEND_URL}/jackpot/:path*` },
       { source: '/crash/:path*', destination: `${CASINO_BACKEND_URL}/crash/:path*` },
       { source: '/slots/:path*', destination: `${CASINO_BACKEND_URL}/slots/:path*` },
+      { source: '/flappybird/:path*', destination: `${CASINO_BACKEND_URL}/flappybird/:path*` },
       { source: '/api/wheel/:path*', destination: `${CASINO_BACKEND_URL}/api/wheel/:path*` },
       { source: '/api/jackpot/:path*', destination: `${CASINO_BACKEND_URL}/api/jackpot/:path*` },
       { source: '/api/crash/:path*', destination: `${CASINO_BACKEND_URL}/api/crash/:path*` },
