@@ -12,6 +12,14 @@
 			"isBackground": true,
 			"problemMatcher": [],
 			"group": "build"
+		},
+		{
+			"label": "dev: full-stack (Next.js + Laravel)",
+			"type": "shell",
+			"command": "./start-both.sh",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
 		}
 	]
 }

@@ -34,6 +34,9 @@ cleanup() {
 
 trap cleanup SIGINT SIGTERM EXIT
 
+# Get script directory
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 # Check port 8000
 if check_port 8000; then
     echo -e "${YELLOW}⚠️  Port 8000 is already in use${NC}"
@@ -42,21 +45,20 @@ if check_port 8000; then
     sleep 1
 fi
 
-# Check port 3000/3001
+# Check port 3000
 if check_port 3000; then
     echo -e "${YELLOW}⚠️  Port 3000 is already in use${NC}"
     echo -e "${YELLOW}Will use port 3001 instead${NC}"
 fi
 
 echo -e "\n${GREEN}✓ Starting Laravel backend (port 8000)...${NC}"
-cd "$(dirname "$0")/Bullcasino"
-php artisan serve --host=0.0.0.0 --port=8000 2>&1 | sed 's/^/  [Laravel] /' &
+php "${SCRIPT_DIR}/Bullcasino/artisan" serve --host=0.0.0.0 --port=8000 2>&1 | sed 's/^/  [Laravel] /' &
 LARAVEL_PID=$!
 
 sleep 3
 
 echo -e "${GREEN}✓ Starting Next.js frontend (port 3000/3001)...${NC}"
-cd "$(dirname "$0")"
+cd "${SCRIPT_DIR}"
 npm run dev 2>&1 | sed 's/^/  [Next.js] /' &
 NEXTJS_PID=$!
 
