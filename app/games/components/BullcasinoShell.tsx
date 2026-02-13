@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 
 const ASSET_BASE = '/assets';
@@ -8,6 +9,14 @@ const ASSET_BASE = '/assets';
 export default function BullcasinoShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isGameDetailPage = /^\/games\/[^/]+$/.test(pathname || '');
+  const [origin, setOrigin] = useState('');
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setOrigin(window.location.origin);
+  }, []);
+
+  const absoluteHref = (path: string) => (origin ? `${origin}${path}` : path);
 
   return (
     <main
@@ -282,19 +291,19 @@ export default function BullcasinoShell({ children }: { children: ReactNode }) {
       {!isGameDetailPage && (
         <div className="mobile_menu">
           <div className="mobile_menu__content">
-            <a href="/games" className="mobile_menu__link">
+            <a href={absoluteHref('/games')} className="mobile_menu__link">
               <i className='bx bxs-home'></i>
               Home
             </a>
-            <a href="/games/terms" className="mobile_menu__link">
+            <a href={absoluteHref('/games/terms')} className="mobile_menu__link">
               <i className='bx bxs-file'></i>
               Terms
             </a>
-            <a href="/community" className="mobile_menu__link">
+            <a href={absoluteHref('/games')} className="mobile_menu__link">
               <i className='bx bxs-user-plus'></i>
-              Community
+              Games
             </a>
-            <a href="/contact" className="mobile_menu__link">
+            <a href={absoluteHref('/contact')} className="mobile_menu__link">
               <i className='bx bxs-user-circle'></i>
               Support
             </a>
@@ -322,8 +331,8 @@ export default function BullcasinoShell({ children }: { children: ReactNode }) {
             </div>
           </div>
           <div className="footer__bottom">
-            <a href="/games/terms" className="footer__rules">Terms of Use</a>
-            <a href="/privacy" className="footer__privacy">Privacy Policy</a>
+            <a href={absoluteHref('/games/terms')} className="footer__rules">Terms of Use</a>
+            <a href={absoluteHref('/privacy')} className="footer__privacy">Privacy Policy</a>
           </div>
         </footer>
       </div>

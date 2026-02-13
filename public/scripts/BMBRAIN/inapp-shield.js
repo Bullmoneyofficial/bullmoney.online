@@ -43,6 +43,10 @@ var detections=[
   {name:'pinterest',pattern:/pinterest/i},
   {name:'reddit',pattern:/reddit/i},
   {name:'discord',pattern:/discord/i},
+  {name:'whatsapp',pattern:/whatsapp/i},
+  {name:'google-app',pattern:/gsa\//i},
+  {name:'kakaotalk',pattern:/kakaotalk|kakaostory/i},
+  {name:'naver',pattern:/naver|whale/i},
   {name:'webview-ios',pattern:/iphone|ipad|ipod/i},
   {name:'webview-android',pattern:/\bwv\b/i}
 ];
@@ -188,7 +192,8 @@ d.addEventListener('click',function(e){
 S.fixes.push('safer-links');
 
 var crashKey='bm_inapp_crashes';
-var crashes=parseInt(sessionStorage.getItem(crashKey)||'0',10);
+var crashes=0;
+try{crashes=parseInt(sessionStorage.getItem(crashKey)||'0',10);}catch(e){crashes=0;}
 if(crashes>0){
   root.classList.add('ultra-light-mode');
   var ultra=d.createElement('style');
@@ -200,10 +205,10 @@ if(crashes>0){
   if(d.head)d.head.appendChild(ultra);
   S.fixes.push('crash-recovery');
 }
-sessionStorage.setItem(crashKey,String(crashes+1));
-w.addEventListener('load',function(){setTimeout(function(){sessionStorage.setItem(crashKey,'0');},2500);},{once:true});
+try{sessionStorage.setItem(crashKey,String(crashes+1));}catch(e){}
+w.addEventListener('load',function(){setTimeout(function(){try{sessionStorage.setItem(crashKey,'0');}catch(e){}},2500);},{once:true});
 
-if(S.browser==='instagram'||S.browser==='tiktok'||S.browser==='facebook'){
+if(S.browser==='instagram'||S.browser==='tiktok'||S.browser==='facebook'||S.browser==='snapchat'||S.browser==='whatsapp'){
   w.addEventListener('load',function(){
     setTimeout(function(){
       if(d.getElementById('bm-open-browser')||!d.body)return;

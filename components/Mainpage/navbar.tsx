@@ -30,8 +30,8 @@ export const Navbar: React.FC<NavbarProps> = ({ setShowConfigurator, activeTheme
 
           {/* Navigation links */}
           <div className="hidden md:flex gap-8">
-            {["About", "Shop", "Contact"].map((link) => (
-              <Link key={link} href={`/${link.toLowerCase()}`}>
+            {["About", "Store", "Newsletter", "Contact"].map((link) => (
+              <Link key={link} href={link === "Store" ? "/store" : link === "Newsletter" ? "/store/account" : `/${link.toLowerCase()}`}>
                 <motion.span
                   whileHover={{ color: "#ffffff", textShadow: "0 0 10px rgba(255, 255, 255, 0.5)" }}
                   className="text-sm uppercase font-bold tracking-wider text-white/80 transition-all cursor-pointer"

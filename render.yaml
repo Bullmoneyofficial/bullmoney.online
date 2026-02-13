@@ -23,3 +23,16 @@ services:
       - key: CACHE_DRIVER
         value: file
     autoDeploy: false
+
+  # Next.js Newsletter/Web App
+  - type: web
+    name: bullmoney-newsletter
+    env: node
+    plan: free
+    rootDir: next
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+    autoDeploy: false

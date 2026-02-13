@@ -96,10 +96,13 @@
 
   window.addEventListener('online',check);
   window.addEventListener('offline',check);
+  // Passive event listener compat — some older browsers don't support options object
+  var supportsPassive=false;
+  try{var o=Object.defineProperty({},'passive',{get:function(){supportsPassive=true;}});window.addEventListener('__bm_test__',null,o);window.removeEventListener('__bm_test__',null,o);}catch(e){}
   window.addEventListener('resize',function(){
     var bar=document.getElementById('bm-offline-bar');
     if(bar)styleBar(bar);
-  },{passive:true});
+  },supportsPassive?{passive:true}:false);
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',check,{once:true});
   else check();

@@ -15,6 +15,7 @@ import {
   IconSparkles,
   IconEye,
   IconEyeOff,
+  IconMail,
 } from '@tabler/icons-react';
 import { SoundEffects } from '@/app/hooks/useSoundEffects';
 // SMART MOUNT: Only import lightweight trigger components - heavy modals mount via UIState
@@ -407,11 +408,20 @@ export const MobileDropdownMenu = memo(React.forwardRef<HTMLDivElement, MobileDr
               highlighted={true}
             />
 
+            {/* Newsletter */}
+            <ThemedMenuItem 
+              delay={0.27} 
+              href="/store/account" 
+              onClick={handleClose} 
+              icon={<IconMail className="h-5 w-5" strokeWidth={2} />} 
+              label="Newsletter" 
+            />
+
             {/* 🌐 Language Selector */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.27, duration: 0.3 }}
+              transition={{ delay: 0.28, duration: 0.3 }}
               className="w-full"
             >
               <LanguageToggle variant="row" dropDirection="down" />

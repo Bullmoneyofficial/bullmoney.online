@@ -9,6 +9,11 @@ var B=w.__BM_BRAIN__=w.__BM_BRAIN__||{};
 var DEBUG=(w.location&&w.location.hostname==='localhost')||/[?&]bm_debug=1/.test(w.location.search||'');
 function log(){if(DEBUG)try{console.log.apply(console,['[MemManager]'].concat([].slice.call(arguments)));}catch(e){}}
 
+// ─── EARLY: Save original timer references BEFORE anything else uses them ───
+var _origSetInterval=w.setInterval;
+var _origSetTimeout=w.setTimeout;
+var _origClearInterval=w.clearInterval;
+
 // ─── Device classification ───────────────────────────────────────────────────
 var ua=n.userAgent||'';
 var mem=n.deviceMemory||4;        // GB (Chrome/Edge only, others default 4)
@@ -567,8 +572,7 @@ function monitorFrameRate(){
 
 // ─── Timer/Interval throttling ───────────────────────────────────────────────
 // Wrap setInterval to enforce minimum intervals on low-end devices
-var _origSetInterval=w.setInterval;
-var _origSetTimeout=w.setTimeout;
+// Note: _origSetInterval, _origSetTimeout, _origClearInterval defined at top of IIFE
 var activeTimers=new Set();
 
 function throttledSetInterval(fn,ms){
@@ -586,10 +590,10 @@ function throttledSetInterval(fn,ms){
   return id;
 }
 
-var _origClearInterval=w.clearInterval;
+var _origClearInterval2=_origClearInterval;
 w.clearInterval=function(id){
   activeTimers.delete(id);
-  return _origClearInterval.call(w,id);
+  return _origClearInterval2.call(w,id);
 };
 
 // Only override on low-end to avoid breaking 3rd-party scripts on capable devices
@@ -1143,7 +1147,9 @@ function drainIdleQueue(){
 // Hide offscreen sections with content-visibility:auto for faster initial layout.
 function applyContentVisibility(){
   // Only if browser supports it
-  if(!CSS||!CSS.supports||!CSS.supports('content-visibility','auto')) return;
+  try{
+    if(!w.CSS||!w.CSS.supports||!w.CSS.supports('content-visibility','auto')) return;
+  }catch(e){return;}
   var sections=d.querySelectorAll('section,article,[data-section],[role="region"]');
   var viewH=w.innerHeight||0;
   for(var i=0;i<sections.length;i++){

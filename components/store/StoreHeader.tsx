@@ -63,6 +63,7 @@ const STORE_NAV_ITEMS = [
   { href: '#action:themes', label: 'Themes', category: '' },
   { href: '#action:hub', label: 'Hub', category: '' },
   { href: '/store', label: 'All Products', category: '' },
+  { href: '/store/account', label: 'Newsletter', category: '' },
   { href: '/store?category=apparel', label: 'Apparel', category: 'apparel' },
   { href: '/store?category=accessories', label: 'Accessories', category: 'accessories' },
   { href: '/store?category=tech-gear', label: 'Tech & Gear', category: 'tech-gear' },
@@ -74,6 +75,7 @@ const STORE_NAV_ITEMS = [
 // Store Categories for mobile menu (matches store page)
 const STORE_CATEGORIES = [
   { value: '', label: 'All Products', href: '/store' },
+  { value: 'newsletter', label: 'Newsletter', href: '/store/account' },
   { value: 'apparel', label: 'Apparel', href: '/store?category=apparel' },
   { value: 'accessories', label: 'Accessories', href: '/store?category=accessories' },
   { value: 'tech-gear', label: 'Tech & Gear', href: '/store?category=tech-gear' },

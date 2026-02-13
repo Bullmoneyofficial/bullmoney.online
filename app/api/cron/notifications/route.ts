@@ -153,6 +153,7 @@ export async function GET(request: NextRequest) {
         url: `/?channel=${channelInfo.channel}&from=notification`,
         channel: channelInfo.channel,
         requireInteraction: channelInfo.priority === 'high',
+        source: 'telegram',
       });
 
       const results = await Promise.allSettled(

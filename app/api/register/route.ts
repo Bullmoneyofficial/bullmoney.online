@@ -2,6 +2,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { supabase } from '@/lib/supabaseClient';
+import { createClient } from '@supabase/supabase-js';
+import { getDripInitialDelayDays } from '@/lib/drip-email-sequences';
 import { strictRateLimit } from '@/lib/rateLimit';
 import { formatValidationError } from '@/lib/validation';
 import { logger } from '@/lib/logger';
@@ -53,7 +55,48 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // 4. Return success
+    // 4. Enroll new recruit into drip campaigns (server-side with service role)
+    try {
+      const adminUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+      const adminKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+      if (adminUrl && adminKey) {
+        const admin = createClient(adminUrl, adminKey);
+        const campaignsToEnroll = [
+          { name: 'store_reminder_30day', totalEmails: 15 },
+          { name: 'inactive_checkin', totalEmails: 4 },
+        ];
+
+        for (const campaign of campaignsToEnroll) {
+          const { data: existing } = await admin
+            .from('email_drip_campaigns')
+            .select('id')
+            .eq('email', email)
+            .eq('campaign_name', campaign.name)
+            .single();
+
+          if (!existing) {
+            const delayDays = getDripInitialDelayDays(campaign.name);
+            await admin.from('email_drip_campaigns').insert({
+              email,
+              source: 'recruits',
+              campaign_name: campaign.name,
+              email_sequence_number: 0,
+              total_emails_to_send: campaign.totalEmails,
+              subscribed: true,
+              started_at: new Date().toISOString(),
+              next_email_scheduled_at: new Date(Date.now() + delayDays * 24 * 60 * 60 * 1000).toISOString(),
+              total_sent: 0,
+              total_opened: 0,
+              total_clicked: 0,
+            });
+          }
+        }
+      }
+    } catch (enrollErr) {
+      logger.warn('Drip enrollment failed:', enrollErr);
+    }
+
+    // 5. Return success
     logger.log(`Registration successful for email: ${email}`);
     return NextResponse.json({ success: true }, { status: 200 });
 

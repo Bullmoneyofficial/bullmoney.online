@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import { ExternalLink, ShieldAlert } from "lucide-react";
 import { trackClick } from "@/lib/analytics";
 import { SparklesCore } from "./sparkles";
@@ -88,6 +89,12 @@ export function Footer() {
                 >
                   Legal
                 </FooterButton>
+              </div>
+
+              <div className="flex items-center justify-center gap-4 text-xs footer-text-muted">
+                <Link href="/store" className="hover:underline">Store</Link>
+                <span className="footer-text-light">•</span>
+                <Link href="/store/account" className="hover:underline">Newsletter</Link>
               </div>
 
               {/* Tagline */}

@@ -113,7 +113,7 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
       className="absolute inset-0 w-full h-full overflow-hidden"
       style={{ 
         zIndex: 0,
-        backgroundColor: '#000',
+        backgroundColor: 'transparent',
       }}
     >
       {/* SVG Filter for maximum in-app browser compatibility (Facebook, Instagram, TikTok, etc.) */}
@@ -134,7 +134,7 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
       <div
         className="absolute inset-0"
         style={{
-          background: 'radial-gradient(ellipse at 40% 30%, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 35%, transparent 60%), radial-gradient(ellipse at 70% 70%, rgba(255, 255, 255, 0.1) 0%, transparent 45%), #000',
+          background: 'radial-gradient(ellipse at 40% 30%, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 35%, transparent 60%), radial-gradient(ellipse at 70% 70%, rgba(255, 255, 255, 0.1) 0%, transparent 45%), transparent',
           opacity: !isLoaded ? 1 : 0.2,
           transition: 'opacity 600ms ease-out',
         }}

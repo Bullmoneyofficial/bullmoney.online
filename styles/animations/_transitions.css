@@ -10,45 +10,45 @@
 
 /* Ultra-fast micro-interactions */
 .transition-micro {
-  transition: transform 0.1s var(--spring-snappy),
-              opacity 0.1s ease-out;
+  transition: transform 0.06s var(--spring-snappy),
+              opacity 0.06s ease-out;
 }
 
 /* Standard UI transitions */
 .transition-ui {
-  transition: transform 0.2s var(--spring-smooth),
-              opacity 0.2s ease-out;
+  transition: transform 0.12s var(--spring-smooth),
+              opacity 0.12s ease-out;
 }
 
 /* Smooth content transitions */
 .transition-content {
-  transition: transform 0.35s var(--spring-smooth),
-              opacity 0.35s ease-out;
+  transition: transform 0.2s var(--spring-smooth),
+              opacity 0.2s ease-out;
 }
 
 /* Page-level transitions */
 .transition-page {
-  transition: transform 0.5s var(--spring-smooth),
-              opacity 0.5s ease-out;
+  transition: transform 0.3s var(--spring-smooth),
+              opacity 0.3s ease-out;
 }
 
 /* ============================================
    120Hz DISPLAY TRANSITION ADJUSTMENTS
    ============================================ */
 .display-120hz .transition-micro { 
-  transition-duration: 0.08s; 
+  transition-duration: 0.04s; 
 }
 
 .display-120hz .transition-ui { 
-  transition-duration: 0.15s; 
+  transition-duration: 0.08s; 
 }
 
 .display-120hz .transition-content { 
-  transition-duration: 0.28s; 
+  transition-duration: 0.16s; 
 }
 
 .display-120hz .transition-page { 
-  transition-duration: 0.4s; 
+  transition-duration: 0.25s; 
 }
 
 /* ============================================
@@ -56,10 +56,10 @@
    ============================================ */
 .theme-transition-element {
   transition: 
-    background-color 0.5s ease-out,
-    border-color 0.5s ease-out,
-    box-shadow 0.5s ease-out,
-    color 0.4s ease-out;
+    background-color 0.25s ease-out,
+    border-color 0.25s ease-out,
+    box-shadow 0.25s ease-out,
+    color 0.2s ease-out;
 }
 
 /* Staggered transitions - navbar (transitions last) */
@@ -68,7 +68,7 @@ header,
 [data-navbar],
 .dock-glass,
 .navbar {
-  transition-delay: 0.35s;
+  transition-delay: 0.15s;
 }
 
 /* Staggered transitions - middle content */
@@ -76,7 +76,7 @@ main,
 section,
 [data-content],
 .hero {
-  transition-delay: 0.2s;
+  transition-delay: 0.08s;
 }
 
 /* Staggered transitions - bottom elements (transitions first) */
@@ -85,15 +85,15 @@ footer,
 .audio-widget,
 [data-audio-widget],
 .floating-player {
-  transition-delay: 0.05s;
+  transition-delay: 0.02s;
 }
 
 /* Theme-aware component transitions */
 [data-theme-aware] {
   transition: 
-    background-color 0.4s ease-out,
-    border-color 0.4s ease-out,
-    box-shadow 0.4s ease-out !important;
+    background-color 0.2s ease-out,
+    border-color 0.2s ease-out,
+    box-shadow 0.2s ease-out !important;
 }
 
 /* ============================================
@@ -103,11 +103,11 @@ footer,
 [data-navbar-container],
 .control-panel-themed {
   transition: 
-    filter 0.5s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    background-color 0.3s ease,
-    border-color 0.3s ease,
-    box-shadow 0.3s ease;
+    filter 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 /* ============================================
@@ -159,11 +159,11 @@ footer,
 }
 
 [role="tooltip"] {
-  animation: tipSlideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: tipSlideUp 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 .mobile-helper-tip {
-  animation: tipPulseGlow 3s ease-in-out infinite;
+  animation: tipPulseGlow 2s ease-in-out infinite;
 }
 
 /* ============================================

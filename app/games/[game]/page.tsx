@@ -16,14 +16,14 @@ export function generateStaticParams() {
   return VALID_GAMES.map((game) => ({ game }));
 }
 
-/** Allow unknown slugs to be handled at runtime (shows "game not found") */
-export const dynamicParams = true;
+/** Static export: only build known slugs to avoid 404 on first load */
+export const dynamicParams = false;
+export const dynamic = 'force-static';
 
-export default async function GamePage({
+export default function GamePage({
   params,
 }: {
-  params: Promise<{ game: string }>;
+  params: { game: string };
 }) {
-  const { game } = await params;
-  return <CasinoGamePage game={game} />;
+  return <CasinoGamePage game={params.game} />;
 }

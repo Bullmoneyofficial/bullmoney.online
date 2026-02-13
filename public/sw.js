@@ -1,13 +1,18 @@
 // Service Worker for Offline Support + Push Notifications + Spline Caching
-// Version 6.0.0 - iOS & Android Optimized
-// iOS Safari: Respects cache limits, handles backgrounding gracefully
-// Android Chrome: Aggressive caching, background sync support
+// Version 7.0.0 - Universal Push + iOS & Android Optimized
+// iOS Safari 16.4+ PWA: Web Push via PushManager
+// Android Chrome/Samsung/Firefox: Full push + vibration + actions
+// macOS Safari 16+: Web Push API
+// Windows/Linux Chrome/Edge/Firefox: Full push support
 // Spline scenes are aggressively cached for instant loading
 
-const CACHE_VERSION = '6.0.0';
-const CACHE_NAME = 'bullmoney-v6-mobile';
-const OFFLINE_CACHE = 'bullmoney-offline-v6';
+const CACHE_VERSION = '7.0.0';
+const CACHE_NAME = 'bullmoney-v7-mobile';
+const OFFLINE_CACHE = 'bullmoney-offline-v7';
 const SPLINE_CACHE = 'spline-scenes-v2';
+const META_CACHE = 'bm-meta-v1';
+const TELEGRAM_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
+const MARKETING_LIMIT_PER_DAY = 2;
 
 // iOS Safari cache limit: ~50MB per origin
 // Android Chrome: ~200MB+ (more generous)
@@ -149,12 +154,12 @@ self.addEventListener('fetch', (event) => {
       caches.open(SPLINE_CACHE).then((cache) => {
         return cache.match(event.request).then((cachedResponse) => {
           if (cachedResponse) {
-            console.log(`[SW v5] ⚡ Spline cache hit: ${url.pathname}`);
+            console.log(`[SW v7] ⚡ Spline cache hit: ${url.pathname}`);
             return cachedResponse;
           }
           
           // Not cached - fetch and cache for next time
-          console.log(`[SW v5] Spline cache miss, fetching: ${url.pathname}`);
+          console.log(`[SW v7] Spline cache miss, fetching: ${url.pathname}`);
           return fetch(event.request).then((networkResponse) => {
             if (networkResponse.ok) {
               cache.put(event.request, networkResponse.clone());
@@ -201,7 +206,7 @@ self.addEventListener('message', (event) => {
             .map((name) => caches.delete(name))
         );
       }).then(() => {
-        console.log('[SW v5] Caches cleared (Spline cache preserved)');
+        console.log('[SW v7] Caches cleared (Spline cache preserved)');
         event.ports[0]?.postMessage({ success: true });
       });
       break;
@@ -213,7 +218,7 @@ self.addEventListener('message', (event) => {
           cacheNames.map((name) => caches.delete(name))
         );
       }).then(() => {
-        console.log('[SW v5] ALL caches cleared including Spline');
+        console.log('[SW v7] ALL caches cleared including Spline');
         event.ports[0]?.postMessage({ success: true });
       });
       break;
@@ -228,7 +233,7 @@ self.addEventListener('message', (event) => {
           )
         );
       }).then(() => {
-        console.log('[SW v5] Spline scenes re-cached');
+        console.log('[SW v7] Spline scenes re-cached');
         event.ports[0]?.postMessage({ success: true });
       });
       break;
@@ -249,33 +254,131 @@ self.addEventListener('message', (event) => {
 
     case 'PING':
       // Health check from app
-      event.ports[0]?.postMessage({ success: true, timestamp: Date.now() });
+      event.ports[0]?.postMessage({ success: true, timestamp: Date.now(), version: CACHE_VERSION });
+      break;
+
+    case 'REFRESH_PUSH':
+      // Re-validate push subscription
+      self.registration.pushManager.getSubscription()
+        .then((sub) => {
+          if (sub) {
+            // Re-send to server to keep it fresh
+            return fetch('/api/notifications/subscribe', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                subscription: sub.toJSON(),
+                reason: 'periodic_refresh',
+              }),
+            });
+          }
+        })
+        .then(() => {
+          event.ports[0]?.postMessage({ success: true });
+        })
+        .catch((err) => {
+          event.ports[0]?.postMessage({ success: false, error: err.message });
+        });
       break;
 
     default:
-      console.log('[SW v4] Unknown message type:', event.data.type);
+      console.log('[SW v7] Unknown message type:', event.data.type);
+  }
+});
+
+// ============================================================================
+// PERIODIC BACKGROUND SYNC — Keeps push subscription alive on Android/Chrome
+// Fires approx every 12 hours when registered. Keeps subscription from expiring.
+// ============================================================================
+self.addEventListener('periodicsync', (event) => {
+  if (event.tag === 'push-keepalive') {
+    console.log('[SW v7] Periodic sync: push-keepalive');
+    event.waitUntil(
+      self.registration.pushManager.getSubscription()
+        .then((sub) => {
+          if (sub) {
+            return fetch('/api/notifications/subscribe', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                subscription: sub.toJSON(),
+                reason: 'periodic_sync',
+              }),
+            });
+          }
+        })
+        .catch((err) => {
+          console.warn('[SW v7] Periodic sync failed:', err);
+        })
+    );
   }
 });
 
 // Background sync (keep for future use)
 self.addEventListener('sync', (event) => {
   if (event.tag === 'sync-data') {
-    console.log('[SW v4] Background sync triggered');
+    console.log('[SW v7] Background sync triggered');
   }
   if (event.tag === 'notification-analytics') {
-    console.log('[SW v4] Syncing notification analytics');
+    console.log('[SW v7] Syncing notification analytics');
   }
 });
 
 // ============================================================================
 // PUSH NOTIFICATIONS - Handle incoming push events
+// Universal: Works on ALL push-capable browsers even when app/browser is closed
 // ============================================================================
 
+async function getMetaValue(key) {
+  try {
+    const cache = await caches.open(META_CACHE);
+    const res = await cache.match(key);
+    if (!res) return null;
+    const text = await res.text();
+    return text ? parseInt(text, 10) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+async function setMetaValue(key, value) {
+  try {
+    const cache = await caches.open(META_CACHE);
+    await cache.put(key, new Response(String(value)));
+  } catch (e) {}
+}
+
+async function getLastTelegramAt() {
+  const v = await getMetaValue('/__bm_last_telegram');
+  return v || 0;
+}
+
+async function setLastTelegramAt(ts) {
+  return setMetaValue('/__bm_last_telegram', ts);
+}
+
+async function getMarketingCountForToday() {
+  const key = '/__bm_marketing_count_' + new Date().toISOString().slice(0, 10);
+  const v = await getMetaValue(key);
+  return v || 0;
+}
+
+async function incrementMarketingCount() {
+  const key = '/__bm_marketing_count_' + new Date().toISOString().slice(0, 10);
+  const current = await getMetaValue(key);
+  const next = (current || 0) + 1;
+  await setMetaValue(key, next);
+  return next;
+}
+
 // Push event - this is where notifications are received (works even when app is closed!)
-// Compatible with: Chrome, Firefox, Safari 16.4+, Edge, Opera, Samsung Internet
-// Works on: Android lock screen, iOS lock screen (PWA), macOS/Windows notification center
+// Compatible with: Chrome, Firefox, Safari 16.4+, Edge, Opera, Samsung Internet, Brave, Vivaldi
+// Works on: Android lock screen, iOS lock screen (PWA), macOS/Windows/Linux notification center
+// Samsung Internet 14+: Full push support with vibration
+// Huawei Browser: Push via Chrome engine
+// UC Browser: Limited — basic notifications only
 self.addEventListener('push', (event) => {
-  console.log('[SW v5] 🔔 Push event received!');
+  console.log('[SW v7] 🔔 Push event received!');
 
   // Default notification content
   let data = {
@@ -288,20 +391,36 @@ self.addEventListener('push', (event) => {
     channel: 'trades',
   };
 
-  // Parse the push payload
+  // Parse the push payload (handle JSON, text, and ArrayBuffer)
   if (event.data) {
     try {
       const payload = event.data.json();
       data = { ...data, ...payload };
-      console.log('[SW v5] Push payload parsed:', data.title);
+      console.log('[SW v7] Push payload parsed:', data.title);
     } catch (jsonErr) {
       // Try plain text fallback
       try {
         const text = event.data.text();
-        if (text) data.body = text;
-        console.log('[SW v5] Push payload as text:', text.substring(0, 50));
+        if (text) {
+          // Try to parse text as JSON (some servers send JSON as text)
+          try {
+            const parsed = JSON.parse(text);
+            data = { ...data, ...parsed };
+          } catch (e) {
+            data.body = text;
+          }
+        }
+        console.log('[SW v7] Push payload as text:', (text || '').substring(0, 50));
       } catch (textErr) {
-        console.error('[SW v5] Could not parse push data');
+        // Try ArrayBuffer fallback
+        try {
+          const ab = event.data.arrayBuffer();
+          const decoder = new TextDecoder('utf-8');
+          const text = decoder.decode(ab);
+          if (text) data.body = text;
+        } catch (abErr) {
+          console.error('[SW v7] Could not parse push data in any format');
+        }
       }
     }
   }
@@ -310,15 +429,19 @@ self.addEventListener('push', (event) => {
   // Using same tag collapses notifications into one
   const uniqueTag = data.tag || ('trade-alert-' + Date.now());
 
+  const source = data.source || 'marketing';
+
   // Build notification options — KEEP IT SIMPLE for max cross-browser compat
+  // LOCKSCREEN OPTIMIZED: requireInteraction=true keeps notification visible until dismissed
   const options = {
     body: data.body || 'Tap to view',
     icon: data.icon || '/bullmoney-logo.png',
     badge: data.badge || '/B.png',
     tag: uniqueTag,
     renotify: true,  // Re-alert even if same tag
-    requireInteraction: !!data.requireInteraction,
+    requireInteraction: data.requireInteraction !== false, // DEFAULT TRUE for lockscreen
     silent: false,    // ALWAYS play sound — critical for lock screen visibility
+    timestamp: Date.now(), // Shows time on lockscreen (Android/Windows)
     data: {
       url: data.url || '/',
       channel: data.channel || 'trades',
@@ -327,10 +450,20 @@ self.addEventListener('push', (event) => {
     },
   };
 
-  // Add vibration on Android (safe to include, ignored on unsupported)
-  try { options.vibrate = [200, 100, 200, 100, 200]; } catch (e) {}
+  // Vibration pattern per channel type — Android/Samsung/Huawei
+  try {
+    if (data.channel === 'vip') {
+      options.vibrate = [300, 100, 300, 100, 300, 100, 300]; // Long urgent
+    } else if (data.channel === 'trades') {
+      options.vibrate = [200, 100, 200, 100, 200]; // Trade alert
+    } else if (data.channel === 'news') {
+      options.vibrate = [150, 75, 150]; // Short news
+    } else {
+      options.vibrate = [200, 100, 200]; // Default
+    }
+  } catch (e) {}
 
-  // Add action buttons (Chrome/Edge only, ignored by Safari/Firefox)
+  // Add action buttons (Chrome/Edge/Samsung Internet, ignored by Safari/Firefox)
   try {
     if ('actions' in Notification.prototype) {
       options.actions = [
@@ -347,32 +480,69 @@ self.addEventListener('push', (event) => {
 
   // CRITICAL: Must call showNotification inside waitUntil
   // Without this, the browser may kill the SW before the notification shows
-  event.waitUntil(
-    self.registration.showNotification(data.title, options)
-      .then(() => {
-        console.log('[SW v5] ✅ Notification displayed:', data.title);
-      })
-      .catch((err) => {
-        console.error('[SW v5] showNotification failed, trying minimal:', err);
-        // Absolute minimal fallback — works on ALL browsers
-        return self.registration.showNotification(data.title || 'BullMoney', {
-          body: data.body || 'New alert',
-          icon: '/bullmoney-logo.png',
-        });
-      })
-  );
+  event.waitUntil((async () => {
+    try {
+      if (source === 'telegram') {
+        await setLastTelegramAt(Date.now());
+      } else {
+        const lastTelegramAt = await getLastTelegramAt();
+        if (Date.now() - lastTelegramAt < TELEGRAM_COOLDOWN_MS) {
+          console.log('[SW v7] Skipping marketing push due to recent Telegram alert');
+          return;
+        }
+        const marketingCount = await getMarketingCountForToday();
+        if (marketingCount >= MARKETING_LIMIT_PER_DAY) {
+          console.log('[SW v7] Skipping marketing push (daily limit reached)');
+          return;
+        }
+        await incrementMarketingCount();
+      }
+
+      await self.registration.showNotification(data.title, options);
+      console.log('[SW v7] ✅ Notification displayed:', data.title);
+
+      // Track delivery (fire-and-forget)
+      fetch('/api/notifications/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'delivered',
+          tag: uniqueTag,
+          channel: data.channel,
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+    } catch (err) {
+      console.error('[SW v7] showNotification failed, trying minimal:', err);
+      // Absolute minimal fallback — works on ALL browsers
+      return self.registration.showNotification(data.title || 'BullMoney', {
+        body: data.body || 'New alert',
+        icon: '/bullmoney-logo.png',
+      });
+    }
+  })());
 });
 
 // Notification click event - opens the app when user taps notification
-// Compatible with all browsers including iOS Safari PWA
+// Compatible with all browsers including iOS Safari PWA, Samsung Internet, Huawei
 self.addEventListener('notificationclick', (event) => {
-  console.log('[SW v5] Notification clicked:', event.action);
+  console.log('[SW v7] Notification clicked:', event.action);
 
   // Always close the notification first
   event.notification.close();
 
   // If user clicked dismiss action, just close
   if (event.action === 'dismiss') {
+    // Track dismiss
+    fetch('/api/notifications/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'dismissed',
+        tag: event.notification.tag,
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
     return;
   }
 
@@ -423,7 +593,7 @@ self.addEventListener('notificationclick', (event) => {
           return self.clients.openWindow(fullUrl);
         }
       } catch (err) {
-        console.error('[SW v5] Notification click error:', err);
+        console.error('[SW v7] Notification click error:', err);
         if (self.clients.openWindow) {
           return self.clients.openWindow(fullUrl);
         }
@@ -450,7 +620,7 @@ self.addEventListener('notificationclose', (event) => {
 // When a subscription expires, the browser fires this event
 // We must re-subscribe and update the server immediately
 self.addEventListener('pushsubscriptionchange', (event) => {
-  console.log('[SW v5] ⚠️ Push subscription changed — re-subscribing...');
+  console.log('[SW v7] ⚠️ Push subscription changed — re-subscribing...');
 
   event.waitUntil(
     (async () => {
@@ -462,7 +632,7 @@ self.addEventListener('pushsubscriptionchange', (event) => {
           }
         );
 
-        console.log('[SW v5] Got new subscription, sending to server...');
+        console.log('[SW v7] Got new subscription, sending to server...');
 
         // Send the new subscription to the server
         const response = await fetch('/api/notifications/subscribe', {
@@ -476,12 +646,12 @@ self.addEventListener('pushsubscriptionchange', (event) => {
         });
 
         if (response.ok) {
-          console.log('[SW v5] ✅ Subscription refreshed successfully');
+          console.log('[SW v7] ✅ Subscription refreshed successfully');
         } else {
-          console.error('[SW v5] ❌ Server rejected new subscription:', response.status);
+          console.error('[SW v7] ❌ Server rejected new subscription:', response.status);
         }
       } catch (err) {
-        console.error('[SW v5] ❌ Failed to refresh subscription:', err);
+        console.error('[SW v7] ❌ Failed to refresh subscription:', err);
       }
     })()
   );

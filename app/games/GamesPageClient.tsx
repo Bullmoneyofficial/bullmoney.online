@@ -2,13 +2,14 @@
 
 import { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { Link } from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Activity,
   ArrowDown,
   Crown,
   Dice5,
-  Gamepad2,
+  const [origin, setOrigin] = useState('');
   Play,
   Shield,
   Sparkles,
@@ -29,17 +30,17 @@ const StoreHeader = dynamic(
   { ssr: false }
 );
 
-function DeferredMount({
+                <a
   children,
   rootMargin = '400px',
   fallback = null,
 }: {
   children: React.ReactNode;
   rootMargin?: string;
-  fallback?: React.ReactNode;
+                </a>
 }) {
-  const hostRef = useRef<HTMLDivElement | null>(null);
-  const [ready, setReady] = useState(false);
+                    <a
+                      href={`/games/${game.slug}`}
 
   useEffect(() => {
     if (ready) return;
@@ -165,6 +166,15 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
   const router = useRouter();
   const [heroBgIndex, setHeroBgIndex] = useState(0);
   const [activeGameCategory, setActiveGameCategory] = useState('all');
+  const [origin, setOrigin] = useState('');
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setOrigin(window.location.origin);
+  }, []);
+
+  const buildGameHref = (slug: string) => (origin ? `${origin}/games/${slug}` : `/games/${slug}`);
+  const gamesHomeHref = origin ? `${origin}/games` : '/games';
 
   const navigateWithFallback = (href: string) => {
     router.push(href);
@@ -643,11 +653,9 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
             {visibleGames.map((game) => {
               const GameIcon = game.icon;
               return (
-                <button
+                <Link
                   key={game.name}
-                  onClick={() => {
-                    navigateWithFallback(`/games/${game.slug}`);
-                  }}
+                  href={`/games/${game.slug}`}
                   className="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 hover:border-white/30 active:border-white/40 transition-all duration-200 text-left w-full active:scale-[0.97] cursor-pointer select-none"
                   style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                 >
@@ -671,22 +679,19 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
                     </div>
                     <p className="text-[11px] sm:text-xs text-white/40 mt-1">{game.desc}</p>
                   </div>
-                </button>
+                </a>
               );
             })}
           </div>
 
           <div className="text-center mt-10">
-            <button
-              type="button"
-              onClick={() => {
-                navigateWithFallback('/games');
-              }}
+            <a
+              href="/games"
               className="inline-flex items-center gap-2 rounded-full bg-white text-black px-6 py-3 text-sm font-bold uppercase tracking-[0.06em] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(255,255,255,0.15)]"
             >
               <Play className="w-4 h-4" />
               Browse All Games
-            </button>
+            </a>
           </div>
         </div>
         </section>
@@ -817,7 +822,7 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
                 }}
               >
                 <a
-                  href={`/games/${game.slug}`}
+                  href={buildGameHref(game.slug)}
                   style={{
                     position: 'absolute',
                     top: 0,

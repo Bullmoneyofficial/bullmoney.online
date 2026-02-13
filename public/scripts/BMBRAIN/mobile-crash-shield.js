@@ -12,11 +12,18 @@ var mem=n.deviceMemory||4;
 var isMobile=/mobi|android|iphone|ipad|ipod/i.test(ua);
 var isIOS=/iphone|ipad|ipod/i.test(ua)||(/macintosh/i.test(ua)&&n.maxTouchPoints>1);
 var isAndroid=/android/i.test(ua);
-var isInApp=!!(B.inApp&&B.inApp.active)||/instagram|fban|fbav|tiktok|wechat|line\/|telegram|pinterest|reddit/i.test(ua);
+var isInApp=!!(B.inApp&&B.inApp.active)||/instagram|fban|fbav|tiktok|wechat|line\/|telegram|pinterest|reddit|whatsapp|discord|snapchat|gsa\//i.test(ua);
+var isSamsungBrowser=/samsungbrowser/i.test(ua);
+var isUCBrowser=/ucbrowser|ubrowser/i.test(ua);
+var isHuaweiBrowser=/huaweibrowser|hmscore/i.test(ua);
 
 function memoryBudget(){
   if(isIOS) return isInApp?50:(mem>=4?110:75);
-  if(isAndroid) return isInApp?85:(mem>=8?300:mem>=6?230:mem>=4?170:110);
+  if(isAndroid){
+    // Samsung Internet and UC Browser use extra memory for their UI chrome
+    var overhead=(isSamsungBrowser||isUCBrowser||isHuaweiBrowser)?0.8:1;
+    return Math.round((isInApp?85:(mem>=8?300:mem>=6?230:mem>=4?170:110))*overhead);
+  }
   if(isMobile) return mem>=6?220:mem>=4?160:95;
   return 500;
 }
@@ -50,7 +57,24 @@ function emit(detail){
 }
 
 function currentLevel(){
-  if(!p.memory) return (isMobile&&mem<=2)?'warning':'normal';
+  if(!p||!p.memory){
+    // Safari/Firefox/Samsung Internet: no performance.memory
+    // Use DOM heuristic for memory pressure estimation
+    if(isMobile){
+      try{
+        var domCount=d.querySelectorAll('*').length;
+        var canvasCount=d.querySelectorAll('canvas').length;
+        var iframeCount=d.querySelectorAll('iframe:not([src="about:blank"])').length;
+        var heuristicMB=(domCount/500)+(iframeCount*10)+(canvasCount*5);
+        Shield.currentMemoryMB=Math.round(heuristicMB);
+        var pct=(heuristicMB/Math.max(Shield.memoryBudget,1))*100;
+        if(pct>=85)return 'critical';
+        if(pct>=65)return 'warning';
+      }catch(e){}
+      return (mem<=2)?'warning':'normal';
+    }
+    return 'normal';
+  }
   var used=Math.round((p.memory.usedJSHeapSize||0)/1048576);
   Shield.currentMemoryMB=used;
   var pct=(used/Math.max(Shield.memoryBudget,1))*100;
@@ -110,8 +134,9 @@ function monitor(){
 }
 
 function smartCacheCleanup(){
-  if(!('caches' in w)||!w.caches)return;
-  caches.keys().then(function(names){
+  try{
+    if(!('caches' in w)||!w.caches)return;
+    caches.keys().then(function(names){
     var keep=/spline|critical|static-v|next-data/i;
     var maxDelete=4;
     for(var i=0;i<names.length&&maxDelete>0;i++){
@@ -120,6 +145,7 @@ function smartCacheCleanup(){
       caches.delete(names[i]);
     }
   }).catch(function(){});
+  }catch(e){}
 }
 
 var queue=[];
@@ -150,7 +176,11 @@ function deferHeavyComponent(selector,loadCallback,opts){
   var start=function(){
     var el=d.querySelector(selector);
     if(!el)return;
-    if(!('IntersectionObserver' in w)){loadCallback();return;}
+    if(!('IntersectionObserver' in w)){
+      // Fallback: load after delay for browsers without IO (older Samsung, UC)
+      setTimeout(function(){loadCallback();Shield.deferredComponents++;},800);
+      return;
+    }
     var io=new IntersectionObserver(function(entries){
       for(var i=0;i<entries.length;i++){
         if(entries[i].isIntersecting){

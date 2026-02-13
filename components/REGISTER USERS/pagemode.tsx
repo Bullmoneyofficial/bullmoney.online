@@ -250,7 +250,7 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
       style={{ 
         zIndex: 0,
         touchAction: 'pan-y pinch-zoom', // Allow scrolling but let Spline handle other gestures
-        backgroundColor: 'rgb(0, 0, 0)',
+        backgroundColor: 'transparent',
       }}
     >
       {!useSafeSplineFilters && (
@@ -272,7 +272,7 @@ const WelcomeSplineBackground = memo(function WelcomeSplineBackground() {
       <div
         className="absolute inset-0"
         style={{
-          background: 'radial-gradient(ellipse at 50% 30%, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 30%, transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 40%), rgb(0, 0, 0)',
+          background: 'radial-gradient(ellipse at 50% 30%, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 30%, transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 40%), transparent',
           opacity: showFallback || !isLoaded ? 1 : 0.2,
           transition: 'opacity 500ms ease-out',
         }}
@@ -522,7 +522,7 @@ const GlobalStyles = () => (
         left: 0 !important;
     }
 
-    /* === REGISTER container - Apple style white background === */
+    /* === REGISTER container - layout only (background set via Tailwind classes) === */
     .register-container {
       min-height: calc(var(--pagemode-vh, 1vh) * 100);
       min-height: 100vh;
@@ -534,7 +534,6 @@ const GlobalStyles = () => (
       overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
-      background: rgb(255, 255, 255); /* Apple white */
     }
 
     /* Fix for iOS Safari address bar */
@@ -1311,7 +1310,7 @@ export default function RegisterPage({ onUnlock }: RegisterPageProps) {
             height: 'calc(var(--pagemode-vh, 1vh) * 100)',
             minHeight: '100dvh',
             cursor: 'default',
-            backgroundColor: 'rgb(0, 0, 0)', // Prevent white flash during load
+            backgroundColor: 'transparent',
           }}
         >
           <WelcomeSplineBackground />

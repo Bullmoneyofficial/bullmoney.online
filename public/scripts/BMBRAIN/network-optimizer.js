@@ -135,12 +135,13 @@ function prefetchPredictedRoutes(){
 
 function watchHeroImages(){
   if(!('IntersectionObserver' in w))return;
+  try{
   var io=new IntersectionObserver(function(entries){
     entries.forEach(function(entry){
       if(!entry.isIntersecting)return;
       var img=entry.target;
       if(img.getAttribute('loading')==='lazy')img.removeAttribute('loading');
-      img.setAttribute('fetchpriority','high');
+      try{img.setAttribute('fetchpriority','high');}catch(e){}
       io.unobserve(img);
     });
   },{rootMargin:'120px',threshold:0});
@@ -149,6 +150,7 @@ function watchHeroImages(){
     var imgs=d.querySelectorAll('.hero img, [data-hero] img, section:first-of-type img');
     for(var i=0;i<imgs.length;i++)io.observe(imgs[i]);
   });
+  }catch(e){}
 }
 
 function estimateBandwidthOnce(){
@@ -167,8 +169,14 @@ function estimateBandwidthOnce(){
 }
 
 computeStrategy();
-if(conn.addEventListener)conn.addEventListener('change',computeStrategy);
-else if('onchange' in conn)conn.onchange=computeStrategy;
+// Connection change listener — varies by browser
+// Samsung Internet, UC Browser use different API surface
+try{
+  if(conn.addEventListener)conn.addEventListener('change',computeStrategy);
+  else if('onchange' in conn)conn.onchange=computeStrategy;
+  // Fallback: periodically re-check for browsers with no change event (Huawei, MIUI)
+  else setInterval(computeStrategy,30000);
+}catch(e){}
 
 w.addEventListener('bm:memory',computeStrategy);
 w.addEventListener('bm:inapp',computeStrategy);

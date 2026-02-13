@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 // ============================================================================
-// EMAIL ATTACHMENTS - Logo images for Resend emails
+// EMAIL ATTACHMENTS - Logo images for email sends
 // Uses CID (Content-ID) for inline images in HTML emails
 // ============================================================================
 
@@ -10,7 +10,7 @@ export const EMAIL_LOGO_CID = 'bullmoney-logo';
 export const EMAIL_FOOTER_LOGO_CID = 'bullmoney-footer';
 
 /**
- * Get email attachments for Resend
+ * Get email attachments for email sends
  * Returns attachments with CID for inline display in emails
  */
 export function getEmailAttachments() {

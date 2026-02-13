@@ -40,7 +40,7 @@
   var lastVisualTick = Date.now();
   var splashStartAt = Date.now();
   var isInAppBrowser = document.documentElement.classList.contains('is-in-app-browser');
-  var minVisibleMs = isInAppBrowser ? 1200 : 700;
+  var minVisibleMs = isInAppBrowser ? 800 : 400;
   var loadAudio = null;
   var interactionBound = false;
   var lifecycleBound = false;
@@ -178,8 +178,8 @@
       }
       target.textContent = out;
       if (iter >= text.length) clearInterval(iv);
-      iter += 0.5;
-    }, 30);
+      iter += 1.2;
+    }, 18);
   }
 
   // Update progress display (safe — these elements have suppressHydrationWarning)
@@ -256,19 +256,28 @@
     lastFrameTs = now;
 
     if (progress < targetPct) {
-      // Proportional easing toward target (prevents stair-step/choppy jumps after 60%)
       var remaining = targetPct - progress;
-      var easing;
-      if (progress >= 92) easing = 0.06;
-      else if (progress >= 75) easing = 0.08;
-      else if (progress >= 60) easing = 0.10;
-      else if (progress >= 40) easing = 0.12;
-      else easing = 0.14;
+      var delta;
 
-      var delta = remaining * easing * dt;
-      var maxDelta = progress >= 60 ? 0.45 : 0.75;
-      var minDelta = remaining > 1 ? 0.04 : 0.008;
-      delta = Math.min(remaining, Math.max(minDelta, Math.min(delta, maxDelta)));
+      if (progress >= 90) {
+        // 90-100%: slow linear tick so every digit is visible (~250ms each)
+        delta = 0.06 * dt;
+      } else {
+        // Front-loaded easing: rush through early %, slow near end for perceived speed
+        var easing;
+        if (progress >= 75) easing = 0.10;
+        else if (progress >= 60) easing = 0.14;
+        else if (progress >= 40) easing = 0.22;
+        else if (progress >= 20) easing = 0.30;
+        else easing = 0.40;
+
+        delta = remaining * easing * dt;
+        var maxDelta = progress >= 60 ? 0.6 : 1.8;
+        var minDelta = remaining > 1 ? 0.08 : 0.01;
+        delta = Math.min(Math.max(minDelta, Math.min(delta, maxDelta)));
+      }
+
+      delta = Math.min(remaining, delta);
       updateProgress(progress + delta);
     }
     if (progress < 100) {
@@ -286,13 +295,13 @@
     }
   }, 250);
 
-  // --- Phase 1: Core loading (0-30%) — only animate counter, no DOM class changes ---
-  targetPct = 15;
+  // --- Phase 1: Core loading (0-40%) — fast initial burst for perceived speed ---
+  targetPct = 35;
 
   // Document ready = core loaded
   function onDomReady() {
     resetSplashSwayAnimation();
-    targetPct = 30;
+    targetPct = 50;
     setStep(1);
 
     // --- Phase 2: Services connecting (30-60%) ---
@@ -304,7 +313,7 @@
   }
 
   function onLoad() {
-    targetPct = 60;
+    targetPct = 75;
     setStep(2);
 
     // --- Phase 3: Hydration (60-95%) ---
@@ -317,21 +326,26 @@
         setStep(3);
       }
       
-      // Brief pause at READY state so user sees it
-      setTimeout(function() {
-        targetPct = 100;
-        // Smoothly animate to 100 instead of forcing a jump
-        var fullStart = Date.now();
-        function waitForFull() {
-          if (progress >= 99.5 || Date.now() - fullStart > 2000) {
-            updateProgress(100);
-            setTimeout(hide, 400);
-          } else {
-            requestAnimationFrame(waitForFull);
+      // Wait for progress to actually reach 95 before going to 100
+      // so each digit 90-100 is visible
+      function waitForNinetyFive() {
+        if (progress >= 94.5) {
+          targetPct = 100;
+          // Let animation naturally tick to 100 — no forced jumps
+          function waitForHundred() {
+            if (progress >= 99.5) {
+              updateProgress(100);
+              setTimeout(hide, 150);
+            } else {
+              requestAnimationFrame(waitForHundred);
+            }
           }
+          waitForHundred();
+        } else {
+          requestAnimationFrame(waitForNinetyFive);
         }
-        waitForFull();
-      }, 300);
+      }
+      waitForNinetyFive();
     });
   }
 
@@ -369,7 +383,7 @@
       if (hydrated || checks >= maxChecks) {
         cb();
       } else {
-        if (targetPct < 90) targetPct += 0.3;
+        if (targetPct < 90) targetPct += 0.6;
         setTimeout(check, 50);
       }
     }
@@ -394,7 +408,7 @@
     splash.classList.add('hide');
     document.documentElement.classList.add('bm-splash-done');
     setTimeout(function() {
-      if (splash.parentNode) splash.parentNode.removeChild(splash);
+      if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
       triggerFinishEffects();
       window.__BM_SPLASH_FINISHED__ = true;
       try {
@@ -402,7 +416,7 @@
       } catch (e) {
         // noop
       }
-    }, 700);
+    }, 450);
   }
 
   function triggerFinishEffects() {
@@ -416,11 +430,15 @@
     var isInAppBrowser = /Instagram|FBAN|FBAV|TikTok|musical_ly|Twitter|GSA|Line\//i.test(ua);
     var isWebView = /\bwv\b|WebView|; wv\)/i.test(ua);
 
+    // Only sway for in-app browsers (Instagram, Facebook, TikTok, etc.)
+    // Skip sway entirely for normal browsers (Safari, Chrome, Firefox, etc.)
+    if (!isInAppBrowser && !isWebView) return;
+
     var root = document.documentElement;
     var body = document.body;
     if (root) {
-      var swayClass = (isInAppBrowser || isWebView) ? 'bm-sway-safe' : 'bm-sway';
-      var swayDuration = (isInAppBrowser || isWebView) ? 900 : 1600;
+      var swayClass = 'bm-sway-safe';
+      var swayDuration = 900;
 
       root.classList.remove('bm-sway', 'bm-sway-safe');
       if (body) body.classList.remove('bm-sway', 'bm-sway-safe');
@@ -448,8 +466,8 @@
     onDomReady();
   }
 
-  // Safety net: 12s max
+  // Safety net: 8s max
   setTimeout(function() {
     if (splash && !splash.classList.contains('hide')) hide();
-  }, 12000);
+  }, 8000);
 })();

@@ -1,6 +1,6 @@
 // ============================================================================
-// BULLMONEY RESEND EMAIL TEMPLATES
-// Professional email templates for Resend - no emojis, clean design
+// BULLMONEY EMAIL TEMPLATES
+// Professional email templates - no emojis, clean design
 // ============================================================================
 
 export const SITE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://bullmoney.shop';
@@ -1126,6 +1126,96 @@ export function cryptoRefundDeniedEmail(vars: CryptoEmailVars & { denial_reason?
 }
 
 // ============================================================================
+// TEMPLATE: DAILY SEO AFFILIATE (SHORT)
+// ============================================================================
+export function dailySeoAffiliateShortEmail(firstName: string, email: string): { subject: string; html: string } {
+  const content = `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#111111" style="background-color: #111111; border: 1px solid #222222; border-radius: 20px;">
+      <tr><td bgcolor="#111111" style="padding: 36px; background-color: #111111; color: #ffffff; text-align: left;">
+        <h1 style="margin: 0 0 12px 0; font-size: 26px; font-weight: 700; color: ${BRAND_BLUE};">
+          Daily update, ${firstName}
+        </h1>
+        <p style="color: #e0e0e0; font-size: 15px; line-height: 1.7; margin: 0 0 20px 0;">
+          Quick highlights from Bullmoney - no hype, just what's new.
+        </p>
+        <div style="background: #0a0a0a; border: 1px solid #222; border-radius: 14px; padding: 18px; margin-bottom: 20px;">
+          <p style="margin: 6px 0; color: #fff; font-size: 14px;">• Fresh content and updates on the main hub</p>
+          <p style="margin: 6px 0; color: #fff; font-size: 14px;">• Affiliate dashboard: track referrals + commissions</p>
+          <p style="margin: 6px 0; color: #fff; font-size: 14px;">• Telegram alerts are the fastest channel</p>
+        </div>
+        <div style="text-align: center;">
+          <a href="${SITE_URL}" style="display: inline-block; background: linear-gradient(135deg, ${BRAND_BLUE}, #1d4ed8); color: #ffffff; padding: 14px 36px; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 15px; margin-right: 8px;">
+            Visit Bullmoney
+          </a>
+          <a href="${AFFILIATE_URL}" style="display: inline-block; background: transparent; border: 2px solid ${BRAND_BLUE}; color: ${BRAND_BLUE}; padding: 12px 28px; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 14px; margin-top: 10px;">
+            Open Affiliate Dashboard
+          </a>
+        </div>
+      </td></tr>
+    </table>
+  `;
+
+  return {
+    subject: 'Bullmoney daily update - quick highlights',
+    html: emailWrapper(content, email),
+  };
+}
+
+// ============================================================================
+// TEMPLATE: DAILY SEO AFFILIATE (LONG)
+// ============================================================================
+export function dailySeoAffiliateLongEmail(firstName: string, email: string): { subject: string; html: string } {
+  const content = `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#111111" style="background-color: #111111; border: 1px solid #222222; border-radius: 20px;">
+      <tr><td bgcolor="#111111" style="padding: 40px; background-color: #111111; color: #ffffff; text-align: left;">
+        <h1 style="margin: 0 0 12px 0; font-size: 28px; font-weight: 700; color: ${BRAND_BLUE};">
+          Daily Bullmoney update, ${firstName}
+        </h1>
+        <p style="color: #e0e0e0; font-size: 16px; line-height: 1.7; margin: 0 0 24px 0;">
+          Here's a clean, no-hype summary of what's new on Bullmoney today. If you want faster alerts, Telegram is the primary channel.
+        </p>
+        <div style="background: #0a0a0a; border: 1px solid #222; border-radius: 16px; padding: 22px; margin-bottom: 22px;">
+          <h3 style="color: ${BRAND_BLUE}; margin: 0 0 12px 0; font-size: 15px; text-transform: uppercase; letter-spacing: 1px;">
+            Affiliate Program Snapshot
+          </h3>
+          <p style="color: #ccc; font-size: 14px; line-height: 1.7; margin: 0 0 10px 0;">
+            The affiliate dashboard gives you a unique referral link, live tracking, and commission history.
+          </p>
+          <ul style="color: #ccc; font-size: 14px; line-height: 2; margin: 0; padding-left: 18px;">
+            <li>Tiered commissions: 5%, 10%, 15%, 20%, up to 25%</li>
+            <li>Track recruits, referrals, and monthly totals</li>
+            <li>Access from the affiliate portal anytime</li>
+          </ul>
+        </div>
+        <div style="background: #0a0a0a; border: 1px solid #222; border-radius: 16px; padding: 22px; margin-bottom: 22px;">
+          <h3 style="color: ${BRAND_BLUE}; margin: 0 0 12px 0; font-size: 15px; text-transform: uppercase; letter-spacing: 1px;">
+            What's New
+          </h3>
+          <ul style="color: #ccc; font-size: 14px; line-height: 2; margin: 0; padding-left: 18px;">
+            <li>Updated pages across the main site and store</li>
+            <li>New resources in the hub and community sections</li>
+            <li>Latest alerts prioritized through Telegram</li>
+          </ul>
+        </div>
+        <div style="text-align: center;">
+          <a href="${SITE_URL}" style="display: inline-block; background: linear-gradient(135deg, ${BRAND_BLUE}, #1d4ed8); color: #ffffff; padding: 16px 42px; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 16px; margin-right: 10px;">
+            Open Bullmoney
+          </a>
+          <a href="${AFFILIATE_URL}" style="display: inline-block; background: transparent; border: 2px solid ${BRAND_BLUE}; color: ${BRAND_BLUE}; padding: 14px 32px; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 15px; margin-top: 10px;">
+            Affiliate Dashboard
+          </a>
+        </div>
+      </td></tr>
+    </table>
+  `;
+
+  return {
+    subject: 'Bullmoney daily update - affiliate + site highlights',
+    html: emailWrapper(content, email),
+  };
+}
+
+// ============================================================================
 // EXPORTS
 // ============================================================================
 export const EmailTemplates = {
@@ -1136,6 +1226,8 @@ export const EmailTemplates = {
   newProduct: newProductEmail,
   flashSale: flashSaleEmail,
   affiliatePromo: affiliatePromoEmail,
+  dailySeoAffiliateShort: dailySeoAffiliateShortEmail,
+  dailySeoAffiliateLong: dailySeoAffiliateLongEmail,
   weeklyDigest: weeklyDigestEmail,
   // Crypto payment templates
   cryptoPaymentAdmin: cryptoPaymentAdminEmail,

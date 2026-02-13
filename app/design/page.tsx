@@ -1,52 +1,24 @@
-'use client';
-
-import { useEffect } from 'react';
-import DesignStudioPage from "@/components/studio/DesignStudioPage";
-import DesignSections from "@/components/studio/DesignSections";
-import DesignPrintSections from "./DesignPrintSections";
+import { Suspense } from "react";
 import DesignShowcaseCards from "./DesignShowcaseCards";
-import { forceEnableScrolling } from '@/lib/forceScrollEnabler';
-import { useShowcaseScroll } from '@/hooks/useShowcaseScroll';
+import DesignPageClientLoader from "./DesignPageClientLoader";
 import "./design.css";
 
 export default function DesignPage() {
-  // Showcase scroll animation — uses hook defaults for lightweight perf
-  useShowcaseScroll({
-    startDelay: 1000,
-    enabled: true,
-    pageId: 'design',
-  });
-
-  // Force enable scrolling for all devices
-  useEffect(() => {
-    // Mark as design page
-    document.documentElement.setAttribute('data-design-page', 'true');
-    document.body.setAttribute('data-design-page', 'true');
-    
-    const cleanup = forceEnableScrolling();
-    
-    return () => {
-      cleanup?.();
-      document.documentElement.removeAttribute('data-design-page');
-      document.body.removeAttribute('data-design-page');
-    };
-  }, []);
-
   return (
-    <>
-      <main className="design-page-root">
-        <DesignPrintSections />
-        <DesignShowcaseCards />
-        <section id="design-studio" className="design-content-wrap" data-canvas-section="true">
-          <div className="design-root min-h-screen">
-            <div className="design-ambient" aria-hidden="true" />
-            <DesignStudioPage />
+    <main className="design-page-root">
+      {/* Showcase cards are lightweight — render immediately on server */}
+      <DesignShowcaseCards />
+
+      {/* Heavy interactive sections load client-side with loading fallbacks */}
+      <Suspense
+        fallback={
+          <div className="min-h-[60vh] flex items-center justify-center">
+            <div className="inline-block w-8 h-8 border-[3px] border-black/10 border-t-black/60 rounded-full animate-spin" />
           </div>
-        </section>
-        <section id="design-sections" className="design-content-wrap">
-          <DesignSections scrollTargetId="design-studio" enableStudioEvents />
-        </section>
-      </main>
-    </>
+        }
+      >
+        <DesignPageClientLoader />
+      </Suspense>
+    </main>
   );
 }

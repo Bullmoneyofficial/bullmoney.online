@@ -81,8 +81,8 @@
 
 /* Animate-ready (add will-change on hover/focus) */
 .will-animate {
-  transition: transform 0.2s var(--spring-smooth),
-              opacity 0.2s var(--spring-smooth);
+  transition: transform 0.12s var(--spring-smooth),
+              opacity 0.12s var(--spring-smooth);
 }
 
 .will-animate:hover,
@@ -96,33 +96,33 @@
 
 /* Ultra-fast micro-interactions (buttons, links) */
 .transition-micro {
-  transition: transform 0.1s var(--spring-snappy),
-              opacity 0.1s ease-out;
+  transition: transform 0.06s var(--spring-snappy),
+              opacity 0.06s ease-out;
 }
 
 /* Standard UI transitions */
 .transition-ui {
-  transition: transform 0.2s var(--spring-smooth),
-              opacity 0.2s ease-out;
+  transition: transform 0.12s var(--spring-smooth),
+              opacity 0.12s ease-out;
 }
 
 /* Smooth content transitions */
 .transition-content {
-  transition: transform 0.35s var(--spring-smooth),
-              opacity 0.35s ease-out;
+  transition: transform 0.2s var(--spring-smooth),
+              opacity 0.2s ease-out;
 }
 
 /* Page-level transitions */
 .transition-page {
-  transition: transform 0.5s var(--spring-smooth),
-              opacity 0.5s ease-out;
+  transition: transform 0.3s var(--spring-smooth),
+              opacity 0.3s ease-out;
 }
 
 /* Adjust transition speed based on refresh rate */
-.display-120hz .transition-micro { transition-duration: 0.08s; }
-.display-120hz .transition-ui { transition-duration: 0.15s; }
-.display-120hz .transition-content { transition-duration: 0.28s; }
-.display-120hz .transition-page { transition-duration: 0.4s; }
+.display-120hz .transition-micro { transition-duration: 0.04s; }
+.display-120hz .transition-ui { transition-duration: 0.08s; }
+.display-120hz .transition-content { transition-duration: 0.16s; }
+.display-120hz .transition-page { transition-duration: 0.25s; }
 
 /* ============================================================================
    HOVER EFFECTS (GPU-Only)
@@ -177,8 +177,8 @@
 /* Fade in on scroll */
 .scroll-fade-in {
   opacity: 0;
-  transform: translateY(30px) translateZ(0);
-  transition: opacity 0.6s ease-out, transform 0.6s var(--spring-smooth);
+  transform: translateY(16px) translateZ(0);
+  transition: opacity 0.3s ease-out, transform 0.3s var(--spring-smooth);
 }
 
 .scroll-fade-in.is-visible {
@@ -189,8 +189,8 @@
 /* Slide in from left */
 .scroll-slide-left {
   opacity: 0;
-  transform: translateX(-40px) translateZ(0);
-  transition: opacity 0.5s ease-out, transform 0.5s var(--spring-smooth);
+  transform: translateX(-20px) translateZ(0);
+  transition: opacity 0.25s ease-out, transform 0.25s var(--spring-smooth);
 }
 
 .scroll-slide-left.is-visible {
@@ -201,8 +201,8 @@
 /* Slide in from right */
 .scroll-slide-right {
   opacity: 0;
-  transform: translateX(40px) translateZ(0);
-  transition: opacity 0.5s ease-out, transform 0.5s var(--spring-smooth);
+  transform: translateX(20px) translateZ(0);
+  transition: opacity 0.25s ease-out, transform 0.25s var(--spring-smooth);
 }
 
 .scroll-slide-right.is-visible {
@@ -213,8 +213,8 @@
 /* Scale up on scroll */
 .scroll-scale {
   opacity: 0;
-  transform: scale(0.95) translateZ(0);
-  transition: opacity 0.5s ease-out, transform 0.5s var(--spring-smooth);
+  transform: scale(0.97) translateZ(0);
+  transition: opacity 0.25s ease-out, transform 0.25s var(--spring-smooth);
 }
 
 .scroll-scale.is-visible {
@@ -239,7 +239,7 @@
 }
 
 .skeleton {
-  animation: skeleton-shimmer 2s ease-in-out infinite;
+  animation: skeleton-shimmer 1.2s ease-in-out infinite;
   background: linear-gradient(90deg, 
     rgba(255, 255, 255, 0.05) 0%,
     rgba(255, 255, 255, 0.15) 20%,
@@ -274,9 +274,9 @@ button,
 [role="button"] {
   /* GPU layer for instant response */
   transform: translateZ(0);
-  transition: transform 0.15s var(--spring-snappy),
-              opacity 0.15s ease-out,
-              background-color 0.15s ease-out;
+  transition: transform 0.08s var(--spring-snappy),
+              opacity 0.08s ease-out,
+              background-color 0.08s ease-out;
   /* Prevent tap delay on mobile */
   touch-action: manipulation;
   /* No tap highlight */
@@ -299,7 +299,7 @@ button:active,
   -webkit-backdrop-filter: blur(calc(8px * var(--blur-enabled, 1)));
   background: rgba(0, 0, 0, 0.5);
   opacity: 0;
-  transition: opacity 0.3s ease-out;
+  transition: opacity 0.15s ease-out;
   transform: translateZ(0);
 }
 
@@ -308,10 +308,10 @@ button:active,
 }
 
 .modal-content {
-  transform: scale(0.95) translateY(10px) translateZ(0);
+  transform: scale(0.97) translateY(6px) translateZ(0);
   opacity: 0;
-  transition: transform 0.3s var(--spring-smooth),
-              opacity 0.2s ease-out;
+  transition: transform 0.18s var(--spring-smooth),
+              opacity 0.12s ease-out;
 }
 
 .modal-content.is-open {

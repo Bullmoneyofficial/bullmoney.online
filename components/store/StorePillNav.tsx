@@ -413,6 +413,10 @@ export const StorePillNav: React.FC<StorePillNavProps> = memo(({
           mask-composite: exclude;
           opacity: 0.9;
         }
+        .store-main-nav {
+          -webkit-text-size-adjust: 100%;
+          text-size-adjust: 100%;
+        }
       `}</style>
     </>
   );

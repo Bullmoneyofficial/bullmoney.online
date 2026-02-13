@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, type CSSProperties } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 // ✅ LAZY-LOADED: These modules are only used in useEffect callbacks,
 // so we use dynamic import() to avoid adding them to the compile-time module graph.
@@ -241,12 +242,13 @@ function WhiteboardCanvas({ isMobile }: { isMobile: boolean }) {
               ))}
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-2.5">
-              <a
+              <Link
                 href="/design"
+                prefetch={true}
                 className="inline-flex items-center justify-center rounded-full border border-white/30 bg-black px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white"
               >
                 Open Full Notes Studio
-              </a>
+              </Link>
               <a
                 href="https://excalidraw.com"
                 target="_blank"

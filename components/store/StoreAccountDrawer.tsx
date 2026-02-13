@@ -14,8 +14,8 @@ interface StoreAccountDrawerProps {
 }
 
 export function StoreAccountDrawer({ isOpen, onClose }: StoreAccountDrawerProps) {
-  const BACKDROP_Z = 2147483600;
-  const PANEL_Z = 2147483601;
+  const BACKDROP_Z = 2147483646;
+  const PANEL_Z = 2147483647;
   const { shouldSkipHeavyEffects } = useUIState();
   const [isDesktop, setIsDesktop] = useState(false);
 
@@ -79,7 +79,7 @@ export function StoreAccountDrawer({ isOpen, onClose }: StoreAccountDrawerProps)
             onClick={(e) => e.stopPropagation()}
             className={
               isDesktop
-                ? 'fixed top-0 left-0 right-0 w-full bg-white border-b border-black/10 flex flex-col safe-area-inset-bottom max-h-[92vh] overflow-hidden'
+                ? 'fixed top-0 left-0 right-0 w-full bg-white border-b border-black/10 flex flex-col safe-area-inset-bottom max-h-[92vh] min-h-[420px] overflow-hidden'
                 : 'fixed top-0 right-0 bottom-0 w-full max-w-2xl bg-white border-l border-black/10 flex flex-col safe-area-inset-bottom overflow-hidden'
             }
             style={{ zIndex: PANEL_Z, color: '#1d1d1f', backgroundColor: '#ffffff', colorScheme: 'light' as const }}

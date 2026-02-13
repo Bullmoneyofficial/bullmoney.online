@@ -424,6 +424,231 @@ export default function RootLayout({
         }
       }
       
+      /* UC Browser / Huawei Browser / MIUI Browser scroll fixes */
+      html.uc-browser:not(.modal-open),
+      html.huawei-browser:not(.modal-open),
+      html.miui-browser:not(.modal-open) {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        touch-action: pan-y pan-x !important;
+        -webkit-overflow-scrolling: touch !important;
+        height: auto !important;
+        transform: none !important;
+      }
+      body.uc-browser:not(.modal-open),
+      body.huawei-browser:not(.modal-open),
+      body.miui-browser:not(.modal-open) {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        height: auto !important;
+      }
+      
+      /* Opera Mini - graceful degradation */
+      html.opera-mini *,
+      html.reduce-effects * {
+        animation-duration: 0.01s !important;
+        transition-duration: 0.01s !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+      }
+      html.opera-mini .glass-effect,
+      html.opera-mini .glassmorphism {
+        background: rgba(5,9,21,.9) !important;
+      }
+      
+      /* Firefox Android specific fixes */
+      @-moz-document url-prefix() {
+        html:not(.modal-open),
+        body:not(.modal-open) {
+          overflow-y: auto !important;
+          touch-action: pan-y pan-x !important;
+        }
+      }
+      
+      /* Foldable device support (Galaxy Z Fold/Flip, Pixel Fold) */
+      html.foldable-device {
+        --fold-width: env(viewport-segment-width 0 0, 100vw);
+      }
+      @media (horizontal-viewport-segments: 2) {
+        body { column-count: 2; column-gap: env(viewport-segment-left 1 0, 0px); }
+      }
+      
+      /* PWA standalone mode */
+      html.is-pwa body,
+      html.standalone-mode body {
+        padding-top: env(safe-area-inset-top, 0px) !important;
+        padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+      }
+      
+      /* ═══════════════════════════════════════════════════════════════════ */
+      /* MAC DESKTOP FIXES — Safari & Chrome on M1-M6 + Intel              */
+      /* ═══════════════════════════════════════════════════════════════════ */
+      
+      /* Mac Safari: fix elastic overscroll color bleed */
+      html[data-os="macos"]:not(.modal-open),
+      html[data-os="macos"]:not(.modal-open) body {
+        overscroll-behavior-y: contain;
+        overscroll-behavior-x: none;
+      }
+      
+      /* Mac Safari: trackpad momentum scroll jitter fix */
+      html.mac-safari .backdrop-blur-sm,
+      html.mac-safari .backdrop-blur-md,
+      html.mac-safari .backdrop-blur-lg,
+      html.mac-safari .backdrop-blur-xl {
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+        will-change: transform;
+      }
+      
+      /* Mac Chrome: prevent sub-pixel rendering artifacts on Retina */
+      html.mac-chrome .glass-effect,
+      html.mac-chrome .glassmorphism {
+        transform: translateZ(0);
+        backface-visibility: hidden;
+      }
+      
+      /* Apple Silicon (M1-M6): higher quality effects */
+      html.apple-silicon .particle-container,
+      html.apple-silicon .aurora {
+        will-change: transform, opacity;
+      }
+      
+      /* Intel Mac: reduce GPU load */
+      html.intel-mac .particle-container { will-change: auto; }
+      html.intel-mac .aurora { animation-duration: 8s !important; }
+      
+      /* ═══════════════════════════════════════════════════════════════════ */
+      /* DESKTOP SCROLL & VIEWPORT — click, scroll, resize support         */
+      /* ═══════════════════════════════════════════════════════════════════ */
+      
+      /* Desktop scrollbar styling */
+      html.is-desktop {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255,255,255,0.15) transparent;
+      }
+      html.is-desktop::-webkit-scrollbar { width: 8px; height: 8px; }
+      html.is-desktop::-webkit-scrollbar-track { background: transparent; }
+      html.is-desktop::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.15);
+        border-radius: 4px;
+        border: 2px solid transparent;
+        background-clip: content-box;
+      }
+      html.is-desktop::-webkit-scrollbar-thumb:hover {
+        background: rgba(255,255,255,0.3);
+        background-clip: content-box;
+      }
+      
+      /* Desktop: always show scrollbar gutter to prevent layout shift */
+      html.is-desktop body {
+        overflow-y: scroll;
+        overflow-x: hidden;
+      }
+      
+      /* Desktop: proper click targets */
+      html.is-desktop a,
+      html.is-desktop button,
+      html.is-desktop [role="button"] {
+        cursor: pointer;
+      }
+      
+      /* Desktop hover effects (only with fine pointer) */
+      @media (hover: hover) and (pointer: fine) {
+        a:hover, button:hover, [role="button"]:hover {
+          transition: all 0.15s ease;
+        }
+      }
+      
+      /* Hybrid device (touch laptop): bigger touch targets */
+      html.hybrid-device a,
+      html.hybrid-device button,
+      html.hybrid-device [role="button"] {
+        min-height: 44px;
+        min-width: 44px;
+      }
+      
+      /* Responsive breakpoint classes from sw-touch.js */
+      html.vp-mobile body { font-size: 14px; }
+      html.vp-ultrawide body { max-width: 2560px; margin: 0 auto; }
+      
+      /* Scroll direction classes (for auto-hiding nav) */
+      html.scroll-down .auto-hide-nav {
+        transform: translateY(-100%);
+        transition: transform 0.3s ease;
+      }
+      html.scroll-up .auto-hide-nav,
+      html.at-top .auto-hide-nav {
+        transform: translateY(0);
+        transition: transform 0.3s ease;
+      }
+      
+      /* Page visibility: pause animations when hidden */
+      html.page-hidden *,
+      html.page-hidden *::before,
+      html.page-hidden *::after {
+        animation-play-state: paused !important;
+      }
+      
+      /* ═══════════════════════════════════════════════════════════════════ */
+      /* UNIVERSAL TOUCH ENHANCEMENTS                                      */
+      /* ═══════════════════════════════════════════════════════════════════ */
+      
+      /* Remove tap highlight on all devices */
+      html {
+        -webkit-tap-highlight-color: transparent;
+        -webkit-tap-highlight-color: rgba(0,0,0,0);
+      }
+      
+      /* Touch target minimums (WCAG 2.5.5 compliance) */
+      html.touch-device a,
+      html.touch-device button,
+      html.touch-device [role="button"],
+      html.touch-device input,
+      html.touch-device select,
+      html.touch-device textarea {
+        min-height: 44px;
+        min-width: 44px;
+      }
+      
+      /* Prevent text selection on interactive elements */
+      button, [role="button"], a, .no-select {
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+      }
+      
+      /* Allow text selection on content */
+      p, article, span, .selectable, [contenteditable] {
+        -webkit-user-select: text;
+        user-select: text;
+      }
+      
+      /* Momentum scrolling for containers */
+      .scroll-container, [data-scroll], [role="listbox"], [role="menu"] {
+        -webkit-overflow-scrolling: touch;
+        overflow-scrolling: touch;
+        overscroll-behavior: contain;
+      }
+      
+      /* Horizontal scroll containers */
+      .scroll-x, .overflow-x-auto, .overflow-x-scroll {
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+      }
+      .scroll-x::-webkit-scrollbar { display: none; }
+      
+      /* Virtual keyboard compensation */
+      html.keyboard-open body {
+        padding-bottom: var(--keyboard-height, 0px);
+      }
+      html.keyboard-open input:focus,
+      html.keyboard-open textarea:focus {
+        scroll-margin-bottom: calc(var(--keyboard-height, 0px) + 20px);
+      }
+      
       /* Ensure all pages can scroll */
       main:not(:has([role="dialog"])), 
       [role="main"]:not(:has([role="dialog"])), 
@@ -500,6 +725,11 @@ export default function RootLayout({
         ` }} />
         {/* CRITICAL: Blocking init  served as static file (no Turbopack compilation cost) */}
         <script src="/scripts/splash-init.js" />
+        {/* UNIVERSAL COMPATIBILITY LAYER: Polyfills + feature detection for ALL devices worldwide
+            MUST load BEFORE other BMBRAIN scripts — provides Element.closest, CustomEvent, Promise,
+            fetch, IntersectionObserver polyfills + safe storage for private browsing + CSS fixes
+            for Samsung Internet, UC Browser, Huawei Browser, Opera Mini, MIUI Browser, etc. */}
+        <script src="/scripts/BMBRAIN/compat-layer.js" />
         {/* Cache validation (deferred to avoid blocking first paint) */}
         <Script
           id="cache-buster"
@@ -507,9 +737,17 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
 (function() {
+  // Safe storage wrapper for private browsing / incognito mode
+  function safeGet(key){try{return localStorage.getItem(key);}catch(e){return null;}}
+  function safeSet(key,val){try{localStorage.setItem(key,val);}catch(e){}}
+  function safeRemove(key){try{localStorage.removeItem(key);}catch(e){}}
+  function safeSessionGet(key){try{return sessionStorage.getItem(key);}catch(e){return null;}}
+  function safeSessionSet(key,val){try{sessionStorage.setItem(key,val);}catch(e){}}
+  function safeSessionRemove(key){try{sessionStorage.removeItem(key);}catch(e){}}
+  
   // App version for cache invalidation - MUST MATCH lib/appVersion.ts
   var APP_VERSION = '${APP_VERSION}';
-  var storedVersion = localStorage.getItem('bullmoney_app_version');
+  var storedVersion = safeGet('bullmoney_app_version');
   
   // Force cache clear on version mismatch
   if (storedVersion && storedVersion !== APP_VERSION) {
@@ -517,45 +755,47 @@ export default function RootLayout({
     
     // Clear browser caches (NOT localStorage auth)
     if ('caches' in window) {
-      caches.keys().then(function(names) {
+      try{caches.keys().then(function(names) {
         names.forEach(function(name) { caches.delete(name); });
-      });
+      }).catch(function(){});}catch(e){}
     }
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function(regs) {
+      try{navigator.serviceWorker.getRegistrations().then(function(regs) {
         regs.forEach(function(r) { r.unregister(); });
-      });
+      }).catch(function(){});}catch(e){}
     }
     
     // SAFE clear: Only remove volatile/cache keys, ALWAYS preserve auth & session
     var keysToKeep = ['bullmoney_app_version'].concat(${JSON.stringify(PRESERVED_KEYS)});
-    for (var i = localStorage.length - 1; i >= 0; i--) {
-      var key = localStorage.key(i);
-      if (!key) continue;
-      // NEVER touch auth/session keys
-      if (keysToKeep.indexOf(key) !== -1) continue;
-      // NEVER touch Supabase auth tokens
-      if (key.indexOf('sb-') === 0 || key.indexOf('supabase') === 0) continue;
-      // NEVER touch cookie-backed auth
-      if (key.indexOf('bm_auth') === 0) continue;
-      // Only clear bullmoney cache/volatile keys
-      if (key.indexOf('bullmoney_cache') === 0 || key.indexOf('bullmoney_temp') === 0 || key.indexOf('bullmoney_spline') === 0 || key.indexOf('bullmoney_image') === 0 || key.indexOf('bullmoney_api') === 0 || key.indexOf('bullmoney_playlist') === 0 || key.indexOf('bullmoney_component') === 0) {
-        localStorage.removeItem(key);
+    try{
+      for (var i = localStorage.length - 1; i >= 0; i--) {
+        var key = localStorage.key(i);
+        if (!key) continue;
+        // NEVER touch auth/session keys
+        if (keysToKeep.indexOf(key) !== -1) continue;
+        // NEVER touch Supabase auth tokens
+        if (key.indexOf('sb-') === 0 || key.indexOf('supabase') === 0) continue;
+        // NEVER touch cookie-backed auth
+        if (key.indexOf('bm_auth') === 0) continue;
+        // Only clear bullmoney cache/volatile keys
+        if (key.indexOf('bullmoney_cache') === 0 || key.indexOf('bullmoney_temp') === 0 || key.indexOf('bullmoney_spline') === 0 || key.indexOf('bullmoney_image') === 0 || key.indexOf('bullmoney_api') === 0 || key.indexOf('bullmoney_playlist') === 0 || key.indexOf('bullmoney_component') === 0) {
+          safeRemove(key);
+        }
       }
-    }
+    }catch(e){}
     
     // Set new version (NO reload - let React hydrate normally)
-    localStorage.setItem('bullmoney_app_version', APP_VERSION);
+    safeSet('bullmoney_app_version', APP_VERSION);
   }
   
   // Initialize version on first load
   if (!storedVersion) {
-    try { localStorage.setItem('bullmoney_app_version', APP_VERSION); } catch (e) {}
+    safeSet('bullmoney_app_version', APP_VERSION);
   }
 
   // Track failed chunk loads
   var failedLoads = 0;
-  var hasReloaded = sessionStorage.getItem('_bm_reloaded');
+  var hasReloaded = safeSessionGet('_bm_reloaded');
   var isDev = window.location.hostname === 'localhost' || window.location.hostname.startsWith('192.168.') || window.location.hostname === '127.0.0.1';
 
   // Listen for resource load errors (404s on JS/CSS files)
@@ -596,7 +836,7 @@ export default function RootLayout({
           console.log('[CacheBuster] Stale cache detected, clearing and reloading...');
 
           // Mark that we're reloading to prevent infinite loops
-          sessionStorage.setItem('_bm_reloaded', '1');
+          safeSessionSet('_bm_reloaded', '1');
 
           // Clear caches
           if ('caches' in window) {
@@ -613,7 +853,7 @@ export default function RootLayout({
           }
 
           // Clear localStorage build ID to force fresh state
-          try { localStorage.removeItem('bullmoney_build_id'); } catch(e) {}
+          safeRemove('bullmoney_build_id');
 
           // Force hard reload (bypass cache)
           setTimeout(function() {
@@ -627,7 +867,7 @@ export default function RootLayout({
   // Clear the reload flag after successful load
   window.addEventListener('load', function() {
     setTimeout(function() {
-      sessionStorage.removeItem('_bm_reloaded');
+      safeSessionRemove('_bm_reloaded');
     }, 5000);
   });
 })();
@@ -643,6 +883,27 @@ export default function RootLayout({
         <meta name="application-name" content="BullMoney" />
         <meta name="format-detection" content="telephone=no" />
         <meta name="HandheldFriendly" content="true" />
+        
+        {/* Samsung Internet specific */}
+        <meta name="samsung-mobile-web-app-capable" content="yes" />
+        
+        {/* UC Browser specific - improves rendering */}
+        <meta name="screen-orientation" content="portrait" />
+        <meta name="full-screen" content="yes" />
+        <meta name="browsermode" content="application" />
+        
+        {/* Huawei Browser / HarmonyOS */}
+        <meta name="huawei-mobile-web-app-capable" content="yes" />
+        
+        {/* Microsoft/Windows Phone legacy */}
+        <meta name="msapplication-tap-highlight" content="no" />
+        <meta name="msapplication-TileColor" content="#000000" />
+        
+        {/* Force IE/Edge to use latest rendering engine */}
+        <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+        
+        {/* Prevent auto-detection that can break layouts */}
+        <meta name="format-detection" content="telephone=no,date=no,email=no,address=no" />
 
         {/* PERFORMANCE: dns-prefetch only origins actually used during page load */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -705,10 +966,13 @@ export default function RootLayout({
           id="sw-init"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
-            __html: `window.__BM_SW_ENABLED__=${swEnabled};window.__BM_ENABLE_ROUTE_PREFETCH__=${routePrefetchEnabled};window.__BM_VAPID_KEY__='${process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ""}';`
+            __html: `window.__BM_SW_ENABLED__=${swEnabled};window.__BM_ENABLE_ROUTE_PREFETCH__=${routePrefetchEnabled};window.__BM_VAPID_KEY__='${process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ""}';window.__BM_SCRIPTS_VIA_NEXTJS__=true;`
           }}
         />
         <Script id="sw-and-touch" src="/scripts/sw-touch.js" strategy="afterInteractive" />
+
+        {/* GLOBAL BRAIN ORCHESTRATOR — coordinates all BMBRAIN scripts, shared state, event bus */}
+        <Script id="bmbrain-global" src="/scripts/BMBRAIN/bmbrain-global.js" strategy="afterInteractive" />
 
         {/* CRITICAL SCRIPTS - afterInteractive (run after page is interactive) */}
         <Script id="mobile-crash-shield" src="/scripts/BMBRAIN/mobile-crash-shield.js" strategy="afterInteractive" />
@@ -767,6 +1031,9 @@ export default function RootLayout({
         <Script id="detect-120hz" src="/scripts/detect-120hz.js" strategy="lazyOnload" />
         <Script id="perf-monitor" src="/scripts/perf-monitor.js" strategy="lazyOnload" />
         <Script id="device-detect" src="/scripts/device-detect.js" strategy="lazyOnload" />
+        <Script id="device-capabilities" src="/scripts/BMBRAIN/device-capabilities.js" strategy="lazyOnload" />
+        <Script id="input-controller" src="/scripts/BMBRAIN/input-controller.js" strategy="lazyOnload" />
+        <Script id="push-manager" src="/scripts/BMBRAIN/push-manager.js" strategy="lazyOnload" />
         {routePrefetchEnabled && (
           <Script id="network-optimizer" src="/scripts/BMBRAIN/network-optimizer.js" strategy="lazyOnload" />
         )}

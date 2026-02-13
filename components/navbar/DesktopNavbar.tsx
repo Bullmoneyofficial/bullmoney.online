@@ -15,6 +15,7 @@ import {
   IconSparkles,
   IconEye,
   IconEyeOff,
+  IconMail,
 } from '@tabler/icons-react';
 import { PillDock } from './PillDock';
 import { MinimizedDock } from './MinimizedDock';
@@ -178,6 +179,12 @@ export const DesktopNavbar = memo(React.forwardRef<HTMLDivElement, DesktopNavbar
         label: "Store",
         tips: ["Browse our merch", "Exclusive products", "Shop now"],
         href: "/store",
+      },
+      {
+        icon: <IconMail className="h-6 w-6 text-white" stroke={1.5} />,
+        label: "Newsletter",
+        tips: ["Get updates", "Affiliate info", "Site highlights"],
+        href: "/store/account",
       },
     ];
 

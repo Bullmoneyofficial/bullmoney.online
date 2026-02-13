@@ -87,12 +87,15 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const recipients = Array.isArray(to) ? to : [to];
     
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(to)) {
+    const invalid = recipients.find((email) => !emailRegex.test(email));
+    if (invalid) {
       return NextResponse.json(
-        { error: 'Invalid email format' },
+        { error: `Invalid email format: ${invalid}` },
         { status: 400 }
       );
     }
@@ -100,26 +103,29 @@ export async function POST(request: NextRequest) {
     // If custom HTML is provided, use it directly (from admin panel preview)
     if (customSubject && customHtml) {
       console.log(`[Email Test] Using custom HTML directly`);
-      const result = await sendEmail({
-        to,
-        subject: customSubject,
-        html: customHtml,
-      });
-      
-      if (result.success) {
-        return NextResponse.json({
-          success: true,
-          message: `Test email sent to ${to}`,
-          source: 'custom',
-          provider: result.provider,
-          messageId: result.messageId,
-        });
-      } else {
-        return NextResponse.json(
-          { success: false, error: result.error, provider: result.provider },
-          { status: 500 }
-        );
-      }
+      const results = await Promise.all(
+        recipients.map(async (recipient) => {
+          const result = await sendEmail({
+            to: recipient,
+            subject: customSubject,
+            html: customHtml,
+          });
+          return {
+            to: recipient,
+            success: result.success,
+            provider: result.provider,
+            messageId: result.messageId,
+            error: result.error,
+          };
+        })
+      );
+
+      const failed = results.filter((r) => !r.success);
+      return NextResponse.json({
+        success: failed.length === 0,
+        source: 'custom',
+        results,
+      }, { status: failed.length ? 500 : 200 });
     }
     
     // Otherwise, use database template (no hardcoded fallback)
@@ -130,35 +136,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const dbTemplate = await getDbTemplate(template, to);
-    if (!dbTemplate) {
-      return NextResponse.json(
-        { error: `Template "${template}" not found in database. Create it in the admin panel first.` },
-        { status: 404 }
-      );
-    }
+    const results = await Promise.all(
+      recipients.map(async (recipient) => {
+        const dbTemplate = await getDbTemplate(template, recipient);
+        if (!dbTemplate) {
+          return {
+            to: recipient,
+            success: false,
+            error: `Template "${template}" not found in database. Create it in the admin panel first.`,
+          };
+        }
 
-    const result = await sendEmail({
-      to,
-      subject: dbTemplate.subject,
-      html: dbTemplate.html,
-    });
-    
-    if (result.success) {
-      return NextResponse.json({
-        success: true,
-        message: `Test email sent to ${to}`,
-        template,
-        source: 'database',
-        provider: result.provider,
-        messageId: result.messageId,
-      });
-    } else {
-      return NextResponse.json(
-        { success: false, error: result.error, provider: result.provider },
-        { status: 500 }
-      );
-    }
+        const result = await sendEmail({
+          to: recipient,
+          subject: dbTemplate.subject,
+          html: dbTemplate.html,
+        });
+
+        return {
+          to: recipient,
+          success: result.success,
+          provider: result.provider,
+          messageId: result.messageId,
+          error: result.error,
+        };
+      })
+    );
+
+    const failed = results.filter((r) => !r.success);
+    return NextResponse.json({
+      success: failed.length === 0,
+      template,
+      source: 'database',
+      results,
+    }, { status: failed.length ? 500 : 200 });
   } catch (error) {
     console.error('[Email Test] Error:', error);
     return NextResponse.json(

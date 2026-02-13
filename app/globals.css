@@ -163,7 +163,7 @@ html[data-showcase-running="true"] [class*="particle"] {
   /* Hover highlight on columns to show they're independently scrollable */
   .store-col-left,
   .store-col-right {
-    transition: box-shadow 0.3s ease;
+    transition: box-shadow 0.15s ease;
   }
   .store-col-left:hover,
   .store-col-right:hover {
@@ -173,7 +173,7 @@ html[data-showcase-running="true"] [class*="particle"] {
   /* Scroll hint divider animation */
   .store-scroll-hint {
     opacity: 1;
-    transition: opacity 0.8s ease;
+    transition: opacity 0.4s ease;
   }
 }
 

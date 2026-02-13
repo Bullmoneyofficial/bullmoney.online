@@ -46,6 +46,8 @@ interface NotificationPayload {
   channel?: string;
   tag?: string;
   requireInteraction?: boolean;
+  source?: string;
+  preset?: string;
 }
 
 // POST - Send push notification to all subscribers
@@ -70,10 +72,28 @@ export async function POST(request: NextRequest) {
       url, 
       channel,
       tag,
-      requireInteraction = false,
+      requireInteraction = true, // DEFAULT TRUE for lockscreen visibility
+      source,
+      preset,
     } = body as NotificationPayload & { body: string };
 
-    if (!title || !messageBody) {
+    let resolvedTitle = title;
+    let resolvedBody = messageBody;
+    let resolvedUrl = url;
+
+    if (preset === 'affiliate_short') {
+      resolvedTitle = 'Affiliate dashboard is live';
+      resolvedBody = 'Track referrals and commissions. Telegram stays priority for alerts.';
+      resolvedUrl = resolvedUrl || '/recruit';
+    }
+
+    if (preset === 'affiliate_long') {
+      resolvedTitle = 'Grow with Bullmoney affiliate';
+      resolvedBody = 'Get your unique link, track recruits, and see tiered commissions up to 25%.';
+      resolvedUrl = resolvedUrl || '/recruit';
+    }
+
+    if (!resolvedTitle || !resolvedBody) {
       return NextResponse.json(
         { error: 'Title and body are required' },
         { status: 400 }
@@ -132,14 +152,15 @@ export async function POST(request: NextRequest) {
 
     // Prepare the notification payload
     const payload: NotificationPayload = {
-      title,
-      body: messageBody,
+      title: resolvedTitle,
+      body: resolvedBody,
       icon: icon || '/bullmoney-logo.png',
       badge: badge || '/B.png',
-      url: url || '/',
+      url: resolvedUrl || '/',
       channel: channel || 'trades',
       tag: tag || `trade-${Date.now()}`,
       requireInteraction,
+      source: source || 'marketing',
     };
 
     if (image) {
@@ -160,7 +181,10 @@ export async function POST(request: NextRequest) {
         };
 
         try {
-          await webpush.sendNotification(pushSubscription, payloadString);
+          await webpush.sendNotification(pushSubscription, payloadString, {
+            urgency: 'high',    // Wakes device from sleep/doze for lockscreen
+            TTL: 86400,         // 24h — keep in queue if device offline
+          });
           return { success: true, endpoint: sub.endpoint };
         } catch (error: any) {
           // Handle expired or invalid subscriptions

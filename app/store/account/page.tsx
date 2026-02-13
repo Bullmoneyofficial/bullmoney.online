@@ -468,7 +468,7 @@ export function StoreAccountPageContent({ embedded = false }: AccountPageContent
   if (!isAuthenticated || !recruit) {
     if (embedded) {
       return (
-        <div className="h-full bg-white flex items-center justify-center px-6" style={{ color: 'rgb(0,0,0)' }}>
+        <div className="h-full min-h-[320px] bg-white flex items-center justify-center px-6" style={{ color: 'rgb(0,0,0)' }}>
           <div className="text-center max-w-sm">
             <h2 className="text-xl font-medium">Sign in to view your account</h2>
             <p className="text-sm text-black/50 mt-2">Access your orders, wishlist, addresses, and settings.</p>

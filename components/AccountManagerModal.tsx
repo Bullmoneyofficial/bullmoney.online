@@ -367,8 +367,8 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
         vip_updated_at: recruitData.vip_updated_at,
         mt5_accounts: mt5Accounts,
         affiliate_code: recruitData.affiliate_code,
-        commission_balance: recruitData.commission_balance || 0,
-        total_referred_manual: recruitData.total_referred_manual || 0,
+        commission_balance: recruitData.commission_balance ?? 0,
+        total_referred_manual: recruitData.total_referred_manual ?? 0,
         telegram_username: recruitData.telegram_username,
         discord_username: recruitData.discord_username,
         instagram_username: recruitData.instagram_username,
@@ -1593,7 +1593,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
                             <p className="text-xs text-slate-400 mb-1">Experience</p>
-                            <span className="text-white text-sm">{accountData.trading_experience_years ? `${accountData.trading_experience_years} years` : 'Not set'}</span>
+                            <span className="text-white text-sm">{accountData.trading_experience_years != null ? `${accountData.trading_experience_years} years` : 'Not set'}</span>
                           </div>
                           <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
                             <p className="text-xs text-slate-400 mb-1">Style</p>
@@ -1629,7 +1629,7 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
                             <p className="text-xs text-slate-400 mb-1">Win Rate Target</p>
-                            <span className="text-white text-sm">{accountData.win_rate_target ? `${accountData.win_rate_target}%` : 'Not set'}</span>
+                            <span className="text-white text-sm">{accountData.win_rate_target != null ? `${accountData.win_rate_target}%` : 'Not set'}</span>
                           </div>
                           <div className="px-3 py-2 bg-slate-900/70 rounded-lg border border-slate-800">
                             <p className="text-xs text-slate-400 mb-1">Monthly Target</p>
@@ -1808,12 +1808,12 @@ export const AccountManagerModal: React.FC<AccountManagerModalProps> = ({ isOpen
                         
                         <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
                           <p className="text-sm text-slate-400 mb-1">Total Referrals</p>
-                          <span className="text-lg font-bold text-white">{accountData.total_referred_manual || 0}</span>
+                          <span className="text-lg font-bold text-white">{accountData.total_referred_manual ?? 0}</span>
                         </div>
                         
                         <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
                           <p className="text-sm text-slate-400 mb-1">Commission Balance</p>
-                          <span className="text-lg font-bold text-white">${(accountData.commission_balance || 0).toFixed(2)}</span>
+                          <span className="text-lg font-bold text-white">${(accountData.commission_balance ?? 0).toFixed(2)}</span>
                         </div>
                       </div>
                     </div>

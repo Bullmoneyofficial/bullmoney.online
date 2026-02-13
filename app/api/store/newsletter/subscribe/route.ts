@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { sendEmailWithAttachment, sendEmail } from '@/lib/email-service';
+import { getDripInitialDelayDays } from '@/lib/drip-email-sequences';
 import { renderEmailTemplate, type EmailTemplateData } from '@/lib/email-template-renderer';
 import path from 'path';
 import fs from 'fs';
@@ -43,7 +44,7 @@ async function findOrCreateRecruitIntegration(email: string, supabase: any) {
     // Check if email exists in recruits table
     const { data: recruit, error: recruitError } = await supabase
       .from('recruits')
-      .select('id, full_name, is_vip, created_at, status, store_newsletter_subscribed, phone, country')
+      .select('id, full_name, is_vip, created_at, status, store_newsletter_subscribed, phone, country, last_seen_at')
       .eq('email', email)
       .single();
     
@@ -67,7 +68,8 @@ async function findOrCreateRecruitIntegration(email: string, supabase: any) {
         status: recruit.status,
         phone: recruit.phone,
         country: recruit.country,
-        recruitedAt: recruit.created_at
+        recruitedAt: recruit.created_at,
+        lastSeenAt: recruit.last_seen_at
       };
     }
   } catch (err) {
@@ -82,13 +84,20 @@ async function findOrCreateRecruitIntegration(email: string, supabase: any) {
     status: null,
     phone: null,
     country: null,
-    recruitedAt: null
+    recruitedAt: null,
+    lastSeenAt: null
   };
 }
 
 // Auto-enroll subscriber in email drip campaigns
  
-async function enrollInDripCampaigns(subscriberId: string, email: string, recruitId: string | null, supabase: any) {
+async function enrollInDripCampaigns(
+  subscriberId: string,
+  email: string,
+  recruitId: string | null,
+  supabase: any,
+  lastSeenAt?: string | null
+) {
   try {
     const campaignsToEnroll = [
       {
@@ -100,6 +109,11 @@ async function enrollInDripCampaigns(subscriberId: string, email: string, recrui
         name: 'store_reminder_30day', 
         totalEmails: 15,
         description: 'Monthly store promotional sequence'
+      },
+      {
+        name: 'inactive_checkin',
+        totalEmails: 4,
+        description: 'Check-in sequence for inactive subscribers'
       }
     ];
 
@@ -113,6 +127,14 @@ async function enrollInDripCampaigns(subscriberId: string, email: string, recrui
         .single();
 
       if (!existing) {
+        const initialDelayDays = getDripInitialDelayDays(campaign.name);
+        const scheduleBase = campaign.name === 'inactive_checkin' && lastSeenAt
+          ? new Date(lastSeenAt)
+          : new Date();
+        const targetTime = new Date(scheduleBase.getTime() + initialDelayDays * 24 * 60 * 60 * 1000);
+        const nextTime = targetTime > new Date()
+          ? targetTime
+          : new Date(Date.now() + initialDelayDays * 24 * 60 * 60 * 1000);
         const { error: campaignError } = await supabase
           .from('email_drip_campaigns')
           .insert({
@@ -125,7 +147,7 @@ async function enrollInDripCampaigns(subscriberId: string, email: string, recrui
             total_emails_to_send: campaign.totalEmails,
             subscribed: true,
             started_at: new Date().toISOString(),
-            next_email_scheduled_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours from now
+            next_email_scheduled_at: nextTime.toISOString(),
             total_sent: 0,
             total_opened: 0,
             total_clicked: 0
@@ -732,7 +754,13 @@ export async function POST(request: NextRequest) {
     // STEP 3: Enroll in email drip campaigns (only for new subscribers)
     if (subscriberId && isNewSubscriber) {
       console.log(`[Drip Campaigns] Enrolling subscriber ${normalizedEmail} in automated sequences`);
-      await enrollInDripCampaigns(subscriberId, normalizedEmail, recruitData.recruitId, supabase);
+      await enrollInDripCampaigns(
+        subscriberId,
+        normalizedEmail,
+        recruitData.recruitId,
+        supabase,
+        recruitData.lastSeenAt
+      );
     }
 
     // STEP 4: Send personalized welcome email (only for new subscribers - existing ones got the "already subscribed" email above)

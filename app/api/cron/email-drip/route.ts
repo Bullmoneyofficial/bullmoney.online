@@ -9,7 +9,7 @@ import {
   affiliatePromoEmail,
   welcomeEmail 
 } from '@/lib/email-templates';
-import { getDripEmailBySequence } from '@/lib/drip-email-sequences';
+import { getDripEmailBySequence, getDripNextDelayDays } from '@/lib/drip-email-sequences';
 
 // ============================================================================
 // EMAIL DRIP CAMPAIGN CRON JOB
@@ -164,9 +164,10 @@ export async function GET(request: NextRequest) {
           const nextSequence = campaign.email_sequence_number + 1;
           const isCompleted = nextSequence >= campaign.total_emails_to_send;
           
-          // Schedule next email (2 days later for drip campaigns)
+          // Schedule next email based on campaign-specific delay
+          const delayDays = getDripNextDelayDays(campaign.campaign_name, campaign.email_sequence_number);
           const nextScheduled = new Date();
-          nextScheduled.setDate(nextScheduled.getDate() + 2);
+          nextScheduled.setDate(nextScheduled.getDate() + (delayDays || 0));
           
           await supabase
             .from('email_drip_campaigns')

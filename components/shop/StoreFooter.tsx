@@ -42,6 +42,7 @@ const FOOTER_GROUPS = [
     links: [
       { label: 'Products', modal: 'products', href: '#' },
       { label: 'FAQ', modal: 'faq', href: '#' },
+      { label: 'Newsletter', href: '/store/account' },
       { label: 'Affiliates', href: '/recruit' },
       { label: 'Themes', modal: 'themes', href: '#' },
       { label: 'Hub', modal: 'hub', href: '#' },

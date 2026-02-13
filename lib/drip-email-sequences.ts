@@ -377,6 +377,90 @@ const storeReminder30DayEmails: { subject: string; getContent: (firstName: strin
 ];
 
 // ============================================================================
+// INACTIVITY CHECK-IN CAMPAIGN (3, 7, 14, 30 days)
+// ============================================================================
+const inactiveCheckinEmails: { subject: string; getContent: (firstName: string) => string }[] = [
+  {
+    subject: "Quick check-in — new updates since your last visit",
+    getContent: (firstName) => `
+      <div style="background: #111; border: 1px solid #222; border-radius: 20px; padding: 36px; text-align: center;">
+        <h1 style="color: ${BRAND_BLUE}; margin: 0 0 12px 0; font-size: 26px;">Hey ${firstName}, quick check-in</h1>
+        <p style="color: #e0e0e0; font-size: 15px; line-height: 1.7; margin: 0 0 20px 0;">
+          We posted new tools, fresh content, and updated pages this week. If you're building consistency,
+          the dashboard makes it easy to track progress and stay focused.
+        </p>
+        <div style="background: #0a0a0a; border-radius: 14px; padding: 18px; margin-bottom: 20px; text-align: left;">
+          <p style="color: #fff; font-size: 14px; margin: 6px 0;">• Live updates on the main hub</p>
+          <p style="color: #fff; font-size: 14px; margin: 6px 0;">• Store drops and new gear</p>
+          <p style="color: #fff; font-size: 14px; margin: 6px 0;">• Affiliate dashboard for tracking referrals</p>
+        </div>
+        <a href="${SITE_URL}" style="display: inline-block; background: linear-gradient(135deg, ${BRAND_BLUE}, #1d4ed8); color: #fff; padding: 14px 36px; border-radius: 12px; font-weight: 600; font-size: 15px; text-decoration: none;">
+          Visit Bullmoney
+        </a>
+      </div>
+    `,
+  },
+  {
+    subject: "Still interested? Here's what's waiting for you",
+    getContent: (firstName) => `
+      <div style="background: #111; border: 1px solid #222; border-radius: 20px; padding: 36px; text-align: center;">
+        <h1 style="color: ${BRAND_BLUE}; margin: 0 0 12px 0; font-size: 26px;">${firstName}, we saved your spot</h1>
+        <p style="color: #e0e0e0; font-size: 15px; line-height: 1.7; margin: 0 0 20px 0;">
+          If you're building a routine, the affiliate dashboard can help track referrals and commissions.
+          You can also catch alerts on Telegram for faster updates.
+        </p>
+        <div style="background: #0a0a0a; border-radius: 14px; padding: 18px; margin-bottom: 20px; text-align: left;">
+          <p style="color: #fff; font-size: 14px; margin: 6px 0;">• Affiliate tiers: 5%, 10%, 15%, 20%, 25%</p>
+          <p style="color: #fff; font-size: 14px; margin: 6px 0;">• Unique referral link + dashboard stats</p>
+          <p style="color: #fff; font-size: 14px; margin: 6px 0;">• Telegram alerts are the fastest channel</p>
+        </div>
+        <a href="${AFFILIATE_URL}" style="display: inline-block; background: #0f0f0f; color: #ffffff; padding: 14px 36px; border-radius: 12px; font-weight: 600; font-size: 15px; text-decoration: none; border: 1px solid #333;">
+          Open Affiliate Dashboard
+        </a>
+      </div>
+    `,
+  },
+  {
+    subject: "A simple path back to consistent progress",
+    getContent: (firstName) => `
+      <div style="background: #111; border: 1px solid #222; border-radius: 20px; padding: 36px; text-align: center;">
+        <h1 style="color: ${BRAND_BLUE}; margin: 0 0 12px 0; font-size: 26px;">Let's get back on track, ${firstName}</h1>
+        <p style="color: #e0e0e0; font-size: 15px; line-height: 1.7; margin: 0 0 20px 0;">
+          If you haven't visited in a bit, start with the main hub and the latest updates. We keep it simple and real.
+        </p>
+        <div style="background: #0a0a0a; border-radius: 14px; padding: 18px; margin-bottom: 20px; text-align: left;">
+          <p style="color: #fff; font-size: 14px; margin: 6px 0;">• Markets overview and news feed</p>
+          <p style="color: #fff; font-size: 14px; margin: 6px 0;">• Store and VIP access pages</p>
+          <p style="color: #fff; font-size: 14px; margin: 6px 0;">• Affiliate program overview</p>
+        </div>
+        <a href="${SITE_URL}/community" style="display: inline-block; background: linear-gradient(135deg, ${BRAND_BLUE}, #1d4ed8); color: #fff; padding: 14px 36px; border-radius: 12px; font-weight: 600; font-size: 15px; text-decoration: none;">
+          See What's New
+        </a>
+      </div>
+    `,
+  },
+  {
+    subject: "Still want updates? Telegram is the fastest",
+    getContent: (firstName) => `
+      <div style="background: #111; border: 1px solid #222; border-radius: 20px; padding: 36px; text-align: center;">
+        <h1 style="color: ${BRAND_BLUE}; margin: 0 0 12px 0; font-size: 26px;">Last ping, ${firstName}</h1>
+        <p style="color: #e0e0e0; font-size: 15px; line-height: 1.7; margin: 0 0 20px 0;">
+          If email isn't the best channel, you can get faster updates on Telegram. We keep it light and useful.
+        </p>
+        <div style="background: #0a0a0a; border-radius: 14px; padding: 18px; margin-bottom: 20px; text-align: left;">
+          <p style="color: #fff; font-size: 14px; margin: 6px 0;">• Priority alerts</p>
+          <p style="color: #fff; font-size: 14px; margin: 6px 0;">• Market updates and announcements</p>
+          <p style="color: #fff; font-size: 14px; margin: 6px 0;">• Community discussions</p>
+        </div>
+        <a href="https://t.me/Bullmoneyshop" style="display: inline-block; background: #0f0f0f; color: #ffffff; padding: 14px 36px; border-radius: 12px; font-weight: 600; font-size: 15px; text-decoration: none; border: 1px solid #333;">
+          Join Telegram
+        </a>
+      </div>
+    `,
+  },
+];
+
+// ============================================================================
 // GET DRIP EMAIL BY SEQUENCE
 // ============================================================================
 export function getDripEmailBySequence(
@@ -390,6 +474,9 @@ export function getDripEmailBySequence(
   switch (campaignName) {
     case 'store_reminder_30day':
       emails = storeReminder30DayEmails;
+      break;
+    case 'inactive_checkin':
+      emails = inactiveCheckinEmails;
       break;
     default:
       return null;
@@ -410,14 +497,40 @@ export function getDripEmailBySequence(
 // GET ALL DRIP CAMPAIGNS
 // ============================================================================
 export function getAvailableDripCampaigns(): string[] {
-  return ['store_reminder_30day'];
+  return ['store_reminder_30day', 'inactive_checkin'];
 }
 
 export function getDripCampaignInfo(campaignName: string): { name: string; totalEmails: number; intervalDays: number } | null {
   switch (campaignName) {
     case 'store_reminder_30day':
       return { name: 'Store Reminder (30 Day)', totalEmails: 15, intervalDays: 2 };
+    case 'inactive_checkin':
+      return { name: 'Inactive Check-In', totalEmails: 4, intervalDays: 7 };
     default:
       return null;
+  }
+}
+
+// Custom delay schedule for campaigns that do not use a fixed interval
+export function getDripInitialDelayDays(campaignName: string): number {
+  switch (campaignName) {
+    case 'inactive_checkin':
+      return 3;
+    case 'store_reminder_30day':
+    default:
+      return 1;
+  }
+}
+
+export function getDripNextDelayDays(campaignName: string, sequenceNumber: number): number {
+  switch (campaignName) {
+    case 'inactive_checkin': {
+      const schedule = [3, 7, 14, 30];
+      if (sequenceNumber >= schedule.length - 1) return 0;
+      return schedule[sequenceNumber + 1] - schedule[sequenceNumber];
+    }
+    case 'store_reminder_30day':
+    default:
+      return 2;
   }
 }
