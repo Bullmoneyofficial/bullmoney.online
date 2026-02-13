@@ -1220,10 +1220,10 @@ export function StoreHero3D({ paused = false }: { paused?: boolean }) {
   const [cryptoPrices, setCryptoPrices] = useState<CryptoPrice[]>([]);
   const [floatingProducts, setFloatingProducts] = useState<FloatingProduct[]>([]);
   const [show3DBackground, setShow3DBackground] = useState(() => {
-    // Initialize to true for desktop (SSR-safe check)
+    // Initialize to true for all clients (SSR-safe check)
     if (typeof window === 'undefined') return false;
     if (!autoLoad3D) return false;
-    return window.innerWidth >= 768;
+    return true;
   });
   const [showGrayscale, setShowGrayscale] = useState(false);
   
@@ -1593,18 +1593,11 @@ export function StoreHero3D({ paused = false }: { paused?: boolean }) {
     const handleResize = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
-      
-      // Smart resize behavior:
-      // - If switching TO mobile: only disable 3D if already loaded (don't interfere with delayed loading)
-      // - If switching TO desktop: enable 3D immediately
-      if (mobile && show3DBackground) {
-        // User resized to mobile while Spline was showing - disable it
-        setShow3DBackground(false);
-      } else if (!mobile && !show3DBackground && autoLoad3D) {
-        // User resized to desktop - enable immediately
+
+      // Keep Spline always enabled across viewport changes
+      if (!show3DBackground && autoLoad3D) {
         setShow3DBackground(true);
       }
-      // Don't interfere with mobile delayed loading (when mobile && !show3DBackground)
     };
     window.addEventListener('resize', handleResize);
     // Invalidate hero rect cache on resize
@@ -1765,7 +1758,7 @@ export function StoreHero3D({ paused = false }: { paused?: boolean }) {
               )}
               <Toggle3DButton 
                 isActive={show3DBackground} 
-                onClick={() => setShow3DBackground(!show3DBackground)} 
+                onClick={() => setShow3DBackground(true)} 
               />
             </motion.div>
           )}

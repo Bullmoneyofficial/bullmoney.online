@@ -2822,7 +2822,7 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
   const [colorMode, setColorMode] = useState<'color' | 'grayscale' | 'custom'>('color');
   const [customColor, setCustomColor] = useState({ h: 0, s: 50, l: 50, a: 0.5 }); // HSL for easier manipulation
   
-  const [show3DOverlay, setShow3DOverlay] = useState(false);
+  const [show3DOverlay] = useState(true);
   const [isSceneSwitching, setIsSceneSwitching] = useState(false);
   const [showSpline, setShowSpline] = useState(true); // Control Spline visibility
   const [splinePlayMode, setSplinePlayMode] = useState(false); // Mobile 3D interaction toggle
@@ -3136,7 +3136,7 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
   const renderEffect = (effect: BackgroundEffect) => {
     switch (effect) {
       case 'spline':
-        return showSpline ? <SplineBackground grayscale={showGrayscale} sceneUrl={currentSplineScene} /> : <MobileAestheticHero />;
+        return <SplineBackground grayscale={showGrayscale} sceneUrl={currentSplineScene} />;
       case 'liquidEther':
         return (
           <LiquidEther
@@ -3406,7 +3406,7 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
         <div className="flex flex-col items-center gap-1" style={{ pointerEvents: 'auto' }}>
           <Toggle3DButton 
             isActive={showSpline} 
-            onClick={() => setShowSpline(!showSpline)}
+            onClick={() => setShowSpline(true)}
             onLongPress={() => setShowSplinePanel(!showSplinePanel)}
           />
           <motion.span 

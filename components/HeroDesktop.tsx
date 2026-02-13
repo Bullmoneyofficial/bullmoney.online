@@ -2306,7 +2306,7 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
   const [customColor, setCustomColor] = useState({ h: 0, s: 50, l: 50, a: 0.5 }); // HSL for easier manipulation
   const [showColorPicker, setShowColorPicker] = useState(false);
   
-  const [show3DOverlay, setShow3DOverlay] = useState(false);
+  const [show3DOverlay] = useState(true);
   const [isSceneSwitching, setIsSceneSwitching] = useState(false);
 
   // Load preferences on mount
@@ -2599,7 +2599,7 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
   const renderEffect = (effect: BackgroundEffect) => {
     switch (effect) {
       case 'spline':
-        return showSpline ? <SplineBackground grayscale={showGrayscale} sceneUrl={currentSplineScene} /> : null;
+        return <SplineBackground grayscale={showGrayscale} sceneUrl={currentSplineScene} />;
       case 'liquidEther':
         return (
           <LiquidEther
@@ -2861,7 +2861,7 @@ const CyclingBackground: React.FC<CyclingBackgroundProps> = ({
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
               <Toggle3DButton 
                 isActive={showSpline} 
-                onClick={() => setShowSpline(!showSpline)}
+                onClick={() => setShowSpline(true)}
                 onLongPress={() => setShowSplinePanel(!showSplinePanel)}
               />
               <motion.span 
