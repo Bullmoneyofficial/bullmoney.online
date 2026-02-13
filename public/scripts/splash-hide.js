@@ -213,6 +213,7 @@
     splash.classList.add('hide');
     setTimeout(function() {
       if (splash.parentNode) splash.parentNode.removeChild(splash);
+      triggerFinishEffects();
       window.__BM_SPLASH_FINISHED__ = true;
       try {
         window.dispatchEvent(new Event('bm-splash-finished'));
@@ -220,6 +221,28 @@
         // noop
       }
     }, 700);
+  }
+
+  function triggerFinishEffects() {
+    try {
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        return;
+      }
+    } catch (e) {}
+
+    var root = document.documentElement;
+    if (root) {
+      root.classList.remove('bm-sway');
+      void root.offsetHeight;
+      root.classList.add('bm-sway');
+      setTimeout(function() {
+        root.classList.remove('bm-sway');
+      }, 1600);
+    }
+
+    if (navigator.vibrate) {
+      navigator.vibrate([20, 40, 20, 60, 20]);
+    }
   }
 
   // Start the flow

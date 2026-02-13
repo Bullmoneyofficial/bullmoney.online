@@ -497,11 +497,6 @@ type ModalStep = 'intro' | 'how-it-works' | 'signup-broker' | 'verify-broker' | 
 export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps) {
   const [mountedFlag, setMountedFlag] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
-  const affiliateScrollYRef = useRef(0);
-  const affiliateLockAcquiredRef = useRef(false);
-  const previousHtmlOverflowRef = useRef('');
-  const previousBodyOverscrollRef = useRef('');
-  const previousHtmlOverscrollRef = useRef('');
 
   useEffect(() => setMountedFlag(true), []);
 
@@ -517,85 +512,18 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
     };
   }, []);
 
+  // Simple scroll lock matching LiveStreamModal pattern — no position:fixed which breaks mobile/in-app scroll
   useEffect(() => {
     if (!mountedFlag) return;
-    const html = document.documentElement;
-    const body = document.body;
 
     if (isOpen) {
-      html.setAttribute('data-affiliate-open', 'true');
-      body.setAttribute('data-affiliate-open', 'true');
-
-      previousHtmlOverflowRef.current = html.style.overflow;
-      previousBodyOverscrollRef.current = body.style.overscrollBehavior;
-      previousHtmlOverscrollRef.current = html.style.overscrollBehavior;
-
-      html.style.overflow = 'hidden';
-      body.style.overscrollBehavior = 'none';
-      html.style.overscrollBehavior = 'none';
-
-      const isStoreHeaderLockActive = body.getAttribute('data-storeheader-scroll-lock') === 'true';
-
-      if (!isStoreHeaderLockActive) {
-        affiliateScrollYRef.current = window.scrollY || window.pageYOffset || 0;
-        affiliateLockAcquiredRef.current = true;
-
-        body.setAttribute('data-affiliate-scroll-lock', 'true');
-        html.setAttribute('data-affiliate-scroll-lock', 'true');
-
-        body.style.position = 'fixed';
-        body.style.top = `-${affiliateScrollYRef.current}px`;
-        body.style.left = '0';
-        body.style.right = '0';
-        body.style.width = '100%';
-        body.style.overflow = 'hidden';
-      }
+      document.body.style.overflow = 'hidden';
     } else {
-      html.removeAttribute('data-affiliate-open');
-      body.removeAttribute('data-affiliate-open');
-
-      html.style.overflow = previousHtmlOverflowRef.current;
-      body.style.overscrollBehavior = previousBodyOverscrollRef.current;
-      html.style.overscrollBehavior = previousHtmlOverscrollRef.current;
-
-      if (affiliateLockAcquiredRef.current) {
-        affiliateLockAcquiredRef.current = false;
-        body.removeAttribute('data-affiliate-scroll-lock');
-        html.removeAttribute('data-affiliate-scroll-lock');
-
-        body.style.position = '';
-        body.style.top = '';
-        body.style.left = '';
-        body.style.right = '';
-        body.style.width = '';
-        body.style.overflow = '';
-
-        window.scrollTo(0, affiliateScrollYRef.current);
-      }
+      document.body.style.overflow = '';
     }
 
     return () => {
-      html.removeAttribute('data-affiliate-open');
-      body.removeAttribute('data-affiliate-open');
-
-      html.style.overflow = previousHtmlOverflowRef.current;
-      body.style.overscrollBehavior = previousBodyOverscrollRef.current;
-      html.style.overscrollBehavior = previousHtmlOverscrollRef.current;
-
-      if (!affiliateLockAcquiredRef.current) return;
-
-      affiliateLockAcquiredRef.current = false;
-      body.removeAttribute('data-affiliate-scroll-lock');
-      html.removeAttribute('data-affiliate-scroll-lock');
-
-      body.style.position = '';
-      body.style.top = '';
-      body.style.left = '';
-      body.style.right = '';
-      body.style.width = '';
-      body.style.overflow = '';
-
-      window.scrollTo(0, affiliateScrollYRef.current);
+      document.body.style.overflow = '';
     };
   }, [isOpen, mountedFlag]);
 
@@ -622,11 +550,12 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
             exit={isDesktop ? { y: '-100%' } : { y: '100%' }}
             transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
             onClick={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
             onWheel={(e) => e.stopPropagation()}
-           className={
+            className={
               isDesktop
                 ? 'fixed top-0 left-0 right-0 w-full bg-white border-b border-black/10 flex flex-col safe-area-inset-bottom max-h-[90vh] overflow-hidden'
-                : 'fixed inset-0 w-full bg-white flex flex-col safe-area-inset-bottom overflow-hidden'
+                : 'fixed inset-0 w-full h-full bg-white flex flex-col safe-area-inset-bottom overflow-hidden'
             }
             style={{ zIndex: 2147483649, color: '#1d1d1f', pointerEvents: 'auto', isolation: 'isolate' }}
             data-apple-section
@@ -655,8 +584,8 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
 
             {/* Content */}
             <div
-              className="flex-1 min-h-0 overflow-y-auto overscroll-none touch-pan-y scroll-smooth p-4 md:p-6 pb-4 md:pb-6"
-              style={{ WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth', overscrollBehavior: 'none' }}
+              className="flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y scroll-smooth p-4 md:p-6 pb-4 md:pb-6"
+              style={{ WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}
             >
               <AffiliateModalContent isOpen={isOpen} onClose={onClose} />
             </div>
@@ -2160,92 +2089,18 @@ function AffiliateModalContent({ isOpen, onClose }: AffiliateModalProps) {
     return renderDashboard();
   }
 
-  // Modal wrapper for other steps - EXACT ChartNewsModal pattern
+  // Non-dashboard steps render directly inside the drawer's scroll container
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.12 }}
-      className="relative w-full h-full"
-      onClick={handleClose}
-    >
-      {/* Tap to close hints */}
-      {!isMobile && ['top', 'bottom', 'left', 'right'].map(pos => (
-        <motion.div
-          key={pos}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0.4, 0.7, 0.4] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className={`absolute text-blue-300/50 text-xs pointer-events-none ${
-            pos === 'top' ? 'top-4 left-1/2 -translate-x-1/2' :
-            pos === 'bottom' ? 'bottom-4 left-1/2 -translate-x-1/2' :
-            pos === 'left' ? 'left-2 top-1/2 -translate-y-1/2' :
-            'right-2 top-1/2 -translate-y-1/2'
-          }`}
-        >
-          {pos === 'top' || pos === 'bottom' ? (
-            <span>↑ Tap anywhere to close ↑</span>
-          ) : (
-            <span style={{ writingMode: 'vertical-rl' }}>Tap to close</span>
-          )}
-        </motion.div>
-      ))}
-      
-      {/* Modal */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        transition={{ duration: 0.2 }}
-        onClick={(e) => e.stopPropagation()}
-        onWheel={(e) => e.stopPropagation()}
-        className="relative w-full max-w-[96vw] sm:max-w-5xl lg:max-w-6xl max-h-[92vh] overflow-hidden my-auto mx-auto rounded-2xl md:rounded-3xl"
-        style={{ pointerEvents: 'auto' }}
-      >
-        {/* Inner Container */}
-        <div className="relative z-10 bg-white rounded-2xl md:rounded-3xl border border-black/10 overflow-hidden h-full flex flex-col shadow-2xl" style={{ isolation: 'isolate' }}>
-          {/* Header */}
-          <div className="sticky top-0 z-30 flex items-center justify-between p-4 border-b border-black/10 flex-shrink-0 bg-white">
-            <div className="flex items-center gap-3">
-              <DollarSign className="w-6 h-6 text-black" />
-              <div>
-                <h2 className="text-lg sm:text-xl font-bold text-black">Affiliate Program</h2>
-                <p className="text-xs text-black/60">Earn commissions with BullMoney</p>
-              </div>
-            </div>
-            
-            <motion.button
-              whileHover={isMobile ? {} : { scale: 1.08 }}
-              whileTap={{ scale: 0.94 }}
-              onClick={handleClose}
-              className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-black/5 hover:bg-black/10 border border-black/10 flex items-center justify-center transition-all shadow-lg cursor-pointer"
-              title="Close (ESC)"
-            >
-              <X className="w-4 h-4 text-black" strokeWidth={2.5} />
-            </motion.button>
-          </div>
-          
-          {/* Content */}
-          <div 
-            ref={scrollContainerRef}
-            className="flex-1 overflow-y-auto scroll-smooth p-4 sm:p-6"
-            style={{ WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}
-          >
-            <AnimatePresence mode="wait">
-              {step === 'intro' && renderIntro()}
-              {step === 'how-it-works' && renderHowItWorks()}
-              {step === 'signup-broker' && renderSignupBroker()}
-              {step === 'verify-broker' && renderVerifyBroker()}
-              {step === 'signup-skrill' && renderSignupSkrill()}
-              {step === 'signup-mt5' && renderSignupMT5()}
-              {step === 'signup-account' && renderSignupAccount()}
-              {step === 'loading' && renderLoading()}
-              {step === 'success' && renderSuccess()}
-            </AnimatePresence>
-          </div>
-        </div>
-      </motion.div>
-    </motion.div>
+    <AnimatePresence mode="wait">
+      {step === 'intro' && renderIntro()}
+      {step === 'how-it-works' && renderHowItWorks()}
+      {step === 'signup-broker' && renderSignupBroker()}
+      {step === 'verify-broker' && renderVerifyBroker()}
+      {step === 'signup-skrill' && renderSignupSkrill()}
+      {step === 'signup-mt5' && renderSignupMT5()}
+      {step === 'signup-account' && renderSignupAccount()}
+      {step === 'loading' && renderLoading()}
+      {step === 'success' && renderSuccess()}
+    </AnimatePresence>
   );
 }

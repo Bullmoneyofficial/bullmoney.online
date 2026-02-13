@@ -72,6 +72,10 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
   const rafRef = useRef<number>(0);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const hasRunRef = useRef(false);
+  const drunkRafRef = useRef<number>(0);
+  const drunkLastScrollRef = useRef<number>(0);
+  const drunkActiveRef = useRef(false);
+  const drunkLastUpdateRef = useRef(0);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -121,23 +125,148 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
       }
     };
 
+    const stopDrunk = () => {
+      if (drunkRafRef.current) cancelAnimationFrame(drunkRafRef.current);
+      drunkActiveRef.current = false;
+      const root = document.documentElement;
+      root.classList.remove("bm-drunk-scroll");
+      root.style.removeProperty("--bm-drunk-x");
+      root.style.removeProperty("--bm-drunk-rot");
+    };
+
+    const updateDrunk = (now?: number) => {
+      if (cancelledRef.current) { stopDrunk(); return; }
+      const ts = typeof now === "number" ? now : (typeof performance !== "undefined" ? performance.now() : Date.now());
+      if (ts - drunkLastUpdateRef.current < 42) {
+        drunkRafRef.current = requestAnimationFrame(updateDrunk);
+        return;
+      }
+      drunkLastUpdateRef.current = ts;
+      const root = document.documentElement;
+      const maxScroll = Math.max(1, getMaxScroll());
+      const scrollTop = getScrollTop();
+      let strength = Math.min(1, Math.max(0, scrollTop / maxScroll));
+      // Ease the curve and taper near the bottom to avoid heavy transforms at footer.
+      strength = strength * strength * (3 - 2 * strength);
+      if (maxScroll - scrollTop < 220) strength *= 0.55;
+
+      if (strength <= 0 && Date.now() - drunkLastScrollRef.current > 600) {
+        stopDrunk();
+        return;
+      }
+
+      const t = ts / 240;
+      const ampX = 2 + 8 * strength;
+      const ampRot = 0.12 + 0.5 * strength;
+      const x = Math.sin(t) * ampX + Math.sin(t * 0.6 + 1.2) * (ampX * 0.3);
+      const rot = Math.sin(t + 0.7) * ampRot + Math.sin(t * 0.85) * (ampRot * 0.25);
+
+      root.style.setProperty("--bm-drunk-x", `${x}px`);
+      root.style.setProperty("--bm-drunk-rot", `${rot}deg`);
+      drunkRafRef.current = requestAnimationFrame(updateDrunk);
+    };
+
+    const startDrunk = () => {
+      if (drunkActiveRef.current) return;
+      drunkActiveRef.current = true;
+      document.documentElement.classList.add("bm-drunk-scroll");
+      drunkRafRef.current = requestAnimationFrame(updateDrunk);
+    };
+
+    const noteScrollActivity = () => {
+      drunkLastScrollRef.current = Date.now();
+      startDrunk();
+    };
+
     // Cancel on any user interaction
     const cancel = () => {
       cancelledRef.current = true;
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       cleanup();
+      removeOverlay();
+      stopDrunk();
       // Remove genie transform if interrupted
       document.documentElement.style.removeProperty("transform");
       document.documentElement.style.removeProperty("transform-origin");
       document.documentElement.style.removeProperty("transition");
     };
 
+    // ── Lightweight "caching" overlay ──────────────────────────────────
+    let overlayEl: HTMLDivElement | null = null;
+    let overlayStyleEl: HTMLStyleElement | null = null;
+    let progressBarEl: HTMLDivElement | null = null;
+    let phaseTextEl: HTMLSpanElement | null = null;
+
+    const injectOverlay = () => {
+      if (overlayEl) return;
+
+      overlayStyleEl = document.createElement("style");
+      overlayStyleEl.textContent = `
+        @keyframes _sc_in { from{opacity:0;transform:scale(.95)} to{opacity:1;transform:scale(1)} }
+        @keyframes _sc_out { from{opacity:1;transform:scale(1)} to{opacity:0;transform:scale(.97)} }
+        @keyframes _sc_spin { to{transform:rotate(360deg)} }
+        #_sc_overlay{position:fixed;inset:0;z-index:999999;pointer-events:none;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.25);animation:_sc_in .3s ease-out both;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+        #_sc_overlay.out{animation:_sc_out .3s ease-in both}
+        ._sc_pill{background:rgba(0,0,0,.7);color:#fff;font-size:12px;font-weight:500;padding:8px 18px;border-radius:40px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+        ._sc_dot{width:12px;height:12px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:_sc_spin .6s linear infinite}
+        ._sc_bar_wrap{width:60px;height:2px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden;margin-left:4px}
+        ._sc_bar_fill{height:100%;width:0%;background:#fff;border-radius:2px;transition:width .1s linear}
+        html.store-active #_sc_overlay{background:rgba(0,0,0,.15)}
+        html.store-active ._sc_pill{background:rgba(255,255,255,.85);color:#1d1d1f;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+        html.store-active ._sc_dot{border-color:rgba(0,0,0,.1);border-top-color:#1d1d1f}
+        html.store-active ._sc_bar_wrap{background:rgba(0,0,0,.08)}
+        html.store-active ._sc_bar_fill{background:#1d1d1f}
+      `;
+      document.head.appendChild(overlayStyleEl);
+
+      overlayEl = document.createElement("div");
+      overlayEl.id = "_sc_overlay";
+      overlayEl.innerHTML = `<div class="_sc_pill"><div class="_sc_dot"></div><span class="_sc_txt">Caching page</span><div class="_sc_bar_wrap"><div class="_sc_bar_fill"></div></div></div>`;
+      document.body.appendChild(overlayEl);
+
+      progressBarEl = overlayEl.querySelector("._sc_bar_fill") as HTMLDivElement;
+      phaseTextEl = overlayEl.querySelector("._sc_txt") as HTMLSpanElement;
+    };
+
+    const setOverlayProgress = (pct: number) => {
+      if (progressBarEl) progressBarEl.style.width = `${Math.min(100, Math.max(0, pct))}%`;
+    };
+
+    const setOverlayPhase = (text: string) => {
+      if (phaseTextEl) phaseTextEl.textContent = text;
+    };
+
+    const removeOverlay = () => {
+      if (!overlayEl) return;
+      setOverlayProgress(100);
+      setOverlayPhase("Cached ✓");
+      const el = overlayEl;
+      const styleEl = overlayStyleEl;
+      setTimeout(() => {
+        el.classList.add("out");
+        setTimeout(() => { el?.remove(); styleEl?.remove(); }, 350);
+      }, 1300);
+      overlayEl = null;
+      overlayStyleEl = null;
+      progressBarEl = null;
+      phaseTextEl = null;
+    };
+    // ────────────────────────────────────────────────────────────────────
+
     const interactionEvents = ["wheel", "touchstart", "mousedown", "keydown"] as const;
     interactionEvents.forEach((evt) => window.addEventListener(evt, cancel, { passive: true, once: true }));
 
+    const scrollTarget = getContainer() || window;
+    const onScroll = () => {
+      if (respectReducedMotion && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      noteScrollActivity();
+    };
+    scrollTarget.addEventListener("scroll", onScroll, { passive: true });
+
     const cleanup = () => {
       interactionEvents.forEach((evt) => window.removeEventListener(evt, cancel));
+      scrollTarget.removeEventListener("scroll", onScroll);
     };
 
     // Animate helper using rAF
@@ -171,6 +300,18 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
       new Promise((resolve) => {
         timeoutRef.current = setTimeout(resolve, ms);
       });
+
+    const waitForScrollable = async (): Promise<number> => {
+      let checks = 0;
+      const maxChecks = 60;
+      while (!cancelledRef.current && checks < maxChecks) {
+        const maxScroll = getMaxScroll();
+        if (maxScroll > 120) return maxScroll;
+        checks += 1;
+        await delay(200);
+      }
+      return getMaxScroll();
+    };
 
     // Wait for the global layout splash (#bm-splash) to finish before starting
     const waitForSplash = (): Promise<void> => {
@@ -226,28 +367,43 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
       if (cancelledRef.current) return;
 
       // Re-measure after settle — content may still be loading
-      let maxScroll = getMaxScroll();
-      // If page content hasn't rendered yet, wait a bit more
-      if (maxScroll <= 100) {
-        await delay(500);
-        if (cancelledRef.current) return;
-        maxScroll = getMaxScroll();
-      }
-      if (maxScroll <= 0) return;
-
-      // 1) Scroll down to bottom
-      await animate(0, maxScroll, scrollDownDuration, easeInOutCubic, setScroll);
+      const maxScroll = await waitForScrollable();
       if (cancelledRef.current) return;
+      if (maxScroll <= 120) return;
+
+      // Show the overlay
+      injectOverlay();
+      startDrunk();
+      noteScrollActivity();
+
+      // 1) Scroll down to bottom — progress 0→60%
+      await animate(0, maxScroll, scrollDownDuration, easeInOutCubic, (v) => {
+        setScroll(v);
+        setOverlayProgress((v / maxScroll) * 60);
+        noteScrollActivity();
+      });
+      if (cancelledRef.current) return;
+
+      setOverlayProgress(60);
 
       // 2) Brief pause at bottom
       await delay(bottomPause);
       if (cancelledRef.current) return;
 
-      // 3) Spring back to top (with overshoot via easeOutBack)
-      await animate(maxScroll, 0, springBackDuration, easeOutBack, setScroll);
+      setOverlayPhase("Returning");
+
+      // 3) Spring back to top — progress 60→85%
+      await animate(maxScroll, 0, springBackDuration, easeOutBack, (v) => {
+        setScroll(v);
+        setOverlayProgress(60 + (1 - v / maxScroll) * 25);
+        noteScrollActivity();
+      });
       if (cancelledRef.current) return;
 
-      // 4) Genie pinch effect on viewport
+      setOverlayProgress(90);
+      setOverlayPhase("Finalizing");
+
+      // 4) Genie pinch effect on viewport — progress 90→100%
       const root = document.documentElement;
       root.style.transformOrigin = "center top";
       root.style.transition = "none";
@@ -255,18 +411,25 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
       // Pinch in
       await animate(1, genieScale, genieDuration * 0.5, easeInOutCubic, (v) => {
         root.style.transform = `scale(${v})`;
+        const pinchProgress = (1 - v) / (1 - genieScale);
+        setOverlayProgress(90 + pinchProgress * 5);
       });
       if (cancelledRef.current) return;
 
       // Snap back with spring
       await animate(genieScale, 1, genieDuration * 0.5, easeOutBack, (v) => {
         root.style.transform = `scale(${v})`;
+        const snapProgress = (v - genieScale) / (1 - genieScale);
+        setOverlayProgress(95 + snapProgress * 5);
       });
 
       // Cleanup transform
       root.style.removeProperty("transform");
       root.style.removeProperty("transform-origin");
       root.style.removeProperty("transition");
+
+      // Dismiss the overlay
+      removeOverlay();
 
       // Mark as done for this session
       try {
@@ -282,6 +445,7 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
 
     return () => {
       cancel();
+      stopDrunk();
     };
   }, [
     scrollDownDuration,

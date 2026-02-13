@@ -1817,7 +1817,7 @@ export default function AffiliateRecruitsDashboard({
   // --- UNAUTHORIZED STATE ---
   if (!loading && !isAuthorized) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4">
+      <div className="bg-white flex flex-col items-center justify-center p-4">
         <div className="bg-white border border-black/10 p-8 rounded-2xl max-w-md w-full text-center shadow-lg">
           <Lock className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-black mb-2">Access Restricted</h2>
@@ -1830,9 +1830,9 @@ export default function AffiliateRecruitsDashboard({
     );
   }
 
-  return (
+    return (
     <div className={cn(
-      "affiliate-dashboard-reset min-h-screen bg-white text-black font-sans selection:bg-black/20"
+      "affiliate-dashboard-reset bg-white text-black font-sans selection:bg-black/20"
     )}>
 
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 relative z-10">

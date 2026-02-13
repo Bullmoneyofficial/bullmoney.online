@@ -399,6 +399,32 @@ const nextConfig = {
     },
   },
 
+  // Canonical route aliases for app/webview links
+  async redirects() {
+    return [
+      {
+        source: '/game',
+        destination: '/games',
+        permanent: true,
+      },
+      {
+        source: '/app/game',
+        destination: '/games',
+        permanent: true,
+      },
+      {
+        source: '/app/games',
+        destination: '/games',
+        permanent: true,
+      },
+      {
+        source: '/app/design',
+        destination: '/design',
+        permanent: true,
+      },
+    ];
+  },
+
   // Proxy casino backend through Next.js
   async rewrites() {
     const casinoProxyRewrites = [
