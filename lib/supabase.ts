@@ -3,6 +3,8 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const SUPABASE_SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const PLACEHOLDER_URL = 'https://placeholder.supabase.co';
+const PLACEHOLDER_KEY = 'placeholder-anon-key';
 
 // Singleton instance for browser client - prevents multiple GoTrueClient instances
 let browserClient: SupabaseClient | null = null;
@@ -18,9 +20,8 @@ export function createSupabaseClient(): SupabaseClient {
   }
   
   if (!SUPABASE_URL || !SUPABASE_ANON) {
-    console.warn('Supabase public env vars missing (NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY). Creating client with empty credentials (will fail at runtime).');
-    // Create a client anyway to satisfy runtime/TS expectations; operations will error if envs are truly missing.
-    browserClient = createClient(SUPABASE_URL || "", SUPABASE_ANON || "");
+    console.warn('Supabase public env vars missing (NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY). Using placeholder credentials for build/runtime safety.');
+    browserClient = createClient(PLACEHOLDER_URL, PLACEHOLDER_KEY);
     return browserClient;
   }
   
@@ -37,7 +38,8 @@ export const supabase = createSupabaseClient();
 export function createServerSupabase(): SupabaseClient {
   const key = SUPABASE_SERVICE || SUPABASE_ANON;
   if (!SUPABASE_URL || !key) {
-    throw new Error('Missing Supabase env for server client. Ensure SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY is set.');
+    console.warn('Missing Supabase env for server client. Using placeholder credentials for build/runtime safety.');
+    return createClient(PLACEHOLDER_URL, PLACEHOLDER_KEY);
   }
   return createClient(SUPABASE_URL, key!);
 }
