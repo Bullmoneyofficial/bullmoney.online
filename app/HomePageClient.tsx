@@ -118,6 +118,7 @@ const PAGEMODE_FORCE_LOGIN_KEY = "bullmoney_pagemode_force_login";
 const PAGEMODE_REDIRECT_PATH_KEY = "bullmoney_pagemode_redirect_path";
 
 import { useAudioEngine } from "@/app/hooks/useAudioEngine";
+import { useShowcaseScroll } from "@/hooks/useShowcaseScroll";
 
 // Lazy load heavy components that aren't needed immediately
 const DiscordMobileHero = dynamic(
@@ -201,6 +202,17 @@ function HomeContent() {
   const [allRemoteSplines, setAllRemoteSplines] = useState<any[]>([]);
   const splinePreloadRanRef = useRef(false);
   const { setLoaderv2Open, setV2Unlocked, devSkipPageModeAndLoader, setDevSkipPageModeAndLoader, openDiscordStageModal, openAccountManagerModal } = useUIState();
+
+  // Showcase scroll: hero → footer → hero spring + genie snap on first load
+  useShowcaseScroll({
+    scrollDownDuration: 1800,
+    springBackDuration: 1200,
+    genieDuration: 500,
+    genieScale: 0.96,
+    startDelay: currentView === 'content' ? 800 : 99999,
+    enabled: currentView === 'content',
+    pageId: 'home',
+  });
 
   // Defer analytics + prefetch — lazy-loaded to avoid compiling 170+309 lines up front
   useEffect(() => {

@@ -56,6 +56,7 @@ import { useHeroMode } from '@/hooks/useHeroMode';
 import type { HeroMode } from '@/hooks/useHeroMode';
 import { isMobileDevice } from '@/lib/mobileDetection';
 import { userStorage } from '@/lib/smartStorage';
+import { useShowcaseScroll } from '@/hooks/useShowcaseScroll';
 
 function DeferredMount({
   children,
@@ -355,6 +356,19 @@ export function StorePageClient({ routeBase = '/store', syncUrl = true, showProd
 
   const heroCacheLoadedRef = useRef(false);
   const allowHeavyHeroReady = allowHeavyHero && hasMounted && heroImageReady;
+
+  // Showcase scroll: hero → footer → hero spring + genie snap on first load
+  // Wait for splash / hero images to be ready before starting
+  useShowcaseScroll({
+    scrollDownDuration: 1800,
+    springBackDuration: 1200,
+    genieDuration: 500,
+    genieScale: 0.96,
+    startDelay: 800,
+    enabled: allowHeavyHeroReady,
+    pageId: 'store',
+  });
+
   const resolvedHeroSlide = useMemo(() => {
     const fallbackImage = HERO_CAROUSEL_SLIDES[FIRST_HERO_IMAGE_INDEX] || HERO_CAROUSEL_SLIDES[0];
 
