@@ -170,30 +170,38 @@ $(document).ready(function() {
     function createBet(){
         $('.crash__play').prop('disabled', true);
         button_enabled = false;
-        // if (!validateField('#amount') || !validateFieldFloat('#crash-auto')) {
-        //     $('.crash-play').prop('disabled', false);
-        //     return;
-        // }
         var wt      = parseFloat($('.crash_auto').val());
         var amount  = $('.crash_bet').val();
-        $.ajax({
-            url : '/crash/addBet',
-            type : 'post',
-            data : {
-                bet : amount,
-                withdraw : wt
-            },
-            success : function(res) {
+        
+        // Check if GameBackend is available for better error handling
+        if (typeof GameBackend !== 'undefined') {
+            GameBackend.post('/crash/addBet', {
+                bet: amount,
+                withdraw: wt
+            }).then(response => {
+                if (!response.success) {
+                    $.notify({
+                        position: 'bottom-right',
+                        type: 'error',
+                        message: '❌ ' + response.error
+                    });
+                    $('.crash__play').prop('disabled', false);
+                    button_enabled = true;
+                    return;
+                }
+                
+                const res = response.data;
                 $.notify({
-                    position : 'bottom-right',
+                    position: 'bottom-right',
                     type: res.success ? 'success' : 'error',
                     message: res.msg
                 });
-                if(res.success == true) 
-                {
-                    updateBalance(res.balance);
+                
+                if (res.success == true) {
+                    if (typeof updateBalance === 'function') {
+                        updateBalance(res.balance);
+                    }
                     lockControls();
-
                     bet = res.bet;
                     withdraw = wt;
                     isCashout = false;
@@ -202,54 +210,145 @@ $(document).ready(function() {
                 }
                 $('.crash__play').prop('disabled', false);
                 button_enabled = true;
-            }, 
-            error : function() {
+            }).catch(err => {
+                console.error('❌ Crash bet error:', err);
                 $.notify({
-                    position : 'bottom-right',
+                    position: 'bottom-right',
                     type: 'error',
-                    message: 'An error occurred while sending data'
+                    message: '❌ Request failed: ' + err.message
                 });
                 $('.crash__play').prop('disabled', false);
                 button_enabled = true;
-            }
-        });
+            });
+        } else {
+            // Fallback to jQuery AJAX
+            $.ajax({
+                url: '/crash/addBet',
+                type: 'post',
+                data: {
+                    _token: $('meta[name="csrf-token"]').attr('content'),
+                    bet: amount,
+                    withdraw: wt
+                },
+                success: function(res) {
+                    $.notify({
+                        position: 'bottom-right',
+                        type: res.success ? 'success' : 'error',
+                        message: res.msg
+                    });
+                    if (res.success == true) {
+                        if (typeof updateBalance === 'function') {
+                            updateBalance(res.balance);
+                        }
+                        lockControls();
+                        bet = res.bet;
+                        withdraw = wt;
+                        isCashout = false;
+                        game_active = true;
+                        $('.crash__play').text('Cash out ' + bet);
+                    }
+                    $('.crash__play').prop('disabled', false);
+                    button_enabled = true;
+                },
+                error: function(err) {
+                    console.error('❌ Crash bet error:', err);
+                    $.notify({
+                        position: 'bottom-right',
+                        type: 'error',
+                        message: '❌ Request failed - Backend unavailable'
+                    });
+                    $('.crash__play').prop('disabled', false);
+                    button_enabled = true;
+                }
+            });
+        }
     }
 
     function cashout(){
         $('.crash__play').prop('disabled', true);
         button_enabled = false;
-        $.ajax({
-            url : '/crash/cashout',
-            type : 'post',
-            success : function(res) {
-                if(res.success == true) 
-                {
+        
+        // Check if GameBackend is available for better error handling
+        if (typeof GameBackend !== 'undefined') {
+            GameBackend.post('/crash/cashout', {}).then(response => {
+                if (!response.success) {
+                    $.notify({
+                        position: 'bottom-right',
+                        type: 'error',
+                        message: '❌ ' + response.error
+                    });
+                    $('.crash__play').prop('disabled', false);
+                    button_enabled = true;
+                    return;
+                }
+                
+                const res = response.data;
+                if (res.success == true) {
                     $('.crash__play').text('Play');
-                    updateBalance(res.balance);
+                    if (typeof updateBalance === 'function') {
+                        updateBalance(res.balance);
+                    }
                     game_active = false;
                     isCashout = true;
                     unlockControls();
-                }
-                else{
+                } else {
                     $.notify({
-                        position : 'bottom-right',
+                        position: 'bottom-right',
                         type: res.success ? 'success' : 'error',
                         message: res.msg
                     });
                 }
                 $('.crash__play').prop('disabled', false);
                 button_enabled = true;
-            },
-            error : function(res) {
+            }).catch(err => {
+                console.error('❌ Crash cashout error:', err);
                 $.notify({
-                    position : 'bottom-right',
+                    position: 'bottom-right',
                     type: 'error',
-                    message: 'An error occurred while sending data'
+                    message: '❌ Request failed: ' + err.message
                 });
                 $('.crash__play').prop('disabled', false);
                 button_enabled = true;
-            }
-        })
+            });
+        } else {
+            // Fallback to jQuery AJAX
+            $.ajax({
+                url: '/crash/cashout',
+                type: 'post',
+                data: {
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(res) {
+                    if (res.success == true) {
+                        $('.crash__play').text('Play');
+                        if (typeof updateBalance === 'function') {
+                            updateBalance(res.balance);
+                        }
+                        game_active = false;
+                        isCashout = true;
+                        unlockControls();
+                    } else {
+                        $.notify({
+                            position: 'bottom-right',
+                            type: res.success ? 'success' : 'error',
+                            message: res.msg
+                        });
+                    }
+                    $('.crash__play').prop('disabled', false);
+                    button_enabled = true;
+                },
+                error: function(res) {
+                    console.error('❌ Crash cashout error:', res);
+                    $.notify({
+                        position: 'bottom-right',
+                        type: 'error',
+                        message: '❌ Request failed - Backend unavailable'
+                    });
+                    $('.crash__play').prop('disabled', false);
+                    button_enabled = true;
+                }
+            });
+        }
     }
 
     function unlockControls(){

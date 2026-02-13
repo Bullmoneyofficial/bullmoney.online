@@ -16,6 +16,16 @@ use App\Http\Controllers\FlappyBirdController;
 use App\Http\Middleware\Access;
 use App\Http\Middleware\UserBanned;
 
+// Health check endpoint (no auth required)
+Route::get('/health', function () {
+    return response()->json(['status' => 'healthy', 'timestamp' => now()]);
+});
+
+// CSRF token endpoint (for frontend to refresh tokens)
+Route::get('/csrf-token', function () {
+    return response()->json(['token' => csrf_token()]);
+});
+
 Route::group(['prefix' => 'slots'], function () {
     Route::any('/getGames', [SlotsController::class, 'getGames']);
     Route::any('/getUrl', [SlotsController::class, 'getGameURI']);

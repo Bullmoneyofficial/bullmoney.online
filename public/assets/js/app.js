@@ -95,6 +95,9 @@ $(document).ready(function () {
             if(e.error){
                 return noty(e.message, 'error');
             }
+        }).catch(err => {
+            console.error('❌ Promo code request failed:', err);
+            return noty('❌ Request failed - Backend unavailable', 'error');
         });
     });
     $(".daily_btn").click(function() {
@@ -106,6 +109,9 @@ $(document).ready(function () {
             if(e.error){
                 return noty(e.message, 'error');
             }
+        }).catch(err => {
+            console.error('❌ Daily bonus request failed:', err);
+            return noty('❌ Request failed - Backend unavailable', 'error');
         });
     });
     $(".vk_bonus").click(function() {

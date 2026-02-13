@@ -836,34 +836,68 @@ var FlappyBird = (function() {
             return;
         }
         
-        // Call backend to deduct bet
-        $.post('/flappybird/start', {
-            _token: $('meta[name="csrf-token"]').attr('content'),
-            bet: betValue
-        }).then(response => {
-            if (response.error) {
-                showNotification(response.msg, 'error');
-                return;
-            }
-            
-            // Update balance
-            if (typeof updateBalance === 'function') {
-                updateBalance(response.balance);
-            }
+        // Call backend to deduct bet using GameBackend helper
+        if (typeof GameBackend !== 'undefined') {
+            GameBackend.post('/flappybird/start', { bet: betValue }).then(response => {
+                if (!response.success) {
+                    console.warn('[FlappyBird] Backend error:', response.error);
+                    if (isDemoMode()) {
+                        startGameLocally(betValue);
+                        return;
+                    }
+                    showNotification(response.error || 'Failed to start game', 'error');
+                    return;
+                }
 
-            beginRun(betValue);
-            
-            console.log('[FlappyBird] Game started with bet:', betValue);
-        }).catch(error => {
-            if (isDemoMode()) {
-                console.warn('[FlappyBird] Backend unavailable, starting in demo mode:', error);
-                startGameLocally(betValue);
-                return;
-            }
+                const result = response.data;
+                if (result.error) {
+                    showNotification(result.msg || result.error, 'error');
+                    return;
+                }
 
-            console.error('[FlappyBird] Failed to start game:', error);
-            showNotification('Failed to start game. Please try again.', 'error');
-        });
+                if (typeof updateBalance === 'function') {
+                    updateBalance(result.balance);
+                }
+
+                beginRun(betValue);
+                console.log('[FlappyBird] Game started with bet:', betValue);
+            }).catch(error => {
+                console.error('[FlappyBird] Failed to start game:', error.message);
+                if (isDemoMode()) {
+                    console.warn('[FlappyBird] Backend unavailable, starting in demo mode');
+                    startGameLocally(betValue);
+                    return;
+                }
+                showNotification('Failed to start game. Please try again.', 'error');
+            });
+        } else {
+            // Fallback to jQuery
+            $.post('/flappybird/start', {
+                _token: $('meta[name="csrf-token"]').attr('content'),
+                bet: betValue
+            }).then(response => {
+                if (response.error) {
+                    showNotification(response.msg, 'error');
+                    return;
+                }
+
+                if (typeof updateBalance === 'function') {
+                    updateBalance(response.balance);
+                }
+
+                beginRun(betValue);
+                console.log('[FlappyBird] Game started with bet:', betValue);
+            }).catch(error => {
+                if (isDemoMode()) {
+                    console.warn('[FlappyBird] Backend unavailable, starting in demo mode:', error);
+                    startGameLocally(betValue);
+                    return;
+                }
+
+                console.error('[FlappyBird] Failed to start game:', error);
+                showNotification('Failed to start game. Please try again.', 'error');
+            });
+        }
     }
 
     function startGameLocally(betValue) {
@@ -1345,39 +1379,78 @@ var FlappyBird = (function() {
             return;
         }
         
-        $.post('/flappybird/result', {
-            _token: $('meta[name="csrf-token"]').attr('content'),
-            bet: gameState.currentBet,
-            multiplier: gameState.currentMultiplier,
-            score: gameState.score,
-            won: won,
-            amount: amount
-        }).then(response => {
-            if (response.error) {
-                console.error('[FlappyBird] Error submitting result:', response.msg);
-                showNotification(response.msg, 'error');
-                return;
-            }
-            
-            // Update balance
-            if (typeof updateBalance === 'function') {
-                updateBalance(response.balance);
-            }
-            
-            console.log('[FlappyBird] Result submitted successfully');
-        }).catch(error => {
-            if (isDemoMode()) {
-                console.warn('[FlappyBird] Demo mode: result submission failed, continuing locally:', error);
-                return;
-            }
+        // Use GameBackend helper if available, fallback to jQuery
+        if (typeof GameBackend !== 'undefined') {
+            GameBackend.post('/flappybird/result', {
+                bet: gameState.currentBet,
+                multiplier: gameState.currentMultiplier,
+                score: gameState.score,
+                won: won,
+                amount: amount
+            }).then(response => {
+                if (!response.success) {
+                    console.error('[FlappyBird] Error submitting result:', response.error);
+                    if (!isDemoMode()) {
+                        showNotification(response.error || 'Failed to submit result', 'error');
+                    }
+                    return;
+                }
 
-            console.error('[FlappyBird] Network error:', error);
-            showNotification('Connection error. Please try again.', 'error');
-        });
+                const result = response.data;
+                if (result.error) {
+                    console.error('[FlappyBird] Error submitting result:', result.msg);
+                    if (!isDemoMode()) {
+                        showNotification(result.msg, 'error');
+                    }
+                    return;
+                }
+
+                if (typeof updateBalance === 'function') {
+                    updateBalance(result.balance);
+                }
+
+                console.log('[FlappyBird] Result submitted successfully');
+            }).catch(error => {
+                if (isDemoMode()) {
+                    console.warn('[FlappyBird] Demo mode: result submission failed:', error.message);
+                    return;
+                }
+
+                console.error('[FlappyBird] Network error:', error);
+                showNotification('Connection error. Please try again.', 'error');
+            });
+        } else {
+            // Fallback to jQuery
+            $.post('/flappybird/result', {
+                _token: $('meta[name="csrf-token"]').attr('content'),
+                bet: gameState.currentBet,
+                multiplier: gameState.currentMultiplier,
+                score: gameState.score,
+                won: won,
+                amount: amount
+            }).then(response => {
+                if (response.error) {
+                    console.error('[FlappyBird] Error submitting result:', response.msg);
+                    showNotification(response.msg, 'error');
+                    return;
+                }
+
+                if (typeof updateBalance === 'function') {
+                    updateBalance(response.balance);
+                }
+
+                console.log('[FlappyBird] Result submitted successfully');
+            }).catch(error => {
+                if (isDemoMode()) {
+                    console.warn('[FlappyBird] Demo mode: result submission failed, continuing locally:', error);
+                    return;
+                }
+
+                console.error('[FlappyBird] Network error:', error);
+                showNotification('Connection error. Please try again.', 'error');
+            });
+        }
     }
-
-    // ============================================================================
-    // PERSISTENCE
     // ============================================================================
 
     function loadHighScore() {

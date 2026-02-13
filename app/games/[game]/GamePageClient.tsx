@@ -2417,6 +2417,10 @@ function getGameContent(game: string) {
 
 function getGameScripts(game: string) {
   const scripts: string[] = [];
+  
+  // Always load backend helper FIRST - all games depend on it
+  scripts.push('/assets/js/backend-helper.js');
+  
   if (game === 'dice') scripts.push('/assets/js/dice.js');
   if (game === 'mines') scripts.push('/assets/js/mines.js');
   if (game === 'crash') scripts.push('/assets/js/jquery.flot.min.js', '/assets/js/chart.js', '/assets/js/crash.js');

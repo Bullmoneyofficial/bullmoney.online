@@ -39,80 +39,14 @@ $(document).ready(function () {
 
 $(document).ready(function () {
     $(".sidebar__play").click(function() {
-        $.post("/mines/create", {
-            bomb: $(".input__bombs").val(),
-            bet: $(".input__bet").val(),
-        }).then((e) => {
-            if (e.error) return noty(e.msg, "error");
-            $(".sidebar__play").hide();
-            $(".sidebar__take_win").show();
-            $('#win').html(Number($(".input__bet").val()).toFixed(2));
-            $(".mines__cell").html("");
-            for (i = 0; i <= 25; i++) {
-                $(".mines__cell[data-number=" + i + "]").attr("disabled", false).removeClass('bomb-mine diamond-mine active');
-            }
-            $('.game__mines_coef').removeClass('active');
-            $('.game__mines_coefs').animate({scrollLeft: 0}, 0);
-            $("#win").html(0.0);
-            updateBalance(e.balance);
-            return noty(e.msg, "success");
-        });
+        playMines();
     });
     $(".sidebar__take_win").click(function() {
-        $.post("/mines/take").then((e) => {
-            if (e.error) return noty(e.msg, "error");
-            $(".sidebar__take_win").hide();
-            $(".sidebar__play").show();
-            $(".mines_coef").removeClass('active');
-            e.bombs.forEach((i) => {
-                $(".mines__cell[data-number=" + i + "]")
-                    .html(bombIcon)
-                    .addClass("bomb-mine")
-                    .addClass("active");
-            });
-    
-            renderCristall();
-            updateBalance(e.balance);
-            return noty(e.msg, "success");
-        });
+        takeMines();
     });
     $(".mines__cell").click(function () {
         var mine = $(this).attr("data-number");
-        $.post("/mines/open", {
-            open: mine,
-        }).then((e) => {
-            if (e.error) {
-                if (e.noend == 1) return noty(e.msg, "error");
-                $(".sidebar__take_win").hide();
-                $(".sidebar__play").show();
-                e.bombs.forEach((i) => {
-                    $(".mines__cell[data-number=" + i + "]")
-                        .html(bombIcon)
-                        .addClass("bomb-mine")
-                        .addClass("active");
-                });
-                $(".mines__cell[data-number=" + mine + "]")
-                    .addClass("active");
-                $(".mines_coef").removeClass('active');
-                renderCristall();
-                return noty(e.msg, "error");
-            }
-            $(".mines__cell[data-number=" + mine + "], .mines_coef[data-p=" + e.step + "]").addClass("active");
-            var leftPos = $(".game__mines_coefs").scrollLeft();
-            var isActive = $(".game__mines_coef.active").length;
-            if (isActive % 2 === 0 || isActive % 4 !== 0) {
-                $(".game__mines_coefs")
-                    .stop()
-                    .animate(
-                        {
-                            scrollLeft: $(".game__mines_coef_wrap").width() * ($(".mines_coef.active").length - 6),
-                        },
-                        800
-                    );
-            }
-            $(this).hide().html(cookieIcon).fadeIn().addClass("diamond-mine");
-            $("#win").html(Number(e.coef).toFixed(2));
-        });
+        openMinCell(mine);
     });
     renderMines();
     getItems(3);
@@ -133,7 +67,7 @@ function getItems(bombs = $(".input__bombs").val()) {
 }
 
 function renderMines() {
-    $.post("/mines/get").then((e) => {
+    minesApiCall("/mines/get", {}, (e) => {
         if (e.error) return noty(e.msg, "error");
         if (e.status == 1) {
             $(".sidebar__play").hide();
@@ -171,4 +105,417 @@ function renderCristall() {
             mine_now.hide().addClass("active").html('<img src="/assets/images/cristal.png" class="cristal">').fadeIn().addClass("diamond-mine");
         }
     }
+}
+
+/**
+ * API helper for Mines game
+ */
+async function minesApiCall(endpoint, data, callback) {
+    try {
+        if (typeof GameBackend === 'undefined') {
+            console.warn('⚠️ GameBackend helper not loaded, falling back to jQuery');
+            return $.post(endpoint, {_token: $('meta[name="csrf-token"]').attr('content'), ...data})
+                .then(callback)
+                .catch(err => {
+                    console.error('❌ Mines API call failed:', err);
+                    if (callback) callback({ error: true, msg: 'Request failed - Backend unavailable' });
+                });
+        }
+
+        const response = await GameBackend.post(endpoint, data);
+        if (!response.success) {
+            GameBackend.error.show('❌ ' + response.error);
+            if (callback) callback({ error: true, msg: response.error });
+        } else if (callback) {
+            callback(response.data);
+        }
+    } catch (err) {
+        console.error('❌ Mines API error:', err);
+        GameBackend.error.show('❌ ' + err.message);
+        if (callback) callback({ error: true, msg: err.message });
+    }
+}
+
+/**
+ * Create new Mines game
+ */
+async function playMines() {
+    const bomb = parseInt($(".input__bombs").val());
+    const bet = parseFloat($(".input__bet").val());
+
+    if (!bomb || bomb < 2 || bomb > 24 || !bet || bet <= 0) {
+        noty('❌ Please enter valid bombs and bet values', 'error');
+        return;
+    }
+
+    minesApiCall('/mines/create', { bomb, bet }, (e) => {
+        if (e.error) return noty(e.msg || e.error, 'error');
+        
+        $(".sidebar__play").hide();
+        $(".sidebar__take_win").show();
+        $('#win').html(Number(bet).toFixed(2));
+        $(".mines__cell").html("");
+        
+        for (let i = 0; i <= 25; i++) {
+            $(".mines__cell[data-number=" + i + "]").attr("disabled", false).removeClass('bomb-mine diamond-mine active');
+        }
+        
+        $('.game__mines_coef').removeClass('active');
+        $('.game__mines_coefs').animate({scrollLeft: 0}, 0);
+        $("#win").html(0.0);
+        
+        if (typeof updateBalance === 'function') {
+            updateBalance(e.balance);
+        }
+        
+        noty(e.msg || 'Game created', 'success');
+    });
+}
+
+/**
+ * Cash out Mines game
+ */
+async function takeMines() {
+    minesApiCall('/mines/take', {}, (e) => {
+        if (e.error) return noty(e.msg || e.error, 'error');
+        
+        $(".sidebar__take_win").hide();
+        $(".sidebar__play").show();
+        $(".mines_coef").removeClass('active');
+        
+        if (e.bombs && Array.isArray(e.bombs)) {
+            e.bombs.forEach((i) => {
+                $(".mines__cell[data-number=" + i + "]")
+                    .html(bombIcon)
+                    .addClass("bomb-mine")
+                    .addClass("active");
+            });
+        }
+
+        renderCristall();
+        
+        if (typeof updateBalance === 'function') {
+            updateBalance(e.balance);
+        }
+        
+        noty(e.msg || 'Cashed out', 'success');
+    });
+}
+
+/**
+ * Open a Mines cell
+ */
+async function openMinCell(mine) {
+    minesApiCall('/mines/open', { open: mine }, function(e) {
+        if (e.error) {
+            if (e.noend == 1) return noty(e.msg || e.error, 'error');
+            
+            $(".sidebar__take_win").hide();
+            $(".sidebar__play").show();
+            
+            if (e.bombs && Array.isArray(e.bombs)) {
+                e.bombs.forEach((i) => {
+                    $(".mines__cell[data-number=" + i + "]")
+                        .html(bombIcon)
+                        .addClass("bomb-mine")
+                        .addClass("active");
+                });
+            }
+            
+            $(".mines__cell[data-number=" + mine + "]").addClass("active");
+            $(".mines_coef").removeClass('active');
+            renderCristall();
+            return noty(e.msg || 'Hit a bomb!', 'error');
+        }
+        
+        $(".mines__cell[data-number=" + mine + "], .mines_coef[data-p=" + e.step + "]").addClass("active");
+        
+        var isActive = $(".game__mines_coef.active").length;
+        if (isActive % 2 === 0 || isActive % 4 !== 0) {
+            $(".game__mines_coefs")
+                .stop()
+                .animate(
+                    { scrollLeft: $(".game__mines_coef_wrap").width() * ($(".mines_coef.active").length - 6) },
+                    800
+                );
+        }
+        
+        $(".mines__cell[data-number=" + mine + "]").hide().html(cookieIcon).fadeIn().addClass("diamond-mine");
+        $("#win").html(Number(e.coef).toFixed(2));
+    });
+}
+
+/**
+ * Wrapper to call Mines API with error handling
+ */
+function minesApiCall(endpoint, data, callback) {
+    if (typeof GameBackend !== 'undefined') {
+        GameBackend.post(endpoint, data).then(function(response) {
+            if (!response.success) {
+                GameBackend.error.show('❌ ' + response.error);
+                if (callback) callback({ error: true, msg: response.error });
+                return;
+            }
+            if (callback) callback(response.data);
+        }).catch(function(err) {
+            GameBackend.error.show('❌ Request failed: ' + err.message);
+            if (callback) callback({ error: true, msg: err.message });
+        });
+    } else {
+        // Fallback to jQuery
+        $.post(endpoint, data)
+            .then(callback)
+            .catch(function(err) {
+                console.error('❌ Mines API call failed:', err);
+                if (callback) callback({ error: true, msg: 'Request failed' });
+            });
+    }
+}
+
+/**
+ * Create/start a new mines game
+ */
+function playMines() {
+    if (typeof GameBackend === 'undefined') {
+        console.warn('⚠️ GameBackend not loaded, using fallback');
+        return playMinesOldWay();
+    }
+
+    const bombs = $(".input__bombs").val();
+    const bet = $(".input__bet").val();
+
+    if (!bombs || !bet || bet <= 0) {
+        noty('❌ Please enter valid bombs and bet', 'error');
+        return;
+    }
+
+    GameBackend.post('/mines/create', { bomb: bombs, bet: bet })
+        .then(function(response) {
+            if (!response.success) {
+                GameBackend.error.show('❌ ' + response.error);
+                return;
+            }
+
+            const e = response.data;
+            if (e.error) return noty(e.msg, "error");
+            
+            // Game started successfully
+            $(".sidebar__play").hide();
+            $(".sidebar__take_win").show();
+            $('#win').html(Number($(".input__bet").val()).toFixed(2));
+            $(".mines__cell").html("");
+            for (i = 0; i <= 25; i++) {
+                $(".mines__cell[data-number=" + i + "]").attr("disabled", false).removeClass('bomb-mine diamond-mine active');
+            }
+            $('.game__mines_coef').removeClass('active');
+            $('.game__mines_coefs').animate({scrollLeft: 0}, 0);
+            $("#win").html(0.0);
+            updateBalance(e.balance);
+            return noty(e.msg, "success");
+        })
+        .catch(function(err) {
+            console.error('❌ Mines create failed:', err);
+            GameBackend.error.show('❌ Failed to create game: ' + err.message);
+        });
+}
+
+/**
+ * Fallback to jQuery for mines creation
+ */
+function playMinesOldWay() {
+    $.post("/mines/create", {
+        bomb: $(".input__bombs").val(),
+        bet: $(".input__bet").val(),
+    })
+    .then((e) => {
+        if (e.error) return noty(e.msg, "error");
+        $(".sidebar__play").hide();
+        $(".sidebar__take_win").show();
+        $('#win').html(Number($(".input__bet").val()).toFixed(2));
+        $(".mines__cell").html("");
+        for (i = 0; i <= 25; i++) {
+            $(".mines__cell[data-number=" + i + "]").attr("disabled", false).removeClass('bomb-mine diamond-mine active');
+        }
+        $('.game__mines_coef').removeClass('active');
+        $('.game__mines_coefs').animate({scrollLeft: 0}, 0);
+        $("#win").html(0.0);
+        updateBalance(e.balance);
+        return noty(e.msg, "success");
+    })
+    .catch(err => {
+        console.error('❌ Mines create request failed:', err);
+        return noty("❌ Request failed - Backend unavailable", "error");
+    });
+}
+
+/**
+ * Cash out and end the game
+ */
+function takeMines() {
+    if (typeof GameBackend !== 'undefined') {
+        GameBackend.post('/mines/take', {})
+            .then(function(response) {
+                if (!response.success) {
+                    GameBackend.error.show('❌ ' + response.error);
+                    return;
+                }
+
+                const e = response.data;
+                if (e.error) return noty(e.msg, "error");
+                
+                $(".sidebar__take_win").hide();
+                $(".sidebar__play").show();
+                $(".mines_coef").removeClass('active');
+                
+                if (e.bombs && Array.isArray(e.bombs)) {
+                    e.bombs.forEach((i) => {
+                        $(".mines__cell[data-number=" + i + "]")
+                            .html(bombIcon)
+                            .addClass("bomb-mine")
+                            .addClass("active");
+                    });
+                }
+
+                renderCristall();
+                updateBalance(e.balance);
+                return noty(e.msg, "success");
+            })
+            .catch(function(err) {
+                console.error('❌ Mines take failed:', err);
+                GameBackend.error.show('❌ Failed to cash out: ' + err.message);
+            });
+    } else {
+        // Fallback
+        takeMinesOldWay();
+    }
+}
+
+/**
+ * Fallback for cash out
+ */
+function takeMinesOldWay() {
+    $.post("/mines/take").then((e) => {
+        if (e.error) return noty(e.msg, "error");
+        $(".sidebar__take_win").hide();
+        $(".sidebar__play").show();
+        $(".mines_coef").removeClass('active');
+        if (e.bombs && Array.isArray(e.bombs)) {
+            e.bombs.forEach((i) => {
+                $(".mines__cell[data-number=" + i + "]")
+                    .html(bombIcon)
+                    .addClass("bomb-mine")
+                    .addClass("active");
+            });
+        }
+        renderCristall();
+        updateBalance(e.balance);
+        return noty(e.msg, "success");
+    }).catch(err => {
+        console.error('❌ Mines take request failed:', err);
+        return noty("❌ Request failed - Backend unavailable", "error");
+    });
+}
+
+/**
+ * Open a cell in the mines game
+ */
+function openMinCell(mine) {
+    if (typeof GameBackend !== 'undefined') {
+        GameBackend.post('/mines/open', { open: mine })
+            .then(function(response) {
+                if (!response.success) {
+                    GameBackend.error.show('❌ ' + response.error);
+                    return;
+                }
+
+                const e = response.data;
+                if (e.error) {
+                    if (e.noend == 1) return noty(e.msg, "error");
+                    
+                    $(".sidebar__take_win").hide();
+                    $(".sidebar__play").show();
+                    
+                    if (e.bombs && Array.isArray(e.bombs)) {
+                        e.bombs.forEach((i) => {
+                            $(".mines__cell[data-number=" + i + "]")
+                                .html(bombIcon)
+                                .addClass("bomb-mine")
+                                .addClass("active");
+                        });
+                    }
+                    
+                    $(".mines__cell[data-number=" + mine + "]").addClass("active");
+                    $(".mines_coef").removeClass('active');
+                    renderCristall();
+                    return noty(e.msg, "error");
+                }
+                
+                // Success - cell opened
+                $(".mines__cell[data-number=" + mine + "], .mines_coef[data-p=" + e.step + "]").addClass("active");
+                var isActive = $(".game__mines_coef.active").length;
+                if (isActive % 2 === 0 || isActive % 4 !== 0) {
+                    $(".game__mines_coefs")
+                        .stop()
+                        .animate(
+                            {
+                                scrollLeft: $(".game__mines_coef_wrap").width() * ($(".mines_coef.active").length - 6),
+                            },
+                            800
+                        );
+                }
+                $(".mines__cell[data-number=" + mine + "]").hide().html(cookieIcon).fadeIn().addClass("diamond-mine");
+                $("#win").html(Number(e.coef).toFixed(2));
+            })
+            .catch(function(err) {
+                console.error('❌ Mines open cell failed:', err);
+                GameBackend.error.show('❌ Failed to open cell: ' + err.message);
+            });
+    } else {
+        // Fallback
+        openMinCellOldWay(mine);
+    }
+}
+
+/**
+ * Fallback for opening cells
+ */
+function openMinCellOldWay(mine) {
+    $.post("/mines/open", { open: mine })
+        .then((e) => {
+            if (e.error) {
+                if (e.noend == 1) return noty(e.msg, "error");
+                $(".sidebar__take_win").hide();
+                $(".sidebar__play").show();
+                if (e.bombs && Array.isArray(e.bombs)) {
+                    e.bombs.forEach((i) => {
+                        $(".mines__cell[data-number=" + i + "]")
+                            .html(bombIcon)
+                            .addClass("bomb-mine")
+                            .addClass("active");
+                    });
+                }
+                $(".mines__cell[data-number=" + mine + "]").addClass("active");
+                $(".mines_coef").removeClass('active');
+                renderCristall();
+                return noty(e.msg, "error");
+            }
+            $(".mines__cell[data-number=" + mine + "], .mines_coef[data-p=" + e.step + "]").addClass("active");
+            var isActive = $(".game__mines_coef.active").length;
+            if (isActive % 2 === 0 || isActive % 4 !== 0) {
+                $(".game__mines_coefs")
+                    .stop()
+                    .animate(
+                        {
+                            scrollLeft: $(".game__mines_coef_wrap").width() * ($(".mines_coef.active").length - 6),
+                        },
+                        800
+                    );
+            }
+            $(".mines__cell[data-number=" + mine + "]").hide().html(cookieIcon).fadeIn().addClass("diamond-mine");
+            $("#win").html(Number(e.coef).toFixed(2));
+        })
+        .catch(err => {
+            console.error('❌ Mines open cell request failed:', err);
+            return noty("❌ Request failed - Backend unavailable", "error");
+        });
 }

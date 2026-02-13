@@ -135,6 +135,9 @@ function wheelBet(color) {
         if(e.error){
             return noty(e.message, 'error');
         }
+    }).catch(err => {
+        console.error('❌ Wheel bet request failed:', err);
+        return noty('❌ Request failed - Backend unavailable', 'error');
     });
     callback_timer = setTimeout(()=>tryPost(),650);
 }
@@ -149,6 +152,9 @@ function wheelInfo(game_id) {
         if(e.error){
             return n(e.message, 'error');
         }
+    }).catch(err => {
+        console.error('❌ Wheel info request failed:', err);
+        return n('❌ Request failed - Backend unavailable', 'error');
     });
 }
 
@@ -160,6 +166,9 @@ function wheelColor(color) {
         if(e.error){
             return n(e.message, 'error');
         }
+    }).catch(err => {
+        console.error('❌ Wheel color request failed:', err);
+        return n('❌ Request failed - Backend unavailable', 'error');
     });
     callback_timer = setTimeout(()=>tryPost(),650);
 }
@@ -192,6 +201,9 @@ function jackpot() {
         if(e.error){
             return noty(e.message, 'error');
         }
+    }).catch(err => {
+        console.error('❌ Jackpot bet request failed:', err);
+        return noty('❌ Request failed - Backend unavailable', 'error');
     });
     callback_timer = setTimeout(()=>tryPost(),650);
 }

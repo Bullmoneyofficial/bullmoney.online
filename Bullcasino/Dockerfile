@@ -16,4 +16,4 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=vendor /app /app
 RUN chmod -R 775 storage bootstrap/cache
 EXPOSE 10000
-CMD ["bash","-lc","php artisan config:cache && php artisan route:cache && php artisan view:cache && php -S 0.0.0.0:${PORT:-10000} -t public"]
+CMD ["bash","-lc","php artisan migrate --force && php artisan config:cache && php artisan route:cache && php artisan view:cache && php -S 0.0.0.0:${PORT:-10000} -t public"]
