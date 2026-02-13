@@ -19,6 +19,7 @@ import { SoundEffects } from '@/app/hooks/useSoundEffects';
 import { useShop, Product, Category } from '@/components/ShopContext';
 import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
 import { useProductsModalUI } from '@/contexts/UIStateContext';
+import { useUIState } from '@/contexts/UIStateContext';
 import { useMobilePerformance } from '@/hooks/useMobilePerformance';
 
 // Modal Context
@@ -244,6 +245,7 @@ ProductCard.displayName = 'ProductCard';
 // Main Content
 const ProductsContent = memo(() => {
   const { setIsOpen } = useModalState();
+  const { shouldSkipHeavyEffects } = useUIState();
   const { state: { /*products, categories*/ } } = useShop();
   const { formatPrice } = useCurrencyLocaleStore();
   const { isMobile } = useMobilePerformance();
@@ -371,21 +373,21 @@ const ProductsContent = memo(() => {
   return (
     <>
       <motion.div
-        initial={{ opacity: 0 }}
+        initial={shouldSkipHeavyEffects ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.12 }}
+        exit={shouldSkipHeavyEffects ? undefined : { opacity: 0 }}
+        transition={shouldSkipHeavyEffects ? { duration: 0 } : { duration: 0.12 }}
         onClick={handleClose}
         onTouchEnd={handleBackdropTouch}
         className="fixed inset-0"
-        style={{ zIndex: 2147483648, background: 'rgba(0,0,0,0.2)' }}
+        style={{ zIndex: 2147483648, background: shouldSkipHeavyEffects ? 'rgba(255,255,255,0.62)' : 'rgba(0,0,0,0.2)' }}
       />
 
       <motion.div
-        initial={isDesktop ? { y: '-100%' } : { y: '100%' }}
+        initial={shouldSkipHeavyEffects ? false : (isDesktop ? { y: '-100%' } : { y: '100%' })}
         animate={isDesktop ? { y: 0 } : { y: 0 }}
-        exit={isDesktop ? { y: '-100%' } : { y: '100%' }}
-        transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
+        exit={shouldSkipHeavyEffects ? undefined : (isDesktop ? { y: '-100%' } : { y: '100%' })}
+        transition={shouldSkipHeavyEffects ? { duration: 0 } : { type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
         onClick={(e) => e.stopPropagation()}
         onTouchEnd={(e) => e.stopPropagation()}
         className={
@@ -503,18 +505,18 @@ const ProductsContent = memo(() => {
       <AnimatePresence>
         {expandedProduct && (
           <motion.div
-            initial={{ opacity: 0 }}
+            initial={shouldSkipHeavyEffects ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/60 backdrop-blur-md overflow-hidden p-3 sm:p-6 md:p-8"
+            exit={shouldSkipHeavyEffects ? undefined : { opacity: 0 }}
+            className={`fixed inset-0 z-[100000] flex items-center justify-center overflow-hidden p-3 sm:p-6 md:p-8 ${shouldSkipHeavyEffects ? 'bg-white/70' : 'bg-black/60 backdrop-blur-md'}`}
             onClick={() => setExpandedProduct(null)}
             onTouchEnd={(e) => { if (e.target === e.currentTarget) setExpandedProduct(null); }}
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
+              initial={shouldSkipHeavyEffects ? false : { scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              transition={{ type: "spring", duration: 0.5 }}
+              exit={shouldSkipHeavyEffects ? undefined : { scale: 0.95, opacity: 0 }}
+              transition={shouldSkipHeavyEffects ? { duration: 0 } : { type: "spring", duration: 0.5 }}
               onClick={(e) => e.stopPropagation()}
               onTouchEnd={(e) => e.stopPropagation()}
               className="relative w-full max-w-[96vw] sm:max-w-5xl lg:max-w-6xl max-h-[92vh] overflow-y-auto bg-white text-black rounded-2xl md:rounded-3xl border border-black/10 shadow-2xl"

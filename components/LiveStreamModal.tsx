@@ -420,7 +420,7 @@ const LiveStreamContent = memo(({ shouldSkipHeavyEffects }: { shouldSkipHeavyEff
         onClick={handleClose}
         onTouchEnd={handleBackdropTouch}
         className="fixed inset-0"
-        style={{ zIndex: 2147483648, background: 'rgba(0,0,0,0.2)', pointerEvents: 'auto' }}
+        style={{ zIndex: 2147483648, background: shouldSkipEffects ? 'rgba(255,255,255,0.62)' : 'rgba(0,0,0,0.2)', pointerEvents: 'auto' }}
       />
 
       {/* Modal */}

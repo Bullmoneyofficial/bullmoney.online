@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { createClient } from '@supabase/supabase-js';
 import { persistSession } from '@/lib/sessionPersistence';
+import { useUIState } from '@/contexts/UIStateContext';
 
 // --- ANALYTICS ---
 import { BullMoneyAnalytics, trackEvent } from '@/lib/analytics';
@@ -497,6 +498,7 @@ type ModalStep = 'intro' | 'how-it-works' | 'signup-broker' | 'verify-broker' | 
 export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps) {
   const [mountedFlag, setMountedFlag] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const { shouldSkipHeavyEffects } = useUIState();
 
   useEffect(() => setMountedFlag(true), []);
 
@@ -535,20 +537,20 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
       {isOpen && (
         <>
           <motion.div
-            initial={{ opacity: 0 }}
+            initial={shouldSkipHeavyEffects ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.12 }}
+            exit={shouldSkipHeavyEffects ? undefined : { opacity: 0 }}
+            transition={shouldSkipHeavyEffects ? { duration: 0 } : { duration: 0.12 }}
             onClick={onClose}
             className="fixed inset-0"
-            style={{ zIndex: 2147483648, background: 'rgba(0,0,0,0.2)' }}
+            style={{ zIndex: 2147483648, background: shouldSkipHeavyEffects ? 'rgba(255,255,255,0.62)' : 'rgba(0,0,0,0.2)' }}
           />
 
           <motion.div
-            initial={isDesktop ? { y: '-100%' } : { y: '100%' }}
+            initial={shouldSkipHeavyEffects ? false : (isDesktop ? { y: '-100%' } : { y: '100%' })}
             animate={isDesktop ? { y: 0 } : { y: 0 }}
-            exit={isDesktop ? { y: '-100%' } : { y: '100%' }}
-            transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
+            exit={shouldSkipHeavyEffects ? undefined : (isDesktop ? { y: '-100%' } : { y: '100%' })}
+            transition={shouldSkipHeavyEffects ? { duration: 0 } : { type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
             onClick={(e) => e.stopPropagation()}
             onTouchEnd={(e) => e.stopPropagation()}
             onWheel={(e) => e.stopPropagation()}

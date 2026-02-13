@@ -9,6 +9,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/stores/cart-store';
+import { useUIState } from '@/contexts/UIStateContext';
 import { toast } from 'sonner';
 import TextType from '@/components/TextType';
 import { useCurrencyLocaleStore } from '@/stores/currency-locale-store';
@@ -21,6 +22,7 @@ import { CryptoCheckoutInline } from '@/components/shop/CryptoCheckoutInline';
 
 export function CartDrawer() {
   const router = useRouter();
+  const { shouldSkipHeavyEffects } = useUIState();
   const CART_DRAWER_BACKDROP_Z_INDEX = 2147483600;
   const CART_DRAWER_PANEL_Z_INDEX = 2147483601;
   const [isDesktop, setIsDesktop] = useState(false);
@@ -130,21 +132,21 @@ export function CartDrawer() {
         <>
           {/* Backdrop - Invisible but clickable to close cart */}
           <motion.div
-            initial={{ opacity: 0 }}
+            initial={shouldSkipHeavyEffects ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.12 }}
+            exit={shouldSkipHeavyEffects ? undefined : { opacity: 0 }}
+            transition={shouldSkipHeavyEffects ? { duration: 0 } : { duration: 0.12 }}
             onClick={closeCart}
             className="fixed inset-0"
-            style={{ zIndex: CART_DRAWER_BACKDROP_Z_INDEX, background: 'rgba(0,0,0,0.2)' }}
+            style={{ zIndex: CART_DRAWER_BACKDROP_Z_INDEX, background: shouldSkipHeavyEffects ? 'rgba(255,255,255,0.62)' : 'rgba(0,0,0,0.2)' }}
           />
 
           {/* Drawer Panel - Full height on mobile */}
           <motion.div
-            initial={isDesktop ? { y: '-100%' } : { x: '100%' }}
+            initial={shouldSkipHeavyEffects ? false : (isDesktop ? { y: '-100%' } : { x: '100%' })}
             animate={isDesktop ? { y: 0 } : { x: 0 }}
-            exit={isDesktop ? { y: '-100%' } : { x: '100%' }}
-            transition={{ type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
+            exit={shouldSkipHeavyEffects ? undefined : (isDesktop ? { y: '-100%' } : { x: '100%' })}
+            transition={shouldSkipHeavyEffects ? { duration: 0 } : { type: 'tween', duration: 0.15, ease: [0.25, 1, 0.5, 1] }}
             onClick={(e) => e.stopPropagation()}
             className={
               isDesktop

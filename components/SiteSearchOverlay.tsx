@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { Search, X, ArrowRight, ShoppingBag, BookOpen, Users, Sparkles, GraduationCap, TrendingUp, Home, BarChart3 } from 'lucide-react';
+import { useUIState } from '@/contexts/UIStateContext';
 
 // ============================================================================
 // SITE-WIDE SEARCH OVERLAY
@@ -71,6 +72,7 @@ interface SiteSearchOverlayProps {
 }
 
 export default function SiteSearchOverlay({ isOpen, onClose }: SiteSearchOverlayProps) {
+  const { shouldSkipHeavyEffects } = useUIState();
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [liveProducts, setLiveProducts] = useState<Array<{ title: string; slug: string; image?: string }>>([]);
@@ -260,10 +262,10 @@ export default function SiteSearchOverlay({ isOpen, onClose }: SiteSearchOverlay
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'rgba(0,0,0,0.6)',
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
-          animation: 'searchFadeIn 120ms ease-out',
+          background: shouldSkipHeavyEffects ? 'rgba(255,255,255,0.62)' : 'rgba(0,0,0,0.6)',
+          backdropFilter: shouldSkipHeavyEffects ? 'none' : 'blur(8px)',
+          WebkitBackdropFilter: shouldSkipHeavyEffects ? 'none' : 'blur(8px)',
+          animation: shouldSkipHeavyEffects ? 'none' : 'searchFadeIn 120ms ease-out',
         }}
       />
 
@@ -280,7 +282,7 @@ export default function SiteSearchOverlay({ isOpen, onClose }: SiteSearchOverlay
           border: '1px solid rgba(255,255,255,0.1)',
           boxShadow: '0 25px 50px -12px rgba(0,0,0,0.6)',
           overflow: 'hidden',
-          animation: 'searchSlideIn 150ms ease-out',
+          animation: shouldSkipHeavyEffects ? 'none' : 'searchSlideIn 150ms ease-out',
         }}
       >
         {/* Search Input */}

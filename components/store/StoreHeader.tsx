@@ -126,7 +126,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
     setDesktopMenuOpen,
     setDropdownMenuOpen: setManualDropdownOpen,
   } = useStoreMenuUI();
-  const { isUltimateHubOpen } = useUIState();
+  const { isUltimateHubOpen, shouldSkipHeavyEffects } = useUIState();
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [accountManagerOpen, setAccountManagerOpen] = useState(false);
   const [affiliateModalOpen, setAffiliateModalOpen] = useState(false);
@@ -832,9 +832,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
             className="fixed left-0 right-0 bottom-0 hidden lg:block pointer-events-none z-[900]"
             style={{
               top: '48px',
-              background: 'rgba(255,255,255,0.95)',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
+              background: shouldSkipHeavyEffects ? 'rgba(255,255,255,0.82)' : 'rgba(255,255,255,0.95)',
             }}
           />
         </>
@@ -1236,19 +1234,19 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
         {mobileMenuOpen && (
           <>
             <LazyMotionDiv
-              initial={{ opacity: 0 }}
+              initial={shouldSkipHeavyEffects ? false : { opacity: 0 }}
               animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.1 }}
+              exit={shouldSkipHeavyEffects ? undefined : { opacity: 0 }}
+              transition={shouldSkipHeavyEffects ? { duration: 0 } : { duration: 0.1 }}
               onClick={handleCloseMobileMenu}
               className="fixed inset-0 z-[1200]"
-              style={{ background: 'rgba(0,0,0,0.18)', willChange: 'opacity' }}
+              style={{ background: shouldSkipHeavyEffects ? 'rgba(255,255,255,0.62)' : 'rgba(0,0,0,0.18)', willChange: 'opacity' }}
             />
             <LazyMotionDiv
-              initial={{ x: '100%' }}
+              initial={shouldSkipHeavyEffects ? false : { x: '100%' }}
               animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'tween', duration: 0.14, ease: [0.25, 1, 0.5, 1] }}
+              exit={shouldSkipHeavyEffects ? undefined : { x: '100%' }}
+              transition={shouldSkipHeavyEffects ? { duration: 0 } : { type: 'tween', duration: 0.14, ease: [0.25, 1, 0.5, 1] }}
               className="fixed top-0 right-0 bottom-0 w-72 max-w-[80vw] z-[1300] p-4 flex flex-col overflow-y-auto overscroll-contain touch-pan-y"
               style={{
                 background: 'rgb(255,255,255)',
