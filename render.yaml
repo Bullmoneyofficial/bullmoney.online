@@ -1,27 +1,15 @@
 services:
-  # Laravel Backend (Bullcasino)
+  # Next.js App (Bullmoney Casino)
   - type: web
     name: bullmoney-casino
-    env: docker
+    env: node
     plan: free
-    rootDir: Bullcasino
-    dockerfilePath: Dockerfile
-    dockerContext: .
+    rootDir: next
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
     envVars:
-      - key: APP_ENV
+      - key: NODE_ENV
         value: production
-      - key: APP_DEBUG
-        value: false
-      - key: APP_KEY
-        generateValue: true
-      - key: DB_CONNECTION
-        value: sqlite
-      - key: SESSION_DRIVER
-        value: file
-      - key: QUEUE_CONNECTION
-        value: sync
-      - key: CACHE_DRIVER
-        value: file
     autoDeploy: false
 
   # Next.js Newsletter/Web App

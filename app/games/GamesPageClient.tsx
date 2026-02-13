@@ -2,14 +2,13 @@
 
 import { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { Link } from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Activity,
   ArrowDown,
   Crown,
   Dice5,
-  const [origin, setOrigin] = useState('');
+  Gamepad2,
   Play,
   Shield,
   Sparkles,
@@ -30,17 +29,17 @@ const StoreHeader = dynamic(
   { ssr: false }
 );
 
-                <a
+function DeferredMount({
   children,
   rootMargin = '400px',
   fallback = null,
 }: {
   children: React.ReactNode;
   rootMargin?: string;
-                </a>
+  fallback?: React.ReactNode;
 }) {
-                    <a
-                      href={`/games/${game.slug}`}
+  const hostRef = useRef<HTMLDivElement | null>(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     if (ready) return;
@@ -166,26 +165,6 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
   const router = useRouter();
   const [heroBgIndex, setHeroBgIndex] = useState(0);
   const [activeGameCategory, setActiveGameCategory] = useState('all');
-  const [origin, setOrigin] = useState('');
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    setOrigin(window.location.origin);
-  }, []);
-
-  const buildGameHref = (slug: string) => (origin ? `${origin}/games/${slug}` : `/games/${slug}`);
-  const gamesHomeHref = origin ? `${origin}/games` : '/games';
-
-  const navigateWithFallback = (href: string) => {
-    router.push(href);
-    // Give client-side navigation enough time to load the game bundle
-    // (large chunk — Three.js + game logic). Fall back to hard nav if it fails.
-    window.setTimeout(() => {
-      if (window.location.pathname !== href) {
-        window.location.assign(href);
-      }
-    }, 3000);
-  };
 
   // Prefetch all game routes on mount for instant navigation
   useEffect(() => {
@@ -653,7 +632,7 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
             {visibleGames.map((game) => {
               const GameIcon = game.icon;
               return (
-                <Link
+                <a
                   key={game.name}
                   href={`/games/${game.slug}`}
                   className="group relative rounded-2xl overflow-hidden bg-white/5 border border-white/10 hover:border-white/30 active:border-white/40 transition-all duration-200 text-left w-full active:scale-[0.97] cursor-pointer select-none"
@@ -822,7 +801,7 @@ export function GamesPageClient({ embedMode = false }: GamesPageClientProps) {
                 }}
               >
                 <a
-                  href={buildGameHref(game.slug)}
+                  href={`/games/${game.slug}`}
                   style={{
                     position: 'absolute',
                     top: 0,
