@@ -213,9 +213,9 @@ export const LanguageToggle = memo(({
             <button
               onClick={() => { setTab('language'); setSearch(''); }}
               className="flex-1 py-1.5 text-[10px] font-medium transition-colors"
-              style={tab === 'language'
+              style={{ ...(tab === 'language'
                 ? { color: 'rgb(0,0,0)', background: 'rgba(0,0,0,0.04)' }
-                : { color: 'rgba(0,0,0,0.5)' }
+                : { color: 'rgba(0,0,0,0.5)' }), touchAction: 'manipulation' as const }
               }
             >
               🌐 Language
@@ -223,9 +223,9 @@ export const LanguageToggle = memo(({
             <button
               onClick={() => { setTab('currency'); setSearch(''); }}
               className="flex-1 py-1.5 text-[10px] font-medium transition-colors"
-              style={tab === 'currency'
+              style={{ ...(tab === 'currency'
                 ? { color: 'rgb(0,0,0)', background: 'rgba(0,0,0,0.04)' }
-                : { color: 'rgba(0,0,0,0.5)' }
+                : { color: 'rgba(0,0,0,0.5)' }), touchAction: 'manipulation' as const }
               }
             >
               💰 Currency
@@ -237,11 +237,12 @@ export const LanguageToggle = memo(({
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: 'rgba(0,0,0,0.4)' }} />
               <input
                 type="text"
+                inputMode="search"
                 placeholder={`Search ${tab === 'language' ? 'languages' : 'currencies'}...`}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full h-6 pl-7 pr-2 rounded-lg text-[10px] focus:outline-none"
-                style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.12)', color: 'rgb(0,0,0)' }}
+                style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.12)', color: 'rgb(0,0,0)', fontSize: '16px' }}
               />
             </div>
           </div>
