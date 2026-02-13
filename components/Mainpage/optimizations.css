@@ -368,12 +368,14 @@
   }
 }
 
-/* --- DARK MODE SUPPORT --- */
+/* --- DARK MODE SUPPORT --- DISABLED to prevent forcing black backgrounds */
+/* REMOVED to prevent modals/drawers from turning black
 @media (prefers-color-scheme: dark) {
   .auto-dark {
     color-scheme: dark;
   }
 }
+*/
 
 /* --- CONNECTION SPEED OPTIMIZATIONS --- */
 @media (prefers-reduced-data: reduce) {

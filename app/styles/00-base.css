@@ -59,6 +59,7 @@
   --frame-duration: 16.67ms;
 }
 
+/* REMOVED: Prevents browser from forcing dark colors on modals/drawers
 @media (prefers-color-scheme: dark) {
   :root {
     --foreground-rgb: 255, 255, 255;
@@ -66,6 +67,7 @@
     --background-end-rgb: 0, 0, 0;
   }
 }
+*/
 
 /* ============================================================================
    THEME TOKENS & TAILWIND LAYERS

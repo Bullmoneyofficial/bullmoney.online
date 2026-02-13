@@ -40,6 +40,20 @@
     position: relative !important;
     transform: none !important;
   }
+  
+  /* CRITICAL: Prevent Chrome from forcing black backgrounds on store page */
+  html.chrome-browser[data-store-page],
+  html.chrome-browser[data-store-page] body,
+  html.chrome-browser[data-store-page] .store-layout,
+  html.chrome-browser[data-store-page] header,
+  html.chrome-browser[data-store-page] [role="dialog"],
+  html.chrome-browser[data-store-page] [aria-modal="true"],
+  html.chrome-browser[data-store-page] .modal,
+  html.chrome-browser[data-store-page] .drawer {
+    color-scheme: light !important;
+    background-color: inherit !important;
+    color: inherit !important;
+  }
 }
 
 /* ============================================
@@ -78,6 +92,21 @@
     min-height: 100vh;
     min-height: 100dvh;
   }
+}
+
+/* ============================================
+   CHROME COLOR SCHEME FIXES
+   ============================================ */
+/* Prevent Chrome from forcing dark mode on modals/drawers */
+html.chrome-browser [role="dialog"],
+html.chrome-browser [aria-modal="true"],
+html.chrome-browser .modal,
+html.chrome-browser .drawer,
+html.chrome-browser [data-modal],
+html.chrome-browser [data-drawer] {
+  color-scheme: light !important;
+  background-color: inherit !important;
+  color: inherit !important;
 }
 
 /* ============================================

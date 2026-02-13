@@ -557,8 +557,7 @@ export default function AffiliateModal({ isOpen, onClose }: AffiliateModalProps)
                 ? 'fixed top-0 left-0 right-0 w-full bg-white border-b border-black/10 flex flex-col safe-area-inset-bottom max-h-[90vh] overflow-hidden'
                 : 'fixed inset-0 w-full h-full bg-white flex flex-col safe-area-inset-bottom overflow-hidden'
             }
-            style={{ zIndex: 2147483649, color: '#1d1d1f', pointerEvents: 'auto', isolation: 'isolate' }}
-            data-apple-section
+            style={{ zIndex: 2147483649, color: '#1d1d1f', pointerEvents: 'auto', isolation: 'isolate', backgroundColor: '#ffffff', colorScheme: 'light' as const }}
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 md:p-6 border-b border-black/10">

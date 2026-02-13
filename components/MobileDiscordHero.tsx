@@ -627,7 +627,8 @@ const Styles = () => (
     .hero-wrapper {
       position: relative;
       width: 100%;
-      min-height: 100vh; /* Fill at least one screen */
+      min-height: 100vh; /* Fallback for older browsers */
+      min-height: 100dvh; /* Dynamic viewport height — accounts for in-app browser toolbars (Discord, IG, etc.) */
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -674,7 +675,7 @@ const Styles = () => (
       z-index: 1;
       pointer-events: none; /* Let scroll pass through on mobile */
       touch-action: pan-y; /* Allow vertical scrolling */
-      overflow: hidden;
+      overflow: visible; /* Let hero-content-overlay escape clipping on in-app browsers */
     }
 
     @media (min-width: 769px) {
@@ -695,6 +696,7 @@ const Styles = () => (
       backface-visibility: hidden;
       transform: translateZ(0);
       pointer-events: none;
+      overflow: hidden; /* Contain background effects within each item */
     }
 
     .cycling-bg-item.active {
@@ -790,6 +792,7 @@ const Styles = () => (
       justify-content: center;
       pointer-events: none;
       padding: 20px;
+      padding-top: max(20px, env(safe-area-inset-top, 20px)); /* Prevent top clipping on in-app browsers */
       box-sizing: border-box;
     }
 

@@ -422,6 +422,11 @@ const nextConfig = {
         destination: '/design',
         permanent: true,
       },
+      {
+        source: '/account',
+        destination: '/store/account',
+        permanent: false,
+      },
     ];
   },
 

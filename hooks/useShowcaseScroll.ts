@@ -3,77 +3,40 @@
 import { useEffect, useRef } from "react";
 
 /**
- * useShowcaseScroll — lightweight "hero → footer → hero" spring showcase scroll.
- *
- * On first load / reload:
- *  1. Auto-scrolls smoothly from top to bottom of the page
- *  2. Pauses briefly at the bottom
- *  3. Springs back to the top with a genie snap-back effect
- *  4. Applies a quick scale "genie pinch" on the viewport then releases
- *
- * User interaction behavior:
- *  - If user scrolls or touches: Speeds up 8x (completes quickly without being annoying)
- *  - If user clicks/taps/keys: Cancels completely (user wants to interact)
- *  - Shows "Fast-forward ⏩" overlay when sped up
- *
- * Designed for mobile (low memory) + desktop:
- *  - Uses requestAnimationFrame easing (no libraries)
- *  - Only runs once per session (sessionStorage guard)
- *  - Respects user's scroll intent by speeding up instead of blocking
- *  - Cleans up all listeners on unmount
+ * useShowcaseScroll — ultra-lightweight "hero → footer → hero" showcase scroll.
+ * V3 — optimized for low-end devices:
+ *  - Throttled scrollTo (skips if delta < 2px)
+ *  - Progress bar updated max 10x/sec (not every rAF)
+ *  - No CSS transitions on progress (eliminates GPU compositing fight)
+ *  - Re-measures scrollHeight max every 500ms
+ *  - Cancels on any user interaction
+ *  - Only runs once per session
  */
 
 const SESSION_KEY_PREFIX = "bm_showcase_scroll_done";
 
 interface ShowcaseScrollOptions {
-  /** ms to scroll down (default 1800) */
   scrollDownDuration?: number;
-  /** ms to pause at bottom (default 400) */
   bottomPause?: number;
-  /** ms to spring back up (default 1200) */
   springBackDuration?: number;
-  /** ms for genie pinch animation (default 500) */
-  genieDuration?: number;
-  /** Min scale during genie pinch 0-1 (default 0.96) */
-  genieScale?: number;
-  /** Delay before starting (ms, default 600) */
   startDelay?: number;
-  /** Skip if user has reduced-motion preference (default true) */
   respectReducedMotion?: boolean;
-  /** CSS selector for the scrollable container — defaults to window */
   containerSelector?: string;
-  /** Gate: scroll won't start until this is true (default true) */
   enabled?: boolean;
-  /** Unique page id for session-key so each page gets its own scroll (default: pathname) */
   pageId?: string;
+  /** @deprecated */ genieDuration?: number;
+  /** @deprecated */ genieScale?: number;
 }
 
-// Simple easing functions (no dependencies)
 function easeInOutCubic(t: number): number {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
-function easeInCubic(t: number): number {
-  return t * t * t;
-}
-
-function easeOutBack(t: number): number {
-  const c1 = 1.70158;
-  const c3 = c1 + 1;
-  return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
-}
-
-function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t;
-}
-
 export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
   const {
-    scrollDownDuration = 1800,
-    bottomPause = 400,
-    springBackDuration = 1200,
-    genieDuration = 500,
-    genieScale = 0.96,
+    scrollDownDuration = 1400,
+    bottomPause = 250,
+    springBackDuration = 900,
     startDelay = 600,
     respectReducedMotion = true,
     containerSelector,
@@ -85,464 +48,232 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
   const rafRef = useRef<number>(0);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const hasRunRef = useRef(false);
-  const speedUpRef = useRef(false); // NEW: Speed up instead of cancel when user scrolls
-  const drunkRafRef = useRef<number>(0);
-  const drunkLastScrollRef = useRef<number>(0);
-  const drunkActiveRef = useRef(false);
-  const drunkLastUpdateRef = useRef(0);
-  const drunkXRef = useRef(0);
-  const drunkRotRef = useRef(0);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || !enabled) return;
+    if (respectReducedMotion && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
 
-    // Don't start until the page signals it's ready
-    if (!enabled) return;
-
-    // Respect reduced-motion
-    if (respectReducedMotion && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    // Only run once per session per page
-    const sessionKey = `${SESSION_KEY_PREFIX}_${pageId || (typeof location !== "undefined" ? location.pathname : "default")}`;
-    try {
-      if (sessionStorage.getItem(sessionKey)) return;
-    } catch {
-      // Private browsing — allow to run
-    }
-
-    // Prevent duplicate runs if enabled toggles multiple times
+    const sessionKey = `${SESSION_KEY_PREFIX}_${pageId || location?.pathname || "default"}`;
+    try { if (sessionStorage.getItem(sessionKey)) return; } catch { /* private */ }
     if (hasRunRef.current) return;
     hasRunRef.current = true;
-
     cancelledRef.current = false;
 
-    const containerEl = containerSelector ? document.querySelector(containerSelector) : null;
-    const getContainer = (): HTMLElement | null => containerEl as HTMLElement | null;
+    const containerEl = containerSelector ? document.querySelector<HTMLElement>(containerSelector) : null;
 
-    const maxScrollRef = { current: 0 };
-    const maxScrollLastUpdateRef = { current: 0 };
-
-    const getScrollTop = (): number => {
-      const el = getContainer();
-      return el ? el.scrollTop : window.scrollY;
-    };
-
-    const computeMaxScroll = (): number => {
-      const el = getContainer();
-      if (el) return el.scrollHeight - el.clientHeight;
-      return document.documentElement.scrollHeight - window.innerHeight;
-    };
-
-    const refreshMaxScroll = (force = false): number => {
-      const now = typeof performance !== "undefined" ? performance.now() : Date.now();
-      if (force || now - maxScrollLastUpdateRef.current > 500) {
-        maxScrollRef.current = computeMaxScroll();
-        maxScrollLastUpdateRef.current = now;
+    // Cache scrollHeight — reading it forces layout, so we throttle
+    let cachedMax = 0;
+    let lastMaxRead = 0;
+    const getMaxScroll = (): number => {
+      const now = performance.now();
+      if (now - lastMaxRead > 500) {
+        cachedMax = containerEl
+          ? containerEl.scrollHeight - containerEl.clientHeight
+          : document.documentElement.scrollHeight - window.innerHeight;
+        lastMaxRead = now;
       }
-      return maxScrollRef.current;
+      return cachedMax;
     };
 
-    const getMaxScroll = (force = false): number => refreshMaxScroll(force);
-
+    let lastScrollY = -999;
     const setScroll = (y: number) => {
-      const el = getContainer();
-      if (el) {
-        el.scrollTop = y;
-      } else {
-        window.scrollTo(0, y);
-      }
+      // Skip DOM write if change is < 2px (invisible, saves layout thrash)
+      if (Math.abs(y - lastScrollY) < 2) return;
+      lastScrollY = y;
+      if (containerEl) containerEl.scrollTop = y;
+      else window.scrollTo(0, y);
     };
 
-    const stopDrunk = () => {
-      if (drunkRafRef.current) cancelAnimationFrame(drunkRafRef.current);
-      drunkActiveRef.current = false;
-      drunkXRef.current = 0;
-      drunkRotRef.current = 0;
-      const root = document.documentElement;
-      root.classList.remove("bm-drunk-scroll");
-      root.style.removeProperty("--bm-drunk-x");
-      root.style.removeProperty("--bm-drunk-rot");
-    };
-
-    const updateDrunk = (now?: number) => {
-      if (cancelledRef.current) { stopDrunk(); return; }
-      const ts = typeof now === "number" ? now : (typeof performance !== "undefined" ? performance.now() : Date.now());
-      // Cap updates to reduce CPU load while keeping motion smooth.
-      if (ts - drunkLastUpdateRef.current < 24) {
-        drunkRafRef.current = requestAnimationFrame(updateDrunk);
-        return;
-      }
-      drunkLastUpdateRef.current = ts;
-      const root = document.documentElement;
-      const maxScroll = Math.max(1, getMaxScroll());
-      const scrollTop = getScrollTop();
-      let strength = Math.min(1, Math.max(0, scrollTop / maxScroll));
-      // Ease the curve and taper near the bottom to avoid heavy transforms at footer.
-      strength = strength * strength * (3 - 2 * strength);
-      if (maxScroll - scrollTop < 220) strength *= 0.55;
-
-      if (strength <= 0 && Date.now() - drunkLastScrollRef.current > 600) {
-        stopDrunk();
-        return;
-      }
-
-      const t = ts / 280;
-      const ampX = 2 + 6 * strength;
-      const ampRot = 0.1 + 0.4 * strength;
-      const targetX = Math.sin(t) * ampX;
-      const targetRot = Math.sin(t + 0.7) * ampRot;
-      const smooth = 0.18 + 0.12 * strength;
-      const x = lerp(drunkXRef.current, targetX, smooth);
-      const rot = lerp(drunkRotRef.current, targetRot, smooth);
-      
-      // Reduce drunk effect by 70% when user speeds up (less distracting)
-      const effectMultiplier = speedUpRef.current ? 0.3 : 1;
-      drunkXRef.current = x;
-      drunkRotRef.current = rot;
-
-      root.style.setProperty("--bm-drunk-x", `${Math.round(x * effectMultiplier * 100) / 100}px`);
-      root.style.setProperty("--bm-drunk-rot", `${Math.round(rot * effectMultiplier * 1000) / 1000}deg`);
-      drunkRafRef.current = requestAnimationFrame(updateDrunk);
-    };
-
-    const startDrunk = () => {
-      if (drunkActiveRef.current) return;
-      drunkActiveRef.current = true;
-      document.documentElement.classList.add("bm-drunk-scroll");
-      drunkRafRef.current = requestAnimationFrame(updateDrunk);
-    };
-
-    const noteScrollActivity = () => {
-      drunkLastScrollRef.current = Date.now();
-      refreshMaxScroll();
-      startDrunk();
-    };
-
-    // Speed up animation when user starts scrolling (finish quickly without canceling)
-    const speedUp = () => {
-      if (speedUpRef.current || cancelledRef.current) return;
-      speedUpRef.current = true;
-      // Overlay shows "Fast-forwarding" when sped up
-      setOverlayPhase("Fast-forward ⏩");
-    };
-
-    // Cancel completely on explicit user interaction (click/tap/key)
+    // ── Cancel ──
     const cancel = () => {
+      if (cancelledRef.current) return;
       cancelledRef.current = true;
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      cleanup();
       removeOverlay();
-      stopDrunk();
-      // Remove genie transform if interrupted
-      document.documentElement.style.removeProperty("transform");
-      document.documentElement.style.removeProperty("transform-origin");
-      document.documentElement.style.removeProperty("transition");
+      detach();
     };
 
-    // ── Lightweight "caching" overlay ──────────────────────────────────
+    const events = ["wheel", "touchstart", "touchmove", "mousedown", "keydown"] as const;
+    const attach = () => { for (const e of events) window.addEventListener(e, cancel, { passive: true, once: true }); };
+    const detach = () => { for (const e of events) window.removeEventListener(e, cancel); };
+    attach();
+
+    // ── Overlay (inline styles only — no injected <style> tag) ──
     let overlayEl: HTMLDivElement | null = null;
-    let overlayStyleEl: HTMLStyleElement | null = null;
-    let progressBarEl: HTMLDivElement | null = null;
-    let phaseTextEl: HTMLSpanElement | null = null;
+    let barEl: HTMLDivElement | null = null;
+    let txtEl: HTMLSpanElement | null = null;
+    let lastBarUpdate = 0;
 
     const injectOverlay = () => {
       if (overlayEl) return;
-
-      overlayStyleEl = document.createElement("style");
-      overlayStyleEl.textContent = `
-        @keyframes _sc_in { from{opacity:0;transform:scale(.95)} to{opacity:1;transform:scale(1)} }
-        @keyframes _sc_out { from{opacity:1;transform:scale(1)} to{opacity:0;transform:scale(.97)} }
-        @keyframes _sc_spin { to{transform:rotate(360deg)} }
-        #_sc_overlay{position:fixed;inset:0;z-index:999999;pointer-events:none;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.25);animation:_sc_in .3s ease-out both;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
-        #_sc_overlay.out{animation:_sc_out .3s ease-in both}
-        ._sc_pill{background:rgba(0,0,0,.7);color:#fff;font-size:12px;font-weight:500;padding:8px 18px;border-radius:40px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 12px rgba(0,0,0,.2)}
-        ._sc_dot{width:12px;height:12px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:_sc_spin .6s linear infinite}
-        ._sc_bar_wrap{width:60px;height:2px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden;margin-left:4px}
-        ._sc_bar_fill{height:100%;width:0%;background:#fff;border-radius:2px;transition:width .1s linear}
-        html.store-active #_sc_overlay{background:rgba(0,0,0,.15)}
-        html.store-active ._sc_pill{background:rgba(255,255,255,.85);color:#1d1d1f;box-shadow:0 2px 12px rgba(0,0,0,.08)}
-        html.store-active ._sc_dot{border-color:rgba(0,0,0,.1);border-top-color:#1d1d1f}
-        html.store-active ._sc_bar_wrap{background:rgba(0,0,0,.08)}
-        html.store-active ._sc_bar_fill{background:#1d1d1f}
-      `;
-      document.head.appendChild(overlayStyleEl);
-
       overlayEl = document.createElement("div");
       overlayEl.id = "_sc_overlay";
-      overlayEl.innerHTML = `<div class="_sc_pill"><div class="_sc_dot"></div><span class="_sc_txt">Caching page</span><div class="_sc_bar_wrap"><div class="_sc_bar_fill"></div></div></div>`;
+      overlayEl.style.cssText = "position:fixed;inset:0;z-index:999999;pointer-events:none;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.32);opacity:0;transition:opacity .35s";
+      overlayEl.innerHTML = `<div style="background:rgba(0,0,0,.7);color:#fff;font-size:12px;font-weight:500;padding:8px 18px;border-radius:40px;display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:_scSpin .6s linear infinite"></span><span id="_sc_txt">Caching page</span><div style="width:56px;height:2px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden;margin-left:4px"><div id="_sc_bar" style="height:100%;width:0%;background:#fff;border-radius:2px"></div></div></div>`;
+
+      // Single tiny keyframes rule for spinner only
+      const s = document.createElement("style");
+      s.id = "_sc_kf";
+      s.textContent = "@keyframes _scSpin{to{transform:rotate(360deg)}}";
+      if (!document.getElementById("_sc_kf")) document.head.appendChild(s);
+
       document.body.appendChild(overlayEl);
-
-      progressBarEl = overlayEl.querySelector("._sc_bar_fill") as HTMLDivElement;
-      phaseTextEl = overlayEl.querySelector("._sc_txt") as HTMLSpanElement;
+      barEl = overlayEl.querySelector("#_sc_bar") as HTMLDivElement;
+      txtEl = overlayEl.querySelector("#_sc_txt") as HTMLSpanElement;
+      requestAnimationFrame(() => { if (overlayEl) overlayEl.style.opacity = "1"; });
     };
 
-    const setOverlayProgress = (pct: number) => {
-      if (progressBarEl) progressBarEl.style.width = `${Math.min(100, Math.max(0, pct))}%`;
+    const setProgress = (pct: number) => {
+      // Throttle bar DOM writes to max ~10/sec
+      const now = performance.now();
+      if (now - lastBarUpdate < 100 && pct < 100) return;
+      lastBarUpdate = now;
+      if (barEl) barEl.style.width = `${Math.round(pct)}%`;
     };
 
-    const setOverlayPhase = (text: string) => {
-      if (phaseTextEl) phaseTextEl.textContent = text;
-    };
+    const setPhase = (t: string) => { if (txtEl) txtEl.textContent = t; };
 
     const removeOverlay = () => {
       if (!overlayEl) return;
-      setOverlayProgress(100);
-      setOverlayPhase(speedUpRef.current ? "Done ✓" : "Cached ✓");
+      if (barEl) barEl.style.width = "100%";
+      setPhase("Cached ✓");
       const el = overlayEl;
-      const styleEl = overlayStyleEl;
-      // Dismiss faster when sped up
-      const dismissDelay = speedUpRef.current ? 200 : 1300;
+      overlayEl = null; barEl = null; txtEl = null;
       setTimeout(() => {
-        el.classList.add("out");
-        setTimeout(() => { el?.remove(); styleEl?.remove(); }, 350);
-      }, dismissDelay);
-      overlayEl = null;
-      overlayStyleEl = null;
-      progressBarEl = null;
-      phaseTextEl = null;
-    };
-    // ────────────────────────────────────────────────────────────────────
-
-    // Speed up on scroll (user wants to explore) - don't cancel completely
-    const onWheel = () => speedUp();
-    const onTouchMove = () => speedUp();
-    window.addEventListener("wheel", onWheel, { passive: true, once: true });
-    window.addEventListener("touchmove", onTouchMove, { passive: true, once: true });
-    
-    // Cancel on explicit interaction (click/tap/key)
-    const onExplicitInteraction = () => cancel();
-    window.addEventListener("mousedown", onExplicitInteraction, { passive: true, once: true });
-    window.addEventListener("touchstart", onExplicitInteraction, { passive: true, once: true });
-    window.addEventListener("keydown", onExplicitInteraction, { passive: true, once: true });
-
-    const scrollTarget = getContainer() || window;
-    const onScroll = () => {
-      if (respectReducedMotion && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-      noteScrollActivity();
-    };
-    scrollTarget.addEventListener("scroll", onScroll, { passive: true });
-
-    const onResize = () => {
-      refreshMaxScroll(true);
-    };
-    window.addEventListener("resize", onResize, { passive: true });
-
-    const cleanup = () => {
-      window.removeEventListener("wheel", onWheel);
-      window.removeEventListener("touchmove", onTouchMove);
-      window.removeEventListener("mousedown", onExplicitInteraction);
-      window.removeEventListener("touchstart", onExplicitInteraction);
-      window.removeEventListener("keydown", onExplicitInteraction);
-      scrollTarget.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onResize);
+        el.style.opacity = "0";
+        setTimeout(() => el.remove(), 350);
+      }, 800);
     };
 
-    // Optimized animate helper using rAF with frame skipping for 60fps
+    // ── Animate ──
     const animate = (
-      from: number,
-      to: number,
-      duration: number,
+      from: number, to: number, duration: number,
       easing: (t: number) => number,
-      onFrame: (value: number) => void,
-    ): Promise<void> => {
-      return new Promise((resolve) => {
-        // Speed up 8x when user scrolls (finish quickly without canceling)
-        const effectiveDuration = speedUpRef.current ? duration / 8 : duration;
+      onFrame: (v: number, curTo: number) => void,
+      dynamicTo?: boolean,
+    ): Promise<number> =>
+      new Promise((resolve) => {
         const start = performance.now();
-        let lastFrameTime = start;
+        let curTo = to;
+        let lastRemeasure = start;
         const tick = (now: number) => {
-          if (cancelledRef.current) { resolve(); return; }
-          // Enforce ~16.67ms per frame (60fps) to avoid excessive DOM writes
-          if (now - lastFrameTime < 14) {
-            rafRef.current = requestAnimationFrame(tick);
-            return;
+          if (cancelledRef.current) { resolve(curTo); return; }
+          // Re-measure every 500ms for lazy content (only on scroll-down)
+          if (dynamicTo && now - lastRemeasure > 500) {
+            lastMaxRead = 0; // force fresh read
+            const m = getMaxScroll();
+            if (m > curTo) curTo = m;
+            lastRemeasure = now;
           }
-          lastFrameTime = now;
-          const elapsed = now - start;
-          const progress = Math.min(elapsed / effectiveDuration, 1);
-          const easedProgress = easing(progress);
-          const value = from + (to - from) * easedProgress;
-          onFrame(value);
-          if (progress < 1) {
-            rafRef.current = requestAnimationFrame(tick);
-          } else {
-            resolve();
-          }
+          const t = Math.min((now - start) / duration, 1);
+          onFrame(from + (curTo - from) * easing(t), curTo);
+          if (t < 1) rafRef.current = requestAnimationFrame(tick);
+          else resolve(curTo);
         };
         rafRef.current = requestAnimationFrame(tick);
       });
-    };
 
     const delay = (ms: number): Promise<void> =>
-      new Promise((resolve) => {
-        // Speed up pauses too when user scrolls
-        const effectiveDelay = speedUpRef.current ? ms / 10 : ms;
-        timeoutRef.current = setTimeout(resolve, effectiveDelay);
-      });
+      new Promise((resolve) => { timeoutRef.current = setTimeout(resolve, ms); });
 
+    // ── Wait for scrollable content (max 6s) ──
     const waitForScrollable = async (): Promise<number> => {
-      let checks = 0;
-      const maxChecks = 60;
-      while (!cancelledRef.current && checks < maxChecks) {
-        const maxScroll = getMaxScroll(true);
-        if (maxScroll > 120) return maxScroll;
-        checks += 1;
+      for (let i = 0; i < 30 && !cancelledRef.current; i++) {
+        lastMaxRead = 0;
+        const m = getMaxScroll();
+        if (m > 120) return m;
         await delay(200);
       }
       return getMaxScroll();
     };
 
-    // Wait for the global layout splash (#bm-splash) to finish before starting
-    const waitForSplash = (): Promise<void> => {
-      return new Promise((resolve) => {
-        // Already finished
-        if ((window as any).__BM_SPLASH_FINISHED__ === true) { resolve(); return; }
-        // Splash element already gone
-        const el = document.getElementById("bm-splash");
-        if (!el) { resolve(); return; }
-
-        // Listen for the splash-finished event
-        const onDone = () => {
-          window.removeEventListener("bm-splash-finished", onDone);
+    // ── Wait for splash-hide.js ──
+    const waitForSplash = (): Promise<void> =>
+      new Promise((resolve) => {
+        if ((window as any).__BM_SPLASH_FINISHED__ === true || !document.getElementById("bm-splash")) {
+          resolve(); return;
+        }
+        let done = false;
+        const finish = () => {
+          if (done) return; done = true;
+          window.removeEventListener("bm-splash-finished", finish);
+          clearInterval(poll); clearTimeout(hard);
           resolve();
         };
-        window.addEventListener("bm-splash-finished", onDone);
-
-        // Safety: if splash hides via class before event fires, poll briefly
+        window.addEventListener("bm-splash-finished", finish);
         const poll = setInterval(() => {
-          if (
-            (window as any).__BM_SPLASH_FINISHED__ === true ||
-            !document.getElementById("bm-splash")
-          ) {
-            clearInterval(poll);
-            window.removeEventListener("bm-splash-finished", onDone);
-            resolve();
+          if ((window as any).__BM_SPLASH_FINISHED__ === true || !document.getElementById("bm-splash")) {
+            if (!(window as any).__BM_SPLASH_FINISHED__) setTimeout(finish, 80);
+            else finish();
           }
         }, 200);
-
-        // Hard timeout so we never hang forever (8s)
-        timeoutRef.current = setTimeout(() => {
-          clearInterval(poll);
-          window.removeEventListener("bm-splash-finished", onDone);
-          resolve();
-        }, 8000);
+        const hard = setTimeout(finish, 10000);
+        timeoutRef.current = hard;
       });
-    };
 
-    // Main sequence
+    // ── Main sequence ──
     const run = async () => {
-      // Wait for the global layout splash to finish first
       await waitForSplash();
       if (cancelledRef.current) return;
 
       await delay(startDelay);
       if (cancelledRef.current) return;
 
-      // Ensure we start at top
-      setScroll(0);
-
-      // Let layout settle so scrollHeight is fully computed
-      await delay(300);
+      setScroll(0); lastScrollY = 0;
+      await delay(150);
       if (cancelledRef.current) return;
 
-      // Re-measure after settle — content may still be loading
+      lastMaxRead = 0;
       const maxScroll = await waitForScrollable();
-      if (cancelledRef.current) return;
-      if (maxScroll <= 120) return;
+      if (cancelledRef.current || maxScroll <= 120) return;
 
-      // Show the overlay
       injectOverlay();
-      startDrunk();
-      noteScrollActivity();
 
-      // 1) Scroll down to bottom — progress 0→60%
-      await animate(0, maxScroll, scrollDownDuration, easeInCubic, (v) => {
-        setScroll(v);
-        setOverlayProgress((v / maxScroll) * 60);
-        noteScrollActivity();
-      });
+      // Brief "Caching page" display
+      await delay(800);
       if (cancelledRef.current) return;
 
-      setOverlayProgress(60);
+      // 1) Scroll down — re-measures for lazy content
+      setPhase("Loading sections");
+      const finalMax = await animate(0, maxScroll, scrollDownDuration, easeInOutCubic, (v, curTo) => {
+        setScroll(v);
+        setProgress(curTo > 0 ? (v / curTo) * 60 : 0);
+      }, true);
+      if (cancelledRef.current) return;
 
-      // 2) Brief pause at bottom
+      // Snap to true bottom if more content loaded
+      lastMaxRead = 0;
+      const trueBottom = getMaxScroll();
+      if (trueBottom > finalMax + 50) setScroll(trueBottom);
+      setProgress(60);
+
+      // 2) Pause
       await delay(bottomPause);
       if (cancelledRef.current) return;
 
-      setOverlayPhase("Returning");
-
-      // 3) Spring back to top — progress 60→85%
-      await animate(maxScroll, 0, springBackDuration, easeInCubic, (v) => {
+      // 3) Scroll back up
+      const backFrom = Math.max(finalMax, trueBottom);
+      setPhase("Returning");
+      await animate(backFrom, 0, springBackDuration, easeInOutCubic, (v) => {
         setScroll(v);
-        setOverlayProgress(60 + (1 - v / maxScroll) * 25);
-        noteScrollActivity();
+        setProgress(60 + (1 - v / Math.max(1, backFrom)) * 30);
       });
       if (cancelledRef.current) return;
 
-      setOverlayProgress(90);
-      setOverlayPhase("Finalizing");
+      // 4) Finalize
+      setProgress(90);
+      setPhase("Finalizing");
+      await delay(300);
+      if (cancelledRef.current) return;
+      setProgress(100);
 
-      // 4) Genie pinch effect on viewport — progress 90→100%
-      // Skip genie effect if user sped up (just decorative)
-      if (!speedUpRef.current) {
-        const root = document.documentElement;
-        root.style.transformOrigin = "center top";
-        root.style.transition = "none";
-
-        // Pinch in
-        await animate(1, genieScale, genieDuration * 0.5, easeInOutCubic, (v) => {
-          root.style.transform = `scale(${v})`;
-          const pinchProgress = (1 - v) / (1 - genieScale);
-          setOverlayProgress(90 + pinchProgress * 5);
-        });
-        if (cancelledRef.current) return;
-
-        // Snap back with spring
-        await animate(genieScale, 1, genieDuration * 0.5, easeOutBack, (v) => {
-          root.style.transform = `scale(${v})`;
-          const snapProgress = (v - genieScale) / (1 - genieScale);
-          setOverlayProgress(95 + snapProgress * 5);
-        });
-
-        // Cleanup transform
-        root.style.removeProperty("transform");
-        root.style.removeProperty("transform-origin");
-        root.style.removeProperty("transition");
-      } else {
-        // Skip genie, just complete
-        setOverlayProgress(100);
-      }
-
-      // Dismiss the overlay
       removeOverlay();
-
-      // Mark as done for this session
-      try {
-        sessionStorage.setItem(sessionKey, "1");
-      } catch {
-        // Ignore
-      }
-
-      cleanup();
+      try { sessionStorage.setItem(sessionKey, "1"); } catch {}
+      detach();
     };
 
     run();
-
-    return () => {
-      cancel();
-      stopDrunk();
-    };
-  }, [
-    scrollDownDuration,
-    bottomPause,
-    springBackDuration,
-    genieDuration,
-    genieScale,
-    startDelay,
-    respectReducedMotion,
-    containerSelector,
-    enabled,
-    pageId,
-  ]);
+    return () => { cancel(); };
+  }, [scrollDownDuration, bottomPause, springBackDuration, startDelay, respectReducedMotion, containerSelector, enabled, pageId]);
 }

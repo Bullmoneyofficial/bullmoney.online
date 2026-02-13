@@ -23,6 +23,7 @@ export const GamesManualModal = memo(function GamesManualModal({ isOpen, onClose
       <div className="fixed inset-0 z-[2001] flex items-center justify-center p-4">
         <div
           className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-200"
+          style={{ backgroundColor: '#ffffff', color: '#111827', colorScheme: 'light' as const }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}

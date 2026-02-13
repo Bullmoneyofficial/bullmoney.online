@@ -239,7 +239,7 @@ export default function BreakingNewsTicker() {
     .slice(0, 4);
 
   return (
-    <div ref={containerRef} className="w-full bg-black" style={{ minHeight: 190 }}>
+    <div ref={containerRef} className="w-full bg-black" style={{ minHeight: 190, backgroundColor: '#000000', colorScheme: 'dark' as const }}>
       <style dangerouslySetInnerHTML={{ __html: `
         .bnt-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
         .bnt-scroll::-webkit-scrollbar{display:none}

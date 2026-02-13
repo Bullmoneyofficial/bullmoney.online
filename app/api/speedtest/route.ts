@@ -117,6 +117,9 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     console.error('[Speedtest API] Error:', error.message);
     
+    const searchParams = request.nextUrl.searchParams;
+    const cacheKey = `${searchParams.get('quick') === 'true'}-${searchParams.get('server') || 'auto'}`;
+    
     // Check if speedtest CLI is not installed
     if (error.message.includes('not found') || error.message.includes('command not found')) {
       const unavailable = {
@@ -131,13 +134,31 @@ export async function GET(request: NextRequest) {
         timestamp: Date.now(),
       };
 
-      cache.set(`${request.nextUrl.searchParams.get('quick') === 'true'}-${request.nextUrl.searchParams.get('server') || 'auto'}`, {
+      cache.set(cacheKey, {
         result: unavailable,
         timestamp: Date.now(),
         ttl: ERROR_CACHE_TTL,
       });
 
       return NextResponse.json(unavailable);
+    }
+
+    // Rate limit error - cache to prevent repeated attempts
+    if (error.message.includes('Limit reached') || error.message.includes('Too many requests')) {
+      const rateLimited = {
+        error: 'Rate limited',
+        message: 'Speedtest CLI rate limit reached. Please wait before trying again.',
+        retryAfter: ERROR_CACHE_TTL / 1000, // seconds
+        timestamp: Date.now(),
+      };
+
+      cache.set(cacheKey, {
+        result: rateLimited,
+        timestamp: Date.now(),
+        ttl: ERROR_CACHE_TTL,
+      });
+
+      return NextResponse.json(rateLimited, { status: 429 });
     }
 
     // Timeout error
@@ -151,14 +172,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Generic error
-    return NextResponse.json(
-      {
-        error: 'Speedtest failed',
-        message: error.message,
-      },
-      { status: 500 }
-    );
+    // Generic error - cache briefly to prevent hammering
+    const genericError = {
+      error: 'Speedtest failed',
+      message: error.message,
+      timestamp: Date.now(),
+    };
+    
+    cache.set(cacheKey, {
+      result: genericError,
+      timestamp: Date.now(),
+      ttl: 30000, // 30 seconds for generic errors
+    });
+
+    return NextResponse.json(genericError, { status: 500 });
   }
 }
 

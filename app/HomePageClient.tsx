@@ -1208,9 +1208,9 @@ function HomeContent() {
 
                       <div
                         style={{
-                          height: isMobile ? 'min(50vh, 400px)' : 'min(60vh, 700px)',
-                          minHeight: isMobile ? '280px' : 'min(40vh, 480px)',
-                          background: '#ffffff',
+                          height: isMobile ? 'min(35vh, 280px)' : 'min(50vh, 500px)',
+                          minHeight: isMobile ? '200px' : '300px',
+                          background: '#0a0a0a',
                         }}
                       >
                         <div
@@ -1253,13 +1253,11 @@ function HomeContent() {
 
                       <div
                         style={{
-                          height: isMobile ? 'min(50vh, 400px)' : 'min(60vh, 700px)',
-                          minHeight: isMobile ? '280px' : 'min(40vh, 480px)',
-                          background: '#ffffff',
+                          background: '#000000',
                         }}
                       >
                         <div
-                          className="h-full overflow-x-auto overflow-y-hidden touch-pan-x overscroll-x-contain"
+                          className="w-full"
                         >
                           <BreakingNewsTicker />
                         </div>

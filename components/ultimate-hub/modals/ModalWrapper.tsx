@@ -64,7 +64,7 @@ export const ModalWrapper = memo(({
             transition={animations.modalContent.transition}
             onClick={e => e.stopPropagation()}
             className={`relative w-full max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-white border ${shouldDisableBackdropBlur ? '' : 'backdrop-blur-2xl'} ${isMobile ? '' : 'shadow-2xl'} ${colorClasses[color]}`}
-            style={{ maxWidth }}
+            style={{ maxWidth, backgroundColor: '#ffffff', colorScheme: 'light' as const }}
           >
             {children}
           </motion.div>

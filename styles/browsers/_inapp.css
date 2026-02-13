@@ -79,7 +79,9 @@ html.google-browser[data-design-page] body {
 html.inapp-browser[data-store-page],
 html.instagram-browser[data-store-page],
 html.facebook-browser[data-store-page],
-html.google-browser[data-store-page] {
+html.google-browser[data-store-page],
+html.tiktok-browser[data-store-page],
+html.twitter-browser[data-store-page] {
   overflow-y: auto !important;
   height: auto !important;
 }
@@ -87,10 +89,61 @@ html.google-browser[data-store-page] {
 html.inapp-browser[data-store-page] body,
 html.instagram-browser[data-store-page] body,
 html.facebook-browser[data-store-page] body,
-html.google-browser[data-store-page] body {
+html.google-browser[data-store-page] body,
+html.tiktok-browser[data-store-page] body,
+html.twitter-browser[data-store-page] body {
   overflow-y: auto !important;
   height: auto !important;
   min-height: 100vh !important;
+}
+
+/* CRITICAL: Prevent in-app browsers from forcing black backgrounds on store page */
+html.inapp-browser[data-store-page],
+html.instagram-browser[data-store-page],
+html.facebook-browser[data-store-page],
+html.google-browser[data-store-page],
+html.tiktok-browser[data-store-page],
+html.twitter-browser[data-store-page],
+html.inapp-browser[data-store-page] body,
+html.instagram-browser[data-store-page] body,
+html.facebook-browser[data-store-page] body,
+html.google-browser[data-store-page] body,
+html.tiktok-browser[data-store-page] body,
+html.twitter-browser[data-store-page] body,
+html.inapp-browser[data-store-page] .store-layout,
+html.instagram-browser[data-store-page] .store-layout,
+html.facebook-browser[data-store-page] .store-layout,
+html.google-browser[data-store-page] .store-layout,
+html.tiktok-browser[data-store-page] .store-layout,
+html.twitter-browser[data-store-page] .store-layout,
+html.inapp-browser[data-store-page] header,
+html.instagram-browser[data-store-page] header,
+html.facebook-browser[data-store-page] header,
+html.google-browser[data-store-page] header,
+html.tiktok-browser[data-store-page] header,
+html.twitter-browser[data-store-page] header,
+html.inapp-browser[data-store-page] [role="dialog"],
+html.instagram-browser[data-store-page] [role="dialog"],
+html.facebook-browser[data-store-page] [role="dialog"],
+html.google-browser[data-store-page] [role="dialog"],
+html.tiktok-browser[data-store-page] [role="dialog"],
+html.twitter-browser[data-store-page] [role="dialog"],
+html.inapp-browser[data-store-page] .modal,
+html.instagram-browser[data-store-page] .modal,
+html.facebook-browser[data-store-page] .modal,
+html.google-browser[data-store-page] .modal,
+html.tiktok-browser[data-store-page] .modal,
+html.twitter-browser[data-store-page] .modal,
+html.inapp-browser[data-store-page] .drawer,
+html.instagram-browser[data-store-page] .drawer,
+html.facebook-browser[data-store-page] .drawer,
+html.google-browser[data-store-page] .drawer,
+html.tiktok-browser[data-store-page] .drawer,
+html.twitter-browser[data-store-page] .drawer {
+  color-scheme: light !important;
+  -webkit-color-scheme: light !important;
+  background-color: inherit !important;
+  color: inherit !important;
 }
 
 /* Home page */
@@ -148,6 +201,40 @@ html.facebook-browser {
 /* Facebook blocks pull-to-refresh */
 html.facebook-browser body {
   overscroll-behavior-y: contain;
+}
+
+/* ============================================
+   IN-APP BROWSER COLOR SCHEME FIXES
+   ============================================ */
+/* Prevent in-app browsers from forcing dark backgrounds on modals/drawers */
+html.inapp-browser [role="dialog"],
+html.instagram-browser [role="dialog"],
+html.facebook-browser [role="dialog"],
+html.google-browser [role="dialog"],
+html.tiktok-browser [role="dialog"],
+html.twitter-browser [role="dialog"],
+html.inapp-browser [aria-modal="true"],
+html.instagram-browser [aria-modal="true"],
+html.facebook-browser [aria-modal="true"],
+html.google-browser [aria-modal="true"],
+html.tiktok-browser [aria-modal="true"],
+html.twitter-browser [aria-modal="true"],
+html.inapp-browser .modal,
+html.instagram-browser .modal,
+html.facebook-browser .modal,
+html.google-browser .modal,
+html.tiktok-browser .modal,
+html.twitter-browser .modal,
+html.inapp-browser .drawer,
+html.instagram-browser .drawer,
+html.facebook-browser .drawer,
+html.google-browser .drawer,
+html.tiktok-browser .drawer,
+html.twitter-browser .drawer {
+  color-scheme: light !important;
+  -webkit-color-scheme: light !important;
+  background-color: inherit !important;
+  color: inherit !important;
 }
 
 /* ============================================

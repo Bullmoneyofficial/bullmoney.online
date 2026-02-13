@@ -383,12 +383,14 @@ img[loading="lazy"] {
   }
 }
 
-/* Dark mode preference */
+/* Dark mode preference - DISABLED to prevent forcing black backgrounds */
+/* REMOVED to prevent modals/drawers from turning black
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: dark;
   }
 }
+*/
 
 /* ============================================================================
    PRINT STYLES

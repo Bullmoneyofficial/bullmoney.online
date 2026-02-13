@@ -10,6 +10,9 @@ body[data-modal-open="true"]:has([role="dialog"]:not([data-state="closed"])) {
   height: 100%;
   touch-action: auto;
   -webkit-overflow-scrolling: touch;
+  /* CRITICAL: Prevent browser from forcing dark colors on modal open */
+  color-scheme: light !important;
+  -webkit-color-scheme: light !important;
 }
 
 /* Fallback for browsers without :has() support */
@@ -20,6 +23,9 @@ body[data-modal-open="true"]:has([role="dialog"]:not([data-state="closed"])) {
     position: fixed;
     width: 100%;
     height: 100%;
+    /* CRITICAL: Prevent browser from forcing dark colors on modal open */
+    color-scheme: light !important;
+    -webkit-color-scheme: light !important;
   }
 }
 

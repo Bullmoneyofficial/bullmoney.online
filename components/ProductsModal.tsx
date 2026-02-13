@@ -393,8 +393,7 @@ const ProductsContent = memo(() => {
             ? 'fixed top-0 left-0 right-0 w-full bg-white border-b border-black/10 flex flex-col safe-area-inset-bottom max-h-[90vh] overflow-hidden'
             : 'fixed inset-0 w-full bg-white flex flex-col safe-area-inset-bottom overflow-hidden'
         }
-        style={{ zIndex: 2147483649, color: '#1d1d1f', isolation: 'isolate' }}
-        data-apple-section
+        style={{ zIndex: 2147483649, color: '#1d1d1f', isolation: 'isolate', backgroundColor: '#ffffff', colorScheme: 'light' as const }}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 md:p-6 border-b border-black/10">
@@ -519,7 +518,7 @@ const ProductsContent = memo(() => {
               onClick={(e) => e.stopPropagation()}
               onTouchEnd={(e) => e.stopPropagation()}
               className="relative w-full max-w-[96vw] sm:max-w-5xl lg:max-w-6xl max-h-[92vh] overflow-y-auto bg-white text-black rounded-2xl md:rounded-3xl border border-black/10 shadow-2xl"
-              style={{ isolation: 'isolate', WebkitOverflowScrolling: 'touch' }}
+              style={{ isolation: 'isolate', WebkitOverflowScrolling: 'touch', backgroundColor: '#ffffff', colorScheme: 'light' as const }}
             >
               {/* Close Button */}
               <div className="sticky top-0 z-30 border-b border-black/10 bg-white">

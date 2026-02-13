@@ -801,7 +801,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
         }}
         onMouseEnter={openDesktopMenu}
         onMouseLeave={scheduleDesktopMenuClose}
-        data-apple-section
+        style={{ backgroundColor: '#ffffff', colorScheme: 'light' as const }}
       >
         <div style={{ background: '#ffffff', borderBottom: '1px solid #000000' }}>
           <div className="max-w-[1200px] mx-auto px-10 py-10 grid grid-cols-3 gap-10">
@@ -1012,7 +1012,7 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
               transition: 'opacity 150ms ease-in-out, transform 180ms ease-in-out',
               willChange: 'opacity, transform',
             }}
-            data-apple-section
+            style={{ backgroundColor: '#ffffff', colorScheme: 'light' as const }}
           >
             <div style={{ background: '#ffffff', borderBottom: '1px solid #000000' }}>
               <div className="max-w-[1200px] mx-auto px-10 py-10 grid grid-cols-3 gap-10">
@@ -1104,6 +1104,8 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
               transform: manualDropdownOpen ? 'translateY(0)' : 'translateY(-8px)',
               transition: 'opacity 150ms ease-in-out, transform 180ms ease-in-out',
               willChange: 'opacity, transform',
+              backgroundColor: '#ffffff',
+              colorScheme: 'light' as const,
             }}
           >
             <div style={{ background: '#ffffff', borderBottom: '1px solid #000000' }}>
@@ -1199,11 +1201,12 @@ export function StoreHeader({ heroModeOverride, onHeroModeChangeOverride }: Stor
               className="fixed top-0 right-0 bottom-0 w-72 max-w-[80vw] z-[1300] p-4 flex flex-col overflow-y-auto overscroll-contain touch-pan-y"
               style={{
                 background: 'rgb(255,255,255)',
+                backgroundColor: '#ffffff',
+                colorScheme: 'light' as const,
                 borderLeft: '1px solid rgba(0,0,0,0.1)',
                 willChange: 'transform',
                 WebkitOverflowScrolling: 'touch',
               }}
-              data-apple-section
             >
               <div className="flex items-center justify-between mb-4">
                 <span className="text-2xl font-medium" style={{ color: 'rgb(0,0,0)' }}>Menu</span>

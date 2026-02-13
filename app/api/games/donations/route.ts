@@ -56,6 +56,11 @@ function getDonationProductIds(): string[] {
     .filter(Boolean);
 }
 
+function isValidUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
+
 function getLicenseGoalUsd(): number {
   const parsed = Number(process.env.GAMES_LICENSE_GOAL_USD || DEFAULT_GOAL_USD);
   if (!Number.isFinite(parsed) || parsed <= 0) return DEFAULT_GOAL_USD;
@@ -77,10 +82,38 @@ export async function GET(_request: NextRequest) {
     const donationProductIds = getDonationProductIds();
     const goalUsd = getLicenseGoalUsd();
 
+    // Filter to only valid UUIDs to prevent database errors
+    const validProductIds = donationProductIds.filter(isValidUUID);
+    
+    if (validProductIds.length === 0) {
+      console.warn('[games/donations] No valid UUID product IDs configured. Using empty result set.');
+      console.warn('[games/donations] Configured IDs:', donationProductIds);
+      console.warn('[games/donations] Please set CRYPTO_DONATION_PRODUCT_IDS to valid UUID values in your environment.');
+      
+      // Return empty donation data instead of erroring
+      return NextResponse.json({
+        goalUsd,
+        raisedUsd: 0,
+        confirmedUsd: 0,
+        pendingUsd: 0,
+        failedUsd: 0,
+        remainingUsd: goalUsd,
+        progressPct: 0,
+        donationCount: 0,
+        activeDonorCount: 0,
+        tiers: DONATION_TIERS,
+        rewardStats: DONATION_TIERS.map(tier => ({ ...tier, donors: 0 })),
+        recentDonations: [],
+        productIds: donationProductIds,
+        lastUpdated: Date.now(),
+        warning: 'No valid UUID product IDs configured',
+      });
+    }
+
     const { data, error } = await supabase
       .from('crypto_payments')
       .select('order_number, status, amount_usd, coin, submitted_at, confirmed_at, guest_email_hash, product_id')
-      .in('product_id', donationProductIds)
+      .in('product_id', validProductIds)
       .order('submitted_at', { ascending: false })
       .limit(2000);
 

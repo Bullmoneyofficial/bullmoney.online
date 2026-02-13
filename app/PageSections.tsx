@@ -1648,6 +1648,7 @@ export function QuotesSection() {
       <section
         id="metatrader-quotes"
         className="w-full full-bleed bg-black"
+        style={{ backgroundColor: '#000000', colorScheme: 'dark' as const }}
         data-allow-scroll
         data-content
         data-theme-aware
@@ -1794,6 +1795,7 @@ export function BreakingNewsSection() {
       <section
         id="breaking-news"
         className="w-full full-bleed bg-black"
+        style={{ backgroundColor: '#000000', colorScheme: 'dark' as const }}
         data-allow-scroll
         data-content
         data-theme-aware
@@ -1803,6 +1805,7 @@ export function BreakingNewsSection() {
                      border border-white/[0.08] bg-[#0a0a0a]/95 
                      overflow-hidden shadow-2xl shadow-black/50
                      relative"
+          style={{ backgroundColor: 'rgba(10, 10, 10, 0.95)' }}
         >
           {/* Breaking news accent */}
           <div className="absolute top-0 left-0 right-0 h-[2px] 
@@ -1949,6 +1952,7 @@ Risk: 1%
       <section
         id="bullmoney-community"
         className="w-full full-bleed bg-black"
+        style={{ backgroundColor: '#000000', colorScheme: 'dark' as const }}
         data-allow-scroll
         data-content
         data-theme-aware

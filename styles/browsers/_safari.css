@@ -91,6 +91,20 @@
     -webkit-touch-callout: none;
   }
   
+  /* CRITICAL: iOS Safari color scheme protection for store and modals */
+  html[data-store-page],
+  html[data-store-page] body,
+  html[data-store-page] .store-layout,
+  html[data-store-page] header,
+  [role="dialog"],
+  [aria-modal="true"],
+  .modal,
+  .drawer {
+    color-scheme: light !important;
+    -webkit-color-scheme: light !important;
+    background-color: inherit !important;
+  }
+  
   /* Fix safe area insets */
   .safe-area-top {
     padding-top: env(safe-area-inset-top);
@@ -173,6 +187,21 @@ html.safari-browser[data-store-page] body,
 html.safari-browser.home-active body {
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch !important;
+}
+
+/* CRITICAL: Prevent Safari from forcing black backgrounds on store page */
+html.safari-browser[data-store-page],
+html.safari-browser[data-store-page] body,
+html.safari-browser[data-store-page] .store-layout,
+html.safari-browser[data-store-page] header,
+html.safari-browser[data-store-page] [role="dialog"],
+html.safari-browser[data-store-page] [aria-modal="true"],
+html.safari-browser[data-store-page] .modal,
+html.safari-browser[data-store-page] .drawer {
+  color-scheme: light !important;
+  -webkit-color-scheme: light !important;
+  background-color: inherit !important;
+  color: inherit !important;
 }
 
 /* ============================================
@@ -368,9 +397,9 @@ html.safari-browser.home-active body {
    ============================================ */
 @media (prefers-color-scheme: dark) {
   @supports (-webkit-appearance: none) {
-    /* Fix dark mode transparency */
+    /* Fix dark mode transparency - DISABLED to prevent forcing black backgrounds */
     .dark-mode-fix {
-      color-scheme: dark;
+      /* color-scheme: dark; REMOVED - causes black backgrounds in modals/drawers */
     }
     
     /* Fix selection color */

@@ -272,12 +272,14 @@ html.is-safari input:-webkit-autofill {
   }
 }
 
-/* Safari in dark mode */
+/* Safari in dark mode - DISABLED to prevent forcing black backgrounds */
+/* REMOVED to prevent modals/drawers from turning black
 @media (prefers-color-scheme: dark) {
   html.is-safari body {
     color-scheme: dark;
   }
 }
+*/
 /* ================================================================
    MACOS SAFARI DESKTOP SCROLL FIXES
    Critical for trackpad and mouse wheel scrolling

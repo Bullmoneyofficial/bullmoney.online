@@ -257,7 +257,7 @@
   /* Dark mode */
   @media (prefers-color-scheme: dark) {
     .dark-mode-fix {
-      color-scheme: dark;
+      /* color-scheme: dark; REMOVED - causes black backgrounds in modals/drawers */
     }
   }
 }

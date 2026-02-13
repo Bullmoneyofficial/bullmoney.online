@@ -117,6 +117,20 @@
     position: relative !important;
   }
   
+  /* CRITICAL: Prevent Samsung from forcing black backgrounds on store page */
+  html[data-store-page],
+  html[data-store-page] body,
+  html[data-store-page] .store-layout,
+  html[data-store-page] header,
+  html[data-store-page] [role="dialog"],
+  html[data-store-page] [aria-modal="true"],
+  html[data-store-page] .modal,
+  html[data-store-page] .drawer {
+    color-scheme: light !important;
+    background-color: inherit !important;
+    color: inherit !important;
+  }
+  
   /* Home page scroll fix */
   html.home-active,
   html.home-active body,
@@ -305,7 +319,7 @@ video::-webkit-media-controls-enclosure {
    ============================================ */
 @media (prefers-color-scheme: dark) {
   .samsung-dark-mode {
-    color-scheme: dark;
+    /* color-scheme: dark; REMOVED - causes black backgrounds in modals/drawers */
   }
   
   .samsung-dark-mode .card {
