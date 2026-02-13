@@ -88,11 +88,31 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
     const pendingTimeouts = new Set<ReturnType<typeof setTimeout>>();
     const pendingIntervals = new Set<ReturnType<typeof setInterval>>();
     let showcaseModeActive = false;
+    let screensaverActive = false;
 
     const setShowcaseMode = (active: boolean) => {
       if (showcaseModeActive === active) return;
       showcaseModeActive = active;
       setShowcaseRunningMode(active);
+    };
+
+    const detectScreensaverActive = () => {
+      return Boolean(
+        document.getElementById("bullmoney-screensaver-overlay") ||
+          document.body.classList.contains("bullmoney-frozen") ||
+          document.documentElement.classList.contains("bullmoney-frozen"),
+      );
+    };
+
+    screensaverActive = detectScreensaverActive();
+
+    const onScreensaverFreeze = () => {
+      screensaverActive = true;
+      cancel();
+    };
+
+    const onScreensaverUnfreeze = () => {
+      screensaverActive = false;
     };
 
     const addTimeout = (handler: () => void, ms: number) => {
@@ -157,6 +177,9 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
       cancelArmed = true;
       for (const e of events) window.addEventListener(e, cancel, { passive: true, once: true });
     };
+
+    window.addEventListener("bullmoney-freeze", onScreensaverFreeze as EventListener);
+    window.addEventListener("bullmoney-unfreeze", onScreensaverUnfreeze as EventListener);
 
     const injectOverlay = () => {
       if (overlayEl) return;
@@ -262,6 +285,37 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
         timeoutRef.current = hard;
       });
 
+    const waitForScreensaverInactive = (): Promise<void> =>
+      new Promise((resolve) => {
+        if (!screensaverActive && !detectScreensaverActive()) {
+          resolve();
+          return;
+        }
+
+        let done = false;
+        const finish = () => {
+          if (done) return;
+          done = true;
+          window.removeEventListener("bullmoney-unfreeze", onUnfreeze);
+          clearInterval(poll);
+          clearTimeout(hard);
+          pendingIntervals.delete(poll);
+          pendingTimeouts.delete(hard);
+          resolve();
+        };
+
+        const onUnfreeze = () => {
+          screensaverActive = false;
+          addTimeout(finish, 120);
+        };
+
+        window.addEventListener("bullmoney-unfreeze", onUnfreeze, { once: true });
+        const poll = addInterval(() => {
+          if (!detectScreensaverActive()) finish();
+        }, 250);
+        const hard = addTimeout(finish, 12000);
+      });
+
     const waitForScrollable = async (): Promise<number> => {
       for (let i = 0; i < 30 && !cancelledRef.current; i++) {
         lastMaxRead = 0;
@@ -285,11 +339,17 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
       await waitForSplash();
       if (cancelledRef.current) return;
 
+      await waitForScreensaverInactive();
+      if (cancelledRef.current || screensaverActive || detectScreensaverActive()) return;
+
       await waitForIdle();
       if (cancelledRef.current) return;
 
       await delay(startDelay);
       if (cancelledRef.current) return;
+
+      await waitForScreensaverInactive();
+      if (cancelledRef.current || screensaverActive || detectScreensaverActive()) return;
 
       // Arm user-cancel only when showcase starts to avoid premature mobile touch cancellations.
       attach();
@@ -351,6 +411,8 @@ export function useShowcaseScroll(options: ShowcaseScrollOptions = {}) {
 
     return () => {
       setShowcaseMode(false);
+      window.removeEventListener("bullmoney-freeze", onScreensaverFreeze as EventListener);
+      window.removeEventListener("bullmoney-unfreeze", onScreensaverUnfreeze as EventListener);
       cancel();
     };
   }, [
